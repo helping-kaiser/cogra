@@ -10,7 +10,12 @@
 // through the reader's ask-link door head the list, every other row stands
 // grouped by the link it came through, by age and never by readiness
 // (`layoutQueue`). Each row carries its own close; a group carries `Close
-// all` past one waiting.
+// all` past one waiting. Both halves stand whenever one holds something, an
+// empty half keeping its label over one quiet line (:29-35).
+//
+// PEOPLE YOU LET IN stands between the halves once the reader has vouched
+// someone in (:7-27), three rows then `Show all`; with only people let in,
+// neither half stands and the page is not its empty state (:21).
 //
 // APPROVING IS VOUCHING (ApprovePad.md:5): a ready row's tap blooms the
 // ordinary opinion pad from an anchor that takes the close's slot, over the
@@ -54,9 +59,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
@@ -65,6 +72,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -85,6 +93,8 @@ import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.LocalOnRestoreKey
 import com.cogra.core.designsystem.LocalSnackbarHostState
+import com.cogra.core.designsystem.RowLine
+import com.cogra.core.designsystem.RowLineState
 import com.cogra.core.designsystem.StancePoint
 import com.cogra.core.designsystem.StanceSignedSnackbar
 import com.cogra.core.designsystem.collapsingTop
@@ -101,6 +111,8 @@ import com.cogra.core.designsystem.v2.atom.ContentRow
 import com.cogra.core.designsystem.v2.atom.ContentRowDisc
 import com.cogra.core.designsystem.v2.atom.ContentRowSecond
 import com.cogra.core.designsystem.v2.atom.EmptyState
+import com.cogra.core.designsystem.v2.atom.InlineAction
+import com.cogra.core.designsystem.v2.atom.InlineSize
 import com.cogra.core.designsystem.v2.atom.PageHeader
 import com.cogra.core.designsystem.v2.atom.forwardCount
 import com.cogra.core.designsystem.v2.atom.hitTarget
@@ -112,6 +124,8 @@ import com.cogra.domain.forwardLadder
 import com.cogra.domain.invites.ApplicationGroup
 import com.cogra.domain.invites.ApplicationInfo
 import com.cogra.domain.invites.InviteLinkInfo
+import com.cogra.domain.invites.LetInPerson
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -135,6 +149,8 @@ fun InvitesRoute(
     /** Invites never stands for a reader who is not a member (ProfileApplicant.md:18). */
     onNotMember: () -> Unit,
     onRestoreKey: () -> Unit,
+    /** A person the reader let in: their profile, whose arrow reads `Back to Invites` (Invites.md:23, :27). */
+    onOpenPerson: (handle: String) -> Unit = {},
     /** What an ask link handed over on the way here, taken once. */
     arrival: InvitesNotice? = null,
     onArrivalConsumed: () -> Unit = {},
@@ -162,6 +178,7 @@ fun InvitesRoute(
             viewModel.onLinkCopied()
         }
     }
+    val copyCard = rememberCardCopy(viewModel)
     CompositionLocalProvider(LocalOnRestoreKey provides onRestoreKey) {
         InvitesScreen(
             state = state,
@@ -180,8 +197,10 @@ fun InvitesRoute(
                 onCloseAll = viewModel::onCloseAll,
                 onConfirmClose = viewModel::onConfirmClose,
                 onKeep = viewModel::onKeep,
-                onCopy = copy,
+                onCopy = copyCard,
                 onRevoke = viewModel::onRevoke,
+                onOpenPerson = { person -> onOpenPerson(person.door) },
+                onShowAllPeople = viewModel::onShowAllPeople,
                 onSnackShown = viewModel::onSnackShown,
                 onFocusMoved = viewModel::onFocusMoved,
                 sheet = SheetActions(
@@ -199,6 +218,36 @@ fun InvitesRoute(
         )
     }
 }
+
+/** A card's copy, which answers on that card when it does not go through (Invites.md:77-81). */
+@Composable
+private fun rememberCardCopy(viewModel: InvitesViewModel): (InviteLinkInfo) -> Unit {
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
+    return remember(viewModel, clipboard, scope) {
+        { link ->
+            scope.launch {
+                if (clipboard.copied(viewModel.joinUrl(link))) {
+                    viewModel.onLinkCopied(link.id)
+                } else {
+                    viewModel.onCopyFailed(link.id)
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The link onto the clipboard, and whether it landed. The platform's
+ * clipboard can refuse a write (a SecurityException for a write it does not
+ * allow, a binder failure for a transaction it cannot carry); a refusal is
+ * the copy that did not go through, never a crash. Cancellation still
+ * propagates.
+ */
+internal suspend fun Clipboard.copied(url: String): Boolean =
+    runCatching { setClipEntry(ClipEntry(ClipData.newPlainText(url, url))) }
+        .onFailure { if (it is CancellationException) throw it }
+        .isSuccess
 
 /** `ACTION_SEND` in the system chooser — the platform's own share sheet (InviteCreated.md:15). */
 internal fun Context.shareLink(url: String) {
@@ -220,10 +269,15 @@ data class InvitesActions(
     val onCloseAll: (ApplicationGroup) -> Unit = {},
     val onConfirmClose: () -> Unit = {},
     val onKeep: () -> Unit = {},
-    val onCopy: (String) -> Unit = {},
+    /** A live link's copy control; the card answers when it does not go through (Invites.md:77-81). */
+    val onCopy: (InviteLinkInfo) -> Unit = {},
     val onRevoke: (InviteLinkInfo) -> Unit = {},
     val onSnackShown: () -> Unit = {},
     val onFocusMoved: () -> Unit = {},
+    /** A row of People you let in: that person's profile (Invites.md:23, :27). */
+    val onOpenPerson: (LetInPerson) -> Unit = {},
+    /** `Show all` under the third person (Invites.md:19). */
+    val onShowAllPeople: () -> Unit = {},
     val sheet: SheetActions = SheetActions({}, {}, {}, {}, {}, {}, {}, {}),
 )
 
@@ -334,6 +388,7 @@ private fun InvitesBody(
     val layout = state.layout
     val links = state.links
     FocusFollowsRemoval(state, list, rowFocus, createFocus, actions.onFocusMoved)
+    val peopleActions = focusFollowsTheDoor(state, rowFocus, actions)
     LazyColumn(
         state = list,
         // 8 under the header to New invite's ink: the pill answers at 48, so its
@@ -364,8 +419,11 @@ private fun InvitesBody(
                         testTag = (INVITES / "create").tag,
                     )
                 }
-                applications(state, padState, now, approvalPad, actions, rowFocus)
-                liveLinks(links, state, now, joinUrl, actions, rowFocus)
+                // Applications, then People you let in, then Live links (:7);
+                // only people let in drops both halves, labels and all (:21).
+                if (!state.onlyLetIn) applications(state, padState, now, approvalPad, actions, rowFocus)
+                peopleLetIn(state, now, peopleActions, rowFocus)
+                if (!state.onlyLetIn) liveLinks(links, state, now, joinUrl, actions, rowFocus)
             }
         }
         if (state.fault) {
@@ -414,7 +472,37 @@ private fun FocusFollowsRemoval(
     }
 }
 
+/**
+ * THE DOOR LEAVES UNDER THE PRESS, so focus moves to the first row `Show all`
+ * opened rather than falling to the page (WAI-ARIA APG, *Disclosure*: a
+ * control that is removed hands focus on). Returns [actions] with the door's
+ * press marked, so only a press — never a state restored later — moves focus.
+ */
+@Composable
+private fun focusFollowsTheDoor(
+    state: InvitesUiState,
+    rowFocus: Map<String, FocusRequester>,
+    actions: InvitesActions,
+): InvitesActions {
+    var doorTaken by remember { mutableStateOf(false) }
+    LaunchedEffect(doorTaken, state.peopleOpened) {
+        if (!doorTaken || !state.peopleOpened) return@LaunchedEffect
+        doorTaken = false
+        withFrameNanos { }
+        state.people.getOrNull(PEOPLE_SHOWN)?.let { first ->
+            runCatching { rowFocus[PERSON_FOCUS_PREFIX + first.id]?.requestFocus() }
+        }
+    }
+    return actions.copy(
+        onShowAllPeople = {
+            doorTaken = true
+            actions.onShowAllPeople()
+        },
+    )
+}
+
 private const val LINK_FOCUS_PREFIX = "link:"
+private const val PERSON_FOCUS_PREFIX = "person:"
 
 /**
  * The item focus moves to: the row an arrival stands at, else the next row or
@@ -439,13 +527,22 @@ private fun itemPosition(state: InvitesUiState, key: String): Int {
     val keys = buildList {
         add("create")
         val layout = state.layout
-        if (!layout.isEmpty) add("applicationsLabel")
+        if (!state.onlyLetIn) {
+            add("applicationsLabel")
+            if (layout.isEmpty) add("applicationsEmpty")
+        }
         layout.head.forEach { add(it.id) }
         layout.groups.forEach { group ->
             add("group:${group.linkId}")
             group.rows.forEach { add(it.id) }
         }
-        if (state.links.isNotEmpty()) add("linksLabel")
+        if (state.people.isNotEmpty()) add("peopleLabel")
+        state.peopleShown.forEach { add(PERSON_FOCUS_PREFIX + it.id) }
+        if (state.peopleCapped) add("peopleDoor")
+        if (!state.onlyLetIn) {
+            add("linksLabel")
+            if (state.links.isEmpty()) add("linksEmpty")
+        }
         state.links.forEach { add(LINK_FOCUS_PREFIX + it.id) }
     }
     return keys.indexOf(key)
@@ -461,7 +558,8 @@ private fun Empty(onCreate: () -> Unit, focus: FocusRequester) {
         testTag = "invites.empty",
         title = stringResource(R.string.invites_empty),
         registered = true,
-        modifier = Modifier.padding(horizontal = Space.x6, vertical = Space.x2),
+        // The board's column stands 16 under the header: the list's own 4, then 12.
+        modifier = Modifier.padding(start = Space.x6, end = Space.x6, top = Space.x3, bottom = Space.x2),
         action = {
             CograButton(
                 text = stringResource(R.string.invites_create),
@@ -483,10 +581,17 @@ private fun LazyListScope.applications(
     rowFocus: MutableMap<String, FocusRequester>,
 ) {
     val layout = state.layout
-    if (layout.isEmpty) return
+    // BOTH HALVES STAND WHENEVER ONE HOLDS SOMETHING (Invites.md:29): an empty
+    // half keeps its label and says so in one quiet line (:31, :35).
     item(key = "applicationsLabel") {
         // 4 of its 12 already stand under New invite's ink, inside the pill's 48.
         SectionLabel(stringResource(R.string.invites_applications), INVITES / "applicationsLabel", top = Space.x2)
+    }
+    if (layout.isEmpty) {
+        item(key = "applicationsEmpty") {
+            EmptyHalf(stringResource(R.string.invites_applications_empty), INVITES / "applicationsEmpty")
+        }
+        return
     }
     val row: @Composable (ApplicationInfo) -> Unit = { application ->
         val focus = remember(application.id) { FocusRequester() }
@@ -508,8 +613,10 @@ private fun LazyListScope.applications(
             Box(Modifier.padding(start = Space.x4, end = Space.x4, bottom = Space.x2)) { row(application) }
         }
     }
-    layout.groups.forEach { group ->
-        item(key = "group:${group.linkId}") { GroupHeader(group, actions.onCloseAll) }
+    layout.groups.forEachIndexed { index, group ->
+        // The groups and their rows stand in one column at 8 apart: every group
+        // after the first keeps that gap above it, as its rows do.
+        item(key = "group:${group.linkId}") { GroupHeader(group, actions.onCloseAll, first = index == 0) }
         group.rows.forEach { application ->
             item(key = application.id) {
                 Box(Modifier.padding(start = Space.x4, end = Space.x4, top = Space.x2)) { row(application) }
@@ -534,17 +641,117 @@ private fun SectionLabel(text: String, node: DataNode, top: Dp = Space.x3) {
 }
 
 /**
+ * An empty half's one line (the board's `INVITES_EMPTY_LINE`): body-medium,
+ * secondary ink, `0 24 8` — the empty list's calm register, never the error
+ * colour (Invites.md:35).
+ */
+@Composable
+private fun EmptyHalf(text: String, node: DataNode) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier
+            .fillMaxWidth()
+            .dataNode(node)
+            .padding(start = Space.x6, end = Space.x6, bottom = Space.x2),
+    )
+}
+
+/**
+ * PEOPLE YOU LET IN (Invites.md:7-27; the board's `letIn` chip, rounds 38 and
+ * 40). Every person the reader vouched in, the newest first — `vouchedIn`'s
+ * own order, each under their first voucher only, a stance walked back since
+ * wearing no mark — in the application row's anatomy without its control:
+ * the picture, else the monogram from the name; the display name, else the
+ * handle; when they were let in, in the page's age form. The row carries no
+ * control and wears the chevron: it opens the person's profile.
+ *
+ * NO LIST IS UNCAPPED IN ITS DEFAULT STATE (round 40): three rows, then `Show
+ * all` under the third, which opens the rest in place — the door leaves,
+ * nothing else does, and no "show fewer" follows (:15-19). Absent, label and
+ * all, until someone is let in (:9).
+ */
+private fun LazyListScope.peopleLetIn(
+    state: InvitesUiState,
+    now: Instant,
+    actions: InvitesActions,
+    focus: MutableMap<String, FocusRequester>,
+) {
+    if (state.people.isEmpty()) return
+    item(key = "peopleLabel") {
+        // Straight under New invite (only people let in), 4 of its 12 already
+        // stand inside the pill's 48, as over Applications.
+        val top = if (state.onlyLetIn) Space.x2 else Space.x3
+        SectionLabel(stringResource(R.string.invites_people), INVITES / "peopleLabel", top = top)
+    }
+    state.peopleShown.forEachIndexed { index, person ->
+        item(key = PERSON_FOCUS_PREFIX + person.id) {
+            val requester = remember(person.id) { FocusRequester() }
+            focus[PERSON_FOCUS_PREFIX + person.id] = requester
+            PersonRow(
+                person = person,
+                now = now,
+                onOpen = { actions.onOpenPerson(person) },
+                modifier = Modifier
+                    .padding(start = Space.x4, end = Space.x4, top = if (index == 0) 0.dp else Space.x2)
+                    .focusRequester(requester),
+            )
+        }
+    }
+    if (state.peopleCapped) {
+        item(key = "peopleDoor") {
+            // An inline action under the rows, at their inset, standing at its start.
+            Box(Modifier.fillMaxWidth().padding(start = Space.x4, end = Space.x4, top = Space.x2)) {
+                InlineAction(
+                    text = stringResource(R.string.invites_people_show_all),
+                    onClick = actions.onShowAllPeople,
+                    size = InlineSize.Small,
+                    node = INVITES / "peopleDoor",
+                )
+            }
+        }
+    }
+}
+
+/**
+ * One person let in. A deleted account keeps its place and its age — the
+ * reserved disc, `Deleted account` in the system's voice, no handle — keyed
+ * by the person's id, and it is still a door, to the deleted account's page
+ * (Invites.md:25, :27).
+ */
+@Composable
+private fun PersonRow(person: LetInPerson, now: Instant, onOpen: () -> Unit, modifier: Modifier = Modifier) {
+    val node = (INVITES / if (person.redacted) "redactedPerson" else "person").keyed(person.id)
+    ContentRow(
+        title = person.name.orEmpty(),
+        disc = when {
+            person.redacted -> ContentRowDisc.Redacted
+            else -> person.avatarUrl?.let { ContentRowDisc.Picture(it, person.monogram) }
+                ?: ContentRowDisc.Monogram(person.monogram)
+        },
+        testTag = "invites_person_${person.id}",
+        trailing = ageLadder(person.vouchedAt, now),
+        onOpen = onOpen,
+        node = node,
+        chevron = true,
+        modifier = modifier,
+    )
+}
+
+/**
  * A link's group (the board's `ApplicationGroup`): its label and waiting
  * count, `Close all` past one waiting, then its rows by age.
  */
 @Composable
-private fun GroupHeader(group: ApplicationGroup, onCloseAll: (ApplicationGroup) -> Unit) {
+private fun GroupHeader(group: ApplicationGroup, onCloseAll: (ApplicationGroup) -> Unit, first: Boolean) {
     val node = (INVITES / "group").keyed(group.linkId)
     val closeAllName = stringResource(R.string.invites_close_all_label, group.rows.size)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier
+            .padding(top = if (first) 0.dp else Space.x2)
             .padding(horizontal = Space.x4)
             .fillMaxWidth()
             .dataNode(node)
@@ -678,18 +885,21 @@ private fun LazyListScope.liveLinks(
     actions: InvitesActions,
     focus: MutableMap<String, FocusRequester>,
 ) {
-    if (links.isEmpty()) return
     item(key = "linksLabel") { SectionLabel(stringResource(R.string.invites_live_links), INVITES / "linksLabel") }
+    if (links.isEmpty()) {
+        item(key = "linksEmpty") { EmptyHalf(stringResource(R.string.invites_links_empty), INVITES / "linksEmpty") }
+    }
     links.forEachIndexed { index, link ->
         item(key = LINK_FOCUS_PREFIX + link.id) {
             val url = joinUrl(link)
             val requester = remember(link.id) { FocusRequester() }
             focus[LINK_FOCUS_PREFIX + link.id] = requester
+            val card = (INVITES / "link").keyed(link.id)
             AddressCard(
                 address = url,
                 label = linkLabel(link),
                 copyLabel = stringResource(R.string.invites_copy_link),
-                onCopy = { actions.onCopy(url) },
+                onCopy = { actions.onCopy(link) },
                 // Inert from the press, `Revoking…` past 200ms, never dimmed
                 // and never a spinner (:49-51).
                 action = AddressAction(
@@ -699,10 +909,26 @@ private fun LazyListScope.liveLinks(
                     busyLabel = stringResource(R.string.invites_revoking),
                 ),
                 caption = linkCaption(link, now),
-                node = (INVITES / "link").keyed(link.id),
+                node = card,
                 modifier = Modifier
                     .padding(start = Space.x4, end = Space.x4, top = if (index == 0) 0.dp else Space.x2)
                     .focusRequester(requester),
+                // A COPY THAT FAILED answers in the comfort's register on the
+                // link's own card, the card's last line, the link staying
+                // whole above it (Invites.md:79-81) — never `Link copied`.
+                footer = if (state.copyFailed == link.id) {
+                    {
+                        // A block at the card's width, as the board's line stands in it.
+                        Box(Modifier.fillMaxWidth().dataNode(card / "copyFault")) {
+                            RowLine(
+                                state = RowLineState.DidntGoThrough(onRetry = { actions.onCopy(link) }),
+                                testTag = "invites_copy_fault",
+                            )
+                        }
+                    }
+                } else {
+                    null
+                },
             )
         }
     }
