@@ -2103,10 +2103,8 @@ same way, drawn once on `ChangeEmail`'s `fault` chip — and a
 change that lands answers `Password changed — other devices are signed
 out.` over settings (*new 2026-10-05, blessed (jakob 2026-10-05)*).
 
-**Change your handle** (`ChangeHandle`) says the calm part before the
-costly one. `@sol is how people mention and find you. Everything you
-have published stays yours — the handle is a name, not the account.`
-The field is `New handle` with the rules where they are typed:
+**Change your handle** (`ChangeHandle`) carries no body under its title
+(jakob 2026-11-12). The field is `New handle` with the rules where they are typed:
 `3 to 30 characters: letters, numbers and underscore. Handles are always
 lowercase.` — the fold is said because a reader who types capitals will
 otherwise think the field ate them. The commitment is `Change handle`;
@@ -2120,9 +2118,8 @@ the cost is said once, unsoftened, where it is read at the press (jakob
 answers `Your handle is now @solferreira.` (*new 2026-10-05, blessed
 (jakob 2026-10-05)*).
 
-**Change your email** (`ChangeEmail`) names why it is guarded: `Your
-email signs you in, and it is the only way back if you lose your
-password — so a change is proved from both ends.` Fields `New email` and
+**Change your email** (`ChangeEmail`) carries no body under its title
+(jakob 2026-11-12). Fields `New email` and
 `Current password`, the commitment `Change email`, and what happens
 next, with the address named rather than described: `A code goes to
 sol@solferreira.art and a link to the new address. Your email is
@@ -3605,8 +3602,7 @@ the same way** — the thing, an em dash, `coming soon`, then, where it
 says more than the headline, one sentence of what will be there:
 
 - `Chats — coming soon`, alone: chats are conversations (jakob 2026-11-12).
-- `Wallet — coming soon. Your earnings will be here.` *(Ruled by jakob
-  2026-09-25.)*
+- `Wallet — coming soon`, alone (jakob 2026-11-12).
 - `The Sky — coming soon` · `Your sky — every account a star, sized by
   your own paths to it.`
 

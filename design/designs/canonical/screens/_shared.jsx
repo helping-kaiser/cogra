@@ -3548,19 +3548,6 @@ function ChangeHandleBody({ value = "" } = {}) {
         >
           Change your handle
         </h1>
-        <p
-          style={{
-            margin: "8px 0 0",
-            fontSize: "var(--text-body-medium)",
-            fontWeight: "var(--text-body-medium--font-weight)",
-            lineHeight: "var(--text-body-medium--line-height)",
-            letterSpacing: "var(--text-body-medium--letter-spacing)",
-            color: "var(--text-secondary)",
-          }}
-          data-node="body"
-        >
-          <NameInText text="@sol is how people mention and find you. Everything you have published stays yours — the handle is a name, not the account." />
-        </p>
 
         <div style={{ marginTop: 32 }}>
           <TextField
