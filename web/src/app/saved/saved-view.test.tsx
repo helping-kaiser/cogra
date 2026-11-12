@@ -390,6 +390,22 @@ describe("SavedScreen — the unsave is the card's own ⋮ first row", () => {
     expect(push).toHaveBeenCalledWith("/compose?reference=u3");
   });
 
+  // ProfileMenu.md:19 on the person card's ⋮: the card's host does not know
+  // the reader, the session does (`reader-state.ts`) — an applicant is told
+  // AND NEVER the wizard opens.
+  it("an_applicants_mention_on_a_person_card_says_post_once_in_and_opens_no_wizard", async () => {
+    push.mockClear();
+    serve(THREE);
+    renderWithProviders(<SavedScreen />, { store: signedIn(), reader: "APPLICANT" });
+    await screen.findByTestId("saved-list");
+    personMenu();
+    fireEvent.click(screen.getByTestId("saved.menuSheet.mention"));
+    expect(await screen.findByTestId("saved.snackbar.message")).toHaveTextContent(
+      "You can post once you're in.",
+    );
+    expect(push).not.toHaveBeenCalledWith(expect.stringMatching(/^\/compose/));
+  });
+
   it("unsave_takes_the_card_and_undo_puts_it_back_where_it_was", async () => {
     const log = bookmarkLog();
     serve(THREE);

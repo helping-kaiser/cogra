@@ -60,10 +60,13 @@ function mount({
   over = {},
   notify = () => {},
   editor,
+  accountState,
 }: {
   host?: Host;
   /** The reader's account; null is a guest. */
   reader?: string | null;
+  /** What the session's account read answered (`reader-state.ts`). */
+  accountState?: "APPLICANT" | "MEMBER";
   over?: Record<string, unknown>;
   notify?: (message: string) => void;
   /** A stand-in for the shell's editor, to drive its two exits. */
@@ -86,6 +89,7 @@ function mount({
     {
       store: reader === null ? createTokenStore() : signedIn(reader),
       writeSigner: fakeWriteSigner(),
+      reader: accountState,
     },
   );
 }
@@ -348,6 +352,31 @@ describe("Edit on your own comment off the thread", () => {
     expect(card).not.toHaveTextContent("old words");
     expect(screen.getByTestId("card-pending")).toBeInTheDocument();
     expect(routerPush).not.toHaveBeenCalled();
+  });
+});
+
+describe("an applicant at the comment card's menu", () => {
+  // ApplicantFeed.md:49's NEVER the wizard opens, at a comment's Cite, with
+  // ProfileMenu.md:19's answer on the host's snackbar.
+  it.each(["history", "saved", "profile"] as const)(
+    "an_applicants_cite_on_%s_says_post_once_in_and_opens_no_wizard",
+    async (host) => {
+      const notify = vi.fn();
+      mount({ host, accountState: "APPLICANT", notify });
+      fireEvent.click(within(await openMenu(host)).getByTestId(`${host}.menuSheet.cite`));
+      expect(notify).toHaveBeenCalledWith("You can post once you're in.");
+      expect(routerPush).not.toHaveBeenCalled();
+      expect(screen.queryByTestId("join-prompt")).toBeNull();
+    },
+  );
+
+  // A member's Cite is unchanged: the wizard, the comment staged.
+  it("a_members_cite_opens_the_wizard_with_the_comment_staged", async () => {
+    const notify = vi.fn();
+    mount({ host: "history", accountState: "MEMBER", notify });
+    fireEvent.click(within(await openMenu()).getByTestId("history.menuSheet.cite"));
+    expect(routerPush).toHaveBeenCalledWith("/compose?reference=c1");
+    expect(notify).not.toHaveBeenCalled();
   });
 });
 

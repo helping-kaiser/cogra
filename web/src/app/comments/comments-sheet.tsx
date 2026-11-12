@@ -85,6 +85,7 @@ import { REPORTED, REPORT_NOT_SENT } from "@/lib/ui2/post-menu-host";
 import { ReportConfirm } from "@/lib/ui2/report-confirm";
 import { sendReport } from "@/lib/api/report-api";
 import { COMMENT_SETTLING } from "@/lib/compose/comment-edit-door";
+import { useReaderIsApplicant } from "@/lib/session/reader-state";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { StageHost } from "@/lib/ui2/media/stage-host";
 import { commentTarget, ReplyWizard } from "@/app/posts/[id]/reply/reply-wizard-view";
@@ -235,6 +236,7 @@ export function CommentsSheet({
   const router = useRouter();
   const viewerId = useActiveAccountId();
   const phase = useAuthPhase();
+  const applicant = useReaderIsApplicant();
   const guard = useAuthGuard();
 
   const [comments, setComments] = useState<readonly CommentView[]>([]);
@@ -707,6 +709,7 @@ export function CommentsSheet({
       writes,
       notify,
       onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
+      applicant,
       navigate: (route) => router.push(route),
       openCitedBy,
       openOpinions,

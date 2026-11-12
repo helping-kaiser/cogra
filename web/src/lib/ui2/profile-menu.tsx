@@ -36,6 +36,7 @@ import { hideRow, hiddenPersonOf, type ActorLike } from "@/lib/hidden/hide-row";
 import { useHiddenSet } from "@/lib/hidden/provider";
 import { useSavedWrites } from "@/lib/saved/provider";
 import { saveRow, type Notify } from "@/lib/saved/save-row";
+import { POST_LOCKED, useReaderIsApplicant } from "@/lib/session/reader-state";
 import { useAuthGuard } from "@/lib/session/runtime";
 import type { DataNode } from "@/lib/ui/data-node";
 import { LINK_COPIED, shareLink } from "@/lib/ui/share";
@@ -45,9 +46,6 @@ import { ReportConfirm } from "@/lib/ui2/report-confirm";
 import { REPORTED, REPORT_NOT_SENT } from "@/lib/ui2/post-menu-host";
 
 export type ProfileMenuKind = "own" | "other" | "deleted";
-
-/** ProfileMenu.md:19 — an applicant's Mention; the applicant family's `once you're in`. */
-export const POST_LOCKED = "You can post once you're in.";
 
 const SHEET = { path: "profile.menuSheet" };
 const pageRow = (name: string): DataNode => ({ path: `profile.menuSheet.${name}` });
@@ -64,15 +62,12 @@ export function ProfileMenu({
   kind,
   profile,
   signedIn,
-  applicant = false,
   notify,
   feed,
 }: {
   kind: ProfileMenuKind;
   profile: ActorLike & { handle: string; viewerBookmarkedAt?: string | null };
   signedIn: boolean;
-  /** The reader is an applicant, where the host knows it: Mention tells rather than opens. */
-  applicant?: boolean;
   /** The host's own snackbar. */
   notify: Notify;
   /** The menu on a profile feed card instead of the profile page. */
@@ -83,6 +78,10 @@ export function ProfileMenu({
   const guard = useAuthGuard();
   const writes = useSavedWrites();
   const hidden = useHiddenSet();
+  // THE READER'S STATE IS THE SESSION'S, not the host's (`reader-state.ts`):
+  // a card's host does not know who is reading, and the page's own read is
+  // not the one every door shares.
+  const applicant = useReaderIsApplicant();
   const [open, setOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [sending, setSending] = useState(false);
