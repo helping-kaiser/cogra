@@ -3591,13 +3591,6 @@ function ChangeHandleBody({ value = "" } = {}) {
         <div style={{ marginTop: 24 }}>
           <WaitingCommit id="change-handle" label="Change handle" reason="Waiting for a new handle" waiting={!value} node="commit" />
         </div>
-
-        <div style={{ marginTop: 24 }}>
-          <QuietNote node="note">
-            Links to your old handle stop working the moment you change it, and anyone can claim it
-            afterwards.
-          </QuietNote>
-        </div>
       </div>
     </>
   );

@@ -2113,10 +2113,9 @@ have published stays yours — the handle is a name, not the account.`
 The field is `New handle` with the rules where they are typed:
 `3 to 30 characters: letters, numbers and underscore. Handles are always
 lowercase.` — the fold is said because a reader who types capitals will
-otherwise think the field ate them. The commitment is `Change handle`,
-and the cost is last and unsoftened: `Links to your old handle stop
-working the moment you change it, and anyone can claim it afterwards.`
-The press asks first (jakob 2026-10-05, §11's think-twice list;
+otherwise think the field ate them. The commitment is `Change handle`;
+the cost is said once, unsoftened, where it is read at the press (jakob
+2026-11-11, C4). The press asks first (jakob 2026-10-05, §11's think-twice list;
 `ChangeHandleConfirm`): `Change your handle to @solferreira?` over
 `Links to @sol stop working the moment it changes, and anyone can claim
 @sol afterwards.`, with `Keep it` filled and `Change it` the quiet answer
@@ -3678,9 +3677,8 @@ recorded so the registry is whole.
   stays readable.`
 - **5** — `Someone brings you in` · `You are here because @mira invited
   you. @mira's link is your first way in to everyone else, and theirs
-  to you.` (the inviter by handle, *Naming*; jakob 2026-11-11), with the quiet note `A friend who's already in has to let you
-  in. Ask around once you have verified your email.` (*blessed (jakob
-  2026-10-07)*)
+  to you.` (the inviter by handle, *Naming*; jakob 2026-11-11), and no note
+  under it (jakob 2026-11-11, C3).
 
 ## About
 
