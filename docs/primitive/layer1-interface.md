@@ -1629,7 +1629,7 @@ recognition quantity.
    debits, recompute historical standing, or reverse title. The
    authoritative order stays authoritative even when proven non-compliant
    (a *compliant* order satisfies both placement conditions); by finalizing
-   an act the host attests it held and validated the full dependency
+   an act the host attests it received and validated the full dependency
    opening.
 
 **Submission-path disclosure (`subsec:deployment:concealment-entropy`).**
