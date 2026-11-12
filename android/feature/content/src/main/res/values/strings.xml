@@ -182,6 +182,10 @@
     <string name="content_post_saved">Signed — landing on the graph</string>
     <string name="content_comment_signin">Sign in or join to comment</string>
     <string name="content_comment_hint">Add a comment</string>
+    <!-- An applicant's Add a comment and Reply on the thread (ReplyEntry.md:25;
+         copy-voice.md, the applicant-foot family) — the profile's Reply says
+         the same (`profile_reply_locked`). -->
+    <string name="content_comment_locked">You can comment once you\'re in.</string>
     <string name="content_comment_submit">Sign comment</string>
     <string name="content_comments_heading">Comments</string>
     <string name="content_comments_empty">No comments yet.</string>
