@@ -168,10 +168,11 @@ async fn newest_wins_within_a_bundle(pool: PgPool) {
     assert!(!current[0].pending);
 }
 
-/// Inside one epoch the causal key orders the bundle: act_time decides
-/// first, and position breaks a tie at equal act_time.
+/// Inside one epoch the key of record orders the bundle: the later
+/// position is the newer claim, whatever act time each record carries —
+/// a time comparison never decides precedence (layer1-interface.md §8.3).
 ///
-/// Inside one epoch act time orders a bundle and position breaks the tie.
+/// Inside one epoch position orders a bundle, whatever act time the records carry.
 /// ´claim:topics:the-causal-key-orders-a-bundle-inside-one-epoch´
 #[sqlx::test(migrations = "../../migrations")]
 async fn within_one_epoch_the_causal_key_decides(pool: PgPool) {
@@ -191,7 +192,10 @@ async fn within_one_epoch_the_causal_key_decides(pool: PgPool) {
         .await
         .expect("folds");
     assert_eq!(current.len(), 1);
-    assert_eq!(current[0].relevance, 0.7, "highest act_time is newest");
+    assert_eq!(
+        current[0].relevance, 0.4,
+        "the latest position is newest, though position 2 carries the highest act time"
+    );
 
     land(
         &pool,

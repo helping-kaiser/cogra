@@ -80,7 +80,6 @@ so the hop re-folds from the answer alone.
 type HopMember {
 	recordId: String!
 	landingEpoch: Int!
-	actTime: Int!
 	position: Int!
 	pDirected: Float!
 	pInterest: Float!

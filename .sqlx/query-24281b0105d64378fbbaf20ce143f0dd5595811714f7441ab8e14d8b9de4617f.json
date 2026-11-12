@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT version_id, created_at, landed_epoch, position,\n                          redaction_reason IS NOT NULL AS \"redacted!\"\n                   FROM post_versions WHERE post_id = $1\n                   ORDER BY pending DESC,\n                            landed_epoch DESC NULLS LAST,\n                            position DESC NULLS LAST,\n                            created_at DESC, version_id DESC\n                   LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "version_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "landed_epoch",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "position",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "redacted!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "24281b0105d64378fbbaf20ce143f0dd5595811714f7441ab8e14d8b9de4617f"
+}

@@ -391,7 +391,6 @@ impl Chain<'_> {
                 rows: ActRows {
                     order: Some(content_store::LandingOrder {
                         landed_epoch: r.epoch,
-                        act_time: r.act_time,
                         position: r.position,
                     }),
                     instant: None,

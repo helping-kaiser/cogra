@@ -11,7 +11,7 @@
 //! (`content::discard_pending_many`), and the previous version renders
 //! again.
 
-use crate::content::LandingOrder;
+use crate::content::LandingStamp;
 use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
 
@@ -52,7 +52,6 @@ pub async fn current_profile(
          WHERE actor_id = $1
          ORDER BY pending DESC,
                   landed_epoch DESC NULLS LAST,
-                  act_time DESC NULLS LAST,
                   position DESC NULLS LAST,
                   created_at DESC, version_id DESC
          LIMIT 1",
@@ -77,7 +76,6 @@ pub async fn landed_profile(
          FROM actor_profile_versions
          WHERE actor_id = $1 AND NOT pending
          ORDER BY landed_epoch DESC NULLS LAST,
-                  act_time DESC NULLS LAST,
                   position DESC NULLS LAST,
                   created_at DESC, version_id DESC
          LIMIT 1",
@@ -104,7 +102,7 @@ pub async fn insert_profile_version(
     bio: Option<&str>,
     avatar_id: Option<Uuid>,
     website_url: Option<&str>,
-    order: Option<LandingOrder>,
+    landing: Option<LandingStamp>,
     created_at: Timestamp,
 ) -> Result<bool, sqlx::Error> {
     Ok(sqlx::query!(
@@ -118,11 +116,11 @@ pub async fn insert_profile_version(
         bio,
         avatar_id,
         website_url,
-        order.is_none(),
+        landing.is_none(),
         created_at,
-        order.map(|o| o.landed_epoch),
-        order.map(|o| o.act_time),
-        order.map(|o| o.position),
+        landing.map(|l| l.order.landed_epoch),
+        landing.map(|l| l.act_time),
+        landing.map(|l| l.order.position),
     )
     .execute(&mut **tx)
     .await?
@@ -139,7 +137,7 @@ pub async fn land_profile_version(
     tx: &mut Transaction<'_, Postgres>,
     actor_id: Uuid,
     created_at: Timestamp,
-    order: LandingOrder,
+    landing: LandingStamp,
 ) -> Result<bool, sqlx::Error> {
     Ok(sqlx::query!(
         "UPDATE actor_profile_versions
@@ -148,9 +146,9 @@ pub async fn land_profile_version(
          WHERE actor_id = $1 AND created_at = $2 AND pending",
         actor_id,
         created_at,
-        order.landed_epoch,
-        order.act_time,
-        order.position,
+        landing.order.landed_epoch,
+        landing.act_time,
+        landing.order.position,
     )
     .execute(&mut **tx)
     .await?

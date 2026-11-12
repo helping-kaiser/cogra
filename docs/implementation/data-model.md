@@ -45,9 +45,10 @@ adds nothing. Conventions:
   identity. Hyper-edge legs are child rows keyed (record, leg).
 - **Columns.** The fields consumed by traversal, folds, and
   display resolution: family, author, target(s), the two authored
-  parameters, tier metadata, landing epoch, the authoritative
-  causal key (act time, position — what `≺` and newest-wins folds
-  read), the host-cached edge-projection maturity `τ_e` (an L1
+  parameters, tier metadata, the key of record (landing epoch,
+  position — what `≺` and newest-wins folds read), the act time the
+  record carries (a recomputable summary of that order, deciding no
+  precedence), the host-cached edge-projection maturity `τ_e` (an L1
   by-product; `w̃`'s order-derived ingredient), the payload-marked
   flag, and the payload-witness reference.
 - **Indexes serve the standing query shapes:** by **author**
@@ -55,7 +56,7 @@ adds nothing. Conventions:
   and per-author bundle folds), by **target** (fold inputs,
   display resolution), by **(family, target, epoch)** (membership,
   edit, and ballot folds — newest-wins reads, resolved within an
-  epoch by the causal key), and by **epoch** (ingestion,
+  epoch by position), and by **epoch** (ingestion,
   incremental recompute).
 - **An epoch cursor** records the last fully-ingested epoch —
   0, the empty boundary, before the first, since epochs and the
@@ -125,7 +126,6 @@ CREATE TABLE network_parameter_versions (
 CREATE INDEX network_parameter_versions_current_idx
     ON network_parameter_versions (parameter,
                                    landed_epoch DESC NULLS LAST,
-                                   act_time     DESC NULLS LAST,
                                    position     DESC NULLS LAST,
                                    created_at DESC, version_id DESC);
 ```
@@ -674,10 +674,12 @@ schema encodes this as a split per content kind:
 - A **versions table** (`post_versions`, …) holds the mutable
   display fields as append-only rows, each keyed by its own
   `version_id` and ordered by the **landing coordinates of the
-  record that promoted it** — `(landed_epoch, act_time, position)`,
-  the same triple the entity rows carry. The **current** value is
-  the version whose record landed last; the entity's `updated_at`
-  is derived as that version's `created_at` — no stored column.
+  record that promoted it** — its key of record `(landed_epoch,
+  position)`, the same pair the entity rows carry; the row also
+  stamps that record's `act_time`, which orders nothing. The
+  **current** value is the version whose record landed last; the
+  entity's `updated_at` is derived as that version's `created_at` —
+  no stored column.
 
 A **redaction tombstone** marks a version row: its
 `redaction_reason` is non-null, its content fields are empty, and
@@ -708,8 +710,8 @@ substrate-visible verdict is the Tag record
 ([moderation.md](../instances/moderation.md)).
 
 Current-version reads order
-`landed_epoch DESC NULLS LAST, act_time DESC NULLS LAST,
-position DESC NULLS LAST, created_at DESC, version_id DESC`
+`landed_epoch DESC NULLS LAST, position DESC NULLS LAST,
+created_at DESC, version_id DESC`
 and take the first row per entity, served by the table's
 current-version index. `created_at` is display metadata: it decides
 only between rows the graph never ordered — a genesis or
@@ -999,7 +1001,6 @@ CREATE UNIQUE INDEX actor_profile_versions_pending_instant_key
 CREATE INDEX actor_profile_versions_current_idx
     ON actor_profile_versions (actor_id, pending DESC,
                                landed_epoch DESC NULLS LAST,
-                               act_time     DESC NULLS LAST,
                                position     DESC NULLS LAST,
                                created_at DESC, version_id DESC);
 ```
@@ -1012,8 +1013,9 @@ also rides the payload envelope's guild map, so the L1 witness
 attests the binding; the column is a verified cache of a graph
 fact, same class as `target_id`. The landing-order columns
 (`landed_epoch`, `act_time`, `position`) cache the genesis
-record's authoritative causal key and are the chronological
-listings' sort key — the record set's own order, never wall clock
+record's key of record `(landed_epoch, position)` and the act time
+it carries. The key is the chronological listings' sort key — the
+record set's own order, never wall clock
 ([graph-model.md §2](../primitive/graph-model.md)); like every
 mirror-derived column they are rebuildable and never
 authoritative.
@@ -1025,7 +1027,7 @@ they sign it
 display row like any other, readable by everyone, from that moment
 on. The landing-order columns are its pending mark — all three are
 NULL until the genesis record lands, because a pending write has
-no causal key yet, and confirm fills them in. They are all-null or
+no key of record yet, and confirm fills them in. They are all-null or
 all-present, never mixed. `created_at` is the authoring instant and
 is set once, so the date never jumps at landing.
 
@@ -1102,7 +1104,6 @@ CREATE TABLE post_versions (
 CREATE INDEX post_versions_current_idx
     ON post_versions (post_id, pending DESC,
                       landed_epoch DESC NULLS LAST,
-                      act_time     DESC NULLS LAST,
                       position     DESC NULLS LAST,
                       created_at DESC, version_id DESC);
 
@@ -1146,7 +1147,6 @@ CREATE TABLE comment_versions (
 CREATE INDEX comment_versions_current_idx
     ON comment_versions (comment_id, pending DESC,
                          landed_epoch DESC NULLS LAST,
-                         act_time     DESC NULLS LAST,
                          position     DESC NULLS LAST,
                          created_at DESC, version_id DESC);
 
@@ -1178,7 +1178,6 @@ CREATE TABLE chat_versions (
 CREATE INDEX chat_versions_current_idx
     ON chat_versions (chat_id,
                       landed_epoch DESC NULLS LAST,
-                      act_time     DESC NULLS LAST,
                       position     DESC NULLS LAST,
                       created_at DESC, version_id DESC);
 
@@ -1223,7 +1222,6 @@ CREATE TABLE chat_message_versions (
 CREATE INDEX chat_message_versions_current_idx
     ON chat_message_versions (chat_message_id,
                               landed_epoch DESC NULLS LAST,
-                              act_time     DESC NULLS LAST,
                               position     DESC NULLS LAST,
                               created_at DESC, version_id DESC);
 
@@ -1248,7 +1246,6 @@ CREATE TABLE item_versions (
 CREATE INDEX item_versions_current_idx
     ON item_versions (item_id,
                       landed_epoch DESC NULLS LAST,
-                      act_time     DESC NULLS LAST,
                       position     DESC NULLS LAST,
                       created_at DESC, version_id DESC);
 

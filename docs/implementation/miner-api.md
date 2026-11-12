@@ -34,8 +34,8 @@ returns the ordered id list. The viewer hands that list to the backend's
 coordinates**
 ([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)):
 the `χ`-bounded node set and the accepted records among those nodes,
-each with its landing epoch, its authoritative causal key
-`(𝕋^act, pos)`, and its host-cached edge-projection maturity `τ_e`.
+each with its key of record `(k, pos)` — landing epoch, then
+position — and its host-cached edge-projection maturity `τ_e`.
 The maturity is a non-normative L1 by-product, shipped because it is
 order-derived over the full prior history — which no bounded slice
 carries — and a distrusting consumer recomputes it from published

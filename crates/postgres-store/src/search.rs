@@ -629,7 +629,7 @@ pub async fn find_scoped(
                claims AS (
                    SELECT l.source AS node, r.author AS author, l.target AS target,
                           l.p_i AS relevance, l.p_d AS confidence, FALSE AS pending,
-                          r.epoch AS epoch, r.act_time AS act_time,
+                          r.epoch AS epoch,
                           r.position AS position, NULL::timestamptz AS authored_at
                    FROM mirror_record_legs l
                    JOIN mirror_records r ON r.record_id = l.record_id
@@ -645,7 +645,7 @@ pub async fn find_scoped(
                              ELSE NULL
                          END
                  UNION ALL
-                   SELECT s.middle, s.author, s.target, s.p_d, s.p_i, TRUE, 0, 0, 0, s.pre_signed_at
+                   SELECT s.middle, s.author, s.target, s.p_d, s.p_i, TRUE, 0, 0, s.pre_signed_at
                    FROM staged_writes s
                    WHERE s.author = $8
                      AND s.family = 'tag'
@@ -668,7 +668,7 @@ pub async fn find_scoped(
                        SELECT DISTINCT ON (author, node, target) node, target, relevance, confidence
                        FROM claims
                        ORDER BY author, node, target, pending DESC,
-                                epoch DESC, act_time DESC, position DESC, authored_at DESC
+                                epoch DESC, position DESC, authored_at DESC
                    ) w
                    WHERE NOT (w.relevance = 0 AND w.confidence = 0)
                ),
@@ -692,7 +692,6 @@ pub async fn find_scoped(
                           FROM comment_versions v WHERE v.comment_id = c.id
                           ORDER BY pending DESC,
                                    landed_epoch DESC NULLS LAST,
-                                   act_time DESC NULLS LAST,
                                    position DESC NULLS LAST,
                                    created_at DESC, version_id DESC
                           LIMIT 1)
@@ -827,7 +826,7 @@ pub async fn find_scoped(
                claims AS (
                    SELECT l.source AS node, r.author AS author, l.target AS target,
                           l.p_i AS relevance, l.p_d AS confidence, FALSE AS pending,
-                          r.epoch AS epoch, r.act_time AS act_time,
+                          r.epoch AS epoch,
                           r.position AS position, NULL::timestamptz AS authored_at
                    FROM mirror_record_legs l
                    JOIN mirror_records r ON r.record_id = l.record_id
@@ -843,7 +842,7 @@ pub async fn find_scoped(
                              ELSE NULL
                          END
                  UNION ALL
-                   SELECT s.middle, s.author, s.target, s.p_d, s.p_i, TRUE, 0, 0, 0, s.pre_signed_at
+                   SELECT s.middle, s.author, s.target, s.p_d, s.p_i, TRUE, 0, 0, s.pre_signed_at
                    FROM staged_writes s
                    WHERE s.author = $8
                      AND s.family = 'tag'
@@ -866,7 +865,7 @@ pub async fn find_scoped(
                        SELECT DISTINCT ON (author, node, target) node, target, relevance, confidence
                        FROM claims
                        ORDER BY author, node, target, pending DESC,
-                                epoch DESC, act_time DESC, position DESC, authored_at DESC
+                                epoch DESC, position DESC, authored_at DESC
                    ) w
                    WHERE NOT (w.relevance = 0 AND w.confidence = 0)
                ),
@@ -890,7 +889,6 @@ pub async fn find_scoped(
                           FROM comment_versions v WHERE v.comment_id = c.id
                           ORDER BY pending DESC,
                                    landed_epoch DESC NULLS LAST,
-                                   act_time DESC NULLS LAST,
                                    position DESC NULLS LAST,
                                    created_at DESC, version_id DESC
                           LIMIT 1)
@@ -1034,7 +1032,7 @@ pub async fn count_scoped(
            claims AS (
                SELECT l.source AS node, r.author AS author, l.target AS target,
                       l.p_i AS relevance, l.p_d AS confidence, FALSE AS pending,
-                      r.epoch AS epoch, r.act_time AS act_time,
+                      r.epoch AS epoch,
                       r.position AS position, NULL::timestamptz AS authored_at
                FROM mirror_record_legs l
                JOIN mirror_records r ON r.record_id = l.record_id
@@ -1050,7 +1048,7 @@ pub async fn count_scoped(
                          ELSE NULL
                      END
              UNION ALL
-               SELECT s.middle, s.author, s.target, s.p_d, s.p_i, TRUE, 0, 0, 0, s.pre_signed_at
+               SELECT s.middle, s.author, s.target, s.p_d, s.p_i, TRUE, 0, 0, s.pre_signed_at
                FROM staged_writes s
                WHERE s.author = $6
                  AND s.family = 'tag'
@@ -1073,7 +1071,7 @@ pub async fn count_scoped(
                    SELECT DISTINCT ON (author, node, target) node, target, relevance, confidence
                    FROM claims
                    ORDER BY author, node, target, pending DESC,
-                            epoch DESC, act_time DESC, position DESC, authored_at DESC
+                            epoch DESC, position DESC, authored_at DESC
                ) w
                WHERE NOT (w.relevance = 0 AND w.confidence = 0)
            ),
@@ -1097,7 +1095,6 @@ pub async fn count_scoped(
                       FROM comment_versions v WHERE v.comment_id = c.id
                       ORDER BY pending DESC,
                                landed_epoch DESC NULLS LAST,
-                               act_time DESC NULLS LAST,
                                position DESC NULLS LAST,
                                created_at DESC, version_id DESC
                       LIMIT 1)
