@@ -55,6 +55,42 @@ query Invites {
   }
 }
 
+# Invites' People you let in (`User.vouchedIn`): every person whose
+# admitting vouch is the reader's, newest vouch first. The page holds
+# the whole list — three stand, `Show all` opens the rest in place
+# (Invites.md:15-19) — so the store pages it to the end, a full page at
+# a time, as the hidden set does. The page size is a literal so the
+# client-operation guard prices the call the device actually makes.
+query VouchedInPage($after: String) {
+  me {
+    id
+    vouchedIn(first: 100, after: $after) {
+      edges {
+        cursor
+        vouchedAt
+        node {
+          id
+          handle
+          displayName {
+            value
+            status
+          }
+          ... on User {
+            avatar {
+              url
+              status
+            }
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
 mutation CreateInviteLink($input: CreateInviteLinkInput!) {
   createInviteLink(input: $input) {
     inviteLink {
