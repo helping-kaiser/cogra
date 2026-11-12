@@ -14,6 +14,7 @@ import type { CSSProperties, ReactNode } from "react";
 
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
+import { NameInText } from "@/lib/ui/names";
 
 export function taskCardStyle(notice: boolean): CSSProperties {
   const ground = notice ? "var(--tertiary-container)" : "var(--surface-card)";
@@ -58,15 +59,22 @@ export function TaskCard({
       style={taskCardStyle(tone === "notice")}
     >
       <div className="flex items-start justify-between gap-3">
-        <h2 className="m-0 text-title-medium" {...testAttributes(part(node, "title"))}>
-          {title}
+        {/* TEXT THAT WRAPS (_shared.jsx `TaskCard`, round 40): the title and
+            the body wrap at their spaces; the handle is one unit
+            (`NameInText`) — `All set — waiting on @…` takes the handle whole to
+            its own line, end-cut past one. */}
+        <h2 className="m-0 min-w-0 text-title-medium [overflow-wrap:anywhere]" {...testAttributes(part(node, "title"))}>
+          <NameInText text={title} />
         </h2>
         <span className="flex-none text-primary">
           <Icon name="mark" size={20} pickColor="var(--primary-container)" />
         </span>
       </div>
-      <p className="m-0 text-body-medium text-on-surface-variant" {...testAttributes(part(node, "body"))}>
-        {body}
+      <p
+        className="m-0 text-body-medium text-on-surface-variant [overflow-wrap:anywhere]"
+        {...testAttributes(part(node, "body"))}
+      >
+        <NameInText text={body} />
       </p>
       {children}
     </section>

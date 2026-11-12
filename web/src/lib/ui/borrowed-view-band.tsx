@@ -28,6 +28,7 @@ import { useDeletionBandStands } from "@/lib/deletion/deletion-status";
 import { Button } from "@/lib/ui/button";
 import { MonogramAvatar } from "@/lib/ui/actor-chip";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { nameInText } from "@/lib/ui/names";
 
 export function BorrowedViewBand({
   handle,
@@ -63,8 +64,14 @@ export function BorrowedViewBand({
     // nothing above, so the band butts against the 48px identity band.
     <div {...testAttributes(node, testId)} className="flex items-center gap-2 px-6 pb-3">
       <MonogramAvatar name={name} src={avatarUrl} node={part(node, "avatar")} />
-      <span {...testAttributes(part(node, "line"), `${testId}-line`)} className="flex-1 text-body-small text-on-surface-variant">
-        {line}
+      {/* TEXT THAT WRAPS (BorrowedViewBand.jsx, round 40): the line wraps at
+          its spaces; the handle is one unit (`nameInText`), whole on a line or
+          end-cut, and the line yields so the action keeps its width. */}
+      <span
+        {...testAttributes(part(node, "line"), `${testId}-line`)}
+        className="min-w-0 flex-1 text-body-small text-on-surface-variant [overflow-wrap:anywhere]"
+      >
+        {nameInText(line)}
       </span>
       {actionLabel !== undefined && onAction !== undefined && (
         <span className="flex-none">
