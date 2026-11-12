@@ -202,6 +202,13 @@ fun CograTextField(
      * rather than at the start, where the text overload would leave it.
      */
     focusRequester: FocusRequester? = null,
+    /**
+     * Whether the supporting line spans the field. `TextField.jsx`'s
+     * `FieldSupport` sets the line in a row, where it is as wide as its words;
+     * `PasswordField.jsx` sets it straight into the field's column, where it
+     * stretches across — [CograPasswordField] passes true.
+     */
+    supportSpans: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
     val reading = fieldCountReading(value, cap, used)
@@ -254,7 +261,7 @@ fun CograTextField(
                 trailing()
             }
         }
-        FieldSupportRow(error, hint, reading, testTag, node)
+        FieldSupportRow(error, hint, reading, testTag, node, supportSpans)
     }
 }
 
@@ -408,36 +415,33 @@ private fun FieldSupportRow(
     reading: FieldCountReading?,
     testTag: String?,
     node: DataNode?,
+    spans: Boolean,
 ) {
     if (error == null && hint == null && reading == null) return
     val colors = MaterialTheme.colorScheme
     // A registered field names its one supporting line `support`, in
     // either state; an unregistered one keeps the `_error` tag.
     val lineTag = node?.div("support")?.tag ?: testTag?.let { if (error != null) "${it}_error" else "${it}_hint" }
+    // The line's own node is as wide as its words unless the field spans it
+    // ([CograTextField]'s `supportSpans`); the box around it takes the row,
+    // so the late counter still sits at the far end.
+    val lineWidth = if (spans) Modifier.fillMaxWidth() else Modifier
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
     ) {
-        if (error != null) {
-            Text(
-                text = error,
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.error,
-                modifier = Modifier
-                    .weight(1f)
-                    .semantics { liveRegion = LiveRegionMode.Polite }
-                    .then(if (lineTag != null) Modifier.testTag(lineTag) else Modifier),
-            )
-        } else if (hint != null) {
-            Text(
-                text = hint,
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.onSurfaceVariant,
-                modifier = Modifier
-                    .weight(1f)
-                    .then(if (lineTag != null) Modifier.testTag(lineTag) else Modifier),
-            )
+        if (error != null || hint != null) {
+            Box(Modifier.weight(1f)) {
+                Text(
+                    text = error ?: hint.orEmpty(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (error != null) colors.error else colors.onSurfaceVariant,
+                    modifier = lineWidth
+                        .then(if (error != null) Modifier.semantics { liveRegion = LiveRegionMode.Polite } else Modifier)
+                        .then(if (lineTag != null) Modifier.testTag(lineTag) else Modifier),
+                )
+            }
         } else {
             Spacer(Modifier.weight(1f))
         }
