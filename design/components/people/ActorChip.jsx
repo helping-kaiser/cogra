@@ -187,3 +187,76 @@ export function ActorChip({ handle, displayName, href, onClick, avatarSrc, redac
     </a>
   );
 }
+
+/* A NAME INSIDE A ONE-LINE PLACE (jakob 2026-11-11, round 40). A page title, a
+   menu row, a row's title and its aside never wrap; where a handle stands in
+   their words — `@ada commented on your post`, `Hide @ada`, `on @mira` — the
+   HANDLE is what is cut with "…", and the words around it keep their room
+   first: `@mmmmmmmm… commented on your post`. The chip's own arithmetic at line
+   scale: the words are `flex: none`, the handle the one part that yields
+   (`minWidth: 0` and the clip). Every one-line master clips its own line at
+   the end ("…", the why-line's way — `Through @ada`) and passes its text
+   through `nameInLine`: where the handle ENDS the line (`Hide @ada`, `Unhide @ada`, `on
+   @mira`, a title that is only `@ada`) the end clip already cuts the handle
+   and keeps the words, so the text returns untouched; only words AFTER the
+   handle split the line, so a line that fits draws exactly what it drew. The
+   first handle is the one that yields. */
+/* A NAME INSIDE TEXT THAT WRAPS — `nameInLine`'s wrapping-text twin (jakob
+   2026-11-11, round 40: "i really dislike when a handle or name wraps an lives
+   in multiple lines"). The sentence wraps at its spaces and is never cut as a
+   whole; a handle, or a person's name passed in `names`, is ONE UNIT that never
+   stands on two lines: it moves whole to the next line when the rest of the
+   current one cannot hold it, and a unit longer than a full line is cut at its
+   end with "…", as a one-line place cuts it. Punctuation right after it — `?`,
+   `.`, `,`, `'s` — rides with it, whole and never swallowed by the cut: the
+   unit is [the name: yields, clipped][its punctuation: never shrinks], kept on
+   one line. Every wrapping master passes its text through `nameInText`; text
+   naming nobody returns untouched. */
+const HANDLE_IN_TEXT = /(?<![\w@])@[A-Za-z0-9_]+/g;
+const UNIT_TAIL = /^(?:['’]s\b|[?.,!:;)’]+)/;
+const UNIT = { display: "inline-flex", maxWidth: "100%", verticalAlign: "top", whiteSpace: "nowrap" };
+const escapeName = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+export function nameInText(text, names = []) {
+  if (Array.isArray(text)) return text.map((part, index) => <React.Fragment key={index}>{nameInText(part, names)}</React.Fragment>);
+  if (typeof text !== "string") return text;
+  const pattern = names.length ? new RegExp(`${HANDLE_IN_TEXT.source}|${names.map(escapeName).join("|")}`, "g") : new RegExp(HANDLE_IN_TEXT.source, "g");
+  const out = [];
+  let last = 0;
+  for (let found = pattern.exec(text); found; found = pattern.exec(text)) {
+    const end = found.index + found[0].length;
+    const tail = UNIT_TAIL.exec(text.slice(end))?.[0] ?? "";
+    out.push(text.slice(last, found.index));
+    out.push(
+      <span key={found.index} style={UNIT} data-name-unit="">
+        <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{found[0]}</span>
+        {tail && <span style={{ flex: "none" }}>{tail}</span>}
+      </span>,
+    );
+    last = end + tail.length;
+  }
+  if (!out.length) return text;
+  out.push(text.slice(last));
+  return out;
+}
+/* The same, as an element, for the screens: `<NameInText text={…} />`. */
+export function NameInText({ text, names }) {
+  return <>{nameInText(text, names)}</>;
+}
+
+const HANDLE_IN_LINE = /(?<![\w@])@[A-Za-z0-9_]+/;
+const LINE_WORDS = { flex: "none", whiteSpace: "pre" };
+export function nameInLine(text) {
+  if (typeof text !== "string") return text;
+  const found = HANDLE_IN_LINE.exec(text);
+  if (!found) return text;
+  const before = text.slice(0, found.index);
+  const after = text.slice(found.index + found[0].length);
+  if (!after.trim()) return text;
+  return (
+    <span style={{ display: "flex", minWidth: 0, whiteSpace: "nowrap" }} data-name-line="">
+      {before && <span style={LINE_WORDS}>{before}</span>}
+      <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{found[0]}</span>
+      {after && <span style={LINE_WORDS}>{after}</span>}
+    </span>
+  );
+}

@@ -12,6 +12,14 @@ ALWAYS People you let in holds one row per person the reader vouched in, the new
 
 ALWAYS a row in People you let in carries no control of its own and wears the chevron of a row that opens
 
+ALWAYS People you let in shows its three newest rows and under the third invites.peopleDoor, Show all, an inline action under the rows GIVEN the reader has vouched more than three people in
+
+ALWAYS People you let in shows every row and no invites.peopleDoor GIVEN the reader has vouched three people in or fewer
+
+WHEN tap invites.peopleDoor -> every person the reader vouched in stands in the list, the newest first, in place AND invites.peopleDoor leaves AND NEVER anything else leaves the page AND NEVER a control to show fewer appears
+
+ALWAYS the page carries New invite and People you let in, and neither Applications nor Live links, their labels and empty lines with them, GIVEN no application waits and no link is live and the reader has vouched someone in
+
 WHEN tap invites.person -> that person's profile opens AND its back arrow reads Back to Invites
 
 ALWAYS invites.redactedPerson keeps its place and its age, its disc keeping its space and filled with nothing, invites.redactedPerson.title reading Deleted account in the system's voice and no handle under it GIVEN the person's account was deleted
@@ -80,7 +88,9 @@ WHEN a link's Revoke lands -> the card leaves the page AND the snackbar reads In
 
 WHEN a link's Revoke lands -> every application already staged through the link stays in the queue, approvable
 
-WHEN a link's Revoke lands GIVEN nothing else stands on the page -> the empty Invites stands
+WHEN a link's Revoke lands GIVEN no application waits and no other link is live and the reader has vouched no one in -> the empty Invites stands
+
+WHEN a link's Revoke lands GIVEN no application waits and no other link is live and the reader has vouched someone in -> New invite and People you let in stand AND NEVER the empty Invites stands
 
 WHEN a link's Revoke does not go through -> the card stays AND the fault answers in the network fault's grammar
 

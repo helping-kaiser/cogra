@@ -1,5 +1,6 @@
 import React from "react";
 import { Icon } from "../navigation/Icon.jsx";
+import { nameInText } from "../people/ActorChip.jsx";
 import { QuietNote } from "./QuietNote.jsx";
 
 /* THE SETTINGS ROW AND ITS GROUP (the settings round) — one anatomy every
@@ -193,8 +194,8 @@ export function SettingsRow({
         {label}
       </span>
       {status && (
-        <span style={{ ...STATUS_TYPE, overflow: "hidden", textOverflow: "ellipsis" }} data-node={node && "status"}>
-          {status}
+        <span style={{ ...STATUS_TYPE, overflow: "hidden", textOverflow: "ellipsis", overflowWrap: "anywhere" }} data-node={node && "status"}>
+          {nameInText(status)}
         </span>
       )}
     </span>
