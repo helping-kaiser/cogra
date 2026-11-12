@@ -144,3 +144,31 @@ describe("the landing", () => {
     expect(screen.getByTestId("probe")).toHaveTextContent("MEMBER");
   });
 });
+
+describe("the landing never demotes", () => {
+  // The subscription only ever lets an applicant in: a member's reader state
+  // is never set back by the loop's reports.
+  it.each([{ kind: "awaitingApproval" }, { kind: "awaitingLanding" }, { kind: "member" }] as const)(
+    "a_members_state_stands_whatever_the_loop_reports ($kind)",
+    (report) => {
+      let progress: RegistrationProgress | null = null;
+      const listeners = new Set<() => void>();
+      const flow: RegistrationFlow = {
+        progress: () => progress,
+        subscribe: (listener) => {
+          listeners.add(listener);
+          return () => listeners.delete(listener);
+        },
+        ensureAdvancing: () => {},
+        consumeLanded: () => false,
+        reset: () => {},
+      };
+      renderWithProviders(<Probe />, { store: signedIn(), reader: "MEMBER", flow });
+      act(() => {
+        progress = report as RegistrationProgress;
+        for (const listener of listeners) listener();
+      });
+      expect(screen.getByTestId("probe")).toHaveTextContent("MEMBER");
+    },
+  );
+});
