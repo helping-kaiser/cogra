@@ -51,8 +51,8 @@ anything not in the feedback closure below is a Layer 2's to reimplement
   together with the record it leaves (`def:comparator:burn-primitive`). A
   *realization* satisfies requirements R1–R11 (§1.1); its use at epoch
   closure also satisfies the marker-bound settlement contract (§1.2). The
-  network reads a realization through exactly four mathematical interface
-  objects, plus that contract at epoch closure. The burn amount map is
+  network takes exactly four interface objects as computational inputs from
+  a realization (`def:comparator:burn-interface`). The burn amount map is
   neutral because the primitive records a destroyed magnitude and declines
   to price it. The primitive knows
   nothing of clusters, feeds, or rewards.
