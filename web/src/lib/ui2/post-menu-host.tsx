@@ -20,7 +20,7 @@ import { useApolloClient } from "@apollo/client/react";
 import type { PostView } from "@/lib/api/content-api";
 import { withRemoval } from "@/lib/api/removal-api";
 import { sendReport } from "@/lib/api/report-api";
-import { hideAct, hiddenPersonOf } from "@/lib/hidden/hide-row";
+import { hideRow, hiddenPersonOf } from "@/lib/hidden/hide-row";
 import { useHiddenSet } from "@/lib/hidden/provider";
 import type { License } from "@/lib/license";
 import { useSavedWrites } from "@/lib/saved/provider";
@@ -154,16 +154,19 @@ export function PostMenuHost({
           }),
           // HIDING NAMES ITS PERSON AND ASKS NOTHING (FeedHidden.md:3): the
           // host's rows take the person out, and its snackbar offers Undo.
+          // While the author is hidden the row reads Unhide and unhides
+          // (ReaderPostMenu.md:19-21; round 41).
           hide:
             post.author == null
               ? undefined
-              : hideAct({
+              : hideRow({
                   set: hidden,
                   person: hiddenPersonOf(post.author),
                   origin: post.id,
                   notify,
                   onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
                 }),
+          onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
           testIdPrefix: testId,
           rowNode: nodes.row,
         });
@@ -187,14 +190,19 @@ export function PostMenuHost({
 
   return (
     <>
-      <MenuSheet
-        open={open}
-        onClose={onClose}
-        items={items}
-        ariaLabel="Post actions"
-        testId={`${testId}-sheet`}
-        node={nodes.sheet}
-      />
+      {/* MOUNTED FROM THE FIRST ⋮ ON: a host whose page carries a menu of its
+          own under the same registered node (the profile's `profile.menuSheet`)
+          holds one such sheet until a card's menu is asked for. */}
+      {post !== null && (
+        <MenuSheet
+          open={open}
+          onClose={onClose}
+          items={items}
+          ariaLabel="Post actions"
+          testId={`${testId}-sheet`}
+          node={nodes.sheet}
+        />
+      )}
       {licenseShown !== null && (
         <LicenseSheet
           open={licenseOpen}

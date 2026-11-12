@@ -1441,7 +1441,11 @@ internal fun KeyAbsentNotice(testTagPrefix: String, noBackup: Boolean, onKeepPen
     }
 }
 
-/** The fault above the commit row (PadFailed.md): `That didn't send. Try again.`, announced as an alert. */
+/**
+ * The fault above the commit row (PadFailed.md): `That didn't send. Try again.`,
+ * announced as an alert — the master's `TransportError`, a block-wide line at
+ * body-medium in the failure ink (TransportError.jsx:18-27).
+ */
 @Composable
 private fun PadFault(needsKey: Boolean, testTagPrefix: String) {
     if (needsKey) {
@@ -1450,9 +1454,10 @@ private fun PadFault(needsKey: Boolean, testTagPrefix: String) {
     }
     Text(
         text = stringResource(R.string.stance_pad_failed),
-        style = MaterialTheme.typography.bodySmall,
+        style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.error,
         modifier = Modifier
+            .fillMaxWidth()
             .semantics { liveRegion = LiveRegionMode.Assertive }
             .testTag("${testTagPrefix}_stance_failed"),
     )
