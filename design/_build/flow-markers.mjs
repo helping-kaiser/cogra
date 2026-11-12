@@ -1212,15 +1212,17 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Leave — the edit is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
     { n: 4, find: 'data-field="Words"', tag: "div" },
-    { n: 5, find: 'aria-label="Remove this video"', tag: "button" },
-    { n: 6, find: ">Describe the video</button>", tag: "button" },
+    // The `clip` chip draws the clip's tile and its describe row once per value (round 44).
+    { n: 5, find: 'aria-label="Remove this video"', tag: "button", all: true },
+    { n: 6, find: ">Describe the video</button>", tag: "button", all: true },
     { n: 7, find: ">Change the cover</button>", tag: "button" },
     { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
     { n: 9, find: "+ Add a tag", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
     // Both `upload` copies count alike: a new face rides the Edit record (seam 248).
     { n: 11, find: "signing 3 things", tag: "button", all: true },
-    { n: 12, find: ">Sign the edit</button>", tag: "button" },
+    // At rest, and disabled under the `clip` chip's failed copy.
+    { n: 12, find: ">Sign the edit</button>", tag: "button", all: true },
     { n: 12, find: ">Signing the edit…</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
     // The withdrawn tag's Undo (the readme's edit-withdrawal law), as on CommentEdit.
