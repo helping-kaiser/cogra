@@ -10,7 +10,7 @@ use common::l1::census::{LegRole, leg_params};
 use common::l1::handshake::{EpochPackage, PublishedLeg, PublishedRecord};
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::content::{self, ContentCursor, LandingOrder, LandingStamp, Post};
-use postgres_store::{genesis, mirror};
+use postgres_store::{auth, genesis, mirror, references};
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -226,4 +226,259 @@ async fn the_chronicle_orders_by_the_key_of_record(pool: PgPool) {
         .await
         .expect("head");
     assert_eq!(head.as_deref(), Some(ids[2].as_str()));
+}
+
+/// A record of `family` by `author` at `(1, position)`, its act time
+/// falling as the position rises.
+fn record(
+    author: &str,
+    seq: u64,
+    family: Family,
+    position: i64,
+    legs: Vec<PublishedLeg>,
+) -> PublishedRecord {
+    PublishedRecord {
+        act_id: ActId::new(author, seq, family).expect("act id"),
+        author: author.to_string(),
+        family,
+        epoch: 1,
+        act_time: 100 - position,
+        position,
+        payload_marked: false,
+        payload_witness: vec![0; 32],
+        legs,
+    }
+}
+
+fn leg(role: LegRole, source: NodeId, target: NodeId, p_d: f64, p_i: f64) -> PublishedLeg {
+    let (p_d, p_i) = leg_params(role, p_d, p_i);
+    PublishedLeg {
+        role,
+        source,
+        target,
+        p_d,
+        p_i,
+        tau: 0.0,
+    }
+}
+
+async fn ingest_one_epoch(pool: &PgPool, records: Vec<PublishedRecord>) {
+    mirror::ingest_epoch(
+        pool,
+        &EpochPackage {
+            epoch: 1,
+            attested_at: chrono::Utc::now(),
+            records,
+            closure: Default::default(),
+        },
+    )
+    .await
+    .expect("ingests");
+}
+
+/// Of one author's two Registrations in one epoch, the genesis is the
+/// earlier position, though it carries the higher act time — in the record
+/// count and the bundle count alike.
+///
+/// A Registration is a genesis by the key of record, in the record and the bundle count alike.
+/// ´claim:mirror:the-genesis-count-reads-the-key-of-record´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_genesis_count_reads_the_key_of_record(pool: PgPool) {
+    let first = NodeId::Prof("alice".to_string());
+    let second = NodeId::Prof("alice-again".to_string());
+    let addr = NodeId::Addr("alice".to_string());
+    ingest_one_epoch(
+        &pool,
+        vec![
+            record(
+                "alice",
+                0,
+                Family::Registration,
+                1,
+                vec![leg(LegRole::Binary, addr.clone(), first.clone(), 1.0, 1.0)],
+            ),
+            record(
+                "alice",
+                1,
+                Family::Registration,
+                2,
+                vec![leg(LegRole::Binary, addr, second.clone(), 1.0, 1.0)],
+            ),
+        ],
+    )
+    .await;
+
+    for (target, genesis) in [(first, 1), (second, 0)] {
+        let filter = mirror::RecordFilter {
+            target: Some(target.to_string()),
+            genesis: Some(true),
+            ..Default::default()
+        };
+        assert_eq!(
+            mirror::count_records(&pool, &filter).await.expect("counts"),
+            genesis,
+            "records toward {target}"
+        );
+        assert_eq!(
+            mirror::count_bundles(&pool, &filter).await.expect("counts"),
+            genesis,
+            "bundles toward {target}"
+        );
+    }
+}
+
+/// A citation and its counter-record in one epoch: the withdrawal is the
+/// record at the later position, though it carries the lower act time.
+///
+/// A citation's withdrawal is read in the order of record, whatever act time its records carry.
+/// ´claim:references:a-withdrawal-reads-in-the-order-of-record´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_withdrawal_reads_in_the_order_of_record(pool: PgPool) {
+    let artifact = NodeId::Mint(ActId::new("alice", 0, Family::Publish).expect("act id"));
+    let cited = NodeId::Mint(ActId::new("bob", 0, Family::Publish).expect("act id"));
+    let citation = |seq: u64, position: i64, sign: f64| {
+        record(
+            "alice",
+            seq,
+            Family::Reference,
+            position,
+            vec![
+                leg(
+                    LegRole::A,
+                    NodeId::Addr("alice".to_string()),
+                    artifact.clone(),
+                    0.0,
+                    0.5 * sign,
+                ),
+                leg(
+                    LegRole::T,
+                    artifact.clone(),
+                    cited.clone(),
+                    0.5 * sign,
+                    0.5 * sign,
+                ),
+            ],
+        )
+    };
+    let records = vec![citation(1, 1, 1.0), citation(2, 2, -1.0)];
+    let ids: Vec<String> = records.iter().map(|r| r.act_id.to_string()).collect();
+    ingest_one_epoch(&pool, records).await;
+
+    let withdrawn = references::withdrawal_records(&pool, &ids)
+        .await
+        .expect("reads");
+    assert_eq!(withdrawn, std::collections::HashSet::from([ids[1].clone()]));
+}
+
+/// A landed Opinion by `voucher` that vouches for `account` at `(1,
+/// position)`, through an application of its own — the account's landed
+/// one if it has none yet (one landed application per account).
+async fn vouch(
+    pool: &PgPool,
+    account: Uuid,
+    ask_link: Uuid,
+    voucher: (Uuid, &str),
+    seq: u64,
+    position: i64,
+) -> PublishedRecord {
+    let application: Uuid = sqlx::query_scalar(
+        "INSERT INTO auth_applications (account_id, approver_id, ask_link_id, approved_at, landed_at)
+         VALUES ($1, $2, $3, NOW(),
+                 CASE WHEN NOT EXISTS (SELECT 1 FROM auth_applications
+                                       WHERE account_id = $1 AND landed_at IS NOT NULL)
+                      THEN NOW() END)
+         RETURNING id",
+    )
+    .bind(account)
+    .bind(voucher.0)
+    .bind(ask_link)
+    .fetch_one(pool)
+    .await
+    .expect("application");
+    let opinion = record(
+        voucher.1,
+        seq,
+        Family::Opinion,
+        position,
+        vec![leg(
+            LegRole::Binary,
+            NodeId::Addr(voucher.1.to_string()),
+            NodeId::Prof(account.to_string()),
+            1.0,
+            1.0,
+        )],
+    );
+    sqlx::query(
+        "INSERT INTO auth_application_vouches (application_id, voucher_id, act_id, landed_at)
+         VALUES ($1, $2, $3, NOW())",
+    )
+    .bind(application)
+    .bind(voucher.0)
+    .bind(opinion.act_id.to_string())
+    .execute(pool)
+    .await
+    .expect("vouch");
+    opinion
+}
+
+/// Two vouches for one account in one epoch: the one that let it in is
+/// the earlier position, though it carries the higher act time; and the
+/// voucher's list pages newest position first.
+///
+/// The vouched-in list picks the admitting vouch and pages by the key of record, whatever act time the vouches carry.
+/// ´claim:auth:the-vouched-in-list-reads-the-key-of-record´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_vouched_in_list_reads_the_key_of_record(pool: PgPool) {
+    let ana = actor(&pool, "ana").await;
+    let ben = actor(&pool, "ben").await;
+    let mira = actor(&pool, "mira").await;
+    let kai = actor(&pool, "kai").await;
+    let mut links = std::collections::HashMap::new();
+    for account in [mira, kai] {
+        let link: Uuid =
+            sqlx::query_scalar("INSERT INTO auth_ask_links (account_id) VALUES ($1) RETURNING id")
+                .bind(account)
+                .fetch_one(&pool)
+                .await
+                .expect("ask link");
+        links.insert(account, link);
+    }
+    let records = vec![
+        vouch(&pool, mira, links[&mira], (ana, "addr-ana"), 1, 1).await,
+        vouch(&pool, mira, links[&mira], (ben, "addr-ben"), 1, 2).await,
+        vouch(&pool, kai, links[&kai], (ana, "addr-ana"), 2, 3).await,
+    ];
+    ingest_one_epoch(&pool, records).await;
+
+    let listed = |voucher: Uuid, cursor: Option<(i64, i64)>, backward: bool| {
+        let pool = pool.clone();
+        async move {
+            auth::vouched_in_by(&pool, voucher, cursor, backward, 10)
+                .await
+                .expect("lists")
+                .into_iter()
+                .map(|row| row.account_id)
+                .collect::<Vec<_>>()
+        }
+    };
+    assert_eq!(
+        listed(ana, None, false).await,
+        vec![kai, mira],
+        "newest position first"
+    );
+    assert_eq!(
+        listed(ben, None, false).await,
+        Vec::<Uuid>::new(),
+        "ben's vouch landed second"
+    );
+    assert_eq!(
+        listed(ana, Some((1, 3)), false).await,
+        vec![mira],
+        "forward from kai"
+    );
+    assert_eq!(
+        listed(ana, Some((1, 1)), true).await,
+        vec![kai],
+        "backward from mira"
+    );
 }
