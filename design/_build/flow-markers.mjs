@@ -1586,7 +1586,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 16, find: 'aria-label="Copy your ask link"', tag: "button", all: true },
   ],
   ProfileOther: [
-    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
+    // The way back is the `from` chip's hole (round 45), as ProfileStances' is.
+    { n: 1, find: 'aria-label="{{backLabel}}"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
     { n: 3, find: ', opinions on @ada"', tag: "button" },
     { n: 13, find: ', opinions by @ada"', tag: "button" },

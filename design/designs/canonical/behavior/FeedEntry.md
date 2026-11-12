@@ -19,3 +19,5 @@ WHEN tap feedEntry.morePaths -> the weakest paths unfold in place AND NEVER a se
 ALWAYS the trace carries no chart, no bar, no meter, no percentage and no trend arrow
 
 ALWAYS the trace carries a cover of the thing its score was tapped on
+
+ALWAYS the back arrow reads Back to the profile GIVEN the score was tapped on a card on another's profile, and Back to your profile on a card on the reader's own

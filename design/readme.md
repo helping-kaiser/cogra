@@ -5757,7 +5757,8 @@ none of them needing a board. Ruled by jakob the same day.
   | the feed, in any of its states | `Back to feed` |
   | a post, through its tags-and-references sheet | `Back to the post` |
   | a comment's chips, in the thread | `Back to the comments` |
-  | a profile's posts | `Back to the profile` |
+  | a card on another's profile (round 45) | `Back to the profile` |
+  | a card on your own profile (round 45) | `Back to your profile` |
   | History (jakob 2026-10-05) | `Back to History` |
   | another tag's page | `Back to #<thattag>` |
   | nowhere — a shared URL | `Back to Explore` |
@@ -8421,6 +8422,8 @@ the rest as recommended. Both laws stand in §4.
   | Saved | `Back to Saved` |
   | History (jakob 2026-10-05) | `Back to History` |
   | a profile's opinions list | `Back to the opinions` |
+  | a card on another's profile — its references (round 45) | `Back to the profile` |
+  | a card on your own profile — its references (round 45) | `Back to your profile` |
   | Explore, mid-query (jakob 2026-10-07) | `Back to the search` |
   | a tag's page | `Back to #<thattag>` |
   | nowhere — a link | `Back to feed` |

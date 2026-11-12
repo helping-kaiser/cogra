@@ -1279,10 +1279,10 @@ function ProfileOwnBody({ tail = null, headLine = null }) {
 
    Named as `ProfileOwnBody` names its page, under the same `profile` prefix:
    `ProfileOther` and `ProfileMenu` register it. */
-function ProfileOtherBody({ bundle } = {}) {
+function ProfileOtherBody({ bundle, backLabel = "Back to feed" } = {}) {
   return (
     <>
-      <PageHeader title="@ada" backHref="#" backLabel="Back to feed" node="header" />
+      <PageHeader title="@ada" backHref="#" backLabel={backLabel} node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader
