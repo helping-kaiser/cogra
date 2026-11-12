@@ -402,7 +402,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
     render();
     await screen.findByTestId("history-list");
     fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p5")));
-    fireEvent.click(screen.getByTestId("history-menu-remove"));
+    fireEvent.click(screen.getByTestId("history.menuSheet.remove"));
     fireEvent.click(await screen.findByTestId("history-menu-remove-confirm-remove"));
     expect(await screen.findByTestId(byNode("history.card.removalMark", "p5"))).toHaveTextContent("Removed by its author");
     expect(cards()).toEqual(["history.commentCard:c1", "history.card:p5", "history.card:p1"]);
@@ -428,7 +428,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
     await screen.findByTestId("history-list");
     expect(screen.queryByRole("button", { name: /clear/i })).toBeNull();
     fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
-    const menu = within(screen.getByTestId("history-menu-sheet")).getAllByRole("button");
+    const menu = within(screen.getByTestId("history.menuSheet")).getAllByRole("button");
     expect(menu.map((row) => row.textContent)).not.toContainEqual(expect.stringMatching(/history/i));
   });
 
@@ -906,7 +906,7 @@ describe("History — hiding from a card in it (HistoryHidden.md)", () => {
     render();
     await screen.findByTestId("history-list");
     fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
-    fireEvent.click(screen.getByTestId("history-menu-hide"));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
     // No confirm step: the snackbar is the whole ceremony.
     expect(screen.queryByRole("alertdialog")).toBeNull();
     expect(screen.getByTestId("history.snackbar.message")).toHaveTextContent(
@@ -944,7 +944,7 @@ describe("History — hiding from a card in it (HistoryHidden.md)", () => {
     );
     await screen.findByTestId("history-list");
     fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
-    fireEvent.click(screen.getByTestId("history-menu-hide"));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
     expect(cards()).toEqual(["history.commentCard:c1", "history.card:p1", "history.profileCard:u1"]);
     await waitFor(() => expect(log.hides).toHaveLength(1));
     pull(scroller);
@@ -960,7 +960,7 @@ describe("History — hiding from a card in it (HistoryHidden.md)", () => {
     render();
     await screen.findByTestId("history-list");
     fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
-    fireEvent.click(screen.getByTestId("history-menu-hide"));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
     await waitFor(() => expect(log.hides).toHaveLength(1));
     fireEvent.click(screen.getByTestId("history.snackbar.action"));
     await waitFor(() => expect(log.unhides).toEqual(["u1"]));
@@ -975,13 +975,76 @@ describe("History — hiding from a card in it (HistoryHidden.md)", () => {
     render();
     await screen.findByTestId("history-list");
     fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
-    fireEvent.click(screen.getByTestId("history-menu-hide"));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
     await waitFor(() => expect(log.hides).toHaveLength(1));
     fireEvent.click(screen.getByTestId("history.snackbar.action"));
     const line = await screen.findByTestId("history-post-p1-row-line");
     expect(line).toHaveTextContent("That didn't go through.");
     expect(within(line).getByRole("button", { name: "Retry" })).toBeInTheDocument();
     expect(cards()).toEqual(["history.commentCard:c1", "history.card:p1"]);
+  });
+});
+
+describe("History — the post menu (HistoryPostMenu.md, round 36 + 41)", () => {
+  /** The open sheet's rows, as `[node, words]`. */
+  function rows() {
+    return within(screen.getByTestId("history.menuSheet"))
+      .getAllByRole("button")
+      .map((row) => [row.getAttribute("data-testid"), row.textContent]);
+  }
+
+  it("the_reader_menu_reads_save_cite_hide_license_report_as_history_menuSheet_rows", async () => {
+    // HistoryPostMenu.md:3 (the sheet over History), :5 (the rows and their order).
+    serveHistory(() => page([COMMENT, POST]));
+    render();
+    await screen.findByTestId("history-list");
+    fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
+    expect(rows()).toEqual([
+      ["history.menuSheet.save", "Save"],
+      ["history.menuSheet.cite", "Cite in a new post"],
+      ["history.menuSheet.hide", "Hide @ada"],
+      ["history.menuSheet.license", "License terms"],
+      ["history.menuSheet.report", "Report"],
+    ]);
+  });
+
+  it("the_hide_row_reads_unhide_with_the_handle_once_the_author_is_hidden_keeping_its_node", async () => {
+    // HistoryPostMenu.md:17 — the post standing in the History open when the
+    // hide was made; the row keeps its one name whatever it reads.
+    const log = hiddenLog();
+    serveHistory(() => page([COMMENT, POST]));
+    server.use(...hiddenHandlers(log));
+    render();
+    await screen.findByTestId("history-list");
+    fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
+    await waitFor(() => expect(log.hides).toHaveLength(1));
+    fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
+    expect(screen.getByTestId("history.menuSheet.hide")).toHaveTextContent(/^Unhide @ada$/);
+  });
+
+  it("unhide_closes_the_sheet_unhides_keeps_history_and_snackbars_with_undo_and_no_confirm", async () => {
+    // HistoryPostMenu.md:19.
+    const log = hiddenLog();
+    serveHistory(() => page([COMMENT, POST]));
+    server.use(...hiddenHandlers(log));
+    render();
+    await screen.findByTestId("history-list");
+    fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
+    await waitFor(() => expect(log.hides).toHaveLength(1));
+    fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    await waitFor(() =>
+      expect((screen.getByTestId("history.menuSheet") as HTMLDialogElement).open).toBe(false),
+    );
+    expect(screen.getByTestId("history.snackbar.message")).toHaveTextContent(
+      "@ada is unhidden — their posts can reach your feed again.",
+    );
+    expect(screen.getByTestId("history.snackbar.action")).toHaveTextContent("Undo");
+    expect(cards()).toEqual(["history.commentCard:c1", "history.card:p1"]);
+    await waitFor(() => expect(log.unhides).toEqual(["u1"]));
   });
 });
 

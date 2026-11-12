@@ -232,7 +232,7 @@ function openMenu(trigger: HTMLElement, sheetTestId: string) {
   return within(screen.getByTestId(sheetTestId)).getAllByRole("button");
 }
 
-const postMenu = () => openMenu(screen.getByTestId(byNode("saved.card.menu", "p1")), "saved-menu-sheet");
+const postMenu = () => openMenu(screen.getByTestId(byNode("saved.card.menu", "p1")), "saved.menuSheet");
 const commentMenu = () => openMenu(screen.getByTestId(byNode("saved.commentCard.menu", "c1")), "saved-comment-c1-menu-sheet");
 const personMenu = () =>
   openMenu(screen.getByTestId(byNode("saved.profileCard.menu", "u3")), "saved-person-u3-menu-sheet");
