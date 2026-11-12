@@ -48,7 +48,8 @@ describe("nameInLine — a one-line place", () => {
 
   it("yields the first handle only", () => {
     const host = mount(nameInLine("@ada and @mira"));
-    const [, handle, after] = [...(host.querySelector("[data-name-line]") as HTMLElement).children];
+    // No words before the handle, so no leading part.
+    const [handle, after] = [...(host.querySelector("[data-name-line]") as HTMLElement).children];
     expect(handle.textContent).toBe("@ada");
     expect(after.textContent).toBe(" and @mira");
   });
@@ -87,7 +88,8 @@ describe("nameInText — text that wraps", () => {
     ["’s view", "’s"],
     [". Then", "."],
     [", and", ","],
-    ["), so", ")"],
+    // The master's tail takes the run of closers: `),` rides whole.
+    ["), so", "),"],
     ["!?", "!?"],
   ])("keeps %j's punctuation with the unit", (after, tail) => {
     const [unit] = units(mount(nameInText(`From ${H}${after}`)));
