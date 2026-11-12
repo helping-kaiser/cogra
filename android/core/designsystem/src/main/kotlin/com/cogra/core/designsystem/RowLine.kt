@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +21,8 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.v2.atom.InlineAction
+import com.cogra.core.designsystem.v2.atom.InlineSize
 
 /**
  * The line in one of its [RowLineState]s. A failure is announced as an alert (an assertive live region), NEVER a
@@ -70,8 +71,13 @@ private fun FailureLine(words: String, onRetry: () -> Unit, testTag: String, mod
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        TextButton(onClick = onRetry, modifier = Modifier.testTag("${testTag}_retry")) {
-            Text(stringResource(R.string.row_line_retry), style = MaterialTheme.typography.labelSmall)
-        }
+        // `Retry` is the master's small inline action: the line's own type,
+        // answering at 48 without growing the line (`SigningPending` `row`).
+        InlineAction(
+            text = stringResource(R.string.row_line_retry),
+            onClick = onRetry,
+            size = InlineSize.Small,
+            testTag = "${testTag}_retry",
+        )
     }
 }
