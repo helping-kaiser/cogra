@@ -1,15 +1,20 @@
 "use client";
 
 // THE HIDE ACTION, STATED ONCE (hidden-actors packet §5.2) for every menu that
-// carries it — the post menu on the feed and the detail, the two profile
-// menus. Each host brings its own snackbar and decides what its rows do; the
+// carries it — the post menu on every host, the profile menu and the profile
+// card's. Each host brings its own snackbar and decides what its rows do; the
 // behaviour is this one:
 //
-// - the row reads `Hide @ada`, or `Hide this account` for a deleted account,
-//   always — hiding is not a toggle (ReaderPostMenu.md:3; ProfileMenu.md:3);
+// - THE ROW TOGGLES (design round 41, seam 305; ReaderPostMenu.md:19,
+//   ProfileMenu.md:31, HistoryPostMenu.md:17, HistoryProfileMenu.md:7): it
+//   reads `Hide @ada`, and `Unhide @ada` while the person is hidden — wherever
+//   their post or card still stands — keeping its one node either way. A
+//   deleted account's row reads `Hide this account` whatever the set holds:
+//   its `Unhide this account` is review-pending and not drawn;
 // - a guest is asked to join, and nothing is sent (GuestGate.md:5);
-// - otherwise the person joins the hidden set at the tap — no confirm, ever —
-//   and the host's snackbar names them with `Undo`, which takes the hide back;
+// - otherwise the person joins (or leaves) the hidden set at the tap — no
+//   confirm, ever — and the host's snackbar names them with `Undo`, which
+//   takes the act back;
 // - a hide of someone already hidden sends nothing and its Undo sends nothing:
 //   Undo restores what was, and what was is hidden (packet §15 F1);
 // - a failure reverts, and the row the gesture was made from says so — never
@@ -89,6 +94,48 @@ export function unhidePerson(
     { label: UNDO, onAction: () => set.hide(person, person.id, person.hiddenAt, "undoUnhide") },
     hideCause(person.id),
   );
+}
+
+/**
+ * Unhides `person` from the row `origin` — a menu's hide row reading Unhide —
+ * and says so on the host. Undo hides them again at the moment they were
+ * hidden, so the Hidden accounts list keeps its order.
+ */
+export function unhideFrom(set: HiddenSet, person: HiddenPerson, origin: string, notify: Notify): void {
+  const was = set.entry(person.id);
+  if (was === null) return;
+  set.unhide(person.id, origin);
+  notify(
+    unhiddenMessage(person),
+    { label: UNDO, onAction: () => set.hide(person, origin, was.hiddenAt, "undoUnhide") },
+    hideCause(origin),
+  );
+}
+
+/**
+ * The menu's hide row as it reads NOW: `Hide @ada`, or `Unhide @ada` while the
+ * person is hidden (the toggle above), with the act that matches its words.
+ * A deleted account never toggles (its Unhide is not drawn).
+ */
+export function hideRow({
+  set,
+  person,
+  origin,
+  notify,
+  onGuest,
+}: {
+  set: HiddenSet;
+  person: HiddenPerson;
+  origin: string;
+  notify: Notify;
+  onGuest: (() => void) | null;
+}): { label: string; onSelect: () => void } {
+  const unhide = !person.redacted && person.handle !== null && set.has(person.id);
+  if (!unhide) return { label: hideLabel(person), onSelect: hideAct({ set, person, origin, notify, onGuest }) };
+  return {
+    label: `Unhide @${person.handle}`,
+    onSelect: () => (onGuest !== null ? onGuest() : unhideFrom(set, person, origin, notify)),
+  };
 }
 
 /** The menu's hide act: the guest's ask, else the hide. */

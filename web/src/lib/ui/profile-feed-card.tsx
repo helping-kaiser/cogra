@@ -13,7 +13,7 @@
 // ranker's figure reaches the contract.
 //
 // ITS ⋮ IS THE PROFILE'S OWN MENU, less the share row the row already carries
-// (`ProfileMenu`'s `feed` placement).
+// (`ProfileMenu`'s `feed` placement), risen as the host's `menuSheet`.
 //
 // A DELETED ACCOUNT STILL STANDS (FeedProfileShapes.md): the disc keeps its
 // space and fills with nothing, the name's place reads `Deleted account` in
@@ -25,6 +25,7 @@ import { useComfortLine } from "@/lib/saved/comfort-line";
 import type { Notify } from "@/lib/saved/save-row";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { MonogramAvatar } from "@/lib/ui2/monogram-avatar";
+import { menuHostOf } from "@/lib/ui2/overflow-menu";
 import { ProfileMenu } from "@/lib/ui2/profile-menu";
 import { REDACTED_ACTOR_NAME } from "@/lib/ui2/content-row";
 import { Card } from "./card";
@@ -120,7 +121,7 @@ export function ProfileFeedCard({
             profile={person}
             signedIn={signedIn}
             notify={onNotify}
-            feed={{ trigger: part(node, "menu"), testId: `${testId}-menu` }}
+            feed={{ trigger: part(node, "menu"), testId: `${testId}-menu`, host: menuHostOf(node) }}
           />
         </div>
       </div>

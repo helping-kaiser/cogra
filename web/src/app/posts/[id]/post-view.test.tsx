@@ -872,6 +872,31 @@ describe("PostView", () => {
     await waitFor(() => expect(log.hides).toEqual([{ actor: "someone-else", at: null }]));
   });
 
+  // ReaderPostMenu.md:19 — the hide row reads Unhide with the author's handle
+  // while the author is hidden, the post reached by a link; :21 — the tap
+  // unhides, the reader stays, the snackbar offers Undo, and no confirm asks.
+  it("a_hidden_authors_post_reads_unhide_and_the_tap_unhides_keeping_the_reader_on_it", async () => {
+    const log = hiddenLog();
+    server.use(
+      ...thread("someone-else", []),
+      ...hiddenHandlers(log, {
+        entries: [{ id: "someone-else", handle: "x", displayName: "X", hiddenAt: "2026-10-01T00:00:00Z" }],
+      }),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    await waitFor(() => expect(log.reads).toBeGreaterThan(0));
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
+    await waitFor(() => expect(screen.getByTestId("postDetail.menuSheet.hide")).toHaveTextContent(/^Unhide @/));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.hide"));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(await screen.findByText(/is unhidden — their posts can reach your feed again\.$/)).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("postDetail.card.body"))).toBeInTheDocument();
+    await waitFor(() => expect(log.unhides).toEqual(["someone-else"]));
+  });
+
   /** The detail's post, kept by the reader at `keptAt` (or not kept). */
   function keptThread(keptAt: string | null) {
     return threadFrom(() => {
