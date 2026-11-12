@@ -12,6 +12,7 @@ import { resetKeptPicksForTests } from "@/lib/stance/kept-picks";
 import { resetSettlingForTests } from "@/lib/stance/settling";
 import { resetCarriedSnackbarForTests } from "@/lib/ui/carried-snackbar";
 import { resetAnnouncerForTests } from "@/lib/release/newer-version-announcer";
+import { resetReaderStateForTests } from "@/lib/session/reader-state";
 import { resetClipMemoryForTests } from "@/lib/ui2/media/clip-memory";
 import { resetElementPoolForTests } from "@/lib/ui2/media/video-stage";
 
@@ -55,6 +56,9 @@ beforeEach(() => {
 // The newer-version announcer's one read and one decision are per page load:
 // each test is a fresh load.
 beforeEach(resetAnnouncerForTests);
+// The reader's account state is the session's one account read, module state
+// (`reader-state.ts`): an applicant one test staged must not lock the next.
+beforeEach(resetReaderStateForTests);
 
 // jsdom implements no Pointer Events (jsdom#2527), which the stance pad
 // is built on — they are the platform's own unification of mouse, touch,
