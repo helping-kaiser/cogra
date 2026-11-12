@@ -10583,8 +10583,9 @@ marked *blessed (jakob 2026-11-10)*.
   details and edit row does; `Reading the video…`, `3 pictures didn't
   upload.` with `Remove them`, and `A post carries one video.` are
   blessed; `ComposePickedErrors` keeps the live grid (`PickGrid`, shared
-  with `ComposePick`) under its refusals; the crop's arrow keys move the
-  window the arrow's way where the picture stays whole; the clip tiles
+  with `ComposePick`) under its refusals; the crop's arrow keys moved the
+  window the arrow's way where the picture stayed whole (replaced in round
+  44: the frame is fixed and the keys move the picture); the clip tiles
   keep their 114×64 and 54×96 boxes for every shape. The tray-drag law
   is gone — reorder lives in Show all.
 - **The gate**: edges **2127 → 2135** (`ExploreComingSoon`'s seven,
@@ -11510,6 +11511,70 @@ jakob's answers to rounds 36–39 (M1–M3, R2, S1–S6, I1–I2), executed.
   out is a back arrow has no drawn precedent for that arrow reading Close.
   Backlog 176 stays open: `FeedRemoved.md` says a removed card carries no
   menu.
+
+### Round 44, one crop model, the comment edit's video, the composer's way out, search without the seen list — 2026-11-12
+
+jakob's crop ruling (seam 301), the re-ask's answers (questions 3 and 19)
+and the implementers' findings (seams 292, 295, 296, 308), executed.
+
+- **One crop model on both clients** (jakob 2026-11-11: "the instagram
+  approach (fixed frame with mooving and zooming image) for both
+  platforms"). Every crop's frame stands still at its shape and the
+  picture moves (drag, the arrow keys) and zooms (pinch, the zoom track)
+  under it; no window moves over a still picture and no stage changes size
+  with the shape. The post crop's stage is 390 × 488 under every shape,
+  the frame full width and centred: Tall 4:5 390 × 488, Square 1:1 390 ×
+  390 at top 49, Wide 1.91:1 390 × 204 at top 142, the outside darkened by
+  `CropViewport`'s 45 % shadow; `ComposeCrop`'s `shape` setting draws each
+  (the stage's constancy is the orchestrator's reading of his words, shown
+  to him on the board). The avatar crop keeps its 390 × 390 stage, the
+  circle 342 × 342 at top 24; the cover crop keeps the same stage with the
+  frame at the video's shape, 342 wide — the drawn 16:9 clip's 342 × 192 at
+  top 99, the comment's square 342 × 342 — because the cover is that
+  video's face. A shape switch keeps each picture's scale and position and
+  lifts a scale only to the new frame's fill (unchanged law; nothing in the
+  tree contradicts it).
+- **The zoom track is drawn** (seam 292-2, option A): 8px, fully rounded,
+  its ground `--border-field` — `Timeline`'s page-ground track
+  (`VideoControls`, `tone="surface"`) and the off `Switch` take the same —
+  the part up to the thumb `primary`, a 16px `primary` thumb with no rim,
+  in a 48px input; `CropZoom` carries the rules, never the platform's
+  default.
+- **The crops say nothing about moving** (re-ask 3, digest A3): `Drag to
+  move, pinch to zoom.` and its pointer variant, `One picture, shown
+  everywhere you appear.`, `Shown everywhere you appear.` (the avatar seal)
+  and `The cover takes the video's shape.` are gone; `One shape for the
+  whole post.` stays. `coverCrop.howTo` and `coverCrop.shapeNote` are
+  deleted, a named breaking change.
+- **A words comment's edit takes a video** (seam 295): the staged refusal
+  is retired for the comment (the post's edit keeps it); words alone is
+  read on the edit's own state. `CommentEditVideo`'s `clip` setting draws a
+  clip picked in the edit — `picked` (uploading, the `Add a cover` door,
+  `commentEdit.cover.add`), `failed` (`That video didn't upload.` with
+  `Retry · Remove it`, the gate's fault reading, Sign disabled), `second` (`A
+  comment carries one video.`), every string copied from the reply's and the
+  composer's boards.
+- **`More` stands only under a clamped caption** — the law in `PostCard`
+  and `ReelCaption` (seam 292-3). The reel draws it so; the sample feed
+  card's caption fits whole, so the boards that register its opener wait on
+  jakob (backlog 202).
+- **Search never looks at the seen list** (seam 296): the search filter's
+  Order section stands without `Show what you've already seen`
+  (`OrderSection`'s `seenToggle`), the filter's "?" drops its search clause,
+  and the reader's saved default still gives search its order.
+  `explore.filterSheet.order.seen` and its two parts are deleted, a named
+  breaking change. No other surface in the tree reads the list (backlog
+  203).
+- **Leaving the composer returns to where it was opened** (re-ask 19): the
+  bar's New post, Cite in a new post, Mention in a new post, a tag card's
+  compose glyph and the didn't-land card's Open the draft each carry their
+  surface, and leaving before Sign and publish returns there from every
+  stage; publishing lands as drawn. `ComposePick.md` says it once, every
+  stage's leave line and the first stage's leave edges name it. No visible
+  string changes.
+- **Not drawn, at jakob:** the cover crop under a tall clip (backlog 200),
+  a picked clip uploading beside a new cover (backlog 201), the sample
+  card's opener (202), who else reads the seen list (203).
 
 ---
 

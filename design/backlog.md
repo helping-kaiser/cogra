@@ -4663,8 +4663,9 @@ report:
 - **Where the reorder's three actions stand on a `PickedSheet` row**,
   what the cover and the last row offer, the handle's keyboard role and
   the footnote's `drag to reorder`.
-- **The crop's arrow-key step**, and the web's `Drag to move, pinch to
-  zoom.` on a device with no pinch.
+- **The crop's arrow-key step** — 1 % of what is unwritten; the picture is
+  what moves (round 44's one crop model), and the no-pinch line went with
+  the how-to line (round 44).
 - **The rail's contrast**: on the brightest fixture region the
   white-with-shadow glyphs measure about 2.4:1 (`ReelRail`'s docblock) —
   under WCAG's 3:1 for controls. The look is ruled; whether to deepen the
@@ -4828,11 +4829,11 @@ each with the lane's recommendation in the round's report:
 The close bite (readme §13) executed the fabric's last ruling and left
 these for jakob's eye, each with the lane's recommendation in its report:
 
-- **One string to bless**, for the next casual look: the crops' no-pinch
-  line, `Drag or use the arrow keys to move, the slider to zoom.`
-  (copy-voice, *The crops' how-to line*).
-- **The arrow step's base.** The crops move 1 % a press and 10 % with
-  Shift; whether that is of the crop window along the pressed axis or of
+- ~~**One string to bless**~~ — closed 2026-11-12 (round 44): the crops'
+  no-pinch line went with the how-to line in jakob's removable-text pass.
+- **The arrow step's base.** The crops move the picture 1 % a press and
+  10 % with Shift (round 44: the frame is fixed, so it is never a window
+  that moves); whether the 1 % is of the frame along the pressed axis or of
   the picture is unwritten.
 - **The applicant's taken-address landing** reads `That address is taken
   now` over the `EMAIL_IN_USE` line; its way on is unwritten, and the
@@ -5232,6 +5233,9 @@ it on its own.`
   round 29 as law: `CommentEdit.md` and its docblock, the staged-surfaces
   row. Drawn in round 30 (jakob 2026-11-11, "draw it"): `CommentEdit`'s
   `body` chip at `words`, the media block reduced to its add row.
+- **The comment's staged line retired** (round 44, seam 295): the web takes
+  the clip; `CommentEditVideo`'s `clip` setting draws a clip picked in the
+  edit. The post's edit keeps the staged refusal.
 
 ### 149 · What round 27's registrations left undrawn · *system* · **filed 2026-10-29**
 
@@ -5769,3 +5773,76 @@ named exception [lean — a guest who closes has nothing to come back to];
 next open.
 
 Ruled by jakob 2026-11-11 (on the round 41 review): (a) — on the signed-in plain forms the back arrow is named `Close` from the press and only leaves, the submit going on; the entry forms keep their exits held while they submit, the named exception. Not built yet: where a failure shows after Close is still at him.
+
+### 200 · The cover crop under a tall clip: the frame does not fit the stage · *design* · **filed 2026-11-12**
+
+Round 44 wrote the one crop model: a fixed frame of the locked shape, the
+picture moving under it, in `CropViewport`'s 390 × 390 stage with the frame
+342 wide between the 24 gutters. That holds for the drawn 16:9 clip (342 ×
+192) and the comment's square (342 × 342). A vertical clip reaches the cover
+crop too (`ComposePickVideo` → details' `Add a cover` → `ComposeCover`'s
+gallery tile), and its display shape in a post is the 4:5 cap — 342 × 427.5,
+taller than the stage. Undrawn either way. For jakob: (a) every cover crop
+takes the post crop's 390 × 488 stage, the frame 342 wide at every shape
+[lean — one stage for every cover, and 4:5 fits it]; (b) a tall frame fits
+the square stage by height (312 × 390), narrower than the others; (c) the
+stage grows with the shape (the model jakob's ruling replaced).
+
+### 201 · A clip picked in a comment's edit: what the board does not draw · *design* · **filed 2026-11-12**
+
+Round 44 drew a clip picked in the edit (`CommentEditVideo`'s `clip`
+setting: picked, failed, second) from strings already on the reply's and
+the composer's boards. Two things have no source line, so they are not
+drawn: (1) the gate while the picked clip AND a new cover go up together.
+The web reads `Uploading 1 of 2 — signing waits for the cover.` once the
+clip lands, and the gate's noun for two different kinds at once is
+unwritten — (a) the noun of what is still going up (`…the cover.` once
+the clip landed, `…the video.` before) [lean, what the web built]; (b) a
+plural for mixed kinds (a new string). (2) `It plays the moment it is on
+screen, so it starts on its own first frame.` under the `Add a cover` door,
+which `EditComposeVideo` and `ReplyVideoFailed` draw for a vertical clip:
+whether a picked comment clip wears it (the comment's square, not a
+vertical post) — (a) no line [lean]; (b) the line as on the reply. And one
+drift for the clients: the failed clip's line under the clip reads `That
+video didn't upload.` (the reply's, copy-voice), the gate's fault `The
+video didn't upload. Signing waits for it.`; the web built `The video
+didn't upload.` under the clip.
+
+### 202 · `More` under a media caption that fits whole, on the sample boards · *design* · **filed 2026-11-12**
+
+Round 44 (seam 292-3, jakob's finding in seam 276 item 2): the law is that a
+media caption carries `More` only when it is clamped, and `PostCard` and
+`ReelCaption` say so. The reel's sample caption is long enough to be clamped,
+so `ReelCaption` now draws the opener on its estimate (49 characters a line
+at 298 px). The sample feed card's caption (`Took the coast road instead of
+the tunnel. Four hours longer, worth every minute.`, 82 characters) fits its
+two 51-character lines whole, yet 32 boards register its opener
+(`feed.card.opener`, `history.card.opener`, `saved.card.opener`,
+`profile.posts.card.opener`) and the flow markers of five boards stamp it
+(`ApplicantFeed`, `Main`, `ProfilePosts`, `Saved`, `VouchBack`), so `PostCard` still offers
+it on every media caption until this is ruled. For jakob: (a) lengthen that
+sample caption past two lines, so the opener stands where the law puts it and
+no path moves [lean — fixture data, the law unchanged]; (b) the opener leaves
+those boards: four registered paths removed across 32 boards and the flows'
+`More` steps dropped (an announced breaking change for both clients); (c)
+leave the boards as they are and read the law from the docblocks.
+
+### 203 · Who else reads the seen list · *design* · **filed 2026-11-12**
+
+Round 44 (seam 296): search never reads the seen list. jakob's wider
+sentence — "the seen list is a pure feed and history thing nothing else should
+use it (i think)" — is a belief, not a ruling. The sweep found no other
+surface in the design tree that reads it: Saved orders by the save
+(`Saved.md`), the cite picker carries no order section (`ReferencePicker.md`),
+the tag page, the profile's tabs and the opinions pages name it nowhere. What
+does touch it, none of which is a reader of the kind he means: the feed's
+ranker (`OrderSection`'s docblock: "shared transiently with the viewer's
+chosen ranker"), the device copy cleared on sign-out and erase
+(`Settings.md`, `EraseConfirm.md`), and `ExploreFilter.md`'s line that an
+opened result counts as seen by History's rules (search writing to the list,
+not reading it). The docs disagree with the master on the ranker:
+`api-spec.md` ("The reader's seen-list is not part of the slice and rides no
+ranking") and `miner-api.md` ("The server's own ranker container receives no
+seen-list") against `OrderSection`'s "shared transiently with the viewer's
+chosen ranker". For jakob: confirm nothing else reads it, and which side of
+the ranker sentence stands.
