@@ -51,6 +51,8 @@ WHEN tap Cancel the change -> the change is called off AND settings returns AND 
 
 WHEN tap Cancel the change GIVEN the reader is offline -> the network error answers AND the change still stands
 
+ALWAYS Cancel the change refuses a press, undimmed and unchanged in face, from the press of Confirm the code until its answer comes — submit is submit (jakob 2026-11-12)
+
 WHEN press the header back arrow GIVEN Confirm the code has not been pressed -> settings returns AND the change stays live for its window AND the Email row reads Change pending
 
 ALWAYS the header's arrow is named Close from the press of Confirm the code until its answer comes

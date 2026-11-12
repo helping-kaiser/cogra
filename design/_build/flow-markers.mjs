@@ -2434,7 +2434,8 @@ Object.assign(FLOW_MARKERS, {
 });
 FLOW_MARKERS.ChangeEmailConfirm.push(
   { n: 4, find: ">Resend</button>", tag: "button" },
-  { n: 5, find: ">Cancel the change</button>", tag: "button" },
+  // Round 46: the pending copy's held Cancel is the same control.
+  { n: 5, find: ">Cancel the change</button>", tag: "button", all: true },
 );
 
 /* The reply and edit wizards, the two overlays and the pattern boards
