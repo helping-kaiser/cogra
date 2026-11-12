@@ -8,7 +8,9 @@ ALWAYS postDetail.card.removalMark carries the line and the removal's date and n
 
 ALWAYS the author's mark never reads like Removed under the platform's rules
 
-ALWAYS postDetail.header carries postDetail.header.back alone and no menu
+ALWAYS postDetail.header carries postDetail.header.back and postDetail.header.menu, whose rows read Save or Unsave, then Cite in a new post, your own post's menu less every row the payload took GIVEN the post is the reader's own
+
+WHEN tap postDetail.header.menu -> the sheet rises over the detail with Save or Unsave and Cite in a new post AND NEVER Edit, Mark as sensitive, Remove or License terms stands
 
 ALWAYS the post keeps postDetail.card.authorChip, postDetail.card.actionRow.stance, postDetail.card.actionRow.score, postDetail.card.actionRow.comments.count and postDetail.card.actionRow.share
 

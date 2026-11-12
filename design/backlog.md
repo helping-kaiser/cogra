@@ -6001,7 +6001,7 @@ Closed by round 45's second act, by (a), the registry's call: `PadStanding`'s
 (`label`, `face`, `exact`, the pads' `standing.pick` names), `pad.field`,
 `note`, `done`, and `TagPad`'s `untag`.
 
-### 206 · Another's removed post, opened: the detail's ⋮ · *design* · **filed 2026-11-12**
+### 206 · Another's removed post, opened: the detail's ⋮ · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 45. jakob's ruling (re-ask 11) gives another's removed post's CARD the
 reader's whole menu. The only drawn removed detail is the reader's own
@@ -6010,6 +6010,8 @@ reader's whole menu. The only drawn removed detail is the reader's own
 detail header carries the reader's post menu as the card does, no license row
 [lean — one menu per post, wherever it is opened]; (b) the detail stays
 menu-less; and whether the reader's own removed card and detail keep none.
+
+Closed by round 46 (jakob 2026-11-12, question 18): another's removed post in detail carries the reader's menu in its header, as the card (`RemovedOther`); and, overruling the lean, your own removed post KEEPS a menu, card and detail — Save, Cite in a new post (`OWN_REMOVED_POST_MENU`; `FeedRemoved`, `Removed`, `FeedRemovedMenuOwn`).
 
 ### 207 · A first page that failed reads `Couldn't load more` · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 

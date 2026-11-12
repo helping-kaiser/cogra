@@ -720,6 +720,15 @@ const OWN_POST_MENU = [
   REMOVE_ROW,
   LICENSE_ROW,
 ];
+/* YOUR OWN REMOVED POST KEEPS A MENU (jakob 2026-11-12, question 18: "i can
+   still cite this (maybe in a folloup post to explain why i deleted it)"):
+   `OWN_POST_MENU` less the rows with no object left — Edit and Mark as
+   sensitive (both open the edit, and a removed post has nothing left to
+   edit), Remove (it is removed) and License terms (the license rode the
+   payload, as the reader's removed menu drops it). Save and Cite stay: the
+   record never left the graph. The card's ⋮ and the detail's header both
+   carry it. */
+const OWN_REMOVED_POST_MENU = [SAVE_ROW, CITE_ROW];
 /* The reader's post menu for a post by `handle`, so a host whose drawn card
    is someone else's than @ada's names its author in the Hide row
    (`TagPageMenu`'s @tobias). */
@@ -2926,9 +2935,10 @@ const TOBIAS_REPLIES = [
    THE MARK IS ONE LINE AND ITS DATE, as on a post (jakob 2026-11-12): the
    thread standing around it shows what remains.
 
-   A REMOVED COMMENT HAS NO MENU LEFT, the post's `Removed` rule: nothing on
-   its card is left to save, cite or read the terms of, so its ⋮ goes with the
-   payload. What survives is what survives a removed post — the author, the
+   A REMOVED COMMENT HAS NO MENU LEFT: nothing on its card is left to save,
+   cite or read the terms of, so its ⋮ goes with the payload. (A removed
+   POST keeps its menu since jakob's 2026-11-12 ruling; whether a removed
+   comment follows is not ruled.) What survives is what survives a removed post — the author, the
    opinion a reader can still give, and the way to answer. */
 /* WHERE THE READER STANDS IN THE THREAD for the whole removal — the menu, the
    dialog and the mark (`ReplySettled`'s `scrolledBy`, the reply-return

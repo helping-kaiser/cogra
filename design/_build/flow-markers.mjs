@@ -732,6 +732,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 5, find: ">Report</button>", tag: "button" },
   ],
+  // Your own removed post's menu open (round 46, question 18).
+  FeedRemovedMenuOwn: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
   FeedRemoveConfirm: [
     { n: 1, find: ">Remove</button>", tag: "button" },
     { n: 2, find: ">Keep it</button>", tag: "button" },
@@ -746,6 +752,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Feed score</span>", tag: "button" },
     { n: 4, find: 'aria-label="2 comments"', tag: "button" },
     { n: 5, find: 'aria-label="Share ', tag: "button" },
+    // Your removed post keeps its menu (round 46, question 18).
+    { n: 6, find: 'aria-label="More on this post"', tag: "button" },
   ],
   // The feed-hosted report confirm and license sheet (FC-G10): scanExempt
   // like the detail's, numbered as ReportConfirm and PostLicense number them.
@@ -875,6 +883,19 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Feed score</span>", tag: "button", all: true },
     { n: 5, find: 'aria-label="2 comments"', tag: "button" },
     ...nav(6),
+    // Your removed post keeps its menu (round 46, question 18).
+    { n: 12, find: 'aria-label="More on this post"', tag: "button" },
+  ],
+  // Another's removed post in detail (round 46): Removed's numbers, its menu at 12.
+  RemovedOther: [
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
+    { n: 2, find: '<a href="/u/', tag: "a", all: true },
+    { n: 3, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
+    { n: 3, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
+    { n: 4, find: ">Feed score</span>", tag: "button", all: true },
+    { n: 5, find: 'aria-label="3 comments"', tag: "button" },
+    ...nav(6),
+    { n: 12, find: 'aria-label="More on this post"', tag: "button" },
   ],
   ComposeLanded: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
