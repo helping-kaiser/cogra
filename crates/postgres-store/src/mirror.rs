@@ -1179,8 +1179,8 @@ pub async fn count_bundles(pool: &PgPool, filter: &RecordFilter) -> Result<i64, 
                      OR (r.family = 'registration' AND NOT EXISTS (
                              SELECT 1 FROM mirror_records e
                              WHERE e.family = 'registration' AND e.author = r.author
-                               AND (e.epoch, e.act_time, e.position)
-                                   < (r.epoch, r.act_time, r.position)))))"#,
+                               AND (e.epoch, e.position)
+                                   < (r.epoch, r.position)))))"#,
         filter.author.as_deref(),
         filter.family.as_deref(),
         filter.payload_marked,
