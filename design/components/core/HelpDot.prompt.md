@@ -1,4 +1,4 @@
-Use `HelpDot` wherever a surface earns its one "?" — at most one per screen, top-right of the header or of the sheet/card it explains (the pads and the filter sheet carry their own).
+Use `HelpDot` wherever a surface earns its one "?" — at most one per screen, top-right of the header or of the sheet/card it explains (the pads and the filter sheet carry their own; Settings alone carries one beside each section heading that needs it — `SettingsGroup`'s `help`).
 
 ```jsx
 <PageHeader title="Cite something" action={<HelpDot ariaLabel="How searching works" />} />

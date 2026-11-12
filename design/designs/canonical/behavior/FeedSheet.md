@@ -84,7 +84,7 @@ ALWAYS the filter's "?" says Reset brings back your defaults, to change them go 
 
 ALWAYS the filter's "?" says Ranked puts what's closest to you first — your view, no one else's. Newest ignores it and lists by time. and How sensitive content is veiled is set in Settings.
 
-ALWAYS the feed filter's "?" says What you've already seen waits below the Already seen line unless you ask for it back. and the search sheet's keeps its stays-out sentence
+ALWAYS the feed filter's "?" says What you've already seen waits below the Already seen line unless you ask for it back. and the search sheet's carries no seen sentence
 
 WHEN the last kind chip is switched off -> NEVER the chip refuses the tap
 

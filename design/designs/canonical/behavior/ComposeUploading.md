@@ -26,4 +26,4 @@ WHEN press Next GIVEN every upload has landed -> the seal opens ungated
 
 WHEN press the header back arrow -> the crop comes back, one stage behind
 
-WHEN press the header X -> the whole flow is left AND the draft is kept AND the uploads finish quietly AND NEVER a dialog asks
+WHEN press the header X -> the whole flow is left for where the composer was opened from AND the draft is kept AND the uploads finish quietly AND NEVER a dialog asks

@@ -74,7 +74,6 @@
         "changeEmail.body": [],
         "changeEmail.commit": [],
         "changeEmail.commit.action": [],
-        "changeEmail.commit.reason": [],
         "changeEmail.current": [],
         "changeEmail.current.input": [],
         "changeEmail.current.label": [],
@@ -887,9 +886,6 @@
           "password",
           "malformed"
         ],
-        "changeEmail.commit.reason": [
-          "none"
-        ],
         "changeEmail.current": [
           "none",
           "password",
@@ -948,7 +944,6 @@
         "changeEmail.code.support": [],
         "changeEmail.commit": [],
         "changeEmail.commit.action": [],
-        "changeEmail.commit.reason": [],
         "changeEmail.header": [],
         "changeEmail.header.back": [],
         "changeEmail.interim": [],
@@ -989,7 +984,6 @@
         "changeHandle.body": [],
         "changeHandle.commit": [],
         "changeHandle.commit.action": [],
-        "changeHandle.commit.reason": [],
         "changeHandle.handle": [],
         "changeHandle.handle.input": [],
         "changeHandle.handle.label": [],
@@ -1282,7 +1276,12 @@
       "prefix": "commentEdit",
       "keys": {
         "commentEdit.acts": "the upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
-        "commentEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+        "commentEdit.gate": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "commentEdit.sign": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "commentEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "commentEdit.video.describeRow": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "commentEdit.video.thumb": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "commentEdit.video.uploadError": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "commentEdit.acts": [
@@ -1294,6 +1293,7 @@
           "uploading"
         ],
         "commentEdit.cover": [],
+        "commentEdit.cover.add": [],
         "commentEdit.cover.change": [],
         "commentEdit.cover.label": [],
         "commentEdit.cover.thumb": [],
@@ -1306,8 +1306,24 @@
         "commentEdit.facts.sensitive.action": [],
         "commentEdit.facts.sensitive.label": [],
         "commentEdit.facts.sensitive.value": [],
-        "commentEdit.gate": [],
-        "commentEdit.gate.line": [],
+        "commentEdit.gate": [
+          "picked",
+          "second",
+          "failed"
+        ],
+        "commentEdit.gate.line": [
+          "picked",
+          "second"
+        ],
+        "commentEdit.gate.message": [
+          "failed"
+        ],
+        "commentEdit.gate.retry": [
+          "failed"
+        ],
+        "commentEdit.gate.wait": [
+          "failed"
+        ],
         "commentEdit.header": [],
         "commentEdit.header.back": [],
         "commentEdit.header.help": [],
@@ -1316,7 +1332,9 @@
         "commentEdit.references": [],
         "commentEdit.references.add": [],
         "commentEdit.references.label": [],
-        "commentEdit.sign": [],
+        "commentEdit.sign": [
+          "failed"
+        ],
         "commentEdit.tags": [],
         "commentEdit.tags.add": [],
         "commentEdit.tags.label": [],
@@ -1330,13 +1348,48 @@
         "commentEdit.tags.withdrawn.undo": [],
         "commentEdit.target": [],
         "commentEdit.video": [],
-        "commentEdit.video.describeRow": [],
-        "commentEdit.video.describeRow.count": [],
-        "commentEdit.video.describeRow.describe": [],
-        "commentEdit.video.describeRow.reason": [],
+        "commentEdit.video.describeRow": [
+          "picked",
+          "failed",
+          "second"
+        ],
+        "commentEdit.video.describeRow.count": [
+          "picked",
+          "failed",
+          "second"
+        ],
+        "commentEdit.video.describeRow.describe": [
+          "picked",
+          "failed",
+          "second"
+        ],
+        "commentEdit.video.describeRow.reason": [
+          "picked",
+          "failed",
+          "second"
+        ],
         "commentEdit.video.label": [],
-        "commentEdit.video.thumb": [],
-        "commentEdit.video.thumb.remove": [],
+        "commentEdit.video.thumb": [
+          "picked",
+          "failed",
+          "second"
+        ],
+        "commentEdit.video.thumb.remove": [
+          "picked",
+          "second"
+        ],
+        "commentEdit.video.uploadError": [
+          "failed"
+        ],
+        "commentEdit.video.uploadError.message": [
+          "failed"
+        ],
+        "commentEdit.video.uploadError.remove": [
+          "failed"
+        ],
+        "commentEdit.video.uploadError.retry": [
+          "failed"
+        ],
         "commentEdit.words": [],
         "commentEdit.words.input": [],
         "commentEdit.words.label": []
@@ -2186,7 +2239,8 @@
     "ComposeCrop": {
       "prefix": "composeCrop",
       "keys": {
-        "composeCrop.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)"
+        "composeCrop.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
+        "composeCrop.shapes": "the shape chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "composeCrop.header": [],
@@ -2200,10 +2254,26 @@
           "1",
           "2"
         ],
-        "composeCrop.shapes": [],
-        "composeCrop.shapes.squareChip": [],
-        "composeCrop.shapes.tallChip": [],
-        "composeCrop.shapes.wideChip": [],
+        "composeCrop.shapes": [
+          "tall",
+          "square",
+          "wide"
+        ],
+        "composeCrop.shapes.squareChip": [
+          "tall",
+          "square",
+          "wide"
+        ],
+        "composeCrop.shapes.tallChip": [
+          "tall",
+          "square",
+          "wide"
+        ],
+        "composeCrop.shapes.wideChip": [
+          "tall",
+          "square",
+          "wide"
+        ],
         "composeCrop.viewport": [],
         "composeCrop.zoom": [],
         "composeCrop.zoom.input": []
@@ -2416,9 +2486,7 @@
         "coverCrop.header.back": [],
         "coverCrop.header.leave": [],
         "coverCrop.header.title": [],
-        "coverCrop.howTo": [],
         "coverCrop.next": [],
-        "coverCrop.shapeNote": [],
         "coverCrop.viewport": [],
         "coverCrop.zoom": [],
         "coverCrop.zoom.input": []
@@ -3135,7 +3203,7 @@
         "settings.reading.feed.chevron": [],
         "settings.reading.feed.label": [],
         "settings.reading.feed.value": [],
-        "settings.reading.footnote": [],
+        "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
         "settings.sensitive.footnote": [],
@@ -3169,15 +3237,14 @@
         ],
         "settings.stance": [],
         "settings.stance.footnote": [],
+        "settings.stance.help": [],
         "settings.stance.label": [],
         "settings.stance.pad": [],
         "settings.stance.pad.choice": [],
         "settings.stance.pad.label": [],
-        "settings.stance.pad.status": [],
         "settings.stance.sliders": [],
         "settings.stance.sliders.choice": [],
         "settings.stance.sliders.label": [],
-        "settings.stance.sliders.status": [],
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
@@ -3290,15 +3357,6 @@
           "member"
         ],
         "explore.filterSheet.order.picker.rankedOption": [
-          "member"
-        ],
-        "explore.filterSheet.order.seen": [
-          "member"
-        ],
-        "explore.filterSheet.order.seen.box": [
-          "member"
-        ],
-        "explore.filterSheet.order.seen.label": [
           "member"
         ],
         "explore.filterSheet.title": [],
@@ -7714,7 +7772,6 @@
         "inviteEntry.browse": [],
         "inviteEntry.commit": [],
         "inviteEntry.commit.action": [],
-        "inviteEntry.commit.reason": [],
         "inviteEntry.header": [],
         "inviteEntry.header.back": [],
         "inviteEntry.link": [],
@@ -7977,6 +8034,7 @@
       "prefix": "invites",
       "keys": {
         "invites.application": "the asker's id, the lowercase UUID the wire carries (Invites' applications, a kept approval's row among them)",
+        "invites.applicationsDoor": "the applications chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "invites.applicationsEmpty": "the sections chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
         "invites.link": "the invite link's id, the link's last path segment (Invites' live links)",
@@ -8035,6 +8093,9 @@
           "c9ae8851-9214-4e5a-bcaf-887e758df006",
           "b7b20d2c-a1b1-4c3a-a6ba-60156276bff5",
           "39fe9a1a-85c4-41b4-a1e2-c5de97325ef4"
+        ],
+        "invites.applicationsDoor": [
+          "capped"
         ],
         "invites.applicationsEmpty": [
           "no-applications"
@@ -8166,6 +8227,7 @@
       "nodes": {
         "invites.empty": [],
         "invites.empty.create": [],
+        "invites.empty.help": [],
         "invites.empty.title": [],
         "invites.header": [],
         "invites.header.back": [],
@@ -8180,7 +8242,6 @@
         "join.body": [],
         "join.commit": [],
         "join.commit.action": [],
-        "join.commit.reason": [],
         "join.confirm": [],
         "join.confirm.input": [],
         "join.confirm.label": [],
@@ -8251,7 +8312,6 @@
         "inviteEntry.browse": [],
         "inviteEntry.commit": [],
         "inviteEntry.commit.action": [],
-        "inviteEntry.commit.reason": [],
         "inviteEntry.header": [],
         "inviteEntry.header.back": [],
         "inviteEntry.link": [],
@@ -12279,7 +12339,6 @@
         "reset.body": [],
         "reset.commit": [],
         "reset.commit.action": [],
-        "reset.commit.reason": [],
         "reset.email": [],
         "reset.email.input": [],
         "reset.email.label": [],
@@ -12306,7 +12365,6 @@
         "reset.body": [],
         "reset.commit": [],
         "reset.commit.action": [],
-        "reset.commit.reason": [],
         "reset.confirm": [],
         "reset.confirm.input": [],
         "reset.confirm.label": [],
@@ -13229,7 +13287,7 @@
         "settings.reading.feed.chevron": [],
         "settings.reading.feed.label": [],
         "settings.reading.feed.value": [],
-        "settings.reading.footnote": [],
+        "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
         "settings.sensitive.footnote": [],
@@ -13263,15 +13321,14 @@
         ],
         "settings.stance": [],
         "settings.stance.footnote": [],
+        "settings.stance.help": [],
         "settings.stance.label": [],
         "settings.stance.pad": [],
         "settings.stance.pad.choice": [],
         "settings.stance.pad.label": [],
-        "settings.stance.pad.status": [],
         "settings.stance.sliders": [],
         "settings.stance.sliders.choice": [],
         "settings.stance.sliders.label": [],
-        "settings.stance.sliders.status": [],
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
@@ -13300,7 +13357,6 @@
         "settingsBackup.body": [],
         "settingsBackup.commit": [],
         "settingsBackup.commit.action": [],
-        "settingsBackup.commit.reason": [],
         "settingsBackup.current": [],
         "settingsBackup.current.input": [],
         "settingsBackup.current.label": [],
@@ -13450,7 +13506,7 @@
         "settings.reading.feed.chevron": [],
         "settings.reading.feed.label": [],
         "settings.reading.feed.value": [],
-        "settings.reading.footnote": [],
+        "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
         "settings.sensitive.footnote": [],
@@ -13484,15 +13540,14 @@
         ],
         "settings.stance": [],
         "settings.stance.footnote": [],
+        "settings.stance.help": [],
         "settings.stance.label": [],
         "settings.stance.pad": [],
         "settings.stance.pad.choice": [],
         "settings.stance.pad.label": [],
-        "settings.stance.pad.status": [],
         "settings.stance.sliders": [],
         "settings.stance.sliders.choice": [],
         "settings.stance.sliders.label": [],
-        "settings.stance.sliders.status": [],
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
@@ -13605,7 +13660,7 @@
         "settings.reading.feed.chevron": [],
         "settings.reading.feed.label": [],
         "settings.reading.feed.value": [],
-        "settings.reading.footnote": [],
+        "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
         "settings.sensitive.footnote": [],
@@ -13639,15 +13694,14 @@
         ],
         "settings.stance": [],
         "settings.stance.footnote": [],
+        "settings.stance.help": [],
         "settings.stance.label": [],
         "settings.stance.pad": [],
         "settings.stance.pad.choice": [],
         "settings.stance.pad.label": [],
-        "settings.stance.pad.status": [],
         "settings.stance.sliders": [],
         "settings.stance.sliders.choice": [],
         "settings.stance.sliders.label": [],
-        "settings.stance.sliders.status": [],
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
@@ -13818,7 +13872,7 @@
         "settings.reading.feed.chevron": [],
         "settings.reading.feed.label": [],
         "settings.reading.feed.value": [],
-        "settings.reading.footnote": [],
+        "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
         "settings.sensitive.footnote": [],
@@ -13852,15 +13906,14 @@
         ],
         "settings.stance": [],
         "settings.stance.footnote": [],
+        "settings.stance.help": [],
         "settings.stance.label": [],
         "settings.stance.pad": [],
         "settings.stance.pad.choice": [],
         "settings.stance.pad.label": [],
-        "settings.stance.pad.status": [],
         "settings.stance.sliders": [],
         "settings.stance.sliders.choice": [],
         "settings.stance.sliders.label": [],
-        "settings.stance.sliders.status": [],
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
@@ -13979,7 +14032,7 @@
         "settings.reading.feed.chevron": [],
         "settings.reading.feed.label": [],
         "settings.reading.feed.value": [],
-        "settings.reading.footnote": [],
+        "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
         "settings.sensitive.footnote": [],
@@ -14013,15 +14066,14 @@
         ],
         "settings.stance": [],
         "settings.stance.footnote": [],
+        "settings.stance.help": [],
         "settings.stance.label": [],
         "settings.stance.pad": [],
         "settings.stance.pad.choice": [],
         "settings.stance.pad.label": [],
-        "settings.stance.pad.status": [],
         "settings.stance.sliders": [],
         "settings.stance.sliders.choice": [],
         "settings.stance.sliders.label": [],
-        "settings.stance.sliders.status": [],
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
@@ -14184,7 +14236,7 @@
         "settings.reading.feed.chevron": [],
         "settings.reading.feed.label": [],
         "settings.reading.feed.value": [],
-        "settings.reading.footnote": [],
+        "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
         "settings.sensitive.footnote": [],
@@ -14218,15 +14270,14 @@
         ],
         "settings.stance": [],
         "settings.stance.footnote": [],
+        "settings.stance.help": [],
         "settings.stance.label": [],
         "settings.stance.pad": [],
         "settings.stance.pad.choice": [],
         "settings.stance.pad.label": [],
-        "settings.stance.pad.status": [],
         "settings.stance.sliders": [],
         "settings.stance.sliders.choice": [],
         "settings.stance.sliders.label": [],
-        "settings.stance.sliders.status": [],
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
@@ -14414,7 +14465,7 @@
         "settings.reading.feed.chevron": [],
         "settings.reading.feed.label": [],
         "settings.reading.feed.value": [],
-        "settings.reading.footnote": [],
+        "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
         "settings.sensitive.footnote": [],
@@ -14448,15 +14499,14 @@
         ],
         "settings.stance": [],
         "settings.stance.footnote": [],
+        "settings.stance.help": [],
         "settings.stance.label": [],
         "settings.stance.pad": [],
         "settings.stance.pad.choice": [],
         "settings.stance.pad.label": [],
-        "settings.stance.pad.status": [],
         "settings.stance.sliders": [],
         "settings.stance.sliders.choice": [],
         "settings.stance.sliders.label": [],
-        "settings.stance.sliders.status": [],
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
@@ -14601,7 +14651,7 @@
         "settings.reading.feed.chevron": [],
         "settings.reading.feed.label": [],
         "settings.reading.feed.value": [],
-        "settings.reading.footnote": [],
+        "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
         "settings.sensitive.footnote": [],
@@ -14638,15 +14688,14 @@
         "settings.snackbar.message": [],
         "settings.stance": [],
         "settings.stance.footnote": [],
+        "settings.stance.help": [],
         "settings.stance.label": [],
         "settings.stance.pad": [],
         "settings.stance.pad.choice": [],
         "settings.stance.pad.label": [],
-        "settings.stance.pad.status": [],
         "settings.stance.sliders": [],
         "settings.stance.sliders.choice": [],
         "settings.stance.sliders.label": [],
-        "settings.stance.sliders.status": [],
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
@@ -14676,7 +14725,6 @@
         "signIn.browse": [],
         "signIn.commit": [],
         "signIn.commit.action": [],
-        "signIn.commit.reason": [],
         "signIn.email": [],
         "signIn.email.input": [],
         "signIn.email.label": [],
@@ -14729,7 +14777,6 @@
         "signIn.browse": [],
         "signIn.commit": [],
         "signIn.commit.action": [],
-        "signIn.commit.reason": [],
         "signIn.email": [],
         "signIn.email.input": [],
         "signIn.email.label": [],
@@ -14869,7 +14916,7 @@
         "settings.reading.feed.chevron": [],
         "settings.reading.feed.label": [],
         "settings.reading.feed.value": [],
-        "settings.reading.footnote": [],
+        "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
         "settings.sensitive.footnote": [],
@@ -14903,15 +14950,14 @@
         ],
         "settings.stance": [],
         "settings.stance.footnote": [],
+        "settings.stance.help": [],
         "settings.stance.label": [],
         "settings.stance.pad": [],
         "settings.stance.pad.choice": [],
         "settings.stance.pad.label": [],
-        "settings.stance.pad.status": [],
         "settings.stance.sliders": [],
         "settings.stance.sliders.choice": [],
         "settings.stance.sliders.label": [],
-        "settings.stance.sliders.status": [],
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
@@ -15498,7 +15544,6 @@
         "yourKey.body": [],
         "yourKey.commit": [],
         "yourKey.commit.action": [],
-        "yourKey.commit.reason": [],
         "yourKey.current": [],
         "yourKey.current.input": [],
         "yourKey.current.label": [],

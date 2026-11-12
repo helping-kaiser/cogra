@@ -10,7 +10,7 @@ ALWAYS the face and the name over the form are the link's inviter's
 
 ALWAYS the heading names the inviter by the whole display name, else by the handle with its @, and reads Mira Voss invited you over the sample's inviter
 
-ALWAYS the heading wraps as running text and the inviter's name in it is never cut
+ALWAYS the heading wraps as running text and the inviter's name in it is one unit that never stands on two lines, whole on a line or cut at its end with … when longer than the line
 
 ALWAYS the header's arrow reads a plain Back, with no origin noun
 
@@ -47,6 +47,8 @@ WHEN typing in a field that carries no error line -> NEVER the field turns to it
 WHEN press Create account -> Create account refuses a second press until the registration answers AND NEVER Create account dims
 
 WHEN the registration has not answered 200ms after the press -> Create account reads Creating account… AND NEVER a spinner appears
+
+ALWAYS the screen's ways out refuse a press, undimmed and unchanged in face, from 200ms after the press of Create account until its answer comes — an entry form keeps its exits held while it submits, the named exception to Close (jakob 2026-11-11)
 
 WHEN the registration has not answered 5s after the press -> Create account still reads Creating account… AND NEVER a slow line or a progress indicator appears
 
@@ -96,6 +98,6 @@ WHEN tap Terms -> the Terms open AND the form keeps every field as it was left o
 
 WHEN tap Privacy Policy -> the Privacy Policy opens AND the form keeps every field as it was left on the way back
 
-ALWAYS Create account stands disabled with Waiting for a handle, your email and a password right above it GIVEN Handle, Email, Password or Repeat password is empty
+ALWAYS Create account stands disabled with no line above it and its spoken description reads Waiting for a handle, your email and a password GIVEN Handle, Email, Password or Repeat password is empty
 
-WHEN all four fields hold a character -> Create account wakes AND the line Waiting for a handle, your email and a password goes
+WHEN all four fields hold a character -> Create account wakes AND its spoken description Waiting for a handle, your email and a password goes

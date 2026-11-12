@@ -18,14 +18,19 @@
    short enough that its content sizes it, so the foot ends the content rather
    than being pinned under a scroll.
 
-   `Reset` STAGES THE SEARCH'S DEFAULT: no kind narrowed, and the shared axes
-   — the order and the seen toggle — at the reader's default, what the
-   trigger reads as `Everything`. ONE DEFAULT OBJECT EVERYWHERE (jakob
-   2026-10-02, the fix-fix round's ruling 12): the default the reader sets in
-   Settings reaches search's order and seen toggle, the axes the two sheets
-   share; the kinds stay search's own, since search's kind semantics are
-   not the feed's. This reader never set one, so the sheet is drawn at the
-   app's.
+   `Reset` STAGES THE SEARCH'S DEFAULT: no kind narrowed, and the shared axis
+   — the order — at the reader's default, what the trigger reads as
+   `Everything`. ONE DEFAULT OBJECT EVERYWHERE (jakob 2026-10-02, the fix-fix
+   round's ruling 12): the default the reader sets in Settings reaches
+   search's order, the axis the two sheets share; the kinds stay search's
+   own, since search's kind semantics are not the feed's. This reader never
+   set one, so the sheet is drawn at the app's.
+
+   SEARCH NEVER LOOKS AT THE SEEN LIST (jakob 2026-11-11, seam 296: "search
+   should not care about seen or unseen at all.. you are literally searching
+   all nodes"). The Order section stands without its seen toggle
+   (`OrderSection`'s `seenToggle={false}`), and nothing seen is held back —
+   people and tags included.
 
    THE TRIGGER SPEAKS DEVIATIONS FROM THAT DEFAULT (ruling 10), a deviation
    back toward the app's included, and the "?" — the feed's own dialog —
@@ -38,8 +43,8 @@
    `kinds` with each chip as `<value>Chip`, then the `order` and the `foot`.
 
    THE `reader` CHIP DRAWS A GUEST'S SHEET (seam 248). A guest's search has
-   one order — newest, no viewer to rank for — and nothing seen to show, so
-   the order section, its seen toggle with it, is left out whole: the sheet
+   one order — newest, no viewer to rank for — so the order section is left
+   out whole: the sheet
    holds the kinds and the foot. Beneath the wash a guest's results stand
    newest first, the topics section first, a tag bare-edged and a post with
    its age (`ExploreSearch`'s guest law). Beneath the wash the sections wear
@@ -81,7 +86,7 @@ export function Screen() {
           ))}
         </FilterSection>
         <div style={{ display: "{{orderShown}}" }} data-node-chip="reader" data-node-key="member">
-          <OrderSection order="ranked" node="order" />
+          <OrderSection order="ranked" seenToggle={false} node="order" />
         </div>
         <FilterFoot node="foot" />
       </BottomSheet>

@@ -18,4 +18,4 @@ WHEN tap a frame -> that frame is the clip's cover AND the strip stands as it di
 
 WHEN press Next -> the details stage opens AND NEVER an Add a cover door stands there
 
-WHEN press the header X -> the whole flow is left AND the draft is kept AND NEVER a dialog asks
+WHEN press the header X -> the whole flow is left for where the composer was opened from AND the draft is kept AND NEVER a dialog asks

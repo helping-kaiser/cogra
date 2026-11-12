@@ -38,10 +38,18 @@ WHEN press Change password GIVEN no answer reaches the device -> the fields keep
 
 WHEN press Change password GIVEN the account's re-auth budget is spent -> the line Too many tries. Wait a little, then try again. stands above Change password AND Change password stays AND NEVER the password changes
 
-WHEN press the header back arrow -> settings returns AND NEVER the password changes
+WHEN press the header back arrow GIVEN Change password has not been pressed -> settings returns AND NEVER the password changes
+
+ALWAYS the header's arrow is named Close from the press of Change password until its answer comes
+
+WHEN press Close GIVEN Change password was pressed -> settings returns AND the change goes on AND NEVER the change is canceled
+
+WHEN the change fails GIVEN the form was closed after the press -> the Password row in settings reads That didn't go through. AND NEVER Retry stands on the row
+
+WHEN tap the Password row GIVEN it reads That didn't go through. -> the form opens at rest, the passwords typed again
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 
-ALWAYS Change password stands disabled, with no line above it, GIVEN any password field is empty
+ALWAYS Change password stands disabled with no line above it and its spoken description reads Waiting for both passwords GIVEN any password field is empty
 
-WHEN all three password fields hold a character -> Change password wakes
+WHEN all three password fields hold a character -> Change password wakes AND its spoken description Waiting for both passwords goes

@@ -297,7 +297,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="How the filter works"', tag: "button" },
     { n: 2, find: 'role="switch"', tag: "button", all: true },
     { n: 3, find: "aria-pressed=", tag: "button", all: true },
-    { n: 4, find: "already seen", tag: "label" },
+    // No 4: search carries no seen toggle (round 44, seam 296).
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 6, find: ">Done</button>", tag: "button" },
     { n: 7, find: ">Reset</button>", tag: "button" },
@@ -921,9 +921,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
-    { n: 4, find: ">Tall 4:5</button>", tag: "button" },
-    { n: 4, find: ">Square 1:1</button>", tag: "button" },
-    { n: 4, find: ">Wide 1.91:1</button>", tag: "button" },
+    // The `shape` chip draws the chips once per value (round 44): every copy.
+    { n: 4, find: ">Tall 4:5</button>", tag: "button", all: true },
+    { n: 4, find: ">Square 1:1</button>", tag: "button", all: true },
+    { n: 4, find: ">Wide 1.91:1</button>", tag: "button", all: true },
     { n: 5, find: "transform:scale(1.15)", tag: "div" },
     { n: 6, find: "position:relative;width:48px", tag: "div", all: true },
     { n: 7, find: 'data-field="Zoom"', tag: "div" },
@@ -1211,19 +1212,26 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Leave — the edit is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
     { n: 4, find: 'data-field="Words"', tag: "div" },
-    { n: 5, find: 'aria-label="Remove this video"', tag: "button" },
-    { n: 6, find: ">Describe the video</button>", tag: "button" },
+    // The `clip` chip draws the clip's tile and its describe row once per value (round 44).
+    { n: 5, find: 'aria-label="Remove this video"', tag: "button", all: true },
+    { n: 6, find: ">Describe the video</button>", tag: "button", all: true },
     { n: 7, find: ">Change the cover</button>", tag: "button" },
     { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
     { n: 9, find: "+ Add a tag", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
     // Both `upload` copies count alike: a new face rides the Edit record (seam 248).
     { n: 11, find: "signing 3 things", tag: "button", all: true },
-    { n: 12, find: ">Sign the edit</button>", tag: "button" },
+    // At rest, and disabled under the `clip` chip's failed copy.
+    { n: 12, find: ">Sign the edit</button>", tag: "button", all: true },
     { n: 12, find: ">Signing the edit…</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
     // The withdrawn tag's Undo (the readme's edit-withdrawal law), as on CommentEdit.
     { n: 15, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
+    // The `clip` chip's picked clip (round 44, seam 295-3): the cover door,
+    // and the failure's and the refusal's ways out in their copies.
+    { n: 16, find: ">Add a cover</button>", tag: "button" },
+    { n: 17, find: ">Retry</button>", tag: "button", all: true },
+    { n: 18, find: ">Remove it</button>", tag: "button", all: true },
   ],
   EditComposeVideo: [
     { n: 14, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },
@@ -1715,13 +1723,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: ">Your key</span>", tag: "button" },
     { n: 10, find: ">Revoke</button>", tag: "button", all: true },
     { n: 11, find: ">Sign out everywhere else</span>", tag: "button" },
-    { n: 12, find: ">Password</span>", tag: "button" },
+    // The Password and Email rows are drawn twice on the `forms` chip (round
+    // 43): the rest row and the failed one, the same control, so one number.
+    { n: 12, find: ">Password</span>", tag: "button", all: true },
     { n: 13, find: ">Handle</span>", tag: "button" },
     { n: 13, find: ">That handle is taken.</span>", tag: "button" },
     // Retry on a failed row — the handle change's, and the kept picks' batch
     // (round 41, the `kept` chip): one control, the same signing asked again.
     { n: 29, find: ">Retry</button>", tag: "button", all: true },
-    { n: 14, find: ">Email</span>", tag: "button" },
+    { n: 14, find: ">Email</span>", tag: "button", all: true },
     { n: 15, find: ">Don&#x27;t remember this account on this device</span>", tag: "button" },
     { n: 16, find: ">Sign out</span>", tag: "button" },
     // The People group arrived after the page was numbered, and a row inserted
@@ -1754,6 +1764,13 @@ Object.assign(FLOW_MARKERS, {
     // The install row (round 39), leading the Clearing data group on the
     // `install` chip — the next free number.
     { n: 30, find: ">Add CoGra to your home screen</span>", tag: "button" },
+    // Round 43: the two section "?" (jakob 2026-11-12) and their dialogs on
+    // the `help` chip — the next free numbers; the two dialogs' Close and
+    // scrim are one control each, so one number each.
+    { n: 31, find: 'aria-label="Giving an opinion"', tag: "button" },
+    { n: 32, find: 'aria-label="Reading"', tag: "button" },
+    { n: 33, find: ">Close</button>", tag: "button", all: true },
+    { n: 34, find: "background:var(--scrim-dialog)", tag: "div", all: true },
   ],
   // The install row's help where the browser cannot ask (round 39): the
   // `HelpDialog` pair, the page beneath wired on `Settings`.
@@ -2080,13 +2097,18 @@ Object.assign(FLOW_MARKERS, {
   // Three password fields, one reveal affordance: the toggle is the same control
   // drawn twice, so it carries one number on both — the rule the repeated
   // per-post controls keep.
+  // The `submit` chip's `pending` (round 43) draws the header again with its
+  // arrow named `Close`: the same control, so the arrow's number — on the
+  // three settings forms and on `ApplicantEmail`.
   ChangePassword: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
-    { n: 2, find: 'data-field="Current password"', tag: "div" },
-    { n: 3, find: 'data-field="New password"', tag: "div" },
+    { n: 1, find: 'aria-label="Close"', tag: "a" },
+    { n: 2, find: 'data-field="Current password"', tag: "div", all: true },
+    { n: 3, find: 'data-field="New password"', tag: "div", all: true },
     { n: 4, find: 'aria-label="Show password"', tag: "button", all: true },
     { n: 5, find: ">Change password</button>", tag: "button" },
-    { n: 6, find: 'data-field="Repeat password"', tag: "div" },
+    { n: 5, find: ">Changing password…</button>", tag: "button" },
+    { n: 6, find: 'data-field="Repeat password"', tag: "div", all: true },
   ],
   ChangeHandle: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
@@ -2105,15 +2127,19 @@ Object.assign(FLOW_MARKERS, {
   // same controls, so the same numbers on every instance.
   ChangeEmail: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 1, find: 'aria-label="Close"', tag: "a" },
     { n: 2, find: 'data-field="New email"', tag: "div", all: true },
     { n: 3, find: 'data-field="Current password"', tag: "div", all: true },
     { n: 4, find: 'aria-label="Show password"', tag: "button", all: true },
     { n: 5, find: ">Change email</button>", tag: "button", all: true },
+    { n: 5, find: ">Changing email…</button>", tag: "button" },
   ],
   ChangeEmailConfirm: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
-    { n: 2, find: 'data-field="Confirmation code"', tag: "div" },
+    { n: 1, find: 'aria-label="Close"', tag: "a" },
+    { n: 2, find: 'data-field="Confirmation code"', tag: "div", all: true },
     { n: 3, find: ">Confirm the code</button>", tag: "button" },
+    { n: 3, find: ">Confirming the code…</button>", tag: "button" },
   ],
 });
 
@@ -2315,10 +2341,12 @@ FLOW_MARKERS.ApplicantFeed.push({ n: 21, find: ">Wrong address?</button>", tag: 
 Object.assign(FLOW_MARKERS, {
   ApplicantEmail: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'data-field="New email"', tag: "div" },
-    { n: 3, find: 'data-field="Current password"', tag: "div" },
-    { n: 4, find: 'aria-label="Show password"', tag: "button" },
+    { n: 1, find: 'aria-label="Close"', tag: "a" },
+    { n: 2, find: 'data-field="New email"', tag: "div", all: true },
+    { n: 3, find: 'data-field="Current password"', tag: "div", all: true },
+    { n: 4, find: 'aria-label="Show password"', tag: "button", all: true },
     { n: 5, find: ">Change email</button>", tag: "button" },
+    { n: 5, find: ">Changing email…</button>", tag: "button" },
   ],
   // SignInError's anatomy to the element, so SignInError's numbers.
   SignInLimited: [
@@ -3179,15 +3207,21 @@ Object.assign(FLOW_MARKERS, {
     // Round 40: the list's door under its third row (the `letIn` chip's
     // `more`), appended so no via renumbers.
     { n: 12, find: 'data-node="invites.peopleDoor"', tag: "button" },
+    // Round 43: the queue's door under its third row (the `applications`
+    // chip's `capped`), appended so no via renumbers.
+    { n: 13, find: 'data-node="invites.applicationsDoor"', tag: "button" },
   ],
   RejectAllConfirm: [
     { n: 1, find: ">Close them</button>", tag: "button" },
     { n: 2, find: ">Keep them</button>", tag: "button" },
     { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+    { n: 4, find: ">Retry</button>", tag: "button" },
   ],
   InvitesEmpty: [
     { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
     { n: 2, find: ">Create invite</button>", tag: "button" },
+    // Round 43: the "?" beside Create invite.
+    { n: 3, find: 'aria-label="How vouching works"', tag: "button" },
   ],
   InviteNew: [
     { n: 1, find: ">Only one person can use it</span>", tag: "button" },
@@ -3223,6 +3257,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: ">Close it</button>", tag: "button" },
     { n: 2, find: ">Keep it</button>", tag: "button" },
     { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+    // Round 43: the closing failed after Close (`answer`'s `closedFailed`),
+    // its row's Retry — `FeedRemoveConfirm`'s fourth.
+    { n: 4, find: ">Retry</button>", tag: "button" },
   ],
 });
 

@@ -390,9 +390,11 @@ the wording **blessed (jakob 2026-10-02)**).
 ## The "?" dialogs
 
 Compose keeps captions to one short line; the full explanation lives
-behind a small "?" (at most one per screen, save the stopper exception:
-a notice that stops the surface's one act carries its own beside the
-header's — readme §13, *The compose flow*) opening a plain dialog:
+behind a small "?" (at most one per screen, save two exceptions: a
+notice that stops the surface's one act carries its own beside the
+header's — readme §13, *The compose flow* — and Settings carries one
+beside each section heading that needs it, `Giving an opinion` and
+`Reading`, jakob 2026-11-12) opening a plain dialog:
 title, at most two short paragraphs, Close. On the stance pad the "?"
 opens nothing: its text replaces the pad's body in place, with `Back to
 the pad` (readme §11; jakob 2026-10-05, the collected brief's D4) — the
@@ -491,7 +493,10 @@ noun):
   you sign when you approve them — is what brings them in. / Nothing is
   signed until Set. *(New 2026-10-05, blessed (jakob 2026-10-05) — jakob's D4:
   the Invites empty state's two blessed sentences on the mechanic, then
-  the pads' own `Nothing is signed until Set.`)*
+  the pads' own `Nothing is signed until Set.` On the empty Invites, beside
+  `Create invite`, the same "?" opens it as a dialog with the first
+  paragraph alone — the page has no Set (jakob 2026-11-12, the re-ask's
+  4).)*
 
   *The italicised tails are the `cg-exact` spans: the face is drawn in
   both reading modes, the digits only when the reader has asked for
@@ -537,9 +542,8 @@ noun):
   sentence is the surface's own, jakob 2026-10-14): What you
   let in, and in what order — the kinds combine freely, ranked or
   newest is one choice, and — on the feed — what you've already seen
-  waits below the Already seen line unless you ask for it back; on
-  search, what you've already seen stays out
-  unless you ask for it back. Nothing changes until you press Done,
+  waits below the Already seen line unless you ask for it back.
+  Nothing changes until you press Done,
   and nothing here is signed or shared. Ranked puts what's closest to
   you first — your view, no one else's. Newest ignores it and lists by
   time. / It lasts until you change it, on this device only. Reset
@@ -551,6 +555,16 @@ noun):
   explainer and the veil pointer stand here and not on the sheet,
   moved whole, jakob 2026-11-12; the veil pointer is the feed's and
   the settings sheet's, where `Also show` stands.)*
+- **Giving an opinion** (Settings, beside the section's heading): A tap
+  opens it; drift to where it feels right. / One slider per side of the
+  opinion. *(The pad's and the sliders' row hints, moved whole from the
+  page — jakob 2026-11-12, the re-ask's 8 (a); each blessed with the
+  settings round.)*
+- **Reading** (Settings, beside the section's heading): Every feed starts
+  from what it shows, and a change made inside a feed lasts until you
+  change it back. Both choices stay on this device. *(The group's
+  footnote, moved whole — jakob 2026-11-12, the re-ask's 8 (a); blessed
+  2026-10-05.)*
 
 **A "?" is named by the dialog it opens.** Its accessible name is that
 dialog's own subject, so a listener hears which explanation the tap
@@ -590,9 +604,9 @@ out (*Remove it*; never *Retry* — retrying cannot change the answer):
   ask 13 H; *new 2026-10-28, blessed (jakob 2026-11-10)*.)
 
 - `A video can't join an edit yet — post it on its own.` — a video picked
-  at an edit while the edit's video path is staged (`EditWords`' `+ Add
-  pictures or a video`, a words comment's edit; staged-surfaces, *Waiting
-  on a slice inside v1.0.0*). It is not a cap: the drawn path takes the
+  at a post's edit while the edit's video path is staged (`EditWords`' `+
+  Add pictures or a video`; staged-surfaces, *Waiting on a slice inside
+  v1.0.0*); a words comment's edit takes the clip (round 44). It is not a cap: the drawn path takes the
   clip through the cover step (`EditWords.md`), and the line says so
   honestly in the meantime — *yet* is load-bearing, the way out is a post
   of its own, and *join* is the composer's own verb (`a video can join
@@ -674,10 +688,9 @@ Retry (`UploadErrorLine` with both ways out):
   the line is drawn short because Retry stands beside it and the pair
   would say "try again" twice.
 
-**The cover's own words** — the crop a gallery picture goes through,
-and the way back to it from an edit:
+**The cover's own words** — the way to the crop a gallery picture goes
+through, from an edit:
 
-- `The cover takes the video's shape.`
 - `Add a cover`
 - `Change the cover`
 
@@ -705,16 +718,12 @@ and the way back to it from an edit:
 
 ## The crops' how-to line
 
-The three crops (`ComposeCrop`, `AvatarCrop`, `CoverCrop`) say how the
-picture moves in one quiet line under the zoom: `Drag to move, pinch to
-zoom.` On `ComposeCrop` the line opens with what the crop decides, `One
-shape for the whole post.` — the prefix *blessed (jakob 2026-10-06)*, so
-the post crop's line reads `One shape for the whole post. Drag to move,
-pinch to zoom.`. A device with no touch to pinch — a desktop browser — reads
-`Drag or use the arrow keys to move, the slider to zoom.` in its place,
-naming the two ways the crop offers there (jakob 2026-10-05; *new
-2026-10-05, flagged for blessing*). The arrow keys move the picture 1 %
-a press, 10 % with Shift.
+No crop says how the picture moves: the frame stands still and the
+picture moves and zooms under it on every crop (`ComposeCrop`,
+`AvatarCrop`, `CoverCrop`; jakob's removable-text pass, round 44). The one line under a zoom is
+`ComposeCrop`'s `One shape for the whole post.` — what the crop decides,
+*blessed (jakob 2026-10-06)*. The arrow keys move the picture 1 % a
+press, 10 % with Shift.
 
 ## Editing a media post
 
@@ -1186,12 +1195,13 @@ field:
 ## Commits that wait
 
 A form's commit stays disabled until its fields hold something (readme
-§4, *Interaction states*), and one quiet line right above it says what
-it waits for, in the voice for what something waits on (`Waiting for
-your key`) — the construction `Report a problem`'s empty foot first
-drew. One line per form (`WaitingCommit`; *new 2026-10-05, blessed
-(jakob 2026-10-05)*):
+§4, *Interaction states*), with nothing on screen about why (jakob
+2026-11-12). What it waits for is the commit's spoken description
+alone, in the voice for what something waits on (`Waiting for your
+key`). One description per form (`WaitingCommit`; *new 2026-10-05,
+blessed (jakob 2026-10-05)*):
 
+- `Waiting for both passwords` — `ChangePassword`.
 - `Waiting for a new handle` — `ChangeHandle`.
 - `Waiting for a new email and your password` — `ChangeEmail`,
   `ApplicantEmail`.
@@ -1204,9 +1214,7 @@ drew. One line per form (`WaitingCommit`; *new 2026-10-05, blessed
 - `Waiting for a handle, your email and a password` — `Join`.
 - `Waiting for a new password` — `ResetNew`.
 
-`ChangePassword` carries none: its commit simply stays disabled until the
-three fields hold something — the wait explains itself (jakob 2026-11-11,
-R2). `Report a problem` carries none: its `Send by email` only prefills a
+`Report a problem` carries none: its `Send by email` only prefills a
 draft, which is no commit for the law to gate.
 
 ## Menu rows
@@ -1848,11 +1856,11 @@ turning it on does.
 **Theme**: `Light` · `Dark` · `Auto`, no footnote: Auto following the
 system theme is a platform convention (jakob 2026-11-12).
 
-**Giving an opinion** keeps the shipped readings and gives them the
-hints the inverted gesture needs — `The pad` / `A tap opens it; drift to
-where it feels right.`, `Sliders` / `One slider per side of the opinion.`,
-`Typed values` with no hint — over a footnote read
-once for the group: `Press and hold instead, and a small positive one is signed on the spot.`
+**Giving an opinion** keeps the shipped readings — `The pad`, `Sliders`,
+`Typed values`, no hints — over a footnote read once for the group:
+`Press and hold instead, and a small positive one is signed on the
+spot.` The pad's and the sliders' background stands behind the
+heading's "?" (*The "?" dialogs*, jakob 2026-11-12).
 
 **The multi-action switch**, merged from the two apps:
 `Confirm multi-action submits`, no second line: the label says what it
@@ -1867,10 +1875,8 @@ the current default in the words the license block already uses —
 **Reading**: `What your feed shows` — the filter sheet's own accessible
 name and the purpose the trigger's name ends on, so the row and the
 trigger cannot say different things — with the default read back
-through the trigger's own words (`Posts`). Under the group: `Every feed
-starts from what it shows, and a change made inside a feed lasts until
-you change it back. Both choices stay on this device.` *(The drawn
-sentence; copy-voice follows the board, blessed (jakob 2026-10-05).)*
+through the trigger's own words (`Posts`). The group's scope stands
+behind the heading's "?" (*The "?" dialogs*, jakob 2026-11-12).
 
 **Sensitive content**: one switch, `Always unveil sensitive content`
 (jakob's own wording, 2026-10-09 — never a sheet, never a pair of
@@ -2465,10 +2471,8 @@ words, recorded so the registry is whole:
   `1 profile change`; under the card `Every change to your profile is
   signed in your name and stays in your public record.`; its "?" is named
   `Changing your profile`.
-- **The picture** — the crop titled `Your picture` with `One picture,
-  shown everywhere you appear.` under the how-to line (`AvatarCrop`); its
-  seal's `Your profile picture` over `Shown everywhere you appear.`, the
-  acts row `Picture` reading `A new profile picture`, and the same
+- **The picture** — the crop titled `Your picture`, no line under its
+  zoom (`AvatarCrop`); its seal's `Your profile picture`, the acts row `Picture` reading `A new profile picture`, and the same
   signed-change line (`AvatarSeal`).
 
 **The chronicle's verbs, one per family it lists** (seam 245, ask 10;
@@ -2719,7 +2723,8 @@ The naming law above is part of the same ruling and is written where it
 belongs.
 
 **The gesture, said in the settings group.** `Giving an opinion` is the
-group, `A tap opens it; drift to where it feels right.` the pad's hint, and
+group, `A tap opens it; drift to where it feels right.` the pad's hint
+behind its "?", and
 `Press and hold instead, and a small positive one is signed on the spot.` the footnote — the one place the
 shortcut and the price are said together.
 
@@ -3794,10 +3799,11 @@ the one the bottom bar (`New post`) and the empty feed (`write the
 first post`) already keep. The button and the sheet it raises say one
 word between them.
 
-**The empty state carries the whole mechanic in three sentences**:
-`No invites out yet. A link lets someone make an account. Your vouch —
-the opinion you sign when you approve them — is what brings them in.`
-The two halves are said APART because every other product conflates
+**The empty state says one thing, and the mechanic stands behind its
+"?"** (jakob 2026-11-12): `No invites out yet.`, and beside `Create
+invite` the "?" `How vouching works` opens `A link lets someone make an
+account. Your vouch — the opinion you sign when you approve them — is
+what brings them in.` The two halves are said APART because every other product conflates
 them and a reader who does will be surprised by the second. *Vouch* is
 the product's word and a reader's unfamiliar one, so it is explained
 where it stands rather than left to be guessed. `brings them in` is

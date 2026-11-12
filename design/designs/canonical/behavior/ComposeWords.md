@@ -22,7 +22,7 @@ WHEN press Next -> NEVER the crop or the cover step opens
 
 WHEN press the header back arrow -> the pick step comes back, one stage behind
 
-WHEN press the header X -> the whole flow is left AND the draft is kept AND NEVER a dialog asks
+WHEN press the header X -> the whole flow is left for where the composer was opened from AND the draft is kept AND NEVER a dialog asks
 
 WHEN tap Add pictures instead GIVEN the body holds words -> an ask to discard the body opens over the stage AND NEVER the body switches before the ask is answered
 

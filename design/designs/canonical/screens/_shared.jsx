@@ -3498,38 +3498,26 @@ function WhatsNewBody({ newer }) {
 /* A COMMIT WAITING ON ITS FIELDS — the disabled-until-filled law drawn
    (readme §4, *Interaction states*; jakob 2026-10-05, the collected brief's D6,
    drawn by the final brief). A form's commit that cannot go yet stands where it
-   always stands, visible and disabled at the 38%, and one quiet line right
-   above it says what it waits for — the construction `Report a problem`'s
-   empty foot first drew (`Nothing to send yet`), in the kept picks' blessed
-   voice for what something waits on (`Waiting for your key`). The line is the
-   button's description, so a listener hears the reason with the control. The
-   first character in the last empty field wakes the commit and the line goes.
-   Every reason is blessed (jakob 2026-10-05; copy-voice, *Commits that
-   wait*).
+   always stands, visible and disabled at the 38%, with nothing on screen about
+   why: the wait is self-evident (jakob 2026-11-12, the re-ask's 1). What it
+   waits for is the button's SPOKEN description alone — `reason`, in a
+   visually hidden span the button names in `aria-describedby`, so a listener
+   hears `Waiting for your email` with the control and a sighted reader sees
+   the disabled commit and nothing more. The first character in the last empty
+   field wakes the commit and the description goes with the wait. Every reason
+   is blessed (jakob 2026-10-05; copy-voice, *Commits that wait*).
 
    `waiting` false draws the live commit alone, for a state whose fields are
-   filled. A form with no `reason` waits silently: the commit disabled and no
-   line (`ChangePassword`, jakob 2026-11-11, R2 — a self-evident wait says
-   nothing).
+   filled.
 
-   `node` names the pair where a registered board places it (design ⇄ impl
-   seam 002): the line is its `reason` and the button its `action`. */
+   `node` names the commit where a registered board places it (design ⇄ impl
+   seam 002): the button is its `action`. The spoken description is no node —
+   nothing of it is drawn. */
 function WaitingCommit({ id, label, reason, waiting = true, node }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-node={node}>
+    <div style={{ display: "flex", flexDirection: "column" }} data-node={node}>
       {waiting && reason && (
-        <span
-          id={`${id}-waits`}
-          data-node={node && "reason"}
-          style={{
-            textAlign: "center",
-            fontSize: "var(--text-label-small)",
-            lineHeight: "var(--text-label-small--line-height)",
-            letterSpacing: "var(--text-label-small--letter-spacing)",
-            fontWeight: "var(--text-label-small--font-weight)",
-            color: "var(--text-secondary)",
-          }}
-        >
+        <span id={`${id}-waits`} style={SR_ONLY}>
           {reason}
         </span>
       )}
@@ -3542,8 +3530,7 @@ function WaitingCommit({ id, label, reason, waiting = true, node }) {
 
 /* The names are the `changeHandle` prefix's (design ⇄ impl seam 082): both
    boards register them — the field is `handle`, named for what it changes, as
-   the credential family names its fields, and the commit with its reason is
-   `commit`. */
+   the credential family names its fields, and the commit is `commit`. */
 function ChangeHandleBody({ value = "" } = {}) {
   return (
     <>
@@ -3572,8 +3559,7 @@ function ChangeHandleBody({ value = "" } = {}) {
           }}
           data-node="body"
         >
-          @sol is how people mention and find you. Everything you have published stays yours — the
-          handle is a name, not the account.
+          <NameInText text="@sol is how people mention and find you. Everything you have published stays yours — the handle is a name, not the account." />
         </p>
 
         <div style={{ marginTop: 32 }}>
@@ -3674,7 +3660,17 @@ function ReportProblemBody({ words }) {
    two unheaded ones for what the page's own note calls them — leaving and
    ending — and a row by one word for what it is. The sessions are keyed by
    their position, this device first: two devices can carry one name. */
-function SettingsBody({ handleChip = false, keptChip = false, backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, hidden = "3", recoveryStatus, backupFootnote, clearingFootnote, install } = {}) {
+/* THE TWO SECTION "?" (jakob 2026-11-12, the re-ask's 8 (a)): Settings alone
+   carries a "?" beside a section heading that needs it, and the background
+   that stood on the page moves behind it whole — copy-voice, *The "?"
+   dialogs*. Each opens a plain dialog titled by its heading, `HelpDialog`'s
+   shape as `SettingsInstallHelp` draws it on this page. `helpChip` draws the
+   two open states on `Settings` (its `help` chip); the dialogs are drawn
+   copies and carry no name. */
+const GIVING_AN_OPINION_HELP = ["A tap opens it; drift to where it feels right.", "One slider per side of the opinion."];
+const READING_HELP = "Every feed starts from what it shows, and a change made inside a feed lasts until you change it back. Both choices stay on this device.";
+
+function SettingsBody({ handleChip = false, keptChip = false, formsChip = false, helpChip = false, backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, hidden = "3", recoveryStatus, backupFootnote, clearingFootnote, install } = {}) {
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" node="header" />
@@ -3703,20 +3699,19 @@ function SettingsBody({ handleChip = false, keptChip = false, backup = "made", f
         <SettingsGroup
           label="Giving an opinion"
           footnote="Press and hold instead, and a small positive one is signed on the spot."
+          help={<HelpDot ariaLabel="Giving an opinion" onOpen={() => {}} node="help" />}
           node="stance"
         >
           <SettingsRow
             name="settings-stance-input"
             selected
             label="The pad"
-            status="A tap opens it; drift to where it feels right."
             node="pad"
           />
           <SettingsRow
             name="settings-stance-input"
             selected={false}
             label="Sliders"
-            status="One slider per side of the opinion."
             node="sliders"
           />
           <SettingsRow
@@ -3749,7 +3744,7 @@ function SettingsBody({ handleChip = false, keptChip = false, backup = "made", f
             drawn either way. */}
         <SettingsGroup
           label="Reading"
-          footnote="Every feed starts from what it shows, and a change made inside a feed lasts until you change it back. Both choices stay on this device."
+          help={<HelpDot ariaLabel="Reading" onOpen={() => {}} node="help" />}
           node="reading"
         >
           <SettingsRow label="What your feed shows" value="Posts" onOpen={() => {}} node="feed" />
@@ -3766,7 +3761,7 @@ function SettingsBody({ handleChip = false, keptChip = false, backup = "made", f
             viewer-state round). It sits beside Reading because that is the
             activity it belongs to — a reader who wants their feed quieter looks
             where the feed's own default lives — and in a group of its own
-            because the Reading footnote's promise, that both its choices stay
+            because the Reading "?"'s promise, that both its choices stay
             on this device, is not true of a hidden account: that list follows
             the account everywhere. Its count is bare, the row's label having
             already said what is counted (§3); with nobody hidden the row goes
@@ -3787,7 +3782,7 @@ function SettingsBody({ handleChip = false, keptChip = false, backup = "made", f
             the account; Android carries the switch itself (Play has no
             web-only rule). One switch, off by default — never a sheet
             (jakob's shape). It stands in a group of its own for the same
-            reason hiding does: the Reading footnote's this-device promise
+            reason hiding does: the Reading "?"'s this-device promise
             is not true of it. */}
         <SettingsGroup
           label="Sensitive content"
@@ -3950,7 +3945,30 @@ function SettingsBody({ handleChip = false, keptChip = false, backup = "made", f
           label="Credentials"
           node="credentials"
         >
-          <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} node="password" />
+          {formsChip ? (
+            /* A FORM'S SUBMIT FAILING AFTER CLOSE (round 43; jakob 2026-11-12,
+               the re-ask's 9 (a)): Close on a signed-in plain form leaves for
+               settings and the submit goes on; one that does not go through
+               says so on the form's own row — `That didn't go through.`, the
+               Handle row's failed line, with no `Retry` (a password change
+               would need the passwords typed again) — and the row's tap opens
+               the form again. The failed states are drawn copies; the rest row
+               alone carries the name. */
+            <div>
+              <div style={{ display: "{{passwordRestShown}}" }}>
+                <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} node="password" />
+              </div>
+              <div style={{ display: "{{passwordFailedShown}}" }}>
+                <SettingsRow
+                  label="Password"
+                  status={<span role="alert" style={{ color: "var(--text-failure)" }}>That didn&apos;t go through.</span>}
+                  onOpen={() => {}}
+                />
+              </div>
+            </div>
+          ) : (
+            <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} node="password" />
+          )}
           {handleChip ? (
             /* THE HANDLE CHANGE AFTER CLOSE (round 37, jakob 2026-11-11: "yep"):
                the dialog and the form leave to settings and the change goes on;
@@ -3990,13 +4008,29 @@ function SettingsBody({ handleChip = false, keptChip = false, backup = "made", f
           ) : (
             <SettingsRow label="Handle" value="@sol" onOpen={() => {}} node="handle" />
           )}
-          <SettingsRow
-            label="Email"
-            value="sol@solferreira.art"
-            status={emailPending ? "Change pending" : undefined}
-            onOpen={() => {}}
-            node="email"
-          />
+          {formsChip ? (
+            <div>
+              <div style={{ display: "{{emailRestShown}}" }}>
+                <SettingsRow label="Email" value="sol@solferreira.art" status={emailPending ? "Change pending" : undefined} onOpen={() => {}} node="email" />
+              </div>
+              <div style={{ display: "{{emailFailedShown}}" }}>
+                <SettingsRow
+                  label="Email"
+                  value="sol@solferreira.art"
+                  status={<span role="alert" style={{ color: "var(--text-failure)" }}>That didn&apos;t go through.</span>}
+                  onOpen={() => {}}
+                />
+              </div>
+            </div>
+          ) : (
+            <SettingsRow
+              label="Email"
+              value="sol@solferreira.art"
+              status={emailPending ? "Change pending" : undefined}
+              onOpen={() => {}}
+              node="email"
+            />
+          )}
         </SettingsGroup>
 
         {/* ABOUT SITS AFTER CREDENTIALS AND BEFORE LEAVING (jakob's ruling, the
@@ -4068,6 +4102,16 @@ function SettingsBody({ handleChip = false, keptChip = false, backup = "made", f
           <SettingsRow label="Delete account" status={deleting ? "Deletion in 6 days" : undefined} onOpen={() => {}} node="delete" />
         </SettingsGroup>
       </div>
+      {helpChip && (
+        <>
+          <div style={{ display: "{{helpOpinionShown}}" }}>
+            <DialogSurface onScrimPress={() => {}} title="Giving an opinion" body={GIVING_AN_OPINION_HELP} actions={<Button>Close</Button>} />
+          </div>
+          <div style={{ display: "{{helpReadingShown}}" }}>
+            <DialogSurface onScrimPress={() => {}} title="Reading" body={READING_HELP} actions={<Button>Close</Button>} />
+          </div>
+        </>
+      )}
     </>
   );
 }
@@ -4136,7 +4180,7 @@ function RestoreBody({ value = "", error }) {
 
    The names are the `settingsBackup` prefix's (round 28), the credential
    family's: the code asked for is the proof, `current`; the line under it
-   `lostNote`; the commit with its reason `commit`; and the thing to know last
+   `lostNote`; the commit `commit`; and the thing to know last
    `note`, as `KeyCeremony` names its code paragraph. */
 function SettingsBackupBody({ app = false, value = "", error }) {
   return (
@@ -5696,7 +5740,14 @@ function KeptApprovalRow({ shown }) {
      go through.` with `Retry`, the row line's vehicle (`RowSigning`'s),
      where `Link copied` would have answered. The link stays whole on the
      card, readable by hand. */
-function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
+/* `closedFailed` draws a closing that failed after Close (round 43; jakob
+   2026-11-11, S5; backlog 190): `row` the single close's — @imke's row stands
+   as it was and the line under it reads `That didn't sign.` with `Retry`,
+   `FeedRemoveConfirm`'s `closedFailed` on this host; `group` the link's whole
+   closing — the same line under the group's label, where its `Close all`
+   stands, the batch failing whole as the kept picks' does on its one row
+   (`Settings`' `kept`). Both lines are drawn copies and carry no name. */
+function InvitesBody({ approving = false, kept = "none", revoke, shown, closedFailed }) {
   return (
     <>
       <PageHeader title="Invites" backHref="/profile" backLabel="Back to your profile" node="header" />
@@ -5735,6 +5786,11 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
         {kept !== "none" && <KeptApprovalRow shown={kept} />}
         <div style={{ display: shown ? shown.applications : "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
           <ApplicationGroup label="Many uses" count={4} node="group" nodeKey={SOL_INVITE_LINK_OPEN.split("/").at(-1)} />
+          {closedFailed && (
+            <div style={{ display: closedFailed.group, padding: "0 var(--space-4)" }}>
+              <SigningPending row onRetry={() => {}} />
+            </div>
+          )}
           <ContentRow
             variant="chronicle"
             chevron={false}
@@ -5747,6 +5803,11 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
             node="application"
             nodeKey={ASKER_IDS.imke}
           />
+          {closedFailed && (
+            <div style={{ display: closedFailed.row, padding: "0 var(--space-4)" }}>
+              <SigningPending row onRetry={() => {}} />
+            </div>
+          )}
           <ContentRow
             variant="chronicle"
             chevron={false}
@@ -5771,6 +5832,21 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
             node="application"
             nodeKey={ASKER_IDS.vora82}
           />
+          {/* THE QUEUE IS CAPPED (jakob 2026-11-11 and 2026-11-12, backlog
+              180): the first three rows in the queue's standing grouped
+              order, groups as they fall, then `Show all` under the third —
+              People you let in's door, opening the rest in place, no "show
+              fewer". A kept approval at the head stands above the cap and is
+              not one of the three. `Invites`' `applications` chip: `capped`
+              draws it shut, `opened` open. */}
+          {shown && (
+            <div style={{ display: shown.applicationsDoor }} data-node-chip="applications" data-node-key="capped">
+              <InlineAction size="sm" selfStart node="applicationsDoor">
+                Show all
+              </InlineAction>
+            </div>
+          )}
+          <div style={{ display: shown ? shown.applicationsRest : "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: shown ? shown.askerNamed : "flex", flexDirection: "column" }}>
             <ContentRow
               variant="chronicle"
@@ -5828,6 +5904,7 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
             node="application"
             nodeKey={ASKER_IDS.rafa}
           />
+          </div>
         </div>
         </div>
 
@@ -6120,7 +6197,10 @@ function IntroLines({ width = 342, height = 300, children }) {
 }
 
 /* A node's caption — the word under a face, `label-small` and quiet, so the
-   drawing says who each dot is without a legend beside it. */
+   drawing says who each dot is without a legend beside it. A handle in it is
+   one unit (`NameInText`, the long-names rule): longer than the caption's own
+   width, it is cut at its end with "…" inside that width (round 43, backlog
+   183). */
 function IntroCaption({ children, x, y, width = 88, node }) {
   return (
     <span
@@ -6138,7 +6218,7 @@ function IntroCaption({ children, x, y, width = 88, node }) {
         color: "var(--text-secondary)",
       }}
     >
-      {children}
+      {typeof children === "string" ? <NameInText text={children} /> : children}
     </span>
   );
 }

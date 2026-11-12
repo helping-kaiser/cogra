@@ -538,15 +538,14 @@ rule covers all three button variants:
 - **Disabled** — **38%** opacity on the whole control (Material's value,
   and the one place the AA guarantee is waived by convention: a disabled
   control is not an available target). **A submit that cannot go yet is
-  visible-but-disabled, with the reason on screen** (jakob, the key-loss
-  round): never hidden, and never left live only to refuse on press — the
-  reader sees the commitment exists and reads what it is waiting for.
-  The reason is one quiet line right above the commit, in the voice for
-  what something waits on — `Waiting for your email` — and the
-  commit's description (`WaitingCommit`; drawn on every credential and
-  entry form, jakob 2026-10-05; the reasons blessed the same day). A wait
-  that explains itself carries no line — change password's three fields
-  (jakob 2026-11-11).
+  visible-but-disabled** (jakob, the key-loss round): never hidden, and
+  never left live only to refuse on press — the reader sees the commitment
+  exists. **Nothing on screen says what it waits for** (jakob 2026-11-12):
+  the empty fields above it say so. The reason is the commit's spoken
+  description alone, in the voice for what something waits on — `Waiting
+  for your email` — so a listener hears it with the control
+  (`WaitingCommit`; every credential and entry form, the reasons blessed
+  2026-10-05).
   **The law gates commits; a handoff that only prefills another app's
   draft is not a commit** (jakob 2026-10-05): `Report a problem`'s `Send
   by email` stays live from an empty field, because what it enforces is
@@ -1619,7 +1618,9 @@ the newest-first device grid, whose first tile opens the device's
 own photos app — picks made there land in the tray. **The crop** is
 Instagram's model: one shape for the whole post — Tall 4:5, Square
 1:1, or Wide 1.91:1 — with drag-to-move and pinch-to-zoom framing
-per picture; 4:5 as the tallest shape is what guarantees the feed
+per picture: the frame stands still at the shape and the picture moves
+and zooms under it, on a stage that keeps its 390 × 488 under every
+shape (round 44, one crop model on both clients); 4:5 as the tallest shape is what guarantees the feed
 card's height cap (below). Wizard screens carry no step numbers and
 no stage label (paths differ in length; the title names the stage,
 and `What you sign` names the end — jakob 2026-11-12).
@@ -1694,7 +1695,10 @@ opening a plain dialog: title, at most two short paragraphs, Close.
 one act its surface exists for carries its own "?" on the panel,
 beside the header's. The header's "?" explains the surface; the
 stopper's explains how the stop resolves, and one dialog cannot do
-both. `WriteRuleFailed` is the first. The dialog texts live in
+both. `WriteRuleFailed` is the first. **The Settings exception**
+(jakob 2026-11-12): Settings, and only Settings, carries a "?" beside a
+section heading that needs one — two in all, beside `Giving an opinion`
+and `Reading` — each opening its section's background. The dialog texts live in
 [guidelines/copy-voice.md](guidelines/copy-voice.md). **Button
 rule:** filled and outlined pills render a TRUE 40px tall (border
 box) with 24px side padding and a 64px minimum width; header pills
@@ -1786,7 +1790,9 @@ as Q46 in docs/open-questions.md):
   impression entered the viewport; device-local, never a record,
   shared transiently with the viewer's chosen ranker. **The feed
   carries this same ordering section** (backlog item 19 — the
-  canonical feed screens never drew the filter at all).
+  canonical feed screens never drew the filter at all). Round 44
+  (jakob 2026-11-11) takes the toggle off search: search reads every
+  node, seen or not; the toggle is the feed's alone.
 - **Scope operators**: `@handle <text>` and `#tag <text>` scope
   the query; the remainder matches the scoped author's own content
   AND the names of their acts' targets — a comment through its
@@ -4834,7 +4840,9 @@ one. The height cap is gone; what bounds a card tile is its shape.
   pinned. A 16:9 clip's would be 342 × 192; a vertical clip never reaches
   the step at all, because its default is no cover.
 - **The card's text clamps were already conform** — title one line,
-  description two, and `More` under a media post's caption always. What
+  description two, and `More` under a media post's caption once it runs
+  past its two lines (round 44: never under one that fits whole; the
+  sample boards lag, backlog 202). What
   was stale was the `media` card's own inventory, which had the
   description clamping to one. The text body's ceiling stays at 18 lines;
   its derivation had been floor(376 ÷ 20) against the capped tile, and
@@ -10575,8 +10583,9 @@ marked *blessed (jakob 2026-11-10)*.
   details and edit row does; `Reading the video…`, `3 pictures didn't
   upload.` with `Remove them`, and `A post carries one video.` are
   blessed; `ComposePickedErrors` keeps the live grid (`PickGrid`, shared
-  with `ComposePick`) under its refusals; the crop's arrow keys move the
-  window the arrow's way where the picture stays whole; the clip tiles
+  with `ComposePick`) under its refusals; the crop's arrow keys moved the
+  window the arrow's way where the picture stayed whole (replaced in round
+  44: the frame is fixed and the keys move the picture); the clip tiles
   keep their 114×64 and 54×96 boxes for every shape. The tray-drag law
   is gone — reorder lives in Show all.
 - **The gate**: edges **2127 → 2135** (`ExploreComingSoon`'s seven,
@@ -11543,6 +11552,140 @@ A3, A8 and the Invites boards are rounds 43 and 44. The rule is copy-voice's
   `keptPicksSeal.header.stage` and `.acts.note`, `tagPicker.tag.sub`, the
   picked sheets' `note`, and the single lines' nodes); six of them stay on
   other boards. Backlog 192–194 filed.
+
+### Round 43, forms without a waiting line, Close on the signed-in forms, Settings' two "?", Invites capped — 2026-11-12
+
+jakob's answers to the re-ask (1, 4, 8, 9 and 10 "as rec") and his ruling on
+round 41's fourth and fifth questions, executed.
+
+- **A form's commit waits silently** (the re-ask's 1). The line above a
+  disabled commit is gone on every form — `ChangePassword`, `ChangeHandle`,
+  `ChangeEmail`, `ApplicantEmail`, `ChangeEmailConfirm`, `SettingsBackup`,
+  `SignIn`, `SignInExpired`, `InviteEntry`, `JoinInvalid`, `Reset`,
+  `YourKeyGate`, `Restore`, `Join`, `ResetNew` — and what it waits for is
+  the commit's spoken description alone: `WaitingCommit` keeps `reason` in a
+  visually hidden span the button names in `aria-describedby`.
+  `ChangePassword` speaks `Waiting for both passwords` again, so every form
+  is one shape. `Waiting for your key` and `Waiting for your review` under a
+  kept pick's face are not of this family and stay.
+- **Close on the signed-in plain forms** (backlog 191 (a); the re-ask's 9
+  (a)). `ChangePassword`, `ChangeEmail`, `ChangeEmailConfirm` and
+  `ApplicantEmail` gain `submit: pending`: the commit's in-flight label, and
+  the header's arrow named `Close` from the press — the seals' X — leaving
+  while the submit goes on. A failure after Close reads `That didn't go
+  through.` on the form's own Settings row, the Handle row's line without
+  `Retry`, and the row's tap opens the form again (`Settings`' `forms`
+  chip: `password`, `email`). The entry forms hold their ways out from
+  200ms after the press until the answer — the named exception, written into
+  each sidecar in place of the older live-ways-out line. `YourKeyGate`
+  reveals and submits nothing, and stays as it was (backlog 197).
+- **Settings carries two "?"** (the re-ask's 8 (a)) — the one-per-screen
+  law's Settings exception, beside `Giving an opinion` and `Reading`
+  (`SettingsGroup`'s `help`, `SheetTitle`'s trailing construction). The
+  pad's and the sliders' hints and the Reading footnote move behind them
+  whole, each a plain dialog titled by its heading (`SettingsInstallHelp`'s
+  shape); `Settings`' `help` chip draws them open. The Sensitive content
+  footnote stays on the page (backlog 196).
+- **Invites' queue is capped** (backlog 180; the re-ask's 10 (a)): the
+  first three rows in its grouped order, then `Show all` under the third —
+  People you let in's door — opening the rest in place; a kept approval
+  stands above the three (`Invites`' `applications` chip, `capped` the
+  default, `opened`). Live links' cap waits on its order (backlog 195).
+- **A closing that fails after Close** (backlog 190): `RejectConfirm`'s
+  `answer` gains `closedFailed`, `That didn't sign.` with `Retry` under the
+  row, `FeedRemoveConfirm`'s form; `RejectAllConfirm`'s draws one line under
+  the group's label, where `Close all` stands.
+- **The empty Invites says one thing** (the re-ask's 4): `No invites out
+  yet.`, and the vouching explainer behind a "?" beside `Create invite`, its
+  name `How vouching works`, the dialog carrying the first paragraph.
+- **The last three long-name overflows** (backlog 183): `Join`'s and
+  `JoinErrors`' heading, `ChangeHandleBody`'s line and `IntroCaption` pass
+  their text through `NameInText`; the caption cuts within its own 88px.
+- **Measured** at `@maximiliana_featherstone_haugh`, the widest legal handle
+  and the 50-character unbroken name: `Join`'s heading 110px past both sides
+  → the name one line, cut inside the 24px gutter; `ChangeHandleBody`'s line
+  13px past (widest handle) → cut at the gutter, the long sample whole on
+  one line; the inviter caption 30.5 / 151px past → cut inside its 88px.
+  At the drawn sample names nothing moved (the heading's box by under
+  0.05px). Settings' last line stands where it stood at every setting
+  (`install` shown: 3071 of 3103px).
+- **The gate**: no board added; chips added on `ChangePassword`,
+  `ChangeEmail`, `ChangeEmailConfirm`, `ApplicantEmail` (`submit`),
+  `Settings` (`forms`, `help`), `Invites` (`applications`), and
+  `closedFailed` on the reject dialogs' `answer`. Edges **2315 → 2323**
+  (the two "?", their dialog's Close and scrim, the queue's door, the two
+  Retries, the empty page's "?"); flows hold at **227**, three start cases
+  re-blessed. The registry **7117 → 7096** board paths, **2000 → 1993**
+  distinct on 185 screens: `invites.applicationsDoor`, `invites.empty.help`,
+  `settings.stance.help` and `settings.reading.help` added; eight
+  `*.commit.reason` paths deleted on thirteen boards (ruled), and three
+  whose words moved behind a "?" — `settings.reading.footnote`,
+  `settings.stance.pad.status`, `settings.stance.sliders.status` — named
+  breaking changes for impl.
+
+### Round 44, one crop model, the comment edit's video, the composer's way out, search without the seen list — 2026-11-12
+
+jakob's crop ruling (seam 301), the re-ask's answers (questions 3 and 19)
+and the implementers' findings (seams 292, 295, 296, 308), executed.
+
+- **One crop model on both clients** (jakob 2026-11-11: "the instagram
+  approach (fixed frame with mooving and zooming image) for both
+  platforms"). Every crop's frame stands still at its shape and the
+  picture moves (drag, the arrow keys) and zooms (pinch, the zoom track)
+  under it; no window moves over a still picture and no stage changes size
+  with the shape. The post crop's stage is 390 × 488 under every shape,
+  the frame full width and centred: Tall 4:5 390 × 488, Square 1:1 390 ×
+  390 at top 49, Wide 1.91:1 390 × 204 at top 142, the outside darkened by
+  `CropViewport`'s 45 % shadow; `ComposeCrop`'s `shape` setting draws each
+  (the stage's constancy is the orchestrator's reading of his words, shown
+  to him on the board). The avatar crop keeps its 390 × 390 stage, the
+  circle 342 × 342 at top 24; the cover crop keeps the same stage with the
+  frame at the video's shape, 342 wide — the drawn 16:9 clip's 342 × 192 at
+  top 99, the comment's square 342 × 342 — because the cover is that
+  video's face. A shape switch keeps each picture's scale and position and
+  lifts a scale only to the new frame's fill (unchanged law; nothing in the
+  tree contradicts it).
+- **The zoom track is drawn** (seam 292-2, option A): 8px, fully rounded,
+  its ground `--border-field` — `Timeline`'s page-ground track
+  (`VideoControls`, `tone="surface"`) and the off `Switch` take the same —
+  the part up to the thumb `primary`, a 16px `primary` thumb with no rim,
+  in a 48px input; `CropZoom` carries the rules, never the platform's
+  default.
+- **The crops say nothing about moving** (re-ask 3, digest A3): `Drag to
+  move, pinch to zoom.` and its pointer variant, `One picture, shown
+  everywhere you appear.`, `Shown everywhere you appear.` (the avatar seal)
+  and `The cover takes the video's shape.` are gone; `One shape for the
+  whole post.` stays. `coverCrop.howTo` and `coverCrop.shapeNote` are
+  deleted, a named breaking change.
+- **A words comment's edit takes a video** (seam 295): the staged refusal
+  is retired for the comment (the post's edit keeps it); words alone is
+  read on the edit's own state. `CommentEditVideo`'s `clip` setting draws a
+  clip picked in the edit — `picked` (uploading, the `Add a cover` door,
+  `commentEdit.cover.add`), `failed` (`That video didn't upload.` with
+  `Retry · Remove it`, the gate's fault reading, Sign disabled), `second` (`A
+  comment carries one video.`), every string copied from the reply's and the
+  composer's boards.
+- **`More` stands only under a clamped caption** — the law in `PostCard`
+  and `ReelCaption` (seam 292-3). The reel draws it so; the sample feed
+  card's caption fits whole, so the boards that register its opener wait on
+  jakob (backlog 202).
+- **Search never looks at the seen list** (seam 296): the search filter's
+  Order section stands without `Show what you've already seen`
+  (`OrderSection`'s `seenToggle`), the filter's "?" drops its search clause,
+  and the reader's saved default still gives search its order.
+  `explore.filterSheet.order.seen` and its two parts are deleted, a named
+  breaking change. No other surface in the tree reads the list (backlog
+  203).
+- **Leaving the composer returns to where it was opened** (re-ask 19): the
+  bar's New post, Cite in a new post, Mention in a new post, a tag card's
+  compose glyph and the didn't-land card's Open the draft each carry their
+  surface, and leaving before Sign and publish returns there from every
+  stage; publishing lands as drawn. `ComposePick.md` says it once, every
+  stage's leave line and the first stage's leave edges name it. No visible
+  string changes.
+- **Not drawn, at jakob:** the cover crop under a tall clip (backlog 200),
+  a picked clip uploading beside a new cover (backlog 201), the sample
+  card's opener (202), who else reads the seen list (203).
 
 ---
 

@@ -34,7 +34,7 @@ ALWAYS a feed opens with the reader's saved default GIVEN no filter committed in
 
 WHEN press Done GIVEN a filter committed inside a feed stands on this device -> that feed keeps opening with the committed filter AND NEVER the newly saved default replaces it
 
-ALWAYS search's order and its already-seen toggle follow the reader's saved default, and search's kinds stay search's own
+ALWAYS search's order follows the reader's saved default, search's kinds stay search's own, and the already-seen toggle reaches the feed alone
 
 ALWAYS the reader's saved default stays on this device
 
