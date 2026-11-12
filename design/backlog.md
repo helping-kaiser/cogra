@@ -5651,7 +5651,7 @@ passes none). For jakob: (a) the reader's card menu, Hide and Report included
 (`readerCardMenu`); (b) Save and Cite only, as drawn [lean — what is hidden
 or reported is the payload, and it is gone]; (c) no menu, `FeedRemoved`'s.
 
-### 180 · Invites' waiting applications: which three · *design* · **filed 2026-11-11**
+### 180 · Invites' waiting applications: which three · *design* · **filed 2026-11-11** · **closed 2026-11-12**
 
 Round 40 (jakob: "the inital screen should only show the couple oldest
 ones"). The queue stands grouped by link, the groups by their oldest waiting
@@ -5666,7 +5666,9 @@ label, the rest behind `Show all`; (c) three per group, a door per group.
 And whether a kept approval at the head counts among the three. Ruled by
 jakob 2026-11-11: (a), the first three rows in the queue's grouped order, to
 build in the next round on Invites; still open: whether the kept approval
-counts among the three.
+counts among the three. Closed by round 43 (jakob 2026-11-12, the re-ask's
+10 (a)): the first three rows, `Show all` under the third, the kept approval
+above the cap and not one of the three (`Invites`' `applications` chip).
 
 ### 181 · Which lists page and which cap · *design* · **filed 2026-11-11**
 
@@ -5699,9 +5701,12 @@ and comments, `TagPage`, `ProfileStances`, `PostOpinions`, `CitedBy`,
 Round 40. The ruling caps Live links at three in the screen's order, but the
 page draws two links, so no setting can show the cap without two more sample
 links (their ids, addresses and captions — fixture data, no new words). Left
-for the next round on Invites, with backlog 180.
+for the next round on Invites, with backlog 180. Round 43 left it undrawn:
+nothing writes the order Live links stands in (the queue's is by age, the
+people's newest first), so which three a cap shows is not settled — backlog
+195.
 
-### 183 · Long names on the boards round 40 did not touch · *design* · **filed 2026-11-11**
+### 183 · Long names on the boards round 40 did not touch · *design* · **filed 2026-11-11** · **closed 2026-11-12**
 
 Round 40's re-measure at the longest legal handle and name leaves three
 places past the screen — two on boards round 41 held that day, one in a
@@ -5714,7 +5719,12 @@ handle (13px, `ChangeHandleBody` in `_shared.jsx`, case 3), and
 column, its width a drawing choice). The fix is the case's, no new word.
 Ruled by jakob 2026-11-11: fix all three in the next round; `Join`'s heading
 and `ChangeHandle`'s body take the revised case 3 — the name or handle one
-unit, whole on a line or end-cut, never on two lines.
+unit, whole on a line or end-cut, never on two lines. Closed by round 43:
+the three pass their text through `NameInText` — `Join`'s and `JoinErrors`'
+heading (the inviter's name a unit), `ChangeHandleBody`'s line, and
+`IntroCaption`, whose handle is cut inside the caption's own drawn 88px, so
+no new width is chosen. Measured at `@maximiliana_featherstone_haugh` and
+the widest legal handle (round 43's record).
 
 ### 184 · Invites with only let-in people: a line for "nothing waiting" · *design* · **filed 2026-11-11**
 
@@ -5733,7 +5743,7 @@ things that i did not say anything to … are blessed"): left open, because
 gives a removed post a menu without the license row. The rule is his: one
 menu for every redacted card, or the ladder's and the feed's kept apart.
 
-### 190 · A closed application failing after Close: its row on Invites · *design* · **filed 2026-11-11**
+### 190 · A closed application failing after Close: its row on Invites · *design* · **filed 2026-11-11** · **closed 2026-11-12**
 
 Round 41 (S5). The law reads on `RejectConfirm` and `RejectAllConfirm`: a
 closing closed on that does not go through leaves the application's row (or
@@ -5741,9 +5751,12 @@ the group's rows) as they were, saying `That didn't sign.` with `Retry`. The
 row is drawn by `InvitesBody`, which round 40 is reshaping in parallel (the
 three-then-show-all cap), so no state is drawn yet. For the next round: a
 `closedFailed` value on `RejectConfirm`'s `answer`, the line under the row,
-as `FeedRemoveConfirm` draws it.
+as `FeedRemoveConfirm` draws it. Closed by round 43: `RejectConfirm`'s and
+`RejectAllConfirm`'s `answer` gain `closedFailed` — the line under @imke's
+row, and the group's one line under its label where `Close all` stands
+(the kept picks' batch-fails-whole form; jakob's to confirm).
 
-### 191 · Close on the plain forms (S6): the arrow, and where a guest's result lands · *design* · **filed 2026-11-11**
+### 191 · Close on the plain forms (S6): the arrow, and where a guest's result lands · *design* · **filed 2026-11-11** · **closed 2026-11-12**
 
 jakob 2026-11-11, S6: "should be close no? submit is submit". Round 41 swept
 the forms whose commit is a submit and not a signing; none draws a state in
@@ -5769,3 +5782,70 @@ named exception [lean — a guest who closes has nothing to come back to];
 next open.
 
 Ruled by jakob 2026-11-11 (on the round 41 review): (a) — on the signed-in plain forms the back arrow is named `Close` from the press and only leaves, the submit going on; the entry forms keep their exits held while they submit, the named exception. Not built yet: where a failure shows after Close is still at him.
+
+Closed by round 43 (jakob 2026-11-12, the re-ask's 9 (a)): `ChangePassword`,
+`ChangeEmail`, `ChangeEmailConfirm` and `ApplicantEmail` draw `submit:
+pending` — the commit's in-flight label, the arrow named `Close`; a failure
+after Close reads `That didn't go through.` on the form's Settings row, no
+`Retry`, the tap reopening the form (`Settings`' `forms` chip). The entry
+forms' sidecars hold their exits from 200ms after the press. `YourKeyGate`
+is not in the family (a reveal, not a submit) — backlog 197.
+
+### 195 · Live links: the order a cap would keep · *design* · **filed 2026-11-12**
+
+Round 43 (backlog 182). The cap is ruled — three, then `Show all`, People
+you let in's door — but no law says in what order Live links stand: the
+queue stands by age, the people newest first, and the two drawn links
+(single use, expiring in 7 days; many uses, in 2) read as newest first or
+as drawn. Which three a capped section shows follows from the order, and
+two more sample links follow from it too. For jakob: (a) newest made first,
+People you let in's order [lean — the drawn pair already reads so]; (b)
+soonest to expire first; (c) single-use links first, then many-use.
+
+### 196 · The Sensitive content footnote and the Reading "?" · *design* · **filed 2026-11-12**
+
+Round 43 (the re-ask's 8 (a)). The digest put `This choice follows your
+account to every device.` behind the Reading "?", but it is the Sensitive
+content group's footnote, not Reading's: in Reading's dialog it would follow
+`Both choices stay on this device.` with a "this choice" that names neither
+of Reading's rows, and copy-voice gives it the group's whole job (the
+travel a future iOS build may honour but not offer). It stays on the page.
+For jakob: (a) it stays as the Sensitive content footnote [lean]; (b) it
+moves into the Reading dialog as the digest said; (c) a third "?" beside
+`Sensitive content`.
+
+### 197 · Signed-in submits the Close rule did not reach · *design* · **filed 2026-11-12**
+
+Round 43 (backlog 191). Three signed-in forms with a commit were left as
+they are: `YourKeyGate`'s `Show my key` reveals the key on the next screen
+and changes nothing, so leaving it abandons only the showing (its ways out
+stay live); `SettingsBackup`'s `Create a new recovery code` replaces the
+backup and then shows the new code once — a Close that left before the code
+showed would lose it; `DeleteAccount`'s `Send the confirmation link` mails
+the link and opens the mail screen. For jakob: (a) all three keep their
+exits as they are, `SettingsBackup` holding them while it submits, the
+entry forms' exception [lean]; (b) `DeleteAccount` takes Close, its failure
+on the Delete account row.
+
+### 198 · The Handle row's Retry beside the forms' rows without one · *design* · **filed 2026-11-12**
+
+Round 43 (the re-ask's 9 (a)). After Close a failed password or email change
+reads `That didn't go through.` on its row with no `Retry`, the tap
+reopening the form; a failed handle change (round 37) reads the same words
+with `Retry`, the row inert. Two shapes for one failure on one group of one
+page. For jakob: (a) keep both — a handle retry needs no secret typed again
+[lean if Retry is wanted where it can work]; (b) the Handle row as the
+others, its tap reopening the form with the handle typed.
+
+### 199 · After Close: the forms' rows while they wait, and what the reopened form shows · *design* · **filed 2026-11-12**
+
+Round 43. Drawn: the failure on the Password and Email rows. Not drawn,
+and not ruled: (1) the wait between Close and the answer — the Handle row
+reads `Changing handle…`; the Password and Email rows read nothing yet;
+(2) when `That didn't go through.` leaves the row; (3) what the reopened
+form shows after a field refusal (a wrong current password) — the handle's
+`taken` waits in its field; (4) `ApplicantEmail` closed from the applicant's
+feed fails onto the Settings Email row, a page the applicant did not come
+from, while the verify card keeps the old address. Lean: (1) the Handle
+row's form, each row its form's in-flight label; (2) on the tap; (3) the
+form at rest, the field's line beside its field; (4) as built.
