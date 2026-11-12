@@ -11540,10 +11540,14 @@ A3, A8 and the Invites boards are rounds 43 and 44. The rule is copy-voice's
   page grows`, `Sensitive — tap to view`, `Signed — it's in the thread now,
   still settling.`, the question-fronted doors.
 - **Stopped, at jakob (backlog 194):** the vouch-back pad's two coaching lines
-  and the edit acts sheets' subline — no "?" holds them; and the sign-out line,
-  where the drawing is the later text and copy-voice the stale side.
+  and the edit acts sheets' subline — no "?" holds them.
 - **Filed:** the digest's MOVE rows nobody ruled (192); two cuts of the ask
   link's caption and lines the pass left asymmetric (193).
+- **After rounds 43 and 44 (act 2):** the reject dialogs' two rows are cut
+  (`RejectConfirm`, `RejectAllConfirm`); the post-MVP twins take the
+  canonical cuts (`PushSettings`, `PushDenied`, the chat and wallet seals);
+  copy-voice takes the drawn sign-out line, which names the seen record
+  sign-out clears (C7). ComposeCrop's line was round 44's.
 - **The gate**: no board added or removed (185 registered screens). The
   registry loses ruled paths, a named breaking change: **7117 → 7014** board
   paths, **2000 → 1960** distinct — 46 paths leave 103 board entries (the
