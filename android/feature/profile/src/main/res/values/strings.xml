@@ -12,6 +12,7 @@
     <!-- The edit screen's arrow (ProfileEdit, outside the profile boards). -->
     <string name="profile_back">Back</string>
     <string name="profile_back_notifications">Back to Notifications</string>
+    <string name="profile_back_invites">Back to Invites</string>
 
     <!-- The profile's ⋮ (ProfileOwnMenu.md, ProfileMenu.md, ProfileDeletedMenu.md). -->
     <string name="profile_menu_own">More on your profile</string>
