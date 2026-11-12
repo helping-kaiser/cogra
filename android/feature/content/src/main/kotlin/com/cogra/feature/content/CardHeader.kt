@@ -28,6 +28,7 @@ import com.cogra.core.designsystem.v2.atom.CograOverflowMenu
 import com.cogra.core.designsystem.v2.atom.MenuRow
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.ActorRef
+import com.cogra.domain.ageLadder
 import java.time.Instant
 
 /**
@@ -38,7 +39,8 @@ import java.time.Instant
  * for. Handed no rows it draws nothing: a trigger that opens an empty
  * sheet teaches the reader the card lies (design/readme.md §2).
  *
- * @param at when the node was authored; drawn as a compact age.
+ * @param at when the node was authored; drawn on copy-voice's age ladder
+ *   (`now`, `35m`, `2h`, `3d`, the date past 30 days) — [ageLadder].
  * @param menu the overflow's rows, or empty for no ⋮ at all.
  * @param stacked the menu opens over another sheet rather than the plain
  *   page — the comment card's, over the comments thread (`CommentMenu.jsx`,
@@ -94,7 +96,7 @@ internal fun ContentCardHeader(
         // The chip and the right-hand group keep `--space-2` between them; the
         // age and the ⋮ keep `--space-3` (`PostCard.jsx:327-329`).
         Text(
-            text = compactAge(at, now),
+            text = ageLadder(at, now),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
@@ -117,25 +119,3 @@ internal fun ContentCardHeader(
         }
     }
 }
-
-/**
- * The age the boards draw: a number and its unit, no word between —
- * `35m`, `1h`, `3d`. Compact because the row it shares with the author
- * has no width to spare, and because a reader scanning a feed reads the
- * order, not the clock.
- *
- * The unit stops at days. No board draws a card older than `3d`, and
- * the date form (`06.09.2024`) belongs to the search result row, on a
- * surface this release does not build.
- */
-internal fun compactAge(at: Instant, now: Instant): String {
-    val minutes = java.time.Duration.between(at, now).toMinutes().coerceAtLeast(0)
-    return when {
-        minutes < MINUTES_PER_HOUR -> "${minutes}m"
-        minutes < MINUTES_PER_DAY -> "${minutes / MINUTES_PER_HOUR}h"
-        else -> "${minutes / MINUTES_PER_DAY}d"
-    }
-}
-
-private const val MINUTES_PER_HOUR = 60L
-private const val MINUTES_PER_DAY = 60L * 24

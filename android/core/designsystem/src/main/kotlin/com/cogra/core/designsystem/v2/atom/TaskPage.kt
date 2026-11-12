@@ -68,10 +68,12 @@ fun TaskPage(
                 .verticalScroll(rememberScrollState())
                 .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 32.dp),
         ) {
+            // The boards' `<h1>` is a block: its node spans the column, as the lead's does.
             Text(
                 text = title,
                 style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier
+                    .fillMaxWidth()
                     .semantics { heading() }
                     .dataNode(node / "title"),
             )

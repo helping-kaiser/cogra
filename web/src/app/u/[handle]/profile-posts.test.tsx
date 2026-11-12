@@ -516,3 +516,52 @@ describe("the profile's doors carry the origin it was opened with", () => {
     expect(streamBack(heldStream()!.snapshot.origin)).toEqual({ href: "/u/ada?from=search", label: "Back to your profile" });
   });
 });
+
+// THE POST CARD'S MENU ON THE PROFILE (ProfilePostsMenu.md, ProfilePostsMenuOwn.md;
+// round 36): the profile tabs' cards register their sheets as `profile.menuSheet`.
+describe("ProfilePosts — a post card's menu (ProfilePostsMenu.md)", () => {
+  /** The open `profile.menuSheet` — the page's own menu keeps a closed one beside it. */
+  function openRows() {
+    const sheet = screen
+      .getAllByTestId("profile.menuSheet")
+      .find((dialog) => (dialog as HTMLDialogElement).open);
+    return within(sheet!)
+      .getAllByRole("button")
+      .map((row) => [row.getAttribute("data-testid"), row.textContent]);
+  }
+
+  it("the_reader_menu_reads_save_cite_hide_license_report_as_profile_menuSheet_rows", async () => {
+    // ProfilePostsMenu.md:3, :5, :7 (the hide row stands on the author's own profile).
+    serveAda();
+    serveChronicle();
+    servePosts({ "": { posts: [adas("p1")], next: null } });
+    renderWithProviders(<ProfileScreen handle="ada" />, { store: signedIn() });
+    await openPostsTab();
+    fireEvent.click(screen.getByTestId(byNode("profile.posts.card.menu", "p1")));
+    expect(openRows()).toEqual([
+      ["profile.menuSheet.save", "Save"],
+      ["profile.menuSheet.cite", "Cite in a new post"],
+      ["profile.menuSheet.hide", "Hide @ada"],
+      ["profile.menuSheet.license", "License terms"],
+      ["profile.menuSheet.report", "Report"],
+    ]);
+  });
+
+  it("the_own_menu_reads_save_cite_edit_sensitive_remove_license_and_no_hide_or_report", async () => {
+    // ProfilePostsMenuOwn.md:3.
+    serveOwn();
+    serveChronicle();
+    servePosts({ "": { posts: [adas("p1")], next: null } });
+    renderWithProviders(<ProfileScreen handle={null} />, { store: signedIn("u-ada") });
+    await openPostsTab();
+    fireEvent.click(screen.getByTestId(byNode("profile.posts.card.menu", "p1")));
+    expect(openRows()).toEqual([
+      ["profile.menuSheet.save", "Save"],
+      ["profile.menuSheet.cite", "Cite in a new post"],
+      ["profile.menuSheet.edit", "Edit"],
+      ["profile.menuSheet.markSensitive", "Mark as sensitive"],
+      ["profile.menuSheet.remove", "Remove"],
+      ["profile.menuSheet.license", "License terms"],
+    ]);
+  });
+});

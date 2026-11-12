@@ -66,7 +66,8 @@ fun rememberWaitedPast(active: Boolean, millis: Long): Boolean {
  * *Interaction states*): while [waiting], the commit stands where it always
  * stands, disabled at the 38%, with one quiet line right above it saying
  * what it waits for. The first character in the last empty field wakes it
- * and the line goes.
+ * and the line goes. A form whose board draws no line passes a null
+ * [reason] (`ChangePassword.md`: disabled "with no line above it").
  *
  * A form's own fault — no answer, a spent budget, a change that ran out —
  * stands in the same column above the commit ([fault], `SignInError`'s
@@ -79,7 +80,7 @@ fun rememberWaitedPast(active: Boolean, millis: Long): Boolean {
 @Composable
 fun WaitingCommit(
     label: String,
-    reason: String,
+    reason: String?,
     waiting: Boolean,
     onCommit: () -> Unit,
     modifier: Modifier = Modifier,
@@ -96,7 +97,7 @@ fun WaitingCommit(
             .dataNode(node),
         verticalArrangement = Arrangement.spacedBy(Space.x2),
     ) {
-        if (waiting) {
+        if (waiting && reason != null) {
             Text(
                 text = reason,
                 style = MaterialTheme.typography.labelSmall,

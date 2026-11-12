@@ -35,6 +35,7 @@ import { PostCard } from "@/lib/ui/post-card";
 import { useScrollHost } from "@/lib/ui/scroll-host";
 import { LINK_COPIED } from "@/lib/ui/share";
 import { StageHost } from "@/lib/ui2/media/stage-host";
+import { menuSheetNodes } from "@/lib/ui2/overflow-menu";
 import { PostMenuHost } from "@/lib/ui2/post-menu-host";
 
 /** The posts view's list and its cards (unregistered: ProfilePosts exports no NODE). */
@@ -125,6 +126,9 @@ export function ProfilePostsList({
         post={menuPost}
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
+        // ProfilePostsMenu(Own): the profile tabs' cards register their sheets
+        // as `profile.menuSheet`, the profile menu's own node.
+        nodes={menuSheetNodes("profile")}
         testId="profile-post-menu"
         notify={notify}
         onRemoved={onRemoved}

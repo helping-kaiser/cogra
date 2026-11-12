@@ -226,16 +226,21 @@ function cards() {
 
 const ALL = ["saved.card:p1", "saved.commentCard:c1", "saved.profileCard:u3"];
 
-/** Opens a card's ⋮ and returns its sheet's rows, in order. */
+/**
+ * Opens a card's ⋮ and returns its sheet's rows, in order. A post card's
+ * sheet and a person card's both wear `saved.menuSheet`: the open one is the
+ * card's.
+ */
 function openMenu(trigger: HTMLElement, sheetTestId: string) {
   fireEvent.click(trigger);
-  return within(screen.getByTestId(sheetTestId)).getAllByRole("button");
+  const sheet = screen.getAllByTestId(sheetTestId).find((dialog) => (dialog as HTMLDialogElement).open);
+  return within(sheet!).getAllByRole("button");
 }
 
-const postMenu = () => openMenu(screen.getByTestId(byNode("saved.card.menu", "p1")), "saved-menu-sheet");
+const postMenu = () => openMenu(screen.getByTestId(byNode("saved.card.menu", "p1")), "saved.menuSheet");
 const commentMenu = () => openMenu(screen.getByTestId(byNode("saved.commentCard.menu", "c1")), "saved-comment-c1-menu-sheet");
 const personMenu = () =>
-  openMenu(screen.getByTestId(byNode("saved.profileCard.menu", "u3")), "saved-person-u3-menu-sheet");
+  openMenu(screen.getByTestId(byNode("saved.profileCard.menu", "u3")), "saved.menuSheet");
 
 function search(query: string) {
   fireEvent.change(screen.getByRole("searchbox", { name: SEARCH_WHAT_YOU_SAVED }), {
@@ -381,7 +386,7 @@ describe("SavedScreen — the unsave is the card's own ⋮ first row", () => {
     renderWithProviders(<SavedScreen />, { store: signedIn() });
     await screen.findByTestId("saved-list");
     personMenu();
-    fireEvent.click(screen.getByTestId("saved-person-u3-menu-mention"));
+    fireEvent.click(screen.getByTestId("saved.menuSheet.mention"));
     expect(push).toHaveBeenCalledWith("/compose?reference=u3");
   });
 
@@ -491,6 +496,60 @@ describe("SavedScreen — the unsave is the card's own ⋮ first row", () => {
     await screen.findByTestId("saved-list");
     expect(cards()).toEqual(["saved.commentCard:c1", "saved.profileCard:u3"]);
     expect(screen.queryByTestId("saved.snackbar.message")).not.toBeInTheDocument();
+  });
+});
+
+describe("SavedScreen — the card menus' rows (SavedPostMenu.md, FeedProfileMenu.md; round 36 + 41)", () => {
+  const words = (rows: HTMLElement[]) => rows.map((row) => [row.getAttribute("data-testid"), row.textContent]);
+  const adaAndMiraHidden = () =>
+    server.use(
+      gqlLink.query("HiddenActorsPage", () =>
+        HttpResponse.json(
+          hiddenPage([
+            { id: "u1", handle: "ada", displayName: "Ada", hiddenAt: at(1) },
+            { id: "u3", handle: "mira", displayName: "Mira Voss", hiddenAt: at(1) },
+          ]),
+        ),
+      ),
+    );
+
+  it("a_post_cards_menu_reads_unsave_cite_hide_license_report_as_saved_menuSheet_rows", async () => {
+    // SavedPostMenu.md:3, :5.
+    serve(THREE);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    expect(words(postMenu())).toEqual([
+      ["saved.menuSheet.save", "Unsave"],
+      ["saved.menuSheet.cite", "Cite in a new post"],
+      ["saved.menuSheet.hide", "Hide @ada"],
+      ["saved.menuSheet.license", "License terms"],
+      ["saved.menuSheet.report", "Report"],
+    ]);
+  });
+
+  it("a_person_cards_menu_reads_unsave_mention_hide_report_the_same_rows_as_on_every_host", async () => {
+    // FeedProfileMenu.md:5, :7 — Saved's first row reading Unsave.
+    serve(THREE);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    expect(words(personMenu())).toEqual([
+      ["saved.menuSheet.save", "Unsave"],
+      ["saved.menuSheet.mention", "Mention in a new post"],
+      ["saved.menuSheet.hide", "Hide @mira"],
+      ["saved.menuSheet.report", "Report"],
+    ]);
+  });
+
+  it("a_hidden_persons_rows_read_unhide_with_the_handle_on_the_post_and_the_person_card", async () => {
+    // SavedPostMenu.md:19; ProfileMenu.md:31 (the profile card in Saved).
+    serve(THREE);
+    adaAndMiraHidden();
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    await waitFor(() => expect(cards()).toEqual(ALL));
+    await waitFor(() => expect(postMenu()[2]).toHaveTextContent(/^Unhide @ada$/));
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
+    expect(personMenu()[2]).toHaveTextContent(/^Unhide @mira$/);
   });
 });
 

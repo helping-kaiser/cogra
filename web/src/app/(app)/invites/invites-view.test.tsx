@@ -29,12 +29,16 @@ import {
   staticInvites,
   USED,
   userError,
+  person,
   type ApplicationFixture,
   type LinkFixture,
+  type PersonFixture,
 } from "@/test/invites";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
+import { detailRoot } from "@/app/shell";
+import { backFor } from "@/lib/ui/back-origin";
 import { InvitesView } from "./invites-view";
 
 const push = vi.fn();
@@ -76,12 +80,20 @@ function show(
   options: {
     queue?: ApplicationFixture[];
     links?: LinkFixture[];
+    people?: PersonFixture[];
     from?: string | null;
     signer?: ReturnType<typeof fakeWriteSigner>;
   } = {},
 ) {
-  const state = { queue: options.queue ?? boardQueue(), links: options.links ?? boardLinks() };
-  server.use(meHandler("MEMBER"), invitesHandler({ queue: () => state.queue, links: () => state.links }));
+  const state = {
+    queue: options.queue ?? boardQueue(),
+    links: options.links ?? boardLinks(),
+    people: options.people ?? [],
+  };
+  server.use(
+    meHandler("MEMBER"),
+    ...invitesHandler({ queue: () => state.queue, links: () => state.links, people: () => state.people }),
+  );
   const signer = options.signer ?? fakeWriteSigner();
   renderWithProviders(<InvitesView from={options.from ?? null} now={() => NOW} />, {
     store: signedInStore(),
@@ -392,9 +404,216 @@ describe("Invites (behavior/Invites.md)", () => {
   });
 
   it("never stands for an applicant: they land where app-open lands (ProfileApplicant.md:18)", async () => {
-    server.use(meHandler("APPLICANT"), staticInvites([], []));
+    server.use(meHandler("APPLICANT"), ...staticInvites([], []));
     renderWithProviders(<InvitesView from={null} />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
+  });
+});
+
+// The board's own people (Invites' `letIn` chip): Nadia 2d, Wren 5d, Juno 9d,
+// Kel 12d, Tobias 16d — newest first, as `vouchedIn` serves them.
+function boardPeople(count = 5): PersonFixture[] {
+  return [
+    person({ id: "b1a7ca95-9571-4509-9e42-d1c45c67b233", handle: "nadia", displayName: "Nadia Rask", vouchedAt: daysAgo(2) }),
+    person({ id: "59959e13-ced7-462c-b7cd-c0381ec09b90", handle: "wren", displayName: "Wren Aliyev", vouchedAt: daysAgo(5) }),
+    person({ id: "22dd3e59-8c50-4ce3-b2f5-e12c57abb984", handle: "juno", displayName: "Juno Baptiste", vouchedAt: daysAgo(9) }),
+    person({ id: "c4fb60a5-9b66-4db3-a043-88986744abbc", handle: "kel", displayName: "Kel Moreau", vouchedAt: daysAgo(12) }),
+    person({ id: "42fa3a4f-a350-4812-bd79-26561c2ffca3", handle: "tobias", displayName: "Tobias Lindqvist", vouchedAt: daysAgo(16) }),
+  ].slice(0, count);
+}
+
+const peopleRows = () => screen.queryAllByTestId(/^invites\.(person|redactedPerson)$/);
+const keyOf = (element: Element) => element.getAttribute("data-testid-key");
+const follows = (a: Element, b: Element) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+
+describe("People you let in (behavior/Invites.md)", () => {
+  // :7 ALWAYS the page reads Applications, then Live links, in that order,
+  // with People you let in between them GIVEN the reader has vouched someone in.
+  it(":7 People you let in stands between Applications and Live links", async () => {
+    show({ people: boardPeople(2) });
+    const label = await screen.findByTestId("invites.peopleLabel");
+    expect(label).toHaveTextContent("People you let in");
+    expect(follows(screen.getByTestId("invites.applicationsLabel"), label)).toBe(true);
+    expect(follows(rows().at(-1)!, label)).toBe(true);
+    expect(follows(label, screen.getByTestId("invites.linksLabel"))).toBe(true);
+  });
+
+  // :9 ALWAYS the section People you let in is absent, its label with it,
+  // GIVEN the reader has vouched no one in.
+  it(":9 with no one let in the section is absent, label and all", async () => {
+    show();
+    await screen.findAllByTestId("invites.application");
+    expect(screen.queryByTestId("invites.peopleLabel")).toBeNull();
+    expect(peopleRows()).toHaveLength(0);
+    expect(document.body.textContent).not.toContain("People you let in");
+  });
+
+  // :11 one row per person, the newest first, in the application row's
+  // anatomy without its control: the picture, else the monogram from their
+  // name; their display name, else their handle; the age, as 2d. :13 no
+  // control of its own, and the chevron of a row that opens.
+  it(":11 :13 one row per person, newest first: picture else monogram, name else handle, the age; no control, the chevron", async () => {
+    show({
+      people: [
+        person({ id: "p-nadia", handle: "nadia", displayName: "Nadia Rask", vouchedAt: daysAgo(2), avatarUrl: "https://media.test/n.jpg" }),
+        person({ id: "p-wren", handle: "wren", displayName: null, vouchedAt: daysAgo(5) }),
+      ],
+    });
+    await screen.findByTestId("invites.peopleLabel");
+    expect(peopleRows().map(keyOf)).toEqual(["p-nadia", "p-wren"]);
+    const [nadia, wren] = peopleRows();
+    expect(within(nadia).getByTestId("invites.person.title")).toHaveTextContent(/^Nadia Rask$/);
+    expect(within(nadia).getByTestId("invites.person.trailing")).toHaveTextContent(/^2d$/);
+    expect(within(nadia).getByTestId("invites.person.disc").querySelector("img")).toHaveAttribute(
+      "src",
+      "https://media.test/n.jpg",
+    );
+    // No written name: the handle, and the monogram from it.
+    expect(within(wren).getByTestId("invites.person.title")).toHaveTextContent(/^@wren$/);
+    expect(within(wren).getByTestId("invites.person.disc")).toHaveTextContent(/^W$/);
+    expect(within(wren).getByTestId("invites.person.trailing")).toHaveTextContent(/^5d$/);
+    for (const r of [nadia, wren]) {
+      // No status line, no control: the row's one press is the row, chevron-marked.
+      expect(within(r).queryByTestId("invites.person.second")).toBeNull();
+      expect(within(r).getAllByRole("link")).toHaveLength(1);
+      expect(within(r).queryByRole("button")).toBeNull();
+      expect(within(r).getByTestId("invites.person.chevron")).toBeInTheDocument();
+    }
+  });
+
+  // :15 ALWAYS three newest rows and under the third invites.peopleDoor, Show
+  // all, an inline action under the rows GIVEN more than three let in.
+  it(":15 past three, the three newest stand and Show all under the third", async () => {
+    show({ people: boardPeople(5) });
+    const door = await screen.findByTestId("invites.peopleDoor");
+    expect(door).toHaveTextContent(/^Show all$/);
+    expect(door.tagName).toBe("BUTTON");
+    expect(peopleRows().map((r) => within(r).getByTestId("invites.person.title").textContent)).toEqual([
+      "Nadia Rask",
+      "Wren Aliyev",
+      "Juno Baptiste",
+    ]);
+    expect(follows(peopleRows()[2], door)).toBe(true);
+    expect(follows(door, screen.getByTestId("invites.linksLabel"))).toBe(true);
+  });
+
+  // :17 ALWAYS every row and no invites.peopleDoor GIVEN three or fewer.
+  it(":17 at three or fewer every row stands and no door", async () => {
+    show({ people: boardPeople(3) });
+    await screen.findByTestId("invites.peopleLabel");
+    expect(peopleRows()).toHaveLength(3);
+    expect(screen.queryByTestId("invites.peopleDoor")).toBeNull();
+  });
+
+  // :19 WHEN tap invites.peopleDoor -> every person stands in the list, the
+  // newest first, in place AND the door leaves AND NEVER anything else leaves
+  // the page AND NEVER a control to show fewer appears.
+  it(":19 Show all opens every row in place, the door leaves, nothing else does, no show fewer", async () => {
+    show({ people: boardPeople(5) });
+    const door = await screen.findByTestId("invites.peopleDoor");
+    const before = {
+      applications: rows().length,
+      links: screen.getAllByTestId("invites.link").length,
+    };
+    fireEvent.click(door);
+    expect(peopleRows().map(keyOf)).toEqual(boardPeople(5).map((p) => p.id));
+    expect(screen.queryByTestId("invites.peopleDoor")).toBeNull();
+    expect(rows()).toHaveLength(before.applications);
+    expect(screen.getAllByTestId("invites.link")).toHaveLength(before.links);
+    expect(screen.getByTestId("invites.create")).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/show fewer|show less/i);
+    expect(screen.getByTestId("invites.peopleLabel").parentElement?.querySelectorAll("button")).toHaveLength(0);
+    // The door's press is not lost to the page: focus lands on the first row it opened.
+    expect(document.activeElement).toBe(within(peopleRows()[3]).getByRole("link"));
+  });
+
+  // :21 ALWAYS New invite and People you let in, and neither Applications nor
+  // Live links, their labels and empty lines with them, GIVEN no application
+  // waits and no link is live and the reader has vouched someone in.
+  // InvitesEmpty.md:5 ALWAYS the empty Invites never stands GIVEN the reader
+  // has vouched someone in.
+  it(":21, InvitesEmpty.md:5 with only people let in: New invite and the people, neither half, never the empty state", async () => {
+    show({ queue: [], links: [inviteLink({ id: "dead", usable: false })], people: boardPeople(2) });
+    expect(await screen.findByTestId("invites.peopleLabel")).toBeInTheDocument();
+    expect(screen.getByTestId("invites.create")).toHaveTextContent("New invite");
+    for (const id of ["applicationsLabel", "applicationsEmpty", "linksLabel", "linksEmpty", "empty"]) {
+      expect(screen.queryByTestId(`invites.${id}`)).toBeNull();
+    }
+    expect(document.body.textContent).not.toMatch(/Applications|Live links|No invites out yet/);
+    expect(peopleRows()).toHaveLength(2);
+  });
+
+  // :23 WHEN tap invites.person -> that person's profile opens AND its back
+  // arrow reads Back to Invites (ProfileOther.md:73).
+  it.each([
+    [null, "/invites"],
+    ["notifications", "/invites?from=notifications"],
+  ])(":23 a row opens the person's profile, whose arrow reads Back to Invites (Invites opened from %s)", async (from, back) => {
+    show({ people: boardPeople(1), from });
+    const open = within((await screen.findAllByTestId("invites.person"))[0]).getByRole("link");
+    const href = new URL(open.getAttribute("href")!, "http://localhost");
+    expect(href.pathname).toBe("/u/nadia");
+    const origin = href.searchParams.get("from");
+    expect(backFor(origin)).toEqual({ href: back, label: "Back to Invites" });
+    // A person let in opens in the Profile stack, as Invites itself stands there.
+    expect(detailRoot(origin)).toBe("profile");
+  });
+
+  // :25 ALWAYS invites.redactedPerson keeps its place and its age, its disc
+  // keeping its space and filled with nothing, its title reading Deleted
+  // account in the system's voice and no handle under it GIVEN deleted.
+  // :27 WHEN tap invites.redactedPerson -> the deleted account's page opens
+  // AND its back arrow reads Back to Invites.
+  it(":25 :27 a deleted account keeps its place and age, reads Deleted account, and opens its page", async () => {
+    const people = boardPeople(3);
+    people[1] = person({ id: "e5a3c2d8-7b14-4f9e-8c06-1d9b4a72f3e5", handle: "wren", redacted: true, vouchedAt: daysAgo(5), avatarUrl: "https://media.test/w.jpg" });
+    show({ people });
+    await screen.findByTestId("invites.peopleLabel");
+    expect(peopleRows().map((r) => r.getAttribute("data-testid"))).toEqual([
+      "invites.person",
+      "invites.redactedPerson",
+      "invites.person",
+    ]);
+    const gone = peopleRows()[1];
+    expect(keyOf(gone)).toBe("e5a3c2d8-7b14-4f9e-8c06-1d9b4a72f3e5");
+    const title = within(gone).getByTestId("invites.redactedPerson.title");
+    expect(title).toHaveTextContent(/^Deleted account$/);
+    expect(title).toHaveClass("text-on-surface-variant");
+    expect(gone.textContent).not.toContain("wren");
+    expect(within(gone).getByTestId("invites.redactedPerson.trailing")).toHaveTextContent(/^5d$/);
+    const disc = within(gone).getByTestId("invites.redactedPerson.disc");
+    expect(disc.querySelector("img")).toBeNull();
+    expect(disc.textContent).toBe("");
+    expect(within(gone).getByTestId("invites.redactedPerson.chevron")).toBeInTheDocument();
+    const href = new URL(within(gone).getByRole("link").getAttribute("href")!, "http://localhost");
+    expect(href.pathname).toBe("/u/wren");
+    expect(backFor(href.searchParams.get("from"))).toEqual({ href: "/invites", label: "Back to Invites" });
+  });
+
+  // :93 WHEN a link's Revoke lands GIVEN no application waits and no other
+  // link is live and the reader has vouched someone in -> New invite and People
+  // you let in stand AND NEVER the empty Invites stands.
+  it(":93 the last revoke with someone let in leaves New invite and the people, never the empty state", async () => {
+    const { state } = show({ queue: [], links: [inviteLink()], people: boardPeople(1) });
+    server.use(
+      gqlLink.mutation("RevokeInviteLink", () => {
+        state.links = [];
+        return HttpResponse.json({
+          data: {
+            revokeInviteLink: {
+              __typename: "RevokeInviteLinkPayload",
+              inviteLink: { __typename: "InviteLink", id: SINGLE.id, revokedAt: daysAgo(0) },
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    fireEvent.click(await screen.findByTestId("invites.link.action"));
+    await waitFor(() => expect(screen.queryByTestId("invites.linksLabel")).toBeNull());
+    expect(screen.getByTestId("invites.create")).toBeInTheDocument();
+    expect(screen.getAllByTestId("invites.person")).toHaveLength(1);
+    expect(screen.queryByTestId("invites.empty")).toBeNull();
   });
 });
 
