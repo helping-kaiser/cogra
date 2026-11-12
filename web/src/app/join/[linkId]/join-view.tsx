@@ -11,15 +11,21 @@
 //
 // THE FIELDS ANSWER ON THE PRESS. Typing never marks a field before the next
 // press of Create account; a press checks the handle's, the email's and the
-// password's shape here, and only a well-formed form goes out. A local format
-// line re-checks as the text changes once it stands; a line the server
-// answered (a taken handle or email, a breached password, no answer) stands
-// until the next press.
+// password's shape here, and whether Repeat password matches, each field on
+// its own (JoinErrors.md), and only a well-formed form goes out. A local line
+// re-checks as the text changes once it stands; a line the server answered (a
+// taken handle or email, a breached password, no answer) stands until the
+// next press.
+//
+// THE EXITS HOLD WHILE THE ACCOUNT IS MADE (Join.md): the back arrow, the "?"
+// and Sign in refuse a press, never dimmed, until the registration answers —
+// a guest who left would have nowhere the answer could reach them (the entry
+// forms' named exception, design backlog 191).
 //
 // WHAT WAS TYPED OUTLIVES A WAY OUT (Join.md): leaving by the "?", Sign in or
 // the back arrow and coming back in the same session finds the handle and the
-// email as they were and the password empty; a cold start finds nothing. The
-// memory is this module's, so it lives exactly as long as the loaded app.
+// email as they were and both passwords empty; a cold start finds nothing.
+// The memory is this module's, so it lives exactly as long as the loaded app.
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -32,6 +38,7 @@ import { checkInviteLink, register, type InviteCheck } from "@/lib/api/onboardin
 import { extractInviteId } from "@/lib/onboarding/invite-input";
 import { joinBackHref, type JoinOrigin } from "@/lib/onboarding/join-origin";
 import { emailValid, handleValid, passwordLength } from "@/lib/onboarding/registration-rules";
+import { mismatchAfterEdit, mismatchOnPress } from "@/lib/onboarding/repeat-password";
 import { deviceLabel } from "@/lib/session/device-label";
 import { useAuthPhase, useTokenStore } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
@@ -39,7 +46,7 @@ import { LINK_ROW } from "@/lib/ui2/link-stack";
 import { FormPasswordField, FormTextField } from "@/lib/ui2/form-fields";
 import { HelpDot } from "@/lib/ui2/help-dot";
 import { MonogramAvatar } from "@/lib/ui2/monogram-avatar";
-import { testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { NO_ANSWER, NOT_THROUGH, RATE_LIMITED_LINE, TaskPage } from "@/lib/ui2/task-page";
 import { WaitingCommit } from "@/lib/ui2/waiting-commit";
 import { buttonClassName } from "@/lib/ui/button";
@@ -47,11 +54,17 @@ import { TransportError } from "@/lib/ui/transport-error";
 
 import { InviteEntry } from "../invite-entry";
 
-// The board's registered nodes (nodes.json `join`, round 28): the inviter's
-// face, the heading that names them, and the line under it.
-const JOIN_AVATAR: DataNode = { path: "join.avatar" };
-const JOIN_TITLE: DataNode = { path: "join.title" };
-const JOIN_BODY: DataNode = { path: "join.body" };
+// The board's registered nodes (nodes.json `join`, round 28, with Repeat
+// password's `confirm` from round 38): the header and its "?", the inviter's
+// face, the heading that names them and the line under it, the fields, the
+// legal lines, the commit and the account switch.
+const JOIN: DataNode = { path: "join" };
+const JOIN_HELP = part(part(JOIN, "header"), "help");
+const JOIN_AVATAR = part(JOIN, "avatar");
+const JOIN_TITLE = part(JOIN, "title");
+const JOIN_BODY = part(JOIN, "body");
+const JOIN_TERMS = part(JOIN, "terms");
+const JOIN_PRIVACY = part(JOIN, "privacy");
 
 const HANDLE_SHAPE = "A handle is 3–30 characters: a–z, 0–9, _.";
 const EMAIL_SHAPE = "That doesn't look like an email address.";
@@ -115,6 +128,8 @@ export function JoinView({ linkId, origin = "arrival" }: { linkId: string; origi
   }
   // A registration refused as INVITE_UNUSABLE turns the form into the door.
   const [spent, setSpent] = useState(false);
+  // The registration out: the page's exits hold until it answers.
+  const [registering, setRegistering] = useState(false);
 
   useEffect(() => {
     if (inviteId === null) return;
@@ -157,8 +172,15 @@ export function JoinView({ linkId, origin = "arrival" }: { linkId: string; origi
   }
 
   return (
-    <JoinPage inviteId={inviteId} inviter={inviterOf(check)} origin={origin}>
-      {phase === "signedOut" && <ApplyForm inviteId={inviteId} onSpent={() => setSpent(true)} />}
+    <JoinPage inviteId={inviteId} inviter={inviterOf(check)} origin={origin} held={registering}>
+      {phase === "signedOut" && (
+        <ApplyForm
+          inviteId={inviteId}
+          onSpent={() => setSpent(true)}
+          busy={registering}
+          onBusy={setRegistering}
+        />
+      )}
       {phase === "signedIn" && accountState === "MEMBER" && (
         <div className="mt-8 flex flex-col gap-2">
           <p data-testid="join_member_note" className="m-0 text-body-medium">
@@ -195,23 +217,29 @@ function JoinPage({
   inviteId,
   inviter,
   origin,
+  held,
   children,
 }: {
   inviteId: string;
   inviter: { name: string; handle: string; avatarUrl: string | null };
   origin: JoinOrigin;
+  /** The registration is out: the arrow and the "?" refuse a press. */
+  held: boolean;
   children: React.ReactNode;
 }) {
   const router = useRouter();
   return (
     <TaskPage
+      node={JOIN}
       backHref={joinBackHref(origin)}
       backLabel="Back"
+      backHeld={held}
       headerAction={
         <HelpDot
           ariaLabel="About CoGra"
           onOpen={() => router.push(`/about?from=join&invite=${inviteId}${origin === "door" ? "&door=1" : ""}`)}
-          testId="join_help"
+          held={held}
+          node={JOIN_HELP}
         />
       }
     >
@@ -229,20 +257,23 @@ function JoinPage({
   );
 }
 
-type FieldLines = { handle: string | null; email: string | null; password: string | null };
-const NO_LINES: FieldLines = { handle: null, email: null, password: null };
+type FieldLines = { handle: string | null; email: string | null; password: string | null; confirm: string | null };
+const NO_LINES: FieldLines = { handle: null, email: null, password: null, confirm: null };
 
-/** The local format lines a press says, by field — null where a field is well-formed. */
-function shapeLines(handle: string, email: string, password: string): FieldLines {
+/** The local lines a press says, by field, each field on its own — null where a field passes. */
+function shapeLines(handle: string, email: string, password: string, repeat: string): FieldLines {
   const length = passwordLength(password);
   return {
     handle: handleValid(handle) ? null : HANDLE_SHAPE,
     email: emailValid(email) ? null : EMAIL_SHAPE,
     password: length === "ok" ? null : LENGTH_LINES[length],
+    confirm: mismatchOnPress(password, repeat),
   };
 }
 
-function refusalLine(code: ErrorCode): { field: keyof FieldLines; line: string } | { fault: string } | "spent" {
+function refusalLine(
+  code: ErrorCode,
+): { field: Exclude<keyof FieldLines, "confirm">; line: string } | { fault: string } | "spent" {
   switch (code) {
     case "HANDLE_TAKEN":
       return { field: "handle", line: HANDLE_TAKEN };
@@ -259,7 +290,18 @@ function refusalLine(code: ErrorCode): { field: keyof FieldLines; line: string }
   }
 }
 
-function ApplyForm({ inviteId, onSpent }: { inviteId: string; onSpent: () => void }) {
+function ApplyForm({
+  inviteId,
+  onSpent,
+  busy,
+  onBusy: setBusy,
+}: {
+  inviteId: string;
+  onSpent: () => void;
+  /** The registration is out — held by the page, whose exits hold with it. */
+  busy: boolean;
+  onBusy: (busy: boolean) => void;
+}) {
   const client = useApolloClient();
   const store = useTokenStore();
   const router = useRouter();
@@ -267,7 +309,7 @@ function ApplyForm({ inviteId, onSpent }: { inviteId: string; onSpent: () => voi
   const [handle, setHandleState] = useState(typed.handle);
   const [email, setEmailState] = useState(typed.email);
   const [password, setPassword] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [repeat, setRepeat] = useState("");
   /** Lines a press's own check said — they re-check as the text changes. */
   const [local, setLocal] = useState<FieldLines>(NO_LINES);
   /** Lines the server answered — they stand until the next press. */
@@ -287,20 +329,28 @@ function ApplyForm({ inviteId, onSpent }: { inviteId: string; onSpent: () => voi
   };
   const onPassword = (value: string) => {
     setPassword(value);
-    if (local.password !== null) {
-      const length = passwordLength(value);
-      setLocal({ ...local, password: length === "ok" ? null : LENGTH_LINES[length] });
-    }
+    const length = passwordLength(value);
+    setLocal({
+      ...local,
+      password: local.password === null || length === "ok" ? null : LENGTH_LINES[length],
+      confirm: mismatchAfterEdit(local.confirm, value, repeat),
+    });
   };
+  const onRepeat = (value: string) => {
+    setRepeat(value);
+    setLocal({ ...local, confirm: mismatchAfterEdit(local.confirm, password, value) });
+  };
+
+  const empty = handle === "" || email === "" || password === "" || repeat === "";
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (busy || handle === "" || email === "" || password === "") return;
+    if (busy || empty) return;
     setAnswered(NO_LINES);
     setFault(null);
-    const lines = shapeLines(handle.trim(), email.trim(), password);
+    const lines = shapeLines(handle.trim(), email.trim(), password, repeat);
     setLocal(lines);
-    if (lines.handle !== null || lines.email !== null || lines.password !== null) return;
+    if (Object.values(lines).some((line) => line !== null)) return;
     setBusy(true);
     const outcome = await register(client, {
       inviteLink: inviteId,
@@ -339,7 +389,7 @@ function ApplyForm({ inviteId, onSpent }: { inviteId: string; onSpent: () => voi
           onChange={setHandle}
           hint="3–30 characters: a–z, 0–9, _"
           error={answered.handle ?? local.handle}
-          testId="apply_handle"
+          node={part(JOIN, "handle")}
         />
         <FormTextField
           label="Email"
@@ -348,16 +398,25 @@ function ApplyForm({ inviteId, onSpent }: { inviteId: string; onSpent: () => voi
           value={email}
           onChange={setEmail}
           error={answered.email ?? local.email}
-          testId="apply_email"
+          node={part(JOIN, "email")}
         />
         <FormPasswordField
           label="Password"
           value={password}
           onChange={onPassword}
           autoComplete="new-password"
+          enterKeyHint="next"
           hint="At least 12 characters."
           error={answered.password ?? local.password}
-          testId="apply_password"
+          node={part(JOIN, "password")}
+        />
+        <FormPasswordField
+          label="Repeat password"
+          value={repeat}
+          onChange={onRepeat}
+          autoComplete="new-password"
+          error={local.confirm}
+          node={part(JOIN, "confirm")}
         />
       </div>
       <div className="mt-6 flex flex-col gap-2">
@@ -370,9 +429,13 @@ function ApplyForm({ inviteId, onSpent }: { inviteId: string; onSpent: () => voi
             line stands directly above Create account. The documents are not
             written yet, so their doors open nothing (Settings' Privacy and
             Terms rows, the same drift). */}
-        <p className="m-0 text-center text-body-small text-on-surface-variant">
+        <p className="m-0 text-center text-body-small text-on-surface-variant" {...testAttributes(JOIN_TERMS)}>
           By creating your account you accept the{" "}
-          <button type="button" className="cg-focus border-0 bg-transparent p-0 text-primary underline" data-testid="join_terms">
+          <button
+            type="button"
+            className="cg-focus border-0 bg-transparent p-0 text-primary underline"
+            {...testAttributes(part(JOIN_TERMS, "open"))}
+          >
             Terms
           </button>
           .
@@ -381,16 +444,26 @@ function ApplyForm({ inviteId, onSpent }: { inviteId: string; onSpent: () => voi
           label="Create account"
           busyLabel="Creating account…"
           reason="Waiting for a handle, your email and a password"
-          waiting={handle === "" || email === "" || password === ""}
+          waiting={empty}
           busy={busy}
-          testId="apply_continue"
+          node={part(JOIN, "commit")}
         />
-        <Link href="/login" data-testid="invite_login" className={`${buttonClassName({ variant: "text" })} w-full`}>
+        <Link
+          href="/login"
+          aria-disabled={busy || undefined}
+          onClick={busy ? (event) => event.preventDefault() : undefined}
+          className={`${buttonClassName({ variant: "text" })} w-full`}
+          {...testAttributes(part(JOIN, "signInDoor"))}
+        >
           Already have an account? Sign in
         </Link>
-        <p className="m-0 text-center text-body-small text-on-surface-variant">
+        <p className="m-0 text-center text-body-small text-on-surface-variant" {...testAttributes(JOIN_PRIVACY)}>
           How CoGra handles your data: the{" "}
-          <button type="button" className="cg-focus border-0 bg-transparent p-0 text-primary underline" data-testid="join_privacy">
+          <button
+            type="button"
+            className="cg-focus border-0 bg-transparent p-0 text-primary underline"
+            {...testAttributes(part(JOIN_PRIVACY, "open"))}
+          >
             Privacy Policy
           </button>
           .
