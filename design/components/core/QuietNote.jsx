@@ -3,8 +3,8 @@ import React from "react";
 /* The quiet note (item 17, the conformance round): one line in the smallest
    type the system has, telling the reader something true about the surface
    they are standing on — what it is ("Your comment on 'The long way home'"),
-   how it works ("Words first — pictures can join them"), or what a gesture
-   does ("Drag to move, pinch to zoom").
+   how it works ("Words first — pictures can join them"), or what a choice
+   decides ("One shape for the whole post.").
 
    IT NEVER ASKS FOR ANYTHING. No action, no error, no warning: it is a fact
    offered on the way past, and the moment a line needs the reader to do

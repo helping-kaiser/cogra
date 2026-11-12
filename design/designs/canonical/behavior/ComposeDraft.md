@@ -16,6 +16,6 @@ WHEN press Continue -> the draft resumes where it was left
 
 WHEN press Discard -> the draft is discarded AND a fresh pick begins with the pictures in reach
 
-WHEN press the header back arrow -> compose is left AND the draft stays AND NEVER a dialog asks
+WHEN press the header back arrow -> compose is left for where the composer was opened from AND the draft stays AND NEVER a dialog asks
 
-WHEN press the header X -> compose is left AND the draft stays AND NEVER a dialog asks
+WHEN press the header X -> compose is left for where the composer was opened from AND the draft stays AND NEVER a dialog asks

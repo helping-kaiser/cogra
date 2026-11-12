@@ -1282,7 +1282,12 @@
       "prefix": "commentEdit",
       "keys": {
         "commentEdit.acts": "the upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
-        "commentEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+        "commentEdit.gate": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "commentEdit.sign": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "commentEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "commentEdit.video.describeRow": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "commentEdit.video.thumb": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "commentEdit.video.uploadError": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "commentEdit.acts": [
@@ -1294,6 +1299,7 @@
           "uploading"
         ],
         "commentEdit.cover": [],
+        "commentEdit.cover.add": [],
         "commentEdit.cover.change": [],
         "commentEdit.cover.label": [],
         "commentEdit.cover.thumb": [],
@@ -1306,8 +1312,24 @@
         "commentEdit.facts.sensitive.action": [],
         "commentEdit.facts.sensitive.label": [],
         "commentEdit.facts.sensitive.value": [],
-        "commentEdit.gate": [],
-        "commentEdit.gate.line": [],
+        "commentEdit.gate": [
+          "picked",
+          "second",
+          "failed"
+        ],
+        "commentEdit.gate.line": [
+          "picked",
+          "second"
+        ],
+        "commentEdit.gate.message": [
+          "failed"
+        ],
+        "commentEdit.gate.retry": [
+          "failed"
+        ],
+        "commentEdit.gate.wait": [
+          "failed"
+        ],
         "commentEdit.header": [],
         "commentEdit.header.back": [],
         "commentEdit.header.help": [],
@@ -1316,7 +1338,9 @@
         "commentEdit.references": [],
         "commentEdit.references.add": [],
         "commentEdit.references.label": [],
-        "commentEdit.sign": [],
+        "commentEdit.sign": [
+          "failed"
+        ],
         "commentEdit.tags": [],
         "commentEdit.tags.add": [],
         "commentEdit.tags.label": [],
@@ -1330,13 +1354,48 @@
         "commentEdit.tags.withdrawn.undo": [],
         "commentEdit.target": [],
         "commentEdit.video": [],
-        "commentEdit.video.describeRow": [],
-        "commentEdit.video.describeRow.count": [],
-        "commentEdit.video.describeRow.describe": [],
-        "commentEdit.video.describeRow.reason": [],
+        "commentEdit.video.describeRow": [
+          "picked",
+          "failed",
+          "second"
+        ],
+        "commentEdit.video.describeRow.count": [
+          "picked",
+          "failed",
+          "second"
+        ],
+        "commentEdit.video.describeRow.describe": [
+          "picked",
+          "failed",
+          "second"
+        ],
+        "commentEdit.video.describeRow.reason": [
+          "picked",
+          "failed",
+          "second"
+        ],
         "commentEdit.video.label": [],
-        "commentEdit.video.thumb": [],
-        "commentEdit.video.thumb.remove": [],
+        "commentEdit.video.thumb": [
+          "picked",
+          "failed",
+          "second"
+        ],
+        "commentEdit.video.thumb.remove": [
+          "picked",
+          "second"
+        ],
+        "commentEdit.video.uploadError": [
+          "failed"
+        ],
+        "commentEdit.video.uploadError.message": [
+          "failed"
+        ],
+        "commentEdit.video.uploadError.remove": [
+          "failed"
+        ],
+        "commentEdit.video.uploadError.retry": [
+          "failed"
+        ],
         "commentEdit.words": [],
         "commentEdit.words.input": [],
         "commentEdit.words.label": []
@@ -2189,7 +2248,8 @@
     "ComposeCrop": {
       "prefix": "composeCrop",
       "keys": {
-        "composeCrop.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)"
+        "composeCrop.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
+        "composeCrop.shapes": "the shape chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "composeCrop.header": [],
@@ -2203,10 +2263,26 @@
           "1",
           "2"
         ],
-        "composeCrop.shapes": [],
-        "composeCrop.shapes.squareChip": [],
-        "composeCrop.shapes.tallChip": [],
-        "composeCrop.shapes.wideChip": [],
+        "composeCrop.shapes": [
+          "tall",
+          "square",
+          "wide"
+        ],
+        "composeCrop.shapes.squareChip": [
+          "tall",
+          "square",
+          "wide"
+        ],
+        "composeCrop.shapes.tallChip": [
+          "tall",
+          "square",
+          "wide"
+        ],
+        "composeCrop.shapes.wideChip": [
+          "tall",
+          "square",
+          "wide"
+        ],
         "composeCrop.viewport": [],
         "composeCrop.zoom": [],
         "composeCrop.zoom.input": []
@@ -2420,9 +2496,7 @@
         "coverCrop.header.back": [],
         "coverCrop.header.leave": [],
         "coverCrop.header.title": [],
-        "coverCrop.howTo": [],
         "coverCrop.next": [],
-        "coverCrop.shapeNote": [],
         "coverCrop.viewport": [],
         "coverCrop.zoom": [],
         "coverCrop.zoom.input": []
@@ -3305,15 +3379,6 @@
           "member"
         ],
         "explore.filterSheet.order.picker.rankedOption": [
-          "member"
-        ],
-        "explore.filterSheet.order.seen": [
-          "member"
-        ],
-        "explore.filterSheet.order.seen.box": [
-          "member"
-        ],
-        "explore.filterSheet.order.seen.label": [
           "member"
         ],
         "explore.filterSheet.title": [],

@@ -12,7 +12,7 @@ WHEN press Next GIVEN the body is over 5,000 characters -> NEVER the step advanc
 
 WHEN cutting brings the body within 5,000 characters -> the refusal and the error outline clear at once AND the count stays reading N left while 500 or fewer characters remain AND Next answers again
 
-WHEN press the header X -> the whole flow is left AND the draft is kept with its over-long words AND NEVER a dialog asks
+WHEN press the header X -> the whole flow is left for where the composer was opened from AND the draft is kept with its over-long words AND NEVER a dialog asks
 
 WHEN press the header back arrow -> the pick step comes back, one stage behind
 

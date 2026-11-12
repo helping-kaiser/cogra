@@ -33,9 +33,10 @@
    2026-11-10: "all comments can hold words/images/one video. there is no
    specific 'text-comment'"). The family's: a comment holding words alone
    reads its add row `+ Add pictures or a video`, as the reply's composer
-   does, and a picked clip arrives as `CommentEditVideo` draws it, with its
-   cover row; until the edit's video path ships the clip is refused with the
-   staged line (staged-surfaces). This board draws a comment holding a
+   does, and a picked clip arrives as `CommentEditVideo`'s `clip` setting
+   draws it, with its cover row (round 44, seam 295). Words alone is read on
+   the edit's own state: a comment whose pictures this edit removed may take
+   a clip. This board draws a comment holding a
    picture, so its row keeps `+ Add pictures · 1 of 4`; the `body` chip's
    `words` draws the comment holding words alone (round 30, jakob 2026-11-11:
    "draw it"): its media block is the add row alone, `+ Add pictures or a

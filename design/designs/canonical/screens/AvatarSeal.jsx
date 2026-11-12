@@ -21,9 +21,6 @@ export function Screen() {
             <span style={{ fontSize: "var(--text-label-large)", letterSpacing: "var(--text-label-large--letter-spacing)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>
               Your profile picture
             </span>
-            <span style={{ fontSize: "var(--text-label-small)", letterSpacing: "var(--text-label-small--letter-spacing)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
-              Shown everywhere you appear.
-            </span>
           </span>
         </div>
 

@@ -70,7 +70,7 @@ WHEN press the header back arrow GIVEN Sign and publish was not pressed -> the d
 
 WHEN press Back GIVEN Sign and publish was not pressed -> the details stage comes back, one stage behind
 
-WHEN press the header X GIVEN Sign and publish was not pressed -> the whole flow is left AND the draft is kept AND NEVER a dialog asks
+WHEN press the header X GIVEN Sign and publish was not pressed -> the whole flow is left for where the composer was opened from AND the draft is kept AND NEVER a dialog asks
 
 WHEN press Sign and publish -> Back reads Close in its place from the press itself AND the header X is named Close AND NEVER Close dims
 
