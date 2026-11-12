@@ -610,8 +610,9 @@ taken is refused by the mixed-kind line. One file, one line, the
 nearest reason.
 
 Two removal marks, never interchangeable: `Removed by its author` —
-"The words and pictures are gone. The post's place in the thread, and
-every response, remain." — and `Removed under the platform's rules` —
+the line and the removal's date, nothing under it (jakob 2026-11-12:
+the thread standing around it shows what remains) — and `Removed under
+the platform's rules` —
 "A passed proposal removed it. The decision is public." Content swept
 with its author's account deletion wears `Removed by its author` too
 (jakob 2026-10-07): the author chose the sweep.
@@ -623,10 +624,8 @@ A visible mark stays in their place — "Removed by its author" — and the
 post's spot in threads stays with it.`, then `This is immediate and
 permanent.`, `Remove` and `Keep it`.
 
-At comment scale the author's mark swaps its noun and nothing else
-(the comment-removal round; blessed, jakob 2026-10-01). The removed
-comment's second line is `The comment's place in the thread, and every
-response, remain.` (`CommentRemoved`). The confirm is titled `Remove
+At comment scale the author's mark is the post's, line and date
+(`CommentRemoved`). The confirm is titled `Remove
 this comment?` over `The words and pictures leave every reader's view,
 along with every earlier version's. A visible mark stays in their place
 — "Removed by its author" — and the comment's spot in its thread stays

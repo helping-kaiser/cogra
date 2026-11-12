@@ -100,7 +100,7 @@ export function Screen() {
             <CommentCard
               author={ADA}
               timestamp="4d"
-              redacted={{ reason: "author", note: REMOVED_COMMENT_NOTE }}
+              redacted={{ reason: "author" }}
               onReply={() => {}}
               target="“Salt maps of the coast road” — @sol"
               onOpenTarget={() => {}}

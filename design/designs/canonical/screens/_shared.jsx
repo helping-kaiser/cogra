@@ -2923,15 +2923,13 @@ const TOBIAS_REPLIES = [
    order, and `RedactedContent` stands where the words were. The replies keep
    their parent and stay readable — removal never breaks a thread.
 
-   ITS SECOND LINE SWAPS THE NOUN. The author's mark ships the post's words —
-   "The post's place in the thread" — and a comment says its own, the way a
-   chat message carries its own second line.
+   THE MARK IS ONE LINE AND ITS DATE, as on a post (jakob 2026-11-12): the
+   thread standing around it shows what remains.
 
    A REMOVED COMMENT HAS NO MENU LEFT, the post's `Removed` rule: nothing on
    its card is left to save, cite or read the terms of, so its ⋮ goes with the
    payload. What survives is what survives a removed post — the author, the
    opinion a reader can still give, and the way to answer. */
-const REMOVED_COMMENT_NOTE = "The comment's place in the thread, and every response, remain.";
 /* WHERE THE READER STANDS IN THE THREAD for the whole removal — the menu, the
    dialog and the mark (`ReplySettled`'s `scrolledBy`, the reply-return
    ruling's offset). @sol's comment stands third, below the fold of a sheet
@@ -3059,7 +3057,7 @@ function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, remov
     <CommentCard
       {...solComment}
       menuItems={removed ? [] : OWN_THREAD_MENU}
-      redacted={removed ? { reason: "author", when: "now", note: REMOVED_COMMENT_NOTE } : undefined}
+      redacted={removed ? { reason: "author", when: "now" } : undefined}
       node={card}
     />
   );

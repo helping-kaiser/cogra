@@ -4,7 +4,7 @@ ALWAYS profile.comments lists the person's comments, each a profile.comments.com
 
 ALWAYS profile.comments.commentCard leads with profile.comments.commentCard.target, the pointer to what it answers
 
-ALWAYS a removed comment keeps its place in the list, profile.comments.commentCard.removalMark.line reading Removed by its author where its words were, over profile.comments.commentCard.removalMark.detail reading The comment's place in the thread, and every response, remain.
+ALWAYS a removed comment keeps its place in the list, profile.comments.commentCard.removalMark.line reading Removed by its author where its words were,, and nothing more under it
 
 ALWAYS a removed comment keeps profile.comments.commentCard.authorChip, its time and profile.comments.commentCard.target, and carries no profile.comments.commentCard.menu
 
