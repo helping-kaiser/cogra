@@ -7984,6 +7984,35 @@ jakob's rulings closing the day's rounds, executed in one lane.
 - **The why-line compresses, then ellipsizes.** Where the full line
   would not fit, it reads `Through @ada`, the strongest path's person;
   a handle that still does not fit ellipsizes, `ActorChip`'s law.
+- **A long name or handle takes one of three cases** (jakob 2026-11-11,
+  round 40; limits: handle 3–30 characters, display name at most 50;
+  drawn on `NamesLong`).
+  1. *Person rows* — the actor chip: the row never wraps, the name
+     ellipsizes first, the handle stays whole until it alone cannot fit
+     (`ActorChip`; `ContentRow`'s bare-handle aside reads the same law).
+  2. *One-line places* — a page title, a menu row, a row's title and its
+     aside, the profile's handle line, a tab or caption: the line never
+     wraps and clips at its end with "…"; the NAME OR HANDLE is the part
+     cut and the words around it keep their room first — `@mmmmmmmm…
+     commented on your post`. Where the handle ends the line (`Hide @ada`,
+     `on @mira`) the end clip already cuts it; where words follow it, the
+     handle is the line's one shrinking part (`nameInLine`, beside
+     `ActorChip`). `PageHeader`, `SheetItem`, `OverflowMenu`'s popover
+     (Material's 280dp maximum), `ContentRow` and `ProfileHeader`'s handle
+     line carry it.
+  3. *Text that wraps* — headings, card titles and bodies, dialog titles
+     and bodies, snackbars, notices, the borrowed-view band: the sentence
+     wraps at its spaces and is never cut as a whole, and A HANDLE OR A
+     NAME NEVER STANDS ON MORE THAN ONE LINE (jakob 2026-11-11). It is
+     one unit: it moves whole to the next line when the rest of the
+     current one cannot hold it, and past a full line it is cut at its end
+     with "…", case 2's clip; punctuation right after it (`?`, `.`,
+     `,`, `'s`) rides with it, whole, never swallowed by the cut
+     (`nameInText`, beside `nameInLine`). A display name with spaces is the
+     same one unit. `overflow-wrap: anywhere` stays only for other unbroken
+     tokens — an email in a settings status, a pasted URL. `DialogSurface`,
+     `Snackbar`, `TaskCard`, `BorrowedViewBand`, `QuotedRow`'s title,
+     `SettingsRow`'s status, the pads' and the intro's lines carry it.
 - **The comment card's ⋮ is the comment's menu** (`CommentMenu`, or
   `CommentMenuOwn` on your own), never the post card's.
 - **The score hangs on the thing it scores.** At the top of the trace
@@ -10990,6 +11019,17 @@ jakob's answers to round 30's proposals (Q1–Q7), the ruled part.
   Salome Ward, Nadia Rask.
 - **The search sections' cap of three** is the rule on every sectioned
   surface, Saved and History included (backlog 141).
+- **A list that is one of several things on its page is capped** (jakob
+  2026-11-11, round 40): a section among other content — Invites'
+  sections, a sessions list inside Settings — shows three rows, then
+  `Show all` under the third — the pickers' door, an inline action under
+  the rows — which opens the rest in place; the list grows, nothing else
+  leaves the page, and no "show fewer" follows. A page or sheet whose
+  PURPOSE is the list — History, Saved, Notifications, the profile's
+  chronicle, posts and comments, the tag page, the opinions page, the
+  opinions and cited-by sheets, Your tags, hidden accounts — is a
+  continuous scroll and is never capped. Drawn on Invites' People you
+  let in (backlog 181).
 - **The way out while an act signs** is round 34's: once the commit is
   pressed nothing cancels it, and `Close` only leaves.
 - **The deleted account's disc and the removed thing's tile** keep the
@@ -11370,6 +11410,56 @@ details are a proposal drawn for his review.
   flows hold at **227**. The registry grows to **182 screens**, **6799 →
   6946** board paths, **1996 → 2000** distinct — `settings.clearing.install`
   with its label and chevron, and `settings.dialog.close`; nothing removed.
+
+### Round 40, long names and capped lists — 2026-11-11
+
+jakob's rulings on backlog 173 ("long name rule seems fine. i just dont want
+ugly wrapping in places where it breaks the design") and on lists ("all
+lists should not be uncapped in default state"), drawn for his review.
+
+- **The three cases are law** (this section, beside the why-line), and the
+  masters carry them: the one-line masters clip at their end and, where
+  words follow a handle, make the handle the line's one shrinking part
+  (`nameInLine`, beside `ActorChip`); in the wrapping masters a handle or name
+  is one unit that never stands on two lines (`nameInText`). `OverflowMenu`'s popover takes Material's
+  280dp maximum, so a long row cuts its handle instead of growing off the
+  screen; `SheetItem` and the popover's rows set the 48px minimum by their
+  padding, so the ellipsis can ride the line. `NamesLong` (*Names · when
+  they are long*, patterns page) draws each case on its masters at
+  `@maximiliana_featherstone_haugh` and a 50-character name, spaced or
+  unbroken.
+- **Measured at the longest legal handle and name** (round 38's sweep,
+  re-run before and after): the task card's title 60 → −50px (past the
+  screen → inside it), its body 17 → −18px, the borrowed-view band 5 →
+  −24px, the intro's line 23 → −24px, the page title `@…` 261px with no
+  ellipsis → cut inside the band, the profile's handle line 53 → −16px,
+  the chronicle's `on @…` 24 → −54px, `Hide @…` wrapping → one line cut;
+  Notifications' rows keep their act (`… commented on your post` whole).
+  Every drawn board at its own sample names: 0 boxes moved on 262 boards
+  compared, measured (round 32's method) — `PageHeader` yields its room
+  only to a title that names a handle, so the seals' `What you sign`,
+  4.5px past the band's padding beside the widest trailing group, stands
+  as drawn.
+- **A list among other content is capped; a page that is the list is not**
+  (the rule beside the search sections' cap): Invites' People you let in
+  shows its three newest and `Show all` under the third, the pickers'
+  door, opening the rest in place (`letIn` chip: `more`, `more-opened`).
+  The waiting applications' three and Live links' cap are ruled and not
+  yet drawn (backlog 180, 182); every page whose purpose is its list
+  scrolls on uncapped (backlog 181 closed).
+- **Invites with only let-in people is not the empty state**: `New
+  invite` and People you let in stand, the two empty halves gone
+  (`sections` chip: `only-let-in`); `InvitesEmpty` stands only while
+  nobody was ever let in (backlog 170 closed; a "nothing waiting" line is
+  backlog 184).
+- **The gate**: one board added (`NamesLong`, patterns page, beside
+  `AppCrash`; scan-exempt, a pattern exemplar, registering nothing).
+  `Invites` gains `letIn`'s `more` and `more-opened` and `sections`'
+  `only-let-in`, and one edge (its door, via 12). Over round 41 the registry
+  grows to **185 screens**, **7116 → 7117** board paths, **1999 → 2000**
+  distinct — `invites.peopleDoor` and three
+  more `invites.person` keys; nothing removed. Backlog 173 closed; 180–184
+  filed.
 
 ### Round 41, Unhide on a hidden person's card, Edit on your own, the last failure places — 2026-11-11
 

@@ -5554,7 +5554,11 @@ they let in are on no screen. For jakob: (a) the people keep the page out of
 the teaching state — `Invites` with both empty halves' lines and the section;
 (b) `InvitesEmpty` gains the section under its teaching body; (c) as drawn,
 the list only while the page has applications or links. Lean: (b), the one
-board a long-standing member reaches most.
+board a long-standing member reaches most. Closed by round 40: jakob ruled
+neither empty — `New invite` and People you let in stand, the empty halves
+gone (`Invites`' `sections` chip, `only-let-in`); `InvitesEmpty` stands only
+while nobody was ever let in. Whether that page wants a line for "nothing
+waiting" is backlog 184.
 
 ### 171 · People you let in, none yet: absent or a quiet line · *design* · **filed 2026-11-11**
 
@@ -5606,7 +5610,10 @@ it can. For jakob: one rule for running text (break a token anywhere, as the
 profile's name already does with `overflow-wrap: anywhere`) and one for
 one-line places (ellipsize the handle inside the sentence and keep the
 sentence's words, the wide anchor's form). The full table is the round's
-hand-back (`r38` in dev-state).
+hand-back (`r38` in dev-state). Closed by round 40: jakob ruled the three
+cases (readme §13, *A long name or handle takes one of three cases*), the
+masters carry them and `NamesLong` draws them; what stays open on boards
+this round did not touch is backlog 183.
 
 ### 174 · People you let in: a long list, a hidden person · *design* · **filed 2026-11-11**
 
@@ -5617,7 +5624,9 @@ profile's lists do (`ProfileMoreFailed`'s `Couldn't load more` family) past a
 count, and whether a hidden person's row stands (the hide law keeps a hidden
 account out of feeds, not out of the reader's own records). Lean: page past
 the page size the lists share; a hidden person stays, as their row is the
-reader's own record.
+reader's own record. Round 40 answers the length: three, the newest, then
+`Show all`, which opens the rest in place (`Invites`' `letIn` chip, `more`
+and `more-opened`); whether a hidden person's row stands is still open.
 
 ### 175 · Settings with the install row outgrows its board · *system* · **filed 2026-11-11** · **closed 2026-11-11**
 
@@ -5641,6 +5650,81 @@ board draws a redacted card's open menu (`FeedRemoved`'s just-removed card
 passes none). For jakob: (a) the reader's card menu, Hide and Report included
 (`readerCardMenu`); (b) Save and Cite only, as drawn [lean — what is hidden
 or reported is the payload, and it is gone]; (c) no menu, `FeedRemoved`'s.
+
+### 180 · Invites' waiting applications: which three · *design* · **filed 2026-11-11**
+
+Round 40 (jakob: "the inital screen should only show the couple oldest
+ones"). The queue stands grouped by link, the groups by their oldest waiting
+application and the rows by age inside them (`Invites.md`), so the queue's
+first three rows are not the three oldest: drawn, they are `@imke` 9d,
+`@vora81` 1d, `@vora82` 1d under Many uses, while `@rafa` 3d heads Single
+use. Not drawn. For jakob: (a) the section's first three rows in the queue's
+standing order, groups as they fall, `Show all` under the third [lean — the
+grouping is the queue's ruled order, and its first row is already the
+oldest]; (b) the three oldest across the groups, each under its group's
+label, the rest behind `Show all`; (c) three per group, a door per group.
+And whether a kept approval at the head counts among the three. Ruled by
+jakob 2026-11-11: (a), the first three rows in the queue's grouped order, to
+build in the next round on Invites; still open: whether the kept approval
+counts among the three.
+
+### 181 · Which lists page and which cap · *design* · **filed 2026-11-11**
+
+Round 40 (jakob: "all lists should not be uncapped in default state"). The
+rule is written once (readme §13, beside the search sections' cap) and drawn
+on Invites alone. Drawn uncapped today, and how each ends: History (a feed,
+newest first; the order frozen while scrolling, a Back to top pill past three
+screens; no end drawn), Saved (pages; `Couldn't load more` with Retry ends a
+failed page), Notifications (pages; `notifications.list.moreFault`), the
+profile chronicle and its posts and comments (pages in place; `Loading…`,
+`ProfileMoreFailed`), a profile's opinions page `ProfileStances` (no end
+drawn), a post's opinions sheet `PostOpinions` and `CitedBy` (every row the
+count names, no cap and no end), Your tags `YourTopics` (no end drawn), the
+tag page's tagged things `TagPage` (no end drawn), Hidden accounts in
+`SettingsHidden` (every hidden account, no end drawn), Invites' Live links
+(two drawn, no cap). No session list is drawn. For jakob: which of these are
+feeds that page and which are lists that take three and `Show all`. Lean:
+History, Saved, Notifications, the chronicle and `TagPage` are feeds that
+page; the sheets, `ProfileStances`, `YourTopics`, Hidden accounts and Live
+links cap. Closed by jakob's ruling 2026-11-11: a list that is one of several
+things on its page caps, and a page or sheet whose purpose is the list is a
+continuous scroll, never capped. Capped: Invites' Applications (backlog 180,
+to build), Live links (182, to build), People you let in (built, round 40).
+Never capped: History, Saved, Notifications, the profile's chronicle, posts
+and comments, `TagPage`, `ProfileStances`, `PostOpinions`, `CitedBy`,
+`YourTopics`, Hidden accounts (readme §13, beside the search sections' cap).
+
+### 182 · Invites' Live links: the cap is not drawn · *design* · **filed 2026-11-11**
+
+Round 40. The ruling caps Live links at three in the screen's order, but the
+page draws two links, so no setting can show the cap without two more sample
+links (their ids, addresses and captions — fixture data, no new words). Left
+for the next round on Invites, with backlog 180.
+
+### 183 · Long names on the boards round 40 did not touch · *design* · **filed 2026-11-11**
+
+Round 40's re-measure at the longest legal handle and name leaves three
+places past the screen — two on boards round 41 held that day, one in a
+positioned drawing whose clip needs the drawing's own column width: `Join`'s
+heading with an unbroken name (316px, `Join.jsx`, a wrapping heading — case
+3, `overflow-wrap: anywhere`), `ChangeHandle`'s body line naming the new
+handle (13px, `ChangeHandleBody` in `_shared.jsx`, case 3), and
+`OnboardingVouch`'s inviter caption under the stage drawing (151px,
+`IntroCaption`, a caption — case 2, the end clip within the drawing's
+column, its width a drawing choice). The fix is the case's, no new word.
+Ruled by jakob 2026-11-11: fix all three in the next round; `Join`'s heading
+and `ChangeHandle`'s body take the revised case 3 — the name or handle one
+unit, whole on a line or end-cut, never on two lines.
+
+### 184 · Invites with only let-in people: a line for "nothing waiting" · *design* · **filed 2026-11-11**
+
+Round 40 (jakob: "something has happened there is just nothing new waiting
+for you"). The page draws `New invite` and People you let in with no line
+saying nothing waits, since no such line is blessed. For jakob: (a) no line,
+as drawn [lean — the button and the people already say the page is alive];
+(b) the halves' own `No applications waiting.` under `New invite`; (c) a new
+line (a draft: `Nothing new is waiting for you.`). Closed by jakob's ruling
+2026-11-11: (a), no line.
 
 Round 41 (jakob 2026-11-11, "fine for now lets keep it there" read with "all
 things that i did not say anything to … are blessed"): left open, because
