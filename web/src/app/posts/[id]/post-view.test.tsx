@@ -23,6 +23,7 @@ import { PostView } from "./post-view";
 import { byNode } from "@/test/data-node";
 import { bookmarkHandlers, bookmarkLog } from "@/test/saved";
 import { citingRecord, citingRecords } from "@/test/inbound";
+import { CarriedSnackbar } from "@/lib/ui/carried-snackbar";
 
 // The menu rows that go somewhere navigate rather than link, because a sheet
 // row is a button — so the router is what a citing or editing row is measured
@@ -2257,6 +2258,43 @@ describe("PostView", () => {
     fireEvent.click(screen.getByTestId("header-back"));
     expect(screen.queryByTestId("reply-wizard")).not.toBeInTheDocument();
     expect(screen.getByTestId("postDetail.threadSheet")).toBeVisible();
+  });
+
+  // ReplyEntry.md:25 — Add a comment or a comment's Reply GIVEN the reader is
+  // an applicant: the snackbar AND NEVER the composer opens.
+  it.each(["add", "reply"] as const)("an_applicants_%s_says_comment_once_in_and_opens_no_composer", async (door) => {
+    server.use(...thread("u1", [{ id: "c1", body: "First!" }]));
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("u2"),
+      writeSigner: fakeWriteSigner(),
+      reader: "APPLICANT",
+    });
+    await openComments();
+    fireEvent.click(
+      door === "add"
+        ? await screen.findByTestId("comment-add")
+        : await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.reply", "c1")),
+    );
+    expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent("You can comment once you're in.");
+    expect(screen.queryByTestId("reply-wizard")).not.toBeInTheDocument();
+  });
+
+  // ApplicantFeed.md:45-53's face on the post's own detail (the shared
+  // control): locked, and a tap tells AND NEVER the pad blooms.
+  it("an_applicants_stance_anchor_on_the_detail_is_locked_and_tells", async () => {
+    server.use(...thread("u1", [{ id: "c1", body: "First!" }]));
+    renderWithProviders(
+      <>
+        <PostView postId="p1" />
+        <CarriedSnackbar />
+      </>,
+      { store: storeFor("u2"), writeSigner: fakeWriteSigner(), reader: "APPLICANT" },
+    );
+    const anchor = await screen.findByTestId(byNode("postDetail.card.actionRow.stance.anchor"));
+    expect(anchor.className).toContain("opacity-[var(--state-disabled)]");
+    fireEvent.click(anchor);
+    expect(screen.getByTestId("carried-snackbar")).toHaveTextContent("You can give your opinion once you're in.");
+    expect(document.querySelector('[data-testid$="-pad"], [data-testid$=".pad"]')).toBeNull();
   });
 
   // THE COMPOSER TAKES THE SCREEN AND GIVES IT BACK WHOLE (jakob 2026-09-15).
