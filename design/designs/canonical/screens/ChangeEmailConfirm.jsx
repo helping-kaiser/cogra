@@ -86,13 +86,20 @@
    (`WizardHeader`'s `closing`); it leaves for settings and the confirm goes
    on. A confirm that fails after Close says so on the Email row (`Settings`'
    `forms` chip, jakob 2026-11-12). The pending header and field are drawn
-   copies; the rest ones alone carry the names. */
+   copies; the rest ones alone carry the names. `Cancel the change` is held
+   while the confirm runs — submit is submit (jakob 2026-11-12, 9): the
+   pending copy refuses a press, undimmed, its face unchanged.
+
+   THE LINK CONFIRMED, THE CODE STILL OWED, is the `confirmed` chip's `link`
+   (jakob 2026-11-12, on round 43's review): the link's side reads `—
+   confirmed` where `— still waiting` stood and the code's still waits; the
+   field and `Confirm the code` stay, and `Resend` sends the code alone. */
 export const NODE = "changeEmail";
 export const PROPS = {
-  confirmed: { editor: "enum", options: ["none", "code"], default: "none" },
+  confirmed: { editor: "enum", options: ["none", "code", "link"], default: "none" },
   submit: { editor: "enum", options: ["rest", "pending"], default: "rest" },
 };
-export const VALS = `codeSideReading: this.props.confirmed === "code" ? "sol@solferreira.art — confirmed" : "sol@solferreira.art — still waiting", interimShown: this.props.confirmed === "code" ? "block" : "none", fieldShown: this.props.confirmed === "code" || this.props.submit === "pending" ? "none" : "block", pendingShown: this.props.confirmed !== "code" && this.props.submit === "pending" ? "block" : "none", headerShown: this.props.confirmed !== "code" && this.props.submit === "pending" ? "none" : "block"`;
+export const VALS = `linkSideReading: this.props.confirmed === "link" ? "sol@ferreira.studio — confirmed" : "sol@ferreira.studio — still waiting", codeSideReading: this.props.confirmed === "code" ? "sol@solferreira.art — confirmed" : "sol@solferreira.art — still waiting", interimShown: this.props.confirmed === "code" ? "block" : "none", fieldShown: this.props.confirmed === "code" || this.props.submit === "pending" ? "none" : "block", pendingShown: this.props.confirmed !== "code" && this.props.submit === "pending" ? "block" : "none", headerShown: this.props.confirmed !== "code" && this.props.submit === "pending" ? "none" : "block"`;
 export function Screen() {
   return (
     <>
@@ -155,7 +162,7 @@ export function Screen() {
               Link
             </span>
             <span style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)" }} data-node="linkSide">
-              sol@ferreira.studio — still waiting
+              {"{{linkSideReading}}"}
             </span>
           </div>
         </div>
@@ -210,8 +217,13 @@ export function Screen() {
           </QuietNote>
         </div>
 
-        <div style={{ marginTop: 16 }}>
+        <div style={{ marginTop: 16, display: "{{headerShown}}" }}>
           <InlineAction size="sm" onClick={() => {}} node="cancel">
+            Cancel the change
+          </InlineAction>
+        </div>
+        <div style={{ marginTop: 16, display: "{{pendingShown}}" }}>
+          <InlineAction size="sm" busy>
             Cancel the change
           </InlineAction>
         </div>

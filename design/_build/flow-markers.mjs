@@ -1781,15 +1781,19 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: ">Your key</span>", tag: "button" },
     { n: 10, find: ">Revoke</button>", tag: "button", all: true },
     { n: 11, find: ">Sign out everywhere else</span>", tag: "button" },
-    // The Password and Email rows are drawn twice on the `forms` chip (round
-    // 43): the rest row and the failed one, the same control, so one number.
-    { n: 12, find: ">Password</span>", tag: "button", all: true },
+    // The Password and Email rows are drawn again on the `forms` chip (round
+    // 43, round 46): the rest row, its inert waiting copies, and the failed
+    // one — the rest and the failed are the same control, so one number; the
+    // waiting copies refuse a tap and carry none.
+    { n: 12, find: ">Password</span>", tag: "button" },
+    { n: 12, find: ">Password</span>", tag: "button", skip: 2 },
     { n: 13, find: ">Handle</span>", tag: "button" },
     { n: 13, find: ">That handle is taken.</span>", tag: "button" },
     // Retry on a failed row — the handle change's, and the kept picks' batch
     // (round 41, the `kept` chip): one control, the same signing asked again.
     { n: 29, find: ">Retry</button>", tag: "button", all: true },
-    { n: 14, find: ">Email</span>", tag: "button", all: true },
+    { n: 14, find: ">Email</span>", tag: "button" },
+    { n: 14, find: ">Email</span>", tag: "button", skip: 3 },
     { n: 15, find: ">Don&#x27;t remember this account on this device</span>", tag: "button" },
     { n: 16, find: ">Sign out</span>", tag: "button" },
     // The People group arrived after the page was numbered, and a row inserted
@@ -2207,18 +2211,20 @@ Object.assign(FLOW_MARKERS, {
 // field and toggle carries its own number now, matched by `id` where the
 // field starts empty (no distinguishing value text to key off).
 Object.assign(FLOW_MARKERS, {
+  // The `answer` chip's `failed` (round 46) draws the fields and the commit
+  // again: the same controls, so the same numbers.
   Join: [
     { n: 8, find: 'aria-label="About CoGra"', tag: "button" },
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'data-field="Handle"', tag: "div" },
-    { n: 3, find: 'data-field="Email"', tag: "div" },
-    { n: 4, find: 'data-field="Password"', tag: "div" },
+    { n: 2, find: 'data-field="Handle"', tag: "div", all: true },
+    { n: 3, find: 'data-field="Email"', tag: "div", all: true },
+    { n: 4, find: 'data-field="Password"', tag: "div", all: true },
     // One reveal control drawn on both password fields (ChangePassword's rule).
     { n: 5, find: 'aria-label="Show password"', tag: "button", all: true },
-    { n: 6, find: ">Create account</button>", tag: "button" },
+    { n: 6, find: ">Create account</button>", tag: "button", all: true },
     { n: 7, find: ">Already have an account? Sign in</button>", tag: "button" },
     // The password asked twice (round 38, jakob's J2).
-    { n: 11, find: 'data-field="Repeat password"', tag: "div" },
+    { n: 11, find: 'data-field="Repeat password"', tag: "div", all: true },
     // The two legal doors (jakob 2026-10-09, ruling 76): the accept
     // sentence's Terms above the commit, the privacy notice at the foot.
     { n: 9, find: ">Terms</a>", tag: "a" },
@@ -2280,6 +2286,8 @@ Object.assign(FLOW_MARKERS, {
     // The two legal doors, as on Join (jakob 2026-10-09, ruling 76).
     { n: 8, find: ">Terms</a>", tag: "a" },
     { n: 9, find: ">Privacy Policy</a>", tag: "a" },
+    // Round 46 (seam 316): the header's "?", Join's own — the next free number.
+    { n: 11, find: 'aria-label="About CoGra"', tag: "button" },
   ],
   SignInError: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
@@ -2345,6 +2353,22 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Show password"', tag: "button", all: true },
     { n: 3, find: ">Set the new password</button>", tag: "button" },
     { n: 4, find: 'data-field="Repeat password"', tag: "div" },
+  ],
+  // Round 46 (seam 316, entry 5): the mismatch in place, `JoinErrors`' way —
+  // the base form's numbers.
+  ResetNewErrors: [
+    { n: 1, find: 'data-field="New password"', tag: "div" },
+    { n: 2, find: 'aria-label="Show password"', tag: "button", all: true },
+    { n: 3, find: ">Set the new password</button>", tag: "button" },
+    { n: 4, find: 'data-field="Repeat password"', tag: "div" },
+  ],
+  ChangePasswordErrors: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'data-field="Current password"', tag: "div" },
+    { n: 3, find: 'data-field="New password"', tag: "div" },
+    { n: 4, find: 'aria-label="Show password"', tag: "button", all: true },
+    { n: 5, find: ">Change password</button>", tag: "button" },
+    { n: 6, find: 'data-field="Repeat password"', tag: "div" },
   ],
   KeyCeremony: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
@@ -2458,7 +2482,8 @@ Object.assign(FLOW_MARKERS, {
 });
 FLOW_MARKERS.ChangeEmailConfirm.push(
   { n: 4, find: ">Resend</button>", tag: "button" },
-  { n: 5, find: ">Cancel the change</button>", tag: "button" },
+  // Round 46: the pending copy's held Cancel is the same control.
+  { n: 5, find: ">Cancel the change</button>", tag: "button", all: true },
 );
 
 /* The reply and edit wizards, the two overlays and the pattern boards
@@ -3270,6 +3295,8 @@ Object.assign(FLOW_MARKERS, {
     // Round 43: the queue's door under its third row (the `applications`
     // chip's `capped`), appended so no via renumbers.
     { n: 13, find: 'data-node="invites.applicationsDoor"', tag: "button" },
+    // Round 46: Live links' door under the third link (the `links` chip).
+    { n: 14, find: 'data-node="invites.linksDoor"', tag: "button" },
   ],
   RejectAllConfirm: [
     { n: 1, find: ">Close them</button>", tag: "button" },

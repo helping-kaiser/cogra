@@ -3558,19 +3558,6 @@ function ChangeHandleBody({ value = "" } = {}) {
         >
           Change your handle
         </h1>
-        <p
-          style={{
-            margin: "8px 0 0",
-            fontSize: "var(--text-body-medium)",
-            fontWeight: "var(--text-body-medium--font-weight)",
-            lineHeight: "var(--text-body-medium--line-height)",
-            letterSpacing: "var(--text-body-medium--letter-spacing)",
-            color: "var(--text-secondary)",
-          }}
-          data-node="body"
-        >
-          <NameInText text="@sol is how people mention and find you. Everything you have published stays yours — the handle is a name, not the account." />
-        </p>
 
         <div style={{ marginTop: 32 }}>
           <TextField
@@ -3677,7 +3664,10 @@ function ReportProblemBody({ words }) {
    shape as `SettingsInstallHelp` draws it on this page. `helpChip` draws the
    two open states on `Settings` (its `help` chip); the dialogs are drawn
    copies and carry no name. */
-const GIVING_AN_OPINION_HELP = ["A tap opens it; drift to where it feels right.", "One slider per side of the opinion."];
+/* Giving an opinion's text is one paragraph naming the three inputs (jakob
+   2026-11-12: "one or a couple actual sentences instead of two disconnect
+   ones") — drafted from the rows' labels and their old hints, review-pending. */
+const GIVING_AN_OPINION_HELP = "Three ways to give an opinion: the pad opens on a tap, and you drift to where it feels right; sliders give each side of the opinion its own slider; typed values take both numbers exactly.";
 const READING_HELP = "Every feed starts from what it shows, and a change made inside a feed lasts until you change it back. Both choices stay on this device.";
 
 function SettingsBody({ handleChip = false, keptChip = false, formsChip = false, helpChip = false, backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, hidden = "3", recoveryStatus, backupFootnote, clearingFootnote, install } = {}) {
@@ -3794,11 +3784,7 @@ function SettingsBody({ handleChip = false, keptChip = false, formsChip = false,
             (jakob's shape). It stands in a group of its own for the same
             reason hiding does: the Reading "?"'s this-device promise
             is not true of it. */}
-        <SettingsGroup
-          label="Sensitive content"
-          footnote="This choice follows your account to every device."
-          node="sensitive"
-        >
+        <SettingsGroup label="Sensitive content" node="sensitive">
           <SettingsRow
             checked={false}
             label="Always unveil sensitive content"
@@ -3962,11 +3948,16 @@ function SettingsBody({ handleChip = false, keptChip = false, formsChip = false,
                says so on the form's own row — `That didn't go through.`, the
                Handle row's failed line, with no `Retry` (a password change
                would need the passwords typed again) — and the row's tap opens
-               the form again. The failed states are drawn copies; the rest row
-               alone carries the name. */
+               the form again. While the submit runs, the row reads the form's
+               own in-flight label and refuses a second open, the Handle row's
+               `Changing handle…` (jakob 2026-11-12, 8). The waiting and failed
+               states are drawn copies; the rest row alone carries the name. */
             <div>
               <div style={{ display: "{{passwordRestShown}}" }}>
                 <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} node="password" />
+              </div>
+              <div style={{ display: "{{passwordChangingShown}}" }}>
+                <SettingsRow label="Password" status="Changing password…" inert />
               </div>
               <div style={{ display: "{{passwordFailedShown}}" }}>
                 <SettingsRow
@@ -4022,6 +4013,12 @@ function SettingsBody({ handleChip = false, keptChip = false, formsChip = false,
             <div>
               <div style={{ display: "{{emailRestShown}}" }}>
                 <SettingsRow label="Email" value="sol@solferreira.art" status={emailPending ? "Change pending" : undefined} onOpen={() => {}} node="email" />
+              </div>
+              <div style={{ display: "{{emailChangingShown}}" }}>
+                <SettingsRow label="Email" value="sol@solferreira.art" status="Changing email…" inert />
+              </div>
+              <div style={{ display: "{{emailConfirmingShown}}" }}>
+                <SettingsRow label="Email" value="sol@solferreira.art" status="Confirming the code…" inert />
               </div>
               <div style={{ display: "{{emailFailedShown}}" }}>
                 <SettingsRow
@@ -5461,6 +5458,10 @@ const SOL_INVITE_LINK_OPEN = "https://cogra.social/join/c47b19e0-3a52-4f68-b1d9-
    it used it up, so it keys his group and never stands under Live links: a
    link that no longer works is not live (Invites.md). */
 const SOL_INVITE_USED_ID = "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64";
+/* Two older live links, Invites' cap only (round 46): made 05.09 and 01.09,
+   both for 30 days. */
+const SOL_INVITE_OLDER_ID = "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025";
+const SOL_INVITE_OLDEST_ID = "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90";
 
 /* THE ASK LINK — the invite link's mirror, and shaped as its mirror: the same
    origin, its own path, one id. What it is NOT is the difference that matters.
@@ -5668,6 +5669,15 @@ const HOW_VOUCHING_WORKS_HELP = [
 const YOUR_VOUCH_BACK_HELP = [
   "Vouching back signs your opinion of the person who vouched you in, and your feed grows from it.",
   "The pad is how you shape what reaches you — for or against, and how much. Nothing is signed until Set.",
+  /* The pad's own coaching lines, moved in whole (jakob 2026-11-12, 11). */
+  {
+    text: "Later, tap the small face under a post to open this — press and hold it instead and a gentle ",
+    face: "🙂",
+    exact: " (+0.10 / +0.10)",
+    tail: " is signed on the spot.",
+    spoken: "Later, tap the small face under a post to open this — press and hold it instead and a gentle Nice, For or against +0.10, How much reaches you +0.10, is signed on the spot.",
+  },
+  "Prefer sliders or exact numbers? Swap the input in settings.",
 ];
 
 /* THE PAGE ITSELF.
@@ -6068,6 +6078,43 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown, closedFa
             node="link"
             nodeKey={SOL_INVITE_LINK_OPEN.split("/").at(-1)}
           />
+          {/* LIVE LINKS ARE CAPPED (jakob 2026-11-12, 4): newest made first,
+              three, then `Show all` under the third — the queue's door, the
+              rest opening in place. Two older sample links, by the drawn
+              cards' form, stand on `Invites` alone (its `links` chip). */}
+          {shown && (
+            <>
+              <PayoutAddress
+                label="Single use · not used yet"
+                address={`https://cogra.social/join/${SOL_INVITE_OLDER_ID}`}
+                onCopy={() => {}}
+                copyLabel="Copy the link"
+                onChange={() => {}}
+                changeLabel="Revoke"
+                caption="Expires in 20 days · 05.10.2026"
+                node="link"
+                nodeKey={SOL_INVITE_OLDER_ID}
+              />
+              <div style={{ display: shown.linksDoor }} data-node-chip="links" data-node-key="capped">
+                <InlineAction size="sm" selfStart node="linksDoor">
+                  Show all
+                </InlineAction>
+              </div>
+              <div style={{ display: shown.linksRest, flexDirection: "column", gap: 8 }}>
+                <PayoutAddress
+                  label="Many uses"
+                  address={`https://cogra.social/join/${SOL_INVITE_OLDEST_ID}`}
+                  onCopy={() => {}}
+                  copyLabel="Copy the link"
+                  onChange={() => {}}
+                  changeLabel="Revoke"
+                  caption="Expires in 16 days · 01.10.2026"
+                  node="link"
+                  nodeKey={SOL_INVITE_OLDEST_ID}
+                />
+              </div>
+            </>
+          )}
         </div>
         </div>
 

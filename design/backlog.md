@@ -5703,7 +5703,7 @@ Never capped: History, Saved, Notifications, the profile's chronicle, posts
 and comments, `TagPage`, `ProfileStances`, `PostOpinions`, `CitedBy`,
 `YourTopics`, Hidden accounts (readme §13, beside the search sections' cap).
 
-### 182 · Invites' Live links: the cap is not drawn · *design* · **filed 2026-11-11**
+### 182 · Invites' Live links: the cap is not drawn · *design* · **filed 2026-11-11** · **closed 2026-11-12**
 
 Round 40. The ruling caps Live links at three in the screen's order, but the
 page draws two links, so no setting can show the cap without two more sample
@@ -5711,7 +5711,7 @@ links (their ids, addresses and captions — fixture data, no new words). Left
 for the next round on Invites, with backlog 180. Round 43 left it undrawn:
 nothing writes the order Live links stands in (the queue's is by age, the
 people's newest first), so which three a cap shows is not settled — backlog
-195.
+195. Closed by round 46 with 195: the cap drawn on `Invites`' `links` chip.
 
 ### 183 · Long names on the boards round 40 did not touch · *design* · **filed 2026-11-11** · **closed 2026-11-12**
 
@@ -5818,7 +5818,7 @@ is on screen, so it starts on its own first frame.` Each is jakob's: move
 
 Closed by round 46 (jakob 2026-11-12, question 13, all as recommended): the clip's line is cut (`ComposeDetailsVideo`, `EditComposeVideo`, `ReplyVideoFailed`; `postEdit.cover.note` deleted); the Feed score note, YourKey's, History's and Saved's search line, the edits' two body lines and the tag picker's rule are kept and marked blessed in copy-voice; ChangeHandle's and ChangeEmail's lines are lane A's to cut.
 
-### 193 · Two cuts of one caption, and lines the pass left asymmetric · *design* · **filed 2026-11-12**
+### 193 · Two cuts of one caption, and lines the pass left asymmetric · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 42 built each canvas's row as written, which leaves: (1) the ask link's
 caption cut two ways — `Send it to anyone who is already in. It does not
@@ -5828,7 +5828,10 @@ people you send it to.` on `ApplicantRejected` and `ApplicantFellThrough`;
 content stands unveiled wherever you read.` while on; (3) `Wallet — coming
 soon` keeps `Your earnings will be here.` while Chats carries no line;
 (4) closed by round 42 (act 2): the post-MVP twins take the canonical cuts —
-the same rulings. Points (1)–(3) are jakob's to align or keep.
+the same rulings. Points (1)–(3) are jakob's to align or keep. Round 46
+(jakob 2026-11-12): (1) closed — `Send it to anyone who is already in. It
+does not expire.` on all three boards; (2) closed — the On line is cut too;
+(3) closed — Wallet's line is cut.
 
 ### 194 · Lines round 42 stopped: no "?" holds them, and the sign-out drift · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
@@ -5844,7 +5847,7 @@ record sign-out clears (PR-69), is the true side; copy-voice takes it.
 
 Closed by round 46 (jakob 2026-11-12, question 12): the edit sheets (`EditActs`, `CommentEditActs`) carry the `?` that opens `How signing works` beside their title, as `ComposeLicense` places its own; the card's subline leaves them. Whether that dialog says why an EDIT is signed and what it costs is round 46's question back to him.
 
-### 195 · Live links: the order a cap would keep · *design* · **filed 2026-11-12**
+### 195 · Live links: the order a cap would keep · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 43 (backlog 182). The cap is ruled — three, then `Show all`, People
 you let in's door — but no law says in what order Live links stand: the
@@ -5853,9 +5856,11 @@ queue stands by age, the people newest first, and the two drawn links
 as drawn. Which three a capped section shows follows from the order, and
 two more sample links follow from it too. For jakob: (a) newest made first,
 People you let in's order [lean — the drawn pair already reads so]; (b)
-soonest to expire first; (c) single-use links first, then many-use.
+soonest to expire first; (c) single-use links first, then many-use. Closed
+by round 46 (jakob 2026-11-12, 4 "as rec"): newest made first, three, then
+`Show all` in place (`Invites`' `links` chip; two older sample links).
 
-### 196 · The Sensitive content footnote and the Reading "?" · *design* · **filed 2026-11-12**
+### 196 · The Sensitive content footnote and the Reading "?" · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 43 (the re-ask's 8 (a)). The digest put `This choice follows your
 account to every device.` behind the Reading "?", but it is the Sensitive
@@ -5865,9 +5870,12 @@ of Reading's rows, and copy-voice gives it the group's whole job (the
 travel a future iOS build may honour but not offer). It stays on the page.
 For jakob: (a) it stays as the Sensitive content footnote [lean]; (b) it
 moves into the Reading dialog as the digest said; (c) a third "?" beside
-`Sensitive content`.
+`Sensitive content`. Closed by round 46 (jakob 2026-11-12, 5, overruling
+the lean): the line is cut — per-account is what people expect; only a
+setting that stays on this device says where it lives (copy-voice, the
+settings page). `settings.sensitive.footnote` leaves the registry.
 
-### 197 · Signed-in submits the Close rule did not reach · *design* · **filed 2026-11-12**
+### 197 · Signed-in submits the Close rule did not reach · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 43 (backlog 191). Three signed-in forms with a commit were left as
 they are: `YourKeyGate`'s `Show my key` reveals the key on the next screen
@@ -5878,9 +5886,11 @@ showed would lose it; `DeleteAccount`'s `Send the confirmation link` mails
 the link and opens the mail screen. For jakob: (a) all three keep their
 exits as they are, `SettingsBackup` holding them while it submits, the
 entry forms' exception [lean]; (b) `DeleteAccount` takes Close, its failure
-on the Delete account row.
+on the Delete account row. Closed by round 46 (jakob 2026-11-12, 6 "as
+rec"): the three keep their ways out as drawn, `SettingsBackup` holding them
+from 200ms after the press until the answer (the sidecars say so).
 
-### 198 · The Handle row's Retry beside the forms' rows without one · *design* · **filed 2026-11-12**
+### 198 · The Handle row's Retry beside the forms' rows without one · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 43 (the re-ask's 9 (a)). After Close a failed password or email change
 reads `That didn't go through.` on its row with no `Retry`, the tap
@@ -5888,9 +5898,11 @@ reopening the form; a failed handle change (round 37) reads the same words
 with `Retry`, the row inert. Two shapes for one failure on one group of one
 page. For jakob: (a) keep both — a handle retry needs no secret typed again
 [lean if Retry is wanted where it can work]; (b) the Handle row as the
-others, its tap reopening the form with the handle typed.
+others, its tap reopening the form with the handle typed. Closed by round 46
+(jakob 2026-11-12, 7: "with retry so as rec"): the Handle row keeps `Retry`,
+the law saying why — a handle retry needs nothing typed again.
 
-### 199 · After Close: the forms' rows while they wait, and what the reopened form shows · *design* · **filed 2026-11-12**
+### 199 · After Close: the forms' rows while they wait, and what the reopened form shows · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 43. Drawn: the failure on the Password and Email rows. Not drawn,
 and not ruled: (1) the wait between Close and the answer — the Handle row
@@ -5901,7 +5913,10 @@ form shows after a field refusal (a wrong current password) — the handle's
 feed fails onto the Settings Email row, a page the applicant did not come
 from, while the verify card keeps the old address. Lean: (1) the Handle
 row's form, each row its form's in-flight label; (2) on the tap; (3) the
-form at rest, the field's line beside its field; (4) as built.
+form at rest, the field's line beside its field; (4) as built. Closed by
+round 46 (jakob 2026-11-12, 8 "as rec"): all four as leaned — `Settings`'
+`forms` chip gains `password-changing`, `email-changing` and
+`email-confirming`; the sidecars carry (2)–(4).
 
 ### 200 · The cover crop under a tall clip: the frame does not fit the stage · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 

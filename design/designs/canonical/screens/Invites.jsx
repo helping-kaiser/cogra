@@ -47,6 +47,10 @@
    The `asker` chip's `deleted` draws the queue opened, its row being the
    fourth.
 
+   THE `links` CHIP DRAWS LIVE LINKS' CAP (jakob 2026-11-12, 4): newest made
+   first — four links, three shown, then `Show all` under the third, the
+   queue's door (`capped`, the default); `opened` the fourth in place.
+
    REGISTERED under the `invites` prefix (design ⇄ impl seam 078, the invites
    packet): the body names its parts, and `NODE` carries them onto the built
    board and into `nodes.json`. The `revoke` chip's two copies of the first
@@ -60,8 +64,9 @@ export const PROPS = {
   copy: { editor: "enum", options: ["rest", "failed"], default: "rest" },
   letIn: { editor: "enum", options: ["none", "people", "deleted", "more", "more-opened"], default: "none" },
   applications: { editor: "enum", options: ["capped", "opened"], default: "capped" },
+  links: { editor: "enum", options: ["capped", "opened"], default: "capped" },
 };
-export const VALS = `applicationsDoorShown: this.props.applications === "opened" || this.props.asker === "deleted" ? "none" : "block", applicationsRestShown: this.props.applications === "opened" || this.props.asker === "deleted" ? "flex" : "none", keptShown: this.props.kept === "waiting" && this.props.sections !== "only-let-in" ? "block" : "none", revokeRestShown: this.props.revoke === "waiting" ? "none" : "block", revokeBusyShown: this.props.revoke === "waiting" ? "block" : "none", applicationsSectionShown: this.props.sections === "only-let-in" ? "none" : "flex", linksSectionShown: this.props.sections === "only-let-in" ? "none" : "flex", applicationsShown: this.props.sections === "no-applications" ? "none" : "flex", applicationsEmptyShown: this.props.sections === "no-applications" ? "block" : "none", linksShown: this.props.sections === "no-links" ? "none" : "flex", linksEmptyShown: this.props.sections === "no-links" ? "block" : "none", askerNamedShown: this.props.asker === "deleted" ? "none" : "flex", askerDeletedShown: this.props.asker === "deleted" ? "flex" : "none", copyFailedShown: this.props.copy === "failed" ? "block" : "none", peopleShown: this.props.letIn === "none" && this.props.sections !== "only-let-in" ? "none" : "flex", personNamedShown: this.props.letIn === "deleted" ? "none" : "flex", personDeletedShown: this.props.letIn === "deleted" ? "flex" : "none", personMoreShown: this.props.letIn === "more" || this.props.letIn === "more-opened" ? "flex" : "none", peopleDoorShown: this.props.letIn === "more" ? "flex" : "none", personRestShown: this.props.letIn === "more-opened" ? "flex" : "none"`;
+export const VALS = `linksDoorShown: this.props.links === "opened" ? "none" : "block", linksRestShown: this.props.links === "opened" ? "flex" : "none", applicationsDoorShown: this.props.applications === "opened" || this.props.asker === "deleted" ? "none" : "block", applicationsRestShown: this.props.applications === "opened" || this.props.asker === "deleted" ? "flex" : "none", keptShown: this.props.kept === "waiting" && this.props.sections !== "only-let-in" ? "block" : "none", revokeRestShown: this.props.revoke === "waiting" ? "none" : "block", revokeBusyShown: this.props.revoke === "waiting" ? "block" : "none", applicationsSectionShown: this.props.sections === "only-let-in" ? "none" : "flex", linksSectionShown: this.props.sections === "only-let-in" ? "none" : "flex", applicationsShown: this.props.sections === "no-applications" ? "none" : "flex", applicationsEmptyShown: this.props.sections === "no-applications" ? "block" : "none", linksShown: this.props.sections === "no-links" ? "none" : "flex", linksEmptyShown: this.props.sections === "no-links" ? "block" : "none", askerNamedShown: this.props.asker === "deleted" ? "none" : "flex", askerDeletedShown: this.props.asker === "deleted" ? "flex" : "none", copyFailedShown: this.props.copy === "failed" ? "block" : "none", peopleShown: this.props.letIn === "none" && this.props.sections !== "only-let-in" ? "none" : "flex", personNamedShown: this.props.letIn === "deleted" ? "none" : "flex", personDeletedShown: this.props.letIn === "deleted" ? "flex" : "none", personMoreShown: this.props.letIn === "more" || this.props.letIn === "more-opened" ? "flex" : "none", peopleDoorShown: this.props.letIn === "more" ? "flex" : "none", personRestShown: this.props.letIn === "more-opened" ? "flex" : "none"`;
 
 export function Screen() {
   return (
@@ -84,6 +89,8 @@ export function Screen() {
         personRest: "{{personRestShown}}",
         applicationsSection: "{{applicationsSectionShown}}",
         applicationsDoor: "{{applicationsDoorShown}}",
+        linksDoor: "{{linksDoorShown}}",
+        linksRest: "{{linksRestShown}}",
         applicationsRest: "{{applicationsRestShown}}",
         linksSection: "{{linksSectionShown}}",
       }}

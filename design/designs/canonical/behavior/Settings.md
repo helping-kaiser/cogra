@@ -26,7 +26,7 @@ ALWAYS settings.stance.help and settings.reading.help, a "?" each, trail their s
 
 ALWAYS The pad and Sliders carry no second line, their background standing behind settings.stance.help
 
-WHEN tap settings.stance.help -> the dialog Giving an opinion opens over the page with A tap opens it; drift to where it feels right. and One slider per side of the opinion. and Close
+WHEN tap settings.stance.help -> the dialog Giving an opinion opens over the page with Three ways to give an opinion: the pad opens on a tap, and you drift to where it feels right; sliders give each side of the opinion its own slider; typed values take both numbers exactly. and Close
 
 WHEN tap settings.reading.help -> the dialog Reading opens over the page with Every feed starts from what it shows, and a change made inside a feed lasts until you change it back. Both choices stay on this device. and Close
 
@@ -52,9 +52,9 @@ WHEN tap Always unveil sensitive content GIVEN the switch is off -> the switch t
 
 WHEN tap Always unveil sensitive content GIVEN the switch is on -> the switch turns off AND sensitive content stays veiled until it is tapped
 
-ALWAYS settings.sensitive.unveil carries no second line GIVEN the switch is off
+ALWAYS settings.sensitive.unveil carries no second line, on or off
 
-ALWAYS the unveil switch's second line reads On, sensitive content stands unveiled wherever you read. GIVEN the switch is on
+ALWAYS settings.sensitive carries no footnote: a setting that follows the account never says so
 
 ALWAYS the Sensitive content choice follows the account, never this device alone
 
@@ -200,6 +200,8 @@ ALWAYS a handle change closed on while in flight carries its wait and its answer
 
 WHEN tap settings.credentials.handle GIVEN its second line reads Changing handle… -> NEVER the form opens
 
+ALWAYS settings.credentials.handle reads That didn't go through. with Retry in its trailing slot GIVEN a handle change was closed on and did not go through — a handle change's retry needs nothing typed again, unlike the password and email rows, whose tap reopens the form (jakob 2026-11-12)
+
 ALWAYS settings.backup.kept reads That didn't sign. in the failure voice in its second line followed by Retry in its trailing slot GIVEN the kept picks' batch was closed on while it signed and did not go through, the row inert apart from its Retry
 
 WHEN tap Retry on settings.backup.kept -> the whole batch is asked to sign again AND each target's row reads Signing… under its face until the batch answers AND NEVER part of the batch is signed alone
@@ -208,6 +210,12 @@ ALWAYS settings.credentials.password reads That didn't go through. in the failur
 
 ALWAYS settings.credentials.email reads That didn't go through. in the failure voice under the address the account still has, with no Retry, GIVEN an email change's request, its confirm or an applicant's change was closed on after its press and did not go through
 
-WHEN tap settings.credentials.password GIVEN its second line reads That didn't go through. -> the password change opens at rest
+ALWAYS settings.credentials.password reads Changing password… in its second line, the row refusing a second open, GIVEN a password change was closed on after its press and has not answered
 
-WHEN tap settings.credentials.email GIVEN its second line reads That didn't go through. -> the form that failed opens again
+ALWAYS settings.credentials.email reads Changing email… in its second line, the row refusing a second open, GIVEN an email change's request or an applicant's change was closed on after its press and has not answered
+
+ALWAYS settings.credentials.email reads Confirming the code… in its second line, the row refusing a second open, GIVEN an email change's confirm was closed on after its press and has not answered
+
+WHEN tap settings.credentials.password GIVEN its second line reads That didn't go through. -> the password change opens AND the line leaves the row AND the form stands at rest AND a refusal about one field, as a wrong current password, stands beside that field in the form's own field-error line
+
+WHEN tap settings.credentials.email GIVEN its second line reads That didn't go through. -> the form that failed opens again AND the line leaves the row AND the form stands at rest AND a refusal about one field, as a wrong current password, stands beside that field in the form's own field-error line

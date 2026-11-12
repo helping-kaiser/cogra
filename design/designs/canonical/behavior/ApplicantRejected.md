@@ -6,7 +6,7 @@ ALWAYS the closed application's card has no way to put it away
 
 ALWAYS the card is titled by the member who closed the application, @kel closed your application
 
-ALWAYS the ask link stands whole on the card with its label Ask someone you know to vouch for you and its caption It does not expire, and it works however many people you send it to.
+ALWAYS the ask link stands whole on the card with its label Ask someone you know to vouch for you and its caption Send it to anyone who is already in. It does not expire.
 
 ALWAYS the account reads, ranks and browses exactly as before the close
 

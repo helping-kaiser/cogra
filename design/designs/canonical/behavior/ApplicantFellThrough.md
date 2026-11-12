@@ -6,7 +6,7 @@ ALWAYS the fall-through card is titled The approval didn't land and reads You're
 
 ALWAYS the fall-through card names no member
 
-ALWAYS the ask link stands whole on the fall-through card with its label Ask someone you know to vouch for you and its caption It does not expire, and it works however many people you send it to.
+ALWAYS the ask link stands whole on the fall-through card with its label Ask someone you know to vouch for you and its caption Send it to anyone who is already in. It does not expire.
 
 ALWAYS the fall-through card stands whether or not the waiting card was put away on this device
 
