@@ -2556,7 +2556,7 @@
       "description": "The Password row asks for the current password and a new one; the change answers with the snackbar, and every other device is signed out.",
       "status": "resolved",
       "steps": [
-        "start · Settings · 12 «Password» → ChangePassword",
+        "start · Settings · 12 «Password» → ChangePassword — the change form — also once the row reads That didn't go through. after a change closed on did not go through: the form opens at rest, the passwords typed again",
         "end · ChangePassword · 5 «Change password» → Settings — changed — the snackbar answers, and every other device is signed out"
       ],
       "boards": [
@@ -2584,7 +2584,7 @@
       "description": "The Email row takes the new address and the current password and sends both messages; the code from the current address is typed here, and with the new address's link clicked too the address moves.",
       "status": "resolved",
       "steps": [
-        "start · Settings · 14 «Email» → ChangeEmail — the request; the confirmation is its own board — also once a change ran out before both sides landed: the row reads the address alone again and opens the request",
+        "start · Settings · 14 «Email» → ChangeEmail — the request; the confirmation is its own board — also once a change ran out before both sides landed: the row reads the address alone again and opens the request; and once the row reads That didn't go through. after a request closed on did not go through",
         "ChangeEmail · 5 «Change email» → ChangeEmailConfirm — both messages sent — the code is typed here, the link is clicked there",
         "end · ChangeEmailConfirm · 3 «Confirm the code» → Settings — the link was clicked too — the address moves and the snackbar answers"
       ],
@@ -2644,7 +2644,7 @@
       "description": "Cancel the change on the confirmation calls a change in flight off without asking first — a change is started again from the row — and settings reads the address alone.",
       "status": "resolved",
       "steps": [
-        "start · Settings · 14 «Email» → ChangeEmailConfirm — a change already in flight — the row returns to the side still owed",
+        "start · Settings · 14 «Email» → ChangeEmailConfirm — a change already in flight — the row returns to the side still owed, also once a confirm closed on did not go through",
         "end · ChangeEmailConfirm · 5 «Cancel the change» → Settings — the change is called off — the row reads the address alone, and the snackbar answers; nothing asks first, since a change is started again from the row"
       ],
       "boards": [
