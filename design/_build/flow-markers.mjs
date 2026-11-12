@@ -1252,7 +1252,8 @@ Object.assign(FLOW_MARKERS, {
     // The `clip` chip draws the clip's tile and its describe row once per value (round 44).
     { n: 5, find: 'aria-label="Remove this video"', tag: "button", all: true },
     { n: 6, find: ">Describe the video</button>", tag: "button", all: true },
-    { n: 7, find: ">Change the cover</button>", tag: "button" },
+    // The kept cover's and the picked-cover copy's (round 46).
+    { n: 7, find: ">Change the cover</button>", tag: "button", all: true },
     { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
     { n: 9, find: "+ Add a tag", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },

@@ -14,4 +14,4 @@ WHEN tap profile.menuSheet.citedBy -> the menu closes AND what cites the comment
 
 WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND nothing changes
 
-WHEN the comment's edit opened from profile.menuSheet.edit is signed -> the own profile's Comments tab comes back as it was left AND the comment's card settles in place wearing Still settling AND NEVER the thread opens
+WHEN the comment's edit opened from profile.menuSheet.edit is signed -> the own profile comes back as it was left, profile.tabRow.commentsTab lit AND the comment's card settles in place wearing Still settling AND NEVER the thread opens
