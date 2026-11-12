@@ -262,27 +262,22 @@ pub async fn record_ids_in_epoch(pool: &PgPool, epoch: i64) -> Result<Vec<String
     .await?)
 }
 
-/// One mirror record's identity and key of record, with the act time it
-/// carries (the slice-1 read surface; the full record read arrives with
-/// the content slice).
+/// One mirror record's identity and key of record (the slice-1 read
+/// surface; the full record read arrives with the content slice).
 #[derive(Debug, Clone)]
 pub struct RecordMeta {
     pub record_id: String,
     pub family: String,
     pub epoch: i64,
-    pub act_time: i64,
     pub position: i64,
 }
 
 impl RecordMeta {
-    /// The landing a display row promoted from this record stamps.
-    pub fn landing(&self) -> crate::content::LandingStamp {
-        crate::content::LandingStamp {
-            order: crate::content::LandingOrder {
-                landed_epoch: self.epoch,
-                position: self.position,
-            },
-            act_time: self.act_time,
+    /// The key of record a display row promoted from this record stamps.
+    pub fn landing(&self) -> crate::content::LandingOrder {
+        crate::content::LandingOrder {
+            landed_epoch: self.epoch,
+            position: self.position,
         }
     }
 }
@@ -292,7 +287,7 @@ pub async fn record_meta(
     record_id: &str,
 ) -> Result<Option<RecordMeta>, MirrorError> {
     Ok(sqlx::query!(
-        "SELECT record_id, family, epoch, act_time, position
+        "SELECT record_id, family, epoch, position
          FROM mirror_records WHERE record_id = $1",
         record_id,
     )
@@ -302,7 +297,6 @@ pub async fn record_meta(
         record_id: r.record_id,
         family: r.family,
         epoch: r.epoch,
-        act_time: r.act_time,
         position: r.position,
     }))
 }

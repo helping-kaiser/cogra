@@ -80,16 +80,6 @@ impl LandingOrder {
     }
 }
 
-/// A landed record as a display row stamps it: the key of record that
-/// orders it, and the act time the record carries. The act time is the
-/// recomputable summary the published record holds (layer1-interface.md
-/// §8.4); the row keeps a copy of it and never compares it.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct LandingStamp {
-    pub order: LandingOrder,
-    pub act_time: i64,
-}
-
 /// A listing cursor: the sort key, plus the entry's own id.
 ///
 /// The id carries two things the key alone cannot. A pending key is the
@@ -203,7 +193,7 @@ pub async fn insert_post(
     author_id: Uuid,
     l1_node_id: &str,
     license: &str,
-    landing: Option<LandingStamp>,
+    landing: Option<LandingOrder>,
     created_at: Timestamp,
     title: Option<&str>,
     description: Option<&str>,
@@ -212,17 +202,16 @@ pub async fn insert_post(
 ) -> Result<Option<i64>, ContentError> {
     let inserted = sqlx::query!(
         "INSERT INTO posts
-             (id, author_id, l1_node_id, license, landed_epoch, act_time,
-              position, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+             (id, author_id, l1_node_id, license, landed_epoch, position,
+              created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          ON CONFLICT (id) DO NOTHING",
         id,
         author_id,
         l1_node_id,
         license,
-        landing.map(|l| l.order.landed_epoch),
-        landing.map(|l| l.act_time),
-        landing.map(|l| l.order.position),
+        landing.map(|l| l.landed_epoch),
+        landing.map(|l| l.position),
         created_at,
     )
     .execute(&mut **tx)
@@ -236,8 +225,8 @@ pub async fn insert_post(
         "INSERT INTO post_versions
              (post_id, title, description, content, sensitive,
               sensitive_reason, pending, created_at,
-              landed_epoch, act_time, position)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+              landed_epoch, position)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          RETURNING version_id",
         id,
         title,
@@ -247,9 +236,8 @@ pub async fn insert_post(
         mark.and_then(|m| m.reason.as_deref()),
         landing.is_none(),
         created_at,
-        landing.map(|l| l.order.landed_epoch),
-        landing.map(|l| l.act_time),
-        landing.map(|l| l.order.position),
+        landing.map(|l| l.landed_epoch),
+        landing.map(|l| l.position),
     )
     .fetch_one(&mut **tx)
     .await?;
@@ -272,15 +260,15 @@ pub async fn insert_post_version(
     description: Option<&str>,
     content: &str,
     mark: Option<&SensitiveMark>,
-    landing: Option<LandingStamp>,
+    landing: Option<LandingOrder>,
     created_at: Timestamp,
 ) -> Result<Option<i64>, ContentError> {
     Ok(sqlx::query_scalar!(
         "INSERT INTO post_versions
              (post_id, title, description, content, sensitive,
               sensitive_reason, pending, created_at,
-              landed_epoch, act_time, position)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+              landed_epoch, position)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          ON CONFLICT (post_id, created_at) DO NOTHING
          RETURNING version_id",
         post_id,
@@ -291,9 +279,8 @@ pub async fn insert_post_version(
         mark.and_then(|m| m.reason.as_deref()),
         landing.is_none(),
         created_at,
-        landing.map(|l| l.order.landed_epoch),
-        landing.map(|l| l.act_time),
-        landing.map(|l| l.order.position),
+        landing.map(|l| l.landed_epoch),
+        landing.map(|l| l.position),
     )
     .fetch_optional(&mut **tx)
     .await?)
@@ -310,7 +297,7 @@ pub async fn insert_comment(
     author_id: Uuid,
     l1_node_id: &str,
     license: &str,
-    landing: Option<LandingStamp>,
+    landing: Option<LandingOrder>,
     created_at: Timestamp,
     content: &str,
     mark: Option<&SensitiveMark>,
@@ -318,8 +305,8 @@ pub async fn insert_comment(
     let inserted = sqlx::query!(
         "INSERT INTO comments
              (id, target_id, target_type, author_id, l1_node_id, license,
-              landed_epoch, act_time, position, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+              landed_epoch, position, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
          ON CONFLICT (id) DO NOTHING",
         id,
         target_id,
@@ -327,9 +314,8 @@ pub async fn insert_comment(
         author_id,
         l1_node_id,
         license,
-        landing.map(|l| l.order.landed_epoch),
-        landing.map(|l| l.act_time),
-        landing.map(|l| l.order.position),
+        landing.map(|l| l.landed_epoch),
+        landing.map(|l| l.position),
         created_at,
     )
     .execute(&mut **tx)
@@ -342,8 +328,8 @@ pub async fn insert_comment(
     let version_id = sqlx::query_scalar!(
         "INSERT INTO comment_versions
              (comment_id, content, sensitive, sensitive_reason, pending,
-              created_at, landed_epoch, act_time, position)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+              created_at, landed_epoch, position)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING version_id",
         id,
         content,
@@ -351,9 +337,8 @@ pub async fn insert_comment(
         mark.and_then(|m| m.reason.as_deref()),
         landing.is_none(),
         created_at,
-        landing.map(|l| l.order.landed_epoch),
-        landing.map(|l| l.act_time),
-        landing.map(|l| l.order.position),
+        landing.map(|l| l.landed_epoch),
+        landing.map(|l| l.position),
     )
     .fetch_one(&mut **tx)
     .await?;
@@ -367,14 +352,14 @@ pub async fn insert_comment_version(
     comment_id: Uuid,
     content: &str,
     mark: Option<&SensitiveMark>,
-    landing: Option<LandingStamp>,
+    landing: Option<LandingOrder>,
     created_at: Timestamp,
 ) -> Result<Option<i64>, ContentError> {
     Ok(sqlx::query_scalar!(
         "INSERT INTO comment_versions
              (comment_id, content, sensitive, sensitive_reason, pending,
-              created_at, landed_epoch, act_time, position)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+              created_at, landed_epoch, position)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          ON CONFLICT (comment_id, created_at) DO NOTHING
          RETURNING version_id",
         comment_id,
@@ -383,9 +368,8 @@ pub async fn insert_comment_version(
         mark.and_then(|m| m.reason.as_deref()),
         landing.is_none(),
         created_at,
-        landing.map(|l| l.order.landed_epoch),
-        landing.map(|l| l.act_time),
-        landing.map(|l| l.order.position),
+        landing.map(|l| l.landed_epoch),
+        landing.map(|l| l.position),
     )
     .fetch_optional(&mut **tx)
     .await?)
@@ -398,15 +382,13 @@ pub async fn insert_comment_version(
 pub async fn land_post(
     tx: &mut Transaction<'_, Postgres>,
     id: Uuid,
-    landing: LandingStamp,
+    landing: LandingOrder,
 ) -> Result<bool, ContentError> {
     Ok(sqlx::query!(
-        "UPDATE posts SET landed_epoch = $2, act_time = $3, position = $4
-         WHERE id = $1",
+        "UPDATE posts SET landed_epoch = $2, position = $3 WHERE id = $1",
         id,
-        landing.order.landed_epoch,
-        landing.act_time,
-        landing.order.position,
+        landing.landed_epoch,
+        landing.position,
     )
     .execute(&mut **tx)
     .await?
@@ -425,18 +407,16 @@ pub async fn land_post_version(
     tx: &mut Transaction<'_, Postgres>,
     post_id: Uuid,
     created_at: Timestamp,
-    landing: LandingStamp,
+    landing: LandingOrder,
 ) -> Result<bool, ContentError> {
     Ok(sqlx::query!(
         "UPDATE post_versions
-            SET pending = FALSE, landed_epoch = $3, act_time = $4,
-                position = $5
+            SET pending = FALSE, landed_epoch = $3, position = $4
          WHERE post_id = $1 AND created_at = $2 AND pending",
         post_id,
         created_at,
-        landing.order.landed_epoch,
-        landing.act_time,
-        landing.order.position,
+        landing.landed_epoch,
+        landing.position,
     )
     .execute(&mut **tx)
     .await?
@@ -448,15 +428,13 @@ pub async fn land_post_version(
 pub async fn land_comment(
     tx: &mut Transaction<'_, Postgres>,
     id: Uuid,
-    landing: LandingStamp,
+    landing: LandingOrder,
 ) -> Result<bool, ContentError> {
     Ok(sqlx::query!(
-        "UPDATE comments SET landed_epoch = $2, act_time = $3, position = $4
-         WHERE id = $1",
+        "UPDATE comments SET landed_epoch = $2, position = $3 WHERE id = $1",
         id,
-        landing.order.landed_epoch,
-        landing.act_time,
-        landing.order.position,
+        landing.landed_epoch,
+        landing.position,
     )
     .execute(&mut **tx)
     .await?
@@ -469,18 +447,16 @@ pub async fn land_comment_version(
     tx: &mut Transaction<'_, Postgres>,
     comment_id: Uuid,
     created_at: Timestamp,
-    landing: LandingStamp,
+    landing: LandingOrder,
 ) -> Result<bool, ContentError> {
     Ok(sqlx::query!(
         "UPDATE comment_versions
-            SET pending = FALSE, landed_epoch = $3, act_time = $4,
-                position = $5
+            SET pending = FALSE, landed_epoch = $3, position = $4
          WHERE comment_id = $1 AND created_at = $2 AND pending",
         comment_id,
         created_at,
-        landing.order.landed_epoch,
-        landing.act_time,
-        landing.order.position,
+        landing.landed_epoch,
+        landing.position,
     )
     .execute(&mut **tx)
     .await?

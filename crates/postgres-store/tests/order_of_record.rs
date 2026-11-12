@@ -1,15 +1,17 @@
 //! The key of record decides (layer1-interface.md §8.3): records are
 //! ordered by `(epoch, position)`, and "a time comparison never decides
 //! precedence". On stand-in data positions follow act time, so every
-//! ordering would pass under either rule; each case here lands records
-//! whose later position carries the LOWER act time — the real Layer 1's
-//! freedom — and asserts that position decides.
+//! ordering would pass under either rule; each mirror case here lands
+//! records whose later position carries the LOWER act time — the real
+//! Layer 1's freedom — and asserts that position decides. Display rows
+//! carry the key of record alone; their cases give the later position the
+//! EARLIER authoring instant, so a wall-clock ordering fails them.
 
 use common::l1::Family;
 use common::l1::census::{LegRole, leg_params};
 use common::l1::handshake::{EpochPackage, PublishedLeg, PublishedRecord};
 use common::l1::identifier::{ActId, NodeId};
-use postgres_store::content::{self, ContentCursor, LandingOrder, LandingStamp, Post};
+use postgres_store::content::{self, ContentCursor, LandingOrder, Post};
 use postgres_store::{auth, genesis, mirror, references};
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -20,15 +22,11 @@ fn at(secs: i64) -> Timestamp {
     chrono::DateTime::from_timestamp(1_800_000_000 + secs, 0).expect("in range")
 }
 
-/// A landing at `(epoch, position)` whose act time falls as the position
-/// rises.
-fn landing(epoch: i64, position: i64) -> LandingStamp {
-    LandingStamp {
-        order: LandingOrder {
-            landed_epoch: epoch,
-            position,
-        },
-        act_time: 100 - position,
+/// A landing at `(epoch, position)`.
+fn landing(epoch: i64, position: i64) -> LandingOrder {
+    LandingOrder {
+        landed_epoch: epoch,
+        position,
     }
 }
 
@@ -48,7 +46,9 @@ async fn actor(pool: &PgPool, handle: &str) -> Uuid {
     id
 }
 
-async fn landed_post(pool: &PgPool, author: Uuid, at_key: LandingStamp, body: &str) -> Uuid {
+/// A landed post at `at_key`, authored at an instant that falls as the
+/// position rises.
+async fn landed_post(pool: &PgPool, author: Uuid, at_key: LandingOrder, body: &str) -> Uuid {
     let id = Uuid::new_v4();
     let mut tx = pool.begin().await.expect("tx");
     content::insert_post(
@@ -58,7 +58,7 @@ async fn landed_post(pool: &PgPool, author: Uuid, at_key: LandingStamp, body: &s
         &format!("mint:act:{id}:0:publish"),
         "a=0;o=0",
         Some(at_key),
-        at(at_key.order.position),
+        at(100 - at_key.position),
         Some("title"),
         None,
         body,
@@ -80,7 +80,7 @@ fn cursor_of(p: &Post) -> ContentCursor {
 /// The landed listing pages newest first by position inside one epoch,
 /// forward and backward, across every page boundary.
 ///
-/// Inside one epoch the post listing pages by position, whatever act time the posts carry.
+/// Inside one epoch the post listing pages by position, whatever instant the posts were authored at.
 /// ´claim:content:the-listing-pages-by-the-key-of-record´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_listing_pages_by_the_key_of_record(pool: PgPool) {
@@ -111,14 +111,14 @@ async fn the_listing_pages_by_the_key_of_record(pool: PgPool) {
     assert_eq!(
         back.iter().map(|p| p.id).collect::<Vec<_>>(),
         vec![second],
-        "the backward walk resumes at the next position, not the next act time"
+        "the backward walk resumes at the next position, not the next instant"
     );
 }
 
 /// A node's current version is the one whose record holds the later
-/// position, though it carries the lower act time.
+/// position, though it was authored earlier.
 ///
-/// The current version is the latest landing by the key of record, whatever act time it carries.
+/// The current version is the latest landing by the key of record, whatever instant it was authored at.
 /// ´claim:content:the-current-version-is-the-latest-by-the-key-of-record´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_current_version_is_the_latest_by_the_key_of_record(pool: PgPool) {
@@ -134,7 +134,7 @@ async fn the_current_version_is_the_latest_by_the_key_of_record(pool: PgPool) {
             text,
             None,
             Some(landing(2, position)),
-            at(10 + position),
+            at(10 - position),
         )
         .await
         .expect("version");
