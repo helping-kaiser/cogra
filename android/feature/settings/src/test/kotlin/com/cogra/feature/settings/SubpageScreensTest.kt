@@ -42,6 +42,8 @@ class SubpageScreensTest {
     private fun absent(tag: String) =
         assertThat(compose.onAllNodesWithTag(tag, useUnmergedTree = true).fetchSemanticsNodes()).isEmpty()
 
+    private fun top(tag: String): Float = node(tag).fetchSemanticsNode().positionInRoot.y
+
     // ---------------------------------------------------- ChangePassword
 
     private fun password(state: ChangePasswordUiState) = compose.setContent {
@@ -52,8 +54,15 @@ class SubpageScreensTest {
     fun thePasswordPageReadsAsDrawn() {
         password(ChangePasswordUiState(account = "sol@solferreira.art"))
         node("changePassword.title").assertTextEquals("Change your password")
-        node("changePassword.commit.reason").assertTextEquals("Waiting for both passwords")
+        // ChangePassword.md:45 — disabled, with no line above it.
+        absent("changePassword.commit.reason")
         node("changePassword.commit.action").assertIsNotEnabled()
+        // ChangePassword.md:5 — the new password twice, Repeat password with no hint.
+        node("changePassword.confirm.label").assertTextEquals("Repeat password")
+        node("changePassword.confirm.reveal").assertExists()
+        absent("changePassword.confirm.support")
+        assertThat(top("changePassword.confirm")).isGreaterThan(top("changePassword.password.support"))
+        assertThat(top("changePassword.commit")).isGreaterThan(top("changePassword.confirm"))
         node("changePassword.password.support").assertTextEquals("At least 12 characters.")
         // No title in the band, and back says where it goes.
         absent("changePassword.header.title")
@@ -62,7 +71,9 @@ class SubpageScreensTest {
     @Test
     fun `changing_password_label_after_200ms`() {
         compose.mainClock.autoAdvance = false
-        password(ChangePasswordUiState(current = "a", newPassword = "b".repeat(12), inFlight = true))
+        password(
+            ChangePasswordUiState(current = "a", newPassword = "b".repeat(12), confirm = "b".repeat(12), inFlight = true),
+        )
         compose.mainClock.advanceTimeByFrame()
         button("changePassword.commit.action").assertTextEquals("Change password")
         compose.mainClock.advanceTimeBy(250)
@@ -80,8 +91,28 @@ class SubpageScreensTest {
         password(ChangePasswordUiState())
         val current = node("changePassword.current.input").fetchSemanticsNode()
         val fresh = node("changePassword.password.input").fetchSemanticsNode()
+        val again = node("changePassword.confirm.input").fetchSemanticsNode()
         assertThat(current.config.getOrNull(SemanticsProperties.ContentType)).isEqualTo(ContentType.Password)
         assertThat(fresh.config.getOrNull(SemanticsProperties.ContentType)).isEqualTo(ContentType.NewPassword)
+        assertThat(again.config.getOrNull(SemanticsProperties.ContentType)).isEqualTo(ContentType.NewPassword)
+        assertThat(again.config.contains(SemanticsProperties.Password)).isTrue()
+    }
+
+    @Test
+    fun theMismatchReadsOnRepeatPasswordInItsErrorState() {
+        // ChangePassword.md:31.
+        password(
+            ChangePasswordUiState(
+                current = "a",
+                newPassword = "b".repeat(12),
+                confirm = "c",
+                confirmError = R.string.passwords_differ,
+            ),
+        )
+        node("changePassword.confirm.support").assertTextEquals("The two passwords don't match.")
+        assertThat(node("changePassword.confirm.input").fetchSemanticsNode().config.contains(SemanticsProperties.Error))
+            .isTrue()
+        node("changePassword.password.support").assertTextEquals("At least 12 characters.")
     }
 
     // ------------------------------------------------------ ChangeHandle

@@ -36,8 +36,12 @@ class CredentialSubpagesTest {
         var password: Outcome<Unit> = Outcome.Success(Unit)
         var handle: Outcome<Unit> = Outcome.Success(Unit)
         val handles = mutableListOf<String>()
+        var passwordChanges = 0
 
-        override suspend fun changePassword(currentPassword: String, newPassword: String) = password
+        override suspend fun changePassword(currentPassword: String, newPassword: String): Outcome<Unit> {
+            passwordChanges++
+            return password
+        }
 
         override suspend fun changeHandle(handle: String): Outcome<Unit> {
             handles += handle
@@ -62,12 +66,15 @@ class CredentialSubpagesTest {
     private fun password() = ChangePasswordViewModel(account, settings).also { idle() }
 
     @Test
-    fun `change_password_waits_for_both_fields`() = runTest(dispatcher) {
+    fun `change_password_waits_for_all_three_fields`() = runTest(dispatcher) {
         val vm = password()
         assertThat(vm.state.value.waiting).isTrue()
         vm.onCurrent("saltmarsh-tide")
         assertThat(vm.state.value.waiting).isTrue()
         vm.onNew("x")
+        assertThat(vm.state.value.waiting).isTrue()
+        // ChangePassword.md:45-47 — Repeat password is the third.
+        vm.onConfirm("x")
         assertThat(vm.state.value.waiting).isFalse()
     }
 
@@ -85,6 +92,7 @@ class CredentialSubpagesTest {
         val vm = password()
         vm.onCurrent("saltmarsh-tide")
         vm.onNew("short")
+        vm.onConfirm("short")
         vm.onCommit()
         assertThat(vm.state.value.newError).isEqualTo(R.string.password_too_short)
         vm.onNew("x".repeat(129))
@@ -99,6 +107,7 @@ class CredentialSubpagesTest {
         val vm = password()
         vm.onCurrent("wrong-password")
         vm.onNew("a-new-long-password")
+        vm.onConfirm("a-new-long-password")
         vm.onCommit()
         idle()
         assertThat(vm.state.value.currentError).isEqualTo(R.string.wrong_password)
@@ -112,6 +121,7 @@ class CredentialSubpagesTest {
         val vm = password()
         vm.onCurrent("saltmarsh-tide")
         vm.onNew("password123456")
+        vm.onConfirm("password123456")
         vm.onCommit()
         idle()
         assertThat(vm.state.value.newError).isEqualTo(R.string.password_breached)
@@ -125,6 +135,7 @@ class CredentialSubpagesTest {
         val vm = password()
         vm.onCurrent("saltmarsh-tide")
         vm.onNew("a-new-long-password")
+        vm.onConfirm("a-new-long-password")
         vm.onCommit()
         idle()
         assertThat(vm.state.value.fault).isEqualTo(R.string.network_error)
@@ -138,6 +149,7 @@ class CredentialSubpagesTest {
         val vm = password()
         vm.onCurrent("saltmarsh-tide")
         vm.onNew("a-new-long-password")
+        vm.onConfirm("a-new-long-password")
         vm.onCommit()
         idle()
         assertThat(vm.state.value.fault).isEqualTo(R.string.rate_limited)
@@ -148,10 +160,70 @@ class CredentialSubpagesTest {
         val vm = password()
         vm.onCurrent("saltmarsh-tide")
         vm.onNew("a-new-long-password")
+        vm.onConfirm("a-new-long-password")
         vm.onCommit()
         idle()
         assertThat(vm.state.value.done).isTrue()
     }
+
+    @Test
+    fun aMismatchReadsOnRepeatPasswordAndThePasswordNeverChanges() = runTest(dispatcher) {
+        // ChangePassword.md:31.
+        val vm = password()
+        vm.onCurrent("saltmarsh-tide")
+        vm.onNew("a-new-long-password")
+        vm.onConfirm("a-new-long-passwort")
+        vm.onCommit()
+        idle()
+        assertThat(vm.state.value.confirmError).isEqualTo(R.string.passwords_differ)
+        assertThat(vm.state.value.newError).isNull()
+        assertThat(vm.state.value.inFlight).isFalse()
+        assertThat(account.passwordChanges).isEqualTo(0)
+    }
+
+    @Test
+    fun aShortPasswordAndAMismatchAreEachSaidOnTheirOwnField() = runTest(dispatcher) {
+        // ChangePassword.md:27, 31 — each local line on its own field at one press.
+        val vm = password()
+        vm.onCurrent("saltmarsh-tide")
+        vm.onNew("short")
+        vm.onConfirm("shorter")
+        vm.onCommit()
+        assertThat(vm.state.value.newError).isEqualTo(R.string.password_too_short)
+        assertThat(vm.state.value.confirmError).isEqualTo(R.string.passwords_differ)
+        assertThat(account.passwordChanges).isEqualTo(0)
+    }
+
+    @Test
+    fun theMismatchLineReChecksAsEitherNewPasswordChangesAndGoesOnceTheyMatch() = runTest(dispatcher) {
+        // ChangePassword.md:33.
+        val vm = password()
+        vm.onCurrent("saltmarsh-tide")
+        vm.onNew("a-new-long-password")
+        vm.onConfirm("a-new-long")
+        vm.onCommit()
+        vm.onConfirm("a-new-long-passwor")
+        assertThat(vm.state.value.confirmError).isEqualTo(R.string.passwords_differ)
+        vm.onConfirm("a-new-long-password")
+        assertThat(vm.state.value.confirmError).isNull()
+        // Raised again by the next press, then taken away by changing New password to meet it.
+        vm.onConfirm("a-new-long-passwordX")
+        vm.onCommit()
+        assertThat(vm.state.value.confirmError).isEqualTo(R.string.passwords_differ)
+        vm.onNew("a-new-long-passwordX")
+        assertThat(vm.state.value.confirmError).isNull()
+        assertThat(account.passwordChanges).isEqualTo(0)
+    }
+
+    @Test
+    fun typingTheTwoApartNeverMarksRepeatPasswordBeforeThePress() = runTest(dispatcher) {
+        // ChangePassword.md:9.
+        val vm = password()
+        vm.onNew("a-new-long-password")
+        vm.onConfirm("something else")
+        assertThat(vm.state.value.confirmError).isNull()
+    }
+
 
     @Test
     fun `current_password_names_the_account_by_hidden_username`() = runTest(dispatcher) {
