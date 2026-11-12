@@ -498,7 +498,7 @@ Shared mathematics (norms, delimiters, number sets) is tag-exempt.
 | released Bcert2/Fcert2 source and manifest hashes | — (integrity locators; the binding change is the announced formula edition) | public reproducibility | L1·verify | consume only; a hash never substitutes for replay |
 | per-epoch certificate commitment (contributing width, evaluated fence, and verdict; the source hash is an integrity locator) | standing-package validity | public audit | L1·closure | consume only; the commitment binds, the hash only locates |
 | path-depth flow shares, clipping rates, and one-boundary standing movement | — | monitoring dashboards | L1·verify | diagnostics; may not override the binding certificate |
-| attested boundary timestamp, closure cause | boundary-accountability replay | guild dashboards | L1·verify | consume only |
+| asserted boundary timestamp, closure cause | boundary-accountability consistency check against the published duration bounds | guild dashboards | L1·verify | consume only |
 | title $\mathrm{owner}^{(k)}$ | recognition (iii), authorization and parties | guild routing | L1·closure ⋆ | consume kernel value; read downstream; a recomputable summary of the partition (`rem:graph:title-certificate-is-summary`) |
 | standing $\alpha_i$ | gate | reward amplifier $(1+\hat{\alpha}_C)$ | L1·closure ⋆ | consume kernel value; read downstream |
 | ownership thread, Item genesis | title → recognition (iii) | terminal display | L1·closure | consume only; may recompute |
@@ -795,7 +795,7 @@ Stated independently of any mechanism that achieves them.
   accepted records** — the final write set $\mathcal{Q}_k$, final edge set
   $E_k$, dependent-set partition formed by merging overlapping principal
   closures against the history finalized before the epoch, realized size,
-  closure cause, attested boundary timestamp; **(ii) final ledger** —
+  closure cause, asserted boundary timestamp; **(ii) final ledger** —
   settled boundary burn state, final residual balances, final action
   counts, accepted-act increments, debit vintages; **(iii) semantic
   projection** — every accepted Actor-authored (complete) act, per-author
@@ -832,7 +832,10 @@ Stated independently of any mechanism that achieves them.
   threshold comparison — an enclosure straddling $\rho_\theta$ for an
   author or $\rho_{\text{eff}}$ for the epoch stamp leaves the proposed set
   uncertified. Misbehavior at the boundary is *evidence, not prevention*
-  (`post:graph:boundary-accountability`).
+  (`post:graph:boundary-accountability`). The boundary timestamp is a host
+  assertion: the closure cause and the asserted timestamp are checkable for
+  mutual consistency with the published duration bounds, with no obligation
+  to anchor the timestamp to an external clock.
 
 **Verification model** (`subsec:introduction:verification-model`): every
 computation that can feed admission is specified by published formula over
