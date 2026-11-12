@@ -49,4 +49,4 @@ WHEN tap profile.bottomBar.profileSlot GIVEN the profile stands at its top -> NE
 
 WHEN pull down GIVEN the profile stands all the way at its top -> the profile refreshes AND the platform's own refresh indicator shows
 
-ALWAYS the applicant's own Posts and Comments tabs read Nothing here yet., the line alone, GIVEN they hold nothing, and only Everything carries the applicant's own line
+ALWAYS the list below profile.tabRow reads Nothing here yet., the line alone, GIVEN profile.tabRow.postsTab or profile.tabRow.commentsTab is lit and the tab holds nothing, only profile.tabRow.everythingTab carrying the applicant's own line
