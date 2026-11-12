@@ -301,9 +301,8 @@ fn coordinates(order: Option<LandingOrder>) -> (Option<i64>, Option<i64>) {
 }
 
 /// The head tombstone: content emptied, never pending, the head's landing
-/// coordinates — copied off the head row with the act time stamped beside
-/// them — and `NOW()`, the removing transaction's own instant, the same
-/// one its carriage reduction stamps.
+/// coordinates copied off the head row, and `NOW()`, the removing
+/// transaction's own instant, the same one its carriage reduction stamps.
 async fn append_tombstone(
     conn: &mut PgConnection,
     node: ContentNode,
@@ -315,10 +314,10 @@ async fn append_tombstone(
             sqlx::query!(
                 "INSERT INTO post_versions
                      (post_id, title, description, content, redaction_reason,
-                      pending, landed_epoch, act_time, position,
+                      pending, landed_epoch, position,
                       sensitive, sensitive_reason, created_at)
                  SELECT $1, NULL, NULL, '', $2, FALSE,
-                        landed_epoch, act_time, position, FALSE, NULL, NOW()
+                        landed_epoch, position, FALSE, NULL, NOW()
                  FROM post_versions WHERE version_id = $3",
                 id,
                 reason,
@@ -331,10 +330,10 @@ async fn append_tombstone(
             sqlx::query!(
                 "INSERT INTO comment_versions
                      (comment_id, content, redaction_reason,
-                      pending, landed_epoch, act_time, position,
+                      pending, landed_epoch, position,
                       sensitive, sensitive_reason, created_at)
                  SELECT $1, '', $2, FALSE,
-                        landed_epoch, act_time, position, FALSE, NULL, NOW()
+                        landed_epoch, position, FALSE, NULL, NOW()
                  FROM comment_versions WHERE version_id = $3",
                 id,
                 reason,
