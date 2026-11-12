@@ -9086,6 +9086,200 @@
         ]
       }
     },
+    "PadStanding": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.cancel": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.bottom": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.left": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.right": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.square": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.square.knob": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.square.knobLayer": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.square.zeroAcross": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.square.zeroDown": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.top": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.help": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.landing": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.landing.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.landing.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.landing.label": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.landing.words": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.landing.zero": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.set": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.sever": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.current": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.current.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.current.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.current.label": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.pick": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.pick.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.pick.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.pick.label": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.zeroPanel": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.zeroPanel.back": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "feed.card.menu": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.opener": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ]
+      }
+    },
     "PostDetail": {
       "prefix": "postDetail",
       "keys": {
@@ -11618,6 +11812,96 @@
         "reel.stage.veil": [],
         "reel.washBottom": [],
         "reel.washTop": []
+      }
+    },
+    "RefPair": {
+      "prefix": "composeDetails",
+      "keys": {
+        "composeDetails.mediaRow.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
+        "composeDetails.references.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)",
+        "composeDetails.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "composeDetails.describeRow": [],
+        "composeDetails.describeRow.count": [],
+        "composeDetails.describeRow.describe": [],
+        "composeDetails.describeRow.reason": [],
+        "composeDetails.description": [],
+        "composeDetails.description.corner": [],
+        "composeDetails.description.input": [],
+        "composeDetails.description.label": [],
+        "composeDetails.header": [],
+        "composeDetails.header.back": [],
+        "composeDetails.header.leave": [],
+        "composeDetails.header.title": [],
+        "composeDetails.mediaRow": [],
+        "composeDetails.mediaRow.caption": [],
+        "composeDetails.mediaRow.thumb": [
+          "1",
+          "2"
+        ],
+        "composeDetails.next": [],
+        "composeDetails.pairSheet": [],
+        "composeDetails.pairSheet.done": [],
+        "composeDetails.pairSheet.dragHandle": [],
+        "composeDetails.pairSheet.note": [],
+        "composeDetails.pairSheet.pad": [],
+        "composeDetails.pairSheet.pad.field": [],
+        "composeDetails.pairSheet.pad.field.bottom": [],
+        "composeDetails.pairSheet.pad.field.left": [],
+        "composeDetails.pairSheet.pad.field.right": [],
+        "composeDetails.pairSheet.pad.field.square": [],
+        "composeDetails.pairSheet.pad.field.square.knob": [],
+        "composeDetails.pairSheet.pad.field.square.zeroAcross": [],
+        "composeDetails.pairSheet.pad.field.square.zeroDown": [],
+        "composeDetails.pairSheet.pad.field.top": [],
+        "composeDetails.pairSheet.pick": [],
+        "composeDetails.pairSheet.pick.exact": [],
+        "composeDetails.pairSheet.pick.face": [],
+        "composeDetails.pairSheet.pick.label": [],
+        "composeDetails.pairSheet.title": [],
+        "composeDetails.references": [],
+        "composeDetails.references.add": [],
+        "composeDetails.references.label": [],
+        "composeDetails.references.stagedReference": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.kind": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.mark": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.name": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.pair": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.pair.exact": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.pair.face": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.remove": [
+          "1"
+        ],
+        "composeDetails.tags": [],
+        "composeDetails.tags.add": [],
+        "composeDetails.tags.label": [],
+        "composeDetails.tags.tag": [
+          "fieldnotes",
+          "coastroad"
+        ],
+        "composeDetails.tags.tag.remove": [
+          "fieldnotes",
+          "coastroad"
+        ],
+        "composeDetails.title": [],
+        "composeDetails.title.corner": [],
+        "composeDetails.title.input": [],
+        "composeDetails.title.label": []
       }
     },
     "ReferencePicker": {
@@ -15101,6 +15385,116 @@
         "settings.writing.license.chevron": [],
         "settings.writing.license.label": [],
         "settings.writing.license.value": []
+      }
+    },
+    "TagPad": {
+      "prefix": "postEdit",
+      "keys": {
+        "postEdit.body.mediaRow.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
+        "postEdit.references.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)",
+        "postEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "postEdit.acts": [],
+        "postEdit.acts.line": [],
+        "postEdit.body": [],
+        "postEdit.body.add": [],
+        "postEdit.body.mediaRow": [],
+        "postEdit.body.mediaRow.caption": [],
+        "postEdit.body.mediaRow.thumb": [
+          "1",
+          "2"
+        ],
+        "postEdit.body.rule": [],
+        "postEdit.description": [],
+        "postEdit.description.corner": [],
+        "postEdit.description.input": [],
+        "postEdit.description.label": [],
+        "postEdit.facts": [],
+        "postEdit.facts.backing": [],
+        "postEdit.facts.backing.action": [],
+        "postEdit.facts.backing.label": [],
+        "postEdit.facts.backing.value": [],
+        "postEdit.facts.backing.value.exact": [],
+        "postEdit.facts.backing.value.face": [],
+        "postEdit.facts.license": [],
+        "postEdit.facts.license.label": [],
+        "postEdit.facts.license.lock": [],
+        "postEdit.facts.license.value": [],
+        "postEdit.facts.sensitive": [],
+        "postEdit.facts.sensitive.action": [],
+        "postEdit.facts.sensitive.label": [],
+        "postEdit.facts.sensitive.value": [],
+        "postEdit.header": [],
+        "postEdit.header.back": [],
+        "postEdit.header.help": [],
+        "postEdit.header.leave": [],
+        "postEdit.header.title": [],
+        "postEdit.pairSheet": [],
+        "postEdit.pairSheet.done": [],
+        "postEdit.pairSheet.dragHandle": [],
+        "postEdit.pairSheet.note": [],
+        "postEdit.pairSheet.pad": [],
+        "postEdit.pairSheet.pad.field": [],
+        "postEdit.pairSheet.pad.field.bottom": [],
+        "postEdit.pairSheet.pad.field.left": [],
+        "postEdit.pairSheet.pad.field.right": [],
+        "postEdit.pairSheet.pad.field.square": [],
+        "postEdit.pairSheet.pad.field.square.knob": [],
+        "postEdit.pairSheet.pad.field.top": [],
+        "postEdit.pairSheet.pick": [],
+        "postEdit.pairSheet.pick.exact": [],
+        "postEdit.pairSheet.pick.face": [],
+        "postEdit.pairSheet.pick.label": [],
+        "postEdit.pairSheet.title": [],
+        "postEdit.pairSheet.untag": [],
+        "postEdit.references": [],
+        "postEdit.references.add": [],
+        "postEdit.references.label": [],
+        "postEdit.references.stagedReference": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.kind": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.mark": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.name": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.pair": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.pair.exact": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.pair.face": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.remove": [
+          "1"
+        ],
+        "postEdit.references.withdrawn": [],
+        "postEdit.references.withdrawn.undo": [],
+        "postEdit.sign": [],
+        "postEdit.tags": [],
+        "postEdit.tags.add": [],
+        "postEdit.tags.label": [],
+        "postEdit.tags.tag": [
+          "fieldnotes",
+          "saltmaps"
+        ],
+        "postEdit.tags.tag.remove": [
+          "fieldnotes",
+          "saltmaps"
+        ],
+        "postEdit.tags.withdrawn": [],
+        "postEdit.tags.withdrawn.undo": [],
+        "postEdit.title": [],
+        "postEdit.title.corner": [],
+        "postEdit.title.input": [],
+        "postEdit.title.label": []
       }
     },
     "TagPageHidden": {
