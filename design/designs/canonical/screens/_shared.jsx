@@ -277,7 +277,7 @@ const ADA_POST = {
   id: "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
   author: ADA,
   title: "The long way home",
-  description: "Took the coast road instead of the tunnel. Four hours longer, worth every minute.",
+  description: "Took the coast road instead of the tunnel. Four hours longer, worth every minute — the light over the third headland alone paid for the detour.",
   timestamp: "2h",
   media: [{ src: "post-photo.jpg", ratio: "wide", fit: "cover" }],
   topics: ["photography", "coastroad"],

@@ -70,7 +70,7 @@ const TEXT_BODY_CLAMP_LINES = 18;
    the line. A media post's caption follows the same law against its two
    lines: `More` stands only where the caption is actually clamped, never
    under one that fits whole (jakob's finding, seam 276 item 2) — clients
-   measure; where the board still lags it is said at `folded` below. */
+   measure; the board decides on this estimate, as `ReelCaption` does. */
 const CHARS_PER_LINE = 51;
 
 export function PostCard({
@@ -281,13 +281,12 @@ export function PostCard({
   // Only where there is something folded away. "More" is a text control, not a
   // link: it opens the text in place and never navigates. The law: a media
   // post's caption is clamped to two lines and carries it only when it runs
-  // past them; a text post's body has 18 lines to fill first. THE BOARDS LAG
-  // THE LAW ON MEDIA (round 44, backlog 202): the sample feed card's caption
-  // fits its two lines whole, yet some thirty boards register its opener and
-  // walk it in flows, so the board still offers it on a media caption until
-  // jakob rules how those boards are fixed. A client follows the law.
+  // past them; a text post's body has 18 lines to fill first. Both are
+  // judged on the same estimate `ReelCaption` uses for its own caption
+  // (round 46, backlog 202: the sample caption was lengthened so the boards
+  // tell the truth). A client measures.
   const folded = hasMedia
-    ? Boolean(description)
+    ? Boolean(description) && description.length > DESCRIPTION_CLAMP_LINES * CHARS_PER_LINE
     : (words && words.length > TEXT_BODY_CLAMP_LINES * CHARS_PER_LINE) ||
       (description && description.length > DESCRIPTION_CLAMP_LINES * CHARS_PER_LINE);
   const opener =
