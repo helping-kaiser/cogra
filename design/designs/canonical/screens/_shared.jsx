@@ -3948,11 +3948,16 @@ function SettingsBody({ handleChip = false, keptChip = false, formsChip = false,
                says so on the form's own row — `That didn't go through.`, the
                Handle row's failed line, with no `Retry` (a password change
                would need the passwords typed again) — and the row's tap opens
-               the form again. The failed states are drawn copies; the rest row
-               alone carries the name. */
+               the form again. While the submit runs, the row reads the form's
+               own in-flight label and refuses a second open, the Handle row's
+               `Changing handle…` (jakob 2026-11-12, 8). The waiting and failed
+               states are drawn copies; the rest row alone carries the name. */
             <div>
               <div style={{ display: "{{passwordRestShown}}" }}>
                 <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} node="password" />
+              </div>
+              <div style={{ display: "{{passwordChangingShown}}" }}>
+                <SettingsRow label="Password" status="Changing password…" inert />
               </div>
               <div style={{ display: "{{passwordFailedShown}}" }}>
                 <SettingsRow
@@ -4008,6 +4013,12 @@ function SettingsBody({ handleChip = false, keptChip = false, formsChip = false,
             <div>
               <div style={{ display: "{{emailRestShown}}" }}>
                 <SettingsRow label="Email" value="sol@solferreira.art" status={emailPending ? "Change pending" : undefined} onOpen={() => {}} node="email" />
+              </div>
+              <div style={{ display: "{{emailChangingShown}}" }}>
+                <SettingsRow label="Email" value="sol@solferreira.art" status="Changing email…" inert />
+              </div>
+              <div style={{ display: "{{emailConfirmingShown}}" }}>
+                <SettingsRow label="Email" value="sol@solferreira.art" status="Confirming the code…" inert />
               </div>
               <div style={{ display: "{{emailFailedShown}}" }}>
                 <SettingsRow

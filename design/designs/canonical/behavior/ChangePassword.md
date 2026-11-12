@@ -46,7 +46,7 @@ WHEN press Close GIVEN Change password was pressed -> settings returns AND the c
 
 WHEN the change fails GIVEN the form was closed after the press -> the Password row in settings reads That didn't go through. AND NEVER Retry stands on the row
 
-WHEN tap the Password row GIVEN it reads That didn't go through. -> the form opens at rest, the passwords typed again
+WHEN tap the Password row GIVEN it reads That didn't go through. -> the form opens, the passwords typed again AND the line leaves the row AND the form stands at rest AND a refusal about one field, as a wrong current password, stands beside that field in the form's own field-error line
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 

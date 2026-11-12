@@ -1753,15 +1753,19 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: ">Your key</span>", tag: "button" },
     { n: 10, find: ">Revoke</button>", tag: "button", all: true },
     { n: 11, find: ">Sign out everywhere else</span>", tag: "button" },
-    // The Password and Email rows are drawn twice on the `forms` chip (round
-    // 43): the rest row and the failed one, the same control, so one number.
-    { n: 12, find: ">Password</span>", tag: "button", all: true },
+    // The Password and Email rows are drawn again on the `forms` chip (round
+    // 43, round 46): the rest row, its inert waiting copies, and the failed
+    // one — the rest and the failed are the same control, so one number; the
+    // waiting copies refuse a tap and carry none.
+    { n: 12, find: ">Password</span>", tag: "button" },
+    { n: 12, find: ">Password</span>", tag: "button", skip: 2 },
     { n: 13, find: ">Handle</span>", tag: "button" },
     { n: 13, find: ">That handle is taken.</span>", tag: "button" },
     // Retry on a failed row — the handle change's, and the kept picks' batch
     // (round 41, the `kept` chip): one control, the same signing asked again.
     { n: 29, find: ">Retry</button>", tag: "button", all: true },
-    { n: 14, find: ">Email</span>", tag: "button", all: true },
+    { n: 14, find: ">Email</span>", tag: "button" },
+    { n: 14, find: ">Email</span>", tag: "button", skip: 3 },
     { n: 15, find: ">Don&#x27;t remember this account on this device</span>", tag: "button" },
     { n: 16, find: ">Sign out</span>", tag: "button" },
     // The People group arrived after the page was numbered, and a row inserted

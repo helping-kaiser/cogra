@@ -5893,7 +5893,7 @@ others, its tap reopening the form with the handle typed. Closed by round 46
 (jakob 2026-11-12, 7: "with retry so as rec"): the Handle row keeps `Retry`,
 the law saying why — a handle retry needs nothing typed again.
 
-### 199 · After Close: the forms' rows while they wait, and what the reopened form shows · *design* · **filed 2026-11-12**
+### 199 · After Close: the forms' rows while they wait, and what the reopened form shows · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 43. Drawn: the failure on the Password and Email rows. Not drawn,
 and not ruled: (1) the wait between Close and the answer — the Handle row
@@ -5904,7 +5904,10 @@ form shows after a field refusal (a wrong current password) — the handle's
 feed fails onto the Settings Email row, a page the applicant did not come
 from, while the verify card keeps the old address. Lean: (1) the Handle
 row's form, each row its form's in-flight label; (2) on the tap; (3) the
-form at rest, the field's line beside its field; (4) as built.
+form at rest, the field's line beside its field; (4) as built. Closed by
+round 46 (jakob 2026-11-12, 8 "as rec"): all four as leaned — `Settings`'
+`forms` chip gains `password-changing`, `email-changing` and
+`email-confirming`; the sidecars carry (2)–(4).
 
 ### 200 · The cover crop under a tall clip: the frame does not fit the stage · *design* · **filed 2026-11-12**
 

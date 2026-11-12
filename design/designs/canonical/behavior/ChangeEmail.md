@@ -32,7 +32,7 @@ WHEN press Close GIVEN Change email was pressed -> settings returns AND the requ
 
 WHEN the request fails GIVEN the form was closed after the press -> the Email row in settings reads That didn't go through. AND NEVER Retry stands on the row
 
-WHEN tap the Email row GIVEN it reads That didn't go through. after a request -> the request opens again
+WHEN tap the Email row GIVEN it reads That didn't go through. after a request -> the request opens again AND the line leaves the row AND the form stands at rest AND a refusal about one field, as a wrong current password, stands beside that field in the form's own field-error line
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 

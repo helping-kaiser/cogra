@@ -30,7 +30,7 @@ WHEN tap Close GIVEN Change email was pressed -> the surface the change opened f
 
 WHEN the change fails GIVEN the form was closed after the press -> the Email row in settings reads That didn't go through. AND the address on file stands AND NEVER Retry stands on the row
 
-WHEN tap the Email row GIVEN it reads That didn't go through. after an applicant's change -> the change opens again
+WHEN tap the Email row GIVEN it reads That didn't go through. after an applicant's change -> the change opens again AND the line leaves the row AND the form stands at rest AND a refusal about one field, as a wrong current password, stands beside that field in the form's own field-error line
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 

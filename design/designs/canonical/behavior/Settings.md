@@ -210,6 +210,12 @@ ALWAYS settings.credentials.password reads That didn't go through. in the failur
 
 ALWAYS settings.credentials.email reads That didn't go through. in the failure voice under the address the account still has, with no Retry, GIVEN an email change's request, its confirm or an applicant's change was closed on after its press and did not go through
 
-WHEN tap settings.credentials.password GIVEN its second line reads That didn't go through. -> the password change opens at rest
+ALWAYS settings.credentials.password reads Changing password… in its second line, the row refusing a second open, GIVEN a password change was closed on after its press and has not answered
 
-WHEN tap settings.credentials.email GIVEN its second line reads That didn't go through. -> the form that failed opens again
+ALWAYS settings.credentials.email reads Changing email… in its second line, the row refusing a second open, GIVEN an email change's request or an applicant's change was closed on after its press and has not answered
+
+ALWAYS settings.credentials.email reads Confirming the code… in its second line, the row refusing a second open, GIVEN an email change's confirm was closed on after its press and has not answered
+
+WHEN tap settings.credentials.password GIVEN its second line reads That didn't go through. -> the password change opens AND the line leaves the row AND the form stands at rest AND a refusal about one field, as a wrong current password, stands beside that field in the form's own field-error line
+
+WHEN tap settings.credentials.email GIVEN its second line reads That didn't go through. -> the form that failed opens again AND the line leaves the row AND the form stands at rest AND a refusal about one field, as a wrong current password, stands beside that field in the form's own field-error line

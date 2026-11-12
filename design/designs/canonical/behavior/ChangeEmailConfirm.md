@@ -59,7 +59,7 @@ WHEN press Close GIVEN Confirm the code was pressed -> settings returns AND the 
 
 WHEN the confirm fails GIVEN the confirmation was closed after the press -> the Email row in settings reads That didn't go through. AND NEVER Retry stands on the row
 
-WHEN tap the Email row GIVEN it reads That didn't go through. after a confirm -> the confirmation opens again on the side still owed
+WHEN tap the Email row GIVEN it reads That didn't go through. after a confirm -> the confirmation opens again on the side still owed AND the line leaves the row AND the form stands at rest AND a refusal about one field, as a wrong current password, stands beside that field in the form's own field-error line
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 
