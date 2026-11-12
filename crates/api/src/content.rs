@@ -15,7 +15,7 @@
 use common::envelope::{CograContent, SensitiveMark};
 use common::l1::census::Family;
 use common::l1::identifier::{ActId, NodeId};
-use postgres_store::content::LandingStamp;
+use postgres_store::content::LandingOrder;
 use postgres_store::{PgPool, content as content_store, mirror, staged};
 use uuid::Uuid;
 
@@ -1297,7 +1297,7 @@ enum ContentShape {
 struct DisplayWrite<'a> {
     actor_id: Uuid,
     target: &'a str,
-    landing: Option<LandingStamp>,
+    landing: Option<LandingOrder>,
     created_at: chrono::DateTime<chrono::Utc>,
     content: &'a CograContent,
     gallery: &'a [postgres_store::media::GalleryPlacement],

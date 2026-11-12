@@ -1802,9 +1802,9 @@ async fn a_removed_subject_keeps_its_row_and_reads_its_mark(pool: PgPool) {
     sqlx::query(
         "INSERT INTO post_versions
              (post_id, title, content, redaction_reason, pending, created_at,
-              landed_epoch, act_time, position)
+              landed_epoch, position)
          VALUES ($1, '[removed]', '[removed]', 'policy', FALSE, NOW() + INTERVAL '1 day',
-                 999, 999, 1)",
+                 999, 1)",
     )
     .bind(Uuid::parse_str(&q).expect("uuid"))
     .execute(&rig.pool)

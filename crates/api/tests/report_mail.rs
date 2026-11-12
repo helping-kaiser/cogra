@@ -8,7 +8,7 @@ mod rig;
 
 use api::ratelimit::{RateLimitConfig, Window};
 use api::report::CONTENT_REPORT_ADDRESS;
-use postgres_store::content::{self, LandingOrder, LandingStamp};
+use postgres_store::content::{self, LandingOrder};
 use postgres_store::genesis;
 use rig::WireRig;
 use serde_json::{Value, json};
@@ -19,13 +19,10 @@ const SEND_REPORT: &str = r#"mutation($target: UUID!) {
   sendReport(input: { target: $target }) { reportedAt userErrors { code field } }
 }"#;
 
-fn landed(secs: i64) -> LandingStamp {
-    LandingStamp {
-        order: LandingOrder {
-            landed_epoch: secs + 1,
-            position: 1,
-        },
-        act_time: secs,
+fn landed(secs: i64) -> LandingOrder {
+    LandingOrder {
+        landed_epoch: secs + 1,
+        position: 1,
     }
 }
 
