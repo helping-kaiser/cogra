@@ -881,7 +881,8 @@ describe("ProfileScreen", () => {
     it("an_applicants_mention_says_post_once_in_and_opens_no_wizard", async () => {
       push.mockClear();
       server.use(meHandler("APPLICANT"), other(), recordsHandler([]));
-      renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+      // The session's one account read answered APPLICANT (`reader-state.ts`).
+      renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore(), reader: "APPLICANT" });
       fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
       fireEvent.click(screen.getByTestId("profile.menuSheet.mention"));
       expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent(

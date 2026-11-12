@@ -1435,6 +1435,24 @@ describe("PostView", () => {
         expect(routerPush).not.toHaveBeenCalled();
         expect(reports).toEqual([]);
       });
+
+      // ApplicantFeed.md:49's NEVER the wizard opens at a comment's Cite in
+      // the thread, with ProfileMenu.md:19's answer on the thread's snackbar.
+      it("an_applicants_cite_on_a_comment_says_post_once_in_and_opens_no_wizard", async () => {
+        server.use(...thread("u1", [{ id: "c1", body: "Theirs", authorId: "u2" }]));
+        renderWithProviders(<PostView postId="p1" />, {
+          store: storeFor("acct-1"),
+          writeSigner: fakeWriteSigner(),
+          reader: "APPLICANT",
+        });
+        await openComments();
+        fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+        fireEvent.click(within(openMenuSheet()).getByTestId("postDetail.menuSheet.cite"));
+        expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent(
+          "You can post once you're in.",
+        );
+        expect(routerPush).not.toHaveBeenCalled();
+      });
     });
 
     // CommentMenuOwn.md:13 — tap Edit: the menu closes AND the comment's edit
