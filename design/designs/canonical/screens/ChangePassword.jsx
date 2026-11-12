@@ -22,14 +22,15 @@
    DRAWN AT REST. Validation is on submit (§13), so an untouched form has
    nothing marked; the marked states are their own boards when they are
    drawn. At rest the commit waits on the three fields, disabled, with no
-   line above it: the wait is self-evident (`WaitingCommit` with no reason;
-   jakob 2026-11-11, R2).
+   line above it: the wait is self-evident (jakob 2026-11-11, R2), and
+   `Waiting for both passwords` is its spoken description alone, as on every
+   form's waiting commit (`WaitingCommit`; jakob 2026-11-12).
 
    REGISTERED under the `changePassword` prefix (design ⇄ impl seam 082, the
    settings packet). The credential family names a field for what it changes
    and the proof `current`: here `current`, `password` and its repeat `confirm`
    (`RecoveryCode`'s name for the field that types a thing back; round 38); the
-   commit is `commit` (its `reason` deleted with the line, R2). */
+   commit is `commit`. */
 export const NODE = "changePassword";
 export function Screen() {
   return (
@@ -83,7 +84,7 @@ export function Screen() {
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <WaitingCommit id="change-password" label="Change password" node="commit" />
+          <WaitingCommit id="change-password" label="Change password" reason="Waiting for both passwords" node="commit" />
         </div>
 
         <div style={{ marginTop: 24 }}>

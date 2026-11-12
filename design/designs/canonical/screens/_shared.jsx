@@ -3520,38 +3520,26 @@ function WhatsNewBody({ newer }) {
 /* A COMMIT WAITING ON ITS FIELDS — the disabled-until-filled law drawn
    (readme §4, *Interaction states*; jakob 2026-10-05, the collected brief's D6,
    drawn by the final brief). A form's commit that cannot go yet stands where it
-   always stands, visible and disabled at the 38%, and one quiet line right
-   above it says what it waits for — the construction `Report a problem`'s
-   empty foot first drew (`Nothing to send yet`), in the kept picks' blessed
-   voice for what something waits on (`Waiting for your key`). The line is the
-   button's description, so a listener hears the reason with the control. The
-   first character in the last empty field wakes the commit and the line goes.
-   Every reason is blessed (jakob 2026-10-05; copy-voice, *Commits that
-   wait*).
+   always stands, visible and disabled at the 38%, with nothing on screen about
+   why: the wait is self-evident (jakob 2026-11-12, the re-ask's 1). What it
+   waits for is the button's SPOKEN description alone — `reason`, in a
+   visually hidden span the button names in `aria-describedby`, so a listener
+   hears `Waiting for your email` with the control and a sighted reader sees
+   the disabled commit and nothing more. The first character in the last empty
+   field wakes the commit and the description goes with the wait. Every reason
+   is blessed (jakob 2026-10-05; copy-voice, *Commits that wait*).
 
    `waiting` false draws the live commit alone, for a state whose fields are
-   filled. A form with no `reason` waits silently: the commit disabled and no
-   line (`ChangePassword`, jakob 2026-11-11, R2 — a self-evident wait says
-   nothing).
+   filled.
 
-   `node` names the pair where a registered board places it (design ⇄ impl
-   seam 002): the line is its `reason` and the button its `action`. */
+   `node` names the commit where a registered board places it (design ⇄ impl
+   seam 002): the button is its `action`. The spoken description is no node —
+   nothing of it is drawn. */
 function WaitingCommit({ id, label, reason, waiting = true, node }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-node={node}>
+    <div style={{ display: "flex", flexDirection: "column" }} data-node={node}>
       {waiting && reason && (
-        <span
-          id={`${id}-waits`}
-          data-node={node && "reason"}
-          style={{
-            textAlign: "center",
-            fontSize: "var(--text-label-small)",
-            lineHeight: "var(--text-label-small--line-height)",
-            letterSpacing: "var(--text-label-small--letter-spacing)",
-            fontWeight: "var(--text-label-small--font-weight)",
-            color: "var(--text-secondary)",
-          }}
-        >
+        <span id={`${id}-waits`} style={SR_ONLY}>
           {reason}
         </span>
       )}
