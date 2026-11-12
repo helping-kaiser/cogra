@@ -11757,9 +11757,13 @@ re-ask (11, 12, 14–18, 20), and two registry gaps impl found (seam 297,
   is `ExplainableNumber`'s source; `FeedKinds`' and `FeedEntry`'s `score`
   chips draw both signs.
 - **Registry**: the snackbar over the thread sheet is `postDetail.snackbar`
-  on `ReplyEntry` (seam 297). 2000 → 2007 distinct paths, 185 → 186 screens,
-  additions only. `PadStanding`, `RefPair` and `TagPad` are not registered
-  yet (backlog 205).
+  on `ReplyEntry` (seam 297). `PadStanding`, `RefPair` and `TagPad` register
+  (seam 308; backlog 205): `PadStanding`'s two chips fold into one, `state`
+  (parked · held · no-side · explained), so its card keys once per value and
+  its pad takes `feed.card.actionRow.stance.pad.*`; the two pair sheets are
+  `pairSheet` — `title`, the readout `pick` with the pads' `label`, `face` and
+  `exact`, `pad.field`, `note`, `done`, `untag`. Over rounds 42–44: 1956 → 2032
+  distinct paths, 185 → 189 screens, additions only.
 
 ---
 
