@@ -14,6 +14,7 @@ import type { ReactNode } from "react";
 
 import { Button } from "@/lib/ui/button";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { nameInText } from "@/lib/ui/names";
 
 export function EmptyState({
   title,
@@ -34,8 +35,13 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-start gap-3 py-2" {...testAttributes(node, testId)}>
-      <p className="text-body-medium text-on-surface-variant" {...testAttributes(part(node, "title"))}>
-        {title}
+      {/* A notice is TEXT THAT WRAPS (NamesLong.md:11): `No opinions by @… yet.`
+          wraps at its spaces and the handle is one unit (`nameInText`). */}
+      <p
+        className="max-w-full text-body-medium text-on-surface-variant [overflow-wrap:anywhere]"
+        {...testAttributes(part(node, "title"))}
+      >
+        {nameInText(title)}
       </p>
       {action ??
         (actionLabel !== undefined && onAction !== undefined ? (

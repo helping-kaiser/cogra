@@ -23,6 +23,7 @@ import { Children, Fragment, type ReactNode, type Ref } from "react";
 
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
+import { nameInText } from "@/lib/ui/names";
 
 import { QuietNote } from "./quiet-note";
 
@@ -136,12 +137,14 @@ export function SettingsRow({
       {status !== undefined && (
         <span
           role={statusTone === "error" ? "alert" : undefined}
-          className={`overflow-hidden text-ellipsis text-body-small ${
+          // TEXT THAT WRAPS (SettingsRow.jsx, round 40): a handle in the status
+          // is one unit (`nameInText`); an email may still break inside.
+          className={`overflow-hidden text-ellipsis text-body-small [overflow-wrap:anywhere] ${
             statusTone === "error" ? "text-error" : "text-on-surface-variant"
           }`}
           {...testAttributes(part(node, "status"))}
         >
-          {status}
+          {nameInText(status)}
         </span>
       )}
     </span>

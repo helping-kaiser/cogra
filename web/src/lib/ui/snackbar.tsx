@@ -18,6 +18,7 @@
 import { useEffect, type ReactNode } from "react";
 
 import { part, testAttributes, type DataNode } from "./data-node";
+import { nameInText } from "./names";
 
 /** Material's short snackbar duration. */
 export const SNACKBAR_MS = 4000;
@@ -80,8 +81,12 @@ export function Snackbar({
           // what lifts a snackbar off the page, not a drop shadow.
           className="fixed inset-x-4 bottom-20 z-30 mx-auto flex w-fit max-w-[min(92vw,24rem)] items-center gap-4 rounded-extra-small bg-inverse-surface px-4 py-3 text-body-medium text-inverse-on-surface"
         >
-          <span className="min-w-0" {...testAttributes(part(node, "message"))}>
-            {message}
+          {/* TEXT THAT WRAPS (Snackbar.jsx, round 40): the message wraps at its
+              spaces; a handle in it is one unit (`nameInText`) that moves whole
+              to the next line, cut at its end only when longer than a line.
+              Other unbroken tokens may still break inside. */}
+          <span className="min-w-0 [overflow-wrap:anywhere]" {...testAttributes(part(node, "message"))}>
+            {nameInText(message)}
           </span>
           {action !== undefined && (
             <button
