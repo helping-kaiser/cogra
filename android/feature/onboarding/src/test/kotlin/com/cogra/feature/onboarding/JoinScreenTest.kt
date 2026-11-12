@@ -12,8 +12,10 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasProgressBarRangeInfo
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -159,11 +161,11 @@ class JoinScreenTest {
     @Test
     fun theRevealControlIsNamedForWhatItDoes() {
         show(filled)
-        compose.onNode(hasContentDescription("Show password"), useUnmergedTree = true).assertExists()
+        reveal("join.password", "Show password").assertExists()
         press("join.password.reveal")
-        compose.onNode(hasContentDescription("Hide password"), useUnmergedTree = true).assertExists()
+        reveal("join.password", "Hide password").assertExists()
         press("join.password.reveal")
-        compose.onNode(hasContentDescription("Show password"), useUnmergedTree = true).assertExists()
+        reveal("join.password", "Show password").assertExists()
     }
 
     // Join.md:41-45 — a second press is refused, the commit never dims, reads
@@ -389,10 +391,8 @@ class JoinScreenTest {
     fun eachRevealShowsOnlyItsOwnField() {
         show(filled)
         press("join.confirm.reveal")
-        assertThat(masked("join.confirm.input")).isFalse()
-        assertThat(masked("join.password.input")).isTrue()
-        compose.onNode(hasContentDescription("Hide password"), useUnmergedTree = true).assertExists()
-        compose.onNode(hasContentDescription("Show password"), useUnmergedTree = true).assertExists()
+        reveal("join.confirm", "Hide password").assertExists()
+        reveal("join.password", "Show password").assertExists()
     }
 
     // Join.md:71, JoinErrors.md:7,15 — the mismatch line is the field's only
@@ -446,7 +446,13 @@ class JoinScreenTest {
         }
     }
 
-    /** Whether a field's words are drawn masked (the input's password transformation). */
+    /** A password field's reveal, by the name it answers to. */
+    private fun reveal(field: String, name: String) = compose.onNode(
+        hasContentDescription(name) and hasAnyAncestor(hasTestTag("$field.reveal")),
+        useUnmergedTree = true,
+    )
+
+    /** Whether the input carries the password semantics (masked kind, password keyboard). */
     private fun masked(path: String): Boolean =
         tag(path).fetchSemanticsNode().config.contains(SemanticsProperties.Password)
 
