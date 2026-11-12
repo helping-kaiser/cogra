@@ -81,13 +81,21 @@ const CITATION_AXES = {
   top: "For",
 };
 
+/* REGISTERED under the `composeDetails` prefix (round 45, seam 308), the
+   details page beneath as `ComposeDetails` names it. The sheet is `pairSheet`:
+   its `title`; the readout `pick` with its `label`, `face` and `exact` — the
+   names the pads' `standing.pick` takes; the field `pad.field`, `StancePad`'s
+   own parts under it as under the pads' `field`; the foot's line `note` and
+   `done`. The non-drag route and the spoken reading stay unnamed, as the pads'
+   do. */
+export const NODE = "composeDetails";
 export function Screen() {
   return (
     <>
       <ComposeDetailsBody />
 
-      <BottomSheet open ariaLabel="The long way home — @ada">
-        <SheetTitle>The long way home — @ada</SheetTitle>
+      <BottomSheet open ariaLabel="The long way home — @ada" node="pairSheet">
+        <SheetTitle node="title">The long way home — @ada</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "0 24px 4px" }}>
           <button type="button" className="cg-sr-focusable cg-state cg-focus cg-hit" style={{ fontFamily: "var(--font-sans)" }}>
             Set exact values for The long way home — @ada
@@ -98,31 +106,32 @@ export function Screen() {
               `aria-hidden` beside a screen-reader reading that names both axes —
               the numbers alone say nothing about which slot they fill, and the
               anchor's own word would name a stance this record is not. */}
-          <div aria-live="polite" style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div aria-live="polite" style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }} data-node="pick">
             <span
               aria-hidden="true"
+              data-node="label"
               style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}
             >
               Your pick
             </span>
             <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)" }}>
-              <span style={{ fontSize: "var(--text-title-large)", letterSpacing: "var(--text-title-large--letter-spacing)", fontWeight: "var(--text-title-large--font-weight)", lineHeight: 1.2 }}>🙂</span>
-              <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", whiteSpace: "nowrap" }}>
+              <span data-node="face" style={{ fontSize: "var(--text-title-large)", letterSpacing: "var(--text-title-large--letter-spacing)", fontWeight: "var(--text-title-large--font-weight)", lineHeight: 1.2 }}>🙂</span>
+              <span className="cg-exact" data-node="exact" style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", whiteSpace: "nowrap" }}>
                 +0.10 / +0.10
               </span>
             </span>
             <span style={SR_ONLY}>Your pick: How much it leans on this +0.10, For or against +0.10</span>
           </div>
 
-          <div role="group" aria-label="The pair this citation signs" style={{ alignSelf: "stretch" }}>
-            <StancePad value={{ pDirected: 0.1, pInterest: 0.1 }} axes={CITATION_AXES} />
+          <div role="group" data-node="pad" aria-label="The pair this citation signs" style={{ alignSelf: "stretch" }}>
+            <StancePad value={{ pDirected: 0.1, pInterest: 0.1 }} axes={CITATION_AXES} node="field" />
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
-            <span style={{ flex: 1, fontSize: "var(--text-body-small)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
+            <span style={{ flex: 1, fontSize: "var(--text-body-small)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }} data-node="note">
               Signed with the post, as its own action.
             </span>
-            <Button>Done</Button>
+            <Button node="done">Done</Button>
           </div>
         </div>
       </BottomSheet>
