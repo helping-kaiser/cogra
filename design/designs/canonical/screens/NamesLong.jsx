@@ -99,7 +99,7 @@ export function Screen() {
             </>
           }
         />
-        <Snackbar inline message={`${H} is hidden — their posts stay out of your feed.`} action="Undo" />
+        <Snackbar inline message={`${H} is hidden.`} action="Undo" />
       </div>
       <div style={{ display: "{{personShown}}", flex: 1, ...COLUMN }}>
         <div style={{ display: "{{spacedShown}}", flexDirection: "column", gap: 12 }}>

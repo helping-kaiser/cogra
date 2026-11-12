@@ -3066,20 +3066,18 @@ Saved, the tag's page, a post or profile reached by a link or a search —
 the hide row reads `Unhide @ada`: Settings' word in the row's own form, the
 handle after it (`Unhide this account` where the actor is redacted, as
 `Hide this account` is). It answers with Settings' snackbar, `@ada is
-unhidden — their posts can reach your feed again.` with `Undo` (jakob
+unhidden.` with `Undo` (jakob
 2026-11-11, M1; round 41). **Drawn** on `HistoryPostMenu` (`author`
 hidden) and `HistoryProfileMenu`. (*`Unhide @ada` and `Unhide this
 account` are `Unhide` taking the row's handle, review-pending.*)
 
 **Hiding is confirm-free, and the snackbar is the whole ceremony.**
-`@ada is hidden — their posts stay out of your feed.` with `Undo`
-beside it. It says what changed and how far it reaches, which is what
-stops a reader wondering whether they have done something to someone.
-It lands wherever the tap was made, in the same words: over the feed
+`@ada is hidden.` with `Undo` beside it — hidden already says how far
+it reaches (jakob 2026-11-12). It lands wherever the tap was made, in the same words: over the feed
 (`FeedHidden`), over the post being read (`PostDetailHidden`) and over
 the person's profile (`ProfileOtherHidden`).
 A deleted account has no handle to spell, so hiding one answers `This
-account is hidden — its posts stay out of your feed.`, with the same
+account is hidden.`, with the same
 `Undo` (`ProfileDeletedMenu`; *blessed (jakob 2026-10-05)*).
 
 **Saving is confirmed like every other completed act.** `Saved.` The
@@ -3127,13 +3125,12 @@ you walk them back.` The footnote carries the whole of what hiding
 means, which is the group anatomy's own rule; its last sentence is
 feed-ranking §8.2's required hint (jakob 2026-10-07; *the sentence a
 draft*). With nobody hidden the row reads `None`.
-`Unhide` answers in the hiding snackbar's shape, `@juno is unhidden —
-their posts can reach your feed again.` with `Undo` beside it (*new
+`Unhide` answers in the hiding snackbar's shape, `@juno is unhidden.`
+with `Undo` beside it (*new
 2026-10-05, blessed (jakob 2026-10-05)*), raised over the sheet while
 others stay hidden (`SettingsUnhidden`). A deleted account's row
 reads `Deleted account` on the reserved disc, and its unhide answers
-with the nameless twin, `This account is unhidden — its posts can reach
-your feed again.` (*blessed (jakob 2026-10-07)*). A failed unhide or
+with the nameless twin, `This account is unhidden.` (*blessed (jakob 2026-10-07)*). A failed unhide or
 Undo says `That didn't go through.` on the row it was made from, in its
 second line, with `Retry` in the trailing slot.
 
@@ -3429,11 +3426,8 @@ them lets a verdict hide behind a person's own decision, or the reverse
 (`erasure.md` §7). Specced here, drawn nowhere yet: no board shows a
 community-redacted actor.
 
-**Hiding's snackbar, now that it has a board.** `@ada is hidden — their
-posts stay out of your feed.` with `Undo`. The second clause is the one
-that matters: what a reader wonders after hiding someone is whether
-they have done something *to* that person, and the answer is that they
-have changed their own feed and nothing else. `Undo` beside it: hiding
+**Hiding's snackbar, now that it has a board.** `@ada is hidden.` with
+`Undo` beside it: hiding
 is a comfort a reader may have meant for one post rather than for a
 person, and the way back costs nothing.
 
