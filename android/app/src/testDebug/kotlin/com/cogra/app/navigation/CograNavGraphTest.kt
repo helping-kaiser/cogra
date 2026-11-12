@@ -13,6 +13,7 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertContentDescriptionEquals
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -1025,23 +1026,124 @@ class CograNavGraphTest {
         assertThat(navController.previousBackStackEntry?.destination?.hasRoute<ResetNew>()).isNotEqualTo(true)
     }
 
-    /** ResetNew.md:41 — a link spent while the form stood open never changes the password and moves on. */
+    private fun onRoute(check: (androidx.navigation.NavDestination) -> Boolean) {
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.let(check) == true
+        }
+    }
+
+    private fun openSpentResetLink() {
+        account.resetLinkCheck = com.cogra.domain.Outcome.Success(false)
+        render()
+        waitForTag("login_email")
+        navController.handleDeepLink(joinIntent("/reset?token=spent"))
+        onRoute { it.hasRoute<ResetExpired>() }
+        waitForTag("reset.again")
+    }
+
+    /** ResetExpired.md:1, ResetNew.md:43 — a spent link opens ResetExpired, and NEVER ResetNew. */
     @Test
-    fun `a_spent_reset_link_hands_on_to_the_request_step`() {
+    fun `a_spent_reset_link_opens_reset_expired_and_never_the_form`() {
+        openSpentResetLink()
+        compose.onNodeWithTag("reset.title").assertTextEquals("This link doesn't work anymore")
+        assertThat(compose.onAllNodesWithTag("reset.password.input").fetchSemanticsNodes()).isEmpty()
+        assertThat(account.resetTokens).isEmpty()
+        // The landing left the stack: ResetExpired stands in its place.
+        assertThat(navController.previousBackStackEntry?.destination?.hasRoute<ResetNew>()).isNotEqualTo(true)
+    }
+
+    /** ResetNew.md:41, ResetExpired.md:19 — a press on a link spent meanwhile opens ResetExpired. */
+    @Test
+    fun `a_link_spent_while_the_form_stood_open_opens_reset_expired`() {
         account.resetOutcome = com.cogra.domain.Outcome.Refused(
             listOf(com.cogra.domain.UserError(com.cogra.domain.ErrorCode.RESET_TOKEN_INVALID, "spent")),
         )
         render()
         waitForTag("login_email")
-        navController.handleDeepLink(joinIntent("/reset?token=spent"))
+        navController.handleDeepLink(joinIntent("/reset?token=spent-meanwhile"))
         waitForTag("reset.password.input")
         compose.onNodeWithTag("reset.password.input").performTextInput("a strong password")
         compose.onNodeWithTag("reset.confirm.input").performTextInput("a strong password")
         compose.onNodeWithTag("reset.commit.action").performScrollTo().performClick()
-        compose.waitUntil(timeoutMillis = 30_000) {
-            navController.currentBackStackEntry?.destination?.hasRoute<PasswordReset>() == true
-        }
+        onRoute { it.hasRoute<ResetExpired>() }
+        // One refused press, and nothing signed anyone in or out.
+        assertThat(account.resetTokens).containsExactly("spent-meanwhile")
         assertThat(navController.previousBackStackEntry?.destination?.hasRoute<ResetNew>()).isNotEqualTo(true)
+    }
+
+    /** The check finds no answer: the form stands — its press still meets a spent link (design gap, named). */
+    @Test
+    fun `a_reset_link_check_without_an_answer_opens_the_form`() {
+        account.resetLinkCheck = com.cogra.domain.Outcome.Failed(java.io.IOException("offline"))
+        render()
+        waitForTag("login_email")
+        navController.handleDeepLink(joinIntent("/reset?token=unchecked"))
+        waitForTag("reset.password.input")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ResetNew>()).isTrue()
+    }
+
+    /** ResetExpired.md:15 — Reset your password opens Reset with its field empty, in this screen's place. */
+    @Test
+    fun `reset_expired_asks_for_a_fresh_link_on_reset_with_its_field_empty`() {
+        openSpentResetLink()
+        compose.onNodeWithTag("reset.again").performScrollTo().performClick()
+        onRoute { it.hasRoute<PasswordReset>() }
+        waitForTag("reset.email.input")
+        assertThat(
+            compose.onNodeWithTag("reset.email.input").fetchSemanticsNode()
+                .config.getOrNull(SemanticsProperties.EditableText)?.text.orEmpty(),
+        ).isEmpty()
+        compose.onNodeWithTag("reset.commit.action").assertIsNotEnabled()
+        assertThat(navController.previousBackStackEntry?.destination?.hasRoute<ResetExpired>()).isNotEqualTo(true)
+    }
+
+    /** ResetExpired.md:17 — Sign in opens SignIn. */
+    @Test
+    fun `reset_expired_sign_in_opens_sign_in`() {
+        openSpentResetLink()
+        compose.onNodeWithTag("reset.onward").performScrollTo().performClick()
+        onRoute { it.hasRoute<Login>() }
+        assertThat(navController.previousBackStackEntry?.destination?.hasRoute<ResetExpired>()).isNotEqualTo(true)
+    }
+
+    /**
+     * ResetExpired.md:21 — system Back leaves to wherever the mail link was
+     * opened from: the screen goes and the task moves back (the platform's
+     * `moveTaskToBack`), as ResetNew's landing does.
+     */
+    @Test
+    fun `system_back_on_reset_expired_leaves_the_landing`() {
+        openSpentResetLink()
+        compose.runOnIdle { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<ResetExpired>() != true
+        }
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<PasswordReset>()).isNotEqualTo(true)
+        assertThat(compose.activity.isFinishing).isFalse()
+    }
+
+    /** Reset.md:3 — the header's back arrow opens SignIn, also from a dead link's request. */
+    @Test
+    fun `the_reset_requests_back_arrow_opens_sign_in`() {
+        openSpentResetLink()
+        compose.onNodeWithTag("reset.again").performScrollTo().performClick()
+        waitForTag("reset.header.back")
+        compose.onNodeWithTag("reset.header.back").performClick()
+        onRoute { it.hasRoute<Login>() }
+    }
+
+    /** Reset.md:1, :11 — Forgot password? opens Reset; a press answers with the status line. */
+    @Test
+    fun `forgot_password_opens_reset_whose_request_answers_with_the_status_line`() {
+        render()
+        waitForTag("login_forgot")
+        compose.onNodeWithTag("login_forgot").performScrollTo().performClick()
+        onRoute { it.hasRoute<PasswordReset>() }
+        waitForTag("reset.email.input")
+        compose.onNodeWithTag("reset.email.input").performTextInput("someone@example.com")
+        compose.onNodeWithTag("reset.commit.action").performScrollTo().performClick()
+        waitForTag(com.cogra.feature.auth.RESET_STATUS_TAG)
+        assertThat(account.requestedEmails).containsExactly("someone@example.com")
     }
 
     /** ChangeEmailLinkedSignedOut.md: Sign in holds the link; the side applies once signed in. */
