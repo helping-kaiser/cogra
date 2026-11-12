@@ -30,7 +30,7 @@
    `Done` COMMITS IT, the way the seal's does and the Reading row's sheet does —
    a staging sheet carries a commit, and the scrim, a swipe down, system Back and Escape discard
    (the sheet law, readme §4, *Sheets*). The foot reads `licenseSummary`, the
-   one joining rule the seal's row reads too.
+   pair's name the seal's row reads too.
 
    REGISTERED under the `settings` prefix (design ⇄ impl seam 082, the
    settings packet): the body names its parts as on `Settings`, and the sheet

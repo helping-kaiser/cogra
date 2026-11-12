@@ -3310,9 +3310,11 @@ function LicenseAxis({ axis, name, tiers, chosen, node }) {
             <span style={{ fontSize: "var(--text-body-medium)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }} data-node={node && "label"}>
               {tier.label}
             </span>
-            <span style={{ fontSize: "var(--text-body-small)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }} data-node={node && "hint"}>
-              {tier.hint}
-            </span>
+            {tier.hint && (
+              <span style={{ fontSize: "var(--text-body-small)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }} data-node={node && "hint"}>
+                {tier.hint}
+              </span>
+            )}
           </span>
         </label>
       ))}

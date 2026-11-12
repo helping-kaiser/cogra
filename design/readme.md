@@ -2983,7 +2983,7 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   pixels apart, in two sizes — the sheet's name lives on its
   `aria-label`. The read side got its
   **own readings**: the chooser's hints address the author declaring
-  the terms, and on a read surface "Every use credits you" tells a
+  the terms, and on a read surface "Commercial uses credit you" tells a
   reuser they are owed the credit they in fact owe.
 - **Citing and mentioning are one fact.** Both stage a **Reference
   edge**; the word only records what sits at the far end — citing for

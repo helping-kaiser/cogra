@@ -18,10 +18,9 @@
    seal's row; the scrim, a swipe down, system Back and Escape discard it, and the post's
    terms are what they were.
 
-   THE FOOT AND THE ROW READ ONE SENTENCE. `licenseSummary` joins the pair's
-   name and both tier hints — drawn here at `Credit always` / `Not logged` —
-   and the seal's License row reads the same sentence for whatever pair the
-   post carries, so the sheet shows what Done will put on the row.
+   THE FOOT AND THE ROW READ ONE NAME. `licenseSummary` is the pair's name —
+   drawn here at `Credit always · Not logged` — and the seal's License row
+   reads the same name for whatever pair the post carries, so the sheet shows what Done will put on the row.
 
    THE SEAL BENEATH IS THE SEAL — `ComposeSealBody`, the same body
    `ComposeSeal` draws. What a sheet covers is inert, not shortened. */

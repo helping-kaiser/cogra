@@ -1279,11 +1279,12 @@ said the opposite of the truth.
 
 **The tiers' hints**, under each tier name in the chooser (`ComposeLicense`,
 `SettingsLicense`; *carried over — blessed by use (jakob 2026-10-06)*):
-credit — `Nobody owes you a name.` · `Commercial uses credit you;
-everything else is free.` · `Every use credits you.`; the public record
-of use — `Uses go unlogged.` · `Commercial uses are logged publicly and
-stay open to audit.` · `Every use is logged publicly and stays open to
-audit.` These are the hints the joining rule below lowercases.
+credit — `Commercial uses credit you; everything else is free.` under
+`Credit commercially`; the public record of use — `Commercial uses are
+logged publicly and stay open to audit.` · `Every use is logged
+publicly and stays open to audit.` `No credit`, `Credit always` and
+`Not logged` carry no hint: a hint that repeats its tier's name goes
+(jakob 2026-11-12).
 
 **The block's own furniture**:
 
@@ -1297,16 +1298,12 @@ audit.` These are the hints the joining rule below lowercases.
   own legends, so a reader who published a post meets the same two
   words on both sides.
 
-**The author's reading of a pair is one joining rule** (`licenseSummary`;
-jakob 2026-10-01, the sheet law's round) — what the seal's License row,
-the license sheets' foot and the settings default all read: the pair's
-name, ` — `, the credit tier's hint and the record tier's hint joined by
-`, and`, each hint lowercased at its head with its full stop dropped,
-the whole closed by one full stop. The zero pair's name is `Public
+**The author's reading of a pair is its name** (`licenseSummary`;
+jakob 2026-10-01, the sheet law's round; the name alone, jakob
+2026-11-12) — what the seal's License row, the license sheets' foot and
+the settings default all read. The zero pair's name is `Public
 domain`; every other pair is named by its two tier names joined by
-` · `. So `Public domain — nobody owes you a name, and uses go
-unlogged.` and `Credit always · Not logged — every use credits you, and
-uses go unlogged.` The seal's row carries no `your default`: the
+` · `, so `Credit always · Not logged`. The seal's row carries no `your default`: the
 reading says what the post's terms are, wherever they came from. The
 rule and the eight non-zero readings it composes are blessed (jakob 2026-10-02).
 
@@ -2090,10 +2087,8 @@ by the row that opened it, so each heading below is a row's own words.
 **The default license** (`SettingsLicense`) is titled `Default license`
 and says what a default does, which the seal's sheet cannot: `Where
 every new post starts. A post's terms settle when it is first signed, so
-changing this never reaches one you have already published.` The reading under the axes names the pair the way
-the read surfaces do — `Public domain — nobody owes you a name, and uses
-go unlogged.`, the two tier hints joined, so the word and what it means
-arrive together.
+changing this never reaches one you have already published.` The reading under the axes is the pair's name,
+`Public domain`, as on the seal's row.
 
 **What your feed shows** (`SettingsReading`) is titled with the row and
 the filter's accessible name, and carries the group footnote's opening

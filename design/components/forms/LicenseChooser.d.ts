@@ -10,7 +10,8 @@ export interface License {
 export interface LicenseTier {
   value: 0 | 0.5 | 1;
   label: string;
-  hint: string;
+  /** Only where it says more than the label (jakob 2026-11-12). */
+  hint?: string;
 }
 
 /** The Credit axis's three named readings, offered by `LicenseChooser`. */
@@ -46,9 +47,8 @@ export interface LicenseReading {
 
 export declare function licenseReadings(license: License): readonly LicenseReading[];
 
-/** The author's reading of a pair, by one joining rule: the pair's name
- *  (`Public domain` for the zero pair, else its two tier names joined by
- *  ` · `), a dash, then the two tier hints joined by `, and`. What the seal's
+/** The author's reading of a pair: its name (`Public domain` for the zero
+ *  pair, else its two tier names joined by ` · `). What the seal's
  *  License row, the license sheets' foot and the settings default all read. */
 export declare function licenseSummary(license?: License): string;
 
