@@ -26,6 +26,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useRef, type ReactNode } from "react";
 
+import { CommentEditDoor } from "@/lib/compose/comment-edit-door";
 import { announceFeedReselect } from "@/lib/feed/feed-reselect";
 import { notificationsOrigin } from "@/lib/notifications/origin";
 import type { BellRoot } from "@/lib/notifications/row-content";
@@ -46,6 +47,7 @@ const ROOT_SLOT: Record<BellRoot, NavSlot> = {
   profile: "profile",
 };
 import { PadParkingProvider } from "@/lib/ui/pad-parking";
+import { CommentEditor } from "@/app/posts/[id]/edit/comment-editor";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 
 /**
@@ -215,8 +217,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-full flex-col">
       {/* A kept pick's anchor opens its review through the router; acts that
-          end by leaving confirm on the surface they land on (`carried-snackbar`). */}
+          end by leaving confirm on the surface they land on (`carried-snackbar`).
+          A comment's edit asked for off its thread rises here, over the
+          surface its menu was opened on (`comment-edit-door.tsx`). */}
       <KeptPicksNavigation navigate={router.push}>
+      <CommentEditDoor editor={CommentEditor}>
       <ScrollHostProvider value={scroller}>
         <PadParkingProvider value={showBar || streaming}>
         <div
@@ -236,6 +241,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </PadParkingProvider>
       </ScrollHostProvider>
+      </CommentEditDoor>
       </KeptPicksNavigation>
       <CarriedSnackbar />
     </div>
