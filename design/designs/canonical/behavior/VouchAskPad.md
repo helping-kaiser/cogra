@@ -8,7 +8,7 @@ ALWAYS the pad opens at the standing low default +0.10 / +0.10 and never at a va
 
 ALWAYS the pad carries no Walk it back
 
-ALWAYS the pad's two lines stand on every open, Vouching is the act. Set signs your opinion on @noor and brings them in. and It is one signed, priced act — and it is theirs to answer: their opinion back completes the pair.
+ALWAYS the pad's two lines stand on every open, Vouching is the act. Set signs your opinion on @noor and brings them in. and It is one signed, priced act.
 
 ALWAYS the pad's ? is named How vouching works
 

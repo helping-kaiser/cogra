@@ -42,7 +42,7 @@
 
    THE `list` CHIP DRAWS THE SHEET EMPTY AT POST SCALE (seam 248): reached
    only when the count it was opened from had gone stale, it says so in the
-   comment sheet's words (`CommentCitedByEmpty`), `Nothing cites this yet.`,
+   comment sheet's words (`CommentCitedByEmpty`), `Nothing cites this yet`,
    the line alone, as `empty`. */
 export const NODE = "postDetail";
 export const PROPS = { list: { editor: "enum", options: ["rows", "empty"], default: "rows" } };

@@ -41,7 +41,7 @@
    line drops away at zero, so a post's sheet meets nothing only when the
    count it was opened from had gone stale — every opinion walked back since
    — and then it says so in the comment sheet's words (`CommentOpinionsEmpty`):
-   `No opinions yet.`, the line alone, as `empty`. */
+   `No opinions yet`, the line alone, as `empty`. */
 export const NODE = "postDetail";
 export const PROPS = { list: { editor: "enum", options: ["rows", "empty"], default: "rows" } };
 export const VALS = `rowsShown: this.props.list === "empty" ? "none" : "flex", emptyShown: this.props.list === "empty" ? "block" : "none"`;

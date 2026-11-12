@@ -4,7 +4,7 @@ ALWAYS the grid takes no picks and the way out to the photos app is gone GIVEN a
 
 ALWAYS the tray carries no Show all GIVEN a clip is staged
 
-ALWAYS the tray's line reads A video is the whole post. Its cover comes next. GIVEN the clip is horizontal or square
+ALWAYS the tray's line reads A video is the whole post. GIVEN the clip is horizontal or square
 
 ALWAYS the tray's line reads A video is the whole post. GIVEN the clip is vertical
 

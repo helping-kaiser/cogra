@@ -4,7 +4,7 @@ ALWAYS the comment's Cited by sheet opens stacked over the thread, the thread st
 
 ALWAYS the comment's sheet is titled Cited by, as the post's is
 
-ALWAYS the comment's Cited by sheet reads Nothing cites this yet. GIVEN nothing cites the comment
+ALWAYS the comment's Cited by sheet reads Nothing cites this yet GIVEN nothing cites the comment
 
 ALWAYS the empty sheet never scolds and wears no error colour
 

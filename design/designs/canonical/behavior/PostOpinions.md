@@ -20,4 +20,4 @@ ALWAYS postDetail.opinionsSheet.opinion.value.face is 🤔, spoken as the state,
 
 WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND the post stands open beneath it as it was
 
-ALWAYS postDetail.opinionsSheet.empty alone reads No opinions yet. GIVEN the sheet's read finds no opinion, as when the count it was opened from has gone stale
+ALWAYS postDetail.opinionsSheet.empty alone reads No opinions yet GIVEN the sheet's read finds no opinion, as when the count it was opened from has gone stale

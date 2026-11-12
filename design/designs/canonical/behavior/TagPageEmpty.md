@@ -1,6 +1,6 @@
 # TagPageEmpty · `spec:design:behavior-tag-page-empty`
 
-ALWAYS the tag page reads Nothing carries this tag right now. The name is still a place — anyone can use it. GIVEN nothing carries the tag
+ALWAYS the tag page reads Nothing carries this tag right now. GIVEN nothing carries the tag
 
 ALWAYS the empty tag page never says not found and never says first
 

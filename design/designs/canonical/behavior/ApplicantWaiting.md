@@ -4,7 +4,7 @@ ALWAYS the waiting card stands GIVEN every owed step is done and the application
 
 ALWAYS the waiting card names the member whose approval is in play and never the role inviter
 
-ALWAYS the band reads Browsing from @mira's view while your application lands. naming the issuer of the reader's invite link
+ALWAYS the band reads Browsing from @mira's view. naming the issuer of the reader's invite link
 
 ALWAYS the waiting card shows no clock and no figure counting down
 

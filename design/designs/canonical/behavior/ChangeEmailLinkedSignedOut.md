@@ -2,7 +2,7 @@
 
 WHEN the new address's link is opened GIVEN no session is on this device and the link's change still waits on its sides -> the landing reads Sign in to finish the change AND names the new address the link confirms AND says it counts once signed in AND NEVER the link's side lands before sign-in
 
-WHEN the new address's link is opened GIVEN no session is on this device and the link's change ran out, was canceled or already applied, or the link is not one the app knows -> the landing reads This link doesn't work anymore AND says The change it belonged to may have run out, been canceled or already happened — this link can't move your email anymore. AND its way on reads Sign in AND NEVER an address appears
+WHEN the new address's link is opened GIVEN no session is on this device and the link's change ran out, was canceled or already applied, or the link is not one the app knows -> the landing reads This link doesn't work anymore AND says The change it belonged to may have run out, been canceled or already happened. AND its way on reads Sign in AND NEVER an address appears
 
 ALWAYS one landing answers every link that no longer works and every link the app does not know, and it never says which happened GIVEN no session is on this device
 
