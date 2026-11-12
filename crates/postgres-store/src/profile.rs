@@ -11,7 +11,7 @@
 //! (`content::discard_pending_many`), and the previous version renders
 //! again.
 
-use crate::content::LandingStamp;
+use crate::content::LandingOrder;
 use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
 
@@ -102,14 +102,14 @@ pub async fn insert_profile_version(
     bio: Option<&str>,
     avatar_id: Option<Uuid>,
     website_url: Option<&str>,
-    landing: Option<LandingStamp>,
+    landing: Option<LandingOrder>,
     created_at: Timestamp,
 ) -> Result<bool, sqlx::Error> {
     Ok(sqlx::query!(
         "INSERT INTO actor_profile_versions
              (actor_id, display_name, bio, avatar_id, website_url, pending,
-              created_at, landed_epoch, act_time, position)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+              created_at, landed_epoch, position)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
          ON CONFLICT (actor_id, created_at) WHERE pending DO NOTHING",
         actor_id,
         display_name,
@@ -118,9 +118,8 @@ pub async fn insert_profile_version(
         website_url,
         landing.is_none(),
         created_at,
-        landing.map(|l| l.order.landed_epoch),
-        landing.map(|l| l.act_time),
-        landing.map(|l| l.order.position),
+        landing.map(|l| l.landed_epoch),
+        landing.map(|l| l.position),
     )
     .execute(&mut **tx)
     .await?
@@ -137,18 +136,16 @@ pub async fn land_profile_version(
     tx: &mut Transaction<'_, Postgres>,
     actor_id: Uuid,
     created_at: Timestamp,
-    landing: LandingStamp,
+    landing: LandingOrder,
 ) -> Result<bool, sqlx::Error> {
     Ok(sqlx::query!(
         "UPDATE actor_profile_versions
-            SET pending = FALSE, landed_epoch = $3, act_time = $4,
-                position = $5
+            SET pending = FALSE, landed_epoch = $3, position = $4
          WHERE actor_id = $1 AND created_at = $2 AND pending",
         actor_id,
         created_at,
-        landing.order.landed_epoch,
-        landing.act_time,
-        landing.order.position,
+        landing.landed_epoch,
+        landing.position,
     )
     .execute(&mut **tx)
     .await?

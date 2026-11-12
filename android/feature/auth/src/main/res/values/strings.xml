@@ -21,16 +21,29 @@
     <string name="reset_title">Reset your password</string>
     <string name="reset_request">Email me a reset token</string>
     <string name="reset_requested">If that address has an account, a reset token is on its way.</string>
-    <string name="reset_token">Reset token</string>
-    <string name="reset_new_password">New password</string>
-    <string name="reset_password_rules">At least 12 characters.</string>
-    <string name="reset_confirm">Set new password</string>
-    <string name="reset_token_invalid">The reset token is invalid or expired.</string>
+
+
+    <!-- ResetNew (ResetNew.dc.html, ResetNew.md). copy-voice: "Reset your password", the refusals. -->
+    <string name="reset_new_title">Set a new password</string>
+    <string name="reset_new_body">Setting a new password signs out every device. You sign in again with the new one.</string>
+    <string name="reset_new_password_label">New password</string>
+    <string name="reset_new_hint">At least 12 characters.</string>
+    <string name="reset_new_confirm">Repeat password</string>
+    <string name="reset_new_commit">Set the new password</string>
+    <string name="reset_new_in_flight">Setting the new password…</string>
+    <string name="reset_new_waiting">Waiting for a new password</string>
+    <string name="reset_new_note">This restores your sign-in only. Your key stays wherever it is — restoring the key is its own step, with your recovery code.</string>
+    <string name="reset_new_short">A password is at least 12 characters.</string>
+    <string name="reset_new_long">A password is at most 128 characters.</string>
+    <string name="reset_new_differ">The two passwords don\'t match.</string>
+    <string name="reset_new_breached">That password has turned up in a data breach — pick another one.</string>
+    <string name="reset_new_no_answer">That didn\'t send. Try again.</string>
+    <string name="reset_new_rate_limited">Too many tries. Wait a little, then try again.</string>
+    <string name="reset_new_not_through">That didn\'t go through. Try again.</string>
 
     <string name="error_generic">Something went wrong. Try again.</string>
     <string name="error_transport">Can\'t reach the server. Check your connection and try again.</string>
     <!-- SignIn.md:71: no answer reached the device; Sign in is the retry. -->
     <string name="login_no_answer">That didn\'t send. Try again.</string>
     <string name="error_rate_limited">Too many attempts — wait a moment and try again.</string>
-    <string name="error_weak_password">Passwords need at least 12 characters and can\'t be a known breached password.</string>
 </resources>

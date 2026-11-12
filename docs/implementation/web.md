@@ -303,8 +303,8 @@ phase, rendering nothing. Phase flips replace the location,
 never push — the
 Android navigation parity. Web deltas from Android: `/invites`
 renders the applicant lock in-page (the URL is directly
-addressable), and `/reset?token=` and `/verify?token=` arrive as
-links where Android pastes the token in-app.
+addressable), and `/verify?token=` arrives as a link where
+Android pastes the token in-app.
 
 ## The onboarding poll loop
 

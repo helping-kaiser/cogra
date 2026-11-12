@@ -14,7 +14,7 @@ mod rig;
 
 use api::ratelimit::{RateLimitConfig, Window};
 use common::hashtag_uuid;
-use postgres_store::content::{self, LandingOrder, LandingStamp};
+use postgres_store::content::{self, LandingOrder};
 use postgres_store::{genesis, hashtag};
 use rig::WireRig;
 use serde_json::{Value, json};
@@ -56,13 +56,10 @@ fn at(secs: i64) -> Timestamp {
     chrono::DateTime::from_timestamp(1_800_000_000 + secs, 0).expect("in range")
 }
 
-fn landed(secs: i64) -> LandingStamp {
-    LandingStamp {
-        order: LandingOrder {
-            landed_epoch: secs + 1,
-            position: 1,
-        },
-        act_time: secs,
+fn landed(secs: i64) -> LandingOrder {
+    LandingOrder {
+        landed_epoch: secs + 1,
+        position: 1,
     }
 }
 
@@ -480,8 +477,8 @@ async fn a_removed_post_keeps_its_place_in_history(pool: PgPool) {
     sqlx::query(
         "INSERT INTO post_versions
              (post_id, title, content, redaction_reason, pending, created_at,
-              landed_epoch, act_time, position)
-         VALUES ($1, '[removed]', '[removed]', 'policy', FALSE, $2, 9, 9, 1)",
+              landed_epoch, position)
+         VALUES ($1, '[removed]', '[removed]', 'policy', FALSE, $2, 9, 1)",
     )
     .bind(removed)
     .bind(at(9))

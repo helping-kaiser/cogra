@@ -117,11 +117,10 @@ CREATE TABLE network_parameter_versions (
     parameter    TEXT        NOT NULL,
     value        JSONB       NOT NULL,
     landed_epoch BIGINT,
-    act_time     BIGINT,
     position     BIGINT,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version_id   BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
+    CHECK (num_nonnulls(landed_epoch, position) IN (0, 2))
 );
 CREATE INDEX network_parameter_versions_current_idx
     ON network_parameter_versions (parameter,
@@ -675,8 +674,7 @@ schema encodes this as a split per content kind:
   display fields as append-only rows, each keyed by its own
   `version_id` and ordered by the **landing coordinates of the
   record that promoted it** — its key of record `(landed_epoch,
-  position)`, the same pair the entity rows carry; the row also
-  stamps that record's `act_time`, which orders nothing. The
+  position)`, the same pair the entity rows carry. The
   **current** value is the version whose record landed last; the
   entity's `updated_at` is derived as that version's `created_at` —
   no stored column.
@@ -989,11 +987,10 @@ CREATE TABLE actor_profile_versions (
     redaction_reason TEXT,
     pending          BOOLEAN     NOT NULL DEFAULT FALSE,
     landed_epoch     BIGINT,
-    act_time         BIGINT,
     position         BIGINT,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version_id       BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
+    CHECK (num_nonnulls(landed_epoch, position) IN (0, 2))
 );
 CREATE UNIQUE INDEX actor_profile_versions_pending_instant_key
     ON actor_profile_versions (actor_id, created_at)
@@ -1012,9 +1009,8 @@ Every content entity row binds to its minted L1 node through
 also rides the payload envelope's guild map, so the L1 witness
 attests the binding; the column is a verified cache of a graph
 fact, same class as `target_id`. The landing-order columns
-(`landed_epoch`, `act_time`, `position`) cache the genesis
-record's key of record `(landed_epoch, position)` and the act time
-it carries. The key is the chronological listings' sort key — the
+(`landed_epoch`, `position`) cache the genesis record's key of
+record. The key is the chronological listings' sort key — the
 record set's own order, never wall clock
 ([graph-model.md §2](../primitive/graph-model.md)); like every
 mirror-derived column they are rebuildable and never
@@ -1025,10 +1021,10 @@ confirm: a prepared record is its author's content from the moment
 they sign it
 ([substrate.md §6](../primitive/substrate.md)), so it is a real
 display row like any other, readable by everyone, from that moment
-on. The landing-order columns are its pending mark — all three are
+on. The landing-order columns are its pending mark — both are
 NULL until the genesis record lands, because a pending write has
-no key of record yet, and confirm fills them in. They are all-null or
-all-present, never mixed. `created_at` is the authoring instant and
+no key of record yet, and confirm fills them in. They are both null
+or both present, never mixed. `created_at` is the authoring instant and
 is set once, so the date never jumps at landing.
 
 A pending row is L2-operational, like the staged row it belongs
@@ -1059,10 +1055,9 @@ CREATE TABLE posts (
     author_id    UUID        NOT NULL REFERENCES actors(id),
     l1_node_id   TEXT        NOT NULL UNIQUE,
     landed_epoch BIGINT,
-    act_time     BIGINT,
     position     BIGINT,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
+    CHECK (num_nonnulls(landed_epoch, position) IN (0, 2))
 );
 
 -- Post versions: append-only display content. One row per edit; the
@@ -1093,13 +1088,12 @@ CREATE TABLE post_versions (
     sensitive_reason TEXT,
     pending          BOOLEAN     NOT NULL DEFAULT FALSE,
     landed_epoch     BIGINT,
-    act_time         BIGINT,
     position         BIGINT,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version_id       BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     UNIQUE (post_id, created_at),
     CHECK (sensitive_reason IS NULL OR sensitive),
-    CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
+    CHECK (num_nonnulls(landed_epoch, position) IN (0, 2))
 );
 CREATE INDEX post_versions_current_idx
     ON post_versions (post_id, pending DESC,
@@ -1121,10 +1115,9 @@ CREATE TABLE comments (
     author_id    UUID        NOT NULL REFERENCES actors(id),
     l1_node_id   TEXT        NOT NULL UNIQUE,
     landed_epoch BIGINT,
-    act_time     BIGINT,
     position     BIGINT,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
+    CHECK (num_nonnulls(landed_epoch, position) IN (0, 2))
 );
 
 CREATE TABLE comment_versions (
@@ -1136,13 +1129,12 @@ CREATE TABLE comment_versions (
     sensitive_reason TEXT,
     pending          BOOLEAN     NOT NULL DEFAULT FALSE,
     landed_epoch     BIGINT,
-    act_time         BIGINT,
     position         BIGINT,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version_id       BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     UNIQUE (comment_id, created_at),
     CHECK (sensitive_reason IS NULL OR sensitive),
-    CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
+    CHECK (num_nonnulls(landed_epoch, position) IN (0, 2))
 );
 CREATE INDEX comment_versions_current_idx
     ON comment_versions (comment_id, pending DESC,
@@ -1169,11 +1161,10 @@ CREATE TABLE chat_versions (
     image_id         UUID        REFERENCES media_attachments(id),
     redaction_reason TEXT,
     landed_epoch     BIGINT,
-    act_time         BIGINT,
     position         BIGINT,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version_id       BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
+    CHECK (num_nonnulls(landed_epoch, position) IN (0, 2))
 );
 CREATE INDEX chat_versions_current_idx
     ON chat_versions (chat_id,
@@ -1213,11 +1204,10 @@ CREATE TABLE chat_message_versions (
                                  ),
     redaction_reason TEXT,
     landed_epoch     BIGINT,
-    act_time         BIGINT,
     position         BIGINT,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version_id       BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
+    CHECK (num_nonnulls(landed_epoch, position) IN (0, 2))
 );
 CREATE INDEX chat_message_versions_current_idx
     ON chat_message_versions (chat_message_id,
@@ -1237,11 +1227,10 @@ CREATE TABLE item_versions (
     description      TEXT,
     redaction_reason TEXT,
     landed_epoch     BIGINT,
-    act_time         BIGINT,
     position         BIGINT,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version_id       BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
+    CHECK (num_nonnulls(landed_epoch, position) IN (0, 2))
 );
 CREATE INDEX item_versions_current_idx
     ON item_versions (item_id,

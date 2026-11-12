@@ -493,7 +493,7 @@ async fn append_profile_tombstone(
         return Ok(false);
     }
     let head = sqlx::query!(
-        "SELECT landed_epoch, act_time, position FROM actor_profile_versions
+        "SELECT landed_epoch, position FROM actor_profile_versions
          WHERE actor_id = $1 AND NOT pending
          ORDER BY landed_epoch DESC NULLS LAST,
                   position DESC NULLS LAST, created_at DESC, version_id DESC
@@ -502,18 +502,17 @@ async fn append_profile_tombstone(
     )
     .fetch_optional(&mut *conn)
     .await?;
-    let (epoch, act_time, position) = match head {
-        Some(h) => (h.landed_epoch, h.act_time, h.position),
-        None => (None, None, None),
+    let (epoch, position) = match head {
+        Some(h) => (h.landed_epoch, h.position),
+        None => (None, None),
     };
     sqlx::query!(
         "INSERT INTO actor_profile_versions
-             (actor_id, display_name, redaction_reason, landed_epoch, act_time, position)
-         VALUES ($1, '', $2, $3, $4, $5)",
+             (actor_id, display_name, redaction_reason, landed_epoch, position)
+         VALUES ($1, '', $2, $3, $4)",
         user_id,
         ACCOUNT_REMOVAL,
         epoch,
-        act_time,
         position,
     )
     .execute(&mut *conn)

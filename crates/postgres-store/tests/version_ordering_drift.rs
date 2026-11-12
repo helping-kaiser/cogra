@@ -190,3 +190,69 @@ fn the_current_version_indexes_carry_the_same_rule() {
         );
     }
 }
+
+/// The display tables that carry a landed record's key of record.
+const LANDING_TABLES: [&str; 9] = [
+    "posts",
+    "comments",
+    "post_versions",
+    "comment_versions",
+    "actor_profile_versions",
+    "chat_versions",
+    "chat_message_versions",
+    "item_versions",
+    "network_parameter_versions",
+];
+
+/// Whether `table` carries an `act_time` column once every migration has
+/// run: the migrations folded in order, statement by statement — a
+/// `CREATE TABLE` declaring the column or an `ALTER TABLE` adding it sets
+/// it, an `ALTER TABLE` dropping it clears it.
+fn carries_act_time(migrations: &[(PathBuf, String)], table: &str) -> bool {
+    let create = format!("CREATE TABLE {table} (");
+    let alter = format!("ALTER TABLE {table} ");
+    let mut carried = false;
+    for (_, flat) in migrations {
+        for statement in flat.split(';').map(str::trim) {
+            if statement.contains(&create) {
+                carried = statement.contains(" act_time ");
+            } else if statement.contains(&alter) {
+                if statement.contains("DROP COLUMN act_time")
+                    || statement.contains("DROP COLUMN IF EXISTS act_time")
+                {
+                    carried = false;
+                }
+                if statement.contains("ADD COLUMN act_time")
+                    || statement.contains("ADD COLUMN IF NOT EXISTS act_time")
+                {
+                    carried = true;
+                }
+            }
+        }
+    }
+    carried
+}
+
+/// The key of record orders a display row, and the act time stays with
+/// the published record (layer1-interface.md §8.3–§8.4): no display table
+/// carries a copy of it, while the mirror's own tables keep theirs — the
+/// second half proves the fold sees a column where one is declared.
+///
+/// No display table carries a landed record's act time; the mirror keeps it.
+/// ´claim:content:no-display-table-carries-the-act-time´
+#[test]
+fn no_display_table_carries_the_act_time() {
+    let migrations = migrations_in_order();
+    for table in LANDING_TABLES {
+        assert!(
+            !carries_act_time(&migrations, table),
+            "{table} carries an act_time column in the schema in force"
+        );
+    }
+    for table in ["mirror_records", "mirror_record_legs"] {
+        assert!(
+            carries_act_time(&migrations, table),
+            "{table} lost the act time the published record carries"
+        );
+    }
+}
