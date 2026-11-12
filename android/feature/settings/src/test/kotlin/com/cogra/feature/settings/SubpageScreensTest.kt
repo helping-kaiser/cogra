@@ -72,7 +72,12 @@ class SubpageScreensTest {
     fun `changing_password_label_after_200ms`() {
         compose.mainClock.autoAdvance = false
         password(
-            ChangePasswordUiState(current = "a", newPassword = "b".repeat(12), confirm = "b".repeat(12), inFlight = true),
+            ChangePasswordUiState(
+                current = "a",
+                newPassword = "b".repeat(12),
+                confirm = "b".repeat(12),
+                inFlight = true,
+            ),
         )
         compose.mainClock.advanceTimeByFrame()
         button("changePassword.commit.action").assertTextEquals("Change password")

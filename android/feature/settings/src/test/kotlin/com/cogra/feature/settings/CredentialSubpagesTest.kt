@@ -224,7 +224,6 @@ class CredentialSubpagesTest {
         assertThat(vm.state.value.confirmError).isNull()
     }
 
-
     @Test
     fun `current_password_names_the_account_by_hidden_username`() = runTest(dispatcher) {
         val vm = password()

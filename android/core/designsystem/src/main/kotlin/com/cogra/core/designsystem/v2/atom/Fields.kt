@@ -422,27 +422,14 @@ private fun FieldSupportRow(
     // A registered field names its one supporting line `support`, in
     // either state; an unregistered one keeps the `_error` tag.
     val lineTag = node?.div("support")?.tag ?: testTag?.let { if (error != null) "${it}_error" else "${it}_hint" }
-    // The line's own node is as wide as its words unless the field spans it
-    // ([CograTextField]'s `supportSpans`); the box around it takes the row,
-    // so the late counter still sits at the far end.
-    val lineWidth = if (spans) Modifier.fillMaxWidth() else Modifier
-    val announced = if (error != null) Modifier.semantics { liveRegion = LiveRegionMode.Polite } else Modifier
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
     ) {
         if (error != null || hint != null) {
-            Box(Modifier.weight(1f)) {
-                Text(
-                    text = error ?: hint.orEmpty(),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (error != null) colors.error else colors.onSurfaceVariant,
-                    modifier = lineWidth
-                        .then(announced)
-                        .then(if (lineTag != null) Modifier.testTag(lineTag) else Modifier),
-                )
-            }
+            // The box takes the row, so the late counter still sits at the far end.
+            Box(Modifier.weight(1f)) { SupportLine(error, hint, lineTag, spans) }
         } else {
             Spacer(Modifier.weight(1f))
         }
@@ -457,6 +444,24 @@ private fun FieldSupportRow(
             )
         }
     }
+}
+
+/**
+ * The supporting line itself: the error in its place when there is one, else
+ * the hint. Its node is as wide as its words unless the field spans it
+ * ([CograTextField]'s `supportSpans`).
+ */
+@Composable
+private fun SupportLine(error: String?, hint: String?, lineTag: String?, spans: Boolean) {
+    Text(
+        text = error ?: hint.orEmpty(),
+        style = MaterialTheme.typography.bodySmall,
+        color = if (error != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier
+            .then(if (spans) Modifier.fillMaxWidth() else Modifier)
+            .then(if (error != null) Modifier.semantics { liveRegion = LiveRegionMode.Polite } else Modifier)
+            .then(if (lineTag != null) Modifier.testTag(lineTag) else Modifier),
+    )
 }
 
 @ThemePreviews
