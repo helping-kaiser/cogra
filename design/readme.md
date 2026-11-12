@@ -2139,11 +2139,10 @@ next to brands like Instagram):
   file picker button and a drop target ("Choose from your files" /
   "…or drop them here") — the caption, the picked tray, and the text
   path identical to the app's (*Pick · the web variant*).
-- **The seal's total row carries the all-or-nothing subline on every
-  multi-act seal** — "They land together, or none does." — and omits it
-  on a single-act seal. It had drifted across the hand boards (on the
-  key-absent and sheet states, missing from the seal itself); it now
-  lives once, as `ActsCard`'s `note`. On the key-absent seal the one
+- **A seal's total row carries no all-or-nothing subline** — the seal's
+  `How signing works` says it (jakob 2026-11-12); the edit's acts
+  sheets, which carry no "?", keep "They land together, or none does."
+  as `ActsCard`'s `note`. On the key-absent seal the one
   "?" belongs to the key notice (the *Your key* dialog), not the
   header — one "?" per screen, and the key story outranks the seal
   story there. Every "?" opens the house plain dialog (the pattern the

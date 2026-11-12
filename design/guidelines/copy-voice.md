@@ -1888,9 +1888,7 @@ which is the repo's word for it, not the reader's.
 
 **The default license** row reads `Default license`, and its value is
 the current default in the words the license block already uses —
-`Public domain`. It opens the sheet the seal opens; that sheet's own
-`Terms for anyone who reuses this.` is written for one post and is the
-one line the settings route still owes a reading.
+`Public domain`. It opens the sheet the seal opens.
 
 **Reading**: `What your feed shows` — the filter sheet's own accessible
 name and the purpose the trigger's name ends on, so the row and the
@@ -2092,9 +2090,7 @@ by the row that opened it, so each heading below is a row's own words.
 **The default license** (`SettingsLicense`) is titled `Default license`
 and says what a default does, which the seal's sheet cannot: `Where
 every new post starts. A post's terms settle when it is first signed, so
-changing this never reaches one you have already published.` The seal's
-`Terms for anyone who reuses this.` is written for the post in front of
-it and stays there. The reading under the axes names the pair the way
+changing this never reaches one you have already published.` The reading under the axes names the pair the way
 the read surfaces do — `Public domain — nobody owes you a name, and uses
 go unlogged.`, the two tier hints joined, so the word and what it means
 arrive together.
@@ -2340,7 +2336,7 @@ rulings B1-B3, 2026-10-01). Every line here is *new 2026-10-01, blessed (jakob 2
 - The last pick dropped: the snackbar `Nothing left to sign.` (a draft,
   per the ruling).
 - The seal keeps the standard seal's words — `What you sign`, `Last step`,
-  `3 things, signed together`, `They land together, or none does.` — and
+  `3 things, signed together` — and
   adds its own: each row's label `Opinion`, the X's name `Leave — your
   picks are kept`, and the commit `Sign the picks` (`Signing the
   picks…` in flight). The commit names the batch by the review's own
@@ -2891,8 +2887,11 @@ non-drag route's three blessed, jakob 2026-10-20.*)
 
 **What one signature commits is counted in things.** The footer reads
 `You're signing 2 things`, the total `2 things, signed together`
-(`1 thing, signed` in the singular), the rows carry bare counts, and
-the subline is `They land together, or none does.` everywhere.
+(`1 thing, signed` in the singular), the rows carry bare counts. A seal
+carries no all-or-nothing line: its `How signing works` says it, and
+the line would repeat the `?` on the same sheet (jakob 2026-11-12).
+The edit's acts sheets (`EditActs`, `CommentEditActs`), which carry
+no `?`, keep `They land together, or none does.`
 
 **The wallet says reach, not paths.** `In escrow` · `Held` ·
 `…paid when an advertiser's reach flows through you.` ·

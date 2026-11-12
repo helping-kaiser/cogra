@@ -10,9 +10,8 @@
    so what a license promises is written once and this board cannot say a
    shorter version of it.
 
-   THE NOTE IS WRITTEN FOR ONE POST. *Terms for anyone who reuses this* is about
-   the thing being signed, and it stays here: the settings route sets what a new
-   post starts from and says so in its own words, on its own board.
+   NO INTRO UNDER THE TITLE: the sheet's "?" (`License`) opens on what the
+   terms are for (jakob 2026-11-12, a line repeating the "?" goes).
 
    THE RADIOS STAGE, AND `Done` COMMITS (the sheet law, readme §4, *Sheets*).
    A pick changes the sheet and nothing else; `Done` carries the pair to the
@@ -35,8 +34,6 @@ export function Screen() {
       <BottomSheet open ariaLabel="License terms" maxHeight="88%">
         <SheetTitle trailing={<HelpDot ariaLabel="License" />}>License</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 24px" }}>
-          <QuietNote>Terms for anyone who reuses this.</QuietNote>
-
           <LicenseAxisLabel>Credit</LicenseAxisLabel>
           <LicenseAxis axis="credit" name="license-attribution" tiers={ATTRIBUTION_TIERS} chosen={2} />
 

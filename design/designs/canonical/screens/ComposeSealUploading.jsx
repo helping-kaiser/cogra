@@ -57,7 +57,6 @@ export function Screen() {
             },
           ]}
           total="3 things, signed together"
-          note="They land together, or none does."
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>

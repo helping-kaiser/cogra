@@ -99,7 +99,6 @@ export function Screen() {
             count: "1",
           }))}
           total={`${KEPT_PICKS.length} things, signed together`}
-          note="They land together, or none does."
         />
 
         <KeptApprovalLine shown="{{approvalShown}}" node="approval" />

@@ -1823,7 +1823,7 @@ function composeSealCard({ cited, tags, state }) {
           : citedOneRow(state === "refused" ? { message: SEAL_UNLANDED_CITATION, onRemove: () => {} } : undefined),
       ]}
       total={`${1 + tags.length + cited} things, signed together`}
-      note={state === "slow" ? SEAL_SLOW_LINE : "They land together, or none does."}
+      note={state === "slow" ? SEAL_SLOW_LINE : undefined}
       noteTone={state === "slow" ? "slow" : "quiet"}
     />
   );
@@ -2074,7 +2074,6 @@ function replySealCard({ named, cited, tags, refused, tagRefused = false }) {
         ...ADD_ROWS,
       ]}
       total={acts > 1 ? `${acts} things, signed together` : "1 thing, signed"}
-      note={acts > 1 ? "They land together, or none does." : undefined}
     />
   );
 }

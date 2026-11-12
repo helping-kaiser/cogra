@@ -6,7 +6,9 @@ ALWAYS the acts card reads one row per pick still in the review, each with what 
 
 ALWAYS a pick on a post or a person reads Opinion, and a pick on a topic reads Feeling, its name the topic's with its # and its pair spoken in the Affinity pad's axis words, How much you like it and How close you want to be
 
-ALWAYS the acts card's total reads the number of picks as things, signed together, and its subline reads They land together, or none does. GIVEN the seal signs more than one pick
+ALWAYS the acts card's total reads the number of picks as things, signed together, GIVEN the seal signs more than one pick
+
+ALWAYS the acts card carries no all-or-nothing line, the seal's "?" How signing works saying it
 
 ALWAYS nothing on the seal is removable
 

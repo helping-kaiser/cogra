@@ -49,7 +49,6 @@ export function Screen() {
             citedOneRow(),
           ]}
           total="4 things, signed together"
-          note="They land together, or none does."
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
