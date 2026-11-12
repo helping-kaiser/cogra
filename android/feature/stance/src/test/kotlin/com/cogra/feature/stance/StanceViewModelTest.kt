@@ -161,7 +161,15 @@ class StanceViewModelTest {
     private val kept = InMemoryKeptPickStore()
     private val standing = ReaderStanding()
 
-    private fun viewModel() = StanceViewModel(stances, WriteSigner(writes, identity), identity, signals, account, kept, standing)
+    private fun viewModel() = StanceViewModel(
+        stances,
+        WriteSigner(writes, identity),
+        identity,
+        signals,
+        account,
+        kept,
+        standing,
+    )
 
     private fun entry(vm: StanceViewModel) = vm.state.value.targets.getValue(TARGET)
 

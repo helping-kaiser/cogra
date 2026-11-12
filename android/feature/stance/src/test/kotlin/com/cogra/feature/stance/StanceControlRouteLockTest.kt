@@ -114,7 +114,8 @@ class StanceControlRouteLockTest {
         compose.onNodeWithTag("${TAG}_stance_pad").assertDoesNotExist()
     }
 
-    // ApplicantFeed.md:47 — WHEN press-and-hold a stance face -> the snackbar reads … AND NEVER anything is signed or staged
+    // ApplicantFeed.md:47 — WHEN press-and-hold a stance face -> the snackbar reads …
+    // AND NEVER anything is signed or staged
     @Test
     fun anApplicantsHoldSaysTheLineAndStagesNothing() {
         render(AccountState.APPLICANT)

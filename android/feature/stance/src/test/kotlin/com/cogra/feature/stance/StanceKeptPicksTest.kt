@@ -83,7 +83,15 @@ class StanceKeptPicksTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = StanceViewModel(stances, WriteSigner(writes, identity), identity, signals, account, kept, standing)
+    private fun viewModel() = StanceViewModel(
+        stances,
+        WriteSigner(writes, identity),
+        identity,
+        signals,
+        account,
+        kept,
+        standing,
+    )
 
     private fun idle() = dispatcher.scheduler.advanceUntilIdle()
 

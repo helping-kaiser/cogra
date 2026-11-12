@@ -308,14 +308,8 @@ fun CommentsSheet(
             onCommentSignedShown()
         }
     }
-    // AN APPLICANT'S TWO DOORS INTO THE COMPOSER ANSWER IN PLACE (ReplyEntry.md:25-29;
-    // copy-voice *The applicant-foot family*): `Add a comment` and every
-    // comment's Reply stand at the disabled opacity, still tappable, and say
-    // `You can comment once you're in.` on this sheet's own snackbar — the
-    // composer never opens and nothing stages.
-    val scope = rememberCoroutineScope()
-    val lockedCopy = stringResource(R.string.content_comment_locked)
-    val answerLocked: () -> Unit = { scope.launch { snackbar.showSnackbar(lockedCopy) } }
+    // AN APPLICANT'S TWO DOORS INTO THE COMPOSER ANSWER IN PLACE ([rememberCommentGuard]).
+    val guard = rememberCommentGuard(state.commentLocked, snackbar)
     val listState = rememberLazyListState()
     ThreadPlacement(state, listState, restoreTo, onRestored, onLanded)
     // WHICH OF THE READER'S OWN COMMENTS THE THINK-TWICE DIALOG IS UP FOR
@@ -374,7 +368,7 @@ fun CommentsSheet(
                 signedIn = signedIn,
                 modifier = Modifier.weight(1f),
                 onLoadMoreComments = onLoadMoreComments,
-                onReplyTo = { c -> if (state.commentLocked) answerLocked() else depart { onReplyTo(c) } },
+                onReplyTo = { c -> guard { depart { onReplyTo(c) } }() },
                 onEditComment = { c -> depart { onEditComment(c) } },
                 onLoadMoreReplies = onLoadMoreReplies,
                 onReveal = onReveal,
@@ -386,12 +380,7 @@ fun CommentsSheet(
                 stanceControl = stanceControl,
             )
         }
-        CommentsFoot(
-            signedIn = signedIn,
-            locked = state.commentLocked,
-            onAddComment = if (state.commentLocked) answerLocked else ({ depart(onAddComment) }),
-            onSignInOrJoin = onSignInOrJoin,
-        )
+        CommentsFoot(signedIn, state.commentLocked, guard { depart(onAddComment) }, onSignInOrJoin)
     }
     // OVER THE THREAD, the sheet beneath whole and inert (CommentRemoveConfirm.md:3):
     // the dialog is its own window, raised after the sheet's. Taken, only the
@@ -1101,3 +1090,18 @@ internal val THREAD_SHEET = POST_DETAIL / "threadSheet"
  * `onReplyTo`; only the look needs to reach it.
  */
 private val LocalReplyLocked = staticCompositionLocalOf { false }
+
+/**
+ * AN APPLICANT'S TWO DOORS INTO THE COMPOSER ANSWER IN PLACE (ReplyEntry.md:25-29;
+ * copy-voice *The applicant-foot family*; PR-103): `Add a comment` and every
+ * comment's Reply say `You can comment once you're in.` on the sheet's own
+ * snackbar — the composer never opens and nothing stages. The guard wraps a
+ * door: while [locked] it answers, otherwise the door opens as it always did.
+ */
+@Composable
+private fun rememberCommentGuard(locked: Boolean, snackbar: SnackbarHostState): (() -> Unit) -> () -> Unit {
+    val scope = rememberCoroutineScope()
+    val line = stringResource(R.string.content_comment_locked)
+    val answer: () -> Unit = { scope.launch { snackbar.showSnackbar(line) } }
+    return { door -> if (locked) answer else door }
+}

@@ -131,15 +131,8 @@ fun StanceControlRoute(
         }
     }
     if (onTaken != null) TakenEffect(entry.taken, target, viewModel, onTaken)
-    // AN APPLICANT'S FACE IS LOCKED, NOT GONE (ApplicantFeed.md:43-53,
-    // ProfileOther.md:45-49; copy-voice *The applicant-foot family*): the
-    // disabled opacity, still tappable, and the tap and the hold each say what
-    // unlocks it on the snackbar the signing's own confirmation uses —
-    // nothing blooms, nothing is signed, staged or kept. The vouch flow's pads
-    // (a [variant]) are the application's own and stay open (PR-103).
-    val locked = state.applicant && variant == null
-    val lockedAnswer = rememberLockedAnswer()
-    val gate: (() -> Unit)? = onRequireAccount ?: lockedAnswer.takeIf { locked }
+    // AN APPLICANT'S FACE IS LOCKED, NOT GONE ([rememberGate]); a [variant]'s pad stays open.
+    val gate = rememberGate(onRequireAccount, locked = state.applicant && variant == null)
     val controlState = entry.toControlState(
         coaching = state.coachingTarget == target,
         inputMode = state.inputMode,
@@ -168,7 +161,7 @@ fun StanceControlRoute(
         onDismissSeverance = { viewModel.onDismissSeverance(target) },
         onConfirmationShown = { viewModel.onConfirmationShown(target) },
         testTagPrefix = testTagPrefix,
-        modifier = if (locked) modifier.alpha(StateTokens.DISABLED) else modifier,
+        modifier = if (gate != null && onRequireAccount == null) modifier.alpha(StateTokens.DISABLED) else modifier,
         axes = axes,
         zeroWords = zeroWords,
         targetLabel = targetLabel,
@@ -299,14 +292,23 @@ internal fun StancePair.toPoint() = StancePoint(pDirected, pInterest)
 internal fun StancePoint.toPair() = StancePair(directed, interest)
 
 /**
- * The applicant's answer at a locked face, `You can give your opinion once
- * you're in.`, on the host the signing's confirmation reads
- * ([LocalSnackbarHostState]): the shell's, or a sheet's own.
+ * AN APPLICANT'S FACE IS LOCKED, NOT GONE (ApplicantFeed.md:43-53,
+ * ProfileOther.md:45-49; copy-voice *The applicant-foot family*; PR-103): the
+ * disabled opacity, still tappable, and the tap and the hold each say what
+ * unlocks it — nothing blooms, nothing is signed, staged or kept. The vouch
+ * flow's pads (a `variant`) are the application's own and stay open.
+ *
+ * What a gesture that would enter the ceremony meets instead, or null for the
+ * ceremony itself: a guest's gate first, then — on a [locked] face — the
+ * applicant's answer, `You can give your opinion once you're in.`, on the host
+ * the signing's confirmation reads ([LocalSnackbarHostState]): the shell's, or
+ * a sheet's own.
  */
 @Composable
-private fun rememberLockedAnswer(): () -> Unit {
+private fun rememberGate(onRequireAccount: (() -> Unit)?, locked: Boolean): (() -> Unit)? {
     val host = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
     val line = stringResource(R.string.stance_opinion_locked)
-    return { scope.launch { host?.showSnackbar(line) } }
+    val answer: () -> Unit = { scope.launch { host?.showSnackbar(line) } }
+    return onRequireAccount ?: answer.takeIf { locked }
 }
