@@ -106,7 +106,7 @@ export function ComponentGallery() {
           <Chip testId="gallery-topic" selected onDismiss={() => {}} dismissLabel="Remove #coastroad">
             #coastroad
           </Chip>
-          <Chip testId="gallery-add-topic">Add a topic</Chip>
+          <Chip testId="gallery-add-topic">Add a tag</Chip>
         </Row>
       </Section>
 
@@ -155,7 +155,7 @@ export function ComponentGallery() {
           onOpen={() => {}}
           onDismiss={() => {}}
         />
-        <ListRow mark={<span>#</span>} title="#saltmarsh" kind="Topic" />
+        <ListRow mark={<span>#</span>} title="#saltmarsh" kind="Tag" />
       </Section>
 
       <Section title="Sheet">
