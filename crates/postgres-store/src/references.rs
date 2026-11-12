@@ -310,7 +310,7 @@ pub async fn withdrawal_records(
            WHERE NOT br.payload_marked
              AND NOT b.census_unknown
            ORDER BY br.author, b.source, b.target,
-                    br.epoch, br.act_time, br.position"#,
+                    br.epoch, br.position"#,
         record_ids,
     )
     .fetch_all(pool)
