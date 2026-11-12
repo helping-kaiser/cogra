@@ -14,6 +14,7 @@ import com.cogra.domain.AuthTokens
 import com.cogra.domain.CommentForEdit
 import com.cogra.domain.CommentPage
 import com.cogra.domain.CommentView
+import com.cogra.domain.FieldStatus
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.LoginGrant
@@ -22,8 +23,10 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostBacking
 import com.cogra.domain.PostDetail
+import com.cogra.domain.PostView
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ProfileComment
 import com.cogra.domain.ProfileFigures
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordAbout
@@ -137,7 +140,23 @@ class OnboardingRepositoryImpl @Inject constructor(private val client: ApolloCli
 
     override suspend fun checkInviteLink(id: String): Outcome<InviteCheck?> =
         client.query(InviteLinkCheckQuery(id)).fetch().map { data ->
-            data.inviteLinkCheck?.let { InviteCheck(it.usable, it.inviterHandle, it.expiresAt) }
+            data.inviteLinkCheck?.let { check ->
+                // Join.md:9 — the face and the name over the form are the
+                // inviter's: the written name, else the handle, and the
+                // picture unless it is redacted (an unknown status hides it too).
+                val inviter = check.inviter
+                val avatar = inviter?.onUser?.avatar
+                    ?.takeIf { it.status.toDomain() !in setOf(FieldStatus.REDACTED, FieldStatus.UNKNOWN) }
+                InviteCheck(
+                    usable = check.usable,
+                    inviterHandle = check.inviterHandle,
+                    expiresAt = check.expiresAt,
+                    inviterName = inviter?.displayName?.value?.trim()?.takeIf { it.isNotEmpty() }
+                        ?: inviter?.handle
+                        ?: check.inviterHandle,
+                    inviterAvatarUrl = avatar?.url,
+                )
+            }
         }
 
     override suspend fun register(
@@ -899,14 +918,12 @@ class ProfileRepositoryImpl @Inject constructor(private val client: ApolloClient
 
     override suspend fun authorRecords(
         authorId: String,
-        family: Family?,
         first: Int,
         after: String?,
     ): Outcome<Page<RecordRow>> = guard.run {
         client.query(
             AuthorRecordsQuery(
                 author = authorId,
-                family = Optional.presentIfNotNull(family?.toRecordFamily()),
                 first = first,
                 after = Optional.presentIfNotNull(after),
             ),
@@ -919,8 +936,16 @@ class ProfileRepositoryImpl @Inject constructor(private val client: ApolloClient
         }
     }
 
-    // Each figure is a `RecordConnection.totalCount` read with `first: 0` —
-    // the number without a page (`ProfileFigures`, open-questions Q35).
+    override suspend fun profilePosts(authorId: String, after: String?): Outcome<Page<PostView>> =
+        guard.run { readProfilePosts(client, authorId, after) }
+
+    override suspend fun profileComments(authorId: String, after: String?): Outcome<Page<ProfileComment>> =
+        guard.run { readProfileComments(client, authorId, after) }
+
+    // Posts is a `RecordConnection.totalCount` and the two opinion figures its
+    // `bundleCount` — one per person, however often revised (open-questions
+    // Q35, ruled 2026-11-10) — each read with `first: 0`,
+    // the number without a page (`ProfileFigures`).
     override suspend fun figures(actorId: String): Outcome<ProfileFigures> = guard.run {
         client.query(ProfileFiguresQuery(actorId)).fetch().map { data ->
             // A count the server did not serve stays unknown — the header
@@ -928,8 +953,8 @@ class ProfileRepositoryImpl @Inject constructor(private val client: ApolloClient
             val user = data.user
             ProfileFigures(
                 posts = user?.posts?.totalCount,
-                opinionsOn = user?.opinionsOn?.totalCount,
-                opinionsBy = user?.opinionsBy?.totalCount,
+                opinionsOn = user?.opinionsOn?.bundleCount,
+                opinionsBy = user?.opinionsBy?.bundleCount,
             )
         }
     }
@@ -966,10 +991,6 @@ class ProfileRepositoryImpl @Inject constructor(private val client: ApolloClient
     }
 }
 
-/** The reverse of RecordFamily.toDomain — null for UNKNOWN (no filter). */
-private fun Family.toRecordFamily(): com.cogra.network.graphql.type.RecordFamily? =
-    com.cogra.network.graphql.type.RecordFamily.knownEntries.find { it.rawValue == name }
-
 /**
  * One chronicle row: family + genesis mark, the touched content's
  * snippet, and the post it opens. A record is a genesis exactly when
@@ -998,6 +1019,7 @@ private fun AuthorRecordsQuery.Node.toRow(): RecordRow {
         targetHandle = reading.handle,
         act = did,
         about = reading.about,
+        topic = topic?.name?.value?.takeIf { it.isNotBlank() },
         untag = kind == Family.TAG && pDirected == 0.0 && pInterest == 0.0,
     )
 }

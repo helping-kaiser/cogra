@@ -16,7 +16,7 @@ ALWAYS the slow line never takes the failure voice or the error colour
 
 ALWAYS the commit keeps its in-flight label and refuses a press GIVEN the slow line stands
 
-ALWAYS the header back arrow, Back and the header X refuse a press and keep their resting face GIVEN the slow line stands
+ALWAYS Back reads Close and it, the header back arrow and the header X close the seal while the signing goes on GIVEN the slow line stands
 
 ALWAYS every fact row's Change, Adjust and Mark refuse a press and never dim GIVEN the slow line stands
 

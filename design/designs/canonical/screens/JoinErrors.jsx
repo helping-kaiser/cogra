@@ -1,7 +1,9 @@
 /* Join · the errors in place — the input-error round (readme §13, entry):
-   Join with two errors demonstrated at once, the server answer on Handle
-   and a local format failure on Password. M3's error supporting line
-   replaces each errored field's own helper span; Email is untouched.
+   Join with three errors demonstrated at once, the server answer on Handle,
+   a local format failure on Password, and the local mismatch on Repeat
+   password (round 38), each field checked on its own at the press. M3's
+   error supporting line replaces each errored field's own helper span (the
+   repeat field has none to replace); Email is untouched.
 
    REGISTERED under the `join` prefix (round 28): `Join`'s names. The live
    commit is `WaitingCommit` with nothing to wait for, so it keeps `Join`'s
@@ -24,7 +26,7 @@ export function Screen() {
             }}
             data-node="title"
           >
-            Mira invited you
+            Mira Voss invited you
           </h1>
           <p
             style={{
@@ -48,9 +50,18 @@ export function Screen() {
             id="password"
             label="Password"
             autoComplete="new-password"
+            enterKeyHint="next"
             value="fieldday"
             error="A password is at least 12 characters."
             node="password"
+          />
+          <PasswordField
+            id="password-repeat"
+            label="Repeat password"
+            autoComplete="new-password"
+            value="fielday"
+            error="The two passwords don't match."
+            node="confirm"
           />
         </div>
 

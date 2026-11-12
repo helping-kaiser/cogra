@@ -275,8 +275,7 @@ impl FeedSlice {
         before: Option<String>,
     ) -> async_graphql::Result<SliceNodeConnection> {
         let pool = ctx.data::<PgPool>()?;
-        validate_page_args(first, last, after.as_deref(), before.as_deref())
-            .map_err(|e| bad_input(e.message))?;
+        validate_page_args(first, last, after.as_deref(), before.as_deref())?;
         if after.is_none() && before.is_none() {
             ctx.data::<SliceReadLog>()?
                 .record(self.viewer, self.as_of_epoch);
@@ -346,7 +345,7 @@ impl FeedSlice {
         before: Option<String>,
     ) -> async_graphql::Result<RecordConnection> {
         let pool = ctx.data::<PgPool>()?;
-        let page = keyset_page(first, after, last, before).map_err(|e| bad_input(e.message))?;
+        let page = keyset_page(first, after, last, before)?;
         let rows = slice::records(
             pool,
             &self.reach,
@@ -917,8 +916,7 @@ pub async fn feed(
     if ordered_ids.len() > MAX_PAGE_SIZE as usize {
         return Err(bad_input(format!("at most {MAX_PAGE_SIZE} ids per window")));
     }
-    validate_page_args(first, last, after.as_deref(), before.as_deref())
-        .map_err(|e| bad_input(e.message))?;
+    validate_page_args(first, last, after.as_deref(), before.as_deref())?;
     let decode = |raw: &Option<String>| -> async_graphql::Result<Option<usize>> {
         raw.as_deref()
             .map(|raw| decode_slot_cursor(raw).ok_or_else(|| bad_input("invalid cursor")))

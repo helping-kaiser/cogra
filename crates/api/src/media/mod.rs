@@ -611,6 +611,41 @@ pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaEr
     })
 }
 
+/// How much of an upload is read to decide its format before its size
+/// is checked against that format's cap — far more than either sniff
+/// needs for any file a camera or an encoder writes.
+pub const SNIFF_PREFIX_BYTES: usize = 4096;
+
+/// Reads an uploaded file of `size` bytes into memory for [`process`],
+/// refusing it first when its size is past its format's cap.
+///
+/// The spooled file's size is known before a byte of it is read, and the
+/// format is decided by its first bytes, so an oversized upload is
+/// refused from its header alone with the refusal [`process`] would give
+/// it — never loaded whole only to be turned away. A positive sniff on a
+/// prefix is the format the whole file sniffs as, so the early refusal
+/// never disagrees with the late one; a prefix that sniffs as neither
+/// format reads on, and [`process`] decides.
+pub fn read_upload(
+    mut file: impl std::io::Read,
+    size: u64,
+    caps: UploadCaps,
+) -> std::io::Result<Result<Vec<u8>, MediaError>> {
+    use std::io::Read;
+    let mut bytes = Vec::new();
+    file.by_ref()
+        .take(SNIFF_PREFIX_BYTES as u64)
+        .read_to_end(&mut bytes)?;
+    if let Some(format) = Format::of(&bytes) {
+        let limit = format.cap(caps);
+        if size > limit as u64 {
+            return Ok(Err(MediaError::TooLarge { limit }));
+        }
+    }
+    file.read_to_end(&mut bytes)?;
+    Ok(Ok(bytes))
+}
+
 /// One stored format's half of the pipeline: the cap that bounds it, the
 /// strip that cleans it, the probe that proves it.
 ///
@@ -2489,6 +2524,64 @@ mod tests {
             DEFAULT_MAX_VIDEO_UPLOAD_BYTES,
             10 * DEFAULT_MAX_UPLOAD_BYTES,
             "one video is capped where ten pictures are"
+        );
+    }
+
+    /// A reader that counts the bytes it hands out.
+    struct Counted<'a> {
+        inner: std::io::Cursor<&'a [u8]>,
+        read: &'a std::cell::Cell<usize>,
+    }
+
+    impl std::io::Read for Counted<'_> {
+        fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+            let n = std::io::Read::read(&mut self.inner, buf)?;
+            self.read.set(self.read.get() + n);
+            Ok(n)
+        }
+    }
+
+    /// An upload whose size is past its format's cap is refused with the
+    /// cap's own refusal after its header alone is read: the file's size
+    /// is known before its bytes are, so the bytes are never loaded. The
+    /// file here is a valid still padded past a 64-byte cap; the reader
+    /// counts what was taken from it.
+    ///
+    /// An upload past its format's cap is refused from its size, its bytes never read into memory.
+    /// ´claim:media:an-oversized-upload-is-refused-before-its-read´
+    #[test]
+    fn an_oversized_upload_is_refused_before_its_read() {
+        let mut file = one_pixel();
+        file.resize(4 * SNIFF_PREFIX_BYTES, 0);
+        let tight = UploadCaps {
+            still_bytes: 64,
+            video_bytes: DEFAULT_MAX_VIDEO_UPLOAD_BYTES,
+        };
+        let read = std::cell::Cell::new(0);
+        let reader = Counted {
+            inner: std::io::Cursor::new(file.as_slice()),
+            read: &read,
+        };
+        let answer = read_upload(reader, file.len() as u64, tight).expect("reads");
+        assert_eq!(answer, Err(MediaError::TooLarge { limit: 64 }));
+        assert!(
+            read.get() <= SNIFF_PREFIX_BYTES,
+            "read {} of {} bytes",
+            read.get(),
+            file.len()
+        );
+
+        let within = one_pixel();
+        let read = std::cell::Cell::new(0);
+        let reader = Counted {
+            inner: std::io::Cursor::new(within.as_slice()),
+            read: &read,
+        };
+        let answer = read_upload(reader, within.len() as u64, caps()).expect("reads");
+        assert_eq!(
+            answer,
+            Ok(within.clone()),
+            "a file within its cap is read whole"
         );
     }
 

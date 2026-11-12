@@ -2,11 +2,11 @@
 
 ALWAYS the screen says before the act that changing the password signs out every other device and keeps this one signed in
 
-ALWAYS the screen asks for the current password and one new password, and never for the new password twice
+ALWAYS the screen asks for the current password, then the new password twice: New password and under it Repeat password, masked alike, Repeat password with no hint
 
 ALWAYS the form opens at rest, nothing marked
 
-WHEN typing in either field GIVEN the field is not marked -> NEVER the field is marked before the next press of Change password
+WHEN typing in any field GIVEN the field is not marked -> NEVER the field is marked before the next press of Change password
 
 WHEN typing in New password GIVEN the field reads A password is at most 128 characters. or A password is at least 12 characters. -> the line re-checks as the reader types and goes once the password is 12 to 128 characters
 
@@ -28,6 +28,10 @@ WHEN press Change password GIVEN the new password is shorter than 12 characters 
 
 WHEN press Change password GIVEN the new password has turned up in a data breach -> the New password field reads That password has turned up in a data breach — pick another one. AND NEVER the password changes
 
+WHEN press Change password GIVEN Repeat password differs from New password -> the Repeat password field reads The two passwords don't match. AND NEVER the password changes
+
+WHEN typing in New password or Repeat password GIVEN Repeat password reads The two passwords don't match. -> the line re-checks as the reader types and goes once the two passwords match
+
 WHEN the change has not answered 200ms after the press -> Change password reads Changing password… in its own place AND NEVER a spinner appears
 
 WHEN press Change password GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Change password AND Change password stays, the retry AND NEVER the password changes
@@ -38,6 +42,6 @@ WHEN press the header back arrow -> settings returns AND NEVER the password chan
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 
-ALWAYS Change password stands disabled with Waiting for both passwords right above it GIVEN either password field is empty
+ALWAYS Change password stands disabled, with no line above it, GIVEN any password field is empty
 
-WHEN both password fields hold a character -> Change password wakes AND the line Waiting for both passwords goes
+WHEN all three password fields hold a character -> Change password wakes

@@ -22,6 +22,14 @@ ALWAYS closing an application removes nothing from the record: the person keeps 
 
 WHEN the closing does not go through -> the dialog stays up with its pair AND the line That didn't send. Try again. stands in it AND Close it reads Retry AND the application is still waiting
 
-WHEN press Keep it -> the dialog closes AND the application is still waiting
+WHEN press Keep it GIVEN Close it was not pressed -> the dialog closes AND the application is still waiting
 
-WHEN tap the scrim, press the system's Back or press Escape -> the dialog closes AND nothing is closed
+WHEN tap the scrim, press the system's Back or press Escape GIVEN Close it was not pressed -> the dialog closes AND nothing is closed
+
+WHEN press Close it -> Keep it reads Close in its place from the press itself, filled and live AND NEVER Close dims
+
+WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN Close it was pressed and has not answered -> the dialog closes AND the closing goes on AND the application's own row on Invites reads Closing it… in the pending marker's quiet register until it answers AND NEVER the closing is cancelled
+
+WHEN the closing is taken GIVEN the dialog was closed while it answered -> the line goes AND the row leaves this reader's list AND the applicant is told
+
+WHEN the closing does not go through GIVEN the dialog was closed while it answered -> the application's own row on Invites stands as it was AND says That didn't sign. in the failure voice followed by Retry, which asks the same act again, AND NEVER the snackbar carries the failure

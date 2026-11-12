@@ -767,7 +767,8 @@ impl Record {
     }
 
     /// What the record did beyond its family (`RecordAct`): a genesis, a
-    /// walk-back, the vouch that landed an account, or ordinary.
+    /// walk-back, a citation withdrawal, the vouch that landed an account,
+    /// or ordinary.
     async fn act(&self, ctx: &Context<'_>) -> async_graphql::Result<RecordAct> {
         Ok(ctx
             .data::<DataLoader<crate::loaders::RecordActLoader>>()?
@@ -817,6 +818,19 @@ impl Record {
     /// The raw L1 identifier of `terminal`; null on binary families.
     async fn terminal_id(&self) -> Option<String> {
         self.0.terminal().map(|leg| leg.target.clone())
+    }
+
+    /// The topic the record ends at: the Type its terminal leg reaches —
+    /// a Tag's topic — or, on a binary family, its target's — an Opinion
+    /// or Affinity toward a topic. A Type is a commons, not a node CoGra
+    /// carries a row for, so `terminal` and `target` cannot type it; this
+    /// does. Null when the record's far end is no Type.
+    async fn topic(&self) -> Option<HashtagType> {
+        let far_end = self.0.terminal().or_else(|| self.0.target())?;
+        match NodeId::parse(&far_end.target) {
+            Ok(NodeId::Name(name)) => Some(HashtagType { name }),
+            _ => None,
+        }
     }
 
     /// The authored directed parameter, as the actor's leg renders it.
@@ -948,6 +962,11 @@ pub enum RecordAct {
     /// that did — the batch the sum before it stages. An empty sign is
     /// never one.
     WalkBack,
+    /// A record a citation withdrawal signed: every counter-record that
+    /// netted its author's citation bundle — (author, citing artifact,
+    /// target) — back to `(0, 0)` from a standing that said something,
+    /// recognised by the same shape as a walk-back's batch.
+    Withdrawal,
     /// The Opinion that vouched someone in: of an account's approval
     /// vouches, the first to land, which landed the account — the record
     /// behind `User.invitedBy`. Any later vouch-Opinion is ORDINARY.
@@ -1604,8 +1623,7 @@ impl User {
             return Ok(None);
         }
         let pool = ctx.data::<PgPool>()?;
-        validate_page_args(first, last, after.as_deref(), before.as_deref())
-            .map_err(|e| super::query::bad_input(e.message))?;
+        validate_page_args(first, last, after.as_deref(), before.as_deref())?;
         let kinds = saved_kinds(kinds.as_deref())?;
         let parsed = crate::search::parse(query.as_deref().unwrap_or("")).map_err(|_| {
             super::query::bad_input(format!(
@@ -1685,8 +1703,7 @@ impl User {
             return Ok(None);
         }
         let pool = ctx.data::<PgPool>()?;
-        validate_page_args(first, last, after.as_deref(), before.as_deref())
-            .map_err(|e| super::query::bad_input(e.message))?;
+        validate_page_args(first, last, after.as_deref(), before.as_deref())?;
         let backward = last.is_some() || before.is_some();
         let cursor = match if backward { &before } else { &after } {
             Some(raw) => Some(
@@ -1728,6 +1745,41 @@ impl User {
         Ok(Some(connection))
     }
 
+    /// The people this user vouched in — every account whose admitting
+    /// vouch, the one `invitedBy` names on that account, is this user's
+    /// Opinion (auth.md "Approval and landing"). A vouch on an account
+    /// that has not landed, and a later vouch-Opinion on one that has, is
+    /// not one. Newest vouch first, keyset on the vouch record's
+    /// landing-order key; `vouchedAt` is that record's `landedAt`. The
+    /// admission stands whatever followed it: a stance walked back since,
+    /// or the account deleted since, which reads as every deleted account
+    /// reads. An invalid cursor is BAD_INPUT. Field-level: viewer-only.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    async fn vouched_in(
+        &self,
+        ctx: &Context<'_>,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<Option<VouchedInConnection>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        let page = keyset_page(first, after, last, before)
+            .map_err(|e| super::query::bad_input(e.message))?;
+        let rows = store::vouched_in_by(
+            pool,
+            self.identity.id,
+            page.cursor.map(|key| key.order()),
+            page.backward,
+            page.limit + 1,
+        )
+        .await?;
+        hydrate_vouched_in(pool, rows, &page).await.map(Some)
+    }
+
     /// The topics the viewer holds — every Type toward which their netted
     /// Affinity bundle is not `(0, 0)`, the read-side bundle fold taken
     /// across every Type at once, and nothing else: a bundle walked back
@@ -1751,8 +1803,7 @@ impl User {
             return Ok(None);
         }
         let pool = ctx.data::<PgPool>()?;
-        validate_page_args(first, last, after.as_deref(), before.as_deref())
-            .map_err(|e| super::query::bad_input(e.message))?;
+        validate_page_args(first, last, after.as_deref(), before.as_deref())?;
         let backward = last.is_some() || before.is_some();
         let cursor = match if backward { &before } else { &after } {
             Some(raw) => Some(
@@ -1863,8 +1914,7 @@ impl User {
             return Ok(None);
         }
         let pool = ctx.data::<PgPool>()?;
-        validate_page_args(first, last, after.as_deref(), before.as_deref())
-            .map_err(|e| super::query::bad_input(e.message))?;
+        validate_page_args(first, last, after.as_deref(), before.as_deref())?;
         let served = history_kinds(kinds.as_deref())?;
         let parsed = crate::search::parse(query.as_deref().unwrap_or("")).map_err(|_| {
             super::query::bad_input(format!(
@@ -2473,6 +2523,10 @@ pub struct InviteLinkCheck {
     pub usable: bool,
     /// The issuing actor's handle.
     pub inviter_handle: String,
+    /// The issuing actor as a public profile — the face and the name the
+    /// registration form stands under; its handle is `inviterHandle`'s
+    /// value. Nullable as every actor reference is (`Application.approver`).
+    pub inviter: Option<Actor>,
     pub expires_at: DateTime<Utc>,
 }
 
@@ -4013,7 +4067,7 @@ pub struct ReferenceCandidate {
 pub(super) fn list_limit(limit: Option<i32>) -> async_graphql::Result<u32> {
     let limit = limit.unwrap_or(DEFAULT_PAGE_SIZE);
     if !(0..=MAX_PAGE_SIZE).contains(&limit) {
-        return Err(async_graphql::Error::new(format!(
+        return Err(super::query::bad_input(format!(
             "limit must lie in 0..={MAX_PAGE_SIZE}"
         )));
     }
@@ -4740,7 +4794,7 @@ impl User {
         let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
         let node_kinds = history_node_kinds(kinds);
         let request =
-            super::query::search_request(ctx, parsed, Some(node_kinds.as_slice()), None).await?;
+            super::query::search_request(ctx, parsed, Some(node_kinds.as_slice())).await?;
         let list = Some(postgres_store::search::ReaderList::History(
             self.identity.id,
         ));
@@ -5054,7 +5108,7 @@ impl User {
             None => None,
         };
         let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
-        let request = super::query::search_request(ctx, parsed, Some(kinds), None).await?;
+        let request = super::query::search_request(ctx, parsed, Some(kinds)).await?;
         let list = Some(postgres_store::search::ReaderList::Saved(self.identity.id));
         let past_people =
             !backward && cursor.is_some_and(|c| c.section > postgres_store::search::SECTION_PEOPLE);
@@ -5363,6 +5417,108 @@ pub(crate) async fn hydrate_hidden(
         .collect())
 }
 
+/// Names the vouched-in connection `VouchedInConnection`, as the contract
+/// does.
+pub struct VouchedInConnectionName;
+
+impl async_graphql::connection::ConnectionNameType for VouchedInConnectionName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "VouchedInConnection".to_string()
+    }
+}
+
+/// Names the vouched-in edge `VouchedInEdge`.
+pub struct VouchedInEdgeName;
+
+impl async_graphql::connection::EdgeNameType for VouchedInEdgeName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "VouchedInEdge".to_string()
+    }
+}
+
+/// `VouchedInEdge`'s own field: when the vouch landed.
+#[derive(SimpleObject)]
+pub struct VouchedInEdgeFields {
+    /// When the viewer's vouch that let this person in landed — the vouch
+    /// record's `landedAt`. The list's order is that record's place in
+    /// the published order, newest first.
+    pub vouched_at: DateTime<Utc>,
+}
+
+/// One person the viewer vouched in.
+pub type VouchedInEdge = Edge<String, Actor, VouchedInEdgeFields, VouchedInEdgeName>;
+
+/// A page of the people the viewer vouched in.
+pub type VouchedInConnection = Connection<
+    String,
+    Actor,
+    async_graphql::connection::EmptyFields,
+    VouchedInEdgeFields,
+    VouchedInConnectionName,
+    VouchedInEdgeName,
+    async_graphql::connection::DisableNodesField,
+>;
+
+/// A page of vouched-in rows, fetched with `limit + 1`, as a connection:
+/// each account through the actor registry, as [`hydrate_hidden`] reads
+/// one, so an account deleted since still resolves as its husk.
+async fn hydrate_vouched_in(
+    pool: &PgPool,
+    mut rows: Vec<store::VouchedIn>,
+    page: &KeysetPage,
+) -> async_graphql::Result<VouchedInConnection> {
+    use async_graphql::ErrorExtensions;
+    let has_more = rows.len() as i64 > page.limit;
+    if has_more {
+        if page.backward {
+            rows.remove(0);
+        } else {
+            rows.pop();
+        }
+    }
+    let (has_previous, has_next) = if page.backward {
+        (has_more, page.cursor.is_some())
+    } else {
+        (page.cursor.is_some(), has_more)
+    };
+    let ids: Vec<Uuid> = rows.iter().map(|r| r.account_id).collect();
+    let mut actors: std::collections::HashMap<Uuid, store::ActorIdentity> =
+        store::actor_identities_by_ids(pool, &ids)
+            .await?
+            .into_iter()
+            .map(|identity| (identity.id, identity))
+            .collect();
+    let mut connection = VouchedInConnection::new(has_previous, has_next);
+    for row in rows {
+        let Some(identity) = actors.remove(&row.account_id) else {
+            continue;
+        };
+        let vouched_at = row.vouched_at.ok_or_else(|| {
+            tracing::error!(
+                epoch = row.epoch,
+                account = %row.account_id,
+                "a vouch record's epoch has no attested instant"
+            );
+            async_graphql::Error::new("the vouch's landing instant is missing")
+                .extend_with(|_, e| e.set("code", "INTERNAL"))
+        })?;
+        connection.edges.push(Edge::with_additional_fields(
+            encode_landing_cursor(CursorKey {
+                epoch: row.epoch,
+                act_time: row.act_time,
+                position: row.position,
+                id: None,
+            }),
+            Actor::User(User {
+                identity,
+                viewer_session: None,
+            }),
+            VouchedInEdgeFields { vouched_at },
+        ));
+    }
+    Ok(connection)
+}
+
 /// Names the search connection `SearchConnection`, as the contract does,
 /// rather than after its node type (`SearchResultConnection`).
 pub struct SearchConnectionName;
@@ -5562,6 +5718,28 @@ impl RecordConnectionFields {
         let total = mirror::count_records(pool, filter).await?;
         Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
     }
+
+    /// How many bundles this filter's records fold into, across every
+    /// page: one author's records in one family toward one target (and,
+    /// on a hyper-edge, one terminal) are one bundle, however often it was
+    /// revised — the count a figure of people reads, where `totalCount`
+    /// counts each revision. A payload-marked record folds through no
+    /// bundle and counts as its own. Null on a ranking slice's records,
+    /// which are a reach, not a filter.
+    ///
+    /// Saturates at [`i32::MAX`] as `totalCount` does.
+    #[graphql(complexity = 0)]
+    async fn bundle_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
+        if self.slice.is_some() {
+            return Ok(None);
+        }
+        let Some(filter) = &self.filter else {
+            return Ok(Some(0));
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let total = mirror::count_bundles(pool, filter).await?;
+        Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
+    }
 }
 
 /// A page of records, carrying the filter that produced it so the count
@@ -5697,12 +5875,8 @@ pub struct KeysetPage {
 }
 
 /// The page arguments every connection field accepts, checked once
-/// (api-spec.md "Pagination").
-///
-/// Both connection helpers used to check a subset of these, so the same
-/// input was refused differently depending on which field a client hit
-/// — and one of the two delegated the missing rules to the library,
-/// which answers in its own words.
+/// (api-spec.md "Pagination"), and refused as `BAD_INPUT` wherever the
+/// field — one rule set, one answer, whichever connection a client hits.
 pub fn validate_page_args(
     first: Option<i32>,
     last: Option<i32>,
@@ -5710,15 +5884,15 @@ pub fn validate_page_args(
     before: Option<&str>,
 ) -> async_graphql::Result<()> {
     if first.is_some_and(|n| n > MAX_PAGE_SIZE) || last.is_some_and(|n| n > MAX_PAGE_SIZE) {
-        return Err(async_graphql::Error::new(format!(
+        return Err(super::query::bad_input(format!(
             "first/last may be at most {MAX_PAGE_SIZE}"
         )));
     }
     if first.is_some_and(|n| n < 0) || last.is_some_and(|n| n < 0) {
-        return Err(async_graphql::Error::new("first/last must be non-negative"));
+        return Err(super::query::bad_input("first/last must be non-negative"));
     }
     if (first.is_some() || after.is_some()) && (last.is_some() || before.is_some()) {
-        return Err(async_graphql::Error::new(
+        return Err(super::query::bad_input(
             "paginate forward (first/after) or backward (last/before), not both",
         ));
     }
@@ -5767,7 +5941,7 @@ pub fn encode_landing_cursor(key: CursorKey) -> String {
 /// cursor — a cursor is opaque, so a client holding one the server no
 /// longer reads restarts the walk.
 fn decode_landing_cursor(cursor: &str) -> async_graphql::Result<CursorKey> {
-    let invalid = || async_graphql::Error::new("invalid cursor");
+    let invalid = || super::query::bad_input("invalid cursor");
     let raw = B64.decode(cursor).map_err(|_| invalid())?;
     let text = String::from_utf8(raw).map_err(|_| invalid())?;
     let parts: Vec<&str> = text.split(':').collect();

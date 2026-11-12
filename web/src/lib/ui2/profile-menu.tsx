@@ -20,10 +20,11 @@
 // card names the trigger, and the sheet and its rows carry the card's test
 // ids rather than the profile page's registered paths.
 //
-// BUILT WHOLE, WIRED IN PART (saved-surface SS-1; the introduced-but-inert
-// law, jakob 2026-09-14): Mention waits on the compose wizard's profile
-// reference. That row stands at full strength and does nothing yet; the
-// hand-test notes name it.
+// MENTION IS THE CITE DOOR WITH A PERSON BEHIND IT (ProfileMenu.md:17; api-spec
+// `ReferenceTarget`: a citation whose target is a User is a mention): the new
+// post's wizard opens at its first stage with the person staged, the same
+// `?reference=` a card's Cite hands it. An applicant is told instead and the
+// wizard never opens (:19).
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -44,6 +45,9 @@ import { REPORTED, REPORT_NOT_SENT } from "@/lib/ui2/post-menu-host";
 
 export type ProfileMenuKind = "own" | "other" | "deleted";
 
+/** ProfileMenu.md:19 — an applicant's Mention; the applicant family's `once you're in`. */
+export const POST_LOCKED = "You can post once you're in.";
+
 const SHEET = { path: "profile.menuSheet" };
 const pageRow = (name: string): DataNode => ({ path: `profile.menuSheet.${name}` });
 
@@ -57,12 +61,15 @@ export function ProfileMenu({
   kind,
   profile,
   signedIn,
+  applicant = false,
   notify,
   feed,
 }: {
   kind: ProfileMenuKind;
   profile: ActorLike & { handle: string; viewerBookmarkedAt?: string | null };
   signedIn: boolean;
+  /** The reader is an applicant, where the host knows it: Mention tells rather than opens. */
+  applicant?: boolean;
   /** The host's own snackbar. */
   notify: Notify;
   /** The menu on a profile feed card instead of the profile page. */
@@ -90,7 +97,8 @@ export function ProfileMenu({
       if (outcome === "copied") notify(LINK_COPIED);
     });
   };
-  const inert = () => {};
+  const mentionAct = () =>
+    applicant ? notify(POST_LOCKED) : router.push(`/compose?reference=${encodeURIComponent(profile.id)}`);
   const report: MenuItem = {
     label: "Report",
     onSelect: gated(() => setReportOpen(true)),
@@ -109,9 +117,8 @@ export function ProfileMenu({
     node: row("save"),
   };
   const mention: MenuItem = {
-    // INERT until the wizard takes a profile as a staged reference.
     label: "Mention in a new post",
-    onSelect: gated(inert),
+    onSelect: gated(mentionAct),
     testId: `${prefix}-mention`,
     node: row("mention"),
   };

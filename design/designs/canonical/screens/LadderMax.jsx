@@ -21,7 +21,7 @@ export function Screen() {
           comments={2}
           bundle={null}
           license={{ attribution: 0.5, provenance: 0.5 }}
-          menuItems={CARD_MENU}
+          menuItems={readerCardMenu("sol")}
         />
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />

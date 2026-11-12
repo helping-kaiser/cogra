@@ -11,8 +11,7 @@
    the line shows. Pressed, its label swaps in place to the in-flight word,
    `Signing and publishing…` — the failure pack's label-swap idiom
    (`SealFooter`'s `busy`): inert from the press, the word once the wait
-   passes 200ms, never dimmed and no spinner, and the ways out locked with it
-   for the swap's duration. Signing proceeds the moment the bytes land; no
+   passes 200ms, never dimmed and no spinner, and from the press Back reads `Close`. Signing proceeds the moment the bytes land; no
    second press is asked. Unpressed, the line goes when the last upload lands
    and the commit stands as it was.
 
@@ -23,7 +22,17 @@
    THE SLOW LINE COUNTS FROM THE PRESS (jakob 2026-10-02, the residue round's
    Q6): the reader's wait starts at their gesture, so 5s after it the acts
    card's subline swaps to `Still signing — the network is slow right now.`,
-   whether the bytes have landed yet or not. */
+   whether the bytes have landed yet or not. 
+   THE `state` CHIP'S `signing` IS A PRESS WHILE THE UPLOADS RUN, CLOSED ON
+   (round 37, jakob 2026-11-11). The press is the act, held only until the
+   bytes land: past 200ms `Signing and publishing…` stands over `Close`, and
+   Close, the arrow and the X leave the seal while the uploads finish and the
+   signing proceeds. An upload that fails after Close signs nothing, and says
+   so where the post would stand, as a failed signing does
+   (`SigningAfterClose`); the draft is kept. */
+
+export const PROPS = { state: { editor: "enum", options: ["rest", "signing"], default: "rest" } };
+export const VALS = `restFootShown: this.props.state === "signing" ? "none" : "flex", signFootShown: this.props.state === "signing" ? "flex" : "none"`;
 
 export function Screen() {
   return (
@@ -65,7 +74,12 @@ export function Screen() {
 
         <UploadStatusLine done={2} total={4} />
 
-        <SealFooter signLabel="Sign and publish" busyLabel="Signing and publishing…" />
+        <div style={{ display: "{{restFootShown}}", flexDirection: "column" }}>
+          <SealFooter signLabel="Sign and publish" busyLabel="Signing and publishing…" />
+        </div>
+        <div style={{ display: "{{signFootShown}}", flexDirection: "column" }}>
+          <SealFooter signLabel="Sign and publish" busy busyLabel="Signing and publishing…" />
+        </div>
       </div>
     </>
   );

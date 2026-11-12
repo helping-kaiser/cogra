@@ -758,11 +758,18 @@ type Record {
   targetId: String!
   "Hyper-edge only: the terminal leg's node — minted by the act
    (Review's Comment, Send's Message, Bid's Offer) or pre-existing
-   (Tag's Type, Invitation's Profile, Reference's cited target).
-   Null on binary families."
+   (Invitation's Profile, Reference's cited target; a Tag's Type,
+   which no Node types — `topic` serves it). Null on binary families."
   terminal: Node
   "The raw L1 identifier of terminal; null on binary families."
   terminalId: String
+  "The topic the record ends at: the Type its terminal leg reaches —
+   a Tag's topic — or, on a binary family, its target's — an Opinion
+   or Affinity toward a topic. A Type is a commons, not a node CoGra
+   carries a row for, so terminal and target cannot type it; this
+   does — the chronicle's and the trace's `#saltmaps` aside. Null
+   when the record's far end is no Type."
+  topic: Hashtag
   "Act time 𝕋^act: the recomputable summary of the order the record
    carries. It decides no precedence — the key of record
    (landingEpoch, position) orders."
@@ -857,6 +864,11 @@ enum RecordAct {
    standing that said something, and every record of a severance
    batch that did. An empty sign is never one."
   WALK_BACK
+  "A record a citation withdrawal signed: every counter-record that
+   netted its author's citation bundle — (author, citing artifact,
+   target) — back to (0, 0) from a standing that said something,
+   recognised by the same shape as a walk-back's batch."
+  WITHDRAWAL
   "The Opinion that vouched someone in: of an account's approval
    vouches, the first to land, which landed the account — the record
    behind User.invitedBy. Any later vouch-Opinion is ORDINARY."
@@ -896,7 +908,18 @@ type CommentEdge {
 type RecordConnection {
   edges: [RecordEdge!]!
   pageInfo: PageInfo!
+  "How many records the filter matches, across every page — each
+   revision one."
   totalCount: Int
+  "How many bundles the filter's records fold into, across every
+   page: one author's records in one family toward one target (and,
+   on a hyper-edge, one terminal) are one bundle, however often it
+   was revised — the count a figure of people reads, where
+   totalCount counts each revision. A payload-marked record folds
+   through no bundle and counts as its own. Null on a ranking
+   slice's records (RankHop.records), which are a reach, not a
+   filter. Priced at zero, as totalCount is."
+  bundleCount: Int
 }
 type RecordEdge {
   cursor: String!
@@ -925,14 +948,26 @@ A walk-back is the act that lands a bundle that says something at
 there, or a severance batch, every record of it. The batch is
 recognised by its shape — the counter-records the sum standing before
 it stages — compared whatever order the host published them in,
-since a batch's records declare no dependency on one another. Which
+since a batch's records declare no dependency on one another. A
+citation's withdrawal is the same shape on the Reference family: the
+counter-records that net an (author, citing artifact, target) bundle
+to `(0, 0)` (`prepareReferenceWithdrawal`), read off that bundle
+the same way — the record carries no marker of it. Which
 vouch landed an account is the application ledger's: the first of
 the account's approval vouches to land, the one `User.invitedBy`
 names. The `genesis` filter on the record reads keeps exactly the
 GENESIS records (`true`) or the rest (`false`), so a count and the
-rows it counts never disagree; the profile's `Posts` figure is
-`outgoingRecords(family: PUBLISH, toKind: POST, genesis: true)`'s
-`totalCount` ([open-questions.md Q35](../open-questions.md)).
+rows it counts never disagree. The profile's figures count bundles,
+never records ([open-questions.md Q35](../open-questions.md)): one
+person's opinions toward one target are one, however often revised.
+`Posts` is `outgoingRecords(family: PUBLISH, toKind: POST, genesis:
+true)`'s `totalCount` — one genesis per post, so its records are its
+bundles. `Opinions on them` is `incomingRecords(family: OPINION,
+payloadMarked: false)`'s `bundleCount` — the people holding an
+opinion on the person — and `Opinions by them` is
+`outgoingRecords(family: OPINION, toKind: USER, payloadMarked:
+false)`'s — the people they hold one on: exactly the rows the
+opinions page lists, which folds the same unmarked records.
 
 ### Per-field moderation
 
@@ -1256,6 +1291,16 @@ type User implements Node & Actor {
    anyone else's feed. Most recently hidden first; keyset on
    `(hiddenAt, actor id)`. Field-level: viewer-only."
   hiddenActors(first: Int, after: String, last: Int, before: String): HiddenActorConnection
+  "The people this user vouched in — every account whose admitting
+   vouch, the one `invitedBy` names on that account, is this user's
+   Opinion (auth.md \"Approval and landing\"). A vouch on an account
+   that has not landed, and a later vouch-Opinion on one that has, is
+   not one. Newest vouch first, keyset on the vouch record's
+   landing-order key; `vouchedAt` is that record's `landedAt`. The
+   admission stands whatever followed it: a stance walked back since,
+   or the account deleted since, which reads as every deleted account
+   reads. An invalid cursor is BAD_INPUT. Field-level: viewer-only."
+  vouchedIn(first: Int, after: String, last: Int, before: String): VouchedInConnection
   "The topics the viewer holds — every Type toward which their netted
    Affinity bundle is not (0, 0): the read-side bundle fold (The
    generic stance) taken across every Type at once, and nothing else.
@@ -2033,6 +2078,18 @@ type HiddenActorEdge {
   hiddenAt: DateTime!
 }
 
+"The people the viewer vouched in (`User.vouchedIn`)."
+type VouchedInConnection {
+  edges: [VouchedInEdge!]!
+  pageInfo: PageInfo!
+}
+"One person the viewer let in, and when the vouch that did it landed."
+type VouchedInEdge {
+  cursor: String!
+  node: Actor!
+  vouchedAt: DateTime!
+}
+
 "The held-topics page (`User.heldTopics`). `totalCount` is how many
  topics the viewer holds, across every page — the list's length."
 type HeldTopicConnection {
@@ -2733,6 +2790,18 @@ type Query {
    no handle, no current address, no id."
   emailChangeLinkCheck(token: String!): EmailChangeLinkCheck
 
+  "Anonymous check of a password-reset link, so the app opens the
+   expired-link screen rather than a form that can only fail
+   (ResetNew, ResetExpired). True while the link is live — the token
+   known, unused and unexpired — the predicate
+   `confirmPasswordReset` consumes it under. It reads and never
+   writes: nothing is consumed. Unknown, malformed, used and expired
+   all answer false alike, and the answer carries nothing about the
+   account the link belongs to. Spends the per-IP token-confirmation
+   budget, a tripped one answering RATE_LIMITED (auth.md \"Rate
+   limiting\")."
+  passwordResetLinkCheck(token: String!): Boolean!
+
   "The governed network parameters, from the operational carrier —
    all of them, or the named keys. The catalog is network.md's; the
    charter schedule on L1 is binding. Unknown keys are omitted; an
@@ -2827,14 +2896,11 @@ type Query {
    rows, never an error. A `kinds` filter drops sections and keeps the
    rest's semantics. COLLECTIVE, CHAT, CHAT_MESSAGE, ITEM and OFFER join
    with their slices and read empty until then. An empty `kinds` list
-   means the same as null (no narrowing). `includeSeen: false` drops
-   nodes on the reader's seen-list (`User.viewHistory`); it needs a
-   session and is ignored without one. Full semantics in the Search
-   section."
+   means the same as null (no narrowing). The reader's seen-list never
+   narrows a search. Full semantics in the Search section."
   search(
     query: String!
     kinds: [NodeKind!]
-    includeSeen: Boolean = true
     order: ReadOrder = NEWEST
     viewer: UUID
     first: Int, after: String, last: Int, before: String
@@ -3162,9 +3228,9 @@ rest's semantics: a filter that excludes people drops the profiles
 and keeps the authored content a person cue or a display-name match
 brings; one that keeps only people keeps just the profiles.
 
-`includeSeen` defaults to `true`, which keeps the anonymous read
-stable; the client passes the reader's "Show what you've already
-seen" filter, which is off by default.
+**The seen-list never narrows a search.** Search reaches every node
+the matcher finds, whether or not the reader has seen it — people and
+topics included.
 
 **Match semantics.** Hashtag names match case-insensitively by
 substring under plain text; handles and Hashtag names match by prefix
@@ -5720,6 +5786,11 @@ type InviteLinkCheck {
   usable: Boolean!
   "The issuing actor's handle."
   inviterHandle: String!
+  "The issuing actor as a public profile — the face and the name the
+   registration form stands under (Join); its handle is
+   inviterHandle's value. Nullable as every actor reference is
+   (Application.approver)."
+  inviter: Actor
   expiresAt: DateTime!
 }
 

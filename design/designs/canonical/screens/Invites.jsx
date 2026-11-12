@@ -44,8 +44,9 @@ export const PROPS = {
   sections: { editor: "enum", options: ["both", "no-applications", "no-links"], default: "both" },
   asker: { editor: "enum", options: ["named", "deleted"], default: "named" },
   copy: { editor: "enum", options: ["rest", "failed"], default: "rest" },
+  letIn: { editor: "enum", options: ["none", "people", "deleted"], default: "none" },
 };
-export const VALS = `keptShown: this.props.kept === "waiting" ? "block" : "none", revokeRestShown: this.props.revoke === "waiting" ? "none" : "block", revokeBusyShown: this.props.revoke === "waiting" ? "block" : "none", applicationsShown: this.props.sections === "no-applications" ? "none" : "flex", applicationsEmptyShown: this.props.sections === "no-applications" ? "block" : "none", linksShown: this.props.sections === "no-links" ? "none" : "flex", linksEmptyShown: this.props.sections === "no-links" ? "block" : "none", askerNamedShown: this.props.asker === "deleted" ? "none" : "flex", askerDeletedShown: this.props.asker === "deleted" ? "flex" : "none", copyFailedShown: this.props.copy === "failed" ? "block" : "none"`;
+export const VALS = `keptShown: this.props.kept === "waiting" ? "block" : "none", revokeRestShown: this.props.revoke === "waiting" ? "none" : "block", revokeBusyShown: this.props.revoke === "waiting" ? "block" : "none", applicationsShown: this.props.sections === "no-applications" ? "none" : "flex", applicationsEmptyShown: this.props.sections === "no-applications" ? "block" : "none", linksShown: this.props.sections === "no-links" ? "none" : "flex", linksEmptyShown: this.props.sections === "no-links" ? "block" : "none", askerNamedShown: this.props.asker === "deleted" ? "none" : "flex", askerDeletedShown: this.props.asker === "deleted" ? "flex" : "none", copyFailedShown: this.props.copy === "failed" ? "block" : "none", peopleShown: this.props.letIn === "none" ? "none" : "flex", personNamedShown: this.props.letIn === "deleted" ? "none" : "flex", personDeletedShown: this.props.letIn === "deleted" ? "flex" : "none"`;
 
 export function Screen() {
   return (
@@ -60,6 +61,9 @@ export function Screen() {
         askerNamed: "{{askerNamedShown}}",
         askerDeleted: "{{askerDeletedShown}}",
         copyFailed: "{{copyFailedShown}}",
+        people: "{{peopleShown}}",
+        personNamed: "{{personNamedShown}}",
+        personDeleted: "{{personDeletedShown}}",
       }}
     />
   );

@@ -9,11 +9,15 @@
 // reading is search's own (FeedFilter.jsx: "search draws its own, with its own
 // kind semantics").
 //
-// THE ORDER AND THE SEEN TOGGLE ARE THE READER'S DEFAULT (ExploreFilter.md:11-15,
-// the one default object, fix-fix ruling 12; SettingsReading.md: "search's
-// order and its already-seen toggle follow the reader's saved default, and
-// search's kinds stay search's own"): the feed default the reader saved in
-// Settings on this device (`reader-default.ts`), CoGra's until they set one.
+// THE ORDER IS THE READER'S DEFAULT (ExploreFilter.md:11-13, the one default
+// object, fix-fix ruling 12; SettingsReading.md): the feed default the reader
+// saved in Settings on this device (`reader-default.ts`), CoGra's until they
+// set one. Search takes only the order from it; the default's seen toggle is
+// the feed's alone.
+//
+// SEARCH NEVER LOOKS AT THE SEEN-LIST (jakob's ruling 2026-11-11, seam 296;
+// api-spec.md "The seen-list never narrows a search"): the filter holds no
+// seen toggle and the request names none.
 
 import type { NodeKind, ReadOrder } from "@/__generated__/graphql";
 import type { FeedKindValue } from "@/lib/feed/feed-filter";
@@ -25,8 +29,6 @@ export type SearchFilterValue = {
   /** The kinds on; none on reads every kind. */
   readonly kinds: readonly FeedKindValue[];
   readonly order: SearchOrder;
-  /** Show what you've already seen. */
-  readonly seen: boolean;
 };
 
 /** `FEED_KINDS` (FeedFilter.jsx:69-74): the value is the record's word, the label the reader's. */
@@ -43,26 +45,25 @@ export const SEARCH_ORDERS: readonly { readonly value: SearchOrder; readonly lab
   { value: "newest", label: "Newest" },
 ];
 
-/** CoGra's own default for search's shared axes (ExploreFilter.md:15). */
-export const APP_SEARCH_DEFAULT: SearchFilterValue = { kinds: [], order: "ranked", seen: false };
+/** CoGra's own default for search's shared axis (ExploreFilter.md:15). */
+export const APP_SEARCH_DEFAULT: SearchFilterValue = { kinds: [], order: "ranked" };
 
 /**
  * The reader's default (ExploreFilter.md:11-13): no kind narrowed, the order
- * and the seen toggle at `account`'s own feed-filter default — CoGra's where
- * they set none, and always for a guest.
+ * at `account`'s own feed-filter default — CoGra's where they set none, and
+ * always for a guest.
  */
 export function readerSearchDefault(account: string | null = null): SearchFilterValue {
   const saved = readReaderDefault(account);
-  return { kinds: APP_SEARCH_DEFAULT.kinds, order: saved.order, seen: saved.seen };
+  return { kinds: APP_SEARCH_DEFAULT.kinds, order: saved.order };
 }
 
 /**
  * A GUEST'S SEARCH (ExploreSearch.md:65; ExploreFilter.md:41, digest item 28):
- * newest first, no rank, no seen toggle — there is no viewpoint to rank from
- * and no seen-list to keep out.
+ * newest first, no rank — there is no viewpoint to rank from.
  */
 export function guestSearchFilter(kinds: readonly FeedKindValue[] = []): SearchFilterValue {
-  return { kinds, order: "newest", seen: true };
+  return { kinds, order: "newest" };
 }
 
 const KIND_OF: Record<FeedKindValue, NodeKind> = {
@@ -95,8 +96,7 @@ function labelOf(kind: FeedKindValue): string {
  * words) — the one kind's name with one on, `All kinds` with all four, else
  * the count (`2 kinds`). Then only the deviations from `against`, the reader's
  * default, in the feed filter's words: `newest` / `ranked` for the order (a
- * deviation back toward the app's default is a deviation too), `showing seen`
- * / `hiding seen` for the toggle.
+ * deviation back toward the app's default is a deviation too).
  */
 export function searchFilterSummary(
   value: SearchFilterValue,
@@ -113,7 +113,6 @@ export function searchFilterSummary(
           : `${kinds.length} kinds`;
   const extras: string[] = [];
   if (value.order !== against.order) extras.push(value.order);
-  if (value.seen !== against.seen) extras.push(value.seen ? "showing seen" : "hiding seen");
   return [head, ...extras].join(" · ");
 }
 
@@ -123,7 +122,7 @@ function sameSet<T>(a: readonly T[], b: readonly T[]): boolean {
 
 /** Whether two filters ask the same question. */
 export function sameSearchFilter(a: SearchFilterValue, b: SearchFilterValue): boolean {
-  return sameSet(a.kinds, b.kinds) && a.order === b.order && a.seen === b.seen;
+  return sameSet(a.kinds, b.kinds) && a.order === b.order;
 }
 
 /** A kind chip's tap: on joins, off leaves; the list's order is kept. */
@@ -156,8 +155,9 @@ export function readCommittedFilter(account: string | null): SearchFilterValue |
     const value = JSON.parse(raw) as Partial<SearchFilterValue>;
     if (!Array.isArray(value.kinds) || !value.kinds.every(isKind)) return null;
     if (value.order !== "ranked" && value.order !== "newest") return null;
-    if (typeof value.seen !== "boolean") return null;
-    return { kinds: value.kinds, order: value.order, seen: value.seen };
+    // A filter kept before search lost its seen toggle still carries one; it
+    // is read past, never kept.
+    return { kinds: value.kinds, order: value.order };
   } catch {
     return null;
   }

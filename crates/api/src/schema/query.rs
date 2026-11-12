@@ -28,6 +28,7 @@ use super::types::{
 };
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
+use crate::ratelimit::{self, RateLimitConfig};
 use crate::search::{self, IndexKind, ScopedKind};
 
 /// Connectivity report for the API process and its store.
@@ -101,7 +102,11 @@ impl Query {
             .ok_or_else(|| super::faults::Fault::new("invite link without inviter"))?;
         Ok(Some(InviteLinkCheck {
             usable: store::invite_link_usable(pool, id).await?,
-            inviter_handle: inviter.handle,
+            inviter_handle: inviter.handle.clone(),
+            inviter: Some(Actor::User(User {
+                identity: inviter,
+                viewer_session: None,
+            })),
             expires_at: link.expires_at,
         }))
     }
@@ -153,6 +158,31 @@ impl Query {
                     new_email: change.new_email,
                 }),
         )
+    }
+
+    /// Anonymous check of a password-reset link, so the app opens the
+    /// expired-link screen rather than a form that can only fail. True
+    /// while the link is live — the token known, unused and unexpired —
+    /// the predicate `confirmPasswordReset` consumes it under.
+    /// It reads and never writes: nothing is consumed. Unknown, malformed,
+    /// used and expired all answer false alike, and the answer carries
+    /// nothing about the account the link belongs to. Spends the per-IP
+    /// token-confirmation budget, a tripped one answering RATE_LIMITED.
+    async fn password_reset_link_check(
+        &self,
+        ctx: &Context<'_>,
+        token: String,
+    ) -> async_graphql::Result<bool> {
+        let pool = ctx.data::<PgPool>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        super::mutation::guard_window(
+            ctx,
+            ratelimit::scope::CONFIRM_IP,
+            &super::mutation::request_ip(ctx)?,
+            limits.confirm_ip,
+        )
+        .await?;
+        Ok(store::password_reset_live(pool, &crate::auth::hash_of(&token)).await?)
     }
 
     /// The viewer's own account, resolved from the request's auth token.
@@ -390,7 +420,7 @@ impl Query {
         ids: Vec<Uuid>,
     ) -> async_graphql::Result<Vec<Option<Node>>> {
         if ids.len() > super::types::MAX_PAGE_SIZE as usize {
-            return Err(async_graphql::Error::new(format!(
+            return Err(bad_input(format!(
                 "at most {} ids per lookup",
                 super::types::MAX_PAGE_SIZE
             )));
@@ -573,7 +603,7 @@ impl Query {
         let Ok(search::Parsed::Unscoped(text)) = search::parse(text) else {
             return Ok(Vec::new());
         };
-        let request = search::unscoped(text, &kinds, None, true);
+        let request = search::unscoped(text, &kinds, true);
         let hits = search_store::find(pool, &request, None, false, i64::from(limit)).await?;
         Ok(hydrate(pool, hits)
             .await?
@@ -615,9 +645,8 @@ impl Query {
     /// filter drops sections and keeps the rest's semantics. COLLECTIVE,
     /// CHAT, CHAT_MESSAGE, ITEM and OFFER join with their slices and read
     /// empty until then. An empty `kinds` list means the same as null (no
-    /// narrowing). `includeSeen: false` drops nodes on the reader's
-    /// seen-list (`User.viewHistory`); it needs a session and is ignored
-    /// without one. Full semantics in the Search section.
+    /// narrowing). The reader's seen-list never narrows a search. Full
+    /// semantics in the Search section.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
     #[expect(
         clippy::too_many_arguments,
@@ -628,7 +657,6 @@ impl Query {
         ctx: &Context<'_>,
         query: String,
         kinds: Option<Vec<NodeKind>>,
-        #[graphql(default_with = "Some(true)")] include_seen: Option<bool>,
         #[graphql(default_with = "Some(ReadOrder::Newest)")] order: Option<ReadOrder>,
         viewer: Option<Uuid>,
         first: Option<i32>,
@@ -637,8 +665,7 @@ impl Query {
         before: Option<String>,
     ) -> async_graphql::Result<SearchConnection> {
         let pool = ctx.data::<PgPool>()?;
-        validate_page_args(first, last, after.as_deref(), before.as_deref())
-            .map_err(|e| bad_input(e.message))?;
+        validate_page_args(first, last, after.as_deref(), before.as_deref())?;
         let ranked_for = match (order.unwrap_or_default(), viewer) {
             (ReadOrder::Ranked, None) => {
                 return Err(bad_input("order: RANKED ranks for a viewer; name one"));
@@ -672,13 +699,7 @@ impl Query {
             ))
         })?;
         let empty = || search_page(Vec::new(), had_cursor, backward, false, None, None);
-        let reader = match ctx.data_opt::<Option<Viewer>>() {
-            Some(Some(v)) => Some(v.user_id),
-            _ => None,
-        };
-        let exclude_seen_by = reader.filter(|_| include_seen == Some(false));
-        let Some(request) = search_request(ctx, parsed, kinds.as_deref(), exclude_seen_by).await?
-        else {
+        let Some(request) = search_request(ctx, parsed, kinds.as_deref()).await? else {
             return Ok(empty());
         };
         if let Some(viewer) = ranked_for {
@@ -900,9 +921,7 @@ async fn lookup_actor(
             Ok(folded) => Ok(store::actor_identity_by_handle(pool, &folded).await?),
             Err(_) => Ok(None),
         },
-        _ => Err(async_graphql::Error::new(
-            "provide exactly one of id or handle",
-        )),
+        _ => Err(bad_input("provide exactly one of id or handle")),
     }
 }
 
@@ -922,20 +941,13 @@ pub(super) async fn search_request(
     ctx: &Context<'_>,
     parsed: search::Parsed<'_>,
     kinds: Option<&[NodeKind]>,
-    exclude_seen_by: Option<Uuid>,
 ) -> async_graphql::Result<Option<search_store::SearchRequest>> {
     Ok(match parsed {
         search::Parsed::Blank => None,
         search::Parsed::Unscoped(text) => {
             let kinds = served_kinds(kinds);
-            (!kinds.is_empty()).then(|| {
-                search_store::SearchRequest::Match(search::unscoped(
-                    text,
-                    &kinds,
-                    exclude_seen_by,
-                    false,
-                ))
-            })
+            (!kinds.is_empty())
+                .then(|| search_store::SearchRequest::Match(search::unscoped(text, &kinds, false)))
         }
         search::Parsed::Scoped {
             scope,
@@ -950,7 +962,6 @@ pub(super) async fn search_request(
                 named,
                 remainder,
                 &kinds,
-                exclude_seen_by,
                 viewer_address(ctx).await?,
             )))
         }

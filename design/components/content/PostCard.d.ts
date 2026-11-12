@@ -103,7 +103,7 @@ export interface PostCardProps {
    * the pad closed, Set's state with it open; or a read-side comfort's
    * revert said on the row. Pass-through to `StanceControl`'s `signing`.
    */
-  stanceSigning?: "busy" | "failed" | "writeRule" | "comfortFailed";
+  stanceSigning?: "pressed" | "busy" | "failed" | "writeRule" | "comfortFailed";
   /** Forwarded to `StanceControl`'s `holdProgress`: the hold's ring drawn standing at this 0–1 fill, for a board. */
   stanceHoldProgress?: number;
   /** Forwarded to `StanceControl`'s `knobHeld`: the pad's knob drawn under the finger, its pressed layer around it, for a board. */
@@ -194,11 +194,12 @@ export interface PostCardProps {
    */
   actions?: React.ReactNode;
   /**
-   * Extra overflow-menu items, appended after the license entry. The rare
+   * The overflow menu's rows. The license entry is appended after them, and
+   * a row marked `tail` (the report row) stands after the license. The rare
    * interactions live here — report, open a proposal, copy a link — so the
    * affordance row keeps only what a reader reaches for.
    */
-  menuItems?: readonly { label: string; onSelect?: () => void }[];
+  menuItems?: readonly { label: string; onSelect?: () => void; tail?: boolean }[];
   /**
    * Stands where the author chip stands, for a feed kind that is not a post —
    * a message's sender and chat, a chat's disc, name and kind mark. Additive.

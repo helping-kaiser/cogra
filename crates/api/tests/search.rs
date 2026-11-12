@@ -1,7 +1,7 @@
 //! `Query.search` and the finder over the one matcher (api-spec.md
 //! "Search"; search-surface packet B1): what the index holds, how a
-//! query matches it, the order and the keyset over it, the kind and
-//! seen-list filters, and the three refusals.
+//! query matches it, the order and the keyset over it, the kind filter,
+//! that the seen-list never narrows it, and the three refusals.
 //!
 //! Content is seeded through the store's own writers, so the authoring
 //! instants — the recency key — are chosen by the test; the database's
@@ -28,9 +28,9 @@ use uuid::Uuid;
 
 type Timestamp = chrono::DateTime<chrono::Utc>;
 
-const SEARCH: &str = r#"query($query: String!, $kinds: [NodeKind!], $includeSeen: Boolean,
+const SEARCH: &str = r#"query($query: String!, $kinds: [NodeKind!],
                                $first: Int, $after: String, $last: Int, $before: String) {
-  search(query: $query, kinds: $kinds, includeSeen: $includeSeen,
+  search(query: $query, kinds: $kinds,
          first: $first, after: $after, last: $last, before: $before) {
     edges {
       cursor
@@ -423,21 +423,7 @@ async fn a_redacted_handle_never_matches_redacted(pool: PgPool) {
     let sol = person(&rig.pool, "sol", Some("Sol Brine")).await;
     person(&rig.pool, "kel", None).await;
 
-    sqlx::query(
-        "INSERT INTO actor_profile_versions
-             (actor_id, display_name, redaction_reason, landed_epoch, act_time, position)
-         VALUES ($1, '[redacted]', 'policy', 99, 99, 1)",
-    )
-    .bind(sol)
-    .execute(&rig.pool)
-    .await
-    .expect("tombstone");
-    sqlx::query("UPDATE actors SET handle = $2 WHERE id = $1")
-        .bind(sol)
-        .bind(format!("redacted-user-{sol}"))
-        .execute(&rig.pool)
-        .await
-        .expect("sentinel");
+    rig.execute_deletion(sol).await;
 
     for typed in ["redacted", "sol", "brine", &sol.to_string()] {
         let found = search(&rig, None, json!({ "query": typed })).await;
@@ -767,101 +753,78 @@ async fn seen(rig: &WireRig, token: &str, content: Uuid) {
     assert_eq!(marked["markSeen"]["ok"], true, "{marked}");
 }
 
-/// With a session, `includeSeen: false` drops what the viewer has seen
-/// — wherever they saw it — and the default keeps it.
+/// Search never looks at the seen-list: a post, a person, a topic and a
+/// comment the reader has opened are found as if they had not been
+/// (api-spec.md "The seen-list never narrows a search"). Plain words find
+/// the post, the person and the topic; the comment, which plain words
+/// never reach, is found under its author's cue.
 ///
-/// includeSeen false drops the nodes on the viewer's seen-list, and the default keeps them.
-/// ´claim:search:include-seen-false-drops-seen-nodes´
+/// Search finds what the reader has already seen, people and topics included.
+/// ´claim:search:search-finds-what-the-reader-has-seen´
 #[sqlx::test(migrations = "../../migrations")]
-async fn include_seen_false_drops_seen_nodes(pool: PgPool) {
+async fn search_finds_what_the_reader_has_seen(pool: PgPool) {
     let rig = rig(pool);
     rig.seed_member("reader", "reader@example.test").await;
     let token = rig.log_in("reader@example.test").await;
     let sol = person(&rig.pool, "saltine", None).await;
-    let read = post(&rig.pool, sol, 1, Some("Salt read"), None, "x").await;
-    post(&rig.pool, sol, 2, Some("Salt fresh"), None, "x").await;
-    seen(&rig, &token, read).await;
-    seen(&rig, &token, sol).await;
-
-    let kept = search(&rig, Some(&token), json!({ "query": "salt" })).await;
-    assert_eq!(
-        names(&kept),
-        vec!["User:saltine", "Post:Salt fresh", "Post:Salt read"]
-    );
-    let dropped = search(
-        &rig,
-        Some(&token),
-        json!({ "query": "salt", "includeSeen": false }),
-    )
-    .await;
-    assert_eq!(names(&dropped), vec!["Post:Salt fresh"]);
-    assert_eq!(dropped["totalCount"], 1);
-}
-
-/// The exclusion runs server-side, so a page still carries as many
-/// results as were asked for, and the next page picks up where it ended.
-/// The three newest are seen, so a client-side filter would serve two.
-///
-/// The seen-list exclusion keeps page sizes whole.
-/// ´claim:search:include-seen-false-keeps-page-sizes´
-#[sqlx::test(migrations = "../../migrations")]
-async fn include_seen_false_keeps_page_sizes(pool: PgPool) {
-    let rig = rig(pool);
-    rig.seed_member("reader", "reader@example.test").await;
-    let token = rig.log_in("reader@example.test").await;
-    let sol = person(&rig.pool, "sol", None).await;
-    let mut posts = Vec::new();
-    for n in 0..10 {
-        posts.push(post(&rig.pool, sol, n, Some(&format!("Salt {n}")), None, "x").await);
-    }
-    for id in &posts[7..] {
-        seen(&rig, &token, *id).await;
+    let read = post_as(&rig.pool, sol, &minted("saltine", 1), 1, Some("Salt read")).await;
+    post_as(&rig.pool, sol, &minted("saltine", 2), 2, Some("Salt fresh")).await;
+    let answer = comment_as(&rig.pool, sol, &minted("saltine", 3), (read, "post"), 3).await;
+    let topic = {
+        let mut conn = rig.pool.acquire().await.expect("conn");
+        hashtag::upsert(&mut conn, "saltmaps").await.expect("tag")
+    };
+    for node in [read, sol, answer, topic] {
+        seen(&rig, &token, node).await;
     }
 
-    let first = search(
-        &rig,
-        Some(&token),
-        json!({ "query": "salt", "includeSeen": false, "first": 5 }),
-    )
-    .await;
+    let found = search(&rig, Some(&token), json!({ "query": "salt" })).await;
     assert_eq!(
-        names(&first),
+        names(&found),
         vec![
-            "Post:Salt 6",
-            "Post:Salt 5",
-            "Post:Salt 4",
-            "Post:Salt 3",
-            "Post:Salt 2"
+            "User:saltine",
+            "Hashtag:saltmaps",
+            "Post:Salt fresh",
+            "Post:Salt read"
         ]
     );
-    assert_eq!(first["pageInfo"]["hasNextPage"], true);
-    let second = search(
-        &rig,
-        Some(&token),
-        json!({ "query": "salt", "includeSeen": false, "first": 5,
-                "after": first["pageInfo"]["endCursor"] }),
-    )
-    .await;
-    assert_eq!(names(&second), vec!["Post:Salt 1", "Post:Salt 0"]);
-    assert_eq!(second["pageInfo"]["hasNextPage"], false);
+    assert_eq!(found["totalCount"], 4);
+    let cued = scoped(&rig, Some(&token), json!({ "query": "@saltine salt" })).await;
+    assert_eq!(
+        hits(&cued),
+        vec![
+            as_comment(answer),
+            "Post:Salt fresh".to_string(),
+            "Post:Salt read".to_string()
+        ]
+    );
+    assert_eq!(cued["totalCount"], 3);
 }
 
-/// Without a session there is no seen-list to read: `includeSeen: false`
-/// is ignored rather than refused.
+/// The search declares no seen argument: a request that names one is
+/// refused by validation, so no client can ask search to read the
+/// seen-list.
 ///
-/// includeSeen is ignored without a session.
-/// ´claim:search:include-seen-needs-a-session´
+/// Search declares no seen argument.
+/// ´claim:search:search-declares-no-seen-argument´
 #[sqlx::test(migrations = "../../migrations")]
-async fn include_seen_is_ignored_without_a_session(pool: PgPool) {
+async fn search_declares_no_seen_argument(pool: PgPool) {
     let rig = rig(pool);
-    rig.seed_member("reader", "reader@example.test").await;
-    let token = rig.log_in("reader@example.test").await;
-    let sol = person(&rig.pool, "sol", None).await;
-    let read = post(&rig.pool, sol, 1, Some("Salt"), None, "x").await;
-    seen(&rig, &token, read).await;
-
-    let found = search(&rig, None, json!({ "query": "salt", "includeSeen": false })).await;
-    assert_eq!(names(&found), vec!["Post:Salt"]);
+    let response = rig
+        .gql_raw(
+            None,
+            r#"query { search(query: "salt", includeSeen: false) { totalCount } }"#,
+            json!({}),
+        )
+        .await;
+    let refused = response["errors"].as_array().is_some_and(|errors| {
+        errors.iter().any(|e| {
+            e["message"]
+                .as_str()
+                .is_some_and(|m| m.contains("includeSeen"))
+        })
+    });
+    assert!(refused, "{response}");
 }
 
 /// A blank query is the field before anything is typed: an empty
@@ -1191,9 +1154,9 @@ async fn claim_pair(
     .expect("ingests");
 }
 
-const SCOPED: &str = r#"query($query: String!, $kinds: [NodeKind!], $includeSeen: Boolean,
+const SCOPED: &str = r#"query($query: String!, $kinds: [NodeKind!],
                                $first: Int, $after: String, $last: Int, $before: String) {
-  search(query: $query, kinds: $kinds, includeSeen: $includeSeen,
+  search(query: $query, kinds: $kinds,
          first: $first, after: $after, last: $last, before: $before) {
     edges {
       node {
@@ -1698,15 +1661,7 @@ async fn an_unknown_handle_scope_with_text_reads_empty(pool: PgPool) {
     let rig = rig(pool);
     let sol = person(&rig.pool, "sol", None).await;
     post_as(&rig.pool, sol, &minted("sol", 1), 1, Some("Salt maps")).await;
-    sqlx::query(
-        "INSERT INTO actor_profile_versions
-             (actor_id, display_name, redaction_reason, landed_epoch, act_time, position)
-         VALUES ($1, '[redacted]', 'policy', 99, 99, 1)",
-    )
-    .bind(sol)
-    .execute(&rig.pool)
-    .await
-    .expect("tombstone");
+    rig.execute_deletion(sol).await;
 
     for typed in [
         "@nobody salt",
@@ -1761,8 +1716,8 @@ async fn a_handle_scope_with_text_returns_no_profile_row(pool: PgPool) {
 /// A cue search keeps the matcher's order and keyset: the topics
 /// section first, then content — exact title first, then newest first
 /// across posts and comments alike; every page forward and backward
-/// yields the one-shot order; the seen exclusion applies inside a cue
-/// too.
+/// yields the one-shot order; a node the reader has seen keeps its place
+/// inside a cue too.
 ///
 /// Scoped pages keep the matcher's order and are stable in both directions.
 /// ´claim:search:scoped-pages-are-stable-and-complete´
@@ -1840,14 +1795,14 @@ async fn scoped_pages_are_stable_and_complete(pool: PgPool) {
 
     let seen_comment = comments[3];
     seen(&rig, &token, seen_comment).await;
-    let unseen = scoped(
+    let after_seeing = scoped(
         &rig,
         Some(&token),
-        json!({ "query": "@sol salt", "first": 100, "includeSeen": false }),
+        json!({ "query": "@sol salt", "first": 100 }),
     )
     .await;
-    assert_eq!(unseen["totalCount"], 14);
-    assert!(!hits(&unseen).contains(&as_comment(seen_comment)));
+    assert_eq!(after_seeing["totalCount"], 15);
+    assert_eq!(hits(&after_seeing), expected, "seeing narrows nothing");
 }
 
 /// A removed comment's current version is a tombstone: it is never found

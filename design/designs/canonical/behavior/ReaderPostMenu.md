@@ -18,6 +18,12 @@ WHEN tap Hide with the author's handle GIVEN the menu was opened from the post b
 
 WHEN tap Hide with the author's handle GIVEN the hide does not go through -> the hide reverts AND the target's row says so with Retry
 
+ALWAYS the hide row reads Unhide with the author's handle GIVEN the author is already hidden, wherever their post still stands — the post reached by a link or a search, Saved, the tag's page, and History until its next load — and keeps its one name whatever it reads
+
+WHEN tap Unhide with the author's handle -> the sheet closes AND the reader stays where the menu was opened AND the author is unhidden AND the snackbar reads @ada is unhidden — their posts can reach your feed again. with Undo AND NEVER a confirm step appears
+
+WHEN tap Unhide with the author's handle GIVEN the unhide does not go through -> the unhide reverts AND the target's row says That didn't go through. with Retry
+
 WHEN tap Cite in a new post -> the post wizard opens fresh at its first stage AND the post rides along unseen until the details stage
 
 WHEN tap License terms -> the menu closes AND the post's terms come up in a sheet over the surface the menu was opened from

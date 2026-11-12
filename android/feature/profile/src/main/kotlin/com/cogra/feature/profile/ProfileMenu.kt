@@ -12,10 +12,11 @@
 //   account, Report — no Mention row and no handle anywhere.
 //
 // BUILT WHOLE, WIRED IN PART (saved-surface SS-1; the introduced-but-inert
-// law, jakob 2026-09-14): Mention waits on the wizard's profile reference,
-// and — on this platform — Report on the report confirm reaching the
-// profile (it lives in the content feature). Those rows stand at full
-// strength and do nothing yet; the hand-test notes name each.
+// law, jakob 2026-09-14): on this platform Report waits on the report
+// confirm reaching the profile (it lives in the content feature); that row
+// stands at full strength and does nothing yet. Mention opens the wizard
+// with the person staged as a reference — a citation whose target is a
+// User is a mention (api-spec.md, `ReferenceTarget`).
 
 package com.cogra.feature.profile
 
@@ -44,6 +45,8 @@ internal fun ProfileMenu(
     onShare: () -> Unit,
     /** The guest gate a signed-out reader's rows open; null when signed in. */
     onRequireAccount: (() -> Unit)?,
+    /** `Mention in a new post` on another's sheet (ProfileMenu.md:17-19); the own and deleted sheets have none. */
+    onMention: () -> Unit = {},
 ) {
     val inert: () -> Unit = {}
     val gated: (() -> Unit) -> () -> Unit = { act -> { onRequireAccount?.invoke() ?: act() } }
@@ -71,8 +74,7 @@ internal fun ProfileMenu(
 
         ProfileMenuKind.OTHER -> listOf(
             save,
-            // INERT until the wizard takes a profile as a staged reference.
-            MenuRow(stringResource(R.string.profile_menu_mention), (SHEET / "mention").tag, gated(inert)),
+            MenuRow(stringResource(R.string.profile_menu_mention), (SHEET / "mention").tag, gated(onMention)),
             MenuRow(share, (SHEET / "share").tag, onShare),
             MenuRow(stringResource(R.string.profile_menu_hide, "@${profile.handle}"), (SHEET / "hide").tag, hideAct),
             report,

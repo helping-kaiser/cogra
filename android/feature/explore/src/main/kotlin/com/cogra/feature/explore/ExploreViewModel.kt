@@ -364,7 +364,6 @@ class ExploreViewModel @Inject constructor(
         return SearchAsk(
             query = text,
             kinds = filter.kinds,
-            includeSeen = guest || filter.seen,
             order = order,
             viewer = reader.takeIf { order == SearchOrder.RANKED },
         )

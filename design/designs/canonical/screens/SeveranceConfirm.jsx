@@ -67,7 +67,10 @@
    inert and never dimmed, and `Keep it` reads `Close`, filled and live in its
    slot: it closes the dialog and the pad beneath so the reader need not
    wait, and the whole walk-back goes on, its wait on the target's row as
-   `PadFailed`'s `closed` moment draws it. */
+   `PadFailed`'s `closed` moment draws it. `Keep it` reads `Close` from the
+   press itself (jakob 2026-11-11: "swap at the press"); only the act's own
+   label waits the 200ms, so inside them `Close` stands beside `Walk it back`
+   — the pad's `pressed` moment, drawn on `PadFailed` alone. */
 export const PROPS = { answer: { editor: "enum", options: ["asking", "signing", "writeRule"], default: "asking" } };
 export const VALS = `askingShown: this.props.answer === "asking" ? "block" : "none", signingShown: this.props.answer === "signing" ? "block" : "none", writeRuleShown: this.props.answer === "writeRule" ? "block" : "none"`;
 

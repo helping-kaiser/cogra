@@ -22,4 +22,6 @@ WHEN tap feed.menuSheet.license -> the menu closes AND the post's terms come up 
 
 WHEN tap feed.menuSheet.report -> the menu closes AND feed.reportSheet rises over the feed, feed.reportSheet.title reading Report this post? AND NEVER anything is sent yet
 
+WHEN a guest taps any row of a post's menu, on any host -> the guest gate opens, the profile menu's rule
+
 WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND nothing changes

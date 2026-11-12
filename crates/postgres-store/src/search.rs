@@ -19,9 +19,9 @@
 //!
 //! `search`, the reference finder, the Saved list and History all read
 //! through [`SearchRequest`]; none grows a second predicate. What differs
-//! between them is passed in: the kinds served, the seen-list exclusion,
-//! the finder's narrowing to what `prepareReference` accepts, and the
-//! [`Window`] a read is confined to. Saved's and History's is the
+//! between them is passed in: the kinds served, the finder's narrowing
+//! to what `prepareReference` accepts, and the [`Window`] a read is
+//! confined to. Saved's and History's is the
 //! reader's own list ([`Window::list`]): the statement itself joins the
 //! list, orders by the list's own time and stops at the page, so a
 //! narrowed page costs one statement bounded by the reader's own list,
@@ -88,8 +88,6 @@ pub struct MatchQuery {
     /// The index kinds served (`user`, `post`, `hashtag`). Never empty:
     /// a request that serves nothing does not reach the store.
     pub kinds: Vec<String>,
-    /// Drop nodes on this account's seen-list (`user_view_log`).
-    pub exclude_seen_by: Option<Uuid>,
     /// Serve only users with a realization address — the finder's
     /// narrowing: a keyless account fronts no Profile to cite.
     pub keyed_users_only: bool,
@@ -132,8 +130,6 @@ pub struct ScopedQuery {
     /// The kinds served (`user`, `post`, `comment`, `hashtag`). Never
     /// empty.
     pub kinds: Vec<String>,
-    /// Drop nodes on this account's seen-list (`user_view_log`).
-    pub exclude_seen_by: Option<Uuid>,
     /// The viewer's address atom: their own in-flight topic claims count,
     /// as they do on the tag page. None reads landed claims only.
     pub pending_actor: Option<String>,
@@ -397,54 +393,50 @@ pub async fn find_in(
                            SELECT d.node_id FROM search_index d
                            WHERE d.field = 'display_name'
                              AND d.words @@ to_tsquery('simple', $3))))
-                     AND ($5::uuid IS NULL OR NOT EXISTS (
-                         SELECT 1 FROM user_view_log l
-                         WHERE l.user_id = $5 AND l.content_id = s.node_id))
-                     AND (NOT $6 OR s.kind <> 'user' OR EXISTS (
+                     AND (NOT $5 OR s.kind <> 'user' OR EXISTS (
                          SELECT 1 FROM actors a
                          WHERE a.id = s.node_id AND a.realization_address IS NOT NULL))
-                     AND ($11::uuid[] IS NULL OR s.node_id = ANY($11))
-                     AND NOT (s.node_id = ANY($12::uuid[]))
-                     AND ($14::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                     AND ($10::uuid[] IS NULL OR s.node_id = ANY($10))
+                     AND NOT (s.node_id = ANY($11::uuid[]))
+                     AND ($13::uuid IS NULL OR s.node_id = ANY(ARRAY(
                          SELECT b.content_id FROM user_bookmarks b
-                         WHERE b.user_id = $14)))
-                     AND ($16::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                         WHERE b.user_id = $13)))
+                     AND ($15::uuid IS NULL OR s.node_id = ANY(ARRAY(
                          SELECT v.content_id FROM user_view_log v
-                         WHERE v.user_id = $16)))
-                     AND ($16::uuid IS NULL OR s.author_id IS NULL OR NOT EXISTS (
+                         WHERE v.user_id = $15)))
+                     AND ($15::uuid IS NULL OR s.author_id IS NULL OR NOT EXISTS (
                          SELECT 1 FROM user_hidden_actors x
-                         WHERE x.viewer_id = $16 AND x.hidden_id = s.author_id))
+                         WHERE x.viewer_id = $15 AND x.hidden_id = s.author_id))
                    GROUP BY s.node_id, s.kind, s.created_at
                ),
                placed AS (
                    SELECT h.node_id, h.kind, h.name,
-                          CASE WHEN $14::uuid IS NULL AND $16::uuid IS NULL THEN h.tier
+                          CASE WHEN $13::uuid IS NULL AND $15::uuid IS NULL THEN h.tier
                                ELSE h.tier / 2 * 2 END AS tier,
-                          CASE WHEN $14::uuid IS NOT NULL THEN b.bookmarked_at
-                               WHEN $16::uuid IS NOT NULL THEN v.first_seen_at
+                          CASE WHEN $13::uuid IS NOT NULL THEN b.bookmarked_at
+                               WHEN $15::uuid IS NOT NULL THEN v.first_seen_at
                                ELSE h.created_at END AS created_at
                    FROM hits h
                    LEFT JOIN user_bookmarks b
-                     ON b.user_id = $14 AND b.content_id = h.node_id
+                     ON b.user_id = $13 AND b.content_id = h.node_id
                    LEFT JOIN user_view_log v
-                     ON v.user_id = $16 AND v.content_id = h.node_id
-                   WHERE ($13::int IS NULL OR h.tier / 2 = $13)
-                     AND ($15::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($15))
-                     AND ($17::uuid[] IS NULL OR h.tier / 2 <> 1 OR h.node_id = ANY($17))
+                     ON v.user_id = $15 AND v.content_id = h.node_id
+                   WHERE ($12::int IS NULL OR h.tier / 2 = $12)
+                     AND ($14::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($14))
+                     AND ($16::uuid[] IS NULL OR h.tier / 2 <> 1 OR h.node_id = ANY($16))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
                FROM placed
-               WHERE ($7::int IS NULL
-                      OR tier < $7
-                      OR (tier = $7 AND (created_at, node_id) > ($8::timestamptz, $9::uuid)))
+               WHERE ($6::int IS NULL
+                      OR tier < $6
+                      OR (tier = $6 AND (created_at, node_id) > ($7::timestamptz, $8::uuid)))
                ORDER BY tier DESC, created_at ASC, node_id ASC
-               LIMIT $10"#,
+               LIMIT $9"#,
             q.text,
             q.like_body,
             q.title_query,
             &q.kinds,
-            q.exclude_seen_by,
             q.keyed_users_only,
             tier,
             at,
@@ -480,54 +472,50 @@ pub async fn find_in(
                            SELECT d.node_id FROM search_index d
                            WHERE d.field = 'display_name'
                              AND d.words @@ to_tsquery('simple', $3))))
-                     AND ($5::uuid IS NULL OR NOT EXISTS (
-                         SELECT 1 FROM user_view_log l
-                         WHERE l.user_id = $5 AND l.content_id = s.node_id))
-                     AND (NOT $6 OR s.kind <> 'user' OR EXISTS (
+                     AND (NOT $5 OR s.kind <> 'user' OR EXISTS (
                          SELECT 1 FROM actors a
                          WHERE a.id = s.node_id AND a.realization_address IS NOT NULL))
-                     AND ($11::uuid[] IS NULL OR s.node_id = ANY($11))
-                     AND NOT (s.node_id = ANY($12::uuid[]))
-                     AND ($14::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                     AND ($10::uuid[] IS NULL OR s.node_id = ANY($10))
+                     AND NOT (s.node_id = ANY($11::uuid[]))
+                     AND ($13::uuid IS NULL OR s.node_id = ANY(ARRAY(
                          SELECT b.content_id FROM user_bookmarks b
-                         WHERE b.user_id = $14)))
-                     AND ($16::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                         WHERE b.user_id = $13)))
+                     AND ($15::uuid IS NULL OR s.node_id = ANY(ARRAY(
                          SELECT v.content_id FROM user_view_log v
-                         WHERE v.user_id = $16)))
-                     AND ($16::uuid IS NULL OR s.author_id IS NULL OR NOT EXISTS (
+                         WHERE v.user_id = $15)))
+                     AND ($15::uuid IS NULL OR s.author_id IS NULL OR NOT EXISTS (
                          SELECT 1 FROM user_hidden_actors x
-                         WHERE x.viewer_id = $16 AND x.hidden_id = s.author_id))
+                         WHERE x.viewer_id = $15 AND x.hidden_id = s.author_id))
                    GROUP BY s.node_id, s.kind, s.created_at
                ),
                placed AS (
                    SELECT h.node_id, h.kind, h.name,
-                          CASE WHEN $14::uuid IS NULL AND $16::uuid IS NULL THEN h.tier
+                          CASE WHEN $13::uuid IS NULL AND $15::uuid IS NULL THEN h.tier
                                ELSE h.tier / 2 * 2 END AS tier,
-                          CASE WHEN $14::uuid IS NOT NULL THEN b.bookmarked_at
-                               WHEN $16::uuid IS NOT NULL THEN v.first_seen_at
+                          CASE WHEN $13::uuid IS NOT NULL THEN b.bookmarked_at
+                               WHEN $15::uuid IS NOT NULL THEN v.first_seen_at
                                ELSE h.created_at END AS created_at
                    FROM hits h
                    LEFT JOIN user_bookmarks b
-                     ON b.user_id = $14 AND b.content_id = h.node_id
+                     ON b.user_id = $13 AND b.content_id = h.node_id
                    LEFT JOIN user_view_log v
-                     ON v.user_id = $16 AND v.content_id = h.node_id
-                   WHERE ($13::int IS NULL OR h.tier / 2 = $13)
-                     AND ($15::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($15))
-                     AND ($17::uuid[] IS NULL OR h.tier / 2 <> 1 OR h.node_id = ANY($17))
+                     ON v.user_id = $15 AND v.content_id = h.node_id
+                   WHERE ($12::int IS NULL OR h.tier / 2 = $12)
+                     AND ($14::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($14))
+                     AND ($16::uuid[] IS NULL OR h.tier / 2 <> 1 OR h.node_id = ANY($16))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
                FROM placed
-               WHERE ($7::int IS NULL
-                      OR tier > $7
-                      OR (tier = $7 AND (created_at, node_id) < ($8::timestamptz, $9::uuid)))
+               WHERE ($6::int IS NULL
+                      OR tier > $6
+                      OR (tier = $6 AND (created_at, node_id) < ($7::timestamptz, $8::uuid)))
                ORDER BY tier ASC, created_at DESC, node_id DESC
-               LIMIT $10"#,
+               LIMIT $9"#,
             q.text,
             q.like_body,
             q.title_query,
             &q.kinds,
-            q.exclude_seen_by,
             q.keyed_users_only,
             tier,
             at,
@@ -567,25 +555,21 @@ pub async fn count(
                    SELECT d.node_id FROM search_index d
                    WHERE d.field = 'display_name'
                      AND d.words @@ to_tsquery('simple', $2))))
-             AND ($4::uuid IS NULL OR NOT EXISTS (
-                 SELECT 1 FROM user_view_log l
-                 WHERE l.user_id = $4 AND l.content_id = s.node_id))
-             AND (NOT $5 OR s.kind <> 'user' OR EXISTS (
+             AND (NOT $4 OR s.kind <> 'user' OR EXISTS (
                  SELECT 1 FROM actors a
                  WHERE a.id = s.node_id AND a.realization_address IS NOT NULL))
-             AND ($6::uuid IS NULL OR s.node_id = ANY(ARRAY(
+             AND ($5::uuid IS NULL OR s.node_id = ANY(ARRAY(
                  SELECT b.content_id FROM user_bookmarks b
-                 WHERE b.user_id = $6)))
-             AND ($7::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                 WHERE b.user_id = $5)))
+             AND ($6::uuid IS NULL OR s.node_id = ANY(ARRAY(
                  SELECT v.content_id FROM user_view_log v
-                 WHERE v.user_id = $7)))
-             AND ($7::uuid IS NULL OR s.author_id IS NULL OR NOT EXISTS (
+                 WHERE v.user_id = $6)))
+             AND ($6::uuid IS NULL OR s.author_id IS NULL OR NOT EXISTS (
                  SELECT 1 FROM user_hidden_actors x
-                 WHERE x.viewer_id = $7 AND x.hidden_id = s.author_id))"#,
+                 WHERE x.viewer_id = $6 AND x.hidden_id = s.author_id))"#,
         q.like_body,
         q.title_query,
         &q.kinds,
-        q.exclude_seen_by,
         q.keyed_users_only,
         saved_by,
         seen_by,
@@ -640,7 +624,7 @@ pub async fn find_scoped(
                    FROM search_index s
                    JOIN actors a ON a.id = s.node_id
                    WHERE s.kind = 'user' AND s.field = 'handle'
-                     AND s.folded LIKE lower($6::text) || '%'
+                     AND s.folded LIKE lower($5::text) || '%'
                ),
                claims AS (
                    SELECT l.source AS node, r.author AS author, l.target AS target,
@@ -652,8 +636,8 @@ pub async fn find_scoped(
                    WHERE l.leg = 't' AND l.family = 'tag'
                      AND NOT r.payload_marked
                      AND NOT l.census_unknown
-                     AND (l.target LIKE 'name:' || $7::text || '%'
-                          OR ($7::text IS NULL
+                     AND (l.target LIKE 'name:' || $6::text || '%'
+                          OR ($6::text IS NULL
                               AND r.author IN (SELECT au.address FROM authors au)))
                      AND r.author = CASE
                              WHEN l.source LIKE 'mint:act:%' THEN split_part(l.source, ':', 3)
@@ -663,14 +647,14 @@ pub async fn find_scoped(
                  UNION ALL
                    SELECT s.middle, s.author, s.target, s.p_d, s.p_i, TRUE, 0, 0, s.pre_signed_at
                    FROM staged_writes s
-                   WHERE s.author = $9
+                   WHERE s.author = $8
                      AND s.family = 'tag'
                      AND s.middle IS NOT NULL
                      AND octet_length(s.payload) = 0
                      AND s.pre_signed_at IS NOT NULL
                      AND s.state NOT IN ('landed', 'expired')
-                     AND (s.target LIKE 'name:' || $7::text || '%'
-                          OR ($7::text IS NULL
+                     AND (s.target LIKE 'name:' || $6::text || '%'
+                          OR ($6::text IS NULL
                               AND s.author IN (SELECT au.address FROM authors au)))
                      AND s.author = CASE
                              WHEN s.middle LIKE 'mint:act:%' THEN split_part(s.middle, ':', 3)
@@ -693,17 +677,17 @@ pub async fn find_scoped(
                    FROM comments c
                    WHERE 'comment' = ANY($4)
                      AND (c.author_id IN (SELECT au.id FROM authors au)
-                          OR ($7::text IS NOT NULL
+                          OR ($6::text IS NOT NULL
                               AND c.l1_node_id IN (SELECT node FROM carried)))
-                     AND ($18::uuid IS NULL OR c.id = ANY(ARRAY(
+                     AND ($17::uuid IS NULL OR c.id = ANY(ARRAY(
                          SELECT b.content_id FROM user_bookmarks b
-                         WHERE b.user_id = $18)))
-                     AND ($20::uuid IS NULL OR c.id = ANY(ARRAY(
+                         WHERE b.user_id = $17)))
+                     AND ($19::uuid IS NULL OR c.id = ANY(ARRAY(
                          SELECT v.content_id FROM user_view_log v
-                         WHERE v.user_id = $20)))
-                     AND ($20::uuid IS NULL OR NOT EXISTS (
+                         WHERE v.user_id = $19)))
+                     AND ($19::uuid IS NULL OR NOT EXISTS (
                          SELECT 1 FROM user_hidden_actors x
-                         WHERE x.viewer_id = $20 AND x.hidden_id = c.author_id))
+                         WHERE x.viewer_id = $19 AND x.hidden_id = c.author_id))
                      AND (SELECT v.redaction_reason IS NULL
                           FROM comment_versions v WHERE v.comment_id = c.id
                           ORDER BY pending DESC,
@@ -719,18 +703,18 @@ pub async fn find_scoped(
                ),
                hits AS (
                    SELECT au.id AS node_id, 'user' AS kind, au.created_at,
-                          CASE WHEN au.folded = lower($8) THEN 0 ELSE 1 END AS tier,
+                          CASE WHEN au.folded = lower($7) THEN 0 ELSE 1 END AS tier,
                           NULL::text AS name
                    FROM authors au
-                   WHERE $10 AND 'user' = ANY($4)
+                   WHERE $9 AND 'user' = ANY($4)
                  UNION ALL
                    SELECT s.node_id, s.kind, s.created_at,
-                          CASE WHEN s.folded = lower($8) THEN 2 ELSE 3 END,
+                          CASE WHEN s.folded = lower($7) THEN 2 ELSE 3 END,
                           s.value
                    FROM search_index s
-                   WHERE $10 AND 'hashtag' = ANY($4)
+                   WHERE $9 AND 'hashtag' = ANY($4)
                      AND s.kind = 'hashtag' AND s.field = 'name'
-                     AND s.folded LIKE $7::text || '%'
+                     AND s.folded LIKE $6::text || '%'
                  UNION ALL
                    SELECT s.node_id, s.kind, s.created_at,
                           CASE WHEN s.folded = lower($1) THEN 4 ELSE 5 END,
@@ -738,18 +722,18 @@ pub async fn find_scoped(
                    FROM search_index s
                    WHERE 'post' = ANY($4)
                      AND s.kind = 'post' AND s.field = 'title'
-                     AND ($10 OR s.words @@ to_tsquery('simple', $3))
-                     AND ($18::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                     AND ($9 OR s.words @@ to_tsquery('simple', $3))
+                     AND ($17::uuid IS NULL OR s.node_id = ANY(ARRAY(
                          SELECT b.content_id FROM user_bookmarks b
-                         WHERE b.user_id = $18)))
-                     AND ($20::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                         WHERE b.user_id = $17)))
+                     AND ($19::uuid IS NULL OR s.node_id = ANY(ARRAY(
                          SELECT v.content_id FROM user_view_log v
-                         WHERE v.user_id = $20)))
-                     AND ($20::uuid IS NULL OR NOT EXISTS (
+                         WHERE v.user_id = $19)))
+                     AND ($19::uuid IS NULL OR NOT EXISTS (
                          SELECT 1 FROM user_hidden_actors x
-                         WHERE x.viewer_id = $20 AND x.hidden_id = s.author_id))
+                         WHERE x.viewer_id = $19 AND x.hidden_id = s.author_id))
                      AND (s.author_id IN (SELECT au.id FROM authors au)
-                          OR ($7::text IS NOT NULL AND EXISTS (
+                          OR ($6::text IS NOT NULL AND EXISTS (
                               SELECT 1 FROM posts p
                               JOIN carried k ON k.node = p.l1_node_id
                               WHERE p.id = s.node_id)))
@@ -762,54 +746,50 @@ pub async fn find_scoped(
                      ON t.node_id = ch.target_id AND t.field = 'title'
                     AND ch.target_type = 'post'
                    WHERE ch.target_type <> 'comment'
-                     AND ($10 OR t.words @@ to_tsquery('simple', $3))
+                     AND ($9 OR t.words @@ to_tsquery('simple', $3))
                  UNION ALL
                    SELECT s.node_id, s.kind, s.created_at,
                           CASE WHEN s.folded = lower($1) THEN 2 ELSE 3 END,
                           s.value
                    FROM search_index s
                    WHERE 'hashtag' = ANY($4)
-                     AND $6::text IS NOT NULL
+                     AND $5::text IS NOT NULL
                      AND s.kind = 'hashtag' AND s.field = 'name'
-                     AND ($10 OR s.folded LIKE '%' || lower($2) || '%')
+                     AND ($9 OR s.folded LIKE '%' || lower($2) || '%')
                      AND EXISTS (SELECT 1 FROM carried k WHERE k.target = 'name:' || s.value)
                ),
                placed AS (
                    SELECT h.node_id, h.kind, h.name,
-                          CASE WHEN $18::uuid IS NULL AND $20::uuid IS NULL THEN h.tier
+                          CASE WHEN $17::uuid IS NULL AND $19::uuid IS NULL THEN h.tier
                                ELSE h.tier / 2 * 2 END AS tier,
-                          CASE WHEN $18::uuid IS NOT NULL THEN b.bookmarked_at
-                               WHEN $20::uuid IS NOT NULL THEN v.first_seen_at
+                          CASE WHEN $17::uuid IS NOT NULL THEN b.bookmarked_at
+                               WHEN $19::uuid IS NOT NULL THEN v.first_seen_at
                                ELSE h.created_at END AS created_at
                    FROM hits h
                    LEFT JOIN user_bookmarks b
-                     ON b.user_id = $18 AND b.content_id = h.node_id
+                     ON b.user_id = $17 AND b.content_id = h.node_id
                    LEFT JOIN user_view_log v
-                     ON v.user_id = $20 AND v.content_id = h.node_id
-                   WHERE ($18::uuid IS NULL OR b.user_id IS NOT NULL)
-                     AND ($20::uuid IS NULL OR v.user_id IS NOT NULL)
-                     AND ($5::uuid IS NULL OR NOT EXISTS (
-                         SELECT 1 FROM user_view_log l
-                         WHERE l.user_id = $5 AND l.content_id = h.node_id))
-                     AND ($15::uuid[] IS NULL OR h.node_id = ANY($15))
-                     AND NOT (h.node_id = ANY($16::uuid[]))
-                     AND ($17::int IS NULL OR h.tier / 2 = $17)
-                     AND ($19::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($19))
-                     AND ($21::uuid[] IS NULL OR h.tier / 2 <> 1 OR h.node_id = ANY($21))
+                     ON v.user_id = $19 AND v.content_id = h.node_id
+                   WHERE ($17::uuid IS NULL OR b.user_id IS NOT NULL)
+                     AND ($19::uuid IS NULL OR v.user_id IS NOT NULL)
+                     AND ($14::uuid[] IS NULL OR h.node_id = ANY($14))
+                     AND NOT (h.node_id = ANY($15::uuid[]))
+                     AND ($16::int IS NULL OR h.tier / 2 = $16)
+                     AND ($18::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($18))
+                     AND ($20::uuid[] IS NULL OR h.tier / 2 <> 1 OR h.node_id = ANY($20))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
                FROM placed
-               WHERE ($11::int IS NULL
-                      OR tier < $11
-                      OR (tier = $11 AND (created_at, node_id) > ($12::timestamptz, $13::uuid)))
+               WHERE ($10::int IS NULL
+                      OR tier < $10
+                      OR (tier = $10 AND (created_at, node_id) > ($11::timestamptz, $12::uuid)))
                ORDER BY tier DESC, created_at ASC, node_id ASC
-               LIMIT $14"#,
+               LIMIT $13"#,
             q.text,
             q.like_body,
             q.title_query,
             &q.kinds,
-            q.exclude_seen_by,
             handle_prefix,
             topic_prefix,
             cue,
@@ -841,7 +821,7 @@ pub async fn find_scoped(
                    FROM search_index s
                    JOIN actors a ON a.id = s.node_id
                    WHERE s.kind = 'user' AND s.field = 'handle'
-                     AND s.folded LIKE lower($6::text) || '%'
+                     AND s.folded LIKE lower($5::text) || '%'
                ),
                claims AS (
                    SELECT l.source AS node, r.author AS author, l.target AS target,
@@ -853,8 +833,8 @@ pub async fn find_scoped(
                    WHERE l.leg = 't' AND l.family = 'tag'
                      AND NOT r.payload_marked
                      AND NOT l.census_unknown
-                     AND (l.target LIKE 'name:' || $7::text || '%'
-                          OR ($7::text IS NULL
+                     AND (l.target LIKE 'name:' || $6::text || '%'
+                          OR ($6::text IS NULL
                               AND r.author IN (SELECT au.address FROM authors au)))
                      AND r.author = CASE
                              WHEN l.source LIKE 'mint:act:%' THEN split_part(l.source, ':', 3)
@@ -864,14 +844,14 @@ pub async fn find_scoped(
                  UNION ALL
                    SELECT s.middle, s.author, s.target, s.p_d, s.p_i, TRUE, 0, 0, s.pre_signed_at
                    FROM staged_writes s
-                   WHERE s.author = $9
+                   WHERE s.author = $8
                      AND s.family = 'tag'
                      AND s.middle IS NOT NULL
                      AND octet_length(s.payload) = 0
                      AND s.pre_signed_at IS NOT NULL
                      AND s.state NOT IN ('landed', 'expired')
-                     AND (s.target LIKE 'name:' || $7::text || '%'
-                          OR ($7::text IS NULL
+                     AND (s.target LIKE 'name:' || $6::text || '%'
+                          OR ($6::text IS NULL
                               AND s.author IN (SELECT au.address FROM authors au)))
                      AND s.author = CASE
                              WHEN s.middle LIKE 'mint:act:%' THEN split_part(s.middle, ':', 3)
@@ -894,17 +874,17 @@ pub async fn find_scoped(
                    FROM comments c
                    WHERE 'comment' = ANY($4)
                      AND (c.author_id IN (SELECT au.id FROM authors au)
-                          OR ($7::text IS NOT NULL
+                          OR ($6::text IS NOT NULL
                               AND c.l1_node_id IN (SELECT node FROM carried)))
-                     AND ($18::uuid IS NULL OR c.id = ANY(ARRAY(
+                     AND ($17::uuid IS NULL OR c.id = ANY(ARRAY(
                          SELECT b.content_id FROM user_bookmarks b
-                         WHERE b.user_id = $18)))
-                     AND ($20::uuid IS NULL OR c.id = ANY(ARRAY(
+                         WHERE b.user_id = $17)))
+                     AND ($19::uuid IS NULL OR c.id = ANY(ARRAY(
                          SELECT v.content_id FROM user_view_log v
-                         WHERE v.user_id = $20)))
-                     AND ($20::uuid IS NULL OR NOT EXISTS (
+                         WHERE v.user_id = $19)))
+                     AND ($19::uuid IS NULL OR NOT EXISTS (
                          SELECT 1 FROM user_hidden_actors x
-                         WHERE x.viewer_id = $20 AND x.hidden_id = c.author_id))
+                         WHERE x.viewer_id = $19 AND x.hidden_id = c.author_id))
                      AND (SELECT v.redaction_reason IS NULL
                           FROM comment_versions v WHERE v.comment_id = c.id
                           ORDER BY pending DESC,
@@ -920,18 +900,18 @@ pub async fn find_scoped(
                ),
                hits AS (
                    SELECT au.id AS node_id, 'user' AS kind, au.created_at,
-                          CASE WHEN au.folded = lower($8) THEN 0 ELSE 1 END AS tier,
+                          CASE WHEN au.folded = lower($7) THEN 0 ELSE 1 END AS tier,
                           NULL::text AS name
                    FROM authors au
-                   WHERE $10 AND 'user' = ANY($4)
+                   WHERE $9 AND 'user' = ANY($4)
                  UNION ALL
                    SELECT s.node_id, s.kind, s.created_at,
-                          CASE WHEN s.folded = lower($8) THEN 2 ELSE 3 END,
+                          CASE WHEN s.folded = lower($7) THEN 2 ELSE 3 END,
                           s.value
                    FROM search_index s
-                   WHERE $10 AND 'hashtag' = ANY($4)
+                   WHERE $9 AND 'hashtag' = ANY($4)
                      AND s.kind = 'hashtag' AND s.field = 'name'
-                     AND s.folded LIKE $7::text || '%'
+                     AND s.folded LIKE $6::text || '%'
                  UNION ALL
                    SELECT s.node_id, s.kind, s.created_at,
                           CASE WHEN s.folded = lower($1) THEN 4 ELSE 5 END,
@@ -939,18 +919,18 @@ pub async fn find_scoped(
                    FROM search_index s
                    WHERE 'post' = ANY($4)
                      AND s.kind = 'post' AND s.field = 'title'
-                     AND ($10 OR s.words @@ to_tsquery('simple', $3))
-                     AND ($18::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                     AND ($9 OR s.words @@ to_tsquery('simple', $3))
+                     AND ($17::uuid IS NULL OR s.node_id = ANY(ARRAY(
                          SELECT b.content_id FROM user_bookmarks b
-                         WHERE b.user_id = $18)))
-                     AND ($20::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                         WHERE b.user_id = $17)))
+                     AND ($19::uuid IS NULL OR s.node_id = ANY(ARRAY(
                          SELECT v.content_id FROM user_view_log v
-                         WHERE v.user_id = $20)))
-                     AND ($20::uuid IS NULL OR NOT EXISTS (
+                         WHERE v.user_id = $19)))
+                     AND ($19::uuid IS NULL OR NOT EXISTS (
                          SELECT 1 FROM user_hidden_actors x
-                         WHERE x.viewer_id = $20 AND x.hidden_id = s.author_id))
+                         WHERE x.viewer_id = $19 AND x.hidden_id = s.author_id))
                      AND (s.author_id IN (SELECT au.id FROM authors au)
-                          OR ($7::text IS NOT NULL AND EXISTS (
+                          OR ($6::text IS NOT NULL AND EXISTS (
                               SELECT 1 FROM posts p
                               JOIN carried k ON k.node = p.l1_node_id
                               WHERE p.id = s.node_id)))
@@ -963,54 +943,50 @@ pub async fn find_scoped(
                      ON t.node_id = ch.target_id AND t.field = 'title'
                     AND ch.target_type = 'post'
                    WHERE ch.target_type <> 'comment'
-                     AND ($10 OR t.words @@ to_tsquery('simple', $3))
+                     AND ($9 OR t.words @@ to_tsquery('simple', $3))
                  UNION ALL
                    SELECT s.node_id, s.kind, s.created_at,
                           CASE WHEN s.folded = lower($1) THEN 2 ELSE 3 END,
                           s.value
                    FROM search_index s
                    WHERE 'hashtag' = ANY($4)
-                     AND $6::text IS NOT NULL
+                     AND $5::text IS NOT NULL
                      AND s.kind = 'hashtag' AND s.field = 'name'
-                     AND ($10 OR s.folded LIKE '%' || lower($2) || '%')
+                     AND ($9 OR s.folded LIKE '%' || lower($2) || '%')
                      AND EXISTS (SELECT 1 FROM carried k WHERE k.target = 'name:' || s.value)
                ),
                placed AS (
                    SELECT h.node_id, h.kind, h.name,
-                          CASE WHEN $18::uuid IS NULL AND $20::uuid IS NULL THEN h.tier
+                          CASE WHEN $17::uuid IS NULL AND $19::uuid IS NULL THEN h.tier
                                ELSE h.tier / 2 * 2 END AS tier,
-                          CASE WHEN $18::uuid IS NOT NULL THEN b.bookmarked_at
-                               WHEN $20::uuid IS NOT NULL THEN v.first_seen_at
+                          CASE WHEN $17::uuid IS NOT NULL THEN b.bookmarked_at
+                               WHEN $19::uuid IS NOT NULL THEN v.first_seen_at
                                ELSE h.created_at END AS created_at
                    FROM hits h
                    LEFT JOIN user_bookmarks b
-                     ON b.user_id = $18 AND b.content_id = h.node_id
+                     ON b.user_id = $17 AND b.content_id = h.node_id
                    LEFT JOIN user_view_log v
-                     ON v.user_id = $20 AND v.content_id = h.node_id
-                   WHERE ($18::uuid IS NULL OR b.user_id IS NOT NULL)
-                     AND ($20::uuid IS NULL OR v.user_id IS NOT NULL)
-                     AND ($5::uuid IS NULL OR NOT EXISTS (
-                         SELECT 1 FROM user_view_log l
-                         WHERE l.user_id = $5 AND l.content_id = h.node_id))
-                     AND ($15::uuid[] IS NULL OR h.node_id = ANY($15))
-                     AND NOT (h.node_id = ANY($16::uuid[]))
-                     AND ($17::int IS NULL OR h.tier / 2 = $17)
-                     AND ($19::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($19))
-                     AND ($21::uuid[] IS NULL OR h.tier / 2 <> 1 OR h.node_id = ANY($21))
+                     ON v.user_id = $19 AND v.content_id = h.node_id
+                   WHERE ($17::uuid IS NULL OR b.user_id IS NOT NULL)
+                     AND ($19::uuid IS NULL OR v.user_id IS NOT NULL)
+                     AND ($14::uuid[] IS NULL OR h.node_id = ANY($14))
+                     AND NOT (h.node_id = ANY($15::uuid[]))
+                     AND ($16::int IS NULL OR h.tier / 2 = $16)
+                     AND ($18::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($18))
+                     AND ($20::uuid[] IS NULL OR h.tier / 2 <> 1 OR h.node_id = ANY($20))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
                FROM placed
-               WHERE ($11::int IS NULL
-                      OR tier > $11
-                      OR (tier = $11 AND (created_at, node_id) < ($12::timestamptz, $13::uuid)))
+               WHERE ($10::int IS NULL
+                      OR tier > $10
+                      OR (tier = $10 AND (created_at, node_id) < ($11::timestamptz, $12::uuid)))
                ORDER BY tier ASC, created_at DESC, node_id DESC
-               LIMIT $14"#,
+               LIMIT $13"#,
             q.text,
             q.like_body,
             q.title_query,
             &q.kinds,
-            q.exclude_seen_by,
             handle_prefix,
             topic_prefix,
             cue,
@@ -1051,7 +1027,7 @@ pub async fn count_scoped(
                FROM search_index s
                JOIN actors a ON a.id = s.node_id
                WHERE s.kind = 'user' AND s.field = 'handle'
-                 AND s.folded LIKE lower($5::text) || '%'
+                 AND s.folded LIKE lower($4::text) || '%'
            ),
            claims AS (
                SELECT l.source AS node, r.author AS author, l.target AS target,
@@ -1063,8 +1039,8 @@ pub async fn count_scoped(
                WHERE l.leg = 't' AND l.family = 'tag'
                  AND NOT r.payload_marked
                  AND NOT l.census_unknown
-                 AND (l.target LIKE 'name:' || $6::text || '%'
-                      OR ($6::text IS NULL
+                 AND (l.target LIKE 'name:' || $5::text || '%'
+                      OR ($5::text IS NULL
                           AND r.author IN (SELECT au.address FROM authors au)))
                  AND r.author = CASE
                          WHEN l.source LIKE 'mint:act:%' THEN split_part(l.source, ':', 3)
@@ -1074,14 +1050,14 @@ pub async fn count_scoped(
              UNION ALL
                SELECT s.middle, s.author, s.target, s.p_d, s.p_i, TRUE, 0, 0, s.pre_signed_at
                FROM staged_writes s
-               WHERE s.author = $7
+               WHERE s.author = $6
                  AND s.family = 'tag'
                  AND s.middle IS NOT NULL
                  AND octet_length(s.payload) = 0
                  AND s.pre_signed_at IS NOT NULL
                  AND s.state NOT IN ('landed', 'expired')
-                 AND (s.target LIKE 'name:' || $6::text || '%'
-                      OR ($6::text IS NULL
+                 AND (s.target LIKE 'name:' || $5::text || '%'
+                      OR ($5::text IS NULL
                           AND s.author IN (SELECT au.address FROM authors au)))
                  AND s.author = CASE
                          WHEN s.middle LIKE 'mint:act:%' THEN split_part(s.middle, ':', 3)
@@ -1104,17 +1080,17 @@ pub async fn count_scoped(
                FROM comments c
                WHERE 'comment' = ANY($3)
                  AND (c.author_id IN (SELECT au.id FROM authors au)
-                      OR ($6::text IS NOT NULL
+                      OR ($5::text IS NOT NULL
                           AND c.l1_node_id IN (SELECT node FROM carried)))
-                 AND ($9::uuid IS NULL OR c.id = ANY(ARRAY(
+                 AND ($8::uuid IS NULL OR c.id = ANY(ARRAY(
                      SELECT b.content_id FROM user_bookmarks b
-                     WHERE b.user_id = $9)))
-                 AND ($10::uuid IS NULL OR c.id = ANY(ARRAY(
+                     WHERE b.user_id = $8)))
+                 AND ($9::uuid IS NULL OR c.id = ANY(ARRAY(
                      SELECT v.content_id FROM user_view_log v
-                     WHERE v.user_id = $10)))
-                 AND ($10::uuid IS NULL OR NOT EXISTS (
+                     WHERE v.user_id = $9)))
+                 AND ($9::uuid IS NULL OR NOT EXISTS (
                      SELECT 1 FROM user_hidden_actors x
-                     WHERE x.viewer_id = $10 AND x.hidden_id = c.author_id))
+                     WHERE x.viewer_id = $9 AND x.hidden_id = c.author_id))
                  AND (SELECT v.redaction_reason IS NULL
                       FROM comment_versions v WHERE v.comment_id = c.id
                       ORDER BY pending DESC,
@@ -1131,30 +1107,30 @@ pub async fn count_scoped(
            hits AS (
                SELECT au.id AS node_id
                FROM authors au
-               WHERE $8 AND 'user' = ANY($3)
+               WHERE $7 AND 'user' = ANY($3)
              UNION ALL
                SELECT s.node_id
                FROM search_index s
-               WHERE $8 AND 'hashtag' = ANY($3)
+               WHERE $7 AND 'hashtag' = ANY($3)
                  AND s.kind = 'hashtag' AND s.field = 'name'
-                 AND s.folded LIKE $6::text || '%'
+                 AND s.folded LIKE $5::text || '%'
              UNION ALL
                SELECT s.node_id
                FROM search_index s
                WHERE 'post' = ANY($3)
                  AND s.kind = 'post' AND s.field = 'title'
-                 AND ($8 OR s.words @@ to_tsquery('simple', $2))
-                 AND ($9::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                 AND ($7 OR s.words @@ to_tsquery('simple', $2))
+                 AND ($8::uuid IS NULL OR s.node_id = ANY(ARRAY(
                      SELECT b.content_id FROM user_bookmarks b
-                     WHERE b.user_id = $9)))
-                 AND ($10::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                     WHERE b.user_id = $8)))
+                 AND ($9::uuid IS NULL OR s.node_id = ANY(ARRAY(
                      SELECT v.content_id FROM user_view_log v
-                     WHERE v.user_id = $10)))
-                 AND ($10::uuid IS NULL OR NOT EXISTS (
+                     WHERE v.user_id = $9)))
+                 AND ($9::uuid IS NULL OR NOT EXISTS (
                      SELECT 1 FROM user_hidden_actors x
-                     WHERE x.viewer_id = $10 AND x.hidden_id = s.author_id))
+                     WHERE x.viewer_id = $9 AND x.hidden_id = s.author_id))
                  AND (s.author_id IN (SELECT au.id FROM authors au)
-                      OR ($6::text IS NOT NULL AND EXISTS (
+                      OR ($5::text IS NOT NULL AND EXISTS (
                           SELECT 1 FROM posts p
                           JOIN carried k ON k.node = p.l1_node_id
                           WHERE p.id = s.node_id)))
@@ -1165,31 +1141,27 @@ pub async fn count_scoped(
                  ON t.node_id = ch.target_id AND t.field = 'title'
                 AND ch.target_type = 'post'
                WHERE ch.target_type <> 'comment'
-                 AND ($8 OR t.words @@ to_tsquery('simple', $2))
+                 AND ($7 OR t.words @@ to_tsquery('simple', $2))
              UNION ALL
                SELECT s.node_id
                FROM search_index s
                WHERE 'hashtag' = ANY($3)
-                 AND $5::text IS NOT NULL
+                 AND $4::text IS NOT NULL
                  AND s.kind = 'hashtag' AND s.field = 'name'
-                 AND ($8 OR s.folded LIKE '%' || lower($1) || '%')
+                 AND ($7 OR s.folded LIKE '%' || lower($1) || '%')
                  AND EXISTS (SELECT 1 FROM carried k WHERE k.target = 'name:' || s.value)
            )
            SELECT COUNT(*) AS "count!"
            FROM hits h
-           WHERE ($4::uuid IS NULL OR NOT EXISTS (
-                     SELECT 1 FROM user_view_log l
-                     WHERE l.user_id = $4 AND l.content_id = h.node_id))
-             AND ($9::uuid IS NULL OR h.node_id = ANY(ARRAY(
+           WHERE ($8::uuid IS NULL OR h.node_id = ANY(ARRAY(
                      SELECT b.content_id FROM user_bookmarks b
-                     WHERE b.user_id = $9)))
-             AND ($10::uuid IS NULL OR h.node_id = ANY(ARRAY(
+                     WHERE b.user_id = $8)))
+             AND ($9::uuid IS NULL OR h.node_id = ANY(ARRAY(
                      SELECT v.content_id FROM user_view_log v
-                     WHERE v.user_id = $10)))"#,
+                     WHERE v.user_id = $9)))"#,
         q.like_body,
         q.title_query,
         &q.kinds,
-        q.exclude_seen_by,
         handle_prefix,
         topic_prefix,
         q.pending_actor,

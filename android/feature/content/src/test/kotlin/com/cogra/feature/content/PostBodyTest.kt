@@ -12,6 +12,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.media.SensitiveSource
 import com.cogra.domain.FieldStatus
@@ -457,6 +458,69 @@ class PostBodyTest {
         compose.onNodeWithTag("m_opener").assertIsDisplayed()
     }
 
+    /**
+     * jakob's hand test (2026-11-11, finding 1.4): "posts always show
+     * "more"/"less" below descriptions even tho there is not more". A media
+     * post's caption that fits its two lines folds nothing away, so it
+     * carries no opener (PostCard.jsx: "Only where there is something
+     * folded away"; web #405, `clamp-fold.ts`).
+     */
+    @Test
+    fun aShortMediaCaptionCarriesNoOpener() {
+        showMediaCaption("A crust at low tide.")
+
+        compose.onNodeWithTag("m_opener").assertDoesNotExist()
+    }
+
+    /** Past its two lines the caption opens; while it is open `Less` stays, however the box changes. */
+    @Test
+    fun aLongMediaCaptionOpensAndLessStaysWhileOpen() {
+        var width by mutableStateOf(NARROW)
+        showMediaCaption(longBody) { width }
+
+        compose.onNodeWithText("More").assertIsDisplayed()
+        compose.onNodeWithTag("m_opener").performClick()
+        compose.onNodeWithText("Less").assertIsDisplayed()
+
+        // Open, nothing overflows any more: the last clamped reading stands.
+        width = WIDE
+        compose.waitForIdle()
+        compose.onNodeWithText("Less").assertIsDisplayed()
+    }
+
+    /**
+     * The reading follows the box: a caption that folds at a narrow width
+     * and fits at a wide one loses its opener when the box widens (a
+     * rotation, `clamp-fold.ts`'s ResizeObserver). Line counts only — the
+     * same words at two widths, never a measured text width.
+     */
+    @Test
+    fun aCaptionThatFitsOnceTheBoxWidensLosesItsOpener() {
+        var width by mutableStateOf(NARROW)
+        showMediaCaption("Salt maps of the coast road.") { width }
+        compose.onNodeWithTag("m_opener").assertIsDisplayed()
+
+        width = WIDE
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("m_opener").assertDoesNotExist()
+    }
+
+    private fun showMediaCaption(description: String, width: () -> Dp = { WIDE }) {
+        compose.setContent {
+            PostBody(
+                content = ModeratedField(null, FieldStatus.NORMAL),
+                description = ModeratedField(description, FieldStatus.NORMAL),
+                attachments = listOf(picture),
+                attachmentsStatus = FieldStatus.NORMAL,
+                moderation = ModerationState.NORMAL,
+                collapsed = true,
+                testTagPrefix = "m",
+                modifier = Modifier.width(width()),
+            )
+        }
+    }
+
     private fun showCollapsed(content: ModeratedField) {
         compose.setContent {
             PostBody(
@@ -473,4 +537,12 @@ class PostBodyTest {
 
     /** Well past the 18-line ceiling at any plausible card width. */
     private val longBody = "Salt maps of the coast road, walked at low tide. ".repeat(80)
+
+    private companion object {
+        /** Narrow enough that a 28-character caption breaks past two lines of body-medium. */
+        val NARROW = 60.dp
+
+        /** Wide enough (the default 320dp screen) to hold that caption on one line. */
+        val WIDE = 320.dp
+    }
 }

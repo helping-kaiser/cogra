@@ -17,6 +17,7 @@ const {
   MonogramAvatar,
   ActorChip,
   HIDE_ACTOR_LABEL,
+  UNHIDE_ACTOR_LABEL,
   REDACTED_ACTOR_NAME,
   ProfileHeader,
   EmptyState,
@@ -244,6 +245,29 @@ const TOBIAS_COMMENT_ID = "8c7296e7-8e4b-45b1-9889-279e7a713f9c";
 const CITE_ROW = { label: "Cite in a new post", onSelect: () => {}, node: "cite" };
 const SAVE_ROW = { label: "Save", onSelect: () => {}, node: "save" };
 const CARD_MENU = [SAVE_ROW, CITE_ROW];
+/* THE REPORT ROW, AT THE SHEET TAIL OF EVERY OTHER-PERSON MENU (jakob
+   2026-10-09, ruling 75). Minimal and via mail for MVP: the row opens a
+   confirm sheet naming the thing (`ReportConfirm`), the commit sends the
+   report out, and no report machinery exists until proposals/moderation
+   land. It sits LAST — below even the license — because it is the one row
+   a reader reaches for about someone else's conduct, not about using the
+   thing, and the tail is where the rows that take or send something have
+   always lived. It NEVER connects to Report-a-problem: reporting content
+   must not read as reporting the app (jakob). Own menus carry no Report —
+   a reader has nothing to report themselves for. `tail` tells a card's own ⋮
+   the same: the card appends the license, and the row stays after it. */
+const REPORT_ROW = { label: "Report", onSelect: () => {}, node: "report", tail: true };
+/* A POST CARD'S OWN ⋮ IS THE MENU THE BOARDS DRAW (round 36): the reader's
+   post menu (`READER_POST_MENU`) less the license the card appends — Save,
+   Cite, Hide with the author's handle, then Report after the license — so a
+   card and the sheet its ⋮ raises cannot disagree. A board drawing a card of
+   the reader's own hands it the own rows instead (`FeedPostMenuOwn`). */
+const readerCardMenu = (handle) => [
+  SAVE_ROW,
+  CITE_ROW,
+  { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {}, node: "hide" },
+  REPORT_ROW,
+];
 
 /* A POST'S BODY IS WORDS XOR MEDIA (post.md). Every fixture with a picture
    carries its words as the DESCRIPTION — the caption beside the body — and no
@@ -261,7 +285,7 @@ const ADA_POST = {
   comments: 3,
   opinions: 9,
   license: { attribution: 1, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("ada"),
 };
 
 const TOBIAS_POST = {
@@ -273,7 +297,7 @@ const TOBIAS_POST = {
   comments: 1,
   opinions: 2,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("tobias"),
 };
 
 const SOL_POST = {
@@ -292,7 +316,7 @@ const SOL_POST = {
   comments: 2,
   opinions: 4,
   license: { attribution: 0.5, provenance: 0.5 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("sol"),
 };
 
 /* @mira's words post — the one History's and Saved's searches both find. */
@@ -305,7 +329,7 @@ const MIRA_WORDS_POST = {
   comments: 1,
   opinions: 3,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("mira"),
 };
 
 /* The gallery post (media slice, 2026-08-31): four pictures at one crop shape,
@@ -328,7 +352,7 @@ const MIRA_GALLERY_POST = {
   comments: 2,
   opinions: 9,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("mira"),
 };
 
 /* CograBand moved into the system (components/navigation/CograBand.jsx) the
@@ -676,26 +700,27 @@ const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {}, node: "lice
    where the post's menu has always put it: the rarest act, and the one that
    takes the content away. */
 const REMOVE_ROW = { label: "Remove", onSelect: () => {}, node: "remove" };
-/* THE REPORT ROW, AT THE SHEET TAIL OF EVERY OTHER-PERSON MENU (jakob
-   2026-10-09, ruling 75). Minimal and via mail for MVP: the row opens a
-   confirm sheet naming the thing (`ReportConfirm`), the commit sends the
-   report out, and no report machinery exists until proposals/moderation
-   land. It sits LAST — below even the license — because it is the one row
-   a reader reaches for about someone else's conduct, not about using the
-   thing, and the tail is where the rows that take or send something have
-   always lived. It NEVER connects to Report-a-problem: reporting content
-   must not read as reporting the app (jakob). Own menus carry no Report —
-   a reader has nothing to report themselves for. */
-const REPORT_ROW = { label: "Report", onSelect: () => {}, node: "report" };
+/* THE AUTHOR'S EDIT, one row on every own menu — the post's and the comment's
+   (jakob 2026-11-11: "this belongs in the three dot bottom sheet as always"):
+   after Save and Cite, before the rest of the acts. Never a button on a card. */
+const EDIT_ROW = { label: "Edit", onSelect: () => {}, node: "edit" };
 const OWN_POST_MENU = [
   SAVE_ROW,
   CITE_ROW,
-  { label: "Edit", onSelect: () => {}, node: "edit" },
+  EDIT_ROW,
   { label: "Mark as sensitive", onSelect: () => {}, node: "markSensitive" },
   REMOVE_ROW,
   LICENSE_ROW,
 ];
-const READER_POST_MENU = [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {}, node: "hide" }, LICENSE_ROW, REPORT_ROW];
+/* The reader's post menu for a post by `handle`, so a host whose drawn card
+   is someone else's than @ada's names its author in the Hide row
+   (`TagPageMenu`'s @tobias). */
+const readerPostMenu = (handle) => [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {}, node: "hide" }, LICENSE_ROW, REPORT_ROW];
+const READER_POST_MENU = readerPostMenu("ada");
+/* SAVED'S MENUS READ `Unsave` FIRST (Saved.md: every card there is kept), the
+   row keeping its one name, `save`, whatever its label reads. */
+const UNSAVE_ROW = { ...SAVE_ROW, label: "Unsave" };
+const keptMenu = (rows) => rows.map((row) => (row === SAVE_ROW ? UNSAVE_ROW : row));
 /* THE COMMENT'S MENU IS WHERE ITS OPINIONS LIVE (backlog item 55; jakob ruled
    both doors, and this is the comment's). A post's door is a count row on its
    detail surface; a comment has no detail surface of its own — it lives inside a
@@ -729,17 +754,22 @@ const OPINIONS_ROW = { label: "Opinions on this", onSelect: () => {}, node: "opi
 const CITED_BY_ROW = { label: "Cited by", onSelect: () => {}, node: "citedBy" };
 
 const COMMENT_MENU = [...CARD_MENU, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW, REPORT_ROW];
-/* YOUR OWN COMMENT'S MENU (the comment-removal round, 2026-10-01): the reader's
-   menu with `Remove` joined as the last of the acts — after Save and Cite,
-   before the two readings, the license closing it. That is `OWN_POST_MENU`'s
-   place for the row, and the one `ChatMessageMenuOwn` already took at message
-   scale.
+/* YOUR OWN COMMENT'S MENU (the comment-removal round, 2026-10-01; round 41):
+   the reader's menu with `Edit` and `Remove` joined among the acts — after
+   Save and Cite, before the two readings, the license closing it. That is
+   `OWN_POST_MENU`'s place for both rows, and `Remove` is the one
+   `ChatMessageMenuOwn` already took at message scale. `Edit` is the one door
+   to the comment's edit on every host, as the post's is (jakob 2026-11-11);
+   no card carries an Edit button.
 
-   NO EDIT ROW AND NO SENSITIVE ROW, though the post's own menu has both. A
-   comment's Edit is a button on its own card (`CommentCard`'s `own`), so a
-   menu row would be a second door to one act; and a comment's sensitive mark
-   rides its edit, which is where the post's row sends the reader too. */
-const OWN_COMMENT_MENU = [...CARD_MENU, REMOVE_ROW, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW];
+   NO SENSITIVE ROW, though the post's own menu has one: a comment's sensitive
+   mark rides its edit, which is where the post's row sends the reader too. */
+const OWN_COMMENT_MENU = [...CARD_MENU, EDIT_ROW, REMOVE_ROW, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW];
+/* A COMMENT CARD'S OWN ⋮ IS THE COMMENT'S MENU (round 36), the post card's
+   rule (`readerCardMenu`): the rows less the license the card appends, the
+   report row standing after it. */
+const COMMENT_CARD_MENU = COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
+const OWN_COMMENT_CARD_MENU = OWN_COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
 
 /* THE THINK-TWICE DIALOG BEHIND AN AUTHOR'S `Remove`, ONE ANATOMY PER KIND
    (`RemoveConfirm`'s, shared the moment the comment's confirm drew it a second
@@ -770,7 +800,13 @@ const REMOVE_CONFIRM_COPY = {
    `line` slot, and `Remove`'s own slot reads `Retry`, still a text button in
    no colour. `Keep it` keeps its place: the way out is the way out it was.
    One anatomy for both kinds, so the post and the comment fail alike. */
-function RemoveDialog({ kind, overSheet = false, failed = false, node }) {
+/* `removing` IS THE REMOVAL IN FLIGHT (round 37, jakob 2026-11-11: the
+   remove and reject dialogs take the same Close while they sign): past 200ms
+   `Remove` reads `Removing…`, inert and never dimmed, and `Keep it` — reading
+   `Close` from the press itself — closes the dialog while the removal goes
+   on, its wait and its answer on the removed thing's own row. A board draws
+   it unnamed beside the named copies, so no path moves. */
+function RemoveDialog({ kind, overSheet = false, failed = false, removing = false, node }) {
   const { title, body } = REMOVE_CONFIRM_COPY[kind];
   const dialog = (
     <DialogSurface
@@ -780,8 +816,8 @@ function RemoveDialog({ kind, overSheet = false, failed = false, node }) {
       line={failed ? "That didn't send. Try again." : undefined}
       actions={
         <>
-          <Button variant="text" node={node && "remove"}>{failed ? "Retry" : "Remove"}</Button>
-          <Button node={node && "keep"}>Keep it</Button>
+          <Button variant="text" busy={removing} busyLabel="Removing…" node={node && "remove"}>{failed ? "Retry" : "Remove"}</Button>
+          <Button node={node && "keep"}>{removing ? "Close" : "Keep it"}</Button>
         </>
       }
       node={node}
@@ -1172,8 +1208,13 @@ function ThreadDetail({ menuItems = READER_POST_MENU }) {
    `Profile` and `ProfileOwnMenu` register them, and every other board this
    page stands on renders them stripped. The chronicle's acts are keyed by their
    position, newest first — two acts can read alike, and an act shows nothing
-   else that is its own. */
-function ProfileOwnBody({ tail = null }) {
+   else that is its own.
+
+   `headLine` is the line under the head: where a profile or picture change
+   closed on while it signs shows its wait and its failure (round 41, S3;
+   `SigningAfterClose`'s edit form, the head standing as it was until the
+   change is taken). Given none, nothing stands there. */
+function ProfileOwnBody({ tail = null, headLine = null }) {
   return (
     <>
       <ProfileBand node="band" />
@@ -1202,6 +1243,7 @@ function ProfileOwnBody({ tail = null }) {
             menu={ownProfileMenu()}
           />
         </div>
+        {headLine}
         <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
         <ChronicleList node="chronicle">
           <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="3d" second="Salt maps of the coast road — rubbings from three weekends at low tide." onOpen={() => {}} node="act" nodeKey="1" />
@@ -1782,9 +1824,15 @@ function composeSealCard({ cited, tags, state }) {
 }
 
 function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state, chipped = false }) {
+  /* From the press on Sign and publish the way out only closes the seal and
+     the post goes on (round 37): Back reads `Close`, the X is named so, and
+     the wait and the answer stand at the feed's head (`SigningAfterClose`).
+     A chipped board draws the signing moment as its `state` chip's
+     `signing`, the label swapped past 200ms. */
+  const signing = state === "signing" || state === "slow";
   return (
     <>
-      <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" />
+      <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" closing={signing} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
 
@@ -1841,8 +1889,17 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state, chipped = false }
               <Button variant="text" style={{ width: "100%" }}>Discard the post</Button>
             </div>
           </>
+        ) : chipped ? (
+          <>
+            <div style={{ display: "{{restFootShown}}", flexDirection: "column" }}>
+              <SealFooter signLabel="Sign and publish" busyLabel="Signing and publishing…" />
+            </div>
+            <div style={{ display: "{{signFootShown}}", flexDirection: "column" }}>
+              <SealFooter signLabel="Sign and publish" busy busyLabel="Signing and publishing…" />
+            </div>
+          </>
         ) : (
-          <SealFooter signLabel="Sign and publish" busy={state === "signing" || state === "slow"} busyLabel="Signing and publishing…" />
+          <SealFooter signLabel="Sign and publish" busy={signing} busyLabel="Signing and publishing…" />
         )}
       </div>
     </>
@@ -2031,8 +2088,13 @@ function ReplySealBugFoot() {
   );
 }
 
-function ReplySealBody({ cited = 0, tags = [], state, target = "post", keyAbsent = false, uploading = null, chipped = false }) {
+function ReplySealBody({ cited = 0, tags = [], state, target = "post", keyAbsent = false, uploading = null, chipped = false, signChip = false }) {
   const named = REPLY_TARGETS[target];
+  /* From the press on Sign comment the way out only closes the seal and the
+     reply goes on (round 37): Back reads `Close`, the X is named so, and the
+     wait and the answer stand on the parent it answers (`SigningAfterClose`). A
+     board drawing that moment passes `chipped` (its `state` chip's
+     `signing`) or `signChip` (a `state` chip of its own). */
   return (
     <>
       <WizardHeader
@@ -2088,6 +2150,9 @@ function ReplySealBody({ cited = 0, tags = [], state, target = "post", keyAbsent
             <div style={{ display: "{{signShown}}", flexDirection: "column" }}>
               <SealFooter signLabel="Sign comment" busyLabel="Signing comment…" />
             </div>
+            <div style={{ display: "{{signingShown}}", flexDirection: "column" }}>
+              <SealFooter signLabel="Sign comment" busy busyLabel="Signing comment…" />
+            </div>
             <div style={{ display: "{{bugShown}}", flexDirection: "column", gap: 12 }}>
               <ReplySealBugFoot />
             </div>
@@ -2102,7 +2167,18 @@ function ReplySealBody({ cited = 0, tags = [], state, target = "post", keyAbsent
               ) : (
                 <UploadStatusLine done={uploading.done} total={uploading.total} media={uploading.media} />
               ))}
-            <SealFooter signLabel="Sign comment" busyLabel="Signing comment…" disabled={Boolean(uploading && uploading.failed)} />
+            {signChip ? (
+              <>
+                <div style={{ display: "{{restFootShown}}", flexDirection: "column" }}>
+                  <SealFooter signLabel="Sign comment" busyLabel="Signing comment…" disabled={Boolean(uploading && uploading.failed)} />
+                </div>
+                <div style={{ display: "{{signFootShown}}", flexDirection: "column" }}>
+                  <SealFooter signLabel="Sign comment" busy busyLabel="Signing comment…" />
+                </div>
+              </>
+            ) : (
+              <SealFooter signLabel="Sign comment" busyLabel="Signing comment…" disabled={Boolean(uploading && uploading.failed)} />
+            )}
           </>
         )}
       </div>
@@ -2528,6 +2604,10 @@ function LockedLicenseRow() {
 function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes } = {}) {
   return (
     <>
+      {/* From the press on Sign the edit the X and the arrow only close the
+          edit and the edit goes on (round 37): the X is named `Close` while it
+          signs — `EditCompose`'s `signing` chip — and the wait and the answer
+          stand on the edited card (`SigningAfterClose`). */}
       <WizardHeader title="Edit post" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         {/* The fields scroll under the pinned foot, the wizard reading: a
@@ -2627,6 +2707,11 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
   const shown = (hole) => (bodyChip ? `{{${hole}}}` : "flex");
   return (
     <>
+      {/* From the press on Sign the edit the X and the arrow only close the
+          edit and the edit goes on (round 37): the X is named `Close` and the
+          commit reads `Signing the edit…` past 200ms — `CommentEdit`'s
+          `signing` chip — and the wait and the answer stand on the edited
+          card in the thread (`SigningAfterClose`). */}
       <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
@@ -2684,7 +2769,18 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
             citation's withdrawal at its two counter-records (`CommentEditActs`). */}
         <EditGate holes={holes} done={0} total={1} />
         <ActsFooter count={5} node="acts" />
-        <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
+        {holes ? (
+          <>
+            <div style={{ display: "{{signRestShown}}" }}>
+              <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
+            </div>
+            <div style={{ display: "{{signBusyShown}}" }}>
+              <Button style={{ width: "100%" }} busy busyLabel="Signing the edit…">Sign the edit</Button>
+            </div>
+          </>
+        ) : (
+          <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
+        )}
       </div>
     </>
   );
@@ -2807,7 +2903,7 @@ const TOBIAS_REPLIES = [
     timestamp: "35m",
     onReply: () => {},
     license: { attribution: 0, provenance: 0 },
-    menuItems: CARD_MENU,
+    menuItems: COMMENT_CARD_MENU,
   },
   {
     id: "t2",
@@ -2816,7 +2912,7 @@ const TOBIAS_REPLIES = [
     timestamp: "28m",
     onReply: () => {},
     license: { attribution: 0, provenance: 0 },
-    menuItems: CARD_MENU,
+    menuItems: COMMENT_CARD_MENU,
   },
 ];
 
@@ -2860,12 +2956,11 @@ const REMOVED_COMMENT_SCROLL = 440;
 /* @SOL'S COMMENTS ARE THE READER'S, AND THEY SAY SO (jakob 2026-10-01: "'own'
    should be added to the existing boards so it is clear that you can interact
    differently with your own comments"). The 3h comment and the landed reply
-   wear `CommentCard`'s `own` — `Edit` beside `Reply` in the affordance row,
-   the anatomy `ReplyMedia` drew first — and their ⋮ holds the own menu's acts
-   (`OWN_COMMENT_MENU`'s `Remove` after Save and Cite; the card appends the
-   license). The removed comment keeps `own` but loses `Edit` with its payload:
-   there is nothing left on it to edit, the same reason its ⋮ goes. */
-const OWN_THREAD_MENU = [...CARD_MENU, REMOVE_ROW];
+   carry the own menu in their ⋮ — `OWN_COMMENT_MENU`'s rows, `Edit` among
+   them; the card appends the license — and their row is any comment's. The
+   removed comment loses its ⋮ with its payload: there is nothing left on it
+   to edit or to act on. */
+const OWN_THREAD_MENU = OWN_COMMENT_CARD_MENU;
 
 /* @sol's 3h comment, the one with a branch under it — drawn as the reader's own
    or as someone else's, so its words are written once. */
@@ -2884,7 +2979,7 @@ const SOL_THREAD_COMMENT = {
       timestamp: "40m",
       onReply: () => {},
       license: { attribution: 0, provenance: 0 },
-      menuItems: CARD_MENU,
+      menuItems: COMMENT_CARD_MENU,
     },
     {
       id: "r2",
@@ -2893,7 +2988,7 @@ const SOL_THREAD_COMMENT = {
       timestamp: "22m",
       onReply: () => {},
       license: { attribution: 0, provenance: 0 },
-      menuItems: CARD_MENU,
+      menuItems: COMMENT_CARD_MENU,
     },
   ],
 };
@@ -2907,7 +3002,7 @@ const NESTED_LIST = { margin: 0, padding: 0, listStyle: "none" };
    `shown` DRAWS THE READER BOTH WAYS for a board's reader chip — two display
    holes, `member` and `applicant`. An applicant cannot have comments of their
    own (jakob 2026-10-02), so in the applicant's reading the foot's face is
-   @juno's and @sol's comment is someone else's: no `Edit`, the reader's ⋮.
+   @juno's and @sol's comment is someone else's: the reader's ⋮.
    Each reading's copy of that comment stands in its own list item, the other
    one hidden.
 
@@ -2942,8 +3037,20 @@ const NESTED_LIST = { margin: 0, padding: 0, listStyle: "none" };
    `pick` DRAWS A KEPT PICK ON THE FIRST COMMENT (round 27, seam 252): given,
    @tobias's card stands in `PickCopies`, so the board's `pick` chip adds the
    stance control's `pending` line to `threadSheet.commentCard`. */
-function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, footOpacity, replyOpacity, shown, pick = false, node }) {
+function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, removed = false, footOpacity, replyOpacity, shown, pick = false, node }) {
   const card = node && "commentCard";
+  /* A REPLY SENT AND CLOSED ON (round 37, `SigningAfterClose`): the branch
+     opens as a landing opens it, and where the new card settles on its
+     parent the reply's wait or its failure stands instead — the
+     commit's own in-flight label in the pending marker's quiet register, or
+     the failure line with Retry. Nothing is drawn as a card before its
+     signature is taken. */
+  const expanded = landed || afterClose !== undefined;
+  const closeLine = afterClose === undefined ? null : (
+    <div style={{ padding: "var(--space-2) 0 0 var(--space-6)" }}>
+      {afterClose === "failed" ? <SigningPending row message="Your comment didn't sign." onRetry={() => {}} /> : <PendingMarker label="Signing comment…" />}
+    </div>
+  );
   const readerCopy = (value) => (node ? { "data-node-chip": "reader", "data-node-key": value } : null);
   const settledReply = (
     <ul style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", margin: 0, padding: 0 }}>
@@ -2953,8 +3060,6 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
         author={SOL}
         content="The third headland light is real — I have a print from 2019 that almost catches it. Almost."
         timestamp="now"
-        own
-        onEdit={() => {}}
         onReply={() => {}}
         replyOpacity={replyOpacity}
         license={{ attribution: 0, provenance: 0 }}
@@ -2966,8 +3071,6 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
   const ownSol = (
     <CommentCard
       {...solComment}
-      own
-      onEdit={removed ? undefined : () => {}}
       menuItems={removed ? [] : OWN_THREAD_MENU}
       redacted={removed ? { reason: "author", when: "now", note: REMOVED_COMMENT_NOTE } : undefined}
       node={card}
@@ -2985,14 +3088,14 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
       onReply={() => {}}
       replyOpacity={replyOpacity}
       replyCount={2}
-      onOpenReplies={landed ? undefined : () => {}}
-      replies={landed ? TOBIAS_REPLIES : []}
+      onOpenReplies={expanded ? undefined : () => {}}
+      replies={expanded ? TOBIAS_REPLIES : []}
       topics={["glovebox", "coastroad"]}
       references={1}
       license={{ attribution: 0, provenance: 0 }}
-      menuItems={CARD_MENU}
+      menuItems={COMMENT_CARD_MENU}
     >
-      {landed ? settledReply : null}
+      {landed ? settledReply : closeLine}
     </CommentCard>
   );
   return (
@@ -3018,7 +3121,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
         onReply={() => {}}
         replyOpacity={replyOpacity}
         license={{ attribution: 0, provenance: 0 }}
-        menuItems={CARD_MENU}
+        menuItems={COMMENT_CARD_MENU}
       />
       {shown ? (
         <>
@@ -3027,7 +3130,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
           </li>
           <li style={{ display: shown.applicant, flexDirection: "column", listStyle: "none" }} {...readerCopy("applicant")}>
             <ul style={NESTED_LIST}>
-              <CommentCard {...solComment} menuItems={CARD_MENU} node={card} />
+              <CommentCard {...solComment} menuItems={COMMENT_CARD_MENU} node={card} />
             </ul>
           </li>
         </>
@@ -3065,7 +3168,7 @@ const MIRA_CLIP_POST = {
   comments: 2,
   opinions: 6,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("mira"),
 };
 
 /* ── The other two clip shapes (video-cover round, 2026-09-10) ─────────────
@@ -3115,7 +3218,7 @@ const TOBIAS_CANOE_POST = {
   score: "4.80",
   comments: 1,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("tobias"),
 };
 
 const ADA_GRAPES_POST = {
@@ -3128,7 +3231,7 @@ const ADA_GRAPES_POST = {
   score: "3.60",
   comments: 4,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("ada"),
 };
 
 /* The bottom bar's height — what the stream's own chrome has to clear. */
@@ -3421,14 +3524,16 @@ function WhatsNewBody({ newer }) {
    wait*).
 
    `waiting` false draws the live commit alone, for a state whose fields are
-   filled.
+   filled. A form with no `reason` waits silently: the commit disabled and no
+   line (`ChangePassword`, jakob 2026-11-11, R2 — a self-evident wait says
+   nothing).
 
    `node` names the pair where a registered board places it (design ⇄ impl
    seam 002): the line is its `reason` and the button its `action`. */
 function WaitingCommit({ id, label, reason, waiting = true, node }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-node={node}>
-      {waiting && (
+      {waiting && reason && (
         <span
           id={`${id}-waits`}
           data-node={node && "reason"}
@@ -3444,7 +3549,7 @@ function WaitingCommit({ id, label, reason, waiting = true, node }) {
           {reason}
         </span>
       )}
-      <Button style={{ width: "100%" }} disabled={waiting} describedBy={waiting ? `${id}-waits` : undefined} node={node && "action"}>
+      <Button style={{ width: "100%" }} disabled={waiting} describedBy={waiting && reason ? `${id}-waits` : undefined} node={node && "action"}>
         {label}
       </Button>
     </div>
@@ -3586,7 +3691,8 @@ function ReportProblemBody({ words }) {
    default; `Settings` passes its reader chip's hole. `recoveryStatus`,
    `backupFootnote` and `clearingFootnote` are the three readings `backup`
    decides, and default to its; `EraseConfirm` passes its backup chip's holes,
-   so the page under its dialog agrees with the dialog.
+   so the page under its dialog agrees with the dialog. `install` is the
+   install row's display (round 39) — left out, the row is not drawn.
 
    The element names are the `settings` prefix's (design ⇄ impl seam 059/061):
    `Settings` and `SettingsHidden` register them, and every other board this
@@ -3597,7 +3703,7 @@ function ReportProblemBody({ words }) {
 const SETTINGS_DELETE_FOOTNOTE =
   "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.";
 
-function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE, hidden = "3", recoveryStatus, backupFootnote, clearingFootnote } = {}) {
+function SettingsBody({ handleChip = false, keptChip = false, backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE, hidden = "3", recoveryStatus, backupFootnote, clearingFootnote, install } = {}) {
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" node="header" />
@@ -3746,9 +3852,32 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
             node="recovery"
           />
           <SettingsRow label="Your key" onOpen={() => {}} node="key" />
-          {keptPicks > 0 && (
-            <SettingsRow label={`${keptPicks} kept ${keptPicks === 1 ? "pick" : "picks"} waiting`} onOpen={() => {}} node="kept" />
-          )}
+          {keptPicks > 0 &&
+            (keptChip ? (
+              /* THE KEPT PICKS' BATCH AFTER CLOSE (round 41; jakob 2026-11-11,
+                 S4 (a)): Close on `KeptPicksSeal` leaves for this page while
+                 the batch goes on, its wait on each target's row; a batch
+                 that fails fails whole, and says so here — `That didn't
+                 sign.` in this row's second line with `Retry` in the trailing
+                 slot, which signs the whole batch again: the Handle row's
+                 failed form below. The failed state is a drawn copy; the rest
+                 row alone carries the name. */
+              <div>
+                <div style={{ display: "{{keptRestShown}}" }}>
+                  <SettingsRow label={`${keptPicks} kept ${keptPicks === 1 ? "pick" : "picks"} waiting`} onOpen={() => {}} node="kept" />
+                </div>
+                <div style={{ display: "{{keptFailedShown}}" }}>
+                  <SettingsRow
+                    label={`${keptPicks} kept ${keptPicks === 1 ? "pick" : "picks"} waiting`}
+                    status={<span role="alert" style={{ color: "var(--text-failure)" }}>That didn&apos;t sign.</span>}
+                    trailing={<InlineAction size="sm" onClick={() => {}}>Retry</InlineAction>}
+                    inert
+                  />
+                </div>
+              </div>
+            ) : (
+              <SettingsRow label={`${keptPicks} kept ${keptPicks === 1 ? "pick" : "picks"} waiting`} onOpen={() => {}} node="kept" />
+            ))}
         </SettingsGroup>
 
         {/* WHAT CLEARING THIS DATA ERASES (jakob 2026-10-13, seams 164 and
@@ -3773,7 +3902,8 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
             and the seen list last: it is a copy of the server's and returns
             on the next sign-in (PR-52), so the words never claim it is lost.
 
-            THE WIPE IS THE GROUP'S ONE ROW (jakob 2026-10-13: "Settings
+            THE WIPE IS THE GROUP'S LAST ROW, and its one row wherever the
+            install row is not shown (jakob 2026-10-13: "Settings
             needs the wipe everything from this device yes. ofcourse with
             warnings and stuff"). `Erase everything from this browser` — in
             the app `…from this app` — is an action row, quiet like `Sign
@@ -3795,7 +3925,25 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
           }
           node="clearing"
         >
-          <SettingsRow action label="Erase everything from this browser" onOpen={() => {}} node="erase" />
+          {install === undefined ? (
+            <SettingsRow action label="Erase everything from this browser" onOpen={() => {}} node="erase" />
+          ) : (
+            /* THE INSTALL ROW (round 39, jakob 2026-11-11, seam 285): one row
+               that adds the web app to the home screen, in the group whose
+               rows concern the app on this device. It leads the group, the
+               wipe staying last. It stands only where the browser can install
+               the app and it is not installed already, so `install` is its
+               display — absent on every board but `Settings`' chip. The
+               hairline after it is the group's own, drawn inside the wrapper
+               so an absent row leaves the card as it was. */
+            <div>
+              <div style={{ display: install }}>
+                <SettingsRow label="Add CoGra to your home screen" onOpen={() => {}} node="install" />
+                <div aria-hidden="true" style={{ height: 1, marginLeft: "var(--space-4)", background: "var(--border-hairline)" }} />
+              </div>
+              <SettingsRow action label="Erase everything from this browser" onOpen={() => {}} node="erase" />
+            </div>
+          )}
         </SettingsGroup>
 
         <SettingsGroup
@@ -3837,7 +3985,45 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
           node="credentials"
         >
           <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} node="password" />
-          <SettingsRow label="Handle" value="@sol" onOpen={() => {}} node="handle" />
+          {handleChip ? (
+            /* THE HANDLE CHANGE AFTER CLOSE (round 37, jakob 2026-11-11: "yep"):
+               the dialog and the form leave to settings and the change goes on;
+               its wait and its answer stand on this row — the change's own
+               in-flight label in the second line, the row refusing a second
+               open until the answer comes (the row-line pattern); a failure as
+               the hidden-accounts row says one, `That didn't go through.` with
+               `Retry` in the trailing slot; a handle someone took first in the
+               dialog's own words, the row still opening the form. The old
+               handle stands as the value until the change is taken. The
+               states are drawn copies; the rest row alone carries the names. */
+            <div>
+              <div style={{ display: "{{handleRestShown}}" }}>
+                <SettingsRow label="Handle" value="@sol" onOpen={() => {}} node="handle" />
+              </div>
+              <div style={{ display: "{{handleChangingShown}}" }}>
+                <SettingsRow label="Handle" value="@sol" status="Changing handle…" inert />
+              </div>
+              <div style={{ display: "{{handleFailedShown}}" }}>
+                <SettingsRow
+                  label="Handle"
+                  value="@sol"
+                  status={<span role="alert" style={{ color: "var(--text-failure)" }}>That didn&apos;t go through.</span>}
+                  trailing={<InlineAction size="sm" onClick={() => {}}>Retry</InlineAction>}
+                  inert
+                />
+              </div>
+              <div style={{ display: "{{handleTakenShown}}" }}>
+                <SettingsRow
+                  label="Handle"
+                  value="@sol"
+                  status={<span role="alert" style={{ color: "var(--text-failure)" }}>That handle is taken.</span>}
+                  onOpen={() => {}}
+                />
+              </div>
+            </div>
+          ) : (
+            <SettingsRow label="Handle" value="@sol" onOpen={() => {}} node="handle" />
+          )}
           <SettingsRow
             label="Email"
             value="sol@solferreira.art"
@@ -4722,9 +4908,10 @@ const FEED_LEAD_TITLE = {
    `Cited by` and `Opinions on this`, the license closing it. Your own
    comment's adds `Remove` among the acts (`CommentMenuOwn`), as everywhere.
    The card appends the license row itself, so the rows handed it stop short
-   of it. */
-const FEED_COMMENT_MENU = COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
-const FEED_OWN_COMMENT_MENU = OWN_COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
+   of it, and the report row, marked `tail`, stays after it: the card's ⋮
+   ends License terms · Report, as `CommentMenu` reads. */
+const FEED_COMMENT_MENU = COMMENT_CARD_MENU;
+const FEED_OWN_COMMENT_MENU = OWN_COMMENT_CARD_MENU;
 /* WHAT THE HEAD ROW NAMES, PER TARGET (the closing batch, jakob 2026-10-01).
    · AN UNTITLED POST — a text post's title is optional — is named by its
      first words in the title's place, the way the quote names a comment:
@@ -4733,8 +4920,9 @@ const FEED_OWN_COMMENT_MENU = OWN_COMMENT_MENU.filter((row) => row !== LICENSE_R
      the title's place reads `Removed by its author`, the removal mark's own
      line, over the author, who stays; its mark keeps its space empty.
 
-   YOUR OWN COMMENT (`own`) is the same card, its ⋮ opening your own menu;
-   nothing else about it changes — the feed card carries no Edit.
+   YOUR OWN COMMENT (`own`) is the same card, its ⋮ opening your own menu,
+   `Edit` among its rows (jakob 2026-11-11: "this belongs in the three dot
+   bottom sheet as always"); its row is any comment card's.
 
    A LONG COMMENT folds at two lines under `More`, the caption's precedent
    (`FEED_COMMENT_CLAMP_LINES`); the card is still the door to its thread.
@@ -4801,11 +4989,16 @@ function CommentFeedCard({ id, author, content, timestamp, parent, parentKind = 
    other card wears. The row reads opinion · score · share: the kind's own act
    is the chat glyph, and its slot waits for chats. Its ⋮ is the profile's own
    menu, less the share row the row already carries; the card opens the
-   profile. */
+   profile. Report closes it, at the sheet tail of every other-person menu
+   (ruling 75; jakob 2026-11-11, H2), as the deleted account's card already
+   had it. Each row keeps the name the profile menu gives it, so the menu
+   board that draws it open (`FeedProfileMenu`) names it as `ProfileMenu`
+   does. */
 const FEED_PROFILE_MENU = (handle) => [
   SAVE_ROW,
-  { label: "Mention in a new post", onSelect: () => {} },
-  { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {} },
+  { label: "Mention in a new post", onSelect: () => {}, node: "mention" },
+  { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {}, node: "hide" },
+  REPORT_ROW,
 ];
 const FEED_BIO = {
   margin: 0,
@@ -4883,6 +5076,122 @@ function ProfileFeedCard({ person, src, bio, score, bundle, redacted = false, no
   );
 }
 
+/* THE HOST TOPS THE CARD MENUS ARE RAISED OVER (round 36, backlog 149):
+   History's and Saved's top viewport, drawn at the phone's own 844 as
+   `HistoryHidden` and `SavedUndo` draw theirs — the header, the search (and
+   History's trigger), then the cards the board hands in. Named as `History`
+   and `Saved` name them. */
+function HistoryTop({ children }) {
+  return (
+    <>
+      <PageHeader title="History" backHref="#" backLabel="Back to your profile" node="header" />
+      <div style={{ flex: "none" }}>
+        <SearchBar placeholder="Search your history" ariaLabel="Search your history" node="searchField" />
+        <div style={{ display: "flex", alignItems: "center", padding: "0 16px 8px 16px" }}>
+          <FilterTrigger reading="Everything" ariaLabel="What your history shows" node="filterTrigger" />
+        </div>
+      </div>
+      <FeedList>
+        <HistoryDayDivider node="day" nodeKey="today">
+          Today
+        </HistoryDayDivider>
+        {children}
+      </FeedList>
+      <BottomNav active="profile" slots={ALL_SLOTS} inline node="bottomBar" />
+    </>
+  );
+}
+function SavedTop({ children }) {
+  return (
+    <>
+      <PageHeader title="Saved" backHref="#" backLabel="Back to your profile" node="header" />
+      <div style={{ flex: "none" }}>
+        <SearchBar placeholder="Search what you saved" ariaLabel="Search what you saved" node="searchField" />
+      </div>
+      <FeedList>{children}</FeedList>
+      <BottomNav active="profile" slots={ALL_SLOTS} inline node="bottomBar" />
+    </>
+  );
+}
+/* @sol's own comment on @mira's gallery post, as `FeedCommentShapes` draws
+   the reader's own comment card — its words, age, tags and score — keyed by
+   an id where a menu board names it (round 36). */
+const SOL_OWN_COMMENT = {
+  id: "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58",
+  author: SOL,
+  content: "The honey stand is half the reason I take the coast road at all.",
+  timestamp: "3h",
+  parent: MIRA_GALLERY_POST,
+  topics: ["tidemarket"],
+  score: "5.20",
+  own: true,
+};
+/* A PROFILE'S POSTS OR COMMENTS VIEW, ITS TOP VIEWPORT (round 36): the page
+   `ProfilePosts` and `ProfileComments` draw — @ada's — or the reader's own,
+   whose header is `ProfileOwnBody`'s; the tab row lit on `tab`, the list named
+   `posts` or `comments` as those boards name it, holding the cards handed in. */
+function ProfileTabTop({ own = false, tab, children }) {
+  return (
+    <>
+      {own ? <ProfileBand node="band" /> : <PageHeader title="@ada" backHref="#" backLabel="Back to feed" node="header" />}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ padding: "0 16px" }}>
+          {own ? (
+            <ProfileHeader
+              node="identity"
+              handle="sol"
+              displayName="Sol Ferreira"
+              bio="Field notes from the flats — salt, paper, and whatever the wind allows."
+              website="solferreira.art"
+              posts={5}
+              stancesOn={5}
+              stancesTaken={5}
+              own
+              invitesWaiting
+              onEdit={() => {}}
+              onInvites={() => {}}
+              onAvatarChange={() => {}}
+              onCounts={() => {}}
+              menu={ownProfileMenu()}
+            />
+          ) : (
+            <ProfileHeader
+              node="identity"
+              handle="ada"
+              displayName="Ada Okonkwo"
+              avatarSrc="comment-camera.jpg"
+              bio="A dozen tries at the third headland light and counting."
+              posts={12}
+              stancesOn={6}
+              stancesTaken={6}
+              onCounts={() => {}}
+              onCommit={() => {}}
+              onMessage={() => {}}
+              menu={otherProfileMenu()}
+              showHandle={false}
+            />
+          )}
+        </div>
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value={tab} tabs={CHRONICLE_TABS} node="tabRow" />
+        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "8px 0 0 0" }} data-node={tab}>
+          {children}
+        </div>
+      </div>
+      <BottomNav active={own ? "profile" : "feed"} slots={ALL_SLOTS} inline node="bottomBar" />
+    </>
+  );
+}
+/* A card's menu, open over its host (round 36): the sheet every menu board
+   draws — `FeedPostMenu`'s — handed its rows, each row named by its `node`. */
+function CardMenuSheet({ items, ariaLabel = "Post actions" }) {
+  return (
+    <BottomSheet open ariaLabel={ariaLabel} node="menuSheet">
+      {items.map((item) => (
+        <SheetItem key={item.label} label={item.label} node={item.node} />
+      ))}
+    </BottomSheet>
+  );
+}
 /* THE TAG CARD — why it reaches you, and a glimpse (jakob's pick,
    2026-10-01). jakob's story for it: "this is a hashtag that ranks high for
    you (based on your graph) and there might be some interesting stuff to
@@ -5077,6 +5386,9 @@ const SOL_INVITE_ID = "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15";
 /* The actor id of the asker who deleted their account (`Invites`' `asker`
    chip): the lowercase UUID the wire carries, the row's only key left. */
 const DELETED_ASKER_ID = "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608";
+/* The id of a person the reader let in who has since deleted their account
+   (`Invites`' `letIn` chip at `deleted`): the row's only key left. */
+const DELETED_LET_IN_ID = "e5a3c2d8-7b14-4f9e-8c06-1d9b4a72f3e5";
 /* The askers' ids (round 33): an application row keys by its asker's id,
    the lowercase UUID the wire carries, as every person row does. */
 const ASKER_IDS = {
@@ -5406,8 +5718,8 @@ function KeptApprovalRow({ shown }) {
 /* The element names are the `invites` prefix's (design ⇄ impl seam 078):
    `Invites` and its two closing dialogs register them, and every other board
    this page stands on renders them stripped. An application is keyed by its
-   applicant's handle — a kept approval's row is an application too, at the
-   head — and a group by the id of the link its applications came through. A
+   applicant's id (round 33) — a kept approval's row is an application too, at
+   the head — and a group by the id of the link its applications came through. A
    live link's card is `link`, keyed by the same id; the `revoke` chip draws
    the first one twice, and each copy keeps the link's own key (jakob
    2026-10-07, ruling 39: a chip copy of a keyed instance).
@@ -5428,6 +5740,12 @@ function KeptApprovalRow({ shown }) {
      the asker's actor id, the hidden-accounts sheet's rule. The data does
      not serve this yet: the application carries no redaction signal today
      (seam 248, an API field owed by the implementation side).
+   - `letIn` — THE PEOPLE YOU LET IN (round 38, jakob's J3). `none` draws
+     no section, the state until someone is let in; `people` the section
+     with two people, newest first; `deleted` the second one's account
+     deleted, read as `asker`'s row reads — `redactedPerson`, keyed by the
+     person's id. A person's row is `person`, keyed by the person's id
+     (round 33), under `peopleLabel`.
    - `copy` — A COPY THAT FAILED. Copying is a comfort, not a signature, so it
      answers in the comfort's register on the link's own card: `That didn't
      go through.` with `Retry`, the row line's vehicle (`RowSigning`'s),
@@ -5560,6 +5878,26 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
             nodeKey={ASKER_IDS.rafa}
           />
         </div>
+
+        {/* THE PEOPLE YOU LET IN (jakob 2026-11-11, J3): under the waiting
+            applications, every person the reader vouched in, newest first —
+            the application's row without its control, so the chevron says it
+            opens their profile. Absent, label and all, until someone is let in.
+            `shown` is `Invites`' `letIn` chip. */}
+        {shown && (
+          <div style={{ display: shown.people, flexDirection: "column" }}>
+            <SectionLabel node="peopleLabel">People you let in</SectionLabel>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
+              <ContentRow variant="chronicle" name={NADIA.displayName} title={NADIA.displayName} trailing="2d" onOpen={() => {}} node="person" nodeKey={NADIA.id} />
+              <div style={{ display: shown.personNamed, flexDirection: "column" }}>
+                <ContentRow variant="chronicle" name={WREN.displayName} title={WREN.displayName} trailing="5d" onOpen={() => {}} node="person" nodeKey={WREN.id} />
+              </div>
+              <div style={{ display: shown.personDeleted, flexDirection: "column" }} data-node-chip="letIn" data-node-key="deleted">
+                <ContentRow variant="chronicle" redacted trailing="5d" onOpen={() => {}} node="redactedPerson" nodeKey={DELETED_LET_IN_ID} />
+              </div>
+            </div>
+          </div>
+        )}
 
         <SectionLabel node="linksLabel">Live links</SectionLabel>
         {shown && (

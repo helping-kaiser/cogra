@@ -245,7 +245,7 @@ class ExploreViewModelTest {
     }
 
     @Test
-    fun `a member searches Ranked as the viewer with seen kept out`() = runTest(dispatcher) {
+    fun `a member searches Ranked as the viewer`() = runTest(dispatcher) {
         member()
         val vm = model()
         runCurrent()
@@ -254,11 +254,10 @@ class ExploreViewModelTest {
         val ask = search.reads.single().ask
         assertThat(ask.order).isEqualTo(SearchOrder.RANKED)
         assertThat(ask.viewer).isEqualTo("me")
-        assertThat(ask.includeSeen).isFalse()
     }
 
     @Test
-    fun `a guest searches newest first with no viewer and nothing kept out`() = runTest(dispatcher) {
+    fun `a guest searches newest first with no viewer`() = runTest(dispatcher) {
         val vm = model()
         runCurrent()
         vm.onQueryChange("salt")
@@ -266,7 +265,6 @@ class ExploreViewModelTest {
         val ask = search.reads.single().ask
         assertThat(ask.order).isEqualTo(SearchOrder.NEWEST)
         assertThat(ask.viewer).isNull()
-        assertThat(ask.includeSeen).isTrue()
         assertThat(vm.state.value.guest).isTrue()
     }
 
@@ -341,10 +339,10 @@ class ExploreViewModelTest {
             assertThat(vm.state.value.results?.hits?.map { it.node.id }).containsExactly("a", "b", "c").inOrder()
         }
 
-    // SettingsReading.md: "ALWAYS search's order and its already-seen toggle follow
-    // the reader's saved default, and search's kinds stay search's own".
+    // SettingsReading.md: search's order follows the reader's saved default and its
+    // kinds stay its own; seam 296 (jakob, 2026-11-11): never the seen toggle.
     @Test
-    fun `search's order and seen follow the reader's saved default, its kinds its own`() = runTest(dispatcher) {
+    fun `search takes the saved default's order, never its seen toggle`() = runTest(dispatcher) {
         member()
         readerDefaults.save(
             "me",
@@ -352,8 +350,8 @@ class ExploreViewModelTest {
         )
         val vm = model()
         advanceUntilIdle()
-        assertThat(vm.state.value.filter).isEqualTo(SearchFilter(order = SearchOrder.NEWEST, seen = true))
-        assertThat(vm.state.value.defaultFilter).isEqualTo(SearchFilter(order = SearchOrder.NEWEST, seen = true))
+        assertThat(vm.state.value.filter).isEqualTo(SearchFilter(order = SearchOrder.NEWEST))
+        assertThat(vm.state.value.defaultFilter).isEqualTo(SearchFilter(order = SearchOrder.NEWEST))
     }
 
     @Test
