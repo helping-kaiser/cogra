@@ -3850,10 +3850,7 @@ reject extension's lines* below). The buttons are `Close it` and `Keep
 it`, `Keep it` being the house word for *don't*, from `RemoveConfirm`
 and `SeveranceConfirm`. The batch dialog's two sentences are the row's
 in the plural (`RejectAllConfirm`; *carried over — blessed by use (jakob
-2026-10-06)*): `All four leave your list and all four people are told.
-Their accounts stay exactly as they are — signed in, and free to keep
-reading.` and `This is your call and nobody else's. Any member can still
-vouch any of them in, and each gets a link to ask with.`
+2026-10-06)*): `All four leave your list and all four people are told. Their accounts stay as they are.` and `Any member can still vouch any of them in, and each gets a link to ask with.`
 
 The count is the sentence's, so it takes the count's English (seam 248;
 *new 2026-10-29, blessed (jakob 2026-11-10)*). A
@@ -3928,10 +3925,7 @@ same state.
 ### The reject extension's lines — same round, same day
 
 **The dialog says both effects.** `Close @imke's application?` then
-`It leaves your list and @imke is told. Their account stays exactly as
-it is — signed in, and free to keep reading.` and `This is your call
-and nobody else's. Any member can still vouch them in, and @imke gets a
-link to ask with.` The first sentence is the one a reader would
+`It leaves your list and @imke is told. Their account stays as it is.` and `Any member can still vouch them in, and @imke gets a link to ask with.` The first sentence is the one a reader would
 otherwise assume away: closing is not private, and a product that let
 somebody press it thinking it was would be lying by omission. The
 second is what stops the first from reading as expulsion.

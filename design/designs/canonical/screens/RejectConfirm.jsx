@@ -61,8 +61,8 @@ export function Screen() {
           onScrimPress={() => {}}
           title="Close @imke's application?"
           body={[
-            "It leaves your list and @imke is told. Their account stays exactly as it is — signed in, and free to keep reading.",
-            "This is your call and nobody else's. Any member can still vouch them in, and @imke gets a link to ask with.",
+            "It leaves your list and @imke is told. Their account stays as it is.",
+            "Any member can still vouch them in, and @imke gets a link to ask with.",
           ]}
           actions={
             <>
@@ -77,8 +77,8 @@ export function Screen() {
           onScrimPress={() => {}}
           title="Close @imke's application?"
           body={[
-            "It leaves your list and @imke is told. Their account stays exactly as it is — signed in, and free to keep reading.",
-            "This is your call and nobody else's. Any member can still vouch them in, and @imke gets a link to ask with.",
+            "It leaves your list and @imke is told. Their account stays as it is.",
+            "Any member can still vouch them in, and @imke gets a link to ask with.",
           ]}
           actions={
             <>
