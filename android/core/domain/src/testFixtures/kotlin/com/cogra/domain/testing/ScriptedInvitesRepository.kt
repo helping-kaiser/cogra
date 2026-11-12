@@ -57,7 +57,8 @@ class ScriptedInvitesRepository(private val writes: SealingWriteRepository? = nu
 
     override suspend fun invites(): Outcome<InvitesRead> {
         reads += Unit
-        return readAnswers.removeFirstOrNull() ?: Outcome.Success(InvitesRead(queue.toList(), links.toList(), people.toList()))
+        return readAnswers.removeFirstOrNull()
+            ?: Outcome.Success(InvitesRead(queue.toList(), links.toList(), people.toList()))
     }
 
     override suspend fun createInviteLink(expiresAt: Instant, singleUse: Boolean): Outcome<InviteLinkInfo> {

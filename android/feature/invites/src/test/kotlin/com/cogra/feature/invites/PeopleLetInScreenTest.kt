@@ -42,9 +42,9 @@ class PeopleLetInScreenTest {
 
     private fun person(id: String, name: String?, daysAgo: Long, redacted: Boolean = false) = LetInPerson(
         id = id,
-        door = id,
-        name = if (redacted) null else name ?: "@$id",
-        monogram = if (redacted) "" else name ?: id,
+        door = id.removeSuffix("-id"),
+        name = if (redacted) null else name ?: "@${id.removeSuffix("-id")}",
+        monogram = if (redacted) "" else name ?: id.removeSuffix("-id"),
         avatarUrl = null,
         redacted = redacted,
         vouchedAt = now.minus(Duration.ofDays(daysAgo)),
@@ -209,7 +209,7 @@ class PeopleLetInScreenTest {
         render(state(listOf(nadia, gone), listOf(imke)), InvitesActions(onOpenPerson = { opened += it }))
         compose.onNodeWithTag("invites_person_nadia-id_open", useUnmergedTree = true).performClick()
         compose.onNodeWithTag("invites_person_gone-id_open", useUnmergedTree = true).performClick()
-        assertThat(opened.map { it.door }).containsExactly("nadia-id", "gone-id").inOrder()
+        assertThat(opened.map { it.door }).containsExactly("nadia", "gone").inOrder()
     }
 
     @Test
@@ -222,7 +222,7 @@ class PeopleLetInScreenTest {
             .assertTextEquals("Deleted account")
         compose.onNodeWithTag("invites.redactedPerson.trailing", useUnmergedTree = true).assertTextEquals("5d")
         compose.onNodeWithTag("invites.redactedPerson.chevron", useUnmergedTree = true).assertExists()
-        compose.onAllNodesWithText("@gone-id", substring = true).assertCountEquals(0)
+        compose.onAllNodesWithText("@gone", substring = true).assertCountEquals(0)
         assertThat(top("invites.person:nadia-id")).isLessThan(top("invites.redactedPerson:gone-id"))
     }
 

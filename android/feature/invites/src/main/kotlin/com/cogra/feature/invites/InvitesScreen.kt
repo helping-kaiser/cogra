@@ -178,16 +178,7 @@ fun InvitesRoute(
             viewModel.onLinkCopied()
         }
     }
-    // A card's copy answers on that card when it does not go through (Invites.md:79).
-    val copyCard: (InviteLinkInfo) -> Unit = { link ->
-        scope.launch {
-            if (clipboard.copied(viewModel.joinUrl(link))) {
-                viewModel.onLinkCopied(link.id)
-            } else {
-                viewModel.onCopyFailed(link.id)
-            }
-        }
-    }
+    val copyCard = rememberCardCopy(viewModel)
     CompositionLocalProvider(LocalOnRestoreKey provides onRestoreKey) {
         InvitesScreen(
             state = state,
@@ -225,6 +216,24 @@ fun InvitesRoute(
             ),
             deletionBand = deletionBand,
         )
+    }
+}
+
+/** A card's copy, which answers on that card when it does not go through (Invites.md:77-81). */
+@Composable
+private fun rememberCardCopy(viewModel: InvitesViewModel): (InviteLinkInfo) -> Unit {
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
+    return remember(viewModel, clipboard, scope) {
+        { link ->
+            scope.launch {
+                if (clipboard.copied(viewModel.joinUrl(link))) {
+                    viewModel.onLinkCopied(link.id)
+                } else {
+                    viewModel.onCopyFailed(link.id)
+                }
+            }
+        }
     }
 }
 
