@@ -460,6 +460,15 @@
       "page": "feed"
     },
     {
+      "file": "FeedRemovedMenuOwn.dc.html",
+      "title": "Feed · your removed post's menu",
+      "x": 12960,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "FeedWordsSensitive.dc.html",
       "title": "Feed · a words-only post, veiled",
       "x": 8160,
@@ -578,10 +587,10 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -8250,
+      "x": -8540,
       "y": 0,
-      "w": 7830,
-      "h": 5545,
+      "w": 8120,
+      "h": 5502,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -840,7 +849,7 @@
       "x": -340,
       "y": 2120,
       "w": 290,
-      "text": "COMMENTS · Removing your own comment\n\nIN V1.0 (jakob 2026-10-01): the erasure half at comment scale, drawn in the post's own idiom. Your own comment's ⋮ opens the reader's sheet with REMOVE joined as the last of the acts — after Save and Cite, before the two readings, the license closing it; no Edit row (the card carries Edit) and no sensitive row (the mark rides the edit). Remove raises the post's think-twice dialog with the nouns swapped: the safe action filled, the removal a text button, no error colour. Removal takes the payload, never the record (comment.md §5): the comment keeps its place in the thread, its author and its time, and 'Removed by its author' stands where its words were. The replies beneath keep their parent and stay readable — removal never breaks a thread, and nothing disappears in silence. Like a removed post, the removed comment has no menu left. Boards: your own comment's menu · remove, think twice · your comment, removed.",
+      "text": "COMMENTS · Removing your own comment\n\nIN V1.0 (jakob 2026-10-01): the erasure half at comment scale, drawn in the post's own idiom. Your own comment's ⋮ opens the reader's sheet with REMOVE joined as the last of the acts — after Save and Cite, before the two readings, the license closing it; no Edit row (the card carries Edit) and no sensitive row (the mark rides the edit). Remove raises the post's think-twice dialog with the nouns swapped: the safe action filled, the removal a text button, no error colour. Removal takes the payload, never the record (comment.md §5): the comment keeps its place in the thread, its author and its time, and 'Removed by its author' stands where its words were. The replies beneath keep their parent and stay readable — removal never breaks a thread, and nothing disappears in silence. The removed comment has no menu left. Boards: your own comment's menu · remove, think twice · your comment, removed.",
       "page": "comments"
     },
     {
@@ -849,7 +858,7 @@
       "y": 3616,
       "w": 290,
       "page": "feed",
-      "text": "THE POST SCORE’S DRILL-DOWN (jakob 2026-09-11, backlog item 13). Four levels — the paths, one path, one step, the records behind it — each carrying a small cover of the post it came from. The register is paths and people, never a chart: a bar would turn a reader’s own connections into a statistic about the post. Level one shows the strongest handful and a quiet row that unfolds the rest in place (never a second page), and that row carries what they add, so the drawn figures still sum to the score. The fifth board is the same screen when the trace's fetch finds no paths — the dash and a quiet line — or for a thing still settling."
+      "text": "THE POST SCORE’S DRILL-DOWN (jakob 2026-09-11, backlog item 13). Four levels — the paths, one path, one step, the records behind it — each carrying a small cover of the post it came from. The register is paths and people, never a chart: a bar would turn a reader’s own connections into a statistic about the post. Level one shows every path, strongest first, one continuous list that is never capped (jakob 2026-11-12), and the drawn figures sum to the score. The fifth board is the same screen when the trace's fetch finds no paths — the dash and a quiet line — or for a thing still settling."
     }
   ],
   "launch": {

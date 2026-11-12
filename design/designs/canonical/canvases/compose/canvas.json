@@ -262,6 +262,15 @@
       "page": "compose"
     },
     {
+      "file": "RemovedOther.dc.html",
+      "title": "Removed by its author · another's post",
+      "x": 5760,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
       "file": "EditActs.dc.html",
       "title": "Edit · the actions",
       "x": 1920,
@@ -551,9 +560,9 @@
     },
     {
       "file": "MapCompose.dc.html",
-      "x": -3900,
+      "x": -4190,
       "y": 0,
-      "w": 3480,
+      "w": 3770,
       "h": 4864,
       "page": "compose",
       "title": "Compose · flow map"

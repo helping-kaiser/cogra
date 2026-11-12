@@ -898,6 +898,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Feed score</span>", tag: "button", all: true },
     { n: 5, find: 'aria-label="3 comments"', tag: "button" },
     ...nav(6),
+    { n: 11, find: 'aria-label="Share this post"', tag: "button" },
     { n: 12, find: 'aria-label="More on this post"', tag: "button" },
   ],
   ComposeLanded: [
