@@ -27,7 +27,15 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/history",
 }));
 
-const server = startMswServer(...stanceHandlers());
+// The real editor reads the author's own mark as it opens (`CommentSelfMark`).
+const server = startMswServer(
+  ...stanceHandlers(),
+  gqlLink.query("CommentSelfMark", ({ variables }) =>
+    HttpResponse.json({
+      data: { comment: { __typename: "Comment", id: variables.id, sensitiveSelfMark: false, sensitiveReason: null } },
+    }),
+  ),
+);
 
 const moderated = (value: string) => ({ __typename: "ModeratedText", value, status: "NORMAL" });
 
@@ -227,7 +235,7 @@ describe("Report on a comment off the thread", () => {
     fireEvent.click(await screen.findByTestId("card-report-sheet-report"));
     await waitFor(() => expect(notify).toHaveBeenCalledWith("Reported."));
     expect(report.targets).toEqual(["c1"]);
-    expect((screen.getByTestId("card-report-sheet") as HTMLDialogElement).open).toBe(false);
+    await waitFor(() => expect((screen.getByTestId("card-report-sheet") as HTMLDialogElement).open).toBe(false));
   });
 
   // ReportConfirm.md:15 — refused: the sheet stays, NEVER Reported.
@@ -249,7 +257,7 @@ describe("Report on a comment off the thread", () => {
     mount({});
     fireEvent.click(within(await openMenu()).getByTestId("history.menuSheet.report"));
     fireEvent.click(await screen.findByTestId("card-report-sheet-cancel"));
-    expect((screen.getByTestId("card-report-sheet") as HTMLDialogElement).open).toBe(false);
+    await waitFor(() => expect((screen.getByTestId("card-report-sheet") as HTMLDialogElement).open).toBe(false));
     expect(report.targets).toEqual([]);
   });
 });

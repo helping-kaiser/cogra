@@ -559,7 +559,7 @@ describe("PostView", () => {
     expect(openMenuSheet().className).toContain(
       "bg-surface-container-highest",
     );
-    fireEvent.click(screen.getByTestId("postDetail.menuSheet.license"));
+    fireEvent.click(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.license"));
     expect(screen.getByTestId("postDetail.licenseSheet.terms")).toHaveTextContent("Public domain");
     expect(screen.getByTestId("postDetail.licenseSheet.terms.publicDomain")).toHaveTextContent(
       "Public domain",
@@ -584,7 +584,7 @@ describe("PostView", () => {
     await openComments();
     await screen.findByTestId(byNode("postDetail.card.body"));
     fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
-    fireEvent.click(screen.getByTestId("postDetail.menuSheet.license"));
+    fireEvent.click(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.license"));
     const credit = screen.getByTestId(byNode("postDetail.licenseSheet.terms.axis", "credit"));
     expect(
       within(credit).getByTestId(byNode("postDetail.licenseSheet.terms.axis.label", "credit")),
@@ -803,12 +803,12 @@ describe("PostView", () => {
     await openComments();
     await screen.findByTestId(byNode("postDetail.card.body"));
     fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
-    expect(screen.getByTestId("postDetail.menuSheet.save")).toHaveTextContent("Save");
-    expect(screen.getByTestId("postDetail.menuSheet.cite")).toHaveTextContent("Cite in a new post");
-    expect(screen.getByTestId("postDetail.menuSheet.citedBy")).toHaveTextContent("Cited by");
-    expect(screen.getByTestId("postDetail.menuSheet.opinions")).toHaveTextContent("Opinions on this");
-    expect(screen.getByTestId("postDetail.menuSheet.license")).toHaveTextContent("License terms");
-    expect(screen.queryByTestId("postDetail.menuSheet.hide")).not.toBeInTheDocument();
+    expect(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.save")).toHaveTextContent("Save");
+    expect(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.cite")).toHaveTextContent("Cite in a new post");
+    expect(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.citedBy")).toHaveTextContent("Cited by");
+    expect(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.opinions")).toHaveTextContent("Opinions on this");
+    expect(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.license")).toHaveTextContent("License terms");
+    expect(within(screen.getByTestId("comment-menu-c1-sheet-body")).queryByTestId("postDetail.menuSheet.hide")).not.toBeInTheDocument();
   });
 
   // A comment has no count line of its own, so its ⋮ row stands whatever the
@@ -822,7 +822,7 @@ describe("PostView", () => {
     await openComments();
     await screen.findByTestId(byNode("postDetail.card.body"));
     fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
-    fireEvent.click(screen.getByTestId("postDetail.menuSheet.citedBy"));
+    fireEvent.click(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.citedBy"));
     expect(await screen.findByTestId("cited-by-sheet-empty")).toHaveTextContent(
       "Nothing cites this yet — yours would be the first.",
     );
@@ -840,7 +840,7 @@ describe("PostView", () => {
     await openComments();
     await screen.findByTestId(byNode("postDetail.card.body"));
     fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
-    fireEvent.click(screen.getByTestId("postDetail.menuSheet.opinions"));
+    fireEvent.click(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.opinions"));
     expect(await screen.findByTestId("opinions-sheet-empty")).toHaveTextContent(
       "No opinions yet — yours would be the first.",
     );
@@ -1001,7 +1001,7 @@ describe("PostView", () => {
     });
     await openComments();
     fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
-    fireEvent.click(screen.getByTestId("postDetail.menuSheet.save"));
+    fireEvent.click(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.save"));
     expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent("Saved.");
     await waitFor(() => expect(log.sets).toEqual([{ node: "c1", at: null }]));
   });
@@ -1304,7 +1304,7 @@ describe("PostView", () => {
         "postDetail.menuSheet.license",
       ]);
       expect(openMenuSheet()).toHaveAccessibleName("Comment actions");
-      expect(screen.queryByTestId("postDetail.menuSheet.report")).not.toBeInTheDocument();
+      expect(within(screen.getByTestId("comment-menu-c1-sheet-body")).queryByTestId("postDetail.menuSheet.report")).not.toBeInTheDocument();
     });
 
     it("gives someone else's comment no Remove", async () => {
@@ -1315,7 +1315,7 @@ describe("PostView", () => {
       });
       await openComments();
       fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
-      expect(screen.queryByTestId("postDetail.menuSheet.remove")).not.toBeInTheDocument();
+      expect(within(screen.getByTestId("comment-menu-c1-sheet-body")).queryByTestId("postDetail.menuSheet.remove")).not.toBeInTheDocument();
     });
 
     // CommentMenu.md:7 — Save, Cite in a new post, Cited by, Opinions on this,
@@ -1493,7 +1493,7 @@ describe("PostView", () => {
       scroller.scrollTop = 440;
 
       fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
-      fireEvent.click(screen.getByTestId("postDetail.menuSheet.remove"));
+      fireEvent.click(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.remove"));
       const dialog = screen.getByTestId("postDetail.dialog") as HTMLDialogElement;
       expect(dialog).toHaveAccessibleName("Remove this comment?");
       await waitFor(() =>
@@ -1546,7 +1546,7 @@ describe("PostView", () => {
       });
       await openComments();
       fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
-      fireEvent.click(screen.getByTestId("postDetail.menuSheet.remove"));
+      fireEvent.click(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.remove"));
       fireEvent.click(screen.getByTestId("postDetail.dialog.remove"));
       await waitFor(() =>
         expect(screen.getByTestId("postDetail.dialog.remove")).toHaveTextContent("Retry"),
@@ -3147,7 +3147,7 @@ describe("PostView — references", () => {
     expect(routerPush).toHaveBeenCalledWith("/compose?reference=p1");
 
     fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
-    fireEvent.click(screen.getByTestId("postDetail.menuSheet.cite"));
+    fireEvent.click(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.cite"));
     expect(routerPush).toHaveBeenCalledWith("/compose?reference=c1");
   });
 
