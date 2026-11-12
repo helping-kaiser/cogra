@@ -631,7 +631,7 @@ describe("the feed filter", () => {
     });
 
     // FeedProfileMenu.md:3, :5 (round 36): the card's ⋮ rises as feed.menuSheet
-    // and reads Save · Mention · Hide @mira · Report; :11 — Report raises the
+    // and reads Save · Mention · Hide @mira · Report; :13 — Report raises the
     // confirm naming the person, and nothing is sent.
     it("a person card's menu reads save, mention, hide and report as feed.menuSheet rows", async () => {
       const r = reads();

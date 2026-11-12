@@ -485,7 +485,7 @@ describe("TopicView — a post card's menu (TagPageMenu.md)", () => {
   });
 
   it("a_guests_cite_raises_the_join_prompt_and_opens_no_wizard", async () => {
-    // FeedPostMenu.md:25 (any host), GuestGate.md:5.
+    // FeedPostMenu.md:23 (any host), GuestGate.md:5.
     serveTag();
     push.mockClear();
     renderWithProviders(<TopicView name="rust" />, { store: guestStore(), writeSigner: fakeWriteSigner() });

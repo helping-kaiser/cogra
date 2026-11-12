@@ -1124,7 +1124,7 @@ describe("History — a hidden person's card menu (HistoryProfileMenu.md, round 
   });
 
   it("report_closes_the_menu_and_the_confirm_names_the_person_sending_nothing", async () => {
-    // HistoryProfileMenu.md:17; FeedProfileMenu.md:11 for the title.
+    // HistoryProfileMenu.md:17; FeedProfileMenu.md:13 for the title.
     const reports: unknown[] = [];
     serveHistory(() => page([MIRA]));
     server.use(
