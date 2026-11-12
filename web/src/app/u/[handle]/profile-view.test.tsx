@@ -15,6 +15,7 @@ import { renderWithProviders } from "@/test/providers";
 import { byNode } from "@/test/data-node";
 import { bookmarkHandlers, bookmarkLog } from "@/test/saved";
 import { stanceBundle, stanceHandlers } from "@/test/stance";
+import { CarriedSnackbar } from "@/lib/ui/carried-snackbar";
 import { ProfileScreen } from "./profile-view";
 
 const push = vi.fn();
@@ -890,6 +891,37 @@ describe("ProfileScreen", () => {
       );
       expect(push).not.toHaveBeenCalledWith(expect.stringMatching(/^\/compose/));
       await waitFor(() => expect((screen.getByTestId("profile.menuSheet") as HTMLDialogElement).open).toBe(false));
+    });
+
+    // ProfileOther.md:45-49 — the wide anchor, GIVEN the reader is an
+    // applicant: the locked look, and a tap tells AND NEVER the pad blooms.
+    it("an_applicants_wide_anchor_is_locked_and_its_tap_says_give_your_opinion_once_in", async () => {
+      server.use(meHandler("APPLICANT"), other(), recordsHandler([]));
+      renderWithProviders(
+        <>
+          <ProfileScreen handle="ada" />
+          <CarriedSnackbar />
+        </>,
+        { store: signedInStore(), reader: "APPLICANT", stanceData: createStubStanceData() },
+      );
+      const anchor = await screen.findByTestId(byNode("profile.identity.actionRow.stance.anchor"));
+      expect(anchor.className).toContain("opacity-[var(--state-disabled)]");
+      fireEvent.click(anchor);
+      expect(screen.getByTestId("carried-snackbar")).toHaveTextContent("You can give your opinion once you're in.");
+      expect(screen.queryByTestId("profile-stance-pad")).toBeNull();
+    });
+
+    it("a_members_wide_anchor_opens_the_pad", async () => {
+      server.use(meHandler(), other(), recordsHandler([]));
+      renderWithProviders(<ProfileScreen handle="ada" />, {
+        store: signedInStore(),
+        reader: "MEMBER",
+        stanceData: createStubStanceData(),
+      });
+      const anchor = await screen.findByTestId(byNode("profile.identity.actionRow.stance.anchor"));
+      expect(anchor.className).not.toContain("opacity-[var(--state-disabled)]");
+      fireEvent.click(anchor);
+      expect(await screen.findByTestId("profile-stance-pad")).toBeInTheDocument();
     });
 
     // ProfileMenu.md:35 — a guest's Mention opens the gate, never the wizard.

@@ -3,12 +3,14 @@
 // what `me` answered, and every door reads it — no door, and no card, asks
 // the server itself.
 
-import { screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { AccountPreferencesSync } from "@/lib/settings/account-preferences-sync";
 import { BottomNav } from "@/lib/ui/bottom-nav";
+import type { RegistrationFlow } from "@/lib/signing/registration-flow";
+import type { RegistrationProgress } from "@/lib/signing/registration-signer";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { useReaderState } from "./reader-state";
@@ -113,5 +115,32 @@ describe("the reader's account state", () => {
     );
     await waitFor(() => expect(screen.getByTestId("probe")).toHaveTextContent("none"));
     expect(reads.count).toBe(0);
+  });
+});
+
+// THE LANDING LETS THE READER IN WHERE THEY STAND (ApplicantLanding.md:17):
+// the registration loop that saw it settles MEMBER, so the locked doors open
+// with no second account read.
+describe("the landing", () => {
+  it("a_landing_the_loop_watched_settles_the_reader_as_member", async () => {
+    let progress: RegistrationProgress | null = { kind: "awaitingLanding" };
+    const listeners = new Set<() => void>();
+    const flow: RegistrationFlow = {
+      progress: () => progress,
+      subscribe: (listener) => {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      },
+      ensureAdvancing: () => {},
+      consumeLanded: () => false,
+      reset: () => {},
+    };
+    renderWithProviders(<Probe />, { store: signedIn(), reader: "APPLICANT", flow });
+    expect(screen.getByTestId("probe")).toHaveTextContent("APPLICANT");
+    act(() => {
+      progress = { kind: "member" };
+      for (const listener of listeners) listener();
+    });
+    expect(screen.getByTestId("probe")).toHaveTextContent("MEMBER");
   });
 });
