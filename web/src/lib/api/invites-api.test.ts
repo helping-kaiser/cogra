@@ -235,9 +235,10 @@ describe("fetchInvites", () => {
   });
 
   it("is the page's fault when the people cannot be read", async () => {
+    // The refusing handler first: MSW answers with the first match.
     server.use(
-      ...staticInvites([application({ handle: "imke" })], []),
       gqlLink.query("VouchedInPage", () => HttpResponse.json({ errors: [{ message: "boom" }] })),
+      ...staticInvites([application({ handle: "imke" })], []),
     );
     expect((await fetchInvites(client())).kind).not.toBe("success");
   });
