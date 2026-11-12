@@ -335,6 +335,15 @@
       "page": "entry"
     },
     {
+      "file": "ResetNewErrors.dc.html",
+      "title": "Set a new password · the errors in place",
+      "x": 2400,
+      "y": 6168,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "InviteEntryError.dc.html",
       "title": "Enter your invite · that isn't a link",
       "x": 480,

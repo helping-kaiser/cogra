@@ -1036,6 +1036,32 @@
         "changePassword.title": []
       }
     },
+    "ChangePasswordErrors": {
+      "prefix": "changePassword",
+      "keys": {},
+      "nodes": {
+        "changePassword.body": [],
+        "changePassword.commit": [],
+        "changePassword.commit.action": [],
+        "changePassword.confirm": [],
+        "changePassword.confirm.input": [],
+        "changePassword.confirm.label": [],
+        "changePassword.confirm.reveal": [],
+        "changePassword.confirm.support": [],
+        "changePassword.current": [],
+        "changePassword.current.input": [],
+        "changePassword.current.label": [],
+        "changePassword.current.reveal": [],
+        "changePassword.header": [],
+        "changePassword.header.back": [],
+        "changePassword.password": [],
+        "changePassword.password.input": [],
+        "changePassword.password.label": [],
+        "changePassword.password.reveal": [],
+        "changePassword.password.support": [],
+        "changePassword.title": []
+      }
+    },
     "ChatsComingSoon": {
       "prefix": "chats",
       "keys": {},
@@ -12790,6 +12816,27 @@
         "reset.confirm.input": [],
         "reset.confirm.label": [],
         "reset.confirm.reveal": [],
+        "reset.note": [],
+        "reset.password": [],
+        "reset.password.input": [],
+        "reset.password.label": [],
+        "reset.password.reveal": [],
+        "reset.password.support": [],
+        "reset.title": []
+      }
+    },
+    "ResetNewErrors": {
+      "prefix": "reset",
+      "keys": {},
+      "nodes": {
+        "reset.body": [],
+        "reset.commit": [],
+        "reset.commit.action": [],
+        "reset.confirm": [],
+        "reset.confirm.input": [],
+        "reset.confirm.label": [],
+        "reset.confirm.reveal": [],
+        "reset.confirm.support": [],
         "reset.note": [],
         "reset.password": [],
         "reset.password.input": [],

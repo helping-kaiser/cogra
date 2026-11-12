@@ -379,6 +379,15 @@
       "page": "profile"
     },
     {
+      "file": "ChangePasswordErrors.dc.html",
+      "title": "Settings · change your password · the errors in place",
+      "x": 7680,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "ChangeHandle.dc.html",
       "title": "Settings · change your handle",
       "x": 2880,
