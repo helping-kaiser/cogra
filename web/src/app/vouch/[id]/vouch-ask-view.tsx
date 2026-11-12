@@ -50,6 +50,7 @@ import { MonogramAvatar } from "@/lib/ui/actor-chip";
 import { buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { NameInText } from "@/lib/ui/names";
 import { PageHeader } from "@/lib/ui/page-header";
 import { StanceControl } from "@/lib/ui/stance-control";
 import { TransportError } from "@/lib/ui/transport-error";
@@ -246,8 +247,9 @@ function Statement({
 }) {
   return (
     <div className="flex flex-col px-6 pb-8 pt-2">
-      <h1 {...testAttributes(part(ROOT, "title"))} className="m-0 text-headline-small">
-        {title}
+      {/* A heading wraps; a handle in it is one unit (NamesLong.md:11-15). */}
+      <h1 {...testAttributes(part(ROOT, "title"))} className="m-0 text-headline-small [overflow-wrap:anywhere]">
+        <NameInText text={title} />
       </h1>
       <p {...testAttributes(part(ROOT, "body"))} className="m-0 mt-2 text-body-medium text-on-surface-variant">
         {body}
@@ -310,8 +312,12 @@ function AskCard({
         <Card node={ASK}>
           <div className="flex items-center gap-3">
             <MonogramAvatar name={bare} size="lg" node={part(ASK, "avatar")} />
-            <h2 {...testAttributes(part(ASK, "title"))} className="m-0 text-title-medium">
-              {askTitle(handle)}
+            {/* The card's title wraps; the handle is one unit (VouchAsk.jsx:71-72). */}
+            <h2
+              {...testAttributes(part(ASK, "title"))}
+              className="m-0 min-w-0 text-title-medium [overflow-wrap:anywhere]"
+            >
+              <NameInText text={askTitle(handle)} />
             </h2>
           </div>
           <p {...testAttributes(part(ASK, "body"))} className="m-0 text-body-medium text-on-surface-variant">

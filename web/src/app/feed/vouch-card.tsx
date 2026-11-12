@@ -36,6 +36,7 @@ import { dismissVouchBack, fetchMe, type MeUser } from "@/lib/api/auth-api";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { MonogramAvatar } from "@/lib/ui/actor-chip";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { nameInText } from "@/lib/ui/names";
 import { StanceControl } from "@/lib/ui/stance-control";
 import { PillButton } from "@/lib/ui2/pill-button";
 import {
@@ -108,12 +109,17 @@ export function VouchCard({
           size="lg"
           node={part(NODE, "avatar")}
         />
-        <h2 {...testAttributes(part(NODE, "title"))} className="m-0 text-title-medium">
-          {vouchCardTitle(voucher.handle)}
+        {/* A card's title and body wrap at their spaces; the handle is one
+            unit, whole on a line or end-cut past one (NamesLong.md:11-15). */}
+        <h2
+          {...testAttributes(part(NODE, "title"))}
+          className="m-0 min-w-0 text-title-medium [overflow-wrap:anywhere]"
+        >
+          {nameInText(vouchCardTitle(voucher.handle))}
         </h2>
       </div>
-      <p {...testAttributes(part(NODE, "body"))} className="m-0 text-body-medium">
-        {vouchCardBody(voucher.handle)}
+      <p {...testAttributes(part(NODE, "body"))} className="m-0 text-body-medium [overflow-wrap:anywhere]">
+        {nameInText(vouchCardBody(voucher.handle))}
       </p>
       <div className="flex items-center justify-end gap-2">
         {putAway === "failed" ? (
