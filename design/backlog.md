@@ -5903,7 +5903,7 @@ from, while the verify card keeps the old address. Lean: (1) the Handle
 row's form, each row its form's in-flight label; (2) on the tap; (3) the
 form at rest, the field's line beside its field; (4) as built.
 
-### 200 · The cover crop under a tall clip: the frame does not fit the stage · *design* · **filed 2026-11-12**
+### 200 · The cover crop under a tall clip: the frame does not fit the stage · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 44 wrote the one crop model: a fixed frame of the locked shape, the
 picture moving under it, in `CropViewport`'s 390 × 390 stage with the frame
@@ -5916,6 +5916,8 @@ takes the post crop's 390 × 488 stage, the frame 342 wide at every shape
 [lean — one stage for every cover, and 4:5 fits it]; (b) a tall frame fits
 the square stage by height (312 × 390), narrower than the others; (c) the
 stage grows with the shape (the model jakob's ruling replaced).
+
+Closed by round 46 (jakob 2026-11-12, on the review and question 1): the cover's frame always has the clip's dimensions — tall a tall cover, square a square, wide a wide — and the crop enforces it. Drawn on the post crop's 390 × 488 stage (the orchestrator's reading, shown to him): `CoverCrop`'s `clip` chip, wide 342 × 192 at 148, tall 342 × 427.5 at 30.25, square 342 × 342 at 73.
 
 ### 201 · A clip picked in a comment's edit: what the board does not draw · *design* · **filed 2026-11-12**
 

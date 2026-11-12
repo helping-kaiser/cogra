@@ -732,6 +732,13 @@ picture moves and zooms under it on every crop (`ComposeCrop`,
 *blessed (jakob 2026-10-06)*. The arrow keys move the picture 1 % a
 press, 10 % with Shift.
 
+**The cover's frame is the clip's, and no line says so** (jakob
+2026-11-12: "tall video = tall cover, square square and wide wide"):
+`CoverCrop`'s frame always has the clip's dimensions — the shape the
+clip stands at in a card, a clip taller than 4:5 at 4:5 — and the crop
+exports that shape only. The rule is a shape, not a sentence: no line on
+the crop states it, and no chip offers another.
+
 ## Editing a media post
 
 The edit surface shows the gallery the post already has where the words
