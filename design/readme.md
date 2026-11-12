@@ -11507,6 +11507,76 @@ jakob's answers to rounds 36–39 (M1–M3, R2, S1–S6, I1–I2), executed.
   Backlog 176 stays open: `FeedRemoved.md` says a removed card carries no
   menu.
 
+### Round 43, forms without a waiting line, Close on the signed-in forms, Settings' two "?", Invites capped — 2026-11-12
+
+jakob's answers to the re-ask (1, 4, 8, 9 and 10 "as rec") and his ruling on
+round 41's fourth and fifth questions, executed.
+
+- **A form's commit waits silently** (the re-ask's 1). The line above a
+  disabled commit is gone on every form — `ChangePassword`, `ChangeHandle`,
+  `ChangeEmail`, `ApplicantEmail`, `ChangeEmailConfirm`, `SettingsBackup`,
+  `SignIn`, `SignInExpired`, `InviteEntry`, `JoinInvalid`, `Reset`,
+  `YourKeyGate`, `Restore`, `Join`, `ResetNew` — and what it waits for is
+  the commit's spoken description alone: `WaitingCommit` keeps `reason` in a
+  visually hidden span the button names in `aria-describedby`.
+  `ChangePassword` speaks `Waiting for both passwords` again, so every form
+  is one shape. `Waiting for your key` and `Waiting for your review` under a
+  kept pick's face are not of this family and stay.
+- **Close on the signed-in plain forms** (backlog 191 (a); the re-ask's 9
+  (a)). `ChangePassword`, `ChangeEmail`, `ChangeEmailConfirm` and
+  `ApplicantEmail` gain `submit: pending`: the commit's in-flight label, and
+  the header's arrow named `Close` from the press — the seals' X — leaving
+  while the submit goes on. A failure after Close reads `That didn't go
+  through.` on the form's own Settings row, the Handle row's line without
+  `Retry`, and the row's tap opens the form again (`Settings`' `forms`
+  chip: `password`, `email`). The entry forms hold their ways out from
+  200ms after the press until the answer — the named exception, written into
+  each sidecar in place of the older live-ways-out line. `YourKeyGate`
+  reveals and submits nothing, and stays as it was (backlog 197).
+- **Settings carries two "?"** (the re-ask's 8 (a)) — the one-per-screen
+  law's Settings exception, beside `Giving an opinion` and `Reading`
+  (`SettingsGroup`'s `help`, `SheetTitle`'s trailing construction). The
+  pad's and the sliders' hints and the Reading footnote move behind them
+  whole, each a plain dialog titled by its heading (`SettingsInstallHelp`'s
+  shape); `Settings`' `help` chip draws them open. The Sensitive content
+  footnote stays on the page (backlog 196).
+- **Invites' queue is capped** (backlog 180; the re-ask's 10 (a)): the
+  first three rows in its grouped order, then `Show all` under the third —
+  People you let in's door — opening the rest in place; a kept approval
+  stands above the three (`Invites`' `applications` chip, `capped` the
+  default, `opened`). Live links' cap waits on its order (backlog 195).
+- **A closing that fails after Close** (backlog 190): `RejectConfirm`'s
+  `answer` gains `closedFailed`, `That didn't sign.` with `Retry` under the
+  row, `FeedRemoveConfirm`'s form; `RejectAllConfirm`'s draws one line under
+  the group's label, where `Close all` stands.
+- **The empty Invites says one thing** (the re-ask's 4): `No invites out
+  yet.`, and the vouching explainer behind a "?" beside `Create invite`, its
+  name `How vouching works`, the dialog carrying the first paragraph.
+- **The last three long-name overflows** (backlog 183): `Join`'s and
+  `JoinErrors`' heading, `ChangeHandleBody`'s line and `IntroCaption` pass
+  their text through `NameInText`; the caption cuts within its own 88px.
+- **Measured** at `@maximiliana_featherstone_haugh`, the widest legal handle
+  and the 50-character unbroken name: `Join`'s heading 110px past both sides
+  → the name one line, cut inside the 24px gutter; `ChangeHandleBody`'s line
+  13px past (widest handle) → cut at the gutter, the long sample whole on
+  one line; the inviter caption 30.5 / 151px past → cut inside its 88px.
+  At the drawn sample names nothing moved (the heading's box by under
+  0.05px). Settings' last line stands where it stood at every setting
+  (`install` shown: 3071 of 3103px).
+- **The gate**: no board added; chips added on `ChangePassword`,
+  `ChangeEmail`, `ChangeEmailConfirm`, `ApplicantEmail` (`submit`),
+  `Settings` (`forms`, `help`), `Invites` (`applications`), and
+  `closedFailed` on the reject dialogs' `answer`. Edges **2315 → 2323**
+  (the two "?", their dialog's Close and scrim, the queue's door, the two
+  Retries, the empty page's "?"); flows hold at **227**, three start cases
+  re-blessed. The registry **7117 → 7096** board paths, **2000 → 1993**
+  distinct on 185 screens: `invites.applicationsDoor`, `invites.empty.help`,
+  `settings.stance.help` and `settings.reading.help` added; eight
+  `*.commit.reason` paths deleted on thirteen boards (ruled), and three
+  whose words moved behind a "?" — `settings.reading.footnote`,
+  `settings.stance.pad.status`, `settings.stance.sliders.status` — named
+  breaking changes for impl.
+
 ---
 
 ## 14. The canvases
