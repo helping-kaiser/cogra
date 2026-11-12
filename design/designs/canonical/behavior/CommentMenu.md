@@ -30,6 +30,6 @@ WHEN tap postDetail.menuSheet.report -> the menu closes AND postDetail.reportShe
 
 WHEN tap Report GIVEN the menu was opened from a comment's ⋮ in a list -> the menu closes AND the report confirm rises over the host, its title reading Report this comment? AND NEVER anything is sent yet
 
-WHEN a guest taps any row of a comment's menu, on any host -> the guest gate opens, the profile menu's rule
+WHEN a guest taps Save, Cite in a new post or Report on a comment's menu, on any host -> the guest gate opens AND NEVER Cited by, Opinions on this or License terms raise it, a reading being open to a guest
 
 WHEN tap the scrim, swipe the menu down, press system Back or press Escape -> the menu closes AND the surface it was opened on stands beneath it as it was
