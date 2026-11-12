@@ -26,6 +26,7 @@ import type { License } from "@/lib/license";
 import { useSavedWrites } from "@/lib/saved/provider";
 import { saveRow, type Notify } from "@/lib/saved/save-row";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
+import { POST_LOCKED, useReaderIsApplicant } from "@/lib/session/reader-state";
 import { useAuthGuard } from "@/lib/session/runtime";
 import type { DataNode } from "@/lib/ui/data-node";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
@@ -93,6 +94,7 @@ export function PostMenuHost({
   const guard = useAuthGuard();
   const phase = useAuthPhase();
   const viewerId = useActiveAccountId();
+  const applicant = useReaderIsApplicant();
   const writes = useSavedWrites();
   const hidden = useHiddenSet();
   // THE NARROW-SHARE FOLD (design/readme.md, jakob 2026-09-17, sharpened
@@ -167,6 +169,7 @@ export function PostMenuHost({
                   onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
                 }),
           onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
+          onApplicant: applicant ? () => notify(POST_LOCKED) : null,
           testIdPrefix: testId,
           rowNode: nodes.row,
         });
