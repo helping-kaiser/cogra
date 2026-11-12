@@ -1548,8 +1548,7 @@ may serve any actor's view of the shared record to any reader. So:
   feed's filter and the Settings default among them; and, by *Only a
   nobody borrows stances* (stance-control), every face a signed-in
   reader can act on. Every first-person readout of the vantage's read
-  speaks its name, the band's way — `@mira's people`, `as far as
-  @mira's eyes reach` — and a control whose words outgrow it falls back
+  speaks its name, the band's way — `@mira's people` — and a control whose words outgrow it falls back
   on its own overflow law, the trigger's collapse to a count among
   them. A control with no overflow law that a long handle breaks falls
   back to *their*, as a flagged exception for jakob. The law holds for

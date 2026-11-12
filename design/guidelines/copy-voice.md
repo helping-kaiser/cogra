@@ -327,46 +327,38 @@ deviations outgrow the pill they collapse to a count after the head,
 `SettingsReading`; search's sheet and History's take the parts they
 carry, `ExploreFilter`, `HistoryFilter`):
 
-- `Kinds` — `Everything that can reach your feed. Combine as many as you
-  like.` — with the chips `Posts` · `Comments` · `Profiles` · `Tags`.
-- `Kinds of post` — `Combine them: photos and video with no text posts is
-  a legitimate feed.` — with `Text` · `Photos` · `Video`.
-- `Order` — `Ranked puts what's closest to you first — your view, no one
-  else's. Newest ignores it and lists by time.` — with `Ranked` ·
-  `Newest` and the checkbox `Show what you've already seen`.
-- `Also show` — `How sensitive content is veiled is set in Settings.` —
-  with `Sensitive` · `Removed` · `Still settling`. The hint carries the
-  one thing the chips don't say themselves — where the veil behavior is
-  changed — and explains nothing else (jakob 2026-10-09: tapping a veil
-  and reading a removed post's husk explain themselves).
-- `People` — `Whose things reach this feed.` — the rows `Everyone` over
-  `The whole feed, as far as your eyes reach.` and `Your people` over
-  `Only the people you hold an opinion of — the same rank, narrowed to
-  them.`, and under `Your people`, only while it is chosen, the one-line
-  sign row `For` · `Against` · `Either` (the pair's labels blessed, jakob
-  2026-10-09, ruling 77; the Everyone line's wording jakob's own,
-  2026-10-09; the Your-people line and the three words jakob's own,
-  2026-10-12, item 7; the sign row's spoken name `Which of your people`
-  *drafted — jakob's at review*; *the section word and the Also-show
-  pointer drafted — their wording jakob's at review*).
+- `Kinds` — the chips `Posts` · `Comments` · `Profiles` · `Tags`, no
+  hint: chips that combine explain themselves (jakob 2026-11-12).
+- `Kinds of post` — `Text` · `Photos` · `Video`; the hint `Applies once
+  posts or comments are in.` stands only while no kind that has forms is
+  on.
+- `Order` — `Ranked` · `Newest` and the checkbox `Show what you've
+  already seen`, no hint. The Ranked / Newest explainer lives in the
+  sheet's "?" (*The filter*).
+- `Also show` — `Sensitive` · `Removed` · `Still settling`, no hint;
+  where the veil behavior is changed is said in the sheet's "?"
+  (jakob 2026-10-09: tapping a veil and reading a removed post's husk
+  explain themselves).
+- `People` — no hint; the rows `Everyone`, with no line of its own, and
+  `Your people` over `Only the people you hold an opinion of.`, and
+  under `Your people`, only while it is chosen, the one-line sign row
+  `For` · `Against` · `Either` (the pair's labels blessed, jakob
+  2026-10-09, ruling 77; the Your-people line and the three words
+  jakob's own, 2026-10-12, item 7; the sign row's spoken name `Which of your people` *drafted — jakob's
+  at review*).
 
 **Under a borrowed view the sheet speaks the vantage's name** (the
 vantage law, jakob 2026-10-13, readme §13): what the sheet reads from
 the vantage's graph is the vantage's, so its first person becomes the
 vantage account's handle, the band's way. The row `@mira's people` over
-`Only the people @mira holds an opinion of — the same rank, narrowed to
-them.`; `Everyone` over `The whole feed, as far as @mira's eyes reach.`;
-the sign row's spoken name `Which of @mira's people`; the trigger's
-extra `@mira's people`, `@mira's people, for`, `@mira's people,
-against`, which past the pill's 154px collapses to the count like any
-extra — so for most handles it reads `Posts · 1 change`; `Order` over
-`Ranked puts what's closest to @mira first — the view you're browsing
-from. Newest ignores it and lists by time.`; and `One tag` over
-`Tags @mira holds and is for. A tag @mira holds against stays a
-record — it just never narrows a feed.` The reader's own axes keep the
-first person: the kinds' line, `Show what you've already seen`, `Also
-show`, `Reset` and the "?". (*new 2026-10-13, drafted — jakob's at
-review*, save `@mira's people`, the ruling's own example.)
+`Only the people @mira holds an opinion of.`; the sign row's spoken
+name `Which of @mira's people`; the trigger's extra `@mira's people`,
+`@mira's people, for`, `@mira's people, against`, which past the
+pill's 154px collapses to the count like any extra — so for most
+handles it reads `Posts · 1 change`; and `One tag` over `Tags @mira
+holds and is for.` The reader's own axes keep the first person:
+`Show what you've already seen`, `Also show`, `Reset` and the "?".
+(*new 2026-10-13, drafted — jakob's at review*, save `@mira's people`, the ruling's own example.)
 
 ## Platform nouns
 
@@ -539,12 +531,17 @@ noun):
   waits below the Already seen line unless you ask for it back; on
   search, what you've already seen stays out
   unless you ask for it back. Nothing changes until you press Done,
-  and nothing here is signed or shared. / It lasts until you change it,
-  on this device only. Reset brings back your defaults, to change
-  them go to settings. *(The Reset
+  and nothing here is signed or shared. Ranked puts what's closest to
+  you first — your view, no one else's. Newest ignores it and lists by
+  time. / It lasts until you change it, on this device only. Reset
+  brings back your defaults, to change them go to settings. How
+  sensitive content is veiled is set in Settings. *(The Reset
   sentence is jakob's own, blessed 2026-10-02: one sentence for the
   feed's, search's and the settings sheet. The feed's seen sentence
-  follows the seen tail, jakob 2026-10-14.)*
+  follows the seen tail, jakob 2026-10-14. The Ranked / Newest
+  explainer and the veil pointer stand here and not on the sheet,
+  moved whole, jakob 2026-11-12; the veil pointer is the feed's and
+  the settings sheet's, where `Also show` stands.)*
 
 **A "?" is named by the dialog it opens.** Its accessible name is that
 dialog's own subject, so a listener hears which explanation the tap
@@ -3103,9 +3100,8 @@ as a feed, newest-seen first. *View history* is the contract's word and
 stays there. Its field reads and is named `Search your history`, its
 trigger `Everything` at rest — search's word for nothing narrowed — and
 the trigger's purpose and the sheet's title are `What your history
-shows`, the feed's and search's construction. The sheet's kind hint is
-search's own, `Combine as many as you like. All, until you narrow it.`
-(*new 2026-10-05, blessed (jakob 2026-10-05)*: `Search your history`,
+shows`, the feed's and search's construction. The sheet's kinds carry
+no hint, as search's do. (*new 2026-10-05, blessed (jakob 2026-10-05)*: `Search your history`,
 `What your history shows`.) The field matches by Explore's one rule
 (readme §4, *Search*).
 
@@ -3850,11 +3846,9 @@ route asks what the drawn one asks. Ruled 2026-09-15; drawn on
 `TagPageHeldPad`.
 
 **The feed filter's section**: label `One tag`, hint `Tags you hold
-and are for. A tag you hold against stays a record — it just never
-narrows a feed.` The label says the cardinality, because it is the one
-section here that does not combine. The hint answers the question the
-section raises by existing — where is the topic I hold against — rather
-than leaving a reader to decide their own record went missing.
+and are for.` The label says the cardinality, because it is the one
+section here that does not combine. The hint names the predicate, so a
+topic held against is missing by the rule the section states.
 
 **The trigger spells the tag itself**, hash and all, leading the
 deviations: `Posts · #saltmaps`. It is an extra rather than the head for
