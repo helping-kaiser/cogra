@@ -54,7 +54,8 @@ class PasswordResetScreenTest {
         show()
         tag("reset.title").assertTextEquals("Reset your password")
         tag("reset.body").assertTextEquals(
-            "Enter the email you signed up with and we send a reset link. Resetting the password signs out every device.",
+            "Enter the email you signed up with and we send a reset link. " +
+                "Resetting the password signs out every device.",
         )
         tag("reset.email.label").assertTextEquals("Email")
         compose.onNodeWithTag("reset.commit.action").assertTextEquals("Send reset link")
@@ -138,7 +139,8 @@ class PasswordResetScreenTest {
         // Reset.md:11, :15 — under the commit, the quiet note under it.
         show(ResetUiState(email = "a@b.c", requested = true))
         tag(RESET_STATUS_TAG).assertTextEquals(
-            "If that email has an account, a reset link is on its way. The link works once and expires after 15 minutes.",
+            "If that email has an account, a reset link is on its way. " +
+                "The link works once and expires after 15 minutes.",
         )
         assertThat(top("reset.commit")).isLessThan(top(RESET_STATUS_TAG))
         assertThat(top(RESET_STATUS_TAG)).isLessThan(top("reset.note"))
