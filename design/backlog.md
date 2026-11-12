@@ -6032,3 +6032,30 @@ for every page [as drawn]; (b) the first page's row takes a line of its
 own, his words. Nothing waits on it.
 
 Closed by round 46 (jakob 2026-11-12, question 19, as recommended): the row stays quiet and takes the first-page family's words, `Can't reach the server — posts can't load right now.` / `… comments can't load right now.`, with `Retry`; `Couldn't load more` is a failed next page's line alone.
+
+### 210 · How signing works on an edit · *design* · **filed 2026-11-12**
+
+Round 46 (question 12). The edit sheets now open the seals' `How signing
+works`, which says each piece of a POST is signed on its own, that the pieces
+land together or none does, and that each signing is paid for. It does not
+say why an edit is signed at all (a new version is a new record) or that
+withdrawing a tag or a citation is an act that costs too. For jakob: (a) the
+dialog stays as written, one text for every seal [as built]; (b) an edit
+section is added to it — new prose, his to word.
+
+### 211 · A removed comment's menu · *design* · **filed 2026-11-12**
+
+Round 46. jakob's ruling 18 gives a removed POST a menu (cite it, read its
+license); a removed comment still has none (`CommentRemoved`, "a removed
+comment has no menu left"). For jakob: (a) the comment follows the post —
+Save, Cite in a new post, Cited by, Opinions on this, License terms, Report
+for another's, the own rows less Edit and Remove for yours [lean]; (b) it
+stays menu-less.
+
+### 212 · Mark as sensitive on your own removed post · *design* · **filed 2026-11-12**
+
+Round 46. The correction to ruling 18 keeps every own row but Edit and
+Remove, so `Mark as sensitive` stands on a removed post's menu; the row opens
+the edit, and a removed post has no words or pictures left to veil. For
+jakob: (a) keep it, the mark being the record's [as built]; (b) it leaves the
+removed post's menu with Edit and Remove.

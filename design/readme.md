@@ -11766,6 +11766,61 @@ re-ask (11, 12, 14–18, 20), and two registry gaps impl found (seam 297,
   `exact`, `pad.field`, `note`, `done`, `untag`. Over rounds 42–44: 1956 → 2032
   distinct paths, 185 → 189 screens, additions only.
 
+
+### Round 46, the review's answers — 2026-11-12
+
+jakob's review of rounds 42–45 and his answers to questions 1–22, executed
+(lane B; lane A's forms, Settings, Invites, entry boards, the vouch-back
+pad and Wallet are recorded beside it).
+
+- **The cover's frame always has the clip's dimensions** (review, 1;
+  backlog 200): tall clip a tall cover, square a square, wide a wide —
+  the shape the clip stands at in a card — and the crop exports only that
+  shape. The cover crop takes the post crop's 390 × 488 stage (the
+  orchestrator's reading); `CoverCrop`'s `clip` chip measures wide 342 ×
+  192 at 148, tall 342 × 427.5 at 30.25, square 342 × 342 at 73.
+  `CropViewport` takes a `stageHeight`.
+- **A picked clip and a new cover upload under one gate** (2; backlog
+  201): the video's line, then the cover's; no note under the cover row
+  (`CommentEditVideo`'s `picked-cover`).
+- **The sample captions run past two lines** (3; backlog 202) and
+  `PostCard` offers `More` on a media caption only past its two lines'
+  estimate, `ReelCaption`'s way. No path moved.
+- **The edit sheets carry `How signing works`** (12; backlog 194): the
+  "?" trails `EditActs`' and `CommentEditActs`' title as `ComposeLicense`'s
+  trails its own; the all-or-nothing subline leaves them.
+- **The pass's last open lines** (13; backlog 192): the clip's first-frame
+  line is cut; the rest are kept and blessed in copy-voice.
+- **The score's trace is uncapped** (review): every path stands, a
+  continuous list; `feedEntry.morePaths` and its `label` and `value` are
+  deleted. The cap rule names the trace among the lists that are the page.
+- **A figure's door is spoken by its number and words alone** (17):
+  `6 Opinions on them`, `5 Opinions by you`.
+- **A removed post keeps a menu** (18, and jakob's word on the license;
+  backlog 206). Another's: the reader's post menu — Save, Cite in a new
+  post, Hide @author, License terms, Report — on the card and in the
+  detail's header (`RemovedOther`, new). Your own: your post's menu less
+  Edit and Remove — Save, Cite in a new post, Mark as sensitive, License
+  terms — on the card (`FeedRemoved`; `FeedRemovedMenuOwn`, new) and in
+  the detail's header (`Removed`). License terms stays because the terms
+  still bind every use already made. `FeedRemovedMenu`'s card carries its
+  removal date.
+- **A failed first page on the profile's tabs** (19; backlog 207):
+  `Can't reach the server — posts can't load right now.` / `… comments
+  can't load right now.` with `Retry`, still the quiet row; `Couldn't load
+  more` is a next page's line alone.
+- **A comment edit opened off the thread returns to its host** (21):
+  History, Saved and the profile's Comments tab, the card settling in
+  place.
+- **A guest reads Cited by, Opinions on this and License terms** (22):
+  five menu edges dropped their guest gate.
+- **Follow-ups**: the component demo cards and the canvas annotations take
+  the cut strings; `Signs as #…` stands only where the typed name changes;
+  `ReaderPostMenuNarrow` registers on `ReaderPostMenu`'s paths, its share
+  row `menuSheet.share` (seam 316).
+- **Registry**: 189 → 192 screens, 2032 → 2029 distinct paths — four
+  ruled removals (`feedEntry.morePaths` ×3, `postEdit.cover.note`), one
+  addition (`postDetail.menuSheet.share`).
 ---
 
 ## 14. The canvases
