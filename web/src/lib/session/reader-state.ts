@@ -13,8 +13,9 @@
 //
 // SETTLED OR NOT. A surface that must not flash the wizard before the answer
 // (the composer opened by address) waits for `settled`; a read that did not
-// answer settles with no state, and the doors then stand open — the server is
-// the gate that refuses an applicant's post, this is the courtesy before it.
+// answer settles with no state, and the doors then stand open: what an
+// applicant's post meets past them is the server's answer to `preparePost`
+// (auth.md "Account states").
 
 import { useSyncExternalStore } from "react";
 

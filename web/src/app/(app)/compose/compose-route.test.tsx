@@ -67,7 +67,7 @@ describe("ComposeRoute", () => {
     expect(screen.getByTestId("stub-edit")).toHaveTextContent("p9");
   });
 
-  // A read that did not answer leaves the door open: the server is the gate.
+  // A read that did not answer leaves the door open (`reader-state.ts`).
   it("an_unanswered_read_opens_the_wizard", () => {
     settleReaderState(null);
     mount();
