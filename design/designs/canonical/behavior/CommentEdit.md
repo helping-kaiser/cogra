@@ -16,13 +16,13 @@ WHEN tap + Add pictures -> the platform's own picker opens AND NEVER a pick stag
 
 ALWAYS the comment edit's add row reads + Add pictures or a video GIVEN the comment holds words alone, no picture and no clip
 
+ALWAYS whether the comment holds words alone is read on the edit's own state, so a comment whose pictures or clip were removed in this edit holds words alone and may take a video
+
 ALWAYS commentEdit.pictures holds commentEdit.pictures.add alone, with no commentEdit.pictures.label, no commentEdit.pictures.thumb and no commentEdit.pictures.describeRow, GIVEN the comment holds words alone
 
 WHEN tap + Add pictures or a video -> the platform's own picker opens AND NEVER a pick stage opens
 
 WHEN a video is picked from + Add pictures or a video -> the clip arrives as the comment's video with its cover row, as CommentEditVideo draws it
-
-WHEN a video is picked at the edit GIVEN the comment holds no picture and no clip and the edit's video path is still staged -> the refusal A video can't join an edit yet — post it on its own. stands under commentEdit.pictures with Remove it alone AND NEVER the video is taken AND NEVER a dialog opens
 
 WHEN a video is picked at the edit GIVEN the comment holds pictures -> the refusal A comment carries pictures or one video, not both. stands under commentEdit.pictures with Remove it alone AND NEVER the video is taken
 

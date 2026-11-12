@@ -1225,6 +1225,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 13, find: ">Mark</button>", tag: "button" },
     // The withdrawn tag's Undo (the readme's edit-withdrawal law), as on CommentEdit.
     { n: 15, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
+    // The `clip` chip's picked clip (round 44, seam 295-3): the cover door,
+    // and the failure's and the refusal's ways out in their copies.
+    { n: 16, find: ">Add a cover</button>", tag: "button" },
+    { n: 17, find: ">Retry</button>", tag: "button", all: true },
+    { n: 18, find: ">Remove it</button>", tag: "button", all: true },
   ],
   EditComposeVideo: [
     { n: 14, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },

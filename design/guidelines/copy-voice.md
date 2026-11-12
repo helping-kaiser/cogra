@@ -583,9 +583,9 @@ out (*Remove it*; never *Retry* — retrying cannot change the answer):
   ask 13 H; *new 2026-10-28, blessed (jakob 2026-11-10)*.)
 
 - `A video can't join an edit yet — post it on its own.` — a video picked
-  at an edit while the edit's video path is staged (`EditWords`' `+ Add
-  pictures or a video`, a words comment's edit; staged-surfaces, *Waiting
-  on a slice inside v1.0.0*). It is not a cap: the drawn path takes the
+  at a post's edit while the edit's video path is staged (`EditWords`' `+
+  Add pictures or a video`; staged-surfaces, *Waiting on a slice inside
+  v1.0.0*); a words comment's edit takes the clip (round 44). It is not a cap: the drawn path takes the
   clip through the cover step (`EditWords.md`), and the line says so
   honestly in the meantime — *yet* is load-bearing, the way out is a post
   of its own, and *join* is the composer's own verb (`a video can join
