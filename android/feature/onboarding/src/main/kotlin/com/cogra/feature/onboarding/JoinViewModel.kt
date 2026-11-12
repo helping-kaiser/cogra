@@ -144,7 +144,8 @@ class JoinViewModel @Inject constructor(
      */
     fun onConfirmChange(value: String) {
         _state.update {
-            it.copy(confirm = value, local = it.local.copy(confirm = it.local.confirm?.let { _ -> confirmLine(it.password, value) }))
+            val line = it.local.confirm?.let { _ -> confirmLine(it.password, value) }
+            it.copy(confirm = value, local = it.local.copy(confirm = line))
         }
     }
 

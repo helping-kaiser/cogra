@@ -426,6 +426,7 @@ private fun FieldSupportRow(
     // ([CograTextField]'s `supportSpans`); the box around it takes the row,
     // so the late counter still sits at the far end.
     val lineWidth = if (spans) Modifier.fillMaxWidth() else Modifier
+    val announced = if (error != null) Modifier.semantics { liveRegion = LiveRegionMode.Polite } else Modifier
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Bottom,
@@ -438,7 +439,7 @@ private fun FieldSupportRow(
                     style = MaterialTheme.typography.bodySmall,
                     color = if (error != null) colors.error else colors.onSurfaceVariant,
                     modifier = lineWidth
-                        .then(if (error != null) Modifier.semantics { liveRegion = LiveRegionMode.Polite } else Modifier)
+                        .then(announced)
                         .then(if (lineTag != null) Modifier.testTag(lineTag) else Modifier),
                 )
             }
