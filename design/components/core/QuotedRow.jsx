@@ -1,5 +1,5 @@
 import React from "react";
-import { MonogramAvatar } from "../people/ActorChip.jsx";
+import { MonogramAvatar, nameInText } from "../people/ActorChip.jsx";
 
 /* THE THING BEING ANSWERED, held above the answer. Every reply composer opens
    with it: what is answered — a post or a comment — whose it is, and how it
@@ -52,10 +52,13 @@ export function QuotedRow({ title, snippet, name, src, mark, attach = false, nod
             letterSpacing: "var(--text-label-large--letter-spacing)",
             lineHeight: "var(--text-label-large--line-height)",
             fontWeight: "var(--text-label-large--font-weight)",
+            // TEXT THAT WRAPS (round 40): `The long way home — @…` wraps at its
+            // spaces; the handle is one unit (`nameInText`), whole or end-cut.
+            overflowWrap: "anywhere",
           }}
           data-node={node && "title"}
         >
-          {title}
+          {nameInText(title)}
         </span>
         {snippet && (
           <span
