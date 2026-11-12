@@ -85,8 +85,8 @@ describe("previewTagName reasons", () => {
   });
 
   it("asks for a name when there is none", () => {
-    expect(previewTagName("").reason).toMatch(/topic name/i);
-    expect(previewTagName("#").reason).toMatch(/topic name/i);
+    expect(previewTagName("").reason).toMatch(/tag name/i);
+    expect(previewTagName("#").reason).toMatch(/tag name/i);
   });
 });
 

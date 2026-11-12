@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { YourTopicsGate } from "./your-topics-gate";
 
-export const metadata: Metadata = { title: "Your topics — CoGra" };
+export const metadata: Metadata = { title: "Your tags — CoGra" };
 
 // Your topics, a subpage of Explore (design readme, the topic round: "a
 // subpage off Explore, not a section in it"), so it lives under its route.

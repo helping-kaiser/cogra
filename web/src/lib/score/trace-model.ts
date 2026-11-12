@@ -218,7 +218,7 @@ function thingName(path: TracePath, index: number, context: TraceContext): strin
   if (index === path.nodes.length - 1) return "it";
   const node = path.nodes[index]!;
   if (isTopicNode(node)) {
-    return node.graphId.startsWith("name:") ? `#${node.graphId.slice("name:".length)}` : "a topic";
+    return node.graphId.startsWith("name:") ? `#${node.graphId.slice("name:".length)}` : "a tag";
   }
   const named = node.id === null ? undefined : context.named.get(node.id);
   if (named?.kind === "person") return `@${named.person.handle}`;
