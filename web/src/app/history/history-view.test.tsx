@@ -504,7 +504,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
     serveHistory(() => page([PERSON]));
     render();
     fireEvent.click(await screen.findByTestId(byNode("history.profileCard.menu", "u3")));
-    fireEvent.click(screen.getByTestId("history-person-u3-menu-mention"));
+    fireEvent.click(screen.getByTestId("history.menuSheet.mention"));
     expect(push).toHaveBeenCalledWith("/compose?reference=u3");
   });
 
@@ -1045,6 +1045,99 @@ describe("History — the post menu (HistoryPostMenu.md, round 36 + 41)", () => 
     expect(screen.getByTestId("history.snackbar.action")).toHaveTextContent("Undo");
     expect(cards()).toEqual(["history.commentCard:c1", "history.card:p1"]);
     await waitFor(() => expect(log.unhides).toEqual(["u1"]));
+  });
+});
+
+describe("History — a hidden person's card menu (HistoryProfileMenu.md, round 41)", () => {
+  const MIRA: Entry = { node: personNode("u7", "mira", "Mira"), firstSeenAt: daysAgo(1) };
+  const hiddenMira = () =>
+    hiddenHandlers(hiddenLogged, {
+      entries: [{ id: "u7", handle: "mira", displayName: "Mira", hiddenAt: "2026-10-01T00:00:00Z" }],
+    });
+  let hiddenLogged = hiddenLog();
+  beforeEach(() => {
+    hiddenLogged = hiddenLog();
+  });
+
+  async function openMiraMenu() {
+    render();
+    await waitFor(() => expect(hiddenLogged.reads).toBeGreaterThan(0));
+    fireEvent.click(await screen.findByTestId(byNode("history.profileCard.menu", "u7")));
+    return screen.getByTestId("history.menuSheet") as HTMLDialogElement;
+  }
+
+  it("reads_save_mention_unhide_report_as_history_menuSheet_rows_and_nothing_on_the_card_marks_the_hide", async () => {
+    // HistoryProfileMenu.md:3, :5, :7, :9.
+    serveHistory(() => page([MIRA]));
+    server.use(...hiddenMira());
+    const sheet = await openMiraMenu();
+    expect(sheet.open).toBe(true);
+    await waitFor(() =>
+      expect(
+        within(sheet)
+          .getAllByRole("button")
+          .map((row) => [row.getAttribute("data-testid"), row.textContent]),
+      ).toEqual([
+        ["history.menuSheet.save", "Save"],
+        ["history.menuSheet.mention", "Mention in a new post"],
+        ["history.menuSheet.hide", "Unhide @mira"],
+        ["history.menuSheet.report", "Report"],
+      ]),
+    );
+    expect(screen.getByTestId(byNode("history.profileCard", "u7"))).not.toHaveTextContent(/hidden/i);
+  });
+
+  it("unhide_closes_the_sheet_unhides_keeps_history_and_undo_hides_again", async () => {
+    // HistoryProfileMenu.md:11, :13.
+    serveHistory(() => page([MIRA]));
+    server.use(...hiddenMira());
+    const sheet = await openMiraMenu();
+    await waitFor(() => expect(screen.getByTestId("history.menuSheet.hide")).toHaveTextContent("Unhide @mira"));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    await waitFor(() => expect(sheet.open).toBe(false));
+    expect(screen.getByTestId("history.snackbar.message")).toHaveTextContent(
+      "@mira is unhidden — their posts can reach your feed again.",
+    );
+    expect(cards()).toEqual(["history.profileCard:u7"]);
+    await waitFor(() => expect(hiddenLogged.unhides).toEqual(["u7"]));
+    fireEvent.click(screen.getByTestId("history.snackbar.action"));
+    await waitFor(() => expect(hiddenLogged.hides).toEqual([{ actor: "u7", at: "2026-10-01T00:00:00Z" }]));
+    expect(cards()).toEqual(["history.profileCard:u7"]);
+  });
+
+  it("a_failed_unhide_reverts_and_the_card_says_so_with_retry", async () => {
+    // HistoryProfileMenu.md:15.
+    serveHistory(() => page([MIRA]));
+    server.use(
+      ...hiddenHandlers(hiddenLogged, {
+        entries: [{ id: "u7", handle: "mira", displayName: "Mira", hiddenAt: "2026-10-01T00:00:00Z" }],
+        failUnhide: true,
+      }),
+    );
+    await openMiraMenu();
+    await waitFor(() => expect(screen.getByTestId("history.menuSheet.hide")).toHaveTextContent("Unhide @mira"));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
+    const line = await screen.findByTestId("history-person-u7-row-line");
+    expect(line).toHaveTextContent("That didn't go through.");
+    expect(within(line).getByRole("button", { name: "Retry" })).toBeInTheDocument();
+  });
+
+  it("report_closes_the_menu_and_the_confirm_names_the_person_sending_nothing", async () => {
+    // HistoryProfileMenu.md:17; FeedProfileMenu.md:11 for the title.
+    const reports: unknown[] = [];
+    serveHistory(() => page([MIRA]));
+    server.use(
+      ...hiddenMira(),
+      gqlLink.mutation("SendReport", ({ variables }) => {
+        reports.push(variables);
+        return HttpResponse.json({ data: null });
+      }),
+    );
+    await openMiraMenu();
+    fireEvent.click(screen.getByTestId("history.menuSheet.report"));
+    expect(await screen.findByTestId("history-person-u7-menu-report-sheet")).toHaveAccessibleName("Report @mira?");
+    expect(reports).toEqual([]);
   });
 });
 
