@@ -11503,6 +11503,47 @@ jakob's answers to rounds 36–39 (M1–M3, R2, S1–S6, I1–I2), executed.
   Backlog 176 stays open: `FeedRemoved.md` says a removed card carries no
   menu.
 
+### Round 42, the removable text goes — 2026-11-12
+
+jakob's rulings on the removable-text digest (2026-11-11: B, C1–C7, "shortening
+are always good"; 2026-11-12: A1–A8), executed for A2, A4–A7, B, C and D; A1,
+A3, A8 and the Invites boards are rounds 43 and 44. The rule is copy-voice's
+*The app does not explain itself*, in his words.
+
+- **Cut whole:** the filter sheets' hints (the Ranked / Newest explainer and the
+  veil pointer moved whole into the sheet's "?"); the sentence after each empty
+  line; the lines that repeat their sheet's "?" (the seals' all-or-nothing
+  subline, the license and sensitive sheets' intros); the license tiers' hints
+  that repeat their names, the pair's reading now its name alone; the digest's
+  single lines but `The two records behind your opinion of @ada.`; the author's
+  removal mark's second line (the comment's too — the mark keeps its line and
+  date); the onboarding's ask-around note; the change-handle form's cost note
+  (the dialog keeps it). An element that only held a cut line goes with it, and
+  so do two chips that only drew one (`Restore`'s `wording`, `Settings`'
+  `reader`); `TaskCard`, `PickPrompt`, `CoverRow` and `ComingSoonCard` take
+  their line as optional, `RedactedContent` draws a detail only where one is
+  given.
+- **Shortened, cut-only**, as the digest's rows say (the clearing footnote, the
+  erase dialog and the delete-account lines among them; the key ceremony's
+  recovery-code line kept whole). The hide snackbars read `@ada is hidden.` /
+  `@juno is unhidden.`, Undo kept.
+- **Kept by ruling:** `Read aloud to people who can't see it.`, About's `This
+  page grows`, `Sensitive — tap to view`, `Signed — it's in the thread now,
+  still settling.`, the question-fronted doors.
+- **Stopped, at jakob (backlog 194):** the vouch-back pad's two coaching lines
+  and the edit acts sheets' subline — no "?" holds them; and the sign-out line,
+  where the drawing is the later text and copy-voice the stale side.
+- **Filed:** the digest's MOVE rows nobody ruled (192); two cuts of the ask
+  link's caption and lines the pass left asymmetric (193).
+- **The gate**: no board added or removed (185 registered screens). The
+  registry loses ruled paths, a named breaking change: **7117 → 7014** board
+  paths, **2000 → 1960** distinct — 46 paths leave 103 board entries (the
+  filter sheets' hints and `settings.feedSheet.note`, the Settings footnotes
+  and second lines, `*.removalMark.detail`, the report sheets' `body`,
+  `keptPicksSeal.header.stage` and `.acts.note`, `tagPicker.tag.sub`, the
+  picked sheets' `note`, and the single lines' nodes); six of them stay on
+  other boards. Backlog 192–194 filed.
+
 ---
 
 ## 14. The canvases
