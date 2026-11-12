@@ -6,6 +6,10 @@ WHEN the deleted account's menu opens -> it reads Save or Unsave, Share this pro
 
 ALWAYS the hide row reads Hide this account, the same words every card the account authored shows, and never names a handle
 
+ALWAYS the hide row reads Unhide this account GIVEN the account is already hidden, the deleted account's page reached by a link, a search or a row, and never names a handle
+
+WHEN tap Unhide this account -> the sheet closes AND the reader stays on the page AND the account is unhidden AND the snackbar answers as the hidden-accounts sheet answers a deleted account's Unhide, with Undo AND NEVER a dialog asks
+
 ALWAYS every row stands at full strength
 
 ALWAYS the deleted account's page stays open beneath the sheet, and nothing beneath the scrim takes a tap

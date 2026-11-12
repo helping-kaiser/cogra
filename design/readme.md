@@ -5207,7 +5207,8 @@ pass: one board, one law, and two sweeps.
   `Unsave` control moved into the shared screen helpers on the way —
   it is drawn on two boards now, and a control spelled twice drifts.
 - **A hide row cannot say a name that is gone.** On a deleted author's
-  post the reader's menu reads `Hide this account`; everywhere else it
+  post the reader's menu reads `Hide this account` (`Unhide this
+  account` where that account is already hidden); everywhere else it
   spells the handle. The ROW stays either way —
   hiding is a read-side comfort about an ACTOR, and a redacted actor
   still ranks into the reader's feed — so only the wording gives way.

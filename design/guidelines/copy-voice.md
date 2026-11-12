@@ -2648,7 +2648,8 @@ beside `Hide @ada`, never instead of it, and the row never drops: the
 act is about an ACTOR, the actor is still there, and its content still
 ranks into the reader's feed. The system's voice for the same reason
 `Deleted account` is — it is the product saying what the tap does when
-it cannot say whose.
+it cannot say whose. Its twin, where that account is already hidden,
+is `Unhide this account` (*On a hidden person's card the row turns*).
 
 ## A card's media description
 
@@ -3080,8 +3081,9 @@ handle after it (`Unhide this account` where the actor is redacted, as
 `Hide this account` is). It answers with Settings' snackbar, `@ada is
 unhidden — their posts can reach your feed again.` with `Undo` (jakob
 2026-11-11, M1; round 41). **Drawn** on `HistoryPostMenu` (`author`
-hidden) and `HistoryProfileMenu`. (*`Unhide @ada` and `Unhide this
-account` are `Unhide` taking the row's handle, review-pending.*)
+hidden) and `HistoryProfileMenu`. (*`Unhide @ada` blessed (jakob
+2026-11-11, round 41's first question); `Unhide this account` blessed
+(jakob 2026-11-12, the re-ask's twelfth).*)
 
 **Hiding is confirm-free, and the snackbar is the whole ceremony.**
 `@ada is hidden — their posts stay out of your feed.` with `Undo`
