@@ -4837,7 +4837,8 @@ one. The height cap is gone; what bounds a card tile is its shape.
   the step at all, because its default is no cover.
 - **The card's text clamps were already conform** — title one line,
   description two, and `More` under a media post's caption once it runs
-  past its two lines (round 44: never under one that fits whole). What
+  past its two lines (round 44: never under one that fits whole; the
+  sample boards lag, backlog 202). What
   was stale was the `media` card's own inventory, which had the
   description clamping to one. The text body's ceiling stays at 18 lines;
   its derivation had been floor(376 ÷ 20) against the capped tile, and
