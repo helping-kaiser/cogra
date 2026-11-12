@@ -113,7 +113,7 @@ private fun ShellScope.ComposeDestination(entry: NavBackStackEntry) {
     if (!editing && applicant) {
         LaunchedEffect(entry.id) {
             if (navController.currentBackStackEntry?.id == entry.id) navController.popBackStack()
-            announcePostLocked()
+            announce(postLockedLine)
         }
         return
     }
