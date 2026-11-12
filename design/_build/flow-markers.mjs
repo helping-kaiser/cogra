@@ -2258,6 +2258,8 @@ Object.assign(FLOW_MARKERS, {
     // The two legal doors, as on Join (jakob 2026-10-09, ruling 76).
     { n: 8, find: ">Terms</a>", tag: "a" },
     { n: 9, find: ">Privacy Policy</a>", tag: "a" },
+    // Round 46 (seam 316): the header's "?", Join's own — the next free number.
+    { n: 11, find: 'aria-label="About CoGra"', tag: "button" },
   ],
   SignInError: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },

@@ -437,6 +437,7 @@
     { "from": "JoinErrors", "via": 10, "kind": "advance", "label": "Repeat password field", "to": [{ "terminal": "self", "case": "typing — the mismatch line re-checks and goes once the two passwords match" }] },
     { "from": "JoinErrors", "via": 6, "kind": "advance", "label": "Create account", "to": [{ "board": "ApplicantFeed", "case": "account created — applicant days begin" }, { "board": "ApplicantFeed", "case": "opened signed in — the new account's applicant days begin, and this device switches to it; the other account's sessions stay valid" },{ "terminal": "self", "case": "still failing — the line updates in place" }, { "terminal": "self", "case": "offline — the form answers in its own slot (E5): That didn't send. Try again. stands above Create account, what was entered stays, and Create account is the retry" }] },
     { "from": "JoinErrors", "via": 7, "kind": "advance", "label": "Already have an account? Sign in", "to": [{ "board": "SignIn" }] },
+    { "from": "JoinErrors", "via": 11, "kind": "detour", "label": "? — About CoGra", "to": [{ "board": "About", "case": "Join's one explanation, as on Join" }] },
     { "from": "JoinErrors", "via": 8, "kind": "detour", "label": "Terms", "to": [{ "gap": "the Terms page — the door stands in the accept sentence (ruling 76); the page it opens is design still owed" }] },
     { "from": "JoinErrors", "via": 9, "kind": "detour", "label": "Privacy Policy", "to": [{ "gap": "the Privacy Policy page — the notice's door stands at the form's foot (ruling 76); the page it opens is design still owed" }] },
 

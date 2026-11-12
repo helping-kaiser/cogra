@@ -1,6 +1,14 @@
 # JoinErrors · `spec:design:behavior-join-errors`
 
-WHEN press Create account GIVEN the handle is taken and the password is shorter than 12 characters and Repeat password differs from it -> the Handle field's line reads That handle is taken. AND the Password field's line reads A password is at least 12 characters. AND the Repeat password field's line reads The two passwords don't match. AND NEVER the Email field changes
+ALWAYS the board is a composite demonstration, never one reachable moment: it draws the server's answer and the two local refusals at once only to show each field's error state (seam 316)
+
+WHEN press Create account GIVEN the password is shorter than 12 characters and Repeat password differs from it -> the Password field's line reads A password is at least 12 characters. AND the Repeat password field's line reads The two passwords don't match. AND NEVER the registration is sent AND NEVER the Email field changes
+
+WHEN press Create account GIVEN every local check passes and the handle is taken -> the Handle field's line reads That handle is taken. AND NEVER the Email field changes
+
+ALWAYS That handle is taken. never stands together with a local refusal: a local refusal stops the press before anything is sent
+
+WHEN press Create account GIVEN a line the server answered stands -> that line goes AND only the new press's answers stand
 
 ALWAYS each field is checked on its own at the press, so Repeat password's mismatch line stands beside Password's own line
 
@@ -44,7 +52,11 @@ WHEN the account is created GIVEN the form opened over the signed-in state -> th
 
 WHEN press Create account GIVEN a field still fails -> its line updates in place AND NEVER the screen changes
 
-WHEN press Create account GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Create account AND Create account stays, the retry
+WHEN press Create account GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands first under the fields, above the Terms line, which stands directly above Create account AND Create account stays, the retry
+
+ALWAYS the header's "?" is the screen's one explanation, named About CoGra, as on Join
+
+WHEN tap the header's "?" -> About opens with a plain Back on its arrow
 
 WHEN tap Already have an account? Sign in -> SignIn opens
 
@@ -52,7 +64,7 @@ ALWAYS a line the server answered stands until the next press of Create account,
 
 WHEN no answer has come 5s after the press of Create account -> Create account still reads Creating account… AND NEVER a slow line or a progress indicator appears
 
-ALWAYS the header's arrow and Already have an account? Sign in refuse a press, never dimmed, while Create account waits on its answer
+ALWAYS the header's arrow, the "?" and Already have an account? Sign in refuse a press, never dimmed, while Create account waits on its answer
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 
