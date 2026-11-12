@@ -7,8 +7,8 @@
 //   answers the status line that never says whether the email has an account
 //   (no account enumeration).
 // - RESET NEW, at /reset?token=: the mail's link lands here holding its own
-//   secret — no field asks for it (ResetNew.md) — with one password field and
-//   one commitment, no header and no back arrow.
+//   secret — no field asks for it (ResetNew.md) — with the new password asked
+//   twice and one commitment, no header and no back arrow.
 // - RESET EXPIRED: a link spent or past its 15 minutes (the link's read-only
 //   check before the form stands, or RESET_TOKEN_INVALID on
 //   the press) — one screen for both, never saying which, and never whose.
@@ -23,7 +23,9 @@ import { useApolloClient } from "@apollo/client/react";
 import { hasCode } from "@/lib/api/outcome";
 import { checkPasswordResetLink, confirmPasswordReset, requestPasswordReset } from "@/lib/api/auth-api";
 import { passwordLength } from "@/lib/onboarding/registration-rules";
+import { mismatchAfterEdit, mismatchOnPress } from "@/lib/onboarding/repeat-password";
 import { buttonClassName } from "@/lib/ui/button";
+import { part, type DataNode } from "@/lib/ui/data-node";
 import { FormPasswordField, FormTextField } from "@/lib/ui2/form-fields";
 import { QuietNote } from "@/lib/ui2/quiet-note";
 import { NO_ANSWER, NOT_THROUGH, RATE_LIMITED_LINE, TaskPage } from "@/lib/ui2/task-page";
@@ -152,12 +154,17 @@ function ResetRequest() {
   );
 }
 
+/** ResetNew's registered prefix (nodes.json `reset`, round 28). */
+const RESET_NEW: DataNode = { path: "reset" };
+
 function ResetNew({ token, onExpired }: { token: string; onExpired: () => void }) {
   const client = useApolloClient();
   const router = useRouter();
   const [password, setPassword] = useState("");
   /** `length` re-checks live; `breach` stands until the next press. */
   const [line, setLine] = useState<{ kind: "length" | "breach"; text: string } | null>(null);
+  const [repeat, setRepeat] = useState("");
+  const [repeatLine, setRepeatLine] = useState<string | null>(null);
   const [fault, setFault] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -167,18 +174,22 @@ function ResetNew({ token, onExpired }: { token: string; onExpired: () => void }
       const length = passwordLength(value);
       setLine(length === "ok" ? null : { kind: "length", text: LENGTH_LINES[length] });
     }
+    setRepeatLine(mismatchAfterEdit(repeatLine, value, repeat));
+  };
+  const onRepeat = (value: string) => {
+    setRepeat(value);
+    setRepeatLine(mismatchAfterEdit(repeatLine, password, value));
   };
 
   const onConfirm = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (busy || password === "") return;
-    setLine(null);
+    if (busy || password === "" || repeat === "") return;
     setFault(null);
     const length = passwordLength(password);
-    if (length !== "ok") {
-      setLine({ kind: "length", text: LENGTH_LINES[length] });
-      return;
-    }
+    const mismatch = mismatchOnPress(password, repeat);
+    setLine(length === "ok" ? null : { kind: "length", text: LENGTH_LINES[length] });
+    setRepeatLine(mismatch);
+    if (length !== "ok" || mismatch !== null) return;
     setBusy(true);
     const outcome = await confirmPasswordReset(client, token.trim(), password);
     setBusy(false);
@@ -194,6 +205,7 @@ function ResetNew({ token, onExpired }: { token: string; onExpired: () => void }
 
   return (
     <TaskPage
+      node={RESET_NEW}
       title="Set a new password"
       lead="Setting a new password signs out every device. You sign in again with the new one."
     >
@@ -204,9 +216,20 @@ function ResetNew({ token, onExpired }: { token: string; onExpired: () => void }
             value={password}
             onChange={onPassword}
             autoComplete="new-password"
+            enterKeyHint="next"
             hint="At least 12 characters."
             error={line?.text ?? null}
-            testId="reset_password"
+            node={part(RESET_NEW, "password")}
+          />
+        </div>
+        <div className="mt-6">
+          <FormPasswordField
+            label="Repeat password"
+            value={repeat}
+            onChange={onRepeat}
+            autoComplete="new-password"
+            error={repeatLine}
+            node={part(RESET_NEW, "confirm")}
           />
         </div>
         <div className="mt-6">
@@ -214,14 +237,14 @@ function ResetNew({ token, onExpired }: { token: string; onExpired: () => void }
             label="Set the new password"
             busyLabel="Setting the new password…"
             reason="Waiting for a new password"
-            waiting={password === ""}
+            waiting={password === "" || repeat === ""}
             busy={busy}
             fault={fault}
-            testId="reset_confirm"
+            node={part(RESET_NEW, "commit")}
           />
         </div>
         <div className="mt-6">
-          <QuietNote>{SIGN_IN_ONLY}</QuietNote>
+          <QuietNote node={part(RESET_NEW, "note")}>{SIGN_IN_ONLY}</QuietNote>
         </div>
       </form>
     </TaskPage>

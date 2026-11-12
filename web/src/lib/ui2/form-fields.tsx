@@ -66,20 +66,28 @@ export type FieldKind = keyof typeof FIELD_KINDS;
 const FIELD =
   "cg-focus box-border w-full min-w-0 rounded-extra-small border bg-transparent px-3 py-2 text-body-large text-on-surface";
 
+/**
+ * The supporting line. A text field's sits in its supporting ROW
+ * (TextField.jsx `FieldSupport`: a baseline flex row the count would share),
+ * so the line is as wide as its words; a password field's stands directly in
+ * the field's column (PasswordField.jsx), as wide as the field.
+ */
 function Support({
   id,
   hint,
   error,
   node,
+  row = false,
 }: {
   id: string;
   hint?: string;
   error?: string | null;
   node?: DataNode;
+  row?: boolean;
 }) {
   const line = error ?? hint;
   if (line === undefined || line === null) return null;
-  return (
+  const span = (
     <span
       id={id}
       role={error ? "alert" : undefined}
@@ -89,6 +97,7 @@ function Support({
       {line}
     </span>
   );
+  return row ? <div className="flex flex-none items-baseline gap-2">{span}</div> : span;
 }
 
 export function FormTextField({
@@ -153,7 +162,7 @@ export function FormTextField({
         className={`${FIELD} ${error ? "border-error" : "border-outline"} ${mono ? "font-mono" : ""}`}
         {...testAttributes(part(node, "input"), testId)}
       />
-      <Support id={supportId} hint={hint} error={error} node={part(node, "support")} />
+      <Support id={supportId} hint={hint} error={error} node={part(node, "support")} row />
     </div>
   );
 }
