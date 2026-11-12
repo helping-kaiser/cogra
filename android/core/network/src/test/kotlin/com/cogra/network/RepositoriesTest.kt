@@ -15,6 +15,7 @@ import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.auth.SessionRefresher
+import com.cogra.network.repo.AccountRepositoryImpl
 import com.cogra.network.repo.OnboardingRepositoryImpl
 import com.cogra.network.repo.SessionRepositoryImpl
 import com.cogra.network.repo.WriteRepositoryImpl
@@ -240,6 +241,28 @@ class RepositoriesTest {
         assertThat(refused.errors.single().code).isEqualTo(ErrorCode.UNAUTHENTICATED)
         // Signed out → no refresh, no replay.
         assertThat(server.requestCount).isEqualTo(1)
+    }
+
+    // ResetNew.md:43, auth.md "Password reset" step 3 — the read-only check
+    // decides the landing: live, spent (one answer for used, expired and
+    // unknown), and the token-confirmation budget refusing visibly.
+    @Test
+    fun theResetLinkCheckAnswersLiveSpentOrRateLimited() = runTest {
+        val account = AccountRepositoryImpl(client, guard())
+        enqueue("""{"data":{"passwordResetLinkCheck":true}}""")
+        assertThat((account.passwordResetLinkCheck("live-token") as Outcome.Success).value).isTrue()
+        assertThat(server.takeRequest().body.readUtf8()).contains("live-token")
+
+        enqueue("""{"data":{"passwordResetLinkCheck":false}}""")
+        assertThat((account.passwordResetLinkCheck("spent") as Outcome.Success).value).isFalse()
+        server.takeRequest()
+
+        enqueue(
+            """{"data":null,"errors":[{"message":"too many attempts",
+               "extensions":{"code":"RATE_LIMITED"}}]}""",
+        )
+        val refused = account.passwordResetLinkCheck("t") as Outcome.Refused
+        assertThat(refused.errors.single().code).isEqualTo(ErrorCode.RATE_LIMITED)
     }
 
     @Test

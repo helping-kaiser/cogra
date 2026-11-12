@@ -207,7 +207,7 @@ describe("Your topics", () => {
     serve(BOARD);
     render();
     const header = screen.getByTestId(byNode("yourTopics.header"));
-    expect(within(header).getByRole("heading", { level: 1 })).toHaveTextContent("Your topics");
+    expect(within(header).getByRole("heading", { level: 1 })).toHaveTextContent("Your tags");
     const back = within(header).getByRole("link", { name: "Back to Explore" });
     expect(back).toHaveAttribute("href", "/explore");
     await screen.findByTestId("your-topics-list");

@@ -191,6 +191,7 @@ is active until resolved.
 | `Apply(inviteId)` | signed out | the apply step of `/join/<link-id>` |
 | `PasswordReset` | signed out | `/reset` |
 | `ResetNew(token)` (the reset mail's `/reset?token=` App Link lands here) | both | `/reset?token=` |
+| `ResetExpired` (a spent or expired reset link, opened in `ResetNew`'s place) | both | `/reset?token=` (the dead-link reading) |
 | `Feed` (signed-in root; bar tab) | both (public read) | `/feed` |
 | `Profile(handle?)` (bar tab when own; drill-in by handle) | both (public read) | `/u/<handle>` |
 | `ProfileEdit` | signed in | the edit form of `/u/<handle>` |
@@ -214,7 +215,9 @@ join entries on the read surfaces push it, so back returns to
 the reading context. No guest session
 exists anywhere: an anonymous read simply carries no
 token. The reset mail's `/reset?token=` link lands on `ResetNew`
-as an App Link; the verification mail's `/verify?token=` link has
+as an App Link, which reads the link first
+(`passwordResetLinkCheck`) and opens `ResetExpired` in its place for a
+link already used or past its time; the verification mail's `/verify?token=` link has
 no destination and opens in the browser.
 
 ## Module layout

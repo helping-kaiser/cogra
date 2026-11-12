@@ -67,7 +67,7 @@ export const TOPICS: readonly { title: string; answer: readonly string[] }[] = [
   {
     title: "Getting in, and being let in",
     answer: [
-      "CoGra is invite-only. Somebody already here vouches for you, and until they have, you are an applicant: you can read everything, write one post, give one opinion and say how you feel about one topic.",
+      "CoGra is invite-only. Somebody already here vouches for you, and until they have, you are an applicant: you can read everything, write one post, give one opinion and say how you feel about one tag.",
       "These wait with your application and arrive with you. Until then only you can see them, and they are signed together with the vouch that lets you in. If your application is closed, your account stays — anyone can still vouch you in.",
       "That is not a waiting period for its own sake. The first link to you is a real one, given by a person who stands behind it — which is the thing that keeps this place small enough to be honest.",
     ],

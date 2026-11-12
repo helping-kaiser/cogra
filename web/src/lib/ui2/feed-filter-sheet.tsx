@@ -57,8 +57,8 @@ const FORMS_HINT_ON = "Combine them: photos and video with no text posts is a le
 const FORMS_HINT_OFF = "Applies once posts or comments are in.";
 const ALSO_HINT = "How sensitive content is veiled is set in Settings.";
 const PEOPLE_HINT = "Whose things reach this feed.";
-const TOPIC_LABEL = "One topic";
-const ALL_YOUR_TOPICS = "All your topics";
+const TOPIC_LABEL = "One tag";
+const ALL_YOUR_TOPICS = "All your tags";
 
 /**
  * Whose words the people rows, the order hint and the topic hint speak in:
@@ -76,7 +76,7 @@ export function viewWords(borrowedHandle: string | null) {
       signName: "Which of your people",
       orderHint:
         "Ranked puts what's closest to you first — your view, no one else's. Newest ignores it and lists by time.",
-      topicHint: "Topics you hold and are for. A topic you hold against stays a record — it just never narrows a feed.",
+      topicHint: "Tags you hold and are for. A tag you hold against stays a record — it just never narrows a feed.",
     };
   }
   const at = `@${borrowedHandle}`;
@@ -86,7 +86,7 @@ export function viewWords(borrowedHandle: string | null) {
     yourPeopleHint: `Only the people ${at} holds an opinion of — the same rank, narrowed to them.`,
     signName: `Which of ${at}'s people`,
     orderHint: `Ranked puts what's closest to ${at} first — the view you're browsing from. Newest ignores it and lists by time.`,
-    topicHint: `Topics ${at} holds and is for. A topic ${at} holds against stays a record — it just never narrows a feed.`,
+    topicHint: `Tags ${at} holds and is for. A tag ${at} holds against stays a record — it just never narrows a feed.`,
   };
 }
 

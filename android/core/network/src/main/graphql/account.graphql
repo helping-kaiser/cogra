@@ -121,6 +121,10 @@ mutation RequestPasswordReset($input: RequestPasswordResetInput!) {
   }
 }
 
+query PasswordResetLinkCheck($token: String!) {
+  passwordResetLinkCheck(token: $token)
+}
+
 mutation ConfirmPasswordReset($input: ConfirmPasswordResetInput!) {
   confirmPasswordReset(input: $input) {
     ok

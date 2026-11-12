@@ -704,7 +704,7 @@ function AtRest({
               the subpage, whose arrow reads `Back to Explore`. */}
           <ContentRow
             variant="door"
-            title="Your topics"
+            title="Your tags"
             second={heldCount === null ? undefined : heldLine(heldCount)}
             href={YOUR_TOPICS_HREF}
             disc={{ kind: "letter", letter: "#" }}
