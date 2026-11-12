@@ -3486,6 +3486,11 @@ colon, no subtitle.
 `graph` glyph and the signed figure, `+15.20`, hung on the thing's top-left;
 `Feed score` is its spoken name. The sign appears only there — every card
 keeps its plain figure, a negative keeping its `−` everywhere, a zero none.
+A tiny score (0 < |s| < 0.005) never reads zero (jakob 2026-11-12): the
+card prints `0.01` or `−0.01`, and every figure on the trace prints it in
+two significant digits, at most six decimals — `+0.0031`, `−0.00042`,
+`+0.000001` the floor; the reader's screen reader says the printed figure
+(`ExplainableNumber`'s source holds the rule whole).
 
 **A path's spoken shape** ends kind-neutral: `You, then @ada, then what
 reached you` — blessed (jakob 2026-10-01). The title's own words, since the

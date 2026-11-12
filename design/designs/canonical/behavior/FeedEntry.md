@@ -21,3 +21,11 @@ ALWAYS the trace carries no chart, no bar, no meter, no percentage and no trend 
 ALWAYS the trace carries a cover of the thing its score was tapped on
 
 ALWAYS the back arrow reads Back to the profile GIVEN the score was tapped on a card on another's profile, and Back to your profile on a card on the reader's own
+
+ALWAYS every figure on the trace — the held thing's flag, each path's figure and the quiet row's — prints two decimals, a positive taking +, a negative −
+
+ALWAYS a figure on the trace prints its magnitude in two significant digits, as +0.0031 or −0.00042, and never past six decimals, GIVEN it is not zero and under 0.005 either way
+
+ALWAYS a figure on the trace reads +0.000001 or −0.000001 GIVEN six decimals would print it as zero and it is not zero
+
+ALWAYS a screen reader reads each figure on the trace as printed, never the computed one

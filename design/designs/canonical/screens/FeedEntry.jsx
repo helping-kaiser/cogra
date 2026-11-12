@@ -38,16 +38,27 @@
    `pathsLabel`, each path row `path` keyed by its place, strongest first, and
    the quiet row `morePaths` with its `label` and `value`. The `view` chip
    draws the path list once per value, so the two lists are one list in two
-   states — each row keeping its own key (a chip copy of a keyed instance). */
+   states — each row keeping its own key (a chip copy of a keyed instance).
+
+   A TINY SCORE'S TRACE (jakob 2026-11-12, the re-ask's twentieth; the
+   `score` chip). The figures only change: `usual` the 15.20 the cast's
+   paths add up to; `tiny` a score of +0.0031 — the card reading `0.01` —
+   every figure under 0.005 in two significant digits, the quiet row's
+   +0.000050 at the six-decimal edge; `tiny-negative` −0.00042, the weakest
+   paths cut at six decimals (−0.000006, −0.000004). The drawn figures still
+   add up to the flag. `ExplainableNumber` holds the rule. */
 export const NODE = "feedEntry";
-export const PROPS = { view: { editor: "enum", options: ["own", "borrowed"], default: "own" } };
-export const VALS = `traceNote: this.props.view === "borrowed" ? "Every path here starts with an opinion @mira gave." : "Every path here starts with an opinion you gave.", ownPaths: this.props.view === "borrowed" ? "none" : "contents", borrowedPaths: this.props.view === "borrowed" ? "contents" : "none"`;
+export const PROPS = {
+  view: { editor: "enum", options: ["own", "borrowed"], default: "own" },
+  score: { editor: "enum", options: ["usual", "tiny", "tiny-negative"], default: "usual" },
+};
+export const VALS = `traceNote: this.props.view === "borrowed" ? "Every path here starts with an opinion @mira gave." : "Every path here starts with an opinion you gave.", ownPaths: this.props.view === "borrowed" ? "none" : "contents", borrowedPaths: this.props.view === "borrowed" ? "contents" : "none", flagScore: this.props.score === "tiny" ? "+0.0031" : this.props.score === "tiny-negative" ? "−0.00042" : "+15.20", path1: this.props.score === "tiny" ? "+0.0018" : this.props.score === "tiny-negative" ? "−0.00031" : "+6.80", path2: this.props.score === "tiny" ? "+0.00079" : this.props.score === "tiny-negative" ? "−0.000080" : "+4.20", path3: this.props.score === "tiny" ? "+0.00034" : this.props.score === "tiny-negative" ? "−0.000020" : "+2.60", path4: this.props.score === "tiny" ? "+0.00012" : this.props.score === "tiny-negative" ? "−0.000006" : "+1.10", moreScore: this.props.score === "tiny" ? "+0.000050" : this.props.score === "tiny-negative" ? "−0.000004" : "+0.50"`;
 export function Screen() {
   return (
     <>
       <PageHeader title="Why this reached you" backHref="#" backLabel="Back to feed" node="header" />
       <ScoreColumn>
-        <ScoreOrigin />
+        <ScoreOrigin score="{{flagScore}}" />
         <QuietNote node="note">{"{{traceNote}}"}</QuietNote>
 
         <SectionLabel node="pathsLabel">Strongest first</SectionLabel>
@@ -58,7 +69,7 @@ export function Screen() {
                 key={path.through}
                 people={path.people}
                 through={path.through}
-                value={path.value}
+                value={`{{path${index + 1}}}`}
                 onOpen={() => {}}
                 node="path"
                 nodeKey={String(index + 1)}
@@ -71,7 +82,7 @@ export function Screen() {
                 key={path.through}
                 people={path.people}
                 through={path.through}
-                value={path.value}
+                value={`{{path${index + 1}}}`}
                 onOpen={() => {}}
                 node="path"
                 nodeKey={String(index + 1)}
@@ -115,7 +126,7 @@ export function Screen() {
               style={{ flex: "none", color: "var(--on-surface)", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: 500 }}
               data-node="value"
             >
-              {SCORE_MORE_PATHS.value}
+              {"{{moreScore}}"}
             </span>
           </button>
         </div>

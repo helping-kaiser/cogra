@@ -22,6 +22,8 @@ ALWAYS the tag page shows no count of people or of uses
 
 ALWAYS a card's score on the tag page is the figure the latest fetch of its thing found — the reader's own last feed fetch, or its trace's fetch since — a dash only where that fetch found none
 
+ALWAYS a card's score on the tag page prints as every feed card's does, two decimals and never more, 0.01 or −0.01 GIVEN a computed figure is not zero and under 0.005 either way
+
 ALWAYS at most one clip plays on the tag page, by the feed's stage law
 
 WHEN tap a portrait or square clip on the tag page -> the stream opens on it, carrying only the clips tagged with this tag that are at least as tall as they are wide, in the tag page's order AND the bar keeps the root the tag page was opened from

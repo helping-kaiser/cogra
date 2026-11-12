@@ -1363,6 +1363,18 @@ vocabulary is the stance readout, and a second face on the same card
 would make both unreadable. Uncapped, negative allowed, never coloured —
 `error` is failure, and a low score is not one.
 
+**A tiny score never reads zero** (jakob 2026-11-12, round 45). A score
+with 0 < |s| < 0.005 is tiny. The card — every ranked card, the tag
+page's included — prints two decimals, never more, and a tiny score
+rounds away from zero to `0.01` or `−0.01`, so `0.00` is a severed
+one's alone. The trace (everything behind the graph glyph: the flag,
+the paths, the quiet row, a path's `adds`) prints two decimals too, and
+a tiny figure in two significant digits — `0.0031`, `0.00042` — at most
+six decimals, a still smaller one reading `0.000001`; the trace's `+`
+on a positive stands. The minus is U+2212. A screen reader reads the
+printed figure. The thresholds and the rounding, stated once:
+`ExplainableNumber`'s source.
+
 **Media runs full-bleed** and is the largest thing in the card, with the
 title above it and the caption clamped below behind a `More` opener. The
 author chip still leads: §1 is not negotiable even where every other

@@ -4,6 +4,8 @@ ALWAYS the path's facts stand before its steps
 
 ALWAYS the path states what it adds, and no step carries a number of its own
 
+ALWAYS what the path adds prints as every figure on the trace does, two decimals, and two significant digits up to six decimals GIVEN it is not zero and under 0.005 either way, +0.000001 or −0.000001 GIVEN six decimals would print it as zero
+
 ALWAYS the path's newest age is its last step's
 
 ALWAYS every age on the path reads on the ages ladder
