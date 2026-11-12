@@ -5,7 +5,7 @@
 
 import { screen, waitFor } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { AccountPreferencesSync } from "@/lib/settings/account-preferences-sync";
 import { BottomNav } from "@/lib/ui/bottom-nav";
@@ -50,6 +50,10 @@ function Probe() {
 }
 
 describe("the reader's account state", () => {
+  // The token store persists in localStorage: an earlier test's session must
+  // not sign in the next one.
+  beforeEach(() => window.localStorage.clear());
+
   it("an_applicants_one_account_read_locks_every_bar_on_the_page", async () => {
     const reads = { count: 0 };
     server.use(meAnswering("APPLICANT", reads));

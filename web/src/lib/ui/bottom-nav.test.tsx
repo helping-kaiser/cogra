@@ -155,7 +155,8 @@ describe("BottomNav", () => {
       const tap = new MouseEvent("click", { bubbles: true, cancelable: true });
       fireEvent(slot(), tap);
       expect(screen.getByTestId("carried-snackbar")).toHaveTextContent("You can post once you're in.");
-      expect(screen.queryByTestId("join-prompt")).not.toBeInTheDocument();
+      // The bar's join prompt stands mounted and closed: an applicant is never asked to join.
+      expect((screen.getByTestId("join-prompt") as HTMLDialogElement).open).toBe(false);
       expect(screen.queryByRole("link", { name: "New post" })).not.toBeInTheDocument();
     });
 
@@ -174,7 +175,7 @@ describe("BottomNav", () => {
     settleReaderState(null);
     render(<BottomNav active="feed" signedIn={false} node={{ path: "feed.bottomBar" }} />);
     fireEvent.click(screen.getByTestId("feed.bottomBar.composeSlot"));
-    expect(screen.getByTestId("join-prompt")).toBeInTheDocument();
+    expect((screen.getByTestId("join-prompt") as HTMLDialogElement).open).toBe(true);
     expect(screen.getByTestId("feed.bottomBar.composeSlot").className).not.toContain(
       "opacity-[var(--state-disabled)]",
     );
