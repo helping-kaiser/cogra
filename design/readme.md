@@ -11836,8 +11836,9 @@ vouch-back pad and Wallet; lane B's crop, composer side, feed and profile).
   paths, 2032 → 2029 distinct. Lane B removed four by ruling
   (`feedEntry.morePaths` ×3, `postEdit.cover.note`) and added one
   (`postDetail.menuSheet.share`); lane A added three (`invites.linksDoor`,
-  `changePassword.confirm.support`, `reset.confirm.support`) and removed three
-  by ruling. Against main: 63 distinct gone, 92 added, none of rounds 42–46's
+  `changePassword.confirm.support`, `reset.confirm.support`) and deleted three
+  by ruling (`settings.sensitive.footnote`, `changeHandle.body`,
+  `wallet.comingSoonCard.line`) plus ChangeEmail's `changeEmail.body` entry. Against main: 63 distinct gone, 92 added, none of rounds 42–46's
   ruled removals back.
 ---
 
