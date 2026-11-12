@@ -11770,9 +11770,23 @@ re-ask (11, 12, 14–18, 20), and two registry gaps impl found (seam 297,
 ### Round 46, the review's answers — 2026-11-12
 
 jakob's review of rounds 42–45 and his answers to questions 1–22, executed
-(lane B; lane A's forms, Settings, Invites, entry boards, the vouch-back
-pad and Wallet are recorded beside it).
+(both lanes: lane A's forms, Settings, Invites, entry boards, the
+vouch-back pad and Wallet; lane B's crop, composer side, feed and profile).
 
+- **Forms, Settings, Invites and entry (lane A).** jakob's answers 4–10, 11 and 13–16, 20, and his two review notes on round 43, executed.
+  - Live links stand newest made first, three, then `Show all` in place (`Invites`' `links` chip).
+  - `This choice follows your account to every device.` is cut. Copy-voice now holds the rule: only a setting that stays on this device says where it lives.
+  - `Show my key`, `Create a new recovery code` and `Send the confirmation link` keep their exits, the recovery-code form holding them while it submits. The Handle row keeps `Retry`, since a handle retry needs nothing typed again.
+  - After Close, a form's Settings row reads the form's own in-flight label (`forms`: `password-changing`, `email-changing`, `email-confirming`). The failure line leaves on the tap that reopens the form at rest, with a one-field refusal beside its field.
+  - `Cancel the change` is held while the code confirms, and `ChangeEmailConfirm` draws the link confirmed with the code owed (`confirmed: link`).
+  - A group's failed closing says it once, under the group label.
+  - Giving an opinion's "?" is one paragraph naming the three inputs (*drafted, review-pending*).
+  - The vouch-back pad's two coaching lines live in its "?".
+  - Cut: the handle and email forms' bodies, the unveil switch's On line, Wallet's line.
+  - The ask-link caption is one on all three boards.
+  - Join's failure line stands above the Terms line above `Create account` (`answer: failed`). `JoinErrors` says it is a composite and carries Join's "?".
+  - Two boards added: `ChangePasswordErrors` and `ResetNewErrors`, `JoinErrors`' construction, each the mismatch in place; through them `changePassword.confirm.support` and `reset.confirm.support` are registered.
+  - Registry on this lane: `invites.linksDoor`, `changePassword.confirm.support` and `reset.confirm.support` registered; `settings.sensitive.footnote`, `changeHandle.body`, `wallet.comingSoonCard.line` and ChangeEmail's `changeEmail.body` entry deleted (ruled).
 - **The cover's frame always has the clip's dimensions** (review, 1;
   backlog 200): tall clip a tall cover, square a square, wide a wide —
   the shape the clip stands at in a card — and the crop exports only that
@@ -11818,9 +11832,13 @@ pad and Wallet are recorded beside it).
   the cut strings; `Signs as #…` stands only where the typed name changes;
   `ReaderPostMenuNarrow` registers on `ReaderPostMenu`'s paths, its share
   row `menuSheet.share` (seam 316).
-- **Registry**: 189 → 192 screens, 2032 → 2029 distinct paths — four
-  ruled removals (`feedEntry.morePaths` ×3, `postEdit.cover.note`), one
-  addition (`postDetail.menuSheet.share`).
+- **The gate, both lanes merged**: 189 → 194 screens, 7252 → 7387 board
+  paths, 2032 → 2029 distinct. Lane B removed four by ruling
+  (`feedEntry.morePaths` ×3, `postEdit.cover.note`) and added one
+  (`postDetail.menuSheet.share`); lane A added three (`invites.linksDoor`,
+  `changePassword.confirm.support`, `reset.confirm.support`) and removed three
+  by ruling. Against main: 63 distinct gone, 92 added, none of rounds 42–46's
+  ruled removals back.
 ---
 
 ## 14. The canvases
