@@ -297,7 +297,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="How the filter works"', tag: "button" },
     { n: 2, find: 'role="switch"', tag: "button", all: true },
     { n: 3, find: "aria-pressed=", tag: "button", all: true },
-    { n: 4, find: "already seen", tag: "label" },
+    // No 4: search carries no seen toggle (round 44, seam 296).
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 6, find: ">Done</button>", tag: "button" },
     { n: 7, find: ">Reset</button>", tag: "button" },

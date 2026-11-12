@@ -82,7 +82,7 @@ ALWAYS feed.band.filterTrigger reads everyone among its deviations GIVEN the rea
 
 ALWAYS the filter's "?" says Reset brings back your defaults, to change them go to settings.
 
-ALWAYS the feed filter's "?" says What you've already seen waits below the Already seen line unless you ask for it back. and the search sheet's keeps its stays-out sentence
+ALWAYS the feed filter's "?" says What you've already seen waits below the Already seen line unless you ask for it back. and the search sheet's carries no seen sentence
 
 WHEN the last kind chip is switched off -> NEVER the chip refuses the tap
 

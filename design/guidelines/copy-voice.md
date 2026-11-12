@@ -536,9 +536,8 @@ noun):
   sentence is the surface's own, jakob 2026-10-14): What you
   let in, and in what order — the kinds combine freely, ranked or
   newest is one choice, and — on the feed — what you've already seen
-  waits below the Already seen line unless you ask for it back; on
-  search, what you've already seen stays out
-  unless you ask for it back. Nothing changes until you press Done,
+  waits below the Already seen line unless you ask for it back.
+  Nothing changes until you press Done,
   and nothing here is signed or shared. / It lasts until you change it,
   on this device only. Reset brings back your defaults, to change
   them go to settings. *(The Reset

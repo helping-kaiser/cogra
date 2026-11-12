@@ -1789,7 +1789,9 @@ as Q46 in docs/open-questions.md):
   impression entered the viewport; device-local, never a record,
   shared transiently with the viewer's chosen ranker. **The feed
   carries this same ordering section** (backlog item 19 — the
-  canonical feed screens never drew the filter at all).
+  canonical feed screens never drew the filter at all). Round 44
+  (jakob 2026-11-11) takes the toggle off search: search reads every
+  node, seen or not; the toggle is the feed's alone.
 - **Scope operators**: `@handle <text>` and `#tag <text>` scope
   the query; the remainder matches the scoped author's own content
   AND the names of their acts' targets — a comment through its

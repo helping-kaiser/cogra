@@ -617,7 +617,6 @@
     { "from": "ExploreFilter", "via": 1, "kind": "detour", "label": "? — How the filter works", "to": [{ "board": "HelpDialog", "case": "the filter text" }] },
     { "from": "ExploreFilter", "via": 2, "kind": "advance", "label": "kind chips", "to": [{ "terminal": "self", "case": "stages what the search shows — the results behind the sheet do not move until Done" }] },
     { "from": "ExploreFilter", "via": 3, "kind": "advance", "label": "Ranked / Newest", "to": [{ "terminal": "self", "case": "stages the order" }] },
-    { "from": "ExploreFilter", "via": 4, "kind": "advance", "label": "show already seen", "to": [{ "terminal": "self", "case": "the toggle flips, staged" }] },
     { "from": "ExploreFilter", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "ExploreSearch", "case": "the sheet closes and the staged filter is dropped — the results are what they were; swipe down, Back and Escape the same — the sheet law: nothing staged applies" }] },
     { "from": "ExploreFilter", "via": 6, "kind": "advance", "label": "Done", "to": [{ "board": "ExploreSearch", "case": "the sheet closes — the search re-queries once, narrowed" }] },
     { "from": "ExploreFilter", "via": 7, "kind": "advance", "label": "Reset (the foot's corner)", "to": [{ "terminal": "self", "case": "stages the search's default — nothing narrowed, the order at rest, what the trigger reads as Everything; nothing applies until Done" }] },
