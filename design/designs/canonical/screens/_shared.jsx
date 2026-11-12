@@ -6577,7 +6577,7 @@ function ReferencePickerBody({ v = REF_PICKER_HOLES }) {
       <div style={{ display: v.filterShown }} data-node-chip="state" data-node-key="filter">
         <BottomSheet open ariaLabel="What the search shows" node="filterSheet">
           <SheetTitle node="title">What the search shows</SheetTitle>
-          <FilterSection label="Kinds" hint="Combine as many as you like. All, until you narrow it." node="kinds">
+          <FilterSection label="Kinds" node="kinds">
             {REF_PICKER_KINDS.map((kind) => (
               <Chip key={kind.value} label={kind.label} selected={false} node={`${kind.value}Chip`} />
             ))}
