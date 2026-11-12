@@ -2095,11 +2095,12 @@ Object.assign(FLOW_MARKERS, {
   ChangePassword: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
     { n: 1, find: 'aria-label="Close"', tag: "a" },
-    { n: 2, find: 'data-field="Current password"', tag: "div" },
-    { n: 3, find: 'data-field="New password"', tag: "div" },
+    { n: 2, find: 'data-field="Current password"', tag: "div", all: true },
+    { n: 3, find: 'data-field="New password"', tag: "div", all: true },
     { n: 4, find: 'aria-label="Show password"', tag: "button", all: true },
     { n: 5, find: ">Change password</button>", tag: "button" },
-    { n: 6, find: 'data-field="Repeat password"', tag: "div" },
+    { n: 5, find: ">Changing password…</button>", tag: "button" },
+    { n: 6, find: 'data-field="Repeat password"', tag: "div", all: true },
   ],
   ChangeHandle: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
@@ -2123,12 +2124,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'data-field="Current password"', tag: "div", all: true },
     { n: 4, find: 'aria-label="Show password"', tag: "button", all: true },
     { n: 5, find: ">Change email</button>", tag: "button", all: true },
+    { n: 5, find: ">Changing email…</button>", tag: "button" },
   ],
   ChangeEmailConfirm: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
     { n: 1, find: 'aria-label="Close"', tag: "a" },
-    { n: 2, find: 'data-field="Confirmation code"', tag: "div" },
+    { n: 2, find: 'data-field="Confirmation code"', tag: "div", all: true },
     { n: 3, find: ">Confirm the code</button>", tag: "button" },
+    { n: 3, find: ">Confirming the code…</button>", tag: "button" },
   ],
 });
 
@@ -2331,10 +2334,11 @@ Object.assign(FLOW_MARKERS, {
   ApplicantEmail: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 1, find: 'aria-label="Close"', tag: "a" },
-    { n: 2, find: 'data-field="New email"', tag: "div" },
-    { n: 3, find: 'data-field="Current password"', tag: "div" },
-    { n: 4, find: 'aria-label="Show password"', tag: "button" },
+    { n: 2, find: 'data-field="New email"', tag: "div", all: true },
+    { n: 3, find: 'data-field="Current password"', tag: "div", all: true },
+    { n: 4, find: 'aria-label="Show password"', tag: "button", all: true },
     { n: 5, find: ">Change email</button>", tag: "button" },
+    { n: 5, find: ">Changing email…</button>", tag: "button" },
   ],
   // SignInError's anatomy to the element, so SignInError's numbers.
   SignInLimited: [
