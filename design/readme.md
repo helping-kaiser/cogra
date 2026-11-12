@@ -1694,7 +1694,10 @@ opening a plain dialog: title, at most two short paragraphs, Close.
 one act its surface exists for carries its own "?" on the panel,
 beside the header's. The header's "?" explains the surface; the
 stopper's explains how the stop resolves, and one dialog cannot do
-both. `WriteRuleFailed` is the first. The dialog texts live in
+both. `WriteRuleFailed` is the first. **The Settings exception**
+(jakob 2026-11-12): Settings, and only Settings, carries a "?" beside a
+section heading that needs one — two in all, beside `Giving an opinion`
+and `Reading` — each opening its section's background. The dialog texts live in
 [guidelines/copy-voice.md](guidelines/copy-voice.md). **Button
 rule:** filled and outlined pills render a TRUE 40px tall (border
 box) with 24px side padding and a 64px minimum width; header pills

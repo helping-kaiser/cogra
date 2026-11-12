@@ -389,9 +389,11 @@ the wording **blessed (jakob 2026-10-02)**).
 ## The "?" dialogs
 
 Compose keeps captions to one short line; the full explanation lives
-behind a small "?" (at most one per screen, save the stopper exception:
-a notice that stops the surface's one act carries its own beside the
-header's — readme §13, *The compose flow*) opening a plain dialog:
+behind a small "?" (at most one per screen, save two exceptions: a
+notice that stops the surface's one act carries its own beside the
+header's — readme §13, *The compose flow* — and Settings carries one
+beside each section heading that needs it, `Giving an opinion` and
+`Reading`, jakob 2026-11-12) opening a plain dialog:
 title, at most two short paragraphs, Close. On the stance pad the "?"
 opens nothing: its text replaces the pad's body in place, with `Back to
 the pad` (readme §11; jakob 2026-10-05, the collected brief's D4) — the
@@ -548,6 +550,16 @@ noun):
   sentence is jakob's own, blessed 2026-10-02: one sentence for the
   feed's, search's and the settings sheet. The feed's seen sentence
   follows the seen tail, jakob 2026-10-14.)*
+- **Giving an opinion** (Settings, beside the section's heading): A tap
+  opens it; drift to where it feels right. / One slider per side of the
+  opinion. *(The pad's and the sliders' row hints, moved whole from the
+  page — jakob 2026-11-12, the re-ask's 8 (a); each blessed with the
+  settings round.)*
+- **Reading** (Settings, beside the section's heading): Every feed starts
+  from what it shows, and a change made inside a feed lasts until you
+  change it back. Both choices stay on this device. *(The group's
+  footnote, moved whole — jakob 2026-11-12, the re-ask's 8 (a); blessed
+  2026-10-05.)*
 
 **A "?" is named by the dialog it opens.** Its accessible name is that
 dialog's own subject, so a listener hears which explanation the tap
@@ -1875,12 +1887,12 @@ device.` It is the one place a bare "device" is right: what Auto follows
 is the device's own light-or-dark setting, which is neither the browser's
 nor the app's.
 
-**Giving an opinion** keeps the shipped readings and gives them the
-hints the inverted gesture needs — `The pad` / `A tap opens it; drift to
-where it feels right.`, `Sliders` / `One slider per side of the opinion.`,
+**Giving an opinion** keeps the shipped readings — `The pad`, `Sliders`,
 `Typed values` / `Type both numbers exactly.` — over a footnote read
 once for the group: `A tap opens this, everywhere. Press and hold
-instead, and a small positive one is signed on the spot.`
+instead, and a small positive one is signed on the spot.` The pad's and
+the sliders' background stands behind the heading's "?" (*The "?"
+dialogs*, jakob 2026-11-12).
 
 **The multi-action switch**, merged from the two apps:
 `Confirm multi-action submits` with
@@ -1901,10 +1913,8 @@ one line the settings route still owes a reading.
 **Reading**: `What your feed shows` — the filter sheet's own accessible
 name and the purpose the trigger's name ends on, so the row and the
 trigger cannot say different things — with the default read back
-through the trigger's own words (`Posts`). Under the group: `Every feed
-starts from what it shows, and a change made inside a feed lasts until
-you change it back. Both choices stay on this device.` *(The drawn
-sentence; copy-voice follows the board, blessed (jakob 2026-10-05).)*
+through the trigger's own words (`Posts`). The group's scope stands
+behind the heading's "?" (*The "?" dialogs*, jakob 2026-11-12).
 
 **Sensitive content**: one switch, `Always unveil sensitive content`
 (jakob's own wording, 2026-10-09 — never a sheet, never a pair of
@@ -2787,7 +2797,8 @@ The naming law above is part of the same ruling and is written where it
 belongs.
 
 **The gesture, said in the settings group.** `Giving an opinion` is the
-group, `A tap opens it; drift to where it feels right.` the pad's hint, and
+group, `A tap opens it; drift to where it feels right.` the pad's hint
+behind its "?", and
 `A tap opens this, everywhere. Press and hold instead, and a small
 positive one is signed on the spot.` the footnote — the one place the
 shortcut and the price are said together.

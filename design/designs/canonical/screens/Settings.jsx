@@ -17,7 +17,7 @@
    would put credentials near the top with identity; a reader reaches for the
    theme far more often than they change their email. People sits next to
    Reading because hiding someone is a reading comfort — and in a group of its
-   own because Reading's footnote promises its choices stay on this device,
+   own because Reading's "?" promises its choices stay on this device,
    which a hidden account does not. About is last before leaving for the same
    rule read from the other end: doors onto words about the product, and the
    ways to answer it (the support stack, jakob 2026-10-01), are the
@@ -148,6 +148,13 @@
    through.` — the Handle row's failed line without its `Retry` — and the
    row's tap opens the form again.
 
+   TWO SECTIONS CARRY A "?" (jakob 2026-11-12, the re-ask's 8 (a)): the one
+   "?" per screen gives way here, beside `Giving an opinion` and `Reading`,
+   and the background that stood on the page moves behind them whole — the
+   pad's and the sliders' hints, and the Reading footnote. Each opens a plain
+   dialog titled by its heading (`SettingsInstallHelp`'s `HelpDialog` shape,
+   on this page); the `help` chip draws them open, `opinion` and `reading`.
+
    THE FRAME FITS EVERY SETTING (backlog 175): 3103px, the page whole with the
    install row shown; the default draws 57px more surface under its last line.
    A second line costs a row nothing — a two-line row is 54px inside its 56px
@@ -165,9 +172,10 @@ export const PROPS = {
   install: { editor: "enum", options: ["absent", "shown"], default: "absent" },
   kept: { editor: "enum", options: ["waiting", "failed"], default: "waiting" },
   forms: { editor: "enum", options: ["rest", "password", "email"], default: "rest" },
+  help: { editor: "enum", options: ["closed", "opinion", "reading"], default: "closed" },
 };
-export const VALS = `passwordRestShown: this.props.forms === "password" ? "none" : "block", passwordFailedShown: this.props.forms === "password" ? "block" : "none", emailRestShown: this.props.forms === "email" ? "none" : "block", emailFailedShown: this.props.forms === "email" ? "block" : "none", keptRestShown: this.props.kept === "failed" ? "none" : "block", keptFailedShown: this.props.kept === "failed" ? "block" : "none", installShown: this.props.install === "shown" ? "block" : "none",handleRestShown: this.props.handle === "rest" ? "block" : "none", handleChangingShown: this.props.handle === "changing" ? "block" : "none", handleFailedShown: this.props.handle === "failed" ? "block" : "none", handleTakenShown: this.props.handle === "taken" ? "block" : "none", deleteFootnote: this.props.reader === "applicant" ? "Nothing is deleted here. The next screen says what goes and what stays." : "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."`;
+export const VALS = `helpOpinionShown: this.props.help === "opinion" ? "block" : "none", helpReadingShown: this.props.help === "reading" ? "block" : "none", passwordRestShown: this.props.forms === "password" ? "none" : "block", passwordFailedShown: this.props.forms === "password" ? "block" : "none", emailRestShown: this.props.forms === "email" ? "none" : "block", emailFailedShown: this.props.forms === "email" ? "block" : "none", keptRestShown: this.props.kept === "failed" ? "none" : "block", keptFailedShown: this.props.kept === "failed" ? "block" : "none", installShown: this.props.install === "shown" ? "block" : "none",handleRestShown: this.props.handle === "rest" ? "block" : "none", handleChangingShown: this.props.handle === "changing" ? "block" : "none", handleFailedShown: this.props.handle === "failed" ? "block" : "none", handleTakenShown: this.props.handle === "taken" ? "block" : "none", deleteFootnote: this.props.reader === "applicant" ? "Nothing is deleted here. The next screen says what goes and what stays." : "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."`;
 
 export function Screen() {
-  return <SettingsBody handleChip keptChip formsChip keptPicks={KEPT_PICKS.length} deleteFootnote="{{deleteFootnote}}" install="{{installShown}}" />;
+  return <SettingsBody handleChip keptChip formsChip helpChip keptPicks={KEPT_PICKS.length} deleteFootnote="{{deleteFootnote}}" install="{{installShown}}" />;
 }

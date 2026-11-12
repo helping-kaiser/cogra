@@ -3692,6 +3692,16 @@ function ReportProblemBody({ words }) {
    two unheaded ones for what the page's own note calls them — leaving and
    ending — and a row by one word for what it is. The sessions are keyed by
    their position, this device first: two devices can carry one name. */
+/* THE TWO SECTION "?" (jakob 2026-11-12, the re-ask's 8 (a)): Settings alone
+   carries a "?" beside a section heading that needs it, and the background
+   that stood on the page moves behind it whole — copy-voice, *The "?"
+   dialogs*. Each opens a plain dialog titled by its heading, `HelpDialog`'s
+   shape as `SettingsInstallHelp` draws it on this page. `helpChip` draws the
+   two open states on `Settings` (its `help` chip); the dialogs are drawn
+   copies and carry no name. */
+const GIVING_AN_OPINION_HELP = ["A tap opens it; drift to where it feels right.", "One slider per side of the opinion."];
+const READING_HELP = "Every feed starts from what it shows, and a change made inside a feed lasts until you change it back. Both choices stay on this device.";
+
 const SETTINGS_DELETE_FOOTNOTE =
   "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.";
 
@@ -3725,20 +3735,19 @@ function SettingsBody({ handleChip = false, keptChip = false, formsChip = false,
         <SettingsGroup
           label="Giving an opinion"
           footnote="A tap opens this, everywhere. Press and hold instead, and a small positive one is signed on the spot."
+          help={<HelpDot ariaLabel="Giving an opinion" onOpen={() => {}} node="help" />}
           node="stance"
         >
           <SettingsRow
             name="settings-stance-input"
             selected
             label="The pad"
-            status="A tap opens it; drift to where it feels right."
             node="pad"
           />
           <SettingsRow
             name="settings-stance-input"
             selected={false}
             label="Sliders"
-            status="One slider per side of the opinion."
             node="sliders"
           />
           <SettingsRow
@@ -3773,7 +3782,7 @@ function SettingsBody({ handleChip = false, keptChip = false, formsChip = false,
             drawn either way. */}
         <SettingsGroup
           label="Reading"
-          footnote="Every feed starts from what it shows, and a change made inside a feed lasts until you change it back. Both choices stay on this device."
+          help={<HelpDot ariaLabel="Reading" onOpen={() => {}} node="help" />}
           node="reading"
         >
           <SettingsRow label="What your feed shows" value="Posts" onOpen={() => {}} node="feed" />
@@ -3790,7 +3799,7 @@ function SettingsBody({ handleChip = false, keptChip = false, formsChip = false,
             viewer-state round). It sits beside Reading because that is the
             activity it belongs to — a reader who wants their feed quieter looks
             where the feed's own default lives — and in a group of its own
-            because the Reading footnote's promise, that both its choices stay
+            because the Reading "?"'s promise, that both its choices stay
             on this device, is not true of a hidden account: that list follows
             the account everywhere. Its count is bare, the row's label having
             already said what is counted (§3); with nobody hidden the row goes
@@ -3811,7 +3820,7 @@ function SettingsBody({ handleChip = false, keptChip = false, formsChip = false,
             the account; Android carries the switch itself (Play has no
             web-only rule). One switch, off by default — never a sheet
             (jakob's shape). It stands in a group of its own for the same
-            reason hiding does: the Reading footnote's this-device promise
+            reason hiding does: the Reading "?"'s this-device promise
             is not true of it. */}
         <SettingsGroup
           label="Sensitive content"
@@ -4139,6 +4148,16 @@ function SettingsBody({ handleChip = false, keptChip = false, formsChip = false,
           <SettingsRow label="Delete account" status={deleting ? "Deletion in 6 days" : undefined} onOpen={() => {}} node="delete" />
         </SettingsGroup>
       </div>
+      {helpChip && (
+        <>
+          <div style={{ display: "{{helpOpinionShown}}" }}>
+            <DialogSurface onScrimPress={() => {}} title="Giving an opinion" body={GIVING_AN_OPINION_HELP} actions={<Button>Close</Button>} />
+          </div>
+          <div style={{ display: "{{helpReadingShown}}" }}>
+            <DialogSurface onScrimPress={() => {}} title="Reading" body={READING_HELP} actions={<Button>Close</Button>} />
+          </div>
+        </>
+      )}
     </>
   );
 }

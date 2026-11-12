@@ -22,6 +22,18 @@ ALWAYS the theme follows the device's own light-or-dark setting GIVEN Auto is ch
 
 ALWAYS one of The pad, Sliders and Typed values stands selected
 
+ALWAYS settings.stance.help and settings.reading.help, a "?" each, trail their section's heading — the page's only "?", the one-per-screen law's Settings exception (jakob 2026-11-12)
+
+ALWAYS The pad and Sliders carry no second line, their background standing behind settings.stance.help
+
+WHEN tap settings.stance.help -> the dialog Giving an opinion opens over the page with A tap opens it; drift to where it feels right. and One slider per side of the opinion. and Close
+
+WHEN tap settings.reading.help -> the dialog Reading opens over the page with Every feed starts from what it shows, and a change made inside a feed lasts until you change it back. Both choices stay on this device. and Close
+
+ALWAYS the Reading group carries no footnote, its scope standing behind settings.reading.help
+
+WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN a section's dialog is open -> the dialog closes AND the page stands as it was
+
 WHEN tap The pad, Sliders or Typed values -> that input is how every opinion and every backing is taken, everywhere AND the other two stand unselected AND the choice stays on this device
 
 WHEN tap Confirm multi-action submits -> the switch flips AND NEVER a dialog asks

@@ -1756,6 +1756,13 @@ Object.assign(FLOW_MARKERS, {
     // The install row (round 39), leading the Clearing data group on the
     // `install` chip — the next free number.
     { n: 30, find: ">Add CoGra to your home screen</span>", tag: "button" },
+    // Round 43: the two section "?" (jakob 2026-11-12) and their dialogs on
+    // the `help` chip — the next free numbers; the two dialogs' Close and
+    // scrim are one control each, so one number each.
+    { n: 31, find: 'aria-label="Giving an opinion"', tag: "button" },
+    { n: 32, find: 'aria-label="Reading"', tag: "button" },
+    { n: 33, find: ">Close</button>", tag: "button", all: true },
+    { n: 34, find: "background:var(--scrim-dialog)", tag: "div", all: true },
   ],
   // The install row's help where the browser cannot ask (round 39): the
   // `HelpDialog` pair, the page beneath wired on `Settings`.
