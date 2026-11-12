@@ -5816,7 +5816,7 @@ and underscore. Capitals become lowercase.`; the clip's `It plays the moment it
 is on screen, so it starts on its own first frame.` Each is jakob's: move
 (where a "?" exists, or a new one), cut, or keep.
 
-### 193 · Two cuts of one caption, and lines the pass left asymmetric · *design* · **filed 2026-11-12**
+### 193 · Two cuts of one caption, and lines the pass left asymmetric · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 42 built each canvas's row as written, which leaves: (1) the ask link's
 caption cut two ways — `Send it to anyone who is already in. It does not
@@ -5826,7 +5826,10 @@ people you send it to.` on `ApplicantRejected` and `ApplicantFellThrough`;
 content stands unveiled wherever you read.` while on; (3) `Wallet — coming
 soon` keeps `Your earnings will be here.` while Chats carries no line;
 (4) closed by round 42 (act 2): the post-MVP twins take the canonical cuts —
-the same rulings. Points (1)–(3) are jakob's to align or keep.
+the same rulings. Points (1)–(3) are jakob's to align or keep. Round 46
+(jakob 2026-11-12): (1) closed — `Send it to anyone who is already in. It
+does not expire.` on all three boards; (2) closed — the On line is cut too;
+(3) closed — Wallet's line is cut.
 
 ### 194 · Lines round 42 stopped: no "?" holds them, and the sign-out drift · *design* · **filed 2026-11-12**
 

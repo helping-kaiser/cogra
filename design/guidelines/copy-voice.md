@@ -3955,12 +3955,10 @@ in.` (jakob 2026-10-02, **blessed**). An application has no timer, so
 closing is the one ending the page names.
 
 **The ask link is labelled by what to do with it**, not by what it is:
-`Ask someone you know to vouch for you`, captioned `It does not expire,
-and it works however many people you send it to.` on the feed's cards
-(`ApplicantRejected`, `ApplicantFellThrough`) and `Send it to anyone
-who is already in. It does not expire.` on the applicant's own profile
-(`ProfileApplicant`) — two cuts of one caption, each canvas's own row of
-the removable-text pass (jakob 2026-11-12; unifying them is open). The
+`Ask someone you know to vouch for you`, captioned `Send it to anyone
+who is already in. It does not expire.` wherever it stands — the feed's
+cards (`ApplicantRejected`, `ApplicantFellThrough`) and the applicant's
+own profile (`ProfileApplicant`) alike (jakob 2026-11-12). The
 caption says what kind of link this is: the differences from an invite
 link, said as reassurance rather than as spec. Its copy control is `Copy your ask
 link`; the snackbar is `Link copied`, the same one the invite link's
