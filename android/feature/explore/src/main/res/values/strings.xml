@@ -6,7 +6,7 @@
     <string name="explore_field_name">Search</string>
     <string name="explore_sky_title">The Sky — coming soon</string>
     <string name="explore_sky_description">Your sky — every account a star, sized by your own paths to it.</string>
-    <string name="explore_topics">Your topics</string>
+    <string name="explore_topics">Your tags</string>
     <!-- The door's second line counts what is behind it (Explore.md:43; copy-voice, `5 held`). -->
     <string name="explore_topics_held">%1$d held</string>
     <string name="explore_recent">Recent</string>
@@ -49,7 +49,7 @@
     <string name="explore_cant_reach">Can\'t reach the server. Check your connection and try again.</string>
 
     <!-- Your topics (YourTopics.jsx; copy-voice, *The list is Your topics*). -->
-    <string name="your_topics_title">Your topics</string>
+    <string name="your_topics_title">Your tags</string>
     <string name="your_topics_back">Back to Explore</string>
-    <string name="your_topics_empty">No topics yet — say how you feel about one from its page.</string>
+    <string name="your_topics_empty">No tags yet — say how you feel about one from its page.</string>
 </resources>
