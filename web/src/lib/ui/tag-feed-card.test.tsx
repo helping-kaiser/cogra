@@ -68,11 +68,20 @@ describe("TagFeedCard", () => {
   // NamesLong.md:5-7 — the glimpse's by-line is one line; a long handle is
   // the part cut, ` · and N more` keeps its room.
   it("cuts a long handle in the glimpse's by-line and keeps its count", () => {
-    const [first] = TOPIC.taggedContent;
-    const long = { ...first.node, author: { id: "u9", handle: LONG_HANDLE } };
+    const post = (id: string, handle: string) => ({
+      node: {
+        __typename: "Post" as const,
+        id,
+        title: { value: null, status: "NORMAL" },
+        content: { value: "Low tide at six", status: "NORMAL" },
+        attachments: [],
+        author: { id: `u-${id}`, handle },
+        createdAt: new Date().toISOString(),
+      },
+    });
     const topic: TagCardTopic = {
       ...TOPIC,
-      taggedContent: [{ node: long }, { node: { ...first.node, id: "p2" } }, { node: { ...first.node, id: "p3" } }],
+      taggedContent: [post("p1", LONG_HANDLE), post("p2", "ada"), post("p3", "ada")],
     };
     renderWithProviders(
       <TagFeedCard topic={topic} from="history" testId="tag" node={{ path: "history.tagCard", key: "t1" }} onLinkCopied={() => {}} />,
