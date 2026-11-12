@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO comment_versions\n             (comment_id, content, sensitive, sensitive_reason, pending,\n              created_at, landed_epoch, position)\n         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)\n         ON CONFLICT (comment_id, created_at) DO NOTHING\n         RETURNING version_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "version_id",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Bool",
+        "Text",
+        "Bool",
+        "Timestamptz",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ace6b39c3192bad0c88254897d1ca7b7ec22bcabf37bbc81382a7ef06f628056"
+}

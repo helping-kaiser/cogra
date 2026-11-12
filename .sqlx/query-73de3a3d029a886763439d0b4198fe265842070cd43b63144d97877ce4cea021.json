@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT record_id, family, epoch, act_time, position\n         FROM mirror_records WHERE record_id = $1",
+  "query": "SELECT record_id, family, epoch, position\n         FROM mirror_records WHERE record_id = $1",
   "describe": {
     "columns": [
       {
@@ -20,11 +20,6 @@
       },
       {
         "ordinal": 3,
-        "name": "act_time",
-        "type_info": "Int8"
-      },
-      {
-        "ordinal": 4,
         "name": "position",
         "type_info": "Int8"
       }
@@ -38,9 +33,8 @@
       false,
       false,
       false,
-      false,
       false
     ]
   },
-  "hash": "abb86901f7da3dd13d7c024a8d23b0fd186db3ce1f45f5f7fe7081475ef25145"
+  "hash": "73de3a3d029a886763439d0b4198fe265842070cd43b63144d97877ce4cea021"
 }

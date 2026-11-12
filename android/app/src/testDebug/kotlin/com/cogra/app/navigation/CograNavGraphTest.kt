@@ -1004,6 +1004,47 @@ class CograNavGraphTest {
         assertThat(settings.confirmedTokens).containsExactly("link-token")
     }
 
+    /** ResetNew.md:3, 23 — the reset mail's App Link opens ResetNew; a taken password opens SignIn. */
+    @Test
+    fun `reset_link_opens_the_new_password_step_and_a_taken_password_opens_sign_in`() {
+        render()
+        waitForTag("login_email")
+        assertThat(navController.handleDeepLink(joinIntent("/reset?token=reset-token"))).isTrue()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<ResetNew>() == true
+        }
+        assertThat(navController.currentBackStackEntry?.toRoute<ResetNew>()?.token).isEqualTo("reset-token")
+        waitForTag("reset.password.input")
+        compose.onNodeWithTag("reset.password.input").performTextInput("a strong password")
+        compose.onNodeWithTag("reset.confirm.input").performTextInput("a strong password")
+        compose.onNodeWithTag("reset.commit.action").performScrollTo().performClick()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<Login>() == true
+        }
+        assertThat(account.resetTokens).containsExactly("reset-token")
+        // The landing left the stack: SignIn stands in its place.
+        assertThat(navController.previousBackStackEntry?.destination?.hasRoute<ResetNew>()).isNotEqualTo(true)
+    }
+
+    /** ResetNew.md:41 — a link spent while the form stood open never changes the password and moves on. */
+    @Test
+    fun `a_spent_reset_link_hands_on_to_the_request_step`() {
+        account.resetOutcome = com.cogra.domain.Outcome.Refused(
+            listOf(com.cogra.domain.UserError(com.cogra.domain.ErrorCode.RESET_TOKEN_INVALID, "spent")),
+        )
+        render()
+        waitForTag("login_email")
+        navController.handleDeepLink(joinIntent("/reset?token=spent"))
+        waitForTag("reset.password.input")
+        compose.onNodeWithTag("reset.password.input").performTextInput("a strong password")
+        compose.onNodeWithTag("reset.confirm.input").performTextInput("a strong password")
+        compose.onNodeWithTag("reset.commit.action").performScrollTo().performClick()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<PasswordReset>() == true
+        }
+        assertThat(navController.previousBackStackEntry?.destination?.hasRoute<ResetNew>()).isNotEqualTo(true)
+    }
+
     /** ChangeEmailLinkedSignedOut.md: Sign in holds the link; the side applies once signed in. */
     @Test
     fun `signed_out_landing_signs_in_then_applies_the_side`() {

@@ -175,7 +175,7 @@ async fn every_version_table_is_keyed_on_the_landing_order(pool: PgPool) {
         let columns: Vec<String> = sqlx::query_scalar(
             "SELECT column_name FROM information_schema.columns
              WHERE table_name = $1
-               AND column_name IN ('landed_epoch', 'act_time', 'position')",
+               AND column_name IN ('landed_epoch', 'position')",
         )
         .bind(table)
         .fetch_all(&pool)
@@ -183,8 +183,8 @@ async fn every_version_table_is_keyed_on_the_landing_order(pool: PgPool) {
         .expect("columns");
         assert_eq!(
             columns.len(),
-            3,
-            "{table} must carry the whole landing-order triple"
+            2,
+            "{table} must carry the whole key of record"
         );
 
         let identity: Option<String> = sqlx::query_scalar(
@@ -203,11 +203,11 @@ async fn every_version_table_is_keyed_on_the_landing_order(pool: PgPool) {
     }
 }
 
-/// The coordinates are one fact in three columns: a row holding part of
-/// a landing position would order against a key the graph never issued.
+/// The coordinates are one fact in two columns: a row holding part of a
+/// landing position would order against a key the graph never issued.
 ///
-/// A landing position is one fact in three columns, and a row holding part of it is refused.
-/// ´claim:schema:a-landing-position-is-all-three-columns-or-none´
+/// A landing position is one fact in two columns, and a row holding part of it is refused.
+/// ´claim:schema:a-landing-position-is-both-columns-or-none´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_partial_landing_position_is_rejected(pool: PgPool) {
     let chat = Uuid::new_v4();
@@ -217,17 +217,22 @@ async fn a_partial_landing_position_is_rejected(pool: PgPool) {
         .await
         .expect("chat");
 
-    let partial = sqlx::query(
-        "INSERT INTO chat_versions (chat_id, name, landed_epoch) VALUES ($1, 'half', 1)",
-    )
-    .bind(chat)
-    .execute(&pool)
-    .await;
-    assert!(partial.is_err(), "part of a position is not a position");
+    for column in ["landed_epoch", "position"] {
+        let partial = sqlx::query(&format!(
+            "INSERT INTO chat_versions (chat_id, name, {column}) VALUES ($1, 'half', 1)"
+        ))
+        .bind(chat)
+        .execute(&pool)
+        .await;
+        assert!(
+            partial.is_err(),
+            "{column} alone is part of a position, not a position"
+        );
+    }
 
     sqlx::query(
-        "INSERT INTO chat_versions (chat_id, name, landed_epoch, act_time, position)
-         VALUES ($1, 'whole', 1, 1, 1)",
+        "INSERT INTO chat_versions (chat_id, name, landed_epoch, position)
+         VALUES ($1, 'whole', 1, 1)",
     )
     .bind(chat)
     .execute(&pool)
@@ -251,8 +256,8 @@ async fn a_copied_landing_position_numbers_from_one(pool: PgPool) {
         .expect("chat");
     for (epoch, position) in [(0, 1), (1, 0)] {
         let refused = sqlx::query(
-            "INSERT INTO chat_versions (chat_id, name, landed_epoch, act_time, position)
-             VALUES ($1, 'zero', $2, 1, $3)",
+            "INSERT INTO chat_versions (chat_id, name, landed_epoch, position)
+             VALUES ($1, 'zero', $2, $3)",
         )
         .bind(chat)
         .bind(epoch)

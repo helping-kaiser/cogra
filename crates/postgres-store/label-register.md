@@ -72,6 +72,7 @@ label.
 | `test:integration:load-of-unknown-id-is-not-found`                                   | load_of_unknown_id_is_not_found                                   |
 | `test:integration:mirror-is-rebuildable-from-the-published-sequence`                 | mirror_is_rebuildable_from_the_published_sequence                 |
 | `test:integration:newest-wins-within-a-bundle`                                       | newest_wins_within_a_bundle                                       |
+| `test:integration:no-display-table-carries-the-act-time`                             | no_display_table_carries_the_act_time                             |
 | `test:integration:out-of-order-transitions-are-refused-with-the-actual-state`        | out_of_order_transitions_are_refused_with_the_actual_state        |
 | `test:integration:parameter-carrier-versions-append`                                 | parameter_carrier_versions_append                                 |
 | `test:integration:pending-claims-are-counted-only-in-the-l2-view`                    | pending_claims_are_counted_only_in_the_l2_view                    |
