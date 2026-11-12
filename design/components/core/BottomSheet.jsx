@@ -1,4 +1,5 @@
 import React from "react";
+import { nameInLine } from "../people/ActorChip.jsx";
 
 /* The bottom sheet (backlog item 3; readme §7, *Intentional additions*). The
    product never built one, so three surfaces were each
@@ -211,7 +212,9 @@ export function BottomSheet({ open = false, onClose, ariaLabel, children, inline
 
 /* One row in a sheet: `label-large`, the 48px minimum, left-aligned, one line.
    No icons in the list — a mixed list of iconned and un-iconned rows is how an
-   icon set starts to look accidental (§5). */
+   icon set starts to look accidental (§5). A ONE-LINE PLACE (round 40): a
+   handle in the label — `Hide @ada` — is the part cut with "…", the words keep
+   their room (`nameInLine`). */
 export function SheetItem({ label, onSelect, ariaLabel, node }) {
   return (
     <button
@@ -221,12 +224,18 @@ export function SheetItem({ label, onSelect, ariaLabel, node }) {
       data-node={node}
       className="cg-state cg-focus"
       style={{
-        display: "flex",
-        alignItems: "center",
+        /* One line, clipped at its end: a block whose padding centres the
+           label-large line in the 48px minimum, so the ellipsis can ride it. */
+        display: "block",
+        width: "100%",
+        boxSizing: "border-box",
         minHeight: "var(--touch-target-min)",
         border: 0,
         background: "none",
-        padding: "0 var(--space-6)",
+        padding: "calc((var(--touch-target-min) - var(--text-label-large--line-height)) / 2) var(--space-6)",
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
         cursor: "pointer",
         fontFamily: "var(--font-sans)",
         fontSize: "var(--text-label-large)",
@@ -237,7 +246,7 @@ export function SheetItem({ label, onSelect, ariaLabel, node }) {
         textAlign: "left",
       }}
     >
-      {label}
+      {nameInLine(label)}
     </button>
   );
 }

@@ -237,9 +237,12 @@ export function ProfileHeader({
           </h1>
           {/* The handle repeats only where the screen's top bar does not already
               carry it — a drill-in is titled @handle, so it passes showHandle
-              false (jakob 2026-09-01). A redacted actor has none to repeat. */}
+              false (jakob 2026-09-01). A redacted actor has none to repeat.
+              The handle line is a ONE-LINE PLACE (round 40): it never wraps,
+              and a handle too long for it is cut with "…"; the name above is
+              a heading and wraps, breaking inside a word it cannot fit. */}
           {showHandle && !redacted && (
-            <span style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "handle"}>
+            <span style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} data-node={node && "handle"}>
               @{handle}
             </span>
           )}

@@ -1,6 +1,7 @@
 import React from "react";
 import { Icon } from "../navigation/Icon.jsx";
 import { BottomSheet, SheetItem } from "../core/BottomSheet.jsx";
+import { nameInLine } from "../people/ActorChip.jsx";
 
 /* The overflow menu on a piece of content.
 
@@ -117,6 +118,9 @@ export function OverflowMenu({ items = [], ariaLabel = "More", align = "right", 
               [align]: 0,
               zIndex: 21,
               minWidth: "12rem",
+              // Material 3's menu maximum, 280dp: a row naming a long handle
+              // cuts the handle (`nameInLine`) instead of growing off the screen.
+              maxWidth: "17.5rem",
               display: "flex",
               flexDirection: "column",
               borderRadius: "var(--radius-medium)",
@@ -136,12 +140,15 @@ export function OverflowMenu({ items = [], ariaLabel = "More", align = "right", 
                 }}
                 className="cg-state cg-focus"
                 style={{
-                  display: "flex",
-                  alignItems: "center",
+                  // One line clipped at its end (`SheetItem`'s block form).
+                  display: "block",
+                  boxSizing: "border-box",
                   minHeight: "var(--touch-target-min)",
                   border: 0,
                   background: "none",
-                  padding: "0 var(--space-4)",
+                  padding: "calc((var(--touch-target-min) - var(--text-label-large--line-height)) / 2) var(--space-4)",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                   cursor: "pointer",
                   fontFamily: "var(--font-sans)",
                   fontSize: "var(--text-label-large)",
@@ -151,9 +158,10 @@ export function OverflowMenu({ items = [], ariaLabel = "More", align = "right", 
                   color: "var(--on-surface)",
                   textAlign: "left",
                   whiteSpace: "nowrap",
+                  minWidth: 0,
                 }}
               >
-                {item.label}
+                {nameInLine(item.label)}
               </button>
             ))}
           </div>

@@ -3223,7 +3223,12 @@ Drawn on `Notifications`, `NotificationsEmpty` and `FeedUnread`.
 **A row is a sentence, and the handle is its subject.** `@ada commented
 on your post`, not *Ada Okonkwo · commented* — the disc already carries
 the face, so the words are free to be the whole fact, and a handle is
-what a reader recognises and can go looking for. Ten kinds, ten
+what a reader recognises and can go looking for. A handle too long for
+the row is the part cut, never the act: `@maximiliana_feathe… commented
+on your post` — the sentence's words keep their room first (readme §13,
+*A long name or handle takes one of three cases*; in running text the
+sentence wraps and the handle moves whole to the next line — a handle or
+name never stands on two lines). Ten kinds, ten
 sentences, all present tense of the act that happened:
 
 - `@ada commented on your post` — a comment on a post of yours.

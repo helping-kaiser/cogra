@@ -33,6 +33,13 @@
    it lands the card leaves with `Invite revoked`; a failure keeps the card
    with the standard failure answer.
 
+   THE `letIn` CHIP'S `more` AND `more-opened` DRAW THE CAP (jakob 2026-11-11,
+   round 40): five people let in, three shown, the newest, then `Show all`
+   under the third (`more`); the door opens the rest in place (`more-opened`).
+   THE `sections` CHIP'S `only-let-in` draws a page where nothing waits and no
+   link is live but someone was let in: not the empty state — `New invite` and
+   `People you let in` stand, the two empty sections gone.
+
    REGISTERED under the `invites` prefix (design ⇄ impl seam 078, the invites
    packet): the body names its parts, and `NODE` carries them onto the built
    board and into `nodes.json`. The `revoke` chip's two copies of the first
@@ -41,12 +48,12 @@ export const NODE = "invites";
 export const PROPS = {
   kept: { editor: "enum", options: ["none", "waiting"], default: "none" },
   revoke: { editor: "enum", options: ["rest", "waiting"], default: "rest" },
-  sections: { editor: "enum", options: ["both", "no-applications", "no-links"], default: "both" },
+  sections: { editor: "enum", options: ["both", "no-applications", "no-links", "only-let-in"], default: "both" },
   asker: { editor: "enum", options: ["named", "deleted"], default: "named" },
   copy: { editor: "enum", options: ["rest", "failed"], default: "rest" },
-  letIn: { editor: "enum", options: ["none", "people", "deleted"], default: "none" },
+  letIn: { editor: "enum", options: ["none", "people", "deleted", "more", "more-opened"], default: "none" },
 };
-export const VALS = `keptShown: this.props.kept === "waiting" ? "block" : "none", revokeRestShown: this.props.revoke === "waiting" ? "none" : "block", revokeBusyShown: this.props.revoke === "waiting" ? "block" : "none", applicationsShown: this.props.sections === "no-applications" ? "none" : "flex", applicationsEmptyShown: this.props.sections === "no-applications" ? "block" : "none", linksShown: this.props.sections === "no-links" ? "none" : "flex", linksEmptyShown: this.props.sections === "no-links" ? "block" : "none", askerNamedShown: this.props.asker === "deleted" ? "none" : "flex", askerDeletedShown: this.props.asker === "deleted" ? "flex" : "none", copyFailedShown: this.props.copy === "failed" ? "block" : "none", peopleShown: this.props.letIn === "none" ? "none" : "flex", personNamedShown: this.props.letIn === "deleted" ? "none" : "flex", personDeletedShown: this.props.letIn === "deleted" ? "flex" : "none"`;
+export const VALS = `keptShown: this.props.kept === "waiting" && this.props.sections !== "only-let-in" ? "block" : "none", revokeRestShown: this.props.revoke === "waiting" ? "none" : "block", revokeBusyShown: this.props.revoke === "waiting" ? "block" : "none", applicationsSectionShown: this.props.sections === "only-let-in" ? "none" : "flex", linksSectionShown: this.props.sections === "only-let-in" ? "none" : "flex", applicationsShown: this.props.sections === "no-applications" ? "none" : "flex", applicationsEmptyShown: this.props.sections === "no-applications" ? "block" : "none", linksShown: this.props.sections === "no-links" ? "none" : "flex", linksEmptyShown: this.props.sections === "no-links" ? "block" : "none", askerNamedShown: this.props.asker === "deleted" ? "none" : "flex", askerDeletedShown: this.props.asker === "deleted" ? "flex" : "none", copyFailedShown: this.props.copy === "failed" ? "block" : "none", peopleShown: this.props.letIn === "none" && this.props.sections !== "only-let-in" ? "none" : "flex", personNamedShown: this.props.letIn === "deleted" ? "none" : "flex", personDeletedShown: this.props.letIn === "deleted" ? "flex" : "none", personMoreShown: this.props.letIn === "more" || this.props.letIn === "more-opened" ? "flex" : "none", peopleDoorShown: this.props.letIn === "more" ? "flex" : "none", personRestShown: this.props.letIn === "more-opened" ? "flex" : "none"`;
 
 export function Screen() {
   return (
@@ -64,6 +71,11 @@ export function Screen() {
         people: "{{peopleShown}}",
         personNamed: "{{personNamedShown}}",
         personDeleted: "{{personDeletedShown}}",
+        personMore: "{{personMoreShown}}",
+        peopleDoor: "{{peopleDoorShown}}",
+        personRest: "{{personRestShown}}",
+        applicationsSection: "{{applicationsSectionShown}}",
+        linksSection: "{{linksSectionShown}}",
       }}
     />
   );

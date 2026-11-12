@@ -1,6 +1,8 @@
 # InvitesEmpty · `spec:design:behavior-invites-empty`
 
-ALWAYS invites.empty.title reads No invites out yet. A link lets someone make an account. Your vouch — the opinion you sign when you approve them — is what brings them in. GIVEN no application waits and no link is live
+ALWAYS invites.empty.title reads No invites out yet. A link lets someone make an account. Your vouch — the opinion you sign when you approve them — is what brings them in. GIVEN no application waits and no link is live and the reader has never vouched anyone in
+
+ALWAYS the empty Invites never stands GIVEN the reader has vouched someone in
 
 ALWAYS invites.empty.create, Create invite, stands under the line, a filled button at the column's full width
 

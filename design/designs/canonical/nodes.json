@@ -8018,6 +8018,7 @@
         "invites.link": "the invite link's id, the link's last path segment (Invites' live links)",
         "invites.link.copyFault": "the copy chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "invites.linksEmpty": "the sections chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "invites.peopleDoor": "the letIn chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "invites.person": "the person's id, the lowercase UUID the wire carries (Invites' people you let in)",
         "invites.redactedApplication": "the deleted asker's actor id, the lowercase UUID the wire carries (Invites' applications, where an asker who deleted their account has no handle left to key by)",
         "invites.redactedPerson": "the deleted person's id, the lowercase UUID the wire carries (Invites' people you let in, a person whose account was deleted)"
@@ -8121,26 +8122,44 @@
           "no-links"
         ],
         "invites.linksLabel": [],
+        "invites.peopleDoor": [
+          "more"
+        ],
         "invites.peopleLabel": [],
         "invites.person": [
           "b1a7ca95-9571-4509-9e42-d1c45c67b233",
-          "59959e13-ced7-462c-b7cd-c0381ec09b90"
+          "59959e13-ced7-462c-b7cd-c0381ec09b90",
+          "22dd3e59-8c50-4ce3-b2f5-e12c57abb984",
+          "c4fb60a5-9b66-4db3-a043-88986744abbc",
+          "42fa3a4f-a350-4812-bd79-26561c2ffca3"
         ],
         "invites.person.chevron": [
           "b1a7ca95-9571-4509-9e42-d1c45c67b233",
-          "59959e13-ced7-462c-b7cd-c0381ec09b90"
+          "59959e13-ced7-462c-b7cd-c0381ec09b90",
+          "22dd3e59-8c50-4ce3-b2f5-e12c57abb984",
+          "c4fb60a5-9b66-4db3-a043-88986744abbc",
+          "42fa3a4f-a350-4812-bd79-26561c2ffca3"
         ],
         "invites.person.disc": [
           "b1a7ca95-9571-4509-9e42-d1c45c67b233",
-          "59959e13-ced7-462c-b7cd-c0381ec09b90"
+          "59959e13-ced7-462c-b7cd-c0381ec09b90",
+          "22dd3e59-8c50-4ce3-b2f5-e12c57abb984",
+          "c4fb60a5-9b66-4db3-a043-88986744abbc",
+          "42fa3a4f-a350-4812-bd79-26561c2ffca3"
         ],
         "invites.person.title": [
           "b1a7ca95-9571-4509-9e42-d1c45c67b233",
-          "59959e13-ced7-462c-b7cd-c0381ec09b90"
+          "59959e13-ced7-462c-b7cd-c0381ec09b90",
+          "22dd3e59-8c50-4ce3-b2f5-e12c57abb984",
+          "c4fb60a5-9b66-4db3-a043-88986744abbc",
+          "42fa3a4f-a350-4812-bd79-26561c2ffca3"
         ],
         "invites.person.trailing": [
           "b1a7ca95-9571-4509-9e42-d1c45c67b233",
-          "59959e13-ced7-462c-b7cd-c0381ec09b90"
+          "59959e13-ced7-462c-b7cd-c0381ec09b90",
+          "22dd3e59-8c50-4ce3-b2f5-e12c57abb984",
+          "c4fb60a5-9b66-4db3-a043-88986744abbc",
+          "42fa3a4f-a350-4812-bd79-26561c2ffca3"
         ],
         "invites.redactedApplication": [
           "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608"

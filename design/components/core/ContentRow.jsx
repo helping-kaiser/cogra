@@ -1,6 +1,6 @@
 import React from "react";
 import { Icon } from "../navigation/Icon.jsx";
-import { MonogramAvatar, REDACTED_ACTOR_NAME } from "../people/ActorChip.jsx";
+import { MonogramAvatar, REDACTED_ACTOR_NAME, nameInLine } from "../people/ActorChip.jsx";
 import { PendingMarker } from "../honesty/PendingMarker.jsx";
 import { EMPTY_PICK_LABEL, SEVERED_LABEL, StanceValue, ZERO_BUNDLE_EMOJI } from "../stance/StanceReadout.jsx";
 
@@ -71,6 +71,14 @@ const TYPE = {
     lineHeight: "var(--text-body-medium--line-height)",
     letterSpacing: "var(--text-body-medium--letter-spacing)",
   },
+};
+
+/* How the aside yields (round 40): a bare handle as the chip's handle does,
+   words naming a handle by giving up the handle first, plain words never. */
+const ASIDE_FLEX = {
+  none: { flex: "none" },
+  bare: { flexShrink: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+  words: { flexShrink: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
 };
 
 const TONES = {
@@ -191,9 +199,11 @@ export function ContentRow({
      destination — the same card, with nothing to press. */
   const Tag = inert ? "div" : "button";
   const ellipsis = { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
+  const asideHandle = typeof titleAside !== "string" ? "none" : /^@[A-Za-z0-9_]+$/.test(titleAside) ? "bare" : /(?<![\w@])@[A-Za-z0-9_]/.test(titleAside) ? "words" : "none";
   const heading = (
     <span
       style={{
+        ...(asideHandle === "bare" ? { flexShrink: 999 } : asideHandle === "words" ? { flex: "none", maxWidth: "100%" } : null),
         fontSize: "var(--text-label-large)",
         lineHeight: "var(--text-label-large--line-height)",
         letterSpacing: "var(--text-label-large--letter-spacing)",
@@ -203,7 +213,7 @@ export function ContentRow({
       }}
       data-node={node && "title"}
     >
-      {title}
+      {nameInLine(title)}
     </span>
   );
   /* The row's own box, and the part of it that presses. With no `action` they
@@ -263,15 +273,21 @@ export function ContentRow({
       <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "1px" }}>
         {/* The aside is a word riding the title's baseline — the chronicle's
             "· 2 acts". It only wraps the heading when it is there, so a row
-            without one keeps the plain line. */}
+            without one keeps the plain line. A ONE-LINE PLACE (round 40),
+            the line never wraps. An aside that IS a handle beside a name —
+            `Juno Baptiste @juno` — takes `ActorChip`'s law: the title (the
+            name) ellipsizes first, the handle stays whole until it alone
+            cannot fit. An aside whose words name a handle — `Gave an opinion
+            on @mira` — gives up its handle first, the words on both sides
+            kept (`nameInLine`). An aside with no handle keeps its width. */}
         {titleAside ? (
           <span style={{ display: "flex", alignItems: "baseline", gap: "var(--space-2)", minWidth: 0 }}>
             {heading}
             <span
-              style={{ ...TYPE["label-small"], color: "var(--text-secondary)", flex: "none" }}
+              style={{ ...TYPE["label-small"], color: "var(--text-secondary)", ...ASIDE_FLEX[asideHandle] }}
               data-node={node && "aside"}
             >
-              {titleAside}
+              {asideHandle === "words" ? nameInLine(titleAside) : titleAside}
             </span>
           </span>
         ) : (
