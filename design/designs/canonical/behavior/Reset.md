@@ -20,7 +20,7 @@ WHEN press Send reset link GIVEN no answer reaches the device -> the field keeps
 
 WHEN no answer has come 5s after the press of Send reset link -> Send reset link still reads Sending reset link… AND NEVER a slow line or a progress indicator appears
 
-ALWAYS the screen's ways out stay live while Send reset link waits on its answer
+ALWAYS the screen's ways out refuse a press, undimmed and unchanged in face, from 200ms after the press of Send reset link until its answer comes — an entry form keeps its exits held while it submits, the named exception to Close (jakob 2026-11-11)
 
 ALWAYS the status line stands only after a press of Send reset link, never at rest
 

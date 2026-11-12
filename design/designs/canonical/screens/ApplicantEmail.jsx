@@ -34,12 +34,63 @@
 
    REGISTERED under the `changeEmail` prefix (design ⇄ impl seam 082, the
    settings packet): it is `ChangeEmail`'s form with the old side gone, so it
-   takes `ChangeEmail`'s names — `email`, `current`, `commit`. */
+   takes `ChangeEmail`'s names — `email`, `current`, `commit`.
+
+   THE `submit` CHIP'S `pending` IS THE CHANGE CLOSED ON (round 43; jakob
+   2026-11-11, backlog 191 (a): submit is submit — the applicant is signed
+   in). From the press on `Change email` nothing cancels it: past 200ms it
+   reads `Changing email…`, and the header's arrow is named `Close` from the
+   press itself — the seals' X (`WizardHeader`'s `closing`); it leaves for
+   where the form was opened and the change goes on. A change that fails
+   after Close says so on the Email row in settings (`Settings`' `forms`
+   chip, jakob 2026-11-12). The pending header and fields are drawn copies;
+   the rest ones alone carry the names. */
 export const NODE = "changeEmail";
+export const PROPS = { submit: { editor: "enum", options: ["rest", "pending"], default: "rest" } };
+export const VALS = `restShown: this.props.submit === "pending" ? "none" : "block", pendingShown: this.props.submit === "pending" ? "block" : "none"`;
+
+function ApplicantEmailFields({ pending = false }) {
+  const named = (n) => (pending ? undefined : n);
+  const at = pending ? "-pending" : "";
+  return (
+    <>
+      <div style={{ marginTop: 32 }}>
+        <TextField id={`new-email${at}`} label="New email" type="email" autoComplete="email" value={pending ? "noor@fieldnotes.org" : ""} node={named("email")} />
+      </div>
+
+      <div style={{ marginTop: 24 }}>
+        <PasswordField
+          id={`email-current-password${at}`}
+          label="Current password"
+          autoComplete="current-password"
+          account="noor@fieldmail.org"
+          value={pending ? "fieldday-notes" : ""}
+          node={named("current")}
+        />
+      </div>
+
+      <div style={{ marginTop: 24 }}>
+        {pending ? (
+          <Button style={{ width: "100%" }} busy busyLabel="Changing email…">
+            Change email
+          </Button>
+        ) : (
+          <WaitingCommit id="change-email" label="Change email" reason="Waiting for a new email and your password" node="commit" />
+        )}
+      </div>
+    </>
+  );
+}
+
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back" node="header" />
+      <div style={{ display: "{{restShown}}" }}>
+        <PageHeader backHref="#" backLabel="Back" node="header" />
+      </div>
+      <div style={{ display: "{{pendingShown}}" }}>
+        <PageHeader backHref="#" backLabel="Close" />
+      </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
@@ -68,23 +119,11 @@ export function Screen() {
           sent to noor@fieldmail.org stops working.
         </p>
 
-        <div style={{ marginTop: 32 }}>
-          <TextField id="new-email" label="New email" type="email" autoComplete="email" value="" node="email" />
+        <div style={{ display: "{{restShown}}" }}>
+          <ApplicantEmailFields />
         </div>
-
-        <div style={{ marginTop: 24 }}>
-          <PasswordField
-            id="email-current-password"
-            label="Current password"
-            autoComplete="current-password"
-            account="noor@fieldmail.org"
-            value=""
-            node="current"
-          />
-        </div>
-
-        <div style={{ marginTop: 24 }}>
-          <WaitingCommit id="change-email" label="Change email" reason="Waiting for a new email and your password" node="commit" />
+        <div style={{ display: "{{pendingShown}}" }}>
+          <ApplicantEmailFields pending />
         </div>
       </div>
     </>

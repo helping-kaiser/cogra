@@ -3696,7 +3696,7 @@ function ReportProblemBody({ words }) {
 const SETTINGS_DELETE_FOOTNOTE =
   "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.";
 
-function SettingsBody({ handleChip = false, keptChip = false, backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE, hidden = "3", recoveryStatus, backupFootnote, clearingFootnote, install } = {}) {
+function SettingsBody({ handleChip = false, keptChip = false, formsChip = false, helpChip = false, backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE, hidden = "3", recoveryStatus, backupFootnote, clearingFootnote, install } = {}) {
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" node="header" />
@@ -3977,7 +3977,30 @@ function SettingsBody({ handleChip = false, keptChip = false, backup = "made", f
           footnote="Changing your password signs out every other device."
           node="credentials"
         >
-          <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} node="password" />
+          {formsChip ? (
+            /* A FORM'S SUBMIT FAILING AFTER CLOSE (round 43; jakob 2026-11-12,
+               the re-ask's 9 (a)): Close on a signed-in plain form leaves for
+               settings and the submit goes on; one that does not go through
+               says so on the form's own row — `That didn't go through.`, the
+               Handle row's failed line, with no `Retry` (a password change
+               would need the passwords typed again) — and the row's tap opens
+               the form again. The failed states are drawn copies; the rest row
+               alone carries the name. */
+            <div>
+              <div style={{ display: "{{passwordRestShown}}" }}>
+                <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} node="password" />
+              </div>
+              <div style={{ display: "{{passwordFailedShown}}" }}>
+                <SettingsRow
+                  label="Password"
+                  status={<span role="alert" style={{ color: "var(--text-failure)" }}>That didn&apos;t go through.</span>}
+                  onOpen={() => {}}
+                />
+              </div>
+            </div>
+          ) : (
+            <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} node="password" />
+          )}
           {handleChip ? (
             /* THE HANDLE CHANGE AFTER CLOSE (round 37, jakob 2026-11-11: "yep"):
                the dialog and the form leave to settings and the change goes on;
@@ -4017,13 +4040,29 @@ function SettingsBody({ handleChip = false, keptChip = false, backup = "made", f
           ) : (
             <SettingsRow label="Handle" value="@sol" onOpen={() => {}} node="handle" />
           )}
-          <SettingsRow
-            label="Email"
-            value="sol@solferreira.art"
-            status={emailPending ? "Change pending" : undefined}
-            onOpen={() => {}}
-            node="email"
-          />
+          {formsChip ? (
+            <div>
+              <div style={{ display: "{{emailRestShown}}" }}>
+                <SettingsRow label="Email" value="sol@solferreira.art" status={emailPending ? "Change pending" : undefined} onOpen={() => {}} node="email" />
+              </div>
+              <div style={{ display: "{{emailFailedShown}}" }}>
+                <SettingsRow
+                  label="Email"
+                  value="sol@solferreira.art"
+                  status={<span role="alert" style={{ color: "var(--text-failure)" }}>That didn&apos;t go through.</span>}
+                  onOpen={() => {}}
+                />
+              </div>
+            </div>
+          ) : (
+            <SettingsRow
+              label="Email"
+              value="sol@solferreira.art"
+              status={emailPending ? "Change pending" : undefined}
+              onOpen={() => {}}
+              node="email"
+            />
+          )}
         </SettingsGroup>
 
         {/* ABOUT SITS AFTER CREDENTIALS AND BEFORE LEAVING (jakob's ruling, the

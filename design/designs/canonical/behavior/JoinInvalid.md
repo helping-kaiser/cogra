@@ -32,7 +32,7 @@ WHEN tap Just looking? Browse the feed -> FeedBare opens
 
 WHEN no answer has come 5s after the press of Continue -> Continue still reads Continuing… AND NEVER a slow line or a progress indicator appears
 
-ALWAYS the screen's ways out stay live while Continue waits on its answer
+ALWAYS the screen's ways out refuse a press, undimmed and unchanged in face, from 200ms after the press of Continue until its answer comes — an entry form keeps its exits held while it submits, the named exception to Close (jakob 2026-11-11)
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 

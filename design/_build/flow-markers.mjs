@@ -1715,13 +1715,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: ">Your key</span>", tag: "button" },
     { n: 10, find: ">Revoke</button>", tag: "button", all: true },
     { n: 11, find: ">Sign out everywhere else</span>", tag: "button" },
-    { n: 12, find: ">Password</span>", tag: "button" },
+    // The Password and Email rows are drawn twice on the `forms` chip (round
+    // 43): the rest row and the failed one, the same control, so one number.
+    { n: 12, find: ">Password</span>", tag: "button", all: true },
     { n: 13, find: ">Handle</span>", tag: "button" },
     { n: 13, find: ">That handle is taken.</span>", tag: "button" },
     // Retry on a failed row — the handle change's, and the kept picks' batch
     // (round 41, the `kept` chip): one control, the same signing asked again.
     { n: 29, find: ">Retry</button>", tag: "button", all: true },
-    { n: 14, find: ">Email</span>", tag: "button" },
+    { n: 14, find: ">Email</span>", tag: "button", all: true },
     { n: 15, find: ">Don&#x27;t remember this account on this device</span>", tag: "button" },
     { n: 16, find: ">Sign out</span>", tag: "button" },
     // The People group arrived after the page was numbered, and a row inserted
@@ -2080,8 +2082,12 @@ Object.assign(FLOW_MARKERS, {
   // Three password fields, one reveal affordance: the toggle is the same control
   // drawn twice, so it carries one number on both — the rule the repeated
   // per-post controls keep.
+  // The `submit` chip's `pending` (round 43) draws the header again with its
+  // arrow named `Close`: the same control, so the arrow's number — on the
+  // three settings forms and on `ApplicantEmail`.
   ChangePassword: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 1, find: 'aria-label="Close"', tag: "a" },
     { n: 2, find: 'data-field="Current password"', tag: "div" },
     { n: 3, find: 'data-field="New password"', tag: "div" },
     { n: 4, find: 'aria-label="Show password"', tag: "button", all: true },
@@ -2105,6 +2111,7 @@ Object.assign(FLOW_MARKERS, {
   // same controls, so the same numbers on every instance.
   ChangeEmail: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 1, find: 'aria-label="Close"', tag: "a" },
     { n: 2, find: 'data-field="New email"', tag: "div", all: true },
     { n: 3, find: 'data-field="Current password"', tag: "div", all: true },
     { n: 4, find: 'aria-label="Show password"', tag: "button", all: true },
@@ -2112,6 +2119,7 @@ Object.assign(FLOW_MARKERS, {
   ],
   ChangeEmailConfirm: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 1, find: 'aria-label="Close"', tag: "a" },
     { n: 2, find: 'data-field="Confirmation code"', tag: "div" },
     { n: 3, find: ">Confirm the code</button>", tag: "button" },
   ],
@@ -2315,6 +2323,7 @@ FLOW_MARKERS.ApplicantFeed.push({ n: 21, find: ">Wrong address?</button>", tag: 
 Object.assign(FLOW_MARKERS, {
   ApplicantEmail: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 1, find: 'aria-label="Close"', tag: "a" },
     { n: 2, find: 'data-field="New email"', tag: "div" },
     { n: 3, find: 'data-field="Current password"', tag: "div" },
     { n: 4, find: 'aria-label="Show password"', tag: "button" },

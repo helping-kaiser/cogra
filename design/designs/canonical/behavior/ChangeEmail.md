@@ -24,7 +24,15 @@ WHEN press Change email GIVEN no answer reaches the device -> the fields keep wh
 
 WHEN press Change email GIVEN the account's mail budget is spent -> the line Too many tries. Wait a little, then try again. stands above Change email AND Change email stays AND NEVER a message is sent
 
-WHEN press the header back arrow -> settings returns AND NEVER a message is sent
+WHEN press the header back arrow GIVEN Change email has not been pressed -> settings returns AND NEVER a message is sent
+
+ALWAYS the header's arrow is named Close from the press of Change email until its answer comes
+
+WHEN press Close GIVEN Change email was pressed -> settings returns AND the request goes on AND the Email row reads Change pending once it lands AND NEVER the request is canceled AND NEVER the confirmation opens
+
+WHEN the request fails GIVEN the form was closed after the press -> the Email row in settings reads That didn't go through. AND NEVER Retry stands on the row
+
+WHEN tap the Email row GIVEN it reads That didn't go through. after a request -> the request opens again
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 

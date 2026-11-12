@@ -36,6 +36,8 @@ WHEN press Create account -> Create account refuses a second press until the reg
 
 WHEN the registration has not answered 200ms after the press -> Create account reads Creating account… AND NEVER a spinner appears
 
+ALWAYS the screen's ways out refuse a press, undimmed and unchanged in face, from 200ms after the press of Create account until its answer comes — an entry form keeps its exits held while it submits, the named exception to Close (jakob 2026-11-11)
+
 WHEN the account is created -> the applicant days begin on ApplicantFeed
 
 WHEN the account is created GIVEN the form opened over the signed-in state -> the new account's applicant days begin on ApplicantFeed AND this device switches to the new account AND the other account's sessions stay valid wherever they are

@@ -193,3 +193,11 @@ WHEN tap settings.credentials.handle GIVEN its second line reads Changing handle
 ALWAYS settings.backup.kept reads That didn't sign. in the failure voice in its second line followed by Retry in its trailing slot GIVEN the kept picks' batch was closed on while it signed and did not go through, the row inert apart from its Retry
 
 WHEN tap Retry on settings.backup.kept -> the whole batch is asked to sign again AND each target's row reads Signing… under its face until the batch answers AND NEVER part of the batch is signed alone
+
+ALWAYS settings.credentials.password reads That didn't go through. in the failure voice in its second line, with no Retry, GIVEN a password change was closed on after its press and did not go through
+
+ALWAYS settings.credentials.email reads That didn't go through. in the failure voice under the address the account still has, with no Retry, GIVEN an email change's request, its confirm or an applicant's change was closed on after its press and did not go through
+
+WHEN tap settings.credentials.password GIVEN its second line reads That didn't go through. -> the password change opens at rest
+
+WHEN tap settings.credentials.email GIVEN its second line reads That didn't go through. -> the form that failed opens again

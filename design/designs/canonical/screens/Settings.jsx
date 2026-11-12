@@ -139,6 +139,15 @@
    batch again — the Handle row's failed form. While the batch signs, the wait
    stands on each target's row (`KeptPicksSeal`), not here.
 
+   THE `forms` CHIP DRAWS A FORM'S SUBMIT FAILING AFTER CLOSE (round 43,
+   jakob 2026-11-12, the re-ask's 9 (a)): Close on a signed-in plain form —
+   `ChangePassword`, `ChangeEmail`, `ChangeEmailConfirm`, `ApplicantEmail` —
+   leaves while the submit goes on, and one that does not go through says
+   so on the form's row: `password` draws the Password row, `email` the
+   Email row (the email forms share it), each reading `That didn't go
+   through.` — the Handle row's failed line without its `Retry` — and the
+   row's tap opens the form again.
+
    THE FRAME FITS EVERY SETTING (backlog 175): 3103px, the page whole with the
    install row shown; the default draws 57px more surface under its last line.
    A second line costs a row nothing — a two-line row is 54px inside its 56px
@@ -155,9 +164,10 @@ export const PROPS = {
   handle: { editor: "enum", options: ["rest", "changing", "failed", "taken"], default: "rest" },
   install: { editor: "enum", options: ["absent", "shown"], default: "absent" },
   kept: { editor: "enum", options: ["waiting", "failed"], default: "waiting" },
+  forms: { editor: "enum", options: ["rest", "password", "email"], default: "rest" },
 };
-export const VALS = `keptRestShown: this.props.kept === "failed" ? "none" : "block", keptFailedShown: this.props.kept === "failed" ? "block" : "none", installShown: this.props.install === "shown" ? "block" : "none",handleRestShown: this.props.handle === "rest" ? "block" : "none", handleChangingShown: this.props.handle === "changing" ? "block" : "none", handleFailedShown: this.props.handle === "failed" ? "block" : "none", handleTakenShown: this.props.handle === "taken" ? "block" : "none", deleteFootnote: this.props.reader === "applicant" ? "Nothing is deleted here. The next screen says what goes and what stays." : "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."`;
+export const VALS = `passwordRestShown: this.props.forms === "password" ? "none" : "block", passwordFailedShown: this.props.forms === "password" ? "block" : "none", emailRestShown: this.props.forms === "email" ? "none" : "block", emailFailedShown: this.props.forms === "email" ? "block" : "none", keptRestShown: this.props.kept === "failed" ? "none" : "block", keptFailedShown: this.props.kept === "failed" ? "block" : "none", installShown: this.props.install === "shown" ? "block" : "none",handleRestShown: this.props.handle === "rest" ? "block" : "none", handleChangingShown: this.props.handle === "changing" ? "block" : "none", handleFailedShown: this.props.handle === "failed" ? "block" : "none", handleTakenShown: this.props.handle === "taken" ? "block" : "none", deleteFootnote: this.props.reader === "applicant" ? "Nothing is deleted here. The next screen says what goes and what stays." : "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."`;
 
 export function Screen() {
-  return <SettingsBody handleChip keptChip keptPicks={KEPT_PICKS.length} deleteFootnote="{{deleteFootnote}}" install="{{installShown}}" />;
+  return <SettingsBody handleChip keptChip formsChip keptPicks={KEPT_PICKS.length} deleteFootnote="{{deleteFootnote}}" install="{{installShown}}" />;
 }

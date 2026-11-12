@@ -74,7 +74,7 @@ ALWAYS a line the server answered stands until the next press of Sign in, and on
 
 WHEN no answer has come 5s after the press of Sign in -> Sign in still reads Signing in… AND NEVER a slow line or a progress indicator appears
 
-ALWAYS the screen's ways out stay live while Sign in waits on its answer
+ALWAYS the screen's ways out refuse a press, undimmed and unchanged in face, from 200ms after the press of Sign in until its answer comes — an entry form keeps its exits held while it submits, the named exception to Close (jakob 2026-11-11)
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 

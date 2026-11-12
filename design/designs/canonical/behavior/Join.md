@@ -48,6 +48,8 @@ WHEN press Create account -> Create account refuses a second press until the reg
 
 WHEN the registration has not answered 200ms after the press -> Create account reads Creating account… AND NEVER a spinner appears
 
+ALWAYS the screen's ways out refuse a press, undimmed and unchanged in face, from 200ms after the press of Create account until its answer comes — an entry form keeps its exits held while it submits, the named exception to Close (jakob 2026-11-11)
+
 WHEN the registration has not answered 5s after the press -> Create account still reads Creating account… AND NEVER a slow line or a progress indicator appears
 
 ALWAYS the header's arrow, the "?" and Already have an account? Sign in refuse a press, never dimmed, while Create account waits on its answer
