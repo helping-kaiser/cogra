@@ -769,8 +769,11 @@ export function CommentsSheet({
     // The editor opens on what the comment actually carries — text and
     // claims alike — so an untouched editor stages nothing (F10). It is
     // the composer's twin surface, so the thread yields to it the same
-    // way (see `openComposer`).
-    depart();
+    // way (see `openComposer`) — but its door is a ROW OF THE ⋮, built
+    // during render, so the reader's place was taken when the ⋮ opened (the
+    // trigger's `onOpen`): the stacked menu is modal, and nothing scrolls
+    // beneath it between that tap and this one.
+    onOpenChange(false);
     setEditing({ comment, parentId });
     setReplying(null);
   };
@@ -855,7 +858,10 @@ export function CommentsSheet({
                   testId={`comment-menu-${comment.id}`}
                   node={part(card, "menu")}
                   expanded={menuFor?.comment.id === comment.id}
-                  onOpen={() => setMenuFor({ comment, parentId })}
+                  onOpen={() => {
+                    measurePlace();
+                    setMenuFor({ comment, parentId });
+                  }}
                 />
               )}
             </div>
