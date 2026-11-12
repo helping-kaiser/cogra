@@ -75,6 +75,17 @@ mechanic keeps its line where the page has room: "the path thingy is
 generally novel stuff for 99% of the users so the explainer doesn't
 hurt" (`RankRecords`' caption).
 
+**Kept by jakob, the pass's last open lines** (2026-11-12, all as
+recommended; *blessed*): Feed score's `Every path here starts with an
+opinion you gave.` (`FeedEntry`, `FeedEntryKinds`); `YourKey`'s `Nothing here
+is sent anywhere — the key is read from this browser and shown.`;
+History's and Saved's `Search reads names and titles, never bodies — fewer
+words reach further.` (`HistoryNone`, `SavedNone`); the edits' `A post's
+body is words or media, never both.` and `A video is the whole post.`
+(`EditWords`, `EditComposeVideo`); the tag picker's `Letters, digits, dot,
+dash and underscore. Capitals become lowercase.`. Cut the same day: the
+clip's quiet line under a cover row with no cover.
+
 This is greppable and should be enforced as a check over Android's
 `strings.xml` and the web copy, rather than left to review — the check
 does not exist yet.
@@ -702,10 +713,6 @@ through, from an edit:
 **The video-cover round's lines** (backlog item 49; *blessed (jakob
 2026-10-06)*):
 
-- `It plays the moment it is on screen, so it starts on its own first
-  frame.` — the quiet line under the `Cover` row's door where a clip has
-  no cover (`ComposeDetailsVideo`, `EditComposeVideo`,
-  `ReplyVideoFailed`).
 - `This clip gave no frames` — the frame strip's caption when the device cut no frames
   from the clip (`ComposeCoverNoFrames`).
 - `No frame` — the neutral tile's label in that state

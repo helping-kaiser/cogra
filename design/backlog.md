@@ -5798,7 +5798,7 @@ after Close reads `That didn't go through.` on the form's Settings row, no
 forms' sidecars hold their exits from 200ms after the press. `YourKeyGate`
 is not in the family (a reveal, not a submit) — backlog 197.
 
-### 192 · The removable-text pass: the moves to a "?" that are not ruled · *design* · **filed 2026-11-12**
+### 192 · The removable-text pass: the moves to a "?" that are not ruled · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 42 built the digest's REMOVE and SHORTEN rows and the A families jakob
 ruled. Digest rows marked MOVE TO "?" outside A2, A5 and A8 were never put to
@@ -5815,6 +5815,8 @@ lose your password — so a change is proved from both ends.`; the edits'
 and underscore. Capitals become lowercase.`; the clip's `It plays the moment it
 is on screen, so it starts on its own first frame.` Each is jakob's: move
 (where a "?" exists, or a new one), cut, or keep.
+
+Closed by round 46 (jakob 2026-11-12, question 13, all as recommended): the clip's line is cut (`ComposeDetailsVideo`, `EditComposeVideo`, `ReplyVideoFailed`; `postEdit.cover.note` deleted); the Feed score note, YourKey's, History's and Saved's search line, the edits' two body lines and the tag picker's rule are kept and marked blessed in copy-voice; ChangeHandle's and ChangeEmail's lines are lane A's to cut.
 
 ### 193 · Two cuts of one caption, and lines the pass left asymmetric · *design* · **filed 2026-11-12**
 
