@@ -4327,9 +4327,10 @@ const SCORE_VIEWER = SOL;
 /* THE PATH SET, and it ADDS UP (feed-ranking.md §6.1: the score is the sum of
    the signed, decayed terms of up to `k` internally disjoint paths, strongest
    first, and `k` is governed at order 4–8). Six paths here, disjoint by person:
-   6.80 + 4.20 + 2.60 + 1.10 + 0.50 = 15.20, which is `ADA_POST`'s own score.
-   The two weakest ride the "more paths" row rather than being spelled out, so
-   the arithmetic still closes on the drawn surface. */
+   6.80 + 4.20 + 2.60 + 1.10 + 0.30 + 0.20 = 15.20, which is `ADA_POST`'s own
+   score. Every path is drawn: the trace is a page whose purpose is the list,
+   so it is never capped (jakob 2026-11-12), and the arithmetic closes on the
+   drawn rows themselves. */
 const ADA_FACED = { ...ADA, src: "comment-camera.jpg" };
 const MIRA_FACED = { ...MIRA, src: "inviter.jpg" };
 const SCORE_PATHS = [
@@ -4337,8 +4338,9 @@ const SCORE_PATHS = [
   { through: "@tobias", people: [SCORE_VIEWER, TOBIAS], value: "+4.20" },
   { through: "@mira", people: [SCORE_VIEWER, MIRA_FACED], value: "+2.60" },
   { through: "@kel and @wren", people: [SCORE_VIEWER, KEL, WREN], value: "+1.10" },
+  { through: "@nadia", people: [SCORE_VIEWER, NADIA], value: "+0.30" },
+  { through: "@juno", people: [SCORE_VIEWER, JUNO], value: "+0.20" },
 ];
-const SCORE_MORE_PATHS = { count: 2, value: "+0.50" };
 
 /* THE SAME SET UNDER A BORROWED VIEW (jakob 2026-10-12, SR-G3): a guest on
    @mira's invite link, or an applicant she let in, reads the walk from HER
@@ -4349,6 +4351,8 @@ const SCORE_PATHS_BORROWED = [
   { through: "@tobias", people: [MIRA_FACED, TOBIAS], value: "+4.20" },
   { through: "@sol", people: [MIRA_FACED, SOL], value: "+2.60" },
   { through: "@kel and @wren", people: [MIRA_FACED, KEL, WREN], value: "+1.10" },
+  { through: "@nadia", people: [MIRA_FACED, NADIA], value: "+0.30" },
+  { through: "@juno", people: [MIRA_FACED, JUNO], value: "+0.20" },
 ];
 
 /* ScoreOrigin — THE THING THE SCORE BELONGS TO, carried on all four levels so

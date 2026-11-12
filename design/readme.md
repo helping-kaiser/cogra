@@ -1367,7 +1367,7 @@ with 0 < |s| < 0.005 is tiny. The card — every ranked card, the tag
 page's included — prints two decimals, never more, and a tiny score
 rounds away from zero to `0.01` or `−0.01`, so `0.00` is a severed
 one's alone. The trace (everything behind the graph glyph: the flag,
-the paths, the quiet row, a path's `adds`) prints two decimals too, and
+the paths, a path's `adds`) prints two decimals too, and
 a tiny figure in two significant digits — `0.0031`, `0.00042` — at most
 six decimals, a still smaller one reading `0.000001`; the trace's `+`
 on a positive stands. The minus is U+2212. A screen reader reads the
@@ -11053,7 +11053,8 @@ jakob's answers to round 30's proposals (Q1–Q7), the ruled part.
   leaves the page, and no "show fewer" follows. A page or sheet whose
   PURPOSE is the list — History, Saved, Notifications, the profile's
   chronicle, posts and comments, the tag page, the opinions page, the
-  opinions and cited-by sheets, Your tags, hidden accounts — is a
+  opinions and cited-by sheets, Your tags, hidden accounts, the score's
+  trace (jakob 2026-11-12) — is a
   continuous scroll and is never capped. Drawn on Invites' People you
   let in (backlog 181).
 - **The way out while an act signs** is round 34's: once the commit is

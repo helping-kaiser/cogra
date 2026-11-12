@@ -2776,7 +2776,6 @@ Object.assign(FLOW_MARKERS, {
   FeedEntry: [
     { n: 1, find: `aria-label="Back to feed"`, tag: "a" },
     { n: 2, find: ">Through ", tag: "button", all: true },
-    { n: 3, find: `aria-label="Show 2 more paths"`, tag: "button" },
     ...nav(4),
   ],
   FeedEntryMoved: [

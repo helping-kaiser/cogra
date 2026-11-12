@@ -3419,10 +3419,6 @@ the trace that draws it. The trace says the shape; the words say who. The
 handles rather than the names, because the row has one line for them and
 a chain of display names would ellipsise before the last person in it.
 
-**The quiet expand row**: `2 more paths`, with what they add beside it,
-and `Show 2 more paths` as its accessible name. Never `See all`, never a
-page number — the row unfolds the rest in place.
-
 **A path's two facts**: `What it adds` and `Newest opinion on it`. Both
 are questions a reader would actually ask out loud, which is what a
 `FactRow` label is for.
