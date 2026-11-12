@@ -2,7 +2,8 @@ import { fireEvent, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { fakeClampLayout } from "@/test/fake-clamp-layout";
-import { profileComment } from "@/test/profile-comment";
+import { expectLineYieldsHandle, LONG_HANDLE } from "@/test/names";
+import { answersComment, profileComment } from "@/test/profile-comment";
 import { renderWithProviders } from "@/test/providers";
 import { CommentFeedCard, type CommentFeedView } from "./comment-feed-card";
 
@@ -56,5 +57,21 @@ describe("CommentFeedCard's fold", () => {
   it("draws a profile's line shape whole, with no More", () => {
     mount("x".repeat(400), "line");
     expect(screen.queryByTestId("card-opener")).not.toBeInTheDocument();
+  });
+});
+
+// NamesLong.md:5-7 — the target line is one line; a long handle is the part
+// cut, `'s comment` keeps its room.
+describe("CommentFeedCard's target line, at the longest handle", () => {
+  it("cuts the handle and keeps the words after it", () => {
+    const comment = profileComment("c1", {
+      target: answersComment("c0", LONG_HANDLE),
+    }) as unknown as CommentFeedView;
+    renderWithProviders(
+      <CommentFeedCard comment={comment} shape="line" from="feed" testId="card" onNotify={() => {}} onLinkCopied={() => {}} />,
+    );
+    const target = screen.getByTestId("card-target");
+    expect(target).toHaveTextContent(`On @${LONG_HANDLE}'s comment`);
+    expectLineYieldsHandle(target, `@${LONG_HANDLE}`, "'s comment");
   });
 });

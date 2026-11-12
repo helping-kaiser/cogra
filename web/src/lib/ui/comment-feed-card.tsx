@@ -74,6 +74,7 @@ import { useClampFold } from "./clamp-fold";
 import { part, testAttributes, type DataNode } from "./data-node";
 import { Icon } from "./icons";
 import { JoinPrompt } from "./join-prompt";
+import { nameInLine } from "./names";
 import { NodeMark } from "./node-mark";
 import { PendingMarker } from "./pending-marker";
 import {
@@ -654,9 +655,11 @@ export function CommentFeedCard({
           className="cg-state cg-focus cg-hit flex max-w-full items-center gap-2 rounded-small text-left text-on-surface-variant"
         >
           <Icon name={head.kind === "comment" ? "chat_bubble" : "dynamic_feed"} size={14} />
-          {/* label-small whole (`CommentCard.jsx`, round 28). */}
-          <span className="truncate text-label-small">
-            On {head.label}
+          {/* label-small whole (`CommentCard.jsx`, round 28). One line: the
+              handle is the part cut, `'s comment` keeps its room
+              (NamesLong.md:5-7, `nameInLine`). */}
+          <span className="min-w-0 truncate text-label-small">
+            {nameInLine(`On ${head.label}`)}
           </span>
         </Link>
       )}

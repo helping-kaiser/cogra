@@ -34,6 +34,7 @@ import { carrySnackbar } from "./carried-snackbar";
 import { Card } from "./card";
 import { part, testAttributes, type DataNode } from "./data-node";
 import { Icon } from "./icons";
+import { nameInLine } from "./names";
 import { NodeMark } from "./node-mark";
 import { ScoreSlot } from "@/lib/score/score-slot";
 import type { TraceOrigin } from "@/lib/score/trace-session";
@@ -248,12 +249,17 @@ export function TagFeedCard({
               >
                 {newest.title}
               </span>
+              {/* One line, clipped at its end; a long handle is the part cut
+                  and ` · and N more` keeps its room (NamesLong.md:5-7). */}
               <span
                 {...testAttributes(part(node, "glimpse.by"), `${testId}-by`)}
-                className="text-body-small text-on-surface-variant"
+                className="min-w-0 truncate text-body-small text-on-surface-variant"
               >
-                {newest.handle === null ? "" : `@${newest.handle}`}
-                {things.length > 1 && ` · and ${things.length - 1} more`}
+                {nameInLine(
+                  `${newest.handle === null ? "" : `@${newest.handle}`}${
+                    things.length > 1 ? ` · and ${things.length - 1} more` : ""
+                  }`,
+                )}
               </span>
             </span>
           </span>

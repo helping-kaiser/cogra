@@ -78,10 +78,12 @@ export function ReelCaption({
     >
       {notice}
       {handle !== null && (
-        // label-large whole (ReelCaption.jsx, round 28).
+        // label-large whole (ReelCaption.jsx, round 28). A caption never
+        // wraps, and a handle ending its line is cut by the line's end clip
+        // (NamesLong.md:5, :9).
         <span
           {...testAttributes(part(node, "handle"), `${testId}-handle`)}
-          className="text-label-large"
+          className="min-w-0 truncate text-label-large"
         >
           @{handle}
         </span>
