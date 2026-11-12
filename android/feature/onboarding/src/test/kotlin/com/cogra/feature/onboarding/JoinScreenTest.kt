@@ -14,6 +14,7 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasParent
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -101,8 +102,14 @@ class JoinScreenTest {
 
     private fun top(path: String): Float = tag(path).fetchSemanticsNode().positionInRoot.y
 
+    /** A legal line's words: the text inside the line's node, beside its door. */
+    private fun words(path: String) = compose.onNode(
+        hasParent(hasTestTag(path)) and SemanticsMatcher.keyIsDefined(SemanticsProperties.Text),
+        useUnmergedTree = true,
+    ).fetchSemanticsNode()
+
     private fun text(path: String): String {
-        val runs = tag(path).fetchSemanticsNode().config.getOrNull(SemanticsProperties.Text)
+        val runs = words(path).config.getOrNull(SemanticsProperties.Text)
         return runs?.joinToString("") { it.text }.orEmpty()
     }
 
@@ -439,6 +446,9 @@ class JoinScreenTest {
     fun theTwoLegalDoorsAreNodesInsideTheirLines() {
         show()
         for (line in listOf("join.terms", "join.privacy")) {
+            // The door is inside its line's node, as the board's `<a>` is inside its `<p>`.
+            compose.onNode(hasTestTag("$line.open") and hasAnyAncestor(hasTestTag(line)), useUnmergedTree = true)
+                .assertExists()
             val outer = tag(line).fetchSemanticsNode().boundsInRoot
             val door = tag("$line.open").fetchSemanticsNode().boundsInRoot
             assertThat(door.top).isAtLeast(outer.top)
@@ -458,7 +468,7 @@ class JoinScreenTest {
 
     /** The link texts inside a line's annotated string. */
     private fun doors(path: String): List<String> {
-        val annotated: AnnotatedString = tag(path).fetchSemanticsNode().config[SemanticsProperties.Text].single()
+        val annotated: AnnotatedString = words(path).config[SemanticsProperties.Text].single()
         return annotated.getLinkAnnotations(0, annotated.length)
             .filter { it.item is LinkAnnotation.Clickable }
             .map { annotated.text.substring(it.start, it.end) }

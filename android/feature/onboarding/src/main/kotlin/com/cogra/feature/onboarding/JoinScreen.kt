@@ -340,16 +340,20 @@ private fun LegalLine(sentence: String, door: String, node: DataNode) {
         }
     }
     var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
-    Box(Modifier.fillMaxWidth()) {
+    // The line's node holds both its words and its door, as the board's
+    // `<p>` holds its `<a>`.
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .testTag(node.tag),
+    ) {
         Text(
             text = text,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             onTextLayout = { layout = it },
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag(node.tag),
+            modifier = Modifier.fillMaxWidth(),
         )
         val bounds = layout?.takeIf { start >= 0 }?.getPathForRange(start, start + door.length)?.getBounds()
         if (bounds != null) {
