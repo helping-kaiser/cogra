@@ -33,7 +33,11 @@ WHEN tap the ⋮ -> the sheet holding Saved, History and Share your profile open
 
 WHEN tap the gear -> Settings opens
 
-WHEN tap the figures -> the opinions page opens on this profile
+WHEN tap the Opinions on figure -> the opinions page opens on this profile on its On state
+
+WHEN tap the Opinions by figure -> the opinions page opens on this profile on its By state
+
+WHEN tap the Posts figure -> NEVER anything happens
 
 WHEN tap profile.tabRow.postsTab -> the reader's posts stand below profile.tabRow as post cards AND the header above stays as it was
 

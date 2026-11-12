@@ -952,8 +952,10 @@ paper over:
   hold an opinion on the person; `Opinions by them` the people they hold
   an opinion on. One person's opinions toward one target are one
   bundle, counted once however often they were revised; a revision count
-  belongs only inside that person's bundle view. The figures are one tap target toward the
-  stances page. On another's profile the stance wears the wide anchor with
+  belongs only inside that person's bundle view. Each opinion figure is
+  a door to the opinions page on its own direction — `Opinions on …` its
+  On state, `Opinions by …` its By — and Posts is no door (jakob
+  2026-11-11). On another's profile the stance wears the wide anchor with
   Message beside it; one's own avatar wears the change badge (the
   standalone crop-and-seal shortcut). No cover image: the largest thing on
   a person's screen should not be decoration.

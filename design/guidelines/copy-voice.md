@@ -948,13 +948,16 @@ Spelled by the round and **blessed (jakob 2026-10-05)**:
   handle, named for its picture: the first row is the cover, every other
   row its place (*blessed (jakob 2026-10-05)*).
 
-**The profile's figures, spoken** — K13.11 executed (the check round,
-2026-10-06): the figures' one door says its visible words and numbers,
-then its purpose — `{n} Posts, {n} Opinions on them, {n} Opinions by
-them, opinions on and by @handle`. One's own reads `{n} Posts, {n}
-Opinions on you, {n} Opinions by you, your opinions, both directions`;
-a deleted account's ends `opinions on and by this account`
-(`ProfileHeader`; `Profile`, `ProfileOther`, `ProfileDeleted`).
+**The profile's figures, spoken** — K13.11's form (the check round,
+2026-10-06), on two doors since jakob's 2026-11-11 ruling: each opinion
+figure says its visible number and words, then its purpose, the one
+door's purpose split by direction — `{n} Opinions on them, opinions on
+@handle` · `{n} Opinions by them, opinions by @handle`. One's own reads
+`{n} Opinions on you, your opinions, on you` · `{n} Opinions by you,
+your opinions, by you`; a deleted account's end `opinions on this
+account` · `opinions by this account`. `Posts` is no door and has no
+spoken name of its own (`ProfileHeader`; `Profile`, `ProfileOther`,
+`ProfileDeleted`).
 
 **Carried over — blessed by use (jakob 2026-10-06).** The names the
 boards already speak, recorded so the registry is whole:

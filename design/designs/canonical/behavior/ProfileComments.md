@@ -38,7 +38,11 @@ WHEN tap a comment's ⋮ GIVEN the comment is someone else's -> the comment's me
 
 WHEN tap the ⋮ in the actions row -> the profile's menu opens over the page
 
-WHEN tap the figures -> the opinions page opens on this profile
+WHEN tap the Opinions on figure -> the opinions page opens on this profile on its On state
+
+WHEN tap the Opinions by figure -> the opinions page opens on this profile on its By state
+
+WHEN tap the Posts figure -> NEVER anything happens
 
 WHEN tap Message -> the chats coming-soon screen opens
 

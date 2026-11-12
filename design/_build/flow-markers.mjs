@@ -1508,7 +1508,9 @@ const ownProfile = () => [
   { n: 2, find: 'aria-label="More on your profile"', tag: "button" },
   { n: 3, find: 'aria-label="Settings"', tag: "button" },
   { n: 4, find: 'aria-label="Change your picture"', tag: "button" },
-  { n: 5, find: ', your opinions, both directions"', tag: "button" },
+  // The two opinion doors (round 45): On at the one door's old number, By at
+  // each board's next free one.
+  { n: 5, find: ', your opinions, on you"', tag: "button" },
   { n: 6, find: ">Edit profile</button>", tag: "button" },
   // The waiting dot rides inside the button (the invites round), so the label
   // is no longer the last thing before the closing tag: the find stops at the
@@ -1523,6 +1525,7 @@ Object.assign(FLOW_MARKERS, {
   // head to the number, the bell at `Profile`'s 15, the cards after.
   ProfilePostsOwn: [
     ...ownProfile(),
+    { n: 23, find: ', your opinions, by you"', tag: "button" },
     { n: 9, find: '<a href="/u/', tag: "a", all: true },
     { n: 10, find: 'aria-label="More on this post"', tag: "button", all: true },
     { n: 11, find: ">More</button>", tag: "button", all: true },
@@ -1537,6 +1540,7 @@ Object.assign(FLOW_MARKERS, {
   ],
   ProfileCommentsOwn: [
     ...ownProfile(),
+    { n: 21, find: ', your opinions, by you"', tag: "button" },
     { n: 9, find: '<a href="/u/', tag: "a", all: true },
     { n: 10, find: 'aria-label="More on this comment"', tag: "button", all: true },
     { n: 11, find: 'aria-label="Give your opinion on this comment"', tag: "button", all: true },
@@ -1548,6 +1552,7 @@ Object.assign(FLOW_MARKERS, {
   ],
   Profile: [
     ...ownProfile(),
+    { n: 17, find: ', your opinions, by you"', tag: "button" },
     { n: 9, find: "Salt maps of the coast road — rubbings", tag: "button" },
     { n: 9, find: "The third headland light is real", tag: "button" },
     { n: 9, find: "Three weekends of walking the same stretch", tag: "button" },
@@ -1569,6 +1574,7 @@ Object.assign(FLOW_MARKERS, {
   ],
   ProfileApplicant: [
     ...ownProfile(),
+    { n: 17, find: ', your opinions, by you"', tag: "button" },
     ...nav(10),
     // The ask link's permanent home (jakob 2026-10-02): the next free number
     // after the bell's 15. The `application` chip draws the card twice, open
@@ -1578,7 +1584,8 @@ Object.assign(FLOW_MARKERS, {
   ProfileOther: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
-    { n: 3, find: ', opinions on and by @ada"', tag: "button" },
+    { n: 3, find: ', opinions on @ada"', tag: "button" },
+    { n: 13, find: ', opinions by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
     { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
     { n: 5, find: ">Message</button>", tag: "button" },
@@ -1595,7 +1602,8 @@ Object.assign(FLOW_MARKERS, {
   ProfileOtherHidden: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
-    { n: 3, find: ', opinions on and by @ada"', tag: "button" },
+    { n: 3, find: ', opinions on @ada"', tag: "button" },
+    { n: 14, find: ', opinions by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
     { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
     { n: 5, find: ">Message</button>", tag: "button" },
@@ -1611,7 +1619,8 @@ Object.assign(FLOW_MARKERS, {
   ProfileOtherHeld: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
-    { n: 3, find: ', opinions on and by @ada"', tag: "button" },
+    { n: 3, find: ', opinions on @ada"', tag: "button" },
+    { n: 13, find: ', opinions by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Your opinion on @ada', tag: "button" },
     { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
     { n: 5, find: ">Message</button>", tag: "button" },
@@ -1641,7 +1650,8 @@ Object.assign(FLOW_MARKERS, {
   ProfilePosts: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
-    { n: 3, find: ', opinions on and by @ada"', tag: "button" },
+    { n: 3, find: ', opinions on @ada"', tag: "button" },
+    { n: 22, find: ', opinions by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
     { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
     { n: 4, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
@@ -1665,7 +1675,8 @@ Object.assign(FLOW_MARKERS, {
   ProfileComments: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
-    { n: 3, find: ', opinions on and by @ada"', tag: "button" },
+    { n: 3, find: ', opinions on @ada"', tag: "button" },
+    { n: 18, find: ', opinions by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
     { n: 5, find: ">Message</button>", tag: "button" },
     { n: 6, find: 'aria-label="Posts"', tag: "button" },
@@ -2830,7 +2841,8 @@ Object.assign(FLOW_MARKERS, {
   // via on this board renumbers behind it.
   ProfileDeleted: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
-    { n: 2, find: ', opinions on and by this account"', tag: "button" },
+    { n: 2, find: ', opinions on this account"', tag: "button" },
+    { n: 12, find: ', opinions by this account"', tag: "button" },
     { n: 3, find: 'aria-label="Give your opinion on this account"', tag: "button" },
     { n: 3, find: ">Choose your opinion on this account</button>", tag: "button" },
     { n: 4, find: 'aria-label="Posts"', tag: "button" },
