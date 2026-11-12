@@ -19,6 +19,7 @@ import com.cogra.app.BuildConfig
 import com.cogra.domain.InviterView
 import com.cogra.feature.auth.LoginRoute
 import com.cogra.feature.auth.PasswordResetRoute
+import com.cogra.feature.auth.ResetExpiredRoute
 import com.cogra.feature.auth.ResetNewRoute
 import com.cogra.feature.auth.RestoreRoute
 import com.cogra.feature.invites.VouchAskRoute
@@ -65,7 +66,9 @@ internal fun NavGraphBuilder.funnel(shell: ShellScope) = with(shell) {
         )
     }
     composable<PasswordReset> {
-        PasswordResetRoute(onBack = { navController.popBackStack() })
+        // The header's back arrow opens SignIn (Reset.md:3), also when the
+        // request was reached from a dead link with nothing beneath it.
+        PasswordResetRoute(onBack = { backToSignIn() })
     }
     composable<Restore> { RestoreDestination() }
 }
@@ -121,6 +124,7 @@ internal fun NavGraphBuilder.linkLandings(shell: ShellScope) {
             navDeepLink { uriPattern = "${BuildConfig.WEB_ORIGIN}$RESET_PATH?token={token}" },
         ),
     ) { entry -> shell.ResetNewDestination(entry) }
+    composable<ResetExpired> { shell.ResetExpiredDestination() }
 }
 
 /**
@@ -161,11 +165,11 @@ private fun ShellScope.VouchAskDestination(entry: NavBackStackEntry) {
 /**
  * THE RESET'S NEW-PASSWORD STEP (ResetNew.md). A taken password opens
  * SignIn in the landing's place, as the deletion's link does (:23). A
- * link spent while the form stood open hands on to the reset's request
- * step — ResetExpired is not built on this client yet, and its board's own
- * way on is asking for a fresh link (:41). System Back leaves
- * the app to wherever the mail link was opened from, never to a CoGra
- * screen in its place (:47): the landing goes, and the task moves back.
+ * spent link — on its check before the form stands (:43), or on a press
+ * while the form stood open (:41) — opens ResetExpired in the landing's
+ * place. System Back leaves the app to wherever the mail link was opened
+ * from, never to a CoGra screen in its place (:47): the landing goes, and
+ * the task moves back.
  */
 @Composable
 private fun ShellScope.ResetNewDestination(entry: NavBackStackEntry) {
@@ -173,20 +177,43 @@ private fun ShellScope.ResetNewDestination(entry: NavBackStackEntry) {
     val activity = LocalActivity.current
     ResetNewRoute(
         token = token,
-        onSignIn = {
-            navController.popBackStack()
-            if (navController.currentBackStackEntry?.destination?.hasRoute(Login::class) != true) {
-                navController.navigate(Login)
-            }
-        },
+        onSignIn = { backToSignIn() },
         onExpired = {
-            navController.navigate(PasswordReset) { popUpTo<ResetNew> { inclusive = true } }
+            navController.navigate(ResetExpired) { popUpTo<ResetNew> { inclusive = true } }
         },
         onLeave = {
             navController.popBackStack()
             activity?.moveTaskToBack(true)
         },
     )
+}
+
+/**
+ * A SPENT RESET LINK (ResetExpired.md). `Reset your password` opens the
+ * request in this screen's place with its field empty (:15) — a fresh
+ * destination, so a fresh view model; `Sign in` opens SignIn (:17). System
+ * Back leaves to wherever the mail link was opened from, as ResetNew's does
+ * (:21).
+ */
+@Composable
+private fun ShellScope.ResetExpiredDestination() {
+    val activity = LocalActivity.current
+    ResetExpiredRoute(
+        onReset = { navController.navigate(PasswordReset) { popUpTo<ResetExpired> { inclusive = true } } },
+        onSignIn = { backToSignIn() },
+        onLeave = {
+            navController.popBackStack()
+            activity?.moveTaskToBack(true)
+        },
+    )
+}
+
+/** The current screen goes and SignIn stands in its place — never a second sign-in on top of one. */
+private fun ShellScope.backToSignIn() {
+    navController.popBackStack()
+    if (navController.currentBackStackEntry?.destination?.hasRoute(Login::class) != true) {
+        navController.navigate(Login)
+    }
 }
 
 /** A landing's way back: over a tab, the state it opened over; cold, the feed's root. */

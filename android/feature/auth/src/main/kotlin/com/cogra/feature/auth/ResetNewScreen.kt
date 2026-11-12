@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -52,6 +53,9 @@ import javax.inject.Inject
 /** ResetNew's registered prefix (`nodes.json` `ResetNew` → `reset`). */
 private val RESET = DataNode("reset")
 
+/** The bare page while the link's check is out — undrawn, so no node is registered for it. */
+const val RESET_CHECKING_TAG = "reset_checking"
+
 data class ResetNewUiState(
     val password: String = "",
     val confirm: String = "",
@@ -66,8 +70,10 @@ data class ResetNewUiState(
     val inFlight: Boolean = false,
     /** The new password is taken: SignIn opens. */
     val done: Boolean = false,
-    /** The link was spent or ran out while the form stood open. */
+    /** The link was spent or ran out — on its check, or while the form stood open. */
     val expired: Boolean = false,
+    /** The link's read-only check has answered (or found no answer): the form may stand. */
+    val checked: Boolean = false,
 ) {
     /** ResetNew.md:49 — Set the new password waits while either field is empty. */
     val waiting: Boolean get() = password.isEmpty() || confirm.isEmpty()
@@ -98,6 +104,14 @@ private fun differLine(password: String, confirm: String): Int? =
  * well-formed, matching pair goes out. A local line once raised re-checks as
  * the text changes; the breach line the server answered stands until the
  * next press.
+ *
+ * THE LINK IS READ BEFORE THE FORM STANDS (ResetNew.md:43, auth.md
+ * "Password reset" step 3): [start] asks `passwordResetLinkCheck` once, and
+ * a spent link opens ResetExpired without the form ever showing. A check
+ * that gets no answer — no network, or the token-confirmation budget
+ * refusing it — opens the form: the press itself still meets a spent link
+ * with RESET_TOKEN_INVALID (:41), and the form has its own no-answer and
+ * rate-limit lines.
  */
 @HiltViewModel
 class ResetNewViewModel @Inject constructor(
@@ -106,6 +120,18 @@ class ResetNewViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(ResetNewUiState())
     val state = _state.asStateFlow()
+
+    private var started = false
+
+    fun start(token: String) {
+        if (started) return
+        started = true
+        viewModelScope.launch {
+            val live = account.passwordResetLinkCheck(token)
+            val spent = live is Outcome.Success && !live.value
+            _state.update { it.copy(checked = true, expired = spent) }
+        }
+    }
 
     fun onPasswordChange(value: String) = _state.update {
         it.copy(
@@ -152,16 +178,23 @@ fun ResetNewRoute(
     token: String,
     /** The new password is taken: SignIn opens (ResetNew.md:23). */
     onSignIn: () -> Unit,
-    /** The link was spent or ran out while the form stood open (ResetNew.md:41). */
+    /** The link was spent or ran out: on its check (ResetNew.md:43) or while the form stood open (:41). */
     onExpired: () -> Unit,
     /** System Back: the platform leaves to wherever the link was opened from (ResetNew.md:47). */
     onLeave: () -> Unit,
     viewModel: ResetNewViewModel = hiltViewModel(),
 ) {
+    LaunchedEffect(token) { viewModel.start(token) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(state.done) { if (state.done) onSignIn() }
     LaunchedEffect(state.expired) { if (state.expired) onExpired() }
     BackHandler(onBack = onLeave)
+    // While the check is out the page stands bare, as every reset screen
+    // carries no header: nothing is drawn that the answer could take back.
+    if (!state.checked || state.expired) {
+        Scaffold(modifier = Modifier.dataNodeSurface().testTag(RESET_CHECKING_TAG)) {}
+        return
+    }
     ResetNewScreen(
         state = state,
         onPasswordChange = viewModel::onPasswordChange,

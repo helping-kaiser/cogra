@@ -181,6 +181,20 @@ class ScriptedAccountRepository : ThrowingAccountRepository() {
         return Outcome.Success(Unit)
     }
 
+    /** What the reset link's read-only check answers; live by default. */
+    var resetLinkCheck: Outcome<Boolean> = Outcome.Success(true)
+
+    override suspend fun passwordResetLinkCheck(token: String): Outcome<Boolean> = resetLinkCheck
+
+    /** How the reset's request step answers, and the addresses it was sent. */
+    var requestOutcome: Outcome<Unit> = Outcome.Success(Unit)
+    val requestedEmails = mutableListOf<String>()
+
+    override suspend fun requestPasswordReset(email: String): Outcome<Unit> {
+        requestedEmails += email
+        return requestOutcome
+    }
+
     /** How the reset's new-password step answers, and the tokens it was sent with. */
     var resetOutcome: Outcome<Unit> = Outcome.Success(Unit)
     val resetTokens = mutableListOf<String>()

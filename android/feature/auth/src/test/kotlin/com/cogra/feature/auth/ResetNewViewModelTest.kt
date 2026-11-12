@@ -19,6 +19,13 @@ import java.io.IOException
 private class ScriptedReset : ThrowingAccountRepository() {
     var outcome: Outcome<Unit> = Outcome.Success(Unit)
     val sent = mutableListOf<Pair<String, String>>()
+    var check: Outcome<Boolean> = Outcome.Success(true)
+    val checked = mutableListOf<String>()
+
+    override suspend fun passwordResetLinkCheck(token: String): Outcome<Boolean> {
+        checked += token
+        return check
+    }
 
     override suspend fun confirmPasswordReset(resetToken: String, newPassword: String): Outcome<Unit> {
         sent += resetToken to newPassword
@@ -188,5 +195,44 @@ class ResetNewViewModelTest {
         vm.onSubmit(token)
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.fault).isEqualTo(R.string.reset_new_rate_limited)
+    }
+
+    @Test
+    fun aLiveLinkOpensTheFormAfterOneCheck() = runTest(dispatcher) {
+        // ResetNew.md:1, :43 — the link is read once, before the form stands.
+        val vm = ResetNewViewModel(account)
+        assertThat(vm.state.value.checked).isFalse()
+        vm.start(token)
+        vm.start(token)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(account.checked).containsExactly(token)
+        assertThat(vm.state.value.checked).isTrue()
+        assertThat(vm.state.value.expired).isFalse()
+    }
+
+    @Test
+    fun aSpentLinkOnItsCheckOpensTheExpiredReadingAndNeverTheForm() = runTest(dispatcher) {
+        // ResetNew.md:43, ResetExpired.md:1.
+        account.check = Outcome.Success(false)
+        val vm = ResetNewViewModel(account)
+        vm.start(token)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.expired).isTrue()
+        assertThat(account.sent).isEmpty()
+    }
+
+    @Test
+    fun aCheckWithoutAnAnswerOpensTheForm() = runTest(dispatcher) {
+        // Not drawn (a design gap named by the lane): no answer, or the
+        // budget refusing the check, opens the form, whose press still
+        // meets a spent link with RESET_TOKEN_INVALID (:41).
+        for (answer in listOf(Outcome.Failed(IOException("offline")), refused(ErrorCode.RATE_LIMITED))) {
+            account.check = answer
+            val vm = ResetNewViewModel(account)
+            vm.start(token)
+            dispatcher.scheduler.advanceUntilIdle()
+            assertThat(vm.state.value.checked).isTrue()
+            assertThat(vm.state.value.expired).isFalse()
+        }
     }
 }
