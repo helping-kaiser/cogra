@@ -2326,6 +2326,22 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Set the new password</button>", tag: "button" },
     { n: 4, find: 'data-field="Repeat password"', tag: "div" },
   ],
+  // Round 46 (seam 316, entry 5): the mismatch in place, `JoinErrors`' way —
+  // the base form's numbers.
+  ResetNewErrors: [
+    { n: 1, find: 'data-field="New password"', tag: "div" },
+    { n: 2, find: 'aria-label="Show password"', tag: "button", all: true },
+    { n: 3, find: ">Set the new password</button>", tag: "button" },
+    { n: 4, find: 'data-field="Repeat password"', tag: "div" },
+  ],
+  ChangePasswordErrors: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'data-field="Current password"', tag: "div" },
+    { n: 3, find: 'data-field="New password"', tag: "div" },
+    { n: 4, find: 'aria-label="Show password"', tag: "button", all: true },
+    { n: 5, find: ">Change password</button>", tag: "button" },
+    { n: 6, find: 'data-field="Repeat password"', tag: "div" },
+  ],
   KeyCeremony: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: ">Create my recovery code</button>", tag: "button" },
