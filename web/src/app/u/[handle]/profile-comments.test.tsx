@@ -53,6 +53,13 @@ function person(id: string, handle: string) {
   };
 }
 
+/** The open `profile.menuSheet` — a card's, while the page's own stands closed beside it. */
+function openProfileMenuSheet(): HTMLElement {
+  const open = screen.getAllByTestId("profile.menuSheet").find((sheet) => (sheet as HTMLDialogElement).open);
+  if (open === undefined) throw new Error("no profile.menuSheet stands open");
+  return open;
+}
+
 function signedIn(account = "u1") {
   const store = createTokenStore();
   store.save({ accessToken: "access-1", refreshToken: "refresh-1", accountId: account });
@@ -370,7 +377,7 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     const own = renderWithProviders(<ProfileScreen handle={null} />, { store: signedIn("u-ada") });
     await openCommentsTab();
     fireEvent.click(screen.getByTestId(byNode("profile.comments.commentCard.menu", "c1")));
-    const mine = within(screen.getByTestId("profile-comment-c1-menu-sheet")).getAllByRole("button");
+    const mine = within(openProfileMenuSheet()).getAllByRole("button");
     expect(mine.map((row) => row.textContent)).toContain("Remove");
     own.unmount();
 
@@ -379,7 +386,7 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     renderWithProviders(<ProfileScreen handle="ada" />, { store: signedIn() });
     await openCommentsTab();
     fireEvent.click(screen.getByTestId(byNode("profile.comments.commentCard.menu", "c1")));
-    const theirs = within(screen.getByTestId("profile-comment-c1-menu-sheet")).getAllByRole("button");
+    const theirs = within(openProfileMenuSheet()).getAllByRole("button");
     expect(theirs.map((row) => row.textContent)).toContain("Opinions on this");
     expect(theirs.map((row) => row.textContent)).not.toContain("Remove");
   });

@@ -30,9 +30,9 @@ const ORIGINS: Record<string, BackTarget> = {
   // back is to it — the query and the scroll as they were (Explore.md:19;
   // ProfileOther.md:73, PostDetail's origin-noun table).
   search: { href: "/explore", label: "Back to the search" },
-  // Your topics, Explore's subpage (TagPage.md:35: `Back to Your topics` from
-  // Your topics) — its rows open the topic's page.
-  [FROM_YOUR_TOPICS]: { href: YOUR_TOPICS_HREF, label: "Back to Your topics" },
+  // Your tags, Explore's subpage (TagPage.md:39: `Back to Your tags` from
+  // Your tags) — its rows open the tag's page.
+  [FROM_YOUR_TOPICS]: { href: YOUR_TOPICS_HREF, label: "Back to Your tags" },
 };
 
 // A CHAINED ORIGIN CARRIES THE ONE ITS PAGE WAS OPENED WITH (readme §4 and

@@ -7,6 +7,8 @@ import { render } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { renderToString } from "react-dom/server";
 
+import { CommentEditor } from "@/app/posts/[id]/edit/comment-editor";
+import { CommentEditDoor } from "@/lib/compose/comment-edit-door";
 import { createGuardedClient } from "@/lib/session/browser-guard";
 import { HiddenProvider } from "@/lib/hidden/provider";
 import type { KeyCeremony } from "@/lib/identity/key-ceremony";
@@ -65,7 +67,10 @@ export function renderWithProviders(
           <RegistrationProvider ceremony={ceremony} flow={flow} writeSigner={writeSigner}>
             <StanceDataProvider data={stanceData}>
               <SavedProvider>
-                <HiddenProvider>{ui}</HiddenProvider>
+                <HiddenProvider>
+                  {/* The shell's door to a comment's edit off its thread (`shell.tsx`). */}
+                  <CommentEditDoor editor={CommentEditor}>{ui}</CommentEditDoor>
+                </HiddenProvider>
               </SavedProvider>
             </StanceDataProvider>
           </RegistrationProvider>

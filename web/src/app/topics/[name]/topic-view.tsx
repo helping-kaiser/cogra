@@ -133,7 +133,7 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
         {header}
         <p role="alert" data-testid="topic-not-found">
-          Not a legal topic name.
+          Not a legal tag name.
         </p>
       </main>
     );
