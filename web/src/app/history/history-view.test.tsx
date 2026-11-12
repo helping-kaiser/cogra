@@ -985,6 +985,52 @@ describe("History — hiding from a card in it (HistoryHidden.md)", () => {
   });
 });
 
+describe("History — the comment menu (HistoryCommentMenu.md, round 41)", () => {
+  /** The open sheet's rows, as `[node, words]`. */
+  function rows() {
+    return within(screen.getByTestId("history.menuSheet"))
+      .getAllByRole("button")
+      .map((row) => [row.getAttribute("data-testid"), row.textContent]);
+  }
+
+  it("someone_elses_comment_reads_its_rows_as_history_menuSheet_rows_report_at_the_tail", async () => {
+    // HistoryCommentMenu.md:3 (the sheet over History), :5 (rows and order).
+    serveHistory(() => page([COMMENT, POST]));
+    render();
+    await screen.findByTestId("history-list");
+    fireEvent.click(screen.getByTestId(byNode("history.commentCard.menu", "c1")));
+    expect(rows()).toEqual([
+      ["history.menuSheet.save", "Save"],
+      ["history.menuSheet.cite", "Cite in a new post"],
+      ["history.menuSheet.citedBy", "Cited by"],
+      ["history.menuSheet.opinions", "Opinions on this"],
+      ["history.menuSheet.license", "License terms"],
+      ["history.menuSheet.report", "Report"],
+    ]);
+  });
+
+  it("your_own_comment_reads_edit_then_remove_after_cite_and_no_report", async () => {
+    // HistoryCommentMenuOwn.md:5; :7 — Edit opens the comment's edit over History.
+    const own: Entry = { node: commentNode("c5", author("me", "me", "Me")), firstSeenAt: hoursAgo(0.5) };
+    serveHistory(() => page([own, POST]));
+    render();
+    await screen.findByTestId("history-list");
+    fireEvent.click(screen.getByTestId(byNode("history.commentCard.menu", "c5")));
+    expect(rows().map(([node]) => node)).toEqual([
+      "history.menuSheet.save",
+      "history.menuSheet.cite",
+      "history.menuSheet.edit",
+      "history.menuSheet.remove",
+      "history.menuSheet.citedBy",
+      "history.menuSheet.opinions",
+      "history.menuSheet.license",
+    ]);
+    fireEvent.click(screen.getByTestId("history.menuSheet.edit"));
+    expect(await screen.findByTestId("comment-edit")).toBeInTheDocument();
+    expect(screen.getByTestId("history-list")).toBeInTheDocument();
+  });
+});
+
 describe("History — the post menu (HistoryPostMenu.md, round 36 + 41)", () => {
   /** The open sheet's rows, as `[node, words]`. */
   function rows() {
