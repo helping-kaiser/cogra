@@ -36,6 +36,8 @@
     <string name="join_handle_taken">That handle is taken.</string>
     <string name="join_email_in_use">That email already has an account.</string>
     <string name="join_password_breached">That password has turned up in a data breach — pick another one.</string>
+    <string name="join_confirm">Repeat password</string>
+    <string name="join_passwords_differ">The two passwords don\'t match.</string>
 
     <!-- Shared by the door and the form. -->
     <string name="entry_sign_in">Already have an account? Sign in</string>

@@ -20,11 +20,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * WHAT WAS TYPED OUTLIVES A WAY OUT (Join.md:25-27): leaving the form by
+ * WHAT WAS TYPED OUTLIVES A WAY OUT (Join.md:29-31): leaving the form by
  * `Already have an account? Sign in` or the back arrow and coming back in
  * the same session finds the handle and the email as they were. The
  * password is never kept. Being held in memory only, a cold launch finds
- * nothing, as Join.md:27 asks.
+ * nothing, as Join.md:31 asks.
  */
 @Singleton
 class JoinDraft @Inject constructor() {
@@ -46,6 +46,9 @@ enum class JoinLine {
     PASSWORD_SHORT,
     PASSWORD_LONG,
     PASSWORD_BREACHED,
+
+    /** Repeat password's one line: `The two passwords don't match.` */
+    PASSWORDS_DIFFER,
 }
 
 /** The form's own fault, standing above the commit: the fields keep what was typed. */
@@ -56,18 +59,21 @@ data class JoinLines(
     val handle: JoinLine? = null,
     val email: JoinLine? = null,
     val password: JoinLine? = null,
+    val confirm: JoinLine? = null,
 ) {
-    val any: Boolean get() = handle != null || email != null || password != null
+    val any: Boolean get() = handle != null || email != null || password != null || confirm != null
 }
 
 data class JoinUiState(
     val handle: String = "",
     val email: String = "",
     val password: String = "",
+    /** Repeat password (seam 275-1: a new password is asked for twice). */
+    val confirm: String = "",
     val inFlight: Boolean = false,
     /** Lines a press's own check said: they re-check as the text changes. */
     val local: JoinLines = JoinLines(),
-    /** Lines the server answered: they stand until the next press (Join.md:75). */
+    /** Lines the server answered: they stand until the next press (Join.md:85). */
     val answered: JoinLines = JoinLines(),
     val fault: JoinFault? = null,
     /** Handles and emails the server has refused as taken: a later press re-says them (JoinErrors.md:3). */
@@ -78,12 +84,13 @@ data class JoinUiState(
     /** The account is made: the applicant days begin. */
     val created: Boolean = false,
 ) {
-    /** Join.md:89 — Create account waits while any field is empty. */
-    val waiting: Boolean get() = handle.isEmpty() || email.isEmpty() || password.isEmpty()
+    /** Join.md:99 — Create account waits while any of the four fields is empty. */
+    val waiting: Boolean get() = handle.isEmpty() || email.isEmpty() || password.isEmpty() || confirm.isEmpty()
 
     val handleLine: JoinLine? get() = answered.handle ?: local.handle
     val emailLine: JoinLine? get() = answered.email ?: local.email
     val passwordLine: JoinLine? get() = answered.password ?: local.password
+    val confirmLine: JoinLine? get() = local.confirm
 }
 
 /**
@@ -121,19 +128,42 @@ class JoinViewModel @Inject constructor(
 
     fun onPasswordChange(value: String) {
         _state.update {
-            it.copy(password = value, local = it.local.copy(password = it.local.password?.let { passwordLine(value) }))
+            it.copy(
+                password = value,
+                local = it.local.copy(
+                    password = it.local.password?.let { passwordLine(value) },
+                    confirm = it.local.confirm?.let { _ -> confirmLine(value, it.confirm) },
+                ),
+            )
         }
     }
 
-    /** Leaving by Sign in: the password goes, the handle and the email stay (Join.md:25). */
-    fun onLeave() = _state.update { it.copy(password = "") }
+    /**
+     * Repeat password's mismatch line re-checks as either password changes
+     * and goes once the two match (Join.md:73); before a press it never shows.
+     */
+    fun onConfirmChange(value: String) {
+        _state.update {
+            it.copy(confirm = value, local = it.local.copy(confirm = it.local.confirm?.let { _ -> confirmLine(it.password, value) }))
+        }
+    }
+
+    /** Leaving by Sign in: both passwords go, the handle and the email stay (Join.md:29). */
+    fun onLeave() = _state.update { it.copy(password = "", confirm = "", local = it.local.copy(confirm = null)) }
 
     fun onSubmit(inviteId: String) {
         val current = _state.value
         if (current.inFlight || current.waiting) return
         val handle = current.handle.trim()
         val email = sanitizedEmail(current.email)
-        val lines = JoinLines(handleLine(handle), emailLine(email), passwordLine(current.password))
+        // Each field is checked on its own (JoinErrors.md:5): the mismatch
+        // line stands beside Password's own line.
+        val lines = JoinLines(
+            handleLine(handle),
+            emailLine(email),
+            passwordLine(current.password),
+            confirmLine(current.password, current.confirm),
+        )
         // A refusal the server already gave for this very value is said again
         // rather than asked again, so a press can show it beside a local line.
         val known = JoinLines(
@@ -193,6 +223,9 @@ class JoinViewModel @Inject constructor(
 }
 
 private fun handleLine(handle: String): JoinLine? = if (handleValid(handle)) null else JoinLine.HANDLE_SHAPE
+
+private fun confirmLine(password: String, confirm: String): JoinLine? =
+    if (password == confirm) null else JoinLine.PASSWORDS_DIFFER
 
 private fun emailLine(email: String): JoinLine? = if (emailValid(email)) null else JoinLine.EMAIL_SHAPE
 
