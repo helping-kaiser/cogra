@@ -48,7 +48,7 @@ export function Screen() {
         />
       </CograBand>
       <FeedList>
-        <TaskCard tone="notice" title="Verify your email" body="We sent you a verification link — open it to prove this email is yours." node="verifyCard">
+        <TaskCard tone="notice" title="Verify your email" node="verifyCard">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <span
               style={{

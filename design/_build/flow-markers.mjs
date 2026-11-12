@@ -3029,7 +3029,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
     { n: 2, find: 'aria-label="Tagging"', tag: "button" },
     { n: 3, find: ">salt<", tag: "div" },
-    { n: 4, find: ">Signs as #salt<", tag: "button" },
+    { n: 4, find: 'data-node-key="salt"', tag: "button" },
     { n: 4, find: ">saltmaps<", tag: "button" },
     { n: 4, find: ">saltcrust<", tag: "button" },
     { n: 5, find: ">Done</button>", tag: "button" },

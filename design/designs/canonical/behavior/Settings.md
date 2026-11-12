@@ -40,7 +40,7 @@ WHEN tap Always unveil sensitive content GIVEN the switch is off -> the switch t
 
 WHEN tap Always unveil sensitive content GIVEN the switch is on -> the switch turns off AND sensitive content stays veiled until it is tapped
 
-ALWAYS settings.sensitive.unveil.status reads Off, the veil stays until you tap it. GIVEN the switch is off
+ALWAYS settings.sensitive.unveil carries no second line GIVEN the switch is off
 
 ALWAYS settings.sensitive.unveil.status reads On, sensitive content stands unveiled wherever you read. GIVEN the switch is on
 
@@ -174,9 +174,7 @@ WHEN tap Sign out GIVEN the don't-remember switch is on and this device holds th
 
 WHEN the sign-out has not answered 200ms after the press -> Sign out reads Signing out… in its own place AND NEVER a spinner appears
 
-ALWAYS the deletion group's footnote reads Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you. GIVEN User.deletionPath reads BY_LINK and no deletion is in its grace
-
-ALWAYS the deletion group's footnote reads Nothing is deleted here. The next screen says what goes and what stays. GIVEN User.deletionPath reads IMMEDIATE or LOCKED
+ALWAYS the deletion group carries no footnote
 
 ALWAYS the Delete account row's state reads User.deletionPath, the one value the server computes, and never the application's fields
 

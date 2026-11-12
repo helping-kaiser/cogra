@@ -39,9 +39,9 @@ export function Screen() {
   return (
     <>
       <WizardHeader title="New post" backLabel="Back" />
-      <PickPrompt caption="Pick one picture, several, or one video." escapeLabel="Write words instead" />
+      <PickPrompt escapeLabel="Write words instead" />
       <div style={{ display: "{{picturesShown}}", flexDirection: "column" }}>
-        <PickTray count={2} onShowAll={() => {}} caption="The first one is the cover.">
+        <PickTray count={2} onShowAll={() => {}}>
           <MediaThumb src="post-photo.jpg" cover onRemove={() => {}} />
           <MediaThumb src="gallery-market.jpg" onRemove={() => {}} />
         </PickTray>

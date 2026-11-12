@@ -2,7 +2,7 @@ Use `SettingsGroup` and `SettingsRow` for every setting in the product. The grou
 
 ```jsx
 <SettingsGroup label="Writing" footnote="Every signed action is paid for separately.">
-  <SettingsRow label="Confirm multi-action submits" status="Ask first when one submit signs more than one action." checked />
+  <SettingsRow label="Confirm multi-action submits" checked />
   <SettingsRow label="Default license" value="Public domain" onOpen={openLicenseSheet} />
 </SettingsGroup>
 

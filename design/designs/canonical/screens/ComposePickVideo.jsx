@@ -4,10 +4,8 @@
    grid stops taking picks and the escape to the photos app goes with it.
 
    AN ABSENT CONTROL EXPLAINS NOTHING ON ITS OWN (jakob 2026-09-03), so the
-   line the tray carries for pictures — "The first one is the cover." — is
-   replaced by the one this state needs: "A video is the whole post. Its cover
-   comes next." It says why nothing else can join AND what happens next, in
-   the space the controls left. Removing the clip (the tile's ×) gives the
+   tray carries the line this state needs: "A video is the whole post." It
+   says why nothing else can join, in the space the controls left. Removing the clip (the tile's ×) gives the
    step back. THE CAPTION IS THE SHAPE'S (jakob 2026-09-24, backlog item
    104): a vertical clip skips the cover step — the shape keys the step, and
    the device takes frame 1 silently (readme §13, the stored first frame) —
@@ -26,7 +24,7 @@ export function Screen() {
   return (
     <>
       <WizardHeader title="New post" backLabel="Back" />
-      <PickPrompt caption="Pick one picture, several, or one video." escapeLabel="Write words instead" />
+      <PickPrompt escapeLabel="Write words instead" />
       <PickTray count={1} caption="A video is the whole post. Its cover comes next.">
         <MediaThumb src="post-photo.jpg" alt="" width={114} height={64} video onRemove={() => {}} removeLabel="Remove this video" />
       </PickTray>

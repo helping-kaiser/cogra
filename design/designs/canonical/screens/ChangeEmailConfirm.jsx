@@ -97,21 +97,6 @@ export function Screen() {
         >
           Confirm the change
         </h1>
-        <p
-          style={{
-            margin: "8px 0 0",
-            fontSize: "var(--text-body-medium)",
-            fontWeight: "var(--text-body-medium--font-weight)",
-            lineHeight: "var(--text-body-medium--line-height)",
-            letterSpacing: "var(--text-body-medium--letter-spacing)",
-            color: "var(--text-secondary)",
-          }}
-          data-node="body"
-        >
-          Two messages, two different errands — a code to type here, and a link to open at the new
-          address. Your email moves when both have been answered, in either order.
-        </p>
-
         <div
           style={{
             marginTop: 24,

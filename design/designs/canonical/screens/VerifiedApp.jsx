@@ -53,21 +53,6 @@ export function Screen() {
       >
         Email verified
       </h1>
-      <p
-        style={{
-          margin: "8px 0 0",
-          maxWidth: 300,
-          fontSize: "var(--text-body-medium)",
-          fontWeight: "var(--text-body-medium--font-weight)",
-          lineHeight: "var(--text-body-medium--line-height)",
-          letterSpacing: "var(--text-body-medium--letter-spacing)",
-          color: "var(--text-secondary)",
-          textAlign: "center",
-        }}
-        data-node="body"
-      >
-        Your application moved a step. The rest of it is waiting for you on the feed.
-      </p>
       <div style={{ marginTop: 24 }}>
         <Button variant="text" node="onward">Go to the feed</Button>
       </div>

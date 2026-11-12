@@ -2,8 +2,8 @@
    the standard seal, reached from `KeptPicksReview`'s `Sign them`, with the
    kept picks as its what-you-sign list.
 
-   THE STANDARD SEAL, UNTOUCHED. `WizardHeader` with `What you sign` and
-   `Last step`, the header's "?" opening the Signed-actions text, the acts
+   THE STANDARD SEAL, UNTOUCHED. `WizardHeader` with `What you sign`, the
+   header's "?" opening the Signed-actions text, the acts
    card, and `SealFooter`'s pair — the anatomy `ProfileEditSeal` and
    `AvatarSeal` draw. Nothing on it is removable: dropping a pick is the
    review's, one stage back, and the seal only reads back what will be
@@ -75,7 +75,7 @@ export const VALS = `approvalShown: this.props.approval === "waiting" ? "block" 
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" leaveLabel="Leave — your picks are kept" stageLabel="Last step" help="How signing works" node="header" />
+      <WizardHeader title="What you sign" leaveLabel="Leave — your picks are kept" help="How signing works" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <ActsCard
           node="acts"

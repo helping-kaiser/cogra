@@ -739,14 +739,13 @@ recorded so the registry is whole.
 - **The stages' titles** — `Details`, `Crop`, `The video's face` (its
   stage label `Video only`), `The cover` (`CoverCrop`), `Edit post`,
   `Edit comment`.
-- **The words stage** — the field `What do you want to publish?`, and
-  under the pick door `The body is your words.` (`ComposeWords`,
-  `EditWords`).
+- **The words stage** — the field `What do you want to publish?`, no
+  line by the pick door (`ComposeWords`, `EditWords`).
 - **The draft's card** (`ComposeDraft`) — `Your draft is here`, its
   media read back as `2 pictures — kept on this device`, `Continue`
-  beside `Discard`, and under the card `Or start fresh —` over the roll.
-- **The pick** — `Pick one picture, several, or one video.`
-  (`ComposePick` and its family), the roll's door `Your photos app`, the
+  beside `Discard`, the roll under the card.
+- **The pick** — no prompt line: the roll is the instruction
+  (`ComposePick` and its family); the roll's door `Your photos app`, the
   tray's `Show all`; on the web `Choose from your files` and `…or drop
   them here.` (`ComposePickWeb`), the reply's `…or drop pictures or a
   video here.` (`ReplyPicturesWeb`). A clip that came with its face reads
@@ -754,18 +753,17 @@ recorded so the registry is whole.
   (`ComposePickVideoCover`).
 - **The picked sheet** (`ComposePicked`, `EditPicked`) — rows named
   `Cover — shown first` and `Picture 2`, their acts `Make it the cover`
-  · `Move up` · `Move down`, and the one rule under them, `The first one
-  is the cover.`
+  · `Move up` · `Move down`; the first row's name says the rule.
 - **The crop's shapes** (`ComposeCrop`) — `Tall 4:5` · `Square 1:1` ·
   `Wide 1.91:1`.
-- **The frame picker** — `A frame, or a picture of your own.` under the
-  strip (`ComposeCover`, `ComposeCoverPlaying`, `ReplyVideo`).
+- **The frame picker** — the strip and the own-picture tile, no line
+  under them (`ComposeCover`, `ComposeCoverPlaying`, `ReplyVideo`).
 - **The details stage** — the field `Title`; the picked row's caption
   `2 pictures — the body`; the describe counter `· 0 of 2 described`
   beside its door `Describe the pictures` (`Describe the video` on a
   clip); the clip's row label `Cover`; the Sensitive row's action `Mark`
-  beside `Not marked`; and while pictures upload, `Pictures upload while
-  you write — signing waits for them.` (`ComposeUploading`).
+  beside `Not marked`; while pictures upload, each thumb shows its own
+  upload and the seal states the wait (`ComposeUploading`).
 - **The describe sheet** — the field `What's in the picture` (`What's in
   the video` on a clip).
 - **The sensitive sheet** — the `Why?` field's corner, `Optional — shown
@@ -1235,9 +1233,7 @@ spelling — one `License terms` everywhere, never the British spelling:
   `Report this post?` / `Report @ada?` (**blessed**), with the comment's
   `Report this comment?` and the nameless `Report this account?` as
   their twins (*drafted 2026-10-09 — their wording jakob's at review*) —
-  over one body line, `It goes to the people who run CoGra for a look.`
-  (*drafted 2026-10-09; the commit mails the report for MVP and the line
-  names no mechanism*), the pair `Report` · `Cancel` and the snackbar
+  over no body line, the pair `Report` · `Cancel` and the snackbar
   `Reported.` (**blessed**). It never connects to Report-a-problem. A
   report the server refuses — the day's reports spent, or the thing gone —
   answers as no answer does, the sheet staying and the shared snackbar
@@ -1607,9 +1603,8 @@ Blessed with the audit-states round:
 - `Setting a new password signs out every device. You sign in again
   with the new one.` — the consequence, said where the act happens
   (auth.md: password reset revokes every session).
-- `Your application moved a step. The rest of it is waiting for you on
-  the feed.` · `Go to the feed` — the app's verification landing
-  (`VerifiedApp`); the way on names its destination.
+- `Go to the feed` — the app's verification landing (`VerifiedApp`),
+  under the heading alone; the way on names its destination.
 - `This link doesn't work anymore` — the dead verify link's heading
   (`VerifyExpired`), in `JoinInvalid`'s idiom.
 - `It may have expired or already been used. Send yourself a fresh one
@@ -1771,17 +1766,16 @@ round*; every one blessed (jakob 2026-10-02).
 ### The landing card and the entry screens' carried-over lines — 2026-10-06
 
 **The landing card** (`ApplicantLanding`): its title is `Approved — your
-registration is landing` (*blessed (jakob 2026-10-06)*), over `@mira
-approved your application. Nothing is needed from you while it lands.`
-(carried over — blessed by use, jakob 2026-10-06); the `keyAt` chip's
-other body is under *The key's lifecycle*.
+registration is landing` (*blessed (jakob 2026-10-06)*), the title alone
+with the key here; the `keyAt` chip's other body is under *The key's
+lifecycle*.
 
 Every other line here is **carried over — blessed by use (jakob
 2026-10-06)**, recorded so the registry is whole:
 
 - **Sign in** (`SignIn`, `SignInError`, `SignInExpired`, `SignInLimited`)
-  — heading `Sign in to CoGra`, lead `Welcome back — your feed is where
-  you left it.` (the expired state puts its own line there), and the
+  — heading `Sign in to CoGra`, no lead (the expired state puts its own
+  line there), and the
   link stack `Forgot password?` · `New here? Enter your invite` above
   the two already recorded.
 - **The invite door** (`InviteEntry`, `InviteEntryError`) — heading
@@ -1808,9 +1802,8 @@ Every other line here is **carried over — blessed by use (jakob
   view's handle), an applicant's `Browsing from @mira's view while your
   application lands.` (`ApplicantFeed`, `ApplicantWaiting`,
   `ApplicantLanding`, `ApplicantKeyElsewhere`).
-- **The applicant's task cards** (`ApplicantFeed`) — `Verify your email`
-  over `We sent you a verification link — open it to prove this email is
-  yours.`; `Create your key` over `Your application needs a key on this
+- **The applicant's task cards** (`ApplicantFeed`) — `Verify your email`,
+  its title alone over the address and `Resend the link`; `Create your key` over `Your application needs a key on this
   browser before @mira can approve it.` (the app's rendering above), with
   `Create my key`.
 - **The waiting card** (`ApplicantWaiting`) — under `All set — waiting on
@@ -1860,28 +1853,21 @@ place the product changes vocabulary. A switch is the exception to
 "status, not description", because its label alone cannot say what
 turning it on does.
 
-**Theme**: `Light` · `Dark` · `Auto`, and under them
-`Auto follows your device's own setting, and the choice stays on this
-device.` It is the one place a bare "device" is right: what Auto follows
-is the device's own light-or-dark setting, which is neither the browser's
-nor the app's.
+**Theme**: `Light` · `Dark` · `Auto`, no footnote: Auto following the
+system theme is a platform convention (jakob 2026-11-12).
 
 **Giving an opinion** keeps the shipped readings and gives them the
 hints the inverted gesture needs — `The pad` / `A tap opens it; drift to
 where it feels right.`, `Sliders` / `One slider per side of the opinion.`,
-`Typed values` / `Type both numbers exactly.` — over a footnote read
+`Typed values` with no hint — over a footnote read
 once for the group: `A tap opens this, everywhere. Press and hold
 instead, and a small positive one is signed on the spot.`
 
 **The multi-action switch**, merged from the two apps:
-`Confirm multi-action submits` with
-`Ask first when one submit signs more than one action.` Web's clause
-about paying was the better fact and the worse place for it — a row is
-scanned — so it moves to the group's footnote:
+`Confirm multi-action submits`, no second line: the label says what it
+does (jakob 2026-11-12). The paying fact stands in the group's footnote:
 `Every signed action is paid for separately. A post's license is settled
-when it is first signed and never changes.` Android's *Ask before
-signing a submit that stages more than one action* loses on "stages",
-which is the repo's word for it, not the reader's.
+when it is first signed and never changes.`
 
 **The default license** row reads `Default license`, and its value is
 the current default in the words the license block already uses —
@@ -1897,9 +1883,9 @@ sentence; copy-voice follows the board, blessed (jakob 2026-10-05).)*
 
 **Sensitive content**: one switch, `Always unveil sensitive content`
 (jakob's own wording, 2026-10-09 — never a sheet, never a pair of
-rows), off by default, with the switch-exception second line
-`Off, the veil stays until you tap it.` — and switched on, `On,
-sensitive content stands unveiled wherever you read.` (*new 2026-10-12,
+rows), off by default, no second line while off (jakob 2026-11-12: it restates
+the switch) — and switched on, `On, sensitive content stands unveiled
+wherever you read.` (*new 2026-10-12,
 ruled (jakob 2026-10-12)*) — and the group footnote
 `This choice follows your account to every device.` — the one settings
 group whose value travels (the People group's hiding travels too, but
@@ -1987,8 +1973,8 @@ and `Sign out everywhere else` answers `Signed out everywhere else.`
 (*new 2026-10-05, blessed (jakob 2026-10-05)*).
 
 **Credentials**: `Password`, `Handle`, `Email`, each showing where it
-stands, with `Changing your password signs out every other device.`
-under them — the fact `ResetNew` already says, moved in front of the act.
+stands, no footnote: the password form says the sign-out where the act is
+(jakob 2026-11-12).
 
 **About** — the support stack (jakob, 2026-10-01; every line here
 blessed the same day). Three
@@ -1998,13 +1984,13 @@ and before `Privacy` and `Terms`, each one string for app and web:
 - `What's new`, its value the version running here (`0.1.2`). It opens
   the release chronicle, titled by the row: each release's dateline
   reads `Version 0.1.2 · installed · 30.09.2026` for the running one and
-  `Version 0.1.1 · 28.09.2026` for the rest, and the page's footnote
-  reads `Newest first.` Each release's card ends in `See it on GitHub`,
+  `Version 0.1.1 · 28.09.2026` for the rest, with no footnote — the
+  datelines show the order (jakob 2026-11-12). Each release's card ends in `See it on GitHub`,
   named `See version 0.1.2 on GitHub` for a listener — the patch notes'
   only door to the deeper level, that release's public page (jakob
   2026-10-02, blessed); the newest release's card in the behind state
   carries its own. A release's notes are written when it ships, never
-  here. *`installed` and the footnote blessed (jakob 2026-10-02),
+  here. *`installed` blessed (jakob 2026-10-02),
   2026-10-02.*
 - **A running version behind the newest** (jakob 2026-10-01). Atop the
   chronicle, one quiet line: `A newer version exists.` ending in `Update
@@ -2116,10 +2102,7 @@ revokes the session doing it and a change does not, and the two lines
 exist to keep that difference visible. Fields `Current password`,
 `New password` with `At least 12 characters.` and `Repeat password`
 (*Field errors*), the commitment `Change
-password`, and last, the reason the first field is there at all:
-`Your current password is asked for even though you are signed in: a
-live session is not proof enough to change the credential behind it.`
-A wrong current password reads `That password isn't right.` under its
+password`. A wrong current password reads `That password isn't right.` under its
 field — on `ChangeEmail` and `ApplicantEmail` too, which ask for it the
 same way, drawn once on `ChangeEmail`'s `fault` chip — and a
 change that lands answers `Password changed — other devices are signed
@@ -2156,10 +2139,7 @@ that is not true. Both apps say *Check both inboxes — either message's
 code confirms the change*, which reads as one message being enough;
 `auth.md` and `api-spec.md` say the change applies only once both sides
 have landed, and that the two sides are not the same errand. The board
-names the asymmetry first: `Two messages, two different errands — a
-code to type here, and a link to open at the new address. Your email
-moves when both have been answered, in either order.` Then it draws the
-pair, captioned `Both have to land`, each side its address and its
+draws the pair, captioned `Both have to land`, each side its address and its
 state — `Code` / `sol@solferreira.art — still waiting` and `Link` /
 `sol@ferreira.studio — still waiting`. `Still waiting` is the resting
 state said the way `Still settling` says its own: what has not happened
@@ -2330,7 +2310,7 @@ rulings B1-B3, 2026-10-01). Every line here is *new 2026-10-01, blessed (jakob 2
 - The commit, `Sign them` (the ruling's own words).
 - The last pick dropped: the snackbar `Nothing left to sign.` (a draft,
   per the ruling).
-- The seal keeps the standard seal's words — `What you sign`, `Last step`,
+- The seal keeps the standard seal's words — `What you sign`,
   `3 things, signed together` — and
   adds its own: each row's label `Opinion`, the X's name `Leave — your
   picks are kept`, and the commit `Sign the picks` (`Signing the
@@ -2451,8 +2431,7 @@ app's renderings are above):
   safe.`, `Copy`, the field `Type or paste the code to confirm`, and `I've
   written it down`.
 - **The restore** (`Restore`, `RestoreError`, `RestoreLength`) — heading
-  `Restore your key`, `Enter your recovery code to bring your signing key
-  onto this browser.` (`…into this app.`), and `This is the only way to
+  `Restore your key` over the field, and `This is the only way to
   restore your key. If the code is gone too, the key can't be brought
   back — your sign-in still works.`; every recovery-code field shows the
   code's shape as its placeholder, `XXXXX-XXXXX-XXXXX-XXXXX-XXXXXX`.
@@ -2465,8 +2444,8 @@ app's renderings are above):
   recovery code keeps working.` (`SettingsBackupKeyAbsent`).
 - **Your key's paragraph** goes on after its first sentence: `Store a copy
   somewhere safe and you keep it whatever happens to CoGra. Anyone who
-  has a copy can act as you.` (`YourKey`, `YourKeyAbsent`); and with no
-  key here, `There is no key on this browser to show.` (`YourKeyAbsent`).
+  has a copy can act as you.` (`YourKey`, `YourKeyAbsent`); with no key
+  here the notice's title says so alone (`YourKeyAbsent`).
 
 ## The profile save
 
@@ -2506,10 +2485,8 @@ words, recorded so the registry is whole:
   yet.` — and a deleted account, which will give none again, `This
   account gave no opinions.` (*blessed (jakob 2026-11-10)*).
 - **The edit** (`ProfileEdit`) — titled `Edit profile`, its fields
-  `Display name` · `Bio` · `Website`, and `Your handle changes in
-  Settings.`
-- **The profile's seal** (`ProfileEditSeal`) — `Your profile` over
-  `Picture, name, bio, and website — one signed change.`; the acts row
+  `Display name` · `Bio` · `Website`.
+- **The profile's seal** (`ProfileEditSeal`) — `Your profile`; the acts row
   `Profile` reading `A new picture, bio and website`, its count spoken
   `1 profile change`; under the card `Every change to your profile is
   signed in your name and stays in your public record.`; its "?" is named
@@ -3276,18 +3253,11 @@ flow's words carry the product's erasure ethic, so the register is held
 tighter here than anywhere: honest, quiet, no drama, and nothing that
 argues with a decision the reader has made.
 
-**The settings row is two words and a footnote.** `Delete account` on a
-navigating row, and under the group: `Nothing is deleted here. The next
-screen says what goes and what stays, and the deletion is confirmed by a
-link we email you.` The row is quiet by ruling; the footnote is what lets
-it be, because the fact a reader needs before tapping is that the tap
-deletes nothing. An applicant's deletion is confirmed in the app and
-nothing is mailed, so their footnote stops at `Nothing is deleted here.
-The next screen says what goes and what stays.` (`Settings`' reader chip;
-**blessed**, jakob 2026-10-05). Which footnote stands, and whether the
-row is open, is read from `User.deletionPath` and never from the
-application: `BY_LINK` takes the mailed-link footnote, `IMMEDIATE` and
-`LOCKED` the applicant's. An applicant whose address is funded but
+**The settings row is two words.** `Delete account` on a navigating
+row, no footnote: the chevron promises a surface, and `DeleteAccount`
+says what goes, what stays and how it is confirmed (jakob 2026-11-12).
+Whether the row is open is read from `User.deletionPath` and never from
+the application. An applicant whose address is funded but
 whose Registration has not landed (`LOCKED`) meets the row in the
 applicant locked look, and its tap answers `You can delete your account
 once your registration lands.` — the moment deletion opens, which can
@@ -3343,9 +3313,7 @@ the product trying to talk them out of it.
 
 **The mail state is the errand and the address.** `Check your mail` ·
 `We sent a link to sol@solferreira.art. Opening it confirms the deletion
-and starts the seven days.` · `Until you open it nothing is scheduled and
-nothing has changed. Closing this screen changes nothing either — the
-link is the whole of it.` · `Resend the link`. No expiry is claimed: the
+and starts the seven days.` · `Resend the link`. No expiry is claimed: the
 reset link states its fifteen minutes because `auth.md` gives it fifteen
 minutes, and `erasure.md` sets no window on this one. A resend that goes
 out answers in the email change's resend register, naming the inbox:
@@ -3651,10 +3619,10 @@ Three places stand in for something not here yet: the screen the
 band's chats icon opens (`ChatsComingSoon`, backlog item 68), the door
 the bar's wallet slot opens (`WalletComingSoon`, the v1.0.0 scope cut),
 and the hero card on Explore (backlog item 16). **All name the promise
-the same way** — the thing, an em dash, `coming soon`, then one
-sentence of what will be there:
+the same way** — the thing, an em dash, `coming soon`, then, where it
+says more than the headline, one sentence of what will be there:
 
-- `Chats — coming soon. Your conversations will be here.`
+- `Chats — coming soon`, alone: chats are conversations (jakob 2026-11-12).
 - `Wallet — coming soon. Your earnings will be here.` *(Ruled by jakob
   2026-09-25.)*
 - `The Sky — coming soon` · `Your sky — every account a star, sized by

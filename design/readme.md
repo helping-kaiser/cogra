@@ -152,7 +152,7 @@ service did something on the reader's behalf.
 
 - `Your key isn't on this browser`
 - `Current opinion 😊 +0.55 / +0.20`
-- `We sent you a verification link — open it to prove this email is yours.`
+- `We sent a link to sol@solferreira.art.`
 
 **Sentence case everywhere.** Titles, buttons, labels, dialog headings.
 `Sign in or join`, `Keep browsing`, `New post`, `Edit profile`,
@@ -1620,9 +1620,9 @@ own photos app — picks made there land in the tray. **The crop** is
 Instagram's model: one shape for the whole post — Tall 4:5, Square
 1:1, or Wide 1.91:1 — with drag-to-move and pinch-to-zoom framing
 per picture; 4:5 as the tallest shape is what guarantees the feed
-card's height cap (below). Wizard screens carry no step numbers
-(paths differ in length; the title names the stage, only the seal
-says "Last step").
+card's height cap (below). Wizard screens carry no step numbers and
+no stage label (paths differ in length; the title names the stage,
+and `What you sign` names the end — jakob 2026-11-12).
 
 **The seal is a place, not a popup.** "What you sign" lists every
 act with its cost, aggregated per kind — one row per kind, its items

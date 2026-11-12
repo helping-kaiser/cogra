@@ -25,11 +25,11 @@
 
    REGISTERED under the feed's own prefix (round 7), named as
    `ApplicantRejected` names the same shell: the card is `application`; the
-   key-absent variant's door is `restore`, one element the `keyAt` chip shows
-   or hides. */
+   key-absent variant's door is `restore`, and its `body`, elements the
+   `keyAt` chip shows or hides: the card with the key here is its title alone. */
 export const NODE = "feed";
 export const PROPS = { keyAt: { editor: "enum", options: ["here", "elsewhere"], default: "here" } };
-export const VALS = `landingBody: this.props.keyAt === "elsewhere" ? "Your key was made on another device — open CoGra there, or restore the key to land here." : "@mira approved your application. Nothing is needed from you while it lands.", restoreDoor: this.props.keyAt === "elsewhere" ? "inline-flex" : "none"`;
+export const VALS = `landingBody: this.props.keyAt === "elsewhere" ? "Your key was made on another device — open CoGra there, or restore the key to land here." : "", bodyShown: this.props.keyAt === "elsewhere" ? "block" : "none", restoreDoor: this.props.keyAt === "elsewhere" ? "inline-flex" : "none"`;
 
 export function Screen() {
   return (
@@ -44,7 +44,7 @@ export function Screen() {
         />
       </CograBand>
       <FeedList>
-        <TaskCard title="Approved — your registration is landing" body="{{landingBody}}" node="application">
+        <TaskCard title="Approved — your registration is landing" body="{{landingBody}}" bodyDisplay="{{bodyShown}}" node="application">
           <Button variant="outline" selfStart style={{ display: "{{restoreDoor}}" }} node="restore">
             Restore the key
           </Button>

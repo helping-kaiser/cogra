@@ -1,6 +1,6 @@
 # KeptPicksSeal · `spec:design:behavior-kept-picks-seal`
 
-ALWAYS the kept picks' seal is the standard seal: What you sign and Last step in the header, the header's ?, the acts card, and Sign the picks over Back
+ALWAYS the kept picks' seal is the standard seal: What you sign in the header, the header's ?, the acts card, and Sign the picks over Back
 
 ALWAYS the acts card reads one row per pick still in the review, each with what it is on and its pair, and a count of 1
 
