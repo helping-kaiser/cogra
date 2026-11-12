@@ -66,6 +66,15 @@ or a helper line explains new, novel, un-learned behavior — never what
 is common, obvious or expected. A reader who already expects it is told
 nothing, and the screen is wordier for it.
 
+**The app does not explain itself** (jakob 2026-11-11, the rule behind
+the removable-text pass): "an app that explains itself all the time is
+just badly designed. we just need to inform users about NOVEL stuff and
+if we have some "maybe usefull infos" we can always put them into a
+"?"" — and, ruling the pass, "shortening are always good". A novel
+mechanic keeps its line where the page has room: "the path thingy is
+generally novel stuff for 99% of the users so the explainer doesn't
+hurt" (`RankRecords`' caption).
+
 This is greppable and should be enforced as a check over Android's
 `strings.xml` and the web copy, rather than left to review — the check
 does not exist yet.

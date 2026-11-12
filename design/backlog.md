@@ -5769,3 +5769,51 @@ named exception [lean — a guest who closes has nothing to come back to];
 next open.
 
 Ruled by jakob 2026-11-11 (on the round 41 review): (a) — on the signed-in plain forms the back arrow is named `Close` from the press and only leaves, the submit going on; the entry forms keep their exits held while they submit, the named exception. Not built yet: where a failure shows after Close is still at him.
+
+### 192 · The removable-text pass: the moves to a "?" that are not ruled · *design* · **filed 2026-11-12**
+
+Round 42 built the digest's REMOVE and SHORTEN rows and the A families jakob
+ruled. Digest rows marked MOVE TO "?" outside A2, A5 and A8 were never put to
+him and stand as drawn: Feed score's `Every path here starts with an opinion you
+gave.` (`FeedEntry`, `FeedEntryKinds`; no "?" there); `YourKey`'s `Nothing here
+is sent anywhere — the key is read from this browser and shown.`; History's and
+Saved's `Search reads names and titles, never bodies — fewer words reach
+further.` (`HistoryNone`, `SavedNone` — Explore's twin is cut, its "?" holds
+it); `ChangeHandle`'s `@sol is how people mention and find you. …`;
+`ChangeEmail`'s `Your email signs you in, and it is the only way back if you
+lose your password — so a change is proved from both ends.`; the edits'
+`A post's body is words or media, never both.` and `A video is the whole post.`
+(`EditWords`, `EditComposeVideo`); the tag picker's `Letters, digits, dot, dash
+and underscore. Capitals become lowercase.`; the clip's `It plays the moment it
+is on screen, so it starts on its own first frame.` Each is jakob's: move
+(where a "?" exists, or a new one), cut, or keep.
+
+### 193 · Two cuts of one caption, and lines the pass left asymmetric · *design* · **filed 2026-11-12**
+
+Round 42 built each canvas's row as written, which leaves: (1) the ask link's
+caption cut two ways — `Send it to anyone who is already in. It does not
+expire.` on `ProfileApplicant`, `It does not expire, and it works however many
+people you send it to.` on `ApplicantRejected` and `ApplicantFellThrough`;
+(2) `Always unveil sensitive content` with no line while off but `On, sensitive
+content stands unveiled wherever you read.` while on; (3) `Wallet — coming
+soon` keeps `Your earnings will be here.` while Chats carries no line;
+(4) the post-MVP boards (`PushSettings`, `PushDenied`, the chat and wallet
+seals) keep the lines the canonical twins lost (`Hiding someone clears…`,
+`Last step`). Each is jakob's to align or keep.
+
+### 194 · Lines round 42 stopped: no "?" holds them, and the sign-out drift · *design* · **filed 2026-11-12**
+
+(1) A5 ruled cutting a line that repeats its sheet's "?" — checked before each
+cut. The vouch-back pad's `Later, tap the small face …` and `Prefer sliders or
+exact numbers? Swap the input in settings.` are in no "?" (`Your vouch back`
+says neither), and the edit acts sheets (`EditActs`, `CommentEditActs`) have no
+"?" at all, so `They land together, or none does.` stays there. Ways: (a)
+the lines move into the pad's "?" whole / the sheets keep the subline [lean];
+(b) they go anyway. (2) C7: the drawn don't-remember line `Your key, your
+draft, any kept picks and what you've seen are cleared from this browser when
+you sign out.` is the later text (commit ee45b0a0b, 2026-10-13, after PR-69
+made the sign-out clear the seen record; `Settings.md` says so); copy-voice
+still records the blessed `Your key, your draft and any kept picks are
+cleared…`. The drawing is not the drifted side, so it was not changed. Ways:
+(a) copy-voice takes the drawn line, at jakob's review [lean]; (b) the drawing
+returns to the blessed words and stops naming the seen record.
