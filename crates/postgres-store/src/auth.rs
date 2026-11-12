@@ -1671,9 +1671,8 @@ pub async fn admitting_vouch_records(
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VouchedIn {
     pub account_id: Uuid,
-    /// The vouch record's landing-order key `(epoch, act time, position)`.
+    /// The vouch record's key of record `(epoch, position)`.
     pub epoch: i64,
-    pub act_time: i64,
     pub position: i64,
     /// The vouch record's epoch's attested instant — `Record.landedAt`.
     /// None only if the mirror lacks the instant of an epoch it ingested.
@@ -1684,27 +1683,26 @@ pub struct VouchedIn {
 /// the inverse of [`admitting_voucher_of`], chosen by the same rule: of an
 /// account's approval vouches the first to land, of an account that
 /// landed (api-spec.md `User.vouchedIn`). `cursor` is a vouch record's
-/// landing-order key; walking forward reads toward older vouches, walking
+/// key of record; walking forward reads toward older vouches, walking
 /// backward toward newer ones, returned in the same newest-first order.
 pub async fn vouched_in_by(
     pool: &PgPool,
     voucher: Uuid,
-    cursor: Option<(i64, i64, i64)>,
+    cursor: Option<(i64, i64)>,
     backward: bool,
     limit: i64,
 ) -> Result<Vec<VouchedIn>, sqlx::Error> {
-    let (epoch, act_time, position) = match cursor {
-        Some((e, t, p)) => (Some(e), Some(t), Some(p)),
-        None => (None, None, None),
+    let (epoch, position) = match cursor {
+        Some((e, p)) => (Some(e), Some(p)),
+        None => (None, None),
     };
     let mut rows = sqlx::query_as!(
         VouchedIn,
         r#"SELECT first.account_id AS "account_id!", first.epoch AS "epoch!",
-                  first.act_time AS "act_time!", first.position AS "position!",
-                  e.attested_at AS "vouched_at?"
+                  first.position AS "position!", e.attested_at AS "vouched_at?"
            FROM (
                SELECT DISTINCT ON (ap.account_id)
-                      ap.account_id, v.voucher_id, m.epoch, m.act_time, m.position
+                      ap.account_id, v.voucher_id, m.epoch, m.position
                FROM auth_application_vouches v
                JOIN auth_applications ap ON ap.id = v.application_id
                JOIN mirror_records m ON m.record_id = v.act_id
@@ -1716,22 +1714,20 @@ pub async fn vouched_in_by(
                  AND EXISTS (SELECT 1 FROM auth_applications landed
                              WHERE landed.account_id = ap.account_id
                                AND landed.landed_at IS NOT NULL)
-               ORDER BY ap.account_id, m.act_time, m.position, m.record_id
+               ORDER BY ap.account_id, m.epoch, m.position, m.record_id
            ) first
            LEFT JOIN mirror_epochs e ON e.epoch = first.epoch
            WHERE first.voucher_id = $1
              AND ($2::bigint IS NULL
-                  OR ($5 AND (first.epoch, first.act_time, first.position) > ($2, $3::bigint, $4::bigint))
-                  OR (NOT $5 AND (first.epoch, first.act_time, first.position) < ($2, $3::bigint, $4::bigint)))
+                  OR ($4 AND (first.epoch, first.position) > ($2, $3::bigint))
+                  OR (NOT $4 AND (first.epoch, first.position) < ($2, $3::bigint)))
            ORDER BY
-               CASE WHEN $5 THEN first.epoch END ASC,
-               CASE WHEN $5 THEN first.act_time END ASC,
-               CASE WHEN $5 THEN first.position END ASC,
-               first.epoch DESC, first.act_time DESC, first.position DESC
-           LIMIT $6"#,
+               CASE WHEN $4 THEN first.epoch END ASC,
+               CASE WHEN $4 THEN first.position END ASC,
+               first.epoch DESC, first.position DESC
+           LIMIT $5"#,
         voucher,
         epoch,
-        act_time,
         position,
         backward,
         limit,

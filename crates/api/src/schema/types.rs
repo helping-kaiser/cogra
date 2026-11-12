@@ -1750,7 +1750,7 @@ impl User {
     /// Opinion (auth.md "Approval and landing"). A vouch on an account
     /// that has not landed, and a later vouch-Opinion on one that has, is
     /// not one. Newest vouch first, keyset on the vouch record's
-    /// landing-order key; `vouchedAt` is that record's `landedAt`. The
+    /// key of record; `vouchedAt` is that record's `landedAt`. The
     /// admission stands whatever followed it: a stance walked back since,
     /// or the account deleted since, which reads as every deleted account
     /// reads. An invalid cursor is BAD_INPUT. Field-level: viewer-only.
@@ -5505,7 +5505,6 @@ async fn hydrate_vouched_in(
         connection.edges.push(Edge::with_additional_fields(
             encode_landing_cursor(CursorKey {
                 epoch: row.epoch,
-                act_time: row.act_time,
                 position: row.position,
                 id: None,
             }),
