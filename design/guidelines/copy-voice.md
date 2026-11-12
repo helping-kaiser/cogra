@@ -486,8 +486,12 @@ noun):
 - **Your vouch back** (the vouch-back pad): Vouching back signs your
   opinion of the person who vouched you in, and your feed grows from
   it. / The pad is how you shape what reaches you — for or against, and
-  how much. Nothing is signed until Set. *(The title is blessed (jakob
-  2026-10-02); the first paragraph is blessed (jakob 2026-10-05).)*
+  how much. Nothing is signed until Set. / Later, tap the small face
+  under a post to open this — press and hold it instead and a gentle 🙂
+  *(+0.10 / +0.10)* is signed on the spot. / Prefer sliders or exact
+  numbers? Swap the input in settings. *(The title is blessed (jakob
+  2026-10-02); the first paragraph is blessed (jakob 2026-10-05); the
+  pad's two coaching lines moved in whole, jakob 2026-11-12.)*
 - **How vouching works** (the approval pad and the ask link's pad, in
   place): A link lets someone make an account. Your vouch — the opinion
   you sign when you approve them — is what brings them in. / Nothing is
@@ -2734,13 +2738,13 @@ behind its "?", and
 `Press and hold instead, and a small positive one is signed on the spot.` the footnote — the one place the
 shortcut and the price are said together.
 
-**The first-ever pad teaches in two coaching lines, and nothing else
-teaches it** (the check round's 6, jakob 2026-10-06). On the account's
-first-ever pad open, wherever that pad opens: `Later, tap the small face
-under a post to open this — press and hold it instead and a gentle 🙂
-*(+0.10 / +0.10)* is signed on the spot.`, then `Nothing is signed until
-Set. Prefer sliders or exact numbers? Swap the input in settings.`
-(`VouchBackPad`). They close with the pad and never show again.
+**The first-ever pad's coaching stands behind its "?"** (jakob
+2026-11-12, moving the check round's two lines): on the account's
+first-ever pad open the pad itself says only `Nothing is signed until
+Set.`; `Later, tap the small face under a post to open this — press and
+hold it instead and a gentle 🙂 *(+0.10 / +0.10)* is signed on the
+spot.` and `Prefer sliders or exact numbers? Swap the input in
+settings.` stand in `Your vouch back`, the pad's "?" (`VouchBackPad`).
 
 **The pad's four help lines.** `Drag the knob. Left
 to right is against to for; bottom to top is how much more of it you

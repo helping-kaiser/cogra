@@ -5665,6 +5665,15 @@ const HOW_VOUCHING_WORKS_HELP = [
 const YOUR_VOUCH_BACK_HELP = [
   "Vouching back signs your opinion of the person who vouched you in, and your feed grows from it.",
   "The pad is how you shape what reaches you — for or against, and how much. Nothing is signed until Set.",
+  /* The pad's own coaching lines, moved in whole (jakob 2026-11-12, 11). */
+  {
+    text: "Later, tap the small face under a post to open this — press and hold it instead and a gentle ",
+    face: "🙂",
+    exact: " (+0.10 / +0.10)",
+    tail: " is signed on the spot.",
+    spoken: "Later, tap the small face under a post to open this — press and hold it instead and a gentle Nice, For or against +0.10, How much reaches you +0.10, is signed on the spot.",
+  },
+  "Prefer sliders or exact numbers? Swap the input in settings.",
 ];
 
 /* THE PAGE ITSELF.
