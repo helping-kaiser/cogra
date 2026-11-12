@@ -1546,3 +1546,75 @@ async fn a_tag_or_stance_on_pending_content_declares_its_mint(pool: PgPool) {
         "{stance}"
     );
 }
+
+/// A tag on content that never lands goes with it. The tag, signed and
+/// approved, is orderable but waits on the content's minting act, so an
+/// epoch close passes it over; the content's write is never approved, and
+/// one sweep collects both — the tag's write reads `EXPIRED`, the state a
+/// later submit or approve answers as `STAGED_WRITE_EXPIRED` — and no
+/// later close lands it.
+///
+/// A tag on content that never lands expires with it and never lands on its own.
+/// ´claim:pending:a-tag-expires-with-the-content-it-names´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_tag_on_content_that_never_lands_expires_with_it(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, author_key) = rig.seed_member("author", "author@example.com").await;
+    let author = rig.log_in("author@example.com").await;
+    let (_, reader_key) = rig.seed_member("reader", "reader@example.com").await;
+    let reader = rig.log_in("reader@example.com").await;
+    let (post, _, held) = rig
+        .pending_post_held(&author, &author_key, "never settles")
+        .await;
+
+    let tag = rig
+        .gql(
+            Some(&reader),
+            r#"mutation($input: PrepareTagInput!) {
+                 prepareTag(input: $input) { writes { id canonicalProposal } userErrors { message } }
+               }"#,
+            json!({ "input": { "target": post, "name": "rust", "pDirected": 0.1, "pInterest": 1.0 }}),
+        )
+        .await;
+    let signed = rig
+        .pre_sign(&reader, &reader_key, &tag["prepareTag"]["writes"])
+        .await;
+    rig.approve_and_close(&reader, &reader_key, &signed).await;
+    assert_ne!(
+        rig.staged_state(&reader, &signed[0].id).await,
+        "LANDED",
+        "a tag never lands ahead of the content it names"
+    );
+
+    rig.expire_everything().await;
+    assert_eq!(rig.staged_state(&author, &held[0].id).await, "EXPIRED");
+    assert_eq!(rig.staged_state(&reader, &signed[0].id).await, "EXPIRED");
+    rig.close_and_ingest().await;
+    assert_eq!(
+        rig.staged_state(&reader, &signed[0].id).await,
+        "EXPIRED",
+        "an expired tag never lands later"
+    );
+
+    let host_key = rig.standin.host_public_key().await.expect("host key");
+    let witness = reader_key
+        .approve(&signed[0].pre, &signed[0].act, &host_key)
+        .expect("approves");
+    let late = rig
+        .gql(
+            Some(&reader),
+            "mutation($input: ApproveActsInput!) {
+               approveActs(input: $input) { stagedWrites { state } userErrors { code field } }
+             }",
+            json!({ "input": { "approvals": [{
+                "stagedWriteId": signed[0].id,
+                "signature": B64.encode(witness.approval_signature),
+            }]}}),
+        )
+        .await;
+    assert_eq!(
+        late["approveActs"]["userErrors"],
+        json!([{ "code": "STAGED_WRITE_EXPIRED", "field": ["approvals", "0"] }]),
+        "{late}"
+    );
+}

@@ -101,8 +101,10 @@ export interface StanceControlProps {
    */
   pendingReview?: boolean;
   /**
-   * A signed act in flight (`"busy"`, past 200ms: nothing cancels it, the
-   * pad's Cancel reads `Close`, and closing passes the wait to the row) or
+   * A signed act in flight — `"pressed"`, the first 200ms after the commit
+   * (the pad's Cancel already reads `Close`; Set keeps its label and refuses
+   * a second press), or `"busy"`, past 200ms (`Setting…` beside `Close`):
+   * nothing cancels it, and closing passes the wait to the row — or
    * one that did not go through (`"failed"`). Pad closed, it is the hold's: the anchor is inert
    * while busy, and the target's row carries `Signing…` or `SigningPending`'s
    * row line with `Retry` under the face, which has not moved. Pad open, it
@@ -116,7 +118,7 @@ export interface StanceControlProps {
    * didn't go through.` with `Retry`, the hold's vehicle. Row only.
    * Off by default.
    */
-  signing?: "busy" | "failed" | "writeRule" | "comfortFailed";
+  signing?: "pressed" | "busy" | "failed" | "writeRule" | "comfortFailed";
   /** The hold mid-way, for a board: the ring that fills around the face over the 500ms hold, drawn standing at this 0–1 fill. Absent, the ring is the press's own and fills live. */
   holdProgress?: number;
   /** The pad's knob under the finger, for a board: `StancePad`'s pressed layer (a 40px disc at 10 %) drawn around the knob. Absent, the layer is the drag's own. */

@@ -25,7 +25,7 @@ const VEILED = (sensitive) => (
     comments={2}
     bundle={null}
     license={{ attribution: 0.5, provenance: 0.5 }}
-    menuItems={CARD_MENU}
+    menuItems={readerCardMenu("sol")}
   />
 );
 

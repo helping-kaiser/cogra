@@ -115,8 +115,7 @@ pub(crate) fn code_mail(to: String, code: &str) -> Mail {
 
 /// The new-address half of an email change: the change link, or — on the
 /// unverified carve-out — the account's verification link, which is the
-/// carve-out's whole proof (auth.md "Link URLs"). The bare token rides
-/// beside the URL, the fallback native apps accept as a paste.
+/// carve-out's whole proof (auth.md "Link URLs").
 pub(crate) fn link_mail(to: String, requires_code: bool, web_origin: &str, token: &str) -> Mail {
     let (subject, line, path) = if requires_code {
         (
@@ -131,32 +130,31 @@ pub(crate) fn link_mail(to: String, requires_code: bool, web_origin: &str, token
         to,
         subject: subject.into(),
         body: format!(
-            "{line} (valid {EMAIL_CHANGE_TTL_HOURS} h): {web_origin}/{path}?token={token}\nOr paste the token in the app: {token}"
+            "{line} (valid {EMAIL_CHANGE_TTL_HOURS} h): {web_origin}/{path}?token={token}"
         ),
     }
 }
 
 /// The account-deletion confirmation, to the verified address on file
-/// (auth.md "Self-service deletion"). The link is the capability; the bare
-/// token rides beside the URL, the fallback native apps accept as a paste
+/// (auth.md "Self-service deletion"). The link is the capability
 /// (auth.md "Link URLs").
 pub(crate) fn deletion_mail(to: String, web_origin: &str, token: &str) -> Mail {
     Mail {
         to,
         subject: "Confirm the deletion of your CoGra account".into(),
         body: format!(
-            "Confirm the deletion of your account (link valid {DELETION_LINK_TTL_DAYS} days): {web_origin}/delete-account?token={token}\nOr paste the token in the app: {token}\n\nOpening the link starts a {DELETION_GRACE_DAYS}-day grace period; until it ends, you can cancel from any device."
+            "Confirm the deletion of your account (link valid {DELETION_LINK_TTL_DAYS} days): {web_origin}/delete-account?token={token}\n\nOpening the link starts a {DELETION_GRACE_DAYS}-day grace period; until it ends, you can cancel from any device."
         ),
     }
 }
 
-/// The password-reset link and its bare token (auth.md "Password reset").
+/// The password-reset link (auth.md "Password reset").
 pub(crate) fn reset_mail(to: String, web_origin: &str, token: &str) -> Mail {
     Mail {
         to,
         subject: "Reset your CoGra password".into(),
         body: format!(
-            "Reset your password: {web_origin}/reset?token={token}\nOr paste the token in the app: {token}\n\nValid {PASSWORD_RESET_TTL_MINUTES} minutes."
+            "Reset your password: {web_origin}/reset?token={token}\n\nValid {PASSWORD_RESET_TTL_MINUTES} minutes."
         ),
     }
 }
@@ -247,7 +245,7 @@ fn ended_change(end: store::EmailChangeEnd) -> UserError {
 /// Counts the attempt against a per-IP or per-key window and refuses
 /// over budget. Storage faults propagate — a broken limiter store must
 /// not silently disable the limits.
-async fn guard_window(
+pub(super) async fn guard_window(
     ctx: &Context<'_>,
     scope: &str,
     key: &str,
@@ -269,7 +267,7 @@ async fn actor_pubkey(pool: &PgPool, user_id: Uuid) -> async_graphql::Result<Opt
 }
 
 /// The request's derived client IP as a limiter key.
-fn request_ip(ctx: &Context<'_>) -> async_graphql::Result<String> {
+pub(super) fn request_ip(ctx: &Context<'_>) -> async_graphql::Result<String> {
     Ok(ctx.data::<RequestIp>()?.0.to_string())
 }
 
@@ -470,8 +468,12 @@ fn reference_refusal(e: ReferencesError) -> PreparePayload {
     }
 }
 
-fn relay_error(e: RelayError, index: usize) -> UserError {
-    let path = vec!["proposals".to_string(), index.to_string()];
+/// The per-entry refusal of a relayed write, at `[list, index]` — the
+/// input list the entry came in (`proposals` on `submitProposals`,
+/// `approvals` on `approveActs`): `UserError.field` is the path to the
+/// offending input field (api-spec.md "Error types").
+fn relay_error(e: RelayError, list: &str, index: usize) -> UserError {
+    let path = vec![list.to_string(), index.to_string()];
     match e {
         RelayError::SignatureInvalid(m) => UserError::at(ErrorCode::SignatureInvalid, m, path),
         RelayError::Wedged(_) => UserError::at(
@@ -2318,9 +2320,8 @@ impl Mutation {
     }
 
     /// Always succeeds, to avoid revealing whether an account exists. If
-    /// one does, a single-use reset link goes to its address — and the
-    /// bare token beside it, which native apps accept as a paste
-    /// (auth.md "Link URLs").
+    /// one does, a single-use reset link goes to its address (auth.md
+    /// "Link URLs").
     ///
     /// The two budgets differ accordingly (auth.md "Rate limiting"): the
     /// per-IP window refuses visibly, while the per-email one trips
@@ -3775,15 +3776,14 @@ impl Mutation {
         let config = ctx.data::<MediaConfig>()?;
         let blobs = ctx.data::<Arc<dyn BlobStore>>()?;
         let value = input.file.value(ctx)?;
+        let size = value.size()?;
         let destination = media::GalleryKind::from(input.scale);
         let caps = config.caps_for(destination);
 
         let _permit = config.process_permits.acquire().await?;
         let processed = tokio::task::spawn_blocking(move || {
-            use std::io::Read;
-            let mut bytes = Vec::new();
-            value.into_read().read_to_end(&mut bytes)?;
-            std::io::Result::Ok(media::process(&bytes, caps))
+            media::read_upload(value.into_read(), size, caps)
+                .map(|read| read.and_then(|bytes| media::process(&bytes, caps)))
         })
         .await??;
 
@@ -4325,7 +4325,7 @@ impl Mutation {
                 }
             };
             if let Err(e) = relay::gate_carried_media(pool, areas, &owned).await {
-                user_errors.push(relay_error(e, i));
+                user_errors.push(relay_error(e, "proposals", i));
                 continue;
             }
             match relay::submit_pre_signed(
@@ -4344,7 +4344,7 @@ impl Mutation {
                     Ok(w) => writes.push(StagedWriteType(w)),
                     Err(e) => user_errors.push(internal(e)),
                 },
-                Err(e) => user_errors.push(relay_error(e, i)),
+                Err(e) => user_errors.push(relay_error(e, "proposals", i)),
             }
         }
         if user_errors.is_empty() {
@@ -4409,7 +4409,7 @@ impl Mutation {
                     Ok(w) => writes.push(StagedWriteType(w)),
                     Err(e) => user_errors.push(internal(e)),
                 },
-                Err(e) => user_errors.push(relay_error(e, i)),
+                Err(e) => user_errors.push(relay_error(e, "approvals", i)),
             }
         }
         if user_errors.is_empty() {

@@ -191,9 +191,7 @@ pub struct RegisteredAccount {
 /// The two clocks are independent (auth.md "Expiry"): the link's expiry
 /// bounds registration through it, the account dies unverified on its own
 /// clock, and the application row carries none. The verification mail
-/// carries the link URL and the bare
-/// token beside it, the universal fallback native apps accept as a paste
-/// (auth.md "Link URLs").
+/// carries the link URL (auth.md "Link URLs").
 pub async fn register(
     pool: &PgPool,
     auth_cfg: &AuthConfig,
@@ -339,26 +337,24 @@ pub async fn resend_verification(
     Ok(())
 }
 
-/// The registration's verification mail: the link, the bare token beside
-/// it (auth.md "Link URLs"), and the unverified account's expiry.
+/// The registration's verification mail: the link (auth.md "Link URLs")
+/// and the unverified account's expiry.
 pub(crate) fn signup_verification_mail(to: String, web_origin: &str, token: &str) -> Mail {
     Mail {
         to,
         subject: "Verify your CoGra email".into(),
         body: format!(
-            "Verify your email: {web_origin}/verify?token={token}\nOr paste the token in the app: {token}\n\nThe account expires in {UNVERIFIED_TTL_DAYS} days if unverified."
+            "Verify your email: {web_origin}/verify?token={token}\n\nThe account expires in {UNVERIFIED_TTL_DAYS} days if unverified."
         ),
     }
 }
 
-/// The resent verification mail: the rotated link and its bare token.
+/// The resent verification mail: the rotated link.
 pub(crate) fn resend_verification_mail(to: String, web_origin: &str, token: &str) -> Mail {
     Mail {
         to,
         subject: "Verify your CoGra email".into(),
-        body: format!(
-            "Verify your email: {web_origin}/verify?token={token}\nOr paste the token in the app: {token}"
-        ),
+        body: format!("Verify your email: {web_origin}/verify?token={token}"),
     }
 }
 

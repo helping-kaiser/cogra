@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -17,6 +16,7 @@ import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.testTag
+import com.cogra.core.designsystem.v2.atom.HouseSlider
 import com.cogra.core.designsystem.v2.token.Space
 
 /**
@@ -26,6 +26,10 @@ import com.cogra.core.designsystem.v2.token.Space
  * (`cg-exact`, readme §13), and the two ends named under the track in
  * `body-small` on `onSurfaceVariant` — a track says nothing about which end
  * is which. The slider announces its own value in both modes.
+ *
+ * The track is the master's range input in `primary` (`accentColor`), which
+ * is the house slider's dot — [HouseSlider], as `CropViewport.jsx` names it —
+ * never Material's vertical handle.
  */
 @Composable
 fun StanceSlider(
@@ -43,13 +47,14 @@ fun StanceSlider(
             text = if (LocalShowExactValues.current) "$label $reading" else label,
             style = MaterialTheme.typography.labelLarge,
         )
-        Slider(
+        HouseSlider(
             value = value.toFloat(),
             // The track is continuous and a Float; the pick is a hundredth
             // (the value domain, jakob 2026-10-20), so every value it reports
             // lands on the grid.
             onValueChange = { onChange(hundredth(it.toDouble())) },
             valueRange = -1f..1f,
+            thumbTag = "${testTag}_thumb",
             modifier = Modifier
                 .testTag(testTag)
                 .semantics {
@@ -99,13 +104,14 @@ internal fun LabeledSlider(
     val reading = twoPlacesUnsigned(value)
     Column(modifier) {
         Text("$label: $reading")
-        Slider(
+        HouseSlider(
             value = value.toFloat(),
             // The track is continuous and a Float; the pick is a hundredth
             // (the value domain, jakob 2026-10-20), so every value it reports
             // lands on the grid — what the label prints is what is picked.
             onValueChange = { onChange(hundredth(it.toDouble())) },
             valueRange = valueRange,
+            thumbTag = "${testTag}_thumb",
             modifier = Modifier
                 .testTag(testTag)
                 .semantics {

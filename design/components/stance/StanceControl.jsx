@@ -72,10 +72,12 @@ import {
    above the commit row and `Retry`, outlined, in Set's slot — a failed signed
    act re-raises its own surface, and here the surface never went away.
    ONCE SET IS PRESSED THE ACT IS DONE: NOTHING CANCELS IT (jakob 2026-11-11).
-   The way out only closes the pad, so the reader need not wait. Past 200ms,
-   beside `Setting…`, the button that read `Cancel` reads `Close`, in the same
-   place; inside the 200ms nothing on screen changes, and a press on it — or
-   outside, Back, Escape — closes the pad as Close does. Closed, the act goes
+   The way out only closes the pad, so the reader need not wait. From the
+   press itself the button that read `Cancel` reads `Close`, in the same
+   place — the one exception to the 200ms law, since a way out that still
+   said Cancel would mislead — while Set keeps its own label until 200ms pass
+   and then reads `Setting…`. Close, a press outside, Back and Escape all
+   close the pad. Closed, the act goes
    on and its wait moves to the target's row as a hold's does — `Signing…`
    under the face, then the face and the snackbar, or `That didn't sign.` with
    a Retry that asks the same pick again. A Set the reader regrets is walked
@@ -313,8 +315,10 @@ export function StanceControl({
   pendingPick,
   pendingReview = false,
   /* A SIGNED ACT IN FLIGHT, OR ONE THAT DID NOT GO THROUGH (the failure
-     pack). `"busy"` is the wait past 200ms (a surface's way out reads
-     `Close`), `"failed"` the signing that did not complete. With the pad closed it is the hold's, and the target's row
+     pack). `"pressed"` is the first 200ms after the commit (the way out
+     already reads `Close`, the commit still its own label, refusing a second
+     press), `"busy"` the wait past 200ms (`Close` beside the commit's
+     waiting label), `"failed"` the signing that did not complete. With the pad closed it is the hold's, and the target's row
      carries it under the face; with the pad open it is Set's, and the pad's
      commit row carries it; with the alternates up it is theirs, and with the
      walk-back or the empty sign raised it is that dialog's (seam 245, asks
@@ -531,8 +535,12 @@ export function StanceControl({
   const padSigning = open && !dialogUp ? signing : undefined;
   const altSigning = alternates && !dialogUp ? signing : undefined;
   const dialogSigning = dialogUp ? signing : undefined;
-  const anchorBusy = rowSigning === "busy";
+  const anchorBusy = rowSigning === "busy" || rowSigning === "pressed";
+  /* From the press the way out reads `Close`; the commit's own label waits
+     the 200ms (`"pressed"` is that first moment, `"busy"` the wait past it). */
+  const padPressed = padSigning === "pressed";
   const padWaiting = padSigning === "busy";
+  const padClosing = padWaiting || padPressed;
   /* The face, ringed while a hold is under way — the ring centred on it, the
      face's own box unchanged, so nothing beside it moves. */
   const ringed = holding || holdProgress !== undefined;
@@ -696,7 +704,7 @@ export function StanceControl({
       {pendingPick && <PendingMarker label={pendingReview ? "Waiting for your review" : "Waiting for your key"} node={node && "pending"} />}
       {/* THE ROW LINE (vehicle (b)): the hold's wait, quiet, and its failure,
           in the failure voice with the way to ask again. */}
-      {anchorBusy && <PendingMarker label="Signing…" />}
+      {rowSigning === "busy" && <PendingMarker label="Signing…" />}
       {/* Retry asks the act that was sent: the hold's default after a hold,
           the pick after a Set its pad was closed under. */}
       {rowSigning === "failed" && (
@@ -888,14 +896,14 @@ export function StanceControl({
                 </button>
               )}
               <button type="button" onClick={closeAll} className={BUTTON_CLASS} style={buttonStyle({ variant: "text", size: "sm" })} data-node={node && "cancel"}>
-                {padWaiting ? "Close" : "Cancel"}
+                {padClosing ? "Close" : "Cancel"}
               </button>
               <button
                 type="button"
                 disabled={Boolean(explaining)}
-                onClick={padWaiting ? undefined : () => commitChecked(pick)}
+                onClick={padClosing ? undefined : () => commitChecked(pick)}
                 aria-busy={padWaiting || undefined}
-                aria-disabled={padWaiting || undefined}
+                aria-disabled={padClosing || undefined}
                 className={BUTTON_CLASS}
                 style={buttonStyle({
                   variant: padSigning === "failed" ? "outline" : "primary",

@@ -42,7 +42,7 @@ WHEN swipe down on reel.stage GIVEN it is the list's first -> the clip stays AND
 
 ALWAYS the stream never moves on to the next clip by itself
 
-ALWAYS the down arrow key and a turn of the wheel downward page the stream as a swipe up does, and the up arrow key and a turn upward as a swipe down does, the list's first and last clips holding as they hold under a swipe, GIVEN the stream is on web
+ALWAYS the down arrow key and a turn of the wheel downward page the stream as a swipe up does, and the up arrow key and a turn upward as a swipe down does, the list's first and last clips holding as they hold under a swipe, GIVEN the stream is on web in a desktop browser, a device with no touch
 
 WHEN the clip on reel.stage reaches its end -> it plays again from its start AND NEVER the next clip takes the screen
 

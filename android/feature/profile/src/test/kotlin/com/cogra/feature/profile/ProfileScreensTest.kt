@@ -45,7 +45,7 @@ class ProfileScreensTest {
         onOpenInvites: () -> Unit = {},
         onOpenSettings: () -> Unit = {},
         onOpenPost: (String) -> Unit = {},
-        onFilterChange: (ChronicleFilter) -> Unit = {},
+        onTabChange: (ProfileTab) -> Unit = {},
         onLoadMore: () -> Unit = {},
         onBack: (() -> Unit)? = null,
         onStance: (Slot) -> Unit = {},
@@ -58,6 +58,7 @@ class ProfileScreensTest {
         backDescription: String? = null,
         onOpenHistory: () -> Unit = {},
         onOpenOpinions: () -> Unit = {},
+        onMention: (String) -> Unit = {},
     ) {
         compose.setContent {
             ProfileScreen(
@@ -65,7 +66,7 @@ class ProfileScreensTest {
                 state = state,
                 profileSavedResult = profileSavedResult,
                 onProfileSavedResultConsumed = onProfileSavedResultConsumed,
-                onFilterChange = onFilterChange,
+                onTabChange = onTabChange,
                 onLoadMore = onLoadMore,
                 onRetry = onRetry,
                 onEdit = onEdit,
@@ -79,6 +80,7 @@ class ProfileScreensTest {
                 backDescription = backDescription,
                 onOpenHistory = onOpenHistory,
                 onOpenOpinions = onOpenOpinions,
+                onMention = onMention,
                 now = now,
             )
         }
@@ -272,6 +274,28 @@ class ProfileScreensTest {
         compose.onNodeWithTag("profile.snackbar.message").assertTextEquals("You can invite once you're in.")
     }
 
+    // ProfileMenu.md:17 — another person's ⋮ `Mention in a new post` opens the
+    // wizard with that person staged (jakob's round-2 hand test: it only closed the sheet).
+    @Test
+    fun mentionOnAnothersMenuOpensTheWizardWithThePerson() {
+        val mentioned = mutableListOf<String>()
+        render(loaded(), onMention = { mentioned += it })
+        compose.onNodeWithTag((row / "menu").tag).performScrollTo().performClick()
+        compose.onNodeWithTag("profile.menuSheet.mention").performClick()
+        assertThat(mentioned).containsExactly("u1")
+    }
+
+    // ProfileMenu.md:19 — an applicant is told, and the wizard never opens.
+    @Test
+    fun anApplicantsMentionExplainsInsteadOfOpeningTheWizard() {
+        val mentioned = mutableListOf<String>()
+        render(loaded(applicant = true), onMention = { mentioned += it })
+        compose.onNodeWithTag((row / "menu").tag).performScrollTo().performClick()
+        compose.onNodeWithTag("profile.menuSheet.mention").performClick()
+        assertThat(mentioned).isEmpty()
+        compose.onNodeWithTag("profile.snackbar.message").assertTextEquals("You can post once you're in.")
+    }
+
     // ProfileApplicant.md:22: the applicant's empty chronicle says what fills it.
     @Test
     fun anApplicantsEmptyChronicleSaysWhenItFills() {
@@ -444,11 +468,11 @@ class ProfileScreensTest {
     // Profile.md:21 and every board: the row lands on Everything.
     @Test
     fun theTabRowLandsOnEverythingAndSwitches() {
-        var picked: ChronicleFilter? = null
-        render(loaded(), onFilterChange = { picked = it })
+        var picked: ProfileTab? = null
+        render(loaded(), onTabChange = { picked = it })
         compose.onNodeWithTag("profile.tabRow.everythingTab").assertIsSelected()
         compose.onNodeWithTag("profile.tabRow.postsTab").performScrollTo().performClick()
-        assertThat(picked).isEqualTo(ChronicleFilter.POSTS)
+        assertThat(picked).isEqualTo(ProfileTab.POSTS)
         compose.onNode(hasContentDescription("What the chronicle shows")).assertExists()
     }
 

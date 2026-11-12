@@ -8,6 +8,19 @@ query InviteLinkCheck($id: UUID!) {
   inviteLinkCheck(id: $id) {
     usable
     inviterHandle
+    # The face and the name Join stands its form under (Join.md).
+    inviter {
+      handle
+      displayName {
+        value
+      }
+      ... on User {
+        avatar {
+          url
+          status
+        }
+      }
+    }
     expiresAt
   }
 }

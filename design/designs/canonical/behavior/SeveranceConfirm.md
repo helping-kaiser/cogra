@@ -44,8 +44,10 @@ WHEN tap the scrim, press the system's Back or press Escape GIVEN Walk it back i
 
 ALWAYS nothing cancels the walk-back GIVEN Walk it back was pressed
 
-WHEN the signing has not answered 200ms after Walk it back -> Walk it back reads Walking it back… and refuses a press AND Keep it reads Close in the same place, filled and live, as the answer chip's signing draws it AND NEVER Close dims
+WHEN press Walk it back -> Keep it reads Close in the same place from the press itself, filled and live AND Walk it back keeps its own label and refuses a second press AND NEVER Close dims
+
+WHEN the signing has not answered 200ms after Walk it back -> Walk it back reads Walking it back… beside Close, as the answer chip's signing draws it
 
 WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN Walk it back is waiting on its signing -> the dialog and the pad beneath it close AND the whole walk-back goes on, its wait carried by the line under the target's face, Signing… in the pending marker's quiet register, as PadFailed's closed moment draws it AND NEVER the face moves before the signing is taken
 
-WHEN tap Keep it, tap the scrim, press the system's Back or press Escape GIVEN Walk it back was pressed under 200ms ago -> the dialog and the pad beneath it close as Close closes them AND the walk-back goes on AND NEVER the walk-back is cancelled
+WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN Walk it back was pressed under 200ms ago -> the dialog and the pad beneath it close AND the walk-back goes on AND NEVER the walk-back is cancelled

@@ -53,10 +53,24 @@
 
    REGISTERED under its own `keptPicksSeal` prefix (seam 248): `header`, the
    card `acts` with one `actRow` per pick, the `approval` line with its
-   `open`, and the foot `foot` with `sign` and `back`. */
+   `open`, and the foot `foot` with `sign` and `back`. 
+   THE `state` CHIP'S `signing` IS THE SEAL CLOSED ON (round 37, jakob
+   2026-11-11: Close on every seal). From the press on `Sign the picks` the
+   batch is done: past 200ms it reads `Signing the picks…` over Back, which
+   reads `Close` from the press itself; it, the arrow and the X leave for
+   where the review was opened from, and the batch goes on as a whole. Its
+   wait is each target's row, `Signing…` under the face; landed, the
+   snackbar counts it and each anchor wears `Still settling`. Its failure is
+   all-or-nothing and has no drawn place once the review is closed — every
+   pick stays kept, and where that is said waits for jakob (backlog 166).
+   The signing foot is drawn beside the rest one and carries no
+   names, so the foot's paths stay one each. */
 export const NODE = "keptPicksSeal";
-export const PROPS = { approval: { editor: "enum", options: ["none", "waiting"], default: "none" } };
-export const VALS = `approvalShown: this.props.approval === "waiting" ? "block" : "none"`;
+export const PROPS = {
+  approval: { editor: "enum", options: ["none", "waiting"], default: "none" },
+  state: { editor: "enum", options: ["rest", "signing"], default: "rest" },
+};
+export const VALS = `approvalShown: this.props.approval === "waiting" ? "block" : "none", footRestShown: this.props.state === "signing" ? "none" : "flex", footBusyShown: this.props.state === "signing" ? "flex" : "none"`;
 
 export function Screen() {
   return (
@@ -95,7 +109,12 @@ export function Screen() {
         {/* `Sign the picks`: the batch can hold a feeling beside the
             opinions (seam 248), and a pick is the review's own word for each
             of its rows (copy-voice, the kept picks' review). */}
-        <SealFooter signLabel="Sign the picks" node="foot" />
+        <div style={{ display: "{{footRestShown}}", flexDirection: "column" }}>
+          <SealFooter signLabel="Sign the picks" busyLabel="Signing the picks…" node="foot" />
+        </div>
+        <div style={{ display: "{{footBusyShown}}", flexDirection: "column" }}>
+          <SealFooter signLabel="Sign the picks" busy busyLabel="Signing the picks…" />
+        </div>
       </div>
     </>
   );

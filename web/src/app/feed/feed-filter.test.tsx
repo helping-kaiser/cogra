@@ -618,6 +618,18 @@ describe("the feed filter", () => {
   });
 
   describe("the four kinds (FeedKinds.md)", () => {
+    // ProfileMenu.md:17 — a person card's Mention opens the wizard with the
+    // person staged, the profile's own door.
+    it("a person card's Mention opens the wizard with the person staged", async () => {
+      const r = reads();
+      server.use(...rankedFeed([post("p1"), person("u3", "mira")], r));
+      writeReaderDefault("acct-1", { ...FEED_FILTER_DEFAULT, kinds: ["posts", "profiles"] });
+      renderFeed();
+      fireEvent.click(await screen.findByTestId(byNode("feed.profileCard.menu", "u3")));
+      fireEvent.click(screen.getByTestId("feed-person-u3-menu-mention"));
+      expect(push).toHaveBeenCalledWith("/compose?reference=u3");
+    });
+
     it("draws profile and tag cards once their kinds are let in", async () => {
       const r = reads();
       server.use(...rankedFeed([post("p1"), person("u3", "mira"), tag("t1", "saltmaps")], r));

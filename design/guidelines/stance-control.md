@@ -61,7 +61,7 @@ looking like a bug.
 | Drag | moves the knob by **accumulated travel**, not absolute position |
 | Release | parks the pick; the pad stays open; **nothing is signed** |
 | Set | signs the pick |
-| Cancel, outside press, Esc | dismisses and stages nothing — once Set is pressed, never cancels: it reads `Close` past 200ms, dismisses and leaves the signing to the target's row (*Confirmation*) |
+| Cancel, outside press, Esc | dismisses and stages nothing — once Set is pressed, never cancels: it reads `Close` from the press, dismisses and leaves the signing to the target's row (*Confirmation*) |
 | `?` | replaces the pad's body with four lines of help, and disables Set while it shows — on the seal-scale pads (compose, reply, and the post edit's) it opens their named dialog instead (copy-voice, *The "?" dialogs*) |
 | Walk it back | the explicit route to `(0, 0)` |
 
@@ -348,16 +348,18 @@ fault above its commit row.
 
 **Once Set is pressed the act is done: nothing cancels it** (jakob
 2026-11-11). The way out only closes the pad, so the reader need not
-wait. Past 200ms, beside `Setting…`, the button that read `Cancel` reads
-`Close`, in the same place; inside the 200ms nothing on screen changes,
-and a press on it — or outside, Back, Esc — closes the pad as Close does.
+wait. From the press itself the button that read `Cancel` reads `Close`,
+in the same place — the one exception to the 200ms law, since a way out
+still reading Cancel would mislead (jakob 2026-11-11) — while `Set` keeps
+its label until 200ms pass and then reads `Setting…`. Close, a press
+outside, Back and Esc close the pad.
 Closed, the act goes on: the signing's wait moves to the target's row,
 exactly a hold's — `Signing…` under the face, the anchor refusing a
 second hold, then the new face and the snackbar, or `That didn't sign.`
 with a `Retry` that asks the same pick again. A Set the reader regrets is
 walked back afterwards. `PadFailed`'s `moment` chip draws it. The
-alternates, the walk-back and the empty sign take the same rule: while
-their act signs, `Cancel` or `Keep it` reads `Close` and closes the
+alternates, the walk-back and the empty sign take the same rule: from the
+press on their act, `Cancel` or `Keep it` reads `Close` and closes the
 surface — a dialog's and the pad beneath — and the act, a walk-back's
 whole batch, goes on. The hold has no exit once it fires.
 

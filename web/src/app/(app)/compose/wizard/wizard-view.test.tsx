@@ -763,6 +763,42 @@ describe("the compose wizard", () => {
     );
   });
 
+  // MENTION IN A NEW POST is the same door with a person behind it
+  // (ProfileMenu.md:17; api-spec `ReferenceTarget`: a User target is a
+  // mention): the person rides staged, unseen until the details stage.
+  it("stages the person the mention row sent it, as a person", async () => {
+    searchParams = new URLSearchParams("reference=u-ada");
+    server.use(
+      gqlLink.query("ReferenceCandidates", () =>
+        HttpResponse.json({
+          data: {
+            referenceCandidates: [
+              {
+                __typename: "ReferenceCandidate",
+                targetId: "u-ada",
+                target: {
+                  __typename: "User",
+                  id: "u-ada",
+                  handle: "ada",
+                  displayName: { __typename: "ModeratedText", value: "Ada" },
+                },
+              },
+            ],
+          },
+        }),
+      ),
+    );
+    render();
+
+    expect(screen.queryByTestId(byNode("composeDetails.references.stagedReference", "1"))).not.toBeInTheDocument();
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "words" } });
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
+
+    const staged = await screen.findByTestId(byNode("composeDetails.references.stagedReference", "1"));
+    await waitFor(() => expect(staged).toHaveTextContent("@ada"));
+  });
+
   // THE TAG CARD'S ACT (`Tag a new post with it`, History.md:63): the
   // composer opens at its first stage, the tag riding staged among the new
   // post's tags.

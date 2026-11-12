@@ -211,8 +211,8 @@ async fn app_versions_pages_forward_and_back(pool: PgPool) {
     assert_eq!(back["pageInfo"]["hasNextPage"], true);
 }
 
-/// Over-asking refuses rather than clamping, with the message-only
-/// validation error every connection answers.
+/// Over-asking refuses rather than clamping, as malformed input
+/// (`BAD_INPUT`), the refusal every connection answers.
 ///
 /// Asking the registry for more than a hundred releases refuses.
 /// ´claim:releases:over-asking-refuses´
@@ -223,7 +223,7 @@ async fn app_versions_refuses_more_than_a_hundred(pool: PgPool) {
         let refused = rig.gql_raw(None, APP_VERSIONS, variables.clone()).await;
         let (message, code) = refusal(&refused);
         assert!(message.contains("at most 100"), "{variables}: {refused}");
-        assert_eq!(code, Value::Null, "message-only: {refused}");
+        assert_eq!(code, "BAD_INPUT", "malformed input: {refused}");
     }
     let served = rig
         .gql_raw(None, APP_VERSIONS, json!({ "first": 100 }))
@@ -253,7 +253,7 @@ async fn app_versions_refuses_a_malformed_cursor(pool: PgPool) {
             .await;
         let (message, code) = refusal(&refused);
         assert_eq!(message, "invalid cursor", "{cursor}: {refused}");
-        assert_eq!(code, Value::Null, "message-only: {refused}");
+        assert_eq!(code, "BAD_INPUT", "malformed input: {refused}");
     }
 }
 

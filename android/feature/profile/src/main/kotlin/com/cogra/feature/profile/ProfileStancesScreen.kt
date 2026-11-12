@@ -9,9 +9,9 @@
 // the root the page's stack began in. web's twin is
 // `web/src/app/u/[handle]/opinions/opinions-view.tsx`.
 //
-// THE FIGURE COUNTS RECORDS; THE PAGE LISTS PEOPLE (open-questions Q35): a
-// revised opinion is three records and one row, so a figure may read more than
-// its list holds — each says what its words say.
+// THE FIGURE COUNTS WHAT THE PAGE LISTS (open-questions Q35, ruled
+// 2026-11-10): a revised opinion is three records, one bundle and one row,
+// and the figure reads the bundle.
 //
 // The board draws no loading or fault state: the page takes the house loading
 // line and the profile's own transport line with its `Try again`.

@@ -15,6 +15,8 @@ export interface WizardHeaderProps {
   onLeave?: () => void;
   /** Defaults to "Leave — your draft is kept"; a flow with nothing to keep (the avatar's) passes "Leave". */
   leaveLabel?: string;
+  /** The surface's commit was pressed and has not answered: the X is named `Close`, and it and the arrow close the surface while the act goes on. */
+  closing?: boolean;
   /** The stage's name, quiet and trailing — "Last step" on every seal. */
   stageLabel?: string;
   /** The screen's one "?", by its aria-label: what the dialog behind it

@@ -114,15 +114,50 @@
    (jakob 2026-10-02, kept picks 7). Quiet: a navigating row and nothing
    more, no badge, no colour, no reminder anywhere else.
 
+   THE `handle` CHIP DRAWS A HANDLE CHANGE AFTER CLOSE (round 37, jakob
+   2026-11-11): Close on `ChangeHandleConfirm` leaves the dialog and the form
+   for this page while the change goes on. `changing` is the wait —
+   `Changing handle…` in the Handle row's second line, the row refusing a
+   second open; `failed` is `That didn't go through.` with `Retry` in the
+   trailing slot, the hidden-accounts row's form; `taken` is the dialog's own
+   `That handle is taken.` on the row, which still opens the form, the typed
+   handle and the field's line waiting there. The old handle stands as the
+   value until the change is taken; taken, the snackbar confirms and the row
+   reads the new one, as the dialog's landing always did.
+
+   THE `install` CHIP DRAWS THE INSTALL ROW (round 39, jakob 2026-11-11, seam
+   285): `Add CoGra to your home screen`, leading the Clearing data group — the
+   group whose rows concern the app on this device. `absent`, the default,
+   is the page as every other board draws it: the row stands only in a
+   browser that can install the app and is not running it installed, and
+   never in the android app. Its tap raises the browser's own install prompt
+   where there is one; elsewhere `SettingsInstallHelp`'s dialog.
+
+   THE `kept` CHIP DRAWS THE KEPT PICKS' BATCH FAILING AFTER CLOSE (round 41,
+   jakob 2026-11-11, S4 (a)): the Key backup row `4 kept picks waiting` reads
+   `That didn't sign.` in its second line with `Retry`, which signs the whole
+   batch again — the Handle row's failed form. While the batch signs, the wait
+   stands on each target's row (`KeptPicksSeal`), not here.
+
+   THE FRAME FITS EVERY SETTING (backlog 175): 3103px, the page whole with the
+   install row shown; the default draws 57px more surface under its last line.
+   A second line costs a row nothing — a two-line row is 54px inside its 56px
+   minimum — so the handle and kept failures move nothing.
+
    REGISTERED under the `settings` prefix (design ⇄ impl seam 059/061, the Hide
    packet): the body names its parts, and `NODE` carries them onto the built
    board and into `nodes.json`. */
 
 export const NODE = "settings";
-export const FRAME = { width: 390, height: 3046 };
-export const PROPS = { reader: { editor: "enum", options: ["member", "applicant"], default: "member" } };
-export const VALS = `deleteFootnote: this.props.reader === "applicant" ? "Nothing is deleted here. The next screen says what goes and what stays." : "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."`;
+export const FRAME = { width: 390, height: 3103 };
+export const PROPS = {
+  reader: { editor: "enum", options: ["member", "applicant"], default: "member" },
+  handle: { editor: "enum", options: ["rest", "changing", "failed", "taken"], default: "rest" },
+  install: { editor: "enum", options: ["absent", "shown"], default: "absent" },
+  kept: { editor: "enum", options: ["waiting", "failed"], default: "waiting" },
+};
+export const VALS = `keptRestShown: this.props.kept === "failed" ? "none" : "block", keptFailedShown: this.props.kept === "failed" ? "block" : "none", installShown: this.props.install === "shown" ? "block" : "none",handleRestShown: this.props.handle === "rest" ? "block" : "none", handleChangingShown: this.props.handle === "changing" ? "block" : "none", handleFailedShown: this.props.handle === "failed" ? "block" : "none", handleTakenShown: this.props.handle === "taken" ? "block" : "none", deleteFootnote: this.props.reader === "applicant" ? "Nothing is deleted here. The next screen says what goes and what stays." : "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."`;
 
 export function Screen() {
-  return <SettingsBody keptPicks={KEPT_PICKS.length} deleteFootnote="{{deleteFootnote}}" />;
+  return <SettingsBody handleChip keptChip keptPicks={KEPT_PICKS.length} deleteFootnote="{{deleteFootnote}}" install="{{installShown}}" />;
 }

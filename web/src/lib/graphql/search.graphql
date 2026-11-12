@@ -10,10 +10,10 @@
 # by `InMemoryCache` without a `possibleTypes` map (see
 # `fragments.graphql`).
 #
-# `includeSeen` is the reader's `Show what you've already seen`; the
-# exclusion runs server-side, so a page keeps its size. Nothing here is
-# marked seen: search results never become seen by being on screen —
-# only opening one counts, on the surface it opens.
+# Search never looks at the seen-list (api-spec.md "The seen-list never
+# narrows a search"), and nothing here is marked seen: search results
+# never become seen by being on screen — only opening one counts, on the
+# surface it opens.
 #
 # `order` is the filter's Ranked or Newest; RANKED names the reader as
 # `viewer`, and each ranked edge carries its `score` — null past a
@@ -21,7 +21,6 @@
 query Search(
   $query: String!
   $kinds: [NodeKind!]
-  $includeSeen: Boolean
   $order: ReadOrder
   $viewer: UUID
   $first: Int
@@ -30,7 +29,6 @@ query Search(
   search(
     query: $query
     kinds: $kinds
-    includeSeen: $includeSeen
     order: $order
     viewer: $viewer
     first: $first

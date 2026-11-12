@@ -14,6 +14,10 @@ export interface SealFooterProps {
   /** The signing is in flight (past 200ms): the commit reads `busyLabel`
    *  and goes inert — not dimmed, no spinner. */
   busy?: boolean;
+  /** The commit was pressed and has not answered (from the press itself):
+   *  Back reads `Close` and only leaves — the act goes on, carried where it
+   *  lands. `busy` implies it. */
+  closing?: boolean;
   /** The commit's present participle — "Signing and publishing…". */
   busyLabel?: string;
   onSign?: () => void;

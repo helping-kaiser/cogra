@@ -114,18 +114,24 @@ private fun tagVerb(row: RecordRow): Int = when (row.about) {
     else -> R.string.chronicle_acted
 }
 
-/** A citation, by what it cites: a person is mentioned. */
-private fun citationVerb(row: RecordRow): Int = when (row.about) {
-    RecordAbout.PERSON -> R.string.chronicle_mentioned
-    RecordAbout.POST -> R.string.chronicle_cited_post
-    RecordAbout.COMMENT -> R.string.chronicle_cited_comment
-    null -> R.string.chronicle_acted
+/**
+ * A citation, by what it cites: a person is mentioned. One taken back reads
+ * its own verb, the act the server reads off the counter-batch (copy-voice,
+ * *A citation*).
+ */
+private fun citationVerb(row: RecordRow): Int = when {
+    row.act == RecordAct.WITHDRAWAL -> R.string.chronicle_withdrew_citation
+    row.about == RecordAbout.PERSON -> R.string.chronicle_mentioned
+    row.about == RecordAbout.POST -> R.string.chronicle_cited_post
+    row.about == RecordAbout.COMMENT -> R.string.chronicle_cited_comment
+    else -> R.string.chronicle_acted
 }
 
 /**
  * The aside names the target (copy-voice, the profile): an opinion's or a
- * walk-back's `on @mira` · `on a post` · `on a comment`, a vouch's or a
- * mention's `@rafa`. A string resource and the handle it takes, if any.
+ * walk-back's `on @mira` · `on a post` · `on a comment` · `on #saltmaps`, a
+ * vouch's or a mention's `@rafa`, a tag's `#saltmaps`. A string resource and
+ * the argument it takes, if any.
  */
 internal fun asideOf(row: RecordRow): Pair<Int, String?>? {
     val handle = row.targetHandle
@@ -135,8 +141,10 @@ internal fun asideOf(row: RecordRow): Pair<Int, String?>? {
             handle != null -> R.string.chronicle_opinion_on to handle
             row.about == RecordAbout.POST -> R.string.chronicle_on_post to null
             row.about == RecordAbout.COMMENT -> R.string.chronicle_on_comment to null
+            row.topic != null -> R.string.chronicle_on_topic to row.topic
             else -> null
         }
+        Family.TAG -> row.topic?.let { R.string.chronicle_topic to it }
         Family.REFERENCE -> handle?.takeIf { row.about == RecordAbout.PERSON }?.let { R.string.chronicle_person to it }
         else -> null
     }

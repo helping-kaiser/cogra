@@ -35,11 +35,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -62,7 +60,6 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
@@ -721,11 +718,12 @@ private const val TAIL_DISTANCE = 5
 
 /**
  * THE SEARCH FILTER SHEET (ExploreFilter.md; ExploreFilter.jsx). It STAGES on a
- * copy taken as it opens: a chip, an order or the seen toggle changes only the
- * copy and nothing behind moves (:25-29); Reset stages the default and asks
+ * copy taken as it opens: a chip or an order changes only the copy and
+ * nothing behind moves (:25-29); Reset stages the default and asks
  * nothing (:31); Done closes and re-queries once (:33); the scrim, a swipe
  * down and Back drop what is staged (:35-37). A guest gets no Order section —
- * no viewpoint to rank from, no seen-list (ExploreFilter.md:41).
+ * no viewpoint to rank from (ExploreFilter.md:41). No reader gets a seen
+ * toggle: search never looks at the seen-list (seam 296).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -790,7 +788,7 @@ private fun ExploreFilterSheet(
     }
 }
 
-/** `OrderSection`: the feed's own — Ranked or Newest, and Show what you've already seen under it. */
+/** `OrderSection`: Ranked or Newest — search draws no seen toggle under it (seam 296). */
 @Composable
 private fun OrderSection(staged: SearchFilter, onStage: (SearchFilter) -> Unit, node: DataNode) {
     FilterSection(
@@ -808,28 +806,6 @@ private fun OrderSection(staged: SearchFilter, onStage: (SearchFilter) -> Unit, 
             ariaLabel = stringResource(R.string.explore_order),
             node = node / "picker",
         )
-        val seen = node / "seen"
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Space.x3),
-            modifier = Modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = Layout.TouchTargetMin)
-                .toggleable(
-                    value = staged.seen,
-                    role = Role.Checkbox,
-                    onValueChange = { onStage(staged.copy(seen = it)) },
-                )
-                .dataNode(seen),
-        ) {
-            Checkbox(checked = staged.seen, onCheckedChange = null, modifier = Modifier.dataNode(seen / "box"))
-            Text(
-                text = stringResource(R.string.explore_seen),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.dataNode(seen / "label"),
-            )
-        }
     }
 }
 
@@ -847,10 +823,7 @@ internal fun readingWords(reading: SearchFilterReading): String {
             if (it == SearchOrder.NEWEST) R.string.explore_reading_newest else R.string.explore_reading_ranked,
         )
     }
-    val seen = reading.seen?.let {
-        stringResource(if (it) R.string.explore_reading_showing_seen else R.string.explore_reading_hiding_seen)
-    }
-    return listOfNotNull(head, order, seen).joinToString(" · ")
+    return listOfNotNull(head, order).joinToString(" · ")
 }
 
 @Composable
