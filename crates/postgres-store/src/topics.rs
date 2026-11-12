@@ -137,7 +137,6 @@ pub async fn topics_of(
                       l.p_d                   AS confidence,
                       FALSE                   AS pending,
                       r.epoch                 AS epoch,
-                      r.act_time              AS act_time,
                       r.position              AS position,
                       NULL::timestamptz       AS authored_at
                FROM mirror_record_legs l
@@ -148,7 +147,7 @@ pub async fn topics_of(
                  AND NOT r.payload_marked
                  AND NOT l.census_unknown
              UNION ALL
-               SELECT s.target, s.p_d, s.p_i, TRUE, 0, 0, 0, s.pre_signed_at
+               SELECT s.target, s.p_d, s.p_i, TRUE, 0, 0, s.pre_signed_at
                FROM staged_writes s
                WHERE $3
                  AND s.family = 'tag'
@@ -162,7 +161,7 @@ pub async fn topics_of(
                SELECT DISTINCT ON (target) *
                FROM candidates
                ORDER BY target, pending DESC,
-                        epoch DESC, act_time DESC, position DESC,
+                        epoch DESC, position DESC,
                         authored_at DESC
            )
            SELECT target       AS "target!",
@@ -231,7 +230,6 @@ pub async fn tagged_with(
                       l.p_d                   AS confidence,
                       FALSE                   AS pending,
                       r.epoch                 AS epoch,
-                      r.act_time              AS act_time,
                       r.position              AS position,
                       NULL::timestamptz       AS authored_at
                FROM mirror_record_legs l
@@ -246,7 +244,7 @@ pub async fn tagged_with(
                          ELSE NULL
                      END)
              UNION ALL
-               SELECT s.middle, s.author, s.p_d, s.p_i, TRUE, 0, 0, 0, s.pre_signed_at
+               SELECT s.middle, s.author, s.p_d, s.p_i, TRUE, 0, 0, s.pre_signed_at
                FROM staged_writes s
                WHERE $3
                  AND s.family = 'tag'
@@ -266,7 +264,7 @@ pub async fn tagged_with(
                SELECT DISTINCT ON (author, node) *
                FROM candidates
                ORDER BY author, node, pending DESC,
-                        epoch DESC, act_time DESC, position DESC,
+                        epoch DESC, position DESC,
                         authored_at DESC
            )
            SELECT node        AS "node!",
@@ -276,7 +274,7 @@ pub async fn tagged_with(
                   pending     AS "pending!"
            FROM winners
            WHERE NOT (relevance = 0 AND confidence = 0)
-           ORDER BY pending DESC, epoch DESC, act_time DESC, position DESC,
+           ORDER BY pending DESC, epoch DESC, position DESC,
                     authored_at DESC, node
            LIMIT $5"#,
         target,

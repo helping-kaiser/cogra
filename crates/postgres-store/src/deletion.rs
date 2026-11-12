@@ -241,9 +241,9 @@ pub async fn registration_acts(
 ) -> Result<Vec<RegistrationAct>, sqlx::Error> {
     let family = Family::Registration.as_str();
     let landed = sqlx::query!(
-        "SELECT record_id, epoch, act_time, position FROM mirror_records
+        "SELECT record_id, epoch, position FROM mirror_records
          WHERE author = $1 AND family = $2
-         ORDER BY epoch, act_time, position",
+         ORDER BY epoch, position",
         address,
         family,
     )
@@ -265,7 +265,6 @@ pub async fn registration_acts(
             rows: ActRows {
                 order: Some(LandingOrder {
                     landed_epoch: r.epoch,
-                    act_time: r.act_time,
                     position: r.position,
                 }),
                 instant: None,
@@ -346,12 +345,11 @@ pub async fn blank_profile_rows(
          SET display_name = '', bio = NULL, avatar_id = NULL, website_url = NULL,
              redaction_reason = $2
          WHERE actor_id = $1 AND redaction_reason IS NULL
-           AND ((landed_epoch = $3 AND act_time = $4 AND position = $5)
-                OR created_at = $6)",
+           AND ((landed_epoch = $3 AND position = $4)
+                OR created_at = $5)",
         actor_id,
         ACCOUNT_REMOVAL,
         order.map(|o| o.landed_epoch),
-        order.map(|o| o.act_time),
         order.map(|o| o.position),
         act.instant,
     )
@@ -497,7 +495,7 @@ async fn append_profile_tombstone(
     let head = sqlx::query!(
         "SELECT landed_epoch, act_time, position FROM actor_profile_versions
          WHERE actor_id = $1 AND NOT pending
-         ORDER BY landed_epoch DESC NULLS LAST, act_time DESC NULLS LAST,
+         ORDER BY landed_epoch DESC NULLS LAST,
                   position DESC NULLS LAST, created_at DESC, version_id DESC
          LIMIT 1",
         user_id,

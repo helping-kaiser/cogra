@@ -19,7 +19,7 @@ use common::l1::Family;
 use common::l1::census::{LegRole, leg_params};
 use common::l1::handshake::{EpochPackage, PublishedLeg, PublishedRecord};
 use common::l1::identifier::{ActId, NodeId};
-use postgres_store::content::{self, LandingOrder};
+use postgres_store::content::{self, LandingOrder, LandingStamp};
 use postgres_store::{genesis, hashtag, mirror};
 use rig::WireRig;
 use serde_json::{Value, json};
@@ -67,11 +67,13 @@ fn at(secs: i64) -> Timestamp {
     chrono::DateTime::from_timestamp(1_800_000_000 + secs, 0).expect("in range")
 }
 
-fn landed(secs: i64) -> LandingOrder {
-    LandingOrder {
-        landed_epoch: secs + 1,
+fn landed(secs: i64) -> LandingStamp {
+    LandingStamp {
+        order: LandingOrder {
+            landed_epoch: secs + 1,
+            position: 1,
+        },
         act_time: secs,
-        position: 1,
     }
 }
 

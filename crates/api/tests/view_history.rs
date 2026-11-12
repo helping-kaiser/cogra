@@ -14,7 +14,7 @@ mod rig;
 
 use api::ratelimit::{RateLimitConfig, Window};
 use common::hashtag_uuid;
-use postgres_store::content::{self, LandingOrder};
+use postgres_store::content::{self, LandingOrder, LandingStamp};
 use postgres_store::{genesis, hashtag};
 use rig::WireRig;
 use serde_json::{Value, json};
@@ -56,11 +56,13 @@ fn at(secs: i64) -> Timestamp {
     chrono::DateTime::from_timestamp(1_800_000_000 + secs, 0).expect("in range")
 }
 
-fn landed(secs: i64) -> LandingOrder {
-    LandingOrder {
-        landed_epoch: secs + 1,
+fn landed(secs: i64) -> LandingStamp {
+    LandingStamp {
+        order: LandingOrder {
+            landed_epoch: secs + 1,
+            position: 1,
+        },
         act_time: secs,
-        position: 1,
     }
 }
 

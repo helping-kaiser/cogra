@@ -23,6 +23,7 @@ label.
 | `test:integration:t-tier-ladder-orders-the-rows`                                       | t_tier_ladder_orders_the_rows                                              |
 | `test:integration:t-zero-zero-is-inert`                                                | t_zero_zero_is_inert                                                       |
 | `test:integration:the-document-states-floats-as-bits`                                  | the_document_states_floats_as_bits                                         |
+| `test:integration:the-key-of-record-is-epoch-then-position`                            | the_key_of_record_is_epoch_then_position                                   |
 | `test:integration:the-ranking-cases-rank-as-stated`                                    | the_ranking_cases_rank_as_stated                                           |
 | `test:unit:a-census-unknown-leg-never-folds-or-transits`                               | a_census_unknown_leg_never_folds_or_transits                               |
 | `test:unit:a-one-axis-zero-tag-still-admits`                                           | a_one_axis_zero_tag_still_admits                                           |

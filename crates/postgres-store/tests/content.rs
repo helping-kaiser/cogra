@@ -5,7 +5,9 @@
 //! serialization rules make that state hard to reach end to end — the
 //! store's contract has to hold on its own.
 
-use postgres_store::content::{self, Comment, ContentCursor, LandingOrder, Post, ThreadOrder};
+use postgres_store::content::{
+    self, Comment, ContentCursor, LandingOrder, LandingStamp, Post, ThreadOrder,
+};
 use postgres_store::genesis;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -16,11 +18,17 @@ fn at(secs: i64) -> Timestamp {
     chrono::DateTime::from_timestamp(1_800_000_000 + secs, 0).expect("in range")
 }
 
-fn order(epoch: i64, position: i64) -> LandingOrder {
-    LandingOrder {
-        landed_epoch: epoch,
-        act_time: position + 1,
-        position,
+/// A landing at the key of record `(epoch, position)`. The act time it
+/// stamps falls as the position rises, as a real Layer 1's may inside
+/// one epoch: every ordering this file asserts holds only because the
+/// position decides, never the act time (layer1-interface.md §8.3).
+fn order(epoch: i64, position: i64) -> LandingStamp {
+    LandingStamp {
+        order: LandingOrder {
+            landed_epoch: epoch,
+            position,
+        },
+        act_time: 1_000 - position,
     }
 }
 
@@ -51,7 +59,7 @@ fn node_of(id: Uuid, family: &str) -> String {
 async fn post(
     pool: &PgPool,
     author: Uuid,
-    order: Option<LandingOrder>,
+    order: Option<LandingStamp>,
     created_at: Timestamp,
     body: &str,
 ) -> Uuid {
@@ -83,7 +91,7 @@ async fn comment(
     pool: &PgPool,
     author: Uuid,
     target: Uuid,
-    order: Option<LandingOrder>,
+    order: Option<LandingStamp>,
     created_at: Timestamp,
     body: &str,
 ) -> Uuid {

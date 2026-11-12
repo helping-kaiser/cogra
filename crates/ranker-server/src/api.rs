@@ -314,7 +314,6 @@ fn node(wire: slice_nodes::SliceNodesFeedSliceNodesEdgesNode) -> Result<SliceNod
         kind: wire.kind.as_ref().map(kind).transpose()?,
         genesis: wire.genesis.map(|g| CausalKey {
             landing_epoch: g.landing_epoch,
-            act_time: g.act_time,
             position: g.position,
         }),
         statistics: None,
@@ -389,7 +388,6 @@ fn record(
         author: wire.author_id,
         key: CausalKey {
             landing_epoch: wire.landing_epoch,
-            act_time: wire.act_time,
             position: wire.position,
         },
         legs,

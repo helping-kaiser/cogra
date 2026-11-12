@@ -298,17 +298,16 @@ fn t_cross_maturity_crossover() {
 
 fn any_bundle() -> impl Strategy<Value = Vec<Member>> {
     prop::collection::btree_map(
-        (0..4i64, 0..8i64, 0..8i64),
+        (0..4i64, 0..8i64),
         (any_parameter(), any_parameter()),
         1..12,
     )
     .prop_map(|members| {
         members
             .into_iter()
-            .map(|((landing_epoch, act_time, position), (p_d, p_i))| Member {
+            .map(|((landing_epoch, position), (p_d, p_i))| Member {
                 key: CausalKey {
                     landing_epoch,
-                    act_time,
                     position,
                 },
                 p_d,
@@ -361,7 +360,6 @@ fn t_fold_no_order_is_observable() {
     let at = |position, p| Member {
         key: CausalKey {
             landing_epoch: 1,
-            act_time: 1,
             position,
         },
         p_d: p,
@@ -393,7 +391,6 @@ fn t_fold_no_order_is_observable() {
 fn t_fold_a_netted_bundle_is_inert() {
     let key = |position| CausalKey {
         landing_epoch: 2,
-        act_time: 7,
         position,
     };
     for (second_d, second_i) in [(-0.75, -0.5), (-0.75, 0.25), (0.25, -0.5)] {
@@ -432,7 +429,6 @@ fn t_fold_a_netted_bundle_is_inert() {
 fn a_malformed_bundle_refuses() {
     let key = CausalKey {
         landing_epoch: 1,
-        act_time: 1,
         position: 1,
     };
     let member = Member {
@@ -442,6 +438,37 @@ fn a_malformed_bundle_refuses() {
     };
     assert!(fold_members(&[member, member]).is_err());
     assert!(fold_members(&[]).is_err());
+}
+
+/// layer1-interface.md §8.3: the key of record is `(k, pos_k)`; a time
+/// comparison never decides precedence. Inside one epoch the later position
+/// is the newer member — on the real Layer 1 it may carry the lower act
+/// time — and two records the order puts at one `(k, pos_k)` are one key,
+/// whatever times they carried.
+///
+/// Inside one epoch the later position is the bundle's newest member, and one (epoch, position) is one key.
+/// ´claim:bundle:the-key-of-record-is-epoch-then-position´
+#[test]
+fn the_key_of_record_is_epoch_then_position() {
+    let at = |landing_epoch, position, p| Member {
+        key: CausalKey {
+            landing_epoch,
+            position,
+        },
+        p_d: p,
+        p_i: p,
+    };
+    let earlier = at(4, 1, 0.5);
+    let later = at(4, 2, -0.25);
+    for members in [[earlier, later], [later, earlier]] {
+        let folded = fold_members(&members).expect("folds");
+        assert_eq!(folded.newest, later.key);
+    }
+    assert!(at(5, 0, 0.1).key > at(4, 9, 0.1).key, "the epoch leads");
+    assert!(
+        fold_members(&[at(4, 2, 0.5), at(4, 2, -0.25)]).is_err(),
+        "one (epoch, position) is one key"
+    );
 }
 
 /// Out-of-domain input is refused by name, never weighed: a parameter
