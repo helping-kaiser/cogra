@@ -61,7 +61,7 @@ data class JoinLines(
     val password: JoinLine? = null,
     val confirm: JoinLine? = null,
 ) {
-    val any: Boolean get() = handle != null || email != null || password != null || confirm != null
+    val any: Boolean get() = listOf(handle, email, password, confirm).any { it != null }
 }
 
 data class JoinUiState(
@@ -85,7 +85,7 @@ data class JoinUiState(
     val created: Boolean = false,
 ) {
     /** Join.md:99 — Create account waits while any of the four fields is empty. */
-    val waiting: Boolean get() = handle.isEmpty() || email.isEmpty() || password.isEmpty() || confirm.isEmpty()
+    val waiting: Boolean get() = listOf(handle, email, password, confirm).any { it.isEmpty() }
 
     val handleLine: JoinLine? get() = answered.handle ?: local.handle
     val emailLine: JoinLine? get() = answered.email ?: local.email
