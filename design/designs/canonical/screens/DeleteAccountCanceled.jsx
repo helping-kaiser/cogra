@@ -38,7 +38,7 @@ export function Screen() {
         <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />
         <PostCard {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} node="card" />
       </FeedList>
-      <Snackbar message="Canceled — your account stays, and nothing was deleted." offset={80} node="snackbar" />
+      <Snackbar message="Canceled — your account stays." offset={80} node="snackbar" />
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );

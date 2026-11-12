@@ -64,8 +64,7 @@ export function Screen() {
           }}
           data-node="body"
         >
-          Your email isn't verified yet, so the new address is all a change needs. A fresh link goes there, and the one
-          sent to noor@fieldmail.org stops working.
+          A fresh link goes there, and the one sent to noor@fieldmail.org stops working.
         </p>
 
         <div style={{ marginTop: 32 }}>

@@ -27,7 +27,7 @@ export function Screen() {
     <>
       <WizardHeader title="New post" backLabel="Back" />
       <PickPrompt escapeLabel="Write words instead" />
-      <PickTray count={1} caption="A video is the whole post. This one has its cover.">
+      <PickTray count={1} caption="A video is the whole post.">
         <MediaThumb
           src="post-photo.jpg"
           alt=""

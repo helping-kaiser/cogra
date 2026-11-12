@@ -7,7 +7,7 @@
    did failed, and nothing short of signing in again lets them carry on, so
    the whole screen is the answer — `SignIn`, unchanged in every control, with
    the one sentence that says why it is here standing where the welcome line
-   stood: `You've been signed out. Sign in again to carry on.` Calm, in the
+   stood: `You've been signed out.` Calm, in the
    welcome line's own secondary ink, never the failure voice: being signed
    out is a fact about the session, not a fault of the reader's.
 
@@ -49,7 +49,7 @@ export function Screen() {
           }}
           data-node="body"
         >
-          You&apos;ve been signed out. Sign in again to carry on.
+          You&apos;ve been signed out.
         </p>
 
         <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 16 }}>

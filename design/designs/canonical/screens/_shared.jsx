@@ -788,11 +788,11 @@ const OWN_COMMENT_CARD_MENU = OWN_COMMENT_MENU.filter((row) => row !== LICENSE_R
 const REMOVE_CONFIRM_COPY = {
   post: {
     title: "Remove this post?",
-    body: `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place — "Removed by its author" — and the post's spot in threads stays with it.`,
+    body: `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place.`,
   },
   comment: {
     title: "Remove this comment?",
-    body: `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place — "Removed by its author" — and the comment's spot in its thread stays with it.`,
+    body: `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place.`,
   },
 };
 
@@ -1153,7 +1153,7 @@ function EditedSinceLine({ node, display }) {
         }}
         data-node={node}
       >
-        Edited since you opened it — tap for the newest version.
+        Edited since you opened it
       </button>
     </div>
   );
@@ -1729,7 +1729,7 @@ function KeptApprovalLine({ shown, node }) {
         color: "var(--text-secondary)",
       }}
     >
-      An approval waits in your invites — go there to sign it.{" "}
+      An approval waits in your invites.{" "}
       <InlineAction size="sm" onClick={() => {}} node={node && "open"}>
         Open Invites
       </InlineAction>
@@ -3628,8 +3628,7 @@ function ReportProblemBody({ words }) {
             color: "var(--text-secondary)",
           }}
         >
-          Say what happened, in your own words. Sending opens your email with everything below filled in — nothing goes
-          until you send it there.
+          Sending opens your email with everything below filled in — nothing goes until you send it there.
         </p>
 
         <div style={{ marginTop: 24 }}>
@@ -3645,8 +3644,7 @@ function ReportProblemBody({ words }) {
 
         <div style={{ marginTop: 12 }}>
           <QuietNote>
-            That's all that goes with your words — no account, no key, nothing you've posted. It's sent from your own email,
-            so we can write back.
+            That's all that goes with your words — no account, no key, nothing you've posted.
           </QuietNote>
         </div>
 
@@ -3704,7 +3702,7 @@ function SettingsBody({ handleChip = false, keptChip = false, backup = "made", f
 
         <SettingsGroup
           label="Giving an opinion"
-          footnote="A tap opens this, everywhere. Press and hold instead, and a small positive one is signed on the spot."
+          footnote="Press and hold instead, and a small positive one is signed on the spot."
           node="stance"
         >
           <SettingsRow
@@ -3776,7 +3774,7 @@ function SettingsBody({ handleChip = false, keptChip = false, backup = "made", f
             sheet is a tap spent on nothing. */}
         <SettingsGroup
           label="People"
-          footnote="Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking. Your opinions on them still count in your friends' feeds until you walk them back."
+          footnote="Nothing changes for them. Your opinions on them still count in your friends' feeds until you walk them back."
           node="people"
         >
           <SettingsRow label="Hidden accounts" value={hidden} onOpen={() => {}} node="hidden" />
@@ -3889,8 +3887,8 @@ function SettingsBody({ handleChip = false, keptChip = false, backup = "made", f
           footnote={
             clearingFootnote ??
             (backup === "none"
-              ? "Your key lives only in this browser, and it has no recovery code yet. Clear CoGra's data here and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in."
-              : "Your key lives only in this browser. Clear CoGra's data here and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in.")
+              ? "Clear CoGra's data here and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out."
+              : "Clear CoGra's data here and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out.")
           }
           node="clearing"
         >
@@ -4168,8 +4166,7 @@ function SettingsBackupBody({ app = false, value = "", error }) {
           }}
           data-node="body"
         >
-          A new code re-encrypts your key and replaces the old backup — recovery always uses the
-          newest one. Your current code was made on 12.08.2026.
+          A new code replaces the old backup. Your current code was made on 12.08.2026.
         </p>
 
         {!app && (
@@ -5551,7 +5548,7 @@ function ApprovePadNote({ handle, node }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }} data-node={node}>
       <PadLine>Vouching is the act. Set signs your opinion on {handle} and brings them in.</PadLine>
-      <PadLine>It is one signed, priced act — and it is theirs to answer: their opinion back completes the pair.</PadLine>
+      <PadLine>It is one signed, priced act.</PadLine>
     </div>
   );
 }
@@ -5971,7 +5968,7 @@ function NewInviteSheet() {
     <BottomSheet open ariaLabel="New invite" node="createSheet">
       <SheetTitle node="title">New invite</SheetTitle>
       <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "0 24px" }}>
-        <SettingsGroup footnote="With it off, anyone holding the link can apply until it expires. Either way each person still needs your approval, one at a time." node="options">
+        <SettingsGroup footnote="Either way each person still needs your approval, one at a time." node="options">
           <SettingsRow label="Only one person can use it" checked onOpen={() => {}} node="singleUse" />
           <SettingsRow label="Expires after" value="7 days" onOpen={() => {}} node="expiry" />
         </SettingsGroup>

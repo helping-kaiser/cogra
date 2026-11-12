@@ -36,7 +36,7 @@ export function Screen() {
           }}
           data-node="body"
         >
-          On this browser your key is sealed inside its backup. Enter your recovery code to open it and see the key.
+          On this browser your key is sealed inside its backup.
         </p>
 
         <div style={{ marginTop: 32 }}>

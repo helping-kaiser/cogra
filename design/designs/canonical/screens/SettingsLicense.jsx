@@ -49,8 +49,8 @@ export function Screen() {
         <SheetTitle trailing={<HelpDot ariaLabel="License" node="help" />} node="title">Default license</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 24px" }}>
           <QuietNote node="note">
-            Where every new post starts. A post's terms settle when it is first signed, so changing
-            this never reaches one you have already published.
+            A post's terms settle when it is first signed, so changing this never reaches one you
+            have already published.
           </QuietNote>
 
           <LicenseAxisLabel node="creditLabel">Credit</LicenseAxisLabel>

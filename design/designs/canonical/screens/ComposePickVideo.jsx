@@ -25,7 +25,7 @@ export function Screen() {
     <>
       <WizardHeader title="New post" backLabel="Back" />
       <PickPrompt escapeLabel="Write words instead" />
-      <PickTray count={1} caption="A video is the whole post. Its cover comes next.">
+      <PickTray count={1} caption="A video is the whole post.">
         <MediaThumb src="post-photo.jpg" alt="" width={114} height={64} video onRemove={() => {}} removeLabel="Remove this video" />
       </PickTray>
       <DeadGrid />

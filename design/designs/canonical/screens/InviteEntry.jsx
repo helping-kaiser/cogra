@@ -38,7 +38,7 @@ export function Screen() {
           }}
           data-node="body"
         >
-          CoGra is invite-only. Paste your invite link to get started.
+          CoGra is invite-only.
         </p>
 
         <div style={{ marginTop: 32 }}>

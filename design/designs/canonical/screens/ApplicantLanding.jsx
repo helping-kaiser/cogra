@@ -39,7 +39,7 @@ export function Screen() {
           handle="mira"
           displayName="Mira Voss"
           avatarSrc="inviter.jpg"
-          line="Browsing from @mira's view while your application lands."
+          line="Browsing from @mira's view."
           node="borrowedViewBand"
         />
       </CograBand>

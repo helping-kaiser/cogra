@@ -102,7 +102,7 @@ export function Screen() {
           {HELD_TOPICS.slice(4).map(heldRow)}
         </div>
         <div style={{ display: "{{emptyShown}}", padding: "8px 24px" }} data-node-chip="list" data-node-key="empty">
-          <EmptyState title="No tags yet." node="empty" />
+          <EmptyState title="No tags yet" node="empty" />
         </div>
       </div>
     </>

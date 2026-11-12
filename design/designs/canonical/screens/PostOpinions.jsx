@@ -66,7 +66,7 @@ export function Screen() {
           )}
         </div>
         <div style={{ display: "{{emptyShown}}", padding: "0 24px 8px" }} data-node-chip="list" data-node-key="empty">
-          <EmptyState title="No opinions yet." node="empty" />
+          <EmptyState title="No opinions yet" node="empty" />
         </div>
       </BottomSheet>
     </>

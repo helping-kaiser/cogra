@@ -42,7 +42,7 @@ export function Screen() {
           }}
           data-node="body"
         >
-          Enter the email you signed up with and we send a reset link. Resetting the password signs out every device.
+          Resetting the password signs out every device.
         </p>
 
         <div style={{ marginTop: 32 }}>

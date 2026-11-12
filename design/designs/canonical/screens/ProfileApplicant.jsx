@@ -56,7 +56,7 @@ export function Screen() {
       <ProfileBand node="band" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "8px 16px 0", display: "{{waitingShown}}" }} data-node-chip="application" data-node-key="waiting">
-          <TaskCard title="Waiting on @mira" body="Their approval brings you in. Until then, you can read everything." node="application">
+          <TaskCard title="Waiting on @mira" body="Their approval brings you in." node="application">
             <PayoutAddress
               bare
               label="Your ask link"
@@ -72,7 +72,7 @@ export function Screen() {
           <TaskCard
             tone="notice"
             title="@mira closed your application"
-            body="That was @mira's call, and it is the only thing it decides. Your account stays exactly as it is, you can keep reading, and any member you know can vouch you in instead."
+            body="That was @mira's call. Your account stays as it is, and any member you know can vouch you in instead."
             node="application"
           >
             <PayoutAddress
@@ -81,7 +81,7 @@ export function Screen() {
               address={ASK_LINK}
               onCopy={() => {}}
               copyLabel="Copy your ask link"
-              caption="Send it to anyone who is already in. It does not expire, and it works however many people you send it to."
+              caption="Send it to anyone who is already in. It does not expire."
               node="link"
             />
           </TaskCard>
