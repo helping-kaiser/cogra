@@ -527,6 +527,8 @@ open class ThrowingAccountRepository : AccountRepository {
     override suspend fun changeHandle(handle: String): Outcome<Unit> = throw UnsupportedOperationException()
     override suspend fun dismissVouchBack(): Outcome<Unit> = throw UnsupportedOperationException()
     override suspend fun requestPasswordReset(email: String): Outcome<Unit> = throw UnsupportedOperationException()
+    override suspend fun passwordResetLinkCheck(token: String): Outcome<Boolean> =
+        throw UnsupportedOperationException()
     override suspend fun confirmPasswordReset(resetToken: String, newPassword: String): Outcome<Unit> =
         throw UnsupportedOperationException()
 }
