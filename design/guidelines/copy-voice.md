@@ -2842,8 +2842,9 @@ non-drag route's three blessed, jakob 2026-10-20.*)
 (`1 thing, signed` in the singular), the rows carry bare counts. A seal
 carries no all-or-nothing line: its `How signing works` says it, and
 the line would repeat the `?` on the same sheet (jakob 2026-11-12).
-The edit's acts sheets (`EditActs`, `CommentEditActs`), which carry
-no `?`, keep `They land together, or none does.`
+The edit's acts sheets (`EditActs`, `CommentEditActs`) carry the same
+`?` beside their title and no line either (jakob 2026-11-12: "signing in
+itself is a new concept for them").
 
 **The wallet says reach, not paths.** `In escrow` · `Held` ·
 `…paid when an advertiser's reach flows through you.` ·

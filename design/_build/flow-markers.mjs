@@ -540,6 +540,8 @@ Object.assign(FLOW_MARKERS, {
   CommentEditActs: [
     { n: 1, find: ">Done</button>", tag: "button" },
     { n: 2, find: 'class="cg-scrim-in"', tag: "div" },
+    // The sheet's ? (round 46, question 12).
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
   ],
   ReplyPictures: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
@@ -2651,6 +2653,8 @@ Object.assign(FLOW_MARKERS, {
   EditActs: [
     { n: 1, find: ">Done</button>", tag: "button" },
     { n: 2, find: 'class="cg-scrim-in"', tag: "div" },
+    // The sheet's ? (round 46, question 12).
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
   ],
   NetworkError: [{ n: 1, find: ">Retry</button>", tag: "button" }],
   /* THE FAILURE PACK'S WIRED BOARDS (2026-09-30). The two seal states are

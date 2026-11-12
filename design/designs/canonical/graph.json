@@ -1081,6 +1081,7 @@
 
     { "from": "CommentEditActs", "via": 1, "kind": "advance", "label": "Done", "to": [{ "board": "CommentEdit", "case": "the sheet closes" }] },
     { "from": "CommentEditActs", "via": 2, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "CommentEdit", "case": "the sheet closes" }] },
+    { "from": "CommentEditActs", "via": 3, "kind": "detour", "label": "? — How signing works", "to": [{ "board": "HelpDialog", "case": "the seals' dialog over the sheet — the acts land together or none does, and each signing is paid for (master)" }] },
 
     { "from": "ReplyCompose", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },
     { "from": "ReplyCompose", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },
@@ -1529,6 +1530,7 @@
 
     { "from": "EditActs", "via": 1, "kind": "advance", "label": "Done", "to": [{ "board": "EditCompose", "case": "the sheet closes" }] },
     { "from": "EditActs", "via": 2, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "EditCompose", "case": "the sheet closes" }] },
+    { "from": "EditActs", "via": 3, "kind": "detour", "label": "? — How signing works", "to": [{ "board": "HelpDialog", "case": "the seals' dialog over the sheet — the acts land together or none does, and each signing is paid for (master)" }] },
 
     { "from": "ReferencePicker", "via": 1, "kind": "back", "label": "back — to the composer", "to": [{ "terminal": "back", "case": "the composer it was opened from, every staged reference kept — navigation, never an undo — the arrow names it: Back to the post from a post's composer or edit, Back to the comment from a reply's or a comment edit's" }] },
     { "from": "ReferencePicker", "via": 2, "kind": "detour", "label": "? — Citing", "to": [{ "board": "HelpDialog", "case": "the Citing text" }] },

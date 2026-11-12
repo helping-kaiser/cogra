@@ -5828,7 +5828,7 @@ soon` keeps `Your earnings will be here.` while Chats carries no line;
 (4) closed by round 42 (act 2): the post-MVP twins take the canonical cuts —
 the same rulings. Points (1)–(3) are jakob's to align or keep.
 
-### 194 · Lines round 42 stopped: no "?" holds them, and the sign-out drift · *design* · **filed 2026-11-12**
+### 194 · Lines round 42 stopped: no "?" holds them, and the sign-out drift · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 (1) A5 ruled cutting a line that repeats its sheet's "?" — checked before each
 cut. The vouch-back pad's `Later, tap the small face …` and `Prefer sliders or
@@ -5839,6 +5839,8 @@ the lines move into the pad's "?" whole / the sheets keep the subline [lean];
 (b) they go anyway. (2) C7, the sign-out drift — closed by round 42 (act 2,
 jakob 2026-11-12 "fix the wrong side"): the drawn line, which names the seen
 record sign-out clears (PR-69), is the true side; copy-voice takes it.
+
+Closed by round 46 (jakob 2026-11-12, question 12): the edit sheets (`EditActs`, `CommentEditActs`) carry the `?` that opens `How signing works` beside their title, as `ComposeLicense` places its own; the card's subline leaves them. Whether that dialog says why an EDIT is signed and what it costs is round 46's question back to him.
 
 ### 195 · Live links: the order a cap would keep · *design* · **filed 2026-11-12**
 
