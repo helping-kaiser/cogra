@@ -19,7 +19,7 @@ WHEN tap Invites -> the snackbar reads You can invite once you're in. AND NEVER 
 
 WHEN tap the ask link's copy control -> the ask link lands on the clipboard AND the snackbar reads Link copied
 
-ALWAYS profile.chronicle holds no act, and profile.chronicle.empty reads Nothing here yet. Your posts and opinions show up here once you're in.
+ALWAYS profile.chronicle holds no act, and profile.chronicle.empty reads Nothing here yet.
 
 ALWAYS profile.bottomBar.composeSlot wears the locked look, visibly inactive at the disabled opacity and still tappable
 

@@ -105,7 +105,7 @@ export function Screen() {
         </div>
         <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
         <ChronicleList node="chronicle">
-          <EmptyState title="Nothing here yet. Your posts and opinions show up here once you're in." node="empty" />
+          <EmptyState title="Nothing here yet." node="empty" />
         </ChronicleList>
       </div>
       <Snackbar message="You can invite once you're in." node="snackbar" />

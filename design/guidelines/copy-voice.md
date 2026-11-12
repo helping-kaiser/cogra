@@ -1042,8 +1042,7 @@ own places, **blessed (jakob 2026-10-16)**: the open
 application's card reads `Their approval brings you in. Until then, you
 can read everything.` under `Waiting on @mira` — `ApplicantWaiting`'s
 first sentence, then what is open meanwhile — and the empty chronicle
-reads `Nothing here yet. Your posts and opinions show up here once you're
-in.`, `HistoryEmpty`'s shape.
+reads `Nothing here yet.`, the line alone, as every empty state.
 
 ## In-flight labels
 
@@ -2511,8 +2510,7 @@ words, recorded so the registry is whole:
   one's own, in the own figures' second person (round 26, seam 250). A
   deleted account's page is titled `Opinions`, the handle dropped and
   never replaced. An empty tab says the figure's own noun at zero, in the
-  empty sheet's calm register: another's `On them` keeps `No opinions yet
-  — yours would be the first.`; `No opinions by @ada yet.` · `No opinions
+  empty sheet's calm register: another's `On them` keeps `No opinions yet.`; `No opinions by @ada yet.` · `No opinions
   on you yet.` · `No opinions by you yet.` · `No opinions on this account
   yet.` — and a deleted account, which will give none again, `This
   account gave no opinions.` (*blessed (jakob 2026-11-10)*).
@@ -2569,9 +2567,8 @@ words. A record is one row, whatever gesture signed it.
 **A member's empty chronicle says only that** (seam 245, ask 11;
 *new 2026-10-28, blessed (jakob 2026-11-10)*): a tab
 with nothing in it reads `Nothing here yet.` at `EmptyState`, the line
-alone. A member knows why their own is empty, and another's needs no
-reason; only the applicant's empty chronicle says what fills it and
-when, because that is new (`ProfileApplicant`, above). A member's
+alone. An empty state says one thing (jakob 2026-11-12), the applicant's
+empty chronicle among them (`ProfileApplicant`, above). A member's
 `Everything` always holds their registration, so the line meets a
 member on `Posts` or `Comments` (`ProfileComments`' `comments` chip).
 
@@ -3124,15 +3121,9 @@ sentence, over `Show everything`, which clears the query (*blessed
 jakob 2026-10-14*: `Search what you saved`,
 `Nothing you've saved carries that name.`).
 
-**Two empty states, and each says why the list is empty.**
-`Nothing saved yet. A post, a comment or a person can be saved from its
-own menu, and it waits here.` names the gesture, because no card shows
-a saving affordance at rest and a reader who has never opened a ⋮ has
-no other way to find it. `Nothing here yet. Everything you see shows
-up here on its own, newest first.` (*new 2026-10-05, blessed (jakob
-2026-10-05); `see` a draft of 2026-10-07, History being everything
-seen*) says the opposite thing — that this one fills without being
-asked — and names no kind, because the list holds every kind.
+**Two empty states, each one line.** `Nothing saved yet.` and
+`Nothing here yet.` — an empty state says one thing (jakob
+2026-11-12).
 
 **The settings group is `People`,** its row `Hidden accounts` with a
 bare count, and its footnote `Hiding someone clears your own feed of
@@ -3277,15 +3268,9 @@ name changes with the drawing, because a marker a listener cannot hear
 is not a marker. Never a number in either: the count belongs to no
 sentence a reader needs.
 
-**The empty state names the kinds.** `Nothing here yet. Comments,
-replies, citations, mentions and opinions on you arrive here as they
-happen, along with what becomes of your invites and your own
-application.` The list has no gesture of its own — it fills from what
-other people do — so naming what arrives is the only way to say the
-channel is empty rather than broken. The kinds that reach a node are
-named one by one and the four that reach the account are one clause: a
-reader counting nine names has stopped reading a sentence. No action
-button: nothing the reader can do from here fills it.
+**The empty state is one line.** `Nothing here yet.` — an empty
+state says one thing (jakob 2026-11-12). No action button: nothing the
+reader can do from here fills it.
 
 **The surface is `Notifications`,** in the page header and wherever it
 is named. Not *Activity*, which describes a log, and not *Alerts*, which
@@ -3591,9 +3576,8 @@ comment`. *Opinion* throughout, never *stance* — the reader's word
 (*Naming*, above) — and the count is bare beside it, the row's own words
 having already said what was counted.
 
-**The empty sheet**: `No opinions yet — yours would be the first.` The
-`Nothing here yet — write the first post.` shape: calm, and naming the
-one thing that would fill it. It never scolds and it carries no `error`
+**The empty sheet**: `No opinions yet.` An empty state says one thing
+(jakob 2026-11-12): what is empty, and nothing after it. It never scolds and it carries no `error`
 colour; a comment nobody has answered is not a fault.
 
 ## The feed cards
@@ -3819,13 +3803,8 @@ because the door beside it already carries one (`5 held`). *Held* is the
 word for having a position on a topic, and it is the predicate said
 plainly: a topic is held while the netted pair is not nothing.
 
-**The empty list**: `No tags yet — say how you feel about one from
-its page.` The `Nothing here yet — write the first post.` shape: calm,
-and naming the one thing that would fill it — including where the
-gesture lives, because a reader with no topics has not met the tag
-page's row yet. *How you feel* is the pad's own register (`How much
-you like it`); the stand-wording is banned from the screen (jakob
-2026-09-24, amending this line at blessing).
+**The empty list**: `No tags yet.` One thing, as every empty state
+(jakob 2026-11-12).
 
 **The Affinity pad's six words.** The pad a topic's stance row opens
 fills the same two signed slots as an opinion's with different
@@ -3866,8 +3845,8 @@ counted. There is no *by whom* in the title: the list holds ARTIFACTS,
 not people, which is exactly what separates it from `Opinions on this
 post`.
 
-**The inbound empty sheet**: `Nothing cites this yet — yours would be
-the first.` `No opinions yet — yours would be the first.`'s twin, and
+**The inbound empty sheet**: `Nothing cites this yet.` `No opinions
+yet.`'s twin, and
 kept a twin on purpose: the two sheets are reached the same way, from
 the same menu, and a reader who has met one should recognize the other.
 

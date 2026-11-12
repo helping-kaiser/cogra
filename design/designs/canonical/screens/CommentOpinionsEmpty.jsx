@@ -26,7 +26,7 @@ export function Screen() {
       <BottomSheet open stacked ariaLabel="Opinions on this comment" maxHeight="62%">
         <SheetTitle>Opinions on this comment</SheetTitle>
         <div style={{ padding: "0 24px 8px" }}>
-          <EmptyState title="No opinions yet — yours would be the first." />
+          <EmptyState title="No opinions yet." />
         </div>
       </BottomSheet>
     </>

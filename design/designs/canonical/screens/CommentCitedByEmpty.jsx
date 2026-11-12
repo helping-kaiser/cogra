@@ -29,7 +29,7 @@ export function Screen() {
       <BottomSheet open stacked ariaLabel="Cited by" maxHeight="62%">
         <SheetTitle>Cited by</SheetTitle>
         <div style={{ padding: "0 24px 8px" }}>
-          <EmptyState title="Nothing cites this yet — yours would be the first." />
+          <EmptyState title="Nothing cites this yet." />
         </div>
       </BottomSheet>
     </>
