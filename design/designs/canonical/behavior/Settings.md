@@ -52,9 +52,9 @@ WHEN tap Always unveil sensitive content GIVEN the switch is off -> the switch t
 
 WHEN tap Always unveil sensitive content GIVEN the switch is on -> the switch turns off AND sensitive content stays veiled until it is tapped
 
-ALWAYS settings.sensitive.unveil carries no second line GIVEN the switch is off
+ALWAYS settings.sensitive.unveil carries no second line, on or off
 
-ALWAYS the unveil switch's second line reads On, sensitive content stands unveiled wherever you read. GIVEN the switch is on
+ALWAYS settings.sensitive carries no footnote: a setting that follows the account never says so
 
 ALWAYS the Sensitive content choice follows the account, never this device alone
 

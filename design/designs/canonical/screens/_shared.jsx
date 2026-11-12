@@ -3784,11 +3784,7 @@ function SettingsBody({ handleChip = false, keptChip = false, formsChip = false,
             (jakob's shape). It stands in a group of its own for the same
             reason hiding does: the Reading "?"'s this-device promise
             is not true of it. */}
-        <SettingsGroup
-          label="Sensitive content"
-          footnote="This choice follows your account to every device."
-          node="sensitive"
-        >
+        <SettingsGroup label="Sensitive content" node="sensitive">
           <SettingsRow
             checked={false}
             label="Always unveil sensitive content"

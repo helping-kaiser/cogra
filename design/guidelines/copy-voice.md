@@ -1883,17 +1883,15 @@ behind the heading's "?" (*The "?" dialogs*, jakob 2026-11-12).
 
 **Sensitive content**: one switch, `Always unveil sensitive content`
 (jakob's own wording, 2026-10-09 — never a sheet, never a pair of
-rows), off by default, no second line while off (jakob 2026-11-12: it restates
-the switch) — and switched on, `On, sensitive content stands unveiled
-wherever you read.` (*new 2026-10-12,
-ruled (jakob 2026-10-12)*) — and the group footnote
-`This choice follows your account to every device.` — the one settings
-group whose value travels (the People group's hiding travels too, but
-its rows are doors, not switches). The account-travel sentence is the
-footnote's whole job: this is the choice a future iOS build may only
-honor, never offer, so the words promise the travel, not the control.
-(*The second line and the footnote drafted 2026-10-09 — wording
-jakob's at review.*)
+rows), off by default, no second line on or off and no footnote (jakob
+2026-11-12: the switch says it).
+
+**Where a setting lives is said only when it is this device** (jakob
+2026-11-12: "people are used that their settings are per account (and
+follow them to all devices) … for per device infos it might be necesarry
+to state so"). A setting that follows the account says nothing about it;
+one that stays on this device says so where it is set — Reading's
+`Both choices stay on this device.` is that line.
 
 **Key backup**: `Recovery code` and `Your key` are rows, not verbs — and,
 only while kept picks wait unsigned with the key here, `3 kept picks
