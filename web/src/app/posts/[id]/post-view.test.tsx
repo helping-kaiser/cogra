@@ -313,6 +313,15 @@ function openMenuSheet(): HTMLElement {
 }
 
 /**
+ * CommentMenuOwn.md:11-13 — the own comment's ⋮ holds Edit, the one door to
+ * its edit; no comment card carries an Edit button (jakob on #423, seam 304).
+ */
+async function editFromMenu(id: string): Promise<void> {
+  fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.menu", id)));
+  fireEvent.click(within(openMenuSheet()).getByTestId("postDetail.menuSheet.edit"));
+}
+
+/**
  * THE COMMENT EDIT ADDS A TAG THROUGH THE PICKER (CommentEdit's `+ Add a tag`):
  * the door, the name typed, its row, Done — and the edit is back with the pick
  * staged.
@@ -550,7 +559,7 @@ describe("PostView", () => {
     expect(openMenuSheet().className).toContain(
       "bg-surface-container-highest",
     );
-    fireEvent.click(screen.getByTestId("comment-menu-license-c1"));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.license"));
     expect(screen.getByTestId("postDetail.licenseSheet.terms")).toHaveTextContent("Public domain");
     expect(screen.getByTestId("postDetail.licenseSheet.terms.publicDomain")).toHaveTextContent(
       "Public domain",
@@ -575,7 +584,7 @@ describe("PostView", () => {
     await openComments();
     await screen.findByTestId(byNode("postDetail.card.body"));
     fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
-    fireEvent.click(screen.getByTestId("comment-menu-license-c1"));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.license"));
     const credit = screen.getByTestId(byNode("postDetail.licenseSheet.terms.axis", "credit"));
     expect(
       within(credit).getByTestId(byNode("postDetail.licenseSheet.terms.axis.label", "credit")),
@@ -794,12 +803,12 @@ describe("PostView", () => {
     await openComments();
     await screen.findByTestId(byNode("postDetail.card.body"));
     fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
-    expect(screen.getByTestId("comment-menu-save-c1")).toHaveTextContent("Save");
-    expect(screen.getByTestId("comment-menu-cite-c1")).toHaveTextContent("Cite in a new post");
-    expect(screen.getByTestId("comment-menu-cited-by-c1")).toHaveTextContent("Cited by");
-    expect(screen.getByTestId("comment-menu-opinions-c1")).toHaveTextContent("Opinions on this");
-    expect(screen.getByTestId("comment-menu-license-c1")).toHaveTextContent("License terms");
-    expect(screen.queryByTestId("comment-menu-hide-c1")).not.toBeInTheDocument();
+    expect(screen.getByTestId("postDetail.menuSheet.save")).toHaveTextContent("Save");
+    expect(screen.getByTestId("postDetail.menuSheet.cite")).toHaveTextContent("Cite in a new post");
+    expect(screen.getByTestId("postDetail.menuSheet.citedBy")).toHaveTextContent("Cited by");
+    expect(screen.getByTestId("postDetail.menuSheet.opinions")).toHaveTextContent("Opinions on this");
+    expect(screen.getByTestId("postDetail.menuSheet.license")).toHaveTextContent("License terms");
+    expect(screen.queryByTestId("postDetail.menuSheet.hide")).not.toBeInTheDocument();
   });
 
   // A comment has no count line of its own, so its ⋮ row stands whatever the
@@ -813,7 +822,7 @@ describe("PostView", () => {
     await openComments();
     await screen.findByTestId(byNode("postDetail.card.body"));
     fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
-    fireEvent.click(screen.getByTestId("comment-menu-cited-by-c1"));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.citedBy"));
     expect(await screen.findByTestId("cited-by-sheet-empty")).toHaveTextContent(
       "Nothing cites this yet — yours would be the first.",
     );
@@ -831,7 +840,7 @@ describe("PostView", () => {
     await openComments();
     await screen.findByTestId(byNode("postDetail.card.body"));
     fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
-    fireEvent.click(screen.getByTestId("comment-menu-opinions-c1"));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.opinions"));
     expect(await screen.findByTestId("opinions-sheet-empty")).toHaveTextContent(
       "No opinions yet — yours would be the first.",
     );
@@ -992,7 +1001,7 @@ describe("PostView", () => {
     });
     await openComments();
     fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
-    fireEvent.click(screen.getByTestId("comment-menu-save-c1"));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.save"));
     expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent("Saved.");
     await waitFor(() => expect(log.sets).toEqual([{ node: "c1", at: null }]));
   });
@@ -1270,8 +1279,9 @@ describe("PostView", () => {
       expect(screen.queryByTestId(byNode("postDetail.card.removalMark"))).not.toBeInTheDocument();
     });
 
-    // CommentMenuOwn.md:3 — Save or Unsave, Cite in a new post, Remove, Cited
-    // by, Opinions on this, License terms; :7 — no Report row.
+    // CommentMenuOwn.md:3 — Save or Unsave, Cite in a new post, Edit, Remove,
+    // Cited by, Opinions on this, License terms; :9 — no Report row. The rows
+    // wear the detail's registered paths (CommentMenuOwn board).
     it("gives the reader's own comment the own menu's rows, in order", async () => {
       server.use(...thread("u1", [{ id: "c1", body: "Mine", authorId: "acct-1" }]));
       renderWithProviders(<PostView postId="p1" />, {
@@ -1285,15 +1295,16 @@ describe("PostView", () => {
         (node) => node.getAttribute("data-testid"),
       );
       expect(order).toEqual([
-        "comment-menu-save-c1",
-        "comment-menu-cite-c1",
-        "comment-menu-remove-c1",
-        "comment-menu-cited-by-c1",
-        "comment-menu-opinions-c1",
-        "comment-menu-license-c1",
+        "postDetail.menuSheet.save",
+        "postDetail.menuSheet.cite",
+        "postDetail.menuSheet.edit",
+        "postDetail.menuSheet.remove",
+        "postDetail.menuSheet.citedBy",
+        "postDetail.menuSheet.opinions",
+        "postDetail.menuSheet.license",
       ]);
       expect(openMenuSheet()).toHaveAccessibleName("Comment actions");
-      expect(screen.queryByTestId("comment-menu-report-c1")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("postDetail.menuSheet.report")).not.toBeInTheDocument();
     });
 
     it("gives someone else's comment no Remove", async () => {
@@ -1304,7 +1315,143 @@ describe("PostView", () => {
       });
       await openComments();
       fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
-      expect(screen.queryByTestId("comment-menu-remove-c1")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("postDetail.menuSheet.remove")).not.toBeInTheDocument();
+    });
+
+    // CommentMenu.md:7 — Save, Cite in a new post, Cited by, Opinions on this,
+    // License terms, then postDetail.menuSheet.report at the sheet's tail.
+    it("gives someone else's comment its rows as postDetail.menuSheet paths, Report at the tail", async () => {
+      server.use(...thread("u1", [{ id: "c1", body: "Theirs", authorId: "u2" }]));
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+      await openComments();
+      fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+      const rows = within(openMenuSheet()).getAllByRole("button");
+      expect(rows.map((row) => row.getAttribute("data-testid"))).toEqual([
+        "postDetail.menuSheet.save",
+        "postDetail.menuSheet.cite",
+        "postDetail.menuSheet.citedBy",
+        "postDetail.menuSheet.opinions",
+        "postDetail.menuSheet.license",
+        "postDetail.menuSheet.report",
+      ]);
+      expect(rows.at(-1)).toHaveTextContent("Report");
+    });
+
+    describe("a comment's Report, stacked over the thread", () => {
+      const reports: string[] = [];
+      const sendReport = (answer: "sent" | "refused") =>
+        gqlLink.mutation("SendReport", ({ variables }) => {
+          reports.push(variables.target as string);
+          return HttpResponse.json({
+            data: {
+              sendReport: {
+                __typename: "SendReportPayload",
+                reportedAt: answer === "sent" ? "2026-11-12T12:00:00Z" : null,
+                userErrors:
+                  answer === "sent"
+                    ? []
+                    : [{ __typename: "UserError", code: "NOT_FOUND", message: "gone", field: ["target"] }],
+              },
+            },
+          });
+        });
+      const openReport = (): HTMLDialogElement =>
+        screen
+          .getAllByTestId("postDetail.reportSheet")
+          .find((sheet) => (sheet as HTMLDialogElement).open) as HTMLDialogElement;
+      beforeEach(() => {
+        reports.length = 0;
+      });
+
+      // CommentMenu.md:29 — the menu closes AND postDetail.reportSheet rises
+      // stacked over the thread, its title reading Report this comment? AND
+      // NEVER anything is sent yet; ReportConfirm.md:9 the thread unchanged.
+      it("report_closes_the_menu_and_raises_the_stacked_confirm_sending_nothing", async () => {
+        server.use(...thread("u1", [{ id: "c1", body: "Theirs", authorId: "u2" }]), sendReport("sent"));
+        renderWithProviders(<PostView postId="p1" />, {
+          store: storeFor("acct-1"),
+          writeSigner: fakeWriteSigner(),
+        });
+        const thread_ = await openComments();
+        fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+        fireEvent.click(within(openMenuSheet()).getByTestId("postDetail.menuSheet.report"));
+        const confirm = openReport();
+        expect(confirm).toBeDefined();
+        expect(within(confirm).getByTestId("postDetail.reportSheet.title")).toHaveTextContent("Report this comment?");
+        expect(confirm.className).toContain("bg-surface-container-highest");
+        await waitFor(() =>
+          expect(screen.queryAllByTestId("postDetail.menuSheet").some((d) => (d as HTMLDialogElement).open)).toBe(false),
+        );
+        expect((thread_ as HTMLDialogElement).open).toBe(true);
+        expect(reports).toEqual([]);
+      });
+
+      // ReportConfirm.md:11 — the report goes out, the snackbar reads Reported.
+      it("the_comments_report_goes_out_once_and_the_thread_reads_reported", async () => {
+        server.use(...thread("u1", [{ id: "c1", body: "Theirs", authorId: "u2" }]), sendReport("sent"));
+        renderWithProviders(<PostView postId="p1" />, {
+          store: storeFor("acct-1"),
+          writeSigner: fakeWriteSigner(),
+        });
+        await openComments();
+        fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+        fireEvent.click(within(openMenuSheet()).getByTestId("postDetail.menuSheet.report"));
+        fireEvent.click(within(openReport()).getByTestId("postDetail.reportSheet.report"));
+        expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent("Reported.");
+        expect(reports).toEqual(["c1"]);
+      });
+
+      // ReportConfirm.md:15 — refused: the sheet stays, NEVER Reported.
+      it("a_refused_comment_report_keeps_the_confirm_up", async () => {
+        server.use(...thread("u1", [{ id: "c1", body: "Theirs", authorId: "u2" }]), sendReport("refused"));
+        renderWithProviders(<PostView postId="p1" />, {
+          store: storeFor("acct-1"),
+          writeSigner: fakeWriteSigner(),
+        });
+        await openComments();
+        fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+        fireEvent.click(within(openMenuSheet()).getByTestId("postDetail.menuSheet.report"));
+        const confirm = openReport();
+        fireEvent.click(within(confirm).getByTestId("postDetail.reportSheet.report"));
+        expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent(
+          "That didn't send. Try again.",
+        );
+        expect(confirm.open).toBe(true);
+      });
+
+      // ReportConfirm.md:21 — signed out: the join prompt asks over the read
+      // AND NEVER postDetail.reportSheet rises; GuestGate.md:5 — Cite too.
+      it.each(["report", "cite"])("a_guests_%s_on_a_comment_raises_the_join_ask", async (row) => {
+        server.use(...thread("u1", [{ id: "c1", body: "Theirs", authorId: "u2" }]), sendReport("sent"));
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+        await openComments();
+        fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+        fireEvent.click(within(openMenuSheet()).getByTestId(`postDetail.menuSheet.${row}`));
+        expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
+        expect(screen.queryAllByTestId("postDetail.reportSheet").some((d) => (d as HTMLDialogElement).open)).toBe(false);
+        expect(routerPush).not.toHaveBeenCalled();
+        expect(reports).toEqual([]);
+      });
+    });
+
+    // CommentMenuOwn.md:13 — tap Edit: the menu closes AND the comment's edit
+    // opens over the thread; :11 — no comment's card carries an Edit button.
+    it("edit_closes_the_menu_and_opens_the_comments_edit_no_card_carrying_an_edit_button", async () => {
+      server.use(...thread("u1", [{ id: "c1", body: "Mine", authorId: "acct-1" }]));
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+      await openComments();
+      expect(screen.queryByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1"))).toBeNull();
+      expect(within(screen.getByTestId("post-comment-c1")).queryByRole("button", { name: "Edit" })).toBeNull();
+      await editFromMenu("c1");
+      expect(await screen.findByTestId("comment-edit")).toBeInTheDocument();
+      expect(screen.getByTestId("commentEdit.words.input")).toHaveValue("Mine");
+      expect(screen.queryAllByTestId("postDetail.menuSheet").some((d) => (d as HTMLDialogElement).open)).toBe(false);
     });
 
     // CommentMenuOwn.md:13 WHEN tap Remove -> the menu closes AND the
@@ -1346,7 +1493,7 @@ describe("PostView", () => {
       scroller.scrollTop = 440;
 
       fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
-      fireEvent.click(screen.getByTestId("comment-menu-remove-c1"));
+      fireEvent.click(screen.getByTestId("postDetail.menuSheet.remove"));
       const dialog = screen.getByTestId("postDetail.dialog") as HTMLDialogElement;
       expect(dialog).toHaveAccessibleName("Remove this comment?");
       await waitFor(() =>
@@ -1399,7 +1546,7 @@ describe("PostView", () => {
       });
       await openComments();
       fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
-      fireEvent.click(screen.getByTestId("comment-menu-remove-c1"));
+      fireEvent.click(screen.getByTestId("postDetail.menuSheet.remove"));
       fireEvent.click(screen.getByTestId("postDetail.dialog.remove"));
       await waitFor(() =>
         expect(screen.getByTestId("postDetail.dialog.remove")).toHaveTextContent("Retry"),
@@ -1521,8 +1668,14 @@ describe("PostView", () => {
     await openComments();
     expect(await screen.findByTestId("comment-edited-c1")).toBeInTheDocument();
     expect(screen.queryByTestId("comment-edited-c2")).not.toBeInTheDocument();
-    expect(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1"))).toBeInTheDocument();
-    expect(screen.queryByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c2"))).not.toBeInTheDocument();
+    // CommentMenuOwn.md:11 — the edit is offered as the own menu's Edit row,
+    // and NO comment card carries an Edit button (seam 304, a ruled removal).
+    expect(screen.queryByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1"))).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+    expect(within(openMenuSheet()).getByTestId("postDetail.menuSheet.edit")).toHaveTextContent("Edit");
+    fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c2")));
+    expect(within(openMenuSheet()).queryByTestId("postDetail.menuSheet.edit")).not.toBeInTheDocument();
   });
 
   it("edits a comment inline and signs the update", async () => {
@@ -1554,7 +1707,7 @@ describe("PostView", () => {
     const signer = fakeWriteSigner();
     renderWithProviders(<PostView postId="p1" />, { store: storeFor("acct-1"), writeSigner: signer });
     await openComments();
-    fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1")));
+    await editFromMenu("c1");
     const input = screen.getByTestId("commentEdit.words.input");
     expect(input).toHaveValue("old words");
     fireEvent.change(input, { target: { value: "better words" } });
@@ -1598,7 +1751,7 @@ describe("PostView", () => {
         writeSigner: signer,
       });
       await openComments();
-      fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1")));
+      await editFromMenu("c1");
       return { signer, wasPrepared: () => prepared };
     }
 
@@ -1613,7 +1766,7 @@ describe("PostView", () => {
       fireEvent.click(screen.getByTestId("commentEdit.header.leave"));
       expect(screen.queryByTestId("comment-edit")).not.toBeInTheDocument();
       expect(screen.queryByTestId("comment-edit-discard-confirm")).not.toBeInTheDocument();
-      fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1")));
+      await editFromMenu("c1");
       fireEvent.click(screen.getByTestId("commentEdit.header.back"));
       expect(screen.queryByTestId("comment-edit")).not.toBeInTheDocument();
       expect(screen.queryByTestId("comment-edit-discard-confirm")).not.toBeInTheDocument();
@@ -1660,13 +1813,13 @@ describe("PostView", () => {
       fireEvent.click(screen.getByTestId("commentEdit.header.leave"));
       fireEvent.click(screen.getByTestId("comment-edit-discard-confirm-discard"));
       expect(screen.queryByTestId("comment-edit")).not.toBeInTheDocument();
-      expect(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1"))).toBeInTheDocument();
+      expect(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1"))).toBeInTheDocument();
       expect(screen.getByText("old words")).toBeInTheDocument();
       expect(screen.queryByTestId("comment-signed")).not.toBeInTheDocument();
       expect(wasPrepared()).toBe(false);
       expect(signer.signStaged).not.toHaveBeenCalled();
       // Reopening starts from the comment, not from the discarded words.
-      fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1")));
+      await editFromMenu("c1");
       expect(screen.getByTestId("commentEdit.words.input")).toHaveValue("old words");
     });
   });
@@ -2258,7 +2411,7 @@ describe("PostView", () => {
       expect(await screen.findByTestId("post-comment-r1")).toHaveTextContent("old words");
       const body = await scrollThreadTo(180);
 
-      fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "r1")));
+      await editFromMenu("r1");
       await screen.findByTestId("comment-edit");
       // The sheet steps aside for the editor and drops on a 200 ms exit timer;
       // saving before that timer has run lets its close land on top of the
@@ -2430,7 +2583,7 @@ describe("PostView", () => {
         writeSigner: fakeWriteSigner(),
       });
       await openComments();
-      fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1")));
+      await editFromMenu("c1");
       expect(screen.getByTestId("commentEdit.tags.tag")).toHaveTextContent("#rust");
       // The chip opens its pair in a sheet over the edit (CommentEdit.md), on
       // the values the claim actually carries — real ones, never the entry
@@ -2473,7 +2626,7 @@ describe("PostView", () => {
       });
       await openComments();
 
-      fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1")));
+      await editFromMenu("c1");
       fireEvent.change(screen.getByTestId("commentEdit.words.input"), {
         target: { value: "new words" },
       });
@@ -2501,7 +2654,7 @@ describe("PostView", () => {
       });
       await openComments();
 
-      fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1")));
+      await editFromMenu("c1");
       // Nothing typed: the row is the only change.
       expect(screen.getByTestId("commentEdit.sign")).toBeDisabled();
 
@@ -2549,7 +2702,7 @@ describe("PostView", () => {
       });
       await openComments();
 
-      fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1")));
+      await editFromMenu("c1");
       await waitFor(() =>
         expect(screen.getByTestId("commentEdit.facts.sensitive.value")).toHaveTextContent("Marked"),
       );
@@ -2572,7 +2725,7 @@ describe("PostView", () => {
       });
       await openComments();
 
-      fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1")));
+      await editFromMenu("c1");
       fireEvent.change(screen.getByTestId("commentEdit.words.input"), {
         target: { value: "x".repeat(COMMENT_BODY_MAX_CHARS + 1) },
       });
@@ -2591,7 +2744,7 @@ describe("PostView", () => {
       });
       await openComments();
 
-      fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1")));
+      await editFromMenu("c1");
       // The sheet opens marked; over the cap its Done is visible and inert, so
       // an over-long reason never reaches the edit.
       fireEvent.click(screen.getByTestId("commentEdit.facts.sensitive.action"));
@@ -2632,7 +2785,7 @@ describe("PostView", () => {
         writeSigner: signer,
       });
       await openComments();
-      fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1")));
+      await editFromMenu("c1");
       fireEvent.change(screen.getByTestId("commentEdit.words.input"), {
         target: { value: "better words" },
       });
@@ -2668,7 +2821,7 @@ describe("PostView", () => {
         writeSigner: signer,
       });
       await openComments();
-      fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1")));
+      await editFromMenu("c1");
       await addTagThroughPicker("rust");
       fireEvent.click(screen.getByTestId("commentEdit.sign"));
 
@@ -2691,7 +2844,7 @@ describe("PostView", () => {
         writeSigner: fakeWriteSigner(),
       });
       await openComments();
-      fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1")));
+      await editFromMenu("c1");
       fireEvent.click(screen.getByTestId("comment-edit-tag-0-select"));
       fireEvent.click(screen.getByTestId("comment-edit-tag-pair-exact-route"));
       fireEvent.change(screen.getByTestId("comment-edit-tag-pair-tracks-directed"), {
@@ -2738,7 +2891,7 @@ describe("PostView", () => {
         writeSigner: signer,
       });
       await openComments();
-      fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1")));
+      await editFromMenu("c1");
       fireEvent.change(screen.getByTestId("commentEdit.words.input"), { target: { value: "moved" } });
       await addTagThroughPicker("a-b");
       fireEvent.click(screen.getByTestId("commentEdit.sign"));
@@ -2760,7 +2913,7 @@ describe("PostView", () => {
         writeSigner: fakeWriteSigner(),
       });
       await openComments();
-      fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1")));
+      await editFromMenu("c1");
       // Untouched: nothing to sign, and the press is inert.
       expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent(
         "Nothing to sign yet",
@@ -2798,7 +2951,7 @@ describe("PostView", () => {
         writeSigner: signer,
       });
       await openComments();
-      fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1")));
+      await editFromMenu("c1");
       fireEvent.change(screen.getByTestId("commentEdit.words.input"), { target: { value: "moved" } });
       await addTagThroughPicker("rust");
       expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent(
@@ -2994,7 +3147,7 @@ describe("PostView — references", () => {
     expect(routerPush).toHaveBeenCalledWith("/compose?reference=p1");
 
     fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
-    fireEvent.click(screen.getByTestId("comment-menu-cite-c1"));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.cite"));
     expect(routerPush).toHaveBeenCalledWith("/compose?reference=c1");
   });
 
@@ -3030,7 +3183,7 @@ describe("PostView — references", () => {
     });
     await openComments();
 
-    fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1")));
+    await editFromMenu("c1");
     fireEvent.click(screen.getByTestId("commentEdit.references.stagedReference.remove"));
     // The foot counts the withdrawal's counter-records, served by the claim,
     // and nothing is staged while the reader reads it.
@@ -3060,7 +3213,7 @@ describe("PostView — references", () => {
     );
     renderWithProviders(<PostView postId="p1" />, { store: storeFor("u1") });
     await openComments();
-    fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1")));
+    await editFromMenu("c1");
     expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent(
       "Nothing to sign yet",
     );
