@@ -5980,7 +5980,7 @@ say so: the list is the reader's own record, cut on the device, leaving it
 only for an outside ranker the reader picks. No surface reads it beyond the
 feed and History; whether anything else may stays his belief.
 
-### 205 · PadStanding, RefPair and TagPad: registering the reference pads · *system* · **filed 2026-11-12**
+### 205 · PadStanding, RefPair and TagPad: registering the reference pads · *system* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 45 (seam 308, option a: register them). Not built, because each needs a
 choice the rules do not make. `PadStanding` draws one keyed card four times
@@ -5992,6 +5992,14 @@ the card [lean — the pad parts then take `feed.card.actionRow.stance.pad.*`,
 `TagPad` are bespoke sheets over the composer and the edit: their prefix
 (the composer's and the edit's own) and every part name (sheet, title, the
 readout, the pad, the foot's line, `Done`, `Un-tag`) are new paths to mint.
+
+Closed by round 45's second act, by (a), the registry's call: `PadStanding`'s
+`state` chip (parked · held · no-side · explained — a chip value is a key, so
+`no-side` is hyphenated) draws the card once per value, the pad under
+`feed.card.actionRow.stance.pad.*`; `RefPair` (`composeDetails`) and `TagPad`
+(`postEdit`) name their sheet `pairSheet` — `title`, the readout `pick`
+(`label`, `face`, `exact`, the pads' `standing.pick` names), `pad.field`,
+`note`, `done`, and `TagPad`'s `untag`.
 
 ### 206 · Another's removed post, opened: the detail's ⋮ · *design* · **filed 2026-11-12**
 
