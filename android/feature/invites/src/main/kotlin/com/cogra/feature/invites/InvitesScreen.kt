@@ -558,7 +558,8 @@ private fun Empty(onCreate: () -> Unit, focus: FocusRequester) {
         testTag = "invites.empty",
         title = stringResource(R.string.invites_empty),
         registered = true,
-        modifier = Modifier.padding(horizontal = Space.x6, vertical = Space.x2),
+        // The board's column stands 16 under the header: the list's own 4, then 12.
+        modifier = Modifier.padding(start = Space.x6, end = Space.x6, top = Space.x3, bottom = Space.x2),
         action = {
             CograButton(
                 text = stringResource(R.string.invites_create),
@@ -612,8 +613,10 @@ private fun LazyListScope.applications(
             Box(Modifier.padding(start = Space.x4, end = Space.x4, bottom = Space.x2)) { row(application) }
         }
     }
-    layout.groups.forEach { group ->
-        item(key = "group:${group.linkId}") { GroupHeader(group, actions.onCloseAll) }
+    layout.groups.forEachIndexed { index, group ->
+        // The groups and their rows stand in one column at 8 apart: every group
+        // after the first keeps that gap above it, as its rows do.
+        item(key = "group:${group.linkId}") { GroupHeader(group, actions.onCloseAll, first = index == 0) }
         group.rows.forEach { application ->
             item(key = application.id) {
                 Box(Modifier.padding(start = Space.x4, end = Space.x4, top = Space.x2)) { row(application) }
@@ -676,7 +679,12 @@ private fun LazyListScope.peopleLetIn(
     focus: MutableMap<String, FocusRequester>,
 ) {
     if (state.people.isEmpty()) return
-    item(key = "peopleLabel") { SectionLabel(stringResource(R.string.invites_people), INVITES / "peopleLabel") }
+    item(key = "peopleLabel") {
+        // Straight under New invite (only people let in), 4 of its 12 already
+        // stand inside the pill's 48, as over Applications.
+        val top = if (state.onlyLetIn) Space.x2 else Space.x3
+        SectionLabel(stringResource(R.string.invites_people), INVITES / "peopleLabel", top = top)
+    }
     state.peopleShown.forEachIndexed { index, person ->
         item(key = PERSON_FOCUS_PREFIX + person.id) {
             val requester = remember(person.id) { FocusRequester() }
@@ -736,13 +744,14 @@ private fun PersonRow(person: LetInPerson, now: Instant, onOpen: () -> Unit, mod
  * count, `Close all` past one waiting, then its rows by age.
  */
 @Composable
-private fun GroupHeader(group: ApplicationGroup, onCloseAll: (ApplicationGroup) -> Unit) {
+private fun GroupHeader(group: ApplicationGroup, onCloseAll: (ApplicationGroup) -> Unit, first: Boolean) {
     val node = (INVITES / "group").keyed(group.linkId)
     val closeAllName = stringResource(R.string.invites_close_all_label, group.rows.size)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier
+            .padding(top = if (first) 0.dp else Space.x2)
             .padding(horizontal = Space.x4)
             .fillMaxWidth()
             .dataNode(node)
@@ -909,7 +918,8 @@ private fun LazyListScope.liveLinks(
                 // whole above it (Invites.md:79-81) — never `Link copied`.
                 footer = if (state.copyFailed == link.id) {
                     {
-                        Box(Modifier.dataNode(card / "copyFault")) {
+                        // A block at the card's width, as the board's line stands in it.
+                        Box(Modifier.fillMaxWidth().dataNode(card / "copyFault")) {
                             RowLine(
                                 state = RowLineState.DidntGoThrough(onRetry = { actions.onCopy(link) }),
                                 testTag = "invites_copy_fault",
