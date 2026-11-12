@@ -21,6 +21,7 @@ import { bundleReadout } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
+import { nameInLine } from "@/lib/ui/names";
 import { NodeMark } from "@/lib/ui/node-mark";
 import { PendingMarker } from "@/lib/ui/pending-marker";
 import { formatStancePair } from "@/lib/ui/stance-format";
@@ -147,7 +148,9 @@ export function ReferenceRow({
             className="min-w-0 overflow-hidden text-body-small text-ellipsis whitespace-nowrap text-on-surface-variant"
             {...testAttributes(part(node, "sub"))}
           >
-            {sub}
+            {/* One line: words after a handle (`@ada · 3d`) keep their room,
+                the handle is cut (NamesLong.md:5-7). */}
+            {nameInLine(sub)}
           </span>
         )}
       </span>

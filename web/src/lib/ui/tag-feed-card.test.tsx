@@ -2,6 +2,7 @@ import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { startMswServer } from "@/test/msw";
+import { expectLineYieldsHandle, LONG_HANDLE } from "@/test/names";
 import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
 import { TagFeedCard, reachesThrough, type TagCardTopic } from "./tag-feed-card";
@@ -62,5 +63,32 @@ describe("TagFeedCard", () => {
     expect(screen.getByTestId("history.tagCard.glimpse.by")).toHaveTextContent("@ada");
     expect(screen.getByTestId("history.tagCard.mark")).toHaveTextContent("#");
     expect(screen.queryByRole("button", { name: /^More/ })).toBeNull();
+  });
+
+  // NamesLong.md:5-7 — the glimpse's by-line is one line; a long handle is
+  // the part cut, ` · and N more` keeps its room.
+  it("cuts a long handle in the glimpse's by-line and keeps its count", () => {
+    const post = (id: string, handle: string) => ({
+      node: {
+        __typename: "Post" as const,
+        id,
+        title: { value: null, status: "NORMAL" },
+        content: { value: "Low tide at six", status: "NORMAL" },
+        attachments: [],
+        author: { id: `u-${id}`, handle },
+        createdAt: new Date().toISOString(),
+      },
+    });
+    const topic: TagCardTopic = {
+      ...TOPIC,
+      taggedContent: [post("p1", LONG_HANDLE), post("p2", "ada"), post("p3", "ada")],
+    };
+    renderWithProviders(
+      <TagFeedCard topic={topic} from="history" testId="tag" node={{ path: "history.tagCard", key: "t1" }} onLinkCopied={() => {}} />,
+    );
+    const by = screen.getByTestId("history.tagCard.glimpse.by");
+    expect(by).toHaveTextContent(`@${LONG_HANDLE} · and 2 more`);
+    expect(by.className.split(" ")).toEqual(expect.arrayContaining(["min-w-0", "truncate"]));
+    expectLineYieldsHandle(by, `@${LONG_HANDLE}`, " · and 2 more");
   });
 });
