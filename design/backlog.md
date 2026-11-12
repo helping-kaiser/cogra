@@ -5772,3 +5772,34 @@ named exception [lean — a guest who closes has nothing to come back to];
 next open.
 
 Ruled by jakob 2026-11-11 (on the round 41 review): (a) — on the signed-in plain forms the back arrow is named `Close` from the press and only leaves, the submit going on; the entry forms keep their exits held while they submit, the named exception. Not built yet: where a failure shows after Close is still at him.
+
+### 205 · PadStanding, RefPair and TagPad: registering the reference pads · *system* · **filed 2026-11-12**
+
+Round 45 (seam 308, option a: register them). Not built, because each needs a
+choice the rules do not make. `PadStanding` draws one keyed card four times
+under two chips (`knob` parked/held only within `landing` pulledBack), and a
+keyed card may repeat once per value of ONE chip: (a) fold the two chips into
+one, `state` = parked · held · noSide · explained, each copy a chip copy of
+the card [lean — the pad parts then take `feed.card.actionRow.stance.pad.*`,
+`VouchBackPad`'s names]; (b) register the parked copy alone. `RefPair` and
+`TagPad` are bespoke sheets over the composer and the edit: their prefix
+(the composer's and the edit's own) and every part name (sheet, title, the
+readout, the pad, the foot's line, `Done`, `Un-tag`) are new paths to mint.
+
+### 206 · Another's removed post, opened: the detail's ⋮ · *design* · **filed 2026-11-12**
+
+Round 45. jakob's ruling (re-ask 11) gives another's removed post's CARD the
+reader's whole menu. The only drawn removed detail is the reader's own
+(`Removed`: back arrow alone, "a removed post has no menu left"), and
+`FeedRemoved`'s own card carries no ⋮. For jakob: (a) another's removed post's
+detail header carries the reader's post menu as the card does, no license row
+[lean — one menu per post, wherever it is opened]; (b) the detail stays
+menu-less; and whether the reader's own removed card and detail keep none.
+
+### 207 · A first page that failed reads `Couldn't load more` · *design* · **filed 2026-11-12**
+
+Round 45 (re-ask 15, as recommended: `ProfileMoreFailed`'s quiet row where the
+list would stand). The row is copied word for word, so a tab whose first page
+never came says `more` with nothing above it. For jakob: (a) keep it, one row
+for every page [as drawn]; (b) the first page's row takes a line of its
+own, his words. Nothing waits on it.

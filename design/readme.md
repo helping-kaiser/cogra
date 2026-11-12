@@ -11523,6 +11523,57 @@ jakob's answers to rounds 36–39 (M1–M3, R2, S1–S6, I1–I2), executed.
   Backlog 176 stays open: `FeedRemoved.md` says a removed card carries no
   menu.
 
+### Round 45, the figures' two doors, the card tabs, the way back, a removed card's menu, the tiny score — 2026-11-12
+
+jakob's rulings of 2026-11-11 (J-A, the figures) and of the 2026-11-12
+re-ask (11, 12, 14–18, 20), and two registry gaps impl found (seam 297,
+308), executed.
+
+- **The figures are two doors and a fact** (J-A; seam 297, 299). `Opinions
+  on …` opens the opinions page on its On state, `Opinions by …` on By; the
+  Posts figure is inert, the posts standing at the page's foot. Each door is
+  spoken by its figure's number and words, then the one door's purpose split
+  by direction (`6 Opinions on them, opinions on @ada` · `5 Opinions by you,
+  your opinions, by you`). The doors are the registered `figures.stancesOn`
+  and `figures.stancesTaken`, the row keeps `figures`: no path moved.
+  Measured on `ProfileOther` and `Profile` against main: every head part at
+  the same pixel; the doors' targets 96×48 and 95.7×48 (another's), 88×48
+  and 87.7×48 (one's own), 20px apart. Graph: «the Opinions on figure» and «the
+  Opinions by figure» on all ten profile boards; a second flow,
+  `see-who-someone-stands-with`.
+- **The card tabs' other moments** (re-ask 14–16). A first page in flight
+  shows nothing for 200ms, then `Loading…`; a first page that does not come
+  shows `ProfileMoreFailed`'s quiet row with `Retry` where the list would
+  stand (`ProfileTabFirstPage`; the `load` chip on `ProfilePosts`,
+  `ProfileComments` and their own twins, whose `posts` / `comments` chip draws
+  the plain `Nothing here yet.` — an applicant's own tab as a member's).
+- **A removed comment on the Comments tab carries its date** (re-ask 17):
+  `removalMark.when` under the mark, the removal's own moment (`2h`).
+- **The way back names the profile** (re-ask 18). Every page a profile's card
+  opens — the post, its thread, the stream, the trace, a tag, and a profile
+  reached through the card's references — reads `Back to the profile`, or
+  `Back to your profile` from the reader's own; the tag page's and the
+  profile's tables gain the rows, the post's had them. `ProfileOther`'s
+  `from` chip draws it.
+- **A removed post's card keeps the reader's whole menu** (re-ask 11,
+  overruling the lean; backlog 176 closed). Save, Cite in a new post, Hide
+  with the author's handle, Report — no license row, the license having gone
+  with the payload. `LadderStates`' two cards; `FeedRemovedMenu` (new, *Feed ·
+  a removed post's menu*) draws it open. The reader's own just-removed card
+  (`FeedRemoved`, no ⋮) was not ruled and stands.
+- **`Unhide this account` is blessed** (re-ask 12), and every place that
+  writes `Hide this account` names its twin.
+- **A tiny score never reads zero** (re-ask 20; seam 293-2, 310). Tiny is
+  0 < |s| < 0.005. The card prints `0.01` or `−0.01`, never more than two
+  decimals; the trace prints two significant digits, six decimals at most,
+  `0.000001` the floor; the screen reader reads the print. The rule whole
+  is `ExplainableNumber`'s source; `FeedKinds`' and `FeedEntry`'s `score`
+  chips draw both signs.
+- **Registry**: the snackbar over the thread sheet is `postDetail.snackbar`
+  on `ReplyEntry` (seam 297). 2000 → 2007 distinct paths, 185 → 186 screens,
+  additions only. `PadStanding`, `RefPair` and `TagPad` are not registered
+  yet (backlog 205).
+
 ---
 
 ## 14. The canvases
