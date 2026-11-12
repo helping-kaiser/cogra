@@ -60,6 +60,42 @@ query Invites {
   }
 }
 
+# People you let in (api-spec.md `User.vouchedIn`): everyone the reader
+# vouched in, newest first, each under their first voucher only. The page
+# shows three and `Show all` opens the rest in place (Invites.md:15-19),
+# so the store pages the whole list to the end, a full page at a time, as
+# the hidden set does. The page size is a literal so the client-operation
+# guard prices the call the device actually makes.
+query VouchedInPage($after: String) {
+  me {
+    id
+    vouchedIn(first: 100, after: $after) {
+      edges {
+        cursor
+        vouchedAt
+        node {
+          id
+          handle
+          displayName {
+            value
+            status
+          }
+          ... on User {
+            avatar {
+              url
+              status
+            }
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
 mutation CreateInviteLink($input: CreateInviteLinkInput!) {
   createInviteLink(input: $input) {
     inviteLink {

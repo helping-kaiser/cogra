@@ -19,6 +19,7 @@ import com.cogra.feature.content.wizard.ComposeWizardRoute
 import com.cogra.feature.invites.InvitesNotice
 import com.cogra.feature.invites.InvitesRoute
 import com.cogra.feature.profile.FramedPicture
+import com.cogra.feature.profile.INVITES_ORIGIN
 import com.cogra.feature.profile.ProfileEditRoute
 import com.cogra.feature.profile.avatar.AvatarFlowRoute
 import com.cogra.feature.stance.kept.KeptPicksRoute
@@ -72,6 +73,8 @@ private fun ShellScope.InvitesDestination(entry: NavBackStackEntry) {
         onBack = { navController.navigateUp() },
         onNotMember = { navController.navigateUp() },
         onRestoreKey = { navController.navigate(Restore) },
+        // A person let in opens over Invites, the way back naming it (Invites.md:23, :27).
+        onOpenPerson = { handle -> navController.navigate(Profile(handle, from = INVITES_ORIGIN)) },
         arrival = InvitesNotice.decode(notice),
         onArrivalConsumed = consumeNotice,
         deletionBand = deletionBand(node = null),

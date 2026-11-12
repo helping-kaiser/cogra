@@ -10,6 +10,7 @@ import com.cogra.domain.UserProfile
 import com.cogra.domain.WriteState
 import com.cogra.domain.invites.ApplicationInfo
 import com.cogra.domain.invites.InviteLinkInfo
+import com.cogra.domain.invites.LetInPerson
 import com.cogra.domain.invites.QueueLink
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.stance.KeptFamily
@@ -523,5 +524,119 @@ class InvitesViewModelTest {
         advanceUntilIdle()
         assertThat(kept.picks.value).isEmpty()
         assertThat(invites.approved).isEmpty()
+    }
+
+    // ── People you let in (Invites.md:7-27, InvitesEmpty.md:5) ───────────
+
+    private fun person(id: String, daysAgo: Long, redacted: Boolean = false) = LetInPerson(
+        id = id,
+        door = id,
+        name = if (redacted) null else "@$id",
+        monogram = if (redacted) "" else id,
+        avatarUrl = null,
+        redacted = redacted,
+        vouchedAt = NOW.minus(Duration.ofDays(daysAgo)),
+    )
+
+    @Test
+    fun invites15_17_threePeopleStandUntilTheDoorThenEveryoneInTheServersOrder() = runTest(dispatcher) {
+        invites.people += listOf(person("nadia", 2), person("wren", 5), person("juno", 9), person("kel", 12))
+        val vm = viewModel()
+        advanceUntilIdle()
+        // :15 — the three newest, the door under the third.
+        assertThat(vm.state.value.peopleShown.map { it.id }).containsExactly("nadia", "wren", "juno").inOrder()
+        assertThat(vm.state.value.peopleCapped).isTrue()
+
+        // :19 — every person, the newest first, in place; the door leaves.
+        vm.onShowAllPeople()
+        assertThat(vm.state.value.peopleShown.map { it.id })
+            .containsExactly("nadia", "wren", "juno", "kel").inOrder()
+        assertThat(vm.state.value.peopleCapped).isFalse()
+
+        // NEVER a control to show fewer: a fresh read keeps them all standing.
+        vm.onPull()
+        advanceUntilIdle()
+        assertThat(vm.state.value.peopleShown).hasSize(4)
+    }
+
+    @Test
+    fun invites17_threeOrFewerStandWholeWithNoDoor() = runTest(dispatcher) {
+        invites.people += listOf(person("nadia", 2), person("wren", 5), person("juno", 9))
+        val vm = viewModel()
+        advanceUntilIdle()
+        assertThat(vm.state.value.peopleShown).hasSize(3)
+        assertThat(vm.state.value.peopleCapped).isFalse()
+    }
+
+    @Test
+    fun invitesEmpty5_theEmptyInvitesNeverStandsForAReaderWhoLetSomeoneIn() = runTest(dispatcher) {
+        invites.people += person("nadia", 2)
+        val vm = viewModel()
+        advanceUntilIdle()
+        assertThat(vm.state.value.empty).isFalse()
+        // Invites.md:21 — New invite and People you let in, neither half.
+        assertThat(vm.state.value.onlyLetIn).isTrue()
+    }
+
+    @Test
+    fun invites21_aWaitingApplicationOrALiveLinkIsNotOnlyLetIn() = runTest(dispatcher) {
+        invites.people += person("nadia", 2)
+        invites.links += link("live")
+        val vm = viewModel()
+        advanceUntilIdle()
+        assertThat(vm.state.value.onlyLetIn).isFalse()
+        assertThat(vm.state.value.empty).isFalse()
+    }
+
+    @Test
+    fun invites91_93_theLastRevokeLeavesTheEmptyInvitesOnlyForAReaderWhoLetNobodyIn() = runTest(dispatcher) {
+        invites.links += link("one")
+        val nobody = viewModel()
+        advanceUntilIdle()
+        nobody.onRevoke(nobody.state.value.links.single())
+        advanceUntilIdle()
+        assertThat(nobody.state.value.empty).isTrue()
+
+        invites.links.clear()
+        invites.links += link("two")
+        invites.people += person("nadia", 2)
+        val someone = viewModel()
+        advanceUntilIdle()
+        someone.onRevoke(someone.state.value.links.single())
+        advanceUntilIdle()
+        assertThat(someone.state.value.empty).isFalse()
+        assertThat(someone.state.value.onlyLetIn).isTrue()
+    }
+
+    @Test
+    fun invites79_81_aCopyThatFailedStandsOnItsCardAndLeavesOnceTheLinkLands() = runTest(dispatcher) {
+        invites.links += listOf(link("one"), link("two"))
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        vm.onCopyFailed("one")
+        assertThat(vm.state.value.copyFailed).isEqualTo("one")
+        // NEVER the snackbar reads Link copied.
+        assertThat(vm.state.value.snack).isNull()
+
+        // Another card's copy leaves this card's line where it stands.
+        vm.onLinkCopied("two")
+        assertThat(vm.state.value.copyFailed).isEqualTo("one")
+        vm.onSnackShown()
+
+        // Retry lands: the line leaves the card, `Link copied`.
+        vm.onLinkCopied("one")
+        assertThat(vm.state.value.copyFailed).isNull()
+        assertThat(vm.state.value.snack).isEqualTo(InvitesSnack.LinkCopied)
+    }
+
+    @Test
+    fun aPeopleReadThatFailsIsThePagesFaultNeverItsEmptyState() = runTest(dispatcher) {
+        // InvitesEmpty.md:5 — a page without its people could stand empty for a reader who let someone in.
+        invites.readAnswers += Outcome.Failed(Exception("offline"))
+        val vm = viewModel()
+        advanceUntilIdle()
+        assertThat(vm.state.value.fault).isTrue()
+        assertThat(vm.state.value.empty).isFalse()
     }
 }
