@@ -14,6 +14,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -1619,6 +1620,42 @@ class CograNavGraphTest {
         compose.runOnUiThread { navController.navigate(Invites(from = "notifications")) }
         waitForTag("invites.header")
         compose.onNodeWithContentDescription("Back to Notifications").assertExists()
+    }
+
+    /** Invites.md:23 — a person let in opens their profile, whose back arrow reads Back to Invites. */
+    @Test
+    fun `a_person_let_in_opens_their_profile_back_to_invites`() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        invites.people += com.cogra.domain.invites.LetInPerson(
+            id = "nadia-1",
+            door = "nadia",
+            name = "Nadia Rahimi",
+            monogram = "Nadia Rahimi",
+            avatarUrl = null,
+            redacted = false,
+            vouchedAt = java.time.Instant.parse("2026-11-10T09:00:00Z"),
+        )
+        profiles.others["nadia"] = com.cogra.domain.testing.testProfile(id = "nadia-1", handle = "nadia")
+        render()
+        waitFor(barSlot("profile"))
+        compose.runOnUiThread { navController.navigate(Invites()) }
+        waitForTag("invites.person:nadia-1")
+        compose.onNodeWithTag("invites_person_nadia-1_open", useUnmergedTree = true).performClick()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<Profile>() == true
+        }
+        val entry = navController.currentBackStackEntry
+        assertThat(entry?.toRoute<Profile>()?.handle).isEqualTo("nadia")
+        assertThat(entry?.toRoute<Profile>()?.from).isEqualTo(com.cogra.feature.profile.INVITES_ORIGIN)
+        waitFor(hasContentDescription("Back to Invites"))
+
+        // The way back is Invites, its own arrow as it was (Invites.md:95).
+        compose.runOnUiThread { navController.navigateUp() }
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<Invites>() == true
+        }
     }
 
     /** ProfileApplicant.md:18 — Invites never stands for a reader who is not a member. */
