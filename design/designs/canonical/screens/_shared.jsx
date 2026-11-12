@@ -18,6 +18,7 @@ const {
   ActorChip,
   HIDE_ACTOR_LABEL,
   UNHIDE_ACTOR_LABEL,
+  NameInText,
   REDACTED_ACTOR_NAME,
   ProfileHeader,
   EmptyState,
@@ -581,9 +582,14 @@ function TaskCard({ title, body, tone, children, node }) {
       }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+        {/* TEXT THAT WRAPS (round 40): the title and the body wrap at their
+            spaces; the handle is one unit (`nameInText`) — `All set — waiting
+            on @…` takes the handle whole to its own line, end-cut past one. */}
         <h2
           style={{
             margin: 0,
+            minWidth: 0,
+            overflowWrap: "anywhere",
             fontSize: "var(--text-title-medium)",
             letterSpacing: "var(--text-title-medium--letter-spacing)",
             lineHeight: "var(--text-title-medium--line-height)",
@@ -591,11 +597,11 @@ function TaskCard({ title, body, tone, children, node }) {
           }}
           data-node={node && "title"}
         >
-          {title}
+          <NameInText text={title} />
         </h2>
         <Icon name="mark" size={20} pickColor="var(--primary-container)" style={{ flex: "none", color: "var(--primary)" }} />
       </div>
-      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }} data-node={node && "body"}>{body}</p>
+      <p style={{ margin: 0, overflowWrap: "anywhere", fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }} data-node={node && "body"}><NameInText text={body} /></p>
       {children}
     </Card>
   );
@@ -5581,8 +5587,8 @@ function VouchBackHint({ node }) {
    never disagree about what a pad's own voice looks like. */
 function PadLine({ children }) {
   return (
-    <p style={{ margin: 0, fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
-      {children}
+    <p style={{ margin: 0, overflowWrap: "anywhere", fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
+      <NameInText text={children} />
     </p>
   );
 }
@@ -5773,6 +5779,12 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
           <Button style={{ width: "100%" }} node="create">New invite</Button>
         </div>
 
+        {/* ONLY PEOPLE LET IN (jakob 2026-11-11, round 40): with no
+            application waiting and no link live but someone let in, the page
+            is not its empty state — `New invite` and `People you let in`
+            stand, and the two empty sections go, labels and all (the
+            `sections` chip's `only-let-in`). */}
+        <div style={{ display: shown ? shown.applicationsSection : "flex", flexDirection: "column" }}>
         <SectionLabel node="applicationsLabel">Applications</SectionLabel>
         {shown && (
           <div style={{ display: shown.applicationsEmpty }} data-node-chip="sections" data-node-key="no-applications">
@@ -5878,6 +5890,7 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
             nodeKey={ASKER_IDS.rafa}
           />
         </div>
+        </div>
 
         {/* THE PEOPLE YOU LET IN (jakob 2026-11-11, J3): under the waiting
             applications, every person the reader vouched in, newest first —
@@ -5895,10 +5908,30 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
               <div style={{ display: shown.personDeleted, flexDirection: "column" }} data-node-chip="letIn" data-node-key="deleted">
                 <ContentRow variant="chronicle" redacted trailing="5d" onOpen={() => {}} node="redactedPerson" nodeKey={DELETED_LET_IN_ID} />
               </div>
+              {/* NO LIST IS UNCAPPED IN ITS DEFAULT STATE (jakob 2026-11-11,
+                  round 40): three rows, the newest, then `Show all` under the
+                  third — the pickers' door (`PICKER_DOOR`), an inline action
+                  under the rows — which opens the rest in place: the list
+                  grows, nothing else leaves the page, and no "show fewer"
+                  follows. The `letIn` chip's `more` draws it shut, `more-opened`
+                  open. */}
+              <div style={{ display: shown.personMore, flexDirection: "column" }} data-node-chip="letIn" data-node-key="more">
+                <ContentRow variant="chronicle" name={JUNO.displayName} title={JUNO.displayName} trailing="9d" onOpen={() => {}} node="person" nodeKey={JUNO.id} />
+              </div>
+              <div style={{ display: shown.peopleDoor }} data-node-chip="letIn" data-node-key="more">
+                <InlineAction size="sm" selfStart node="peopleDoor">
+                  Show all
+                </InlineAction>
+              </div>
+              <div style={{ display: shown.personRest, flexDirection: "column", gap: 8 }} data-node-chip="letIn" data-node-key="more-opened">
+                <ContentRow variant="chronicle" name={KEL.displayName} title={KEL.displayName} trailing="12d" onOpen={() => {}} node="person" nodeKey={KEL.id} />
+                <ContentRow variant="chronicle" name={TOBIAS.displayName} title={TOBIAS.displayName} trailing="16d" onOpen={() => {}} node="person" nodeKey={TOBIAS.id} />
+              </div>
             </div>
           </div>
         )}
 
+        <div style={{ display: shown ? shown.linksSection : "flex", flexDirection: "column" }}>
         <SectionLabel node="linksLabel">Live links</SectionLabel>
         {shown && (
           <div style={{ display: shown.linksEmpty }} data-node-chip="sections" data-node-key="no-links">
@@ -5963,6 +5996,7 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
             node="link"
             nodeKey={SOL_INVITE_LINK_OPEN.split("/").at(-1)}
           />
+        </div>
         </div>
 
         <div style={{ flex: 1 }} />
@@ -6098,6 +6132,7 @@ function IntroFrame({ step, headline, lines, note = null, cta = "Next", children
             key={line}
             style={{
               margin: "8px 0 0",
+              overflowWrap: "anywhere",
               fontSize: "var(--text-body-medium)",
               fontWeight: "var(--text-body-medium--font-weight)",
               lineHeight: "var(--text-body-medium--line-height)",
@@ -6106,7 +6141,7 @@ function IntroFrame({ step, headline, lines, note = null, cta = "Next", children
             }}
             data-node="body"
           >
-            {line}
+            <NameInText text={line} />
           </p>
         ))}
         {note}

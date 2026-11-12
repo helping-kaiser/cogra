@@ -45,11 +45,18 @@ function fillForm({
   handle = "ada",
   email = "ada@example.org",
   password = "correct horse battery",
-}: { handle?: string; email?: string; password?: string } = {}) {
-  fireEvent.change(screen.getByTestId("apply_handle"), { target: { value: handle } });
-  fireEvent.change(screen.getByTestId("apply_email"), { target: { value: email } });
-  fireEvent.change(screen.getByTestId("apply_password"), { target: { value: password } });
+  repeat = password,
+}: { handle?: string; email?: string; password?: string; repeat?: string } = {}) {
+  fireEvent.change(screen.getByTestId("join.handle.input"), { target: { value: handle } });
+  fireEvent.change(screen.getByTestId("join.email.input"), { target: { value: email } });
+  fireEvent.change(screen.getByTestId("join.password.input"), { target: { value: password } });
+  fireEvent.change(screen.getByTestId("join.confirm.input"), { target: { value: repeat } });
 }
+
+const typeIn = (field: "handle" | "email" | "password" | "confirm", value: string) =>
+  fireEvent.change(screen.getByTestId(`join.${field}.input`), { target: { value } });
+const createAccount = () => fireEvent.click(screen.getByTestId("join.commit.action"));
+const MISMATCH = "The two passwords don't match.";
 
 const refusal = (code: string, field: string[] | null) =>
   gqlLink.mutation("Register", () =>
@@ -102,7 +109,7 @@ describe("JoinView", () => {
     server.use(usableCheck);
     renderWithProviders(<JoinView linkId={ID} />);
     expect(await screen.findByTestId("join.title")).toHaveTextContent("Grace Hopper invited you");
-    expect(screen.getByTestId("apply_handle")).toBeInTheDocument();
+    expect(screen.getByTestId("join.handle.input")).toBeInTheDocument();
   });
 
   it("refuses an unknown invite before the form", async () => {
@@ -111,7 +118,7 @@ describe("JoinView", () => {
     );
     renderWithProviders(<JoinView linkId={ID} />);
     expect(await screen.findByRole("heading", { name: "This invite can't be used anymore" })).toBeInTheDocument();
-    expect(screen.queryByTestId("apply_handle")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("join.handle.input")).not.toBeInTheDocument();
   });
 
   it("refuses an unusable invite before the form", async () => {
@@ -170,14 +177,10 @@ describe("JoinView", () => {
       }),
     );
     const { store } = renderWithProviders(<JoinView linkId={ID} />);
-    await screen.findByTestId("apply_handle");
+    await screen.findByTestId("join.handle.input");
 
-    fireEvent.change(screen.getByTestId("apply_handle"), { target: { value: "Ada" } });
-    fireEvent.change(screen.getByTestId("apply_email"), { target: { value: "ada@example.org" } });
-    fireEvent.change(screen.getByTestId("apply_password"), {
-      target: { value: "correct horse battery" },
-    });
-    fireEvent.click(screen.getByTestId("apply_continue"));
+    fillForm({ handle: "Ada" });
+    fireEvent.click(screen.getByTestId("join.commit.action"));
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
     expect(store.hasSession()).toBe(true);
@@ -195,16 +198,16 @@ describe("JoinView", () => {
       }),
     );
     renderWithProviders(<JoinView linkId={ID} />);
-    await screen.findByTestId("apply_handle");
+    await screen.findByTestId("join.handle.input");
     fillForm({ password: "short" });
     // Typing never marks a field before the press.
     expect(screen.queryByText("A password is at least 12 characters.")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("apply_continue"));
+    fireEvent.click(screen.getByTestId("join.commit.action"));
     expect(await screen.findByText("A password is at least 12 characters.")).toBeInTheDocument();
-    expect(screen.getByTestId("apply_password")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByTestId("join.password.input")).toHaveAttribute("aria-invalid", "true");
     expect(calls).toBe(0);
     // The local line re-checks as the text changes.
-    fireEvent.change(screen.getByTestId("apply_password"), { target: { value: "correct horse battery" } });
+    fireEvent.change(screen.getByTestId("join.password.input"), { target: { value: "correct horse battery" } });
     expect(screen.queryByText("A password is at least 12 characters.")).not.toBeInTheDocument();
   });
 
@@ -232,16 +235,12 @@ describe("JoinView", () => {
       ),
     );
     renderWithProviders(<JoinView linkId={ID} />);
-    await screen.findByTestId("apply_handle");
-    fireEvent.change(screen.getByTestId("apply_handle"), { target: { value: "ada" } });
-    fireEvent.change(screen.getByTestId("apply_email"), { target: { value: "ada@example.org" } });
-    fireEvent.change(screen.getByTestId("apply_password"), {
-      target: { value: "correct horse battery" },
-    });
-    fireEvent.click(screen.getByTestId("apply_continue"));
+    await screen.findByTestId("join.handle.input");
+    fillForm();
+    fireEvent.click(screen.getByTestId("join.commit.action"));
     // Join.md: the line reads in place of the hint, and the field takes the error state.
     expect(await screen.findByText("That handle is taken.")).toBeInTheDocument();
-    expect(screen.getByTestId("apply_handle")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByTestId("join.handle.input")).toHaveAttribute("aria-invalid", "true");
     expect(screen.queryByText("3–30 characters: a–z, 0–9, _")).not.toBeInTheDocument();
   });
 
@@ -255,13 +254,9 @@ describe("JoinView", () => {
       ),
     );
     renderWithProviders(<JoinView linkId={ID} />);
-    await screen.findByTestId("apply_handle");
-    fireEvent.change(screen.getByTestId("apply_handle"), { target: { value: "ada" } });
-    fireEvent.change(screen.getByTestId("apply_email"), { target: { value: "ada@example.org" } });
-    fireEvent.change(screen.getByTestId("apply_password"), {
-      target: { value: "correct horse battery" },
-    });
-    fireEvent.click(screen.getByTestId("apply_continue"));
+    await screen.findByTestId("join.handle.input");
+    fillForm();
+    fireEvent.click(screen.getByTestId("join.commit.action"));
     expect(await screen.findByTestId("apply_error")).toHaveTextContent(
       "Too many tries. Wait a little, then try again.",
     );
@@ -272,8 +267,8 @@ describe("JoinView", () => {
     server.use(usableCheck, meHandler("APPLICANT"));
     renderWithProviders(<JoinView linkId={ID} />, { store: signedInStore() });
     expect(await screen.findByTestId("join.title")).toBeInTheDocument();
-    expect(screen.queryByTestId("apply_handle")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("invite_login")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("join.handle.input")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("join.signInDoor")).not.toBeInTheDocument();
   });
 
   it("offers a member no action — the invite is for someone new", async () => {
@@ -281,7 +276,7 @@ describe("JoinView", () => {
     renderWithProviders(<JoinView linkId={ID} />, { store: signedInStore() });
     expect(await screen.findByTestId("join_member_note")).toBeInTheDocument();
     expect(screen.getByTestId("join_member_invites")).toHaveAttribute("href", "/invites");
-    expect(screen.queryByTestId("apply_handle")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("join.handle.input")).not.toBeInTheDocument();
   });
 
   it("offers no action while the account state is unknown", async () => {
@@ -366,44 +361,211 @@ describe("JoinView", () => {
     it("the hints read until a line takes their place", async () => {
       server.use(usableCheck);
       renderWithProviders(<JoinView linkId={ID} />);
-      await screen.findByTestId("apply_handle");
+      await screen.findByTestId("join.handle.input");
       expect(screen.getByText("3–30 characters: a–z, 0–9, _")).toBeInTheDocument();
       expect(screen.getByText("At least 12 characters.")).toBeInTheDocument();
     });
 
-    it("create_account_stands_disabled_with_its_waiting_line_until_all_three_fields_hold_a_character", async () => {
+    // Join.md: "ALWAYS Create account stands disabled with Waiting for a
+    // handle, your email and a password right above it GIVEN Handle, Email,
+    // Password or Repeat password is empty" · "WHEN all four fields hold a
+    // character -> Create account wakes AND the line … goes".
+    it("create_account_stands_disabled_with_its_waiting_line_until_all_four_fields_hold_a_character", async () => {
       server.use(usableCheck);
       renderWithProviders(<JoinView linkId={ID} />);
-      await screen.findByTestId("apply_handle");
+      await screen.findByTestId("join.handle.input");
       const reason = "Waiting for a handle, your email and a password";
-      expect(screen.getByText(reason)).toBeInTheDocument();
-      expect(screen.getByTestId("apply_continue")).toBeDisabled();
-      fillForm({ password: "x" });
-      expect(screen.queryByText(reason)).not.toBeInTheDocument();
-      expect(screen.getByTestId("apply_continue")).toBeEnabled();
+      expect(screen.getByTestId("join.commit.reason")).toHaveTextContent(reason);
+      expect(screen.getByTestId("join.commit.action")).toBeDisabled();
+      typeIn("handle", "a");
+      typeIn("email", "b");
+      typeIn("password", "x");
+      expect(screen.getByTestId("join.commit.action")).toBeDisabled();
+      expect(screen.getByTestId("join.commit.reason")).toHaveTextContent(reason);
+      typeIn("confirm", "y");
+      expect(screen.queryByTestId("join.commit.reason")).not.toBeInTheDocument();
+      expect(screen.getByTestId("join.commit.action")).toBeEnabled();
+    });
+
+    // Join.md: "ALWAYS a second field, Repeat password, stands under
+    // Password, masked like it, with its own reveal control and no hint".
+    it("a_second_field_repeat_password_stands_under_password_masked_with_its_own_reveal_and_no_hint", async () => {
+      server.use(usableCheck);
+      renderWithProviders(<JoinView linkId={ID} />);
+      await screen.findByTestId("join.handle.input");
+      const inputs = screen.getAllByTestId(/^join\.[a-z]+\.input$/).map((el) => el.getAttribute("data-testid"));
+      expect(inputs).toEqual(["join.handle.input", "join.email.input", "join.password.input", "join.confirm.input"]);
+      expect(screen.getByTestId("join.confirm.label")).toHaveTextContent("Repeat password");
+      const confirm = screen.getByTestId("join.confirm.input");
+      expect(confirm).toHaveAttribute("type", "password");
+      expect(confirm).toHaveAttribute("autocomplete", "new-password");
+      expect(confirm).toHaveAttribute("enterkeyhint", "go");
+      expect(screen.getByTestId("join.password.input")).toHaveAttribute("enterkeyhint", "next");
+      expect(screen.queryByTestId("join.confirm.support")).not.toBeInTheDocument();
+      expect(confirm).not.toHaveAttribute("aria-describedby");
+      fireEvent.click(screen.getByTestId("join.confirm.reveal"));
+      expect(confirm).toHaveAttribute("type", "text");
+      expect(screen.getByTestId("join.confirm.reveal")).toHaveAccessibleName("Hide password");
+      expect(screen.getByTestId("join.password.input")).toHaveAttribute("type", "password");
+      fireEvent.click(screen.getByTestId("join.confirm.reveal"));
+      expect(confirm).toHaveAttribute("type", "password");
+      expect(screen.getByTestId("join.confirm.reveal")).toHaveAccessibleName("Show password");
+    });
+
+    // Join.md: "WHEN press Create account GIVEN Repeat password differs from
+    // Password -> the Repeat password field's line reads The two passwords
+    // don't match. AND the field takes the error state".
+    it("a_repeat_that_differs_reads_on_the_repeat_field_and_nothing_goes_out", async () => {
+      let calls = 0;
+      server.use(
+        usableCheck,
+        gqlLink.mutation("Register", () => {
+          calls += 1;
+          return HttpResponse.error();
+        }),
+      );
+      renderWithProviders(<JoinView linkId={ID} />);
+      await screen.findByTestId("join.handle.input");
+      fillForm({ repeat: "correct horse batery" });
+      expect(screen.queryByText(MISMATCH)).not.toBeInTheDocument();
+      createAccount();
+      expect(await screen.findByTestId("join.confirm.support")).toHaveTextContent(MISMATCH);
+      expect(screen.getByTestId("join.confirm.input")).toHaveAttribute("aria-invalid", "true");
+      expect(screen.getByTestId("join.confirm.label")).toHaveClass("text-error");
+      expect(screen.getByTestId("join.password.support")).toHaveTextContent("At least 12 characters.");
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(calls).toBe(0);
+    });
+
+    // JoinErrors.md: "WHEN press Create account GIVEN the handle is taken and
+    // the password is shorter than 12 characters and Repeat password differs
+    // from it -> …" · "ALWAYS each field is checked on its own at the press,
+    // so Repeat password's mismatch line stands beside Password's own line".
+    it("each_field_is_checked_on_its_own_so_the_mismatch_stands_beside_the_password_line", async () => {
+      server.use(usableCheck);
+      renderWithProviders(<JoinView linkId={ID} />);
+      await screen.findByTestId("join.handle.input");
+      fillForm({ password: "fieldday", repeat: "fielday" });
+      createAccount();
+      expect(await screen.findByTestId("join.confirm.support")).toHaveTextContent(MISMATCH);
+      expect(screen.getByTestId("join.password.support")).toHaveTextContent("A password is at least 12 characters.");
+      expect(screen.getByTestId("join.email.input")).not.toHaveAttribute("aria-invalid");
+    });
+
+    // Join.md / JoinErrors.md: "WHEN typing in Password or Repeat password
+    // GIVEN Repeat password carries The two passwords don't match. -> the
+    // line re-checks as the text changes AND it goes once the two passwords
+    // match AND NEVER a hint takes its place".
+    it("the_mismatch_line_rechecks_as_either_field_changes_and_goes_once_they_match", async () => {
+      server.use(usableCheck);
+      renderWithProviders(<JoinView linkId={ID} />);
+      await screen.findByTestId("join.handle.input");
+      fillForm({ repeat: "correct horse" });
+      createAccount();
+      expect(await screen.findByTestId("join.confirm.support")).toHaveTextContent(MISMATCH);
+      typeIn("confirm", "correct horse batt");
+      expect(screen.getByTestId("join.confirm.support")).toHaveTextContent(MISMATCH);
+      typeIn("password", "correct horse batt");
+      expect(screen.queryByTestId("join.confirm.support")).not.toBeInTheDocument();
+      expect(screen.getByTestId("join.confirm.input")).not.toHaveAttribute("aria-invalid");
+      // Gone, it never comes back by typing alone.
+      typeIn("confirm", "correct horse bat");
+      expect(screen.queryByTestId("join.confirm.support")).not.toBeInTheDocument();
+    });
+
+    // Join.md: "ALWAYS the header's arrow, the "?" and Already have an
+    // account? Sign in refuse a press, never dimmed, while Create account
+    // waits on its answer" · "WHEN press Create account -> Create account
+    // refuses a second press until the registration answers AND NEVER Create
+    // account dims".
+    it("the_exits_refuse_a_press_never_dimmed_while_create_account_waits", async () => {
+      let calls = 0;
+      let release: () => void = () => {};
+      const answered = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      server.use(
+        usableCheck,
+        gqlLink.mutation("Register", async () => {
+          calls += 1;
+          await answered;
+          return HttpResponse.error();
+        }),
+      );
+      renderWithProviders(<JoinView linkId={ID} />);
+      await screen.findByTestId("join.handle.input");
+      fillForm();
+      createAccount();
+      const back = screen.getByTestId("join.header.back");
+      const help = screen.getByTestId("join.header.help");
+      const signIn = screen.getByTestId("join.signInDoor");
+      await waitFor(() => expect(back).toHaveAttribute("aria-disabled", "true"));
+      expect(help).toHaveAttribute("aria-disabled", "true");
+      expect(signIn).toHaveAttribute("aria-disabled", "true");
+      expect(fireEvent.click(back)).toBe(false);
+      expect(fireEvent.click(signIn)).toBe(false);
+      fireEvent.click(help);
+      expect(push).not.toHaveBeenCalled();
+      createAccount();
+      const commit = screen.getByTestId("join.commit.action");
+      expect(commit).toBeEnabled();
+      expect(commit).toHaveAttribute("aria-busy", "true");
+      release();
+      expect(await screen.findByTestId("apply_error")).toHaveTextContent("That didn't send. Try again.");
+      expect(calls).toBe(1);
+      expect(back).not.toHaveAttribute("aria-disabled");
+      expect(signIn).not.toHaveAttribute("aria-disabled");
+      expect(help).not.toHaveAttribute("aria-disabled");
+      fireEvent.click(help);
+      expect(push).toHaveBeenCalledWith(`/about?from=join&invite=${ID}`);
+    });
+
+    it("the_board_names_its_nodes_on_the_form", async () => {
+      server.use(usableCheck);
+      renderWithProviders(<JoinView linkId={ID} />);
+      await screen.findByTestId("join.handle.input");
+      for (const path of [
+        "join.header",
+        "join.header.back",
+        "join.header.help",
+        "join.handle.label",
+        "join.handle.support",
+        "join.email.label",
+        "join.password.reveal",
+        "join.confirm",
+        "join.terms",
+        "join.terms.open",
+        "join.commit",
+        "join.signInDoor",
+        "join.privacy",
+        "join.privacy.open",
+      ]) {
+        expect(screen.getByTestId(path)).toBeInTheDocument();
+      }
+      expect(screen.getByTestId("join.header.help")).toHaveAccessibleName("About CoGra");
     });
 
     it("the terms line stands directly above Create account and the privacy notice at the foot", async () => {
       server.use(usableCheck);
       renderWithProviders(<JoinView linkId={ID} />);
-      await screen.findByTestId("apply_handle");
+      await screen.findByTestId("join.handle.input");
       const terms = screen.getByText(/By creating your account you accept the/);
       expect(terms).toHaveTextContent("By creating your account you accept the Terms.");
       const privacy = screen.getByText(/How CoGra handles your data: the/);
       expect(privacy).toHaveTextContent("How CoGra handles your data: the Privacy Policy.");
       expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
-      const commit = screen.getByTestId("apply_continue");
+      const commit = screen.getByTestId("join.commit.action");
       expect(terms.compareDocumentPosition(commit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(commit.compareDocumentPosition(privacy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-      expect(screen.getByTestId("invite_login")).toHaveTextContent("Already have an account? Sign in");
+      expect(screen.getByTestId("join.signInDoor")).toHaveTextContent("Already have an account? Sign in");
     });
 
     it("a_malformed_handle_and_email_answer_on_the_press", async () => {
       server.use(usableCheck);
       renderWithProviders(<JoinView linkId={ID} />);
-      await screen.findByTestId("apply_handle");
+      await screen.findByTestId("join.handle.input");
       fillForm({ handle: "a!", email: "nope" });
-      fireEvent.click(screen.getByTestId("apply_continue"));
+      fireEvent.click(screen.getByTestId("join.commit.action"));
       expect(await screen.findByText("A handle is 3–30 characters: a–z, 0–9, _.")).toBeInTheDocument();
       expect(screen.getByText("That doesn't look like an email address.")).toBeInTheDocument();
     });
@@ -411,20 +573,20 @@ describe("JoinView", () => {
     it("a_taken_email_reads_on_its_field_and_stands_while_typing", async () => {
       server.use(usableCheck, refusal("EMAIL_IN_USE", ["email"]));
       renderWithProviders(<JoinView linkId={ID} />);
-      await screen.findByTestId("apply_handle");
+      await screen.findByTestId("join.handle.input");
       fillForm();
-      fireEvent.click(screen.getByTestId("apply_continue"));
+      fireEvent.click(screen.getByTestId("join.commit.action"));
       expect(await screen.findByText("That email already has an account.")).toBeInTheDocument();
-      fireEvent.change(screen.getByTestId("apply_email"), { target: { value: "ada2@example.org" } });
+      fireEvent.change(screen.getByTestId("join.email.input"), { target: { value: "ada2@example.org" } });
       expect(screen.getByText("That email already has an account.")).toBeInTheDocument();
     });
 
     it("a_breached_password_reads_on_its_field", async () => {
       server.use(usableCheck, refusal("WEAK_PASSWORD", ["password"]));
       renderWithProviders(<JoinView linkId={ID} />);
-      await screen.findByTestId("apply_handle");
+      await screen.findByTestId("join.handle.input");
       fillForm();
-      fireEvent.click(screen.getByTestId("apply_continue"));
+      fireEvent.click(screen.getByTestId("join.commit.action"));
       expect(
         await screen.findByText("That password has turned up in a data breach — pick another one."),
       ).toBeInTheDocument();
@@ -433,34 +595,35 @@ describe("JoinView", () => {
     it("no_answer_keeps_the_fields_and_says_it_above_create_account", async () => {
       server.use(usableCheck, gqlLink.mutation("Register", () => HttpResponse.error()));
       renderWithProviders(<JoinView linkId={ID} />);
-      await screen.findByTestId("apply_handle");
+      await screen.findByTestId("join.handle.input");
       fillForm();
-      fireEvent.click(screen.getByTestId("apply_continue"));
+      fireEvent.click(screen.getByTestId("join.commit.action"));
       expect(await screen.findByTestId("apply_error")).toHaveTextContent("That didn't send. Try again.");
-      expect(screen.getByTestId("apply_handle")).toHaveValue("ada");
-      expect(screen.getByTestId("apply_continue")).toBeEnabled();
+      expect(screen.getByTestId("join.handle.input")).toHaveValue("ada");
+      expect(screen.getByTestId("join.commit.action")).toBeEnabled();
     });
 
     it("a_link_spent_while_the_form_stood_reads_join_invalid", async () => {
       server.use(usableCheck, refusal("INVITE_UNUSABLE", null));
       renderWithProviders(<JoinView linkId={ID} />);
-      await screen.findByTestId("apply_handle");
+      await screen.findByTestId("join.handle.input");
       fillForm();
-      fireEvent.click(screen.getByTestId("apply_continue"));
+      fireEvent.click(screen.getByTestId("join.commit.action"));
       expect(await screen.findByRole("heading", { name: "This invite can't be used anymore" })).toBeInTheDocument();
     });
 
-    it("the_handle_and_email_outlive_a_way_out_and_the_password_does_not", async () => {
+    it("the_handle_and_email_outlive_a_way_out_and_both_passwords_do_not", async () => {
       server.use(usableCheck);
       const first = renderWithProviders(<JoinView linkId={ID} />);
-      await screen.findByTestId("apply_handle");
+      await screen.findByTestId("join.handle.input");
       fillForm({ handle: "kept", email: "kept@example.org" });
       first.unmount();
       server.use(usableCheck);
       renderWithProviders(<JoinView linkId={ID} />);
-      expect(await screen.findByTestId("apply_handle")).toHaveValue("kept");
-      expect(screen.getByTestId("apply_email")).toHaveValue("kept@example.org");
-      expect(screen.getByTestId("apply_password")).toHaveValue("");
+      expect(await screen.findByTestId("join.handle.input")).toHaveValue("kept");
+      expect(screen.getByTestId("join.email.input")).toHaveValue("kept@example.org");
+      expect(screen.getByTestId("join.password.input")).toHaveValue("");
+      expect(screen.getByTestId("join.confirm.input")).toHaveValue("");
     });
   });
 });
