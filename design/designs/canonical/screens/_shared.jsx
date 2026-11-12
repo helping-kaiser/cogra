@@ -5782,7 +5782,14 @@ function KeptApprovalRow({ shown }) {
      go through.` with `Retry`, the row line's vehicle (`RowSigning`'s),
      where `Link copied` would have answered. The link stays whole on the
      card, readable by hand. */
-function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
+/* `closedFailed` draws a closing that failed after Close (round 43; jakob
+   2026-11-11, S5; backlog 190): `row` the single close's — @imke's row stands
+   as it was and the line under it reads `That didn't sign.` with `Retry`,
+   `FeedRemoveConfirm`'s `closedFailed` on this host; `group` the link's whole
+   closing — the same line under the group's label, where its `Close all`
+   stands, the batch failing whole as the kept picks' does on its one row
+   (`Settings`' `kept`). Both lines are drawn copies and carry no name. */
+function InvitesBody({ approving = false, kept = "none", revoke, shown, closedFailed }) {
   return (
     <>
       <PageHeader title="Invites" backHref="/profile" backLabel="Back to your profile" node="header" />
@@ -5821,6 +5828,11 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
         {kept !== "none" && <KeptApprovalRow shown={kept} />}
         <div style={{ display: shown ? shown.applications : "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
           <ApplicationGroup label="Many uses" count={4} node="group" nodeKey={SOL_INVITE_LINK_OPEN.split("/").at(-1)} />
+          {closedFailed && (
+            <div style={{ display: closedFailed.group, padding: "0 var(--space-4)" }}>
+              <SigningPending row onRetry={() => {}} />
+            </div>
+          )}
           <ContentRow
             variant="chronicle"
             chevron={false}
@@ -5833,6 +5845,11 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
             node="application"
             nodeKey={ASKER_IDS.imke}
           />
+          {closedFailed && (
+            <div style={{ display: closedFailed.row, padding: "0 var(--space-4)" }}>
+              <SigningPending row onRetry={() => {}} />
+            </div>
+          )}
           <ContentRow
             variant="chronicle"
             chevron={false}
@@ -5857,6 +5874,21 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
             node="application"
             nodeKey={ASKER_IDS.vora82}
           />
+          {/* THE QUEUE IS CAPPED (jakob 2026-11-11 and 2026-11-12, backlog
+              180): the first three rows in the queue's standing grouped
+              order, groups as they fall, then `Show all` under the third —
+              People you let in's door, opening the rest in place, no "show
+              fewer". A kept approval at the head stands above the cap and is
+              not one of the three. `Invites`' `applications` chip: `capped`
+              draws it shut, `opened` open. */}
+          {shown && (
+            <div style={{ display: shown.applicationsDoor }} data-node-chip="applications" data-node-key="capped">
+              <InlineAction size="sm" selfStart node="applicationsDoor">
+                Show all
+              </InlineAction>
+            </div>
+          )}
+          <div style={{ display: shown ? shown.applicationsRest : "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: shown ? shown.askerNamed : "flex", flexDirection: "column" }}>
             <ContentRow
               variant="chronicle"
@@ -5914,6 +5946,7 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
             node="application"
             nodeKey={ASKER_IDS.rafa}
           />
+          </div>
         </div>
         </div>
 

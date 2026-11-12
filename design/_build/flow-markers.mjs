@@ -3188,15 +3188,21 @@ Object.assign(FLOW_MARKERS, {
     // Round 40: the list's door under its third row (the `letIn` chip's
     // `more`), appended so no via renumbers.
     { n: 12, find: 'data-node="invites.peopleDoor"', tag: "button" },
+    // Round 43: the queue's door under its third row (the `applications`
+    // chip's `capped`), appended so no via renumbers.
+    { n: 13, find: 'data-node="invites.applicationsDoor"', tag: "button" },
   ],
   RejectAllConfirm: [
     { n: 1, find: ">Close them</button>", tag: "button" },
     { n: 2, find: ">Keep them</button>", tag: "button" },
     { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+    { n: 4, find: ">Retry</button>", tag: "button" },
   ],
   InvitesEmpty: [
     { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
     { n: 2, find: ">Create invite</button>", tag: "button" },
+    // Round 43: the "?" beside Create invite.
+    { n: 3, find: 'aria-label="How vouching works"', tag: "button" },
   ],
   InviteNew: [
     { n: 1, find: ">Only one person can use it</span>", tag: "button" },
@@ -3232,6 +3238,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: ">Close it</button>", tag: "button" },
     { n: 2, find: ">Keep it</button>", tag: "button" },
     { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+    // Round 43: the closing failed after Close (`answer`'s `closedFailed`),
+    // its row's Retry — `FeedRemoveConfirm`'s fourth.
+    { n: 4, find: ">Retry</button>", tag: "button" },
   ],
 });
 

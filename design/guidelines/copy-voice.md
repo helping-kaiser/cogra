@@ -490,7 +490,10 @@ noun):
   you sign when you approve them — is what brings them in. / Nothing is
   signed until Set. *(New 2026-10-05, blessed (jakob 2026-10-05) — jakob's D4:
   the Invites empty state's two blessed sentences on the mechanic, then
-  the pads' own `Nothing is signed until Set.`)*
+  the pads' own `Nothing is signed until Set.` On the empty Invites, beside
+  `Create invite`, the same "?" opens it as a dialog with the first
+  paragraph alone — the page has no Set (jakob 2026-11-12, the re-ask's
+  4).)*
 
   *The italicised tails are the `cg-exact` spans: the face is drawn in
   both reading modes, the digits only when the reader has asked for
@@ -3904,10 +3907,11 @@ the one the bottom bar (`New post`) and the empty feed (`write the
 first post`) already keep. The button and the sheet it raises say one
 word between them.
 
-**The empty state carries the whole mechanic in three sentences**:
-`No invites out yet. A link lets someone make an account. Your vouch —
-the opinion you sign when you approve them — is what brings them in.`
-The two halves are said APART because every other product conflates
+**The empty state says one thing, and the mechanic stands behind its
+"?"** (jakob 2026-11-12): `No invites out yet.`, and beside `Create
+invite` the "?" `How vouching works` opens `A link lets someone make an
+account. Your vouch — the opinion you sign when you approve them — is
+what brings them in.` The two halves are said APART because every other product conflates
 them and a reader who does will be surprised by the second. *Vouch* is
 the product's word and a reader's unfamiliar one, so it is explained
 where it stands rather than left to be guessed. `brings them in` is
