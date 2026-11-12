@@ -8138,6 +8138,7 @@
         "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
         "invites.link": "the invite link's id, the link's last path segment (Invites' live links)",
         "invites.link.copyFault": "the copy chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "invites.linksDoor": "the links chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "invites.linksEmpty": "the sections chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "invites.peopleDoor": "the letIn chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "invites.person": "the person's id, the lowercase UUID the wire carries (Invites' people you let in)",
@@ -8217,30 +8218,45 @@
         "invites.header.title": [],
         "invites.link": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
-          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025",
+          "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90"
         ],
         "invites.link.action": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
-          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025",
+          "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90"
         ],
         "invites.link.address": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
-          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025",
+          "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90"
         ],
         "invites.link.caption": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
-          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025",
+          "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90"
         ],
         "invites.link.copy": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
-          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025",
+          "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90"
         ],
         "invites.link.copyFault": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15/failed"
         ],
         "invites.link.label": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
-          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025",
+          "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90"
+        ],
+        "invites.linksDoor": [
+          "capped"
         ],
         "invites.linksEmpty": [
           "no-links"
@@ -8390,6 +8406,7 @@
         "join.handle.support": [],
         "join.header": [],
         "join.header.back": [],
+        "join.header.help": [],
         "join.password": [],
         "join.password.input": [],
         "join.password.label": [],
