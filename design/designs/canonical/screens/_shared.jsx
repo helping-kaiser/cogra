@@ -3552,8 +3552,7 @@ function WaitingCommit({ id, label, reason, waiting = true, node }) {
 
 /* The names are the `changeHandle` prefix's (design ⇄ impl seam 082): both
    boards register them — the field is `handle`, named for what it changes, as
-   the credential family names its fields, and the commit with its reason is
-   `commit`. */
+   the credential family names its fields, and the commit is `commit`. */
 function ChangeHandleBody({ value = "" } = {}) {
   return (
     <>
@@ -4184,7 +4183,7 @@ function RestoreBody({ value = "", error }) {
 
    The names are the `settingsBackup` prefix's (round 28), the credential
    family's: the code asked for is the proof, `current`; the line under it
-   `lostNote`; the commit with its reason `commit`; and the thing to know last
+   `lostNote`; the commit `commit`; and the thing to know last
    `note`, as `KeyCeremony` names its code paragraph. */
 function SettingsBackupBody({ app = false, value = "", error }) {
   return (

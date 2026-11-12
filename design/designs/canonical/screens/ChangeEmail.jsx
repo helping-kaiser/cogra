@@ -23,7 +23,7 @@
 
    AT REST THE COMMIT WAITS (jakob 2026-10-05, the disabled-until-filled law
    drawn): `Change email` disabled until both fields hold something, its reason
-   above it (`WaitingCommit`).
+   spoken only (`WaitingCommit`).
 
    THE FIELD-ERROR IDIOM, DRAWN ONCE (jakob 2026-10-05, the final brief; the
    `fault` chip). A line answers on the field it is about, in the error colour,
@@ -40,7 +40,7 @@
    REGISTERED under the `changeEmail` prefix (design ⇄ impl seam 082, the
    settings packet), the family's surface. The credential family names a field
    for what it changes and the proof `current`: here `email` and `current`;
-   the commit with its reason is `commit`. The fields and the commit are drawn
+   the commit is `commit`. The fields and the commit are drawn
    once per `fault` value, one shown at a time, so each copy takes the same
    paths keyed by the chip's value (the chip-drawn duplicate rule). */
 export const NODE = "changeEmail";

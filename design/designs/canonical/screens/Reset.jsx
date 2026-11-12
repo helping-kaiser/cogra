@@ -11,8 +11,8 @@
 
    REGISTERED under the `reset` prefix (round 28, seam 254 A1), the reset
    family's surface with `ResetNew` and `ResetExpired`, as `deleteAccount`
-   holds its mail landings: `title`, `body`, the field `email`, the commit with
-   its reason `commit`, and the quiet note `note`. */
+   holds its mail landings: `title`, `body`, the field `email`, the commit
+   `commit`, and the quiet note `note`. */
 export const NODE = "reset";
 export function Screen() {
   return (

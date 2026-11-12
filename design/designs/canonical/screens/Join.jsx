@@ -47,7 +47,7 @@
    `email` and `password` (the credential family's names) and the password's
    repeat `confirm` (`RecoveryCode`'s name for the field that types a thing
    back; round 38, jakob's J2: every new password is asked twice), the legal lines
-   `terms` and `privacy`, the commit with its reason `commit`, and the account
+   `terms` and `privacy`, the commit `commit`, and the account
    switch `signInDoor` — a name that does not bar the sidecar's `Sign in`
    (round 23: a name never forbids its own words). */
 export const NODE = "join";

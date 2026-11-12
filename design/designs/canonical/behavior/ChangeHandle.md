@@ -16,9 +16,9 @@ WHEN press Change handle GIVEN the new handle breaks the field's rules -> the Ne
 
 WHEN typing in New handle GIVEN the field reads its format line -> the line re-checks as the reader types and goes once the handle keeps the rules
 
-ALWAYS Change handle stands disabled with Waiting for a new handle right above it GIVEN New handle is empty
+ALWAYS Change handle stands disabled with no line above it and its spoken description reads Waiting for a new handle GIVEN New handle is empty
 
-WHEN the first character is typed in New handle -> Change handle wakes AND the line Waiting for a new handle goes
+WHEN the first character is typed in New handle -> Change handle wakes AND its spoken description Waiting for a new handle goes
 
 ALWAYS a handle change moves nothing the reader has signed
 

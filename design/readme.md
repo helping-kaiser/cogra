@@ -538,15 +538,14 @@ rule covers all three button variants:
 - **Disabled** — **38%** opacity on the whole control (Material's value,
   and the one place the AA guarantee is waived by convention: a disabled
   control is not an available target). **A submit that cannot go yet is
-  visible-but-disabled, with the reason on screen** (jakob, the key-loss
-  round): never hidden, and never left live only to refuse on press — the
-  reader sees the commitment exists and reads what it is waiting for.
-  The reason is one quiet line right above the commit, in the voice for
-  what something waits on — `Waiting for your email` — and the
-  commit's description (`WaitingCommit`; drawn on every credential and
-  entry form, jakob 2026-10-05; the reasons blessed the same day). A wait
-  that explains itself carries no line — change password's three fields
-  (jakob 2026-11-11).
+  visible-but-disabled** (jakob, the key-loss round): never hidden, and
+  never left live only to refuse on press — the reader sees the commitment
+  exists. **Nothing on screen says what it waits for** (jakob 2026-11-12):
+  the empty fields above it say so. The reason is the commit's spoken
+  description alone, in the voice for what something waits on — `Waiting
+  for your email` — so a listener hears it with the control
+  (`WaitingCommit`; every credential and entry form, the reasons blessed
+  2026-10-05).
   **The law gates commits; a handoff that only prefills another app's
   draft is not a commit** (jakob 2026-10-05): `Report a problem`'s `Send
   by email` stays live from an empty field, because what it enforces is

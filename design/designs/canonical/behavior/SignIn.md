@@ -78,9 +78,9 @@ ALWAYS the screen's ways out stay live while Sign in waits on its answer
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 
-ALWAYS Sign in stands disabled with Waiting for your email and password right above it GIVEN Email or Password is empty
+ALWAYS Sign in stands disabled with no line above it and its spoken description reads Waiting for your email and password GIVEN Email or Password is empty
 
-WHEN both fields hold a character -> Sign in wakes AND the line Waiting for your email and password goes
+WHEN both fields hold a character -> Sign in wakes AND its spoken description Waiting for your email and password goes
 
 WHEN press system Back GIVEN SignIn did not open from the join layer over the signed-in state -> the screen the header's back arrow links to opens, exactly as the arrow's press opens it AND NEVER Back walks the history instead
 

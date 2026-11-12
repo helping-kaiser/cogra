@@ -96,6 +96,6 @@ WHEN tap Terms -> the Terms open AND the form keeps every field as it was left o
 
 WHEN tap Privacy Policy -> the Privacy Policy opens AND the form keeps every field as it was left on the way back
 
-ALWAYS Create account stands disabled with Waiting for a handle, your email and a password right above it GIVEN Handle, Email, Password or Repeat password is empty
+ALWAYS Create account stands disabled with no line above it and its spoken description reads Waiting for a handle, your email and a password GIVEN Handle, Email, Password or Repeat password is empty
 
-WHEN all four fields hold a character -> Create account wakes AND the line Waiting for a handle, your email and a password goes
+WHEN all four fields hold a character -> Create account wakes AND its spoken description Waiting for a handle, your email and a password goes

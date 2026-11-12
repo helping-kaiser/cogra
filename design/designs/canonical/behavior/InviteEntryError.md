@@ -32,6 +32,6 @@ ALWAYS the screen's ways out stay live while Continue waits on its answer
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 
-ALWAYS Continue stands disabled with Waiting for your invite link right above it GIVEN Invite link is empty
+ALWAYS Continue stands disabled with no line above it and its spoken description reads Waiting for your invite link GIVEN Invite link is empty
 
-WHEN the first character is typed in Invite link -> Continue wakes AND the line Waiting for your invite link goes
+WHEN the first character is typed in Invite link -> Continue wakes AND its spoken description Waiting for your invite link goes

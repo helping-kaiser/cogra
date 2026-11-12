@@ -58,6 +58,6 @@ ALWAYS the line By creating your account you accept the Terms. stands directly a
 
 ALWAYS the notice How CoGra handles your data: the Privacy Policy. stands at the form's foot, its own line with Privacy Policy a door, and never inside the accept sentence
 
-ALWAYS Create account stands disabled with Waiting for a handle, your email and a password right above it GIVEN Handle, Email, Password or Repeat password is empty
+ALWAYS Create account stands disabled with no line above it and its spoken description reads Waiting for a handle, your email and a password GIVEN Handle, Email, Password or Repeat password is empty
 
-WHEN all four fields hold a character -> Create account wakes AND the line Waiting for a handle, your email and a password goes
+WHEN all four fields hold a character -> Create account wakes AND its spoken description Waiting for a handle, your email and a password goes

@@ -41,7 +41,7 @@
    reading it back. The code is 6 digits, single-use (auth.md, *Email change*;
    jakob 2026-10-05), so the field is the `digits` kind: the numeric keyboard
    and the platform's one-time-code fill. At rest `Confirm the code` waits on
-   it, disabled, its reason above it (`WaitingCommit`).
+   it, disabled, its reason spoken only (`WaitingCommit`).
 
    NO BACK TRAP. Nothing is lost by leaving — the change is live on the server
    for its window and this screen is reachable again from the row — so the
@@ -75,7 +75,7 @@
    settings packet). The inset is `pair`: its `label` and `resend`, then each
    side's caption and reading — `codeLabel` / `codeSide`, `linkLabel` /
    `linkSide`. Under it, on the chip's `code` only, the line `interim`.
-   The field is `code`, the commit with its reason `commit`, the line under
+   The field is `code`, the commit `commit`, the line under
    it `note`, and `Cancel the change` is `cancel`. */
 export const NODE = "changeEmail";
 export const PROPS = { confirmed: { editor: "enum", options: ["none", "code"], default: "none" } };

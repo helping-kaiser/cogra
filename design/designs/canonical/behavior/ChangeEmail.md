@@ -28,9 +28,9 @@ WHEN press the header back arrow -> settings returns AND NEVER a message is sent
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 
-ALWAYS Change email stands disabled with Waiting for a new email and your password right above it GIVEN New email or Current password is empty
+ALWAYS Change email stands disabled with no line above it and its spoken description reads Waiting for a new email and your password GIVEN New email or Current password is empty
 
-WHEN both fields hold a character -> Change email wakes AND the line Waiting for a new email and your password goes
+WHEN both fields hold a character -> Change email wakes AND its spoken description Waiting for a new email and your password goes
 
 WHEN press Change email GIVEN the new address is not an email address -> the New email field reads That doesn't look like an email address. AND NEVER a message is sent
 
