@@ -722,6 +722,16 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 5, find: ">Report</button>", tag: "button" },
   ],
+  // A removed post's card, its menu open (jakob 2026-11-12, the re-ask's
+  // eleventh): the reader's card menu whole, no license row — scanExempt like
+  // every menu board.
+  FeedRemovedMenu: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+    { n: 3, find: ">Hide @ada</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 5, find: ">Report</button>", tag: "button" },
+  ],
   FeedRemoveConfirm: [
     { n: 1, find: ">Remove</button>", tag: "button" },
     { n: 2, find: ">Keep it</button>", tag: "button" },

@@ -5641,15 +5641,18 @@ setting shows; (c) the shown page as a board of its own.
 Closed by round 41, by (a): the frame is 3103px; a row's second line costs
 nothing (54px inside the 56px minimum), so no other setting needs more.
 
-### 176 · The ladder's redacted records: which menu · *design* · **filed 2026-11-11**
+### 176 · The ladder's redacted records: which menu · *design* · **filed 2026-11-11** · **closed 2026-11-12**
 
-Round 39 (backlog 162). `LadderStates` draws a post removed by its author and
-one removed as illegal with `CARD_MENU` — Save and Cite — and its note says a
-redacted record keeps its menu, citable because it never left the graph. No
-board draws a redacted card's open menu (`FeedRemoved`'s just-removed card
-passes none). For jakob: (a) the reader's card menu, Hide and Report included
-(`readerCardMenu`); (b) Save and Cite only, as drawn [lean — what is hidden
-or reported is the payload, and it is gone]; (c) no menu, `FeedRemoved`'s.
+Round 39 (backlog 162). `LadderStates` drew a post removed by its author and
+one removed as illegal with Save and Cite alone, and no board drew a redacted
+card's open menu. Closed by round 45, by jakob's ruling (2026-11-12, the
+re-ask's eleventh: "full menu. hide targets the user so i could still hide an
+existing user from a deleted post and report can stay aswell"): another's
+removed post's card raises the reader's card menu whole (`readerCardMenu`:
+Save, Cite in a new post, Hide with the author's handle, Report), no license
+row since the license rode the payload — both `LadderStates` cards, and
+`FeedRemovedMenu` draws it open. The reader's own just-removed card
+(`FeedRemoved`, no ⋮) was not ruled and stands as drawn.
 
 ### 180 · Invites' waiting applications: which three · *design* · **filed 2026-11-11**
 
