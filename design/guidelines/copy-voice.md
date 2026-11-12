@@ -555,11 +555,13 @@ noun):
   explainer and the veil pointer stand here and not on the sheet,
   moved whole, jakob 2026-11-12; the veil pointer is the feed's and
   the settings sheet's, where `Also show` stands.)*
-- **Giving an opinion** (Settings, beside the section's heading): A tap
-  opens it; drift to where it feels right. / One slider per side of the
-  opinion. *(The pad's and the sliders' row hints, moved whole from the
-  page — jakob 2026-11-12, the re-ask's 8 (a); each blessed with the
-  settings round.)*
+- **Giving an opinion** (Settings, beside the section's heading): Three
+  ways to give an opinion: the pad opens on a tap, and you drift to where
+  it feels right; sliders give each side of the opinion its own slider;
+  typed values take both numbers exactly. *(One paragraph naming the
+  three inputs, from the rows' labels and their old hints — jakob
+  2026-11-12: "one or a couple actual sentences instead of two disconnect
+  ones"; drafted 2026-11-12, review-pending.)*
 - **Reading** (Settings, beside the section's heading): Every feed starts
   from what it shows, and a change made inside a feed lasts until you
   change it back. Both choices stay on this device. *(The group's

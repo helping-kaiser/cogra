@@ -26,7 +26,7 @@ ALWAYS settings.stance.help and settings.reading.help, a "?" each, trail their s
 
 ALWAYS The pad and Sliders carry no second line, their background standing behind settings.stance.help
 
-WHEN tap settings.stance.help -> the dialog Giving an opinion opens over the page with A tap opens it; drift to where it feels right. and One slider per side of the opinion. and Close
+WHEN tap settings.stance.help -> the dialog Giving an opinion opens over the page with Three ways to give an opinion: the pad opens on a tap, and you drift to where it feels right; sliders give each side of the opinion its own slider; typed values take both numbers exactly. and Close
 
 WHEN tap settings.reading.help -> the dialog Reading opens over the page with Every feed starts from what it shows, and a change made inside a feed lasts until you change it back. Both choices stay on this device. and Close
 

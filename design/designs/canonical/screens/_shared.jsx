@@ -3667,7 +3667,10 @@ function ReportProblemBody({ words }) {
    shape as `SettingsInstallHelp` draws it on this page. `helpChip` draws the
    two open states on `Settings` (its `help` chip); the dialogs are drawn
    copies and carry no name. */
-const GIVING_AN_OPINION_HELP = ["A tap opens it; drift to where it feels right.", "One slider per side of the opinion."];
+/* Giving an opinion's text is one paragraph naming the three inputs (jakob
+   2026-11-12: "one or a couple actual sentences instead of two disconnect
+   ones") — drafted from the rows' labels and their old hints, review-pending. */
+const GIVING_AN_OPINION_HELP = "Three ways to give an opinion: the pad opens on a tap, and you drift to where it feels right; sliders give each side of the opinion its own slider; typed values take both numbers exactly.";
 const READING_HELP = "Every feed starts from what it shows, and a change made inside a feed lasts until you change it back. Both choices stay on this device.";
 
 function SettingsBody({ handleChip = false, keptChip = false, formsChip = false, helpChip = false, backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, hidden = "3", recoveryStatus, backupFootnote, clearingFootnote, install } = {}) {
