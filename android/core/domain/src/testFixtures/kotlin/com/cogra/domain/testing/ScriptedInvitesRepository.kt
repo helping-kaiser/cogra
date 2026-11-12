@@ -9,6 +9,7 @@ import com.cogra.domain.invites.AskLinkCheck
 import com.cogra.domain.invites.InviteLinkInfo
 import com.cogra.domain.invites.InvitesRead
 import com.cogra.domain.invites.InvitesRepository
+import com.cogra.domain.invites.LetInPerson
 import com.cogra.domain.invites.MyApplication
 import java.time.Instant
 
@@ -23,6 +24,9 @@ import java.time.Instant
 class ScriptedInvitesRepository(private val writes: SealingWriteRepository? = null) : InvitesRepository {
     val queue = mutableListOf<ApplicationInfo>()
     val links = mutableListOf<InviteLinkInfo>()
+
+    /** The people the reader let in, newest first, as `vouchedIn` serves them. */
+    val people = mutableListOf<LetInPerson>()
 
     /** What `askLinkCheck` answers, by ask link id; an id not here names nobody. */
     val askLinks = mutableMapOf<String, AskLinkCheck>()
@@ -53,7 +57,7 @@ class ScriptedInvitesRepository(private val writes: SealingWriteRepository? = nu
 
     override suspend fun invites(): Outcome<InvitesRead> {
         reads += Unit
-        return readAnswers.removeFirstOrNull() ?: Outcome.Success(InvitesRead(queue.toList(), links.toList()))
+        return readAnswers.removeFirstOrNull() ?: Outcome.Success(InvitesRead(queue.toList(), links.toList(), people.toList()))
     }
 
     override suspend fun createInviteLink(expiresAt: Instant, singleUse: Boolean): Outcome<InviteLinkInfo> {
