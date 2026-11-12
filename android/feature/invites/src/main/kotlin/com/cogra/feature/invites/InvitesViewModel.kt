@@ -17,6 +17,7 @@ import com.cogra.domain.invites.ApplicationInfo
 import com.cogra.domain.invites.InviteLinkInfo
 import com.cogra.domain.invites.InvitesRead
 import com.cogra.domain.invites.InvitesRepository
+import com.cogra.domain.invites.LetInPerson
 import com.cogra.domain.invites.QueueLayout
 import com.cogra.domain.invites.layoutQueue
 import com.cogra.domain.invites.liveLinks
@@ -127,13 +128,34 @@ data class InvitesUiState(
     val keptApprovals: Map<String, StancePair> = emptyMap(),
     /** The signing key is not on this device: a kept approval reads `Waiting for your key` (:87). */
     val keyAbsent: Boolean = false,
+    /** `Show all` was taken: every person stands, and no control to show fewer follows (Invites.md:19). */
+    val peopleOpened: Boolean = false,
+    /** The link whose copy did not go through: its card carries the line (Invites.md:79). */
+    val copyFailed: String? = null,
 ) {
     val layout: QueueLayout get() = layoutQueue(read?.queue.orEmpty())
     val links: List<InviteLinkInfo> get() = liveLinks(read?.links.orEmpty())
 
-    /** InvitesEmpty: no application waits and no link is live. */
-    val empty: Boolean get() = read != null && layout.isEmpty && links.isEmpty()
+    /** Everyone the reader vouched in, newest first (Invites.md:11). */
+    val people: List<LetInPerson> get() = read?.people.orEmpty()
+
+    /** People you let in as it stands: the three newest until `Show all` opens the rest (:15-19). */
+    val peopleShown: List<LetInPerson> get() = if (peopleCapped) people.take(PEOPLE_SHOWN) else people
+
+    /** More than three let in and the door not yet taken: `Show all` stands under the third (:15). */
+    val peopleCapped: Boolean get() = !peopleOpened && people.size > PEOPLE_SHOWN
+
+    private val halvesEmpty: Boolean get() = layout.isEmpty && links.isEmpty()
+
+    /** InvitesEmpty: no application waits, no link is live, and nobody was let in (InvitesEmpty.md:3, :5). */
+    val empty: Boolean get() = read != null && halvesEmpty && people.isEmpty()
+
+    /** Only people let in: New invite and People you let in, neither half (Invites.md:21). */
+    val onlyLetIn: Boolean get() = read != null && halvesEmpty && people.isNotEmpty()
 }
+
+/** How many people People you let in shows before `Show all` (Invites.md:15). */
+const val PEOPLE_SHOWN = 3
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -201,7 +223,8 @@ class InvitesViewModel @Inject constructor(
 
     /** Pull down at the top: the page refreshes (Invites.md:91). */
     fun onPull() {
-        _state.update { it.copy(refreshing = true) }
+        // The fresh load ends a copy's fault line (RowLine: it stands until Retry or the next fresh load).
+        _state.update { it.copy(refreshing = true, copyFailed = null) }
         refresh()
     }
 
@@ -342,7 +365,19 @@ class InvitesViewModel @Inject constructor(
 
     // ── The links ────────────────────────────────────────────────────────
 
-    fun onLinkCopied() = _state.update { it.copy(snack = InvitesSnack.LinkCopied) }
+    /** A card's copy landed: `Link copied`, and that card's fault line leaves (Invites.md:77, :81). */
+    fun onLinkCopied(linkId: String? = null) = _state.update {
+        it.copy(
+            snack = InvitesSnack.LinkCopied,
+            copyFailed = it.copyFailed.takeUnless { failed -> failed == linkId },
+        )
+    }
+
+    /** A card's copy did not go through: the line on that card, never `Link copied`, never a dialog (:79). */
+    fun onCopyFailed(linkId: String) = _state.update { it.copy(copyFailed = linkId) }
+
+    /** `Show all`: every person stands in place, the door leaves, nothing else does (Invites.md:19). */
+    fun onShowAllPeople() = _state.update { it.copy(peopleOpened = true) }
 
     /**
      * Revoke: the card holds until the revoke answers, refuses a second press,

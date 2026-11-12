@@ -16,6 +16,7 @@
 import { Fragment, useEffect, useRef, type ReactNode } from "react";
 
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { nameInText } from "@/lib/ui/names";
 
 import { useCoversSurface } from "./covering-layer";
 
@@ -93,19 +94,22 @@ export function DialogSurface({
         id="dialog-surface-title"
         ref={titleRef}
         tabIndex={-1}
-        className="m-0 text-headline-small outline-none"
+        className="m-0 text-headline-small outline-none [overflow-wrap:anywhere]"
         {...testAttributes(part(node, "title"))}
       >
-        {title}
+        {nameInText(title)}
       </h2>
+      {/* TEXT THAT WRAPS (JoinPrompt.jsx `DialogSurface`, round 40): the title
+          and the body wrap at their spaces; a handle in them is one unit
+          (`nameInText`), whole on a line or end-cut past one. */}
       <div
-        className="mt-4 flex flex-col gap-4 text-body-medium text-on-surface-variant"
+        className="mt-4 flex flex-col gap-4 text-body-medium text-on-surface-variant [overflow-wrap:anywhere]"
         {...testAttributes(part(node, "body"))}
       >
         {body.map((paragraph, index) =>
           typeof paragraph === "string" ? (
             <p key={paragraph} className="m-0">
-              {paragraph}
+              {nameInText(paragraph)}
             </p>
           ) : (
             <Fragment key={index}>{paragraph}</Fragment>
@@ -115,7 +119,7 @@ export function DialogSurface({
       {line !== undefined && (
         <p
           role="alert"
-          className="m-0 mt-4 text-body-medium text-error"
+          className="m-0 mt-4 text-body-medium text-error [overflow-wrap:anywhere]"
           {...testAttributes(part(node, "line"), lineTestId)}
         >
           {line}
