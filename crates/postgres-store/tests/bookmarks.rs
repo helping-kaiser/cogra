@@ -4,7 +4,7 @@
 //! Requires Postgres (`make up`).
 
 use postgres_store::bookmarks::{self, BookmarkCursor, SaveOutcome};
-use postgres_store::content::{self, LandingOrder, LandingStamp};
+use postgres_store::content::{self, LandingOrder};
 use postgres_store::{genesis, hashtag};
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -40,12 +40,9 @@ async fn post(pool: &PgPool, author: Uuid, title: &str) -> Uuid {
         author,
         &format!("mint:act:{id}:0:publish"),
         "a=0;o=0",
-        Some(LandingStamp {
-            order: LandingOrder {
-                landed_epoch: 1,
-                position: 1,
-            },
-            act_time: 1,
+        Some(LandingOrder {
+            landed_epoch: 1,
+            position: 1,
         }),
         at(1),
         Some(title),

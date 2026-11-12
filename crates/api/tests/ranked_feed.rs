@@ -26,7 +26,7 @@ use common::l1::Family;
 use common::l1::census::LegRole;
 use common::l1::handshake::{EpochPackage, PublishedLeg, PublishedRecord};
 use common::l1::identifier::{ActId, NodeId};
-use postgres_store::content::{self, LandingOrder, LandingStamp};
+use postgres_store::content::{self, LandingOrder};
 use postgres_store::{genesis, hashtag, mirror};
 use rig::WireRig;
 use rig::pod::{Mode, StubPod, ranking, search_ranking};
@@ -193,12 +193,9 @@ async fn post_row(pool: &PgPool, author: Uuid, node: &NodeId, epoch: i64) -> Uui
         author,
         &node.to_string(),
         "a=0;o=0",
-        Some(LandingStamp {
-            order: LandingOrder {
-                landed_epoch: epoch,
-                position: 1,
-            },
-            act_time: epoch * 100,
+        Some(LandingOrder {
+            landed_epoch: epoch,
+            position: 1,
         }),
         chrono::DateTime::from_timestamp(1_800_000_000 + epoch, 0).expect("instant"),
         Some("a title"),
@@ -503,8 +500,8 @@ async fn a_never_amended_parameter_reads_the_charters_landing_epoch(pool: PgPool
         .as_i64()
         .expect("the Charter landed");
     sqlx::query(
-        "INSERT INTO network_parameter_versions (parameter, value, landed_epoch, act_time, position)
-         VALUES ('gamma', '0.9', 7, 700, 1)",
+        "INSERT INTO network_parameter_versions (parameter, value, landed_epoch, position)
+         VALUES ('gamma', '0.9', 7, 1)",
     )
     .execute(&rig.pool)
     .await
@@ -2800,12 +2797,9 @@ async fn titled_post(
         author,
         &node.to_string(),
         "a=0;o=0",
-        Some(LandingStamp {
-            order: LandingOrder {
-                landed_epoch: epoch,
-                position: 1,
-            },
-            act_time: epoch * 100,
+        Some(LandingOrder {
+            landed_epoch: epoch,
+            position: 1,
         }),
         chrono::DateTime::from_timestamp(1_800_000_000 + secs, 0).expect("instant"),
         Some(title),
@@ -3507,12 +3501,9 @@ async fn landed_comment(pool: &PgPool, parent: Uuid) -> Uuid {
         author,
         &minted("a", 3, Family::Review).to_string(),
         "a=0;o=0",
-        Some(LandingStamp {
-            order: LandingOrder {
-                landed_epoch: 2,
-                position: 1,
-            },
-            act_time: 200,
+        Some(LandingOrder {
+            landed_epoch: 2,
+            position: 1,
         }),
         authored_at(0),
         "a reply",
