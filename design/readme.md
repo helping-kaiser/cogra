@@ -1801,8 +1801,9 @@ as Q46 in docs/open-questions.md):
   seen" toggle — default off since the feed-filter session
   (2026-08-28, flipping this session's first call): what you've
   seen stays out until you ask for it back. Seen = the card's
-  impression entered the viewport; device-local, never a record,
-  shared transiently with the viewer's chosen ranker. **The feed
+  impression entered the viewport; the reader's own record, never a
+  graph record, cut on the device and leaving it only for an outside
+  ranker the reader picks (seam 312). **The feed
   carries this same ordering section** (backlog item 19 — the
   canonical feed screens never drew the filter at all). Round 44
   (jakob 2026-11-11) takes the toggle off search: search reads every

@@ -5952,7 +5952,7 @@ those boards: four registered paths removed across 32 boards and the flows'
 `More` steps dropped (an announced breaking change for both clients); (c)
 leave the boards as they are and read the law from the docblocks.
 
-### 203 · Who else reads the seen list · *design* · **filed 2026-11-12**
+### 203 · Who else reads the seen list · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 44 (seam 296): search never reads the seen list. jakob's wider
 sentence — "the seen list is a pure feed and history thing nothing else should
@@ -5971,6 +5971,14 @@ ranking") and `miner-api.md` ("The server's own ranker container receives no
 seen-list") against `OrderSection`'s "shared transiently with the viewer's
 chosen ranker". For jakob: confirm nothing else reads it, and which side of
 the ranker sentence stands.
+
+Closed by round 45 with impl's answer (seam 312, checked in the docs and the
+code): the docs are right for what ships — the server's own ranker gets no
+seen list, and the feed's cut happens on the reader's device; only an outside
+ranker (a miner) would be handed it, by the device. The component notes now
+say so: the list is the reader's own record, cut on the device, leaving it
+only for an outside ranker the reader picks. No surface reads it beyond the
+feed and History; whether anything else may stays his belief.
 
 ### 205 · PadStanding, RefPair and TagPad: registering the reference pads · *system* · **filed 2026-11-12**
 
