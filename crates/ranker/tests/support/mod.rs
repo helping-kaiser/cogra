@@ -80,7 +80,6 @@ impl Builder {
         self.clock += 1;
         CausalKey {
             landing_epoch: self.epoch,
-            act_time: self.clock,
             position: self.clock,
         }
     }
@@ -357,7 +356,7 @@ pub fn cost_tie_cases() -> Vec<Case> {
 }
 
 fn key_json(key: &CausalKey) -> Value {
-    json!({"landingEpoch": key.landing_epoch, "actTime": key.act_time, "position": key.position})
+    json!({"landingEpoch": key.landing_epoch, "position": key.position})
 }
 
 pub fn slice_json(slice: &Slice) -> Value {

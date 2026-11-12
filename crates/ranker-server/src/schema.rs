@@ -198,7 +198,6 @@ pub struct TieBreakers {
 pub struct HopMember {
     pub record_id: String,
     pub landing_epoch: i64,
-    pub act_time: i64,
     pub position: i64,
     pub p_directed: f64,
     pub p_interest: f64,
@@ -412,7 +411,6 @@ fn answer(ranking: ranker::FeedRanking) -> Result<FeedRanking, async_graphql::Er
                                     .map(|m| HopMember {
                                         record_id: m.record_id,
                                         landing_epoch: m.key.landing_epoch,
-                                        act_time: m.key.act_time,
                                         position: m.key.position,
                                         p_directed: m.p_d,
                                         p_interest: m.p_i,

@@ -44,15 +44,15 @@ pub enum ContentError {
 /// The sentinel epoch a pending entry sorts under (api-spec.md
 /// "Pagination"): above every real epoch, so newest-first ordering puts
 /// pending entries ahead of the newest landed one and the cursor keeps
-/// its `(epoch, act time, position)` form. Pending entries sort among
-/// themselves by authoring instant, in microseconds.
+/// its `(epoch, position)` form. Pending entries sort among themselves by
+/// authoring instant, in microseconds, carried in the position slot.
 pub const PENDING_EPOCH: i64 = i64::MAX;
 
-/// The genesis record's landing coordinates — the listing sort key.
+/// The genesis record's key of record `(epoch, position)` — the listing
+/// sort key, compared lexicographically (layer1-interface.md §8.3).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct LandingOrder {
     pub landed_epoch: i64,
-    pub act_time: i64,
     pub position: i64,
 }
 
@@ -67,8 +67,7 @@ impl LandingOrder {
     fn pending_at(created_at: Timestamp) -> Self {
         Self {
             landed_epoch: PENDING_EPOCH,
-            act_time: created_at.timestamp_micros(),
-            position: 0,
+            position: created_at.timestamp_micros(),
         }
     }
 
@@ -76,9 +75,19 @@ impl LandingOrder {
     /// or an out-of-range value.
     fn pending_instant(&self) -> Option<Timestamp> {
         self.is_pending()
-            .then(|| chrono::DateTime::from_timestamp_micros(self.act_time))
+            .then(|| chrono::DateTime::from_timestamp_micros(self.position))
             .flatten()
     }
+}
+
+/// A landed record as a display row stamps it: the key of record that
+/// orders it, and the act time the record carries. The act time is the
+/// recomputable summary the published record holds (layer1-interface.md
+/// §8.4); the row keeps a copy of it and never compares it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct LandingStamp {
+    pub order: LandingOrder,
+    pub act_time: i64,
 }
 
 /// A listing cursor: the sort key, plus the entry's own id.
@@ -179,7 +188,7 @@ impl Comment {
     }
 }
 
-/// Inserts a post's entity row and its first version row. `order` is None
+/// Inserts a post's entity row and its first version row. `landing` is None
 /// at the pre-commitment — the row is pending — and Some for a genesis
 /// promoted without one (a mirror rebuild).
 ///
@@ -194,7 +203,7 @@ pub async fn insert_post(
     author_id: Uuid,
     l1_node_id: &str,
     license: &str,
-    order: Option<LandingOrder>,
+    landing: Option<LandingStamp>,
     created_at: Timestamp,
     title: Option<&str>,
     description: Option<&str>,
@@ -211,9 +220,9 @@ pub async fn insert_post(
         author_id,
         l1_node_id,
         license,
-        order.map(|o| o.landed_epoch),
-        order.map(|o| o.act_time),
-        order.map(|o| o.position),
+        landing.map(|l| l.order.landed_epoch),
+        landing.map(|l| l.act_time),
+        landing.map(|l| l.order.position),
         created_at,
     )
     .execute(&mut **tx)
@@ -236,11 +245,11 @@ pub async fn insert_post(
         content,
         mark.is_some(),
         mark.and_then(|m| m.reason.as_deref()),
-        order.is_none(),
+        landing.is_none(),
         created_at,
-        order.map(|o| o.landed_epoch),
-        order.map(|o| o.act_time),
-        order.map(|o| o.position),
+        landing.map(|l| l.order.landed_epoch),
+        landing.map(|l| l.act_time),
+        landing.map(|l| l.order.position),
     )
     .fetch_one(&mut **tx)
     .await?;
@@ -250,7 +259,7 @@ pub async fn insert_post(
 /// Appends a post version row — an edit. The caller supplies the full
 /// merged field set (an edit's unchanged fields are copied forward so the
 /// newest row alone renders the post — data-model.md "Display-content
-/// versioning"). `order` is None at the pre-commitment — the version is
+/// versioning"). `landing` is None at the pre-commitment — the version is
 /// pending — and Some for an edit promoted without one.
 ///
 /// Returns the new row's id, or None when a row for this authoring instant
@@ -263,7 +272,7 @@ pub async fn insert_post_version(
     description: Option<&str>,
     content: &str,
     mark: Option<&SensitiveMark>,
-    order: Option<LandingOrder>,
+    landing: Option<LandingStamp>,
     created_at: Timestamp,
 ) -> Result<Option<i64>, ContentError> {
     Ok(sqlx::query_scalar!(
@@ -280,11 +289,11 @@ pub async fn insert_post_version(
         content,
         mark.is_some(),
         mark.and_then(|m| m.reason.as_deref()),
-        order.is_none(),
+        landing.is_none(),
         created_at,
-        order.map(|o| o.landed_epoch),
-        order.map(|o| o.act_time),
-        order.map(|o| o.position),
+        landing.map(|l| l.order.landed_epoch),
+        landing.map(|l| l.act_time),
+        landing.map(|l| l.order.position),
     )
     .fetch_optional(&mut **tx)
     .await?)
@@ -301,7 +310,7 @@ pub async fn insert_comment(
     author_id: Uuid,
     l1_node_id: &str,
     license: &str,
-    order: Option<LandingOrder>,
+    landing: Option<LandingStamp>,
     created_at: Timestamp,
     content: &str,
     mark: Option<&SensitiveMark>,
@@ -318,9 +327,9 @@ pub async fn insert_comment(
         author_id,
         l1_node_id,
         license,
-        order.map(|o| o.landed_epoch),
-        order.map(|o| o.act_time),
-        order.map(|o| o.position),
+        landing.map(|l| l.order.landed_epoch),
+        landing.map(|l| l.act_time),
+        landing.map(|l| l.order.position),
         created_at,
     )
     .execute(&mut **tx)
@@ -340,11 +349,11 @@ pub async fn insert_comment(
         content,
         mark.is_some(),
         mark.and_then(|m| m.reason.as_deref()),
-        order.is_none(),
+        landing.is_none(),
         created_at,
-        order.map(|o| o.landed_epoch),
-        order.map(|o| o.act_time),
-        order.map(|o| o.position),
+        landing.map(|l| l.order.landed_epoch),
+        landing.map(|l| l.act_time),
+        landing.map(|l| l.order.position),
     )
     .fetch_one(&mut **tx)
     .await?;
@@ -358,7 +367,7 @@ pub async fn insert_comment_version(
     comment_id: Uuid,
     content: &str,
     mark: Option<&SensitiveMark>,
-    order: Option<LandingOrder>,
+    landing: Option<LandingStamp>,
     created_at: Timestamp,
 ) -> Result<Option<i64>, ContentError> {
     Ok(sqlx::query_scalar!(
@@ -372,11 +381,11 @@ pub async fn insert_comment_version(
         content,
         mark.is_some(),
         mark.and_then(|m| m.reason.as_deref()),
-        order.is_none(),
+        landing.is_none(),
         created_at,
-        order.map(|o| o.landed_epoch),
-        order.map(|o| o.act_time),
-        order.map(|o| o.position),
+        landing.map(|l| l.order.landed_epoch),
+        landing.map(|l| l.act_time),
+        landing.map(|l| l.order.position),
     )
     .fetch_optional(&mut **tx)
     .await?)
@@ -389,15 +398,15 @@ pub async fn insert_comment_version(
 pub async fn land_post(
     tx: &mut Transaction<'_, Postgres>,
     id: Uuid,
-    order: LandingOrder,
+    landing: LandingStamp,
 ) -> Result<bool, ContentError> {
     Ok(sqlx::query!(
         "UPDATE posts SET landed_epoch = $2, act_time = $3, position = $4
          WHERE id = $1",
         id,
-        order.landed_epoch,
-        order.act_time,
-        order.position,
+        landing.order.landed_epoch,
+        landing.act_time,
+        landing.order.position,
     )
     .execute(&mut **tx)
     .await?
@@ -416,7 +425,7 @@ pub async fn land_post_version(
     tx: &mut Transaction<'_, Postgres>,
     post_id: Uuid,
     created_at: Timestamp,
-    order: LandingOrder,
+    landing: LandingStamp,
 ) -> Result<bool, ContentError> {
     Ok(sqlx::query!(
         "UPDATE post_versions
@@ -425,9 +434,9 @@ pub async fn land_post_version(
          WHERE post_id = $1 AND created_at = $2 AND pending",
         post_id,
         created_at,
-        order.landed_epoch,
-        order.act_time,
-        order.position,
+        landing.order.landed_epoch,
+        landing.act_time,
+        landing.order.position,
     )
     .execute(&mut **tx)
     .await?
@@ -439,15 +448,15 @@ pub async fn land_post_version(
 pub async fn land_comment(
     tx: &mut Transaction<'_, Postgres>,
     id: Uuid,
-    order: LandingOrder,
+    landing: LandingStamp,
 ) -> Result<bool, ContentError> {
     Ok(sqlx::query!(
         "UPDATE comments SET landed_epoch = $2, act_time = $3, position = $4
          WHERE id = $1",
         id,
-        order.landed_epoch,
-        order.act_time,
-        order.position,
+        landing.order.landed_epoch,
+        landing.act_time,
+        landing.order.position,
     )
     .execute(&mut **tx)
     .await?
@@ -460,7 +469,7 @@ pub async fn land_comment_version(
     tx: &mut Transaction<'_, Postgres>,
     comment_id: Uuid,
     created_at: Timestamp,
-    order: LandingOrder,
+    landing: LandingStamp,
 ) -> Result<bool, ContentError> {
     Ok(sqlx::query!(
         "UPDATE comment_versions
@@ -469,9 +478,9 @@ pub async fn land_comment_version(
          WHERE comment_id = $1 AND created_at = $2 AND pending",
         comment_id,
         created_at,
-        order.landed_epoch,
-        order.act_time,
-        order.position,
+        landing.order.landed_epoch,
+        landing.act_time,
+        landing.order.position,
     )
     .execute(&mut **tx)
     .await?
@@ -816,17 +825,12 @@ pub async fn reduced_payload_acts(
     .collect())
 }
 
-/// The landing coordinates of a row, all-present or all-absent (the
-/// table's own CHECK); a mixed row is impossible and reads as pending.
-fn landing_order(
-    epoch: Option<i64>,
-    act_time: Option<i64>,
-    position: Option<i64>,
-) -> Option<LandingOrder> {
-    match (epoch, act_time, position) {
-        (Some(landed_epoch), Some(act_time), Some(position)) => Some(LandingOrder {
+/// The key of record of a row, all-present or all-absent (the table's own
+/// CHECK); a mixed row is impossible and reads as pending.
+fn landing_order(epoch: Option<i64>, position: Option<i64>) -> Option<LandingOrder> {
+    match (epoch, position) {
+        (Some(landed_epoch), Some(position)) => Some(LandingOrder {
             landed_epoch,
-            act_time,
             position,
         }),
         _ => None,
@@ -839,7 +843,7 @@ fn post_from_row(row: PostRow) -> Post {
         author_id: row.author_id,
         l1_node_id: row.l1_node_id,
         license: row.license,
-        order: landing_order(row.landed_epoch, row.act_time, row.position),
+        order: landing_order(row.landed_epoch, row.position),
         created_at: row.created_at,
         title: row.title,
         description: row.description,
@@ -859,7 +863,6 @@ struct PostRow {
     l1_node_id: String,
     license: String,
     landed_epoch: Option<i64>,
-    act_time: Option<i64>,
     position: Option<i64>,
     created_at: Timestamp,
     title: Option<String>,
@@ -880,7 +883,7 @@ pub async fn post(pool: &PgPool, id: Uuid) -> Result<Option<Post>, ContentError>
     let row = sqlx::query_as!(
         PostRow,
         r#"SELECT p.id, p.author_id, p.l1_node_id, p.license,
-                  p.landed_epoch, p.act_time, p.position, p.created_at,
+                  p.landed_epoch, p.position, p.created_at,
                   v.title, v.description,
                   v.content AS "content!", v.redaction_reason,
                   v.sensitive AS "sensitive!", v.sensitive_reason,
@@ -895,7 +898,6 @@ pub async fn post(pool: &PgPool, id: Uuid) -> Result<Option<Post>, ContentError>
                FROM post_versions WHERE post_id = p.id
                ORDER BY pending DESC,
                         landed_epoch DESC NULLS LAST,
-                        act_time DESC NULLS LAST,
                         position DESC NULLS LAST,
                         created_at DESC, version_id DESC
                LIMIT 1
@@ -914,7 +916,7 @@ pub async fn post_by_node(pool: &PgPool, l1_node_id: &str) -> Result<Option<Post
     let row = sqlx::query_as!(
         PostRow,
         r#"SELECT p.id, p.author_id, p.l1_node_id, p.license,
-                  p.landed_epoch, p.act_time, p.position, p.created_at,
+                  p.landed_epoch, p.position, p.created_at,
                   v.title, v.description,
                   v.content AS "content!", v.redaction_reason,
                   v.sensitive AS "sensitive!", v.sensitive_reason,
@@ -929,7 +931,6 @@ pub async fn post_by_node(pool: &PgPool, l1_node_id: &str) -> Result<Option<Post
                FROM post_versions WHERE post_id = p.id
                ORDER BY pending DESC,
                         landed_epoch DESC NULLS LAST,
-                        act_time DESC NULLS LAST,
                         position DESC NULLS LAST,
                         created_at DESC, version_id DESC
                LIMIT 1
@@ -952,7 +953,7 @@ pub async fn posts_by_nodes(
     let rows = sqlx::query_as!(
         PostRow,
         r#"SELECT p.id, p.author_id, p.l1_node_id, p.license,
-                  p.landed_epoch, p.act_time, p.position, p.created_at,
+                  p.landed_epoch, p.position, p.created_at,
                   v.title, v.description,
                   v.content AS "content!", v.redaction_reason,
                   v.sensitive AS "sensitive!", v.sensitive_reason,
@@ -967,7 +968,6 @@ pub async fn posts_by_nodes(
                FROM post_versions WHERE post_id = p.id
                ORDER BY pending DESC,
                         landed_epoch DESC NULLS LAST,
-                        act_time DESC NULLS LAST,
                         position DESC NULLS LAST,
                         created_at DESC, version_id DESC
                LIMIT 1
@@ -1097,13 +1097,10 @@ async fn resolve_post_cursor(
     let Some(id) = movable(cursor) else {
         return Ok(cursor);
     };
-    let landed = sqlx::query!(
-        "SELECT landed_epoch, act_time, position FROM posts WHERE id = $1",
-        id
-    )
-    .fetch_optional(pool)
-    .await?
-    .and_then(|r| landing_order(r.landed_epoch, r.act_time, r.position));
+    let landed = sqlx::query!("SELECT landed_epoch, position FROM posts WHERE id = $1", id)
+        .fetch_optional(pool)
+        .await?
+        .and_then(|r| landing_order(r.landed_epoch, r.position));
     Ok(repoint(cursor, landed))
 }
 
@@ -1116,12 +1113,12 @@ async fn resolve_comment_cursor(
         return Ok(cursor);
     };
     let landed = sqlx::query!(
-        "SELECT landed_epoch, act_time, position FROM comments WHERE id = $1",
+        "SELECT landed_epoch, position FROM comments WHERE id = $1",
         id
     )
     .fetch_optional(pool)
     .await?
-    .and_then(|r| landing_order(r.landed_epoch, r.act_time, r.position));
+    .and_then(|r| landing_order(r.landed_epoch, r.position));
     Ok(repoint(cursor, landed))
 }
 
@@ -1139,16 +1136,16 @@ async fn list_posts_landed(
     limit: i64,
     include_pending: bool,
 ) -> Result<Vec<Post>, ContentError> {
-    let (ce, ca, cp) = match cursor {
-        Some(c) => (Some(c.landed_epoch), Some(c.act_time), Some(c.position)),
-        None => (None, None, None),
+    let (ce, cp) = match cursor {
+        Some(c) => (Some(c.landed_epoch), Some(c.position)),
+        None => (None, None),
     };
     let rows = if backward {
         sqlx::query_as!(
             PostRow,
             r#"SELECT * FROM (
                    SELECT p.id, p.author_id, p.l1_node_id, p.license,
-                          p.landed_epoch, p.act_time, p.position, p.created_at,
+                          p.landed_epoch, p.position, p.created_at,
                           v.title, v.description,
                           v.content AS "content!", v.redaction_reason,
                           v.sensitive AS "sensitive!", v.sensitive_reason,
@@ -1161,23 +1158,21 @@ async fn list_posts_landed(
                               sensitive, sensitive_reason,
                               pending, created_at, version_id
                        FROM post_versions
-                       WHERE post_id = p.id AND ($5 OR NOT pending)
+                       WHERE post_id = p.id AND ($4 OR NOT pending)
                        ORDER BY pending DESC,
                                 landed_epoch DESC NULLS LAST,
-                                act_time DESC NULLS LAST,
                                 position DESC NULLS LAST,
                                 created_at DESC, version_id DESC
                        LIMIT 1
                    ) v ON TRUE
                    WHERE p.landed_epoch IS NOT NULL
                      AND ($1::bigint IS NULL
-                          OR (p.landed_epoch, p.act_time, p.position) > ($1, $2, $3))
-                   ORDER BY p.landed_epoch ASC, p.act_time ASC, p.position ASC
-                   LIMIT $4
+                          OR (p.landed_epoch, p.position) > ($1, $2))
+                   ORDER BY p.landed_epoch ASC, p.position ASC
+                   LIMIT $3
                ) page
-               ORDER BY landed_epoch DESC, act_time DESC, position DESC"#,
+               ORDER BY landed_epoch DESC, position DESC"#,
             ce,
-            ca,
             cp,
             limit,
             include_pending,
@@ -1188,7 +1183,7 @@ async fn list_posts_landed(
         sqlx::query_as!(
             PostRow,
             r#"SELECT p.id, p.author_id, p.l1_node_id, p.license,
-                      p.landed_epoch, p.act_time, p.position, p.created_at,
+                      p.landed_epoch, p.position, p.created_at,
                       v.title, v.description,
                       v.content AS "content!", v.redaction_reason,
                       v.sensitive AS "sensitive!", v.sensitive_reason,
@@ -1201,21 +1196,19 @@ async fn list_posts_landed(
                           sensitive, sensitive_reason,
                           pending, created_at, version_id
                    FROM post_versions
-                   WHERE post_id = p.id AND ($5 OR NOT pending)
+                   WHERE post_id = p.id AND ($4 OR NOT pending)
                    ORDER BY pending DESC,
                             landed_epoch DESC NULLS LAST,
-                            act_time DESC NULLS LAST,
                             position DESC NULLS LAST,
                             created_at DESC, version_id DESC
                    LIMIT 1
                ) v ON TRUE
                WHERE p.landed_epoch IS NOT NULL
                  AND ($1::bigint IS NULL
-                      OR (p.landed_epoch, p.act_time, p.position) < ($1, $2, $3))
-               ORDER BY p.landed_epoch DESC, p.act_time DESC, p.position DESC
-               LIMIT $4"#,
+                      OR (p.landed_epoch, p.position) < ($1, $2))
+               ORDER BY p.landed_epoch DESC, p.position DESC
+               LIMIT $3"#,
             ce,
-            ca,
             cp,
             limit,
             include_pending,
@@ -1244,7 +1237,7 @@ async fn list_posts_pending(
             PostRow,
             r#"SELECT * FROM (
                    SELECT p.id, p.author_id, p.l1_node_id, p.license,
-                          p.landed_epoch, p.act_time, p.position, p.created_at,
+                          p.landed_epoch, p.position, p.created_at,
                           v.title, v.description,
                           v.content AS "content!", v.redaction_reason,
                           v.sensitive AS "sensitive!", v.sensitive_reason,
@@ -1259,7 +1252,6 @@ async fn list_posts_pending(
                        FROM post_versions WHERE post_id = p.id
                        ORDER BY pending DESC,
                                 landed_epoch DESC NULLS LAST,
-                                act_time DESC NULLS LAST,
                                 position DESC NULLS LAST,
                                 created_at DESC, version_id DESC
                        LIMIT 1
@@ -1282,7 +1274,7 @@ async fn list_posts_pending(
         sqlx::query_as!(
             PostRow,
             r#"SELECT p.id, p.author_id, p.l1_node_id, p.license,
-                      p.landed_epoch, p.act_time, p.position, p.created_at,
+                      p.landed_epoch, p.position, p.created_at,
                       v.title, v.description,
                       v.content AS "content!", v.redaction_reason,
                       v.sensitive AS "sensitive!", v.sensitive_reason,
@@ -1297,7 +1289,6 @@ async fn list_posts_pending(
                    FROM post_versions WHERE post_id = p.id
                    ORDER BY pending DESC,
                             landed_epoch DESC NULLS LAST,
-                            act_time DESC NULLS LAST,
                             position DESC NULLS LAST,
                             created_at DESC, version_id DESC
                    LIMIT 1
@@ -1326,7 +1317,7 @@ fn comment_from_row(row: CommentRow) -> Comment {
         author_id: row.author_id,
         l1_node_id: row.l1_node_id,
         license: row.license,
-        order: landing_order(row.landed_epoch, row.act_time, row.position),
+        order: landing_order(row.landed_epoch, row.position),
         created_at: row.created_at,
         content: row.content,
         redaction_reason: row.redaction_reason,
@@ -1346,7 +1337,6 @@ struct CommentRow {
     l1_node_id: String,
     license: String,
     landed_epoch: Option<i64>,
-    act_time: Option<i64>,
     position: Option<i64>,
     created_at: Timestamp,
     content: String,
@@ -1363,7 +1353,7 @@ pub async fn comment(pool: &PgPool, id: Uuid) -> Result<Option<Comment>, Content
     let row = sqlx::query_as!(
         CommentRow,
         r#"SELECT c.id, c.target_id, c.target_type, c.author_id,
-                  c.l1_node_id, c.license, c.landed_epoch, c.act_time,
+                  c.l1_node_id, c.license, c.landed_epoch,
                   c.position, c.created_at,
                   v.content AS "content!", v.redaction_reason,
                   v.sensitive AS "sensitive!", v.sensitive_reason,
@@ -1377,7 +1367,6 @@ pub async fn comment(pool: &PgPool, id: Uuid) -> Result<Option<Comment>, Content
                FROM comment_versions WHERE comment_id = c.id
                ORDER BY pending DESC,
                         landed_epoch DESC NULLS LAST,
-                        act_time DESC NULLS LAST,
                         position DESC NULLS LAST,
                         created_at DESC, version_id DESC
                LIMIT 1
@@ -1398,7 +1387,7 @@ pub async fn comment_by_node(
     let row = sqlx::query_as!(
         CommentRow,
         r#"SELECT c.id, c.target_id, c.target_type, c.author_id,
-                  c.l1_node_id, c.license, c.landed_epoch, c.act_time,
+                  c.l1_node_id, c.license, c.landed_epoch,
                   c.position, c.created_at,
                   v.content AS "content!", v.redaction_reason,
                   v.sensitive AS "sensitive!", v.sensitive_reason,
@@ -1412,7 +1401,6 @@ pub async fn comment_by_node(
                FROM comment_versions WHERE comment_id = c.id
                ORDER BY pending DESC,
                         landed_epoch DESC NULLS LAST,
-                        act_time DESC NULLS LAST,
                         position DESC NULLS LAST,
                         created_at DESC, version_id DESC
                LIMIT 1
@@ -1435,7 +1423,7 @@ pub async fn comments_by_nodes(
     let rows = sqlx::query_as!(
         CommentRow,
         r#"SELECT c.id, c.target_id, c.target_type, c.author_id,
-                  c.l1_node_id, c.license, c.landed_epoch, c.act_time,
+                  c.l1_node_id, c.license, c.landed_epoch,
                   c.position, c.created_at,
                   v.content AS "content!", v.redaction_reason,
                   v.sensitive AS "sensitive!", v.sensitive_reason,
@@ -1449,7 +1437,6 @@ pub async fn comments_by_nodes(
                FROM comment_versions WHERE comment_id = c.id
                ORDER BY pending DESC,
                         landed_epoch DESC NULLS LAST,
-                        act_time DESC NULLS LAST,
                         position DESC NULLS LAST,
                         created_at DESC, version_id DESC
                LIMIT 1
@@ -1526,16 +1513,16 @@ async fn comments_landed(
     limit: i64,
     include_pending: bool,
 ) -> Result<Vec<Comment>, ContentError> {
-    let (ce, ca, cp) = match cursor {
-        Some(c) => (Some(c.landed_epoch), Some(c.act_time), Some(c.position)),
-        None => (None, None, None),
+    let (ce, cp) = match cursor {
+        Some(c) => (Some(c.landed_epoch), Some(c.position)),
+        None => (None, None),
     };
     let rows = if backward {
         sqlx::query_as!(
             CommentRow,
             r#"SELECT * FROM (
                    SELECT c.id, c.target_id, c.target_type, c.author_id,
-                          c.l1_node_id, c.license, c.landed_epoch, c.act_time,
+                          c.l1_node_id, c.license, c.landed_epoch,
                           c.position, c.created_at,
                           v.content AS "content!", v.redaction_reason,
                           v.sensitive AS "sensitive!", v.sensitive_reason,
@@ -1547,24 +1534,22 @@ async fn comments_landed(
                        SELECT content, redaction_reason, sensitive,
                               sensitive_reason, pending, created_at, version_id
                        FROM comment_versions
-                       WHERE comment_id = c.id AND ($6 OR NOT pending)
+                       WHERE comment_id = c.id AND ($5 OR NOT pending)
                        ORDER BY pending DESC,
                                 landed_epoch DESC NULLS LAST,
-                                act_time DESC NULLS LAST,
                                 position DESC NULLS LAST,
                                 created_at DESC, version_id DESC
                        LIMIT 1
                    ) v ON TRUE
-                   WHERE c.target_id = $5
+                   WHERE c.target_id = $4
                      AND c.landed_epoch IS NOT NULL
                      AND ($1::bigint IS NULL
-                          OR (c.landed_epoch, c.act_time, c.position) > ($1, $2, $3))
-                   ORDER BY c.landed_epoch ASC, c.act_time ASC, c.position ASC
-                   LIMIT $4
+                          OR (c.landed_epoch, c.position) > ($1, $2))
+                   ORDER BY c.landed_epoch ASC, c.position ASC
+                   LIMIT $3
                ) page
-               ORDER BY landed_epoch DESC, act_time DESC, position DESC"#,
+               ORDER BY landed_epoch DESC, position DESC"#,
             ce,
-            ca,
             cp,
             limit,
             target_id,
@@ -1576,7 +1561,7 @@ async fn comments_landed(
         sqlx::query_as!(
             CommentRow,
             r#"SELECT c.id, c.target_id, c.target_type, c.author_id,
-                      c.l1_node_id, c.license, c.landed_epoch, c.act_time,
+                      c.l1_node_id, c.license, c.landed_epoch,
                       c.position, c.created_at,
                       v.content AS "content!", v.redaction_reason,
                       v.sensitive AS "sensitive!", v.sensitive_reason,
@@ -1588,22 +1573,20 @@ async fn comments_landed(
                    SELECT content, redaction_reason, sensitive,
                           sensitive_reason, pending, created_at, version_id
                    FROM comment_versions
-                   WHERE comment_id = c.id AND ($6 OR NOT pending)
+                   WHERE comment_id = c.id AND ($5 OR NOT pending)
                    ORDER BY pending DESC,
                             landed_epoch DESC NULLS LAST,
-                            act_time DESC NULLS LAST,
                             position DESC NULLS LAST,
                             created_at DESC, version_id DESC
                    LIMIT 1
                ) v ON TRUE
-               WHERE c.target_id = $5
+               WHERE c.target_id = $4
                  AND c.landed_epoch IS NOT NULL
                  AND ($1::bigint IS NULL
-                      OR (c.landed_epoch, c.act_time, c.position) < ($1, $2, $3))
-               ORDER BY c.landed_epoch DESC, c.act_time DESC, c.position DESC
-               LIMIT $4"#,
+                      OR (c.landed_epoch, c.position) < ($1, $2))
+               ORDER BY c.landed_epoch DESC, c.position DESC
+               LIMIT $3"#,
             ce,
-            ca,
             cp,
             limit,
             target_id,
@@ -1630,7 +1613,7 @@ async fn comments_pending(
             CommentRow,
             r#"SELECT * FROM (
                    SELECT c.id, c.target_id, c.target_type, c.author_id,
-                          c.l1_node_id, c.license, c.landed_epoch, c.act_time,
+                          c.l1_node_id, c.license, c.landed_epoch,
                           c.position, c.created_at,
                           v.content AS "content!", v.redaction_reason,
                           v.sensitive AS "sensitive!", v.sensitive_reason,
@@ -1644,7 +1627,6 @@ async fn comments_pending(
                        FROM comment_versions WHERE comment_id = c.id
                        ORDER BY pending DESC,
                                 landed_epoch DESC NULLS LAST,
-                                act_time DESC NULLS LAST,
                                 position DESC NULLS LAST,
                                 created_at DESC, version_id DESC
                        LIMIT 1
@@ -1669,7 +1651,7 @@ async fn comments_pending(
         sqlx::query_as!(
             CommentRow,
             r#"SELECT c.id, c.target_id, c.target_type, c.author_id,
-                      c.l1_node_id, c.license, c.landed_epoch, c.act_time,
+                      c.l1_node_id, c.license, c.landed_epoch,
                       c.position, c.created_at,
                       v.content AS "content!", v.redaction_reason,
                       v.sensitive AS "sensitive!", v.sensitive_reason,
@@ -1683,7 +1665,6 @@ async fn comments_pending(
                    FROM comment_versions WHERE comment_id = c.id
                    ORDER BY pending DESC,
                             landed_epoch DESC NULLS LAST,
-                            act_time DESC NULLS LAST,
                             position DESC NULLS LAST,
                             created_at DESC, version_id DESC
                    LIMIT 1
@@ -1826,7 +1807,6 @@ mod tests {
     fn landed(epoch: i64) -> LandingOrder {
         LandingOrder {
             landed_epoch: epoch,
-            act_time: 0,
             position: 0,
         }
     }
@@ -1897,7 +1877,7 @@ mod tests {
         assert_eq!(landed_post.sort_key(), landed(7));
     }
 
-    /// The table's CHECK admits all three coordinates or none, so a row
+    /// The table's CHECK admits all landing coordinates or none, so a row
     /// carrying part of a position reads as pending rather than as a
     /// position with holes in it.
     ///
@@ -1905,12 +1885,10 @@ mod tests {
     /// ´claim:content:a-partial-position-is-no-position´
     #[test]
     fn a_partial_position_is_no_position() {
-        assert_eq!(
-            landing_order(Some(1), Some(2), Some(3)).map(|o| o.position),
-            Some(3)
-        );
-        assert_eq!(landing_order(Some(1), Some(2), None), None);
-        assert_eq!(landing_order(None, None, None), None);
+        assert_eq!(landing_order(Some(1), Some(3)).map(|o| o.position), Some(3));
+        assert_eq!(landing_order(Some(1), None), None);
+        assert_eq!(landing_order(None, Some(3)), None);
+        assert_eq!(landing_order(None, None), None);
     }
 
     /// Only a pending cursor moves, and only one carrying an id can be

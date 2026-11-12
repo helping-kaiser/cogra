@@ -26,7 +26,7 @@ use common::l1::Family;
 use common::l1::census::LegRole;
 use common::l1::handshake::{EpochPackage, PublishedLeg, PublishedRecord};
 use common::l1::identifier::{ActId, NodeId};
-use postgres_store::content::{self, LandingOrder};
+use postgres_store::content::{self, LandingOrder, LandingStamp};
 use postgres_store::{genesis, hashtag, mirror};
 use rig::WireRig;
 use rig::pod::{Mode, StubPod, ranking, search_ranking};
@@ -41,7 +41,7 @@ const SLICE: &str = r#"query($viewer: UUID!, $asOf: Int, $dust: Float, $gamma: F
     asOfEpoch
     nodes(first: $first, after: $after) {
       totalCount
-      edges { cursor node { graphId id kind genesis { landingEpoch actTime position } } }
+      edges { cursor node { graphId id kind genesis { landingEpoch position } } }
       pageInfo { hasNextPage endCursor }
     }
     records(first: $rfirst) {
@@ -193,10 +193,12 @@ async fn post_row(pool: &PgPool, author: Uuid, node: &NodeId, epoch: i64) -> Uui
         author,
         &node.to_string(),
         "a=0;o=0",
-        Some(LandingOrder {
-            landed_epoch: epoch,
+        Some(LandingStamp {
+            order: LandingOrder {
+                landed_epoch: epoch,
+                position: 1,
+            },
             act_time: epoch * 100,
-            position: 1,
         }),
         chrono::DateTime::from_timestamp(1_800_000_000 + epoch, 0).expect("instant"),
         Some("a title"),
@@ -701,11 +703,11 @@ async fn slice_nodes_carry_their_genesis_key_and_a_type_carries_none(pool: PgPoo
     let s = full_slice(&rig, f.viewer).await;
     assert_eq!(
         node(&s, &f.p.to_string())["genesis"],
-        json!({ "landingEpoch": 2, "actTime": 201, "position": 2 })
+        json!({ "landingEpoch": 2, "position": 2 })
     );
     assert_eq!(
         node(&s, &prof("a").to_string())["genesis"],
-        json!({ "landingEpoch": 1, "actTime": 101, "position": 2 })
+        json!({ "landingEpoch": 1, "position": 2 })
     );
     assert_eq!(node(&s, &topic("salt").to_string())["genesis"], Value::Null);
 }
@@ -2798,10 +2800,12 @@ async fn titled_post(
         author,
         &node.to_string(),
         "a=0;o=0",
-        Some(LandingOrder {
-            landed_epoch: epoch,
+        Some(LandingStamp {
+            order: LandingOrder {
+                landed_epoch: epoch,
+                position: 1,
+            },
             act_time: epoch * 100,
-            position: 1,
         }),
         chrono::DateTime::from_timestamp(1_800_000_000 + secs, 0).expect("instant"),
         Some(title),
@@ -3503,10 +3507,12 @@ async fn landed_comment(pool: &PgPool, parent: Uuid) -> Uuid {
         author,
         &minted("a", 3, Family::Review).to_string(),
         "a=0;o=0",
-        Some(LandingOrder {
-            landed_epoch: 2,
+        Some(LandingStamp {
+            order: LandingOrder {
+                landed_epoch: 2,
+                position: 1,
+            },
             act_time: 200,
-            position: 1,
         }),
         authored_at(0),
         "a reply",

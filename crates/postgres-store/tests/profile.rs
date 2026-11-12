@@ -3,16 +3,21 @@
 //! one-namespace handle lookup. Requires Postgres (`make up`).
 
 use chrono::{Duration, SubsecRound, Utc};
-use postgres_store::content::{self, LandingOrder};
+use postgres_store::content::{self, LandingOrder, LandingStamp};
 use postgres_store::{auth, genesis, profile};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-fn order(epoch: i64, position: i64) -> LandingOrder {
-    LandingOrder {
-        landed_epoch: epoch,
-        act_time: position + 1,
-        position,
+/// A landing at the key of record `(epoch, position)`, its act time
+/// falling as the position rises — inside one epoch the position decides,
+/// never the act time (layer1-interface.md §8.3).
+fn order(epoch: i64, position: i64) -> LandingStamp {
+    LandingStamp {
+        order: LandingOrder {
+            landed_epoch: epoch,
+            position,
+        },
+        act_time: 1_000 - position,
     }
 }
 

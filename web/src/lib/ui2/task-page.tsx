@@ -24,6 +24,7 @@ export function TaskPage({
   backLabel = "Back",
   bandOnly = false,
   headerAction,
+  backHeld = false,
   title,
   lead,
   children,
@@ -45,6 +46,8 @@ export function TaskPage({
   backLabel?: string;
   /** The header's trailing control (Join's "?"). */
   headerAction?: ReactNode;
+  /** The back arrow refuses a press, never dimmed, while the commit waits (Join.md). */
+  backHeld?: boolean;
   /** Omitted where the screen heads itself (Join's inviter block). */
   title?: string;
   /** Omitted while the words it needs are still being read. */
@@ -60,6 +63,7 @@ export function TaskPage({
         <PageHeader
           backHref={bandOnly ? undefined : backHref}
           backLabel={backLabel}
+          backHeld={backHeld}
           action={headerAction}
           node={part(node, "header")}
           deletionBand={deletionBand}

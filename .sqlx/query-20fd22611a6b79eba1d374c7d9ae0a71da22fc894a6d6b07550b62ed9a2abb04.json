@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT DISTINCT ON (parameter)\n                  parameter AS \"parameter!\", value AS \"value!\", landed_epoch\n           FROM network_parameter_versions\n           WHERE ($1::text[] IS NULL OR parameter = ANY($1))\n           ORDER BY parameter,\n                    landed_epoch DESC NULLS LAST,\n                    position DESC NULLS LAST,\n                    created_at DESC, version_id DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "parameter!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "value!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 2,
+        "name": "landed_epoch",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "20fd22611a6b79eba1d374c7d9ae0a71da22fc894a6d6b07550b62ed9a2abb04"
+}

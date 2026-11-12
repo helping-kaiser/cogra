@@ -38,6 +38,7 @@ export function PageHeader({
   backLabel,
   backTestId,
   backScroll,
+  backHeld = false,
   action,
   node,
   deletionBand,
@@ -72,6 +73,12 @@ export function PageHeader({
    * it. Left at Next's default — a fresh surface starts at its top.
    */
   backScroll?: boolean;
+  /**
+   * The arrow refuses a press, never dimmed, while the page's commit waits on
+   * its answer — an entry form's exits hold while it submits (Join.md; the
+   * named exception of backlog 191).
+   */
+  backHeld?: boolean;
   action?: ReactNode;
 }) {
   return (
@@ -83,6 +90,8 @@ export function PageHeader({
               href={backHref}
               scroll={backScroll}
               aria-label={backLabel}
+              aria-disabled={backHeld || undefined}
+              onClick={backHeld ? (event) => event.preventDefault() : undefined}
               {...testAttributes(part(node, "back"), backTestId)}
               className="cg-state cg-focus grid size-12 flex-none place-items-center rounded-full text-on-surface-variant"
             >

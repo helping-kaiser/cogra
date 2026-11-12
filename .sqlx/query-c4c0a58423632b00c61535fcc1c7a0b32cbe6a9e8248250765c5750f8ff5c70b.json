@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE actor_profile_versions\n         SET display_name = '', bio = NULL, avatar_id = NULL, website_url = NULL,\n             redaction_reason = $2\n         WHERE actor_id = $1 AND redaction_reason IS NULL\n           AND ((landed_epoch = $3 AND position = $4)\n                OR created_at = $5)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Int8",
+        "Int8",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c4c0a58423632b00c61535fcc1c7a0b32cbe6a9e8248250765c5750f8ff5c70b"
+}

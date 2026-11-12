@@ -33,7 +33,7 @@ import { parseOpinionsOrigin } from "@/lib/profile/opinions-route";
 import { useAuthPhase } from "@/lib/session/provider";
 import { KeptPicksNavigation } from "@/lib/stance/kept-picks-route";
 import { FROM_YOUR_TOPICS } from "@/lib/topics/your-topics";
-import { carriedOrigin } from "@/lib/ui/back-origin";
+import { carriedOrigin, parseInvitesOrigin } from "@/lib/ui/back-origin";
 import { BottomNav, type NavSlot } from "@/lib/ui/bottom-nav";
 import { CarriedSnackbar } from "@/lib/ui/carried-snackbar";
 import { scrollHostToTopAnimated, scrollOffsetOf } from "@/lib/ui/scroll-host";
@@ -76,6 +76,9 @@ export function detailRoot(from: string | null): NavSlot {
   if (from === "search" || from === "explore" || from === FROM_YOUR_TOPICS) return "search";
   const opinions = parseOpinionsOrigin(from);
   if (opinions !== null) return opinions.handle === null ? "profile" : detailRoot(opinions.from);
+  // Invites is a door of the reader's own profile (its back arrow's home,
+  // Invites.md:135), so a person let in opens in the Profile stack.
+  if (parseInvitesOrigin(from) !== null) return "profile";
   const carried = carriedOrigin(from);
   if (carried !== undefined) return detailRoot(carried);
   return from === "saved" || from === "history" || from === "profile" ? "profile" : "feed";
