@@ -1,5 +1,5 @@
-// The password-reset pair (auth.md "Password reset"); the token is
-// pasted in-app per the dev-mailer posture (auth.md "Link URLs").
+// The reset's request step (auth.md "Password reset" step 1). The new
+// password is set where the mailed link lands, ResetNew (ResetNewScreen.kt).
 
 package com.cogra.feature.auth
 
@@ -29,10 +29,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
-import com.cogra.core.designsystem.PasswordTextField
 import com.cogra.core.designsystem.v2.atom.PageHeader
 import com.cogra.domain.ErrorCode
-import com.cogra.domain.MIN_PASSWORD_LENGTH
 import com.cogra.domain.Outcome
 import com.cogra.domain.has
 import com.cogra.domain.repo.AccountRepository
@@ -45,12 +43,9 @@ import kotlinx.coroutines.launch
 
 data class ResetUiState(
     val email: String = "",
-    val token: String = "",
-    val newPassword: String = "",
     val inProgress: Boolean = false,
     /** The silent verb reported success — tell the user to check mail. */
     val requested: Boolean = false,
-    val confirmed: Boolean = false,
     val error: ErrorCode? = null,
     val transportFailed: Boolean = false,
 )
@@ -64,10 +59,6 @@ class PasswordResetViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     fun onEmailChange(v: String) = _state.update { it.copy(email = v, error = null) }
-
-    fun onTokenChange(v: String) = _state.update { it.copy(token = v, error = null) }
-
-    fun onNewPasswordChange(v: String) = _state.update { it.copy(newPassword = v, error = null) }
 
     fun onRequest() {
         val email = _state.value.email.trim()
@@ -91,40 +82,18 @@ class PasswordResetViewModel @Inject constructor(
             }
         }
     }
-
-    fun onConfirm() {
-        val current = _state.value
-        if (current.token.isBlank() || current.newPassword.isEmpty() || current.inProgress) return
-        _state.update { it.copy(inProgress = true, error = null, transportFailed = false) }
-        viewModelScope.launch {
-            when (val outcome = account.confirmPasswordReset(current.token.trim(), current.newPassword)) {
-                is Outcome.Success -> _state.update { it.copy(inProgress = false, confirmed = true) }
-                is Outcome.Refused -> _state.update {
-                    it.copy(inProgress = false, error = outcome.errors.first().code)
-                }
-                is Outcome.Failed -> _state.update { it.copy(inProgress = false, transportFailed = true) }
-            }
-        }
-    }
 }
 
 @Composable
 fun PasswordResetRoute(
-    onDone: () -> Unit,
     onBack: () -> Unit,
     viewModel: PasswordResetViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    androidx.compose.runtime.LaunchedEffect(state.confirmed) {
-        if (state.confirmed) onDone()
-    }
     PasswordResetScreen(
         state = state,
         onEmailChange = viewModel::onEmailChange,
-        onTokenChange = viewModel::onTokenChange,
-        onNewPasswordChange = viewModel::onNewPasswordChange,
         onRequest = viewModel::onRequest,
-        onConfirm = viewModel::onConfirm,
         onBack = onBack,
     )
 }
@@ -133,10 +102,7 @@ fun PasswordResetRoute(
 fun PasswordResetScreen(
     state: ResetUiState,
     onEmailChange: (String) -> Unit,
-    onTokenChange: (String) -> Unit,
-    onNewPasswordChange: (String) -> Unit,
     onRequest: () -> Unit,
-    onConfirm: () -> Unit,
     onBack: () -> Unit = {},
 ) {
     Scaffold(topBar = { PageHeader(onBack = onBack, testTag = "reset_header") }) { padding ->
@@ -178,23 +144,6 @@ fun PasswordResetScreen(
                     modifier = Modifier.testTag("reset_requested"),
                 )
             }
-            OutlinedTextField(
-                value = state.token,
-                onValueChange = onTokenChange,
-                label = { Text(stringResource(R.string.reset_token)) },
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("reset_token"),
-            )
-            PasswordTextField(
-                value = state.newPassword,
-                onValueChange = onNewPasswordChange,
-                label = stringResource(R.string.reset_new_password),
-                testTag = "reset_password",
-                supportingText = stringResource(R.string.reset_password_rules),
-                modifier = Modifier.fillMaxWidth(),
-            )
             state.error?.let {
                 Text(
                     text = stringResource(it.resetMessage()),
@@ -211,27 +160,11 @@ fun PasswordResetScreen(
                     modifier = Modifier.testTag("reset_transport_error"),
                 )
             }
-            Button(
-                onClick = onConfirm,
-                // The floor the server states (auth.md "Password
-                // requirements"), not merely "not empty" — the reset form
-                // answers to the same rule the join form does.
-                enabled = state.token.isNotBlank() &&
-                    state.newPassword.length >= MIN_PASSWORD_LENGTH &&
-                    !state.inProgress,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("reset_confirm"),
-            ) {
-                Text(stringResource(R.string.reset_confirm))
-            }
         }
     }
 }
 
 private fun ErrorCode.resetMessage(): Int = when (this) {
-    ErrorCode.RESET_TOKEN_INVALID -> R.string.reset_token_invalid
-    ErrorCode.WEAK_PASSWORD -> R.string.error_weak_password
     ErrorCode.RATE_LIMITED -> R.string.error_rate_limited
     else -> R.string.error_generic
 }

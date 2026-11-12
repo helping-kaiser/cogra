@@ -1,11 +1,11 @@
 package com.cogra.feature.auth
 
+import android.content.Context
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.test.core.app.ApplicationProvider
-import android.content.Context
 import com.cogra.domain.ErrorCode
 import org.junit.Rule
 import org.junit.Test
@@ -22,29 +22,20 @@ class PasswordResetScreenTest {
 
     private fun render(state: ResetUiState) {
         compose.setContent {
-            PasswordResetScreen(
-                state = state,
-                onEmailChange = {},
-                onTokenChange = {},
-                onNewPasswordChange = {},
-                onRequest = {},
-                onConfirm = {},
-            )
+            PasswordResetScreen(state = state, onEmailChange = {}, onRequest = {})
         }
     }
 
     @Test
-    fun anInvalidTokenRefusalShowsItsSpecificMessage() {
-        // The backend refuses a bad reset token with
-        // RESET_TOKEN_INVALID (api-spec.md "confirmPasswordReset").
-        render(ResetUiState(token = "stale", newPassword = "x", error = ErrorCode.RESET_TOKEN_INVALID))
+    fun aRateLimitedRequestShowsItsOwnMessage() {
+        render(ResetUiState(email = "a@b.c", error = ErrorCode.RATE_LIMITED))
         compose.onNodeWithTag("reset_error")
-            .assertTextEquals(context.getString(R.string.reset_token_invalid))
+            .assertTextEquals(context.getString(R.string.error_rate_limited))
     }
 
     @Test
     fun anUnmappedRefusalFallsBackToTheGenericMessage() {
-        render(ResetUiState(token = "t", newPassword = "x", error = ErrorCode.INTERNAL))
+        render(ResetUiState(email = "a@b.c", error = ErrorCode.INTERNAL))
         compose.onNodeWithTag("reset_error")
             .assertTextEquals(context.getString(R.string.error_generic))
     }
@@ -56,9 +47,17 @@ class PasswordResetScreenTest {
     }
 
     @Test
-    fun progressDisablesBothSubmits() {
-        render(ResetUiState(email = "a@b.c", token = "t", newPassword = "x", inProgress = true))
+    fun progressDisablesTheRequest() {
+        render(ResetUiState(email = "a@b.c", inProgress = true))
         compose.onNodeWithTag("reset_request").assertIsNotEnabled()
-        compose.onNodeWithTag("reset_confirm").assertIsNotEnabled()
+    }
+
+    // The new password is never set here: it is set where the mailed link
+    // lands (ResetNew), asked for twice (seam 275-1).
+    @Test
+    fun theRequestStepSetsNoPassword() {
+        render(ResetUiState())
+        compose.onNodeWithTag("reset_password").assertDoesNotExist()
+        compose.onNodeWithTag("reset_confirm").assertDoesNotExist()
     }
 }

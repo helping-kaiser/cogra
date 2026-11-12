@@ -239,8 +239,8 @@ private fun CograNavGraphContent(
     // deep-link docs require forwarding to handleDeepLink. Every link here
     // answers signed in as well as signed out: an invite link ignores
     // sign-in and opens over the signed-in state (Join.md:7), and the email
-    // change's and the deletion's links answer either way (the deletion's
-    // link is the capability, session or none).
+    // change's, the deletion's and the reset's links answer either way (the
+    // deletion's and the reset's link is the capability, session or none).
     val phaseNow by rememberUpdatedState(phase)
     val activity = LocalActivity.current as? ComponentActivity
     // THE SYSTEM'S "MANAGE SPACE" DOOR (Settings.md: settings opens with
@@ -268,7 +268,8 @@ private fun CograNavGraphContent(
             val answersSignedIn = path?.startsWith(JOIN_PATH) == true ||
                 path?.startsWith(EMAIL_CHANGE_PATH) == true ||
                 path?.startsWith(DELETE_ACCOUNT_PATH) == true ||
-                path?.startsWith(VOUCH_PATH) == true
+                path?.startsWith(VOUCH_PATH) == true ||
+                path?.startsWith(RESET_PATH) == true
             if (phaseNow == AuthPhase.SIGNED_OUT || (answersSignedIn && phaseNow == AuthPhase.SIGNED_IN)) {
                 navController.handleDeepLink(newIntent)
             }
