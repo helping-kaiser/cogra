@@ -64,8 +64,8 @@ class ResetExpiredScreenTest {
         var resets = 0
         var signIns = 0
         compose.setContent { ResetExpiredScreen(onReset = { resets++ }, onSignIn = { signIns++ }) }
-        tag("reset.again").assertTextEquals("Reset your password")
-        tag("reset.onward").assertTextEquals("Sign in")
+        compose.onNodeWithTag("reset.again").assertTextEquals("Reset your password")
+        compose.onNodeWithTag("reset.onward").assertTextEquals("Sign in")
         assertThat(top("reset.body")).isLessThan(top("reset.again"))
         assertThat(top("reset.again")).isLessThan(top("reset.onward"))
         compose.onNodeWithTag("reset.again").performScrollTo().performClick()

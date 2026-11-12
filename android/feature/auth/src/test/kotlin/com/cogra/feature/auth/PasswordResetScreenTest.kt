@@ -57,7 +57,7 @@ class PasswordResetScreenTest {
             "Enter the email you signed up with and we send a reset link. Resetting the password signs out every device.",
         )
         tag("reset.email.label").assertTextEquals("Email")
-        tag("reset.commit.action").assertTextEquals("Send reset link")
+        compose.onNodeWithTag("reset.commit.action").assertTextEquals("Send reset link")
         // Reset.md:15 — the reset restores the sign-in only, never the key.
         tag("reset.note").assertTextEquals(
             "This restores your sign-in only. Your key stays wherever it is — restoring the key is its own step, " +
