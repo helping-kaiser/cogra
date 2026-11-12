@@ -200,6 +200,8 @@ ALWAYS a handle change closed on while in flight carries its wait and its answer
 
 WHEN tap settings.credentials.handle GIVEN its second line reads Changing handle… -> NEVER the form opens
 
+ALWAYS settings.credentials.handle reads That didn't go through. with Retry in its trailing slot GIVEN a handle change was closed on and did not go through — a handle change's retry needs nothing typed again, unlike the password and email rows, whose tap reopens the form (jakob 2026-11-12)
+
 ALWAYS settings.backup.kept reads That didn't sign. in the failure voice in its second line followed by Retry in its trailing slot GIVEN the kept picks' batch was closed on while it signed and did not go through, the row inert apart from its Retry
 
 WHEN tap Retry on settings.backup.kept -> the whole batch is asked to sign again AND each target's row reads Signing… under its face until the batch answers AND NEVER part of the batch is signed alone

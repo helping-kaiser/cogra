@@ -5881,7 +5881,7 @@ on the Delete account row. Closed by round 46 (jakob 2026-11-12, 6 "as
 rec"): the three keep their ways out as drawn, `SettingsBackup` holding them
 from 200ms after the press until the answer (the sidecars say so).
 
-### 198 · The Handle row's Retry beside the forms' rows without one · *design* · **filed 2026-11-12**
+### 198 · The Handle row's Retry beside the forms' rows without one · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 43 (the re-ask's 9 (a)). After Close a failed password or email change
 reads `That didn't go through.` on its row with no `Retry`, the tap
@@ -5889,7 +5889,9 @@ reopening the form; a failed handle change (round 37) reads the same words
 with `Retry`, the row inert. Two shapes for one failure on one group of one
 page. For jakob: (a) keep both — a handle retry needs no secret typed again
 [lean if Retry is wanted where it can work]; (b) the Handle row as the
-others, its tap reopening the form with the handle typed.
+others, its tap reopening the form with the handle typed. Closed by round 46
+(jakob 2026-11-12, 7: "with retry so as rec"): the Handle row keeps `Retry`,
+the law saying why — a handle retry needs nothing typed again.
 
 ### 199 · After Close: the forms' rows while they wait, and what the reopened form shows · *design* · **filed 2026-11-12**
 
