@@ -183,7 +183,7 @@ private fun CograChipRemovable() {
         PreviewRow {
             CograChip("#fieldnotes", selected = true, onRemove = {})
             CograChip("#coastroad", selected = true, onRemove = {})
-            CograChip("Add a topic", onClick = {})
+            CograChip("Add a tag", onClick = {})
         }
     }
 }

@@ -43,11 +43,11 @@
 
     <!-- The tags section, on the composer and the edit screen
          (hashtag.md; D15: no autocomplete). -->
-    <string name="content_topics_heading">Topics</string>
-    <string name="content_topics_field">Add a topic</string>
+    <string name="content_topics_heading">Tags</string>
+    <string name="content_topics_field">Add a tag</string>
     <string name="content_topics_add">Add</string>
     <string name="content_topics_preview">Will be added as #%1$s</string>
-    <string name="content_topics_cap_reached">Up to %1$d topics per post</string>
+    <string name="content_topics_cap_reached">Up to %1$d tags per post.</string>
     <string name="content_topics_params_done">Done</string>
     <!-- The topics line on a card: two chips whole, then everything
          else in words (TopicsLine.jsx). The two counts join with the
@@ -135,7 +135,7 @@
         <item quantity="other">Removing references signs %d actions.</item>
     </plurals>
 
-    <string name="content_topics_illegal_whitespace">Spaces aren\'t allowed in topic names.</string>
+    <string name="content_topics_illegal_whitespace">Spaces aren\'t allowed in tag names.</string>
     <string name="content_topics_illegal_charset">Only ASCII letters, digits, and . _ -</string>
     <string name="content_topics_illegal_too_long">That name is too long.</string>
 

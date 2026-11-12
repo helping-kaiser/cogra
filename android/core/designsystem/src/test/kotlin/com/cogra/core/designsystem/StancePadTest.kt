@@ -774,7 +774,7 @@ class StancePadTest {
             zeroWords = StanceZeroWords.Disconnected,
         )
         compose.onNodeWithTag("${TAG}_stance_landing_zero", useUnmergedTree = true).performClick()
-        compose.onNodeWithText("It still counts among your opinions — #saltmaps stays on Your topics.").assertExists()
+        compose.onNodeWithText("It still counts among your opinions — #saltmaps stays on Your tags.").assertExists()
     }
 
     @Test
@@ -1072,7 +1072,7 @@ class StancePadTest {
         show(open, zeroWords = StanceZeroWords.Disconnected)
         compose.onNodeWithTag("${TAG}_stance_explain").performClick()
         compose.onNodeWithText(
-            "Disconnect takes everything you've said about the topic to nothing. It has its own confirmation, " +
+            "Disconnect takes everything you've said about the tag to nothing. It has its own confirmation, " +
                 "and each thing you've said is cleared by its own signature.",
         ).assertExists()
     }
