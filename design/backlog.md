@@ -5851,7 +5851,7 @@ two more sample links follow from it too. For jakob: (a) newest made first,
 People you let in's order [lean — the drawn pair already reads so]; (b)
 soonest to expire first; (c) single-use links first, then many-use.
 
-### 196 · The Sensitive content footnote and the Reading "?" · *design* · **filed 2026-11-12**
+### 196 · The Sensitive content footnote and the Reading "?" · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 43 (the re-ask's 8 (a)). The digest put `This choice follows your
 account to every device.` behind the Reading "?", but it is the Sensitive
@@ -5861,9 +5861,12 @@ of Reading's rows, and copy-voice gives it the group's whole job (the
 travel a future iOS build may honour but not offer). It stays on the page.
 For jakob: (a) it stays as the Sensitive content footnote [lean]; (b) it
 moves into the Reading dialog as the digest said; (c) a third "?" beside
-`Sensitive content`.
+`Sensitive content`. Closed by round 46 (jakob 2026-11-12, 5, overruling
+the lean): the line is cut — per-account is what people expect; only a
+setting that stays on this device says where it lives (copy-voice, the
+settings page). `settings.sensitive.footnote` leaves the registry.
 
-### 197 · Signed-in submits the Close rule did not reach · *design* · **filed 2026-11-12**
+### 197 · Signed-in submits the Close rule did not reach · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 43 (backlog 191). Three signed-in forms with a commit were left as
 they are: `YourKeyGate`'s `Show my key` reveals the key on the next screen
@@ -5874,7 +5877,9 @@ showed would lose it; `DeleteAccount`'s `Send the confirmation link` mails
 the link and opens the mail screen. For jakob: (a) all three keep their
 exits as they are, `SettingsBackup` holding them while it submits, the
 entry forms' exception [lean]; (b) `DeleteAccount` takes Close, its failure
-on the Delete account row.
+on the Delete account row. Closed by round 46 (jakob 2026-11-12, 6 "as
+rec"): the three keep their ways out as drawn, `SettingsBackup` holding them
+from 200ms after the press until the answer (the sidecars say so).
 
 ### 198 · The Handle row's Retry beside the forms' rows without one · *design* · **filed 2026-11-12**
 

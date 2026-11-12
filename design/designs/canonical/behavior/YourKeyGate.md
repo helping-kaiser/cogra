@@ -32,7 +32,7 @@ ALWAYS a line the server answered stands until the next press of Show my key, an
 
 WHEN no answer has come 5s after the press of Show my key -> Show my key still reads Showing my key… AND NEVER a slow line or a progress indicator appears
 
-ALWAYS the screen's ways out stay live while Show my key waits on its answer
+ALWAYS the screen's ways out stay live while Show my key waits on its answer — a reveal submits nothing, so leaving only leaves the key unshown, and the arrow keeps its name (jakob 2026-11-12)
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 
