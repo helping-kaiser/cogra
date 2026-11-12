@@ -8,11 +8,15 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasParent
 import androidx.compose.ui.test.hasProgressBarRangeInfo
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -49,9 +53,9 @@ private class HeldOnboarding : ThrowingOnboardingRepository() {
 
 /**
  * Join.md and JoinErrors.md, line by line, against the drawn screen. Tags
- * are the boards' evident `join.*` paths (Join is not registered in
- * `nodes.json`). Assertions bind to nodes and their order, never to text
- * widths (Robolectric measures text near zero).
+ * are the registered `join.*` paths (`nodes.json`). Assertions bind to
+ * nodes and their order, never to text widths (Robolectric measures text
+ * near zero).
  */
 @RunWith(RobolectricTestRunner::class)
 class JoinScreenTest {
@@ -61,7 +65,12 @@ class JoinScreenTest {
 
     private val mira = InviterView(handle = "mira", name = "Mira Voss")
 
-    private val filled = JoinUiState(handle = "noor", email = "noor@fieldmail.org", password = "fielddayfield")
+    private val filled = JoinUiState(
+        handle = "noor",
+        email = "noor@fieldmail.org",
+        password = "fielddayfield",
+        confirm = "fielddayfield",
+    )
 
     private fun show(
         state: JoinUiState = JoinUiState(),
@@ -93,8 +102,14 @@ class JoinScreenTest {
 
     private fun top(path: String): Float = tag(path).fetchSemanticsNode().positionInRoot.y
 
+    /** A legal line's words: the text inside the line's node, beside its door. */
+    private fun words(path: String) = compose.onNode(
+        hasParent(hasTestTag(path)) and SemanticsMatcher.keyIsDefined(SemanticsProperties.Text),
+        useUnmergedTree = true,
+    ).fetchSemanticsNode()
+
     private fun text(path: String): String {
-        val runs = tag(path).fetchSemanticsNode().config.getOrNull(SemanticsProperties.Text)
+        val runs = words(path).config.getOrNull(SemanticsProperties.Text)
         return runs?.joinToString("") { it.text }.orEmpty()
     }
 
@@ -153,11 +168,11 @@ class JoinScreenTest {
     @Test
     fun theRevealControlIsNamedForWhatItDoes() {
         show(filled)
-        compose.onNode(hasContentDescription("Show password"), useUnmergedTree = true).assertExists()
+        reveal("join.password", "Show password").assertExists()
         press("join.password.reveal")
-        compose.onNode(hasContentDescription("Hide password"), useUnmergedTree = true).assertExists()
+        reveal("join.password", "Hide password").assertExists()
         press("join.password.reveal")
-        compose.onNode(hasContentDescription("Show password"), useUnmergedTree = true).assertExists()
+        reveal("join.password", "Show password").assertExists()
     }
 
     // Join.md:41-45 — a second press is refused, the commit never dims, reads
@@ -205,18 +220,19 @@ class JoinScreenTest {
         vm.onHandleChange("noor")
         vm.onEmailChange("noor@fieldmail.org")
         vm.onPasswordChange("fielddayfield")
+        vm.onConfirmChange("fielddayfield")
         press("join.commit.action")
         compose.waitForIdle()
         assertThat(vm.state.value.inFlight).isTrue()
         for (path in listOf("join.header.back", "join.header.help")) {
             compose.onNodeWithTag(path).assertIsEnabled().performClick()
         }
-        compose.onNodeWithTag("join.signIn").assertIsEnabled().performScrollTo().performClick()
+        compose.onNodeWithTag("join.signInDoor").assertIsEnabled().performScrollTo().performClick()
         assertThat(left).isEqualTo(0)
 
         held.answer.complete(Outcome.Failed(IOException("offline")))
         compose.waitForIdle()
-        press("join.signIn")
+        press("join.signInDoor")
         assertThat(left).isEqualTo(1)
     }
 
@@ -241,6 +257,7 @@ class JoinScreenTest {
         vm.onHandleChange("noor")
         vm.onEmailChange("noor@fieldmail.org")
         vm.onPasswordChange("fielddayfield")
+        vm.onConfirmChange("fielddayfield")
         press("join.commit.action")
         held.answer.complete(Outcome.Success(AuthTokens("a", "r", "u2")))
         compose.waitForIdle()
@@ -274,6 +291,7 @@ class JoinScreenTest {
             JoinLine.PASSWORD_SHORT to "A password is at least 12 characters.",
             JoinLine.PASSWORD_LONG to "A password is at most 128 characters.",
             JoinLine.PASSWORD_BREACHED to "That password has turned up in a data breach — pick another one.",
+            JoinLine.PASSWORDS_DIFFER to "The two passwords don't match.",
         )
         var state by mutableStateOf(filled)
         compose.setContent {
@@ -283,6 +301,7 @@ class JoinScreenTest {
             state = when (line) {
                 JoinLine.HANDLE_SHAPE, JoinLine.HANDLE_TAKEN -> filled.copy(answered = JoinLines(handle = line))
                 JoinLine.EMAIL_SHAPE, JoinLine.EMAIL_IN_USE -> filled.copy(answered = JoinLines(email = line))
+                JoinLine.PASSWORDS_DIFFER -> filled.copy(local = JoinLines(confirm = line))
                 else -> filled.copy(answered = JoinLines(password = line))
             }
             compose.waitForIdle()
@@ -306,8 +325,8 @@ class JoinScreenTest {
     fun alreadyHaveAnAccountOpensSignIn() {
         var signIn = 0
         show(onSignIn = { signIn++ })
-        compose.onNodeWithTag("join.signIn").assertTextEquals("Already have an account? Sign in")
-        press("join.signIn")
+        compose.onNodeWithTag("join.signInDoor").assertTextEquals("Already have an account? Sign in")
+        press("join.signInDoor")
         assertThat(signIn).isEqualTo(1)
     }
 
@@ -339,15 +358,20 @@ class JoinScreenTest {
         assertThat(text("join.privacy")).isEqualTo("How CoGra handles your data: the Privacy Policy.")
         assertThat(doors("join.privacy")).containsExactly("Privacy Policy")
         assertThat(text("join.terms")).doesNotContain("Privacy")
-        assertThat(top("join.privacy")).isGreaterThan(top("join.signIn"))
+        assertThat(top("join.privacy")).isGreaterThan(top("join.signInDoor"))
     }
 
-    // Join.md:89-91 — Create account stands disabled with its waiting line
-    // until all three fields hold a character, then wakes and the line goes.
+    // Join.md:99-101 — Create account stands disabled with its waiting line
+    // until all four fields hold a character, then wakes and the line goes.
     @Test
     fun createAccountWaitsOnItsFieldsThenWakes() {
         var state by mutableStateOf(filled.copy(password = ""))
         compose.setContent { JoinScreen(state, mira, {}, {}, {}, {}) }
+        tag("join.commit.action").assertIsNotEnabled()
+        tag("join.commit.reason").assertTextEquals("Waiting for a handle, your email and a password")
+        // Join.md:99 — an empty Repeat password keeps it waiting, under the same line.
+        state = filled.copy(confirm = "")
+        compose.waitForIdle()
         tag("join.commit.action").assertIsNotEnabled()
         tag("join.commit.reason").assertTextEquals("Waiting for a handle, your email and a password")
         state = filled
@@ -356,9 +380,95 @@ class JoinScreenTest {
         tag("join.commit.reason").assertDoesNotExist()
     }
 
+    // Join.md:39 — Repeat password stands under Password, masked like it, with
+    // its own reveal control and no hint.
+    @Test
+    fun repeatPasswordStandsUnderPasswordMaskedWithItsOwnRevealAndNoHint() {
+        show(filled)
+        tag("join.confirm.label").assertTextEquals("Repeat password")
+        assertThat(top("join.confirm")).isGreaterThan(top("join.password.support"))
+        tag("join.confirm.reveal").assertExists()
+        tag("join.confirm.support").assertDoesNotExist()
+        assertThat(masked("join.confirm.input")).isTrue()
+        assertThat(masked("join.password.input")).isTrue()
+    }
+
+    // Join.md:41-43 — each password field's reveal answers for that field alone.
+    @Test
+    fun eachRevealShowsOnlyItsOwnField() {
+        show(filled)
+        press("join.confirm.reveal")
+        reveal("join.confirm", "Hide password").assertExists()
+        reveal("join.password", "Show password").assertExists()
+    }
+
+    // Join.md:71, JoinErrors.md:7,15 — the mismatch line is the field's only
+    // line, in M3's error state, beside Password's own line.
+    @Test
+    fun theMismatchLineStandsOnRepeatPasswordInItsErrorState() {
+        show(filled.copy(local = JoinLines(password = JoinLine.PASSWORD_SHORT, confirm = JoinLine.PASSWORDS_DIFFER)))
+        tag("join.confirm.support").assertTextEquals("The two passwords don't match.")
+        tag("join.password.support").assertTextEquals("A password is at least 12 characters.")
+        tag("join.confirm.input").assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Error))
+        tag("join.password.input").assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Error))
+    }
+
+    // Join.md:71 — the press that finds the two apart says so and sends nothing.
+    @Test
+    fun aPressWithThePasswordsApartSaysSoAndSendsNothing() {
+        val held = HeldOnboarding()
+        val vm = JoinViewModel(Register(held, FakeTokenStore()), JoinDraft())
+        compose.setContent {
+            JoinRoute(
+                inviteId = "0d9e4a71-2f4b-4a1e-9c53-8d54f0a3b2c1",
+                inviter = mira,
+                onBack = {},
+                onAbout = {},
+                onSignIn = {},
+                onSpent = {},
+                onCreated = {},
+                viewModel = vm,
+            )
+        }
+        vm.onHandleChange("noor")
+        vm.onEmailChange("noor@fieldmail.org")
+        vm.onPasswordChange("fielddayfield")
+        vm.onConfirmChange("fielddayfeld")
+        press("join.commit.action")
+        compose.waitForIdle()
+        tag("join.confirm.support").assertTextEquals("The two passwords don't match.")
+        assertThat(vm.state.value.inFlight).isFalse()
+    }
+
+    // Join.md:89, 93 — the Terms and the Privacy Policy are doors of their own,
+    // each inside its line (registered `join.terms.open`, `join.privacy.open`).
+    @Test
+    fun theTwoLegalDoorsAreNodesInsideTheirLines() {
+        show()
+        for (line in listOf("join.terms", "join.privacy")) {
+            // The door is inside its line's node, as the board's `<a>` is inside its `<p>`.
+            compose.onNode(hasTestTag("$line.open") and hasAnyAncestor(hasTestTag(line)), useUnmergedTree = true)
+                .assertExists()
+            val outer = tag(line).fetchSemanticsNode().boundsInRoot
+            val door = tag("$line.open").fetchSemanticsNode().boundsInRoot
+            assertThat(door.top).isAtLeast(outer.top)
+            assertThat(door.bottom).isAtMost(outer.bottom)
+        }
+    }
+
+    /** A password field's reveal, by the name it answers to. */
+    private fun reveal(field: String, name: String) = compose.onNode(
+        hasContentDescription(name) and hasAnyAncestor(hasTestTag("$field.reveal")),
+        useUnmergedTree = true,
+    )
+
+    /** Whether the input carries the password semantics (masked kind, password keyboard). */
+    private fun masked(path: String): Boolean =
+        tag(path).fetchSemanticsNode().config.contains(SemanticsProperties.Password)
+
     /** The link texts inside a line's annotated string. */
     private fun doors(path: String): List<String> {
-        val annotated: AnnotatedString = tag(path).fetchSemanticsNode().config[SemanticsProperties.Text].single()
+        val annotated: AnnotatedString = words(path).config[SemanticsProperties.Text].single()
         return annotated.getLinkAnnotations(0, annotated.length)
             .filter { it.item is LinkAnnotation.Clickable }
             .map { annotated.text.substring(it.start, it.end) }

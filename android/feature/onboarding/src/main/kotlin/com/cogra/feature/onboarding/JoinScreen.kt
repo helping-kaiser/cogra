@@ -5,13 +5,16 @@
 package com.cogra.feature.onboarding
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -21,9 +24,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -32,6 +39,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
@@ -40,6 +48,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -55,6 +64,7 @@ import com.cogra.core.designsystem.v2.atom.PageHeader
 import com.cogra.core.designsystem.v2.atom.WaitingCommit
 import com.cogra.core.designsystem.v2.media.CograAvatar
 import com.cogra.domain.InviterView
+import kotlin.math.roundToInt
 
 /** Join's registered prefix (`nodes.json` `join`, round 28). */
 val JOIN = DataNode("join")
@@ -75,7 +85,7 @@ fun JoinRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(state.spent) { if (state.spent) onSpent() }
     LaunchedEffect(state.created) { if (state.created) onCreated() }
-    // Join.md:47 — the arrow, the "?" and Sign in refuse a press while
+    // Join.md:53 — the arrow, the "?" and Sign in refuse a press while
     // Create account waits on its answer, and none of them dims.
     val unlessWaiting: (() -> Unit) -> () -> Unit = { action -> { if (!state.inFlight) action() } }
     JoinScreen(
@@ -84,6 +94,7 @@ fun JoinRoute(
         onHandleChange = viewModel::onHandleChange,
         onEmailChange = viewModel::onEmailChange,
         onPasswordChange = viewModel::onPasswordChange,
+        onConfirmChange = viewModel::onConfirmChange,
         onSubmit = { viewModel.onSubmit(inviteId) },
         onBack = unlessWaiting(onBack),
         onAbout = unlessWaiting(onAbout),
@@ -102,6 +113,7 @@ fun JoinScreen(
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onSubmit: () -> Unit,
+    onConfirmChange: (String) -> Unit = {},
     onBack: () -> Unit = {},
     onAbout: () -> Unit = {},
     onSignIn: () -> Unit = {},
@@ -111,7 +123,7 @@ fun JoinScreen(
         topBar = {
             PageHeader(
                 onBack = onBack,
-                // Join.md:19 — the screen's one explanation, named for where it goes.
+                // Join.md:23 — the screen's one explanation, named for where it goes.
                 action = {
                     HelpDot(
                         onHelp = onAbout,
@@ -133,7 +145,7 @@ fun JoinScreen(
         ) {
             Inviter(inviter)
             Spacer(Modifier.height(32.dp))
-            Fields(state, onHandleChange, onEmailChange, onPasswordChange, onSubmit)
+            Fields(state, FieldEdits(onHandleChange, onEmailChange, onPasswordChange, onConfirmChange), onSubmit)
             Spacer(Modifier.height(24.dp))
             Actions(state, onSubmit, onSignIn)
         }
@@ -158,7 +170,7 @@ private fun Actions(state: JoinUiState, onSubmit: () -> Unit, onSignIn: () -> Un
                     .dataNode(JOIN / "fault"),
             )
         }
-        // THE TERMS ARE ACCEPTED BY THE PRESS (Join.md:79-81): the line
+        // THE TERMS ARE ACCEPTED BY THE PRESS (Join.md:89-91): the line
         // stands directly above Create account, and no checkbox stands
         // anywhere on the form.
         LegalLine(
@@ -183,10 +195,10 @@ private fun Actions(state: JoinUiState, onSubmit: () -> Unit, onSignIn: () -> Un
             onClick = onSignIn,
             kind = ButtonKind.Text,
             modifier = Modifier.fillMaxWidth(),
-            testTag = (JOIN / "signIn").tag,
+            testTag = (JOIN / "signInDoor").tag,
         )
         // The Privacy Policy is a notice, never part of the acceptance
-        // (Join.md:83): its own line at the form's foot.
+        // (Join.md:93): its own line at the form's foot.
         LegalLine(
             sentence = stringResource(R.string.join_privacy),
             door = stringResource(R.string.join_privacy_door),
@@ -229,20 +241,22 @@ private fun Inviter(inviter: InviterView) {
     }
 }
 
+/** What the form's four fields hand back as they are typed in. */
+private class FieldEdits(
+    val handle: (String) -> Unit,
+    val email: (String) -> Unit,
+    val password: (String) -> Unit,
+    val confirm: (String) -> Unit,
+)
+
 @Composable
-private fun Fields(
-    state: JoinUiState,
-    onHandleChange: (String) -> Unit,
-    onEmailChange: (String) -> Unit,
-    onPasswordChange: (String) -> Unit,
-    onSubmit: () -> Unit,
-) {
+private fun Fields(state: JoinUiState, edits: FieldEdits, onSubmit: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         // The `handle` kind: an ASCII keyboard, no caps or correction, and
         // no autofill on Android (TextField.prompt.md's kinds table).
         CograTextField(
             value = state.handle,
-            onValueChange = onHandleChange,
+            onValueChange = edits.handle,
             label = stringResource(R.string.join_handle),
             hint = stringResource(R.string.join_handle_hint),
             error = state.handleLine?.let { stringResource(it.text()) },
@@ -258,7 +272,7 @@ private fun Fields(
         // address is the account's username to autofill.
         CograTextField(
             value = state.email,
-            onValueChange = onEmailChange,
+            onValueChange = edits.email,
             label = stringResource(R.string.join_email),
             error = state.emailLine?.let { stringResource(it.text()) },
             keyboardOptions = KeyboardOptions(
@@ -272,13 +286,25 @@ private fun Fields(
         )
         CograPasswordField(
             value = state.password,
-            onValueChange = onPasswordChange,
+            onValueChange = edits.password,
             label = stringResource(R.string.join_password),
             newPassword = true,
             hint = stringResource(R.string.join_password_hint),
             error = state.passwordLine?.let { stringResource(it.text()) },
-            onImeAction = { if (!state.waiting) onSubmit() },
+            // `PasswordField.jsx`: `next` above its Repeat password.
+            imeAction = ImeAction.Next,
             node = JOIN / "password",
+        )
+        // Join.md:39 — masked like Password, its own reveal, no hint; the
+        // form's last field, so its return key submits.
+        CograPasswordField(
+            value = state.confirm,
+            onValueChange = edits.confirm,
+            label = stringResource(R.string.join_confirm),
+            newPassword = true,
+            error = state.confirmLine?.let { stringResource(it.text()) },
+            onImeAction = { if (!state.waiting) onSubmit() },
+            node = JOIN / "confirm",
         )
     }
 }
@@ -290,8 +316,13 @@ private fun Fields(
  * THE DOORS OPEN NOTHING YET. The Terms and the Privacy Policy are a launch
  * task — the documents are not written — so the link is drawn and named as
  * the board draws it but answers no tap, as the web's inert doors do.
- * Join.md:85-87 also asks that the form keep every field as it was left on
+ * Join.md:95-97 also asks that the form keep every field as it was left on
  * the way back from those pages, which is untestable until the pages exist.
+ *
+ * THE DOOR IS ITS OWN NODE (`join.terms.open`, `join.privacy.open`): Compose
+ * gives a text link no node a tag can reach, so the door's words are marked
+ * by a box laid over their bounds from the text's own layout — the same
+ * bounds the link answers on.
  */
 @Composable
 private fun LegalLine(sentence: String, door: String, node: DataNode) {
@@ -308,15 +339,33 @@ private fun LegalLine(sentence: String, door: String, node: DataNode) {
             append(sentence.substring(start + door.length))
         }
     }
-    Text(
-        text = text,
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        textAlign = TextAlign.Center,
-        modifier = Modifier
+    var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
+    // The line's node holds both its words and its door, as the board's
+    // `<p>` holds its `<a>`.
+    Box(
+        Modifier
             .fillMaxWidth()
             .testTag(node.tag),
-    )
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            onTextLayout = { layout = it },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        val bounds = layout?.takeIf { start >= 0 }?.getPathForRange(start, start + door.length)?.getBounds()
+        if (bounds != null) {
+            val density = LocalDensity.current
+            Box(
+                Modifier
+                    .offset { IntOffset(bounds.left.roundToInt(), bounds.top.roundToInt()) }
+                    .size(with(density) { bounds.width.toDp() }, with(density) { bounds.height.toDp() })
+                    .dataNode(node / "open"),
+            )
+        }
+    }
 }
 
 private fun JoinLine.text(): Int = when (this) {
@@ -327,6 +376,7 @@ private fun JoinLine.text(): Int = when (this) {
     JoinLine.PASSWORD_SHORT -> R.string.join_password_short
     JoinLine.PASSWORD_LONG -> R.string.join_password_long
     JoinLine.PASSWORD_BREACHED -> R.string.join_password_breached
+    JoinLine.PASSWORDS_DIFFER -> R.string.join_passwords_differ
 }
 
 private fun JoinFault.text(): Int = when (this) {
