@@ -2025,10 +2025,12 @@ below), and a session whose device gave no name reads `Unnamed device`
 
 **Sign out** carries the login form's own line verbatim —
 `Don't remember this account on this device` — with what it decides
-underneath: `Your key, your draft and any kept picks are cleared from
-this browser when you sign out.` (*blessed (jakob 2026-10-05)*); in the
-app, `Your key, your draft and any kept picks are cleared from this app
-when you sign out.` (*blessed (jakob 2026-10-07)*). The three app lines
+underneath: `Your key, your draft, any kept picks and what you've seen
+are cleared from this browser when you sign out.`; in the app, `Your
+key, your draft, any kept picks and what you've seen are cleared from
+this app when you sign out.` (*blessed (jakob 2026-10-05 / 2026-10-07);
+the seen record named since sign-out clears it (PR-69), the drawn line
+taken, jakob 2026-11-12*). The three app lines
 say `this app`, never `this phone`, since the app runs on tablets and
 emulators too; Sessions' `This phone` stays its own case.
 
@@ -4390,11 +4392,10 @@ each line says what a joiner meets and never who decides, because
 governance ships silently. `Invite only` starts chosen. The forward
 action is `Next`.
 
-**The founding's seal.** `What you sign`, `Last step`, the leave named
+**The founding's seal.** `What you sign`, the leave named
 `Leave — nothing is started`; the chat shown back as `Low-tide walks` ·
 `A new group chat — invite only.`; the acts card `Chat` · the name and
-`Invitations` · the names, `3 things, signed together`, `They land
-together, or none does.`; the fact `Who can join` · `Invite only`; the
+`Invitations` · the names, `3 things, signed together`; the fact `Who can join` · `Invite only`; the
 line `A chat is public: its name, who is in it and who talks to whom
 are there for anyone to read.`; the act `Sign and start the chat`.
 
@@ -4429,14 +4430,14 @@ chat` for a member, `Ask to join` or `Join` for a reader outside.
 
 **Editing the chat.** `Edit chat` titles it; its way back is `Back to
 chat details`. `Change picture`; `Name` and `Description`, each
-`Optional`; `Save`. The seal: `What you sign`, `Last step`, the leave
+`Optional`; `Save`. The seal: `What you sign`, the leave
 `Leave`, the "?" `How signing works`; the chat shown back as `Coast
 walkers` · `Name, picture and description — one change to the chat.`;
 the acts card in three rows — `Change` · `A new description`, `Chat` ·
 `Coast walkers`, `Your opinion` · `For the change` (spoken `1 change`,
 `1 link to the chat`, `1 opinion`) — totalled `3 things, signed
-together` over `They land together, or none does.`, the founding seal's
-own pair (jakob's fix pass: the proposal's anchor, its reference to the
+together`, the founding seal's
+own total (jakob's fix pass: the proposal's anchor, its reference to the
 chat and the proposer's own ballot, named in the reader's words and
 never as proposal, ballot or tally); the line `The change is public, and the chat's earlier
 versions stay readable in its edit history.`; the act `Sign the change`
@@ -4543,10 +4544,9 @@ before the dash on a voted row.
 **Adding people.** Titled `Add people`, back `Back to chat details`, the
 field `Search people`, the forward action `Next`; under the list `People
 already in the chat, or already invited, aren't listed.` The seal: `What
-you sign`, `Last step`, the leave `Leave — nobody is invited`; the chat
+you sign`, the leave `Leave — nobody is invited`; the chat
 shown back as `Coast walkers` · `Inviting two people into the chat.`; the
-acts card `Invitations` · the names, `2 things, signed together`, `They
-land together, or none does.`; the line `An invitation is public and
+acts card `Invitations` · the names, `2 things, signed together`; the line `An invitation is public and
 vouches that they belong here. They join only if they accept.`; the act
 `Sign and invite`.
 

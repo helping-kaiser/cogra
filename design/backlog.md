@@ -5822,9 +5822,8 @@ people you send it to.` on `ApplicantRejected` and `ApplicantFellThrough`;
 (2) `Always unveil sensitive content` with no line while off but `On, sensitive
 content stands unveiled wherever you read.` while on; (3) `Wallet — coming
 soon` keeps `Your earnings will be here.` while Chats carries no line;
-(4) the post-MVP boards (`PushSettings`, `PushDenied`, the chat and wallet
-seals) keep the lines the canonical twins lost (`Hiding someone clears…`,
-`Last step`). Each is jakob's to align or keep.
+(4) closed by round 42 (act 2): the post-MVP twins take the canonical cuts —
+the same rulings. Points (1)–(3) are jakob's to align or keep.
 
 ### 194 · Lines round 42 stopped: no "?" holds them, and the sign-out drift · *design* · **filed 2026-11-12**
 
@@ -5834,14 +5833,9 @@ exact numbers? Swap the input in settings.` are in no "?" (`Your vouch back`
 says neither), and the edit acts sheets (`EditActs`, `CommentEditActs`) have no
 "?" at all, so `They land together, or none does.` stays there. Ways: (a)
 the lines move into the pad's "?" whole / the sheets keep the subline [lean];
-(b) they go anyway. (2) C7: the drawn don't-remember line `Your key, your
-draft, any kept picks and what you've seen are cleared from this browser when
-you sign out.` is the later text (commit ee45b0a0b, 2026-10-13, after PR-69
-made the sign-out clear the seen record; `Settings.md` says so); copy-voice
-still records the blessed `Your key, your draft and any kept picks are
-cleared…`. The drawing is not the drifted side, so it was not changed. Ways:
-(a) copy-voice takes the drawn line, at jakob's review [lean]; (b) the drawing
-returns to the blessed words and stops naming the seen record.
+(b) they go anyway. (2) C7, the sign-out drift — closed by round 42 (act 2,
+jakob 2026-11-12 "fix the wrong side"): the drawn line, which names the seen
+record sign-out clears (PR-69), is the true side; copy-voice takes it.
 
 ### 195 · Live links: the order a cap would keep · *design* · **filed 2026-11-12**
 
