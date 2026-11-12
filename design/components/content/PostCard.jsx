@@ -198,15 +198,18 @@ export function PostCard({
   // The license is a term over downstream reuse, checked once in a hundred
   // readings — so it is not on the card at all. The menu's row opens it in a
   // sheet over whatever surface the reader asked from (readme §13, the menus
-  // round), and the card's only part in it is carrying the row. The license
-  // rode the payload, so a redacted record has none to show.
+  // round), and the card's only part in it is carrying the row. A REMOVED
+  // post keeps the row (jakob 2026-11-12: "even if the media is now removed
+  // someone might have used my content already under its license
+  // regulations"): the terms it was published under still bind every use made
+  // of it, so its sheet shows them as any post's does.
   //
   // It CLOSES the menu rather than leading it: the rows the menu was opened for
   // come first, the rarest read last — the order the author's own menu has
   // always had, and the one the menu boards draw. A row marked `tail` stands
   // after it — the report row, which sits at the sheet tail of every
   // other-person menu, below even the license (ruling 75).
-  const items = license && !redacted
+  const items = license || redacted
     ? [
         ...menuItems.filter((item) => !item.tail),
         { label: LICENSE_MENU_LABEL, onSelect: () => {} },

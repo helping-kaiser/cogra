@@ -14,8 +14,9 @@
    and Comments tabs, and a comment card of their own in the feed.
 
    YOUR REMOVED POST KEEPS ITS MENU (jakob 2026-11-12, question 18): the ⋮
-   holds `OWN_REMOVED_POST_MENU` — Save, Cite in a new post — and nothing
-   that needs the payload (`FeedRemovedMenuOwn` draws it open). With it
+   holds `OWN_REMOVED_POST_MENU` — Save, Cite in a new post, Mark as
+   sensitive, License terms: your own post's menu less Edit and Remove
+   (`FeedRemovedMenuOwn` draws it open). With it
    survive the author, the score, the opinion a reader can still give, the
    comment count and the share.
 
@@ -27,7 +28,7 @@ export function Screen() {
     <>
       <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band" />
       <FeedList>
-        <PostCard id={SOL_POST.id} author={SOL} timestamp="3d" redacted={{ reason: "author", when: "now" }} score="9.10" comments={2} bundle={mkBundle(0.1, 1)} menuItems={OWN_REMOVED_POST_MENU} node="card" />
+        <PostCard id={SOL_POST.id} author={SOL} timestamp="3d" redacted={{ reason: "author", when: "now" }} score="9.10" comments={2} bundle={mkBundle(0.1, 1)} menuItems={OWN_REMOVED_CARD_MENU} node="card" />
         <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />

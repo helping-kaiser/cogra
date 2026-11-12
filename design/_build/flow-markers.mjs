@@ -723,7 +723,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Report</button>", tag: "button" },
   ],
   // A removed post's card, its menu open (jakob 2026-11-12, the re-ask's
-  // eleventh): the reader's card menu whole, no license row — scanExempt like
+  // eleventh): the reader's post menu whole, License terms kept — scanExempt like
   // every menu board.
   FeedRemovedMenu: [
     { n: 1, find: ">Save</button>", tag: "button" },
@@ -731,12 +731,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Hide @ada</button>", tag: "button" },
     { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 5, find: ">Report</button>", tag: "button" },
+    { n: 6, find: ">License terms</button>", tag: "button" },
   ],
   // Your own removed post's menu open (round 46, question 18).
   FeedRemovedMenuOwn: [
     { n: 1, find: ">Save</button>", tag: "button" },
     { n: 2, find: ">Cite in a new post</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 4, find: ">Mark as sensitive</button>", tag: "button" },
+    { n: 5, find: ">License terms</button>", tag: "button" },
   ],
   FeedRemoveConfirm: [
     { n: 1, find: ">Remove</button>", tag: "button" },

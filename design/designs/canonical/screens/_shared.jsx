@@ -721,14 +721,14 @@ const OWN_POST_MENU = [
   LICENSE_ROW,
 ];
 /* YOUR OWN REMOVED POST KEEPS A MENU (jakob 2026-11-12, question 18: "i can
-   still cite this (maybe in a folloup post to explain why i deleted it)"):
-   `OWN_POST_MENU` less the rows with no object left — Edit and Mark as
-   sensitive (both open the edit, and a removed post has nothing left to
-   edit), Remove (it is removed) and License terms (the license rode the
-   payload, as the reader's removed menu drops it). Save and Cite stay: the
-   record never left the graph. The card's ⋮ and the detail's header both
-   carry it. */
-const OWN_REMOVED_POST_MENU = [SAVE_ROW, CITE_ROW];
+   still cite this (maybe in a folloup post to explain why i deleted it)";
+   and on License terms: "even if the media is now removed someone might have
+   used my content already under its license regulations"): `OWN_POST_MENU`
+   less Edit and Remove alone — Save, Cite in a new post, Mark as sensitive,
+   License terms, in the own menu's order. The detail's header carries it
+   whole; a card's ⋮ is handed it less the license, which `PostCard` appends. */
+const OWN_REMOVED_POST_MENU = OWN_POST_MENU.filter((row) => row !== EDIT_ROW && row !== REMOVE_ROW);
+const OWN_REMOVED_CARD_MENU = OWN_REMOVED_POST_MENU.filter((row) => row !== LICENSE_ROW);
 /* The reader's post menu for a post by `handle`, so a host whose drawn card
    is someone else's than @ada's names its author in the Hide row
    (`TagPageMenu`'s @tobias). */

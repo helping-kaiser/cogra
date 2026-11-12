@@ -2,9 +2,9 @@
 
 WHEN tap the ⋮ of a removed post's card GIVEN the post is another's -> feed.menuSheet rises over the feed AND the feed stands unchanged beneath its wash
 
-ALWAYS feed.menuSheet reads Save or Unsave, then Cite in a new post, then Hide with the author's handle, then feed.menuSheet.report at the sheet tail, the reader's card menu whole GIVEN the post was removed, by its author or by a passed proposal
+ALWAYS feed.menuSheet reads Save or Unsave, then Cite in a new post, then Hide with the author's handle, then License terms, then feed.menuSheet.report at the sheet tail, the reader's post menu whole GIVEN the post was removed, by its author or by a passed proposal
 
-ALWAYS a removed post's menu carries no License terms row, the license having gone with the payload
+WHEN tap feed.menuSheet.license -> the menu closes AND the terms the post was published under come up over the feed, as any post's do
 
 ALWAYS the rows read the same whichever removed the post, its author or a passed proposal
 

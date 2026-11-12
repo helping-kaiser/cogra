@@ -3,13 +3,14 @@
    existing user from a deleted post and report can stay aswell"). @ada's post,
    removed by its author, stands as its mark in the feed — `LadderStates`'
    first redacted card — and its ⋮ raises the reader's card menu whole
-   (`readerCardMenu`): Save, Cite in a new post, Hide @ada, then Report at the
-   tail. The mark carries its removal's date under it, `2d`, as every feed
+   (`readerCardMenu`, the license appended): Save, Cite in a new post, Hide
+   @ada, License terms, then Report at the tail. The mark carries its removal's date under it, `2d`, as every feed
    card's mark does (`FeedRemoved`'s `now`).
 
-   NO LICENSE ROW, and that is the payload's rule, not this board's: the
-   license rode the payload and went with it, so the card appends none
-   (`PostCard`). Everything else stays. The record never left the graph, so it
+   THE LICENSE ROW STAYS (jakob 2026-11-12: "someone might have used my
+   content already under its license regulations"; the orchestrator's
+   extension of his ruling on your own to another's): the card appends it as
+   on any post, its sheet showing the terms the post was published under. The record never left the graph, so it
    can still be saved and cited; Hide acts on the author, who still exists and
    still ranks into the reader's feed; Report stays, because a comment section
    or the removal itself may be what the operators should look at.
@@ -22,6 +23,8 @@
    sheet `menuSheet` with the rows' own names. */
 export const NODE = "feed";
 const REMOVED_MENU = readerCardMenu("ada");
+/* The sheet's rows: the card's, the license before the report — `READER_POST_MENU`'s order. */
+const REMOVED_SHEET = readerPostMenu("ada");
 export function Screen() {
   return (
     <>
@@ -33,7 +36,7 @@ export function Screen() {
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
 
       <BottomSheet open ariaLabel="Post actions" node="menuSheet">
-        {REMOVED_MENU.map((item) => (
+        {REMOVED_SHEET.map((item) => (
           <SheetItem key={item.label} label={item.label} node={item.node} />
         ))}
       </BottomSheet>

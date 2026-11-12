@@ -2,9 +2,9 @@
 
 WHEN tap feed.card.menu GIVEN the card is the reader's own removed post -> feed.menuSheet rises over the feed AND the feed stands unchanged beneath its wash
 
-ALWAYS feed.menuSheet reads Save or Unsave, then Cite in a new post, your own post's menu less every row the payload took
+ALWAYS feed.menuSheet reads Save or Unsave, then Cite in a new post, then Mark as sensitive, then License terms, your own post's menu less Edit and Remove
 
-ALWAYS the sheet carries no Edit, no Mark as sensitive, no Remove and no License terms, the payload they act on being gone
+WHEN tap feed.menuSheet.license -> the menu closes AND the terms the post was published under come up over the feed, as any post's do
 
 WHEN tap feed.menuSheet.save -> the removed post is kept as any post is kept AND the sheet closes
 

@@ -6011,7 +6011,7 @@ detail header carries the reader's post menu as the card does, no license row
 [lean — one menu per post, wherever it is opened]; (b) the detail stays
 menu-less; and whether the reader's own removed card and detail keep none.
 
-Closed by round 46 (jakob 2026-11-12, question 18): another's removed post in detail carries the reader's menu in its header, as the card (`RemovedOther`); and, overruling the lean, your own removed post KEEPS a menu, card and detail — Save, Cite in a new post (`OWN_REMOVED_POST_MENU`; `FeedRemoved`, `Removed`, `FeedRemovedMenuOwn`).
+Closed by round 46 (jakob 2026-11-12, question 18): another's removed post in detail carries the reader's menu in its header, as the card (`RemovedOther`), License terms kept on both (jakob: "someone might have used my content already under its license regulations"); and, overruling the lean, your own removed post KEEPS a menu, card and detail — Save, Cite in a new post, Mark as sensitive, License terms, its own menu less Edit and Remove (`OWN_REMOVED_POST_MENU`; `FeedRemoved`, `Removed`, `FeedRemovedMenuOwn`).
 
 ### 207 · A first page that failed reads `Couldn't load more` · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
