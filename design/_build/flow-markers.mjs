@@ -1537,6 +1537,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 17, find: 'aria-label="Share this post"', tag: "button", all: true },
     ...nav(18),
     { n: 15, find: 'aria-label="Notifications"', tag: "button" },
+    // The load chip's failed first page (round 45): its Retry.
+    { n: 24, find: ">Retry</button>", tag: "button" },
   ],
   ProfileCommentsOwn: [
     ...ownProfile(),
@@ -1549,6 +1551,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 14, find: ">On “", tag: "button", all: true },
     { n: 15, find: 'aria-label="Notifications"', tag: "button" },
     ...nav(16),
+    // The load chip's failed first page (round 45): its Retry.
+    { n: 22, find: ">Retry</button>", tag: "button" },
   ],
   Profile: [
     ...ownProfile(),
@@ -1671,6 +1675,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 15, find: 'aria-label="3 comments"', tag: "button" },
     { n: 15, find: 'aria-label="1 comment"', tag: "button", all: true },
     ...nav(16),
+    // The load chip's failed first page (round 45): its Retry.
+    { n: 23, find: ">Retry</button>", tag: "button" },
   ],
   ProfileComments: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
@@ -1696,6 +1702,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 11, find: "View 2 replies", tag: "button" },
     { n: 17, find: ">On “", tag: "button", all: true },
     ...nav(12),
+    // The load chip's failed first page (round 45): its Retry.
+    { n: 19, find: ">Retry</button>", tag: "button" },
   ],
   ProfileEdit: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },

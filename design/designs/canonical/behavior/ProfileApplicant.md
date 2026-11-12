@@ -48,3 +48,5 @@ WHEN tap profile.bottomBar.profileSlot GIVEN the profile is scrolled -> the prof
 WHEN tap profile.bottomBar.profileSlot GIVEN the profile stands at its top -> NEVER anything happens
 
 WHEN pull down GIVEN the profile stands all the way at its top -> the profile refreshes AND the platform's own refresh indicator shows
+
+ALWAYS the applicant's own Posts and Comments tabs read Nothing here yet., the line alone, GIVEN they hold nothing, and only Everything carries the applicant's own line

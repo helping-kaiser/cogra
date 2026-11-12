@@ -5132,6 +5132,45 @@ const SOL_OWN_COMMENT = {
   score: "5.20",
   own: true,
 };
+/* A PROFILE CARD TAB'S FIRST PAGE, NOT YET IN OR NOT COMING (round 45; jakob
+   2026-11-12, the re-ask's fourteenth and fifteenth, as recommended). Drawn
+   in the list's place on `ProfilePosts`, `ProfileComments` and their own
+   twins, shown by the board's `loadingShown` and `failedShown`:
+   · IN FLIGHT, the chronicle's own wait (`Profile`, `ProfileMoreFailed`):
+     nothing for the first 200ms — no empty line meanwhile — then
+     `LoadingState`'s `Loading…`, no skeleton cards and no spinner.
+   · NOT COMING, `ProfileMoreFailed`'s quiet row, word for word —
+     `Couldn't load more — Retry` at body-medium in the secondary colour,
+     never `--error` — standing where the list would stand, never a full-tab
+     fault. Named as `Notifications` names the same row: `moreFault` and its
+     `retry`; the wait `loading`. */
+const PROFILE_TAB_FAULT = {
+  margin: 0,
+  padding: "8px 4px 16px",
+  fontSize: "var(--text-body-medium)",
+  fontWeight: "var(--text-body-medium--font-weight)",
+  lineHeight: "var(--text-body-medium--line-height)",
+  letterSpacing: "var(--text-body-medium--letter-spacing)",
+  color: "var(--text-secondary)",
+};
+/* `top` is the list's own top padding still owed: `ProfileTabTop`'s list
+   already carries its 8px, the posts and comments boards' own do not. */
+function ProfileTabFirstPage({ top = 8 }) {
+  return (
+    <>
+      <div style={{ display: "{{loadingShown}}", padding: `${top}px 16px 0` }}>
+        <div data-node="loading">
+          <LoadingState />
+        </div>
+      </div>
+      <div style={{ display: "{{failedShown}}", padding: "0 12px", marginTop: top - 8 }}>
+        <p style={PROFILE_TAB_FAULT} data-node="moreFault">
+          Couldn&apos;t load more <span aria-hidden="true">—</span> <InlineAction size="sm" node="retry">Retry</InlineAction>
+        </p>
+      </div>
+    </>
+  );
+}
 /* A PROFILE'S POSTS OR COMMENTS VIEW, ITS TOP VIEWPORT (round 36): the page
    `ProfilePosts` and `ProfileComments` draw — @ada's — or the reader's own,
    whose header is `ProfileOwnBody`'s; the tab row lit on `tab`, the list named

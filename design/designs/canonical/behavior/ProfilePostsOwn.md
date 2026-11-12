@@ -15,3 +15,13 @@ WHEN tap profile.tabRow.everythingTab -> the reader's own chronicle stands below
 WHEN tap profile.tabRow.postsTab -> NEVER anything changes
 
 WHEN tap Edit profile -> the profile edit opens
+
+ALWAYS profile.posts.empty below profile.tabRow reads Nothing here yet., the line alone, GIVEN the reader has published no post, an applicant's own tab as a member's, only Everything carrying the applicant's own line
+
+WHEN the tab's first page has not arrived 200ms after it was asked for -> profile.posts.loading stands in the list's place, reading Loading… AND NEVER profile.posts.empty stands meanwhile AND NEVER a skeleton card or a spinner appears
+
+WHEN the tab's first page does not arrive -> profile.posts.moreFault stands where the list would stand, reading Couldn't load more, then profile.posts.moreFault.retry as an inline action AND NEVER the line takes the error colour AND NEVER a full-tab fault stands
+
+WHEN the first page has not arrived 200ms after profile.posts.moreFault.retry is tapped -> Loading… stands in the row's place AND NEVER a spinner appears
+
+WHEN the retried first page arrives -> its cards stand below profile.tabRow AND profile.posts.moreFault goes
