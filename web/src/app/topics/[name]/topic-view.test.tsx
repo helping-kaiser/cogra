@@ -1,8 +1,9 @@
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { intersectEach, whenObserved } from "@/test/media-env";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
@@ -28,8 +29,9 @@ function guestStore() {
 }
 
 // The post cards on this page carry the ⋮, whose rows navigate.
+const push = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useRouter: () => ({ push, replace: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
 }));
 
@@ -373,6 +375,124 @@ describe("TopicView", () => {
     renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
     expect(await screen.findByTestId("topic-comment-c1")).toHaveTextContent("nice crate");
     expect(screen.getByTestId("topic-comment-post-c1")).toHaveAttribute("href", "/posts/p1?from=tag%3Arust");
+  });
+});
+
+// THE TAG PAGE'S CARD MENU (TagPageMenu.md, round 36 + 41): the one post menu
+// every host shares, risen over the page as `tagPage.menuSheet`, its aftermath
+// on `tagPage.snackbar`.
+describe("TopicView — a post card's menu (TagPageMenu.md)", () => {
+  const tobiasPost = () => ({
+    ...postNode("p1", "About Rust"),
+    viewerBookmarkedAt: null,
+    author: {
+      __typename: "User",
+      id: "t1",
+      handle: "tobias",
+      displayName: { __typename: "ModeratedText", value: "Tobias" },
+      avatar: null,
+    },
+  });
+  const serveTag = () =>
+    server.use(
+      gqlLink.query("HashtagDetail", () =>
+        HttpResponse.json({
+          data: hashtagDetail("rust", [
+            { relevance: 0.1, confidence: 1, pending: false, node: tobiasPost() },
+            { relevance: 0.1, confidence: 1, pending: false, node: { ...postNode("p2", "More Rust"), id: "p2" } },
+          ]),
+        }),
+      ),
+    );
+  const rows = () =>
+    within(screen.getByTestId("tagPage.menuSheet"))
+      .getAllByRole("button")
+      .map((row) => [row.getAttribute("data-testid"), row.textContent]);
+  const listed = () =>
+    within(screen.getByTestId("topic-content-list"))
+      .getAllByTestId(/^topic-post-p\d$/)
+      .map((card) => card.getAttribute("data-testid"));
+
+  it("the_menu_rises_over_the_tag_page_reading_save_cite_hide_license_report", async () => {
+    // TagPageMenu.md:3, :5.
+    serveTag();
+    renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+    fireEvent.click(await screen.findByTestId("topic-post-p1-menu"));
+    expect((screen.getByTestId("tagPage.menuSheet") as HTMLDialogElement).open).toBe(true);
+    expect(rows()).toEqual([
+      ["tagPage.menuSheet.save", "Save"],
+      ["tagPage.menuSheet.cite", "Cite in a new post"],
+      ["tagPage.menuSheet.hide", "Hide @tobias"],
+      ["tagPage.menuSheet.license", "License terms"],
+      ["tagPage.menuSheet.report", "Report"],
+    ]);
+  });
+
+  it("hide_closes_the_sheet_leaves_every_row_in_place_and_snackbars_with_undo_and_no_confirm", async () => {
+    // TagPageMenu.md:7.
+    const log = hiddenLog();
+    serveTag();
+    server.use(...hiddenHandlers(log));
+    renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+    fireEvent.click(await screen.findByTestId("topic-post-p1-menu"));
+    fireEvent.click(screen.getByTestId("tagPage.menuSheet.hide"));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(screen.getByTestId("tagPage.snackbar.message")).toHaveTextContent(
+      "@tobias is hidden — their posts stay out of your feed.",
+    );
+    expect(screen.getByTestId("tagPage.snackbar.action")).toHaveTextContent("Undo");
+    expect(listed()).toEqual(["topic-post-p1", "topic-post-p2"]);
+    await waitFor(() => expect(log.hides).toEqual([{ actor: "t1", at: null }]));
+  });
+
+  it("the_hide_row_reads_unhide_with_the_handle_while_the_author_is_already_hidden", async () => {
+    // TagPageMenu.md:15, and ReaderPostMenu.md:21 for the tap.
+    const log = hiddenLog();
+    serveTag();
+    server.use(
+      ...hiddenHandlers(log, {
+        entries: [{ id: "t1", handle: "tobias", displayName: "Tobias", hiddenAt: "2026-10-01T00:00:00Z" }],
+      }),
+    );
+    renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+    await waitFor(() => expect(log.reads).toBe(1));
+    fireEvent.click(await screen.findByTestId("topic-post-p1-menu"));
+    await waitFor(() => expect(screen.getByTestId("tagPage.menuSheet.hide")).toHaveTextContent(/^Unhide @tobias$/));
+    fireEvent.click(screen.getByTestId("tagPage.menuSheet.hide"));
+    expect(screen.getByTestId("tagPage.snackbar.message")).toHaveTextContent(
+      "@tobias is unhidden — their posts can reach your feed again.",
+    );
+    expect(listed()).toEqual(["topic-post-p1", "topic-post-p2"]);
+    await waitFor(() => expect(log.unhides).toEqual(["t1"]));
+  });
+
+  it("report_closes_the_menu_and_raises_the_confirm_over_the_page_sending_nothing", async () => {
+    // TagPageMenu.md:11.
+    const reports: unknown[] = [];
+    serveTag();
+    server.use(
+      gqlLink.mutation("SendReport", ({ variables }) => {
+        reports.push(variables);
+        return HttpResponse.json({ data: null });
+      }),
+    );
+    renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+    fireEvent.click(await screen.findByTestId("topic-post-p1-menu"));
+    fireEvent.click(screen.getByTestId("tagPage.menuSheet.report"));
+    const confirm = await screen.findByTestId("topic-menu-report-sheet");
+    expect(confirm).toHaveAccessibleName("Report this post?");
+    expect(reports).toEqual([]);
+  });
+
+  it("a_guests_cite_raises_the_join_prompt_and_opens_no_wizard", async () => {
+    // FeedPostMenu.md:23 (any host), GuestGate.md:5.
+    serveTag();
+    push.mockClear();
+    renderWithProviders(<TopicView name="rust" />, { store: guestStore(), writeSigner: fakeWriteSigner() });
+    fireEvent.click(await screen.findByTestId("topic-post-p1-menu"));
+    fireEvent.click(screen.getByTestId("tagPage.menuSheet.cite"));
+    expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
   });
 });
 

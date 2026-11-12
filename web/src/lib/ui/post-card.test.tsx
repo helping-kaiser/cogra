@@ -323,143 +323,39 @@ describe("PostCard", () => {
     expect(screen.getByTestId("card-refs-sheet")).toHaveAttribute("open");
   });
 
-  // THE ⋮ IS ON EVERY NON-DETAIL CARD (`PostCard.jsx:262`). The rows are the
-  // detail's own — one menu for a post wherever it is drawn — so what these
-  // read is that the card picks the right set and names the author.
-  describe("the overflow menu", () => {
-    // `OWN_POST_MENU` (`_shared.jsx:421-428`): Save · Cite in a new post ·
-    // Edit · Mark as sensitive · Remove · License terms. Cite takes the
-    // reader menu's own position, second, so the thumb finds one row in
-    // one place on every menu that has it.
-    it("gives the creator the own-post rows, cite in second position", () => {
-      mount(post(), {}, { store: storeFor("u1") });
-      fireEvent.click(screen.getByTestId("card-menu"));
-      expect(screen.getByTestId("card-menu-save")).toHaveTextContent("Save");
-      expect(screen.getByTestId("card-menu-cite")).toHaveTextContent("Cite in a new post");
-      expect(screen.getByTestId("card-menu-edit")).toHaveTextContent("Edit");
-      expect(screen.getByTestId("card-menu-sensitive")).toHaveTextContent("Mark as sensitive");
-      expect(screen.getByTestId("card-menu-remove")).toHaveTextContent("Remove");
-      expect(screen.getByTestId("card-menu-license")).toHaveTextContent("License terms");
-      expect(screen.queryByTestId("card-menu-hide")).not.toBeInTheDocument();
-      const order = Array.from(
-        screen.getByTestId("card-menu-sheet-body").querySelectorAll("[data-testid]"),
-        (node) => node.getAttribute("data-testid"),
-      );
-      expect(order).toEqual([
-        "card-menu-save",
-        "card-menu-cite",
-        "card-menu-edit",
-        "card-menu-sensitive",
-        "card-menu-remove",
-        "card-menu-license",
-      ]);
+  // THE ⋮ IS ON EVERY NON-DETAIL CARD (`PostCard.jsx:262`), and the menu it
+  // raises is the HOST's (`PostMenuHost`, ruling 84): the card only asks. The
+  // rows each host's sheet holds are pinned on the hosts' own suites.
+  describe("the overflow trigger", () => {
+    it("asks its host to raise the menu", () => {
+      const onOpenMenu = vi.fn();
+      mount(post(), { onOpenMenu });
+      const trigger = screen.getByTestId("card-menu");
+      expect(trigger).toHaveAccessibleName("More on this post");
+      expect(trigger).toHaveAttribute("aria-expanded", "false");
+      fireEvent.click(trigger);
+      expect(onOpenMenu).toHaveBeenCalledTimes(1);
     });
 
-    // `READER_POST_MENU` (`_shared.jsx:376`): Save · Cite in a new post ·
-    // Hide @handle · License terms.
-    it("gives a reader the reader rows, naming the author in the hide row", () => {
-      mount(post(), {}, { store: storeFor("someone-else") });
-      fireEvent.click(screen.getByTestId("card-menu"));
-      expect(screen.getByTestId("card-menu-cite")).toHaveTextContent("Cite in a new post");
-      // `Hide @alice`, never "Hide this author" (`ActorChip.jsx:67`).
-      expect(screen.getByTestId("card-menu-hide")).toHaveTextContent("Hide @alice");
-      expect(screen.queryByTestId("card-menu-edit")).not.toBeInTheDocument();
-      expect(screen.queryByTestId("card-menu-remove")).not.toBeInTheDocument();
-    });
-
-    // A signed-out reader is nobody's author, so the reader rows are what a
-    // card carries before anyone signs in.
-    it("gives a signed-out reader the reader rows", () => {
-      mount(post());
-      fireEvent.click(screen.getByTestId("card-menu"));
-      expect(screen.getByTestId("card-menu-cite")).toBeInTheDocument();
-      expect(screen.queryByTestId("card-menu-edit")).not.toBeInTheDocument();
+    it("says the host's sheet is up for it", () => {
+      mount(post(), { onOpenMenu: vi.fn(), menuOpen: true });
+      expect(screen.getByTestId("card-menu")).toHaveAttribute("aria-expanded", "true");
     });
 
     // ON A DETAIL SURFACE THE PAGE HEADER OWNS THE ONE OVERFLOW
     // (`_shared.jsx:341-346`): two dots would be two menus for one post.
     it("yields the dot on the detail surface", () => {
-      mount(post(), { variant: "detail" }, { store: storeFor("u1") });
+      mount(post(), { variant: "detail", onOpenMenu: vi.fn() }, { store: storeFor("u1") });
       expect(screen.queryByTestId("card-menu")).not.toBeInTheDocument();
     });
 
     // A REMOVED POST HAS NO MENU AT ALL (`Removed.jsx:5-6`) — the ⋮ goes
     // wholesale, not a row at a time.
     it("drops the whole menu on a removed post", () => {
-      mount(post({ content: moderated(null, "REDACTED"), description: moderated(null, "REDACTED") }));
+      mount(post({ content: moderated(null, "REDACTED"), description: moderated(null, "REDACTED") }), {
+        onOpenMenu: vi.fn(),
+      });
       expect(screen.queryByTestId("card-menu")).not.toBeInTheDocument();
-    });
-
-    // The rows navigate from a card exactly as they do from the detail.
-    it("opens the edit route from the creator's Edit row", () => {
-      mount(post(), {}, { store: storeFor("u1") });
-      fireEvent.click(screen.getByTestId("card-menu"));
-      fireEvent.click(screen.getByTestId("card-menu-edit"));
-      expect(routerPush).toHaveBeenCalledWith("/compose?post=p1");
-    });
-
-    it("stages the post in the composer from the reader's Cite row", () => {
-      mount(post(), {}, { store: storeFor("someone-else") });
-      fireEvent.click(screen.getByTestId("card-menu"));
-      fireEvent.click(screen.getByTestId("card-menu-cite"));
-      expect(routerPush).toHaveBeenCalledWith("/compose?reference=p1");
-    });
-
-    // THE SHEETS THE ROWS OPEN RIDE THE CARD, the way the refs sheet does:
-    // the license reads on the surface the reader asked from.
-    it("raises the card's own license sheet from the license row", () => {
-      mount(post());
-      fireEvent.click(screen.getByTestId("card-menu"));
-      fireEvent.click(screen.getByTestId("card-menu-license"));
-      expect(screen.getByTestId("card-license-sheet")).toHaveAttribute("open");
-    });
-
-    // THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK (design/readme.md,
-    // jakob 2026-09-17, sharpened 2026-09-22 — PR #794): strictly below
-    // 360px the reader's menu leads with it.
-    it("leads the reader's menu with Share strictly below the narrow breakpoint", () => {
-      vi.stubGlobal("navigator", { share: vi.fn() });
-      setViewport(359);
-      mount(post(), {}, { store: storeFor("someone-else") });
-      fireEvent.click(screen.getByTestId("card-menu"));
-      expect(screen.getByTestId("card-menu-share")).toHaveTextContent("Share");
-      const order = Array.from(
-        screen.getByTestId("card-menu-sheet-body").querySelectorAll("[data-testid]"),
-        (node) => node.getAttribute("data-testid"),
-      );
-      expect(order[0]).toBe("card-menu-share");
-      expect(order.indexOf("card-menu-share")).toBeLessThan(order.indexOf("card-menu-save"));
-    });
-
-    // AT 360 THE WIDE LAYOUT STANDS — the inequality is strict, since 360dp
-    // is a mainstream android width (jakob 2026-09-22).
-    it("keeps the reader's menu free of Share at the breakpoint itself", () => {
-      vi.stubGlobal("navigator", { share: vi.fn() });
-      setViewport(360);
-      mount(post(), {}, { store: storeFor("someone-else") });
-      fireEvent.click(screen.getByTestId("card-menu"));
-      expect(screen.queryByTestId("card-menu-share")).not.toBeInTheDocument();
-    });
-
-    // A dead row is worse than none (`share.ts`'s "the control does not
-    // render" law) — the fold never outruns the button's own capability gate.
-    it("keeps the reader's menu free of Share where the browser has no share door", () => {
-      vi.stubGlobal("navigator", {});
-      setViewport(359);
-      mount(post(), {}, { store: storeFor("someone-else") });
-      fireEvent.click(screen.getByTestId("card-menu"));
-      expect(screen.queryByTestId("card-menu-share")).not.toBeInTheDocument();
-    });
-
-    // No board draws Share leaving the author's own menu — the ruling names
-    // only the reader's (design/readme.md). Pinned so a future change to
-    // this scope is a deliberate one, not a drift.
-    it("never adds Share to the creator's own menu, even below the narrow breakpoint", () => {
-      vi.stubGlobal("navigator", { share: vi.fn() });
-      setViewport(359);
-      mount(post(), {}, { store: storeFor("u1") });
-      fireEvent.click(screen.getByTestId("card-menu"));
-      expect(screen.queryByTestId("card-menu-share")).not.toBeInTheDocument();
     });
   });
 

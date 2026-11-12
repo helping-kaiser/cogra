@@ -64,10 +64,17 @@ export type PostMenuContext = {
    */
   save: { label: string; onSelect: () => void };
   /**
-   * The reader menu's hide act (`hideAct`, the one hide behaviour every menu
-   * shares); absent stands the row inert.
+   * The reader menu's hide row as it reads now — `Hide @ada`, or `Unhide @ada`
+   * while the author is hidden (`hideRow`, the one hide behaviour every menu
+   * shares). Absent, the row reads Hide by `handle` and stands inert.
    */
-  hide?: () => void;
+  hide?: { label: string; onSelect: () => void };
+  /**
+   * The host's join prompt, null for a signed-in reader. A guest's Cite asks
+   * to join rather than opening the wizard (GuestGate.md:5); Save, Hide and
+   * Report carry their own ask, and License terms opens for a guest (:7).
+   */
+  onGuest?: (() => void) | null;
   /** Row test ids derive from this — `post-menu` gives `post-menu-save`. */
   testIdPrefix: string;
   /**
@@ -106,6 +113,7 @@ export function postMenuItems({
   shareRow,
   save,
   hide,
+  onGuest = null,
   testIdPrefix,
   rowNode = () => undefined,
 }: PostMenuContext): MenuItem[] {
@@ -125,7 +133,9 @@ export function postMenuItems({
   // CITE STANDS SECOND ON BOTH MENUS (`_shared.jsx:414-420`, backlog item
   // 100): self-citation is a real authorial act, so the thumb finds the row
   // in one place on every menu that has it.
-  rows.push(row("cite", "cite", "Cite in a new post", () => navigate(`/compose?reference=${postId}`)));
+  rows.push(
+    row("cite", "cite", "Cite in a new post", onGuest ?? (() => navigate(`/compose?reference=${postId}`))),
+  );
   if (own) {
     rows.push(
       row("edit", "edit", "Edit", () => navigate(`/compose?post=${postId}`)),
@@ -142,8 +152,10 @@ export function postMenuItems({
     );
   } else {
     // The handle is the thing a reader recognises, and the word they will
-    // look for again under Hidden accounts (`ActorChip.jsx:67`).
-    rows.push(row("hide", "hide", handle === null ? "Hide this account" : `Hide @${handle}`, hide ?? (() => {})));
+    // look for again under Hidden accounts (`ActorChip.jsx:67`). The row keeps
+    // its one node whether it reads Hide or Unhide.
+    const fallback = handle === null ? "Hide this account" : `Hide @${handle}`;
+    rows.push(row("hide", "hide", hide?.label ?? fallback, hide?.onSelect ?? (() => {})));
   }
   if (license !== null) {
     rows.push(row("license", "license", "License terms", () => openLicense(license)));

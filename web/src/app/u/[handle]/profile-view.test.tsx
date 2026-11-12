@@ -811,6 +811,41 @@ describe("ProfileScreen", () => {
       expect(await screen.findByTestId("profile.identity.actionRow.menu")).toBeInTheDocument();
     });
 
+    // ProfileMenu.md:31 — the hide row reads Unhide with the handle while the
+    // person is hidden, the profile reached by a link; :33 — the tap unhides,
+    // the reader stays, the snackbar offers Undo, and no dialog asks.
+    it("a_hidden_persons_menu_reads_unhide_and_the_tap_unhides_keeping_the_profile", async () => {
+      const log = hiddenLog();
+      server.use(
+        meHandler(),
+        other(),
+        recordsHandler([]),
+        ...hiddenHandlers(log, {
+          entries: [{ id: "u2", handle: "ada", displayName: "Ada", hiddenAt: "2026-10-01T00:00:00Z" }],
+        }),
+      );
+      renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+      await waitFor(() => expect(log.reads).toBeGreaterThan(0));
+      fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
+      await waitFor(() =>
+        expect(rows()).toEqual([
+          ["profile.menuSheet.save", "Save"],
+          ["profile.menuSheet.mention", "Mention in a new post"],
+          ["profile.menuSheet.share", "Share this profile"],
+          ["profile.menuSheet.hide", "Unhide @ada"],
+          ["profile.menuSheet.report", "Report"],
+        ]),
+      );
+      fireEvent.click(screen.getByTestId("profile.menuSheet.hide"));
+      expect(screen.queryByRole("alertdialog")).toBeNull();
+      expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent(
+        "@ada is unhidden — their posts can reach your feed again.",
+      );
+      expect(screen.getByTestId("profile.snackbar.action")).toHaveTextContent("Undo");
+      expect(screen.getByTestId("profile.identity.actionRow.menu")).toBeInTheDocument();
+      await waitFor(() => expect(log.unhides).toEqual(["u2"]));
+    });
+
     it("a_guest_meets_the_ask_on_hide", async () => {
       const log = hiddenLog();
       server.use(other(), recordsHandler([]), ...hiddenHandlers(log));
