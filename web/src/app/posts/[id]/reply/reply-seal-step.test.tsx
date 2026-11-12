@@ -177,7 +177,7 @@ describe("ReplySealStep — the board's rows and lines", () => {
     expect(acts.getByTestId("reply-open-tags")).toHaveTextContent("+ Add a tag");
     expect(acts.getByTestId("reply-open-tags")).toHaveTextContent("1 more");
     expect(acts.getByTestId("reply-open-references")).toHaveTextContent("+ Cite something");
-    expect(screen.queryByText(/Add a topic/)).toBeNull();
+    expect(screen.queryByText(/Add a (tag|topic)/)).toBeNull();
   });
 
   it("round 27: + Add a tag opens the tag picker, + Cite something the citation picker", () => {
