@@ -5941,7 +5941,7 @@ didn't upload.` under the clip.
 
 Closed by round 46 (jakob 2026-11-12, question 2, as recommended): the gate names what is still uploading in its two existing lines, the video's first, then the cover's; no note under the cover row (`CommentEditVideo`'s `clip` = picked-cover). The failed clip's line reads `That video didn't upload.` on the board and in the sidecar.
 
-### 202 · `More` under a media caption that fits whole, on the sample boards · *design* · **filed 2026-11-12**
+### 202 · `More` under a media caption that fits whole, on the sample boards · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 44 (seam 292-3, jakob's finding in seam 276 item 2): the law is that a
 media caption carries `More` only when it is clamped, and `PostCard` and
@@ -5959,6 +5959,8 @@ no path moves [lean — fixture data, the law unchanged]; (b) the opener leaves
 those boards: four registered paths removed across 32 boards and the flows'
 `More` steps dropped (an announced breaking change for both clients); (c)
 leave the boards as they are and read the law from the docblocks.
+
+Closed by round 46 (jakob 2026-11-12, question 3, as recommended, (a)): the sample captions were lengthened in their own voice — `ADA_POST`'s to 147 characters, the canoe clip's to 140 — so `More` stands where the caption is cut, and `PostCard` now offers it on a media caption only past two lines' estimate, `ReelCaption`'s way. No registered path moved.
 
 ### 203 · Who else reads the seen list · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 

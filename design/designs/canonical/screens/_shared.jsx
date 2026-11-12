@@ -3206,7 +3206,7 @@ const TOBIAS_CANOE_POST = {
   author: TOBIAS,
   title: "Crossing at the narrows before the wind got up",
   description:
-    "Four of us out, one camera wedged in the bow. The far bank is closer than it looks from the road.",
+    "Four of us out, one camera wedged in the bow. The far bank is closer than it looks from the road, and further than it looks from the water.",
   timestamp: "2h",
   media: [{ ...CLIP_CANOE, resting: true }],
   topics: ["stillwater"],
