@@ -53,9 +53,9 @@ private class HeldOnboarding : ThrowingOnboardingRepository() {
 
 /**
  * Join.md and JoinErrors.md, line by line, against the drawn screen. Tags
- * are the boards' evident `join.*` paths (Join is not registered in
- * `nodes.json`). Assertions bind to nodes and their order, never to text
- * widths (Robolectric measures text near zero).
+ * are the registered `join.*` paths (`nodes.json`). Assertions bind to
+ * nodes and their order, never to text widths (Robolectric measures text
+ * near zero).
  */
 @RunWith(RobolectricTestRunner::class)
 class JoinScreenTest {
