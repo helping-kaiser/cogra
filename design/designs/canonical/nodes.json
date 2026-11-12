@@ -1276,6 +1276,8 @@
       "prefix": "commentEdit",
       "keys": {
         "commentEdit.acts": "the upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "commentEdit.cover.change": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "commentEdit.cover.thumb": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "commentEdit.gate": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "commentEdit.sign": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "commentEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
@@ -1294,9 +1296,13 @@
         ],
         "commentEdit.cover": [],
         "commentEdit.cover.add": [],
-        "commentEdit.cover.change": [],
+        "commentEdit.cover.change": [
+          "picked-cover"
+        ],
         "commentEdit.cover.label": [],
-        "commentEdit.cover.thumb": [],
+        "commentEdit.cover.thumb": [
+          "picked-cover"
+        ],
         "commentEdit.facts": [],
         "commentEdit.facts.license": [],
         "commentEdit.facts.license.label": [],
@@ -1308,11 +1314,13 @@
         "commentEdit.facts.sensitive.value": [],
         "commentEdit.gate": [
           "picked",
+          "picked-cover",
           "second",
           "failed"
         ],
         "commentEdit.gate.line": [
           "picked",
+          "picked-cover",
           "second"
         ],
         "commentEdit.gate.message": [
@@ -1350,32 +1358,38 @@
         "commentEdit.video": [],
         "commentEdit.video.describeRow": [
           "picked",
+          "picked-cover",
           "failed",
           "second"
         ],
         "commentEdit.video.describeRow.count": [
           "picked",
+          "picked-cover",
           "failed",
           "second"
         ],
         "commentEdit.video.describeRow.describe": [
           "picked",
+          "picked-cover",
           "failed",
           "second"
         ],
         "commentEdit.video.describeRow.reason": [
           "picked",
+          "picked-cover",
           "failed",
           "second"
         ],
         "commentEdit.video.label": [],
         "commentEdit.video.thumb": [
           "picked",
+          "picked-cover",
           "failed",
           "second"
         ],
         "commentEdit.video.thumb.remove": [
           "picked",
+          "picked-cover",
           "second"
         ],
         "commentEdit.video.uploadError": [
