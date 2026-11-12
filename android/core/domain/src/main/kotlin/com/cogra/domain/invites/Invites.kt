@@ -49,6 +49,35 @@ data class InvitesRead(
     val queue: List<ApplicationInfo>,
     /** The reader's links, usable or not; the screen shows the usable ones. */
     val links: List<InviteLinkInfo>,
+    /** Everyone the reader vouched in, newest first (`vouchedIn`'s own order). */
+    val people: List<LetInPerson> = emptyList(),
+)
+
+/**
+ * One person the reader let in, as People you let in draws them
+ * (Invites.md:11): the picture, else the monogram from the name; the display
+ * name, else the handle; and when the vouch landed. Each person stands under
+ * their first voucher only — exactly what `vouchedIn` serves — and a stance
+ * walked back since wears no mark.
+ */
+data class LetInPerson(
+    /** The person's actor id, the lowercase UUID the wire carries — the row's key. */
+    val id: String,
+    /**
+     * The handle the row's door opens. A deleted account's page still names
+     * its account by route while its handle is never printed (ProfileDeleted.md),
+     * so the door keeps it and the row does not.
+     */
+    val door: String,
+    /** The row's title: the display name, else `@handle`; null for a deleted account. */
+    val name: String?,
+    /** What the monogram is drawn from: the display name, else the bare handle. */
+    val monogram: String,
+    val avatarUrl: String?,
+    /** A deleted account: the reserved disc and `Deleted account` (Invites.md:25). */
+    val redacted: Boolean,
+    /** When the vouch that let them in landed (`VouchedInEdge.vouchedAt`). */
+    val vouchedAt: Instant,
 )
 
 /** An invite link as its issuer sees it. */

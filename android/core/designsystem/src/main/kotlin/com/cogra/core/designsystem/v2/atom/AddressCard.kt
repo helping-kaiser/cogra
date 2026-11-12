@@ -61,6 +61,12 @@ fun AddressCard(
     /** The registered card: its label, copy, action, address and caption are parts. */
     node: DataNode? = null,
     testTag: String? = null,
+    /**
+     * The card's last line, under the caption (`PayoutAddress.jsx`
+     * `children`): the copy that did not go through says so there, on the
+     * string's own card.
+     */
+    footer: (@Composable () -> Unit)? = null,
 ) {
     val quiet = ink ?: MaterialTheme.colorScheme.onSurfaceVariant
     val strong = ink ?: MaterialTheme.colorScheme.onSurface
@@ -105,6 +111,7 @@ fun AddressCard(
                     .dataNode(node?.div("caption")),
             )
         }
+        footer?.invoke()
     }
 }
 
