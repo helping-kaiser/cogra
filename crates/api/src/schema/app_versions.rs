@@ -8,8 +8,7 @@
 //! The registry is not record-backed, so its cursor is its own — a keyset
 //! over `(releasedAt, component, version)`, which the primary key makes
 //! unique — and the landing-order helpers do not apply. Bad page
-//! arguments refuse exactly as theirs do: a message-only validation
-//! error.
+//! arguments refuse exactly as theirs do: `BAD_INPUT`.
 
 use async_graphql::connection::{Connection, Edge};
 use async_graphql::{Context, Object, SimpleObject};
@@ -107,7 +106,7 @@ pub async fn app_versions(
     let backward = last.is_some() || before.is_some();
     let cursor = match if backward { &before } else { &after } {
         Some(raw) => {
-            Some(decode_cursor(raw).ok_or_else(|| async_graphql::Error::new("invalid cursor"))?)
+            Some(decode_cursor(raw).ok_or_else(|| super::query::bad_input("invalid cursor"))?)
         }
         None => None,
     };

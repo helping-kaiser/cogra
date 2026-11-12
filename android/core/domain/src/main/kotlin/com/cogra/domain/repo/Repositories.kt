@@ -4,7 +4,6 @@
 
 package com.cogra.domain.repo
 
-import com.cogra.crypto.Family
 import com.cogra.domain.ActorRef
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AttachmentClaim
@@ -21,8 +20,10 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostBacking
 import com.cogra.domain.PostDetail
+import com.cogra.domain.PostView
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ProfileComment
 import com.cogra.domain.ProfileFigures
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
@@ -473,27 +474,43 @@ interface ProfileRepository {
     suspend fun myProfile(): Outcome<ProfileView?>
 
     /**
-     * The actor's chronicle, newest first — every record, or one
-     * family's when [family] is set (the profile filter chips).
+     * The actor's chronicle, newest first — every record they authored
+     * (the tab row's right-most tab, Everything: Profile.md:23).
      */
     suspend fun authorRecords(
         authorId: String,
-        family: Family?,
         first: Int,
         after: String?,
     ): Outcome<Page<RecordRow>>
 
     /**
+     * THE POSTS VIEW (ProfilePosts.md:3): the person's posts as their post
+     * cards read them — each post's own genesis Publish record, never an
+     * edit, a still-settling one among the landed (:5) — newest first, a
+     * page at a time. A record whose post CoGra does not carry is skipped,
+     * never drawn as a blank card.
+     */
+    suspend fun profilePosts(authorId: String, after: String?): Outcome<Page<PostView>>
+
+    /**
+     * THE COMMENTS VIEW (ProfileComments.md:3): the person's comments as
+     * their cards read them — each comment's own genesis Review, whatever
+     * it answers — newest first, a page at a time; a record whose comment
+     * CoGra does not carry is skipped.
+     */
+    suspend fun profileComments(authorId: String, after: String?): Outcome<Page<ProfileComment>>
+
+    /**
      * The header's three figures (`ProfileFigures`; open-questions Q35,
-     * closed toward the drawn figures, jakob's confirmation pending): record
-     * counts, each labelled and never merged.
+     * ruled 2026-11-10): bundles, never records, each labelled and never
+     * merged.
      */
     suspend fun figures(actorId: String): Outcome<ProfileFigures>
 
     /**
      * One direction of a person's opinions page (`ProfileStances`), read whole
      * and folded: one row per person, strongest first (`foldHeldOpinions`).
-     * The figures count records; this lists people (open-questions Q35).
+     * The opinion figures count exactly these people (open-questions Q35).
      */
     suspend fun opinions(actorId: String, direction: OpinionDirection): Outcome<List<HeldOpinion>>
 

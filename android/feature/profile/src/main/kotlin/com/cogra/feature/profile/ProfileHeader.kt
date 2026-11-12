@@ -4,11 +4,11 @@
 // card: the top of a screen, on the page ground. web's twin is
 // `web/src/lib/ui/profile-header.tsx`.
 //
-// THE FIGURES (Posts · Opinions on · Opinions by) count RECORDS, never a fold
-// — open-questions Q35, closed 2026-10-28 toward the drawn figures, jakob's
-// confirmation pending — read through `ProfileFigures` (#324): the genesis
-// Publish records, the Opinion records toward the person, the ones they gave
-// toward people. They stand beside the avatar under the name while they fit
+// THE FIGURES (Posts · Opinions on · Opinions by) count BUNDLES, never records
+// — open-questions Q35, ruled by jakob 2026-11-10 — read through
+// `ProfileFigures`: the posts published, the people holding an opinion on
+// the person, the people they hold one on. They stand beside the avatar
+// under the name while they fit
 // its column, and move under the avatar-and-name block where they do not
 // (the master's two arrangements), and the whole line is one door to the
 // opinions page (`onCounts`). The own avatar's change badge is not here yet: the

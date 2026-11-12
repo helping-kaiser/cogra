@@ -25,15 +25,12 @@
     <!-- The trigger's deviations, in the feed filter's words (copy-voice, the filter's state words). -->
     <string name="explore_reading_newest">newest</string>
     <string name="explore_reading_ranked">ranked</string>
-    <string name="explore_reading_showing_seen">showing seen</string>
-    <string name="explore_reading_hiding_seen">hiding seen</string>
     <string name="explore_kinds">Kinds</string>
     <string name="explore_kinds_hint">Combine as many as you like. All, until you narrow it.</string>
     <string name="explore_order">Order</string>
     <string name="explore_order_hint">Ranked puts what\'s closest to you first — your view, no one else\'s. Newest ignores it and lists by time.</string>
     <string name="explore_order_ranked">Ranked</string>
     <string name="explore_order_newest">Newest</string>
-    <string name="explore_seen">Show what you\'ve already seen</string>
     <string name="explore_reset">Reset</string>
     <string name="explore_done">Done</string>
 

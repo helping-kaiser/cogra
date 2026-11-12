@@ -8,6 +8,7 @@
 
 package com.cogra.feature.content
 
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import com.cogra.core.designsystem.ActorChip
 import com.cogra.core.designsystem.DataNode
@@ -61,6 +63,11 @@ internal fun ContentCardHeader(
     node: DataNode? = null,
     /** The registered sheet the ⋮ raises (`feed.menuSheet`), when its board registers one. */
     menuSheetNode: DataNode? = null,
+    /**
+     * THE AUTHOR IS THE PAGE THE CARD STANDS ON (ProfilePosts.md:25,
+     * ProfileComments.md:21): the chip is inert, its drawing unchanged.
+     */
+    authorHere: Boolean = false,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -68,12 +75,16 @@ internal fun ContentCardHeader(
     ) {
         // The chip takes the row and the age holds the right edge, so a
         // system actor's missing chip does not pull the age left.
-        Box(Modifier.weight(1f)) {
+        // An inert chip still takes its tap, so a tap on it never falls
+        // through to the card's own door beneath (ProfilePosts.md:25: NEVER
+        // anything changes).
+        val inert = if (authorHere) Modifier.pointerInput(Unit) { detectTapGestures { } } else Modifier
+        Box(Modifier.weight(1f).then(inert)) {
             author?.let {
                 ActorChip(
                     handle = it.handle,
                     displayName = it.displayName,
-                    onOpen = { onOpenActor(it.handle) },
+                    onOpen = if (authorHere) null else ({ onOpenActor(it.handle) }),
                     avatarUrl = it.avatar?.url,
                     testTag = "${testTagPrefix}_author",
                     node = node?.div("authorChip"),

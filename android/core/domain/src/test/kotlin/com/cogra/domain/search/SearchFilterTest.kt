@@ -4,7 +4,9 @@
 
 package com.cogra.domain.search
 
+import com.cogra.domain.feed.FeedFilter
 import com.cogra.domain.feed.FeedKind
+import com.cogra.domain.feed.FeedOrder
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -13,7 +15,7 @@ class SearchFilterTest {
     @Test
     fun `the default reads Everything with nothing after it`() {
         assertThat(READER_SEARCH_DEFAULT.reading(READER_SEARCH_DEFAULT))
-            .isEqualTo(SearchFilterReading(KindsHead.Everything, order = null, seen = null))
+            .isEqualTo(SearchFilterReading(KindsHead.Everything, order = null))
     }
 
     @Test
@@ -28,13 +30,20 @@ class SearchFilterTest {
 
     @Test
     fun `the trigger speaks only the deviations from the reader's default`() {
-        val reading = SearchFilter(order = SearchOrder.NEWEST, seen = true).reading(READER_SEARCH_DEFAULT)
+        val reading = SearchFilter(order = SearchOrder.NEWEST).reading(READER_SEARCH_DEFAULT)
         assertThat(reading.order).isEqualTo(SearchOrder.NEWEST)
-        assertThat(reading.seen).isEqualTo(true)
+    }
+
+    // Seam 296 (jakob, 2026-11-11): search never looks at the seen-list, so the
+    // reader's saved default gives it the order and nothing else.
+    @Test
+    fun `the saved default gives search its order alone, whatever its seen toggle`() {
+        val saved = FeedFilter.DEFAULT.copy(kinds = setOf(FeedKind.TAG), order = FeedOrder.NEWEST, showSeen = true)
+        assertThat(saved.searchDefault()).isEqualTo(SearchFilter(order = SearchOrder.NEWEST))
     }
 
     @Test
-    fun `a guest's search reads newest with seen shown, and its default deviates nowhere`() {
+    fun `a guest's search reads newest, and its default deviates nowhere`() {
         val guest = guestSearchFilter()
         assertThat(guest.order).isEqualTo(SearchOrder.NEWEST)
         assertThat(guest.reading(guestSearchFilter()).order).isNull()

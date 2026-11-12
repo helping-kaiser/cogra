@@ -45,7 +45,7 @@ class ProfileScreensTest {
         onOpenInvites: () -> Unit = {},
         onOpenSettings: () -> Unit = {},
         onOpenPost: (String) -> Unit = {},
-        onFilterChange: (ChronicleFilter) -> Unit = {},
+        onTabChange: (ProfileTab) -> Unit = {},
         onLoadMore: () -> Unit = {},
         onBack: (() -> Unit)? = null,
         onStance: (Slot) -> Unit = {},
@@ -66,7 +66,7 @@ class ProfileScreensTest {
                 state = state,
                 profileSavedResult = profileSavedResult,
                 onProfileSavedResultConsumed = onProfileSavedResultConsumed,
-                onFilterChange = onFilterChange,
+                onTabChange = onTabChange,
                 onLoadMore = onLoadMore,
                 onRetry = onRetry,
                 onEdit = onEdit,
@@ -468,11 +468,11 @@ class ProfileScreensTest {
     // Profile.md:21 and every board: the row lands on Everything.
     @Test
     fun theTabRowLandsOnEverythingAndSwitches() {
-        var picked: ChronicleFilter? = null
-        render(loaded(), onFilterChange = { picked = it })
+        var picked: ProfileTab? = null
+        render(loaded(), onTabChange = { picked = it })
         compose.onNodeWithTag("profile.tabRow.everythingTab").assertIsSelected()
         compose.onNodeWithTag("profile.tabRow.postsTab").performScrollTo().performClick()
-        assertThat(picked).isEqualTo(ChronicleFilter.POSTS)
+        assertThat(picked).isEqualTo(ProfileTab.POSTS)
         compose.onNode(hasContentDescription("What the chronicle shows")).assertExists()
     }
 

@@ -810,6 +810,88 @@ async fn withdrawing_a_citation_quotes_its_counter_record_count(pool: PgPool) {
     );
 }
 
+/// A withdrawal's counter-records read WITHDRAWAL on the chronicle, every
+/// one of the batch, while the citations they netted stay ORDINARY — the
+/// act read off the bundle's shape, with no marker on the record. The
+/// chronicle speaks it as `Withdrew a citation` (copy-voice), never as a
+/// citation against.
+///
+/// A citation's withdrawal reads as its own act on every counter-record, read off the bundle's shape alone.
+/// ´claim:references:a-withdrawal-reads-as-its-own-act´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_withdrawals_counter_records_read_as_withdrawal(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (alice, key) = rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+    let carrier = rig.plain_post(&token, &key, "carrier").await;
+    let cited = rig.plain_post(&token, &key, "cited").await;
+    for _ in 0..2 {
+        rig.land_citation(
+            &token,
+            &key,
+            &carrier,
+            &cited,
+            json!({ "relevance": 0.8, "support": 0.6 }),
+        )
+        .await;
+    }
+    let withdrawal = rig
+        .gql(
+            Some(&token),
+            WITHDRAW_REFERENCE,
+            json!({ "input": { "artifact": carrier, "target": cited }}),
+        )
+        .await;
+    assert_eq!(
+        families(&withdrawal, "prepareReferenceWithdrawal"),
+        vec!["REFERENCE", "REFERENCE"],
+        "⌈max(1.6, 1.2)⌉ counter-records"
+    );
+    rig.land(
+        &token,
+        &key,
+        &withdrawal["prepareReferenceWithdrawal"]["writes"],
+    )
+    .await;
+
+    let listing = rig
+        .gql(
+            None,
+            r#"query($a: UUID!) {
+                 records(author: $a, family: REFERENCE, first: 20) {
+                   edges { node { act legs { role pDirected pInterest } } }
+                 }
+               }"#,
+            json!({ "a": alice.to_string() }),
+        )
+        .await;
+    let mut acts: Vec<(String, bool)> = listing["records"]["edges"]
+        .as_array()
+        .expect("edges")
+        .iter()
+        .map(|edge| {
+            let node = &edge["node"];
+            let negative = node["legs"]
+                .as_array()
+                .expect("legs")
+                .iter()
+                .any(|leg| leg["pDirected"].as_f64().expect("pDirected") < 0.0);
+            (node["act"].as_str().expect("act").to_string(), negative)
+        })
+        .collect();
+    acts.sort();
+    assert_eq!(
+        acts,
+        vec![
+            ("ORDINARY".to_string(), false),
+            ("ORDINARY".to_string(), false),
+            ("WITHDRAWAL".to_string(), true),
+            ("WITHDRAWAL".to_string(), true),
+        ],
+        "the citations stay ordinary, their counter-records read the withdrawal: {listing}"
+    );
+}
+
 /// (´claim:references:an-absent-citing-artifact-names-its-field´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn citing_an_artifact_that_is_not_there_names_the_artifact_field(pool: PgPool) {

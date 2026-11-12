@@ -17,18 +17,29 @@ const server = startMswServer();
 
 const ID = "0198c9a2-1f6b-7c31-9d70-3a4f5b6c7d8e";
 
-const usableCheck = gqlLink.query("InviteLinkCheck", () =>
-  HttpResponse.json({
-    data: {
-      inviteLinkCheck: {
-        __typename: "InviteLinkCheck",
-        usable: true,
-        inviterHandle: "grace",
-        expiresAt: "2026-08-08T00:00:00Z",
+const GRACE = {
+  __typename: "User",
+  handle: "grace",
+  displayName: { __typename: "ModeratedText", value: "Grace Hopper" },
+  avatar: { __typename: "MediaAttachment", url: "https://media.test/grace.webp", status: "NORMAL" },
+};
+
+const checkWith = (inviter: unknown) =>
+  gqlLink.query("InviteLinkCheck", () =>
+    HttpResponse.json({
+      data: {
+        inviteLinkCheck: {
+          __typename: "InviteLinkCheck",
+          usable: true,
+          inviterHandle: "grace",
+          inviter,
+          expiresAt: "2026-08-08T00:00:00Z",
+        },
       },
-    },
-  }),
-);
+    }),
+  );
+
+const usableCheck = checkWith(GRACE);
 
 function fillForm({
   handle = "ada",
@@ -90,7 +101,7 @@ describe("JoinView", () => {
   it("shows who is vouching and the apply form on a usable invite", async () => {
     server.use(usableCheck);
     renderWithProviders(<JoinView linkId={ID} />);
-    expect(await screen.findByTestId("invite_inviter")).toHaveTextContent("@grace");
+    expect(await screen.findByTestId("join.title")).toHaveTextContent("Grace Hopper invited you");
     expect(screen.getByTestId("apply_handle")).toBeInTheDocument();
   });
 
@@ -260,7 +271,7 @@ describe("JoinView", () => {
   it("offers a signed-in applicant neither the form nor the sign-in link", async () => {
     server.use(usableCheck, meHandler("APPLICANT"));
     renderWithProviders(<JoinView linkId={ID} />, { store: signedInStore() });
-    expect(await screen.findByTestId("invite_inviter")).toBeInTheDocument();
+    expect(await screen.findByTestId("join.title")).toBeInTheDocument();
     expect(screen.queryByTestId("apply_handle")).not.toBeInTheDocument();
     expect(screen.queryByTestId("invite_login")).not.toBeInTheDocument();
   });
@@ -276,7 +287,7 @@ describe("JoinView", () => {
   it("offers no action while the account state is unknown", async () => {
     server.use(usableCheck, gqlLink.query("Me", () => HttpResponse.error()));
     renderWithProviders(<JoinView linkId={ID} />, { store: signedInStore() });
-    expect(await screen.findByTestId("invite_inviter")).toBeInTheDocument();
+    expect(await screen.findByTestId("join.title")).toBeInTheDocument();
     expect(screen.queryByTestId("join_member_note")).not.toBeInTheDocument();
   });
 
@@ -286,7 +297,7 @@ describe("JoinView", () => {
     it("heads with a plain Back, the About CoGra dot, the inviter and the lead", async () => {
       server.use(usableCheck);
       renderWithProviders(<JoinView linkId={ID} />);
-      expect(await screen.findByTestId("invite_inviter")).toHaveTextContent("@grace invited you");
+      expect(await screen.findByTestId("join.title")).toHaveTextContent("Grace Hopper invited you");
       expect(screen.getByRole("link", { name: "Back" })).toBeInTheDocument();
       expect(
         screen.getByText("CoGra is invite-only — a member vouches for you, and @grace's approval brings you in."),
@@ -295,11 +306,48 @@ describe("JoinView", () => {
       expect(push).toHaveBeenCalledWith(`/about?from=join&invite=${ID}`);
     });
 
+    // Join.md:9 — the face and the name over the form are the inviter's.
+    it("the_face_and_the_name_over_the_form_are_the_links_inviters", async () => {
+      server.use(usableCheck);
+      renderWithProviders(<JoinView linkId={ID} />);
+      expect(await screen.findByTestId("join.title")).toHaveTextContent("Grace Hopper invited you");
+      const face = screen.getByTestId("join.avatar");
+      expect(face.querySelector("img")).toHaveAttribute("src", "https://media.test/grace.webp");
+      expect(screen.getByTestId("join.body")).toHaveTextContent(
+        "CoGra is invite-only — a member vouches for you, and @grace's approval brings you in.",
+      );
+    });
+
+    it("an_inviter_with_no_written_name_or_picture_reads_by_handle_under_the_monogram", async () => {
+      server.use(
+        checkWith({
+          ...GRACE,
+          displayName: { __typename: "ModeratedText", value: "  " },
+          avatar: null,
+        }),
+      );
+      renderWithProviders(<JoinView linkId={ID} />);
+      expect(await screen.findByTestId("join.title")).toHaveTextContent("grace invited you");
+      expect(screen.getByTestId("join.avatar").querySelector("img")).toBeNull();
+    });
+
+    it("a_redacted_picture_never_shows_and_the_monogram_stands_in", async () => {
+      server.use(
+        checkWith({
+          ...GRACE,
+          avatar: { __typename: "MediaAttachment", url: "https://media.test/grace.webp", status: "REDACTED" },
+        }),
+      );
+      renderWithProviders(<JoinView linkId={ID} />);
+      await screen.findByTestId("join.title");
+      expect(screen.getByTestId("join.avatar").querySelector("img")).toBeNull();
+    });
+
     // Join.md:13 — pasted at the invite door, Back returns to it.
     it("press_the_back_arrow_given_the_link_was_pasted_at_the_invite_door_opens_invite_entry", async () => {
       server.use(usableCheck);
       renderWithProviders(<JoinView linkId={ID} origin="door" />);
-      await screen.findByTestId("invite_inviter");
+      await screen.findByTestId("join.title");
       expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute("href", "/join");
       // The "?" carries the door along, so About's Back finds this same form.
       fireEvent.click(screen.getByRole("button", { name: "About CoGra" }));
@@ -311,7 +359,7 @@ describe("JoinView", () => {
     it("press_the_back_arrow_given_the_link_was_held_from_the_arrival_brings_the_borrowed_view_back", async () => {
       server.use(usableCheck);
       renderWithProviders(<JoinView linkId={ID} />);
-      await screen.findByTestId("invite_inviter");
+      await screen.findByTestId("join.title");
       expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute("href", "/feed");
     });
 

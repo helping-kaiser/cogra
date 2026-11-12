@@ -25,6 +25,7 @@ import com.cogra.domain.PostDetail
 import com.cogra.domain.PostView
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ProfileComment
 import com.cogra.domain.ProfileFigures
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
@@ -266,10 +267,21 @@ class ScriptedProfileRepository : ThrowingProfileRepository() {
 
     override suspend fun authorRecords(
         authorId: String,
-        family: com.cogra.crypto.Family?,
         first: Int,
         after: String?,
     ): Outcome<Page<RecordRow>> = Outcome.Success(Page(records, endCursor = null, hasNextPage = false))
+
+    /** The posts view's cards, by author id; unscripted reads empty. */
+    var posts: MutableMap<String, List<PostView>> = mutableMapOf()
+
+    /** The comments view's cards, by author id; unscripted reads empty. */
+    var comments: MutableMap<String, List<ProfileComment>> = mutableMapOf()
+
+    override suspend fun profilePosts(authorId: String, after: String?): Outcome<Page<PostView>> =
+        Outcome.Success(Page(posts[authorId].orEmpty(), endCursor = null, hasNextPage = false))
+
+    override suspend fun profileComments(authorId: String, after: String?): Outcome<Page<ProfileComment>> =
+        Outcome.Success(Page(comments[authorId].orEmpty(), endCursor = null, hasNextPage = false))
 
     override suspend fun prepareProfileUpdate(
         displayName: String,

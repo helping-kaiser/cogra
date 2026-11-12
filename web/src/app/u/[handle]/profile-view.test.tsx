@@ -92,6 +92,8 @@ function recordsHandler(
     on?: string;
     pair?: [number, number];
     act?: string;
+    topic?: string;
+    cites?: string;
   }[],
 ) {
   return gqlLink.query("AuthorRecords", () =>
@@ -108,6 +110,7 @@ function recordsHandler(
               act: row.act ?? (row.targetId === undefined ? "GENESIS" : "ORDINARY"),
               targetId: row.targetId ?? `mint:${row.id}`,
               terminalId: null,
+              topic: row.topic ? { __typename: "Hashtag", name: { __typename: "ModeratedText", value: row.topic } } : null,
               landedAt: new Date(Date.now() - 3 * 86_400_000).toISOString(),
               pDirected: row.pair?.[0] ?? 0,
               pInterest: row.pair?.[1] ?? 0,
@@ -122,7 +125,14 @@ function recordsHandler(
                 : row.on
                   ? { __typename: "User", id: `u-${row.on}`, handle: row.on }
                   : null,
-              terminal: null,
+              terminal: row.cites
+                ? {
+                    __typename: "Post",
+                    id: row.cites,
+                    title: { __typename: "ModeratedText", value: "The long way home" },
+                    content: { __typename: "ModeratedText", value: "Body" },
+                  }
+                : null,
             },
           })),
           pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
@@ -218,8 +228,34 @@ describe("ProfileScreen", () => {
     expect(screen.getByTestId(byNode("profile.chronicle.act", "3"))).toHaveTextContent("Joined");
   });
 
-  // THE HEADER'S FIGURES (ProfileOther.md:7; Q35 closed toward the drawn
-  // figures, jakob's confirmation pending): three labelled record counts,
+  // copy-voice, *The chronicle's verbs*: a tag's aside is the tag
+  // (`#saltmaps`), an opinion on a topic reads `on #saltmaps`, and a citation
+  // taken back reads `Withdrew a citation` with the cited thing under it.
+  it("prints a tag's topic aside, an opinion on a topic, and a withdrawn citation", async () => {
+    server.use(
+      gqlLink.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      recordsHandler([
+        { id: "act:a:3:tag", family: "TAG", targetId: "mint:act:a:1:publish", postId: "p1", topic: "saltmaps", pair: [1, 0.5] },
+        { id: "act:a:2:affinity", family: "AFFINITY", targetId: "name:saltmaps", topic: "saltmaps", pair: [0.4, 0.5] },
+        { id: "act:a:1:reference", family: "REFERENCE", targetId: "mint:act:a:1:publish", cites: "p9", act: "WITHDRAWAL", pair: [-0.5, -0.5] },
+      ]),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    const tag = await screen.findByTestId(byNode("profile.chronicle.act", "1"));
+    expect(tag).toHaveTextContent("Tagged a post");
+    expect(screen.getByTestId(byNode("profile.chronicle.act.aside", "1"))).toHaveTextContent("#saltmaps");
+    expect(screen.getByTestId(byNode("profile.chronicle.act", "2"))).toHaveTextContent("Gave an opinion");
+    expect(screen.getByTestId(byNode("profile.chronicle.act.aside", "2"))).toHaveTextContent("on #saltmaps");
+    const withdrawn = screen.getByTestId(byNode("profile.chronicle.act", "3"));
+    expect(withdrawn).toHaveTextContent("Withdrew a citation");
+    expect(withdrawn).toHaveTextContent("The long way home");
+    expect(withdrawn).not.toHaveTextContent("Cited a post");
+  });
+
+  // THE HEADER'S FIGURES (ProfileOther.md:7; Q35 ruled 2026-11-10: bundles,
+  // never records): three labelled figures,
   // never merged, grouped as every figure is.
   it("draws the three figures, each labelled, from ProfileFigures", async () => {
     server.use(
@@ -234,8 +270,8 @@ describe("ProfileScreen", () => {
               __typename: "User",
               id: "u2",
               posts: { __typename: "RecordConnection", totalCount: 12 },
-              opinionsOn: { __typename: "RecordConnection", totalCount: 1204 },
-              opinionsBy: { __typename: "RecordConnection", totalCount: 7 },
+              opinionsOn: { __typename: "RecordConnection", bundleCount: 1204 },
+              opinionsBy: { __typename: "RecordConnection", bundleCount: 7 },
             },
           },
         }),
@@ -266,8 +302,8 @@ describe("ProfileScreen", () => {
               __typename: "User",
               id,
               posts: { __typename: "RecordConnection", totalCount: 12 },
-              opinionsOn: { __typename: "RecordConnection", totalCount: 1204 },
-              opinionsBy: { __typename: "RecordConnection", totalCount: 7 },
+              opinionsOn: { __typename: "RecordConnection", bundleCount: 1204 },
+              opinionsBy: { __typename: "RecordConnection", bundleCount: 7 },
             },
           },
         }),

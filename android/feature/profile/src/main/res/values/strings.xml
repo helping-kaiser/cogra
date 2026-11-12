@@ -34,6 +34,8 @@
     <string name="profile_edit">Edit profile</string>
     <string name="profile_invites">Invites</string>
     <string name="profile_invites_locked">You can invite once you\'re in.</string>
+    <!-- An applicant's Reply on a comment card answers here, never the composer (ProfileComments.md:29). -->
+    <string name="profile_reply_locked">You can comment once you\'re in.</string>
     <!-- An applicant's Mention in a new post (ProfileMenu.md:19). -->
     <string name="profile_mention_locked">You can post once you\'re in.</string>
     <string name="profile_message">Message</string>
@@ -103,10 +105,13 @@
     <string name="chronicle_cited_post">Cited a post</string>
     <string name="chronicle_cited_comment">Cited a comment</string>
     <string name="chronicle_mentioned">Mentioned</string>
+    <string name="chronicle_withdrew_citation">Withdrew a citation</string>
     <string name="chronicle_opinion_on">on @%1$s</string>
     <string name="chronicle_on_post">on a post</string>
     <string name="chronicle_on_comment">on a comment</string>
     <string name="chronicle_person">@%1$s</string>
+    <string name="chronicle_topic">#%1$s</string>
+    <string name="chronicle_on_topic">on #%1$s</string>
     <string name="chronicle_acted">Did something</string>
 
     <string name="profile_edit_title">Edit profile</string>

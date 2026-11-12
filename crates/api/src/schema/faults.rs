@@ -1,8 +1,10 @@
 //! ´mod:module:faults´
 //!
-//! Server faults collapse to the declared `INTERNAL` answer before they
-//! leave the process (api-spec.md "Errors are tiered"): internal detail
-//! stays in the server log and never reaches the client.
+//! Every transport fault leaves the process with a declared code
+//! (api-spec.md "Errors are tiered"). Server faults collapse to
+//! `INTERNAL`, their detail kept in the server log and off the wire; the
+//! library's own refusal of an argument it could not parse is the
+//! caller's malformed input and answers `BAD_INPUT`.
 //!
 //! The rule sits once, at the schema, as the async-graphql extension the
 //! library documents for post-processing an operation's response, rather
@@ -15,11 +17,20 @@
 //! What collapses is an error that names no `extensions.code` and carries
 //! a Rust error as its source — what async-graphql's blanket `From`
 //! conversion builds for a `?` on a typed error. An error that declares
-//! its code was shaped for the client on purpose. An error with neither
-//! is a message the code wrote itself or the library's own refusal of an
-//! argument it could not parse; neither carries internal detail. A
-//! resolver that finds a broken invariant names it as a [`Fault`], which
-//! carries its message as a source and so collapses like any other.
+//! its code was shaped for the client on purpose, and passes as it is.
+//! An error with neither is what the library builds when a custom
+//! scalar's `parse` refuses a value (`InputValueError::into_server_error`:
+//! the scalar's message, no source, no extensions) — a malformed UUID, a
+//! Dimension off its range or grid — so it is coded `BAD_INPUT` and keeps
+//! its message, which names the argument's fault and nothing internal.
+//! The resolvers' own refusals declare their codes, so no message the
+//! code wrote reaches this rule. A resolver that finds a broken invariant
+//! names it as a [`Fault`], which carries its message as a source and so
+//! collapses like any other.
+//!
+//! Type and enum mismatches the library catches at validation, before
+//! execution, never reach this hook and stay message-only, like the
+//! budget refusals (api-spec.md "Query budgets").
 
 use std::sync::Arc;
 
@@ -68,14 +79,22 @@ impl Extension for InternalFaults {
 }
 
 /// Logs a server fault with its cause and rewrites it to the declared
-/// internal answer; leaves every other error as it is. The path and the
+/// internal answer, codes an argument the library refused as
+/// `BAD_INPUT`, and leaves a declared error as it is. The path and the
 /// locations stay: they name the field that failed, not why.
 fn collapse(error: &mut ServerError) {
     let declared = error
         .extensions
         .as_ref()
         .is_some_and(|extensions| extensions.get("code").is_some());
-    if declared || error.source.is_none() {
+    if declared {
+        return;
+    }
+    if error.source.is_none() {
+        error
+            .extensions
+            .get_or_insert_with(ErrorExtensionValues::default)
+            .set("code", "BAD_INPUT");
         return;
     }
     tracing::error!(path = ?error.path, cause = %error.message, "a resolver failed");
@@ -107,10 +126,10 @@ mod tests {
         assert_eq!(code, Some(&async_graphql::Value::from("INTERNAL")));
     }
 
-    /// A declared code, or a plain message with no source, passes as it is.
+    /// A declared code passes as it is.
     /// (´claim:server:a-declared-code-passes-the-collapse´)
     #[test]
-    fn a_declared_or_plain_error_passes() {
+    fn a_declared_error_passes() {
         let mut declared = sourced("not yours");
         declared
             .extensions
@@ -118,10 +137,19 @@ mod tests {
             .set("code", "FORBIDDEN");
         collapse(&mut declared);
         assert_eq!(declared.message, "not yours");
+        let code = declared.extensions.as_ref().and_then(|e| e.get("code"));
+        assert_eq!(code, Some(&async_graphql::Value::from("FORBIDDEN")));
+    }
 
-        let mut plain = ServerError::new("invalid cursor", None);
+    /// A codeless error with no source — the library's refusal of an
+    /// argument — keeps its message and answers `BAD_INPUT`.
+    /// (´claim:server:an-unparsable-argument-is-bad-input´)
+    #[test]
+    fn a_codeless_plain_error_is_bad_input() {
+        let mut plain = ServerError::new("Failed to parse \"UUID\": invalid length", None);
         collapse(&mut plain);
-        assert_eq!(plain.message, "invalid cursor");
-        assert!(plain.extensions.is_none());
+        assert_eq!(plain.message, "Failed to parse \"UUID\": invalid length");
+        let code = plain.extensions.as_ref().and_then(|e| e.get("code"));
+        assert_eq!(code, Some(&async_graphql::Value::from("BAD_INPUT")));
     }
 }

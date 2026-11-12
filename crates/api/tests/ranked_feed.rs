@@ -3005,6 +3005,54 @@ async fn ranked_search_orders_the_head_by_the_pod_and_the_rest_behind_the_seam(p
     assert_eq!(page["totalCount"], json!(3));
 }
 
+/// The seen-list never narrows a ranked search either: a signed-in reader
+/// who has opened every match still has the in-slice ones ranked and the
+/// rest served behind the seam (api-spec.md "The seen-list never narrows
+/// a search").
+///
+/// A ranked search ranks and serves what the reader has already seen.
+/// ´claim:search:a-ranked-search-keeps-what-the-reader-has-seen´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_ranked_search_keeps_what_the_reader_has_seen(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = search_fixture(&rig.pool).await;
+    rig.seed_member("reader", "reader@example.test").await;
+    let token = rig.log_in("reader@example.test").await;
+    let marked = rig
+        .gql(
+            Some(&token),
+            "mutation($nodes: [UUID!]!) { markSeen(input: { nodes: $nodes }) { ok } }",
+            json!({ "nodes": [f.near, f.near_exact, f.far] }),
+        )
+        .await;
+    assert_eq!(marked["markSeen"]["ok"], true, "{marked}");
+    pod.set(Mode::Answer(search_ranking(&[
+        (f.near, "POST", 0.2),
+        (f.near_exact, "POST", 0.9),
+    ])));
+    let page = rig
+        .gql(
+            Some(&token),
+            SEARCH,
+            json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer }),
+        )
+        .await["search"]
+        .clone();
+    assert_eq!(
+        sent_search_candidates(&pod),
+        HashSet::from([f.near, f.near_exact])
+    );
+    assert_eq!(
+        scored(&page),
+        vec![
+            (f.near, Some(0.2)),
+            (f.near_exact, Some(0.9)),
+            (f.far, None)
+        ]
+    );
+    assert_eq!(page["totalCount"], json!(3));
+}
+
 /// The tiers are the query's, not the ranker's (ExploreSearch.md:5): a
 /// full match stands before a partial one even when the ranker scored the
 /// partial one higher, and inside each tier the pod's order stands.

@@ -279,10 +279,22 @@ class StoresTest {
     @Test
     fun `explores_committed_filter_round_trips_per_account`() = runTest {
         val explore = ExploreDeviceStoreImpl(store())
-        val filter = SearchFilter(kinds = setOf(FeedKind.POST, FeedKind.TAG), order = SearchOrder.NEWEST, seen = true)
+        val filter = SearchFilter(kinds = setOf(FeedKind.POST, FeedKind.TAG), order = SearchOrder.NEWEST)
         explore.commitFilter("account-a", filter)
         assertThat(explore.committedFilter("account-a")).isEqualTo(filter)
         assertThat(explore.committedFilter(null)).isNull()
+    }
+
+    /** Seam 296: a filter kept while search still had a seen toggle reads past it, its kinds and order kept. */
+    @Test
+    fun `a_committed_filter_kept_with_a_seen_toggle_still_reads`() = runTest {
+        val encrypted = store()
+        encrypted.put(
+            "explore_filter:account-a",
+            """{"kinds":["POST"],"order":"NEWEST","seen":true}""".encodeToByteArray(),
+        )
+        assertThat(ExploreDeviceStoreImpl(encrypted).committedFilter("account-a"))
+            .isEqualTo(SearchFilter(kinds = setOf(FeedKind.POST), order = SearchOrder.NEWEST))
     }
 
     /**

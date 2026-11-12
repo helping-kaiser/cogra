@@ -3,6 +3,7 @@ package com.cogra.feature.onboarding
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.domain.InviteCheck
+import com.cogra.domain.InviterView
 import com.cogra.domain.Outcome
 import com.cogra.domain.extractInviteId
 import com.cogra.domain.repo.OnboardingRepository
@@ -16,7 +17,7 @@ import kotlinx.coroutines.launch
 /** Where a checked link sends the reader on (consumed once by the route). */
 sealed interface InviteEntryExit {
     /** The link checks out: Join opens holding it, under its inviter. */
-    data class Join(val inviteId: String, val inviterHandle: String) : InviteEntryExit
+    data class Join(val inviteId: String, val inviter: InviterView) : InviteEntryExit
 
     /** A link opened from outside the app is dead: the landing stays, one snackbar says so. */
     data object DeadArrival : InviteEntryExit
@@ -91,7 +92,7 @@ class InviteEntryViewModel @Inject constructor(
             is Outcome.Success -> when (val check = outcome.value) {
                 null -> refused(state, arrival)
                 else -> if (check.usable) {
-                    state.copy(exit = InviteEntryExit.Join(id, check.inviterHandle))
+                    state.copy(exit = InviteEntryExit.Join(id, check.inviter))
                 } else {
                     refused(state, arrival)
                 }

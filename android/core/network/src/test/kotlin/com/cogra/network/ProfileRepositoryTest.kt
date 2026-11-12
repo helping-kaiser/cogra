@@ -65,11 +65,13 @@ class ProfileRepositoryTest {
         target: String = "null",
         terminal: String = "null",
         pair: String = "0.4,0.3",
+        topic: String = "null",
     ): String {
         val (d, i) = pair.split(",")
         return """{"node":{"__typename":"Record","id":"$id","family":"$family","act":"$act",
            "targetId":"t","terminalId":null,"landedAt":"2026-10-20T10:00:00Z",
-           "pDirected":$d,"pInterest":$i,"severed":false,"target":$target,"terminal":$terminal}}"""
+           "pDirected":$d,"pInterest":$i,"severed":false,"target":$target,"terminal":$terminal,
+           "topic":$topic}}"""
     }
 
     @Test
@@ -89,7 +91,7 @@ class ProfileRepositoryTest {
                "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
         )
 
-        val page = (repo().authorRecords("u1", null, 20, null) as Outcome.Success).value.items
+        val page = (repo().authorRecords("u1", 20, null) as Outcome.Success).value.items
 
         val published = page[0]
         val walkedBack = page[1]
@@ -114,15 +116,41 @@ class ProfileRepositoryTest {
         assertThat(joined.act).isEqualTo(RecordAct.GENESIS)
     }
 
-    // ProfileHeader's figures (Q35, closed toward the drawn figures): three
-    // record counts, each a `totalCount` read with `first: 0`.
+    // copy-voice, the chronicle's verbs: a tag's aside is its topic, served as
+    // `Record.topic` since a Type is no Node; a withdrawn citation's act reads
+    // through, and an act this build does not know reads ordinary.
     @Test
-    fun theFiguresAreTheThreeRecordCounts() = runTest {
+    fun aRowCarriesItsTopicAndAWithdrawal() = runTest {
+        tokenStore.save(AuthTokens("a", "r", "u1"))
+        val post = """{"__typename":"Post","id":"p1","title":{"value":"Salt maps"},"content":{"value":"x"}}"""
+        val saltmaps = """{"__typename":"Hashtag","name":{"__typename":"ModeratedText","value":"saltmaps"}}"""
+        val rows = listOf(
+            record("r1", "TAG", "ORDINARY", target = post, topic = saltmaps, pair = "1,0.5"),
+            record("r2", "REFERENCE", "WITHDRAWAL", target = post, terminal = post, pair = "-0.5,-0.5"),
+            record("r3", "OPINION", "SOMETHING_NEWER", target = post),
+        ).joinToString(",")
+        enqueue(
+            """{"data":{"records":{"__typename":"RecordConnection","edges":[$rows],
+               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
+        )
+
+        val page = (repo().authorRecords("u1", 20, null) as Outcome.Success).value.items
+
+        assertThat(page[0].topic).isEqualTo("saltmaps")
+        assertThat(page[1].act).isEqualTo(RecordAct.WITHDRAWAL)
+        assertThat(page[1].topic).isNull()
+        assertThat(page[2].act).isEqualTo(RecordAct.ORDINARY)
+    }
+
+    // ProfileHeader's figures (Q35, ruled 2026-11-10): Posts a `totalCount`,
+    // the opinion figures `bundleCount`s over unmarked records, each `first: 0`.
+    @Test
+    fun theFiguresCountPostsAndTheBundlesOfOpinions() = runTest {
         enqueue(
             """{"data":{"user":{"__typename":"User","id":"u1",
                "posts":{"__typename":"RecordConnection","totalCount":5},
-               "opinionsOn":{"__typename":"RecordConnection","totalCount":9},
-               "opinionsBy":{"__typename":"RecordConnection","totalCount":null}}}}""",
+               "opinionsOn":{"__typename":"RecordConnection","bundleCount":9},
+               "opinionsBy":{"__typename":"RecordConnection","bundleCount":null}}}}""",
         )
         val figures = (repo().figures("u1") as Outcome.Success).value
         assertThat(figures.posts).isEqualTo(5)
@@ -132,6 +160,8 @@ class ProfileRepositoryTest {
         val sent = server.takeRequest().body.readUtf8()
         assertThat(sent).containsMatch("genesis:\\s*true")
         assertThat(sent).containsMatch("toKind:\\s*USER")
+        assertThat(sent).containsMatch("payloadMarked:\\s*false")
+        assertThat(sent).contains("bundleCount")
     }
 
     // -- The opinions page (ProfileStances): the whole set, folded to people --
@@ -214,6 +244,50 @@ class ProfileRepositoryTest {
         // An address no account fronts keeps its row, named by that address.
         assertThat(rows[1].holderId).isEqualTo("a-x")
         assertThat(server.takeRequest().body.readUtf8()).containsMatch("toKind:\\s*USER")
+    }
+
+    // THE POSTS VIEW'S READ (ProfilePosts.md:3): the person's genesis Publish
+    // records, a page at a time; a record whose target CoGra does not carry
+    // as a post is skipped, never a blank card.
+    @Test
+    fun thePostsViewSkipsARecordWithNoPostAndPagesOnItsCursor() = runTest {
+        enqueue(
+            """{"data":{"user":{"__typename":"User","id":"u2","posts":{"__typename":"RecordConnection",
+               "edges":[{"__typename":"RecordEdge","node":{"__typename":"Record","id":"r1","target":null}},
+                        {"__typename":"RecordEdge","node":{"__typename":"Record","id":"r2",
+                          "target":{"__typename":"User"}}}],
+               "pageInfo":{"__typename":"PageInfo","hasNextPage":true,"endCursor":"c2"}}}}}""",
+        )
+
+        val page = (repo().profilePosts("u2", after = "c1") as Outcome.Success).value
+
+        assertThat(page.items).isEmpty()
+        assertThat(page.hasNextPage).isTrue()
+        assertThat(page.endCursor).isEqualTo("c2")
+        val sent = server.takeRequest().body.readUtf8()
+        assertThat(sent).containsMatch("\"after\"\\s*:\\s*\"c1\"")
+        assertThat(sent).containsMatch("family:\\s*PUBLISH,\\s*toKind:\\s*POST,\\s*genesis:\\s*true")
+    }
+
+    // THE COMMENTS VIEW'S READ (ProfileComments.md:3): each comment's own
+    // genesis Review, its terminal the comment; anything else is skipped.
+    @Test
+    fun theCommentsViewSkipsARecordWithNoCommentAndAnUnknownPersonReadsEmpty() = runTest {
+        enqueue(
+            """{"data":{"user":{"__typename":"User","id":"u2","comments":{"__typename":"RecordConnection",
+               "edges":[{"__typename":"RecordEdge","node":{"__typename":"Record","id":"r1",
+                 "terminal":{"__typename":"Post"}}}],
+               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}}""",
+        )
+        enqueue("""{"data":{"user":null}}""")
+
+        val page = (repo().profileComments("u2", after = null) as Outcome.Success).value
+        val unknown = (repo().profileComments("nobody", after = null) as Outcome.Success).value
+
+        assertThat(page.items).isEmpty()
+        assertThat(server.takeRequest().body.readUtf8()).containsMatch("family:\\s*REVIEW,\\s*genesis:\\s*true")
+        assertThat(unknown.items).isEmpty()
+        assertThat(unknown.hasNextPage).isFalse()
     }
 
     @Test

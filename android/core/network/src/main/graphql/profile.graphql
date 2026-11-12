@@ -46,15 +46,17 @@ query MyProfile {
   }
 }
 
-# The chronicle rendered as labelled rows: family + genesis mark, a
-# snippet of the touched content, and the post to open. A record is a
-# genesis when its target/terminal is the mint of its own act id.
-# `act` is the server's reading of what the record did beyond its
-# family — GENESIS (a post published, a comment made, the account's
+# The chronicle — the tab row's right-most tab, Everything — rendered
+# as labelled rows: family + genesis mark, a snippet of the touched
+# content, and the post to open. The Posts and Comments tabs draw the
+# feed's own cards on reads of their own (ProfilePosts, ProfileComments).
+# A record is a genesis when its target/terminal is the mint of its own
+# act id. `act` is the server's reading of what the record did beyond
+# its family — GENESIS (a post published, a comment made, the account's
 # joining), WALK_BACK (every record a walk-back signed), VOUCH (the
 # vouch that landed someone), ORDINARY — the chronicle verbs' data.
-query AuthorRecords($author: UUID!, $family: RecordFamily, $first: Int!, $after: String) {
-  records(author: $author, family: $family, first: $first, after: $after) {
+query AuthorRecords($author: UUID!, $first: Int!, $after: String) {
+  records(author: $author, first: $first, after: $after) {
     edges {
       node {
         id
@@ -62,6 +64,13 @@ query AuthorRecords($author: UUID!, $family: RecordFamily, $first: Int!, $after:
         act
         targetId
         terminalId
+        # A Type is no Node, so a topic the record ends at — a Tag's, or an
+        # opinion's on a topic — is read here: the card's `#saltmaps` aside.
+        topic {
+          name {
+            value
+          }
+        }
         # The chronicle card's age, and an opinion's own face (Profile.md:23).
         landedAt
         pDirected
@@ -143,23 +152,109 @@ query AuthorRecords($author: UUID!, $family: RecordFamily, $first: Int!, $after:
   }
 }
 
-# The header's three figures (ProfileHeader; open-questions.md Q35):
-# record counts, each labelled and never merged, each a `totalCount`
-# with `first: 0` — the number without a page. `Posts` counts the
-# records that minted the person's posts (`genesis: true`), never an
-# edit; `Opinions on them` the Opinion records aimed at their profile;
-# `Opinions by them` the Opinion records they authored toward a person.
+# THE POSTS VIEW (ProfilePosts.md:3: "the posts view lists the person's
+# posts as post cards, never as chronicle entries"): the records that
+# minted the person's posts — each post's own Publish, never an edit
+# (`genesis: true`), the `Posts` figure's own records — in the mirror's
+# own order, newest first by landing, a still-settling post among them
+# (:5). Each edge's target is the post as the feed card reads it
+# (`FeedWindow`'s selection: `PostFields` and its comment count). A page
+# of TEN, web's twin's size (web/src/lib/graphql/profile.graphql): every
+# edge carries a whole card. The page size is a literal so the
+# client-operation guard (`crates/api/tests/client_operations.rs`) prices
+# the call the device makes.
+query ProfilePosts($id: UUID!, $after: String) {
+  user(id: $id) {
+    id
+    posts: outgoingRecords(family: PUBLISH, toKind: POST, genesis: true, first: 10, after: $after) {
+      edges {
+        node {
+          id
+          target {
+            __typename
+            ... on Post {
+              ...PostFields
+              # The card's comment count, pending comments counted as the
+              # thread it raises lists them.
+              commentCount: comments(first: 0, includePending: true) {
+                totalCount
+              }
+            }
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# THE COMMENTS VIEW (ProfileComments.md:3: "profile.comments lists the
+# person's comments, each a profile.comments.commentCard in reach of its
+# thread"): the records that made the person's comments — each comment's
+# own Review, never an edit (`genesis: true`), whether it answers a post
+# or a comment (no `toKind`: a Review's actor leg enters on the PARENT, so
+# `toKind: COMMENT` would keep the replies alone) — newest first by
+# landing. The Review's terminal is the comment, as the comment card reads
+# it everywhere (`HistoryPage`'s selection): the thread's own fields, what
+# it answers (the card's `On …` pointer) and its thread's post (where its
+# doors land) — and its replies' count, the "View n replies" line, priced
+# at `first: 0` as web's twin prices it. Ten a page, for the posts view's
+# reason.
+query ProfileComments($id: UUID!, $after: String) {
+  user(id: $id) {
+    id
+    comments: outgoingRecords(family: REVIEW, genesis: true, first: 10, after: $after) {
+      edges {
+        node {
+          id
+          terminal {
+            __typename
+            ... on Comment {
+              ...CommentFields
+              target {
+                ...CommentHeadFields
+              }
+              post {
+                id
+              }
+              replies(first: 0, includePending: true) {
+                totalCount
+              }
+            }
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# The header's three figures (ProfileHeader; open-questions.md Q35): they
+# count BUNDLES, never records (jakob 2026-11-10) — one person's opinions
+# toward one target are one, however often revised — each labelled and
+# never merged, each read with `first: 0`, the number without a page.
+# `Posts` is the records that minted the person's posts (`genesis: true`),
+# one per post, so its `totalCount` is its bundles; `Opinions on them` the
+# people holding an opinion on them and `Opinions by them` the people they
+# hold one on, each a `bundleCount` over the unmarked Opinion records —
+# exactly the rows the opinions page folds and lists.
 query ProfileFigures($id: UUID!) {
   user(id: $id) {
     id
     posts: outgoingRecords(family: PUBLISH, toKind: POST, genesis: true, first: 0) {
       totalCount
     }
-    opinionsOn: incomingRecords(family: OPINION, first: 0) {
-      totalCount
+    opinionsOn: incomingRecords(family: OPINION, payloadMarked: false, first: 0) {
+      bundleCount
     }
-    opinionsBy: outgoingRecords(family: OPINION, toKind: USER, first: 0) {
-      totalCount
+    opinionsBy: outgoingRecords(family: OPINION, toKind: USER, payloadMarked: false, first: 0) {
+      bundleCount
     }
   }
 }
