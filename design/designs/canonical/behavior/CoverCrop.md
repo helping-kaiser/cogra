@@ -18,7 +18,7 @@ WHEN press Next -> the cover is set AND the step that asked for it comes back AN
 
 WHEN press the header back arrow -> the step that asked for the cover comes back AND the picture goes unused
 
-WHEN press the header X GIVEN the crop was entered from a post's compose -> the whole flow is left AND the draft is kept AND NEVER a dialog asks
+WHEN press the header X GIVEN the crop was entered from a post's compose -> the whole flow is left for where the composer was opened from AND the draft is kept AND NEVER a dialog asks
 
 WHEN press the header X GIVEN the crop was entered from a post edit's cover row -> DiscardConfirm opens, as the edit's own X raises it AND NEVER the edit is discarded before the dialog is answered
 

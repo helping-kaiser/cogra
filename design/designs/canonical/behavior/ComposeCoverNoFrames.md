@@ -16,4 +16,4 @@ WHEN press the header back arrow GIVEN a cover came from the gallery -> the pick
 
 WHEN press the header back arrow GIVEN no cover was chosen -> the pick step comes back with the clip staged
 
-WHEN press the header X -> the whole flow is left AND the draft is kept AND NEVER a dialog asks
+WHEN press the header X -> the whole flow is left for where the composer was opened from AND the draft is kept AND NEVER a dialog asks

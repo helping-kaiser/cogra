@@ -38,7 +38,7 @@ WHEN press the header back arrow GIVEN the crop was entered from compose's pick 
 
 WHEN press the header back arrow GIVEN the crop was entered from an edit -> the edit comes back as it was left AND the pictures go unused AND NEVER a pick stage opens
 
-WHEN press the header X GIVEN the crop was entered from compose's pick step -> the whole flow is left AND the draft is kept AND NEVER a dialog asks
+WHEN press the header X GIVEN the crop was entered from compose's pick step -> the whole flow is left for where the composer was opened from AND the draft is kept AND NEVER a dialog asks
 
 WHEN press the header X GIVEN the crop was entered from an edit -> DiscardConfirm opens, as the edit's own X raises it AND NEVER the edit is discarded before the dialog is answered
 
