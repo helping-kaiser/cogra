@@ -49,10 +49,19 @@ const confirmRefused = (code: string) =>
     }),
   );
 
-function fillConfirm(password = "long enough password") {
-  fireEvent.change(screen.getByTestId("reset_password"), { target: { value: password } });
-  fireEvent.click(screen.getByTestId("reset_confirm"));
+const newInput = (field: "password" | "confirm") => screen.getByTestId(`reset.${field}.input`);
+const typeIn = (field: "password" | "confirm", value: string) =>
+  fireEvent.change(newInput(field), { target: { value } });
+const pressSet = () => fireEvent.click(screen.getByTestId("reset.commit.action"));
+
+/** The new password typed into both fields (or the repeat as given), then the press. */
+function fillConfirm(password = "long enough password", repeat = password) {
+  typeIn("password", password);
+  typeIn("confirm", repeat);
+  pressSet();
 }
+
+const MISMATCH = "The two passwords don't match.";
 
 function requestFor(email = "a@b.c") {
   fireEvent.change(screen.getByTestId("reset_email"), { target: { value: email } });
@@ -131,7 +140,7 @@ describe("the new password (ResetNew)", () => {
     nav.search = "token=token-1";
   });
 
-  it("holds the link's own secret and never asks for it; no header, one field, one commitment", async () => {
+  it("holds the link's own secret and never asks for it; no header, the new password twice, one commitment", async () => {
     await renderNew();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Set a new password");
     expect(
@@ -166,8 +175,102 @@ describe("the new password (ResetNew)", () => {
     fillConfirm("short");
     expect(await screen.findByText("A password is at least 12 characters.")).toBeInTheDocument();
     expect(screen.queryByText("At least 12 characters.")).not.toBeInTheDocument();
-    fireEvent.change(screen.getByTestId("reset_password"), { target: { value: "long enough password" } });
+    typeIn("password", "long enough password");
     expect(screen.queryByText("A password is at least 12 characters.")).not.toBeInTheDocument();
+  });
+
+  // ResetNew.md: "ALWAYS the screen holds two password fields, New password
+  // and under it Repeat password, masked alike, each with its own reveal
+  // control, and one commitment" · "ALWAYS Repeat password carries no hint".
+  it("holds_new_password_and_under_it_repeat_password_masked_alike_the_repeat_with_no_hint", async () => {
+    await renderNew();
+    const fields = screen.getAllByLabelText(/password$/i, { selector: "input" });
+    expect(fields.map((field) => field.getAttribute("data-testid"))).toEqual(["reset.password.input", "reset.confirm.input"]);
+    expect(screen.getByTestId("reset.confirm.label")).toHaveTextContent("Repeat password");
+    expect(newInput("password")).toHaveAttribute("type", "password");
+    expect(newInput("confirm")).toHaveAttribute("type", "password");
+    expect(newInput("password")).toHaveAttribute("enterkeyhint", "next");
+    expect(newInput("confirm")).toHaveAttribute("enterkeyhint", "go");
+    expect(newInput("confirm")).toHaveAttribute("autocomplete", "new-password");
+    expect(screen.queryByTestId("reset.confirm.support")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /^(Show|Hide) password$/ })).toHaveLength(2);
+    fireEvent.click(screen.getByTestId("reset.confirm.reveal"));
+    expect(newInput("confirm")).toHaveAttribute("type", "text");
+    expect(screen.getByTestId("reset.confirm.reveal")).toHaveAccessibleName("Hide password");
+    expect(newInput("password")).toHaveAttribute("type", "password");
+    expect(screen.getByTestId("reset.title")).toHaveTextContent("Set a new password");
+    expect(screen.getByTestId("reset.note")).toHaveTextContent(SIGN_IN_ONLY);
+  });
+
+  // ResetNew.md: "ALWAYS Set the new password stands disabled with Waiting
+  // for a new password right above it GIVEN New password or Repeat password
+  // is empty" · "WHEN both password fields hold a character -> Set the new
+  // password wakes AND the line Waiting for a new password goes".
+  it("set_the_new_password_waits_until_both_fields_hold_a_character", async () => {
+    await renderNew();
+    const commit = screen.getByTestId("reset.commit.action");
+    expect(commit).toBeDisabled();
+    expect(screen.getByTestId("reset.commit.reason")).toHaveTextContent("Waiting for a new password");
+    typeIn("password", "x");
+    expect(commit).toBeDisabled();
+    expect(screen.getByTestId("reset.commit.reason")).toBeInTheDocument();
+    typeIn("confirm", "y");
+    expect(commit).toBeEnabled();
+    expect(screen.queryByTestId("reset.commit.reason")).not.toBeInTheDocument();
+  });
+
+  // ResetNew.md: "WHEN press Set the new password GIVEN Repeat password
+  // differs from New password -> Repeat password's line reads The two
+  // passwords don't match. AND the field takes the error state AND NEVER the
+  // password changes".
+  it("a_repeat_that_differs_reads_on_the_repeat_field_and_the_password_never_changes", async () => {
+    const asked = vi.fn();
+    server.use(
+      gqlLink.mutation("ConfirmPasswordReset", () => {
+        asked();
+        return HttpResponse.json({
+          data: { confirmPasswordReset: { __typename: "ConfirmPasswordResetPayload", ok: true, userErrors: [] } },
+        });
+      }),
+    );
+    await renderNew();
+    fillConfirm("long enough password", "long enough passwrod");
+    expect(await screen.findByTestId("reset.confirm.support")).toHaveTextContent(MISMATCH);
+    expect(newInput("confirm")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByTestId("reset.confirm.label")).toHaveClass("text-error");
+    expect(screen.getByTestId("reset.password.support")).toHaveTextContent("At least 12 characters.");
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(asked).not.toHaveBeenCalled();
+    expect(nav.replace).not.toHaveBeenCalled();
+  });
+
+  // ResetNew.md: "WHEN typing in New password or Repeat password GIVEN
+  // Repeat password carries The two passwords don't match. -> the line
+  // re-checks as the text changes AND it goes once the two passwords match".
+  it("the_mismatch_line_rechecks_as_either_field_changes_and_goes_once_they_match", async () => {
+    await renderNew();
+    fillConfirm("long enough password", "long enough");
+    expect(await screen.findByTestId("reset.confirm.support")).toHaveTextContent(MISMATCH);
+    typeIn("confirm", "long enough pass");
+    expect(screen.getByTestId("reset.confirm.support")).toHaveTextContent(MISMATCH);
+    typeIn("password", "long enough pass");
+    expect(screen.queryByTestId("reset.confirm.support")).not.toBeInTheDocument();
+    typeIn("confirm", "long enough pas");
+    expect(screen.queryByTestId("reset.confirm.support")).not.toBeInTheDocument();
+  });
+
+  it("a_short_and_a_differing_password_each_answer_on_their_own_field", async () => {
+    await renderNew();
+    fillConfirm("short", "shirt");
+    expect(await screen.findByTestId("reset.confirm.support")).toHaveTextContent(MISMATCH);
+    expect(screen.getByTestId("reset.password.support")).toHaveTextContent("A password is at least 12 characters.");
+  });
+
+  it("typing_never_marks_a_field_before_the_press", async () => {
+    await renderNew();
+    typeIn("password", "short");
+    typeIn("confirm", "shirt");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("a_breached_password_reads_on_the_field", async () => {
@@ -177,7 +280,7 @@ describe("the new password (ResetNew)", () => {
     expect(
       await screen.findByText("That password has turned up in a data breach — pick another one."),
     ).toBeInTheDocument();
-    expect(screen.getByTestId("reset_password")).toHaveAttribute("aria-invalid", "true");
+    expect(newInput("password")).toHaveAttribute("aria-invalid", "true");
   });
 
   it("renders a rate-limited confirm as a backoff, not a connectivity failure", async () => {
@@ -193,7 +296,8 @@ describe("the new password (ResetNew)", () => {
     await renderNew();
     fillConfirm();
     expect(await screen.findByRole("alert")).toHaveTextContent("That didn't send. Try again.");
-    expect(screen.getByTestId("reset_password")).toHaveValue("long enough password");
+    expect(newInput("password")).toHaveValue("long enough password");
+    expect(newInput("confirm")).toHaveValue("long enough password");
   });
 });
 
