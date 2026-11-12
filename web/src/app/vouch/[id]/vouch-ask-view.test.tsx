@@ -23,6 +23,7 @@ import {
   userError,
 } from "@/test/invites";
 import { gqlLink, startMswServer } from "@/test/msw";
+import { expectWrapsWithUnits, LONG_HANDLE } from "@/test/names";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
 import { VouchAskView } from "./vouch-ask-view";
@@ -303,5 +304,22 @@ describe("the dead ends (behavior/VouchAskInvalid.md, VouchAskUnusable.md)", () 
     expect(door).toHaveTextContent("See @noor's profile");
     fireEvent.click(door);
     expect(push).toHaveBeenCalledWith("/u/noor");
+  });
+});
+
+describe("a long handle (behavior/NamesLong.md:11-17)", () => {
+  it("the ask card's title wraps and keeps the handle one unit (VouchAsk.jsx:71-72)", async () => {
+    asMember({ usable: true, applicantHandle: LONG_HANDLE, reason: null });
+    const title = await screen.findByTestId("vouchAsk.ask.title");
+    expect(title).toHaveTextContent(`@${LONG_HANDLE} is asking to be vouched in`);
+    expect(title.className).toContain("min-w-0");
+    expectWrapsWithUnits(title, [`@${LONG_HANDLE}`]);
+  });
+
+  it("the landed heading wraps and keeps the handle one unit", async () => {
+    asMember({ usable: false, applicantHandle: LONG_HANDLE, reason: "LANDED" });
+    const title = await screen.findByTestId("vouchAsk.title");
+    expect(title).toHaveTextContent(`@${LONG_HANDLE} is already in`);
+    expectWrapsWithUnits(title, [`@${LONG_HANDLE}`]);
   });
 });
