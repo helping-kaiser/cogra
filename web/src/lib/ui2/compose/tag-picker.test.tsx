@@ -3,7 +3,7 @@
 // TagPickerRefused.md). The picker is driven through a host that holds the
 // composer's tags, so a stage made here is the composer's at once.
 
-import { act, fireEvent, screen, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -16,6 +16,7 @@ import {
   TAG_NAME_LENGTH_REFUSAL,
   TAG_NAME_RULE,
 } from "@/lib/topics/picker";
+import { answerLog } from "@/test/answers";
 import { byNode } from "@/test/data-node";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
@@ -23,10 +24,14 @@ import { renderWithProviders } from "@/test/providers";
 import { TagPicker } from "./tag-picker";
 import type { PickerOrigin } from "./picker-rows";
 
+// Every index read the handlers below answer, for the reads that wait on it.
+const { answer: noteRead, answered } = answerLog();
+
 /** The index answers the names in use that start with the typed one. */
 function tagNames(...names: readonly string[]) {
-  return gqlLink.query("TagNames", () =>
-    HttpResponse.json({
+  return gqlLink.query("TagNames", () => {
+    noteRead();
+    return HttpResponse.json({
       data: {
         search: {
           __typename: "SearchConnection",
@@ -40,8 +45,8 @@ function tagNames(...names: readonly string[]) {
           })),
         },
       },
-    }),
-  );
+    });
+  });
 }
 
 // An index that knows no names is the default; a test that needs rows says so.
@@ -86,19 +91,16 @@ const stagedNames = () =>
 const rowNames = () =>
   screen.queryAllByTestId(byNode("tagPicker.tag")).map((row) => row.getAttribute("data-testid-key"));
 
-/** Let the zero-wait index answer. */
-async function settle() {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 20));
-  });
-}
+// The index's answer is awaited, never slept on (test/answers.ts): the typed
+// name's row stands at once, the index's rows join it when the read answers.
+const showing = (expected: readonly (string | null)[]) => waitFor(() => expect(rowNames()).toEqual(expected));
 
 describe("TagPicker", () => {
   it("puts the canonicalized typed name first while it is a legal name", async () => {
     indexServes("saltmaps", "saltcrust");
     renderWithProviders(<Host />);
     type("#SaltMaps");
-    await settle();
+    await showing(["saltmaps", "saltcrust"]);
     // TagPickerTyping.md: the typed name canonicalized, with Signs as #name as
     // its second line; a name in use that IS the typed name stands as the
     // first row alone, never listed twice; the index's rows under it.
@@ -112,11 +114,12 @@ describe("TagPicker", () => {
   it("follows the name as it is typed", async () => {
     indexServes();
     renderWithProviders(<Host />);
+    // The index knows nothing, so the typed row stands alone once it answers.
     type("sa");
-    await settle();
+    await answered(1);
     expect(rowNames()).toEqual(["sa"]);
     type("salt");
-    await settle();
+    await answered(2);
     expect(rowNames()).toEqual(["salt"]);
   });
 
@@ -131,7 +134,7 @@ describe("TagPicker", () => {
     indexServes("saltmarsh", "saltmaps");
     renderWithProviders(<Host initial={[draft("saltmarsh")]} />);
     type("salt");
-    await settle();
+    await showing(["salt", "saltmaps"]);
     expect(stagedNames()).toEqual(["saltmarsh"]);
     expect(rowNames()).toEqual(["salt", "saltmaps"]);
   });
@@ -166,7 +169,7 @@ describe("TagPicker", () => {
     const spy = vi.fn();
     renderWithProviders(<Host spy={spy} />);
     type("salt");
-    await settle();
+    await showing(["salt", "saltmaps", "saltcrust"]);
     fireEvent.click(screen.getByTestId(byNode("tagPicker.tag", "saltcrust")));
     expect(spy).toHaveBeenLastCalledWith([draft("saltcrust")]);
     expect(stagedNames()).toEqual(["saltcrust"]);
@@ -180,7 +183,8 @@ describe("TagPicker", () => {
     const onDone = vi.fn();
     renderWithProviders(<Host initial={[draft("saltflats")]} spy={spy} onDone={onDone} />);
     type("salt");
-    await settle();
+    // The index answers only the staged name, so nothing new appears to wait on.
+    await answered();
     fireEvent.click(screen.getByRole("button", { name: "Remove saltflats" }));
     expect(spy).toHaveBeenLastCalledWith([]);
     expect(stagedNames()).toEqual([]);
@@ -275,7 +279,7 @@ describe("TagPicker — a refused name", () => {
     renderWithProviders(<Host />);
     type("#salt maps");
     type("#saltmaps");
-    await settle();
+    await answered();
     expect(rowNames()).toEqual(["saltmaps"]);
     expect(screen.getByTestId(byNode("tagPicker.rule"))).toHaveTextContent(TAG_NAME_RULE);
     expect(field()).not.toHaveAttribute("aria-invalid");
@@ -306,7 +310,7 @@ describe("TagPicker — the state chip's cap and fault (rounds 24-25)", () => {
     indexServes("saltmaps");
     renderWithProviders(<Host initial={ten} />);
     type("salt");
-    await settle();
+    await showing(["salt", "saltmaps"]);
     const cap = screen.getByTestId(byNode("tagPicker.cap"));
     expect(cap).toHaveTextContent("Up to 10 tags per post.");
     // Above the list: the line precedes the typed name's row.
@@ -327,7 +331,7 @@ describe("TagPicker — the state chip's cap and fault (rounds 24-25)", () => {
     const spy = vi.fn();
     renderWithProviders(<Host initial={ten} spy={spy} />);
     type("salt");
-    await settle();
+    await showing(["salt", "saltmaps"]);
     const rows = screen.getAllByTestId(byNode("tagPicker.tag"));
     expect(rows.map((row) => row.getAttribute("data-testid-key"))).toEqual(["salt", "saltmaps"]);
     for (const row of rows) {
@@ -352,7 +356,7 @@ describe("TagPicker — the state chip's cap and fault (rounds 24-25)", () => {
   it(":35 a staged × at the cap un-stages, the cap leaves, and the list takes taps again", async () => {
     renderWithProviders(<Host initial={ten} />);
     type("salt");
-    await settle();
+    await answered();
     fireEvent.click(within(screen.getAllByTestId(byNode("tagPicker.staged.tag"))[0]!).getByRole("button"));
     expect(stagedNames()).toHaveLength(9);
     expect(screen.queryByTestId(byNode("tagPicker.cap"))).not.toBeInTheDocument();
@@ -371,9 +375,8 @@ describe("TagPicker — the state chip's cap and fault (rounds 24-25)", () => {
     server.use(failingIndex());
     renderWithProviders(<Host />);
     type("salt");
-    await settle();
+    const fault = await screen.findByTestId(byNode("tagPicker.fault"));
     expect(rowNames()).toEqual(["salt"]);
-    const fault = screen.getByTestId(byNode("tagPicker.fault"));
     expect(fault).toHaveTextContent("Can't reach the server — tags can't load right now.");
     expect(fault.textContent).not.toMatch(/try again/i);
     const retry = within(fault).getByTestId(byNode("tagPicker.fault.retry"));
@@ -388,12 +391,11 @@ describe("TagPicker — the state chip's cap and fault (rounds 24-25)", () => {
     server.use(failingIndex(() => (calls += 1)));
     renderWithProviders(<Host />);
     type("salt");
-    await settle();
+    await screen.findByTestId(byNode("tagPicker.fault"));
     expect(calls).toBe(1);
     indexServes("saltmaps");
     fireEvent.click(screen.getByTestId(byNode("tagPicker.fault.retry")));
-    await settle();
-    expect(rowNames()).toEqual(["salt", "saltmaps"]);
+    await showing(["salt", "saltmaps"]);
     expect(screen.queryByTestId(byNode("tagPicker.fault"))).not.toBeInTheDocument();
   });
 
@@ -403,7 +405,7 @@ describe("TagPicker — the state chip's cap and fault (rounds 24-25)", () => {
     renderWithProviders(<Host />);
     type("salt");
     expect(screen.queryByTestId(byNode("tagPicker.fault"))).not.toBeInTheDocument();
-    await settle();
+    await answered();
     expect(rowNames()).toEqual(["salt"]);
     expect(screen.queryByTestId(byNode("tagPicker.fault"))).not.toBeInTheDocument();
     expect(screen.queryByTestId(byNode("tagPicker.cap"))).not.toBeInTheDocument();

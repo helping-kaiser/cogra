@@ -15,6 +15,7 @@ import { detailRoot } from "@/app/shell";
 import { createTokenStore } from "@/lib/session/token-store";
 import { CLEAR_SEARCH } from "@/lib/ui2/search-bar";
 import { byNode } from "@/test/data-node";
+import { settleFetches } from "@/test/fetch";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import {
@@ -378,12 +379,19 @@ describe("Explore at rest", () => {
   });
 
   it("explore_md_41_the_door_prints_no_count_it_could_not_read", async () => {
-    server.use(gqlLink.query("HeldTopicsCount", () => HttpResponse.error()));
+    // The count's absence is read once its failed read has answered and been
+    // delivered, never after a guessed sleep.
+    let counted = 0;
+    server.use(
+      gqlLink.query("HeldTopicsCount", () => {
+        counted += 1;
+        return HttpResponse.error();
+      }),
+    );
     renderExplore();
     const door = screen.getByTestId(byNode("explore.topics"));
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 30));
-    });
+    await waitFor(() => expect(counted).toBe(1));
+    await act(() => settleFetches());
     expect(within(door).queryByTestId(byNode("explore.topics.second"))).toBeNull();
     expect(within(door).getByRole("link")).toHaveAttribute("href", "/explore/topics");
   });
