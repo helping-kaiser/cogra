@@ -91,8 +91,8 @@ impl PreSigned {
     /// "Approval witness", then the witness over the encoded verified act
     /// and its seal.
     ///
-    /// Exact equality of the returned body, P and pre-signature with what
-    /// was pre-signed; the editions; the host seal; and both commitments
+    /// Exact equality of the returned body's canonical bytes, P and
+    /// pre-signature with what was pre-signed; the editions; the host seal; and both commitments
     /// recomputed from material the device holds itself — C_c over its own
     /// content pre-digest from the payload and content nonce, C_d over its
     /// own canonical dependency encoding — with the returned salts. A
@@ -106,7 +106,9 @@ impl PreSigned {
         host_pubkey: &[u8],
     ) -> Result<ApprovalWitness, ClientError> {
         let act = &sealed.act;
-        if act.body != self.proposal.body || act.pre_signature != self.pre_signature {
+        if act.body.canonical_bytes() != self.proposal.body.canonical_bytes()
+            || act.pre_signature != self.pre_signature
+        {
             return Err(refuse("host returned a different act than was pre-signed"));
         }
         let pre_commitment = self.pre_commitment();
