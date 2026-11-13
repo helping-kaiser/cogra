@@ -40,15 +40,22 @@
    draw it — `2h`, the removal's own moment, never the comment's `4d`.
 
    THE FIRST PAGE'S OTHER MOMENTS (round 45) are the `load` chip,
-   `ProfileTabFirstPage`'s, as on `ProfilePosts`. */
+   `ProfileTabFirstPage`'s, as on `ProfilePosts`.
+
+   AN APPLICANT'S REPLY (the `reader` chip; jakob 2026-11-13, seam 320-2, 3b —
+   this tab is the ruling's model): every card's `Reply` wears the locked
+   look and answers on the card, `You can comment once you're in.`, drawn as
+   the snackbar it raises (`snackbar`, the profile's own) — as on `FeedKinds`,
+   `History` and the thread (`ReplyEntry`). */
 export const NODE = "profile";
 const ADA_COMMENT_ID = "5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e";
 const ADA_SECOND_COMMENT_ID = "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f";
 export const PROPS = {
   comments: { editor: "enum", options: ["some", "none", "removed"], default: "some" },
   load: { editor: "enum", options: ["loaded", "loading", "failed"], default: "loaded" },
+  reader: { editor: "enum", options: ["member", "applicant"], default: "member" },
 };
-export const VALS = `someShown: this.props.load === "loaded" && this.props.comments !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "flex" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", secondLive: this.props.comments === "removed" ? "none" : "contents", secondRemoved: this.props.comments === "removed" ? "contents" : "none"`;
+export const VALS = `someShown: this.props.load === "loaded" && this.props.comments !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "flex" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", secondLive: this.props.comments === "removed" ? "none" : "contents", secondRemoved: this.props.comments === "removed" ? "contents" : "none", lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none"`;
 
 export function Screen() {
   return (
@@ -84,6 +91,7 @@ export function Screen() {
             replyCount={2}
             onOpenReplies={() => {}}
             onReply={() => {}}
+            replyOpacity="{{lockOpacity}}"
             target="“The long way home” — @ada"
             onOpenTarget={() => {}}
             menuItems={COMMENT_CARD_MENU}
@@ -98,6 +106,8 @@ export function Screen() {
               license={{ attribution: 0, provenance: 0 }}
               onOpenReplies={() => {}}
               onReply={() => {}}
+              replyOpacity="{{lockOpacity}}"
+            replyOpacity="{{lockOpacity}}"
               target="“Salt maps of the coast road” — @sol"
               onOpenTarget={() => {}}
               menuItems={COMMENT_CARD_MENU}
@@ -115,6 +125,8 @@ export function Screen() {
               redacted={{ reason: "author", when: "2h" }}
               menuItems={COMMENT_CARD_MENU}
               onReply={() => {}}
+              replyOpacity="{{lockOpacity}}"
+            replyOpacity="{{lockOpacity}}"
               target="“Salt maps of the coast road” — @sol"
               onOpenTarget={() => {}}
               node="commentCard"
@@ -129,6 +141,9 @@ export function Screen() {
         </div>
       </div>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
+      <div style={{ display: "{{lockedLine}}" }}>
+        <Snackbar message="You can comment once you're in." node="snackbar" />
+      </div>
     </>
   );
 }
