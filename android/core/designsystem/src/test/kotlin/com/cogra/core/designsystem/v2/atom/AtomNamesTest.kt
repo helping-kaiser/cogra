@@ -153,7 +153,8 @@ class AtomNamesTest {
         compose.setContent {
             Cogra2PreviewTheme { EmptyState(testTag = "empty", title = "No opinions by $handle yet.") }
         }
-        compose.onNodeWithTag("empty").assert(unitsAre("$handle."))
+        // `yet.` — the stop is the sentence's, not the handle's.
+        compose.onNodeWithTag("empty").assert(unitsAre(handle))
     }
 
     @Test
