@@ -218,7 +218,7 @@ author's own per-content removal, the author's account deletion
 mechanics live in [moderation.md](moderation.md),
 [erasure.md](erasure.md), and
 [retention-archive.md](../primitive/retention-archive.md). A full
-deletion sweeps payload and salt across the whole revision chain —
+deletion sweeps payload, content nonce and salt across the whole revision chain —
 the genesis payload and every edit record's payload (§4) — while
 every structural record stays; a single superseded revision can
 also be removed alone
