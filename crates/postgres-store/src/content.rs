@@ -626,26 +626,107 @@ async fn discard_pending_thread(
     Ok(())
 }
 
-/// Stores an act's payload bytes and private value — permanent carriage,
-/// promoted from the staged row at confirm (layers.md §5). Idempotent on
-/// the act id: a re-promotion (mirror rebuild) keeps the first row.
-pub async fn insert_act_payload(
+/// A full carriage row's content: the content pair (payload, content
+/// nonce) and the host-drawn content salt (layer1-interface.md §8.2,
+/// "Verified act"). The salt and the content pre-digest the pair
+/// reproduces open the record's witness.
+#[derive(Debug, Clone, Copy)]
+pub struct CarriedPair<'a> {
+    pub payload: &'a [u8],
+    pub content_nonce: &'a [u8],
+    pub content_salt: &'a [u8],
+}
+
+/// The payload mark follows carriage (data-model.md "The record mirror"):
+/// a record is payload-marked exactly when its act has a carriage row,
+/// full or reduced. Ingestion reads it when the record arrives
+/// ([`crate::mirror::ingest_epoch`]); a carriage row written after that —
+/// a promotion that missed the ingestion, a genesis resume — marks the
+/// record in the same transaction, so a rebuild from the published
+/// sequence reads the same mark the live mirror holds.
+async fn mark_carried(conn: &mut sqlx::PgConnection, act_id: &str) -> Result<(), ContentError> {
+    sqlx::query!(
+        "UPDATE mirror_records SET payload_marked = TRUE
+         WHERE record_id = $1 AND NOT payload_marked",
+        act_id,
+    )
+    .execute(conn)
+    .await?;
+    Ok(())
+}
+
+/// Promotes the staged carriage of the given acts into `act_payloads`:
+/// every staged write among them that holds a sealed, non-empty content
+/// pair gets its full carriage row. Runs inside the ingestion's
+/// transaction, before the records are inserted, so the payload mark is
+/// read off carriage that already stands. Idempotent: a row already
+/// there — full or reduced — is kept. A full-empty payload, a write never
+/// sealed and one a redaction reaped promote nothing here; the reap left
+/// its own reduced row.
+///
+/// The staged rows are read `FOR SHARE`, which conflicts with the
+/// redaction's `FOR UPDATE` on the same row. That orders the two against
+/// each other (PostgreSQL manual, "Explicit Locking: Row-Level Locks"
+/// and "Transaction Isolation: Read Committed"). If a redaction holds
+/// the row, this read waits for it and then re-checks its `WHERE` on the
+/// reaped version, so it promotes nothing. If this read holds the row,
+/// the redaction waits for the ingestion to commit and then reduces the
+/// full row it finds. Without the lock, a plain read of a payload being
+/// reaped would land a full row under a redaction that reports it
+/// reduced.
+///
+/// The lock cannot deadlock with a redaction. `ON CONFLICT DO NOTHING`
+/// does wait on a conflicting insert that has not committed yet, but
+/// every flow takes the staged row before it can wait on a carriage row.
+/// This statement locks the staged row in the same statement that
+/// inserts the carriage row, and the redaction locks it before it
+/// writes carriage. So neither ever waits on the other while holding
+/// what the other needs.
+pub async fn promote_staged_carriage(
     tx: &mut Transaction<'_, Postgres>,
-    act_id: &str,
-    payload: &[u8],
-    content_salt: &[u8],
+    act_ids: &[String],
 ) -> Result<(), ContentError> {
     sqlx::query!(
-        "INSERT INTO act_payloads (act_id, payload, content_salt)
-         VALUES ($1, $2, $3)
+        "INSERT INTO act_payloads (act_id, payload, content_nonce, content_salt)
+         SELECT act_id, payload, content_nonce, content_salt
+         FROM staged_writes
+         WHERE act_id = ANY($1) AND state <> 'carried'
+           AND length(payload) > 0
+           AND content_nonce IS NOT NULL AND content_salt IS NOT NULL
+         FOR SHARE
          ON CONFLICT (act_id) DO NOTHING",
-        act_id,
-        payload,
-        content_salt,
+        act_ids,
     )
     .execute(&mut **tx)
     .await?;
     Ok(())
+}
+
+/// Stores an act's content pair and salt — permanent carriage, promoted
+/// from the staged row at confirm (layers.md §5). Idempotent on the act
+/// id: a re-promotion (mirror rebuild) keeps the first row. Marks the
+/// record (see [`mark_carried`]). Returns whether this call inserted the
+/// row, as opposed to finding one already there.
+pub async fn insert_act_payload(
+    tx: &mut Transaction<'_, Postgres>,
+    act_id: &str,
+    pair: CarriedPair<'_>,
+) -> Result<bool, ContentError> {
+    let inserted = sqlx::query!(
+        "INSERT INTO act_payloads (act_id, payload, content_nonce, content_salt)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (act_id) DO NOTHING",
+        act_id,
+        pair.payload,
+        pair.content_nonce,
+        pair.content_salt,
+    )
+    .execute(&mut **tx)
+    .await?
+    .rows_affected()
+        == 1;
+    mark_carried(tx, act_id).await?;
+    Ok(inserted)
 }
 
 /// Stores a genesis act's carriage, replacing a full row already held
@@ -655,55 +736,62 @@ pub async fn insert_act_payload(
 /// row follows the act's current sealing: a stand-in substrate wiped and
 /// re-sealed under the same identifier returns a fresh salt, and the
 /// carriage has to open the witness the host holds now. A reduced row is
-/// never replaced.
+/// never replaced. The caller moves the content nonce out of the
+/// bootstrap's handshake custody on the same transaction
+/// ([`crate::genesis::take_carried_content_nonce`]) — the pair has one
+/// home at a time.
 pub async fn put_genesis_act_payload(
     tx: &mut Transaction<'_, Postgres>,
     act_id: &str,
-    payload: &[u8],
-    content_salt: &[u8],
+    pair: CarriedPair<'_>,
 ) -> Result<(), ContentError> {
     sqlx::query!(
-        "INSERT INTO act_payloads (act_id, payload, content_salt)
-         VALUES ($1, $2, $3)
+        "INSERT INTO act_payloads (act_id, payload, content_nonce, content_salt)
+         VALUES ($1, $2, $3, $4)
          ON CONFLICT (act_id) DO UPDATE
-         SET payload = EXCLUDED.payload, content_salt = EXCLUDED.content_salt
+         SET payload = EXCLUDED.payload, content_nonce = EXCLUDED.content_nonce,
+             content_salt = EXCLUDED.content_salt
          WHERE act_payloads.payload_state = 'full'",
         act_id,
-        payload,
-        content_salt,
+        pair.payload,
+        pair.content_nonce,
+        pair.content_salt,
     )
     .execute(&mut **tx)
     .await?;
-    Ok(())
+    mark_carried(tx, act_id).await
 }
 
-/// Records the carriage of an act whose payload was reduced before its
-/// record landed: the row exists, in `reduced`, holding nothing.
+/// Records the carriage of an act whose payload was reduced before it
+/// was promoted: the row exists, in `reduced`, holding nothing.
 ///
-/// A redaction reaps the staged copy of an act that has not landed yet;
-/// when its record lands after that, the landing has no bytes to promote
-/// and must not invent any — zero bytes is the canonical empty payload,
-/// so an empty row would claim the act carried nothing. Idempotent on the
-/// act id, like the full promotion: a row already there is kept.
+/// A redaction reaps the staged copy of an act that has not landed yet,
+/// and records its carriage reduced in the same transaction; a landing
+/// over it then has no bytes to promote and must not invent any — zero
+/// bytes is the canonical empty payload, so an empty row would claim the
+/// act carried nothing. Idempotent on the act id, like the full promotion:
+/// a row already there is kept. Marks the record (see [`mark_carried`]).
 ///
 /// `reduced_at` is the moment the redaction reaped the staged copy — when
 /// the payload actually left — not the landing's: the record's
 /// `redactedAt` is the mark's own moment, and the landing only records it.
+/// None is the transaction's own moment, for the redaction itself.
 pub async fn insert_reduced_act_payload(
     tx: &mut Transaction<'_, Postgres>,
     act_id: &str,
-    reduced_at: Timestamp,
+    reduced_at: Option<Timestamp>,
 ) -> Result<(), ContentError> {
     sqlx::query!(
-        "INSERT INTO act_payloads (act_id, payload, content_salt, payload_state, reduced_at)
-         VALUES ($1, NULL, NULL, 'reduced', $2)
+        "INSERT INTO act_payloads
+             (act_id, payload, content_nonce, content_salt, payload_state, reduced_at)
+         VALUES ($1, NULL, NULL, NULL, 'reduced', COALESCE($2::timestamptz, NOW()))
          ON CONFLICT (act_id) DO NOTHING",
         act_id,
         reduced_at,
     )
     .execute(&mut **tx)
     .await?;
-    Ok(())
+    mark_carried(tx, act_id).await
 }
 
 /// Locks one act's carriage row for a redaction and reads it.
@@ -712,7 +800,7 @@ pub async fn lock_act_payload(
     act_id: &str,
 ) -> Result<Option<ActPayload>, ContentError> {
     Ok(sqlx::query!(
-        "SELECT payload, content_salt, payload_state, reduced_at
+        "SELECT payload, content_nonce, content_salt, payload_state, reduced_at
          FROM act_payloads WHERE act_id = $1
          FOR UPDATE",
         act_id,
@@ -721,23 +809,26 @@ pub async fn lock_act_payload(
     .await?
     .map(|row| ActPayload {
         payload: row.payload,
+        content_nonce: row.content_nonce,
         content_salt: row.content_salt,
         reduced: row.payload_state == "reduced",
         reduced_at: row.reduced_at,
     }))
 }
 
-/// Reduces one act's carriage: payload and content salt go to NULL
-/// together, the state moves to `reduced` and the moment is kept
-/// (layers.md §5). The row is never deleted. Returns whether this call
-/// reduced it — a row already reduced is left exactly as it is.
+/// Reduces one act's carriage: payload, content nonce and content salt go
+/// to NULL in one statement, the state moves to `reduced` and the moment
+/// is kept (layers.md §5; layer1-interface.md §8.4 "Custody across
+/// phases": both pair members removed atomically). The row is never
+/// deleted. Returns whether this call reduced it — a row already reduced
+/// is left exactly as it is.
 pub async fn reduce_act_payload(
     conn: &mut sqlx::PgConnection,
     act_id: &str,
 ) -> Result<bool, ContentError> {
     Ok(sqlx::query!(
         "UPDATE act_payloads
-         SET payload = NULL, content_salt = NULL,
+         SET payload = NULL, content_nonce = NULL, content_salt = NULL,
              payload_state = 'reduced', reduced_at = NOW()
          WHERE act_id = $1 AND payload_state = 'full'",
         act_id,
@@ -748,12 +839,13 @@ pub async fn reduce_act_payload(
         == 1)
 }
 
-/// One act's carriage as stored: the payload bytes and the private value
-/// behind its content commitment — both absent once the controller has
-/// reduced it (layers.md §5), never emptied.
+/// One act's carriage as stored: the content pair and the salt behind its
+/// content commitment — all three absent once the controller has reduced
+/// it (layers.md §5), never emptied.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActPayload {
     pub payload: Option<Vec<u8>>,
+    pub content_nonce: Option<Vec<u8>>,
     pub content_salt: Option<Vec<u8>>,
     pub reduced: bool,
     pub reduced_at: Option<chrono::DateTime<chrono::Utc>>,
@@ -762,7 +854,7 @@ pub struct ActPayload {
 /// The carriage of one act, if any row holds it.
 pub async fn act_payload(pool: &PgPool, act_id: &str) -> Result<Option<ActPayload>, ContentError> {
     Ok(sqlx::query!(
-        "SELECT payload, content_salt, payload_state, reduced_at
+        "SELECT payload, content_nonce, content_salt, payload_state, reduced_at
          FROM act_payloads WHERE act_id = $1",
         act_id,
     )
@@ -770,6 +862,7 @@ pub async fn act_payload(pool: &PgPool, act_id: &str) -> Result<Option<ActPayloa
     .await?
     .map(|row| ActPayload {
         payload: row.payload,
+        content_nonce: row.content_nonce,
         content_salt: row.content_salt,
         reduced: row.payload_state == "reduced",
         reduced_at: row.reduced_at,

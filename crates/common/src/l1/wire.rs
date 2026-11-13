@@ -34,7 +34,7 @@ pub enum WireError {
     Shape(&'static str),
 }
 
-fn decode_body(bytes: &[u8]) -> Result<StructuralBody, WireError> {
+pub(super) fn decode_body(bytes: &[u8]) -> Result<StructuralBody, WireError> {
     let mut d = Decoder::new(bytes);
     if d.array()? != 9 {
         return Err(WireError::Shape("structural body"));

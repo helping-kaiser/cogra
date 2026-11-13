@@ -44,7 +44,6 @@ fn tag(
         epoch,
         act_time,
         position,
-        payload_marked: false,
         payload_witness: vec![0; 32],
         legs: vec![
             PublishedLeg {
@@ -67,15 +66,28 @@ fn tag(
     }
 }
 
+/// Gives an act a full carriage row before its record lands — what makes
+/// the record payload-marked (data-model.md "Act payload carriage").
+async fn carry(pool: &PgPool, act_id: &ActId) {
+    sqlx::query(
+        "INSERT INTO act_payloads (act_id, payload, content_nonce, content_salt)
+         VALUES ($1, '\\x01', '\\x02', '\\x03')",
+    )
+    .bind(act_id.to_string())
+    .execute(pool)
+    .await
+    .expect("carries");
+}
+
 /// Lands one epoch holding the given records. Epochs are ingested in
 /// order, so `epoch` doubles as the call index.
 async fn land(pool: &PgPool, epoch: i64, records: Vec<PublishedRecord>) {
-    let attested_at = chrono::Utc::now();
+    let asserted_at = chrono::Utc::now();
     mirror::ingest_epoch(
         pool,
         &EpochPackage {
             epoch,
-            attested_at,
+            asserted_at,
             records,
             closure: Default::default(),
         },
@@ -816,8 +828,8 @@ async fn include_pending_needs_a_viewer(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn verdict_marks_are_not_topics(pool: PgPool) {
     let post = content_of("alice", 0);
-    let mut verdict = tag("moderator", 0, &post, "illegal", 0.0, 0.0, 1, 1, 1);
-    verdict.payload_marked = true;
+    let verdict = tag("moderator", 0, &post, "illegal", 0.0, 0.0, 1, 1, 1);
+    carry(&pool, &verdict.act_id).await;
     land(&pool, 1, vec![verdict]).await;
 
     assert!(
@@ -854,8 +866,8 @@ async fn a_verdict_mark_does_not_hide_a_real_claim(pool: PgPool) {
         vec![tag("moderator", 0, &post, "rust", 0.5, 0.9, 1, 1, 1)],
     )
     .await;
-    let mut verdict = tag("moderator", 1, &post, "rust", 0.0, 0.0, 2, 2, 1);
-    verdict.payload_marked = true;
+    let verdict = tag("moderator", 1, &post, "rust", 0.0, 0.0, 2, 2, 1);
+    carry(&pool, &verdict.act_id).await;
     land(&pool, 2, vec![verdict]).await;
 
     let current = topics::topics_of(&pool, &post.to_string(), "moderator", TopicView::Landed)

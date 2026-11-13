@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT act_id, author, seq, family, middle, target, p_d, p_i,\n                settlement_ref, license, asserted_parents, deps,\n                payload_len, content_commitment\n         FROM l1_acts WHERE status = 'approved'\n         ORDER BY approved_at, act_id",
+  "query": "SELECT act_id, author, seq, family, middle, target, p_d, p_i,\n                settlement_ref, license, asserted_parents, deps,\n                pre_commitment, deps_salt, deps_commitment, content_commitment\n         FROM l1_acts WHERE status = 'approved'\n         ORDER BY approved_at, act_id",
   "describe": {
     "columns": [
       {
@@ -65,11 +65,21 @@
       },
       {
         "ordinal": 12,
-        "name": "payload_len",
-        "type_info": "Int8"
+        "name": "pre_commitment",
+        "type_info": "Bytea"
       },
       {
         "ordinal": 13,
+        "name": "deps_salt",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 14,
+        "name": "deps_commitment",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 15,
         "name": "content_commitment",
         "type_info": "Bytea"
       }
@@ -91,8 +101,10 @@
       false,
       false,
       false,
+      false,
+      false,
       false
     ]
   },
-  "hash": "1df110600d1863e317a383333ea6c4fe236bad1d5cac0f0ba578b0b7c5d07263"
+  "hash": "3f0d8496ef6ebfd952b20281eafcf388d375f6e271b0bc463b92de435b46b212"
 }

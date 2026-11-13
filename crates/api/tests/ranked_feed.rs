@@ -130,7 +130,6 @@ fn record(handle: &str, seq: u64, family: Family, legs: Vec<PublishedLeg>) -> Pu
         epoch: 0,
         act_time: 0,
         position: 0,
-        payload_marked: false,
         payload_witness: vec![0; 32],
         legs,
     }
@@ -153,7 +152,7 @@ async fn land(pool: &PgPool, records: Vec<PublishedRecord>) -> i64 {
         pool,
         &EpochPackage {
             epoch,
-            attested_at: landing_instant(epoch),
+            asserted_at: landing_instant(epoch),
             records,
             closure: Default::default(),
         },
@@ -163,7 +162,7 @@ async fn land(pool: &PgPool, records: Vec<PublishedRecord>) -> i64 {
     epoch
 }
 
-/// The attested boundary timestamp of a fixture epoch: a minute per epoch.
+/// The asserted boundary timestamp of a fixture epoch: a minute per epoch.
 fn landing_instant(epoch: i64) -> chrono::DateTime<chrono::Utc> {
     chrono::DateTime::from_timestamp(1_850_000_000 + epoch * 60, 0).expect("instant")
 }
@@ -3807,11 +3806,11 @@ async fn a_t_leg_hop_shows_the_t_legs_pair_not_the_actors(pool: PgPool) {
     assert_ne!(actor_leg["pDirected"], hop["pDirected"]);
 }
 
-/// X-SR3: a record's landing instant is its epoch's attested boundary
+/// X-SR3: a record's landing instant is its epoch's asserted boundary
 /// timestamp — wall-clock time for the ages ladder, never the logical
 /// act time.
 ///
-/// A record's landing instant is its epoch's attested boundary timestamp.
+/// A record's landing instant is its epoch's asserted boundary timestamp.
 /// ´claim:trace:a-records-landing-instant-is-its-epochs´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_records_landing_instant_is_its_epochs_boundary_timestamp(pool: PgPool) {

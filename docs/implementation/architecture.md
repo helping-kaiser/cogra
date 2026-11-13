@@ -120,8 +120,9 @@ holds the shared and backend rules; `android/CLAUDE.md` and
 Every binding fact is an L1 record: priced, signed, witnessed,
 epoch-stamped, visible to every other L2. Nothing CoGra stores is
 authoritative about the graph — the record mirror is a cache (it
-may lag, it must never diverge, it is fully rebuildable from the
-published ordered sequence), and the overlay caches published fold rules
+may lag, it must never diverge, it is rebuildable from the
+published ordered sequence, with the payload mark read from CoGra's
+carriage), and the overlay caches published fold rules
 (the charter's parameter schedule, Proposal tallies,
 `network_role` marks). Where a local table and the L1 record could
 disagree, the record governs — and because every binding value is
@@ -135,11 +136,13 @@ audit CoGra's reads without CoGra's help.
 what a record **is** lives on L1; what it **shows** lives in
 Postgres; what it **weighs** is recomputed from records. Within
 Postgres the schema keeps three kinds of state apart — mirror
-tables (L1's truth, cached), overlay tables (CoGra's own
+tables (L1's truth, cached, the payload mark read from CoGra's
+carriage), overlay tables (CoGra's own
 machinery, itself derived from public records), and authoritative
 L2 tables (identity association, display content, honor ledgers,
-staged applicants). Money sits in none of them; payload bytes and
-salts sit in the carriage tables, and media bytes in the media
+staged applicants). Money sits in none of them; payload bytes,
+their content nonces and salts sit in the carriage tables, and
+media bytes in the media
 service ([data-model.md](data-model.md)).
 
 ### 3. Writes are client-signed, backend-relayed
@@ -281,7 +284,8 @@ steps:
 1. **Prepare** (backend). Validate the gesture against L2 policy
    and envelope conformance, pre-check the write rule (below),
    assemble the canonical proposal — act body, payload envelope,
-   dependency list — and store it as a **staged write** (Postgres
+   dependency list in canonical order (sorted bytewise by act
+   identifier, duplicate-free) — and store it as a **staged write** (Postgres
    row; payload bytes ride the row until confirm promotes them
    into carriage). Return the
    proposal to the client.
@@ -308,22 +312,36 @@ steps:
    the landing it signs only a proposal that still digests to it,
    the landing's appended dependencies aside. A landing seen on a
    device that holds no such digest refuses the whole released
-   batch; no family is exempt. Then the device
-   signs the proposal pre-commitment; the key never leaves it.
-3. **Relay and seal** (backend ↔ L1). Submit the pre-signed
-   proposal through the L1 boundary; the L1 host verifies it,
-   adds the projection salts, and returns the sealed **verified
-   act**, stored on the staged write.
+   batch; no family is exempt. Then the device draws a fresh
+   content nonce and dependency nonce, forms the two pre-digests,
+   and signs the proposal pre-commitment; the key never leaves it.
+3. **Relay and seal** (backend ↔ L1). The backend carries the
+   content pair — the payload and its content nonce — so it first
+   runs the carriage checks on it (both nonces 32 bytes, the two
+   nonces distinct, the content nonce not already used by its
+   author, the payload within M_payload) and refuses a failing pair
+   before anything reaches L1 ([data-model.md "Act payload
+   carriage"](data-model.md#act-payload-carriage)). It submits the
+   proposal through the L1 boundary without the pair: the content
+   pre-digest it forms from the payload and the content nonce,
+   beside the dependency list and the dependency nonce. The L1 host
+   runs the act checks — among them a dependency list strictly
+   ascending by act identifier and free of the act itself —
+   verifies the pre-commitment,
+   adds the projection salts, and
+   returns the sealed **verified act**, stored on the staged write.
 4. **Approve** (client, then backend). The device verifies the
    host seal, the exact returned body and pre-commitment, the
-   editions, and both commitment openings, then signs the
+   editions, the content commitment over the content pre-digest it
+   recomputes from its own payload and content nonce, and the
+   dependency commitment over the dependency list, then signs the
    **approval witness** over the verified act and its seal — only then is
    the act orderable. The backend relays the approval and drives
    retries across epoch boundaries. Both signatures cover the
    act, so the relay can neither alter it nor author one unasked.
 5. **Confirm** (ingestion). When the accepted act arrives in the
-   mirror, the staged write is promoted: payload becomes
-   permanent carriage, display rows drop their pending mark, flow
+   mirror, the staged write is promoted: the content pair and its
+   salt become permanent carriage, display rows drop their pending mark, flow
    state advances. A staged write that never completes the
    handshake and lands is garbage-collected — staged payload
    included — after a bounded number of epochs (an operational
@@ -372,11 +390,14 @@ Who funds the debits is economics
 Per epoch, the backend ingests the accepted ordered act sequence
 `𝒬_k` through the L1 boundary and appends it to the mirror
 tables — each record with its key of record (epoch, position) and
-the act time it carries, each epoch with its attested boundary timestamp —
+the act time it carries, each epoch with its asserted boundary timestamp
+(the host's assertion, checkable only for consistency with the
+published duration bounds) —
 advancing a stored epoch cursor. The contract is
 exactly the mirror's truth relationship: it may lag L1; it must
-never diverge; it is fully rebuildable from the published
-sequence, so ingestion state is never precious. Confirmation of staged writes (§ above) and overlay
+never diverge; it is rebuildable from the published sequence,
+with the payload mark read from CoGra's carriage, so ingestion
+state is never precious. Confirmation of staged writes (§ above) and overlay
 fold updates (tallies, the parameter carrier, role marks) are
 driven off the same ingestion pass.
 

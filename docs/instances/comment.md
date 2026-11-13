@@ -45,8 +45,8 @@ The record carries:
   the Peer Content Envelope
   ([substrate.md §7](../primitive/substrate.md#7-payload-carriage)),
   one entry per asset carrying its digest, type and alt text.
-  The witness lands on L1; the bytes and salt live in CoGra
-  carriage — their only home, verifiable against the witness —
+  The witness lands on L1; the bytes, their content nonce and the
+  salt live in CoGra carriage — their only home, verifiable against the witness —
   and the mirror caches the structural record.
 
 A Comment is **words plus optional media** — deliberately

@@ -64,6 +64,14 @@ impl ActorKey {
         crypto::address_of(&self.key.verifying_key())
     }
 
+    pub(crate) fn sign_digest(&self, digest: &[u8; 32]) -> Vec<u8> {
+        crypto::sign_digest(&self.key, digest)
+    }
+
+    pub(crate) fn verifying_key(&self) -> ed25519_dalek::VerifyingKey {
+        self.key.verifying_key()
+    }
+
     /// Step 2 of the write — pre-sign: bind the exact proposal under a fresh
     /// private nonce, forming the proposal pre-commitment of
     /// layer1-interface.md §8.2, and sign those 32 bytes.

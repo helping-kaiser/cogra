@@ -141,17 +141,13 @@ impl Rig {
         .await
         .expect("prepares anchor");
         let write = staged::load(&self.pool, anchor.id).await.expect("loads");
-        let pre = key.pre_sign(write.proposal);
-        let parts = PreSignedParts {
-            author_pubkey: pre.author_pubkey.clone(),
-            nonce: pre.nonce.clone(),
-            pre_signature: pre.pre_signature.clone(),
-        };
+        let pre = common::l1::proposal::PreSigned::sign(&key, write.proposal);
+        let parts = PreSignedParts::from(&pre);
         let sealed = api::relay::submit_pre_signed(&self.boundary(), &self.pool, anchor.id, parts)
             .await
             .expect("seals");
         let host_key = self.standin.host_public_key().await.expect("host key");
-        let witness = key.approve(&pre, &sealed, &host_key).expect("approves");
+        let witness = pre.approve(&key, &sealed, &host_key).expect("approves");
         api::relay::submit_approval(
             &self.boundary(),
             &self.pool,
@@ -203,7 +199,7 @@ impl Rig {
                     .expect("b64"),
             )
             .expect("decodes");
-            let pre = key.pre_sign(proposal);
+            let pre = common::l1::proposal::PreSigned::sign(key, proposal);
             let sealed = self
                 .gql(
                     Some(token),
@@ -214,17 +210,17 @@ impl Rig {
                      }",
                     json!({ "input": { "proposals": [{
                         "stagedWriteId": id,
-                        "signature": B64.encode(wire::encode_pre_commitment_of(&pre)),
+                        "signature": B64.encode(pre.pre_commitment_blob().encode()),
                     }]}}),
                 )
                 .await;
             let staged_write = &sealed["submitProposals"]["stagedWrites"][0];
-            let act = wire::decode_verified_act(
+            let act = common::l1::proposal::SealedAct::decode(
                 &B64.decode(staged_write["verifiedAct"].as_str().expect("sealed"))
                     .expect("b64"),
             )
             .expect("decodes");
-            let witness = key.approve(&pre, &act, &host_key).expect("approves");
+            let witness = pre.approve(key, &act, &host_key).expect("approves");
             self.gql(
                 Some(token),
                 "mutation($input: ApproveActsInput!) {

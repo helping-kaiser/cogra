@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO genesis_handshake_nonces (act_id, content_nonce, dependency_nonce)\n         VALUES ($1, $2, $3)\n         ON CONFLICT (act_id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bytea",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3b38e48fa97d97dd8d8b90e115912bbf88b081764fb46c0056a91782f8206218"
+}

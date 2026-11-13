@@ -7,6 +7,7 @@ use common::l1::Family;
 use common::l1::client::ActorKey;
 use common::l1::handshake::{Proposal, StructuralBody};
 use common::l1::identifier::NodeId;
+use common::l1::proposal::PreSigned;
 use l1_standin::{StandIn, StandInConfig};
 use postgres_store::mirror;
 use sqlx::PgPool;
@@ -50,10 +51,10 @@ async fn a_record_crosses_the_seam_into_the_mirror(pool: PgPool) {
 
     let proposal = registration(&actor);
     let act_id = proposal.body.act_id();
-    let pre = actor.pre_sign(proposal);
-    let sealed = boundary.seal(pre.clone()).await.expect("seals");
+    let pre = PreSigned::sign(&actor, proposal);
+    let sealed = boundary.seal(pre.submission()).await.expect("seals");
     let host_key = boundary.host_public_key().await.expect("host key");
-    let witness = actor.approve(&pre, &sealed, &host_key).expect("approves");
+    let witness = pre.approve(&actor, &sealed, &host_key).expect("approves");
     boundary.approve(witness).await.expect("approved");
 
     let outcome = api::ingest::ingest_pending(&boundary, &pool, 8)
@@ -92,11 +93,11 @@ async fn a_record_crosses_the_seam_into_the_mirror(pool: PgPool) {
 }
 
 /// X-SR3 across the seam: each ingested epoch carries the boundary
-/// timestamp its package attests, and an epoch the mirror took in before
+/// timestamp its package asserts, and an epoch the mirror took in before
 /// the package carried one is filled from the published sequence on the
 /// next pass — through the seam, never from the stand-in's tables.
 ///
-/// Every ingested epoch carries its attested instant, and a missing one is filled from the published sequence.
+/// Every ingested epoch carries its asserted instant, and a missing one is filled from the published sequence.
 /// ´claim:relay:epoch-instants-cross-the-seam´
 #[sqlx::test(migrations = "../../migrations")]
 async fn epoch_instants_cross_the_seam_and_missing_ones_are_filled(pool: PgPool) {
@@ -108,32 +109,32 @@ async fn epoch_instants_cross_the_seam_and_missing_ones_are_filled(pool: PgPool)
             .credit_burn(&actor.address(), 10_000_000)
             .await
             .expect("burn");
-        let pre = actor.pre_sign(registration(&actor));
-        let sealed = boundary.seal(pre.clone()).await.expect("seals");
+        let pre = PreSigned::sign(&actor, registration(&actor));
+        let sealed = boundary.seal(pre.submission()).await.expect("seals");
         let host_key = boundary.host_public_key().await.expect("host key");
-        let witness = actor.approve(&pre, &sealed, &host_key).expect("approves");
+        let witness = pre.approve(&actor, &sealed, &host_key).expect("approves");
         boundary.approve(witness).await.expect("approved");
         standin.close_epoch().await.expect("closes");
     }
     api::ingest::ingest_pending(&boundary, &pool, 8)
         .await
         .expect("pass");
-    let attested: Vec<(i64, chrono::DateTime<chrono::Utc>)> = boundary
+    let asserted: Vec<(i64, chrono::DateTime<chrono::Utc>)> = boundary
         .epochs_since(0)
         .await
         .expect("published")
         .into_iter()
-        .map(|p| (p.epoch, p.attested_at))
+        .map(|p| (p.epoch, p.asserted_at))
         .collect();
-    assert_eq!(attested.len(), 2);
+    assert_eq!(asserted.len(), 2);
     assert_eq!(
-        attested.iter().map(|(epoch, _)| *epoch).collect::<Vec<_>>(),
+        asserted.iter().map(|(epoch, _)| *epoch).collect::<Vec<_>>(),
         vec![1, 2]
     );
     let mirrored = mirror::epoch_instants(&pool, &[1, 2])
         .await
         .expect("instants");
-    for (epoch, at) in &attested {
+    for (epoch, at) in &asserted {
         assert_eq!(mirrored[epoch], *at);
     }
 
@@ -160,7 +161,7 @@ async fn epoch_instants_cross_the_seam_and_missing_ones_are_filled(pool: PgPool)
     let refilled = mirror::epoch_instants(&pool, &[1, 2])
         .await
         .expect("instants");
-    for (epoch, at) in &attested {
+    for (epoch, at) in &asserted {
         assert_eq!(refilled[epoch], *at);
     }
 }
@@ -214,10 +215,10 @@ async fn an_empty_epoch_crosses_the_seam(pool: PgPool) {
         .expect("burn");
     let proposal = registration(&actor);
     let act_id = proposal.body.act_id();
-    let pre = actor.pre_sign(proposal);
-    let sealed = boundary.seal(pre.clone()).await.expect("seals");
+    let pre = PreSigned::sign(&actor, proposal);
+    let sealed = boundary.seal(pre.submission()).await.expect("seals");
     let host_key = boundary.host_public_key().await.expect("host key");
-    let witness = actor.approve(&pre, &sealed, &host_key).expect("approves");
+    let witness = pre.approve(&actor, &sealed, &host_key).expect("approves");
     boundary.approve(witness).await.expect("approved");
     standin.close_epoch().await.expect("closes");
     let outcome = api::ingest::ingest_pending(&boundary, &pool, 8)

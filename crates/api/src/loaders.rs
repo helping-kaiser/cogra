@@ -347,7 +347,7 @@ impl Loader<String> for RecordActLoader {
     }
 }
 
-/// An epoch's attested boundary timestamp, keyed on the epoch:
+/// An epoch's asserted boundary timestamp, keyed on the epoch:
 /// `Record.landedAt` on every record of a page asks once per distinct
 /// epoch. An epoch the mirror has not ingested is absent.
 pub struct EpochInstantLoader(PgPool);

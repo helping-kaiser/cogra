@@ -10,7 +10,8 @@
 //! here can alter or author one (architecture.md "The write path").
 
 use common::l1::crypto;
-use common::l1::handshake::{ApprovalWitness, PreSignedProposal, VerifiedAct};
+use common::l1::handshake::ApprovalWitness;
+use common::l1::proposal::SealedAct;
 use postgres_store::PgPool;
 use postgres_store::staged::{self, PreSignedParts, StagedState};
 use uuid::Uuid;
@@ -27,6 +28,13 @@ pub enum RelayError {
     /// (layer1-interface.md §8.2), so the device may fix and retry.
     #[error("signature invalid: {0}")]
     SignatureInvalid(String),
+    /// The content pair failed a carriage check (layer1-interface.md
+    /// §8.2, "Entropy custody" and "Verified act"): CoGra carries the
+    /// pair, and never relays an act whose pair it cannot carry. Refused
+    /// as `BAD_INPUT` before anything reached the host: no act was formed
+    /// and the pre-commitment was not recorded.
+    #[error("carriage refused: {0}")]
+    Carriage(String),
     /// The staged write lost its sealed act — a relay crash between seal
     /// and store, or a re-seal the substrate refuses as a conflict because
     /// it already sealed the act. Unrecoverable either way, because the
@@ -34,10 +42,11 @@ pub enum RelayError {
     /// re-prepares under a fresh sequence value.
     #[error("staged write {0} lost its seal; re-prepare")]
     Wedged(Uuid),
-    /// A resubmission whose pre-commitment differs from the sealed one —
-    /// returning the stored act would tell a re-signing client its new
-    /// bytes were sealed. Refused; only a byte-identical replay is
-    /// answered idempotently.
+    /// A resubmission whose pre-commitment differs from the one recorded
+    /// or sealed. Returning the stored act would tell a re-signing client
+    /// that its new bytes were sealed, and recording them over a leg in
+    /// `sealing` would pair one leg's nonces with the other's salts.
+    /// Refused; only a byte-identical replay is answered idempotently.
     #[error("staged write {0}: resubmitted pre-commitment differs from the sealed one")]
     ReplayMismatch(Uuid),
     /// The pre-commitment was recorded but its display rows could not be
@@ -109,12 +118,63 @@ pub async fn gate_carried_media(
     }
 }
 
-/// Relay leg 1 — seal: store the device's pre-commitment, submit through
-/// the boundary, and store the host-sealed verified act. Returns the
-/// sealed act for the device's approval step. Re-submission after a lost
-/// response is idempotent: an already-sealed write returns its stored act
-/// — but only for the exact pre-commitment that was sealed; differing
+/// The carriage checks on the content pair, before anything is recorded
+/// or relayed (layer1-interface.md §8.2): CoGra carries the pair, so the
+/// checks the host makes only when it holds the pair are CoGra's. The
+/// content nonce is exactly [`crypto::SALT_LEN`] bytes — the published
+/// generation rule (`common::l1::proposal::PreSigned::sign`) — and is not
+/// the dependency nonce: the host holds the dependency nonce for the
+/// row's life, so a content nonce equal to it would let anyone reading
+/// the host's rows test payload guesses against P, and only the carrier
+/// can see the two side by side. The dependency nonce is held to the same
+/// length. The payload is within M_payload, read through the seam as
+/// prepare reads it. Non-reuse needs the store and is checked where the
+/// leg is recorded (`staged::record_pre_signed`).
+fn check_carriage(
+    write: &staged::StagedWrite,
+    pre: &PreSignedParts,
+    max_payload: usize,
+) -> Result<(), RelayError> {
+    let refuse = |why: String| Err(RelayError::Carriage(why));
+    if pre.content_nonce.len() != crypto::SALT_LEN {
+        return refuse(format!(
+            "the content nonce is {} bytes, not {}",
+            pre.content_nonce.len(),
+            crypto::SALT_LEN
+        ));
+    }
+    if pre.dependency_nonce.len() != crypto::SALT_LEN {
+        return refuse(format!(
+            "the dependency nonce is {} bytes, not {}",
+            pre.dependency_nonce.len(),
+            crypto::SALT_LEN
+        ));
+    }
+    if pre.content_nonce == pre.dependency_nonce {
+        return refuse("the content nonce repeats the dependency nonce".into());
+    }
+    let len = write.proposal.payload.len();
+    if len > max_payload {
+        return refuse(format!(
+            "the payload exceeds M_payload ({len} > {max_payload})"
+        ));
+    }
+    Ok(())
+}
+
+/// Relay leg 1 — seal: check and store the device's pre-commitment, submit
+/// through the boundary, and store the host-sealed verified act. Returns
+/// the sealed act for the device's approval step. Re-submission after a
+/// lost response is idempotent: an already-sealed write returns its stored
+/// act — but only for the exact pre-commitment that was sealed; differing
 /// bytes are refused (`ReplayMismatch`).
+///
+/// The content pair is checked first ([`check_carriage`], then the
+/// content nonce's non-reuse as the leg is recorded), and a failure
+/// refuses the leg as [`RelayError::Carriage`] with nothing recorded and
+/// nothing sent to the host. The host then receives the proposal without
+/// the pair: the content pre-digest is formed here, from the staged
+/// payload and the content nonce, never taken from the device.
 ///
 /// The pre-commitment is the anchor: from it on, the content is the
 /// author's, readable by everyone and marked pending (substrate.md §6).
@@ -126,6 +186,11 @@ pub async fn gate_carried_media(
 /// being left in `sealing`, where it would wedge until GC and block the
 /// author's next edit of the node.
 ///
+/// A redaction can reap the write between the recorded leg and its
+/// staging. Staging then refuses it under the staged row's lock, writes
+/// no display row from the removed bytes, and the leg is handed back and
+/// answered as reaped, as when the reap came before the leg.
+///
 /// A write the landing released passes [`gate_carried_media`] before it
 /// reaches this leg; `submitProposals` runs the gate.
 pub async fn submit_pre_signed<B: L1Boundary>(
@@ -133,7 +198,7 @@ pub async fn submit_pre_signed<B: L1Boundary>(
     pool: &PgPool,
     id: Uuid,
     pre: PreSignedParts,
-) -> Result<VerifiedAct, RelayError> {
+) -> Result<SealedAct, RelayError> {
     let write = staged::load(pool, id).await?;
     match write.state {
         StagedState::AwaitingPreSign | StagedState::Sealing => {}
@@ -141,11 +206,25 @@ pub async fn submit_pre_signed<B: L1Boundary>(
             if write.pre_signed.as_ref() != Some(&pre) {
                 return Err(RelayError::ReplayMismatch(id));
             }
-            return write.verified_act().ok_or(RelayError::Wedged(id));
+            return write.sealed_act().ok_or(RelayError::Wedged(id));
         }
         other => return Err(wrong_state(id, "awaiting_pre_sign", other)),
     }
-    let pre_signed_at = staged::record_pre_signed(pool, id, &pre).await?;
+    let max_payload = boundary
+        .max_payload_bytes()
+        .await
+        .map_err(RelayError::Boundary)?;
+    check_carriage(&write, &pre, max_payload)?;
+    let pre_signed_at = match staged::record_pre_signed(pool, id, &pre).await {
+        Ok(at) => at,
+        Err(staged::StagedError::ContentNonceReused(_)) => {
+            return Err(RelayError::Carriage(
+                "the content nonce was already used for another act".into(),
+            ));
+        }
+        Err(staged::StagedError::PreSignMismatch(_)) => return Err(RelayError::ReplayMismatch(id)),
+        Err(e) => return Err(e.into()),
+    };
     if let Err(e) = crate::content::stage_pending(pool, &write, pre_signed_at).await {
         if let Err(revert) = staged::revert_to_pre_sign(pool, id).await {
             tracing::error!(
@@ -154,15 +233,15 @@ pub async fn submit_pre_signed<B: L1Boundary>(
                 "staging failed and the revert failed too; the write stays in sealing"
             );
         }
-        return Err(RelayError::Staging(e));
+        return Err(match e {
+            crate::content::ContentError::Reaped => {
+                RelayError::Staged(staged::StagedError::Reaped(id))
+            }
+            e => RelayError::Staging(e),
+        });
     }
-    let pre_signed = PreSignedProposal {
-        proposal: write.proposal.clone(),
-        author_pubkey: pre.author_pubkey,
-        nonce: pre.nonce,
-        pre_signature: pre.pre_signature,
-    };
-    match boundary.seal(pre_signed).await {
+    let submission = pre.pre_signed(&write.proposal).submission();
+    match boundary.seal(submission).await {
         Ok(act) => {
             staged::record_sealed(pool, id, &act).await?;
             Ok(act)
@@ -248,11 +327,22 @@ async fn waits_for_funding<B: L1Boundary>(
 /// never hears from, so a bad signature must be refused now, while the
 /// device can still fix it.
 fn check_witness(write: &staged::StagedWrite, approval_signature: &[u8]) -> Result<(), RelayError> {
-    let act = write.verified_act().ok_or(RelayError::Wedged(write.id))?;
-    let key = crypto::verifying_key_from_bytes(&act.author_pubkey).ok_or_else(|| {
-        RelayError::SignatureInvalid("the sealed act's author key is malformed".into())
-    })?;
-    if crypto::verify_digest(&key, &act.approval_digest(), approval_signature) {
+    let act = write.sealed_act().ok_or(RelayError::Wedged(write.id))?;
+    let author_pubkey = write
+        .pre_signed
+        .as_ref()
+        .map(|p| p.author_pubkey.as_slice())
+        .ok_or(RelayError::Wedged(write.id))?;
+    if crypto::verifying_key_from_bytes(author_pubkey).is_none() {
+        return Err(RelayError::SignatureInvalid(
+            "the sealed act's author key is malformed".into(),
+        ));
+    }
+    let witness = ApprovalWitness {
+        act_id: write.proposal.body.act_id(),
+        approval_signature: approval_signature.to_vec(),
+    };
+    if act.verify_approval(author_pubkey, &witness) {
         Ok(())
     } else {
         Err(RelayError::SignatureInvalid(

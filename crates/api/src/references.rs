@@ -651,6 +651,29 @@ mod tests {
         NodeId::parse("mint:act:alice:0:publish").expect("node")
     }
 
+    /// A withdrawal's site list is canonical whatever order the bundle read named the in-flight records in, and a record named twice is declared once.
+    /// ´claim:references:a-withdrawal-dependency-list-is-canonical´
+    #[test]
+    fn a_withdrawal_dependency_list_is_canonical() {
+        let citing = ActId::new("alice", 2, Family::Publish).expect("act");
+        let in_flight: Vec<String> = ["act:alice:10:reference", "act:alice:9:reference"]
+            .into_iter()
+            .rev()
+            .chain(["act:alice:9:reference"])
+            .map(str::to_string)
+            .collect();
+        let deps = withdrawal_deps(&Some(citing.clone()), &in_flight).expect("parses");
+        let id = |s: &str| ActId::parse(s).expect("act");
+        assert_eq!(
+            deps,
+            vec![
+                id("act:alice:10:reference"),
+                citing,
+                id("act:alice:9:reference"),
+            ]
+        );
+    }
+
     /// The claim-9 trap, pinned against the census itself rather than
     /// against a remembered orientation: the A-leg renders the act tuple
     /// verbatim, and the census row for Reference reads `A: p_d = f,

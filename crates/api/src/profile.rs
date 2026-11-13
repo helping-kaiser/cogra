@@ -50,6 +50,10 @@ pub enum ProfileError {
     Media(#[from] crate::media::GalleryError),
     #[error(transparent)]
     Prepare(#[from] PrepareError),
+    /// The profile update being materialized was reaped by a redaction
+    /// after its leg was recorded. Nothing was staged.
+    #[error("the staged write was reaped by a redaction")]
+    Reaped,
     #[error("internal: {0}")]
     Internal(String),
 }
@@ -263,6 +267,12 @@ pub async fn prepare_profile_update<B: L1Boundary>(
 /// the staged node — the key expiry discards the row by — and one
 /// without it is a fault, not a quiet success, for the reason
 /// `content::stage_pending` gives.
+///
+/// The row is built from bytes loaded before the leg was recorded, so
+/// the transaction first takes the staged row's share lock and refuses a
+/// write a redaction has reaped since as [`ProfileError::Reaped`]
+/// (`staged::lock_unreaped`). An account deletion takes the staged row
+/// before it blanks the profile rows, so the two lock in the same order.
 pub async fn stage_pending(
     pool: &PgPool,
     write: &staged::StagedWrite,
@@ -283,6 +293,11 @@ pub async fn stage_pending(
         .begin()
         .await
         .map_err(|e| ProfileError::Internal(e.to_string()))?;
+    match staged::lock_unreaped(&mut tx, write.id).await {
+        Ok(()) => {}
+        Err(staged::StagedError::Reaped(_)) => return Err(ProfileError::Reaped),
+        Err(e) => return Err(e.into()),
+    }
     profile::insert_profile_version(
         &mut tx,
         write.actor_id,
@@ -381,8 +396,12 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
                 .begin()
                 .await
                 .map_err(|e| ProfileError::Internal(e.to_string()))?;
-            content_store::insert_reduced_act_payload(&mut tx, &write.act_id, reaped.reaped_at)
-                .await?;
+            content_store::insert_reduced_act_payload(
+                &mut tx,
+                &write.act_id,
+                Some(reaped.reaped_at),
+            )
+            .await?;
             if !reaped.body.asserted_parents.is_empty()
                 && let Some(created_at) = reaped.pre_signed_at
             {
@@ -395,9 +414,8 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
         }
     };
     let payload = &staged_row.proposal.payload;
-    let sealed = staged_row
-        .sealed
-        .as_ref()
+    let carried = staged_row
+        .carried_pair()
         .ok_or_else(|| ProfileError::Internal("landed write without sealed parts".into()))?;
     if staged_row.proposal.body.asserted_parents.is_empty() {
         if payload.is_empty() {
@@ -407,8 +425,7 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
             .begin()
             .await
             .map_err(|e| ProfileError::Internal(e.to_string()))?;
-        content_store::insert_act_payload(&mut tx, &write.act_id, payload, &sealed.content_salt)
-            .await?;
+        content_store::insert_act_payload(&mut tx, &write.act_id, carried).await?;
         tx.commit()
             .await
             .map_err(|e| ProfileError::Internal(e.to_string()))?;
@@ -429,8 +446,7 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
         .begin()
         .await
         .map_err(|e| ProfileError::Internal(e.to_string()))?;
-    content_store::insert_act_payload(&mut tx, &write.act_id, payload, &sealed.content_salt)
-        .await?;
+    content_store::insert_act_payload(&mut tx, &write.act_id, carried).await?;
     if content_store::lock_act_payload(&mut tx, &write.act_id)
         .await?
         .is_some_and(|carriage| carriage.reduced)

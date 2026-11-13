@@ -19,6 +19,7 @@ use common::l1::client::ActorKey;
 use common::l1::encoding::Encoder;
 use common::l1::handshake::{Proposal, StructuralBody};
 use common::l1::identifier::NodeId;
+use common::l1::proposal::PreSigned;
 use l1_standin::{StandIn, StandInConfig};
 use postgres_store::staged::{self, PreSignedParts, StagedState};
 use postgres_store::{PgPool, auth as store, mirror};
@@ -223,21 +224,17 @@ impl Rig {
     /// The device's two signing legs over one staged write.
     async fn sign(&self, key: &ActorKey, staged_id: Uuid) {
         let write = staged::load(&self.pool, staged_id).await.expect("loads");
-        let pre = key.pre_sign(write.proposal.clone());
+        let pre = PreSigned::sign(key, write.proposal.clone());
         let sealed = api::relay::submit_pre_signed(
             &self.boundary,
             &self.pool,
             staged_id,
-            PreSignedParts {
-                author_pubkey: pre.author_pubkey.clone(),
-                nonce: pre.nonce.clone(),
-                pre_signature: pre.pre_signature.clone(),
-            },
+            PreSignedParts::from(&pre),
         )
         .await
         .expect("seals");
         let host_key = self.standin.host_public_key().await.expect("host key");
-        let witness = key.approve(&pre, &sealed, &host_key).expect("approves");
+        let witness = pre.approve(key, &sealed, &host_key).expect("approves");
         api::relay::submit_approval(
             &self.boundary,
             &self.pool,
@@ -302,25 +299,28 @@ impl Rig {
         payload.array(2);
         payload.uint(1);
         payload.text("ticker");
-        let pre = ticker.pre_sign(Proposal {
-            body: StructuralBody {
-                author: ticker.address(),
-                seq: 0,
-                family: Family::Registration,
-                middle: None,
-                target: NodeId::Prof(ticker.address()),
-                p_d: 1.0,
-                p_i: 1.0,
-                settlement_ref: None,
-                license: None,
-                asserted_parents: vec![],
+        let pre = PreSigned::sign(
+            &ticker,
+            Proposal {
+                body: StructuralBody {
+                    author: ticker.address(),
+                    seq: 0,
+                    family: Family::Registration,
+                    middle: None,
+                    target: NodeId::Prof(ticker.address()),
+                    p_d: 1.0,
+                    p_i: 1.0,
+                    settlement_ref: None,
+                    license: None,
+                    asserted_parents: vec![],
+                },
+                payload: payload.finish(),
+                deps: vec![],
             },
-            payload: payload.finish(),
-            deps: vec![],
-        });
-        let sealed = self.standin.seal(pre.clone()).await.expect("seals");
+        );
+        let sealed = self.standin.seal(pre.submission()).await.expect("seals");
         let host_key = self.standin.host_public_key().await.expect("host key");
-        let witness = ticker.approve(&pre, &sealed, &host_key).expect("approves");
+        let witness = pre.approve(&ticker, &sealed, &host_key).expect("approves");
         self.standin.approve(witness).await.expect("approval");
         self.standin.close_epoch().await.expect("closes");
         self.ingest_under(gc_after_epochs).await
@@ -1373,17 +1373,13 @@ async fn an_applicant_carries_each_kind_once(pool: PgPool) {
     }
 
     let write = staged::load(&rig.pool, opinion[0]).await.expect("loads");
-    let pre = noa.key.pre_sign(write.proposal.clone());
+    let pre = PreSigned::sign(&noa.key, write.proposal.clone());
     assert!(
         api::relay::submit_pre_signed(
             &rig.boundary,
             &rig.pool,
             opinion[0],
-            PreSignedParts {
-                author_pubkey: pre.author_pubkey.clone(),
-                nonce: pre.nonce.clone(),
-                pre_signature: pre.pre_signature.clone(),
-            },
+            PreSignedParts::from(&pre),
         )
         .await
         .is_err(),
@@ -1516,7 +1512,10 @@ async fn the_carried_batch_signs_at_the_landing(pool: PgPool) {
         assert!(write.carried);
         let mut expected = old;
         expected.extend([registration.clone(), vouch.clone()]);
-        assert_eq!(deps_of(&rig, *id).await, expected);
+        expected.sort();
+        expected.dedup();
+        let deps = deps_of(&rig, *id).await;
+        assert_eq!(deps, expected, "the canonical list: text bytes ascending");
     }
     let on_graph: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM mirror_records WHERE author = $1")
         .bind(noa.key.address())
@@ -1662,16 +1661,12 @@ async fn crate_post(rig: &Rig, author: &Member) -> api::content::PreparedContent
     let write = staged::load(&rig.pool, prepared.writes[0].id)
         .await
         .expect("loads");
-    let pre = author.key.pre_sign(write.proposal.clone());
+    let pre = PreSigned::sign(&author.key, write.proposal.clone());
     api::relay::submit_pre_signed(
         &rig.boundary,
         &rig.pool,
         write.id,
-        PreSignedParts {
-            author_pubkey: pre.author_pubkey.clone(),
-            nonce: pre.nonce.clone(),
-            pre_signature: pre.pre_signature.clone(),
-        },
+        PreSignedParts::from(&pre),
     )
     .await
     .expect("seals");

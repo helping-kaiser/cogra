@@ -20,7 +20,8 @@ Within the schema, three kinds of state stay apart
 ([substrate.md §3](../primitive/substrate.md#3-cogras-stores)):
 
 - **Mirror tables** — L1's truth, cached. May lag, never diverge,
-  fully rebuildable from the published ordered sequence.
+  rebuildable from the published ordered sequence, with the payload
+  mark read from CoGra's carriage.
 - **Overlay tables** — CoGra's own machinery (Proposal state, the
   parameter carrier, role marks), itself derived from public
   records and published fold rules.
@@ -38,7 +39,8 @@ keep L1's own record keys (see "ID Strategy").
 The mirror caches accepted L1 records for traversal and folds. Its
 schema is deliberately thin here: **layer1-interface.md §8 owns the
 record shape**; the mirror stores what the interface defines and
-adds nothing. Conventions:
+adds only the payload mark, CoGra's reading of its own carriage.
+Conventions:
 
 - **Keying.** A mirrored record is keyed by **L1's own record
   identifier, stored verbatim** — the mirror never re-mints
@@ -50,7 +52,8 @@ adds nothing. Conventions:
   record carries (a recomputable summary of that order, deciding no
   precedence), the host-cached edge-projection maturity `τ_e` (an L1
   by-product; `w̃`'s order-derived ingredient), the payload-marked
-  flag, and the payload-witness reference.
+  flag (set from carriage — "Act payload carriage"), and the
+  payload-witness reference.
 - **Indexes serve the standing query shapes:** by **author**
   (forward expansion — the feed's hop-by-hop frontier queries —
   and per-author bundle folds), by **target** (fold inputs,
@@ -64,17 +67,20 @@ adds nothing. Conventions:
   ([layer1-interface.md §8.3](../primitive/layer1-interface.md#83-temporal-structure));
   ingestion appends records and advances it
   ([architecture.md "Record ingestion"](architecture.md#record-ingestion-the-mirror-contract)).
-- **Per epoch, the attested boundary timestamp** the package
+- **Per epoch, the asserted boundary timestamp** the package
   publishes (layer1-interface.md, the Host Contract) — when the
   epoch's records landed, the wall-clock instant a record's display
-  reads (`Record.landedAt`). The stand-in attests its own close time.
+  reads (`Record.landedAt`). The host asserts it; it is checkable only
+  for consistency with the published duration bounds. The stand-in
+  asserts its own close time.
   An ingested epoch missing its instant is filled by the next
   ingestion pass from the published sequence, through the seam.
 
 The contract is the mirror's whole identity: it may lag L1, it
 must never diverge, and it can be rebuilt from the published
-ordered sequence at any time — mirror state is never precious,
-and no backup of it is meaningful.
+ordered sequence at any time, with the payload mark read from
+CoGra's carriage — mirror state is never precious, and no backup
+of it is meaningful.
 
 ---
 
@@ -294,60 +300,126 @@ witness ([layers.md §5](../primitive/layers.md#5-deletion-policy)).
 The content commitment is invariant across custody phases and only
 carriage migrates
 ([layer1-interface.md](../primitive/layer1-interface.md), "Custody
-across phases"). CoGra runs witness-only at Layer 1 from the start.
-The L1 author has confirmed that Layer-1 carriage of payload and salt
-is optional from the start, so a centralized deployment may run
-witness-only. The host holds the payload, its content salt and the
-proposal nonce **transiently**, from seal until acceptance, because
-it forms the commitments over them. At acceptance it nulls all three
-and keeps the payload length and both commitments. The nonce goes
-with them: the public pre-commitment is formed over it and the
-payload, so a kept nonce would confirm a guessed payload. The
-dependency salt stays, because an ordering fraud proof opens it.
-The nonce's digest stays too — SHA-256 over a tag, the author's
-address and the nonce, unique per author — because the host refuses
-a nonce its author already used, whether or not the earlier act was
-accepted ([layer1-interface.md](../primitive/layer1-interface.md),
-"Proposal pre-commitment"). The digest is one-way and the
-pre-commitment is formed over the nonce itself, not its digest, so
-the digest confirms no payload. An act accepted before the host kept
-digests has none, and a reuse of its nonce goes unseen.
-From acceptance on, `act_payloads` is the only carriage.
+across phases"). CoGra runs **centralized append, decentralized
+carriage**: the stand-in host operates append, and CoGra's API is
+the carrier of the **content pair** — the payload and its content
+nonce — of every act it relays. The host never receives the pair
+([layer1-interface.md §8.2](../primitive/layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake),
+"Verified act"). The API forms the content pre-digest from the
+staged payload and the device's content nonce and submits it, as an
+opaque value, with the structural body, the dependency list, the
+dependency nonce, the pre-commitment and the pre-signature. The host
+recomputes the pre-commitment from them and forms the content
+commitment over that pre-digest and a salt it draws, so nothing it
+verifies, commits to or seals depends on the payload.
 
-At confirm, promotion moves the envelope and the seal's private
-value from the staged row into `act_payloads`, keyed by the L1 act
-identifier verbatim — every landed payload, the admission
-Registration's handle included, so the staged row is never a
-payload's last home. A genesis act has no staged row, so the genesis
-bootstrap writes the carriage of each genesis payload the moment the
-seal returns its salt:
+The pair's checks belong to whoever carries it
+([layer1-interface.md §8.2](../primitive/layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake),
+"Entropy custody"), so they are the API's **carriage checks**, run
+before anything reaches the host
+(`relay::check_carriage`, then `staged::record_pre_signed`): the
+content nonce and the dependency nonce are each 32 bytes
+(`crypto::SALT_LEN`), the content nonce differs from the dependency
+nonce, the payload is within M_payload, and the content nonce is not
+one its author already used for another act. A failure refuses the
+write as `BAD_INPUT`: the pre-commitment is not recorded and
+nothing is relayed. The
+stand-in applies no nonce policy of its own. Non-reuse is held in
+`content_nonce_digests`: SHA-256 over a tag, the author's address
+and the nonce, reserved for the act it was first used for, so the
+same act re-submitting it is a retry, not a reuse. The digest
+outlives the reduction that removes the nonce itself. It is one-way,
+and the pre-commitment is formed over the nonce, not its digest, so
+it confirms no payload:
 
 ```sql
+CREATE TABLE content_nonce_digests (
+    digest     BYTEA       PRIMARY KEY CHECK (length(digest) = 32),
+    act_id     TEXT        NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+The host's act row (`l1_acts`) holds neither member of the pair, nor
+the content pre-digest. It keeps the dependency nonce with the
+dependency list and the dependency salt for the row's life — the
+dependency opening an ordering fraud proof reads. It holds the
+content salt from the seal until acceptance and then nulls it. CoGra
+holds the content salt from the seal on.
+
+Ingestion promotes the content pair and the content salt from the
+staged row into `act_payloads`, keyed by the L1 act identifier
+verbatim, in the same transaction that inserts the epoch's records
+(`content::promote_staged_carriage`, `mirror::ingest_epoch`). It
+reads the staged rows `FOR SHARE`, so a redaction of the same act
+is ordered before or after the promotion, and its reduction stands. Every
+landed non-empty payload is promoted, the admission Registration's
+handle included, so the staged row is never a payload's last home.
+A genesis act has no staged row. The genesis bootstrap draws both
+nonces and keeps them in `genesis_handshake_nonces` before it asks
+for the seal, so a run interrupted after the seal recovers its
+approval from the custodied key and the kept nonces. It writes each
+non-empty genesis payload's carriage the moment the seal returns
+its salt, and the content nonce leaves `genesis_handshake_nonces`
+in the same transaction: the nonce has one home at a time. An empty
+payload has no carriage row, and its content nonce, which conceals
+nothing, stays there:
+
+```sql
+CREATE TABLE genesis_handshake_nonces (
+    act_id           TEXT        PRIMARY KEY,
+    content_nonce    BYTEA,
+    dependency_nonce BYTEA       NOT NULL,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE act_payloads (
     act_id        TEXT        PRIMARY KEY,  -- L1 act identifier, verbatim
     payload       BYTEA,                    -- the envelope bytes; NULL once reduced
-    content_salt  BYTEA,                    -- the commitment's private value; NULL with it
+    content_nonce BYTEA,                    -- the pair's nonce; NULL with the payload
+    content_salt  BYTEA,                    -- the host-drawn salt; NULL with the payload
     payload_state TEXT        NOT NULL DEFAULT 'full'
         CHECK (payload_state IN ('full', 'reduced')),
     reduced_at    TIMESTAMPTZ,              -- the reduction's moment
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CHECK ((payload IS NULL) = (content_salt IS NULL)),
-    CHECK ((payload IS NULL) = (payload_state = 'reduced')),
-    CHECK ((reduced_at IS NULL) = (payload_state = 'full'))
+    CONSTRAINT act_payloads_pair_goes_together
+        CHECK ((payload IS NULL) = (content_salt IS NULL)
+               AND (payload IS NULL) = (content_nonce IS NULL)),
+    CONSTRAINT act_payloads_full_is_not_empty
+        CHECK (payload IS NULL OR length(payload) > 0),
+    CONSTRAINT act_payloads_bytes_absent_iff_reduced
+        CHECK ((payload IS NULL) = (payload_state = 'reduced')),
+    CONSTRAINT act_payloads_reduced_at_iff_reduced
+        CHECK ((reduced_at IS NULL) = (payload_state = 'full'))
 );
 ```
 
-Anyone holding a row can verify it against the record's published
-witness. `payload_state` moves toward `'reduced'` only. A reduction
-sets `payload` and `content_salt` to NULL together and stamps
-`reduced_at`; the row itself is never deleted. NULL is never the
-zero-length string: zero bytes is the canonical empty payload
+A full row, with the record's pre-commitment, opens the record's
+published witness: the payload and the content nonce reproduce the
+content pre-digest, and the salt with it opens the content
+commitment over the act identifier and the pre-commitment. `payload_state` moves
+toward `'reduced'` only. A reduction sets `payload`,
+`content_nonce` and `content_salt` to NULL in one statement and
+stamps `reduced_at`; the row itself is never deleted. NULL is never
+the zero-length string: zero bytes is the canonical empty payload
 (`crates/common/src/l1/handshake.rs`), so an emptied row would
 claim the act carried nothing. A full-empty payload (an act with no
 bytes) has no carriage row. A promotion over a reduced row keeps it
-reduced, and a record landing after a redaction reaped its staged
-copy lands reduced: a carriage row in `reduced` holding nothing, and
-no display row built.
+reduced.
+
+**The payload mark** is CoGra's, derived from its own carriage: a
+record is payload-marked exactly when its act has a carriage row,
+full or reduced. Ingestion reads the mark from the carriage it has
+just promoted (`EXISTS` over `act_payloads`), so a record is marked
+from its first read. A carriage row written after the record landed
+marks it in the same transaction (`content::mark_carried`), so a
+mirror rebuild reads the mark the live mirror holds. A redaction of
+an act that has been sealed but has not landed records its carriage
+row `reduced` ("Redacting an act"), so the record lands reduced and
+marked, with no display row built. An act whose payload CoGra does
+not carry reads unmarked: an act sealed on the stand-in directly
+(the `l1-dev` CLI), and a CoGra actor's act written through another
+Layer 2 ([open-questions.md Q63](../open-questions.md#q63--the-payload-mark-of-an-act-cogra-does-not-carry)).
 
 ### Redacting an act
 
@@ -355,24 +427,34 @@ A redaction of one act (the erasure engines decide which acts;
 `crates/api/src/redaction.rs` does each one) is **one transaction**:
 
 1. **Promote first.** If the act landed but its carriage row is
-   missing, the landed staged row's payload is promoted before
+   missing, the landed staged row's content pair is promoted before
    anything is reaped, so nothing is erased without an archive unit.
 2. **Archive** the unit (below) — from the carriage while it is full,
    else from a sealed staged copy of an act that has not landed. A
    copy never sealed has no witness and is not archived.
-3. **Reduce** the carriage row.
-4. **Reap** the staged row: `payload`, `content_salt` and `nonce` to
-   NULL. The nonce goes with them, because the public pre-commitment
-   is formed over nonce and payload.
+3. **Reduce** the carriage row: `payload`, `content_nonce` and
+   `content_salt` to NULL. An act carried so far only in its sealed
+   staged copy gets its carriage row recorded `reduced` here, so a
+   record landing later reads marked and reduced from its first read.
+4. **Reap** the staged row: `payload`, `content_salt` and
+   `content_nonce` to NULL. The content nonce goes with them, because
+   with the public pre-commitment it confirms a guessed payload. The
+   dependency nonce stays with the rest of the pre-commitment leg: it
+   was disclosed to the host with the dependency list and opens no
+   content. The content nonce's digest stays in
+   `content_nonce_digests`, so the nonce is still refused. A
+   full-empty payload is not reaped: its content nonce conceals
+   nothing, and its record lands with no carriage row, unmarked.
 5. **Hold** each asset the envelope names whose last live placement
    is now gone.
 
 Because all five commit together, no committed state holds an
 archive unit without its reduction or a reduction without its unit.
-Once the transaction commits, the stand-in's own copy — the
-custody of an act that never reached acceptance — is dropped across
-the seam (`L1Boundary::drop_carriage`); a crash between the two
-leaves that residue for the retry, and every step is idempotent. A
+Once the transaction commits, the stand-in's content salt — held
+only by an act that never reached acceptance — is dropped across the
+seam (`L1Boundary::drop_carriage`); the host keeps the act's
+dependency opening. A crash between the two leaves that residue for
+the retry, and every step is idempotent. A
 carried act is never redacted: it never reached Layer 1 or a
 reader, and is deleted with its account.
 
@@ -418,11 +500,11 @@ A graph-side redaction writes one row per act, `original_type =
 
 ```json
 {
-  "unit": 1,
+  "unit": 2,
   "act_id": "act:<author>:<seq>:<family>",
   "envelope": "<the full payload>",
+  "content_nonce": "<hex>",
   "content_salt": "<hex>",
-  "nonce": "<hex, or null when no copy still held it>",
   "witness": "<the content commitment>",
   "media": [
     { "role": "asset", "rendition_digest": "<R>", "upload_digest": "<U>",
@@ -433,11 +515,11 @@ A graph-side redaction writes one row per act, `original_type =
 }
 ```
 
-The unit re-verifies against the public record on its own: salt and
-envelope open the content commitment over the act identifier and
-the record's pre-commitment, the nonce reproduces that
-pre-commitment, and each media entry names the bytes by both
-manifest digests. A unit **references** media; it never copies blob
+The unit re-verifies against the public record on its own: the
+envelope and the content nonce reproduce the content pre-digest, the
+salt with it opens the content commitment over the act identifier
+and the record's pre-commitment, and each media entry names the
+bytes by both manifest digests. A unit **references** media; it never copies blob
 bytes. One asset can sit in several placements, so it is held
 (`media_attachments.held_at`) only when its **last** live placement
 is redacted, and until then it keeps serving the others. A live
@@ -515,9 +597,9 @@ The write path stages before it lands
 a staged act — the canonical proposal, joined by the device's
 pre-commitment and the host-sealed verified act as the handshake
 advances — is one `staged_writes` row from **prepare** until
-**confirm**. Staged payload bytes ride the row; promotion at
-confirm copies them into the carriage tables, which own permanent
-payload storage. A content write's or profile update's display
+**confirm**. Staged payload bytes and both nonces ride the row;
+ingestion copies the content pair and its salt into `act_payloads`,
+which owns permanent payload storage ("Act payload carriage"). A content write's or profile update's display
 rows appear earlier, at the pre-commitment signature, carrying a
 pending mark ("Content nodes" below); promotion on confirm drops that mark and drives the
 flows built on landing (an applicant's Registration and a
@@ -558,7 +640,8 @@ CREATE TABLE staged_writes (
     asserted_parents TEXT[]           NOT NULL DEFAULT '{}',
     deps             TEXT[]           NOT NULL DEFAULT '{}',
     -- NULL only once a redaction reaped it ("Redacting an act"),
-    -- with the content salt and the nonce, at payload_reaped_at.
+    -- with the content salt and the content nonce, at
+    -- payload_reaped_at.
     payload          BYTEA,
     payload_reaped_at TIMESTAMPTZ,
 
@@ -567,17 +650,21 @@ CREATE TABLE staged_writes (
                          'awaiting_approval', 'relaying', 'landed',
                          'expired')),
     -- Staged as an act carried with an application (auth.md
-    -- "Application"): held in 'carried' until the landing appends the
-    -- admission Registration and the winning vouch to deps and moves it
+    -- "Application"): held in 'carried' until the landing merges the
+    -- admission Registration and the winning vouch into deps, keeping
+    -- the list in canonical order (sorted, duplicate-free), and moves it
     -- to 'awaiting_pre_sign'; the flag stays, marking the batch the
     -- device signs without a prompt.
     carried        BOOLEAN     NOT NULL DEFAULT FALSE,
 
     -- The device's pre-commitment leg, then the host-sealed
-    -- verified act, stored as the relay legs return them.
-    author_pubkey  BYTEA,
-    nonce          BYTEA,
-    pre_signature  BYTEA,
+    -- verified act, stored as the relay legs return them. The
+    -- content nonce is never sent to the host; the dependency nonce
+    -- is disclosed to it with the dependency list.
+    author_pubkey    BYTEA,
+    content_nonce    BYTEA,
+    dependency_nonce BYTEA,
+    pre_signature    BYTEA,
     content_salt        BYTEA,
     deps_salt           BYTEA,
     content_commitment  BYTEA,
@@ -600,9 +687,18 @@ CREATE TABLE staged_writes (
     expired_epoch  BIGINT,
     created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CHECK ((payload IS NULL) = (payload_reaped_at IS NOT NULL)),
-    CHECK (payload IS NOT NULL OR (nonce IS NULL AND content_salt IS NULL)),
-    CHECK (payload IS NOT NULL OR state <> 'carried')
+    CONSTRAINT staged_writes_payload_absent_iff_reaped
+        CHECK ((payload IS NULL) = (payload_reaped_at IS NOT NULL)),
+    CONSTRAINT staged_writes_reaped_conceals
+        CHECK (payload IS NOT NULL OR (content_nonce IS NULL AND content_salt IS NULL)),
+    CONSTRAINT staged_writes_carried_never_reaped
+        CHECK (payload IS NOT NULL OR state <> 'carried'),
+    CONSTRAINT staged_writes_pre_signed_leg_whole
+        CHECK ((author_pubkey IS NULL) = (dependency_nonce IS NULL)
+               AND (author_pubkey IS NULL) = (pre_signature IS NULL)
+               AND (payload IS NULL OR (author_pubkey IS NULL) = (content_nonce IS NULL))),
+    CONSTRAINT staged_writes_epochs_from_boundary
+        CHECK (prepared_epoch >= 0 AND expired_epoch >= 0)
 );
 ```
 
@@ -2106,8 +2202,8 @@ CREATE INDEX honor_entries_member_idx
   the admission balance is the realization's, read as `B_i`. Postgres
   holds pointers and bookkeeping, never amounts that bind.
 - **Payload integrity.** The content witness is L1's evidence;
-  the carriage tables hold bytes and salts that verify against
-  it, and deletion is payload removal — the witness and the
+  the carriage tables hold bytes, content nonces and salts that
+  verify against it, and deletion is payload removal — the witness and the
   structural record remain.
 
 ---

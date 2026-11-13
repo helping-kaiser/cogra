@@ -316,6 +316,16 @@ async fn execution_redacts_identity_and_keeps_every_record(pool: PgPool) {
     let address = sol.key.address();
     let records_before = mirrored_by(&rig, &address).await;
     assert!(records_before >= 1, "the profile update landed");
+    let mut with_bytes: Vec<String> = sqlx::query_scalar(
+        "SELECT m.record_id FROM mirror_records m
+         JOIN staged_writes s ON s.act_id = m.record_id
+         WHERE m.author = $1 AND m.family = 'registration' AND length(s.payload) > 0",
+    )
+    .bind(&address)
+    .fetch_all(&rig.pool)
+    .await
+    .expect("the Registrations with bytes, read off the staged rows before the reap");
+    with_bytes.sort();
 
     let done = tick(&rig).await;
     assert_eq!(done.executed, vec![sol.id]);
@@ -376,7 +386,7 @@ async fn execution_redacts_identity_and_keeps_every_record(pool: PgPool) {
         Some("user-account-deletion")
     );
     assert_eq!(current.display_name, "");
-    let registration_records: Vec<String> = sqlx::query_scalar(
+    let mut registration_records: Vec<String> = sqlx::query_scalar(
         "SELECT record_id FROM mirror_records
          WHERE author = $1 AND family = 'registration' AND payload_marked",
     )
@@ -384,8 +394,13 @@ async fn execution_redacts_identity_and_keeps_every_record(pool: PgPool) {
     .fetch_all(&rig.pool)
     .await
     .expect("records");
-    assert!(!registration_records.is_empty());
-    for record in &registration_records {
+    registration_records.sort();
+    assert!(!with_bytes.is_empty(), "the admission handle carried bytes");
+    assert_eq!(
+        registration_records, with_bytes,
+        "exactly the Registrations that carried bytes are marked"
+    );
+    for record in &with_bytes {
         let state: String =
             sqlx::query_scalar("SELECT payload_state FROM act_payloads WHERE act_id = $1")
                 .bind(record)
@@ -1240,21 +1255,13 @@ async fn registered_applicant(rig: &WireRig, inviter: &Member, handle: &str) -> 
 async fn sign(rig: &WireRig, key: &ActorKey, staged_id: Uuid) {
     let boundary = StandInBoundary(rig.standin.clone());
     let write = staged::load(&rig.pool, staged_id).await.expect("loads");
-    let pre = key.pre_sign(write.proposal.clone());
-    let sealed = api::relay::submit_pre_signed(
-        &boundary,
-        &rig.pool,
-        staged_id,
-        PreSignedParts {
-            author_pubkey: pre.author_pubkey.clone(),
-            nonce: pre.nonce.clone(),
-            pre_signature: pre.pre_signature.clone(),
-        },
-    )
-    .await
-    .expect("seals");
+    let pre = common::l1::proposal::PreSigned::sign(key, write.proposal.clone());
+    let sealed =
+        api::relay::submit_pre_signed(&boundary, &rig.pool, staged_id, PreSignedParts::from(&pre))
+            .await
+            .expect("seals");
     let host_key = rig.standin.host_public_key().await.expect("host key");
-    let witness = key.approve(&pre, &sealed, &host_key).expect("approves");
+    let witness = pre.approve(key, &sealed, &host_key).expect("approves");
     api::relay::submit_approval(&boundary, &rig.pool, staged_id, witness.approval_signature)
         .await
         .expect("relays");
