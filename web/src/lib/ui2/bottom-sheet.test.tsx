@@ -205,6 +205,81 @@ describe("BottomSheet", () => {
     expect(screen.getByRole("heading", { name: "Report this post?" })).toHaveClass("pb-2");
   });
 
+  // THE MASTER'S BOX MODEL (`BottomSheet.jsx`: the surface's `padding:
+  // var(--space-2) 0 calc(var(--space-6) + env(safe-area-inset-bottom, 0px))`,
+  // the grip's `marginBottom: var(--space-3)` and nothing over it). The padding
+  // is the SURFACE's — measured on its node — never a child's margin standing
+  // in for it (W-SHEET-PADDING-PLACEMENT).
+  describe("the master's box model", () => {
+    it("pads the surface itself: 8 over the grip, 24 and the inset under the last child", () => {
+      render(
+        <BottomSheet open onClose={() => {}} title="Mark as sensitive">
+          <p>Body</p>
+        </BottomSheet>,
+      );
+      const surface = screen.getByTestId("bottom-sheet");
+      expect(surface.style.paddingTop).toBe("0.5rem");
+      expect(surface.style.paddingBottom).toBe("calc(1.5rem + env(safe-area-inset-bottom, 0px))");
+      expect(surface.style.paddingLeft).toBe("0px");
+      expect(surface.style.paddingRight).toBe("0px");
+      expect(surface.className).not.toMatch(/\bp-0\b/);
+    });
+
+    it("gives the grip 12 under it and nothing over it", () => {
+      render(
+        <BottomSheet open onClose={() => {}} title="Mark as sensitive" node={{ path: "x.sheet" }}>
+          <p>Body</p>
+        </BottomSheet>,
+      );
+      const grip = screen.getByTestId("x.sheet.dragHandle").className.split(" ");
+      expect(grip).toEqual(expect.arrayContaining(["mb-3", "h-1", "w-8"]));
+      expect(grip.some((c) => /^m[ty]-/.test(c))).toBe(false);
+    });
+
+    // A foot-less body runs into the surface's bottom padding by exactly that
+    // padding, so a capped sheet's content still scrolls to the edge — the
+    // master's surface IS its scroller, and its padding ends the scroll.
+    it("lets a foot-less body scroll through the surface's bottom padding, adding none", () => {
+      render(
+        <BottomSheet open onClose={() => {}} title="Mark as sensitive">
+          <p>Body</p>
+        </BottomSheet>,
+      );
+      const body = screen.getByTestId("bottom-sheet-body");
+      expect(body.style.marginBottom).toBe("calc(-1 * (1.5rem + env(safe-area-inset-bottom, 0px)))");
+      expect(body.style.paddingBottom).toBe("calc(1.5rem + env(safe-area-inset-bottom, 0px))");
+      expect(body.className).not.toMatch(/\bpb-/);
+    });
+
+    // W-SHEET-FOOT-GAP (SettingsLicense: the foot stands in the padded
+    // column at its `gap:8px`); the 24 under the foot is the surface's.
+    it("gaps a foot at 8 and leaves the 24 under it to the surface", () => {
+      render(
+        <BottomSheet open onClose={() => {}} title="Default license" foot={<div data-testid="foot">Done</div>}>
+          <p>Body</p>
+        </BottomSheet>,
+      );
+      const body = screen.getByTestId("bottom-sheet-body");
+      expect(body.className.split(" ")).toContain("pb-2");
+      expect(body.className).not.toMatch(/\bpb-3\b/);
+      expect(body.style.marginBottom).toBe("");
+      expect(screen.getByTestId("foot").parentElement?.className).not.toMatch(/\bpb-/);
+    });
+
+    // The column fits inside the padded surface: its bound is the surface's
+    // less the padding, or it would push past the surface's edge.
+    it("bounds the column by the surface's class less the surface's padding", () => {
+      render(
+        <BottomSheet open onClose={() => {}} title="Cited by" maxHeight={SHEET_RAISED}>
+          <p>Body</p>
+        </BottomSheet>,
+      );
+      expect(screen.getByTestId("bottom-sheet-column").style.maxHeight).toBe(
+        `calc(min(88dvh, ${SHEET_CEILING}) - 0.5rem - (1.5rem + env(safe-area-inset-bottom, 0px)))`,
+      );
+    });
+  });
+
   // A sheet over a sheet takes the next tonal rung (design/readme.md:2364:
   // "its surface moves to `surfaceContainerHighest` ... two surfaces at one
   // rung claim one elevation").
@@ -527,6 +602,19 @@ describe("SheetItem", () => {
       </SheetItem>,
     );
     expect(screen.getByTestId("pd").className).toContain("min-h-12");
+  });
+
+  // `SheetItem`'s own padding (`BottomSheet.jsx`: `calc((48px − label-large's
+  // 20px line) / 2) var(--space-6)` = 14 24): the row's height is its padding
+  // around the line, the 48px minimum only a floor under it.
+  it("pads its row 14 over and under the line, the master's padding rather than a centred minimum", () => {
+    render(
+      <SheetItem testId="pd" onSelect={() => {}} edge>
+        Public domain
+      </SheetItem>,
+    );
+    const row = screen.getByTestId("pd").className.split(" ");
+    expect(row).toEqual(expect.arrayContaining(["py-3.5", "px-6", "min-h-12"]));
   });
 
   // NamesLong.md:5 and :9 at the longest legal handle (NamesLong.jsx).
