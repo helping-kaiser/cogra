@@ -17,6 +17,7 @@ import { writeStanceTaught } from "@/lib/stance/stance-coach";
 import type { StanceTargetRef } from "@/lib/stance/stance-data";
 import { createStubStanceData, type StubStanceOptions } from "@/lib/stance/stub-stance-data";
 import { raisedLayersForTests } from "@/lib/ui2/covering-layer";
+import { declared } from "@/test/css";
 import { byNode } from "@/test/data-node";
 import { renderWithProviders } from "@/test/providers";
 import { CarriedSnackbar } from "./carried-snackbar";
@@ -970,7 +971,7 @@ describe("the pad the tap opens", () => {
     // The knob's percentages are of a box inset from the field, which is
     // what keeps the knob itself inside the drawn corner.
     const travelBox = knob().parentElement;
-    expect(travelBox?.style.inset).toBe(`${KNOB_TRAVEL_INSET_PX}px`);
+    expect(travelBox?.style.inset).toBe(declared("inset", `${KNOB_TRAVEL_INSET_PX}px`));
   });
 
   it("measures the pick as travel from where the thumb went down", async () => {
