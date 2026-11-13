@@ -211,7 +211,8 @@ impl PreSigned {
 /// and dependency bounds are the host's own.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum SubmissionError {
-    #[error("malformed author key")]
+    /// The author key does not parse, or is not the body author's.
+    #[error("malformed author key, or a key that is not the author's")]
     AuthorKey,
     #[error("the pre-commitment does not recompute from the body and both pre-digests")]
     PreCommitment,
@@ -271,10 +272,15 @@ impl Submission {
     /// The submission's authentication: P recomputed from the body, the
     /// received content pre-digest and the dependency pre-digest formed
     /// here, equal to the received P, and the pre-signature strictly valid
-    /// over it under the author's key.
+    /// over it under the author's key. The key must parse and must be the
+    /// body's author's, so a signature under any other actor's key is
+    /// refused.
     pub fn verify_pre_commitment(&self) -> Result<(), SubmissionError> {
         let key = crypto::verifying_key_from_bytes(&self.author_pubkey)
             .ok_or(SubmissionError::AuthorKey)?;
+        if crypto::address_of(&key) != self.body.author {
+            return Err(SubmissionError::AuthorKey);
+        }
         let formed = pre_commitment(
             &self.body,
             &self.content_pre_digest,

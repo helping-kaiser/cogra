@@ -347,6 +347,27 @@ fn the_host_needs_neither_payload_nor_content_nonce() {
     );
 }
 
+/// The host refuses a key that parses but is not the body author's, even when the signature verifies under it.
+///
+/// A submission pre-signed correctly by another actor's key for a body whose author is someone else is refused.
+/// ´claim:proposal:a-submission-under-another-actors-key-is-refused´
+#[test]
+fn a_submission_under_another_actors_key_is_refused() {
+    let author = ActorKey::from_seed([7u8; 32]);
+    let other = ActorKey::from_seed([8u8; 32]);
+    let pre = PreSigned::sign_with_nonces(
+        &other,
+        proposal(&author.address(), b"hello"),
+        CONTENT_NONCE.to_vec(),
+        DEPENDENCY_NONCE.to_vec(),
+    );
+    let submission = pre.submission();
+    assert_eq!(
+        submission.verify_pre_commitment(),
+        Err(SubmissionError::AuthorKey)
+    );
+}
+
 /// The host refuses a content pre-digest the author did not sign, a
 /// signature that is not the author's, and a key that does not parse.
 ///
