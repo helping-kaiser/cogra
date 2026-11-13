@@ -3,6 +3,8 @@ package com.cogra.core.designsystem
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertTextEquals
@@ -135,16 +137,29 @@ class NamesTest {
     }
 
     @Test
-    fun wrappingTextSpeaksAsWrittenAndDrawsItsUnitsJoined() {
-        val text = "$longHandle is hidden — their posts stay out of your feed."
+    fun wrappingTextSpeaksAsWrittenAndMarksItsUnits() {
+        val text = "Change your handle to $longHandle? Links to $longHandle stop working."
         compose.setContent {
             Cogra2PreviewTheme { NameInText(text, Modifier.testTag("text")) }
         }
         val node = compose.onNodeWithTag("text").assertTextEquals(text).fetchSemanticsNode()
-        val shown = node.config[NameInTextShown]
-        assertThat(shown).contains(WORD_JOINER.toString())
-        assertThat(shown.filterNot { it == WORD_JOINER }).isEqualTo(text)
+        assertThat(node.config[NameUnits]).containsExactly("$longHandle?", longHandle).inOrder()
         assertThat(node.config[SemanticsProperties.Text].single().text).isEqualTo(text)
+    }
+
+    @Test
+    fun theCallersOwnSemanticsStayOnTheNode() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                NameInText(
+                    "$longHandle is hidden.",
+                    Modifier.testTag("text").semantics { heading() },
+                )
+            }
+        }
+        compose.onNodeWithTag("text")
+            .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+            .assertTextEquals("$longHandle is hidden.")
     }
 
     @Test
@@ -154,6 +169,6 @@ class NamesTest {
         }
         compose.onNodeWithTag("text")
             .assertTextEquals("Nothing here names anyone.")
-            .assert(SemanticsMatcher.keyNotDefined(NameInTextShown))
+            .assert(SemanticsMatcher.keyNotDefined(NameUnits))
     }
 }

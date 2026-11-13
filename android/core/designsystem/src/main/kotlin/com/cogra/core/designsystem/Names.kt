@@ -43,7 +43,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
@@ -70,13 +69,13 @@ internal val ELLIPSIS: String = Char(0x2026).toString()
 val NameLineHandle = SemanticsPropertyKey<String>("NameLineHandle", mergePolicy = ::outerFirst)
 
 /**
- * Marks wrapping text that holds units, with the text as drawn — joined, and
- * cut where a unit passed a full line (web's `data-name-unit`).
+ * Marks wrapping text that [NameInText] holds units in, with each unit as
+ * written, its punctuation included (web's `data-name-unit`).
  */
-val NameInTextShown = SemanticsPropertyKey<String>("NameInTextShown", mergePolicy = ::outerFirst)
+val NameUnits = SemanticsPropertyKey<List<String>>("NameUnits", mergePolicy = ::outerFirst)
 
 /** A mark merges up to the node that merges its children (a tagged, merged row reads it). */
-private fun outerFirst(parent: String?, child: String): String = parent ?: child
+private fun <T> outerFirst(parent: T?, child: T): T = parent ?: child
 
 /** A one-line place split around its first handle: the words, the handle, the words. */
 data class NameLine(val before: String, val handle: String, val after: String)
@@ -231,23 +230,22 @@ fun NameInText(
         return
     }
     val measurer = rememberTextMeasurer()
-    // Merged, so the caller's node (its tag, its heading) speaks the text the
-    // Text inside sets — the shaped string is chosen only once the width is known.
-    BoxWithConstraints(modifier.semantics(mergeDescendants = true) {}) {
+    val written = units.map { text.substring(it.start, it.end) }
+    // The caller's node speaks the text as written — never the joiners or a
+    // cut — and its own semantics (a tag, a heading, a description) ride
+    // ahead of the clearing, so they stay.
+    BoxWithConstraints(
+        modifier.clearAndSetSemantics {
+            this.text = AnnotatedString(text)
+            this[NameUnits] = written
+        },
+    ) {
         val lineWidth = constraints.maxWidth.takeIf { constraints.hasBoundedWidth }
         val shown = remember(text, units, lineWidth, style, measurer) {
             shapeNamesInText(text, units, lineWidth) { piece ->
                 measurer.measure(piece, style, softWrap = false, maxLines = 1).size.width
             }
         }
-        Text(
-            text = shown,
-            color = color,
-            style = style,
-            modifier = Modifier.clearAndSetSemantics {
-                this.text = AnnotatedString(text)
-                this[NameInTextShown] = shown
-            },
-        )
+        Text(shown, color = color, style = style)
     }
 }
