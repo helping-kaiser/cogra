@@ -4,8 +4,9 @@
 // TagPickerRefused; behavior/TagPicker*.md; readme §13, the tag round).
 //
 // THE FIRST ROW IS THE TYPED NAME, ALWAYS (jakob 2026-09-30, K14.1): the
-// canonicalized form of what is typed, `Signs as #name` on its second line,
-// and the field's action key stages it — the same pick as a tap. It names a
+// canonicalized form of what is typed, `Signs as #name` on its second line
+// only where the canonical name differs from it, and the field's action key
+// stages it — the same pick as a tap. It names a
 // Type that already exists; there is no "Create" row and never can be
 // (hashtag.md §2). The rows under it are the index's: names in use that start
 // with what is typed (`fetchTagNames`), the typed name never listed twice.
@@ -232,7 +233,10 @@ export function TagPicker({
                 <PickerRow
                   kind="topic"
                   name={first}
-                  sub={signsAs(first)}
+                  // `Signs as #name` only where it tells something: GIVEN the
+                  // canonical name differs from what was typed
+                  // (TagPickerTyping.md:3; seam 314 cut it where it repeated).
+                  sub={first !== query ? signsAs(first) : undefined}
                   onPick={() => stage(first)}
                   disabled={atCap}
                   node={instance(NODE, "tag", first)}

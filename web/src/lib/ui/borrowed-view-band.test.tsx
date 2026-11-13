@@ -12,7 +12,7 @@ describe("BorrowedViewBand", () => {
       "Browsing from @mira's view — join to build your own.",
     );
     expect(borrowedViewLine.applicant("mira")).toBe(
-      "Browsing from @mira's view while your application lands.",
+      "Browsing from @mira's view.",
     );
     // VouchBack.md:13 — the member's line asks for nothing.
     expect(borrowedViewLine.member("mira")).toBe(

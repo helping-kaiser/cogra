@@ -204,18 +204,6 @@ export function DetailsStep({
       />
 
       <div className="flex-1" />
-      {/* Why the seal may wait, said before the reader reaches it rather than
-          as a refusal when they get there — and only while something is still
-          going up: `ComposeUploading` draws it, the stage at rest
-          (`ComposeDetails`) does not. */}
-      {mode === "media" && assets.some((asset) => thumbState(asset).progress !== undefined) && (
-        <p
-          data-testid="wizard-upload-aside"
-          className="m-0 text-center text-label-small text-on-surface-variant"
-        >
-          Pictures upload while you write — signing waits for them.
-        </p>
-      )}
       <PillButton
         testId="wizard-next"
         node={{ path: "composeDetails.next" }}
@@ -260,9 +248,6 @@ function CoverField({ onOpen }: { onOpen: () => void }) {
       <InlineAction size="sm" testId="wizard-cover-door" onClick={onOpen}>
         Add a cover
       </InlineAction>
-      <p className="m-0 text-label-small text-on-surface-variant">
-        It plays the moment it is on screen, so it starts on its own first frame.
-      </p>
     </div>
   );
 }

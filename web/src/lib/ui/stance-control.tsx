@@ -32,8 +32,9 @@
 // moves the face only once signed: past 200ms the row says `Signing…`, and a
 // failure says `That didn't sign.` with Retry. Never a snackbar for a failure.
 //
-// THE PAD IS THE TEACHER: the account's first-ever open carries the two
-// coaching lines, and they close with the pad and never show again.
+// THE FIRST-EVER OPEN SAYS ONE LINE: `Nothing is signed until Set.` closes
+// with the pad and never shows again; the shortcut is said in the vouch-back
+// pad's "?" (copy-voice, jakob 2026-11-12).
 //
 // RELEASING THE FINGER NEVER COMMITS. Release parks the pick; Set signs it;
 // Cancel, a press on the wash, or Escape stages nothing. The walk-back — and a
@@ -108,7 +109,13 @@ import { RowLine, type RowLineState } from "@/lib/ui/row-line";
 import { SeveranceConfirm } from "@/lib/ui/severance-confirm";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { StanceAlternates } from "@/lib/ui/stance-alternates";
-import { padHelp, StanceCoaching, unreachableHelp } from "@/lib/ui/stance-pad-help";
+import {
+  padHelp,
+  PressAndHoldLine,
+  StanceFirstOpenLine,
+  unreachableHelp,
+  type PadHelpLine,
+} from "@/lib/ui/stance-pad-help";
 import {
   formatStancePair,
   severanceWords,
@@ -203,8 +210,8 @@ export type PadVariant = {
    * `How vouching works`, ApprovePad.md:19 — the master's `helpLabel`).
    */
   readonly helpLabel?: string;
-  /** The help that replaces the pad's body in place (:21). */
-  readonly help: readonly string[];
+  /** The help that replaces the pad's body in place (:21); a line may be the press-and-hold one. */
+  readonly help: readonly PadHelpLine[];
   /**
    * The line — or lines — above the field's foot on every open of this
    * variant (:13; the approval pads' two lines, ApprovePad.md:17).
@@ -449,7 +456,7 @@ export function StanceControl({
   // already open, exactly as `openConsidered` below would leave it.
   const [open, setOpen] = useState(padOnly !== undefined && mode === "pad");
   const [alternates, setAlternates] = useState(padOnly !== undefined && mode !== "pad");
-  /** This open is the account's first-ever, so the pad carries the coaching lines. */
+  /** This open is the account's first-ever, so the pad carries its one first-open line. */
   const [coaching, setCoaching] = useState(padOnly !== undefined && mode === "pad" && !taught);
   /** False, the "?"'s help, or the unreachable landing's 🤔 explanation. */
   const [explaining, setExplaining] = useState<false | "help" | "zero">(false);
@@ -685,7 +692,7 @@ export function StanceControl({
     setAlternates(false);
     setExplaining(false);
     setPadFault(null);
-    // The coaching lines close with the pad and never show again.
+    // The first-open line closes with the pad and never shows again.
     setCoaching(false);
   };
 
@@ -1208,11 +1215,15 @@ export function StanceControl({
             parking. */}
         {explaining !== false ? (
           <div data-testid={`${testIdPrefix}-explanation`} className="flex flex-col gap-2">
-            {helpLines.map((line) => (
-              <p key={line} className="m-0 text-body-small text-on-surface-variant">
-                {line}
-              </p>
-            ))}
+            {helpLines.map((line, index) =>
+              typeof line === "string" ? (
+                <p key={index} className="m-0 text-body-small text-on-surface-variant">
+                  {line}
+                </p>
+              ) : (
+                <PressAndHoldLine key={index} />
+              ),
+            )}
             <button
               type="button"
               data-testid={`${testIdPrefix}-explain-back`}
@@ -1235,7 +1246,7 @@ export function StanceControl({
             />
             {/* The master's `padNote` slot, between the field and the landing
                 line: a variant's own line on every open, and the first-ever
-                open's two coaching lines. */}
+                open's one line. */}
             {variant !== undefined ? (
               <div
                 {...testAttributes(part(padNode, "note"), `${testIdPrefix}-note`)}
@@ -1246,10 +1257,10 @@ export function StanceControl({
                     {line}
                   </p>
                 ))}
-                {coaching && <StanceCoaching testId={`${testIdPrefix}-coaching`} />}
+                {coaching && <StanceFirstOpenLine testId={`${testIdPrefix}-coaching`} />}
               </div>
             ) : (
-              coaching && <StanceCoaching testId={`${testIdPrefix}-coaching`} />
+              coaching && <StanceFirstOpenLine testId={`${testIdPrefix}-coaching`} />
             )}
             {padFault !== "writeRule" && keyAbsent !== true && (
               <StanceLandingLine

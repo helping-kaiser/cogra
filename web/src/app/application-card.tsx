@@ -38,26 +38,26 @@ export const COPY_YOUR_ASK_LINK = "Copy your ask link";
 export const YOUR_ASK_LINK = "Your ask link";
 export const ASK_SOMEONE = "Ask someone you know to vouch for you";
 export const ASK_SOMEONE_CAPTION =
-  "Send it to anyone who is already in. It does not expire, and it works however many people you send it to.";
+  "Send it to anyone who is already in. It does not expire.";
 export const GOT_IT = "Got it";
 
 export function closedTitle(handle: string): string {
   return `${handle} closed your application`;
 }
 export function closedBody(handle: string): string {
-  return `That was ${handle}'s call, and it is the only thing it decides. Your account stays exactly as it is, you can keep reading, and any member you know can vouch you in instead.`;
+  return `That was ${handle}'s call. Your account stays as it is, and any member you know can vouch you in instead.`;
 }
 
 /** Each surface's words for the waiting card (the closed card's are one). */
 const WAITING = {
   feed: {
     title: (handle: string) => `All set — waiting on ${handle}`,
-    body: "Their approval brings you in. Nothing else is needed from you.",
+    body: "Their approval brings you in.",
     caption: "It does not expire.",
   },
   profile: {
     title: (handle: string) => `Waiting on ${handle}`,
-    body: "Their approval brings you in. Until then, you can read everything.",
+    body: "Their approval brings you in.",
     caption: "It does not expire. Anyone who holds your ask can let you in — the first vouch lands it.",
   },
 } as const;
