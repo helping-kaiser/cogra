@@ -43,6 +43,23 @@ export function readTagName(raw: string): TagNameReading {
   return { kind: "refused", refusal: TAG_NAME_LENGTH_REFUSAL };
 }
 
+/**
+ * The line a server refusal of a staged tag's NAME reads as: the picker's own
+ * refusal for that name (jakob 2026-11-13: the picker's two lines are the law,
+ * and the server's text never reaches a reader). A name the client reads as
+ * legal cannot be refused by a server that canonicalizes the same way; should
+ * the two ever drift, the charset line — the atom's rule — stands.
+ */
+export function tagNameRefusal(name: string): string {
+  const reading = readTagName(name);
+  return reading.kind === "refused" ? reading.refusal : TAG_NAME_CHARSET_REFUSAL;
+}
+
+/** Whether a refusal names a tag's name — `["name"]` on a single Tag act, `["tags", i, "name"]` in a batch. */
+export function refusesTagName(error: { readonly code: string; readonly field: readonly string[] | null }): boolean {
+  return error.code === "BAD_INPUT" && error.field !== null && error.field[error.field.length - 1] === "name";
+}
+
 /** The first row's second line — the record the tap will sign (TagPickerTyping.md). */
 export function signsAs(canonical: string): string {
   return `Signs as #${canonical}`;
