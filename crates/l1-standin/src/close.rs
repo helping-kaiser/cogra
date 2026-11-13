@@ -481,11 +481,11 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, Stand
     };
 
     let closure = closure_outputs(&selection, &state, &counts, wall_in_force, theta, config)?;
-    let attested_at = persist(&mut tx, epoch, &selection, &closure).await?;
+    let asserted_at = persist(&mut tx, epoch, &selection, &closure).await?;
     crate::settle_due(&mut tx, epoch).await?;
     let package = EpochPackage {
         epoch,
-        attested_at,
+        asserted_at,
         records: selection.records,
         closure,
     };
@@ -676,7 +676,7 @@ fn publishable(package: &EpochPackage) -> Result<(), StandInError> {
 /// unnested arrays rather than one statement per record: the epoch holds an
 /// `EXCLUSIVE` lock while it runs, and at the default budget a per-record
 /// loop is tens of thousands of round trips inside it. Returns the epoch
-/// row's close instant — the boundary timestamp the package attests.
+/// row's close instant — the boundary timestamp the package asserts.
 ///
 /// Acceptance drops the content salt in the statement that accepts: it is
 /// opening material of the content commitment, which the carriage layer
@@ -790,7 +790,7 @@ async fn persist(
         .wall
         .as_ref()
         .ok_or_else(|| StandInError::Host("a close publishes its controller step".into()))?;
-    let attested_at = sqlx::query_scalar!(
+    let asserted_at = sqlx::query_scalar!(
         "INSERT INTO l1_epochs
              (epoch, act_count, theta_charged_micro, closure_cause,
               marker_policy, marker_edition,
@@ -846,7 +846,7 @@ async fn persist(
     .execute(&mut **tx)
     .await?;
 
-    Ok(attested_at)
+    Ok(asserted_at)
 }
 
 pub(crate) async fn epochs_since(
@@ -936,7 +936,7 @@ pub(crate) async fn epochs_since(
 async fn load_epoch(
     conn: &mut PgConnection,
     epoch: i64,
-    attested_at: chrono::DateTime<chrono::Utc>,
+    asserted_at: chrono::DateTime<chrono::Utc>,
 ) -> Result<EpochPackage, StandInError> {
     let rows = sqlx::query!(
         r#"SELECT act_id, author, family, act_time AS "act_time!",
@@ -1015,7 +1015,7 @@ async fn load_epoch(
     }
     Ok(EpochPackage {
         epoch,
-        attested_at,
+        asserted_at,
         records,
         closure: EpochClosure {
             dependent_sets: dependent_sets(&parents),
@@ -1240,7 +1240,7 @@ mod tests {
         .expect("selects");
         let package = EpochPackage {
             epoch: 4,
-            attested_at: chrono::DateTime::from_timestamp(1_800_000_000, 0).expect("instant"),
+            asserted_at: chrono::DateTime::from_timestamp(1_800_000_000, 0).expect("instant"),
             records: selection.records,
             closure: EpochClosure::default(),
         };
@@ -1271,7 +1271,7 @@ mod tests {
         .expect("selects");
         let mut package = EpochPackage {
             epoch: 0,
-            attested_at: chrono::DateTime::from_timestamp(1_800_000_000, 0).expect("instant"),
+            asserted_at: chrono::DateTime::from_timestamp(1_800_000_000, 0).expect("instant"),
             records: selection.records,
             closure: EpochClosure::default(),
         };

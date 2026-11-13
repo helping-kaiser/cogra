@@ -363,15 +363,17 @@ pub struct PublishedLeg {
 
 /// One closed epoch as published through the seam: the ordered accepted
 /// act sequence 𝒬_k as records (§11.6 — the record projection of the
-/// final act sequence), with the boundary's attested timestamp and the
+/// final act sequence), with the boundary's asserted timestamp and the
 /// closure outputs the host computed for it.
 #[derive(Debug, Clone, PartialEq)]
 pub struct EpochPackage {
     /// The epoch, numbered from [`FIRST_EPOCH`].
     pub epoch: i64,
-    /// The attested boundary timestamp (the Host Contract's accepted-records
-    /// package): when the epoch closed, so when its records landed.
-    pub attested_at: chrono::DateTime<chrono::Utc>,
+    /// The host's asserted boundary timestamp (the Host Contract's
+    /// accepted-records package), checkable only for consistency with the
+    /// published duration bounds: when the epoch closed, so when its
+    /// records landed.
+    pub asserted_at: chrono::DateTime<chrono::Utc>,
     /// 𝒬_k in its published order; its length is the realized size.
     pub records: Vec<PublishedRecord>,
     pub closure: EpochClosure,
@@ -799,7 +801,7 @@ mod tests {
     fn package(epoch: i64, positions: &[i64]) -> EpochPackage {
         EpochPackage {
             epoch,
-            attested_at: chrono::DateTime::from_timestamp(1_800_000_000, 0).expect("instant"),
+            asserted_at: chrono::DateTime::from_timestamp(1_800_000_000, 0).expect("instant"),
             records: positions
                 .iter()
                 .enumerate()

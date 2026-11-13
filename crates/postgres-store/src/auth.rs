@@ -1681,7 +1681,7 @@ pub struct VouchedIn {
     /// The vouch record's key of record `(epoch, position)`.
     pub epoch: i64,
     pub position: i64,
-    /// The vouch record's epoch's attested instant — `Record.landedAt`.
+    /// The vouch record's epoch's asserted instant — `Record.landedAt`.
     /// None only if the mirror lacks the instant of an epoch it ingested.
     pub vouched_at: Option<DateTime<Utc>>,
 }
@@ -1706,7 +1706,7 @@ pub async fn vouched_in_by(
     let mut rows = sqlx::query_as!(
         VouchedIn,
         r#"SELECT first.account_id AS "account_id!", first.epoch AS "epoch!",
-                  first.position AS "position!", e.attested_at AS "vouched_at?"
+                  first.position AS "position!", e.asserted_at AS "vouched_at?"
            FROM (
                SELECT DISTINCT ON (ap.account_id)
                       ap.account_id, v.voucher_id, m.epoch, m.position
