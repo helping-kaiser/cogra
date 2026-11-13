@@ -1536,9 +1536,8 @@ async fn land_one(
         }
     };
     let payload = &staged_row.proposal.payload;
-    let sealed = staged_row
-        .sealed
-        .as_ref()
+    let carried = staged_row
+        .carried_pair()
         .ok_or_else(|| ContentError::Internal("landed write without sealed parts".into()))?;
     let content = CograContent::read_payload(payload)
         .map_err(|e| ContentError::Internal(format!("landed payload not admissible: {e}")))?
@@ -1559,8 +1558,7 @@ async fn land_one(
         .begin()
         .await
         .map_err(|e| ContentError::Internal(e.to_string()))?;
-    content_store::insert_act_payload(&mut tx, &write.act_id, payload, &sealed.content_salt)
-        .await?;
+    content_store::insert_act_payload(&mut tx, &write.act_id, carried).await?;
     if let Some(reduced_at) = content_store::lock_act_payload(&mut tx, &write.act_id)
         .await?
         .filter(|carriage| carriage.reduced)
@@ -1677,7 +1675,8 @@ async fn land_reduced(
         .begin()
         .await
         .map_err(|e| ContentError::Internal(e.to_string()))?;
-    content_store::insert_reduced_act_payload(&mut tx, &write.act_id, reaped.reaped_at).await?;
+    content_store::insert_reduced_act_payload(&mut tx, &write.act_id, Some(reaped.reaped_at))
+        .await?;
     if let Some(created_at) = reaped.pre_signed_at {
         match (family, is_genesis, reaped.node_id, edited) {
             (ContentFamily::Post, true, Some(node), _) => {

@@ -158,6 +158,16 @@ impl PreSignedParts {
 }
 
 impl StagedWrite {
+    /// The content pair and the host-drawn salt, as carriage holds them —
+    /// present once the seal has returned the salt. None before that.
+    pub fn carried_pair(&self) -> Option<crate::content::CarriedPair<'_>> {
+        Some(crate::content::CarriedPair {
+            payload: &self.proposal.payload,
+            content_nonce: &self.pre_signed.as_ref()?.content_nonce,
+            content_salt: &self.sealed.as_ref()?.content_salt,
+        })
+    }
+
     /// What the host receives at the seal leg (layer1-interface.md §8.2,
     /// "Verified act"): the content pre-digest is formed here, from the
     /// staged payload and the device's content nonce, and the pair itself

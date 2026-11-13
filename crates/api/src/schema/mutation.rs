@@ -17,7 +17,8 @@ use async_graphql::{Context, InputObject, Object, SimpleObject, Upload};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use chrono::{DateTime, Duration, Utc};
-use common::l1::{crypto, device_lock, key_backup, wire};
+use common::l1::proposal::PreCommitmentBlob;
+use common::l1::{crypto, device_lock, key_backup};
 use postgres_store::auth::RevokedReason;
 use postgres_store::staged::PreSignedParts;
 use postgres_store::{PgPool, auth as store, staged};
@@ -476,6 +477,7 @@ fn relay_error(e: RelayError, list: &str, index: usize) -> UserError {
     let path = vec![list.to_string(), index.to_string()];
     match e {
         RelayError::SignatureInvalid(m) => UserError::at(ErrorCode::SignatureInvalid, m, path),
+        RelayError::Carriage(m) => UserError::at(ErrorCode::BadInput, m, path),
         RelayError::Wedged(_) => UserError::at(
             ErrorCode::StagedWriteExpired,
             "the staged write lost its seal; re-prepare",
@@ -1789,9 +1791,10 @@ struct PrepareSeveranceInput {
 #[derive(InputObject)]
 struct ProposalSignatureInput {
     staged_write_id: Uuid,
-    /// The pre-commitment blob (base64): the device's private nonce and
-    /// pre-commitment signature — produced with the actor's device-held
-    /// key; opaque to this API.
+    /// The pre-commitment blob (base64): the device's content nonce, its
+    /// dependency nonce and the pre-commitment signature, produced with the
+    /// actor's device-held key. The API carries the content nonce beside
+    /// the payload and never sends it to Layer 1.
     signature: String,
 }
 
@@ -4261,6 +4264,13 @@ impl Mutation {
     /// Resubmitting a sealed proposal is idempotent only for the exact
     /// signature that was sealed; differing bytes refuse as BAD_INPUT.
     ///
+    /// The API carries the content pair, so it checks the pair before
+    /// relaying anything: a content nonce or dependency nonce of the wrong
+    /// length, a content nonce equal to the dependency nonce or already
+    /// used for another of the author's acts, or a payload past M_payload
+    /// refuses as BAD_INPUT, with nothing sent to L1 and nothing recorded.
+    /// The device re-signs under fresh nonces.
+    ///
     /// A carried write the landing released signs only once every asset
     /// it names is published to the live store; the submit runs that
     /// move. One whose move has not landed refuses as
@@ -4309,7 +4319,7 @@ impl Mutation {
                 }
             };
             let blob = decode_b64("signature", &proposal.signature).and_then(|raw| {
-                wire::decode_pre_commitment(&raw).map_err(|_| {
+                PreCommitmentBlob::decode(&raw).map_err(|_| {
                     UserError::at(
                         ErrorCode::BadInput,
                         "not a pre-commitment blob",
@@ -4317,7 +4327,7 @@ impl Mutation {
                     )
                 })
             });
-            let (nonce, pre_signature) = match blob {
+            let blob = match blob {
                 Ok(b) => b,
                 Err(e) => {
                     user_errors.push(e);
@@ -4334,8 +4344,9 @@ impl Mutation {
                 owned.id,
                 PreSignedParts {
                     author_pubkey: author_pubkey.clone(),
-                    nonce,
-                    pre_signature,
+                    content_nonce: blob.content_nonce,
+                    dependency_nonce: blob.dependency_nonce,
+                    pre_signature: blob.pre_signature,
                 },
             )
             .await

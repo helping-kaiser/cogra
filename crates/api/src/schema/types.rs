@@ -896,7 +896,9 @@ impl Record {
         self.0.position
     }
 
-    /// Whether the act committed a non-empty payload.
+    /// Whether the act carried a non-empty payload: CoGra carries it, full
+    /// or reduced. An empty payload, or one CoGra does not carry, reads
+    /// false.
     async fn payload_marked(&self) -> bool {
         self.0.payload_marked
     }
@@ -1136,12 +1138,12 @@ impl StagedWriteType {
     }
 
     /// The host-sealed verified act once the seal has returned (base64):
-    /// every host-added field the device verifies before approving. Null
-    /// in earlier states.
+    /// every host-added field the device verifies before approving, with
+    /// both salts. It carries neither the payload nor a nonce — the device
+    /// checks the commitments against what it holds itself. Null in
+    /// earlier states.
     async fn verified_act(&self) -> Option<String> {
-        self.0
-            .verified_act()
-            .map(|act| B64.encode(wire::encode_verified_act(&act)))
+        self.0.sealed_act().map(|act| B64.encode(act.encode()))
     }
 
     /// The accepted record once LANDED; null before.

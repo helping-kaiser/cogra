@@ -381,8 +381,12 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
                 .begin()
                 .await
                 .map_err(|e| ProfileError::Internal(e.to_string()))?;
-            content_store::insert_reduced_act_payload(&mut tx, &write.act_id, reaped.reaped_at)
-                .await?;
+            content_store::insert_reduced_act_payload(
+                &mut tx,
+                &write.act_id,
+                Some(reaped.reaped_at),
+            )
+            .await?;
             if !reaped.body.asserted_parents.is_empty()
                 && let Some(created_at) = reaped.pre_signed_at
             {
@@ -395,9 +399,8 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
         }
     };
     let payload = &staged_row.proposal.payload;
-    let sealed = staged_row
-        .sealed
-        .as_ref()
+    let carried = staged_row
+        .carried_pair()
         .ok_or_else(|| ProfileError::Internal("landed write without sealed parts".into()))?;
     if staged_row.proposal.body.asserted_parents.is_empty() {
         if payload.is_empty() {
@@ -407,8 +410,7 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
             .begin()
             .await
             .map_err(|e| ProfileError::Internal(e.to_string()))?;
-        content_store::insert_act_payload(&mut tx, &write.act_id, payload, &sealed.content_salt)
-            .await?;
+        content_store::insert_act_payload(&mut tx, &write.act_id, carried).await?;
         tx.commit()
             .await
             .map_err(|e| ProfileError::Internal(e.to_string()))?;
@@ -429,8 +431,7 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
         .begin()
         .await
         .map_err(|e| ProfileError::Internal(e.to_string()))?;
-    content_store::insert_act_payload(&mut tx, &write.act_id, payload, &sealed.content_salt)
-        .await?;
+    content_store::insert_act_payload(&mut tx, &write.act_id, carried).await?;
     if content_store::lock_act_payload(&mut tx, &write.act_id)
         .await?
         .is_some_and(|carriage| carriage.reduced)

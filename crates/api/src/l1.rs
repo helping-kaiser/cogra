@@ -26,7 +26,7 @@ use std::future::Future;
 use common::l1::handshake::{
     AccountBalance, ApprovalWitness, BurnSettlement, BurnTicket, EpochPackage,
 };
-use common::l1::{PreSignedProposal, VerifiedAct};
+use common::l1::proposal::{SealedAct, Submission};
 use l1_standin::{StandIn, StandInError};
 use uuid::Uuid;
 
@@ -69,12 +69,15 @@ impl From<StandInError> for BoundaryError {
 /// one-boundary lead). Prepare is L2 orchestration in front of the seam,
 /// not a seam operation (substrate.md §6 step 1).
 pub trait L1Boundary: Send + Sync {
-    /// Relay leg 1: submit the pre-signed proposal; the host verifies,
-    /// salts, and returns the sealed verified act.
+    /// Relay leg 1: submit the proposal — body, dependency list and
+    /// dependency nonce, the content pre-digest, P and the pre-signature,
+    /// never the content pair (layer1-interface.md §8.2, "Verified act");
+    /// the host runs its act checks, salts, and returns the sealed
+    /// verified act with its salts.
     fn seal(
         &self,
-        pre: PreSignedProposal,
-    ) -> impl Future<Output = Result<VerifiedAct, BoundaryError>> + Send;
+        submission: Submission,
+    ) -> impl Future<Output = Result<SealedAct, BoundaryError>> + Send;
 
     /// Relay leg 2: submit the approval witness; the act becomes
     /// orderable.
@@ -108,8 +111,8 @@ pub trait L1Boundary: Send + Sync {
     fn current_theta(&self) -> impl Future<Output = Result<f64, BoundaryError>> + Send;
 
     /// The published per-act carriage bound M_payload the prepare
-    /// pre-check reads — consume-only, like every binding constant
-    /// (data-model.md "The payload envelope").
+    /// pre-check and the relay's carriage checks read — consume-only, like
+    /// every binding constant (data-model.md "The payload envelope").
     fn max_payload_bytes(&self) -> impl Future<Output = Result<usize, BoundaryError>> + Send;
 
     /// Request the community-funded admission burn to `address` — CoGra
@@ -133,13 +136,13 @@ pub trait L1Boundary: Send + Sync {
         ticket: &BurnTicket,
     ) -> impl Future<Output = Result<BurnSettlement, BoundaryError>> + Send;
 
-    /// A redaction's reach into the substrate: drop whatever payload,
-    /// content salt and proposal nonce the substrate still holds for the
-    /// listed acts, returning how many it emptied. The host is
-    /// witness-only from acceptance (data-model.md "Act payload
+    /// A redaction's reach into the substrate: drop the content salt the
+    /// substrate still holds for the listed acts, returning how many it
+    /// emptied. The host never receives the content pair and keeps the
+    /// salt it drew only until acceptance (data-model.md "Act payload
     /// carriage"), so only acts that never reached acceptance can still
-    /// hold any; for every other act this is a no-op, and a repeat is too.
-    /// It leaves at the swap: the real Layer 1 never holds carriage.
+    /// hold one; for every other act this is a no-op, and a repeat is too.
+    /// It leaves at the swap.
     fn drop_carriage(
         &self,
         act_ids: &[String],
@@ -151,8 +154,8 @@ pub trait L1Boundary: Send + Sync {
 pub struct StandInBoundary(pub StandIn);
 
 impl L1Boundary for StandInBoundary {
-    async fn seal(&self, pre: PreSignedProposal) -> Result<VerifiedAct, BoundaryError> {
-        Ok(self.0.seal(pre).await?)
+    async fn seal(&self, submission: Submission) -> Result<SealedAct, BoundaryError> {
+        Ok(self.0.seal(submission).await?)
     }
 
     async fn approve(&self, witness: ApprovalWitness) -> Result<(), BoundaryError> {
