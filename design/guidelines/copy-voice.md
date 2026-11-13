@@ -828,7 +828,9 @@ recorded so the registry is whole.
   and reading `Reply to @ada's post` (`ReplySeal` and its family; the
   comment target's lines are under *Honesty phrasings*).
 - **The comment edit** — `Your comment on "The long way home".` under its
-  title, and its sections `Words` and `Pictures` (`CommentEdit`; `Cover`
+  title, naming the POST for a reply as for a top-level comment, on
+  every host the edit opens from (jakob 2026-11-13, N5); an untitled
+  post takes its stand-in (*An untitled post*), and its sections `Words` and `Pictures` (`CommentEdit`; `Cover`
   on `CommentEditVideo`).
 
 ## Accessible names

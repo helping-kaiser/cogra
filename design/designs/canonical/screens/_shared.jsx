@@ -2723,6 +2723,8 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
       <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
+          {/* The line names the POST, a reply's as a top-level comment's, on
+              every host (jakob 2026-11-13, N5). */}
           <QuietNote node="target">Your comment on "The long way home".</QuietNote>
 
           <TextField label="Words" rows={3} cap={2000} value="The glovebox camera earns its keep — this is the print from 2019 that almost catches it." node="words" />
