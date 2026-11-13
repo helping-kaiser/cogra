@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE comment_versions\n             SET content = '', sensitive = FALSE, sensitive_reason = NULL,\n                 redaction_reason = $2\n             WHERE comment_id = $1 AND redaction_reason IS NULL\n               AND ((landed_epoch = $3 AND position = $4)\n                    OR created_at = $5)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Int8",
+        "Int8",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2e1abc5f2fe73e17531d151bbc3940ba8e620e55c9ac97702be7d9c68c16e837"
+}

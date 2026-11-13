@@ -1,0 +1,36 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT r.record_id, r.epoch, r.position\n         FROM mirror_records r\n         JOIN mirror_record_legs l ON l.record_id = r.record_id\n         WHERE r.author = $1 AND r.family = $2\n           AND l.leg IN ('binary', 't') AND l.target = $3\n         ORDER BY r.epoch, r.position",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "record_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "epoch",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "position",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "4862b4f845b5d8daba97d2c7fcbaa8636c82862f97ae9e6c20fbea938c3e6eeb"
+}

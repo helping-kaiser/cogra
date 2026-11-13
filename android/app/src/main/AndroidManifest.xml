@@ -58,8 +58,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <!-- The canonical invite URL, the email change's new-address link,
-                 the account deletion's link and the ask link (auth.md "Link URLs": Android
-                 App Links on the same paths). Verification needs the real
+                 the account deletion's link, the ask link and the password
+                 reset's link (auth.md "Link URLs": Android App Links on the
+                 same paths). Verification needs the real
                  deployed origin serving assetlinks.json; in dev, drive links
                  via `adb shell am start`. -->
             <intent-filter android:autoVerify="true">
@@ -73,6 +74,7 @@
                 <data android:pathPrefix="/email-change" />
                 <data android:pathPrefix="/delete-account" />
                 <data android:pathPrefix="/vouch" />
+                <data android:pathPrefix="/reset" />
             </intent-filter>
         </activity>
 

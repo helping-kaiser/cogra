@@ -42,7 +42,7 @@ impl BundleView {
 /// form.
 ///
 /// The newest record is the last in the published order — the causal key
-/// `(epoch, act_time, position)` the chronicle pages on — and with the
+/// `(epoch, position)` the chronicle pages on — and with the
 /// pending half counted, the author's newest act in flight, by its act
 /// sequence: an act still in flight lands after everything already
 /// landed, so it is the newest the bundle will hold.
@@ -82,8 +82,7 @@ pub async fn standing(
                   COALESCE(SUM(l.p_i::text::numeric), 0)::text AS "p_i!",
                   COUNT(*)::bigint              AS "records!",
                   COALESCE((ARRAY_AGG(NOT (l.p_d = 0 AND l.p_i = 0)
-                                      ORDER BY r.epoch DESC, r.act_time DESC,
-                                               r.position DESC))[1],
+                                      ORDER BY r.epoch DESC, r.position DESC))[1],
                            FALSE)               AS "newest_says!"
            FROM mirror_record_legs l
            JOIN mirror_records r ON r.record_id = l.record_id
@@ -164,8 +163,8 @@ pub async fn severing_records(
                  AND b.source = l.source AND b.target = l.target
                  AND NOT br.payload_marked
                  AND NOT b.census_unknown
-                 AND (br.epoch, br.act_time, br.position)
-                     <= (r.epoch, r.act_time, r.position)
+                 AND (br.epoch, br.position)
+                     <= (r.epoch, r.position)
            ) prefix
            WHERE l.record_id = ANY($1)
              AND l.leg = 'binary' AND l.family IN ('opinion', 'affinity')
@@ -217,7 +216,7 @@ pub async fn walk_back_records(
            WHERE NOT br.payload_marked
              AND NOT b.census_unknown
            ORDER BY b.family, b.source, b.target,
-                    br.epoch, br.act_time, br.position"#,
+                    br.epoch, br.position"#,
         record_ids,
     )
     .fetch_all(pool)

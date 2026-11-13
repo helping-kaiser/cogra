@@ -18,7 +18,6 @@
 use common::envelope::CograProfile;
 use common::l1::census::Family;
 use common::l1::identifier::{ActId, NodeId};
-use postgres_store::content::LandingOrder;
 use postgres_store::{PgPool, content as content_store, mirror, profile, staged};
 use uuid::Uuid;
 
@@ -424,11 +423,7 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
     let meta = mirror::record_meta(pool, &write.act_id)
         .await?
         .ok_or_else(|| ProfileError::Internal("promoted record missing from mirror".into()))?;
-    let order = LandingOrder {
-        landed_epoch: meta.epoch,
-        act_time: meta.act_time,
-        position: meta.position,
-    };
+    let landing = meta.landing();
     let merged = merge_update(pool, write.actor_id, update).await?;
     let mut tx = pool
         .begin()
@@ -446,7 +441,7 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
             .map_err(|e| ProfileError::Internal(e.to_string()))?;
         return Ok(());
     }
-    if !profile::land_profile_version(&mut tx, write.actor_id, created_at, order).await? {
+    if !profile::land_profile_version(&mut tx, write.actor_id, created_at, landing).await? {
         profile::insert_profile_version(
             &mut tx,
             write.actor_id,
@@ -454,7 +449,7 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
             merged.bio.as_deref(),
             merged.avatar_id,
             merged.website_url.as_deref(),
-            Some(order),
+            Some(landing),
             created_at,
         )
         .await?;

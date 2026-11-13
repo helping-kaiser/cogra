@@ -31,6 +31,7 @@ import type { ReactNode } from "react";
 import { DeletionBandSlot } from "@/lib/deletion/deletion-status";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
+import { nameInLine } from "@/lib/ui/names";
 
 export function PageHeader({
   title,
@@ -38,6 +39,7 @@ export function PageHeader({
   backLabel,
   backTestId,
   backScroll,
+  backHeld = false,
   action,
   node,
   deletionBand,
@@ -72,6 +74,12 @@ export function PageHeader({
    * it. Left at Next's default — a fresh surface starts at its top.
    */
   backScroll?: boolean;
+  /**
+   * The arrow refuses a press, never dimmed, while the page's commit waits on
+   * its answer — an entry form's exits hold while it submits (Join.md; the
+   * named exception of backlog 191).
+   */
+  backHeld?: boolean;
   action?: ReactNode;
 }) {
   return (
@@ -83,6 +91,8 @@ export function PageHeader({
               href={backHref}
               scroll={backScroll}
               aria-label={backLabel}
+              aria-disabled={backHeld || undefined}
+              onClick={backHeld ? (event) => event.preventDefault() : undefined}
               {...testAttributes(part(node, "back"), backTestId)}
               className="cg-state cg-focus grid size-12 flex-none place-items-center rounded-full text-on-surface-variant"
             >
@@ -91,9 +101,12 @@ export function PageHeader({
           )}
           {title !== undefined && (
             // A page title is a name and never wraps — a two-line header steals
-            // the content's first row.
-            <h1 className="truncate whitespace-nowrap text-title-large" {...testAttributes(part(node, "title"))}>
-              {title}
+            // the content's first row. A ONE-LINE PLACE (PageHeader.jsx, round
+            // 40): a title too long for the band is cut with "…", and a handle
+            // standing in its words is the part cut, the words kept
+            // (`nameInLine`).
+            <h1 className="min-w-0 truncate whitespace-nowrap text-title-large" {...testAttributes(part(node, "title"))}>
+              {nameInLine(title)}
             </h1>
           )}
         </div>

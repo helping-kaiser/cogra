@@ -18,12 +18,15 @@ export function HelpDot({
   onOpen,
   testId,
   variant = "page",
+  held = false,
   node,
 }: {
   ariaLabel: string;
   onOpen: () => void;
   testId?: string;
   variant?: "page" | "inverse";
+  /** The dot refuses a press, never dimmed, while its form's commit waits (Join.md). */
+  held?: boolean;
   /** The registered node this dot is (`settings.licenseSheet.title.help`). */
   node?: DataNode;
 }) {
@@ -32,7 +35,8 @@ export function HelpDot({
       type="button"
       {...testAttributes(node, testId)}
       aria-label={ariaLabel}
-      onClick={onOpen}
+      aria-disabled={held || undefined}
+      onClick={held ? undefined : onOpen}
       className={`cg-state cg-focus grid size-12 flex-none cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 ${
         variant === "inverse" ? "text-inherit" : ""
       }`}

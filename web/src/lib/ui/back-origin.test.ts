@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { backFor, carriedOrigin, EXPLORE_COLD, personOrigin, postOrigin, tagOrigin } from "./back-origin";
+import {
+  backFor,
+  carriedOrigin,
+  EXPLORE_COLD,
+  letInOrigin,
+  parseInvitesOrigin,
+  personOrigin,
+  postOrigin,
+  tagOrigin,
+} from "./back-origin";
 
 // The origin-naming table (design/readme.md "Back labels"; ProfileOther.md:63;
 // Profile.md: a chronicle card's post; ChatsComingSoon.md:15-17).
@@ -24,6 +33,23 @@ describe("backFor", () => {
       href: "/u/ada?from=opinions%3Atobias%2Fhistory",
       label: "Back to the profile",
     });
+  });
+
+  // Invites.md:23, :27 — a person let in, or a deleted account's page, reads
+  // Back to Invites; ProfileOther.md:73 the same, from the people you let in.
+  it("names Invites Back to Invites, returning to it opened as it was", () => {
+    expect(backFor(letInOrigin())).toEqual({ href: "/invites", label: "Back to Invites" });
+    expect(backFor(letInOrigin("notifications"))).toEqual({
+      href: "/invites?from=notifications",
+      label: "Back to Invites",
+    });
+    // A door out of that profile chains it, and the profile's own way back
+    // still names Invites.
+    expect(backFor(personOrigin("ada", letInOrigin("kept-picks")))).toEqual({
+      href: "/u/ada?from=invites%2Fkept-picks",
+      label: "Back to the profile",
+    });
+    expect(parseInvitesOrigin("invitesx")).toBeNull();
   });
 
   it("names a tag's page Back to #<thattag>, returning to it opened as it was", () => {
@@ -77,9 +103,9 @@ describe("backFor", () => {
     });
   });
 
-  // TagPage.md:35: Back to Your topics from Your topics.
-  it("names Your topics, the list a topic row opens from", () => {
-    expect(backFor("yourTopics")).toEqual({ href: "/explore/topics", label: "Back to Your topics" });
+  // TagPage.md:39: Back to Your tags from Your tags.
+  it("names Your tags, the list a tag row opens from", () => {
+    expect(backFor("yourTopics")).toEqual({ href: "/explore/topics", label: "Back to Your tags" });
   });
 
   it("never builds a profile link from an empty handle", () => {

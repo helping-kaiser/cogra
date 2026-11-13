@@ -353,7 +353,7 @@ describe("Explore at rest", () => {
     );
     renderExplore();
     const door = screen.getByTestId(byNode("explore.topics"));
-    expect(within(door).getByTestId(byNode("explore.topics.title"))).toHaveTextContent("Your topics");
+    expect(within(door).getByTestId(byNode("explore.topics.title"))).toHaveTextContent("Your tags");
     expect(within(door).getByTestId(byNode("explore.topics.chevron"))).toBeInTheDocument();
     expect(await within(door).findByTestId(byNode("explore.topics.second"))).toHaveTextContent("5 held");
     // The count is the length of the list the door opens: pending acts in.

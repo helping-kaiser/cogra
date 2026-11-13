@@ -41,7 +41,7 @@ const SLICE: &str = r#"query($viewer: UUID!, $asOf: Int, $dust: Float, $gamma: F
     asOfEpoch
     nodes(first: $first, after: $after) {
       totalCount
-      edges { cursor node { graphId id kind genesis { landingEpoch actTime position } } }
+      edges { cursor node { graphId id kind genesis { landingEpoch position } } }
       pageInfo { hasNextPage endCursor }
     }
     records(first: $rfirst) {
@@ -195,7 +195,6 @@ async fn post_row(pool: &PgPool, author: Uuid, node: &NodeId, epoch: i64) -> Uui
         "a=0;o=0",
         Some(LandingOrder {
             landed_epoch: epoch,
-            act_time: epoch * 100,
             position: 1,
         }),
         chrono::DateTime::from_timestamp(1_800_000_000 + epoch, 0).expect("instant"),
@@ -501,8 +500,8 @@ async fn a_never_amended_parameter_reads_the_charters_landing_epoch(pool: PgPool
         .as_i64()
         .expect("the Charter landed");
     sqlx::query(
-        "INSERT INTO network_parameter_versions (parameter, value, landed_epoch, act_time, position)
-         VALUES ('gamma', '0.9', 7, 700, 1)",
+        "INSERT INTO network_parameter_versions (parameter, value, landed_epoch, position)
+         VALUES ('gamma', '0.9', 7, 1)",
     )
     .execute(&rig.pool)
     .await
@@ -701,11 +700,11 @@ async fn slice_nodes_carry_their_genesis_key_and_a_type_carries_none(pool: PgPoo
     let s = full_slice(&rig, f.viewer).await;
     assert_eq!(
         node(&s, &f.p.to_string())["genesis"],
-        json!({ "landingEpoch": 2, "actTime": 201, "position": 2 })
+        json!({ "landingEpoch": 2, "position": 2 })
     );
     assert_eq!(
         node(&s, &prof("a").to_string())["genesis"],
-        json!({ "landingEpoch": 1, "actTime": 101, "position": 2 })
+        json!({ "landingEpoch": 1, "position": 2 })
     );
     assert_eq!(node(&s, &topic("salt").to_string())["genesis"], Value::Null);
 }
@@ -2800,7 +2799,6 @@ async fn titled_post(
         "a=0;o=0",
         Some(LandingOrder {
             landed_epoch: epoch,
-            act_time: epoch * 100,
             position: 1,
         }),
         chrono::DateTime::from_timestamp(1_800_000_000 + secs, 0).expect("instant"),
@@ -3505,7 +3503,6 @@ async fn landed_comment(pool: &PgPool, parent: Uuid) -> Uuid {
         "a=0;o=0",
         Some(LandingOrder {
             landed_epoch: 2,
-            act_time: 200,
             position: 1,
         }),
         authored_at(0),

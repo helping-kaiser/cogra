@@ -7,6 +7,7 @@
 import type { ReactNode } from "react";
 
 import { testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { nameInText } from "@/lib/ui/names";
 
 export function QuietNote({
   children,
@@ -18,8 +19,10 @@ export function QuietNote({
   testId?: string;
 }) {
   return (
-    <p className="m-0 text-label-small text-on-surface-variant" {...testAttributes(node, testId)}>
-      {children}
+    // TEXT THAT WRAPS (NamesLong.md:11): `… an opinion @… gave.` wraps at its
+    // spaces and the handle is one unit (`nameInText`).
+    <p className="m-0 text-label-small text-on-surface-variant [overflow-wrap:anywhere]" {...testAttributes(node, testId)}>
+      {nameInText(children)}
     </p>
   );
 }

@@ -21,6 +21,7 @@ import { useApolloClient } from "@apollo/client/react";
 import { createKeyCeremony, type KeyCeremony } from "@/lib/identity/key-ceremony";
 import { identityStore } from "@/lib/identity/store";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
+import { readerState, settleReaderState } from "@/lib/session/reader-state";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { carriedExpectationStore } from "./carried";
 import { createRegistrationFlow, type RegistrationFlow } from "./registration-flow";
@@ -100,6 +101,19 @@ export function RegistrationProvider({
     lastAccount.current = accountId;
     flow.reset();
   }, [accountId, flow]);
+
+  // THE LANDING LETS THE READER IN WHERE THEY STAND (ApplicantLanding.md:17):
+  // the loop that saw it is the session's one witness, so the doors the
+  // reader state locks open without a second account read (`reader-state.ts`).
+  useEffect(
+    () =>
+      flow.subscribe(() => {
+        if (flow.progress()?.kind === "member" && readerState().accountState === "APPLICANT") {
+          settleReaderState("MEMBER");
+        }
+      }),
+    [flow],
+  );
 
   const value = useMemo(
     () => ({ flow, ceremony, writeSigner }),

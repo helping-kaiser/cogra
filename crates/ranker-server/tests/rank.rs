@@ -27,7 +27,7 @@ query Rank($viewer: UUID!, $params: RankParams!, $asOfEpoch: Int) {
         nodeIds sign magnitude recency contribution
         hops {
           family role authorId sourceId targetId recordIds pDirected pInterest maturity weight
-          members { recordId landingEpoch actTime position pDirected pInterest maturity }
+          members { recordId landingEpoch position pDirected pInterest maturity }
         }
       }
     }
@@ -293,7 +293,6 @@ fn claimed(answer: &Value) -> Vec<FeedEntry> {
                                     record_id: s(&m["recordId"]),
                                     key: CausalKey {
                                         landing_epoch: i(&m["landingEpoch"]),
-                                        act_time: i(&m["actTime"]),
                                         position: i(&m["position"]),
                                     },
                                     p_d: f(&m["pDirected"]),

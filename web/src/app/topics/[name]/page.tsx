@@ -16,12 +16,12 @@ export async function generateMetadata({
   try {
     const { data } = await query({ query: HashtagDetailDocument, variables: { name } });
     const hashtag = data?.hashtag;
-    if (!hashtag) return { title: "Topic — CoGra" };
+    if (!hashtag) return { title: "Tag — CoGra" };
     return { title: `#${hashtag.name.value} — CoGra` };
   } catch {
     // An unreachable backend must not break the page render; the
     // client view carries its own error surface.
-    return { title: "Topic — CoGra" };
+    return { title: "Tag — CoGra" };
   }
 }
 

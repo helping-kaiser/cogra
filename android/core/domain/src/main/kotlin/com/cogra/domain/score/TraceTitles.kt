@@ -28,7 +28,7 @@ internal fun thingName(path: TracePath, index: Int, context: TraceContext): Stri
     if (index == path.nodes.size - 1) return "it"
     val node = path.nodes[index]
     return when {
-        node.isTopic() -> if (node.graphId.startsWith("name:")) "#${node.graphId.removePrefix("name:")}" else "a topic"
+        node.isTopic() -> if (node.graphId.startsWith("name:")) "#${node.graphId.removePrefix("name:")}" else "a tag"
         node.isPerson() -> personAt(path, index)?.let { "@${it.handle}" } ?: "someone"
         else -> namedNode(node, context)
     }

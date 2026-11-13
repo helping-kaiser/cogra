@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import com.cogra.app.R
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.dataNodeSurface
+import com.cogra.core.designsystem.v2.token.StateTokens
 
 @Composable
 fun CograBottomBar(
@@ -56,6 +58,12 @@ fun CograBottomBar(
     onWallet: () -> Unit = {},
     searchSelected: Boolean = false,
     walletSelected: Boolean = false,
+    /**
+     * An applicant's centre slot: LOCKED, NOT GONE (BottomNav.jsx
+     * `composeOpacity`) — the whole slot at the disabled opacity, still
+     * tappable, [onCompose] answering the tap.
+     */
+    composeLocked: Boolean = false,
     /**
      * The bar's data-node under a registered screen (`feed.bottomBar`): the
      * bar and its slots then wear the registered paths in place of their
@@ -97,7 +105,11 @@ fun CograBottomBar(
                     glyph = Icons.Filled.Search,
                     testTag = node?.div("searchSlot")?.tag ?: "bar_explore",
                 )
-                NavSlot.Compose -> ComposeSlot(onCompose, node?.div("composeSlot")?.tag ?: "bar_compose")
+                NavSlot.Compose -> ComposeSlot(
+                    onCompose = onCompose,
+                    testTag = node?.div("composeSlot")?.tag ?: "bar_compose",
+                    locked = composeLocked,
+                )
                 NavSlot.Wallet -> DestinationSlot(
                     slot = slot,
                     selected = walletSelected,
@@ -158,9 +170,13 @@ internal fun barItemColors(): NavigationItemColors = ShortNavigationBarItemDefau
     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
 )
 
-/** The centre slot: the compose ACTION, wearing the one loud surface. */
+/**
+ * The centre slot: the compose ACTION, wearing the one loud surface. Locked,
+ * the opacity rides the whole slot as the master's `opacity` rides its
+ * button — the badge and its touch target alike — and the click stays.
+ */
 @Composable
-private fun ComposeSlot(onCompose: () -> Unit, testTag: String) {
+private fun ComposeSlot(onCompose: () -> Unit, testTag: String, locked: Boolean) {
     ShortNavigationBarItem(
         selected = false,
         onClick = onCompose,
@@ -181,6 +197,8 @@ private fun ComposeSlot(onCompose: () -> Unit, testTag: String) {
         },
         // The compose action is icon-only: the badge is its label.
         label = null,
-        modifier = Modifier.testTag(testTag),
+        modifier = Modifier
+            .then(if (locked) Modifier.alpha(StateTokens.DISABLED) else Modifier)
+            .testTag(testTag),
     )
 }

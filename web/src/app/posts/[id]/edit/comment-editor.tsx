@@ -5,8 +5,9 @@
 // is `comment-edit-view.tsx`; the gallery's law is `lib/compose/comment-edit.ts`
 // and the batch's `lib/compose/edit-batch.ts`.
 //
-// IT IS ITS OWN COMPONENT because the comments sheet raises it and nothing
-// else about the thread needs its state: the sheet says which comment and
+// IT IS ITS OWN COMPONENT because the comments sheet raises it — and, off the
+// thread, the shell's door for a card's menu (`comment-edit-door.tsx`) — and
+// nothing else about the host needs its state: the host says which comment and
 // where the reader should land after, and the edit owns everything between —
 // the way the reply wizard does.
 //
@@ -22,12 +23,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
-import {
-  fetchCommentSelfMark,
-  prepareCommentEdit,
-  type CommentView,
-  type ReplyView,
-} from "@/lib/api/content-api";
+import type { CommentFieldsFragment } from "@/__generated__/graphql";
+import { fetchCommentSelfMark, prepareCommentEdit } from "@/lib/api/content-api";
 import { firstRefusalMessage } from "@/lib/ui/error-messages";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import type { UserError } from "@/lib/api/outcome";
@@ -133,7 +130,7 @@ function tagDrafts(
 }
 
 /** The comment as it arrived, ready to edit — an untouched editor stages nothing (F10). */
-function editingOf(comment: CommentView | ReplyView): Editing {
+function editingOf(comment: CommentFieldsFragment): Editing {
   const tags = tagDrafts(comment.topics);
   // A claim CoGra cannot type has no L2 id to name it back by, so it is left
   // out of the section — never staged, never read as a removal.
@@ -168,15 +165,16 @@ export function CommentEditor({
   onLeave,
   onSigned,
 }: {
-  comment: CommentView | ReplyView;
+  /** The comment as any read serves it — the thread's, or a card's off the thread (`comment-edit-door.tsx`). */
+  comment: CommentFieldsFragment;
   /** The comment this one hangs under, or null at the top level — the node it answers. */
   parentId: string | null;
   postId: string;
   /** What the comment is on, for the editor's lede. */
   targetLabel: string;
-  /** Back to the thread, nothing kept. */
+  /** Back to where the edit was opened — the thread, or a card's host — nothing kept. */
   onLeave: () => void;
-  /** The signing was taken: the thread reopens with the edit settling. */
+  /** The signing was taken: the host it was opened from shows the edit settling. */
   onSigned: () => void;
 }) {
   const client = useApolloClient();
