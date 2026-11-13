@@ -1896,7 +1896,7 @@
       "x": -4190,
       "y": 0,
       "w": 3770,
-      "h": 4864,
+      "h": 4916,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1914,7 +1914,7 @@
       "x": -9410,
       "y": 0,
       "w": 8990,
-      "h": 5623,
+      "h": 5662,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1977,7 +1977,7 @@
       "x": -5930,
       "y": 0,
       "w": 5510,
-      "h": 9567,
+      "h": 9580,
       "page": "profile",
       "title": "Profile · flow map"
     },

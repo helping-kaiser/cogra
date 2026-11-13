@@ -11885,94 +11885,76 @@ vouch-back pad and Wallet; lane B's crop, composer side, feed and profile).
 
 ### Round 48, the implementers' gaps — 2026-11-13
 
-Seam 320's and 323's gaps that jakob ruled ("as rec" on four, 2026-11-13)
-or that needed no ruling, built in one lane on main beside round 47.
+Seam 320's and 323's gaps that jakob ruled or that needed no ruling, on
+round 47's tree, and his review of the round's screens (jakob 2026-11-13:
+2a, 3b, 4b, 5b, N1, N9, N10). Round 47's `ActsCard`, the head's whole name
+and the head's sentence in the long-names law stand beside this round's
+spoken unit.
 
-- **Every door into the composer answers an applicant alike** (2a): a
-  post's and a comment's `Cite in a new post`, a person card's `Mention in
-  a new post`, a tag card's compose glyph, `Open the draft` and the
-  composer's own address answer `You can post once you're in.` and open
-  nothing, the address landing where app-open lands. They look as they do
-  for a member — a menu row or a card's glyph has no locked treatment — so
-  copy-voice's *The applicant-foot family* now names them as the exception
-  to its locked-look sentence, and `staged-surfaces.md`'s posting row says
-  the same (it had put the menus' rows in the locked look, against round
-  16's record). The line rides the surface's own snackbar, else the
-  shell's. Named in the sidecars of the menus (on any host), the tag
-  cards, the expired-draft notice and the composer.
-- **An applicant's reply glyph is locked on the feed and History** (3b):
-  dimmed, still tappable, answering on the card `You can comment once
-  you're in.` — the thread's and the profile's rule on every host.
-  `GlyphAction` takes `opacity`; `CommentCard` passes `replyOpacity` to
-  the glyph; `FeedKinds` and `History` draw it (`reader` chip).
+- **The applicant lock is one rule** (N1; copy-voice, *The applicant lock,
+  one rule*; `staged-surfaces.md`'s posting row): a control on a card, bar
+  or header whose only destination is an act wears the locked look and
+  answers in place — the thread's foot and `Reply`, `Invites`, `New post`,
+  the stance faces, a tag card's compose button and `Open the draft`
+  (`FeedKinds` and `ComposeExpired`, `reader` chip); a door to reading is
+  never locked; a menu row looks normal and answers in place, the menu
+  closing first (`Cite in a new post`, `Mention in a new post`, named in
+  the menus' sidecars on any host); the composer's own address lands where
+  app-open lands. The line rides the surface's own snackbar, else the
+  shell's.
+- **A comment card's comment button opens the thread for an applicant**
+  (jakob 2026-11-13, on the feed's and History's cards): it is the door to
+  reading, at full strength; the lock stands inside the thread, its foot
+  and every `Reply`. On the profile's Comments tab `Reply` is the door to
+  writing and wears the lock (`ProfileComments`, `reader` chip).
+- **A comment card in a list is about the comment** (jakob 2026-11-13): no
+  `View n replies` on the feed, History, Saved, a profile's Comments tabs,
+  a tag page or search; a tap on the card lands on its post with the
+  thread sheet open, scrolled to that comment, where the replies' line
+  stands (`CommentCard`'s prose and each host's sidecar).
+  `profile.comments.viewReplies` leaves the registry by this ruling.
 - **The reset link is checked before its form stands** (4b, 5b):
-  `ResetNew`'s `link` chip — `checking`, `Loading…` after 200ms;
-  `fault`, `Can't reach the server — this page can't load right now.`
-  over an outlined `Retry`, `DeleteAccountConfirmed`'s landing shape with
-  the read's word (*worded by the lane, to be blessed*); `limited`, the
-  reset's own `RATE_LIMITED` line, `Too many tries. Wait a little, then
-  try again.`, over the same control.
-- **Reset's answered state is drawn** (320-7): the `request` chip's
-  `sent`, `reset.status` under the commit, the line the tree held.
-- **Registered what was drawn**: the thread's foot
-  (`postDetail.threadSheet.foot.addComment`), `PadFailed` and
-  `PadWriteRule` under `feed`, `TagPageHeldPad` under `tagPage`. Not
-  registered: `PadKeyAbsent` (a hand-built pad, backlog 221); the seals
-  and the edit sheets (no body passes names, and `ActsCard` waits for
-  round 47, backlog 220); the feed's comment menu and your own comment's
-  menu on Saved, which no board draws (backlog 222).
-- **Long names** (320-12, the law applied): `StanceRow`'s lines,
-  `ReelCaption`'s handle and the person card's handle line clip at their
-  end; `VouchBack`'s card passes its title and body through `nameInText`.
-  `NamesLong` draws each at the longest sample.
-- **A name unit is spoken as one string** (320-13): the drawn unit is
-  hidden from assistive tech and its name and punctuation spoken once
-  from a visually hidden twin; the law says it for clients.
-- **Stale text**: `KeptPicksReview.md`'s kind list reads `Tag`; four
-  composer-caption comments read `Tags`; `CropViewport`'s comment places
-  the cover frame on the 390 × 488 stage.
-- **The gate**: 194 → 197 screens (`PadFailed`, `PadWriteRule`,
-  `TagPageHeldPad`), 7387 → 7565 board paths, 2029 → 2072 distinct — 43
-  added, none gone. Backlog 220–222 filed.
-Act 2, on round 47's tree (merged in; its `ActsCard`, the head's whole
-name and the head's sentence in the long-names law stand beside this
-round's spoken unit):
-
+  `ResetNew`'s `link` chip — `checking`, `Loading…` after 200ms; `fault`,
+  `Can't reach the server — this link can't be checked right now.` over an
+  outlined `Retry` (N9, blessed); `limited`, the reset's own
+  `RATE_LIMITED` line over the same control. Reset's answered state is the
+  `request` chip's `sent`, `reset.status` under the commit.
 - **Drawn where the law already spoke**: the tag picker's length refusal
-  (`TagPickerRefused`, `refusal` chip); the tag page's first page with no
+  (`TagPickerRefused`, `refusal`); the tag page's first page with no
   answer, `Can't reach the server — this tag can't load right now.` over
-  `Retry` (`TagPage`, `load` chip; *the noun worded by the lane, to be
-  blessed* — the picker's `tags` names a list, not the page); the feed
-  filter with no kind that has forms (`FeedSheetFormsOff`, new), so
-  `feed.filterSheet.forms.hint` registers again; the batch close for two,
-  `Both…` / `either of them` (`RejectAllConfirm`, `count` chip); the
-  vouch-back pad's help in place (`VouchBackPad`, `pad` chip, a drawn copy
-  with no names); an applicant's locked `Reply` on the profile's Comments
-  tab (`ProfileComments`, `reader` chip).
-- **The menu boards impl registers against**: `FeedCommentMenu`,
-  `FeedCommentMenuOwn` and `SavedCommentMenuOwn`, the rows exactly as the
-  law states them; the other law-only hosts are backlog 223. The
-  `cite-a-post` flow re-blessed: 22 → 25 origins.
-- **Registered, names only**: `EditActs`, `CommentEditActs` (`actsSheet`),
-  `AvatarCrop`, `AvatarSeal`, `ProfileEdit`, `ProfileEditSeal` — each
-  render byte-identical once its annotations are stripped. `ComposeSeal`
-  and `ReplySeal` wait: their chip copies stand for more than one chip
-  value (backlog 220).
-- **Written down**: the post crop's one zoom ceiling, about 4× the Tall
-  frame's fill under every shape, and the stage scaling with the column
-  (`ComposeCrop.md`, `CropViewport`); `SearchBar`'s input fills its row, a
-  board's width for it being its sample's.
-- **Stale text**: History's kept search tail (copy-voice), Hide's place
-  among the person menu's acts, `RemoveMenu`'s full order,
-  `OverflowMenu`'s two readings; backlog 162 closed as stale.
-- **Measured** (headless Chromium, the conformance harness's chips):
-  `NamesLong`'s `wraps` column stood at 848 against 844 with the vouch
-  card, now spaced at 10; every other new state stands inside its frame.
-- **The gate**: against main, 194 → 209 screens, 7387 → 8130 board paths,
-  2029 → 2152 distinct (123 added across both acts, round 47's and act 1's
-  included), none gone against main, round 47 or act 1. Backlog 222
-  closed, 220 partly, 162 closed as stale; 223 filed.
----
+  `Retry` (`TagPage`, `load`; N10, blessed); the feed filter with no kind
+  that has forms (`FeedSheetFormsOff`), so `feed.filterSheet.forms.hint`
+  registers; the batch close for two, `Both…` / `either of them`
+  (`RejectAllConfirm`, `count`); the vouch-back pad's help in place
+  (`VouchBackPad`, `pad`, a drawn copy with no names).
+- **Menu boards for registration**: `FeedCommentMenu`,
+  `FeedCommentMenuOwn`, `SavedCommentMenuOwn`, their rows as the law states
+  them; the other law-only hosts are backlog 223. `cite-a-post` re-blessed
+  at 25 origins.
+- **Registered, names only** (each render byte-identical once its
+  annotations are stripped): the thread's foot
+  (`postDetail.threadSheet.foot.addComment`); `PadFailed`, `PadWriteRule`
+  (`feed`) and `TagPageHeldPad` (`tagPage`); `EditActs`, `CommentEditActs`
+  (`actsSheet`); `AvatarCrop`, `AvatarSeal`, `ProfileEdit`,
+  `ProfileEditSeal`. Not registered: `ComposeSeal` and `ReplySeal`, whose
+  chip copies stand for more than one chip value (backlog 220);
+  `PadKeyAbsent`, a hand-built pad (backlog 221).
+- **Long names** (320-12, 320-13): `StanceRow`'s lines, `ReelCaption`'s
+  handle and the person card's handle line clip at their end; `VouchBack`'s
+  card passes its title and body through `nameInText`; a name unit is
+  spoken as one string, the drawn unit hidden from assistive tech and a
+  visually hidden twin speaking name and punctuation. `NamesLong` draws
+  each at the longest sample, its wrapping column spaced at 10 to hold the
+  vouch card inside 844 (measured, headless Chromium).
+- **Written down**: the post crop's zoom ceiling and the stage scaling with
+  the column (`ComposeCrop.md`, `CropViewport`; the ceiling's value is open
+  at jakob, 2026-11-13); `SearchBar`'s input fills its row, a board's width
+  for it being its sample's.
+- **Stale text**: `KeptPicksReview.md`'s `Tag`; the composer captions'
+  `Tags`; `CropViewport`'s cover frame on the 390 × 488 stage; History's
+  kept search tail; Hide's place among the person menu's acts;
+  `RemoveMenu`'s order; `OverflowMenu`'s two readings; backlog 162 closed.
+- **The gate**: GATELINE---
 
 ## 14. The canvases
 
