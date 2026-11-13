@@ -12045,6 +12045,16 @@ built on round 48's final tree (merged in, fe728bfd7).
   box-less `card` wrapper, once per `tags`, its foot once per `state`
   (`replySeal`). Pixel-identical to the earlier drawings at all 3 and 15
   combinations (headless Chromium, screenshot hashes).
+- **The tree's own rules, applied** (act 3): the crops' zoom edges read
+  10×; the picture crop's back arrow returns to the screen that asked, the
+  picture unused, never a pick stage (`CoverCrop`'s and `ComposeCrop`'s
+  rule); `StanceControl`'s first open carries `Nothing is signed until
+  Set.` alone, the hold in the pad's help; the profile and picture seals'
+  write-rule notice carries its own "?" (`WriteRuleFailed`), law only;
+  `CommentCard` keeps a guest's `Reply` and comment glyph at full strength,
+  as the drawn guest boards draw a guest's controls (told to jakob, not
+  separately ruled; no board draws a guest's thread — its foot's face is
+  open); copy-voice marks the answered-fault line *Copy-only*.
 - **The gate**: against round 48's final tree (fe728bfd7), 209 → 212
   screens (`ReelMenu`, `ComposeSeal`, `ReplySeal`), 8126 → 8389 board
   paths, 2151 → 2229 distinct — 78 added, none gone, and no board lost a
