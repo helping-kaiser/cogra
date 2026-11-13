@@ -28,7 +28,7 @@ describe("the parked pad", () => {
     // upper centre would still pass every geometric assertion below.
     expect(DESIGN).toMatch(/pad lives at one fixed spot: the lower centre of the\s+viewport/);
     expect(PAD_STANDING).toContain(
-      "16px above the bottom bar where the surface has one and 16px off the bottom edge where it does not",
+      "16px above feed.bottomBar, or the bar of whatever surface it blooms over, and 16px off the bottom edge where the surface has no bar",
     );
   });
 
