@@ -154,7 +154,6 @@ export function LoginForm({
       backHref="/feed"
       backLabel="Back"
       title="Sign in to CoGra"
-      lead="Welcome back — your feed is where you left it."
     >
       <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-4" noValidate>
         <FormTextField

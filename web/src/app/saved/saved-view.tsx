@@ -70,8 +70,7 @@ import { PostMenuHost } from "@/lib/ui2/post-menu-host";
 import { SearchBar } from "@/lib/ui2/search-bar";
 
 /** SavedEmpty.md:3, verbatim. */
-export const SAVED_EMPTY =
-  "Nothing saved yet. A post, a comment or a person can be saved from its own menu, and it waits here.";
+export const SAVED_EMPTY = "Nothing saved yet.";
 
 /** SavedNone.md:3, verbatim. */
 export const SAVED_NONE =

@@ -775,7 +775,7 @@ describe("ProfileScreen", () => {
       fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
       fireEvent.click(screen.getByTestId("profile.menuSheet.hide"));
       expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent(
-        "@ada is hidden — their posts stay out of your feed.",
+        "@ada is hidden.",
       );
       // ProfileMenu.md:23 — the reader stays on the profile.
       expect(screen.getByTestId("profile.identity.actionRow.menu")).toBeInTheDocument();
@@ -795,7 +795,7 @@ describe("ProfileScreen", () => {
       fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
       fireEvent.click(screen.getByTestId("profile.menuSheet.hide"));
       expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent(
-        "This account is hidden — its posts stay out of your feed.",
+        "This account is hidden.",
       );
     });
 
@@ -840,7 +840,7 @@ describe("ProfileScreen", () => {
       fireEvent.click(screen.getByTestId("profile.menuSheet.hide"));
       expect(screen.queryByRole("alertdialog")).toBeNull();
       expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent(
-        "@ada is unhidden — their posts can reach your feed again.",
+        "@ada is unhidden.",
       );
       expect(screen.getByTestId("profile.snackbar.action")).toHaveTextContent("Undo");
       expect(screen.getByTestId("profile.identity.actionRow.menu")).toBeInTheDocument();
@@ -1021,7 +1021,7 @@ describe("ProfileScreen", () => {
     );
     // The applicant's empty chronicle says what fills it, and when.
     expect(screen.getByTestId(byNode("profile.chronicle.empty.title"))).toHaveTextContent(
-      "Nothing here yet. Your posts and opinions show up here once you're in.",
+      /^Nothing here yet\.$/,
     );
   });
 
