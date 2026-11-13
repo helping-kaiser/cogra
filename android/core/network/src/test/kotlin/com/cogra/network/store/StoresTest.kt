@@ -215,6 +215,18 @@ class StoresTest {
         }
     }
 
+    /** Runs [beforeNextEdit] once, just before the next edit reaches the store. */
+    private class InterleavingDataStore(val inner: DataStore<Preferences>) : DataStore<Preferences> {
+        var beforeNextEdit: (suspend () -> Unit)? = null
+
+        override val data: Flow<Preferences> get() = inner.data
+
+        override suspend fun updateData(transform: suspend (t: Preferences) -> Preferences): Preferences {
+            beforeNextEdit?.also { beforeNextEdit = null }?.invoke()
+            return inner.updateData(transform)
+        }
+    }
+
     /** Signs in, then gives the account a seed, a blob, handshakes, flags and a draft. */
     private suspend fun seedCustody(encrypted: EncryptedStore, account: String): Stores {
         val stores = Stores(encrypted)
@@ -515,9 +527,13 @@ class StoresTest {
 
         val restored = checkNotNull(identity.handshake("w1"))
         assertThat(restored.proposal).isEqualTo(pre.proposal)
-        assertThat(restored.nonce).isEqualTo(pre.nonce)
+        assertThat(restored.contentNonce).isEqualTo(pre.contentNonce)
+        assertThat(restored.dependencyNonce).isEqualTo(pre.dependencyNonce)
         assertThat(restored.preSignature).isEqualTo(pre.preSignature)
         assertThat(restored.authorPubkey).isEqualTo(pre.authorPubkey)
+        // The whole record, so a store that swapped the two same-length
+        // nonces fails here too.
+        assertThat(restored).isEqualTo(pre)
 
         identity.clearHandshake("w1")
         assertThat(identity.handshakeIds()).containsExactly("w2")
@@ -691,6 +707,118 @@ class StoresTest {
         assertThat(StorageHealthImpl(dataStore).storageLost.first()).isTrue()
     }
 
+    /** A record as the one-nonce handshake wrote it: whole, readable, and one `nonce`. */
+    private fun oneNonceRecord(actor: ActorKey): ByteArray {
+        val b64 = java.util.Base64.getEncoder()
+        val oneNonce = """{"proposal":"${b64.encodeToString(proposalOf(actor))}",""" +
+            """"authorPubkey":"${b64.encodeToString(actor.publicKeyBytes())}",""" +
+            """"nonce":"${b64.encodeToString(ByteArray(32) { 1 })}",""" +
+            """"preSignature":"${b64.encodeToString(ByteArray(64) { 2 })}"}"""
+        return oneNonce.encodeToByteArray()
+    }
+
+    /**
+     * A record the one-nonce handshake wrote — whole and readable, but
+     * nothing the device signs now can approve under it. It reads as
+     * absent, so the signer takes its no-material path; it is deleted, so
+     * it is not kept at rest; and it is no loss of storage to report.
+     */
+    @Test
+    fun aOneNonceHandshakeRecordReadsAsAbsentIsDeletedAndMarksNoLoss() = runTest {
+        val file = File(tmp.newFolder(), "test.preferences_pb")
+        val dataStore = PreferenceDataStoreFactory.create(scope = scope) { file }
+        val encrypted = EncryptedStore(dataStore, FakeCipher())
+        val stores = Stores(encrypted)
+        stores.signIn("u1")
+        encrypted.put("acct:u1:handshake:w1", oneNonceRecord(ActorKey.generate()))
+        assertThat(stores.identity.handshake("w1")).isNull()
+        assertThat(encrypted.get("acct:u1:handshake:w1")).isNull()
+        assertThat(stores.identity.handshakeIds()).isEmpty()
+        assertThat(StorageHealthImpl(dataStore).storageLost.first()).isFalse()
+    }
+
+    // Another pass saves fresh material for the same id after this read saw
+    // the one-nonce record and before its removal: the removal re-checks in
+    // its own transaction, so the fresh record survives.
+    @Test
+    fun aRecordSavedBetweenTheReadAndTheRemovalSurvivesIt() = runTest {
+        val file = File(tmp.newFolder(), "test.preferences_pb")
+        val interleaving = InterleavingDataStore(PreferenceDataStoreFactory.create(scope = scope) { file })
+        val encrypted = EncryptedStore(interleaving, FakeCipher())
+        val stores = Stores(encrypted)
+        stores.signIn("u1")
+        val actor = ActorKey.generate()
+        val fresh = actor.preSign(decodeProposal(proposalOf(actor)))
+        stores.identity.saveHandshake("staging", fresh)
+        val freshBytes = checkNotNull(encrypted.get("acct:u1:handshake:staging"))
+        encrypted.put("acct:u1:handshake:w1", oneNonceRecord(actor))
+
+        val otherPass = EncryptedStore(interleaving.inner, FakeCipher())
+        interleaving.beforeNextEdit = { otherPass.put("acct:u1:handshake:w1", freshBytes) }
+        assertThat(stores.identity.handshake("w1")).isNull()
+
+        assertThat(interleaving.beforeNextEdit).isNull()
+        assertThat(stores.identity.handshake("w1")).isEqualTo(fresh)
+        assertThat(StorageHealthImpl(interleaving.inner).storageLost.first()).isFalse()
+    }
+
+    // The listing decrypts each record to find the one-nonce ones; a record
+    // it cannot open is simply not one. It is listed, kept and not marked
+    // by the listing, as before the listing looked inside — and the listing
+    // answers rather than throws.
+    @Test
+    fun anUnopenableRecordIsListedKeptAndUnmarkedByTheListing() = runTest {
+        val file = File(tmp.newFolder(), "test.preferences_pb")
+        val dataStore = PreferenceDataStoreFactory.create(scope = scope) { file }
+        val stores = Stores(EncryptedStore(dataStore, IoFailingCipher()))
+        stores.signIn("u1")
+        EncryptedStore(dataStore, PoisonCipher()).put("acct:u1:handshake:w1", "unopenable".encodeToByteArray())
+
+        assertThat(stores.identity.handshakeIds()).containsExactly("w1")
+        assertThat(dataStore.data.first().asMap().keys.map { it.name }).contains("acct:u1:handshake:w1")
+        assertThat(StorageHealthImpl(dataStore).storageLost.first()).isFalse()
+    }
+
+    // Listed before anything reads it, the record is still never counted:
+    // the home card's count and the resume set both come from this list.
+    @Test
+    fun aOneNonceHandshakeRecordIsNeverListedAndTheListingDeletesIt() = runTest {
+        val file = File(tmp.newFolder(), "test.preferences_pb")
+        val dataStore = PreferenceDataStoreFactory.create(scope = scope) { file }
+        val encrypted = EncryptedStore(dataStore, FakeCipher())
+        val stores = Stores(encrypted)
+        stores.signIn("u1")
+        val actor = ActorKey.generate()
+        encrypted.put("acct:u1:handshake:old", oneNonceRecord(actor))
+        stores.identity.saveHandshake("current", actor.preSign(decodeProposal(proposalOf(actor))))
+        assertThat(stores.identity.handshakeIds()).containsExactly("current")
+        assertThat(encrypted.get("acct:u1:handshake:old")).isNull()
+        assertThat(stores.identity.handshake("current")).isNotNull()
+        assertThat(StorageHealthImpl(dataStore).storageLost.first()).isFalse()
+    }
+
+    // The wedge this closes: a resume over a store holding only such a
+    // record has nothing to continue, so it ends with no result at all —
+    // never a Failed one for a record no build can complete.
+    @Test
+    fun aResumeOverOnlyAOneNonceRecordHasNothingPending() = runTest {
+        val file = File(tmp.newFolder(), "test.preferences_pb")
+        val dataStore = PreferenceDataStoreFactory.create(scope = scope) { file }
+        val encrypted = EncryptedStore(dataStore, FakeCipher())
+        val stores = Stores(encrypted)
+        stores.signIn("u1")
+        val actor = ActorKey.generate()
+        stores.identity.saveActorSeed(actor.seed())
+        encrypted.put("acct:u1:handshake:w1", oneNonceRecord(actor))
+        val signer = com.cogra.domain.signing.WriteSigner(
+            com.cogra.domain.testing.ThrowingWriteRepository(),
+            stores.identity,
+        )
+        assertThat(signer.resume()).isEmpty()
+        assertThat(stores.identity.handshakeIds()).isEmpty()
+        assertThat(StorageHealthImpl(dataStore).storageLost.first()).isFalse()
+    }
+
     @Test
     fun aCorruptFileIsReplacedWithTheLossMark() = runTest {
         // Not a preferences proto: the serializer throws
@@ -713,4 +841,25 @@ private class BrokenCipher : StoreCipher {
 
     override fun open(sealed: ByteArray): ByteArray =
         throw java.security.GeneralSecurityException("decryption failed")
+}
+
+/**
+ * [FakeCipher], except that a value [PoisonCipher] sealed throws on open
+ * as Tink's lazy keyset load can: an `IOException`, which `Editor.get`
+ * itself does not catch.
+ */
+private class IoFailingCipher : StoreCipher {
+    private val fake = FakeCipher()
+
+    override fun seal(plaintext: ByteArray): ByteArray = fake.seal(plaintext)
+
+    override fun open(sealed: ByteArray): ByteArray =
+        if (sealed[0] == 0.toByte()) throw java.io.IOException("keyset unavailable") else fake.open(sealed)
+}
+
+/** Seals with the leading byte [IoFailingCipher] will not open. */
+private class PoisonCipher : StoreCipher {
+    override fun seal(plaintext: ByteArray): ByteArray = byteArrayOf(0) + plaintext
+
+    override fun open(sealed: ByteArray): ByteArray = sealed.drop(1).toByteArray()
 }

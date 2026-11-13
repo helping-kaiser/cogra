@@ -166,7 +166,8 @@ DataStore through `core:network`'s identity store: the actor seed
 (exportable by design — it goes into the backup blob, so a
 non-extractable Keystore key is impossible), the applicant token, the
 pending backup blob awaiting its first-session upload, and the
-per-write handshake material (private nonce + pre-signature, keyed by
+per-write handshake material (content nonce, dependency nonce and
+pre-signature, keyed by
 staged-write id) that lets the approve step verify against what THIS
 device pre-signed across process death. Every identity value is bound
 to the account it belongs to — the stored token pair carries the

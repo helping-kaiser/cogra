@@ -181,14 +181,21 @@ class GoldenVectorsTest {
         }
     }
 
+    // The one-nonce groups `handshake` and `handshakeRefusals` stay in the
+    // contract file for the reference's own history; this client speaks
+    // only the two-nonce handshake, so only its groups are read here.
     private class HandshakeFixture(val hs: JsonElement, val actor: ActorKey, val proposal: Proposal) {
+        val host: ActorKey = ActorKey.fromSeed(hs.jsonObject.getValue("host").str("seedHex").hexToBytes())
         val hostPubkey: ByteArray = hs.jsonObject.getValue("host").str("publicKeyHex").hexToBytes()
-        val nonce: ByteArray = hs.str("nonceHex").hexToBytes()
-        val pre: PreSignedProposal = actor.preSignWith(proposal, nonce)
+        val contentNonce: ByteArray = hs.str("contentNonceHex").hexToBytes()
+        val dependencyNonce: ByteArray = hs.str("dependencyNonceHex").hexToBytes()
+        val contentSalt: ByteArray = hs.str("contentSaltHex").hexToBytes()
+        val dependencySalt: ByteArray = hs.str("dependencySaltHex").hexToBytes()
+        val pre: PreSignedProposal = actor.preSignWith(proposal, contentNonce, dependencyNonce)
     }
 
     private fun handshakeFixture(): HandshakeFixture {
-        val hs = vectors.jsonObject.getValue("handshake")
+        val hs = vectors.jsonObject.getValue("proposalHandshake")
         val proposalJson = hs.jsonObject.getValue("proposal")
         return HandshakeFixture(
             hs = hs,
@@ -203,87 +210,136 @@ class GoldenVectorsTest {
     }
 
     @Test
-    fun theDeviceReproducesEveryConformantHandshakeVector() {
+    fun theHandshakeTagsAreTheContractsTags() {
+        val tags = handshakeFixture().hs.jsonObject.getValue("tags")
+        assertThat(Tags.PRE_DIGEST_CONTENT).isEqualTo(tags.str("contentPreDigestUtf8"))
+        assertThat(Tags.PRE_DIGEST_DEPS).isEqualTo(tags.str("dependencyPreDigestUtf8"))
+        assertThat(Tags.PRE_COMMITMENT).isEqualTo(tags.str("preCommitmentUtf8"))
+        assertThat(Tags.COMMIT_CONTENT).isEqualTo(tags.str("contentCommitmentUtf8"))
+        assertThat(Tags.COMMIT_DEPS).isEqualTo(tags.str("dependencyCommitmentUtf8"))
+        assertThat(Tags.HOST_SEAL).isEqualTo(tags.str("hostSealUtf8"))
+        assertThat(Tags.APPROVAL).isEqualTo(tags.str("approvalUtf8"))
+        assertThat(tags.jsonObject.keys).hasSize(7)
+    }
+
+    // Every value is formed here from the inputs alone — the seeds, the
+    // proposal, the two nonces and the two salts — and only then compared
+    // with the pinned one. No pinned intermediate feeds a later step.
+    @Test
+    fun theDeviceReproducesEveryTwoNonceHandshakeVector() {
         val f = handshakeFixture()
         val hs = f.hs
         val proposal = f.proposal
+        val actId = proposal.body.actId()
         assertThat(canonicalDeps(proposal.deps).toHex()).isEqualTo(hs.str("canonicalDepsHex"))
-        assertThat(encodeProposal(proposal).toHex()).isEqualTo(hs.str("wireProposalHex"))
-        assertThat(decodeProposal(hs.str("wireProposalHex").hexToBytes())).isEqualTo(proposal)
+        // The nonce inputs are the documented byte runs, and two of them.
+        assertThat(f.contentNonce).isEqualTo(ByteArray(SALT_LEN) { (0x2a + it).toByte() })
+        assertThat(f.dependencyNonce).isEqualTo(ByteArray(SALT_LEN) { (0x6a + it).toByte() })
 
-        // Pre-sign under the pinned nonce: every intermediate matches.
-        val nonce = f.nonce
+        // Pre-sign under the pinned nonces: every intermediate matches.
+        val hC = contentPreDigest(actId, f.contentNonce, proposal.payload)
+        val hD = dependencyPreDigest(actId, f.dependencyNonce, proposal.deps)
+        assertThat(hC.bytes.toHex()).isEqualTo(hs.str("contentPreDigestHex"))
+        assertThat(hD.toHex()).isEqualTo(hs.str("dependencyPreDigestHex"))
+        assertThat(preCommitmentMsg(proposal.body, hC.bytes, hD).toHex()).isEqualTo(hs.str("preCommitmentMsgHex"))
+        val p = preCommitment(proposal.body, hC, hD)
+        assertThat(p.toHex()).isEqualTo(hs.str("preCommitmentHex"))
         val pre = f.pre
-        val actId = proposal.body.actId().toString().toByteArray(Charsets.UTF_8)
-        assertThat(preDigest(Tags.PRE_DIGEST_CONTENT, actId, nonce, proposal.payload).toHex())
-            .isEqualTo(hs.str("contentPreDigestHex"))
-        assertThat(preDigest(Tags.PRE_DIGEST_DEPS, actId, nonce, canonicalDeps(proposal.deps)).toHex())
-            .isEqualTo(hs.str("depsPreDigestHex"))
-        assertThat(
-            preCommitmentMsg(
-                proposal.body,
-                hs.str("contentPreDigestHex").hexToBytes(),
-                hs.str("depsPreDigestHex").hexToBytes(),
-            ).toHex(),
-        ).isEqualTo(hs.str("preCommitmentMsgHex"))
-        assertThat(preCommitment(proposal, nonce).toHex()).isEqualTo(hs.str("preCommitmentHex"))
+        assertThat(pre.contentPreDigest().bytes).isEqualTo(hC.bytes)
+        assertThat(pre.dependencyPreDigest()).isEqualTo(hD)
+        assertThat(pre.preCommitment()).isEqualTo(p)
         assertThat(pre.preSignature.toHex()).isEqualTo(hs.str("preSignatureHex"))
-        assertThat(
-            verifyDigest(f.actor.publicKeyBytes(), hs.str("preCommitmentHex").hexToBytes(), pre.preSignature),
-        ).isTrue()
-        assertThat(encodePreCommitmentOf(pre).toHex()).isEqualTo(hs.str("wirePreCommitmentHex"))
+        assertThat(verifyDigest(f.actor.publicKeyBytes(), p, pre.preSignature)).isTrue()
+        val blob = encodePreCommitmentOf(pre)
+        assertThat(blob.toHex()).isEqualTo(hs.str("wirePreCommitmentHex"))
+        assertThat(decodePreCommitment(blob))
+            .isEqualTo(PreCommitmentBlob(f.contentNonce, f.dependencyNonce, pre.preSignature))
 
-        // The sealed act: commitments recompute, the seal message and
-        // wire form match, and the host seal verifies.
-        val preCommitmentBytes = hs.str("preCommitmentHex").hexToBytes()
-        val sealed = VerifiedAct(
-            proposal = proposal,
-            authorPubkey = f.actor.publicKeyBytes(),
-            nonce = nonce,
+        // The host's side, formed here as the reference host forms it: both
+        // commitments, the editions, the seal message, the seal.
+        val cC = contentCommitment(actId, p, f.contentSalt, hC)
+        val cD = dependencyCommitment(actId, p, f.dependencySalt, proposal.deps)
+        assertThat(cC.toHex()).isEqualTo(hs.str("contentCommitmentHex"))
+        assertThat(cD.toHex()).isEqualTo(hs.str("dependencyCommitmentHex"))
+        assertThat(CONTENT_EDITION).isEqualTo(hs.str("contentEdition").toULong())
+        assertThat(DEPENDENCY_EDITION).isEqualTo(hs.str("dependencyEdition").toULong())
+        val act = VerifiedAct(
+            body = proposal.body,
+            preCommitment = p,
             preSignature = pre.preSignature,
-            preCommitment = preCommitmentBytes,
-            contentSalt = hs.str("contentSaltHex").hexToBytes(),
-            depsSalt = hs.str("depsSaltHex").hexToBytes(),
-            contentCommitment = hs.str("contentCommitmentHex").hexToBytes(),
-            depsCommitment = hs.str("depsCommitmentHex").hexToBytes(),
-            contentEdition = hs.str("contentEdition").toULong(),
-            depsEdition = hs.str("depsEdition").toULong(),
-            hostSeal = hs.str("hostSealHex").hexToBytes(),
+            contentCommitment = cC,
+            dependencyCommitment = cD,
+            contentEdition = CONTENT_EDITION,
+            dependencyEdition = DEPENDENCY_EDITION,
         )
-        assertThat(
-            commitment(Tags.COMMIT_CONTENT, actId, preCommitmentBytes, sealed.contentSalt, proposal.payload).toHex(),
-        ).isEqualTo(hs.str("contentCommitmentHex"))
-        assertThat(
-            commitment(Tags.COMMIT_DEPS, actId, preCommitmentBytes, sealed.depsSalt, canonicalDeps(proposal.deps))
-                .toHex(),
-        ).isEqualTo(hs.str("depsCommitmentHex"))
-        assertThat(sealed.contentEdition).isEqualTo(EDITION)
-        assertThat(sealed.depsEdition).isEqualTo(EDITION)
-        assertThat(sealed.sealMsg().toHex()).isEqualTo(hs.str("sealMsgHex"))
+        assertThat(act.sealMsg().toHex()).isEqualTo(hs.str("sealMsgHex"))
+        assertThat(f.host.publicKeyBytes()).isEqualTo(f.hostPubkey)
+        val sealed = SealedAct(
+            act = act,
+            contentSalt = f.contentSalt,
+            dependencySalt = f.dependencySalt,
+            hostSeal = f.host.signTagged(Tags.HOST_SEAL, act.sealMsg()),
+        )
+        assertThat(sealed.hostSeal.toHex()).isEqualTo(hs.str("hostSealHex"))
+        assertThat(sealed.verifySeal(f.hostPubkey)).isTrue()
         assertThat(sealed.approvalDigest().toHex()).isEqualTo(hs.str("approvalDigestHex"))
-        assertThat(encodeVerifiedAct(sealed).toHex()).isEqualTo(hs.str("wireVerifiedActHex"))
-        // Every field, not a sample of two: a decoder that swapped the
-        // two same-length salts passed the old pair of assertions.
-        assertThat(decodeVerifiedAct(hs.str("wireVerifiedActHex").hexToBytes())).isEqualTo(sealed)
+        assertThat(encodeSealedAct(sealed).toHex()).isEqualTo(hs.str("wireVerifiedActHex"))
+        // Every field, not a sample: a decoder that swapped the two
+        // same-length salts fails this one assertion.
+        assertThat(decodeSealedAct(hs.str("wireVerifiedActHex").hexToBytes())).isEqualTo(sealed)
 
-        // The real approval path accepts the pinned act and reproduces
-        // the pinned witness.
-        val witness = f.actor.approve(pre, sealed, f.hostPubkey)
+        // The real approval path accepts the served act and reproduces the
+        // pinned witness.
+        val witness = f.actor.approve(pre, decodeSealedAct(hs.str("wireVerifiedActHex").hexToBytes()), f.hostPubkey)
         assertThat(witness.actId.toString()).isEqualTo(hs.str("approvalActId"))
         assertThat(witness.approvalSignature.toHex()).isEqualTo(hs.str("approvalSignatureHex"))
+        assertThat(verifyDigest(f.actor.publicKeyBytes(), sealed.approvalDigest(), witness.approvalSignature))
+            .isTrue()
     }
 
-    // Each of these is validly sealed by the host, so only the device's
-    // own checks can catch it — and the reference catches every one.
+    /**
+     * Why the device refuses each `approve` case — its refusal message.
+     * The four cases are validly resealed by the host, so the seal passes
+     * and only the device's own recomputation can catch each.
+     */
+    private val approveRefusalReasons = mapOf(
+        "a content commitment over the payload bytes" to
+            "content commitment is not formed over this device's content pre-digest",
+        "a pre-commitment the device did not form" to "host returned a different pre-commitment than was formed",
+        "an unexpected content edition" to "unexpected editions (content 1, dependencies 1)",
+        "an unexpected dependency edition" to "unexpected editions (content 2, dependencies 2)",
+    )
+
     @Test
-    fun theDeviceRefusesEveryHandshakeRejectionVector() {
+    fun theDeviceRefusesEveryTwoNonceRefusalVectorForItsStatedReason() {
         val f = handshakeFixture()
-        val cases = vectors.jsonObject.getValue("handshakeRefusals").jsonArray
-        assertThat(cases).isNotEmpty()
+        val cases = vectors.jsonObject.getValue("proposalHandshakeRefusals").jsonArray
+        assertThat(cases).hasSize(6)
         for (case in cases) {
-            val act = decodeVerifiedAct(case.str("wireVerifiedActHex").hexToBytes())
-            assertThrows(case.str("case"), HandshakeException::class.java) {
-                f.actor.approve(f.pre, act, f.hostPubkey)
+            val label = case.str("case")
+            when (val what = case.str("what")) {
+                "approve" -> {
+                    val sealed = decodeSealedAct(case.str("wireVerifiedActHex").hexToBytes())
+                    assertWithMessage("%s: validly sealed", label).that(sealed.verifySeal(f.hostPubkey)).isTrue()
+                    val thrown = assertThrows(label, HandshakeException::class.java) {
+                        f.actor.approve(f.pre, sealed, f.hostPubkey)
+                    }
+                    val reason = approveRefusalReasons[label] ?: throw AssertionError("unknown refusal case `$label`")
+                    assertWithMessage(label).that(thrown).hasMessageThat().startsWith(reason)
+                }
+                "decodePreCommitment" -> {
+                    val thrown = assertThrows(label, WireException::class.java) {
+                        decodePreCommitment(case.str("hex").hexToBytes())
+                    }
+                    assertWithMessage(label).that(thrown).hasMessageThat().endsWith(case.str("refusal"))
+                }
+                "decodeVerifiedAct" -> {
+                    val thrown = assertThrows(label, WireException::class.java) {
+                        decodeSealedAct(case.str("hex").hexToBytes())
+                    }
+                    assertWithMessage(label).that(thrown).hasMessageThat().endsWith(case.str("refusal"))
+                }
+                else -> throw AssertionError("unknown refusal kind `$what`")
             }
         }
     }

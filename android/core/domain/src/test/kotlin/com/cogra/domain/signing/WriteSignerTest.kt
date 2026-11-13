@@ -41,6 +41,9 @@ private class FakeWriteRepository(val actor: ActorKey) : WriteRepository {
     var tamperSeal: ((ByteArray) -> ByteArray)? = null
     var approveCount = 0
 
+    /** Every `signature` input submitted, in order. */
+    val submitted = mutableListOf<String>()
+
     /** What the host seals; [testProposalBytes] unless a test serves another. */
     var sealedProposal: ByteArray? = null
 
@@ -53,6 +56,7 @@ private class FakeWriteRepository(val actor: ActorKey) : WriteRepository {
         throw UnsupportedOperationException()
 
     override suspend fun submitProposal(stagedWriteId: String, signatureBase64: String): Outcome<StagedWriteView> {
+        submitted += signatureBase64
         refuseSubmit?.let { return Outcome.Refused(it) }
         if (failSubmit) return Outcome.Failed(IOException("submit lost"))
         val proposal = sealedProposal ?: testProposalBytes(actor)
@@ -217,6 +221,54 @@ class WriteSignerTest {
         val resumed = signer.resume()
         assertThat(resumed).containsExactly(WriteResult.Done("w1", WriteState.RELAYING))
         assertThat(identity.handshakes).isEmpty()
+    }
+
+    // Every caller asks this of a pass; an empty one signed nothing.
+    @Test
+    fun aSigningPassThatSignedNothingIsNotAllDone() {
+        val done = WriteResult.Done("w1", WriteState.RELAYING)
+        assertThat(WriteResult.allDone(emptyList())).isFalse()
+        assertThat(WriteResult.allDone(listOf(done))).isTrue()
+        assertThat(WriteResult.allDone(listOf(done, WriteResult.AwaitingSeal("w2")))).isFalse()
+    }
+
+    // What leaves the device is the two-nonce blob of exactly the material
+    // it keeps for the approve step — never a nonce it does not hold.
+    @Test
+    fun theSubmittedSignatureIsTheTwoNonceBlobOfTheKeptMaterial() = runTest {
+        val repo = FakeWriteRepository(actor).apply { failApprove = true }
+        WriteSigner(repo, identity).sign(listOf(prepared("w1")), ordered)
+        val kept = identity.handshakes.getValue("w1")
+        val blob = com.cogra.crypto.decodePreCommitment(Base64.getDecoder().decode(repo.submitted.single()))
+        assertThat(blob).isEqualTo(
+            com.cogra.crypto.PreCommitmentBlob(kept.contentNonce, kept.dependencyNonce, kept.preSignature),
+        )
+        assertThat(kept.contentNonce).hasLength(com.cogra.crypto.SALT_LEN)
+        assertThat(kept.dependencyNonce).hasLength(com.cogra.crypto.SALT_LEN)
+        assertThat(kept.contentNonce).isNotEqualTo(kept.dependencyNonce)
+    }
+
+    // The API refuses a reused content nonce (or any blob it cannot take)
+    // as BAD_INPUT: terminal, so the material is spent, and the next
+    // signing of the write draws fresh nonces rather than re-sending.
+    @Test
+    fun aBadInputSubmitSpendsTheNoncesAndTheNextSigningDrawsFreshOnes() = runTest {
+        val repo = FakeWriteRepository(actor).apply {
+            refuseSubmit = listOf(UserError(ErrorCode.BAD_INPUT, "the content nonce was used before"))
+        }
+        val signer = WriteSigner(repo, identity)
+        val refused = signer.sign(listOf(prepared("w1")), ordered).single()
+        assertThat(refused).isInstanceOf(WriteResult.Refused::class.java)
+        assertThat(identity.handshakes).isEmpty()
+
+        repo.refuseSubmit = null
+        assertThat(signer.sign(listOf(prepared("w1")), ordered).single())
+            .isEqualTo(WriteResult.Done("w1", WriteState.RELAYING))
+        val (first, second) = repo.submitted.map {
+            com.cogra.crypto.decodePreCommitment(Base64.getDecoder().decode(it))
+        }
+        assertThat(second.contentNonce).isNotEqualTo(first.contentNonce)
+        assertThat(second.dependencyNonce).isNotEqualTo(first.dependencyNonce)
     }
 
     @Test
