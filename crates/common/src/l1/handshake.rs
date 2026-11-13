@@ -94,6 +94,33 @@ pub fn canonical_deps(deps: &[ActId]) -> Vec<u8> {
     e.finish()
 }
 
+/// The order of a canonical dependency list: sorted by act identifier and
+/// duplicate-free (§8.2, "Act dependency projection"). The seam leaves
+/// the order to the deployment's identifier encoding, and this one orders
+/// bytewise over each identifier's canonical text form — the form
+/// [`canonical_deps`] encodes — so anyone holding the encoded list checks
+/// it without parsing an identifier.
+pub fn dependency_order(a: &ActId, b: &ActId) -> std::cmp::Ordering {
+    a.to_string().cmp(&b.to_string())
+}
+
+/// A dependency list in canonical order with every duplicate collapsed —
+/// the one way CoGra forms the list a device pre-signs.
+pub fn canonical_dep_list(deps: impl IntoIterator<Item = ActId>) -> Vec<ActId> {
+    let mut deps: Vec<ActId> = deps.into_iter().collect();
+    deps.sort_by(dependency_order);
+    deps.dedup();
+    deps
+}
+
+/// Whether a dependency list is strictly ascending under
+/// [`dependency_order`]: sorted and duplicate-free at once. The empty list
+/// is canonical.
+pub fn is_canonical_dep_list(deps: &[ActId]) -> bool {
+    deps.windows(2)
+        .all(|pair| dependency_order(&pair[0], &pair[1]).is_lt())
+}
+
 /// A proposal before signing: body plus the two removable projections.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Proposal {
@@ -742,6 +769,31 @@ mod tests {
             canonical_deps(&[d2, d1])
         );
         assert_eq!(canonical_deps(&[]), vec![0x80]);
+    }
+
+    /// A dependency list is canonical when it ascends strictly by the identifiers' text bytes, and forming one sorts and collapses duplicates.
+    /// ´claim:handshake:a-canonical-dependency-list-ascends-bytewise´
+    #[test]
+    fn a_canonical_dependency_list_ascends_bytewise() {
+        let id = |s: &str| ActId::parse(s).expect("ok");
+        let (nine, ten, bob) = (
+            id("act:a:9:opinion"),
+            id("act:a:10:opinion"),
+            id("act:b:0:opinion"),
+        );
+        assert!(is_canonical_dep_list(&[]));
+        assert!(is_canonical_dep_list(std::slice::from_ref(&nine)));
+        assert!(
+            is_canonical_dep_list(&[ten.clone(), nine.clone(), bob.clone()]),
+            "the text bytes order the list, not the sequence value"
+        );
+        assert!(!is_canonical_dep_list(&[nine.clone(), ten.clone()]));
+        assert!(!is_canonical_dep_list(&[ten.clone(), ten.clone()]));
+        assert_eq!(
+            canonical_dep_list([bob.clone(), nine.clone(), ten.clone(), nine.clone()]),
+            vec![ten, nine, bob]
+        );
+        assert!(canonical_dep_list([]).is_empty());
     }
 
     fn package(epoch: i64, positions: &[i64]) -> EpochPackage {
