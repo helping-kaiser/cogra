@@ -1540,7 +1540,8 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   ink.
 - `INTERNAL`, `FORBIDDEN` — in place: `That didn't go through. Try
   again.` The house line says "can't reach the server", which is false
-  for a fault the server answered.
+  for a fault the server answered. *Copy-only* (`NetworkError.md`'s
+  line; the board draws the offline fault alone).
 - `EMAIL_NOT_VERIFIED` — in place: `Verify your email first — the link
   is in your inbox.` The client gates acting on verification, so this
   is the rare case that slips past the gate. *Copy-only.*
@@ -1559,7 +1560,7 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   (jakob 2026-11-13, N4, **blessed**), **drawn** on `TagPage`'s
   `notFound`; a legal name nobody has used is the empty page instead.
 - `BAD_INPUT` — on the field, in the field's own words. Where no field
-  is named, in place: `That didn't go through. Try again.`
+  is named, in place: `That didn't go through. Try again.` *Copy-only.*
 
 **Expected refusals:**
 
@@ -1590,7 +1591,7 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   `NetworkError` outcome: `That didn't go through. Try again.` Retry
   asks for a fresh challenge.
 - `SIGNATURE_INVALID` — in place: `That didn't go through. Try again.`
-  Retry signs again.
+  Retry signs again. *Copy-only.*
 - `STAGED_WRITE_EXPIRED` — the did-not-land notice in the shell: `Your
   post didn't land` (`ComposeExpired`).
 - `SIGNING_BUDGET` — the budget refusal's own code and sentence (jakob
