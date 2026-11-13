@@ -698,6 +698,21 @@ describe("the search filter sheet", () => {
     );
   });
 
+  // Seam 324 on 323-1: the one filter text, its seen clause absent on search
+  // (the clause is the feed's, "— on the feed —"; search never looks at the
+  // seen list, seam 296).
+  it("says the filter text without the seen clause in search's ?", async () => {
+    serveSearch(() => answer([]));
+    renderExplore();
+    const sheet = await openSheet();
+    fireEvent.click(within(sheet).getByTestId(byNode("explore.filterSheet.help")));
+    const help = await screen.findByTestId("explore-filter-help-dialog");
+    expect(help).toHaveTextContent(
+      "What you let in, and in what order — the kinds combine freely, ranked or newest is one choice. Nothing changes until you press Done, and nothing here is signed or shared.",
+    );
+    expect(help).not.toHaveTextContent("already seen");
+  });
+
   it("explore_filter_md_5_25_33_chips_combine_stage_and_done_requeries_once", async () => {
     const asks = serveSearch(() => answer([]));
     renderExplore();

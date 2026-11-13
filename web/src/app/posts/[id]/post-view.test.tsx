@@ -712,9 +712,7 @@ describe("PostView", () => {
     expect(screen.getByTestId("postDetail.reportSheet.title")).toHaveTextContent(
       "Report this post?",
     );
-    expect(screen.getByTestId("postDetail.reportSheet.body")).toHaveTextContent(
-      "It goes to the people who run CoGra for a look.",
-    );
+    expect(screen.queryByTestId("postDetail.reportSheet.body")).toBeNull();
     expect(targets).toEqual([]);
 
     fireEvent.click(screen.getByTestId("postDetail.reportSheet.report"));
@@ -1172,9 +1170,8 @@ describe("PostView", () => {
       expect(screen.getByTestId(byNode("postDetail.card.removalMark.line"))).toHaveTextContent(
         "Removed by its author",
       );
-      expect(screen.getByTestId(byNode("postDetail.card.removalMark.detail"))).toHaveTextContent(
-        "The words and pictures are gone. The post's place in the thread, and every response, remain.",
-      );
+      // The line and its date, no detail sentence (seam 314).
+      expect(screen.queryByTestId(byNode("postDetail.card.removalMark.detail"))).toBeNull();
       expect(screen.getByTestId(byNode("postDetail.card.removalMark.when"))).toHaveTextContent("now");
       // Removed.md:9 — never the platform's words.
       expect(mark).not.toHaveTextContent("Removed under the platform's rules");
@@ -1525,7 +1522,7 @@ describe("PostView", () => {
       await waitFor(() => expect(screen.queryByTestId("postDetail.dialog")).not.toBeInTheDocument());
       expect(removals).toEqual(["rec-c1"]);
       expect(mark).toHaveTextContent("Removed by its author");
-      expect(mark).toHaveTextContent("The comment's place in the thread, and every response, remain.");
+      expect(mark).not.toHaveTextContent("The comment's place in the thread");
       expect(mark).toHaveTextContent("now");
       const card = screen.getByTestId("post-comment-c1");
       expect(card).not.toHaveTextContent("Mine");
@@ -1584,17 +1581,30 @@ describe("PostView", () => {
     expect(await screen.findByTestId("post-not-found")).toBeInTheDocument();
   });
 
-  it("reads without a session and swaps the comment box for the sign-in entry", async () => {
+  // ReplyEntry.md:23, :31; GuestGate.md:3 — the foot stands for a guest too, and
+  // Add a comment or a comment's Reply raises the ask over the sheet AND NEVER
+  // the composer opens AND NEVER the reader is bounced to another screen.
+  it.each(["add", "reply"] as const)("a_guests_%s_raises_the_join_ask_over_the_sheet", async (door) => {
     server.use(
       ...thread("u1", [{ id: "c1", body: "First!" }]),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
-    await openComments();
-    expect(await screen.findByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
+    const sheet = await openComments();
     expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("First!");
-    expect(screen.queryByTestId("comment-draft")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("comment-submit")).not.toBeInTheDocument();
-    expect(screen.getByTestId("comment-signin")).toHaveAttribute("href", "/login");
+    expect(screen.queryByTestId("comment-signin")).not.toBeInTheDocument();
+    const pushedBefore = routerPush.mock.calls.length;
+    fireEvent.click(
+      door === "add"
+        ? screen.getByTestId("comment-add")
+        : screen.getByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.reply", "c1")),
+    );
+    const ask = await screen.findByTestId("join-prompt");
+    expect(ask).toHaveTextContent("Join the conversation");
+    expect(ask).toHaveTextContent("Posting and profiles need an account.");
+    expect(screen.queryByTestId("reply-wizard")).not.toBeInTheDocument();
+    // The read beneath the ask stays exactly where it was.
+    expect(sheet).toBeVisible();
+    expect(routerPush.mock.calls.length).toBe(pushedBefore);
   });
 
   it("keeps the thread readable and faults at the load-more slot when a comments page fails", async () => {
@@ -2221,9 +2231,9 @@ describe("PostView", () => {
     // The thread is the sheet's own read, made when it is raised — so the
     // comments arrive a moment after the drawer does.
     expect(sheet).toContainElement(await screen.findByTestId("post-comment-c1"));
-    // The foot rides the sheet whichever way the write affordance swapped —
-    // this reader has no session, so it is the join entry.
-    expect(sheet).toContainElement(screen.getByTestId("comment-signin"));
+    // The foot rides the sheet for every reader (ReplyEntry.md:31) — this one
+    // has no session, and it is still Add a comment.
+    expect(sheet).toContainElement(screen.getByTestId("comment-add"));
   });
 
   // A drawer the reader opened is a drawer the reader can drop, and the post

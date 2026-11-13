@@ -119,14 +119,14 @@ describe("the closed card (behavior/ApplicantRejected.md)", () => {
     show("feed", false);
     expect(await screen.findByTestId("feed.application.title")).toHaveTextContent("@kel closed your application");
     expect(screen.getByTestId("feed.application.body")).toHaveTextContent(
-      "That was @kel's call, and it is the only thing it decides. Your account stays exactly as it is, you can keep reading, and any member you know can vouch you in instead.",
+      "That was @kel's call. Your account stays as it is, and any member you know can vouch you in instead.",
     );
     expect(screen.queryByTestId("feed.application.dismiss")).not.toBeInTheDocument();
     expect(screen.getByTestId("feed.application.link.label")).toHaveTextContent(
       "Ask someone you know to vouch for you",
     );
     expect(screen.getByTestId("feed.application.link.caption")).toHaveTextContent(
-      "Send it to anyone who is already in. It does not expire, and it works however many people you send it to.",
+      "Send it to anyone who is already in. It does not expire.",
     );
   });
 
@@ -178,7 +178,7 @@ describe("the profile's card (behavior/ProfileApplicant.md)", () => {
     show("profile", false);
     expect(await screen.findByTestId("profile.application.title")).toHaveTextContent("Waiting on @mira");
     expect(screen.getByTestId("profile.application.body")).toHaveTextContent(
-      "Their approval brings you in. Until then, you can read everything.",
+      "Their approval brings you in.",
     );
     expect(screen.getByTestId("profile.application.link.label")).toHaveTextContent("Your ask link");
     expect(screen.getByTestId("profile.application.link.caption")).toHaveTextContent(

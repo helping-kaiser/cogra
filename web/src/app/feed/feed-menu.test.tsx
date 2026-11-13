@@ -352,9 +352,8 @@ describe("the feed's post menu", () => {
     expect(sheet.open).toBe(true);
     expect(sheet).toHaveAccessibleName("Report this post?");
     expect(sheet).toHaveTextContent("Report this post?");
-    expect(screen.getByTestId("feed.reportSheet.body")).toHaveTextContent(
-      "It goes to the people who run CoGra for a look.",
-    );
+    // The title, then the answers (seam 314: no body line).
+    expect(screen.queryByTestId("feed.reportSheet.body")).toBeNull();
     await waitFor(() =>
       expect((screen.getByTestId("feed.menuSheet") as HTMLDialogElement).open).toBe(false),
     );
