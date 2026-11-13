@@ -126,7 +126,7 @@ export function profilePreview(user: WireProfile): KeptTargetPreview {
 
 /** A topic is its own name; nothing to read. */
 export function topicPreview(target: StanceTarget): KeptTargetPreview {
-  return { kind: "topic", name: `#${target.id}`, sub: "Topic", src: null, removed: null };
+  return { kind: "topic", name: `#${target.id}`, sub: "Tag", src: null, removed: null };
 }
 
 /**

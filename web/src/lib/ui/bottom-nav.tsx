@@ -37,6 +37,8 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { POST_LOCKED, useReaderIsApplicant } from "@/lib/session/reader-state";
+import { carrySnackbar } from "@/lib/ui/carried-snackbar";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon, type GlyphName } from "@/lib/ui/icons";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
@@ -122,6 +124,7 @@ export function BottomNav({
   node?: DataNode;
 }) {
   const [prompting, setPrompting] = useState(false);
+  const applicant = useReaderIsApplicant();
   const tone = (selected: boolean) =>
     selected ? "text-on-surface" : "text-on-surface-variant";
 
@@ -159,6 +162,25 @@ export function BottomNav({
               {LABELS[slot]}
             </>
           );
+
+        // AN APPLICANT'S NEW POST IS LOCKED, NOT GONE (ApplicantFeed.md:49-51,
+        // ProfileApplicant.md:24-26; `BottomNav.jsx` `composeOpacity`): the
+        // slot stands at the disabled opacity and stays tappable, the tap
+        // answering on the shell's snackbar — never the wizard.
+        if (slot === "compose" && signedIn && applicant) {
+          return (
+            <button
+              key={slot}
+              type="button"
+              {...ids}
+              aria-label={LABELS.compose}
+              onClick={() => carrySnackbar(POST_LOCKED)}
+              className={`${ITEM} opacity-[var(--state-disabled)]`}
+            >
+              {body}
+            </button>
+          );
+        }
 
         // A slot that needs an account asks on an anonymous tap; the reads and
         // the Wallet's door stay links for every viewer.

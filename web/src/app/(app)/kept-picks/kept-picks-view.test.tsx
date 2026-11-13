@@ -253,10 +253,11 @@ describe("the kept picks' seal", () => {
     await keepPick("u1", ADA, { pDirected: 0.1, pInterest: 0.1 });
     await keepPick("u1", { kind: "topic", id: "saltmarsh" }, { pDirected: 0.6, pInterest: 0.4 });
     mount();
-    // KeptPicksReview.md:9 — on the review the same pick reads Topic under its name.
+    // KeptPicksReview.md:9 — on the review the same pick reads Tag under its name.
     const reviewRow = await screen.findByTestId(byNode("keptPicks.pick", "2"));
     expect(reviewRow).toHaveTextContent("#saltmarsh");
-    expect(reviewRow).toHaveTextContent("Topic");
+    expect(reviewRow).toHaveTextContent("Tag");
+    expect(reviewRow).not.toHaveTextContent("Topic");
     await openSeal();
     const acts = screen.getByTestId("keptPicksSeal.acts");
     const rows = within(acts).getAllByTestId("keptPicksSeal.acts.actRow");

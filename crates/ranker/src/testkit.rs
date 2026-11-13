@@ -87,7 +87,6 @@ impl Builder {
         self.clock += 1;
         CausalKey {
             landing_epoch: self.epoch,
-            act_time: self.clock,
             position: self.clock,
         }
     }

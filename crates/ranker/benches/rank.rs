@@ -53,7 +53,6 @@ fn slice(records: usize) -> Slice {
         clock += 1;
         CausalKey {
             landing_epoch: epoch,
-            act_time: clock,
             position: clock,
         }
     };

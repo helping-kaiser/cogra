@@ -202,6 +202,13 @@ fun CograTextField(
      * rather than at the start, where the text overload would leave it.
      */
     focusRequester: FocusRequester? = null,
+    /**
+     * Whether the supporting line spans the field. `TextField.jsx`'s
+     * `FieldSupport` sets the line in a row, where it is as wide as its words;
+     * `PasswordField.jsx` sets it straight into the field's column, where it
+     * stretches across — [CograPasswordField] passes true.
+     */
+    supportSpans: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
     val reading = fieldCountReading(value, cap, used)
@@ -254,7 +261,7 @@ fun CograTextField(
                 trailing()
             }
         }
-        FieldSupportRow(error, hint, reading, testTag, node)
+        FieldSupportRow(error, hint, reading, testTag, node, supportSpans)
     }
 }
 
@@ -408,6 +415,7 @@ private fun FieldSupportRow(
     reading: FieldCountReading?,
     testTag: String?,
     node: DataNode?,
+    spans: Boolean,
 ) {
     if (error == null && hint == null && reading == null) return
     val colors = MaterialTheme.colorScheme
@@ -419,25 +427,9 @@ private fun FieldSupportRow(
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
     ) {
-        if (error != null) {
-            Text(
-                text = error,
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.error,
-                modifier = Modifier
-                    .weight(1f)
-                    .semantics { liveRegion = LiveRegionMode.Polite }
-                    .then(if (lineTag != null) Modifier.testTag(lineTag) else Modifier),
-            )
-        } else if (hint != null) {
-            Text(
-                text = hint,
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.onSurfaceVariant,
-                modifier = Modifier
-                    .weight(1f)
-                    .then(if (lineTag != null) Modifier.testTag(lineTag) else Modifier),
-            )
+        if (error != null || hint != null) {
+            // The box takes the row, so the late counter still sits at the far end.
+            Box(Modifier.weight(1f)) { SupportLine(error, hint, lineTag, spans) }
         } else {
             Spacer(Modifier.weight(1f))
         }
@@ -452,6 +444,24 @@ private fun FieldSupportRow(
             )
         }
     }
+}
+
+/**
+ * The supporting line itself: the error in its place when there is one, else
+ * the hint. Its node is as wide as its words unless the field spans it
+ * ([CograTextField]'s `supportSpans`).
+ */
+@Composable
+private fun SupportLine(error: String?, hint: String?, lineTag: String?, spans: Boolean) {
+    Text(
+        text = error ?: hint.orEmpty(),
+        style = MaterialTheme.typography.bodySmall,
+        color = if (error != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier
+            .then(if (spans) Modifier.fillMaxWidth() else Modifier)
+            .then(if (error != null) Modifier.semantics { liveRegion = LiveRegionMode.Polite } else Modifier)
+            .then(if (lineTag != null) Modifier.testTag(lineTag) else Modifier),
+    )
 }
 
 @ThemePreviews

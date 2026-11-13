@@ -99,7 +99,7 @@ class YourTopicsScreenTest {
     @Test
     fun `no topic held reads copy-voice's empty line`() {
         render(YourTopicsUiState(loading = false))
-        compose.onNodeWithText("No topics yet — say how you feel about one from its page.", useUnmergedTree = true)
+        compose.onNodeWithText("No tags yet — say how you feel about one from its page.", useUnmergedTree = true)
             .assertExists()
     }
 }

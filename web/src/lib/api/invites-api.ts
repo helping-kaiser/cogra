@@ -14,10 +14,12 @@ import {
   RejectLinkApplicationsDocument,
   RevokeInviteLinkDocument,
   StageApplicantDocument,
+  VouchedInPageDocument,
   type AskLinkCheckQuery,
   type InvitesQuery,
   type MyApplicationQuery,
   type QueueApplicationFieldsFragment,
+  type VouchedInPageQuery,
 } from "@/__generated__/graphql";
 import {
   fetchOutcome,
@@ -32,23 +34,111 @@ type InvitesUser = NonNullable<InvitesQuery["me"]>;
 export type InviteLinkView = NonNullable<InvitesUser["inviteLinks"]>["edges"][number]["node"];
 export type ApplicationView = QueueApplicationFieldsFragment;
 
-/** What Invites reads in one round trip: the queue and the reader's links. */
+/**
+ * One person the reader let in, as People you let in draws them
+ * (Invites.md:11): the picture, else the monogram from the name; the display
+ * name, else the handle; and when the vouch landed.
+ */
+export type LetInPerson = {
+  /** The person's actor id, the lowercase UUID the wire carries — the row's key. */
+  readonly id: string;
+  /**
+   * The handle the row's door opens. A deleted account's route still names
+   * its account while its handle is never printed (ProfileDeleted.md, the
+   * opinions list's `door`), so the door keeps it and the row does not.
+   */
+  readonly door: string;
+  /** The row's title: the display name, else `@handle`; null for a deleted account. */
+  readonly name: string | null;
+  /** What the monogram is drawn from: the display name, else the bare handle (Invites.md:11). */
+  readonly monogram: string;
+  readonly avatarUrl: string | null;
+  /** A deleted account: the reserved disc and `Deleted account` (Invites.md:25). */
+  readonly redacted: boolean;
+  /** When the vouch that let them in landed (`VouchedInEdge.vouchedAt`). */
+  readonly vouchedAt: string;
+};
+
+/** What Invites reads: the queue, the reader's links, and the people they let in. */
 export type InvitesRead = {
   /** Waiting applications only, oldest first (`approvalQueue`). */
   readonly queue: readonly ApplicationView[];
   /** Every link the reader issued — dead ones included; the screen filters. */
   readonly links: readonly InviteLinkView[];
+  /** Everyone the reader vouched in, newest first (`vouchedIn`'s own order). */
+  readonly people: readonly LetInPerson[];
 };
 
+type VouchedInEdge = NonNullable<
+  NonNullable<VouchedInPageQuery["me"]>["vouchedIn"]
+>["edges"][number];
+
+/**
+ * One row as the list draws it. A deleted account reads REDACTED in its name
+ * (ER-G10) and serves no name, picture or handle the row may print.
+ */
+function personOf(edge: VouchedInEdge): LetInPerson {
+  const node = edge.node;
+  const redacted = node.displayName.status === "REDACTED";
+  const avatar = "avatar" in node ? node.avatar : null;
+  const written = node.displayName.value?.trim();
+  return {
+    id: node.id,
+    door: node.handle,
+    name: redacted ? null : written ? written : `@${node.handle}`,
+    monogram: redacted ? "" : written ? written : node.handle,
+    avatarUrl: redacted || avatar?.status === "REDACTED" ? null : (avatar?.url ?? null),
+    redacted,
+    vouchedAt: edge.vouchedAt,
+  };
+}
+
+/** How many pages the whole list may take before the read gives up (100 apiece). */
+const MAX_PEOPLE_PAGES = 50;
+
+/** Everyone the reader vouched in, newest first, paged to the end. */
+export async function fetchVouchedIn(client: ApolloClient): Promise<Outcome<LetInPerson[]>> {
+  const people: LetInPerson[] = [];
+  let after: string | null = null;
+  for (let page = 0; page < MAX_PEOPLE_PAGES; page += 1) {
+    const fetched = await viewerField(
+      () =>
+        client.query({
+          query: VouchedInPageDocument,
+          variables: { after },
+          fetchPolicy: "network-only",
+        }),
+      (data) => data.me?.vouchedIn,
+    );
+    if (fetched.kind !== "success") return fetched;
+    people.push(...fetched.value.edges.map(personOf));
+    if (!fetched.value.pageInfo.hasNextPage) break;
+    after = fetched.value.pageInfo.endCursor ?? null;
+    if (after === null) break;
+  }
+  return success(people);
+}
+
+/**
+ * The whole page in one outcome: the queue and the links in one round trip,
+ * the people beside it. Either read failing is the page's fault line — a
+ * page that drew the halves without the people could stand as its empty
+ * state for a reader who has let someone in (InvitesEmpty.md:5).
+ */
 export async function fetchInvites(client: ApolloClient): Promise<Outcome<InvitesRead>> {
-  const me = await viewerField(
-    () => client.query({ query: InvitesDocument, fetchPolicy: "network-only" }),
-    (data) => data.me,
-  );
+  const [me, people] = await Promise.all([
+    viewerField(
+      () => client.query({ query: InvitesDocument, fetchPolicy: "network-only" }),
+      (data) => data.me,
+    ),
+    fetchVouchedIn(client),
+  ]);
   if (me.kind !== "success") return me;
+  if (people.kind !== "success") return people;
   return success({
     queue: (me.value.approvalQueue?.edges ?? []).map((edge) => edge.node),
     links: (me.value.inviteLinks?.edges ?? []).map((edge) => edge.node),
+    people: people.value,
   });
 }
 

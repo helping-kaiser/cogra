@@ -155,7 +155,7 @@ pub async fn write_for_epoch(conn: &mut PgConnection, epoch: i64) -> Result<u64,
     Ok(sqlx::query!(
         r#"WITH recs AS (
                SELECT r.record_id, r.family, r.author, r.payload_marked, a.id AS actor_id,
-                      ROW_NUMBER() OVER (ORDER BY r.act_time, r.position) AS ord
+                      ROW_NUMBER() OVER (ORDER BY r.epoch, r.position) AS ord
                FROM mirror_records r
                JOIN actors a ON a.realization_address = r.author
                WHERE r.epoch = $1

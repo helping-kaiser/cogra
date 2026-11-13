@@ -5,7 +5,8 @@
 // A post's thread used to be a region of the post page, reading out of the
 // detail's own state — which made it unraisable anywhere the detail was not
 // already loaded. The count on a feed card raises THIS, the same full-function
-// thread the detail's count raises: reply, the comment's ⋮, edit, license, and
+// thread the detail's count raises: reply, the comment's ⋮ and the edit, license and
+// report it holds, and
 // the branches a reader unfolds.
 //
 // SO THE THREAD OWNS ITSELF. The surfaces underneath stay presentational: they
@@ -79,7 +80,13 @@ import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { CitedBySheet } from "@/lib/ui2/cited-by-sheet";
 import { OpinionsSheet } from "@/lib/ui2/opinions-sheet";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
-import { MenuSheet, OverflowTrigger, type MenuItem } from "@/lib/ui2/overflow-menu";
+import { MenuSheet, OverflowTrigger, menuSheetNodes, type MenuItem } from "@/lib/ui2/overflow-menu";
+import { REPORTED, REPORT_NOT_SENT } from "@/lib/ui2/post-menu-host";
+import { ReportConfirm } from "@/lib/ui2/report-confirm";
+import { sendReport } from "@/lib/api/report-api";
+import { COMMENT_SETTLING } from "@/lib/compose/comment-edit-door";
+import { COMMENT_LOCKED, useReaderIsApplicant } from "@/lib/session/reader-state";
+import { useAuthGuard } from "@/lib/session/runtime";
 import { StageHost } from "@/lib/ui2/media/stage-host";
 import { commentTarget, ReplyWizard } from "@/app/posts/[id]/reply/reply-wizard-view";
 import { CommentEditor } from "@/app/posts/[id]/edit/comment-editor";
@@ -88,7 +95,7 @@ import { JoinPrompt } from "@/lib/ui/join-prompt";
 import { RowLine } from "@/lib/ui/row-line";
 import { useSavedWrites } from "@/lib/saved/provider";
 import { useHostSnack } from "@/lib/saved/save-row";
-import { commentMenuItems } from "@/lib/ui2/comment-menu";
+import { REPORT_COMMENT_TITLE, commentMenuItems } from "@/lib/ui2/comment-menu";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
@@ -122,6 +129,9 @@ const MAX_INDENT_DEPTH = 1;
  * surface raised the thread.
  */
 const COMMENT_LICENSE_SHEET: DataNode = { path: "postDetail.licenseSheet" };
+
+/** The one menu sheet over the thread, and its rows: the detail's `postDetail.menuSheet`. */
+const THREAD_MENU = menuSheetNodes("postDetail");
 
 /** How many pages a landing reads, of the thread or of one branch, before it settles. */
 const LANDING_PAGES = 10;
@@ -226,6 +236,8 @@ export function CommentsSheet({
   const router = useRouter();
   const viewerId = useActiveAccountId();
   const phase = useAuthPhase();
+  const applicant = useReaderIsApplicant();
+  const guard = useAuthGuard();
 
   const [comments, setComments] = useState<readonly CommentView[]>([]);
   const [endCursor, setEndCursor] = useState<string | null>(null);
@@ -270,8 +282,14 @@ export function CommentsSheet({
   // menu's Remove over the thread, the thread still where the menu was opened.
   const [removing, setRemoving] = useState<ThreadComment | null>(null);
   // THE ONE MENU SHEET: every comment's ⋮ raises the same sheet, holding the
-  // rows of the comment it was raised for (seam 094 item 64).
-  const [menuFor, setMenuFor] = useState<ThreadComment | null>(null);
+  // rows of the comment it was raised for (seam 094 item 64) — and where that
+  // comment hangs, which its Edit row hands the editor.
+  const [menuFor, setMenuFor] = useState<{ comment: ThreadComment; parentId: string | null } | null>(null);
+  // THE COMMENT'S REPORT CONFIRM, stacked over the thread (CommentMenu.md:29):
+  // the comment it names is held from the tap, as the removal's is.
+  const [reporting, setReporting] = useState<ThreadComment | null>(null);
+  const [reportAsked, setReportAsked] = useState(false);
+  const [reportSending, setReportSending] = useState(false);
   // Stable, so the snackbar's own timer is not restarted by every render of
   // the thread underneath it.
   const dismissCommentSigned = useCallback(() => setCommentSigned(false), []);
@@ -629,6 +647,12 @@ export function CommentsSheet({
    * out, because a closed dialog no longer holds one.
    */
   const openComposer = (target: ReplyTarget) => {
+    // AN APPLICANT IS TOLD, NEVER THE COMPOSER (ReplyEntry.md:25; ruling
+    // PR-103): both doors, and a landing aimed at a reply, end here.
+    if (applicant) {
+      notify(COMMENT_LOCKED);
+      return;
+    }
     depart();
     setEditing(null);
     setReplying(target);
@@ -680,20 +704,53 @@ export function CommentsSheet({
    * license terms rise from inside the thread, a sheet over a sheet
    * (`CommentLicense.jsx`, design/readme.md:2364).
    */
-  const menuRowsOf = (comment: ThreadComment, own: boolean): MenuItem[] =>
+  const menuRowsOf = (
+    comment: ThreadComment,
+    own: boolean,
+    parentId: string | null,
+    rowNode?: (row: string) => DataNode,
+  ): MenuItem[] =>
     commentMenuItems({
       comment,
       writes,
       notify,
       onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
+      applicant,
       navigate: (route) => router.push(route),
       openCitedBy,
       openOpinions,
       openLicense,
-      // THE READER'S OWN COMMENT'S MENU (CommentMenuOwn.md:3): Remove joins it.
+      // THE READER'S OWN COMMENT'S MENU (CommentMenuOwn.md:3): Edit and Remove
+      // join it. Edit is the one door to the comment's edit — no card carries
+      // an Edit button (jakob on #423, seam 304).
+      openEdit: own ? () => openEditor(comment, parentId) : undefined,
       openRemove: own ? () => setRemoving(comment) : undefined,
+      // SOMEONE ELSE'S: Report at the tail, its confirm stacked over the thread.
+      openReport: () => {
+        setReportAsked(true);
+        setReporting(comment);
+      },
       testIdPrefix: "comment-menu",
+      rowNode,
     });
+
+  /**
+   * THE COMMIT SENDS THE MAIL (ReportConfirm.md:11-17), the post menu's rule:
+   * gone through, the sheet closes and the thread's snackbar says so; refused
+   * or unanswered, the sheet stays and the snackbar never claims a report.
+   */
+  const commitReport = async () => {
+    if (reporting === null || reportSending) return;
+    setReportSending(true);
+    const outcome = await guard.run(() => sendReport(client, reporting.id));
+    setReportSending(false);
+    if (outcome.kind === "success") {
+      setReporting(null);
+      notify(REPORTED);
+    } else {
+      notify(REPORT_NOT_SENT);
+    }
+  };
 
   /**
    * A REMOVAL TAKEN IN THE THREAD (CommentRemoveConfirm.md:11): the comment's
@@ -721,8 +778,11 @@ export function CommentsSheet({
     // The editor opens on what the comment actually carries — text and
     // claims alike — so an untouched editor stages nothing (F10). It is
     // the composer's twin surface, so the thread yields to it the same
-    // way (see `openComposer`).
-    depart();
+    // way (see `openComposer`) — but its door is a ROW OF THE ⋮, built
+    // during render, so the reader's place was taken when the ⋮ opened (the
+    // trigger's `onOpen`): the stacked menu is modal, and nothing scrolls
+    // beneath it between that tap and this one.
+    onOpenChange(false);
     setEditing({ comment, parentId });
     setReplying(null);
   };
@@ -801,13 +861,16 @@ export function CommentsSheet({
                   thread already lives in a sheet, so this menu is a sheet on a
                   sheet (design/readme.md:2364). A REMOVED COMMENT HAS NO MENU
                   LEFT (`_shared.jsx`, `menuItems={removed ? [] : …}`). */}
-              {!removed && menuRowsOf(comment, isOwn).length > 0 && (
+              {!removed && menuRowsOf(comment, isOwn, parentId).length > 0 && (
                 <OverflowTrigger
                   ariaLabel="More on this comment"
                   testId={`comment-menu-${comment.id}`}
                   node={part(card, "menu")}
-                  expanded={menuFor?.id === comment.id}
-                  onOpen={() => setMenuFor(comment)}
+                  expanded={menuFor?.comment.id === comment.id}
+                  onOpen={() => {
+                    measurePlace();
+                    setMenuFor({ comment, parentId });
+                  }}
                 />
               )}
             </div>
@@ -899,9 +962,10 @@ export function CommentsSheet({
             />
           )}
           {/* ONE ACTION ROW (the thread's CommentCard, CommentRemoved): the
-              comment's own stance control (design.md §6) leads and Reply and
-              Edit stand at the row's far end — one spread row, as the feed's
-              comment card draws it. */}
+              comment's own stance control (design.md §6) leads and Reply stands
+              at the row's far end — one spread row, as the feed's comment card
+              draws it. NO EDIT BUTTON on any comment card, the own one's
+              included: Edit is a row of its ⋮ (jakob on #423, seam 304). */}
           <div
             className="flex w-full min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1"
             {...testAttributes(part(card, "actionRow"))}
@@ -911,37 +975,22 @@ export function CommentsSheet({
               testIdPrefix={`comment-stance-${comment.id}`}
               node={part(card, "actionRow.stance")}
             />
-            <div className="flex gap-2">
-              {phase === "signedIn" && (
-                <Button
-                  testId={`comment-reply-${comment.id}`}
-                  node={part(card, "actionRow.reply")}
-                  variant="text"
-                  size="sm"
-                  onClick={() => {
-                    // ReplyEntry via=5: the composer, PRE-TARGETED at this
-                    // comment. The other door — "Add a comment" at the foot of
-                    // the thread — pins the post instead.
-                    openComposer(commentTarget(comment));
-                  }}
-                >
-                  Reply
-                </Button>
-              )}
-              {/* The removed comment keeps `own` but loses Edit with its payload
-                  (`_shared.jsx`: `onEdit={removed ? undefined : …}`). */}
-              {isOwn && !removed && (
-                <Button
-                  testId={`comment-edit-${comment.id}`}
-                  node={part(card, "actionRow.edit")}
-                  variant="text"
-                  size="sm"
-                  onClick={() => openEditor(comment, parentId)}
-                >
-                  Edit
-                </Button>
-              )}
-            </div>
+            {phase === "signedIn" && (
+              <Button
+                testId={`comment-reply-${comment.id}`}
+                node={part(card, "actionRow.reply")}
+                variant="text"
+                size="sm"
+                onClick={() => {
+                  // ReplyEntry via=5: the composer, PRE-TARGETED at this
+                  // comment. The other door — "Add a comment" at the foot of
+                  // the thread — pins the post instead.
+                  openComposer(commentTarget(comment));
+                }}
+              >
+                Reply
+              </Button>
+            )}
           </div>
           {/* THE ROW LINE under the face (RowSigning.md): a save or unsave of
               this comment that did not go through. */}
@@ -1033,7 +1082,7 @@ export function CommentsSheet({
                 it. */}
             <Snackbar
               testId="comment-signed"
-              message={commentSigned ? "Signed — it's in the thread now, still settling." : null}
+              message={commentSigned ? COMMENT_SETTLING : null}
               onDismiss={dismissCommentSigned}
             />
             {/* THE COMMENT MENUS' AFTERMATH (CommentMenu.md, design digest item
@@ -1209,11 +1258,34 @@ export function CommentsSheet({
         <MenuSheet
           open
           onClose={() => setMenuFor(null)}
-          items={menuRowsOf(menuFor, viewerId !== null && menuFor.author?.id === viewerId)}
+          items={menuRowsOf(
+            menuFor.comment,
+            viewerId !== null && menuFor.comment.author?.id === viewerId,
+            menuFor.parentId,
+            // The rows wear the detail's registered paths (CommentMenu,
+            // CommentMenuOwn: `postDetail.menuSheet.citedBy`, `.edit`, `.report`).
+            node === undefined ? undefined : THREAD_MENU.row,
+          )}
           ariaLabel="Comment actions"
-          testId={`comment-menu-${menuFor.id}-sheet`}
-          node={node === undefined ? undefined : { path: "postDetail.menuSheet" }}
+          testId={`comment-menu-${menuFor.comment.id}-sheet`}
+          node={node === undefined ? undefined : THREAD_MENU.sheet}
           stacked
+        />
+      )}
+      {/* REPORT THIS COMMENT? — stacked over the thread, the thread standing
+          unchanged beneath it (CommentMenu.md:29, ReportConfirm.md:9). Mounted
+          from the first ask on, so its exit is drawn; on the detail it is the
+          detail's `postDetail.reportSheet`. */}
+      {reportAsked && (
+        <ReportConfirm
+          open={reporting !== null}
+          onClose={() => setReporting(null)}
+          onReport={() => void commitReport()}
+          sending={reportSending}
+          title={REPORT_COMMENT_TITLE}
+          node={node === undefined ? undefined : { path: "postDetail.reportSheet" }}
+          stacked
+          testId="comment-report-sheet"
         />
       )}
       {/* The wizard is a surface OVER the thread, and every way out of it

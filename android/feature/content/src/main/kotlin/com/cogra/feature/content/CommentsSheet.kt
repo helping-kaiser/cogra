@@ -34,9 +34,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -50,6 +53,7 @@ import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.CommentStanceTarget
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.LocalSnackbarHostState
 import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.RowLine
 import com.cogra.core.designsystem.dataNode
@@ -67,6 +71,7 @@ import com.cogra.core.designsystem.v2.media.ScrollStageRow
 import com.cogra.core.designsystem.v2.media.SensitiveSource
 import com.cogra.core.designsystem.v2.media.VideoSurfaceType
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.core.designsystem.v2.token.StateTokens
 import com.cogra.domain.CommentView
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.content.SensitiveMark
@@ -79,6 +84,7 @@ import com.cogra.feature.saved.LocalSavedHost
 import com.cogra.feature.saved.rememberSavedHost
 import com.cogra.feature.saved.rememberSavedWrites
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 /**
  * THE COMMENTS SHEET, WIRED TO ITS OWN THREAD — the one comments surface
@@ -150,8 +156,11 @@ fun CommentsSheetRoute(
     LaunchedEffect(postId, landOn, aimReply) {
         val at = landOn ?: return@LaunchedEffect
         if (!aimReply) return@LaunchedEffect
-        val landed = viewModel.state.first { it.standing(at) != null }.standing(at)
-        onReply(ReplyTargetRequest(postId, landed))
+        // An applicant's aimed landing opens no composer: the thread stands at
+        // the comment, its doors answering in place (ReplyEntry.md:25).
+        val landedState = viewModel.state.first { it.standing(at) != null }
+        if (landedState.commentLocked) return@LaunchedEffect
+        onReply(ReplyTargetRequest(postId, landedState.standing(at)))
     }
     // In an effect, not the composition body: a recomposition that never
     // commits would otherwise fire the refetch anyway. The landing is
@@ -299,6 +308,8 @@ fun CommentsSheet(
             onCommentSignedShown()
         }
     }
+    // AN APPLICANT'S TWO DOORS INTO THE COMPOSER ANSWER IN PLACE ([rememberCommentGuard]).
+    val guard = rememberCommentGuard(state.commentLocked, snackbar)
     val listState = rememberLazyListState()
     ThreadPlacement(state, listState, restoreTo, onRestored, onLanded)
     // WHICH OF THE READER'S OWN COMMENTS THE THINK-TWICE DIALOG IS UP FOR
@@ -341,9 +352,14 @@ fun CommentsSheet(
         // a SurfaceView escapes every Compose clip, and over the sheet's
         // translucent scrim a clip scrolled past the list's top stood
         // above the sheet up to the top of the screen.
+        // THE THREAD'S STANCE FACES ANSWER ON THIS SHEET'S SNACKBAR TOO: the
+        // control reads [LocalSnackbarHostState], and the shell's host is
+        // beneath the sheet's own window.
         CompositionLocalProvider(
             LocalSavedHost provides savedHost,
             LocalVideoSurfaceType provides VideoSurfaceType.TextureView,
+            LocalSnackbarHostState provides snackbar,
+            LocalReplyLocked provides state.commentLocked,
         ) {
             CommentsList(
                 state = state,
@@ -352,7 +368,7 @@ fun CommentsSheet(
                 signedIn = signedIn,
                 modifier = Modifier.weight(1f),
                 onLoadMoreComments = onLoadMoreComments,
-                onReplyTo = { c -> depart { onReplyTo(c) } },
+                onReplyTo = { c -> guard { depart { onReplyTo(c) } }() },
                 onEditComment = { c -> depart { onEditComment(c) } },
                 onLoadMoreReplies = onLoadMoreReplies,
                 onReveal = onReveal,
@@ -364,7 +380,7 @@ fun CommentsSheet(
                 stanceControl = stanceControl,
             )
         }
-        CommentsFoot(signedIn, { depart(onAddComment) }, onSignInOrJoin)
+        CommentsFoot(signedIn, state.commentLocked, guard { depart(onAddComment) }, onSignInOrJoin)
     }
     // OVER THE THREAD, the sheet beneath whole and inert (CommentRemoveConfirm.md:3):
     // the dialog is its own window, raised after the sheet's. Taken, only the
@@ -593,6 +609,8 @@ private fun MoreComments(state: CommentsUiState, onLoadMoreComments: () -> Unit)
 @Composable
 private fun CommentsFoot(
     signedIn: Boolean?,
+    /** An applicant's foot: the disabled opacity, still tappable (ReplyEntry.md:27). */
+    locked: Boolean,
     onAddComment: () -> Unit,
     onSignInOrJoin: () -> Unit,
 ) {
@@ -609,6 +627,7 @@ private fun CommentsFoot(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = Space.x4, vertical = Space.x3)
+                .alpha(if (locked) StateTokens.DISABLED else 1f)
                 .testTag("detail_add_comment"),
         ) {
             Text(
@@ -955,7 +974,10 @@ private fun CommentAffordances(
                 onClick = { onReplyTo(comment) },
                 kind = ButtonKind.Text,
                 size = ButtonSize.Compact,
-                modifier = Modifier.dataNode(node / "reply"),
+                // An applicant's Reply: the disabled opacity, still tappable (ReplyEntry.md:29).
+                modifier = Modifier
+                    .alpha(if (LocalReplyLocked.current) StateTokens.DISABLED else 1f)
+                    .dataNode(node / "reply"),
             )
         }
         // `ReplyMedia` 6 — an own comment wears Edit, and it
@@ -1060,3 +1082,26 @@ private fun CommentBranch(
 
 /** The thread's one sheet (`postDetail.threadSheet`), whichever surface raised it. */
 internal val THREAD_SHEET = POST_DETAIL / "threadSheet"
+
+/**
+ * The thread's Reply wears the applicant's locked look. A local scoped to this
+ * sheet rather than a parameter: the Reply sits five layers down the thread's
+ * list, under the replies' own nesting, and the taps already ride
+ * `onReplyTo`; only the look needs to reach it.
+ */
+private val LocalReplyLocked = staticCompositionLocalOf { false }
+
+/**
+ * AN APPLICANT'S TWO DOORS INTO THE COMPOSER ANSWER IN PLACE (ReplyEntry.md:25-29;
+ * copy-voice *The applicant-foot family*; PR-103): `Add a comment` and every
+ * comment's Reply say `You can comment once you're in.` on the sheet's own
+ * snackbar — the composer never opens and nothing stages. The guard wraps a
+ * door: while [locked] it answers, otherwise the door opens as it always did.
+ */
+@Composable
+private fun rememberCommentGuard(locked: Boolean, snackbar: SnackbarHostState): (() -> Unit) -> () -> Unit {
+    val scope = rememberCoroutineScope()
+    val line = stringResource(R.string.content_comment_locked)
+    val answer: () -> Unit = { scope.launch { snackbar.showSnackbar(line) } }
+    return { door -> if (locked) answer else door }
+}

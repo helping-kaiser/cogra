@@ -21,8 +21,7 @@ function record(
     pInterest,
     payloadMarked: false,
     landingEpoch: 1,
-    actTime: clock,
-    position: 0,
+    position: clock,
     ...extra,
   };
 }

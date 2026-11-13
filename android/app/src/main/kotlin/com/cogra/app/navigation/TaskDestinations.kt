@@ -5,6 +5,7 @@
 package com.cogra.app.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -19,6 +20,7 @@ import com.cogra.feature.content.wizard.ComposeWizardRoute
 import com.cogra.feature.invites.InvitesNotice
 import com.cogra.feature.invites.InvitesRoute
 import com.cogra.feature.profile.FramedPicture
+import com.cogra.feature.profile.INVITES_ORIGIN
 import com.cogra.feature.profile.ProfileEditRoute
 import com.cogra.feature.profile.avatar.AvatarFlowRoute
 import com.cogra.feature.stance.kept.KeptPicksRoute
@@ -72,6 +74,8 @@ private fun ShellScope.InvitesDestination(entry: NavBackStackEntry) {
         onBack = { navController.navigateUp() },
         onNotMember = { navController.navigateUp() },
         onRestoreKey = { navController.navigate(Restore) },
+        // A person let in opens over Invites, the way back naming it (Invites.md:23, :27).
+        onOpenPerson = { handle -> navController.navigate(Profile(handle, from = INVITES_ORIGIN)) },
         arrival = InvitesNotice.decode(notice),
         onArrivalConsumed = consumeNotice,
         deletionBand = deletionBand(node = null),
@@ -102,6 +106,17 @@ internal fun NavController.openReplyWizard(target: ReplyTarget) {
 @Composable
 private fun ShellScope.ComposeDestination(entry: NavBackStackEntry) {
     val editing = entry.toRoute<ComposePost>().postId != null
+    // THE WIZARD NEVER OPENS FOR AN APPLICANT (ApplicantFeed.md:49): every
+    // door answers in place ([ShellScope.openComposer]), and an entry that
+    // reached the stack another way — a restored stack — leaves it, saying
+    // the line once, as Invites sends a non-member back (ProfileApplicant.md:18).
+    if (!editing && applicant) {
+        LaunchedEffect(entry.id) {
+            if (navController.currentBackStackEntry?.id == entry.id) navController.popBackStack()
+            announce(postLockedLine)
+        }
+        return
+    }
     // Creating a post runs the wizard (D19); editing one runs
     // the post edit, one screen and one batch (EditCompose).
     // Both live behind the same destination so the bottom

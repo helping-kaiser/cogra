@@ -20,7 +20,6 @@ pub async fn current(
         "SELECT value FROM network_parameter_versions
          WHERE parameter = $1
          ORDER BY landed_epoch DESC NULLS LAST,
-                  act_time DESC NULLS LAST,
                   position DESC NULLS LAST,
                   created_at DESC, version_id DESC
          LIMIT 1",
@@ -55,7 +54,6 @@ pub async fn all_current(
            WHERE ($1::text[] IS NULL OR parameter = ANY($1))
            ORDER BY parameter,
                     landed_epoch DESC NULLS LAST,
-                    act_time DESC NULLS LAST,
                     position DESC NULLS LAST,
                     created_at DESC, version_id DESC"#,
         keys,
@@ -73,7 +71,7 @@ pub async fn charter_epoch(pool: &PgPool) -> Result<Option<i64>, sqlx::Error> {
          FROM mirror_records r
          JOIN actors a ON a.realization_address = r.author
          WHERE a.kind = 'system' AND a.handle = $1 AND r.family = 'publish'
-         ORDER BY r.epoch, r.act_time, r.position
+         ORDER BY r.epoch, r.position
          LIMIT 1",
         crate::genesis::PUBLISHER_HANDLE,
     )

@@ -408,7 +408,7 @@ describe("the feed filter", () => {
       expect(tide).toHaveAttribute("aria-checked", "false");
       expect(salt).toHaveAttribute("aria-checked", "false");
       const groups = within(sheet()).getAllByRole("group");
-      expect(groups.at(-1)).toHaveAccessibleName("One topic");
+      expect(groups.at(-1)).toHaveAccessibleName("One tag");
     });
 
     it("holds Reset in its foot's corner and Done at its end, with no reading of the staged filter", async () => {
@@ -626,8 +626,33 @@ describe("the feed filter", () => {
       writeReaderDefault("acct-1", { ...FEED_FILTER_DEFAULT, kinds: ["posts", "profiles"] });
       renderFeed();
       fireEvent.click(await screen.findByTestId(byNode("feed.profileCard.menu", "u3")));
-      fireEvent.click(screen.getByTestId("feed-person-u3-menu-mention"));
+      fireEvent.click(screen.getByTestId("feed.menuSheet.mention"));
       expect(push).toHaveBeenCalledWith("/compose?reference=u3");
+    });
+
+    // FeedProfileMenu.md:3, :5 (round 36): the card's ⋮ rises as feed.menuSheet
+    // and reads Save · Mention · Hide @mira · Report; :13 — Report raises the
+    // confirm naming the person, and nothing is sent.
+    it("a person card's menu reads save, mention, hide and report as feed.menuSheet rows", async () => {
+      const r = reads();
+      server.use(...rankedFeed([post("p1"), person("u3", "mira")], r));
+      writeReaderDefault("acct-1", { ...FEED_FILTER_DEFAULT, kinds: ["posts", "profiles"] });
+      renderFeed();
+      fireEvent.click(await screen.findByTestId(byNode("feed.profileCard.menu", "u3")));
+      const sheet = screen.getByTestId("feed.menuSheet") as HTMLDialogElement;
+      expect(sheet.open).toBe(true);
+      expect(
+        within(sheet)
+          .getAllByRole("button")
+          .map((row) => [row.getAttribute("data-testid"), row.textContent]),
+      ).toEqual([
+        ["feed.menuSheet.save", "Save"],
+        ["feed.menuSheet.mention", "Mention in a new post"],
+        ["feed.menuSheet.hide", "Hide @mira"],
+        ["feed.menuSheet.report", "Report"],
+      ]);
+      fireEvent.click(screen.getByTestId("feed.menuSheet.report"));
+      expect(await screen.findByTestId("feed-person-u3-menu-report-sheet")).toHaveAccessibleName("Report @mira?");
     });
 
     it("draws profile and tag cards once their kinds are let in", async () => {
@@ -665,11 +690,11 @@ describe("the feed filter", () => {
     });
   });
 
-  // flows.json FeedSheet → YourTopics: "All your topics" opens everything
+  // flows.json FeedSheet → YourTopics: "All your tags" opens everything
   // held; back returns the feed with this sheet up, as it was left (design
   // readme, *A sheet that launched a forward navigation comes back*).
-  describe("All your topics", () => {
-    it("opens Your topics, naming the feed as where the reader came from", async () => {
+  describe("All your tags", () => {
+    it("opens Your tags, naming the feed as where the reader came from", async () => {
       server.use(...rankedFeed([post("p1")], reads()), heldTopics(), meHandler());
       renderFeed();
       await openSheet();

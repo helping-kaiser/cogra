@@ -509,12 +509,12 @@ type CancelEmailChangePayload {
 }
 
 """
-A record's place in the authoritative order: its landing epoch and
-causal key (𝕋^act, pos).
+A record's place in the authoritative order: the key of record
+(epoch, position), compared lexicographically — the landing epoch
+first, then the position in that epoch's published order.
 """
 type CausalKey {
 	landingEpoch: Int!
-	actTime: Int!
 	position: Int!
 }
 
@@ -3045,11 +3045,12 @@ input PrepareReferenceInput {
 }
 
 """
-Withdrawing one citation. Records are never deleted, and Reference
-withdrawal is per-leg net stance — not the Tag rule beside it, which
-is newest-wins at `(0,0)` only because a tag's confidence cannot
-be netted. Both citation parameters are signed, so a withdrawal is the
-severance shape: counter-records until the bundle reaches `(0, 0)`.
+Withdrawing one citation. Records are never deleted, and a Reference
+is withdrawn by its author through netting — not the Tag rule beside
+it, which is newest-wins at `(0,0)` only because a tag's confidence
+cannot be netted. Both citation parameters are signed, so a withdrawal
+is the severance shape: counter-records until the bundle reaches
+`(0, 0)`.
 
 A count read earlier can differ from the batch prepared here — the
 bundle may have moved in between (another device's act staging or
@@ -3639,11 +3640,14 @@ type Record {
 	"""
 	When the record landed: its epoch's attested boundary timestamp
 	(layer1-interface.md, the Host Contract). Wall-clock time for
-	display; `landingEpoch` and the causal key carry the order.
+	display; the key of record (`landingEpoch`, `position`) carries the
+	order.
 	"""
 	landedAt: DateTime!
 	"""
-	Authoritative act time — the first component of the causal key.
+	Act time 𝕋^act: the recomputable summary of the order the record
+	carries. It decides no precedence — the key of record
+	(`landingEpoch`, `position`) orders.
 	"""
 	actTime: Int!
 	"""
@@ -4953,7 +4957,7 @@ type User implements Node & Actor {
 	Opinion (auth.md "Approval and landing"). A vouch on an account
 	that has not landed, and a later vouch-Opinion on one that has, is
 	not one. Newest vouch first, keyset on the vouch record's
-	landing-order key; `vouchedAt` is that record's `landedAt`. The
+	key of record; `vouchedAt` is that record's `landedAt`. The
 	admission stands whatever followed it: a stance walked back since,
 	or the account deleted since, which reads as every deleted account
 	reads. An invalid cursor is BAD_INPUT. Field-level: viewer-only.

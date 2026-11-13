@@ -109,8 +109,8 @@ export async function prepareReference(
 }
 
 /**
- * Withdrawing one reference (D11). Reference withdrawal is per-leg net
- * stance, so the server assembles counter-records until the bundle
+ * Withdrawing one reference (D11). A reference is withdrawn by its author
+ * through netting, so the server assembles counter-records until the bundle
  * reaches `(0, 0)` — the returned batch is the QUOTED COST, one priced
  * act per write, and the only place that count is known truthfully.
  * `ReferenceClaim` serves the clipped fold, not the raw sums, so the

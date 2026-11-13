@@ -61,7 +61,7 @@ fn page<T: Clone>(items: &[T], variables: &Value) -> (Vec<(usize, T)>, bool) {
 }
 
 fn key_json(key: &CausalKey) -> Value {
-    json!({"landingEpoch": key.landing_epoch, "actTime": key.act_time, "position": key.position})
+    json!({"landingEpoch": key.landing_epoch, "position": key.position})
 }
 
 fn node_json(node: &SliceNode) -> Value {
@@ -79,7 +79,6 @@ fn record_json(record: &SliceRecord) -> Value {
         "family": record.family.wire_name(),
         "authorId": record.author,
         "landingEpoch": record.key.landing_epoch,
-        "actTime": record.key.act_time,
         "position": record.key.position,
         "legs": record.legs.iter().map(|l| json!({
             "role": l.role.wire_name(),
@@ -193,7 +192,6 @@ impl Builder {
         self.clock += 1;
         CausalKey {
             landing_epoch: self.epoch,
-            act_time: self.clock,
             position: self.clock,
         }
     }

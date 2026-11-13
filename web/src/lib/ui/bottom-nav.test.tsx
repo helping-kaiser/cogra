@@ -1,7 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { settleReaderState } from "@/lib/session/reader-state";
 import { ALL_SLOTS, BottomNav } from "./bottom-nav";
+import { CarriedSnackbar } from "./carried-snackbar";
 
 describe("BottomNav", () => {
   // Every canonical board draws five slots, and V1.0 carries all five
@@ -122,6 +124,61 @@ describe("BottomNav", () => {
     fireEvent(screen.getByTestId(`nav-${slot}`), tap);
     expect(onReselect).toHaveBeenCalledTimes(1);
     expect(tap.defaultPrevented).toBe(true);
+  });
+
+  // AN APPLICANT'S NEW POST (ApplicantFeed.md:49-51 on `feed.bottomBar`,
+  // ProfileApplicant.md:24-26 on `profile.bottomBar`): locked, not gone.
+  describe.each(["feed", "profile"] as const)("the applicant's %s.bottomBar", (screenName) => {
+    const node = { path: `${screenName}.bottomBar` };
+    const slot = () => screen.getByTestId(`${screenName}.bottomBar.composeSlot`);
+
+    // :51 / :24 — the locked look, visibly inactive at the disabled opacity and still tappable.
+    it("the_compose_slot_wears_the_locked_look_and_stays_tappable", () => {
+      settleReaderState("APPLICANT");
+      render(<BottomNav active={screenName} signedIn node={node} />);
+      expect(slot().tagName).toBe("BUTTON");
+      expect(slot()).not.toBeDisabled();
+      expect(slot()).not.toHaveAttribute("href");
+      expect(slot().className).toContain("opacity-[var(--state-disabled)]");
+      expect(slot()).toHaveAttribute("aria-label", "New post");
+    });
+
+    // :49 / :26 — the snackbar reads You can post once you're in. AND NEVER the wizard opens.
+    it("tapping_new_post_says_post_once_in_and_opens_no_wizard", () => {
+      settleReaderState("APPLICANT");
+      render(
+        <>
+          <BottomNav active={screenName} signedIn node={node} />
+          <CarriedSnackbar />
+        </>,
+      );
+      const tap = new MouseEvent("click", { bubbles: true, cancelable: true });
+      fireEvent(slot(), tap);
+      expect(screen.getByTestId("carried-snackbar")).toHaveTextContent("You can post once you're in.");
+      // The bar's join prompt stands mounted and closed: an applicant is never asked to join.
+      expect((screen.getByTestId("join-prompt") as HTMLDialogElement).open).toBe(false);
+      expect(screen.queryByRole("link", { name: "New post" })).not.toBeInTheDocument();
+    });
+
+    // A member's slot is unchanged: the loud link to the wizard.
+    it("a_members_compose_slot_is_the_plain_link_to_the_wizard", () => {
+      settleReaderState("MEMBER");
+      render(<BottomNav active={screenName} signedIn node={node} />);
+      expect(slot()).toHaveAttribute("href", "/compose");
+      expect(slot().className).not.toContain("opacity-[var(--state-disabled)]");
+    });
+  });
+
+  // GuestGate: a guest's New post still asks to join — the lock is the
+  // applicant's, never the guest's.
+  it("a_guests_new_post_still_raises_the_join_ask", () => {
+    settleReaderState(null);
+    render(<BottomNav active="feed" signedIn={false} node={{ path: "feed.bottomBar" }} />);
+    fireEvent.click(screen.getByTestId("feed.bottomBar.composeSlot"));
+    expect((screen.getByTestId("join-prompt") as HTMLDialogElement).open).toBe(true);
+    expect(screen.getByTestId("feed.bottomBar.composeSlot").className).not.toContain(
+      "opacity-[var(--state-disabled)]",
+    );
   });
 
   // Feed.md:85 — from anywhere else the slot stays the way to the feed.

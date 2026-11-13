@@ -47,7 +47,7 @@ fun keptKindWord(kind: StanceKind): String = when (kind) {
     StanceKind.POST -> "Post"
     StanceKind.COMMENT -> "Comment"
     StanceKind.PERSON -> "Person"
-    StanceKind.TOPIC -> "Topic"
+    StanceKind.TOPIC -> "Tag"
 }
 
 /**

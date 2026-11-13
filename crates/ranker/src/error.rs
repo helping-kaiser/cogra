@@ -25,8 +25,9 @@ pub enum RankError {
     #[error("the slice is malformed: {reason}")]
     MalformedSlice { reason: String },
     /// The slice holds a record of a family whose feed traversal needs an
-    /// L2 fold this ranker does not build yet — chat lineages and inviter
-    /// revocation (feed-ranking.md §3.2, §4; ranker-core §3.9).
+    /// L2 fold this ranker does not build yet — chat lineages and the
+    /// Invitation T-leg's inertness with its A-leg (feed-ranking.md §3.2, §4;
+    /// ranker-core §3.9).
     #[error("record {record_id} is a {family} record, which this ranker does not fold yet")]
     UnsupportedFamily { record_id: String, family: Family },
 }

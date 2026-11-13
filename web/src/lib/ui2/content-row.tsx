@@ -29,6 +29,7 @@ import type { ReactNode } from "react";
 import { bundleReadout, EMPTY_PICK_LABEL, ZERO_BUNDLE_EMOJI } from "@/lib/stance/anchors";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon, type GlyphName } from "@/lib/ui/icons";
+import { nameInLine } from "@/lib/ui/names";
 import { formatStancePair, STANCE_SEVERANCE_WORDS } from "@/lib/ui/stance-format";
 import { MonogramAvatar } from "./monogram-avatar";
 
@@ -71,6 +72,29 @@ export type ContentRowDisc =
 const SEVERED_LABEL = STANCE_SEVERANCE_WORDS.zero;
 
 const ELLIPSIS ="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap";
+
+/** What the title's aside holds: a bare `@handle`, words naming one, or neither. */
+type AsideHandle = "none" | "bare" | "words";
+
+function asideKind(aside: string | undefined): AsideHandle {
+  if (aside === undefined) return "none";
+  if (/^@[A-Za-z0-9_]+$/.test(aside)) return "bare";
+  return /(?<![\w@])@[A-Za-z0-9_]/.test(aside) ? "words" : "none";
+}
+
+/** The title beside each kind of aside (ContentRow.jsx `heading`). */
+const HEADING_FLEX: Record<AsideHandle, string> = {
+  none: "",
+  bare: "shrink-[999]",
+  words: "flex-none max-w-full",
+};
+
+/** The aside's share of the squeeze (ContentRow.jsx `ASIDE_FLEX`). */
+const ASIDE_FLEX: Record<AsideHandle, string> = {
+  none: "flex-none",
+  bare: `${ELLIPSIS} shrink`,
+  words: `${ELLIPSIS} shrink`,
+};
 
 function Disc({ disc }: { disc: ContentRowDisc }) {
   switch (disc.kind) {
@@ -190,13 +214,20 @@ export function ContentRow({
   const title = redacted && !sentence ? REDACTED_ACTOR_NAME : titleGiven;
   const aside = redacted ? undefined : asideGiven;
   const quiet = (redacted && !sentence) || titleQuiet;
+  // A ONE-LINE PLACE (ContentRow.jsx, round 40; NamesLong.md). An aside that
+  // IS a handle beside a name — `Juno Baptiste @juno` — takes `ActorChip`'s
+  // law: the title (the name) gives way first, the handle stays whole until
+  // it alone cannot fit. An aside whose words name a handle — `on @mira` —
+  // gives up its handle first, the title and the words kept (`nameInLine`).
+  // An aside with no handle keeps its width.
+  const asideHandle = asideKind(aside);
   const heading = (
     <span
       id={titleId}
-      className={`${ELLIPSIS} text-label-large ${quiet ? "text-on-surface-variant" : "text-on-surface"}`}
+      className={`${ELLIPSIS} ${HEADING_FLEX[asideHandle]} text-label-large ${quiet ? "text-on-surface-variant" : "text-on-surface"}`}
       {...testAttributes(part(node, "title"), `${testId}-title`)}
     >
-      {title}
+      {nameInLine(title)}
     </span>
   );
   const inner = (
@@ -209,10 +240,10 @@ export function ContentRow({
           <span className="flex min-w-0 items-baseline gap-2">
             {heading}
             <span
-              className="flex-none text-label-small text-on-surface-variant"
+              className={`${ASIDE_FLEX[asideHandle]} text-label-small text-on-surface-variant`}
               {...testAttributes(part(node, "aside"), `${testId}-aside`)}
             >
-              {aside}
+              {asideHandle === "words" ? nameInLine(aside) : aside}
             </span>
           </span>
         ) : (
