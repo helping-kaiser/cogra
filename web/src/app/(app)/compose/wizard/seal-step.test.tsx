@@ -457,11 +457,10 @@ describe("SealStep", () => {
     expect(screen.getByRole("radiogroup", { name: "Credit" })).toBeInTheDocument();
     expect(screen.getByRole("radiogroup", { name: "Public record of use" })).toBeInTheDocument();
     // LicenseChooser's own legend and note would be a second, duplicate
-    // one — the sheet already carries its title and its own note.
+    // one — and the sheet carries no intro of its own (seam 314): its "?"
+    // says what the terms are.
     expect(screen.queryByRole("group", { name: "License" })).not.toBeInTheDocument();
-    expect(
-      screen.queryByText("Terms for anyone who reuses this — not a statement about how you made it."),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Terms for anyone who reuses this/)).not.toBeInTheDocument();
   });
 
   // CW-36: key absent reads back only the License term — the stance and
@@ -473,23 +472,22 @@ describe("SealStep", () => {
     expect(screen.queryByTestId("wizard-open-sensitive")).not.toBeInTheDocument();
   });
 
-  // FC-8b (copy-voice "The license block"; seam 106.5): the seal's License row
-  // reads the author's reading of the pair — its name, then the two hints by
-  // the one joining rule — and never `your default`, wherever the terms came
-  // from. The sheet's foot reads the same sentence.
+  // FC-8b (seam 106.5; round 42, LicenseChooser.jsx `licenseSummary`): the
+  // seal's License row reads the author's reading of the pair — its NAME, no
+  // hint joined — and never `your default`. The sheet's foot reads the same.
   it("the_seal_license_summary_reads_license_name_and_reading", () => {
     renderStep({}, "none", true);
     const row = screen.getByTestId("wizard-open-license").parentElement!;
-    expect(row).toHaveTextContent("Public domain — nobody owes you a name, and uses go unlogged.");
+    expect(row).toHaveTextContent("Public domain");
+    expect(row).not.toHaveTextContent("nobody owes you a name");
     expect(row).not.toHaveTextContent("your default");
   });
 
-  it("names a non-zero pair by its tier names before the reading", () => {
+  it("names a non-zero pair by its tier names alone", () => {
     renderStep({ license: { attribution: 1, provenance: 0 } }, "none", true);
     const row = screen.getByTestId("wizard-open-license").parentElement!;
-    expect(row).toHaveTextContent(
-      "Credit always · Not logged — every use credits you, and uses go unlogged.",
-    );
+    expect(row).toHaveTextContent("Credit always · Not logged");
+    expect(row).not.toHaveTextContent("every use credits you");
   });
 
   it("shows all three terms on a live seal", () => {

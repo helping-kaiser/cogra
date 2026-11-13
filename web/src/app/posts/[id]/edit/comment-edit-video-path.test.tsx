@@ -381,7 +381,7 @@ describe("CommentEdit — a video picked at the edit (CommentEdit.md:23, Comment
     await waitFor(() => expect(gate()).not.toBeInTheDocument());
     fireEvent.click(screen.getByTestId("comment-edit-add-cover"));
     await pickInto("comment-edit-cover-input", [aPicture("face.jpg")]);
-    expect(await screen.findByTestId("comment-edit-cover-crop")).toHaveTextContent(
+    expect(await screen.findByTestId("comment-edit-cover-crop")).not.toHaveTextContent(
       "The cover takes the video's shape.",
     );
     fireEvent.click(screen.getByTestId("coverCrop.next"));

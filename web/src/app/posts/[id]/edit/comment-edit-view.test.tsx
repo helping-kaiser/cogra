@@ -476,7 +476,8 @@ describe("CommentEditVideo", () => {
       cropping: { src: "blob:face", crop: face.crop, onCrop: vi.fn(), onNext, onBack },
     });
     expect(screen.getByRole("heading", { name: "The cover" })).toBeInTheDocument();
-    expect(screen.getByTestId("comment-edit-cover-crop")).toHaveTextContent("The cover takes the video's shape.");
+    expect(screen.getByTestId("coverCrop.viewport")).toBeInTheDocument();
+    expect(screen.getByTestId("comment-edit-cover-crop")).not.toHaveTextContent("The cover takes the video's shape.");
     expect(screen.queryByRole("group", { name: "The post's shape" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId("coverCrop.next"));
     expect(onNext).toHaveBeenCalled();

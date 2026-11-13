@@ -395,18 +395,20 @@ describe("the compose wizard", () => {
     fireEvent.keyDown(screen.getByTestId("composeCrop.viewport"), { key: "+" });
     fireEvent.click(screen.getByTestId("composeCrop.shapes.wideChip"));
 
+    // The stage keeps its size under every shape (ComposeCrop.md:7); the
+    // frame inside it changes, and the zoom stays.
     const frame = screen.getByTestId("composeCrop.viewport");
-    expect(frame.style.aspectRatio).toBe("1.91 / 1");
+    expect(frame.style.aspectRatio).toBe("390 / 488");
     expect(zoomOf()).toBeCloseTo(1.1, 6);
     // The picture the cropper works from is the picked original, never a
     // rectangle a previous shape left behind.
     expect(frame.querySelector("img")!.getAttribute("src")).toBe("blob:preview");
   });
 
-  // ComposeCrop.md: the zoom slider under the cut, the cut named for what it
-  // does (crop-frame.test.tsx, where the cut can be measured), and the
-  // QuietNote's how-to line for the device in hand.
-  it("draws the crop's zoom slider and its how-to line", async () => {
+  // ComposeCrop.md:45,53: the zoom slider under the crop, and the line under
+  // it saying what the crop decides — nothing about how to move the picture,
+  // on any device (round 44, the removable-text pass).
+  it("draws the crop's zoom slider and its one line", async () => {
     render();
     await pick(["one.jpg", "two.jpg"]);
     fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
@@ -414,28 +416,7 @@ describe("the compose wizard", () => {
     expect(screen.getByRole("slider", { name: "Zoom" })).toBeInTheDocument();
     const note = screen.getByTestId("composeCrop.howTo");
     expect(note.className).toContain("text-label-small");
-    // The phone's sentence where a touch can pinch.
-    expect(note).toHaveTextContent("One shape for the whole post. Drag to move, pinch to zoom.");
-  });
-
-  it("names the desktop's ways to move and zoom where no touch can pinch", async () => {
-    const original = window.matchMedia;
-    window.matchMedia = ((query: string) => ({
-      matches: false,
-      media: query,
-      addEventListener: () => {},
-      removeEventListener: () => {},
-    })) as unknown as typeof window.matchMedia;
-    try {
-      render();
-      await pick(["one.jpg"]);
-      fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
-      expect(screen.getByTestId("composeCrop.howTo")).toHaveTextContent(
-        "One shape for the whole post. Drag or use the arrow keys to move, the slider to zoom.",
-      );
-    } finally {
-      window.matchMedia = original;
-    }
+    expect(note.textContent).toBe("One shape for the whole post.");
   });
 
   // ComposeWords.md: an empty body holds Next inert, and nothing else is said
@@ -1245,7 +1226,7 @@ describe("the license a new post starts from", () => {
     // The seal's License row reads the seeded pair, never public domain.
     const licenseRow = screen.getByTestId("wizard-open-license").parentElement!;
     await waitFor(() => expect(licenseRow).toHaveTextContent("Credit always"));
-    expect(licenseRow).toHaveTextContent("every use credits you");
+    expect(licenseRow).toHaveTextContent("Credit always · Not logged");
     expect(licenseRow).not.toHaveTextContent("Public domain");
   });
 
