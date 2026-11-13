@@ -112,6 +112,15 @@ import com.cogra.feature.saved.R as SavedR
 /** The registered prefix (`Saved`, `SavedUndo`, `SavedEmpty`, `SavedNone` in `nodes.json`). */
 private val SAVED = DataNode("saved")
 
+/** The rows SavedPostMenu registers under `saved.menuSheet`. */
+private val SAVED_MENU_ROWS = setOf(
+    PostMenuRow.Save,
+    PostMenuRow.Cite,
+    PostMenuRow.Hide,
+    PostMenuRow.License,
+    PostMenuRow.Report,
+)
+
 /** Saved's post card: the feed's own, keyed by the post's id as the feed keys it. */
 private val SAVED_PLACEMENT = CardPlacement(
     card = SAVED / "card",
@@ -123,15 +132,6 @@ private val SAVED_PLACEMENT = CardPlacement(
     licenseSheet = null,
     tag = "saved",
     menuRows = SAVED_MENU_ROWS,
-)
-
-/** The rows SavedPostMenu registers under `saved.menuSheet`. */
-private val SAVED_MENU_ROWS = setOf(
-    PostMenuRow.Save,
-    PostMenuRow.Cite,
-    PostMenuRow.Hide,
-    PostMenuRow.License,
-    PostMenuRow.Report,
 )
 
 @Composable

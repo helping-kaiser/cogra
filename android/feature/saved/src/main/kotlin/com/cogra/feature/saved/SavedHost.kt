@@ -67,14 +67,16 @@ class SavedHost(
     fun hideRow(person: HiddenPerson, origin: String, testTag: String): MenuRow? {
         val store = hidden ?: return null
         val say = hiddenSnackbar ?: return null
-        val entry = hiddenView.entries.firstOrNull { it.person.id == person.id }
-        val unhide = entry != null && !person.nameless
-        val label = if (unhide) say.words.unhideRow(person) else say.words.row(person)
+        // A deleted account's row never toggles: `Unhide this account` is not drawn.
+        val hiddenEntry = hiddenView.entries
+            .firstOrNull { it.person.id == person.id }
+            ?.takeUnless { person.nameless }
+        val label = if (hiddenEntry != null) say.words.unhideRow(person) else say.words.row(person)
         val guest = onGuest
         return MenuRow(label, testTag) {
             when {
                 guest != null -> guest()
-                unhide && entry != null -> unhidePerson(store, entry, say, origin)
+                hiddenEntry != null -> unhidePerson(store, hiddenEntry, say, origin)
                 else -> hidePerson(store, hiddenView, person, origin, say)
             }
         }
