@@ -877,7 +877,7 @@ describe("PostView", () => {
     });
     fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
     fireEvent.click(screen.getByTestId("postDetail.menuSheet.hide"));
-    expect(await screen.findByText(/is hidden — their posts stay out of your feed\.$/)).toBeInTheDocument();
+    expect(await screen.findByText(/is hidden.$/)).toBeInTheDocument();
     expect(screen.getByTestId(byNode("postDetail.card.body"))).toBeInTheDocument();
     await waitFor(() => expect(log.hides).toEqual([{ actor: "someone-else", at: null }]));
   });
@@ -902,7 +902,7 @@ describe("PostView", () => {
     await waitFor(() => expect(screen.getByTestId("postDetail.menuSheet.hide")).toHaveTextContent(/^Unhide @/));
     fireEvent.click(screen.getByTestId("postDetail.menuSheet.hide"));
     expect(screen.queryByRole("alertdialog")).toBeNull();
-    expect(await screen.findByText(/is unhidden — their posts can reach your feed again\.$/)).toBeInTheDocument();
+    expect(await screen.findByText(/is unhidden.$/)).toBeInTheDocument();
     expect(screen.getByTestId(byNode("postDetail.card.body"))).toBeInTheDocument();
     await waitFor(() => expect(log.unhides).toEqual(["someone-else"]));
   });

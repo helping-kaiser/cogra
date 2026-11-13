@@ -910,7 +910,7 @@ describe("History — hiding from a card in it (HistoryHidden.md)", () => {
     // No confirm step: the snackbar is the whole ceremony.
     expect(screen.queryByRole("alertdialog")).toBeNull();
     expect(screen.getByTestId("history.snackbar.message")).toHaveTextContent(
-      "@ada is hidden — their posts stay out of your feed.",
+      "@ada is hidden.",
     );
     expect(screen.getByTestId("history.snackbar.action")).toHaveTextContent("Undo");
     expect(cards()).toEqual(["history.commentCard:c1", "history.card:p1"]);
@@ -1086,7 +1086,7 @@ describe("History — the post menu (HistoryPostMenu.md, round 36 + 41)", () => 
       expect((screen.getByTestId("history.menuSheet") as HTMLDialogElement).open).toBe(false),
     );
     expect(screen.getByTestId("history.snackbar.message")).toHaveTextContent(
-      "@ada is unhidden — their posts can reach your feed again.",
+      "@ada is unhidden.",
     );
     expect(screen.getByTestId("history.snackbar.action")).toHaveTextContent("Undo");
     expect(cards()).toEqual(["history.commentCard:c1", "history.card:p1"]);
@@ -1143,7 +1143,7 @@ describe("History — a hidden person's card menu (HistoryProfileMenu.md, round 
     expect(screen.queryByRole("alertdialog")).toBeNull();
     await waitFor(() => expect(sheet.open).toBe(false));
     expect(screen.getByTestId("history.snackbar.message")).toHaveTextContent(
-      "@mira is unhidden — their posts can reach your feed again.",
+      "@mira is unhidden.",
     );
     expect(cards()).toEqual(["history.profileCard:u7"]);
     await waitFor(() => expect(hiddenLogged.unhides).toEqual(["u7"]));
