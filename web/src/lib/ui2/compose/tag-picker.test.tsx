@@ -99,14 +99,26 @@ describe("TagPicker", () => {
     renderWithProviders(<Host />);
     type("#SaltMaps");
     await settle();
-    // TagPickerTyping.md: the typed name canonicalized, with Signs as #name as
-    // its second line; a name in use that IS the typed name stands as the
-    // first row alone, never listed twice; the index's rows under it.
+    // TagPickerTyping.md:3: the typed name canonicalized, with Signs as #name
+    // as its second line GIVEN the canonical name differs from what was typed;
+    // a name in use that IS the typed name stands as the first row alone,
+    // never listed twice; the index's rows under it.
     expect(rowNames()).toEqual(["saltmaps", "saltcrust"]);
     const first = screen.getAllByTestId(byNode("tagPicker.tag"))[0]!;
     expect(within(first).getByText("Signs as #saltmaps")).toBeInTheDocument();
     // The mark node is the 32px tile itself, its ground and corner (TagPicker's `tag.mark`).
     expect(within(first).getByTestId(byNode("tagPicker.tag.mark", "saltmaps")).style.width).toBe("32px");
+  });
+
+  // TagPickerTyping.md:3 GIVEN; seam 314 cut the line where it only repeats.
+  it("draws no Signs as line when the typed name already is the canonical one", async () => {
+    indexServes("saltmaps");
+    renderWithProviders(<Host />);
+    type("saltmaps");
+    await settle();
+    const first = screen.getAllByTestId(byNode("tagPicker.tag"))[0]!;
+    expect(first).toHaveTextContent("saltmaps");
+    expect(within(first).queryByText(/^Signs as/)).toBeNull();
   });
 
   it("follows the name as it is typed", async () => {

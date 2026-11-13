@@ -254,9 +254,7 @@ describe("picking a video", () => {
     expect(await screen.findByTestId("wizard-cover-no-frame")).toHaveTextContent("No frame");
     expect(screen.getByTestId("wizard-cover-duration")).toBeInTheDocument();
     expect(screen.queryByTestId("wizard-cover-play")).toBeNull();
-    expect(screen.getByTestId("wizard-cover-caption")).toHaveTextContent(
-      "This clip gave no frames — choose a picture of your own, or leave it without one.",
-    );
+    expect(screen.getByTestId("wizard-cover-caption").textContent).toBe("This clip gave no frames");
   });
 
   // F3-4, ruled final 2026-09-11: the preview shows the ACTUAL OUTPUT FORMAT.
@@ -477,15 +475,9 @@ describe("picking a video", () => {
     await pickFiles([aVideo()]);
 
     expect(await screen.findByTestId("wizard-picked-count")).toHaveTextContent("Picked · 1");
-    expect(
-      screen.getByText("A video is the whole post. Its cover comes next."),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId("wizard-tray-caption").textContent).toBe("A video is the whole post.");
     expect(screen.queryByTestId("wizard-show-all")).toBeNull();
-    // The tray's picture caption, not the closed Show-all sheet's footnote,
-    // which since the K13 round reads the same words.
-    expect(
-      screen.queryByText("The first one is the cover.", { selector: "span" }),
-    ).toBeNull();
+    expect(screen.queryByText("The first one is the cover.")).toBeNull();
   });
 
   // CW-08 (ComposePickVideo.jsx:57): the tray's own remove control names what
@@ -637,11 +629,7 @@ describe("picking a video", () => {
     // NEW-2 (ComposeCoverNoFrames.jsx:44): the terminal caption says why the
     // choice is smaller than it was, once extraction is done and came back
     // with nothing.
-    expect(
-      screen.getByText(
-        "This clip gave no frames — choose a picture of your own, or leave it without one.",
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText("This clip gave no frames")).toBeInTheDocument();
     // Next stays open even with no face chosen — a faceless video is no
     // longer a wall (jakob, 2026-09-10, "going without a cover is always
     // possible"), so a capture failure that leaves no offers still has to
@@ -840,12 +828,12 @@ describe("a vertical clip", () => {
     expect(screen.queryByText(/Its cover comes next./)).toBeNull();
   });
 
-  it("keeps the cover promise on a horizontal clip's tray", async () => {
+  // Seam 314: a horizontal clip's tray reads the same line as a vertical
+  // one's — the cover step promises itself by arriving.
+  it("reads the one video line on a horizontal clip's tray too", async () => {
     render();
     await pickFiles([aVideo()]);
-    expect(await screen.findByTestId("wizard-tray-caption")).toHaveTextContent(
-      "A video is the whole post. Its cover comes next.",
-    );
+    expect(await screen.findByTestId("wizard-tray-caption")).toHaveTextContent(/^A video is the whole post.$/);
   });
 
   it("opens details with the Add a cover door on Next, and never the cover step", async () => {
