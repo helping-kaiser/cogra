@@ -1004,10 +1004,11 @@ describe("the reply wizard", () => {
       );
     });
 
-    it("ReplySeal: the seal's header carries Last step and the one ? as WizardHeader's pair", async () => {
+    it("ReplySeal: the seal's header carries the one ? and no stage label (seam 314)", async () => {
       draw();
       await toSeal();
-      expect(screen.getByTestId("header-stage")).toHaveTextContent("Last step");
+      expect(screen.queryByTestId("header-stage")).toBeNull();
+      expect(screen.queryByText("Last step")).toBeNull();
       fireEvent.click(screen.getByRole("button", { name: "How signing works" }));
       expect(await screen.findByTestId("reply-help-dialog")).toBeInTheDocument();
     });

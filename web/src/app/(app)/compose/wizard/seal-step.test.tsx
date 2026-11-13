@@ -382,17 +382,18 @@ describe("SealStep", () => {
     });
   });
 
-  // CW-24/CW-25: the acts card's total row is its own column (label +
-  // all-or-nothing note stacked), and the per-act rows both read at
-  // text-label-small.
-  it("stacks the signed-together total over its all-or-nothing note", () => {
+  // CW-24/CW-25: the acts card's total row is its own column (the slow line
+  // stacks under it when it comes). Seam 314: at several acts the card says no
+  // land-together line — the seal's "?" (How signing works) says it.
+  it("stands the signed-together total alone in its column at several acts", () => {
     renderStep({ tags: [tag("fieldnotes")] });
     const total = screen.getByTestId("wizard-seal-acts-total");
     expect(total).toHaveTextContent("2 things, signed together");
     const row = total.parentElement;
     expect(row?.className).toContain("flex-col");
     expect(row?.className).toContain("min-h-12");
-    expect(screen.getByTestId("wizard-seal-acts-note")).toHaveTextContent("They land together, or none does.");
+    expect(screen.queryByTestId("wizard-seal-acts-note")).toBeNull();
+    expect(screen.queryByText("They land together, or none does.")).toBeNull();
   });
 
   // One act: `1 thing, signed`, and no all-or-nothing line (ComposeSeal.md).
