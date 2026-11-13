@@ -1077,21 +1077,6 @@ export function ComposeWizard({
         />
       )}
 
-      {/* The other way out of the offer, said rather than drawn: the pick screen
-          below is already the way to start fresh, so this names it instead of
-          adding a second control that would compete with Continue. Discarding
-          is the card's own affordance and the only route to it. */}
-      {offered !== null && (
-        <div className="flex flex-none items-center gap-2 px-6 py-2">
-          <p
-            data-testid="wizard-draft-fresh"
-            className="m-0 flex-1 text-body-medium text-on-surface-variant"
-          >
-            Or start fresh —
-          </p>
-        </div>
-      )}
-
       {state.step === "pick" && (
         // CW-42 (ComposeDraft.jsx): while the draft offer shows, the pick
         // step underneath is present, clearly not the subject, and the
@@ -1118,7 +1103,6 @@ export function ComposeWizard({
             error={gate.ok ? null : gate.reason}
             blocked={!gate.ok}
             coverSrc={coverPreview}
-            vertical={skipsCoverStep(state)}
             durationMs={durationMs}
             clipFace={clipFace}
             onWords={(words) => dispatch({ type: "words", words })}
@@ -1398,7 +1382,7 @@ export function ComposeWizard({
         <DialogSurface
           title="Discard your draft?"
           body={[
-            "Picking pictures starts a new post, and this draft is what stands in the way. Discarding is the only thing that loses it.",
+            "Picking pictures starts a new post.",
           ]}
           onDismiss={() => setAskingDraft(false)}
           testId="wizard-draft-discard-ask"

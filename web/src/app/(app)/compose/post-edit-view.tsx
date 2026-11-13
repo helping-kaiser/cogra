@@ -765,9 +765,6 @@ function ClipFields({
             <InlineAction size="sm" testId="post-edit-add-cover" node={part(COVER, "add")} onClick={openPicker}>
               Add a cover
             </InlineAction>
-            <QuietNote testId="post-edit-cover-note" node={part(COVER, "note")}>
-              It plays the moment it is on screen, so it starts on its own first frame.
-            </QuietNote>
           </>
         )}
         {faceFailed && (
