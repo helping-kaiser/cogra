@@ -658,9 +658,8 @@ export function ReplyWizard({
               if (!locked) leave();
             }}
             leaveLabel={LEAVE_LABEL}
-            // `WizardHeader`'s own pair on the seal (`ReplySealBody`): the
-            // stage's name, then the screen's one "?" as `HelpDot`.
-            stageLabel={state.step === "seal" ? "Last step" : undefined}
+            // The seal's header carries the screen's one "?" as `HelpDot`,
+            // with no stage label beside it (seam 314).
             help={
               state.step === "seal" ? (
                 <HelpDot
