@@ -32,6 +32,7 @@ import { formatStancePair, formatStanceWords, STANCE_AXES, type StanceAxes } fro
 import { NodeMark } from "@/lib/ui/node-mark";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
+import { nameInLine } from "@/lib/ui/names";
 
 import { MonogramAvatar } from "../monogram-avatar";
 
@@ -132,8 +133,10 @@ export function StagedRow({
           {removed || name}
         </span>
         {sub && (
-          <span className="text-body-small text-on-surface-variant" {...testAttributes(part(node, "kind"))}>
-            {sub}
+          // One line, clipped at its end; a handle in it is the part cut
+          // (NamesLong.md:5-9).
+          <span className="min-w-0 truncate text-body-small text-on-surface-variant" {...testAttributes(part(node, "kind"))}>
+            {nameInLine(sub)}
           </span>
         )}
         {consequence && (

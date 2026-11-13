@@ -61,6 +61,7 @@ import com.cogra.core.designsystem.LocalPadBottomInset
 import com.cogra.core.designsystem.LocalSnackbarHostState
 import com.cogra.core.designsystem.v2.media.LocalAlwaysUnveil
 import com.cogra.core.designsystem.v2.token.NavTransitions
+import com.cogra.domain.AccountState
 import com.cogra.domain.deletion.AccountDeletionState
 import com.cogra.domain.store.TokenStore
 import com.cogra.feature.notifications.BellViewModel
@@ -72,6 +73,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Instant
 import javax.inject.Inject
+import com.cogra.feature.profile.R as ProfileR
 
 /** The app's coarse auth phase; each value owns a navigation graph root. */
 enum class AuthPhase { LOADING, SIGNED_OUT, SIGNED_IN }
@@ -116,6 +118,9 @@ fun CograNavGraph(
     // (`AccountPreferencesViewModel.kt`; `SensitiveVeil.kt`'s [LocalAlwaysUnveil]).
     val preferences: AccountPreferencesViewModel = hiltViewModel()
     val alwaysUnveil by preferences.alwaysUnveil.collectAsStateWithLifecycle()
+    // The reader's standing, read once by the shell and handed to every
+    // posting door through the shell scope (`ReaderStanding`).
+    val readerState by preferences.readerState.collectAsStateWithLifecycle()
     // THE PAD PARKS 16dp ABOVE THE BOTTOM BAR where the surface has one
     // (PadStanding.md:15): the bar's 64 plus the 16, or 16 off the edge.
     var barShown by remember { mutableStateOf(false) }
@@ -128,7 +133,12 @@ fun CograNavGraph(
         // A kept pick's face with the key here opens the kept picks' review (PadPendingReview.md:11).
         LocalOnOpenKeptPicks provides { navController.navigate(KeptPicks) },
     ) {
-        CograNavGraphContent(navController, shellSnackbar, onBarShown = { barShown = it })
+        CograNavGraphContent(
+            navController,
+            shellSnackbar,
+            applicant = readerState == AccountState.APPLICANT,
+            onBarShown = { barShown = it },
+        )
     }
 }
 
@@ -142,6 +152,7 @@ private val PAD_OFF_EDGE = 16.dp
 private fun CograNavGraphContent(
     navController: NavHostController,
     shellSnackbar: SnackbarHostState,
+    applicant: Boolean,
     onBarShown: (Boolean) -> Unit,
 ) {
     val authState: AuthStateViewModel = hiltViewModel()
@@ -239,8 +250,8 @@ private fun CograNavGraphContent(
     // deep-link docs require forwarding to handleDeepLink. Every link here
     // answers signed in as well as signed out: an invite link ignores
     // sign-in and opens over the signed-in state (Join.md:7), and the email
-    // change's and the deletion's links answer either way (the deletion's
-    // link is the capability, session or none).
+    // change's, the deletion's and the reset's links answer either way (the
+    // deletion's and the reset's link is the capability, session or none).
     val phaseNow by rememberUpdatedState(phase)
     val activity = LocalActivity.current as? ComponentActivity
     // THE SYSTEM'S "MANAGE SPACE" DOOR (Settings.md: settings opens with
@@ -268,7 +279,8 @@ private fun CograNavGraphContent(
             val answersSignedIn = path?.startsWith(JOIN_PATH) == true ||
                 path?.startsWith(EMAIL_CHANGE_PATH) == true ||
                 path?.startsWith(DELETE_ACCOUNT_PATH) == true ||
-                path?.startsWith(VOUCH_PATH) == true
+                path?.startsWith(VOUCH_PATH) == true ||
+                path?.startsWith(RESET_PATH) == true
             if (phaseNow == AuthPhase.SIGNED_OUT || (answersSignedIn && phaseNow == AuthPhase.SIGNED_IN)) {
                 navController.handleDeepLink(newIntent)
             }
@@ -316,7 +328,17 @@ private fun CograNavGraphContent(
     val bellModel: BellViewModel = hiltViewModel()
     val bellLit by bellModel.lit.collectAsStateWithLifecycle()
     val shellScope = rememberCoroutineScope()
-    val shell = Shell(navController, authState, signedIn, shellState, bellLit, shellSnackbar, shellScope)
+    val shell = Shell(
+        navController = navController,
+        authState = authState,
+        signedIn = signedIn,
+        applicant = signedIn == true && applicant,
+        state = shellState,
+        bellLit = bellLit,
+        snackbar = shellSnackbar,
+        scope = shellScope,
+        postLockedLine = stringResource(ProfileR.string.profile_mention_locked),
+    )
 
     // The shell: one scaffold owning the bottom bar and the shell-level
     // snackbar host (design.md §6) — one frame for every viewer: the bar
@@ -441,9 +463,12 @@ private fun ShellBottomBar(shell: ShellScope, state: ShellState, destination: Na
         // included (Explore.md:35-37; WalletComingSoon.md:5).
         onSearch = { select(TopLevelTab.EXPLORE) },
         onWallet = { select(TopLevelTab.WALLET) },
-        onCompose = {
-            if (shell.signedIn == true) navController.navigate(ComposePost()) else shell.requireJoin()
-        },
+        // An applicant's New post is LOCKED, NOT GONE (ApplicantFeed.md:49-51,
+        // ProfileApplicant.md:24-26; BottomNav.jsx `composeOpacity`): the slot
+        // stands at the disabled opacity on every bar they meet, still
+        // tappable, and the tap says so — the wizard never opens.
+        composeLocked = shell.applicant,
+        onCompose = { shell.openComposer(ComposePost()) },
         onProfile = {
             if (shell.signedIn == true) select(TopLevelTab.PROFILE) else shell.requireJoin()
         },

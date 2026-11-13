@@ -56,7 +56,6 @@ fn at(secs: i64) -> chrono::DateTime<chrono::Utc> {
 fn landed() -> LandingOrder {
     LandingOrder {
         landed_epoch: 5,
-        act_time: 5,
         position: 1,
     }
 }

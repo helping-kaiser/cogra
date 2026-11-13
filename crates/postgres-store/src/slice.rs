@@ -87,13 +87,13 @@ pub async fn records(
     pool: &PgPool,
     reach: &[String],
     as_of: i64,
-    cursor: Option<(i64, i64, i64)>,
+    cursor: Option<(i64, i64)>,
     backward: bool,
     limit: i64,
 ) -> Result<Vec<RecordFull>, MirrorError> {
-    let (ce, ca, cp) = match cursor {
-        Some((e, a, p)) => (Some(e), Some(a), Some(p)),
-        None => (None, None, None),
+    let (ce, cp) = match cursor {
+        Some((e, p)) => (Some(e), Some(p)),
+        None => (None, None),
     };
     let control = CONTROL_FAMILIES.map(String::from);
     let rows = if backward {
@@ -111,16 +111,15 @@ pub async fn records(
                            AND l.source NOT LIKE 'name:%'
                            AND l.family <> ALL($3::text[]))
                      AND ($4::bigint IS NULL
-                          OR (r.epoch, r.act_time, r.position) > ($4, $5, $6))
-                   ORDER BY r.epoch ASC, r.act_time ASC, r.position ASC
-                   LIMIT $7
+                          OR (r.epoch, r.position) > ($4, $5))
+                   ORDER BY r.epoch ASC, r.position ASC
+                   LIMIT $6
                ) page
-               ORDER BY epoch DESC, act_time DESC, position DESC"#,
+               ORDER BY epoch DESC, position DESC"#,
             reach,
             as_of,
             &control,
             ce,
-            ca,
             cp,
             limit,
         )
@@ -140,14 +139,13 @@ pub async fn records(
                        AND l.source NOT LIKE 'name:%'
                        AND l.family <> ALL($3::text[]))
                  AND ($4::bigint IS NULL
-                      OR (r.epoch, r.act_time, r.position) < ($4, $5, $6))
-               ORDER BY r.epoch DESC, r.act_time DESC, r.position DESC
-               LIMIT $7"#,
+                      OR (r.epoch, r.position) < ($4, $5))
+               ORDER BY r.epoch DESC, r.position DESC
+               LIMIT $6"#,
             reach,
             as_of,
             &control,
             ce,
-            ca,
             cp,
             limit,
         )
@@ -269,8 +267,8 @@ pub async fn count_nodes(pool: &PgPool, reach: &[String], as_of: i64) -> Result<
 }
 
 /// A node's genesis authorship record's causal key (feed-ranking.md §7's
-/// recency fallback key): `(landing epoch, act time, position)`.
-pub type GenesisKey = (i64, i64, i64);
+/// recency fallback key): the key of record `(landing epoch, position)`.
+pub type GenesisKey = (i64, i64);
 
 /// The genesis key of every given node that has one at `as_of`: a minted
 /// node's own minting act (a mint names the act that minted it), a
@@ -291,7 +289,7 @@ pub async fn genesis_keys(
         .collect();
     let mut keys = HashMap::new();
     for row in sqlx::query!(
-        "SELECT record_id, epoch, act_time, position FROM mirror_records
+        "SELECT record_id, epoch, position FROM mirror_records
          WHERE record_id = ANY($1) AND epoch <= $2",
         &minting,
         as_of,
@@ -299,26 +297,20 @@ pub async fn genesis_keys(
     .fetch_all(pool)
     .await?
     {
-        keys.insert(
-            format!("mint:{}", row.record_id),
-            (row.epoch, row.act_time, row.position),
-        );
+        keys.insert(format!("mint:{}", row.record_id), (row.epoch, row.position));
     }
     for row in sqlx::query!(
-        r#"SELECT DISTINCT ON (author) author, epoch, act_time, position
+        r#"SELECT DISTINCT ON (author) author, epoch, position
            FROM mirror_records
            WHERE family = 'registration' AND author = ANY($1) AND epoch <= $2
-           ORDER BY author, epoch, act_time, position"#,
+           ORDER BY author, epoch, position"#,
         &persons,
         as_of,
     )
     .fetch_all(pool)
     .await?
     {
-        keys.insert(
-            format!("prof:{}", row.author),
-            (row.epoch, row.act_time, row.position),
-        );
+        keys.insert(format!("prof:{}", row.author), (row.epoch, row.position));
     }
     Ok(keys)
 }

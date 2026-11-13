@@ -27,6 +27,7 @@ export function ReportConfirm({
   sending,
   title = "Report this post?",
   node,
+  stacked = false,
   testId,
 }: {
   open: boolean;
@@ -40,10 +41,15 @@ export function ReportConfirm({
   title?: string;
   /** The registered sheet (`postDetail.reportSheet`); its parts follow. */
   node?: DataNode;
+  /**
+   * Raised over another sheet — a comment's Report over the thread
+   * (CommentMenu.md:29: `postDetail.reportSheet` rises stacked over the thread).
+   */
+  stacked?: boolean;
   testId: string;
 }) {
   return (
-    <BottomSheet open={open} onClose={onClose} title={title} testId={testId} node={node}>
+    <BottomSheet open={open} onClose={onClose} title={title} testId={testId} node={node} stacked={stacked}>
       <p
         className="m-0 pb-2 text-body-medium text-on-surface-variant"
         {...testAttributes(part(node, "body"), `${testId}-text`)}

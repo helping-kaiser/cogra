@@ -42,10 +42,14 @@ data class ChangePasswordUiState(
     val account: String? = null,
     val current: String = "",
     val newPassword: String = "",
+    /** Repeat password (seam 275-1: a new password is asked for twice). */
+    val confirm: String = "",
     /** `That password isn't right.` — stands until the next press. */
     @StringRes val currentError: Int? = null,
     /** The length lines re-check live once pressed; the breach line stands until the next press. */
     @StringRes val newError: Int? = null,
+    /** `The two passwords don't match.` — re-checks as either new password changes, goes once they match. */
+    @StringRes val confirmError: Int? = null,
     /** Whether a press has happened — from then the length lines re-check as the reader types. */
     val pressed: Boolean = false,
     /** A form-level fault above the commit: no answer, or a tripped re-auth budget (B7). */
@@ -53,7 +57,8 @@ data class ChangePasswordUiState(
     val inFlight: Boolean = false,
     val done: Boolean = false,
 ) {
-    val waiting: Boolean get() = current.isEmpty() || newPassword.isEmpty()
+    /** ChangePassword.md:45 — disabled while any of the three password fields is empty. */
+    val waiting: Boolean get() = current.isEmpty() || newPassword.isEmpty() || confirm.isEmpty()
 }
 
 /** The local length lines, or null — the client knows 12 and 128 from the registration rules. */
@@ -66,6 +71,11 @@ internal fun passwordLengthLine(password: String): Int? {
         else -> null
     }
 }
+
+/** The mismatch line, or null. */
+@StringRes
+internal fun passwordsDifferLine(password: String, confirm: String): Int? =
+    if (password == confirm) null else R.string.passwords_differ
 
 @HiltViewModel
 class ChangePasswordViewModel @Inject constructor(
@@ -87,18 +97,41 @@ class ChangePasswordViewModel @Inject constructor(
     fun onNew(value: String) = _state.update { s ->
         // A length line re-checks live; a breach line stands until the press.
         val live = if (s.pressed && s.newError != R.string.password_breached) passwordLengthLine(value) else s.newError
-        s.copy(newPassword = value, newError = live)
+        s.copy(
+            newPassword = value,
+            newError = live,
+            confirmError = s.confirmError?.let { passwordsDifferLine(value, s.confirm) },
+        )
+    }
+
+    /** ChangePassword.md:33 — a standing mismatch line re-checks as the reader types. */
+    fun onConfirm(value: String) = _state.update { s ->
+        s.copy(confirm = value, confirmError = s.confirmError?.let { passwordsDifferLine(s.newPassword, value) })
     }
 
     fun onCommit() {
         val s = _state.value
         if (s.waiting || s.inFlight) return
+        // Each local line is said on its own field at the press; either one
+        // keeps the change from going out (ChangePassword.md:25-31).
         val length = passwordLengthLine(s.newPassword)
-        if (length != null) {
-            _state.update { it.copy(pressed = true, newError = length, currentError = null, fault = null) }
+        val differ = passwordsDifferLine(s.newPassword, s.confirm)
+        if (length != null || differ != null) {
+            _state.update {
+                it.copy(pressed = true, newError = length, confirmError = differ, currentError = null, fault = null)
+            }
             return
         }
-        _state.update { it.copy(pressed = true, inFlight = true, newError = null, currentError = null, fault = null) }
+        _state.update {
+            it.copy(
+                pressed = true,
+                inFlight = true,
+                newError = null,
+                confirmError = null,
+                currentError = null,
+                fault = null,
+            )
+        }
         viewModelScope.launch {
             val outcome = account.changePassword(s.current, s.newPassword)
             _state.update {
@@ -133,7 +166,15 @@ fun ChangePasswordRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val notice = stringResource(R.string.change_password_done)
     LaunchedEffect(state.done) { if (state.done) onDone(notice) }
-    ChangePasswordScreen(state, onBack, viewModel::onCurrent, viewModel::onNew, viewModel::onCommit, deletionBand)
+    ChangePasswordScreen(
+        state = state,
+        onBack = onBack,
+        onCurrent = viewModel::onCurrent,
+        onNew = viewModel::onNew,
+        onCommit = viewModel::onCommit,
+        deletionBand = deletionBand,
+        onConfirm = viewModel::onConfirm,
+    )
 }
 
 @Composable
@@ -144,6 +185,7 @@ fun ChangePasswordScreen(
     onNew: (String) -> Unit,
     onCommit: () -> Unit,
     deletionBand: @Composable () -> Unit = {},
+    onConfirm: (String) -> Unit = {},
 ) {
     TaskPage(
         node = Page,
@@ -171,14 +213,27 @@ fun ChangePasswordScreen(
             newPassword = true,
             hint = stringResource(R.string.change_password_new_hint),
             error = state.newError?.let { stringResource(it) },
+            // `PasswordField.jsx`: `next` above its Repeat password.
+            imeAction = ImeAction.Next,
+            node = Page / "password",
+        )
+        Spacer(Modifier.height(24.dp))
+        // ChangePassword.md:5 — masked alike, no hint; the form's last field.
+        CograPasswordField(
+            value = state.confirm,
+            onValueChange = onConfirm,
+            label = stringResource(R.string.change_password_confirm),
+            newPassword = true,
+            error = state.confirmError?.let { stringResource(it) },
             imeAction = ImeAction.Go,
             onImeAction = { if (!state.waiting) onCommit() },
-            node = Page / "password",
+            node = Page / "confirm",
         )
         Spacer(Modifier.height(24.dp))
         WaitingCommit(
             label = stringResource(R.string.change_password_commit),
-            reason = stringResource(R.string.change_password_reason),
+            // ChangePassword.md:45 — disabled with no line above it.
+            reason = null,
             waiting = state.waiting,
             onCommit = onCommit,
             inFlight = state.inFlight,

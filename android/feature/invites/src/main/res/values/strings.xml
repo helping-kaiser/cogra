@@ -14,6 +14,12 @@
     <string name="invites_creating">Creating invite…</string>
     <string name="invites_applications">Applications</string>
     <string name="invites_live_links">Live links</string>
+    <!-- An empty half keeps its label over one quiet line (Invites.md:31, :33; copy-voice *Invites' empty halves*). -->
+    <string name="invites_applications_empty">No applications waiting.</string>
+    <string name="invites_links_empty">No live links.</string>
+    <!-- People you let in (Invites.md:7-27; copy-voice *The invites round*). -->
+    <string name="invites_people">People you let in</string>
+    <string name="invites_people_show_all">Show all</string>
     <string name="invites_ready">Ready for your approval</string>
     <string name="invites_not_registered">Not fully registered yet</string>
     <!-- A kept approval with the key elsewhere (Invites.md:87; the kept pick's own line). -->

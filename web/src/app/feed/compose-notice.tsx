@@ -15,7 +15,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { POST_LOCKED, useReaderIsApplicant } from "@/lib/session/reader-state";
 import { Button, buttonClassName } from "@/lib/ui/button";
+import { carrySnackbar } from "@/lib/ui/carried-snackbar";
 import { Icon } from "@/lib/ui/icons";
 import { composeDraftStore, draftSummary, type ComposeDraftStore } from "@/lib/compose/draft-store";
 
@@ -36,6 +38,7 @@ export function ComposeNotice({
   // Named from the draft that is still on the device, so the notice says which
   // post did not land rather than "a post".
   const [name, setName] = useState<string | null>(null);
+  const applicant = useReaderIsApplicant();
   useEffect(() => {
     let cancelled = false;
     void drafts.load().then((draft) => {
@@ -67,6 +70,16 @@ export function ComposeNotice({
         </Button>
         <Link
           href="/compose"
+          // AN APPLICANT IS TOLD, NEVER THE WIZARD (`reader-state.ts`): the
+          // composer's every door answers one way.
+          onClick={
+            applicant
+              ? (event) => {
+                  event.preventDefault();
+                  carrySnackbar(POST_LOCKED);
+                }
+              : undefined
+          }
           data-testid="compose-expired-open"
           className={buttonClassName({ size: "sm" })}
         >

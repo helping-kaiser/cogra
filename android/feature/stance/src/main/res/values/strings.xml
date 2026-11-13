@@ -6,4 +6,7 @@
     <string name="vouch_back_note">Your vouch back. The pad is how you shape what reaches you — for or against, and how much.</string>
     <string name="vouch_back_help_1">Vouching back signs your opinion of the person who vouched you in, and your feed grows from it.</string>
     <string name="vouch_back_help_2">The pad is how you shape what reaches you — for or against, and how much. Nothing is signed until Set.</string>
+    <!-- An applicant's locked stance face, tapped or held (ApplicantFeed.md:45-47,
+         ProfileOther.md:47-49; copy-voice.md, the applicant-foot family). -->
+    <string name="stance_opinion_locked">You can give your opinion once you\'re in.</string>
 </resources>

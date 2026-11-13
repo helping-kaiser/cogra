@@ -528,4 +528,44 @@ describe("SheetItem", () => {
     );
     expect(screen.getByTestId("pd").className).toContain("min-h-12");
   });
+
+  // NamesLong.md:5 and :9 at the longest legal handle (NamesLong.jsx).
+  it("keeps a menu row to one line, clipped at its end where the handle ends it", () => {
+    const label = "Hide @maximiliana_featherstone_haugh";
+    render(
+      <SheetItem testId="hide" onSelect={() => {}}>
+        {label}
+      </SheetItem>,
+    );
+    const row = screen.getByRole("button", { name: label });
+    const words = row.firstElementChild as HTMLElement;
+    expect(words.className.split(" ")).toEqual(expect.arrayContaining(["min-w-0", "flex-1", "truncate"]));
+    expect(words.textContent).toBe(label);
+  });
+
+  // NamesLong.md:7 — words after the handle keep their room.
+  it("cuts the handle and keeps the words after it", () => {
+    render(
+      <SheetItem testId="cite" onSelect={() => {}}>
+        {"@maximiliana_featherstone_haugh's comment"}
+      </SheetItem>,
+    );
+    const line = screen.getByTestId("cite").querySelector("[data-name-line]");
+    expect(line?.lastElementChild?.textContent).toBe("'s comment");
+  });
+});
+
+// NamesLong.md:11 and :13 — a sheet's heading wraps; the handle is one unit.
+describe("BottomSheet's title with a long handle", () => {
+  it("keeps the handle whole on one line inside the wrapping heading", () => {
+    render(
+      <BottomSheet open onClose={() => {}} title="Report @maximiliana_featherstone_haugh?">
+        <p>Terms</p>
+      </BottomSheet>,
+    );
+    const heading = screen.getByRole("heading", { name: "Report @maximiliana_featherstone_haugh?" });
+    const unit = heading.querySelector("[data-name-unit]") as HTMLElement;
+    expect(unit.className.split(" ")).toEqual(expect.arrayContaining(["inline-flex", "max-w-full", "whitespace-nowrap"]));
+    expect(unit.lastElementChild?.textContent).toBe("?");
+  });
 });

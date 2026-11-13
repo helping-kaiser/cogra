@@ -52,3 +52,45 @@ describe("the identity row's trailing age", () => {
     expect(age.getAttribute("style")).toBeNull();
   });
 });
+
+// NamesLong.md, at the board's longest legal handle (NamesLong.jsx).
+describe("the identity row's long names", () => {
+  const H = "@maximiliana_featherstone_haugh";
+  const NAME = "Max Wilhelmina Featherstonehaugh Okonkwo-Lindqvist";
+  const classes = (testId: string) => screen.getByTestId(testId).className.split(" ");
+
+  // NamesLong.md:7 — the handle is the part cut, the words keep their room.
+  it("cuts the handle in a notification's title and keeps the sentence's words", () => {
+    render(<ContentRow title={`${H} commented on your post`} disc={{ kind: "monogram", name: NAME }} testId="row" />);
+    const line = screen.getByTestId("row-title").querySelector("[data-name-line]") as HTMLElement;
+    const [handle, words] = [...line.children] as HTMLElement[];
+    expect(handle.textContent).toBe(H);
+    expect(handle.className.split(" ")).toEqual(expect.arrayContaining(["min-w-0", "text-ellipsis"]));
+    expect(words.textContent).toBe(" commented on your post");
+    expect(words.className.split(" ")).toContain("flex-none");
+    expect(screen.getByTestId("row-title")).toHaveTextContent(`${H} commented on your post`);
+  });
+
+  // NamesLong.md:3 — a person row: the name ellipsizes first, the handle
+  // stays whole until it alone cannot fit (ActorChip's arithmetic).
+  it("yields the name before a bare handle aside", () => {
+    render(<ContentRow title={NAME} titleAside={H} disc={{ kind: "monogram", name: NAME }} testId="row" />);
+    expect(classes("row-title")).toEqual(expect.arrayContaining(["shrink-[999]", "min-w-0", "text-ellipsis"]));
+    expect(classes("row-aside")).toEqual(expect.arrayContaining(["shrink", "min-w-0", "text-ellipsis", "whitespace-nowrap"]));
+    expect(classes("row-aside")).not.toContain("flex-none");
+  });
+
+  // NamesLong.md:7 — an aside whose words name a handle gives up the handle,
+  // the title and the aside's words kept.
+  it("keeps the title whole and cuts the handle inside an aside's words", () => {
+    render(<ContentRow title="Gave an opinion" titleAside={`on ${H}`} disc={{ kind: "glyph", glyph: "chat_bubble" }} testId="row" />);
+    expect(classes("row-title")).toEqual(expect.arrayContaining(["flex-none", "max-w-full"]));
+    expect(classes("row-aside")).toEqual(expect.arrayContaining(["shrink", "min-w-0", "text-ellipsis"]));
+    expect(screen.getByTestId("row-aside")).toHaveTextContent(`on ${H}`);
+  });
+
+  it("keeps a handle-free aside at its width", () => {
+    render(<ContentRow title="Saved" titleAside="· 2 acts" disc={{ kind: "glyph", glyph: "chat_bubble" }} testId="row" />);
+    expect(classes("row-aside")).toContain("flex-none");
+  });
+});

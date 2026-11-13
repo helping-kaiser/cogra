@@ -19,6 +19,7 @@ import { createStubStanceData, type StubStanceOptions } from "@/lib/stance/stub-
 import { raisedLayersForTests } from "@/lib/ui2/covering-layer";
 import { byNode } from "@/test/data-node";
 import { renderWithProviders } from "@/test/providers";
+import { CarriedSnackbar } from "./carried-snackbar";
 import type { DataNode } from "./data-node";
 import { PAD_PARK_INSET_PX, PadParkingProvider } from "./pad-parking";
 import { NO_STANDING_LABEL, SEVERED_LABEL } from "./stance-readout";
@@ -68,7 +69,12 @@ function mount(
     mode = "pad",
     overMedia = false,
     lineNode,
+    reader,
+    vouchesIn = false,
   }: {
+    /** What the session's account read answered (`reader-state.ts`). */
+    reader?: "APPLICANT" | "MEMBER";
+    vouchesIn?: boolean;
     signedIn?: boolean;
     target?: StanceTargetRef;
     axes?: StanceAxes;
@@ -83,12 +89,21 @@ function mount(
   renderWithProviders(
     <KeptPicksNavigation navigate={(href) => navigated.push(href)}>
       <PadParkingProvider value={barBeneath}>
-        <StanceControl target={target} testIdPrefix={PREFIX} axes={axes} overMedia={overMedia} lineNode={lineNode} />
+        <StanceControl
+          target={target}
+          testIdPrefix={PREFIX}
+          axes={axes}
+          overMedia={overMedia}
+          lineNode={lineNode}
+          vouchesIn={vouchesIn}
+        />
       </PadParkingProvider>
+      <CarriedSnackbar />
     </KeptPicksNavigation>,
     {
       store: signedIn ? signedInStore() : createTokenStore(),
       stanceData: data,
+      reader,
     },
   );
   return data;
@@ -3268,5 +3283,85 @@ describe("the stance control over media (the stream's rail)", () => {
     // Reel.md:69: never fades on a timer — a minute on, it still stands.
     await settle(60_000);
     expect(plate()).toHaveTextContent("You can't sign right now.");
+  });
+});
+
+// AN APPLICANT'S FACE IS LOCKED, NOT GONE (ruling PR-103; ApplicantFeed.md:45-53,
+// ApplicantWaiting.md:23-29, ProfileOther.md:45-49): the lock is the control's
+// own, so every host's face answers alike.
+describe("an applicant's stance face", () => {
+  beforeEach(() => {
+    alreadyTaught();
+  });
+  const carried = () => screen.queryByTestId("carried-snackbar");
+
+  // :53 — visibly inactive at the disabled opacity and still tappable.
+  it("wears_the_locked_look_and_stays_tappable", async () => {
+    mount({}, { reader: "APPLICANT" });
+    await settle();
+    expect(control().className).toContain("opacity-[var(--state-disabled)]");
+    expect(control()).not.toBeDisabled();
+  });
+
+  // :45 — WHEN tap a stance face -> the snackbar reads … AND NEVER the pad blooms.
+  it("a_tap_says_give_your_opinion_once_in_and_the_pad_never_blooms", async () => {
+    const data = mount({}, { reader: "APPLICANT" });
+    await settle();
+    await openPad();
+    expect(carried()).toHaveTextContent("You can give your opinion once you're in.");
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    expect(data.sent).toEqual([]);
+  });
+
+  // :47 — WHEN press-and-hold a stance face -> the snackbar reads … AND NEVER anything is signed or staged.
+  it("a_hold_says_give_your_opinion_once_in_and_nothing_is_signed_or_staged", async () => {
+    const data = mount({}, { reader: "APPLICANT" });
+    await settle();
+    await hold();
+    expect(carried()).toHaveTextContent("You can give your opinion once you're in.");
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    expect(screen.queryByTestId(`${PREFIX}-hold-ring`)).toBeNull();
+    await settle(60_000);
+    expect(data.sent).toEqual([]);
+    expect(await listKeptPicks("u1")).toEqual([]);
+  });
+
+  // The accessible route answers as the tap does.
+  it("the_choose_route_says_it_too_and_opens_nothing", async () => {
+    mount({}, { reader: "APPLICANT" });
+    await settle();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-choose`));
+    });
+    expect(carried()).toHaveTextContent("You can give your opinion once you're in.");
+    expect(screen.queryByTestId("stance-alternates")).toBeNull();
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+  });
+
+  // PR-103's carve-out: the vouch flow stays live (VouchAsk, ApprovePad).
+  it("a_vouching_face_stays_live", async () => {
+    mount({}, { reader: "APPLICANT", vouchesIn: true });
+    await settle();
+    expect(control().className).not.toContain("opacity-[var(--state-disabled)]");
+    await openPad();
+    expect(screen.getByTestId(`${PREFIX}-pad`)).toBeInTheDocument();
+    expect(carried()).toBeNull();
+  });
+
+  it("a_members_tap_opens_the_pad_as_before", async () => {
+    mount({}, { reader: "MEMBER" });
+    await settle();
+    expect(control().className).not.toContain("opacity-[var(--state-disabled)]");
+    await openPad();
+    expect(screen.getByTestId(`${PREFIX}-pad`)).toBeInTheDocument();
+    expect(carried()).toBeNull();
+  });
+
+  it("a_guests_tap_still_asks_to_join", async () => {
+    mount({}, { signedIn: false });
+    await settle();
+    await openPad();
+    expect(screen.getByTestId("join-prompt")).toBeInTheDocument();
+    expect(carried()).toBeNull();
   });
 });

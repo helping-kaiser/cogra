@@ -2,13 +2,13 @@
 
 > **Provenance.** This document is a derived reference extracted from the
 > **PeerNetworks Layer 1** specification by the **Peer Team** (Peer Network,
-> v0.31.1), reproducing its binding surface for the purpose
+> v0.32.0), reproducing its binding surface for the purpose
 > of building CoGra as a Layer 2 on it. It is not the normative source —
 > the PeerNetworks paper is. Licensed under CC-BY-4.0; see
 > [LICENSE-DOCS](../../LICENSE-DOCS).
 
-**Derived file — hard facts only.** v0.31.1 ships as the flat source
-(`PeerNetwork_PeerNetwork_v0.31.1_flat.tex`). It carries the **Edition 4**
+**Derived file — hard facts only.** v0.32.0 ships as the flat source
+(`PeerNetwork_PeerNetwork_v0.32.0_flat.tex`). It carries the **Edition 4**
 act-ownership refoundation (authored acts, the admission handshake, the
 authoritative act order) and the **Edition 5** refoundation of standing as
 one conserved allocation operator. This reference draws two scopes from it:
@@ -51,8 +51,8 @@ anything not in the feedback closure below is a Layer 2's to reimplement
   together with the record it leaves (`def:comparator:burn-primitive`). A
   *realization* satisfies requirements R1–R11 (§1.1); its use at epoch
   closure also satisfies the marker-bound settlement contract (§1.2). The
-  network reads a realization through exactly four mathematical interface
-  objects, plus that contract at epoch closure. The burn amount map is
+  network takes exactly four interface objects as computational inputs from
+  a realization (`def:comparator:burn-interface`). The burn amount map is
   neutral because the primitive records a destroyed magnitude and declines
   to price it. The primitive knows
   nothing of clusters, feeds, or rewards.
@@ -498,7 +498,7 @@ Shared mathematics (norms, delimiters, number sets) is tag-exempt.
 | released Bcert2/Fcert2 source and manifest hashes | — (integrity locators; the binding change is the announced formula edition) | public reproducibility | L1·verify | consume only; a hash never substitutes for replay |
 | per-epoch certificate commitment (contributing width, evaluated fence, and verdict; the source hash is an integrity locator) | standing-package validity | public audit | L1·closure | consume only; the commitment binds, the hash only locates |
 | path-depth flow shares, clipping rates, and one-boundary standing movement | — | monitoring dashboards | L1·verify | diagnostics; may not override the binding certificate |
-| attested boundary timestamp, closure cause | boundary-accountability replay | guild dashboards | L1·verify | consume only |
+| asserted boundary timestamp, closure cause | boundary-accountability consistency check against the published duration bounds | guild dashboards | L1·verify | consume only |
 | title $\mathrm{owner}^{(k)}$ | recognition (iii), authorization and parties | guild routing | L1·closure ⋆ | consume kernel value; read downstream; a recomputable summary of the partition (`rem:graph:title-certificate-is-summary`) |
 | standing $\alpha_i$ | gate | reward amplifier $(1+\hat{\alpha}_C)$ | L1·closure ⋆ | consume kernel value; read downstream |
 | ownership thread, Item genesis | title → recognition (iii) | terminal display | L1·closure | consume only; may recompute |
@@ -506,7 +506,7 @@ Shared mathematics (norms, delimiters, number sets) is tag-exempt.
 | parallel bundles, all other folds | — | the guild / user | L2 | **reimplement freely** (`rem:graph:authored-act-bundle-consumers`) |
 | membership fold $\mathrm{member}^{(k)}(a,C)$ | — | guild / chat policy | L2 | reimplement freely; policy defaults L1·by-product |
 | raw $\tilde{w}(e)$ and $\epsilon(e)$ **formulas** | — | feed, raw bridge, raw signed diagnostics | **L2** | reimplement freely at terminal read-sites |
-| payload projection / bytes | — (terminal by postulate) | user / L2 service | L2 | reimplement freely; carriage custody per phase |
+| payload projection / bytes | — (terminal by postulate) | user / L2 service | L2 | reimplement freely; carriage custody per carriage mode |
 | content witness | — (evidence; authenticates carriage) | any verifier | L1·verify | consume only; retained by Layer 1 across phases (`rem:graph:act-payload-custody-phases`) |
 | feed $S(u,c)$ | — | the user | L2 | **reimplement freely** |
 | reward $R_C$ | — | the guild | L2 | **reimplement freely** |
@@ -534,7 +534,7 @@ pruned-node state (`rem:sorting:raw-pruning-is-implementation`).
 
 Note: the payload **projection / bytes** are terminal by postulate — no
 closure quantity reads them (removable-projection invariance), so they are
-**L2**, a carriage-custody concern per phase. The **content witness** is
+**L2**, a carriage-custody concern per carriage mode. The **content witness** is
 not: it is **L1·verify** evidence — no formula consumes it, but it
 authenticates carriage and is retained by Layer 1 across both deployment
 phases (`rem:graph:act-payload-custody-phases`); withholding it breaks
@@ -795,7 +795,7 @@ Stated independently of any mechanism that achieves them.
   accepted records** — the final write set $\mathcal{Q}_k$, final edge set
   $E_k$, dependent-set partition formed by merging overlapping principal
   closures against the history finalized before the epoch, realized size,
-  closure cause, attested boundary timestamp; **(ii) final ledger** —
+  closure cause, asserted boundary timestamp; **(ii) final ledger** —
   settled boundary burn state, final residual balances, final action
   counts, accepted-act increments, debit vintages; **(iii) semantic
   projection** — every accepted Actor-authored (complete) act, per-author
@@ -832,7 +832,10 @@ Stated independently of any mechanism that achieves them.
   threshold comparison — an enclosure straddling $\rho_\theta$ for an
   author or $\rho_{\text{eff}}$ for the epoch stamp leaves the proposed set
   uncertified. Misbehavior at the boundary is *evidence, not prevention*
-  (`post:graph:boundary-accountability`).
+  (`post:graph:boundary-accountability`). The boundary timestamp is a host
+  assertion: the closure cause and the asserted timestamp are checkable for
+  mutual consistency with the published duration bounds, with no obligation
+  to anchor the timestamp to an external clock.
 
 **Verification model** (`subsec:introduction:verification-model`): every
 computation that can feed admission is specified by published formula over
@@ -1540,34 +1543,76 @@ recognition quantity.
 
 1. **Proposal pre-commitment (`def:graph:proposal-pre-commitment`).**
    Because the host contributes the final projection salts, the actor first
-   binds its proposal: with a fresh private nonce, it forms domain-separated
-   pre-digests of the content bytes and canonical dependency encoding, each
-   over the act identifier, the nonce, and the bytes; the pre-commitment is
-   the hash of the canonical structural body plus both pre-digests, and the
-   actor signs it. The pre-commitment exists before host salting, binds the
-   exact proposal, cannot be transplanted to another act identifier,
-   carries no host order, and grants no inclusion. The nonce's entropy
-   custody is the actor's when it is client-generated; the host receives
-   it at proposal, validates its checkable part at append (format, length,
-   freshness, and non-reuse across the author's acts), and custodies and
-   removes it with the payload (`subsec:deployment:concealment-entropy`,
-   `rem:graph:erasure-floor`).
-2. **Verified act (`def:graph:verified-act`).** The host verifies the actor
-   signature, act-identifier uniqueness, canonical formation, hyper-edge
-   A/T consistency, public protocol references, carriage and dependency
-   bounds, and the recomputed pre-commitment (a failure produces no Layer-1
-   object); chooses independent fresh domain-separated salts meeting the
-   published entropy floor; forms the binding content and dependency
-   commitments, each over the act identifier, the pre-commitment, its salt,
-   and the projection's bytes; and seals the resulting **verified act**
-   header — body, pre-commitment, pre-signature, both commitments, and the
-   content and dependency edition tags, no host order fields — with its
-   host signature. The seal attests receipt, verification, and salt
-   addition; it promises no inclusion.
+   binds its proposal: with two independent fresh private nonces, one per
+   projection — a **content nonce** and a **dependency nonce** — it forms
+   domain-separated pre-digests of the content bytes and of the canonical
+   dependency encoding, each over the act identifier, its projection's
+   nonce, and the bytes; the pre-commitment is the hash of the canonical
+   structural body plus both pre-digests, and the actor signs it. The
+   pre-commitment exists before host salting, binds the exact proposal,
+   cannot be transplanted to another act identifier, carries no host order,
+   and grants no inclusion. The dependency nonce is disclosed to the host at
+   proposal with the dependency list. The content nonce stays on the
+   author's content-carriage side, beside the payload, is removed atomically
+   with it, and is never disclosed as dependency-verification input; the
+   host receives it only inside the optional content pair (step 2). With two
+   independent nonces, dependency verification carries no content
+   capability. **Entropy custody** (`subsec:deployment:concealment-entropy`,
+   `rem:graph:erasure-floor`): the host generates the commitment salts in
+   both carriage modes; the content nonce's entropy custody belongs to the
+   actor or the carriage layer under the published generation rule. When the
+   pair is absent the host never holds the content nonce, and the carrier
+   owns its checkable format, length, freshness, and non-reuse checks; these
+   are carriage obligations, not conditions of act acceptance. A low-entropy
+   content nonce exposes that actor's payload, not another actor's record.
+2. **Verified act (`def:graph:verified-act`).** The proposal carries the
+   structural body, the optional **content pair** (payload, content nonce),
+   the dependency list and the dependency nonce, the content pre-digest, the
+   pre-commitment, and the pre-signature. The pair is optional as a unit:
+   bytes without their nonce cannot be verified against the content
+   pre-digest. The host uses one submission procedure whether or not it
+   holds the pair. **Act checks:** it verifies the actor signature,
+   act-identifier uniqueness, canonical formation, hyper-edge A/T
+   consistency, public protocol references, dependency bounds, absence of
+   self-dependency, and the pre-commitment recomputed from the encoded
+   structural body, the received opaque content pre-digest, and the
+   dependency pre-digest recomputed from the dependency nonce and the
+   canonical dependency encoding. The act checks never require the payload
+   or the content nonce; a failure of an act check produces no Layer-1
+   object. The host then chooses independent fresh domain-separated salts
+   meeting the published entropy floor and forms the binding commitments:
+   the content commitment over the act identifier, the pre-commitment, its
+   salt, and the content pre-digest — binding the payload transitively and
+   inheriting the pre-digest's concealment, by one formula with or without
+   the pair — and the dependency commitment over the act identifier, the
+   pre-commitment, its salt, and the canonical dependency encoding.
+   **Carriage checks:** when the pair is present, the host additionally
+   recomputes the content pre-digest from the payload and content nonce,
+   requires equality with the received pre-digest, enforces the
+   $M_{\text{payload}}$ carriage bound, and carries the pair under
+   `rem:graph:act-payload-custody-phases`, removing both members atomically
+   on request; a failure refuses carriage of the pair, not the act. When the
+   pair is absent, those checks and that custody belong to whoever carries
+   it and are not conditions of the act. What the host verifies for the act,
+   commits to, seals, or orders never depends on possession of the payload
+   or content nonce. It seals the resulting **verified act** header — body,
+   pre-commitment, pre-signature, both commitments, and the content and
+   dependency edition tags, no host order fields — with its host signature.
+   The seal attests receipt, pre-commitment verification from the two
+   pre-digests, formation validity, and salt addition, identically in both
+   carriage modes; it promises no inclusion. The seal does not attest
+   carriage of the content pair: a party on the submission path can remove
+   an offered pair without invalidating the act, and a host can seal and
+   order an act while declining its carriage. Where carriage matters to the
+   actor, the layer that accepts it returns an authenticated carriage result
+   separate from the seal; its form is a deployment concern.
 3. **Approval witness (`def:graph:approval-witness`).** The actor verifies
    the host seal, exact equality of the returned body, references,
-   pre-commitment and pre-signature, correct opening of both commitments,
-   correct editions, and (for a hyper-edge) agreement of all act-level
+   pre-commitment and pre-signature, correct recomputation of its own
+   content pre-digest from the payload and content nonce, correct formation
+   of the content commitment over that pre-digest and of the dependency
+   commitment over the canonical dependency encoding with the returned
+   salts, correct editions, and (for a hyper-edge) agreement of all act-level
    fields across both legs — then signs the **approval witness** over the
    encoded verified act together with its host seal. The witness signs no
    epoch index, position, logical time,
@@ -1584,8 +1629,15 @@ recognition quantity.
    debits, recompute historical standing, or reverse title. The
    authoritative order stays authoritative even when proven non-compliant
    (a *compliant* order satisfies both placement conditions); by finalizing
-   an act the host attests it held and validated the full dependency
+   an act the host attests it received and validated the full dependency
    opening.
+
+**Submission-path disclosure (`subsec:deployment:concealment-entropy`).**
+Every submission discloses the dependency list and its nonce, and the
+content pair when it is sent, to the host and to whatever carries the
+submission. Confidentiality of the submission path is deployment scope; a
+later tombstone conceals the dependency projection from holders of the
+record, not from parties that observed the submission.
 
 **Post-finalization faults (`def:graph:parent-placement-fault`,
 `def:graph:stamp-fault`, `def:graph:title-certificate-fault`).** A
@@ -1745,8 +1797,9 @@ determinant sign, damped weight, and both commitment verifications
 of an accepted act has exactly these fields: act identifier, author, and
 family; structural body; public protocol references and causal parents;
 payload and dependency commitments; admission handshake and approval
-witness; finalization epoch and act time. The payload bytes, salts, and
-dependency opening travel beside the envelope and are not part of it. Its
+witness; finalization epoch and act time. The payload and content nonce
+(the content pair), the salts, and the dependency opening travel beside the
+envelope and are not part of it. Its
 serialization, carriage, and transport are deployment concerns.
 
 **Act payload projection (`def:graph:act-payload-projection`).** **Every
@@ -1768,12 +1821,19 @@ without exception. The payload is removable; the structural record is not.
 controller of an act is its **author** — there is no separate A-leg or
 T-leg controller; the initiating author owns the one act payload. The
 payload is removable at the request of its controller **or of any
-legitimate entity**, under the phase-custody split below. Derived raw
+legitimate entity**, under the carriage-custody split below. Derived raw
 edges carry no payload projection; there is nothing to control.
 
 **Payload state (`def:graph:act-payload-state`).** Three states:
 **full-empty** (canonical zero-length bytes, private value present),
-**full**, **reduced**. State moves toward reduced only.
+**full**, **reduced**. State moves toward reduced only. Payload state
+belongs to the projection wherever its content pair is held: a pair held
+only by its author is full until its custodian removes it, and absence of
+the pair at the host is neither an empty payload nor a reduction. A
+requested publication state constrains how the projection may move, not
+where it is held; making a full projection available is the duty of
+whichever layer accepts its carriage, and Layer 1 promises no availability
+for a pair that no layer carries.
 
 **Separable, Concealing Act Commitment
 (`post:graph:separable-act-projections`).** The append mechanism's
@@ -1809,10 +1869,14 @@ never an action-denomination rule.
 
 **Custody across phases (`rem:graph:act-payload-custody-phases`):** the
 content commitment (*witness*) is invariant across phases; only carriage
-migrates. Centralized: Layer 1 tracks payload and salt, removable on
-request. Decentralized: Layer 1 tracks only the witness; payload and salt
-are a terminal carriage obligation. The structural record is identical in
-both.
+migrates. Centralized carriage: the host tracks the optional content pair
+and its opening material, removable on request with both pair members
+removed atomically. Decentralized carriage: Layer 1 tracks only the
+witness; the pair and its opening material are a terminal carriage
+obligation. Carriage custody may precede append decentralization: a
+centralized-phase deployment may use decentralized carriage. The structural
+record and the witness are identical in all four combinations of append and
+carriage custody; the phase split binds only who operates append.
 
 ### 8.5 The stored sentiment slice
 
@@ -2340,7 +2404,7 @@ target; both are projections of one act (`def:graph:act-edge-projection`).
 | Bid | Actor → Item → Offer | Economic ↑promoted, both legs **Half** | signed generosity $g \in [-1,1]$, urgency $u \in [0,1]$; A: $p_d = g, p_i = u$; T: $p_d = u, p_i = g$. Both legs carry $\epsilon = \mathrm{sgn}(g)$, so composed parity is $+1$: a predatory Bid is parity-visible per leg, parity-neutral as a composition; the buyer's stance is read by stance consumers (`cor:nodes:bid-leg-parity`) |
 | **Participant** | Actor → Chat → Chat | Relational $(1,1,1,1)$ ↑ F / Epistemic $(0,1,0,1)$ M | interactivity $i \in [-1,1]$, responsibility $r \in [-1,1]$, continuity $c \in [0,1]$; A: $p_d = i, p_i = r$; T: $p_d = c, p_i = 1$ type-fixed (forced $\epsilon = +1$, `lem:nodes:self-loop-neutral`). **A-leg whence, T-leg whither** — one meaning, *I move from A to T*, in four instantiations: **found** (both legs on $\mathsf{mint}(\mathrm{actid})$), **join** (both on $C_1$), **found successor** (A on $C_0$, T on the mint), **move** (A on $C_0$, T on $C_1$). There is no shape branch to test and no field a reader must consult; the terminal target alone decides whether the act mints, so found and found successor mint and join and move do not (§8.1). Origin is unchecked at formation — a move from a chat the author was never in is a decorated join. The A-leg's $(i, r)$ are the act's mandatory coordinates; the T-leg's $c$ is authored, semantically vacuous in the join and found cases, and **not** mandatory, so a choice on a meaningless field never moves its author's coefficient. The T-leg's path-view determinant is a function of $c$ alone, and its damped weight is bounded by the parameter-uniform Marginal family supremum $\sqrt{\eta}\,\tilde{w}_{\max}^{\text{Op}} \approx 0.113$ (`thm:graph:raw-weight-ceiling`). The membership fold reads leg roles, never family incidence (§9.8) (`edge:nodes:participant`) |
 | **Invitation** | Actor → Chat → Profile(invitee) | Relational $(1,1,1,1)$ ↑ **Half** / Epistemic $(0,1,0,1)$ M | urgency $u \in [-1,1]$, formality $f \in [-1,1]$, relevance $r \in [0,1]$; A: $p_d = u, p_i = f$; T: $p_d = r, p_i = 1$ (forced $+1$ for $r > 0$). A public, priced, authored vouch that the invitee fits the community; a proposal, not participation. The A-leg's $(u, f)$ are the act's mandatory coordinates: when the folded $u, f$ are strictly positive after netting, the inviter may compile one complete hyper-vouch toward the invitee's bound Actor, at the coefficient $\sqrt{|u\,f|}$, the geometric mean of their magnitudes; the T-leg's $r$ is raw context and enters neither that coefficient nor its positivity gate. The terminal leg targets the invitee's **Profile**, never the Actor — influence reaches the invitee only through their standing-dependent activation (wall-clamped, §11.4). Withdrawn by its author through a cancelling Invitation that nets the bundle to $(0, 0)$ (§9.8) (`edge:nodes:hyper-invitation`, `subsec:necessity:invitation-profile-terminus`) |
-| **De-invite** | Actor → Chat → Profile(de-invitee) | Minimal $(0,0,0,1)$ M / Minimal $(0,0,0,1)$ M | none — both legs type-fixed $p_d = p_i = 1$, $\epsilon = +1$ forced | declaration that another actor should not be (or no longer be) part of a Chat; a **control record** — its force is terminal policy, never a Layer-1 validity predicate. **Unconditional**: the author need not be a member, inviter, or authority; the target need not be a member. Both legs are control records resolving to their author, absent from person-vouch compilation — a De-invite never vouches for its target (`rem:epoch:control-acts-resolve-to-self`). It withdraws nothing: it allocates nothing outward and has no effect on its author's Invitation bundle, which a cancelling Invitation withdraws (§9.8). It is still a priced act — debited, counted, and weighed at self at coefficient 1. Its reading is the Layer-2 membership fold (`def:nodes:canonical-membership-fold`) (`edge:nodes:hyper-deinvite`, `subsec:necessity:deinvite-profile-terminus`) |
+| **De-invite** | Actor → Chat → Profile(de-invitee) | Minimal $(0,0,0,1)$ M / Minimal $(0,0,0,1)$ M | none — both legs type-fixed $p_d = p_i = 1$, $\epsilon = +1$ forced | declaration that another actor should not be (or no longer be) part of a Chat; a **control record** — its force is terminal policy, never a Layer-1 validity predicate. **Unconditional**: the author need not be a member, inviter, or authority; the target need not be a member. Both legs are control records resolving to their author, absent from person-vouch compilation — a De-invite never vouches for its target (`rem:epoch:control-acts-resolve-to-self`). It withdraws nothing: it makes no outward allocation in either quadrant and has no effect on its author's Invitation bundle, which a cancelling Invitation withdraws (§9.8). It is still a priced act — debited, counted, and weighed at self at coefficient 1. Its reading is the Layer-2 membership fold (`def:nodes:canonical-membership-fold`) (`edge:nodes:hyper-deinvite`, `subsec:necessity:deinvite-profile-terminus`) |
 | Send | Actor → Chat → Message | Relational $(1,1,1,1)$ ↑ F / Minimal $(0,0,0,1)$ M | importance $i \in [-1,1]$; A: $p_d = i, p_i = 1$; T: $p_d = 1, p_i = i$. *Write* is the protocol act (§8.2), and no edge family may shadow it (`edge:nodes:hyper-send`): a Send is carried into the graph by a write, it is not one. **Not membership-gated**: a Layer-1 membership precondition would drag membership into the admission closure (`rem:nodes:membership-is-terminal`). Resolves to its author, weighed and priced like every accepted act, and endorses no one: not the Chat's participants, invitees, referenced Profiles, or Message reviewers (`tbl:epoch:standing-recipient-resolution`) |
 | Reference | Actor → Passive(artifact) → Passive(target) | Epistemic $(0,1,0,1)$ M / Tribal $(1,1,1,1)$ F | enthusiasm $e \in [-1,1]$, effort $f \in [-1,1]$; A: $p_d = f, p_i = e$; T: $p_d = e, p_i = f$. Review with its legs transposed; **mints nothing** — both endpoints of the T-leg are pre-existing nodes: the citing artifact is any passive node, the target any passive node including a Profile, never an Actor. The strong Tribal leg carries the citation itself; the weak Epistemic leg carries authorship. Commentary, never state (`rem:graph:reviews-commentary`); census sibling is Tag. Target class switches the allocation destination: a **complete** Reference whose T-leg targets Profile$_i$ with strictly-positive folded $(e, f)$ resolves its fold cell to Actor $i$; every other Reference resolves to its author's self-retention channel — weighed and priced either way, but reaching no one else (still read by feed, raw signed traversal, CAN, provenance, terminal policy). The artifact supplies context, never transferable standing: incoming weight on the citing artifact enters no cell (§11.3, `def:epoch:standing-recipient-resolution`). Self-reference resolves home. Withdrawn by its author through netting (`lem:epoch:authored-vouch-withdrawable`) (`edge:nodes:hyper-reference`, `rem:nodes:reference-author-allocation`) |
 
@@ -2494,8 +2558,8 @@ weighed home at coefficient zero; a later positive Invitation re-establishes
 the vouch. Netting is strictly per-author: no act withdraws another author's
 vouch. Each withdrawal and re-establishment is a priced act — it increments
 the author's act count and irrevocably lowers the author's commitment rate. A De-invite withdraws
-nothing: it has no effect on its author's Invitation bundle and allocates
-nothing outward; it is still a priced act — debited, counted, and weighed at
+nothing: it has no effect on its author's Invitation bundle and makes no
+outward allocation in either quadrant; it is still a priced act — debited, counted, and weighed at
 self at coefficient 1 (`rem:epoch:control-acts-resolve-to-self`) — and its
 reading is the Layer-2 membership fold above. Settlement acts (Accept,
 Ratify) are singleton cells and withdraw through the epoch-quantized
@@ -2738,7 +2802,8 @@ weighed and consume their author's allocation — they simply never direct any
 of it outward. De-invite is the case that makes this load-bearing: its fixed
 raw parameters are positive, and treating raw positivity as regard would turn
 expulsion into standing support. The control family never enters the
-person-vouch projection: a De-invite directs nothing outward and leaves its
+person-vouch projection: a De-invite makes no outward allocation in either
+quadrant and leaves its
 author's Invitation bundle untouched — it is still a priced act, one
 $\theta$-debit and one count increment, weighed at self at coefficient $1$ —
 and its reading is the Layer-2 membership fold alone
@@ -3967,7 +4032,7 @@ package's intermediate values are binding but not straddlers (§2).
 | $\bar{p}_d, \bar{p}_i$ | Net stance of a same-author full-incidence bundle: sum-then-clip to $[-1,1]$; standing projection only. | `def:epoch:net-stance` |
 | $\xi$, $\mathcal{R}_k$, $c(\xi)$ | Standing fold cell (for families eligible for net stance, the equivalence class of accepted Actor-authored acts with equal author, family, source, target, and full incidence; each aggregation-excluded act is a singleton cell), the epoch's eligible cell set, and the cell's total effective coefficient — one per cell, never one per member — the geometric mean of the **magnitudes** of its mandatory folded coordinates, in $[0,1]$. | `def:epoch:standing-fold-cell`, `def:epoch:effective-act-contribution` |
 | recipient resolution | Published order-free operator sending each cell to a person recipient or to the author's self-retention channel; strictly positive coordinates, author ownership, live consent, and an anchored person target are what send it outward. Every cell is weighed either way; no glyph. | `def:epoch:standing-recipient-resolution`, `post:epoch:universal-act-weighing` |
-| vouch withdrawal | Per-author netting of signed mandatory coordinates, order-free, no tie rule, priced: a cancelling Opinion, Reference, or Invitation nets its author's bundle — for an Invitation, $(-u, -f)$ nets it to $(0, 0)$ — which fails the strictly-positive gate and resolves home at coefficient zero. A De-invite withdraws nothing: it allocates nothing outward and leaves its author's Invitation bundle unchanged, but stays a priced act weighed at self at coefficient 1. No glyph. | `lem:epoch:authored-vouch-withdrawable` |
+| vouch withdrawal | Per-author netting of signed mandatory coordinates, order-free, no tie rule, priced: a cancelling Opinion, Reference, or Invitation nets its author's bundle — for an Invitation, $(-u, -f)$ nets it to $(0, 0)$ — which fails the strictly-positive gate and resolves home at coefficient zero. A De-invite withdraws nothing: it makes no outward allocation in either quadrant and leaves its author's Invitation bundle unchanged, but stays a priced act weighed at self at coefficient 1. No glyph. | `lem:epoch:authored-vouch-withdrawable` |
 | control-act class | Withdraw, Rescind, Leave, De-invite/A·T: type-fixed records, weighed and priced, always resolving to their author. | `rem:epoch:control-acts-resolve-to-self` |
 | $\mathsf{A}_{uj}$, $\kappa_{\text{self}}$, $\omega_D$, $\delta_D(\xi)$ | Base allocation matrix over the anchored Actors — the sole standing-relevant reading of the epoch's acts — with the self-retention base, the published domain weights, and the act-level domain profile. | `def:epoch:domain-weighted-base-allocation`, `def:epoch:standing-domain-profile` |
 | $g_{\text{vch}}(x)$, $\bar{g}_{\text{vch}}(x)$ | Responsive activation $\big(Q(p(x))/Q(1)\big)^{1/4}$ and its safety-wall clamp $g_{\text{vch}}(\max(x, \rho_\theta))$ — the sole standing activation; below-wall constant, zero derivative. | `def:epoch:responsive-vouch-activation`, `def:epoch:safety-wall-clamped-activation` |

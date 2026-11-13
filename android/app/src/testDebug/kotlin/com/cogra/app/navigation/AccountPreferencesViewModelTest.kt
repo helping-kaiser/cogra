@@ -7,6 +7,7 @@ package com.cogra.app.navigation
 import com.cogra.domain.AccountState
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.Outcome
+import com.cogra.domain.ReaderStanding
 import com.cogra.domain.UserProfile
 import com.cogra.domain.settings.SensitiveContentChoice
 import com.cogra.domain.testing.FakeTokenStore
@@ -28,10 +29,12 @@ class AccountPreferencesViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val tokens = FakeTokenStore()
     private val sensitive = SensitiveContentChoice()
+    private val standing = ReaderStanding()
 
-    /** The account's `me` read, answering the level set here. */
+    /** The account's `me` read, answering the level and the state set here. */
     private val account = object : ThrowingAccountRepository() {
         var level: Int? = null
+        var state = AccountState.MEMBER
         var reads = 0
 
         override suspend fun me(): Outcome<UserProfile?> {
@@ -41,7 +44,7 @@ class AccountPreferencesViewModelTest {
                     id = "u1",
                     handle = "sol",
                     displayName = null,
-                    accountState = AccountState.MEMBER,
+                    accountState = state,
                     hasReciprocated = true,
                     invitedBy = null,
                     contentFilteringSeverityLevel = level,
@@ -62,7 +65,7 @@ class AccountPreferencesViewModelTest {
     fun `a_choice_made_on_another_device_reads_here`() = runTest(dispatcher) {
         account.level = 0
         tokens.save(AuthTokens("a", "r", "u1"))
-        val vm = AccountPreferencesViewModel(tokens, account, sensitive)
+        val vm = AccountPreferencesViewModel(tokens, account, sensitive, standing)
         idle()
         assertThat(vm.alwaysUnveil.value).isTrue()
         assertThat(account.reads).isEqualTo(1)
@@ -71,7 +74,7 @@ class AccountPreferencesViewModelTest {
     @Test
     fun `an account that never chose reads veiled`() = runTest(dispatcher) {
         tokens.save(AuthTokens("a", "r", "u1"))
-        val vm = AccountPreferencesViewModel(tokens, account, sensitive)
+        val vm = AccountPreferencesViewModel(tokens, account, sensitive, standing)
         idle()
         assertThat(vm.alwaysUnveil.value).isFalse()
     }
@@ -80,7 +83,7 @@ class AccountPreferencesViewModelTest {
     fun `signed_out_reader_sees_the_veil — and the last account's choice is forgotten`() = runTest(dispatcher) {
         account.level = 0
         tokens.save(AuthTokens("a", "r", "u1"))
-        val vm = AccountPreferencesViewModel(tokens, account, sensitive)
+        val vm = AccountPreferencesViewModel(tokens, account, sensitive, standing)
         idle()
         assertThat(vm.alwaysUnveil.value).isTrue()
 
@@ -92,9 +95,32 @@ class AccountPreferencesViewModelTest {
 
     @Test
     fun `a signed-out start reads nothing`() = runTest(dispatcher) {
-        val vm = AccountPreferencesViewModel(tokens, account, sensitive)
+        val vm = AccountPreferencesViewModel(tokens, account, sensitive, standing)
         idle()
         assertThat(vm.alwaysUnveil.value).isFalse()
         assertThat(account.reads).isEqualTo(0)
+    }
+
+    // The one read every applicant door answers from (ApplicantFeed.md:49):
+    // the shell's own, never a read per card.
+    @Test
+    fun `the same read records an applicant's standing`() = runTest(dispatcher) {
+        account.state = AccountState.APPLICANT
+        tokens.save(AuthTokens("a", "r", "u1"))
+        AccountPreferencesViewModel(tokens, account, sensitive, standing)
+        idle()
+        assertThat(standing.applicant).isTrue()
+        assertThat(account.reads).isEqualTo(1)
+    }
+
+    @Test
+    fun `a sign-out forgets the applicant's standing`() = runTest(dispatcher) {
+        account.state = AccountState.APPLICANT
+        tokens.save(AuthTokens("a", "r", "u1"))
+        AccountPreferencesViewModel(tokens, account, sensitive, standing)
+        idle()
+        tokens.clear()
+        idle()
+        assertThat(standing.state.value).isNull()
     }
 }

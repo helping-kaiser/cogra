@@ -2212,24 +2212,43 @@ class ContentScreensTest {
 
     // -- The card header: author left, age right --
 
-    /** The boards' compact age — a number and its unit, no word between. */
-    @Test
-    fun theAgeReadsAsTheBoardsDrawIt() {
+    /** The header's age node as the card draws it, [secondsAgo] before a fixed clock. */
+    private fun headerAge(secondsAgo: Long): androidx.compose.ui.test.SemanticsNodeInteraction {
         val now = java.time.Instant.parse("2026-09-09T12:00:00Z")
-        fun ago(minutes: Long) = compactAge(now.minusSeconds(minutes * 60), now)
+        compose.setContent {
+            ContentCardHeader(
+                author = null,
+                at = now.minusSeconds(secondsAgo),
+                onOpenActor = {},
+                testTagPrefix = "hdr",
+                now = now,
+            )
+        }
+        return compose.onNodeWithTag("hdr_age", useUnmergedTree = true)
+    }
 
-        assertThat(ago(0)).isEqualTo("0m")
-        assertThat(ago(35)).isEqualTo("35m")
-        assertThat(ago(60)).isEqualTo("1h")
-        assertThat(ago(60 * 4)).isEqualTo("4h")
-        assertThat(ago(60 * 24 * 3)).isEqualTo("3d")
+    /** copy-voice *Ages* (`design/guidelines/copy-voice.md:76`): under a minute is `now`, never `0m`. */
+    @Test
+    fun aCardUnderAMinuteOldReadsNow() {
+        headerAge(20).assertTextEquals("now")
     }
 
     /** A clock behind the node's own time never reads as the future. */
     @Test
-    fun anAgeNeverRunsBackwards() {
-        val now = java.time.Instant.parse("2026-09-09T12:00:00Z")
-        assertThat(compactAge(now.plusSeconds(600), now)).isEqualTo("0m")
+    fun aCardFromAheadOfTheClockReadsNow() {
+        headerAge(-600).assertTextEquals("now")
+    }
+
+    /** The ladder climbs on the card as everywhere: minutes, hours, days. */
+    @Test
+    fun aCardClimbsTheLadder() {
+        headerAge(35L * 60).assertTextEquals("35m")
+    }
+
+    /** copy-voice *Ages*: past 30 days the card prints the date, not `31d`. */
+    @Test
+    fun aCardPastThirtyDaysReadsTheDate() {
+        headerAge(31L * 86_400).assertTextEquals("09.08.2026")
     }
 
     @Test

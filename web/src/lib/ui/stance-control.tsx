@@ -89,6 +89,8 @@ import type {
   StanceTargetRef,
 } from "@/lib/stance/stance-data";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
+import { OPINION_LOCKED, useReaderIsApplicant } from "@/lib/session/reader-state";
+import { carrySnackbar } from "@/lib/ui/carried-snackbar";
 import { BUTTON_CLASS, buttonClassName } from "@/lib/ui/button";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
@@ -419,6 +421,15 @@ export function StanceControl({
   const data = useStanceData();
   const phase = useAuthPhase();
   const accountId = useActiveAccountId();
+  // AN APPLICANT'S FACE IS LOCKED, NOT GONE (ruling PR-103; ApplicantFeed.md:45-53,
+  // ProfileOther.md:45-49; the master's `anchorOpacity`): the disabled
+  // opacity, still tappable, a tap or a hold answering OPINION_LOCKED, the
+  // pad never blooming. Answered here, in the one control every face is, so
+  // no host wires it. The application's own vouch flow stays live (PR-103's
+  // carve-out): a pad-only host is the vouch-back gesture, and `vouchesIn`
+  // is the approval and the ask link's vouch.
+  const locked =
+    useReaderIsApplicant() && phase === "signedIn" && padOnly === undefined && !vouchesIn;
   const [mode] = useStanceInputMode();
   const [taught, teach] = useStanceTaught();
   const barBeneath = useBarBeneath();
@@ -961,6 +972,10 @@ export function StanceControl({
       setJoinPrompt(true);
       return;
     }
+    if (locked) {
+      carrySnackbar(OPINION_LOCKED);
+      return;
+    }
     // A KEPT OPINION WITH THE KEY HERE WAITS FOR ITS REVIEW: the tap opens
     // the kept picks' review, never the key notice and never a pad
     // (PadPendingReview.md:13). One whose key answer has not come yet asks
@@ -1006,6 +1021,16 @@ export function StanceControl({
     suppressClick.current = false;
     if (phase !== "signedIn" || busy) return;
     clearHold();
+    // AN APPLICANT'S HOLD IS TOLD, as the tap is, and signs nothing: no ring,
+    // no capture, and the click its release makes is swallowed.
+    if (locked) {
+      holdTimer.current = setTimeout(() => {
+        holdTimer.current = null;
+        suppressClick.current = true;
+        carrySnackbar(OPINION_LOCKED);
+      }, LONG_PRESS_MS);
+      return;
+    }
     // Captured, so the lift always reaches the target that armed the hold:
     // a finger that slides off and lets go must disarm it.
     const element = event.currentTarget;
@@ -1366,7 +1391,7 @@ export function StanceControl({
             onContextMenu={(event) => event.preventDefault()}
             className={`${BUTTON_CLASS} flex cursor-pointer touch-none select-none items-center justify-center gap-2 rounded-full bg-transparent px-3 text-label-large text-primary [-webkit-touch-callout:none] ${
               wide ? "min-h-10 min-w-0 flex-1 border border-solid border-outline" : "min-h-12 min-w-12 border-0"
-            }`}
+            }${locked ? " opacity-[var(--state-disabled)]" : ""}`}
             style={overMedia ? OVER_MEDIA_ANCHOR : undefined}
           >
             {/* Never a bare word: a viewer with no bundle gets a face outside
@@ -1447,8 +1472,13 @@ export function StanceControl({
               data-testid={`${testIdPrefix}-choose`}
               disabled={busy}
               onClick={() => {
-                // The accessible route answers as the tap does: a kept opinion
-                // with the key here opens its review (PadPendingReview.md:13).
+                // The accessible route answers as the tap does — an applicant
+                // is told; a kept opinion with the key here opens its review
+                // (PadPendingReview.md:13).
+                if (locked) {
+                  carrySnackbar(OPINION_LOCKED);
+                  return;
+                }
                 if (kept !== null && family === "opinion" && keyAbsent === false) {
                   openKeptPicks();
                   return;

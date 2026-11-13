@@ -19,17 +19,16 @@ use common::l1::fold::BundleSum;
 
 use crate::error::RankError;
 
-/// A record's place in the authoritative order: its landing epoch, then its
-/// causal key `(𝕋^act, pos)` (layer1-interface.md §8.3).
+/// A record's place in the authoritative order: the key of record
+/// `(k, pos_k)`, its landing epoch then its position in that epoch's
+/// published order, compared lexicographically (layer1-interface.md §8.3).
 ///
-/// Layer 1 publishes a total order per epoch, `pos` totalising equal Lamport
-/// times within it; the published sequence is those orders epoch after
-/// epoch, so the landing epoch leads. It is the api's `CausalKey`, field for
-/// field and in the same precedence.
+/// Logical time is derived from this order, never the reverse, so act time
+/// is not part of the key: a time comparison never decides precedence. It
+/// is the api's `CausalKey`, field for field and in the same precedence.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CausalKey {
     pub landing_epoch: i64,
-    pub act_time: i64,
     pub position: i64,
 }
 
@@ -41,11 +40,7 @@ impl PartialOrd for CausalKey {
 
 impl Ord for CausalKey {
     fn cmp(&self, other: &Self) -> Ordering {
-        (self.landing_epoch, self.act_time, self.position).cmp(&(
-            other.landing_epoch,
-            other.act_time,
-            other.position,
-        ))
+        (self.landing_epoch, self.position).cmp(&(other.landing_epoch, other.position))
     }
 }
 

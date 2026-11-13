@@ -8,6 +8,7 @@ import type { ApolloClient } from "@apollo/client";
 
 import {
   CommentParentDocument,
+  CommentCardDocument,
   CommentRepliesDocument,
   CommentSelfMarkDocument,
   FeedPostFragmentDoc,
@@ -18,6 +19,7 @@ import {
   PrepareCommentEditDocument,
   PreparePostDocument,
   PreparePostEditDocument,
+  type CommentFieldsFragment,
   type CommentRepliesQuery,
   type FeedPostFragment,
   type LandingState,
@@ -390,6 +392,21 @@ export async function fetchCommentSelfMark(
     sensitive: comment.sensitiveSelfMark,
     reason: comment.sensitiveReason ?? "",
   });
+}
+
+/**
+ * One comment as every read selects it (`CommentFields`), read afresh — the
+ * card that settles an edit in place. Null means the comment is gone.
+ */
+export async function fetchComment(
+  client: ApolloClient,
+  id: string,
+): Promise<Outcome<CommentFieldsFragment | null>> {
+  const fetched = await fetchOutcome(() =>
+    client.query({ query: CommentCardDocument, variables: { id }, fetchPolicy: "network-only" }),
+  );
+  if (fetched.kind !== "success") return fetched;
+  return success(fetched.value.comment ?? null);
 }
 
 /** How far up a chain the landing walks before it settles for the deepest ancestor it found. */

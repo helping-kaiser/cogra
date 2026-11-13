@@ -19,9 +19,13 @@ import {
   applicationNode,
   askCheckAnswer,
   inviteLink,
+  daysAgo,
   linkNode,
+  PEOPLE_PAGE,
+  person,
   staticInvites,
   userError,
+  vouchedInHandler,
 } from "@/test/invites";
 import { gqlLink, startMswServer } from "@/test/msw";
 
@@ -174,7 +178,7 @@ describe("approveApplicant", () => {
 describe("fetchInvites", () => {
   it("reads the queue and the links in one round trip", async () => {
     server.use(
-      staticInvites(
+      ...staticInvites(
         [application({ handle: "imke" }), application({ handle: "noor", link: null })],
         [inviteLink({ id: "l1" })],
       ),
@@ -188,8 +192,55 @@ describe("fetchInvites", () => {
   });
 
   it("treats a null viewer as unauthenticated", async () => {
-    server.use(gqlLink.query("Invites", () => HttpResponse.json({ data: { me: null } })));
+    server.use(
+      gqlLink.query("Invites", () => HttpResponse.json({ data: { me: null } })),
+      vouchedInHandler(() => []),
+    );
     expect(hasCode(await fetchInvites(client()), "UNAUTHENTICATED")).toBe(true);
+  });
+
+  it("reads the people let in beside them, newest first, paged to the end", async () => {
+    // Two pages: the read follows endCursor until hasNextPage is false.
+    const people = Array.from({ length: PEOPLE_PAGE + 2 }, (_, i) =>
+      person({ handle: `p${i}`, vouchedAt: daysAgo(i) }),
+    );
+    server.use(...staticInvites([], [], people));
+    const outcome = await fetchInvites(client());
+    expect(outcome.kind).toBe("success");
+    if (outcome.kind !== "success") return;
+    expect(outcome.value.people).toHaveLength(PEOPLE_PAGE + 2);
+    expect(outcome.value.people.at(-1)?.door).toBe(`p${PEOPLE_PAGE + 1}`);
+  });
+
+  it("names a person by their display name, else their handle; a deleted account by nothing", async () => {
+    server.use(
+      ...staticInvites(
+        [],
+        [],
+        [
+          person({ id: "a", handle: "nadia", displayName: "Nadia Okafor", avatarUrl: "https://x/n.jpg" }),
+          person({ id: "b", handle: "wren", displayName: "  " }),
+          person({ id: "c", handle: "gone", redacted: true, avatarUrl: "https://x/g.jpg" }),
+        ],
+      ),
+    );
+    const outcome = await fetchInvites(client());
+    if (outcome.kind !== "success") throw new Error("read failed");
+    expect(outcome.value.people).toEqual([
+      expect.objectContaining({ id: "a", name: "Nadia Okafor", avatarUrl: "https://x/n.jpg", redacted: false }),
+      expect.objectContaining({ id: "b", name: "@wren", door: "wren", redacted: false }),
+      // The door keeps the route; the row prints neither name, picture nor handle.
+      expect.objectContaining({ id: "c", name: null, avatarUrl: null, door: "gone", redacted: true }),
+    ]);
+  });
+
+  it("is the page's fault when the people cannot be read", async () => {
+    // The refusing handler first: MSW answers with the first match.
+    server.use(
+      gqlLink.query("VouchedInPage", () => HttpResponse.json({ errors: [{ message: "boom" }] })),
+      ...staticInvites([application({ handle: "imke" })], []),
+    );
+    expect((await fetchInvites(client())).kind).not.toBe("success");
   });
 });
 

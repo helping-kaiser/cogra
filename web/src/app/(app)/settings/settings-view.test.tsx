@@ -1328,7 +1328,7 @@ describe("What your feed shows (SettingsReading.md)", () => {
     for (const section of ["kinds", "forms", "order", "also", "people"]) {
       expect(within(dialog).getByTestId(`settings.feedSheet.${section}`)).toBeInTheDocument();
     }
-    expect(within(dialog).queryByRole("group", { name: "One topic" })).toBeNull();
+    expect(within(dialog).queryByRole("group", { name: "One tag" })).toBeNull();
     const foot = within(dialog).getByTestId("settings.feedSheet.foot");
     expect(within(foot).getAllByRole("button").map((button) => button.textContent)).toEqual(["Reset", "Done"]);
   });

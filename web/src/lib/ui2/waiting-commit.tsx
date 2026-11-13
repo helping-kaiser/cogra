@@ -4,7 +4,8 @@
 // `WaitingCommit`; copy-voice *Commits that wait*). A form's commit stays
 // disabled until its fields hold something, and one quiet line right above it
 // says what it waits for; the first character in the last empty field wakes it
-// and the line goes.
+// and the line goes. A wait that explains itself carries no line, the commit
+// disabled alone (`WaitingCommit` with no `reason`; ChangePassword, round 41).
 //
 // IN FLIGHT THE LABEL SAYS WHAT IS HAPPENING, LATE: past 200ms without an
 // answer the label swaps to its present participle (`Changing password…`),
@@ -71,8 +72,8 @@ export function WaitingCommit({
 }: {
   label: string;
   busyLabel: string;
-  /** What the commit waits for, said while `waiting`. */
-  reason: string;
+  /** What the commit waits for, said while `waiting`; omitted where the wait explains itself. */
+  reason?: string;
   waiting: boolean;
   busy?: boolean;
   /** The whole-act fault line above the commit, or null. */
@@ -85,9 +86,10 @@ export function WaitingCommit({
 }) {
   const id = useId();
   const slow = useSlowAnswer(busy);
+  const said = waiting && reason !== undefined;
   return (
     <div className="flex flex-col gap-2" {...testAttributes(node)}>
-      {waiting && (
+      {said && (
         <span
           id={`${id}-waits`}
           className="text-center text-label-small text-on-surface-variant"
@@ -104,7 +106,7 @@ export function WaitingCommit({
       <button
         type={type}
         disabled={waiting}
-        aria-describedby={waiting ? `${id}-waits` : undefined}
+        aria-describedby={said ? `${id}-waits` : undefined}
         aria-busy={busy || undefined}
         aria-disabled={busy || undefined}
         onClick={(event) => {
