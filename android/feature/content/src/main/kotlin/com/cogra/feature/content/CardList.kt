@@ -275,6 +275,16 @@ internal fun LoadNextAtTheTail(
 }
 
 /**
+ * What the edit's caption names (`Your comment on "…".`, which quotes it): a
+ * post's own title, else the head row's words — `@mira's comment` (seam 320-15).
+ */
+private fun editCaption(target: CommentTarget?): String = when (target) {
+    null -> ""
+    is CommentTarget.Post -> headRowOf(target).title
+    else -> headRowOf(target).label
+}
+
+/**
  * A listed comment's ⋮: the own rows or another's, their doors over the host.
  * THE EDIT OPENED OFF THE THREAD RETURNS TO THIS HOST (CommentEdit.md:89): the
  * host notes which comment it opened ([EditReturn]), and the edit's caption
@@ -291,7 +301,7 @@ private fun listedCommentMenu(
     own = own,
     onEdit = {
         actions.editReturn?.opening(comment.id)
-        actions.onEditComment(comment.id, target?.let { headRowOf(it).label }.orEmpty())
+        actions.onEditComment(comment.id, editCaption(target))
     },
     onRemove = onRemove,
     onReport = { actions.onReport(ReportAsk(comment.id, ReportKind.Comment)) },
