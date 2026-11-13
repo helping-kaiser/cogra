@@ -9,6 +9,7 @@ import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { settleFetches } from "@/test/fetch";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
@@ -732,9 +733,8 @@ describe("the feed filter", () => {
       second.unmount();
       renderFeed();
       await screen.findByTestId(byNode("feed.band.filterTrigger"));
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 20));
-      });
+      // The arrival's reads delivered and acted on, so a return had its turn.
+      await act(() => settleFetches());
       expect(sheet().open).toBe(false);
     });
   });
