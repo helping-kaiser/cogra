@@ -8010,10 +8010,10 @@ jakob's rulings closing the day's rounds, executed in one lane.
 - **A long name or handle takes one of three cases** (jakob 2026-11-11,
   round 40; limits: handle 3–30 characters, display name at most 50;
   drawn on `NamesLong`). THE NAMED EXCEPTION, the profile's head (seam 318;
-  jakob chose it 2026-11-13 and asked to see it — shown to him, awaiting his
-  word, backlog 213): there the display name wraps at its spaces onto
-  further lines, never inside a word, a single word longer than the line
-  end-cut with "…".
+  ruled by jakob 2026-11-13, backlog 213): there the display name is always
+  shown whole — it wraps at its spaces, a word wider than the line breaks
+  INSIDE the word (the one place in the tree a name may), no end-cut and no
+  line cap.
   1. *Person rows* — the actor chip: the row never wraps, the name
      ellipsizes first, the handle stays whole until it alone cannot fit
      (`ActorChip`; `ContentRow`'s bare-handle aside reads the same law).
@@ -11862,6 +11862,20 @@ vouch-back pad and Wallet; lane B's crop, composer side, feed and profile).
   setting; backlog 213). Registry: 194 → 196 screens, 7387 → 7501 board
   paths, 2029 distinct unchanged; one board entry leaves with the ruled
   row (`feed.menuSheet.markSensitive` on `FeedRemovedMenuOwn`).
+### Round 47, after jakob's review of round 46 — 2026-11-13
+
+- **An acts card with no total row ends on its last act, unlined**: a line
+  separates, and nothing follows it there (`ActsCard`; `Edit · the
+  actions`, `Edit comment · the acts`). Every card with a total is unchanged.
+- **The profile head's name is always shown whole** (seam 318; backlog 213,
+  ruled): it wraps at its spaces, a word wider than the line breaks INSIDE
+  the word — the one place in the tree a name may — and there is no end-cut
+  and no line cap. Every board drawing `ProfileHeader` takes it.
+- **The head's name at two lines, measured** (jakob's question; backlog 214,
+  shown, not ruled): at 262px the name is 22px / 400 on 28px; the
+  50-character sample takes 3 lines and fits 2 at 19px, 50 characters of `W`
+  in words fit 2 at 12px, 50 × `W` at 10px. `ProfileOther`'s `name` =
+  three-lines-shrunk draws the sample at 19px.
 ---
 
 ## 14. The canvases

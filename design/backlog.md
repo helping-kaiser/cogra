@@ -6081,7 +6081,7 @@ removed post's menu with Edit and Remove.
 
 Closed by jakob 2026-11-13 (point B, as recommended: "it goes"): your own removed post's menu, card and detail, reads Save, Cite in a new post, License terms (`FeedRemoved`, `Removed`, `FeedRemovedMenuOwn`).
 
-### 213 · The display name on the profile's head · *design* · **filed 2026-11-13**
+### 213 · The display name on the profile's head · *design* · **filed 2026-11-13** · **closed 2026-11-13**
 
 Round 46, act 3 (seam 318: `ProfileHeader` broke the name inside a word,
 against the long-names rule). jakob chose (b) and asked to see it: on the head
@@ -6091,3 +6091,17 @@ setting: `two-lines` takes 2 lines, `three-lines` — the 50-character maximum
 in four words — takes 3 at the head's 262px, `one-word` 1 line, end-cut). For
 jakob: keep (b) as drawn [built, awaiting his word]; or (a) one line,
 end-cut, as every one-line place.
+
+Closed as ruled by jakob 2026-11-13 ("i still want people to be able to see the full name"): on the head alone the name is always shown whole — it wraps at its spaces, a word wider than the line breaks inside the word, no end-cut, no line cap. (a) is not taken.
+
+### 214 · The head's name shrinks to hold two lines · *design* · **filed 2026-11-13**
+
+Round 47 (jakob's idea: "how much smaller would we need to make the font for
+it to fit two lines?"). Shown, not ruled. At the head's 262px the name is
+title-large, 22px / 400 on a 28px line. Measured (Figtree loaded): the
+50-character sample takes 3 lines and fits 2 at 19px; 50 characters of `W` in
+words take 5 and fit 2 at 12px; 50 × `W` without a space takes 5 and fits 2
+at 10px; the 40-character two-lines sample needs 13px for one line.
+`ProfileOther`'s `name` = three-lines-shrunk draws the sample at 19px on a
+24px line. For jakob: whether the head shrinks at all, and if so by what rule
+(steps, a floor) — nothing is built beyond the one sample.

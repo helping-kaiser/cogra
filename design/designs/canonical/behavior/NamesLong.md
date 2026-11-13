@@ -16,4 +16,4 @@ ALWAYS a handle or name longer than a full line of wrapping text is cut at its e
 
 ALWAYS wrapping text is never ellipsized as a whole
 
-ALWAYS a display name on the profile's head is the named exception, shown to jakob 2026-11-13 and awaiting his word: it wraps at its spaces onto further lines, never inside a word, a single word longer than the line end-cut with an ellipsis, as ProfileOther's name setting draws it
+ALWAYS a display name on the profile's head is the named exception, always shown whole: it wraps at its spaces, a word wider than the line breaks inside the word — the one place in the tree a name may — and it is never end-cut and never capped in lines, as ProfileOther's name setting draws it

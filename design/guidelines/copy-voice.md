@@ -3181,8 +3181,8 @@ on your post` — the sentence's words keep their room first (readme §13,
 *A long name or handle takes one of three cases*; in running text the
 sentence wraps and the handle moves whole to the next line — a handle or
 name never stands on two lines; the profile's head is the named exception,
-its display name wrapping at its spaces and an over-long word end-cut —
-*shown to jakob 2026-11-13, awaiting his word*). Ten kinds, ten
+its display name always shown whole: it wraps at its spaces and a word
+wider than the line breaks inside the word, no end-cut — jakob 2026-11-13). Ten kinds, ten
 sentences, all present tense of the act that happened:
 
 - `@ada commented on your post` — a comment on a post of yours.

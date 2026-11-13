@@ -1284,7 +1284,7 @@ function ProfileOwnBody({ tail = null, headLine = null }) {
 
    Named as `ProfileOwnBody` names its page, under the same `profile` prefix:
    `ProfileOther` and `ProfileMenu` register it. */
-function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "Ada Okonkwo" } = {}) {
+function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "Ada Okonkwo", nameSize, nameLineHeight } = {}) {
   return (
     <>
       <PageHeader title="@ada" backHref="#" backLabel={backLabel} node="header" />
@@ -1294,6 +1294,8 @@ function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "A
             node="identity"
             handle="ada"
             displayName={displayName}
+            nameSize={nameSize}
+            nameLineHeight={nameLineHeight}
             avatarSrc="comment-camera.jpg"
             bio="A dozen tries at the third headland light and counting."
             posts={12}

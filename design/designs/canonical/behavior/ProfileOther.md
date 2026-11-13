@@ -84,4 +84,6 @@ WHEN pull down GIVEN the profile stands all the way at its top -> the profile re
 
 WHEN the profile's read never reaches the server -> the profile's unreachable state stands in its place
 
-ALWAYS profile.identity.name wraps at its spaces onto further lines, never breaks inside a word, and a single word longer than its line is end-cut with an ellipsis, the named exception to the long-names rule, the head alone, shown to jakob 2026-11-13 and awaiting his word GIVEN the display name is longer than its line
+ALWAYS profile.identity.name is shown whole, the named exception to the long-names rule, the head alone: it wraps at its spaces, a word wider than its line breaks inside the word, the one place a name may, and it is never end-cut and never capped in lines GIVEN the display name is longer than its line
+
+ALWAYS the name setting's three-lines-shrunk is shown and not law: the 50-character sample at 19px on a 24px line, holding two lines, jakob's idea drawn to judge, no shrink rule riding it
