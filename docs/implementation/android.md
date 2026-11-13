@@ -69,17 +69,19 @@ The app pre-signs each act under two nonces drawn independently —
 a content nonce and a dependency nonce — and keeps both on the
 device until approval; the sealed act the host returns carries
 neither nonce and no payload. Before it signs an approval the app
-runs five checks: the returned act carries the body and
+checks that the material it holds is its own — the proposal's
+author is this actor, and the held pre-signature verifies under
+this key — and then the returned act: it carries the body and
 pre-signature this device pre-signed; it carries the
-pre-commitment this device formed, under the expected edition
-tags; the host seal verifies under the host key; the content
+pre-commitment this device formed; it carries the expected
+edition tags; the host seal verifies under the host key; the content
 commitment recomputes over the act identifier, that
 pre-commitment and the content pre-digest the device forms from
 its own payload and content nonce; and the dependency commitment
 recomputes over the act identifier, that pre-commitment and the
 dependency list the device holds. The approval then signs the
 verified act together with its host seal. The payload is opaque
-bytes to these checks, so what the five establish is that
+bytes to these checks, so what they establish is that
 the host returned the act this device signed — not that the
 envelope encodes what the user typed
 ([open-questions.md Q54](../open-questions.md#q54--semantic-verification-of-the-payload-envelope-on-clients)).
