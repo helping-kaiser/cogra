@@ -535,15 +535,15 @@ fn proposal_handshake_vectors(
     let deps_bytes = canonical_deps(&proposal.deps);
 
     let digest_content = crypto::sha256_tagged(
-        proposal::tags::PRE_DIGEST_CONTENT,
+        proposal::domain_tags::PRE_DIGEST_CONTENT,
         &[id.as_bytes(), &content_nonce, &proposal.payload],
     );
     let digest_deps = crypto::sha256_tagged(
-        proposal::tags::PRE_DIGEST_DEPS,
+        proposal::domain_tags::PRE_DIGEST_DEPS,
         &[id.as_bytes(), &dependency_nonce, &deps_bytes],
     );
     let msg = pre_commitment_msg(&proposal.body, &digest_content, &digest_deps);
-    let pre_commitment = crypto::sha256_tagged(proposal::tags::PRE_COMMITMENT, &[&msg]);
+    let pre_commitment = crypto::sha256_tagged(proposal::domain_tags::PRE_COMMITMENT, &[&msg]);
     let pre_signature = crypto::sign_digest(actor_signing, &pre_commitment);
 
     let pre = proposal::PreSigned::sign_with_nonces(
@@ -571,7 +571,7 @@ fn proposal_handshake_vectors(
         .seal(host, content_salt.clone(), deps_salt.clone())
         .expect("the reference host seals the submission");
     let content_commitment = crypto::sha256_tagged(
-        proposal::tags::COMMIT_CONTENT,
+        proposal::domain_tags::COMMIT_CONTENT,
         &[
             id.as_bytes(),
             &pre_commitment,
@@ -580,7 +580,7 @@ fn proposal_handshake_vectors(
         ],
     );
     let deps_commitment = crypto::sha256_tagged(
-        proposal::tags::COMMIT_DEPS,
+        proposal::domain_tags::COMMIT_DEPS,
         &[id.as_bytes(), &pre_commitment, &deps_salt, &deps_bytes],
     );
     assert_eq!(sealed.act.content_commitment, content_commitment);
@@ -608,11 +608,11 @@ fn proposal_handshake_vectors(
 
     let group = json!({
         "tags": {
-            "contentPreDigestUtf8": utf8(proposal::tags::PRE_DIGEST_CONTENT),
-            "dependencyPreDigestUtf8": utf8(proposal::tags::PRE_DIGEST_DEPS),
-            "preCommitmentUtf8": utf8(proposal::tags::PRE_COMMITMENT),
-            "contentCommitmentUtf8": utf8(proposal::tags::COMMIT_CONTENT),
-            "dependencyCommitmentUtf8": utf8(proposal::tags::COMMIT_DEPS),
+            "contentPreDigestUtf8": utf8(proposal::domain_tags::PRE_DIGEST_CONTENT),
+            "dependencyPreDigestUtf8": utf8(proposal::domain_tags::PRE_DIGEST_DEPS),
+            "preCommitmentUtf8": utf8(proposal::domain_tags::PRE_COMMITMENT),
+            "contentCommitmentUtf8": utf8(proposal::domain_tags::COMMIT_CONTENT),
+            "dependencyCommitmentUtf8": utf8(proposal::domain_tags::COMMIT_DEPS),
             "hostSealUtf8": utf8(tags::HOST_SEAL),
             "approvalUtf8": utf8(tags::APPROVAL),
         },
@@ -651,7 +651,7 @@ fn proposal_handshake_vectors(
     };
     let mut over_payload = sealed.clone();
     over_payload.act.content_commitment = crypto::commitment(
-        proposal::tags::COMMIT_CONTENT,
+        proposal::domain_tags::COMMIT_CONTENT,
         id.as_bytes(),
         &pre_commitment,
         &content_salt,

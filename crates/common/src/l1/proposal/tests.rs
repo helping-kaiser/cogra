@@ -177,7 +177,7 @@ fn approval_refuses_a_content_commitment_over_the_payload() {
 
     let mut over_payload = sealed.clone();
     over_payload.act.content_commitment = crypto::commitment(
-        tags::COMMIT_CONTENT,
+        domain_tags::COMMIT_CONTENT,
         pre.act_id().to_string().as_bytes(),
         &sealed.act.pre_commitment,
         &sealed.content_salt,
@@ -399,7 +399,7 @@ fn the_content_commitment_is_formed_over_the_pre_digest() {
     assert_eq!(
         over_digest,
         crypto::sha256_tagged(
-            tags::COMMIT_CONTENT,
+            domain_tags::COMMIT_CONTENT,
             &[
                 pre.act_id().to_string().as_bytes(),
                 &p,
@@ -411,7 +411,7 @@ fn the_content_commitment_is_formed_over_the_pre_digest() {
     assert_ne!(
         over_digest,
         crypto::commitment(
-            tags::COMMIT_CONTENT,
+            domain_tags::COMMIT_CONTENT,
             pre.act_id().to_string().as_bytes(),
             &p,
             &salt,

@@ -23,18 +23,21 @@ use super::handshake::{self, ApprovalWitness, Proposal, SealFrame, StructuralBod
 use super::identifier::ActId;
 
 mod device;
-mod wire;
+mod transport;
 
-pub use wire::PreCommitmentBlob;
+pub use transport::PreCommitmentBlob;
 
-pub mod tags {
-    //! ´mod:module:proposal-tags´
+pub mod domain_tags {
+    //! ´mod:module:domain-tags´
     //!
     //! Domain-separation tags of the formulas this module owns. The rule of
     //! [`crate::l1::crypto::tags`] holds: a tag's version names its formula,
     //! so no artifact formed under one nonce shared by both projections
-    //! verifies here. The host seal and the approval are formed over the
-    //! same encoded verified act as before and keep their tags.
+    //! verifies here. The host seal and the approval cover the encoded
+    //! verified act of [`crate::l1::handshake::seal_message`], whose shape
+    //! these formulas leave alone, so they keep
+    //! [`crate::l1::crypto::tags::HOST_SEAL`] and
+    //! [`crate::l1::crypto::tags::APPROVAL`].
     pub const PRE_DIGEST_CONTENT: &[u8] = b"cogra-l1:pre-digest:content:v3";
     pub const PRE_DIGEST_DEPS: &[u8] = b"cogra-l1:pre-digest:deps:v3";
     pub const PRE_COMMITMENT: &[u8] = b"cogra-l1:pre-commitment:v2";
@@ -55,7 +58,7 @@ pub const DEPENDENCY_EDITION: u64 = 1;
 /// Without the content nonce it confirms no payload guess.
 pub fn content_pre_digest(act_id: &ActId, content_nonce: &[u8], payload: &[u8]) -> [u8; 32] {
     crypto::pre_digest(
-        tags::PRE_DIGEST_CONTENT,
+        domain_tags::PRE_DIGEST_CONTENT,
         act_id.to_string().as_bytes(),
         content_nonce,
         payload,
@@ -67,7 +70,7 @@ pub fn content_pre_digest(act_id: &ActId, content_nonce: &[u8], payload: &[u8]) 
 /// it receives.
 pub fn dependency_pre_digest(act_id: &ActId, dependency_nonce: &[u8], deps: &[ActId]) -> [u8; 32] {
     crypto::pre_digest(
-        tags::PRE_DIGEST_DEPS,
+        domain_tags::PRE_DIGEST_DEPS,
         act_id.to_string().as_bytes(),
         dependency_nonce,
         &handshake::canonical_deps(deps),
@@ -84,7 +87,7 @@ pub fn pre_commitment(
     dependency_pre_digest: &[u8; 32],
 ) -> [u8; 32] {
     crypto::sha256_tagged(
-        tags::PRE_COMMITMENT,
+        domain_tags::PRE_COMMITMENT,
         &[&handshake::pre_commitment_msg(
             body,
             content_pre_digest,
@@ -105,7 +108,7 @@ pub fn content_commitment(
     content_pre_digest: &[u8; 32],
 ) -> [u8; 32] {
     crypto::commitment(
-        tags::COMMIT_CONTENT,
+        domain_tags::COMMIT_CONTENT,
         act_id.to_string().as_bytes(),
         pre_commitment,
         salt,
@@ -123,7 +126,7 @@ pub fn dependency_commitment(
     deps: &[ActId],
 ) -> [u8; 32] {
     crypto::commitment(
-        tags::COMMIT_DEPS,
+        domain_tags::COMMIT_DEPS,
         act_id.to_string().as_bytes(),
         pre_commitment,
         salt,

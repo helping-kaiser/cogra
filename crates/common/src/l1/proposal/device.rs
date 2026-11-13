@@ -1,3 +1,5 @@
+//! ´mod:module:device´
+//!
 //! The device side of the handshake: pre-sign under two fresh nonces, and
 //! approve only what the actor can recompute from its own held material
 //! (§8.2, "Proposal pre-commitment" and "Approval witness").

@@ -1,3 +1,5 @@
+//! ´mod:module:transport´
+//!
 //! Transport encodings of the handshake objects that cross the API: the
 //! pre-commitment blob the device submits as the opaque `signature` input,
 //! and the sealed verified act it approves. The proposal itself travels as
