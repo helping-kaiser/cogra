@@ -142,6 +142,157 @@ beforeEach(() => {
   push.mockClear();
 });
 
+function pickFace() {
+  return new File([new Uint8Array([1, 2, 3]) as BlobPart], "face.jpg", { type: "image/jpeg" });
+}
+
+/** Change picture → the picker hands a picture back → its crop screen → Next. */
+async function pickThroughCrop() {
+  fireEvent.change(await screen.findByTestId("profile-edit-avatar-input"), {
+    target: { files: [pickFace()] },
+  });
+  fireEvent.click(await screen.findByTestId("avatar-crop-next"));
+  await screen.findByTestId("profile-edit");
+}
+
+// ProfileEdit.md: a wizard stage — the top pinned, the fields scrolling under
+// it, Save pinned in the foot, no field holding focus as it opens.
+describe("the profile edit as its board draws it", () => {
+  it("stands as a wizard stage: its heading focused, its fields optional, Save in the foot", async () => {
+    server.use(myProfileHandler());
+    renderWithProviders(<ProfileEditPage />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+
+    const name = await screen.findByTestId("profile-edit-display-name");
+    const heading = screen.getByRole("heading", { name: "Edit profile" });
+    expect(heading).toHaveFocus();
+    expect(screen.getByLabelText("Back")).toBeInTheDocument();
+    expect(screen.getAllByText("Optional")).toHaveLength(3);
+    // Save is the scrolling column's sibling, never inside it.
+    const save = screen.getByTestId("profile-edit-save");
+    expect(name.closest(".overflow-y-auto")).not.toBeNull();
+    expect(save.closest(".overflow-y-auto")).toBeNull();
+    expect(save).toHaveClass("w-full");
+  });
+
+  it("goes back to the profile from its arrow", async () => {
+    server.use(myProfileHandler());
+    renderWithProviders(<ProfileEditPage />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+    fireEvent.click(await screen.findByLabelText("Back"));
+    expect(push).toHaveBeenCalledWith("/profile");
+  });
+});
+
+// AvatarCrop.md: the picture's crop is a screen of its own; no crop is drawn
+// inline (seam 324, 323-11).
+describe("Change picture and the picture's crop screen", () => {
+  it("opens the crop screen, never an inline crop, and keeps the fields as typed", async () => {
+    installEncoder();
+    server.use(myProfileHandler());
+    renderWithProviders(<ProfileEditPage />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+
+    fireEvent.change(await screen.findByTestId("profile-edit-bio"), { target: { value: "Typed first" } });
+    fireEvent.change(screen.getByTestId("profile-edit-avatar-input"), { target: { files: [pickFace()] } });
+
+    expect(await screen.findByTestId("avatar-crop")).toBeInTheDocument();
+    expect(screen.queryByTestId("profile-edit")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your picture" })).toBeInTheDocument();
+    expect(screen.getByRole("slider", { name: "Zoom" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("avatar-crop-next"));
+    expect(await screen.findByTestId("profile-edit-bio")).toHaveValue("Typed first");
+  });
+
+  it("brings the picture back to the edit on Next, and signs nothing until Save", async () => {
+    installEncoder();
+    const sign = vi.fn();
+    server.use(myProfileHandler(), gqlLink.mutation("PrepareProfileUpdate", () => {
+      sign();
+      return HttpResponse.json({ data: { prepareProfileUpdate: null } });
+    }));
+    renderWithProviders(<ProfileEditPage />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+
+    await pickThroughCrop();
+    // The row holds the new picture, and offers to undo the pick.
+    expect(screen.getByTestId("profile-edit-avatar-undo")).toHaveTextContent("Undo");
+    expect(screen.getByTestId("profile-edit-avatar-preview").querySelector("img")).toHaveAttribute(
+      "src",
+      "blob:preview",
+    );
+    expect(sign).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("goes back to the edit from the arrow, the picture unused", async () => {
+    installEncoder();
+    server.use(myProfileHandler({ avatar: asset("m-old") }));
+    renderWithProviders(<ProfileEditPage />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+
+    fireEvent.change(await screen.findByTestId("profile-edit-avatar-input"), { target: { files: [pickFace()] } });
+    fireEvent.click(await screen.findByLabelText("Back a step"));
+
+    await screen.findByTestId("profile-edit");
+    expect(screen.queryByTestId("profile-edit-avatar-undo")).not.toBeInTheDocument();
+    expect(screen.getByTestId("profile-edit-avatar-remove")).toHaveTextContent("Remove");
+  });
+
+  it("leaves the flow from the X, nothing signed", async () => {
+    installEncoder();
+    const prepare = vi.fn();
+    server.use(myProfileHandler(), gqlLink.mutation("PrepareProfileUpdate", () => {
+      prepare();
+      return HttpResponse.json({ data: { prepareProfileUpdate: null } });
+    }));
+    renderWithProviders(<ProfileEditPage />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+
+    fireEvent.change(await screen.findByTestId("profile-edit-avatar-input"), { target: { files: [pickFace()] } });
+    fireEvent.click(await screen.findByLabelText("Leave"));
+
+    expect(push).toHaveBeenCalledWith("/profile");
+    expect(prepare).not.toHaveBeenCalled();
+  });
+
+  // THE OUTPUT DOES NOT CHANGE with the screen (seam 301; `crop-output.test.ts`
+  // pins the measured rectangle itself): the crop screen hands the edit the
+  // same framing the inline crop did, and the encoder cuts it the same way —
+  // here the resting framing of a square 1200 picture, drawn whole at 1080.
+  it("encodes the framing the crop screen handed back, exactly as the inline crop did", async () => {
+    installEncoder();
+    const drawn: unknown[][] = [];
+    class Recording {
+      constructor(
+        public width: number,
+        public height: number,
+      ) {}
+      getContext() {
+        return { drawImage: (...args: unknown[]) => drawn.push(args.slice(1)) };
+      }
+      async convertToBlob({ type }: { type: string }) {
+        return new Blob([new Uint8Array(8) as BlobPart], { type });
+      }
+    }
+    vi.stubGlobal("OffscreenCanvas", Recording);
+    const seen: { input?: Record<string, unknown> } = {};
+    server.use(myProfileHandler(), uploadHandler("m-9"), capturingUpdate(seen));
+    renderWithProviders(<ProfileEditPage />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+
+    await pickThroughCrop();
+    fireEvent.click(screen.getByTestId("profile-edit-save"));
+
+    await waitFor(() => expect(seen.input).toHaveProperty("avatarMediaId", "m-9"));
+    expect(drawn).toEqual([[0, 0, 1200, 1200, 0, 0, 1080, 1080]]);
+  });
+
+  it("undoes a fresh pick back to the picture the profile carries", async () => {
+    installEncoder();
+    server.use(myProfileHandler({ avatar: asset("m-old") }));
+    renderWithProviders(<ProfileEditPage />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+
+    await pickThroughCrop();
+    fireEvent.click(screen.getByTestId("profile-edit-avatar-undo"));
+    expect(screen.getByTestId("profile-edit-avatar-remove")).toHaveTextContent("Remove");
+  });
+});
+
 describe("ProfileEditPage", () => {
   it("prefills the form from the current version", async () => {
     server.use(myProfileHandler());
@@ -405,7 +556,8 @@ describe("ProfileEditPage", () => {
 
       await screen.findByTestId("profile-edit-avatar-preview");
       expect(screen.queryByTestId("profile-edit-avatar-remove")).not.toBeInTheDocument();
-      expect(screen.getByTestId("profile-edit-avatar-choose")).toHaveTextContent("Choose");
+      // ProfileEdit.jsx: the row's one drawn control, whatever the profile carries.
+      expect(screen.getByTestId("profile-edit-avatar-choose")).toHaveTextContent("Change picture");
     });
 
     // The third value, and the one the other two cannot stand in for: a picked
@@ -421,14 +573,7 @@ describe("ProfileEditPage", () => {
         writeSigner: fakeWriteSigner(),
       });
 
-      const input = await screen.findByTestId("profile-edit-avatar-input");
-      fireEvent.change(input, {
-        target: {
-          files: [
-            new File([new Uint8Array([1, 2, 3]) as BlobPart], "face.jpg", { type: "image/jpeg" }),
-          ],
-        },
-      });
+      await pickThroughCrop();
       fireEvent.click(screen.getByTestId("profile-edit-save"));
 
       await waitFor(() => expect(seen.input).toHaveProperty("avatarMediaId", "m-9"));
@@ -444,14 +589,7 @@ describe("ProfileEditPage", () => {
         writeSigner: fakeWriteSigner(),
       });
 
-      const input = await screen.findByTestId("profile-edit-avatar-input");
-      fireEvent.change(input, {
-        target: {
-          files: [
-            new File([new Uint8Array([1, 2, 3]) as BlobPart], "face.jpg", { type: "image/jpeg" }),
-          ],
-        },
-      });
+      await pickThroughCrop();
       fireEvent.click(screen.getByTestId("profile-edit-save"));
 
       expect(await screen.findByText("The server couldn't finish that upload.")).toBeInTheDocument();
@@ -493,13 +631,7 @@ describe("ProfileEditPage", () => {
         writeSigner: fakeWriteSigner(),
       });
 
-      fireEvent.change(await screen.findByTestId("profile-edit-avatar-input"), {
-        target: {
-          files: [
-            new File([new Uint8Array([1, 2, 3]) as BlobPart], "face.jpg", { type: "image/jpeg" }),
-          ],
-        },
-      });
+      await pickThroughCrop();
       fireEvent.click(screen.getByTestId("profile-edit-save"));
 
       expect(await screen.findByTestId("profile-edit-refused")).toHaveTextContent(
