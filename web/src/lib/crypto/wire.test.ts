@@ -194,6 +194,9 @@ it("a version-2 sealed act with trailing bytes is refused", () => {
   expect(() => decodeVerifiedAct(concat(sealed, Uint8Array.of(0)))).toThrow(
     new WireError("malformed verified act: 1 bytes of trailing input"),
   );
+});
+
+it("an empty pre-commitment blob is refused as malformed", () => {
   expect(() => decodePreCommitment(new Uint8Array(0))).toThrow(
     new WireError("malformed pre-commitment: unexpected end of input at byte 0"),
   );
