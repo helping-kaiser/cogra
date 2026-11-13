@@ -3226,6 +3226,12 @@ refused state:
 *Name*, not *tag*, because the string is what is wrong and the tag is
 fine — there is no tag yet.
 
+An empty field has no line: a tag has no empty name (jakob 2026-11-13,
+N3), so with nothing typed the picker offers nothing to add and refuses
+nothing, the rule line standing as at rest. And the picker is the only
+place a tag's name is typed — every composer's `+ Add a tag` opens it
+(N2).
+
 ## Notifications
 
 Drawn on `Notifications`, `NotificationsEmpty` and `FeedUnread`.
