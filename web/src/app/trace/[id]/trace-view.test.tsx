@@ -463,9 +463,7 @@ describe("RankHop.md — one step", () => {
     expect(screen.getByTestId(byNode("feedEntry.carries.value"))).toHaveAccessibleName(/\+0\.55 \/ \+0\.20/);
     expect(screen.getByTestId(byNode("feedEntry.behind.value"))).toHaveTextContent("2 opinions");
     expect(screen.getByTestId(byNode("feedEntry.newest.value"))).toHaveTextContent("8d");
-    expect(screen.getByTestId(byNode("feedEntry.note"))).toHaveTextContent(
-      "Your opinion of @ada — the first of this path's two steps.",
-    );
+    expect(screen.getByTestId(byNode("feedEntry.note"))).toHaveTextContent(/^Your opinion of @ada$/);
     expect(screen.getByTestId(byNode("feedEntry.header.back"))).toHaveAccessibleName("Back to the path");
   });
 

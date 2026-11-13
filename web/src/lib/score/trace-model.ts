@@ -109,15 +109,9 @@ const LIMIT = 1;
 const LIMIT_EPSILON = 1e-9;
 
 const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
-const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth"];
-
 /** `two` — the boards' own counts are words (`two opinions`, `two steps`). */
 export function countWord(n: number): string {
   return NUMBER_WORDS[n] ?? String(n);
-}
-
-function ordinal(n: number): string {
-  return ORDINALS[n - 1] ?? `${n}th`;
 }
 
 /** Persons fold: an address and its profile are one node (feed-ranking.md §2; RankHop.records). */
@@ -485,11 +479,9 @@ export function memberSum(path: TracePath, step: TraceStep): { pDirected: number
 const CLIPPED_FOLD = "Added up, they go past the limit an opinion can reach, so the step carries the limit.";
 export const CLIPPED_RECORDS = "Added up, these go past the limit an opinion can reach, so the step carries the limit.";
 
-/** `Your opinion of @ada — the first of this path's two steps.` (RankHop.md:7). */
-export function placeNote(title: string, place: number, steps: number): string {
-  return steps === 1
-    ? `${title} — this path's one step.`
-    : `${title} — the ${ordinal(place)} of this path's ${countWord(steps)} steps.`;
+/** The note over a step: its title alone, `Your opinion of @ada` (RankHop.md:7). */
+export function placeNote(title: string): string {
+  return title;
 }
 
 /**

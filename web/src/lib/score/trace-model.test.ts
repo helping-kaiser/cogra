@@ -195,8 +195,8 @@ describe("level three (RankHop.md)", () => {
   const ada = ownAnswer().paths[0]!;
   const first = stepsOf(ada)[0]!;
 
-  it("the note names the step by its title and its place", () => {
-    expect(placeNote("Your opinion of @ada", 1, 2)).toBe("Your opinion of @ada — the first of this path's two steps.");
+  it("the note names the step by its title alone", () => {
+    expect(placeNote("Your opinion of @ada")).toBe("Your opinion of @ada");
   });
 
   it("the fold's note reads in the reader's own word, and leaves the pad out", () => {
