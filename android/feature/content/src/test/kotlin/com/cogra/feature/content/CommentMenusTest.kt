@@ -333,7 +333,7 @@ class CommentMenusTest {
             CompositionLocalProvider(LocalSnackbarHostState provides host) {
                 SavedScreen(
                     state = SavedUiState(
-                        entries = listOf(SavedEntry(SavedCard.Comment(theirs, onPost, "p1"), Instant.now())),
+                        entries = listOf(SavedEntry(SavedCard.Comment(theirs, onPost, "p1", null), Instant.now())),
                         loading = false,
                     ),
                     writes = null,
