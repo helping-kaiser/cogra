@@ -8010,10 +8010,13 @@ jakob's rulings closing the day's rounds, executed in one lane.
 - **A long name or handle takes one of three cases** (jakob 2026-11-11,
   round 40; limits: handle 3–30 characters, display name at most 50;
   drawn on `NamesLong`). THE NAMED EXCEPTION, the profile's head (seam 318;
-  ruled by jakob 2026-11-13, backlog 213): there the display name is always
-  shown whole — it wraps at its spaces, a word wider than the line breaks
-  INSIDE the word (the one place in the tree a name may), no end-cut and no
-  line cap.
+  ruled by jakob 2026-11-13, backlogs 213 and 214): there the display name
+  is always shown whole on AT MOST TWO LINES — it wraps at its spaces, a
+  word wider than the line breaks INSIDE the word (the one place in the tree
+  a name may), and a name that would take more than two lines at 22px is
+  shrunk to the largest whole pixel that holds two, its line-height
+  round(size × 28 / 22) px (`ProfileHeader`'s `nameFitSize`). Never cut, and two
+  lines are the hard cap: the size has no floor.
   1. *Person rows* — the actor chip: the row never wraps, the name
      ellipsizes first, the handle stays whole until it alone cannot fit
      (`ActorChip`; `ContentRow`'s bare-handle aside reads the same law).
@@ -11873,15 +11876,19 @@ vouch-back pad and Wallet; lane B's crop, composer side, feed and profile).
 - **An acts card with no total row ends on its last act, unlined**: a line
   separates, and nothing follows it there (`ActsCard`; `Edit · the
   actions`, `Edit comment · the acts`). Every card with a total is unchanged.
-- **The profile head's name is always shown whole** (seam 318; backlog 213,
-  ruled): it wraps at its spaces, a word wider than the line breaks INSIDE
-  the word — the one place in the tree a name may — and there is no end-cut
-  and no line cap. Every board drawing `ProfileHeader` takes it.
-- **The head's name at two lines, measured** (jakob's question; backlog 214,
-  shown, not ruled): at 262px the name is 22px / 400 on 28px; the
-  50-character sample takes 3 lines and fits 2 at 19px, 50 characters of `W`
-  in words fit 2 at 12px, 50 × `W` at 10px. `ProfileOther`'s `name` =
-  three-lines-shrunk draws the sample at 19px.
+- **The profile head's name is always shown whole, on at most two lines**
+  (seam 318; backlogs 213 and 214, ruled: "i prefer the shrunk 2 line
+  version over the 3 liner"): at 22px on 28px it wraps at its spaces and a
+  word wider than the line breaks INSIDE the word — the one place in the
+  tree a name may; a name that would take more than two lines is shrunk to
+  the largest whole pixel that holds two, its line-height round(size × 28 /
+  22) px, several words or one word alike. Nothing is cut; the handle line
+  and the rest of the head keep their sizes. Every board drawing
+  `ProfileHeader` takes it. Measured at the head's 262px: the 50-character
+  sample 19px, a 50-character unbroken name 20px, 50 × `W` 10px, 50 × `m`
+  12px, 50 × `i` 22px (no shrink). Two lines are the hard cap,
+  the size with no floor (backlog 215, ruled); `ProfileOther`'s `name` setting draws sample, two-lines, fifty,
+  one-word and widest.
 
 ### Round 48, the implementers' gaps — 2026-11-13
 
@@ -11960,7 +11967,8 @@ spoken unit.
 - **The gate**: against main, 194 → 209 screens, 7387 → 8126 board paths,
   2029 → 2151 distinct — 123 added, one gone by ruling
   (`profile.comments.viewReplies`). Backlog 222 closed, 220 partly, 162
-  closed as stale; 220, 221 and 223 open.---
+  closed as stale; 220, 221 and 223 open.
+---
 
 ## 14. The canvases
 

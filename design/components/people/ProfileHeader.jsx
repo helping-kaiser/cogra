@@ -133,6 +133,20 @@ function Figure({ value, label, node, onOpen, ariaLabel }) {
   );
 }
 
+/* THE NAME'S TWO-LINE RULE, as a client computes it (jakob 2026-11-13): the
+   largest whole-pixel size from 22 down, in steps of 1, at which the name —
+   wrapped at its spaces, a too-wide word broken inside — takes at most two
+   lines of the name's width, the leading round(size × 28 / 22) px. `lines`
+   measures the name at a size and leading; the result is passed back as
+   `nameSize` / `nameLineHeight`. No smallest size is ruled. */
+export function nameFitSize(lines) {
+  for (let size = 22; size > 1; size -= 1) {
+    const lineHeight = Math.round((size * 28) / 22);
+    if (lines(size, lineHeight) <= 2) return { size, lineHeight };
+  }
+  return { size: 1, lineHeight: 1 };
+}
+
 export function ProfileHeader({
   handle,
   displayName,
@@ -162,9 +176,10 @@ export function ProfileHeader({
   invitesOpacity,
   redacted = false,
   showHandle = true,
-  /* A BOARD'S SHOW-ONLY OVERRIDE of the name's size and leading, for the
-     shrink jakob asked to see (2026-11-13, backlog 214) — no rule rides it;
-     the role's own size stands everywhere else. */
+  /* THE NAME'S FITTED SIZE, the result of the two-line rule below: the size
+     and leading the rule gives this name (`nameFitSize`), unset at the
+     role's own 22px / 28px. A client computes them by the rule; a static
+     board passes what the rule gives its sample. */
   nameSize,
   nameLineHeight,
   node,
@@ -274,11 +289,18 @@ export function ProfileHeader({
               The handle line is a ONE-LINE PLACE (round 40): it never wraps,
               and a handle too long for it is cut with "…". THE NAME ABOVE IS THE
               NAMED EXCEPTION (seam 318; ruled by jakob 2026-11-13: "i still want
-              people to be able to see the full name"): on the profile's head
-              alone the display name is always shown whole — it wraps at its
-              spaces, a word wider than the line breaks INSIDE the word (the one
-              place in the tree a name may), no end-cut and no line cap
-              (`ProfileOther`'s `name` setting draws it). */}
+              people to be able to see the full name", and "i prefer the shrunk
+              2 line version"): on the profile's head alone the display name is
+              always shown whole, on AT MOST TWO LINES. At the role's 22px on
+              28px it wraps at its spaces, and a word wider than the line breaks
+              INSIDE the word (the one place in the tree a name may). A name that
+              would take more than two lines there is shrunk, several words or one
+              long word alike: its size is the largest whole pixel, from 22 down
+              in steps of 1, at which it holds two lines, its line-height
+              round(size × 28 / 22) px, half up (`nameFitSize`). Nothing is ever
+              cut; only the name's own size changes, the handle line and the
+              rest of the head keep theirs. Two lines are the hard cap and the size has no
+              floor: the name shrinks until it holds them (jakob 2026-11-13). `ProfileOther`'s `name` setting draws it. */}
           {showHandle && !redacted && (
             <span style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} data-node={node && "handle"}>
               @{handle}
