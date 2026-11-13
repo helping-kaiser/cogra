@@ -1439,13 +1439,18 @@ mod tests {
             .map(|d| ActId::parse(d).expect("valid"))
             .collect();
         let commitment = dependency_commitment(&act, &pre, &salt, &parsed);
-        let opens = |deps: &[String]| dependency_opening_matches(&act, &pre, &salt, deps, &commitment);
+        let opens =
+            |deps: &[String]| dependency_opening_matches(&act, &pre, &salt, deps, &commitment);
         assert!(opens(&list));
         assert!(!opens(&[list[1].clone(), list[0].clone()]));
         assert!(!opens(&list[..1]));
         assert!(!opens(&["not an act".to_string(), list[1].clone()]));
         assert!(!dependency_opening_matches(
-            &act, &pre, &[0u8; 32], &list, &commitment
+            &act,
+            &pre,
+            &[0u8; 32],
+            &list,
+            &commitment
         ));
     }
 

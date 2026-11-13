@@ -281,9 +281,14 @@ async fn prepare_forms_the_canonical_dependency_list(pool: PgPool) {
     let stored = staged::load(&rig.pool, prepared.id).await.expect("loads");
     assert_eq!(stored.proposal.deps, canonical);
     let pre = PreSigned::sign(&key, stored.proposal);
-    relay::submit_pre_signed(&rig.boundary, &rig.pool, prepared.id, PreSignedParts::from(&pre))
-        .await
-        .expect("the host seals the canonical list");
+    relay::submit_pre_signed(
+        &rig.boundary,
+        &rig.pool,
+        prepared.id,
+        PreSignedParts::from(&pre),
+    )
+    .await
+    .expect("the host seals the canonical list");
 }
 
 /// An author with no burn has b_i = 0 < θ. That is a normal, visible

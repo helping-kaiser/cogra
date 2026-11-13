@@ -650,10 +650,14 @@ async fn seal_rejects_formation_failures(pool: PgPool) {
 /// Three foreign opinion identifiers in canonical order: the text bytes
 /// put sequence 10 before sequence 9.
 fn foreign_deps() -> Vec<ActId> {
-    ["act:elsewhere:10:opinion", "act:elsewhere:9:opinion", "act:other:0:opinion"]
-        .into_iter()
-        .map(|s| ActId::parse(s).expect("ok"))
-        .collect()
+    [
+        "act:elsewhere:10:opinion",
+        "act:elsewhere:9:opinion",
+        "act:other:0:opinion",
+    ]
+    .into_iter()
+    .map(|s| ActId::parse(s).expect("ok"))
+    .collect()
 }
 
 /// Seals `deps` on a fresh opinion and reports the refusal, after checking

@@ -1083,8 +1083,9 @@ impl PreparedWrite {
     /// gesture its user ordered and recomputes every signing base from
     /// it: the user never signs blind bytes. Deterministic CBOR
     /// `[1, body, payload, deps]`: the structural body's canonical bytes,
-    /// the payload bytes, and the dependency list as act identifiers.
-    /// Its envelope version is its own and is 1.
+    /// the payload bytes, and the dependency list as act identifiers,
+    /// strictly ascending bytewise by their text form. Its envelope
+    /// version is its own and is 1.
     async fn canonical_proposal(&self) -> String {
         B64.encode(wire::encode_proposal(&self.proposal))
     }

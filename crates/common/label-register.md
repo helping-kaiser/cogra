@@ -18,6 +18,7 @@ label.
 | `test:unit:a-batch-is-the-walk-back-in-any-published-order`                                         | a_batch_is_the_walk_back_in_any_published_order                                         |
 | `test:unit:a-bundle-of-only-empty-records-says-nothing`                                             | a_bundle_of_only_empty_records_says_nothing                                             |
 | `test:unit:a-bundle-sums-the-same-in-every-order`                                                   | a_bundle_sums_the_same_in_every_order                                                   |
+| `test:unit:a-canonical-dependency-list-ascends-bytewise`                                            | a_canonical_dependency_list_ascends_bytewise                                            |
 | `test:unit:a-counter-pick-can-reach-severance-in-one-record`                                        | a_counter_pick_can_reach_severance_in_one_record                                        |
 | `test:unit:a-counter-pick-to-zero-is-a-one-record-walk-back`                                        | a_counter_pick_to_zero_is_a_one_record_walk_back                                        |
 | `test:unit:a-dependency-commitment-binds-the-act-id-and-the-pre-commitment`                         | a_dependency_commitment_binds_the_act_id_and_the_pre_commitment                         |

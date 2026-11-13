@@ -289,7 +289,12 @@ mod tests {
         let (nine, ten, carol) = (act("bob", 9), act("bob", 10), act("carol", 0));
         let deps = deps_awaiting(
             &[carol.clone(), nine.clone()],
-            [&Some(ten.clone()), &Some(carol.clone()), &None, &Some(nine.clone())],
+            [
+                &Some(ten.clone()),
+                &Some(carol.clone()),
+                &None,
+                &Some(nine.clone()),
+            ],
         );
         assert_eq!(deps, vec![ten, nine, carol]);
         assert!(common::l1::handshake::is_canonical_dep_list(&deps));
