@@ -8,13 +8,13 @@ import { concat, equalBytes, fromBase64Url, fromHex, randomBytes } from "./bytes
 import { addressOf, CryptoUnavailableError, SALT_LEN, sign, signDigest, Tags, verify } from "./hashing";
 import {
   ApprovalWitness,
+  CONTENT_EDITION,
   contentCommitment,
-  depsCommitment,
-  EDITION,
-  preCommitment,
+  DEPENDENCY_EDITION,
+  dependencyCommitment,
   PreSignedProposal,
   type Proposal,
-  type VerifiedAct,
+  type SealedAct,
 } from "./handshake";
 
 /** A refused signing step — the device never signs what it cannot verify. */
@@ -100,28 +100,51 @@ export class ActorKey {
 
   /**
    * Step 2 of the write — pre-sign: bind the exact proposal under a
-   * fresh private nonce. The nonce parameter exists for the golden
-   * vectors; production callers use the random default.
+   * content nonce and a dependency nonce, two independent draws of
+   * {@link SALT_LEN} bytes from the platform CSPRNG
+   * (`crypto.getRandomValues`), form P, and sign it. The nonce parameters
+   * exist for the golden vectors; production callers use the random
+   * defaults.
    */
-  async preSign(proposal: Proposal, nonce: Uint8Array = randomBytes(SALT_LEN)): Promise<PreSignedProposal> {
-    if (nonce.length !== SALT_LEN) throw new RangeError(`nonce must be ${SALT_LEN} bytes`);
-    const preSignature = await signDigest(this.privateKey, await preCommitment(proposal, nonce));
-    return new PreSignedProposal({
+  async preSign(
+    proposal: Proposal,
+    contentNonce: Uint8Array = randomBytes(SALT_LEN),
+    dependencyNonce: Uint8Array = randomBytes(SALT_LEN),
+  ): Promise<PreSignedProposal> {
+    if (contentNonce.length !== SALT_LEN) throw new RangeError(`content nonce must be ${SALT_LEN} bytes`);
+    if (dependencyNonce.length !== SALT_LEN) throw new RangeError(`dependency nonce must be ${SALT_LEN} bytes`);
+    // The host refuses a submission whose two nonces are equal; refusing it
+    // here keeps such material from ever being stored or sent.
+    if (equalBytes(contentNonce, dependencyNonce)) {
+      throw new RangeError("content nonce and dependency nonce must differ");
+    }
+    const unsigned = new PreSignedProposal({
       proposal,
       authorPubkey: this.publicKeyBytes(),
-      nonce,
-      preSignature,
+      contentNonce,
+      dependencyNonce,
+      preSignature: new Uint8Array(0),
     });
+    const preSignature = await signDigest(this.privateKey, await unsigned.preCommitment());
+    return new PreSignedProposal({ ...unsigned, preSignature });
   }
 
   /**
    * Step 4 of the write — approve: verify the exact returned act, the
-   * pre-commitment and the editions, the host seal, and both commitment
-   * openings, then sign the approval witness over the verified act and its
-   * seal. `sent` is the proposal the client pre-signed; the check is exact
-   * equality against what the host returned.
+   * pre-commitment and the editions, the host seal, and both commitments
+   * recomputed from material this device holds itself, then sign the
+   * approval witness over the verified act and its seal. `sent` is the
+   * proposal the client pre-signed; the check is exact equality against
+   * what the host returned.
+   *
+   * The sealed act carries no payload, nonce or dependency list, so
+   * nothing the host returns can stand in for them: C_c is recomputed over
+   * this device's own content pre-digest (from its payload and content
+   * nonce — never over the payload bytes), C_d over its own canonical
+   * dependency encoding. A different dependency list changes both P (via
+   * h_d) and C_d, so those two checks are its equality check.
    */
-  async approve(sent: PreSignedProposal, sealed: VerifiedAct, hostPubkey: Uint8Array): Promise<ApprovalWitness> {
+  async approve(sent: PreSignedProposal, sealed: SealedAct, hostPubkey: Uint8Array): Promise<ApprovalWitness> {
     // THE MATERIAL HAS TO BE THIS KEY'S. `sent` is read back out of IndexedDB
     // on the web, so it can outlive the key that pre-signed it — a re-mint
     // between staging and approval leaves material whose pre-signature no
@@ -132,35 +155,35 @@ export class ActorKey {
     if (!equalBytes(sent.authorPubkey, this.publicKey)) {
       throw new HandshakeError("handshake material was pre-signed by a different key");
     }
+    const act = sealed.act;
     if (
-      !sealed.proposal.equals(sent.proposal) ||
-      !equalBytes(sealed.preSignature, sent.preSignature) ||
-      !equalBytes(sealed.nonce, sent.nonce)
+      !equalBytes(act.body.canonicalBytes(), sent.proposal.body.canonicalBytes()) ||
+      !equalBytes(act.preSignature, sent.preSignature)
     ) {
       throw new HandshakeError("host returned a different act than was pre-signed");
     }
     const formed = await sent.preCommitment();
-    if (!equalBytes(sealed.preCommitment, formed)) {
+    if (!equalBytes(act.preCommitment, formed)) {
       throw new HandshakeError("host returned a different pre-commitment than was formed");
     }
-    if (sealed.contentEdition !== EDITION || sealed.depsEdition !== EDITION) {
+    if (act.contentEdition !== CONTENT_EDITION || act.depsEdition !== DEPENDENCY_EDITION) {
       throw new HandshakeError(
-        `unexpected editions (content ${sealed.contentEdition}, dependencies ${sealed.depsEdition}); this device signs edition ${EDITION}`,
+        `unexpected editions (content ${act.contentEdition}, dependencies ${act.depsEdition}); this device signs content edition ${CONTENT_EDITION} and dependency edition ${DEPENDENCY_EDITION}`,
       );
     }
-    if (!(await verify(hostPubkey, Tags.HOST_SEAL, sealed.sealMsg(), sealed.hostSeal))) {
+    if (!(await verify(hostPubkey, Tags.HOST_SEAL, act.sealMsg(), sealed.hostSeal))) {
       throw new HandshakeError("invalid host seal");
     }
-    // Both commitment openings: recompute from the returned salts, the
-    // pre-commitment the client formed, and the bytes it holds.
-    const actId = sent.proposal.body.actId();
-    const content = await contentCommitment(actId, formed, sealed.contentSalt, sent.proposal.payload);
-    if (!equalBytes(content, sealed.contentCommitment)) {
-      throw new HandshakeError("content commitment does not open over the sent payload");
+    // Both commitments: recompute from the returned salts, the P this device
+    // formed, and the material it holds.
+    const actId = sent.actId();
+    const content = await contentCommitment(actId, formed, sealed.contentSalt, await sent.contentPreDigest());
+    if (!equalBytes(content, act.contentCommitment)) {
+      throw new HandshakeError("content commitment is not formed over this device's content pre-digest");
     }
-    const deps = await depsCommitment(actId, formed, sealed.depsSalt, sent.proposal.deps);
-    if (!equalBytes(deps, sealed.depsCommitment)) {
-      throw new HandshakeError("dependency commitment does not open over the sent list");
+    const deps = await dependencyCommitment(actId, formed, sealed.depsSalt, sent.proposal.deps);
+    if (!equalBytes(deps, act.depsCommitment)) {
+      throw new HandshakeError("dependency commitment does not open over the dependency list");
     }
     const approvalSignature = await signDigest(this.privateKey, await sealed.approvalDigest());
     return new ApprovalWitness(actId, approvalSignature);

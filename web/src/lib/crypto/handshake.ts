@@ -1,5 +1,7 @@
 // The admission-handshake objects the device signs (reference:
-// crates/common/src/l1/handshake.rs; Android mirror: Handshake.kt). The
+// crates/common/src/l1/handshake.rs for the body, the proposal and the
+// sealed frame; crates/common/src/l1/proposal/ for the two-nonce
+// pre-commitment and commitments; Android mirror: Handshake.kt). The
 // structural body's canonical bytes are the signing base of the
 // pre-commitment and, with the host additions, of the seal and approval.
 
@@ -97,9 +99,7 @@ export function canonicalDeps(deps: readonly ActId[]): Uint8Array<ArrayBuffer> {
 /**
  * A proposal before signing: body plus the two removable projections.
  * Equality is by content — compared over the canonical encodings, which
- * reproduces the reference field semantics exactly (floats by raw bits)
- * — because the approve step checks the host returned exactly what was
- * sent.
+ * reproduces the reference field semantics exactly (floats by raw bits).
  */
 export class Proposal {
   constructor(
@@ -119,34 +119,38 @@ export class Proposal {
   }
 }
 
+/** The length of every pre-digest and of the pre-commitment (SHA-256). */
+const DIGEST_LEN = 32;
+
+const utf8 = new TextEncoder();
+
+/** The act identifier's bytes as every pre-digest and commitment binds them. */
+function actIdBytes(actId: ActId): Uint8Array<ArrayBuffer> {
+  return utf8.encode(actId.toString());
+}
+
 /**
- * The actor's signed pre-commitment over the canonical structural body
- * plus both pre-digests.
+ * The content pre-digest h_c: the act identifier, the content nonce and
+ * the payload. Without the content nonce it confirms no payload guess.
  */
-export class PreSignedProposal {
-  readonly proposal: Proposal;
-  /** The actor's public key (32 bytes, Ed25519 interim realization). */
-  readonly authorPubkey: Uint8Array;
-  /** The private nonce under the pre-digests. */
-  readonly nonce: Uint8Array;
-  readonly preSignature: Uint8Array;
+export function contentPreDigest(
+  actId: ActId,
+  contentNonce: Uint8Array,
+  payload: Uint8Array,
+): Promise<Uint8Array<ArrayBuffer>> {
+  return preDigest(Tags.PRE_DIGEST_CONTENT, actIdBytes(actId), contentNonce, payload);
+}
 
-  constructor(fields: {
-    proposal: Proposal;
-    authorPubkey: Uint8Array;
-    nonce: Uint8Array;
-    preSignature: Uint8Array;
-  }) {
-    this.proposal = fields.proposal;
-    this.authorPubkey = fields.authorPubkey;
-    this.nonce = fields.nonce;
-    this.preSignature = fields.preSignature;
-  }
-
-  /** The pre-commitment the pre-signature covers, recomputed from the proposal and nonce. */
-  preCommitment(): Promise<Uint8Array<ArrayBuffer>> {
-    return preCommitment(this.proposal, this.nonce);
-  }
+/**
+ * The dependency pre-digest h_d: the act identifier, the dependency nonce
+ * and the canonical dependency encoding.
+ */
+export function dependencyPreDigest(
+  actId: ActId,
+  dependencyNonce: Uint8Array,
+  deps: readonly ActId[],
+): Promise<Uint8Array<ArrayBuffer>> {
+  return preDigest(Tags.PRE_DIGEST_DEPS, actIdBytes(actId), dependencyNonce, canonicalDeps(deps));
 }
 
 /** The message the pre-commitment hashes: the canonical body and both pre-digests. */
@@ -163,41 +167,40 @@ export function preCommitmentMsg(
   return e.finish();
 }
 
-const utf8 = new TextEncoder();
-
-/** The act identifier's bytes as every pre-digest and commitment binds them. */
-function actIdBytes(actId: ActId): Uint8Array<ArrayBuffer> {
-  return utf8.encode(actId.toString());
+/**
+ * The proposal pre-commitment P over the canonical body and both
+ * pre-digests. The pre-signature signs exactly these 32 bytes, and both
+ * commitments bind them.
+ */
+export function preCommitment(
+  body: StructuralBody,
+  digestContent: Uint8Array,
+  digestDeps: Uint8Array,
+): Promise<Uint8Array<ArrayBuffer>> {
+  return sha256Tagged(Tags.PRE_COMMITMENT, [preCommitmentMsg(body, digestContent, digestDeps)]);
 }
 
 /**
- * The proposal pre-commitment: the tagged hash of the canonical body and
- * both pre-digests, each pre-digest over the act identifier, the private
- * nonce and the projection's bytes. The pre-signature signs exactly these
- * 32 bytes, and both commitments bind them.
+ * The content commitment C_c over the act identifier, P, the host's content
+ * salt and the content PRE-DIGEST — never the payload bytes. It binds the
+ * payload through the pre-digest and inherits its concealment. A value of
+ * any other length than a digest is refused, so payload bytes passed in
+ * its place fail loudly instead of forming a commitment.
  */
-export async function preCommitment(
-  proposal: Proposal,
-  nonce: Uint8Array,
-): Promise<Uint8Array<ArrayBuffer>> {
-  const actId = actIdBytes(proposal.body.actId());
-  const digestContent = await preDigest(Tags.PRE_DIGEST_CONTENT, actId, nonce, proposal.payload);
-  const digestDeps = await preDigest(Tags.PRE_DIGEST_DEPS, actId, nonce, canonicalDeps(proposal.deps));
-  return sha256Tagged(Tags.PRE_COMMITMENT, [preCommitmentMsg(proposal.body, digestContent, digestDeps)]);
-}
-
-/** The content commitment of an act — the payload witness. */
 export function contentCommitment(
   actId: ActId,
   preCommitmentBytes: Uint8Array,
   salt: Uint8Array,
-  payload: Uint8Array,
+  digestContent: Uint8Array,
 ): Promise<Uint8Array<ArrayBuffer>> {
-  return commitment(Tags.COMMIT_CONTENT, actIdBytes(actId), preCommitmentBytes, salt, payload);
+  if (digestContent.length !== DIGEST_LEN) {
+    throw new RangeError(`a content pre-digest is ${DIGEST_LEN} bytes`);
+  }
+  return commitment(Tags.COMMIT_CONTENT, actIdBytes(actId), preCommitmentBytes, salt, digestContent);
 }
 
-/** The dependency commitment of an act, over its canonical dependency list. */
-export function depsCommitment(
+/** The dependency commitment C_d, over the canonical dependency encoding. */
+export function dependencyCommitment(
   actId: ActId,
   preCommitmentBytes: Uint8Array,
   salt: Uint8Array,
@@ -207,56 +210,99 @@ export function depsCommitment(
 }
 
 /**
- * The edition tags the stand-in seals under, for the content and the
- * dependency projection alike. The device refuses any other edition.
+ * The content edition a verified act is sealed under: the content
+ * commitment is formed over the content pre-digest. The device refuses
+ * any other.
  */
-export const EDITION = 1n;
+export const CONTENT_EDITION = 2n;
+
+/** The dependency edition a verified act is sealed under. */
+export const DEPENDENCY_EDITION = 1n;
 
 /**
- * The host-sealed verified act: the exact proposal plus the named
- * pre-commitment, host salts, the binding commitments and the edition
- * tags, sealed by the host signature. No host order fields.
+ * The actor's pre-signed proposal: the proposal it signed, both nonces it
+ * drew, and its signature over P. The device holds all of it until
+ * approval — the sealed act it gets back carries neither the payload, nor
+ * a nonce, nor the dependency list.
  */
-export class VerifiedAct {
+export class PreSignedProposal {
   readonly proposal: Proposal;
+  /** The actor's public key (32 bytes, Ed25519 interim realization). */
   readonly authorPubkey: Uint8Array;
-  readonly nonce: Uint8Array;
+  /** The private nonce under the content pre-digest. */
+  readonly contentNonce: Uint8Array;
+  /** The private nonce under the dependency pre-digest, drawn independently. */
+  readonly dependencyNonce: Uint8Array;
   readonly preSignature: Uint8Array;
-  readonly preCommitment: Uint8Array;
-  readonly contentSalt: Uint8Array;
-  readonly depsSalt: Uint8Array;
-  readonly contentCommitment: Uint8Array;
-  readonly depsCommitment: Uint8Array;
-  readonly contentEdition: bigint;
-  readonly depsEdition: bigint;
-  readonly hostSeal: Uint8Array;
 
   constructor(fields: {
     proposal: Proposal;
     authorPubkey: Uint8Array;
-    nonce: Uint8Array;
+    contentNonce: Uint8Array;
+    dependencyNonce: Uint8Array;
     preSignature: Uint8Array;
+  }) {
+    this.proposal = fields.proposal;
+    this.authorPubkey = fields.authorPubkey;
+    this.contentNonce = fields.contentNonce;
+    this.dependencyNonce = fields.dependencyNonce;
+    this.preSignature = fields.preSignature;
+  }
+
+  actId(): ActId {
+    return this.proposal.body.actId();
+  }
+
+  /** h_c, recomputed from this device's own payload and content nonce. */
+  contentPreDigest(): Promise<Uint8Array<ArrayBuffer>> {
+    return contentPreDigest(this.actId(), this.contentNonce, this.proposal.payload);
+  }
+
+  /** h_d, recomputed from this device's own dependency list and nonce. */
+  dependencyPreDigest(): Promise<Uint8Array<ArrayBuffer>> {
+    return dependencyPreDigest(this.actId(), this.dependencyNonce, this.proposal.deps);
+  }
+
+  /** P, recomputed from the proposal and both nonces. */
+  async preCommitment(): Promise<Uint8Array<ArrayBuffer>> {
+    return preCommitment(this.proposal.body, await this.contentPreDigest(), await this.dependencyPreDigest());
+  }
+}
+
+/**
+ * The verified act: the header the host seals — body, P, pre-signature,
+ * both commitments and both edition tags. No payload, no nonce, no host
+ * order field.
+ */
+export class VerifiedAct {
+  readonly body: StructuralBody;
+  readonly preCommitment: Uint8Array;
+  readonly preSignature: Uint8Array;
+  readonly contentCommitment: Uint8Array;
+  readonly depsCommitment: Uint8Array;
+  readonly contentEdition: bigint;
+  readonly depsEdition: bigint;
+
+  constructor(fields: {
+    body: StructuralBody;
     preCommitment: Uint8Array;
-    contentSalt: Uint8Array;
-    depsSalt: Uint8Array;
+    preSignature: Uint8Array;
     contentCommitment: Uint8Array;
     depsCommitment: Uint8Array;
     contentEdition: bigint;
     depsEdition: bigint;
-    hostSeal: Uint8Array;
   }) {
-    this.proposal = fields.proposal;
-    this.authorPubkey = fields.authorPubkey;
-    this.nonce = fields.nonce;
-    this.preSignature = fields.preSignature;
+    this.body = fields.body;
     this.preCommitment = fields.preCommitment;
-    this.contentSalt = fields.contentSalt;
-    this.depsSalt = fields.depsSalt;
+    this.preSignature = fields.preSignature;
     this.contentCommitment = fields.contentCommitment;
     this.depsCommitment = fields.depsCommitment;
     this.contentEdition = fields.contentEdition;
     this.depsEdition = fields.depsEdition;
-    this.hostSeal = fields.hostSeal;
+  }
+
+  actId(): ActId {
+    return this.body.actId();
   }
 
   /**
@@ -267,7 +313,7 @@ export class VerifiedAct {
   sealMsg(): Uint8Array<ArrayBuffer> {
     const e = new CborEncoder();
     e.array(8n);
-    e.bytes(this.proposal.body.canonicalBytes());
+    e.bytes(this.body.canonicalBytes());
     e.bytes(this.preCommitment);
     e.bytes(this.preSignature);
     e.bytes(this.contentCommitment);
@@ -278,13 +324,32 @@ export class VerifiedAct {
     e.uint(1n);
     return e.finish();
   }
+}
+
+/**
+ * What the host returns: the verified act, both salts and the host seal
+ * over the encoded verified act — every host-added field visible to the
+ * device before approval.
+ */
+export class SealedAct {
+  readonly act: VerifiedAct;
+  readonly contentSalt: Uint8Array;
+  readonly depsSalt: Uint8Array;
+  readonly hostSeal: Uint8Array;
+
+  constructor(fields: { act: VerifiedAct; contentSalt: Uint8Array; depsSalt: Uint8Array; hostSeal: Uint8Array }) {
+    this.act = fields.act;
+    this.contentSalt = fields.contentSalt;
+    this.depsSalt = fields.depsSalt;
+    this.hostSeal = fields.hostSeal;
+  }
 
   /**
    * The digest the author's approval witness signs: the encoded verified
    * act and its host seal, together.
    */
   approvalDigest(): Promise<Uint8Array<ArrayBuffer>> {
-    return sha256Tagged(Tags.APPROVAL, [this.sealMsg(), this.hostSeal]);
+    return sha256Tagged(Tags.APPROVAL, [this.act.sealMsg(), this.hostSeal]);
   }
 }
 

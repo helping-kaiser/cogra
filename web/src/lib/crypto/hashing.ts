@@ -12,11 +12,11 @@ import { concat, toHex } from "./bytes";
  * formula, so no artifact of an earlier formula verifies under a later one.
  */
 export const Tags = {
-  PRE_DIGEST_CONTENT: "cogra-l1:pre-digest:content:v2",
-  PRE_DIGEST_DEPS: "cogra-l1:pre-digest:deps:v2",
-  PRE_COMMITMENT: "cogra-l1:pre-commitment:v1",
-  COMMIT_CONTENT: "cogra-l1:commitment:content:v2",
-  COMMIT_DEPS: "cogra-l1:commitment:deps:v2",
+  PRE_DIGEST_CONTENT: "cogra-l1:pre-digest:content:v3",
+  PRE_DIGEST_DEPS: "cogra-l1:pre-digest:deps:v3",
+  PRE_COMMITMENT: "cogra-l1:pre-commitment:v2",
+  COMMIT_CONTENT: "cogra-l1:commitment:content:v3",
+  COMMIT_DEPS: "cogra-l1:commitment:deps:v3",
   HOST_SEAL: "cogra-l1:host-seal:v2",
   APPROVAL: "cogra-l1:approval:v2",
 } as const;
@@ -49,8 +49,8 @@ export async function sha256Tagged(
 
 /**
  * The actor-side pre-digest of a removable projection: SHA-256 over (tag,
- * act identifier, the actor's private nonce, bytes) — the exact bytes
- * bound to the one act they were proposed for, before any host salt
+ * act identifier, that projection's own private nonce, bytes) — the exact
+ * bytes bound to the one act they were proposed for, before any host salt
  * exists.
  */
 export function preDigest(
@@ -65,7 +65,8 @@ export function preDigest(
 /**
  * The host-side binding, concealing commitment over a removable
  * projection: SHA-256 over (tag, act identifier, pre-commitment, host
- * salt, bytes).
+ * salt, bytes) — the content pre-digest for the content projection, the
+ * canonical dependency encoding for the dependency projection.
  */
 export function commitment(
   tag: string,

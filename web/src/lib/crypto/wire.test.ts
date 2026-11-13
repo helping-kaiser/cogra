@@ -5,7 +5,7 @@ import { expect, it } from "vitest";
 import { concat, toHex } from "./bytes";
 import { CborDecoder, CborEncoder } from "./cbor";
 import { ActId, NodeId } from "./identifiers";
-import { Proposal, StructuralBody, VerifiedAct } from "./handshake";
+import { Proposal, SealedAct, StructuralBody, VerifiedAct } from "./handshake";
 import {
   decodePreCommitment,
   decodeProposal,
@@ -56,19 +56,19 @@ function minimalProposal(): Proposal {
   );
 }
 
-function verifiedActOf(proposal: Proposal): VerifiedAct {
-  return new VerifiedAct({
-    proposal,
-    authorPubkey: new Uint8Array(32).fill(3),
-    nonce: new Uint8Array(32).fill(4),
-    preSignature: new Uint8Array(64).fill(5),
-    preCommitment: new Uint8Array(32).fill(11),
+function sealedActOf(proposal: Proposal): SealedAct {
+  return new SealedAct({
+    act: new VerifiedAct({
+      body: proposal.body,
+      preSignature: new Uint8Array(64).fill(5),
+      preCommitment: new Uint8Array(32).fill(11),
+      contentCommitment: new Uint8Array(32).fill(8),
+      depsCommitment: new Uint8Array(32).fill(9),
+      contentEdition: 2n,
+      depsEdition: 1n,
+    }),
     contentSalt: new Uint8Array(32).fill(6),
     depsSalt: new Uint8Array(32).fill(7),
-    contentCommitment: new Uint8Array(32).fill(8),
-    depsCommitment: new Uint8Array(32).fill(9),
-    contentEdition: 1n,
-    depsEdition: 2n,
     hostSeal: new Uint8Array(64).fill(10),
   });
 }
@@ -87,36 +87,45 @@ it("the wire body is the canonical signing base", () => {
   expect(toHex(d.bytes())).toBe(toHex(p.body.canonicalBytes()));
 });
 
-it("verified acts round-trip", () => {
-  const act = verifiedActOf(fullProposal());
-  const decoded = decodeVerifiedAct(encodeVerifiedAct(act));
-  expect(decoded.proposal.equals(act.proposal)).toBe(true);
-  expect(toHex(decoded.authorPubkey)).toBe(toHex(act.authorPubkey));
-  expect(toHex(decoded.nonce)).toBe(toHex(act.nonce));
-  expect(toHex(decoded.preSignature)).toBe(toHex(act.preSignature));
-  expect(toHex(decoded.contentSalt)).toBe(toHex(act.contentSalt));
-  expect(toHex(decoded.depsSalt)).toBe(toHex(act.depsSalt));
-  expect(toHex(decoded.contentCommitment)).toBe(toHex(act.contentCommitment));
-  expect(toHex(decoded.depsCommitment)).toBe(toHex(act.depsCommitment));
-  expect(toHex(decoded.hostSeal)).toBe(toHex(act.hostSeal));
+it("sealed acts round-trip", () => {
+  for (const p of [fullProposal(), minimalProposal()]) {
+    const sealed = sealedActOf(p);
+    const decoded = decodeVerifiedAct(encodeVerifiedAct(sealed));
+    expect(toHex(decoded.act.body.canonicalBytes())).toBe(toHex(p.body.canonicalBytes()));
+    expect(toHex(decoded.act.preSignature)).toBe(toHex(sealed.act.preSignature));
+    expect(toHex(decoded.act.preCommitment)).toBe(toHex(sealed.act.preCommitment));
+    expect(toHex(decoded.act.contentCommitment)).toBe(toHex(sealed.act.contentCommitment));
+    expect(toHex(decoded.act.depsCommitment)).toBe(toHex(sealed.act.depsCommitment));
+    expect(decoded.act.contentEdition).toBe(2n);
+    expect(decoded.act.depsEdition).toBe(1n);
+    expect(toHex(decoded.contentSalt)).toBe(toHex(sealed.contentSalt));
+    expect(toHex(decoded.depsSalt)).toBe(toHex(sealed.depsSalt));
+    expect(toHex(decoded.hostSeal)).toBe(toHex(sealed.hostSeal));
+  }
 });
 
-it("the verified act carries the pre-commitment and both edition tags", () => {
-  const act = verifiedActOf(fullProposal());
-  const decoded = decodeVerifiedAct(encodeVerifiedAct(act));
-  expect(toHex(decoded.preCommitment)).toBe(toHex(act.preCommitment));
-  expect(decoded.contentEdition).toBe(1n);
-  expect(decoded.depsEdition).toBe(2n);
-  const d = new CborDecoder(encodeVerifiedAct(act));
-  expect(d.array()).toBe(15n);
+it("the sealed act is an eleven-element version-2 frame with no payload", () => {
+  const p = fullProposal();
+  const bytes = encodeVerifiedAct(sealedActOf(p));
+  const d = new CborDecoder(bytes);
+  expect(d.array()).toBe(11n);
+  expect(d.uint()).toBe(2n);
+  expect(toHex(d.bytes())).toBe(toHex(p.body.canonicalBytes()));
+  expect(toHex(bytes)).not.toContain(toHex(p.payload));
 });
 
 it("pre-commitments round-trip", () => {
-  const nonce = new Uint8Array(32).fill(11);
+  const contentNonce = new Uint8Array(32).fill(11);
+  const dependencyNonce = new Uint8Array(32).fill(13);
   const preSignature = new Uint8Array(64).fill(12);
-  const decoded = decodePreCommitment(encodePreCommitment(nonce, preSignature));
-  expect(toHex(decoded.nonce)).toBe(toHex(nonce));
+  const bytes = encodePreCommitment(contentNonce, dependencyNonce, preSignature);
+  const decoded = decodePreCommitment(bytes);
+  expect(toHex(decoded.contentNonce)).toBe(toHex(contentNonce));
+  expect(toHex(decoded.dependencyNonce)).toBe(toHex(dependencyNonce));
   expect(toHex(decoded.preSignature)).toBe(toHex(preSignature));
+  const d = new CborDecoder(bytes);
+  expect(d.array()).toBe(4n);
+  expect(d.uint()).toBe(2n);
 });
 
 function rawBody(actIdText: string, bodyVersion: bigint): Uint8Array {
@@ -156,14 +165,27 @@ it("malformed input is refused, not misread", () => {
   expect(() =>
     decodeProposal(proposalEnvelope(1n, rawBody("act:alice-addr:1:opinion", 2n))),
   ).toThrow(new WireError("malformed structural body version"));
+  // The handshake envelopes judge the version before the arity: a version-1
+  // frame of any shape is refused as version 1 ...
   expect(() => decodeVerifiedAct(new CborEncoder().array(2n).uint(1n).bytes(body).finish())).toThrow(
+    new WireError("unsupported wire version 1"),
+  );
+  expect(() =>
+    decodePreCommitment(
+      new CborEncoder().array(3n).uint(1n).bytes(new Uint8Array(32)).bytes(new Uint8Array(64)).finish(),
+    ),
+  ).toThrow(new WireError("unsupported wire version 1"));
+  // ... and a version-2 frame of the wrong arity as malformed.
+  expect(() => decodeVerifiedAct(new CborEncoder().array(2n).uint(2n).bytes(body).finish())).toThrow(
     new WireError("malformed verified act"),
   );
   expect(() =>
     decodePreCommitment(
       new CborEncoder().array(3n).uint(2n).bytes(new Uint8Array(32)).bytes(new Uint8Array(64)).finish(),
     ),
-  ).toThrow(new WireError("unsupported wire version 2"));
+  ).toThrow(new WireError("malformed pre-commitment"));
+  const blob = encodePreCommitment(new Uint8Array(32).fill(1), new Uint8Array(32).fill(2), new Uint8Array(64));
+  expect(() => decodePreCommitment(concat(blob, Uint8Array.of(0)))).toThrow(WireError);
   expect(() => decodePreCommitment(new Uint8Array(0))).toThrow(
     new WireError("malformed pre-commitment: unexpected end of input at byte 0"),
   );
