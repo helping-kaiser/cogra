@@ -126,7 +126,7 @@ describe("the kept picks' review", () => {
     await keepPick("u1", MIRA, { pDirected: 0.3, pInterest: 0.3 }, "approval");
     mount();
     const line = await screen.findByTestId("keptPicks.approval");
-    expect(line).toHaveTextContent("An approval waits in your invites — go there to sign it.");
+    expect(line).toHaveTextContent("An approval waits in your invites.");
     fireEvent.click(within(line).getByText("Open Invites"));
     expect(router.push).toHaveBeenCalledWith("/invites?from=kept-picks");
     expect((await listKeptPicks("u1")).length).toBe(2);
@@ -398,7 +398,7 @@ describe("the kept picks' seal", () => {
     const data = mount();
     await openSeal();
     expect(screen.getByTestId("keptPicksSeal.approval")).toHaveTextContent(
-      "An approval waits in your invites — go there to sign it.",
+      "An approval waits in your invites.",
     );
     await act(async () => {
       fireEvent.click(screen.getByTestId("keptPicksSeal.foot.sign"));

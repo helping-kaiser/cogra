@@ -66,13 +66,12 @@ export const NOT_NOW = "Not now";
 export const INVALID_TITLE = "This ask link doesn't work";
 export const INVALID_BODY =
   "Check that the whole link came through, or ask the person who sent it for it again.";
-export const LANDED_BODY = "Someone has vouched them in already, so this ask has nothing left to do.";
 
 export function askTitle(handle: string): string {
   return `${handle} is asking to be vouched in`;
 }
 export const ASK_BODY =
-  "They have an account and can read; what they do not have yet is anyone standing for them. Your opinion is what brings them in.";
+  "Your opinion is what brings them in.";
 
 export function landedTitle(handle: string): string {
   return `${handle} is already in`;
@@ -206,7 +205,7 @@ export function VouchAskView({ id }: { id: string }) {
       // — and the door to their profile (VouchAskUnusable.md:15-17).
       return (
         <Frame>
-          <Statement title={landedTitle(landing.handle)} body={LANDED_BODY}>
+          <Statement title={landedTitle(landing.handle)}>
             <div className="mt-6">
               <button
                 type="button"
@@ -242,7 +241,8 @@ function Statement({
   children,
 }: {
   title: string;
-  body: string;
+  /** The line under the heading; the landed ask has none (VouchAskUnusable). */
+  body?: string;
   children?: React.ReactNode;
 }) {
   return (
@@ -251,9 +251,11 @@ function Statement({
       <h1 {...testAttributes(part(ROOT, "title"))} className="m-0 text-headline-small [overflow-wrap:anywhere]">
         <NameInText text={title} />
       </h1>
-      <p {...testAttributes(part(ROOT, "body"))} className="m-0 mt-2 text-body-medium text-on-surface-variant">
-        {body}
-      </p>
+      {body !== undefined && (
+        <p {...testAttributes(part(ROOT, "body"))} className="m-0 mt-2 text-body-medium text-on-surface-variant">
+          {body}
+        </p>
+      )}
       {children}
     </div>
   );
