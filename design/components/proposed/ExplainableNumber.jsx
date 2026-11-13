@@ -42,6 +42,27 @@ const SR_ONLY = {
    else. A Feed score has no glyph that carries its magnitude, so hiding the
    digits would leave the `graph` mark saying only "there is a score", which is
    the black box §7 exists to refuse. */
+/* THE SCORE'S STRING, ONE RULE FOR EVERY PLACE IT PRINTS (jakob 2026-11-12,
+   the re-ask's twentieth; seam 293-2, 310). A computed score `s` is `tiny`
+   when 0 < |s| < 0.005 — the scores two decimals would print as `0.00`.
+   · THE CARD — this master's `value` on every ranked card, the tag page's
+     cards included: two decimals, never more, rounded half away from zero; a
+     tiny score rounds AWAY from zero, `0.01` above it and `−0.01` below. So
+     the card reads `0.00` only for a score that is exactly zero — a severed
+     one — and a reader never meets a computed figure that looks like none.
+   · THE TRACE — every figure behind the graph glyph: the held thing's flag,
+     each path's figure, the quiet row's, a path's `adds`: two decimals as on
+     the card, and a tiny one in two significant digits instead — its
+     magnitude rounded to two significant digits and written in plain
+     decimals (`0.0031`, `0.00042`, `0.000050`, `0.0010`), then cut to at most
+     six decimals, rounded half away from zero; a magnitude that then reads
+     `0.000000` reads `0.000001`. The trace's own sign rule stands: a positive
+     takes `+` there (`+0.0031`), a negative its `−` (`−0.00042`, `−0.000001`).
+   · THE MINUS IS U+2212 everywhere (readme §3), never a hyphen.
+   · SPOKEN, a screen reader reads the printed figure, never the computed
+     one: `Feed score`, then exactly what the slot prints.
+   The stored and the wire value keep their full precision; only the string
+   follows this rule. */
 /* A PENDING MARK UNDER THE GLYPH, INSIDE THE DOOR (round 26, seam 250): the
    stream's settling face is the bare glyph with `Still settling` under it, and
    the whole face is the door. `pending` carries those words; the door then

@@ -63,3 +63,5 @@ ALWAYS postDetail.bottomBar keeps lit the slot of the root the bell was tapped o
 ALWAYS postDetail.card.actionRow.stance.pending reads Waiting for your key under the kept pick's face GIVEN a pick is kept pending on the post and the key is not on this device
 
 ALWAYS postDetail.card.actionRow.stance.pending reads Waiting for your review under the kept pick's face GIVEN the key is on this device and the kept picks' review was left unsigned
+
+ALWAYS the back arrow names the screen the post was opened from by the post detail's origin table, Back to the profile GIVEN it was opened from a card on another's profile, and Back to your profile from a card on the reader's own

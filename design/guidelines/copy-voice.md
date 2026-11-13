@@ -956,13 +956,16 @@ Spelled by the round and **blessed (jakob 2026-10-05)**:
   handle, named for its picture: the first row is the cover, every other
   row its place (*blessed (jakob 2026-10-05)*).
 
-**The profile's figures, spoken** — K13.11 executed (the check round,
-2026-10-06): the figures' one door says its visible words and numbers,
-then its purpose — `{n} Posts, {n} Opinions on them, {n} Opinions by
-them, opinions on and by @handle`. One's own reads `{n} Posts, {n}
-Opinions on you, {n} Opinions by you, your opinions, both directions`;
-a deleted account's ends `opinions on and by this account`
-(`ProfileHeader`; `Profile`, `ProfileOther`, `ProfileDeleted`).
+**The profile's figures, spoken** — K13.11's form (the check round,
+2026-10-06), on two doors since jakob's 2026-11-11 ruling: each opinion
+figure says its visible number and words, then its purpose, the one
+door's purpose split by direction — `{n} Opinions on them, opinions on
+@handle` · `{n} Opinions by them, opinions by @handle`. One's own reads
+`{n} Opinions on you, your opinions, on you` · `{n} Opinions by you,
+your opinions, by you`; a deleted account's end `opinions on this
+account` · `opinions by this account`. `Posts` is no door and has no
+spoken name of its own (`ProfileHeader`; `Profile`, `ProfileOther`,
+`ProfileDeleted`).
 
 **Carried over — blessed by use (jakob 2026-10-06).** The names the
 boards already speak, recorded so the registry is whole:
@@ -2589,7 +2592,8 @@ beside `Hide @ada`, never instead of it, and the row never drops: the
 act is about an ACTOR, the actor is still there, and its content still
 ranks into the reader's feed. The system's voice for the same reason
 `Deleted account` is — it is the product saying what the tap does when
-it cannot say whose.
+it cannot say whose. Its twin, where that account is already hidden,
+is `Unhide this account` (*On a hidden person's card the row turns*).
 
 ## A card's media description
 
@@ -3023,8 +3027,9 @@ handle after it (`Unhide this account` where the actor is redacted, as
 `Hide this account` is). It answers with Settings' snackbar, `@ada is
 unhidden.` with `Undo` (jakob
 2026-11-11, M1; round 41). **Drawn** on `HistoryPostMenu` (`author`
-hidden) and `HistoryProfileMenu`. (*`Unhide @ada` and `Unhide this
-account` are `Unhide` taking the row's handle, review-pending.*)
+hidden) and `HistoryProfileMenu`. (*`Unhide @ada` blessed (jakob
+2026-11-11, round 41's first question); `Unhide this account` blessed
+(jakob 2026-11-12, the re-ask's twelfth).*)
 
 **Hiding is confirm-free, and the snackbar is the whole ceremony.**
 `@ada is hidden.` with `Undo` beside it — hidden already says how far
@@ -3389,6 +3394,11 @@ colon, no subtitle.
 `graph` glyph and the signed figure, `+15.20`, hung on the thing's top-left;
 `Feed score` is its spoken name. The sign appears only there — every card
 keeps its plain figure, a negative keeping its `−` everywhere, a zero none.
+A tiny score (0 < |s| < 0.005) never reads zero (jakob 2026-11-12): the
+card prints `0.01` or `−0.01`, and every figure on the trace prints it in
+two significant digits, at most six decimals — `+0.0031`, `−0.00042`,
+`+0.000001` the floor; the reader's screen reader says the printed figure
+(`ExplainableNumber`'s source holds the rule whole).
 
 **A path's spoken shape** ends kind-neutral: `You, then @ada, then what
 reached you` — blessed (jakob 2026-10-01). The title's own words, since the

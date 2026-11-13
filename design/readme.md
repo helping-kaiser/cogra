@@ -951,8 +951,10 @@ paper over:
   hold an opinion on the person; `Opinions by them` the people they hold
   an opinion on. One person's opinions toward one target are one
   bundle, counted once however often they were revised; a revision count
-  belongs only inside that person's bundle view. The figures are one tap target toward the
-  stances page. On another's profile the stance wears the wide anchor with
+  belongs only inside that person's bundle view. Each opinion figure is
+  a door to the opinions page on its own direction — `Opinions on …` its
+  On state, `Opinions by …` its By — and Posts is no door (jakob
+  2026-11-11). On another's profile the stance wears the wide anchor with
   Message beside it; one's own avatar wears the change badge (the
   standalone crop-and-seal shortcut). No cover image: the largest thing on
   a person's screen should not be decoration.
@@ -1359,6 +1361,18 @@ Not the word "Score", and never an emoji: the product's only emoji
 vocabulary is the stance readout, and a second face on the same card
 would make both unreadable. Uncapped, negative allowed, never coloured —
 `error` is failure, and a low score is not one.
+
+**A tiny score never reads zero** (jakob 2026-11-12, round 45). A score
+with 0 < |s| < 0.005 is tiny. The card — every ranked card, the tag
+page's included — prints two decimals, never more, and a tiny score
+rounds away from zero to `0.01` or `−0.01`, so `0.00` is a severed
+one's alone. The trace (everything behind the graph glyph: the flag,
+the paths, the quiet row, a path's `adds`) prints two decimals too, and
+a tiny figure in two significant digits — `0.0031`, `0.00042` — at most
+six decimals, a still smaller one reading `0.000001`; the trace's `+`
+on a positive stands. The minus is U+2212. A screen reader reads the
+printed figure. The thresholds and the rounding, stated once:
+`ExplainableNumber`'s source.
 
 **Media runs full-bleed** and is the largest thing in the card, with the
 title above it and the caption clamped below behind a `More` opener. The
@@ -1787,8 +1801,9 @@ as Q46 in docs/open-questions.md):
   seen" toggle — default off since the feed-filter session
   (2026-08-28, flipping this session's first call): what you've
   seen stays out until you ask for it back. Seen = the card's
-  impression entered the viewport; device-local, never a record,
-  shared transiently with the viewer's chosen ranker. **The feed
+  impression entered the viewport; the reader's own record, never a
+  graph record, cut on the device and leaving it only for an outside
+  ranker the reader picks (seam 312). **The feed
   carries this same ordering section** (backlog item 19 — the
   canonical feed screens never drew the filter at all). Round 44
   (jakob 2026-11-11) takes the toggle off search: search reads every
@@ -5213,7 +5228,8 @@ pass: one board, one law, and two sweeps.
   `Unsave` control moved into the shared screen helpers on the way —
   it is drawn on two boards now, and a control spelled twice drifts.
 - **A hide row cannot say a name that is gone.** On a deleted author's
-  post the reader's menu reads `Hide this account`; everywhere else it
+  post the reader's menu reads `Hide this account` (`Unhide this
+  account` where that account is already hidden); everywhere else it
   spells the handle. The ROW stays either way —
   hiding is a read-side comfort about an ACTOR, and a redacted actor
   still ranks into the reader's feed — so only the wording gives way.
@@ -5760,7 +5776,8 @@ none of them needing a board. Ruled by jakob the same day.
   | the feed, in any of its states | `Back to feed` |
   | a post, through its tags-and-references sheet | `Back to the post` |
   | a comment's chips, in the thread | `Back to the comments` |
-  | a profile's posts | `Back to the profile` |
+  | a card on another's profile (round 45) | `Back to the profile` |
+  | a card on your own profile (round 45) | `Back to your profile` |
   | History (jakob 2026-10-05) | `Back to History` |
   | another tag's page | `Back to #<thattag>` |
   | nowhere — a shared URL | `Back to Explore` |
@@ -8424,6 +8441,8 @@ the rest as recommended. Both laws stand in §4.
   | Saved | `Back to Saved` |
   | History (jakob 2026-10-05) | `Back to History` |
   | a profile's opinions list | `Back to the opinions` |
+  | a card on another's profile — its references (round 45) | `Back to the profile` |
+  | a card on your own profile — its references (round 45) | `Back to your profile` |
   | Explore, mid-query (jakob 2026-10-07) | `Back to the search` |
   | a tag's page | `Back to #<thattag>` |
   | nowhere — a link | `Back to feed` |
@@ -11690,6 +11709,61 @@ and the implementers' findings (seams 292, 295, 296, 308), executed.
 - **Not drawn, at jakob:** the cover crop under a tall clip (backlog 200),
   a picked clip uploading beside a new cover (backlog 201), the sample
   card's opener (202), who else reads the seen list (203).
+
+### Round 45, the figures' two doors, the card tabs, the way back, a removed card's menu, the tiny score — 2026-11-12
+
+jakob's rulings of 2026-11-11 (J-A, the figures) and of the 2026-11-12
+re-ask (11, 12, 14–18, 20), and two registry gaps impl found (seam 297,
+308), executed.
+
+- **The figures are two doors and a fact** (J-A; seam 297, 299). `Opinions
+  on …` opens the opinions page on its On state, `Opinions by …` on By; the
+  Posts figure is inert, the posts standing at the page's foot. Each door is
+  spoken by its figure's number and words, then the one door's purpose split
+  by direction (`6 Opinions on them, opinions on @ada` · `5 Opinions by you,
+  your opinions, by you`). The doors are the registered `figures.stancesOn`
+  and `figures.stancesTaken`, the row keeps `figures`: no path moved.
+  Measured on `ProfileOther` and `Profile` against main: every head part at
+  the same pixel; the doors' targets 96×48 and 95.7×48 (another's), 88×48
+  and 87.7×48 (one's own), 20px apart. Graph: «the Opinions on figure» and «the
+  Opinions by figure» on all ten profile boards; a second flow,
+  `see-who-someone-stands-with`.
+- **The card tabs' other moments** (re-ask 14–16). A first page in flight
+  shows nothing for 200ms, then `Loading…`; a first page that does not come
+  shows `ProfileMoreFailed`'s quiet row with `Retry` where the list would
+  stand (`ProfileTabFirstPage`; the `load` chip on `ProfilePosts`,
+  `ProfileComments` and their own twins, whose `posts` / `comments` chip draws
+  the plain `Nothing here yet.` — an applicant's own tab as a member's).
+- **A removed comment on the Comments tab carries its date** (re-ask 17):
+  `removalMark.when` under the mark, the removal's own moment (`2h`).
+- **The way back names the profile** (re-ask 18). Every page a profile's card
+  opens — the post, its thread, the stream, the trace, a tag, and a profile
+  reached through the card's references — reads `Back to the profile`, or
+  `Back to your profile` from the reader's own; the tag page's and the
+  profile's tables gain the rows, the post's had them. `ProfileOther`'s
+  `from` chip draws it.
+- **A removed post's card keeps the reader's whole menu** (re-ask 11,
+  overruling the lean; backlog 176 closed). Save, Cite in a new post, Hide
+  with the author's handle, Report — no license row, the license having gone
+  with the payload. `LadderStates`' two cards; `FeedRemovedMenu` (new, *Feed ·
+  a removed post's menu*) draws it open. The reader's own just-removed card
+  (`FeedRemoved`, no ⋮) was not ruled and stands.
+- **`Unhide this account` is blessed** (re-ask 12), and every place that
+  writes `Hide this account` names its twin.
+- **A tiny score never reads zero** (re-ask 20; seam 293-2, 310). Tiny is
+  0 < |s| < 0.005. The card prints `0.01` or `−0.01`, never more than two
+  decimals; the trace prints two significant digits, six decimals at most,
+  `0.000001` the floor; the screen reader reads the print. The rule whole
+  is `ExplainableNumber`'s source; `FeedKinds`' and `FeedEntry`'s `score`
+  chips draw both signs.
+- **Registry**: the snackbar over the thread sheet is `postDetail.snackbar`
+  on `ReplyEntry` (seam 297). `PadStanding`, `RefPair` and `TagPad` register
+  (seam 308; backlog 205): `PadStanding`'s two chips fold into one, `state`
+  (parked · held · no-side · explained), so its card keys once per value and
+  its pad takes `feed.card.actionRow.stance.pad.*`; the two pair sheets are
+  `pairSheet` — `title`, the readout `pick` with the pads' `label`, `face` and
+  `exact`, `pad.field`, `note`, `done`, `untag`. Over rounds 42–44: 1956 → 2032
+  distinct paths, 185 → 189 screens, additions only.
 
 ---
 

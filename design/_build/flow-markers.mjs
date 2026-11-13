@@ -722,6 +722,16 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 5, find: ">Report</button>", tag: "button" },
   ],
+  // A removed post's card, its menu open (jakob 2026-11-12, the re-ask's
+  // eleventh): the reader's card menu whole, no license row — scanExempt like
+  // every menu board.
+  FeedRemovedMenu: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+    { n: 3, find: ">Hide @ada</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 5, find: ">Report</button>", tag: "button" },
+  ],
   FeedRemoveConfirm: [
     { n: 1, find: ">Remove</button>", tag: "button" },
     { n: 2, find: ">Keep it</button>", tag: "button" },
@@ -1506,7 +1516,9 @@ const ownProfile = () => [
   { n: 2, find: 'aria-label="More on your profile"', tag: "button" },
   { n: 3, find: 'aria-label="Settings"', tag: "button" },
   { n: 4, find: 'aria-label="Change your picture"', tag: "button" },
-  { n: 5, find: ', your opinions, both directions"', tag: "button" },
+  // The two opinion doors (round 45): On at the one door's old number, By at
+  // each board's next free one.
+  { n: 5, find: ', your opinions, on you"', tag: "button" },
   { n: 6, find: ">Edit profile</button>", tag: "button" },
   // The waiting dot rides inside the button (the invites round), so the label
   // is no longer the last thing before the closing tag: the find stops at the
@@ -1521,6 +1533,7 @@ Object.assign(FLOW_MARKERS, {
   // head to the number, the bell at `Profile`'s 15, the cards after.
   ProfilePostsOwn: [
     ...ownProfile(),
+    { n: 23, find: ', your opinions, by you"', tag: "button" },
     { n: 9, find: '<a href="/u/', tag: "a", all: true },
     { n: 10, find: 'aria-label="More on this post"', tag: "button", all: true },
     { n: 11, find: ">More</button>", tag: "button", all: true },
@@ -1532,9 +1545,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 17, find: 'aria-label="Share this post"', tag: "button", all: true },
     ...nav(18),
     { n: 15, find: 'aria-label="Notifications"', tag: "button" },
+    // The load chip's failed first page (round 45): its Retry.
+    { n: 24, find: ">Retry</button>", tag: "button" },
   ],
   ProfileCommentsOwn: [
     ...ownProfile(),
+    { n: 21, find: ', your opinions, by you"', tag: "button" },
     { n: 9, find: '<a href="/u/', tag: "a", all: true },
     { n: 10, find: 'aria-label="More on this comment"', tag: "button", all: true },
     { n: 11, find: 'aria-label="Give your opinion on this comment"', tag: "button", all: true },
@@ -1543,9 +1559,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 14, find: ">On “", tag: "button", all: true },
     { n: 15, find: 'aria-label="Notifications"', tag: "button" },
     ...nav(16),
+    // The load chip's failed first page (round 45): its Retry.
+    { n: 22, find: ">Retry</button>", tag: "button" },
   ],
   Profile: [
     ...ownProfile(),
+    { n: 17, find: ', your opinions, by you"', tag: "button" },
     { n: 9, find: "Salt maps of the coast road — rubbings", tag: "button" },
     { n: 9, find: "The third headland light is real", tag: "button" },
     { n: 9, find: "Three weekends of walking the same stretch", tag: "button" },
@@ -1567,6 +1586,7 @@ Object.assign(FLOW_MARKERS, {
   ],
   ProfileApplicant: [
     ...ownProfile(),
+    { n: 17, find: ', your opinions, by you"', tag: "button" },
     ...nav(10),
     // The ask link's permanent home (jakob 2026-10-02): the next free number
     // after the bell's 15. The `application` chip draws the card twice, open
@@ -1574,9 +1594,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 16, find: 'aria-label="Copy your ask link"', tag: "button", all: true },
   ],
   ProfileOther: [
-    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
+    // The way back is the `from` chip's hole (round 45), as ProfileStances' is.
+    { n: 1, find: 'aria-label="{{backLabel}}"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
-    { n: 3, find: ', opinions on and by @ada"', tag: "button" },
+    { n: 3, find: ', opinions on @ada"', tag: "button" },
+    { n: 13, find: ', opinions by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
     { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
     { n: 5, find: ">Message</button>", tag: "button" },
@@ -1593,7 +1615,8 @@ Object.assign(FLOW_MARKERS, {
   ProfileOtherHidden: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
-    { n: 3, find: ', opinions on and by @ada"', tag: "button" },
+    { n: 3, find: ', opinions on @ada"', tag: "button" },
+    { n: 14, find: ', opinions by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
     { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
     { n: 5, find: ">Message</button>", tag: "button" },
@@ -1609,7 +1632,8 @@ Object.assign(FLOW_MARKERS, {
   ProfileOtherHeld: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
-    { n: 3, find: ', opinions on and by @ada"', tag: "button" },
+    { n: 3, find: ', opinions on @ada"', tag: "button" },
+    { n: 13, find: ', opinions by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Your opinion on @ada', tag: "button" },
     { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
     { n: 5, find: ">Message</button>", tag: "button" },
@@ -1639,7 +1663,8 @@ Object.assign(FLOW_MARKERS, {
   ProfilePosts: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
-    { n: 3, find: ', opinions on and by @ada"', tag: "button" },
+    { n: 3, find: ', opinions on @ada"', tag: "button" },
+    { n: 22, find: ', opinions by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
     { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
     { n: 4, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
@@ -1659,11 +1684,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 15, find: 'aria-label="3 comments"', tag: "button" },
     { n: 15, find: 'aria-label="1 comment"', tag: "button", all: true },
     ...nav(16),
+    // The load chip's failed first page (round 45): its Retry.
+    { n: 23, find: ">Retry</button>", tag: "button" },
   ],
   ProfileComments: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
-    { n: 3, find: ', opinions on and by @ada"', tag: "button" },
+    { n: 3, find: ', opinions on @ada"', tag: "button" },
+    { n: 18, find: ', opinions by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
     { n: 5, find: ">Message</button>", tag: "button" },
     { n: 6, find: 'aria-label="Posts"', tag: "button" },
@@ -1683,6 +1711,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 11, find: "View 2 replies", tag: "button" },
     { n: 17, find: ">On “", tag: "button", all: true },
     ...nav(12),
+    // The load chip's failed first page (round 45): its Retry.
+    { n: 19, find: ">Retry</button>", tag: "button" },
   ],
   ProfileEdit: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
@@ -2848,7 +2878,8 @@ Object.assign(FLOW_MARKERS, {
   // via on this board renumbers behind it.
   ProfileDeleted: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
-    { n: 2, find: ', opinions on and by this account"', tag: "button" },
+    { n: 2, find: ', opinions on this account"', tag: "button" },
+    { n: 12, find: ', opinions by this account"', tag: "button" },
     { n: 3, find: 'aria-label="Give your opinion on this account"', tag: "button" },
     { n: 3, find: ">Choose your opinion on this account</button>", tag: "button" },
     { n: 4, find: 'aria-label="Posts"', tag: "button" },

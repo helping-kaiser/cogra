@@ -1416,7 +1416,7 @@
     },
     {
       "name": "see-who-stands-with-someone",
-      "description": "The figures row, on any profile, opens the stance lists; reading who stands with them is the whole journey.",
+      "description": "The Opinions on figure, on any profile, opens the opinions page on its On state; reading who stands with them is the whole journey.",
       "status": "resolved",
       "startsOn": [
         "Profile",
@@ -1431,7 +1431,41 @@
         "ProfilePostsOwn"
       ],
       "steps": [
-        "start · «the figures row» on 10 boards → ProfileStances",
+        "start · «the Opinions on figure» on 10 boards → ProfileStances",
+        "end · arrival at ProfileStances"
+      ],
+      "boards": [
+        "ProfileStances",
+        "Profile",
+        "ProfileApplicant",
+        "ProfileComments",
+        "ProfileCommentsOwn",
+        "ProfileDeleted",
+        "ProfileOther",
+        "ProfileOtherHeld",
+        "ProfileOtherHidden",
+        "ProfilePosts",
+        "ProfilePostsOwn"
+      ]
+    },
+    {
+      "name": "see-who-someone-stands-with",
+      "description": "The Opinions by figure, on any profile, opens the opinions page on its By state; reading whom they hold an opinion on is the whole journey.",
+      "status": "resolved",
+      "startsOn": [
+        "Profile",
+        "ProfileApplicant",
+        "ProfileComments",
+        "ProfileCommentsOwn",
+        "ProfileDeleted",
+        "ProfileOther",
+        "ProfileOtherHeld",
+        "ProfileOtherHidden",
+        "ProfilePosts",
+        "ProfilePostsOwn"
+      ],
+      "steps": [
+        "start · «the Opinions by figure» on 10 boards → ProfileStances",
         "end · arrival at ProfileStances"
       ],
       "boards": [
@@ -1887,6 +1921,7 @@
         "CommentMenuOwn",
         "FeedPostMenu",
         "FeedPostMenuOwn",
+        "FeedRemovedMenu",
         "HistoryCommentMenu",
         "HistoryCommentMenuOwn",
         "HistoryPostMenu",
@@ -1903,7 +1938,7 @@
         "TagPageMenu"
       ],
       "steps": [
-        "start · «Cite in a new post» — to ComposePick on 18 boards → ComposePick",
+        "start · «Cite in a new post» — to ComposePick on 19 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -1916,6 +1951,7 @@
         "CommentMenuOwn",
         "FeedPostMenu",
         "FeedPostMenuOwn",
+        "FeedRemovedMenu",
         "HistoryCommentMenu",
         "HistoryCommentMenuOwn",
         "HistoryPostMenu",
@@ -5511,6 +5547,12 @@
       ],
       "endpoint": []
     },
+    "FeedRemovedMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
     "FeedScrolled": {
       "flows": [
         "follow-a-citation",
@@ -6150,6 +6192,7 @@
         "publish-a-video",
         "publish-words",
         "read-your-history",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone",
         "send-someone-an-invite",
         "send-your-first-invite",
@@ -6176,6 +6219,7 @@
     "ProfileApplicant": {
       "flows": [
         "read-your-own-page-as-an-applicant",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone"
       ],
       "endpoint": [
@@ -6189,6 +6233,7 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person"
       ],
@@ -6212,6 +6257,7 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone"
       ],
       "endpoint": []
@@ -6223,6 +6269,7 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person"
       ],
@@ -6293,6 +6340,7 @@
         "publish-words",
         "read-someones-posts",
         "search-and-open-a-person",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person",
         "visit-an-author"
@@ -6315,6 +6363,7 @@
         "publish-a-video",
         "publish-words",
         "revise-a-standing-opinion",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone",
         "walk-back-an-opinion"
       ],
@@ -6330,6 +6379,7 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person"
       ],
@@ -6356,6 +6406,7 @@
         "publish-words",
         "read-someones-posts",
         "reply-to-a-post",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person",
         "take-a-stance-on-a-post",
@@ -6385,6 +6436,7 @@
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-post",
         "trace-a-score-to-its-records"
@@ -6397,9 +6449,11 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone"
       ],
       "endpoint": [
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone"
       ]
     },

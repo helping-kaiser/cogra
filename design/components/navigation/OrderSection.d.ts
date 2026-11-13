@@ -10,9 +10,10 @@ export interface OrderSectionProps {
   onOrder?: (order: string) => void;
   /** The seen toggle, default false — what you've seen stays out until you ask
    *  for it back. Seen = the content was fully in the viewport, the first
-   *  time only; the seen-list is the reader's History — application state,
-   *  never a graph record, shared transiently with the viewer's chosen
-   *  ranker. */
+   *  time only; the seen-list is the reader's History — the reader's own
+   *  record, application state and never a graph record. The feed's cut
+   *  happens on the reader's device; the list leaves the device only if the
+   *  reader picks an outside ranker, which the device then hands it to. */
   seen?: boolean;
   onSeen?: (seen: boolean) => void;
   /** Whether the seen toggle stands (default true). The search sheet passes

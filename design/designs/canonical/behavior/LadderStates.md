@@ -26,4 +26,6 @@ ALWAYS the author's mark and the platform's mark never read alike
 
 ALWAYS a removed post's card carries no License terms row in its menu
 
+ALWAYS a removed post's card raises the reader's card menu whole — Save or Unsave, Cite in a new post, Hide with the author's handle, then Report at the sheet tail — GIVEN the post is another's, whether its author removed it or a passed proposal did
+
 ALWAYS no removal is silent, and no removed post leaves a gap without a mark

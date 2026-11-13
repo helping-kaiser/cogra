@@ -5645,15 +5645,18 @@ setting shows; (c) the shown page as a board of its own.
 Closed by round 41, by (a): the frame is 3103px; a row's second line costs
 nothing (54px inside the 56px minimum), so no other setting needs more.
 
-### 176 · The ladder's redacted records: which menu · *design* · **filed 2026-11-11**
+### 176 · The ladder's redacted records: which menu · *design* · **filed 2026-11-11** · **closed 2026-11-12**
 
-Round 39 (backlog 162). `LadderStates` draws a post removed by its author and
-one removed as illegal with `CARD_MENU` — Save and Cite — and its note says a
-redacted record keeps its menu, citable because it never left the graph. No
-board draws a redacted card's open menu (`FeedRemoved`'s just-removed card
-passes none). For jakob: (a) the reader's card menu, Hide and Report included
-(`readerCardMenu`); (b) Save and Cite only, as drawn [lean — what is hidden
-or reported is the payload, and it is gone]; (c) no menu, `FeedRemoved`'s.
+Round 39 (backlog 162). `LadderStates` drew a post removed by its author and
+one removed as illegal with Save and Cite alone, and no board drew a redacted
+card's open menu. Closed by round 45, by jakob's ruling (2026-11-12, the
+re-ask's eleventh: "full menu. hide targets the user so i could still hide an
+existing user from a deleted post and report can stay aswell"): another's
+removed post's card raises the reader's card menu whole (`readerCardMenu`:
+Save, Cite in a new post, Hide with the author's handle, Report), no license
+row since the license rode the payload — both `LadderStates` cards, and
+`FeedRemovedMenu` draws it open. The reader's own just-removed card
+(`FeedRemoved`, no ⋮) was not ruled and stands as drawn.
 
 ### 180 · Invites' waiting applications: which three · *design* · **filed 2026-11-11** · **closed 2026-11-12**
 
@@ -5949,7 +5952,7 @@ those boards: four registered paths removed across 32 boards and the flows'
 `More` steps dropped (an announced breaking change for both clients); (c)
 leave the boards as they are and read the law from the docblocks.
 
-### 203 · Who else reads the seen list · *design* · **filed 2026-11-12**
+### 203 · Who else reads the seen list · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 44 (seam 296): search never reads the seen list. jakob's wider
 sentence — "the seen list is a pure feed and history thing nothing else should
@@ -5968,3 +5971,50 @@ ranking") and `miner-api.md` ("The server's own ranker container receives no
 seen-list") against `OrderSection`'s "shared transiently with the viewer's
 chosen ranker". For jakob: confirm nothing else reads it, and which side of
 the ranker sentence stands.
+
+Closed by round 45 with impl's answer (seam 312, checked in the docs and the
+code): the docs are right for what ships — the server's own ranker gets no
+seen list, and the feed's cut happens on the reader's device; only an outside
+ranker (a miner) would be handed it, by the device. The component notes now
+say so: the list is the reader's own record, cut on the device, leaving it
+only for an outside ranker the reader picks. No surface reads it beyond the
+feed and History; whether anything else may stays his belief.
+
+### 205 · PadStanding, RefPair and TagPad: registering the reference pads · *system* · **filed 2026-11-12** · **closed 2026-11-12**
+
+Round 45 (seam 308, option a: register them). Not built, because each needs a
+choice the rules do not make. `PadStanding` draws one keyed card four times
+under two chips (`knob` parked/held only within `landing` pulledBack), and a
+keyed card may repeat once per value of ONE chip: (a) fold the two chips into
+one, `state` = parked · held · noSide · explained, each copy a chip copy of
+the card [lean — the pad parts then take `feed.card.actionRow.stance.pad.*`,
+`VouchBackPad`'s names]; (b) register the parked copy alone. `RefPair` and
+`TagPad` are bespoke sheets over the composer and the edit: their prefix
+(the composer's and the edit's own) and every part name (sheet, title, the
+readout, the pad, the foot's line, `Done`, `Un-tag`) are new paths to mint.
+
+Closed by round 45's second act, by (a), the registry's call: `PadStanding`'s
+`state` chip (parked · held · no-side · explained — a chip value is a key, so
+`no-side` is hyphenated) draws the card once per value, the pad under
+`feed.card.actionRow.stance.pad.*`; `RefPair` (`composeDetails`) and `TagPad`
+(`postEdit`) name their sheet `pairSheet` — `title`, the readout `pick`
+(`label`, `face`, `exact`, the pads' `standing.pick` names), `pad.field`,
+`note`, `done`, and `TagPad`'s `untag`.
+
+### 206 · Another's removed post, opened: the detail's ⋮ · *design* · **filed 2026-11-12**
+
+Round 45. jakob's ruling (re-ask 11) gives another's removed post's CARD the
+reader's whole menu. The only drawn removed detail is the reader's own
+(`Removed`: back arrow alone, "a removed post has no menu left"), and
+`FeedRemoved`'s own card carries no ⋮. For jakob: (a) another's removed post's
+detail header carries the reader's post menu as the card does, no license row
+[lean — one menu per post, wherever it is opened]; (b) the detail stays
+menu-less; and whether the reader's own removed card and detail keep none.
+
+### 207 · A first page that failed reads `Couldn't load more` · *design* · **filed 2026-11-12**
+
+Round 45 (re-ask 15, as recommended: `ProfileMoreFailed`'s quiet row where the
+list would stand). The row is copied word for word, so a tab whose first page
+never came says `more` with nothing above it. For jakob: (a) keep it, one row
+for every page [as drawn]; (b) the first page's row takes a line of its
+own, his words. Nothing waits on it.

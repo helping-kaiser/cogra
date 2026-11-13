@@ -46,9 +46,9 @@ import { StanceControl } from "../stance/StanceControl.jsx";
    person's bundle view (jakob 2026-11-10). Two
    figures, each labelled, each plain — never one merged "followers" number,
    because there is no following here and borrowing the word would describe a
-   different product. A Posts figure leads the row, and the figures are one tap
-   target leading to the opinions page: both directions, separated, never merged
-   there either.
+   different product. A Posts figure leads the row, inert; each opinion figure
+   is its own door to the opinions page, opened on the direction it counts
+   (jakob 2026-11-11) — both directions separated there too, never merged.
 
    THE AVATAR CHANGES WITHOUT THE EDIT SCREEN (jakob 2026-09-01). Changing the
    picture is frequent and mostly standalone, so one's own avatar wears a change
@@ -57,9 +57,9 @@ import { StanceControl } from "../stance/StanceControl.jsx";
    TAPPABLE (the K13 round): the badge is the door, and the picture is a
    picture.
 
-   BOTH DOORS ANSWER TO 48px (readme §4, the K13 round): the 28px badge and the
-   figures row (about 40px of ink) carry `cg-hit`, which grows each target
-   without moving a pixel of the drawing. The floor is ruled.
+   EVERY DOOR ANSWERS TO 48px (readme §4, the K13 round): the 28px badge and
+   the two opinion figures (about 40px of ink each) carry `cg-hit`, which grows
+   each target without moving a pixel of the drawing. The floor is ruled.
 
    No cover image, no banner: the system has no imagery slot that size, and a
    decorative band would be the largest thing on a screen whose subject is a
@@ -92,9 +92,31 @@ const PROFILE_TOP_CSS = `@container cg-profile-other (width < calc(96px + 15.5re
    rounds 20/23/25): size, leading, tracking and weight, so a client
    conforming to the master measures off the role's tokens rather than an
    inherited tracking. */
-function Figure({ value, label, node }) {
+/* AN OPINION FIGURE IS A DOOR, THE POSTS FIGURE IS NOT (jakob 2026-11-11,
+   J-A; seam 297/299). `onOpen` makes the figure its own button, spoken by
+   `ariaLabel`; without it the figure is the plain column it always was. The
+   button adds no pixel: no border, no padding, the same column. */
+function Figure({ value, label, node, onOpen, ariaLabel }) {
+  const Tag = onOpen ? "button" : "div";
+  const door = onOpen
+    ? {
+        type: "button",
+        "aria-label": ariaLabel,
+        onClick: onOpen,
+        className: "cg-state cg-focus cg-hit",
+      }
+    : {};
   return (
-    <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }} data-node={node}>
+    <Tag
+      {...door}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        minWidth: 0,
+        ...(onOpen ? { border: 0, background: "none", padding: 0, margin: 0, cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left", borderRadius: "var(--radius-small)" } : null),
+      }}
+      data-node={node}
+    >
       <span
         style={{ fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", letterSpacing: "var(--text-title-medium--letter-spacing)", fontWeight: "var(--text-title-medium--font-weight)" }}
         data-node={node && "value"}
@@ -107,7 +129,7 @@ function Figure({ value, label, node }) {
       >
         {label}
       </span>
-    </div>
+    </Tag>
   );
 }
 
@@ -144,12 +166,36 @@ export function ProfileHeader({
 }) {
   const name = redacted ? REDACTED_ACTOR_NAME : displayName && displayName.trim() ? displayName : handle;
   const hasFigures = posts !== undefined || stancesOn !== undefined || stancesTaken !== undefined;
+  const onLabel = own ? "Opinions on you" : "Opinions on them";
+  const byLabel = own ? "Opinions by you" : "Opinions by them";
+  /* EACH DOOR'S NAME CARRIES WHAT THE EYE READS (readme §10, K13.11): its
+     figure's number and words first, then the door's purpose — the one
+     door's purpose split by direction: `opinions on @ada` · `opinions by
+     @ada`, `opinions on this account` · `opinions by this account`, and on
+     one's own `your opinions, on you` · `your opinions, by you`, the
+     direction in the opinions page's own tab words. */
+  const purpose = (direction) =>
+    own ? `your opinions, ${direction} you` : redacted ? `opinions ${direction} this account` : `opinions ${direction} @${handle}`;
   const figures = (
     <>
       {posts !== undefined && <Figure value={posts} label="Posts" node={node && "posts"} />}
-      {stancesOn !== undefined && <Figure value={stancesOn} label={own ? "Opinions on you" : "Opinions on them"} node={node && "stancesOn"} />}
+      {stancesOn !== undefined && (
+        <Figure
+          value={stancesOn}
+          label={onLabel}
+          node={node && "stancesOn"}
+          onOpen={onCounts && (() => onCounts("on"))}
+          ariaLabel={`${stancesOn} ${onLabel}, ${purpose("on")}`}
+        />
+      )}
       {stancesTaken !== undefined && (
-        <Figure value={stancesTaken} label={own ? "Opinions by you" : "Opinions by them"} node={node && "stancesTaken"} />
+        <Figure
+          value={stancesTaken}
+          label={byLabel}
+          node={node && "stancesTaken"}
+          onOpen={onCounts && (() => onCounts("by"))}
+          ariaLabel={`${stancesTaken} ${byLabel}, ${purpose("by")}`}
+        />
       )}
     </>
   );
@@ -165,35 +211,21 @@ export function ProfileHeader({
      header's own width — 96px of avatar and gap plus the labels' measured
      width in `rem`, so it moves with the reader's text size. */
   const container = own ? "cg-profile-own" : "cg-profile-other";
-  /* THE NAME CARRIES WHAT THE EYE READS (readme §10, K13.11): the figures'
-     visible words and numbers first, then the door's purpose — the filter
-     pill's reading-before-purpose order (`triggerName`). */
-  const figuresReading = [
-    posts !== undefined && `${posts} Posts`,
-    stancesOn !== undefined && `${stancesOn} ${own ? "Opinions on you" : "Opinions on them"}`,
-    stancesTaken !== undefined && `${stancesTaken} ${own ? "Opinions by you" : "Opinions by them"}`,
-  ].filter(Boolean).join(", ");
-  const figuresPurpose = own ? "your opinions, both directions" : redacted ? "opinions on and by this account" : "opinions on and by @" + handle;
-  const figuresCell = hasFigures
-    ? onCounts
-      ? (
-        <button
-          type="button"
-          aria-label={`${figuresReading}, ${figuresPurpose}`}
-          onClick={onCounts}
-          className="cg-state cg-focus cg-hit cg-profile-figures"
-          style={{ gridArea: "figures", alignSelf: "start", display: "flex", gap: "var(--space-5)", border: 0, background: "none", padding: 0, marginTop: 6, cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left", width: "fit-content", maxWidth: "100%", borderRadius: "var(--radius-small)" }}
-          data-node={node && "figures"}
-        >
-          {figures}
-        </button>
-      )
-      : (
-        <div className="cg-profile-figures" style={{ gridArea: "figures", alignSelf: "start", display: "flex", gap: "var(--space-5)", marginTop: 6 }} data-node={node && "figures"}>
-          {figures}
-        </div>
-      )
-    : null;
+  /* THE ROW HOLDS TWO DOORS AND A FACT (jakob 2026-11-11, J-A). The row
+     itself is no target: `figures` stays the row's name, and its two opinion
+     figures are the doors — `Opinions on …` opens the opinions page on its On
+     state, `Opinions by …` on By — while `Posts` is inert, the posts standing
+     at the page's foot beside the comments and the chronicle. The row keeps
+     its width, its gap and its 6px, so nothing in the head moves. */
+  const figuresCell = hasFigures ? (
+    <div
+      className="cg-profile-figures"
+      style={{ gridArea: "figures", alignSelf: "start", display: "flex", gap: "var(--space-5)", marginTop: 6, color: "var(--on-surface)", width: "fit-content", maxWidth: "100%" }}
+      data-node={node && "figures"}
+    >
+      {figures}
+    </div>
+  ) : null;
   return (
     <header style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", padding: "var(--space-3) 0 var(--space-1)" }} data-node={node}>
       <style dangerouslySetInnerHTML={{ __html: PROFILE_TOP_CSS }} />

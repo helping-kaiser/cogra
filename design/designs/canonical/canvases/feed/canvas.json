@@ -451,6 +451,15 @@
       "page": "feed"
     },
     {
+      "file": "FeedRemovedMenu.dc.html",
+      "title": "Feed · a removed post's menu",
+      "x": 12480,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "FeedWordsSensitive.dc.html",
       "title": "Feed · a words-only post, veiled",
       "x": 8160,
@@ -569,9 +578,9 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -7960,
+      "x": -8250,
       "y": 0,
-      "w": 7540,
+      "w": 7830,
       "h": 5545,
       "page": "feed",
       "title": "Feed & Search · flow map"
@@ -815,7 +824,7 @@
       "x": -340,
       "y": 1060,
       "w": 290,
-      "text": "FEED · The filter (item 19, growing item 4). The trigger sits on the CograBand's right edge — the band never spends its full width on identity alone — and scrolls away and back with it. EVERY feed view wears it, guests and applicants too: filtering is a read control. The trigger speaks deviations only ('Posts' at rest; 'Posts · photos · newest' when flipped; past the pill's budget the extras collapse to a count — '3 kinds · 4 changes', the far-from-default board). The sheet: four kinds that combine, the ones V1.0 serves (Posts, Comments, Profiles, Tags — readme §13, the V1.0 scope cut) — ONE list shared with search, 'Profiles' everywhere — forms of post, the Order section (Ranked/Newest + 'Show what you've already seen', DEFAULT OFF: what you've seen stays out until asked back; impression-based, device-local, shared transiently with the viewer's ranker; identical section on search), what else is admitted, Reset, and the sheet's own '?' (The filter dialog — names the settings default). The chips stage and Done commits — one re-query per visit; the scrim, a swipe down and Back discard (the sheet law). Everything off is allowed: the feed's empty state answers, not the chip.",
+      "text": "FEED · The filter (item 19, growing item 4). The trigger sits on the CograBand's right edge — the band never spends its full width on identity alone — and scrolls away and back with it. EVERY feed view wears it, guests and applicants too: filtering is a read control. The trigger speaks deviations only ('Posts' at rest; 'Posts · photos · newest' when flipped; past the pill's budget the extras collapse to a count — '3 kinds · 4 changes', the far-from-default board). The sheet: four kinds that combine, the ones V1.0 serves (Posts, Comments, Profiles, Tags — readme §13, the V1.0 scope cut) — ONE list shared with search, 'Profiles' everywhere — forms of post, the Order section (Ranked/Newest + 'Show what you've already seen', DEFAULT OFF: what you've seen stays out until asked back; impression-based, the reader's own record, cut on the device and leaving it only for an outside ranker the reader picks; identical section on search), what else is admitted, Reset, and the sheet's own '?' (The filter dialog — names the settings default). The chips stage and Done commits — one re-query per visit; the scrim, a swipe down and Back discard (the sheet law). Everything off is allowed: the feed's empty state answers, not the chip.",
       "page": "feed"
     },
     {

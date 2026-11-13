@@ -9,8 +9,10 @@ import { Checkbox } from "../forms/Checkbox.jsx";
 
    SEEN, PRECISELY. Seen means the content was fully in the viewport, the
    first time only — a re-seeing is never counted. The seen-list is the
-   reader's `History` (feed-ranking.md §9.4): application state, never a
-   graph record, shared transiently with the viewer's chosen ranker. Default
+   reader's `History` (feed-ranking.md §9.4): the reader's own record,
+   application state and never a graph record. The feed's cut happens on the
+   reader's device; the list leaves the device only if the reader picks an
+   outside ranker, which the device then hands it to (seam 312). Default
    OFF (ruled 2026-08-28, flipping the search session's first
    call): what you've seen stays out until you ask for it back, so the box
    arrives unticked and "showing seen" is the deviation the trigger speaks.

@@ -47,3 +47,5 @@ WHEN Add a comment is pressed GIVEN the reader is a member -> the reply composer
 ALWAYS postDetail.threadSheet.commentCard.actionRow.stance.pending reads Waiting for your key under the kept pick's face GIVEN a pick is kept pending on the comment and the key is not on this device
 
 ALWAYS postDetail.threadSheet.commentCard.actionRow.stance.pending reads Waiting for your review under the kept pick's face GIVEN the key is on this device and the kept picks' review was left unsigned
+
+ALWAYS the post's back arrow beneath the sheet reads Back to the profile GIVEN the thread was opened from a comment on another's profile's Comments tab — its target, Reply or its replies — and Back to your profile from one on the reader's own
