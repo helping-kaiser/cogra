@@ -9,8 +9,12 @@
 //! and reaped when a write never lands.
 
 use common::l1::census::Family;
-use common::l1::handshake::{EDITION, PreSignedProposal, Proposal, StructuralBody, VerifiedAct};
+use common::l1::crypto;
+use common::l1::handshake::{Proposal, StructuralBody};
 use common::l1::identifier::{ActId, NodeId};
+use common::l1::proposal::{
+    CONTENT_EDITION, DEPENDENCY_EDITION, PreSigned, SealedAct, Submission, VerifiedAct,
+};
 use sqlx::{PgConnection, PgPool};
 use uuid::Uuid;
 
@@ -33,6 +37,11 @@ pub enum StagedError {
     /// longer be signed, relayed or read back as a proposal.
     #[error("staged write {0} was reaped by a redaction")]
     Reaped(Uuid),
+    /// The pre-commitment's content nonce is one its author already used
+    /// for another act — a carriage refusal (layer1-interface.md §8.2,
+    /// "Entropy custody"). Nothing was recorded.
+    #[error("staged write {0}: the content nonce was already used for another act")]
+    ContentNonceReused(Uuid),
     #[error(transparent)]
     Storage(#[from] sqlx::Error),
 }
@@ -113,10 +122,15 @@ pub struct StagedWrite {
     pub sealed: Option<SealedParts>,
 }
 
+/// The device's pre-commitment leg: both nonces it drew and its signature
+/// over P (layer1-interface.md §8.2, "Proposal pre-commitment"). The
+/// content nonce stays on CoGra's side with the payload; the dependency
+/// nonce goes to the host with the dependency list.
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreSignedParts {
     pub author_pubkey: Vec<u8>,
-    pub nonce: Vec<u8>,
+    pub content_nonce: Vec<u8>,
+    pub dependency_nonce: Vec<u8>,
     pub pre_signature: Vec<u8>,
 }
 
@@ -129,40 +143,51 @@ pub struct SealedParts {
     pub host_seal: Vec<u8>,
 }
 
+impl PreSignedParts {
+    /// The leg joined to the proposal it covers — the carrier's whole
+    /// pre-signed proposal, content pair included.
+    pub fn pre_signed(&self, proposal: &Proposal) -> PreSigned {
+        PreSigned {
+            proposal: proposal.clone(),
+            author_pubkey: self.author_pubkey.clone(),
+            content_nonce: self.content_nonce.clone(),
+            dependency_nonce: self.dependency_nonce.clone(),
+            pre_signature: self.pre_signature.clone(),
+        }
+    }
+}
+
 impl StagedWrite {
-    /// The pre-signed proposal as submitted to the seal leg.
-    pub fn pre_signed_proposal(&self) -> Option<PreSignedProposal> {
-        let p = self.pre_signed.as_ref()?;
-        Some(PreSignedProposal {
-            proposal: self.proposal.clone(),
-            author_pubkey: p.author_pubkey.clone(),
-            nonce: p.nonce.clone(),
-            pre_signature: p.pre_signature.clone(),
-        })
+    /// What the host receives at the seal leg (layer1-interface.md §8.2,
+    /// "Verified act"): the content pre-digest is formed here, from the
+    /// staged payload and the device's content nonce, and the pair itself
+    /// stays behind. None before the pre-commitment leg.
+    pub fn submission(&self) -> Option<Submission> {
+        Some(self.pre_signed.as_ref()?.pre_signed(&self.proposal).submission())
     }
 
     /// The host-sealed verified act, once the seal has returned.
     ///
     /// The pre-commitment and the edition tags are not stored: the first is
-    /// a function of the proposal and the nonce this row holds, the second
-    /// the stand-in's constant. Rebuilding them hides nothing from the
-    /// device, because the host seal covers both — a host that sealed any
-    /// other value fails the device's seal check on the rebuilt act.
-    pub fn verified_act(&self) -> Option<VerifiedAct> {
-        let pre = self.pre_signed_proposal()?;
+    /// a function of the proposal and the two nonces this row holds, the
+    /// second the handshake's constants. Rebuilding them hides nothing from
+    /// the device, because the host seal covers both — a host that sealed
+    /// any other value fails the device's seal check on the rebuilt act.
+    pub fn sealed_act(&self) -> Option<SealedAct> {
+        let pre = self.pre_signed.as_ref()?;
         let s = self.sealed.as_ref()?;
-        Some(VerifiedAct {
-            pre_commitment: pre.pre_commitment().to_vec(),
-            proposal: pre.proposal,
-            author_pubkey: pre.author_pubkey,
-            nonce: pre.nonce,
-            pre_signature: pre.pre_signature,
+        Some(SealedAct {
+            act: VerifiedAct {
+                body: self.proposal.body.clone(),
+                pre_commitment: pre.pre_signed(&self.proposal).pre_commitment().to_vec(),
+                pre_signature: pre.pre_signature.clone(),
+                content_commitment: s.content_commitment.clone(),
+                dependency_commitment: s.deps_commitment.clone(),
+                content_edition: CONTENT_EDITION,
+                dependency_edition: DEPENDENCY_EDITION,
+            },
             content_salt: s.content_salt.clone(),
-            deps_salt: s.deps_salt.clone(),
-            content_commitment: s.content_commitment.clone(),
-            deps_commitment: s.deps_commitment.clone(),
-            content_edition: EDITION,
-            deps_edition: EDITION,
+            dependency_salt: s.deps_salt.clone(),
             host_seal: s.host_seal.clone(),
         })
     }
@@ -276,7 +301,8 @@ pub enum Promotable {
 }
 
 /// What a reaped write keeps: the structure of the act and the display
-/// rows it owned, and none of the payload, its content salt or its nonce.
+/// rows it owned, and none of the payload, its content salt or its content
+/// nonce.
 /// A record landing over it lands reduced (data-model.md "Act payload
 /// carriage").
 #[derive(Debug, Clone)]
@@ -298,7 +324,8 @@ pub async fn load_promotable(pool: &PgPool, id: Uuid) -> Result<Promotable, Stag
     let row = sqlx::query!(
         "SELECT id, actor_id, author, seq, family, middle,
                 target, p_d, p_i, settlement_ref, license, asserted_parents,
-                deps, payload, state, author_pubkey, nonce, pre_signature,
+                deps, payload, state, author_pubkey, content_nonce,
+                dependency_nonce, pre_signature,
                 content_salt, deps_salt, content_commitment, deps_commitment,
                 host_seal, prepared_epoch, node_id, pre_signed_at, carried,
                 payload_reaped_at
@@ -359,13 +386,21 @@ pub async fn load_promotable(pool: &PgPool, id: Uuid) -> Result<Promotable, Stag
         payload,
         deps: parse_ids(&row.deps)?,
     };
-    let pre_signed = match (row.author_pubkey, row.nonce, row.pre_signature) {
-        (Some(author_pubkey), Some(nonce), Some(pre_signature)) => Some(PreSignedParts {
-            author_pubkey,
-            nonce,
-            pre_signature,
-        }),
-        (None, None, None) => None,
+    let pre_signed = match (
+        row.author_pubkey,
+        row.content_nonce,
+        row.dependency_nonce,
+        row.pre_signature,
+    ) {
+        (Some(author_pubkey), Some(content_nonce), Some(dependency_nonce), Some(pre_signature)) => {
+            Some(PreSignedParts {
+                author_pubkey,
+                content_nonce,
+                dependency_nonce,
+                pre_signature,
+            })
+        }
+        (None, None, None, None) => None,
         _ => return Err(corrupt("pre-commitment leg")),
     };
     let sealed = match (
@@ -584,38 +619,92 @@ async fn transition(
 /// Accepts a retry from `sealing` (a relay that died between recording
 /// and sealing) — `pre_signed_at` is set only the first time, so a retry
 /// gets back the same instant rather than moving it.
+///
+/// The content nonce's non-reuse is checked in the same transaction, a
+/// carriage obligation (layer1-interface.md §8.2, "Entropy custody"): its
+/// digest over the author's address is reserved for this act, and a
+/// digest already reserved for another act refuses the leg as
+/// [`StagedError::ContentNonceReused`] with nothing recorded. The
+/// reservation outlives the leg, the write and the payload's reduction —
+/// once used, a content nonce is never this author's again, whatever
+/// became of the act it was used for.
 pub async fn record_pre_signed(
     pool: &PgPool,
     id: Uuid,
     pre: &PreSignedParts,
 ) -> Result<chrono::DateTime<chrono::Utc>, StagedError> {
+    let mut tx = pool.begin().await?;
+    let Some(row) = sqlx::query!(
+        "SELECT author, act_id FROM staged_writes
+         WHERE id = $1 AND state IN ('awaiting_pre_sign', 'sealing')
+         FOR UPDATE",
+        id,
+    )
+    .fetch_optional(&mut *tx)
+    .await?
+    else {
+        drop(tx);
+        return Err(missed_transition(pool, id, "awaiting_pre_sign or sealing").await);
+    };
+    let digest = crypto::nonce_digest(&row.author, &pre.content_nonce);
+    if !reserve_content_nonce(&mut tx, &digest, &row.act_id).await? {
+        return Err(StagedError::ContentNonceReused(id));
+    }
     let recorded = sqlx::query_scalar!(
         "UPDATE staged_writes
-         SET state = 'sealing', author_pubkey = $2, nonce = $3,
-             pre_signature = $4, pre_signed_at = COALESCE(pre_signed_at, NOW()),
-             updated_at = NOW()
-         WHERE id = $1 AND state IN ('awaiting_pre_sign', 'sealing')
+         SET state = 'sealing', author_pubkey = $2, content_nonce = $3,
+             dependency_nonce = $4, pre_signature = $5,
+             pre_signed_at = COALESCE(pre_signed_at, NOW()), updated_at = NOW()
+         WHERE id = $1
          RETURNING pre_signed_at",
         id,
         &pre.author_pubkey,
-        &pre.nonce,
+        &pre.content_nonce,
+        &pre.dependency_nonce,
         &pre.pre_signature,
     )
-    .fetch_optional(pool)
+    .fetch_one(&mut *tx)
     .await?;
-    match recorded {
-        Some(Some(at)) => Ok(at),
-        Some(None) => Err(StagedError::Corrupt(
+    let at = recorded.ok_or_else(|| {
+        StagedError::Corrupt(
             id,
             "pre-commitment recorded without an authoring instant".into(),
-        )),
-        None => Err(missed_transition(pool, id, "awaiting_pre_sign or sealing").await),
-    }
+        )
+    })?;
+    tx.commit().await?;
+    Ok(at)
+}
+
+/// Reserves a content nonce's digest for one act, returning whether the
+/// digest is this act's: newly reserved, or reserved by the same act
+/// before (a retry of its leg). False means another act holds it. The
+/// primary key serializes two concurrent reservations of one digest, so
+/// exactly one act wins it.
+pub async fn reserve_content_nonce(
+    conn: &mut PgConnection,
+    digest: &[u8; 32],
+    act_id: &str,
+) -> Result<bool, StagedError> {
+    sqlx::query!(
+        "INSERT INTO content_nonce_digests (digest, act_id) VALUES ($1, $2)
+         ON CONFLICT (digest) DO NOTHING",
+        digest.as_slice(),
+        act_id,
+    )
+    .execute(&mut *conn)
+    .await?;
+    let holder = sqlx::query_scalar!(
+        "SELECT act_id FROM content_nonce_digests WHERE digest = $1",
+        digest.as_slice(),
+    )
+    .fetch_one(&mut *conn)
+    .await?;
+    Ok(holder == act_id)
 }
 
 /// Stores the host additions of the sealed verified act and moves the
 /// write into `awaiting_approval`.
-pub async fn record_sealed(pool: &PgPool, id: Uuid, act: &VerifiedAct) -> Result<(), StagedError> {
+pub async fn record_sealed(pool: &PgPool, id: Uuid, act: &SealedAct) -> Result<(), StagedError> {
     let updated = sqlx::query!(
         "UPDATE staged_writes
          SET state = 'awaiting_approval', content_salt = $2, deps_salt = $3,
@@ -624,9 +713,9 @@ pub async fn record_sealed(pool: &PgPool, id: Uuid, act: &VerifiedAct) -> Result
          WHERE id = $1 AND state = 'sealing'",
         id,
         &act.content_salt,
-        &act.deps_salt,
-        &act.content_commitment,
-        &act.deps_commitment,
+        &act.dependency_salt,
+        &act.act.content_commitment,
+        &act.act.dependency_commitment,
         &act.host_seal,
     )
     .execute(pool)
@@ -918,7 +1007,8 @@ pub struct StagedCopy {
     pub carried: bool,
     /// None once reaped.
     pub payload: Option<Vec<u8>>,
-    pub nonce: Option<Vec<u8>>,
+    /// None once reaped, and before the pre-commitment leg.
+    pub content_nonce: Option<Vec<u8>>,
     pub content_salt: Option<Vec<u8>>,
     pub content_commitment: Option<Vec<u8>>,
 }
@@ -990,7 +1080,7 @@ pub async fn lock_copy(
 ) -> Result<Option<StagedCopy>, StagedError> {
     Ok(sqlx::query_as!(
         StagedCopy,
-        "SELECT id, state, carried, payload, nonce, content_salt, content_commitment
+        "SELECT id, state, carried, payload, content_nonce, content_salt, content_commitment
          FROM staged_writes WHERE act_id = $1
          FOR UPDATE",
         act_id,
@@ -1000,8 +1090,10 @@ pub async fn lock_copy(
 }
 
 /// The redaction reap: the staged row of `act_id` keeps its structure and
-/// loses the payload, its content salt and the proposal nonce — the three
+/// loses the payload, its content salt and its content nonce — the three
 /// values that would reopen the content (data-model.md "Staged writes").
+/// The dependency nonce stays with the pre-commitment leg: the host holds
+/// it beside the dependency list, and it opens no content.
 ///
 /// Every state but `carried` is reaped, landed rows included: promotion
 /// only flips the state, so a landed row still holds the bytes the
@@ -1012,7 +1104,7 @@ pub async fn lock_copy(
 pub async fn reap_payload(conn: &mut PgConnection, act_id: &str) -> Result<u64, StagedError> {
     Ok(sqlx::query!(
         "UPDATE staged_writes
-         SET payload = NULL, content_salt = NULL, nonce = NULL,
+         SET payload = NULL, content_salt = NULL, content_nonce = NULL,
              payload_reaped_at = NOW(), updated_at = NOW()
          WHERE act_id = $1 AND state <> 'carried' AND payload IS NOT NULL",
         act_id,
