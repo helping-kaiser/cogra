@@ -91,7 +91,6 @@ import com.cogra.core.designsystem.v2.media.ScrollStageHost
 import com.cogra.core.designsystem.v2.media.ScrollStageRow
 import com.cogra.core.designsystem.v2.media.SurfaceCover
 import com.cogra.core.designsystem.v2.token.Space
-import com.cogra.domain.CommentView
 import com.cogra.domain.PostView
 import com.cogra.domain.content.isRevealed
 import com.cogra.domain.hidden.HiddenSet
@@ -171,6 +170,7 @@ fun SavedRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val returns = HostReturn(commentsReturn, onCommentsReturnConsumed, rememberCommentReread())
     // SAVED'S REMOVAL, for the own cards' ⋮ and the thread a count raises: a
     // card removed here stands as its mark in place (RM-G9).
     ProvideRemoval {
@@ -210,15 +210,12 @@ fun SavedRoute(
                     onReply = onReply,
                     onEditComment = onEditComment,
                     onSignInOrJoin = onSignInOrJoin,
-                    commentsReturn = commentsReturn,
-                    onCommentsReturnConsumed = onCommentsReturnConsumed,
+                    returns = returns,
                     onCommentsDepart = onCommentsDepart,
                 )
             },
             reportSheet = reportDoor(null, SAVED_REPORT_SHEET),
-            commentsReturn = commentsReturn,
-            onCommentsReturnConsumed = onCommentsReturnConsumed,
-            rereadComment = rememberCommentReread(),
+            returns = returns,
         )
     }
 }
@@ -275,11 +272,8 @@ fun SavedScreen(
     hooks: CardHooks = CardHooks(),
     commentsSheet: @Composable (postId: String, onDismiss: () -> Unit) -> Unit = { _, _ -> },
     reportSheet: ReportSheetSlot = { _, _, _ -> },
-    /** What came back from a comment edit or reply signed off this page — see [CommentsReturn]. */
-    commentsReturn: CommentsReturn = CommentsReturn(),
-    onCommentsReturnConsumed: () -> Unit = {},
-    /** One comment read afresh, for the card an edit signed off the thread settles ([EditReturn]). */
-    rereadComment: suspend (String) -> CommentView? = { null },
+    /** What came back from a comment edit or reply signed off this page, and the one-comment re-read ([EditReturn]). */
+    returns: HostReturn = HostReturn(),
 ) {
     val overlay = writes.overlayState()
     val snackbar = LocalSnackbarHostState.current
@@ -291,7 +285,7 @@ fun SavedScreen(
     val layers = remember { CoveringLayers() }
     var commentsFor by rememberSaveable { mutableStateOf<String?>(null) }
     var reportFor by remember { mutableStateOf<ReportAsk?>(null) }
-    val editReturn = rememberEditReturn(commentsReturn, commentsFor != null, rereadComment, onCommentsReturnConsumed)
+    val editReturn = rememberEditReturn(returns, threadOpen = commentsFor != null)
     val notify = rememberSavedNotify(snackbar)
     LoadNextAtTheTail(listState, state.hasNextPage, state.moreFailed, view.shown.size, onLoadMore)
     val actions = CardActions(hooks, doors, state.reveals, { commentsFor = it }, { reportFor = it }, editReturn)

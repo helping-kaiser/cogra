@@ -14,6 +14,7 @@
 
 package com.cogra.feature.content
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -88,7 +89,10 @@ class ReportViewModel @Inject constructor(
 }
 
 /** What kind of thing a report names — its confirm's title (`Report this post?`, `Report this comment?`). */
-enum class ReportKind { Post, Comment }
+enum class ReportKind(@StringRes internal val title: Int) {
+    Post(R.string.content_report_title_post),
+    Comment(R.string.content_report_title_comment),
+}
 
 /** One report asked for: the node it names and what kind of thing that is. */
 data class ReportAsk(val target: String, val kind: ReportKind)
@@ -197,12 +201,7 @@ internal fun ReportConfirmSheet(
                 .padding(bottom = Space.x6),
         ) {
             Text(
-                text = stringResource(
-                    when (kind) {
-                        ReportKind.Post -> R.string.content_report_title_post
-                        ReportKind.Comment -> R.string.content_report_title_comment
-                    },
-                ),
+                text = stringResource(kind.title),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier
                     .padding(horizontal = Space.x6)

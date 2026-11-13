@@ -318,11 +318,7 @@ fun CommentsSheet(
     // (CommentMenuOwn.md:11): the menu closes and the dialog comes up over the
     // thread, which stays where the reader opened the menu.
     var removeFor by remember { mutableStateOf<CommentView?>(null) }
-    // WHICH COMMENT'S REPORT CONFIRM IS UP (CommentMenu.md:29): stacked over
-    // the thread, its aftermath on the thread's own snackbar.
     var reportFor by remember { mutableStateOf<String?>(null) }
-    val scope = rememberCoroutineScope()
-    val notify: (String) -> Unit = { text -> scope.launch { snackbar.showSnackbar(text) } }
     val depart: (() -> Unit) -> Unit = { go ->
         onDepart(
             CommentsScroll(
@@ -395,9 +391,25 @@ fun CommentsSheet(
     // one comment gives way to its mark — the list is not re-read, so the
     // reader's place and every unfolded branch hold (CommentRemoved.md:19).
     removeFor?.let { comment -> CommentRemoveConfirm(comment, onClose = { removeFor = null }) }
-    // A sheet over the thread's sheet, as the menu that raised it; a guest's
-    // tap raises the join prompt in its place (ReportConfirm.md:21).
-    reportFor?.let { id -> reportSheet(ReportAsk(id, ReportKind.Comment), { reportFor = null }, notify) }
+    reportFor?.let { id -> ThreadReport(id, reportSheet, snackbar, onClose = { reportFor = null }) }
+}
+
+/**
+ * WHICH COMMENT'S REPORT CONFIRM IS UP (CommentMenu.md:29): a sheet over the
+ * thread's sheet, as the menu that raised it — a guest's tap raises the join
+ * prompt in its place (ReportConfirm.md:21) — its aftermath on the thread's own
+ * snackbar.
+ */
+@Composable
+private fun ThreadReport(
+    commentId: String,
+    reportSheet: ReportSheetSlot,
+    snackbar: SnackbarHostState,
+    onClose: () -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    val notify: (String) -> Unit = { text -> scope.launch { snackbar.showSnackbar(text) } }
+    reportSheet(ReportAsk(commentId, ReportKind.Comment), onClose, notify)
 }
 
 /** The thread sheet's own snackbar: the design registers no node for it yet. */

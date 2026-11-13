@@ -102,7 +102,6 @@ import com.cogra.core.designsystem.v2.media.ScrollStageHost
 import com.cogra.core.designsystem.v2.media.ScrollStageRow
 import com.cogra.core.designsystem.v2.media.SurfaceCover
 import com.cogra.core.designsystem.v2.token.Space
-import com.cogra.domain.CommentView
 import com.cogra.domain.PostView
 import com.cogra.domain.content.isRevealed
 import com.cogra.domain.feed.FeedKind
@@ -172,6 +171,7 @@ fun HistoryRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val returns = HostReturn(commentsReturn, onCommentsReturnConsumed, rememberCommentReread())
     // HISTORY'S REMOVAL, for the own cards' ⋮ and the thread a count raises: a
     // card removed here stands as its mark in place (RM-G9), as over Saved.
     ProvideRemoval {
@@ -193,9 +193,7 @@ fun HistoryRoute(
             hooks = viewModel.cardHooks(viewerId, onEditPost, onCitePost, onEditComment) { url ->
                 context.sharePost(url)
             },
-            commentsReturn = commentsReturn,
-            onCommentsReturnConsumed = onCommentsReturnConsumed,
-            rereadComment = rememberCommentReread(),
+            returns = returns,
             tagCards = TagCardHooks(
                 onShare = { name -> context.sharePost(viewModel.topicShareUrl(name)) },
                 stance = topicStanceControl,
@@ -212,8 +210,7 @@ fun HistoryRoute(
                     onReply = onReply,
                     onEditComment = onEditComment,
                     onSignInOrJoin = onSignInOrJoin,
-                    commentsReturn = commentsReturn,
-                    onCommentsReturnConsumed = onCommentsReturnConsumed,
+                    returns = returns,
                     onCommentsDepart = onCommentsDepart,
                 )
             },
@@ -378,11 +375,8 @@ fun HistoryScreen(
     now: Instant = Instant.now(),
     commentsSheet: @Composable (postId: String, onDismiss: () -> Unit) -> Unit = { _, _ -> },
     reportSheet: ReportSheetSlot = { _, _, _ -> },
-    /** What came back from a comment edit or reply signed off this page — see [CommentsReturn]. */
-    commentsReturn: CommentsReturn = CommentsReturn(),
-    onCommentsReturnConsumed: () -> Unit = {},
-    /** One comment read afresh, for the card an edit signed off the thread settles ([EditReturn]). */
-    rereadComment: suspend (String) -> CommentView? = { null },
+    /** What came back from a comment edit or reply signed off this page, and the one-comment re-read ([EditReturn]). */
+    returns: HostReturn = HostReturn(),
 ) {
     val snackbar = LocalSnackbarHostState.current
     // THE CARDS' MENUS SAVE THROUGH THE ONE OVERLAY AND HIDE THROUGH THE ONE
@@ -394,7 +388,7 @@ fun HistoryScreen(
     val layers = remember { CoveringLayers() }
     var commentsFor by rememberSaveable { mutableStateOf<String?>(null) }
     var reportFor by remember { mutableStateOf<ReportAsk?>(null) }
-    val editReturn = rememberEditReturn(commentsReturn, commentsFor != null, rereadComment, onCommentsReturnConsumed)
+    val editReturn = rememberEditReturn(returns, threadOpen = commentsFor != null)
     var sheetOpen by rememberSaveable { mutableStateOf(false) }
     val notify = rememberHistoryNotify(snackbar)
     LoadNextAtTheTail(listState, state.hasNextPage, state.moreFailed, view.rows.size, callbacks.onLoadMore)

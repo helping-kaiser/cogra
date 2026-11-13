@@ -150,12 +150,8 @@ internal fun HostedCardsScope(
     var commentsFor by rememberSaveable { mutableStateOf<String?>(null) }
     var commentsPost by remember { mutableStateOf<PostView?>(null) }
     var reportFor by remember { mutableStateOf<ReportAsk?>(null) }
-    val editReturn = rememberEditReturn(
-        commentsReturn = routes.commentsReturn,
-        threadOpen = commentsFor != null,
-        reread = rereadComment,
-        onConsumed = routes.onCommentsReturnConsumed,
-    )
+    val returns = HostReturn(routes.commentsReturn, routes.onCommentsReturnConsumed, rereadComment)
+    val editReturn = rememberEditReturn(returns, threadOpen = commentsFor != null)
     val actions = CardActions(
         hooks = hooks,
         doors = doors,
@@ -190,8 +186,7 @@ internal fun HostedCardsScope(
                 onReply = routes.onReply,
                 onEditComment = routes.onEditComment,
                 onSignInOrJoin = routes.onSignInOrJoin,
-                commentsReturn = routes.commentsReturn,
-                onCommentsReturnConsumed = routes.onCommentsReturnConsumed,
+                returns = returns,
                 onCommentsDepart = routes.onCommentsDepart,
             )
         }

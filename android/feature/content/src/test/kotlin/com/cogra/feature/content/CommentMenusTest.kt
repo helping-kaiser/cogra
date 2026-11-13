@@ -218,6 +218,11 @@ class CommentMenusTest {
         mine.copy(landing = Landing.Pending)
     }
 
+    private fun consume() {
+        consumed++
+        returned = CommentsReturn()
+    }
+
     private fun renderHistory(comment: CommentView) {
         compose.setContent {
             CompositionLocalProvider(LocalSnackbarHostState provides host) {
@@ -232,12 +237,7 @@ class CommentMenusTest {
                     doors = HistoryDoors(cards = noDoors, onComposeWithTag = {}),
                     hooks = hooks,
                     reportSheet = recordReport,
-                    commentsReturn = returned,
-                    onCommentsReturnConsumed = {
-                        consumed++
-                        returned = CommentsReturn()
-                    },
-                    rereadComment = reread,
+                    returns = HostReturn(returned, onConsumed = ::consume, reread = reread),
                 )
             }
         }

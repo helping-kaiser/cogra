@@ -99,8 +99,8 @@ internal fun ListThread(
     onReply: (ReplyTarget) -> Unit,
     onEditComment: (commentId: String, parentTitle: String) -> Unit,
     onSignInOrJoin: () -> Unit,
-    commentsReturn: CommentsReturn,
-    onCommentsReturnConsumed: () -> Unit,
+    /** What came back to the thread's host: the thread reads it as its own return. */
+    returns: HostReturn,
     onCommentsDepart: (CommentsScroll) -> Unit,
 ) {
     CommentsSheetRoute(
@@ -115,8 +115,8 @@ internal fun ListThread(
         onReference = onCitePost,
         onSignInOrJoin = onSignInOrJoin,
         onDepart = onCommentsDepart,
-        commentsReturn = commentsReturn,
-        onReturnConsumed = onCommentsReturnConsumed,
+        commentsReturn = returns.value,
+        onReturnConsumed = returns.onConsumed,
         stanceControl = { target, tag, node ->
             StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node)
         },
@@ -154,18 +154,7 @@ internal fun ListCommentCard(
     val own = actions.viewerId != null && comment.author?.id == actions.viewerId
     CommentFeedCard(
         comment = comment,
-        menu = CommentCardMenu(
-            own = own,
-            // THE EDIT OPENED OFF THE THREAD RETURNS TO THIS HOST (CommentEdit.md:89):
-            // its caption names what the comment answers, as the head row does.
-            onEdit = {
-                actions.editReturn?.opening(comment.id)
-                actions.onEditComment(comment.id, target?.let { headRowOf(it).label }.orEmpty())
-            },
-            onRemove = { removeOpen = true },
-            onReport = { actions.onReport(ReportAsk(comment.id, ReportKind.Comment)) },
-            placement = menu,
-        ),
+        menu = listedCommentMenu(comment, own, target, actions, menu) { removeOpen = true },
         target = target,
         node = node,
         testTagPrefix = testTagPrefix,
@@ -209,6 +198,13 @@ internal fun ListCommentCard(
     }
 }
 
+/** A host's side of the comment return: what came back, how it is marked read, and the one-comment re-read. */
+data class HostReturn(
+    val value: CommentsReturn = CommentsReturn(),
+    val onConsumed: () -> Unit = {},
+    val reread: suspend (String) -> CommentView? = { null },
+)
+
 /**
  * AN EDIT OPENED OFF THE THREAD RETURNS TO ITS HOST (CommentEdit.md:89,
  * HistoryCommentMenuOwn.md:17, Saved.md:135, ProfileCommentsMenuOwn.md:17):
@@ -245,20 +241,16 @@ internal class EditReturn(
  * the thread's signed line the next time a thread opens here.
  */
 @Composable
-internal fun rememberEditReturn(
-    commentsReturn: CommentsReturn,
-    threadOpen: Boolean,
-    reread: suspend (String) -> CommentView?,
-    onConsumed: () -> Unit,
-): EditReturn {
+internal fun rememberEditReturn(returns: HostReturn, threadOpen: Boolean): EditReturn {
+    val commentsReturn = returns.value
     val opened = rememberSaveable { mutableStateOf<String?>(null) }
     val settled = remember { mutableStateMapOf<String, CommentView>() }
     LaunchedEffect(commentsReturn.landed, threadOpen) {
         if (!commentsReturn.landed || threadOpen) return@LaunchedEffect
         val id = opened.value
         opened.value = null
-        onConsumed()
-        if (id != null) reread(id)?.let { settled[id] = it }
+        returns.onConsumed()
+        if (id != null) returns.reread(id)?.let { settled[id] = it }
     }
     return remember(opened, settled) { EditReturn(opened, settled) }
 }
@@ -281,3 +273,27 @@ internal fun LoadNextAtTheTail(
             }
     }
 }
+
+/**
+ * A listed comment's ⋮: the own rows or another's, their doors over the host.
+ * THE EDIT OPENED OFF THE THREAD RETURNS TO THIS HOST (CommentEdit.md:89): the
+ * host notes which comment it opened ([EditReturn]), and the edit's caption
+ * names what the comment answers, as the head row does.
+ */
+private fun listedCommentMenu(
+    comment: CommentView,
+    own: Boolean,
+    target: CommentTarget?,
+    actions: CardActions,
+    placement: CommentMenuPlacement?,
+    onRemove: () -> Unit,
+) = CommentCardMenu(
+    own = own,
+    onEdit = {
+        actions.editReturn?.opening(comment.id)
+        actions.onEditComment(comment.id, target?.let { headRowOf(it).label }.orEmpty())
+    },
+    onRemove = onRemove,
+    onReport = { actions.onReport(ReportAsk(comment.id, ReportKind.Comment)) },
+    placement = placement,
+)
