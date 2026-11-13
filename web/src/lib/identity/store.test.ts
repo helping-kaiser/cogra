@@ -15,6 +15,7 @@ import { randomBytes } from "@/lib/crypto/bytes";
 import { verify, Tags } from "@/lib/crypto/hashing";
 import { AddrId, ActId } from "@/lib/crypto/identifiers";
 import { Proposal, StructuralBody } from "@/lib/crypto/handshake";
+import { encodeProposal } from "@/lib/crypto/wire";
 import { createIdentityStore, CustodyBlockedError, type IdentityStore } from "./store";
 
 const ACCOUNT_A = "11111111-1111-4111-8111-111111111111";
@@ -164,10 +165,13 @@ describe("identity store", () => {
 
     const loaded = await store.handshake("staged-1");
     expect(loaded).not.toBeNull();
-    expect(loaded?.nonce).toEqual(pre.nonce);
+    expect(loaded?.contentNonce).toEqual(pre.contentNonce);
+    expect(loaded?.dependencyNonce).toEqual(pre.dependencyNonce);
     expect(loaded?.preSignature).toEqual(pre.preSignature);
     expect(loaded?.authorPubkey).toEqual(pre.authorPubkey);
     expect(loaded?.proposal.equals(pre.proposal)).toBe(true);
+    // The material reloaded from custody still forms the P it signed.
+    expect(await loaded?.preCommitment()).toEqual(await pre.preCommitment());
 
     expect(await store.handshakeIds()).toEqual(["staged-1"]);
     await store.clearHandshake("staged-1");
@@ -177,6 +181,38 @@ describe("identity store", () => {
 
   it("returns null for unknown handshake ids", async () => {
     expect(await store.handshake("missing")).toBeNull();
+  });
+
+  it("reads a stored one-nonce handshake record as absent", async () => {
+    const key = await ActorKey.generate();
+    const pre = await key.preSign(sampleProposal());
+    // Opens the database at the store's version, so the raw write below
+    // lands in the layout the store reads.
+    await store.saveHandshake("staged-new", pre);
+    const oneNonce = {
+      proposal: encodeProposal(pre.proposal),
+      authorPubkey: pre.authorPubkey.slice(),
+      nonce: pre.contentNonce.slice(),
+      preSignature: pre.preSignature.slice(),
+    };
+    await new Promise<void>((resolve, reject) => {
+      const req = indexedDB.open("cogra.identity");
+      req.onsuccess = () => {
+        const db = req.result;
+        const tx = db.transaction("handshake", "readwrite");
+        tx.objectStore("handshake").put(oneNonce, `${ACCOUNT_A}/staged-old`);
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        tx.onerror = () => reject(tx.error);
+      };
+      req.onerror = () => reject(req.error);
+    });
+
+    expect(await store.handshake("staged-old")).toBeNull();
+    // The current-shape record beside it still reads.
+    expect((await store.handshake("staged-new"))?.contentNonce).toEqual(pre.contentNonce);
   });
 
   it("upgrades a v1 database in place", async () => {

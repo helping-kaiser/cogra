@@ -28,12 +28,37 @@ type ActorRecord = {
   seed: Uint8Array | null;
 };
 
+/**
+ * One staged write's handshake material, kept from pre-sign to approval:
+ * the proposal and BOTH nonces, since the sealed act the host returns
+ * carries neither the payload nor a nonce, and the device recomputes both
+ * commitments from what it holds here.
+ */
 type HandshakeRecord = {
   proposal: Uint8Array;
   authorPubkey: Uint8Array;
-  nonce: Uint8Array;
+  contentNonce: Uint8Array;
+  dependencyNonce: Uint8Array;
   preSignature: Uint8Array;
 };
+
+/**
+ * Whether a stored value is material of the current handshake. A record of
+ * any other shape — one written before both nonces were kept — cannot be
+ * approved under this handshake, so it reads as absent and the signer takes
+ * the path it takes for material it never held.
+ */
+function isHandshakeRecord(value: unknown): value is HandshakeRecord {
+  if (typeof value !== "object" || value === null) return false;
+  const r = value as Record<string, unknown>;
+  return (
+    r.proposal instanceof Uint8Array &&
+    r.authorPubkey instanceof Uint8Array &&
+    r.contentNonce instanceof Uint8Array &&
+    r.dependencyNonce instanceof Uint8Array &&
+    r.preSignature instanceof Uint8Array
+  );
+}
 
 type UxRecord = {
   ephemeral: boolean;
@@ -521,7 +546,8 @@ export function createIdentityStore(deps: {
       await write(HANDSHAKE, handshakeKey(account, stagedWriteId), {
         proposal: encodeProposal(pre.proposal),
         authorPubkey: pre.authorPubkey.slice(),
-        nonce: pre.nonce.slice(),
+        contentNonce: pre.contentNonce.slice(),
+        dependencyNonce: pre.dependencyNonce.slice(),
         preSignature: pre.preSignature.slice(),
       } satisfies HandshakeRecord);
     },
@@ -529,12 +555,13 @@ export function createIdentityStore(deps: {
     async handshake(stagedWriteId) {
       const account = await forRead();
       if (account === null) return null;
-      const record = await read<HandshakeRecord>(HANDSHAKE, handshakeKey(account, stagedWriteId));
-      if (record === null) return null;
+      const record = await read<unknown>(HANDSHAKE, handshakeKey(account, stagedWriteId));
+      if (!isHandshakeRecord(record)) return null;
       return new PreSignedProposal({
         proposal: decodeProposal(record.proposal),
         authorPubkey: record.authorPubkey,
-        nonce: record.nonce,
+        contentNonce: record.contentNonce,
+        dependencyNonce: record.dependencyNonce,
         preSignature: record.preSignature,
       });
     },
