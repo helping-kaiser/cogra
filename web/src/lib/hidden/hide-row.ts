@@ -55,15 +55,15 @@ export function hideLabel(person: Pick<HiddenPerson, "handle" | "redacted">): st
 /** The snackbar a hide answers with (copy-voice "Saved, History and hiding"). */
 export function hiddenMessage(person: Pick<HiddenPerson, "handle" | "redacted">): string {
   return person.redacted || person.handle === null
-    ? "This account is hidden — its posts stay out of your feed."
-    : `@${person.handle} is hidden — their posts stay out of your feed.`;
+    ? "This account is hidden."
+    : `@${person.handle} is hidden.`;
 }
 
 /** The snackbar an unhide answers with; the nameless twin is design digest item 56(b). */
 export function unhiddenMessage(person: Pick<HiddenPerson, "handle" | "redacted">): string {
   return person.redacted || person.handle === null
-    ? "This account is unhidden — its posts can reach your feed again."
-    : `@${person.handle} is unhidden — their posts can reach your feed again.`;
+    ? "This account is unhidden."
+    : `@${person.handle} is unhidden.`;
 }
 
 /** Hides `person` from the row `origin`, and says so on the host. */

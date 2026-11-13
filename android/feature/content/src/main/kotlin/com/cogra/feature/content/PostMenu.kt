@@ -63,10 +63,11 @@ internal fun postMenuRows(
      */
     saveRow: MenuRow? = null,
     /**
-     * The reader menu's hide act (`SavedHost.hideAct`, the one hide behaviour
-     * every menu shares). Null stands the row inert.
+     * The reader menu's hide row's words and act — `Hide @ada`, or `Unhide
+     * @ada` while the author is hidden (`SavedHost.hideRow`, the one hide
+     * behaviour every menu shares). Null stands the row inert as `Hide`.
      */
-    onHide: (() -> Unit)? = null,
+    hideRow: MenuRow? = null,
 ): List<MenuRow> {
     fun tag(row: PostMenuRow, legacy: String): String = rowNode(row)?.tag ?: "${testTagPrefix}_$legacy"
     val save = stringResource(R.string.content_menu_save)
@@ -91,7 +92,7 @@ internal fun postMenuRows(
         // moment ago (design/readme.md). Only the reader's menu gains it — no
         // board draws it leaving the author's own.
         if (!own && onShare != null) {
-            add(MenuRow(share, "${testTagPrefix}_share", onShare))
+            add(MenuRow(share, tag(PostMenuRow.Share, "share"), onShare))
         }
         add(MenuRow(saveRow?.label ?: save, tag(PostMenuRow.Save, "save"), saveRow?.onSelect ?: {}))
         // CITE STANDS SECOND ON BOTH MENUS (`_shared.jsx:414-420`, backlog
@@ -109,7 +110,9 @@ internal fun postMenuRows(
             add(MenuRow(sensitive, tag(PostMenuRow.MarkSensitive, "sensitive"), onEdit))
             add(MenuRow(remove, tag(PostMenuRow.Remove, "remove"), onRemove))
         } else {
-            add(MenuRow(hide, tag(PostMenuRow.Hide, "hide"), onHide ?: {}))
+            // THE ROW KEEPS ITS ONE NAME WHATEVER IT READS (ReaderPostMenu.md:21):
+            // `Hide @ada` and `Unhide @ada` are one node.
+            add(MenuRow(hideRow?.label ?: hide, tag(PostMenuRow.Hide, "hide"), hideRow?.onSelect ?: {}))
         }
         // The license rode the payload, so a redacted record has none to show
         // (`PostCard.jsx:146-148`).

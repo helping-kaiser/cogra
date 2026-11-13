@@ -48,7 +48,6 @@ import { PageHeader } from "@/lib/ui/page-header";
 import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
 import { useScrollHost } from "@/lib/ui/scroll-host";
 import { TransportError } from "@/lib/ui/transport-error";
-import { NO_OPINIONS } from "@/lib/ui2/opinions-sheet";
 import { StanceRow } from "@/lib/ui2/stance-row";
 import { TabBar, type Tab } from "@/lib/ui2/tab-bar";
 
@@ -94,12 +93,12 @@ export const DIRECTION_TABS_LABEL = "Which direction";
  * The empty list's line, per tab and whose page it is: the figure's own noun
  * at zero, in the empty sheet's calm register, never the error colour
  * (ProfileStances.md:27-39; copy-voice, *The opinions page*). Another's
- * `On them` keeps the opinions sheet's `No opinions yet — yours would be the
- * first.`; a deleted account, which will give none again, says so in the past.
+ * `On them` reads `No opinions yet.`; a deleted account, which will give
+ * none again, says so in the past.
  */
 export function emptyLine(direction: OpinionDirection, whose: "own" | "other" | "deleted", handle: string): string {
   if (direction === "on") {
-    if (whose === "other") return NO_OPINIONS;
+    if (whose === "other") return "No opinions yet.";
     return whose === "own" ? "No opinions on you yet." : "No opinions on this account yet.";
   }
   if (whose === "own") return "No opinions by you yet.";
