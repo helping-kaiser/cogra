@@ -4,7 +4,7 @@
 // the returned card; the one search law over the saved set, run on the server
 // (`bookmarks(query:)`); hidden accounts' things staying.
 
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { delay } from "msw/utils/delay";
 import { describe, expect, it, vi } from "vitest";
@@ -15,6 +15,7 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { byNode } from "@/test/data-node";
+import { settleFetches } from "@/test/fetch";
 import { hiddenPage } from "@/test/hidden";
 import { intersect } from "@/test/media-env";
 import { gqlLink, startMswServer } from "@/test/msw";
@@ -679,7 +680,8 @@ describe("SavedScreen — search what you saved", () => {
     await waitFor(() => expect(reads.map((read) => read.query)).toContain("slow"));
     search("slower");
     await waitFor(() => expect(cards()).toEqual(["saved.commentCard:c1"]));
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    // Every answer still out, the older query's among them, delivered and acted on.
+    await act(() => settleFetches());
     expect(cards()).toEqual(["saved.commentCard:c1"]);
   });
 
