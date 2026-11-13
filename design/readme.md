@@ -11844,6 +11844,24 @@ vouch-back pad and Wallet; lane B's crop, composer side, feed and profile).
   by ruling (`settings.sensitive.footnote`, `changeHandle.body`,
   `wallet.comingSoonCard.line`) plus ChangeEmail's `changeEmail.body` entry. Against main: 63 distinct gone, 92 added, none of rounds 42–46's
   ruled removals back.
+- **Act 3, jakob's review of round 46** (2026-11-13, points A–F and one
+  defect). `ActsCard` draws its total row only when it has something to
+  say: the edit sheets' card ended in 60px of nothing under its last act,
+  and now ends 4px under it; the seals, which pass a total, are unchanged.
+  The Giving an opinion "?" paragraph is blessed (A). Your own removed
+  post's menu loses Mark as sensitive — Save, Cite in a new post, License
+  terms (B). A removed comment's menu follows the post's (C): another's
+  raises the reader's comment menu whole, your own your comment menu less
+  Edit and Remove (`ProfileCommentsRemovedMenu`, `CommentRemovedMenu`,
+  new). `How signing works` takes `An edit is signed too — the new version
+  is a new record in your name, and it costs like any signing.` (D). The
+  tall cover's 4:5 and a reader's removed-post License row are confirmed
+  (E). The profile head's display name wraps at its spaces, never inside a
+  word, an over-long word end-cut — the named exception to the long-names
+  rule, shown to jakob and awaiting his word (F; `ProfileOther`'s `name`
+  setting; backlog 213). Registry: 194 → 196 screens, 7387 → 7501 board
+  paths, 2029 distinct unchanged; one board entry leaves with the ruled
+  row (`feed.menuSheet.markSensitive` on `FeedRemovedMenuOwn`).
 ---
 
 ## 14. The canvases
