@@ -904,7 +904,8 @@ function ReportPostSheet() {
    word for referencing a person is mentioning (readme §13, the menus round). A
    person is saveable like anything else, and hiding one is the read-side
    comfort this menu is the natural home of (the private-viewer-state round).
-   Hide sits last: it is the rarest row and the one that takes something away. */
+   Hide stands last among the acts, before the report row at the sheet's tail
+   (ruling 75): it is the rarest act and the one that takes something away. */
 const PROFILE_MENU = [
   SAVE_ROW,
   { label: "Mention in a new post", onSelect: () => {}, node: "mention" },

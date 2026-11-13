@@ -5490,7 +5490,7 @@ Closed by round 39, by (b) — round 32's law, which round 36's graph follows:
 the menu a host card raises takes the host's prefix; the license, report and
 remove sheets its rows raise are drawn once and keep one path (readme §13).
 
-### 162 · Card fixtures on a few boards still carry Save and Cite only · *system* · **filed 2026-11-11**
+### 162 · Card fixtures on a few boards still carry Save and Cite only · *system* · **filed 2026-11-11** · **closed 2026-11-13**
 
 Round 36 (F2) handed the shared post and comment fixtures the menu their
 sheets draw (`readerCardMenu`, `COMMENT_CARD_MENU`). The boards that spell
@@ -5500,6 +5500,12 @@ their own cards still pass `CARD_MENU`: `LadderMax`, `LadderSmall`,
 `sheet.card.html`) pass the license row themselves, so the card's own append
 draws it twice, and no Report. Closed menus draw no row, so no pixel moves;
 a mechanical sweep.
+
+Closed as stale by round 48 (2026-11-13): the five boards already pass
+`readerCardMenu(...)` / `COMMENT_CARD_MENU` (`LadderMax`, `LadderSmall`,
+`LadderStates`, `LadderTopics`, `ReplyMedia`), and the specimens pass Save ·
+Cite · Hide · Report at the tail with no license row of their own (the menus
+audit of 2026-11-13, §3 item 16); nothing is left to sweep.
 
 ### 165 · After Close: where a profile change lands · *design* · **filed 2026-11-11** · **closed 2026-11-11**
 

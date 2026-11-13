@@ -1,5 +1,7 @@
 # RemoveMenu · `spec:design:behavior-remove-menu`
 
+ALWAYS the menu reads Save or Unsave, then Cite in a new post, then Edit, then Mark as sensitive, then Remove, then License terms, the own post menu's rows
+
 ALWAYS Save, or Unsave while the post is kept, is the menu's first row
 
 ALWAYS License terms is the menu's last row
