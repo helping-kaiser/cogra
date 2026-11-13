@@ -69,6 +69,8 @@ class ActorKey private constructor(private val key: Ed25519PrivateKeyParameters)
      * device pre-signed; every check recomputes from material it holds
      * itself, never from anything the host could have chosen:
      *
+     * 0. [sent] is this key's own: its body's author is [address], and its
+     *    pre-signature verifies under this key over the P it recomputes to;
      * 1. the returned body's canonical bytes and the pre-signature equal
      *    what was pre-signed;
      * 2. the returned P equals the P this device forms from its own
@@ -87,6 +89,15 @@ class ActorKey private constructor(private val key: Ed25519PrivateKeyParameters)
      */
     fun approve(sent: PreSignedProposal, sealed: SealedAct, hostPubkey: ByteArray): ApprovalWitness {
         val act = sealed.act
+        // Material reloaded from storage is proven this key's, not trusted
+        // (the reference's `PreSigned::recover`).
+        if (sent.proposal.body.author != address()) {
+            throw HandshakeException("the held proposal is not this actor's")
+        }
+        val formed = sent.preCommitment()
+        if (!verifyDigest(publicKeyBytes(), formed, sent.preSignature)) {
+            throw HandshakeException("the held pre-signature is not this key's over the pre-commitment")
+        }
         // By the signed bytes, not by field equality: float equality calls
         // two bodies equal whose canonical bytes differ — 0.0 and -0.0
         // under IEEE 754, NaNs of other bits under Double.equals — and the
@@ -96,7 +107,6 @@ class ActorKey private constructor(private val key: Ed25519PrivateKeyParameters)
         ) {
             throw HandshakeException("host returned a different act than was pre-signed")
         }
-        val formed = sent.preCommitment()
         if (!act.preCommitment.contentEquals(formed)) {
             throw HandshakeException("host returned a different pre-commitment than was formed")
         }

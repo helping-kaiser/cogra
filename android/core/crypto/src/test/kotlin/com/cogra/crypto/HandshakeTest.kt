@@ -129,6 +129,40 @@ class HandshakeTest {
         )
     }
 
+    // Material reloaded from storage is proven, not trusted: a validly
+    // sealed act over another actor's proposal is never approved here.
+    @Test
+    fun approveRefusesHeldMaterialWhoseProposalIsNotThisActors() {
+        val other = ActorKey.generate()
+        val foreign = other.preSign(proposal(other.address()))
+        val e = assertThrows(HandshakeException::class.java) {
+            actor.approve(foreign, seal(foreign, host), host.publicKeyBytes())
+        }
+        assertThat(e).hasMessageThat().isEqualTo("the held proposal is not this actor's")
+    }
+
+    // This actor's proposal under a pre-signature another key made, and
+    // this key's material with a nonce altered at rest: neither σ verifies
+    // under this key over the P the held material recomputes to.
+    @Test
+    fun approveRefusesHeldMaterialWhosePreSignatureIsNotThisKeys() {
+        val forged = ActorKey.generate().preSign(proposal(actor.address()))
+        val altered = PreSignedProposal(
+            proposal = pre.proposal,
+            authorPubkey = pre.authorPubkey,
+            contentNonce = ByteArray(SALT_LEN) { 9 },
+            dependencyNonce = pre.dependencyNonce,
+            preSignature = pre.preSignature,
+        )
+        val reason = "the held pre-signature is not this key's over the pre-commitment"
+        for (held in listOf(forged, altered)) {
+            val e = assertThrows(HandshakeException::class.java) {
+                actor.approve(held, seal(held, host), host.publicKeyBytes())
+            }
+            assertThat(e).hasMessageThat().isEqualTo(reason)
+        }
+    }
+
     @Test
     fun approveRejectsAnotherPreSignature() {
         val other = actor.preSign(proposal(actor.address()))
