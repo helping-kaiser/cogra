@@ -32,11 +32,49 @@
    REGISTERED under the `reset` prefix (round 28): `title`, `body`, the field
    `password` (`ChangePassword`'s name for the new one), its repeat `confirm`
    (`RecoveryCode`'s name for the field that types a thing back; round 38),
-   `commit` and `note`. */
+   `commit` and `note`.
+
+   THE LINK IS CHECKED BEFORE THE FORM STANDS (jakob 2026-11-13, seam 320-5
+   and 320-6, as recommended; the `link` chip). `checking` is the check in
+   flight: nothing for the first 200ms, then the tree's `LoadingState`
+   `Loading…` alone at the column's head, no spinner — the chronicle's own
+   wait (`ProfileTabFirstPage`). `fault` is the check with no answer: the
+   fault family's one shape in the form's place (`DeleteAccountConfirmed`'s
+   landing, `ProfileUnreachable`) — the house line's noun form, `Can't reach
+   the server — this link can't be checked right now.` (jakob 2026-11-13, N9),
+   over an OUTLINED `Retry`,
+   sized to its word and leading the column; the read's word, since checking
+   a link signs and confirms nothing. `limited` is the check refused by its
+   budget: the reset's `RATE_LIMITED` line (copy-voice, *Faults by code*),
+   `Too many tries. Wait a little, then try again.`, over the same control,
+   as `DeleteAccountConfirmed`'s `limited` draws it. Named `loading`, `fault` and
+   its `retry`, each fault copy keyed by the chip's value; `live` is the form. */
 export const NODE = "reset";
+export const PROPS = { link: { editor: "enum", options: ["live", "checking", "fault", "limited"], default: "live" } };
+export const VALS = `liveShown: this.props.link === "live" ? "flex" : "none", checkingShown: this.props.link === "checking" ? "block" : "none", faultShown: this.props.link === "fault" ? "block" : "none", limitedShown: this.props.link === "limited" ? "block" : "none"`;
+const FAULT = (message) => (
+  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-3)" }} data-node="fault">
+    <TransportError message={message} />
+    <Button variant="outline" size="sm" selfStart node="retry">
+      Retry
+    </Button>
+  </div>
+);
 export function Screen() {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "32px 24px", overflow: "hidden" }}>
+      <div style={{ display: "{{checkingShown}}" }}>
+        <div data-node="loading">
+          <LoadingState />
+        </div>
+      </div>
+      <div style={{ display: "{{faultShown}}" }} data-node-chip="link" data-node-key="fault">
+        {FAULT("Can't reach the server — this link can't be checked right now.")}
+      </div>
+      <div style={{ display: "{{limitedShown}}" }} data-node-chip="link" data-node-key="limited">
+        {FAULT("Too many tries. Wait a little, then try again.")}
+      </div>
+      <div style={{ display: "{{liveShown}}", flexDirection: "column" }}>
       <h1
         style={{
           margin: 0,
@@ -80,6 +118,7 @@ export function Screen() {
           This restores your sign-in only. Your key stays wherever it is — restoring the key is its own step, with your
           recovery code.
         </QuietNote>
+      </div>
       </div>
     </div>
   );

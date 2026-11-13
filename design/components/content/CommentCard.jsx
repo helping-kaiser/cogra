@@ -24,7 +24,13 @@ import { NodeMark } from "./ReferenceRow.jsx";
    and its replies indented once. Anything deeper flattens into that one reply
    level and opens with the @handle it answers — the mention IS the structure,
    so the column never narrows to a word. Replies arrive COLLAPSED behind a
-   "View n replies" line (`replyCount`); `replies` renders them expanded. */
+   "View n replies" line (`replyCount`); `replies` renders them expanded.
+
+   THE REPLIES LIVE IN THE THREAD ONLY (jakob 2026-11-13). A comment card in a
+   list — the feed, History, Saved, a profile's Comments tab, a tag page,
+   search — is about the comment itself and passes neither `replyCount` nor
+   `replies`: a tap on the card lands on its post with the thread sheet open,
+   scrolled to that comment, and the "View n replies" line stands there. */
 
 const MAX_INDENT_DEPTH = 1;
 
@@ -132,7 +138,10 @@ export function CommentCard({
      disabled opacity and stays tappable, the tap answering `You can comment
      once you're in.` The value is the opacity itself — `var(--state-disabled)`
      — so a board's reader chip can pass it as a hole, exactly as the foot's
-     `fieldOpacity`; it carries down to the replies, as `signedIn` does. */
+     `fieldOpacity`; it carries down to the replies, as `signedIn` does. The
+     list card's comment glyph (`replyGlyph`) never wears it: it is the door to
+     READING the thread, open to an applicant (jakob 2026-11-13); the lock is the
+     thread's foot and its `Reply`. */
   replyOpacity,
   /* SHARE CLOSES THE ROW where it is given — the feed card's — exactly as
      `PostCard`'s does. A thread passes none. */

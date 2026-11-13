@@ -11,6 +11,8 @@ export interface GlyphActionProps {
   /** The accessible name, the act in words — "Reply to @tobias". */
   label: string;
   onPress?: () => void;
+  /** The locked look for a reader the act is locked for: `var(--state-disabled)`, the glyph still tappable — a tag card's compose glyph for an applicant. Never on a glyph that opens something to read. */
+  opacity?: string | number;
   /** The data-node name its placer gives this button (design ⇄ impl seam 002; renders as attributes only). */
   node?: string;
 }

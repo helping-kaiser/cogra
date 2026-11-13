@@ -18,6 +18,8 @@ WHEN tap Unsave -> the menu closes AND postDetail.snackbar reads Removed from Sa
 
 WHEN tap Cite in a new post -> the post wizard opens fresh at its first stage AND the comment rides along unseen until the details stage
 
+WHEN an applicant taps Cite in a new post on a comment's menu, on any host -> the menu closes AND the snackbar reads You can post once you're in. AND NEVER the wizard opens
+
 WHEN tap Opinions on this -> the menu closes AND the comment's opinions sheet comes up over the surface the menu was opened on, the thread or the host
 
 WHEN tap postDetail.menuSheet.citedBy -> the menu closes AND what cites the comment comes up over the surface the menu was opened on, the thread or the host

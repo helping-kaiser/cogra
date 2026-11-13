@@ -100,6 +100,15 @@
       "page": "profile"
     },
     {
+      "file": "SavedCommentMenuOwn.dc.html",
+      "title": "Saved · your own comment's menu",
+      "x": 3360,
+      "y": 6107,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "HistoryProfileMenu.dc.html",
       "title": "History · a hidden person's card, its menu",
       "x": 4800,
@@ -221,7 +230,7 @@
       "x": -5930,
       "y": 0,
       "w": 5510,
-      "h": 9489,
+      "h": 9580,
       "page": "profile",
       "title": "Profile · flow map"
     },

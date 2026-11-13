@@ -5490,7 +5490,7 @@ Closed by round 39, by (b) — round 32's law, which round 36's graph follows:
 the menu a host card raises takes the host's prefix; the license, report and
 remove sheets its rows raise are drawn once and keep one path (readme §13).
 
-### 162 · Card fixtures on a few boards still carry Save and Cite only · *system* · **filed 2026-11-11**
+### 162 · Card fixtures on a few boards still carry Save and Cite only · *system* · **filed 2026-11-11** · **closed 2026-11-13**
 
 Round 36 (F2) handed the shared post and comment fixtures the menu their
 sheets draw (`readerCardMenu`, `COMMENT_CARD_MENU`). The boards that spell
@@ -5500,6 +5500,12 @@ their own cards still pass `CARD_MENU`: `LadderMax`, `LadderSmall`,
 `sheet.card.html`) pass the license row themselves, so the card's own append
 draws it twice, and no Report. Closed menus draw no row, so no pixel moves;
 a mechanical sweep.
+
+Closed as stale by round 48 (2026-11-13): the five boards already pass
+`readerCardMenu(...)` / `COMMENT_CARD_MENU` (`LadderMax`, `LadderSmall`,
+`LadderStates`, `LadderTopics`, `ReplyMedia`), and the specimens pass Save ·
+Cite · Hide · Report at the tail with no license row of their own (the menus
+audit of 2026-11-13, §3 item 16); nothing is left to sweep.
 
 ### 165 · After Close: where a profile change lands · *design* · **filed 2026-11-11** · **closed 2026-11-11**
 
@@ -6118,3 +6124,64 @@ widest); 50 × `m` and 50 `W` in words take 12px, the 50-character sample
 (b) a floor (a size he names), the name past it taking a third line.
 
 Closed as ruled by jakob 2026-11-13 ("F1 as drawn so two lines is the hard cap and it shrinks until it fits"): (a), no floor — the head's name shrinks until it holds two lines, the widest legal name at 10px on 13px.
+
+### 220 · The seals and the edit sheets have no registry rows · *system* · **filed 2026-11-13**
+
+Round 48 (seam 323-6). `ComposeSeal`, `ReplySeal`, `EditActs` and
+`CommentEditActs` export no `NODE`, so the clients' harness has no verdict
+on them. Why: no round asked for them — the seals' sheet boards stayed
+unregistered by habit (round 35's gate line) — and their bodies
+(`ComposeSealBody`, `ReplySealBody`, the acts sheet) pass no node names
+down; the acts card itself, `ActsCard`, names no rows, and round 47 (PR
+#454) is changing `ActsCard`, so naming its parts waits for that merge. Then:
+the seal prefixes (`composeSeal`, `replySeal`, or under `composeDetails` /
+`postEdit` / `commentEdit` for the edit sheets) and `ActsCard`'s row names.
+
+Partly closed by round 48, act 2 (2026-11-13): `ActsCard` already names its rows
+(`actRow` by place, `total`) once placed with a `node`, so `EditActs` and
+`CommentEditActs` register (`postEdit.actsSheet`, `commentEdit.actsSheet`), and
+so do `AvatarCrop`, `AvatarSeal`, `ProfileEdit` and `ProfileEditSeal` — names
+only, each render byte-identical with its annotations stripped. Still open:
+`ComposeSeal` and `ReplySeal`. No written rule keeps them out (round 35's gate
+line only describes them); their chip copies do: `ComposeSeal`'s rest card stands
+for two values of `state` (`rest` and `signing`), and `ReplySeal`'s seven copies
+are drawn per pair of `tags` × `state`, while a chip-drawn copy is keyed by one
+value of one chip (`node-paths.mjs`). Registering them first redraws the copies
+one per value — pixel-identical, but a restructuring of both boards' bodies.
+
+### 221 · `PadKeyAbsent`'s pad is hand-built, so it cannot register yet · *system* · **filed 2026-11-13**
+
+Round 48 (seam 320-16). `PadFailed`, `PadWriteRule` and `TagPageHeldPad`
+register (round 48); `PadKeyAbsent` draws its pad by hand beside the card,
+not through `StanceControl`, so its parts have no anatomy to take names
+from — a name minted on the hand-built copy would drift from the master.
+The fix is a key-absent state on `StanceControl` (the board then renders it
+as `PadStanding` does) — a drawing change, so it waits for a round that may
+redraw.
+
+### 222 · The feed's comment-card menu and your own comment's menu on Saved are undrawn · *design* · **filed 2026-11-13** · **closed 2026-11-13**
+
+Round 48 (seam 320-14). The clients draw `feed.menuSheet.citedBy` /
+`.opinions` (a comment card's ⋮ on the feed) and `saved.menuSheet.edit` /
+`.remove` (your own comment's ⋮ on Saved), but no board draws either menu
+open — `HistoryCommentMenu` and `SavedCommentMenu` draw their hosts' — so
+there is nothing to register. Each is one board when drawn, by round 36's
+rule (one menu board per place a card's menu is raised): `FeedCommentMenu`
+and `SavedCommentMenuOwn`. Held while the menus audit (jakob 2026-11-13,
+round 47's review) runs, since it may reorder the rows.
+
+Closed by round 48, act 2: `FeedCommentMenu`, `FeedCommentMenuOwn` and
+`SavedCommentMenuOwn` draw the rows exactly as the law states them, nothing
+reordered; the four paths register. The other undrawn hosts are backlog 223.
+
+### 223 · The menu hosts the sidecars name but no board draws · *design* · **filed 2026-11-13**
+
+Round 48 (the menus audit of 2026-11-13, §3 item 11). Round 36's rule is one
+menu board per place a card's menu is raised; round 48 drew the feed's comment
+card menus and your own comment's menu on Saved. Still law-only: your own post
+in Saved and on a tag page (`FeedPostMenuOwn.md:7`); another's removed comment
+over the thread (`CommentRemoved.md:9`); your own removed comment on your own
+profile and in History; removed posts in History, Saved, the profile and the tag
+page; the Saved profile card (`FeedProfileMenu.md:7`); the deleted account's
+feed card (`FEED_DELETED_PROFILE_MENU`). Each is one board drawn exactly as its
+law states the rows; held while jakob decides whether post menus gain rows (M1).

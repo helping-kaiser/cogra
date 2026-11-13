@@ -904,7 +904,8 @@ function ReportPostSheet() {
    word for referencing a person is mentioning (readme §13, the menus round). A
    person is saveable like anything else, and hiding one is the read-side
    comfort this menu is the natural home of (the private-viewer-state round).
-   Hide sits last: it is the rarest row and the one that takes something away. */
+   Hide stands last among the acts, before the report row at the sheet's tail
+   (ruling 75): it is the rarest act and the one that takes something away. */
 const PROFILE_MENU = [
   SAVE_ROW,
   { label: "Mention in a new post", onSelect: () => {}, node: "mention" },
@@ -2820,7 +2821,12 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
    on its way to the composer. So the door is a `button` named by its words,
    `Add a comment`, drawn exactly as `TextField` draws a one-line field — the
    label above, the empty 1px box under it — with the state layer and focus
-   ring every pressable carries, and no cap: there is nothing here to count. */
+   ring every pressable carries, and no cap: there is nothing here to count.
+
+   REGISTERED under the sheet that holds it (round 48, seam 320-4): the row is
+   `foot`, as every sheet's foot is (`filterSheet.foot`), and the door
+   `foot.addComment` — `postDetail.threadSheet.foot.addComment` wherever the
+   thread is raised. The faces stay unnamed. */
 const FOOT_LABEL = {
   fontSize: "var(--text-label-large)",
   lineHeight: "var(--text-label-large--line-height)",
@@ -2835,9 +2841,9 @@ const FOOT_BOX = {
   borderRadius: "var(--radius-extra-small)",
   border: "1px solid var(--border-field)",
 };
-function CommentComposerFoot({ fieldOpacity, shown }) {
+function CommentComposerFoot({ fieldOpacity, shown, node }) {
   return (
-    <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 0", borderTop: "1px solid var(--border-hairline)" }}>
+    <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 0", borderTop: "1px solid var(--border-hairline)" }} data-node={node}>
       {shown ? (
         <>
           <span style={{ display: shown.member }}>
@@ -2855,6 +2861,7 @@ function CommentComposerFoot({ fieldOpacity, shown }) {
           type="button"
           className="cg-state cg-focus"
           style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)", width: "100%", border: 0, background: "none", padding: 0, margin: 0, borderRadius: "var(--radius-extra-small)", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left", cursor: "pointer" }}
+          data-node={node && "addComment"}
         >
           <span style={FOOT_LABEL}>Add a comment</span>
           <span aria-hidden="true" style={FOOT_BOX} />
@@ -2892,7 +2899,7 @@ function CommentsSheet({ children, scrolledBy = 0, footOpacity, shown, node }) {
         {scrolledBy > 0 && <li aria-hidden="true" style={{ flex: "none", height: 0, marginTop: -(scrolledBy + COMMENTS_GAP) }} />}
         {children}
       </ul>
-      <CommentComposerFoot fieldOpacity={footOpacity} shown={shown} />
+      <CommentComposerFoot fieldOpacity={footOpacity} shown={shown} node={node && "foot"} />
     </BottomSheet>
   );
 }
@@ -4800,9 +4807,13 @@ const AFFINITY_AXES = {
    never hidden. A ⋮ here would open a sheet holding one row, so share stands
    as itself, the `ShareButton` glyph every card's row ends with — one tap, the
    platform's own sheet. */
-function TopicStanceRow({ name, bundle, stanceOpen, stanceDefaultPick }) {
+/* `node` names the row where a placer registers it (`TagPageHeldPad`, round
+   48, seam 320-16): `actionRow`, the wide anchor `stance` — `StanceControl`'s
+   anatomy, its open pad `stance.pad.*` — and `share`, as the profile's head
+   names its row (`profile.identity.actionRow.stance`). */
+function TopicStanceRow({ name, bundle, stanceOpen, stanceDefaultPick, node }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", padding: "4px 16px 8px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", padding: "4px 16px 8px" }} data-node={node}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <StanceControl
           wide
@@ -4812,18 +4823,19 @@ function TopicStanceRow({ name, bundle, stanceOpen, stanceDefaultPick }) {
           defaultOpen={stanceOpen}
           defaultPick={stanceDefaultPick}
           onCommit={() => {}}
+          node={node && "stance"}
         />
       </div>
-      <ShareButton targetLabel={name} onShare={() => {}} />
+      <ShareButton targetLabel={name} onShare={() => {}} node={node && "share"} />
     </div>
   );
 }
 
-function TagPageBody({ bundle, stanceOpen, stanceDefaultPick } = {}) {
+function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false } = {}) {
   return (
     <>
-      <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" />
-      <TopicStanceRow name="#saltmaps" bundle={bundle} stanceOpen={stanceOpen} stanceDefaultPick={stanceDefaultPick} />
+      <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" node={named ? "header" : undefined} />
+      <TopicStanceRow name="#saltmaps" bundle={bundle} stanceOpen={stanceOpen} stanceDefaultPick={stanceDefaultPick} node={named ? "actionRow" : undefined} />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "4px 0 0" }}>
         <TaggedRow pair={{ pDirected: 0.1, pInterest: 1 }} pending>
           <PostCard attach {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
@@ -5058,7 +5070,10 @@ function ProfileFeedCard({ person, src, bio, score, bundle, redacted = false, no
                 <span style={FEED_LEAD_TITLE} data-node={node && "name"}>
                   {person.displayName}
                 </span>
-                <span style={FEED_LEAD_SMALL} data-node={node && "handle"}>
+                {/* The handle line is a one-line place, as the name above it is
+                    (the long-names law, case 2; round 48, seam 320-12): it never
+                    wraps and clips at its end with "…". */}
+                <span style={{ ...FEED_LEAD_SMALL, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} data-node={node && "handle"}>
                   @{person.handle}
                 </span>
               </>
@@ -5304,7 +5319,10 @@ const SALTMAPS_TAG_ID = "fc7d18fe-c334-4c2a-82b3-eed28f2eaa26";
    names them; the lead's are `mark`, `name` and the why-line `through`, the
    glimpse is `glimpse` with its newest thing's `newest` and `by` (or the
    empty tag's one line as `nothing`), and the kind's own act is `compose`. */
-function TagFeedCard({ id, name, through, tagged, score, bundle, node }) {
+/* `composeOpacity` is the applicant lock on the compose button (copy-voice,
+   *The applicant lock, one rule*; jakob 2026-11-13, N1): its only destination
+   is an act, so an applicant meets it dimmed, still tappable. */
+function TagFeedCard({ id, name, through, tagged, score, bundle, composeOpacity, node }) {
   const [newest, ...rest] = tagged;
   const glimpse = newest ? (
     <span style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", minWidth: 0 }} data-node={node && "glimpse"}>
@@ -5351,7 +5369,7 @@ function TagFeedCard({ id, name, through, tagged, score, bundle, node }) {
       score={score}
       onOpenScore={() => {}}
       stanceAxes={AFFINITY_AXES}
-      act={<GlyphAction glyph="add" label={TAG_ACT} onPress={() => {}} node={node && "compose"} />}
+      act={<GlyphAction glyph="add" label={TAG_ACT} onPress={() => {}} opacity={composeOpacity} node={node && "compose"} />}
       onOpen={() => {}}
       node={node}
       nodeKey={id}
@@ -5578,8 +5596,14 @@ const ApplicationGroup = ({ label, count, node, nodeKey }) => (
 
    Named by its placer, as a master is: given `node`, it names its `avatar`,
    `title` and `body`, and the buttons `actions` hands it are named where they
-   are placed. */
-function VouchBackCard({ body, actions, node }) {
+   are placed.
+
+   THE TITLE IS WRAPPING TEXT (the long-names law, case 3; round 48, seam
+   320-12): the inviter's handle, in the title and the body alike, passes
+   through `nameInText`, one unit that never stands on two lines, as
+   `VouchAsk`'s title does. `handle` draws it
+   (`NamesLong` passes the longest legal one). */
+function VouchBackCard({ body, actions, handle = "mira", node }) {
   return (
     <Card style={{ flex: "none", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)" }} node={node}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -5587,6 +5611,8 @@ function VouchBackCard({ body, actions, node }) {
         <h2
           style={{
             margin: 0,
+            minWidth: 0,
+            overflowWrap: "anywhere",
             fontSize: "var(--text-title-medium)",
             letterSpacing: "var(--text-title-medium--letter-spacing)",
             lineHeight: "var(--text-title-medium--line-height)",
@@ -5594,11 +5620,11 @@ function VouchBackCard({ body, actions, node }) {
           }}
           data-node={node && "title"}
         >
-          @mira vouched you in
+          <NameInText text={`@${handle} vouched you in`} />
         </h2>
       </div>
-      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node && "body"}>
-        {body}
+      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", minWidth: 0, overflowWrap: "anywhere" }} data-node={node && "body"}>
+        <NameInText text={body} />
       </p>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>{actions}</div>
     </Card>

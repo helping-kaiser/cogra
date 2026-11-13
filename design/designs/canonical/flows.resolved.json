@@ -1934,6 +1934,8 @@
         "CommentMenu",
         "CommentMenuOwn",
         "CommentRemovedMenu",
+        "FeedCommentMenu",
+        "FeedCommentMenuOwn",
         "FeedPostMenu",
         "FeedPostMenuOwn",
         "FeedRemovedMenu",
@@ -1951,11 +1953,12 @@
         "ReaderPostMenuNarrow",
         "RemoveMenu",
         "SavedCommentMenu",
+        "SavedCommentMenuOwn",
         "SavedPostMenu",
         "TagPageMenu"
       ],
       "steps": [
-        "start · «Cite in a new post» — to ComposePick on 22 boards → ComposePick",
+        "start · «Cite in a new post» — to ComposePick on 25 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -1967,6 +1970,8 @@
         "CommentMenu",
         "CommentMenuOwn",
         "CommentRemovedMenu",
+        "FeedCommentMenu",
+        "FeedCommentMenuOwn",
         "FeedPostMenu",
         "FeedPostMenuOwn",
         "FeedRemovedMenu",
@@ -1984,6 +1989,7 @@
         "ReaderPostMenuNarrow",
         "RemoveMenu",
         "SavedCommentMenu",
+        "SavedCommentMenuOwn",
         "SavedPostMenu",
         "TagPageMenu"
       ]
@@ -5365,6 +5371,18 @@
         "a-guest-meets-the-join-ask"
       ]
     },
+    "FeedCommentMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "FeedCommentMenuOwn": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
     "FeedCover": {
       "flows": [
         "open-a-posts-pictures",
@@ -7014,6 +7032,12 @@
       ]
     },
     "SavedCommentMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "SavedCommentMenuOwn": {
       "flows": [
         "cite-a-post"
       ],

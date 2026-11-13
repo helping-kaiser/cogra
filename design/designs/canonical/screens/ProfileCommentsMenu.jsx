@@ -21,8 +21,6 @@ export function Screen() {
           timestamp="1d"
           license={{ attribution: 0, provenance: 0 }}
           bundle={mkBundle(0.1, 0.1)}
-          replyCount={2}
-          onOpenReplies={() => {}}
           onReply={() => {}}
           target="“The long way home” — @ada"
           onOpenTarget={() => {}}

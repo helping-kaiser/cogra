@@ -2,6 +2,10 @@
 
 ALWAYS the composer carries the door it was opened from: the bottom bar's New post on the tab it stood on, Cite in a new post or Mention in a new post on the surface its menu was opened over, a tag card's compose glyph on the page the card stands on, Open the draft on the feed's Your post didn't land card
 
+WHEN any door into the composer is pressed GIVEN the reader is an applicant -> the snackbar of the surface the door stands on, else the shell's, reads You can post once you're in. AND NEVER the composer opens
+
+WHEN the composer's own address opens GIVEN the reader is an applicant -> the reader lands where app-open lands for them AND the snackbar reads You can post once you're in. AND NEVER the composer opens
+
 ALWAYS leaving the composer before Sign and publish is pressed returns to the surface its door stood on, a menu's sheet closed, from every stage of the wizard
 
 ALWAYS publishing lands where the seal draws it, whichever door opened the composer

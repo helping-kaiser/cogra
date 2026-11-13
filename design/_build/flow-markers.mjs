@@ -171,12 +171,15 @@ export const FLOW_MARKERS = {
     ...post({ author: 4, menu: 5, media: 6, more: 7, topic: 8, refs: 9, stance: 10, score: 11, comments: 12 }),
     ...nav(13),
   ],
+  // The `pad` chip's `help` copy (round 48) repeats the pad: the same numbers
+  // on both, and the help's way back the next free one.
   VouchBackPad: [
-    { n: 1, find: 'aria-label="Your vouch back"', tag: "button" },
-    { n: 2, find: 'aria-label="Opinion', tag: "div" },
-    { n: 2, find: ">Choose your opinion on @mira</button>", tag: "button" },
-    { n: 3, find: ">Cancel</button>", tag: "button" },
-    { n: 4, find: ">Set</button>", tag: "button" },
+    { n: 1, find: 'aria-label="Your vouch back"', tag: "button", all: true },
+    { n: 2, find: 'aria-label="Opinion', tag: "div", all: true },
+    { n: 2, find: ">Choose your opinion on @mira</button>", tag: "button", all: true },
+    { n: 3, find: ">Cancel</button>", tag: "button", all: true },
+    { n: 4, find: ">Set</button>", tag: "button", all: true },
+    { n: 5, find: ">Back to the pad", tag: "button" },
   ],
   // The same pad with a history behind it, so `StanceControl` draws the
   // walk-away as well: it takes the third number and the two decisions shift
@@ -342,6 +345,19 @@ Object.assign(FLOW_MARKERS, {
     // The sign row under Your people (item 7): one choice, three words, the
     // next free number. Drawn on the chip's `your-people` copy.
     { n: 10, find: 'data-sign="', tag: "label", all: true },
+  ],
+  // Round 48 (seam 323-2): `FeedSheet` with no kind that has forms — the same
+  // numbers, the sign row not drawn.
+  FeedSheetFormsOff: [
+    { n: 1, find: 'aria-label="How the filter works"', tag: "button" },
+    { n: 2, find: 'role="switch"', tag: "button", all: true },
+    { n: 3, find: "aria-pressed=", tag: "button", all: true },
+    { n: 4, find: "already seen", tag: "label" },
+    { n: 5, find: ">Reset</button>", tag: "button" },
+    { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 7, find: ">All your tags</button>", tag: "button" },
+    { n: 8, find: ">Done</button>", tag: "button" },
+    { n: 9, find: 'data-people="', tag: "label", all: true },
   ],
   /* The feed narrowed to one topic. Neither card carries a reference, so the
      numbering closes over the slot `FeedNarrowed` keeps for one. */
@@ -716,6 +732,10 @@ Object.assign(FLOW_MARKERS, {
   // A removed comment's menu on the profile (round 46, point C): the same rows.
   ProfileCommentsRemovedMenu: commentMenuMarks(">Save</button>"),
   HistoryCommentMenuOwn: ownCommentMenuMarks,
+  // Round 48 (seam 320-14): the feed's comment card menus and your own comment in Saved.
+  FeedCommentMenu: commentMenuMarks(">Save</button>"),
+  FeedCommentMenuOwn: ownCommentMenuMarks,
+  SavedCommentMenuOwn: [{ n: 1, find: ">Unsave</button>", tag: "button" }, ...ownCommentMenuMarks.filter((m) => m.n !== 1)],
   ProfileCommentsMenuOwn: ownCommentMenuMarks,
   // The profile card's menu (round 36, H2): `ProfileMenu`'s rows less Share,
   // Report at the tail.
@@ -1746,7 +1766,10 @@ Object.assign(FLOW_MARKERS, {
        the skip-link text under the same via (jakob 2026-09-10). */
     { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
     { n: 10, find: ">Reply</button>", tag: "button", all: true },
-    { n: 11, find: "View 2 replies", tag: "button" },
+    // A list's comment card carries no replies' line (jakob 2026-11-13): via 11
+    // is the card itself, the door to its thread.
+    { n: 11, find: ">The glovebox camera earns its keep", tag: "a" },
+    { n: 11, find: ">Low tide is kinder to the rubbings", tag: "a" },
     { n: 17, find: ">On “", tag: "button", all: true },
     ...nav(12),
     // The load chip's failed first page (round 45): its Retry.
@@ -2352,10 +2375,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Already have an account? Sign in</button>", tag: "button" },
     { n: 5, find: ">Just looking? Browse the feed", tag: "button" },
   ],
+  // The `request` chip's `sent` copy (round 48) carries the same field and commit.
   Reset: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'data-field="Email"', tag: "div" },
-    { n: 3, find: ">Send reset link</button>", tag: "button" },
+    { n: 2, find: 'data-field="Email"', tag: "div", all: true },
+    { n: 3, find: ">Send reset link</button>", tag: "button", all: true },
   ],
   // No back arrow: a mail link has no previous screen of ours behind it.
   ResetNew: [
@@ -2363,6 +2387,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Show password"', tag: "button", all: true },
     { n: 3, find: ">Set the new password</button>", tag: "button" },
     { n: 4, find: 'data-field="Repeat password"', tag: "div" },
+    // The `link` chip's fault and budget copies (round 48): one Retry.
+    { n: 5, find: ">Retry</button>", tag: "button", all: true },
   ],
   // Round 46 (seam 316, entry 5): the mismatch in place, `JoinErrors`' way —
   // the base form's numbers.
@@ -3112,7 +3138,12 @@ const tagPageBody = ({ topicStance }) => [
 ];
 
 Object.assign(FLOW_MARKERS, {
-  TagPage: tagPageBody({ topicStance: 'aria-label="Give your opinion on #saltmaps"' }),
+  // The `load` chip's `failed` copy (round 48) repeats the header's back and adds Retry.
+  TagPage: [
+    { n: 1, find: 'aria-label="Back to Explore"', tag: "a", all: true },
+    ...tagPageBody({ topicStance: 'aria-label="Give your opinion on #saltmaps"' }).filter((m) => m.n !== 1),
+    { n: 16, find: ">Retry</button>", tag: "button" },
+  ],
   /* The page a moment after a hide (item 83): the same body, so the same
      markers; the snackbar's Undo takes the next free number. */
   TagPageHidden: [
@@ -3181,7 +3212,8 @@ Object.assign(FLOW_MARKERS, {
   TagPickerRefused: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
     { n: 2, find: 'aria-label="Tagging"', tag: "button" },
-    { n: 3, find: ">#salt maps<", tag: "div" },
+    // The typed name is the `refusal` chip's hole (round 48).
+    { n: 3, find: ">{{typed}}<", tag: "div" },
     { n: 4, find: ">Done</button>", tag: "button" },
   ],
   TagPad: [

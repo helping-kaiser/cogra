@@ -4,6 +4,10 @@ WHEN a staged post expires unlanded -> the notice Your post didn't land arrives 
 
 WHEN press Open the draft -> compose opens with the draft card leading
 
+ALWAYS Open the draft wears the locked look, at the disabled opacity and still tappable GIVEN the reader is an applicant
+
+WHEN press Open the draft GIVEN the reader is an applicant -> the snackbar reads You can post once you're in. AND NEVER compose opens
+
 WHEN press Dismiss -> the notice leaves the feed
 
 WHEN a staged act that is not a post expires unlanded -> the notice arrives as a card in the feed titled for its family, Your opinion didn't land, Your comment didn't land, Your edit didn't land, Your tag didn't land or Your citation didn't land AND its body names what the act was about, then reads couldn't finish settling. Nothing was spent. AND the act has left every reader's view

@@ -1066,11 +1066,25 @@ doors answer in the same register (PR-103, **blessed (jakob
   the face's own name (`Give your opinion on this post`). The pad never
   blooms, and nothing is signed or staged.
 
-Every control the family answers wears the locked look (auth.md):
-visibly inactive, still tappable — the foot, `Reply` and `Invites` (jakob
-2026-10-02), and `New post` and the stance faces alike (jakob
-2026-10-16).
+**The applicant lock, one rule** (jakob 2026-11-13, N1, as recommended):
 
+- A control on a card, a bar or a header whose only destination is an act
+  wears the locked look — visibly inactive at the disabled opacity, still
+  tappable — and answers in place with its line: the thread's `Add a
+  comment` foot and every `Reply`, `Invites`, the bar's `New post`, every
+  stance face, a tag card's compose button (`Tag a new post with it`) and
+  the expired-draft notice's `Open the draft`.
+- A door to READING is never locked: a comment card's comment button opens
+  its thread as for anyone, the lock standing inside it (jakob
+  2026-11-13).
+- A menu row looks as it does for a member and answers in place — `Cite in
+  a new post`, `Mention in a new post` — the menu closing first.
+- The composer opened by its own address leaves the reader where app-open
+  lands for them, with `You can post once you're in.`, as the Invites
+  page's own address does.
+
+The line rides the surface's own snackbar where it has one (the
+profile's, the thread's), else the shell's; nothing opens.
 The applicant's own profile (`ProfileApplicant`) says the same in its
 own places, **blessed (jakob 2026-10-16)**: the open
 application's card reads `Their approval brings you in.` under `Waiting on @mira` — `ApplicantWaiting`'s
@@ -1453,11 +1467,14 @@ the review fixes' lines, jakob 2026-10-01), all of them (the last flags cleared 
   `RowSigning`.
 - A read with nothing loaded: the house line's noun form, `Can't reach
   the server — {what} can't load right now.`, over an outlined `Retry`
-  — `this profile`, `notifications`, `tags`, `results` (one rule, round
+  — `this profile`, `notifications`, `tags`, `results`, and the tag page's `this tag` (*blessed (jakob 2026-11-13, N10)*) (one rule, round
   25: `ProfileUnreachable`, `Notifications`, the two pickers, search);
   the deletion mail's landing, whose act is a confirm, says `Can't reach
   the server — the deletion can't be confirmed right now.` over its `Try
-  again` (`DeleteAccountConfirmed`). A
+  again` (`DeleteAccountConfirmed`); the reset link's landing, whose
+  check signs nothing, says `Can't reach the server — this link can't
+  be checked right now.` over `Retry` (`ResetNew`'s `link` chip; *blessed (jakob
+  2026-11-13, N9)*). A
   fault line never says "try again" beside a control that does it, so the
   long line, `Can't reach the server. Check your connection and try
   again.`, is `TransportError`'s fallback for a surface that names no
@@ -1487,7 +1504,7 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
 - `RATE_LIMITED` — in place, in SignInError's slot. Sign-in's login
   backoff says the drawn line, `Too many tries in a row. Wait a moment,
   then try again.` (`SignInLimited`); every other visible one — the
-  registration, the reset, the token confirms, and the email change's
+  registration, the reset and its link's check, the token confirms, and the email change's
   request and resend once the account's mail budget is spent (jakob
   2026-10-06) — says `Too many tries. Wait a little, then try again.`
   (jakob 2026-10-05). The submit stays.
@@ -2578,10 +2595,12 @@ card's act is the stance face, and one line beside it teaches the tap:
 with no first-opinion words, because the card stands while the member
 holds other opinions (jakob's own, 2026-10-13). The
 pad's title and its "?" read `Your vouch back`, and the line above its
-two coaching lines opens on the title: `Your vouch back. The pad is how you shape what
-reaches you — for or against, and how much.` *Carried over — blessed by
+field opens on the title: `Your vouch back. The pad is how you shape what
+reaches you — for or against, and how much.`, `Nothing is signed until
+Set.` under it on the first-ever pad open; the coaching lives in the help
+`Your vouch back` alone (jakob 2026-11-12). *Carried over — blessed by
 use (jakob 2026-10-06):* the card's title `@mira vouched you in`
-(`VouchBack`, `VouchBackPad`), and the pad's first coaching line, `Later,
+(`VouchBack`, `VouchBackPad`), and the help's coaching line, `Later,
 tap the small face under a post to open this — press and hold it instead
 and a gentle 🙂 *(+0.10 / +0.10)* is signed on the spot.` The band's line keeps
 *first opinion*: the borrowed view does end on the first opinion,
@@ -3074,8 +3093,8 @@ no hint, as search's do. (*new 2026-10-05, blessed (jakob 2026-10-05)*: `Search 
 (`HistoryNone`): a query nothing seen carries reads `Nothing you've seen
 carries that name.` before `Search reads names and titles, never bodies —
 fewer words reach further.` (the sentence `ExploreNone` no longer
-carries: its `How searching works` "?" holds it; here, whether it moves
-behind a "?" is open); kinds that hold
+carries: its `How searching works` "?" holds it; here it stays, History
+having no "?" — kept by jakob 2026-11-12, question 13, backlog 192); kinds that hold
 nothing seen read `Nothing you've seen is of that kind.`; and both offer
 `Show everything`, which clears the query and the kinds at once (*new
 2026-10-05, blessed (jakob 2026-10-05)*: the two first sentences and

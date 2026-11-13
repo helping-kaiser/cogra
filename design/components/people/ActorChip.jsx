@@ -211,10 +211,19 @@ export function ActorChip({ handle, displayName, href, onClick, avatarSrc, redac
    `.`, `,`, `'s` — rides with it, whole and never swallowed by the cut: the
    unit is [the name: yields, clipped][its punctuation: never shrinks], kept on
    one line. Every wrapping master passes its text through `nameInText`; text
-   naming nobody returns untouched. */
+   naming nobody returns untouched. A screen reader hears the unit as one
+   string — the name and its punctuation with no space between (round 48;
+   `UNIT_SPOKEN` below). */
 const HANDLE_IN_TEXT = /(?<![\w@])@[A-Za-z0-9_]+/g;
 const UNIT_TAIL = /^(?:['’]s\b|[?.,!:;)’]+)/;
 const UNIT = { display: "inline-flex", maxWidth: "100%", verticalAlign: "top", whiteSpace: "nowrap" };
+/* THE UNIT IS SPOKEN AS ONE STRING (round 48, seam 320-13). The drawn unit's
+   two parts are flex items, and a flex item is its own box to a screen
+   reader, which then reads a space before the mark ("…haugh ?"). So the drawn
+   unit is hidden from assistive tech and the name with its punctuation, as
+   one text node, is spoken in its place from a visually hidden twin — the
+   standard visually-hidden pattern every other SR_ONLY here uses. */
+const UNIT_SPOKEN = { position: "absolute", width: 1, height: 1, padding: 0, margin: -1, overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 };
 const escapeName = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 export function nameInText(text, names = []) {
   if (Array.isArray(text)) return text.map((part, index) => <React.Fragment key={index}>{nameInText(part, names)}</React.Fragment>);
@@ -227,10 +236,13 @@ export function nameInText(text, names = []) {
     const tail = UNIT_TAIL.exec(text.slice(end))?.[0] ?? "";
     out.push(text.slice(last, found.index));
     out.push(
-      <span key={found.index} style={UNIT} data-name-unit="">
-        <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{found[0]}</span>
-        {tail && <span style={{ flex: "none" }}>{tail}</span>}
-      </span>,
+      <React.Fragment key={found.index}>
+        <span style={UNIT_SPOKEN}>{found[0] + tail}</span>
+        <span aria-hidden="true" style={UNIT} data-name-unit="">
+          <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{found[0]}</span>
+          {tail && <span style={{ flex: "none" }}>{tail}</span>}
+        </span>
+      </React.Fragment>,
     );
     last = end + tail.length;
   }
