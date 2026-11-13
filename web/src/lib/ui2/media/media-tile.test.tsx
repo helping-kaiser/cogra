@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { declared } from "@/test/css";
 import { MediaTile } from "./media-tile";
 import { PORTRAIT_CAP } from "./aspect";
 
@@ -11,7 +12,7 @@ describe("MediaTile", () => {
   it("reserves its space before anything loads, full-width and uncapped", () => {
     render(<MediaTile src="/media/abc" sourceRatio={16 / 9} testId="tile" />);
     const tile = screen.getByTestId("tile");
-    expect(tile.style.aspectRatio).toBe(`${16 / 9} / 1`);
+    expect(tile.style.aspectRatio).toBe(declared("aspect-ratio", `${16 / 9} / 1`));
     // The default frame's ratio is already clamped by `tileRatio`, so nothing
     // it reserves needs a second, viewport-tied height cap on top of it.
     expect(tile.style.maxHeight).toBe("");

@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
+import { declared } from "@/test/css";
 import { countReading, TextField } from "./text-field";
 
 function Host({ multiline = false }: { multiline?: boolean }) {
@@ -95,14 +96,14 @@ describe("TextField", () => {
       <TextField label="Why?" multiline rows={1} value="" onChange={() => {}} testId="why" />,
     );
     expect(screen.getByTestId("growing-box").style.minHeight).toBe(
-      "calc(1lh + calc(1rem + 2px))",
+      declared("min-height", "calc(1lh + calc(1rem + 2px))"),
     );
 
     rerender(
       <TextField label="What's in the picture" multiline rows={3} value="" onChange={() => {}} testId="why" />,
     );
     expect(screen.getByTestId("growing-box").style.minHeight).toBe(
-      "calc(3lh + calc(1rem + 2px))",
+      declared("min-height", "calc(3lh + calc(1rem + 2px))"),
     );
   });
 
