@@ -1,7 +1,7 @@
 /**
  * The label row, assigned once: `TextField` renders it over its own field, and
  * the composer's captions over sections that are not fields (Pictures, Video,
- * Cover, Topics, References) render it over a tray or a list.
+ * Cover, Tags, References) render it over a tray or a list.
  */
 export interface FieldLabelProps {
   children: React.ReactNode;

@@ -29,8 +29,10 @@ import React from "react";
 
    THE WINDOW IS ALWAYS CENTRED, and that is why it takes a height and not a
    position: it is inset `inset` from each side, and the leftover height splits
-   evenly above and below. The circle's 342 square lands at top 24, the cover's
-   342×192 at top 99, and neither board has to state a coordinate.
+   evenly above and below. The circle's 342 square lands at top 24 on its 390
+   stage; on the cover's 390 × 488 stage the wide 342×192 lands at top 148, the
+   square 342 at top 73 and the tall 342×427.5 at top 30.25, and no board has
+   to state a coordinate.
 
    THE DRAG HAS A NON-DRAG TWIN, AND THE PINCH A VISIBLE ONE (the K13 round;
    readme §10). Under the viewport stands `CropZoom`, a visible slider on both
