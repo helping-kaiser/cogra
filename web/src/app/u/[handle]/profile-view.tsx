@@ -105,8 +105,7 @@ export const CHRONICLE_TABS_LABEL = "What the chronicle shows";
 /** ProfileApplicant.md:17. */
 export const INVITE_LOCKED = "You can invite once you're in.";
 /** ProfileApplicant.md:21 — the applicant-foot family's `once you're in`. */
-export const APPLICANT_CHRONICLE_EMPTY =
-  "Nothing here yet. Your posts and opinions show up here once you're in.";
+export const APPLICANT_CHRONICLE_EMPTY = "Nothing here yet.";
 /** The chronicle page that did not arrive (Profile.md:35; copy-voice.md). */
 export const COULDNT_LOAD_MORE = "Couldn't load more";
 /** How long a next page may take before `Loading…` stands for it (Profile.md:33). */

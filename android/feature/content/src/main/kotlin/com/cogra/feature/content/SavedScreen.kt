@@ -112,14 +112,26 @@ import com.cogra.feature.saved.R as SavedR
 /** The registered prefix (`Saved`, `SavedUndo`, `SavedEmpty`, `SavedNone` in `nodes.json`). */
 private val SAVED = DataNode("saved")
 
+/** The rows SavedPostMenu registers under `saved.menuSheet`. */
+private val SAVED_MENU_ROWS = setOf(
+    PostMenuRow.Save,
+    PostMenuRow.Cite,
+    PostMenuRow.Hide,
+    PostMenuRow.License,
+    PostMenuRow.Report,
+)
+
 /** Saved's post card: the feed's own, keyed by the post's id as the feed keys it. */
 private val SAVED_PLACEMENT = CardPlacement(
     card = SAVED / "card",
-    // No sheet of Saved's is drawn: the card's menu and terms keep their tags.
-    menuSheet = null,
+    // THE CARD'S ⋮ RAISES `saved.menuSheet` (SavedPostMenu). Only the reader's
+    // rows are registered there — no board draws an own post's menu over Saved —
+    // so an own post's Edit, Mark as sensitive and Remove keep their tags, as
+    // do the terms, which no Saved board registers.
+    menuSheet = SAVED / "menuSheet",
     licenseSheet = null,
     tag = "saved",
-    menuRows = emptySet(),
+    menuRows = SAVED_MENU_ROWS,
 )
 
 @Composable
