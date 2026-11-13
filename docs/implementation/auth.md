@@ -351,8 +351,10 @@ unusable.
 
 Every emailed or shared link is a web URL on the per-environment
 web origin — the web app serves everyone the native apps don't
-reach, and one URL opens the app where one is installed
-(Android App Links on the same paths):
+reach. Every URL below but the verification URL opens the app
+where one is installed (Android App Links on the same paths); the
+verification URL is the web's alone, and the app takes the same
+token pasted in place:
 
 - Invite: `https://<web-origin>/join/<link-id>`
 - Ask: `https://<web-origin>/vouch/<link-id>`
@@ -479,12 +481,14 @@ latency is a UX cost, not a correctness problem. Clients take that
 literally: an applicant lands in the same shell as a member and
 browses the read surfaces immediately, with the application riding
 along as cards and dismissible hints — the actionable
-email-verification step, the approval wait, the landing. Every
-acting surface stays visible but locked: styled as disabled yet
-still tappable, the tap answering in place and never opening the
-surface — `You can post once you're in.` at every door into the
+email-verification step, the approval wait, the landing. A
+control on a card, bar or header whose only destination is an act
+wears the locked look — dimmed, still tappable — and answers in
+place: `You can post once you're in.` at every door into the
 composer, `You can give your opinion once you're in.` at every
-stance face. Account management —
+stance face. A door to reading is never locked. A menu row looks
+normal and answers in place the same way. The composer opened by
+its address lands where app-open lands. Account management —
 settings, sign-out, password change — is never gated; the
 applicant is an ordinary logged-in account.
 The waiting state is never a wall, and the poll/sign loop that
