@@ -719,7 +719,12 @@ describe("the default license", () => {
     expect(chosen).toBeChecked();
     expect(screen.getByTestId("settings.licenseSheet.foot.summary").textContent).toBe("Credit always · Not logged");
     // No name-repeating hints, and the note keeps only what it adds (round 42).
-    expect(within(sheet).queryByTestId(byNode("settings.licenseSheet.credit.tier.hint", "1"))).toBeNull();
+    expect(
+      sheet.querySelector('[data-testid="settings.licenseSheet.credit.tier.hint"][data-testid-key="1"]'),
+    ).toBeNull();
+    expect(
+      sheet.querySelector('[data-testid="settings.licenseSheet.credit.tier.hint"][data-testid-key="2"]'),
+    ).toHaveTextContent("Commercial uses credit you; everything else is free.");
     expect(within(sheet).getByTestId("settings.licenseSheet.note").textContent).toBe(
       "A post's terms settle when it is first signed, so changing this never reaches one you have already published.",
     );
