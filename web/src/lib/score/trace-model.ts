@@ -18,7 +18,7 @@
 
 import type { NodeKind, RecordFamily, RecordLegRole } from "@/__generated__/graphql";
 import { ladderAge } from "@/lib/ui/timestamp";
-import { apportionCents, signedOfCents } from "./figure";
+import { apportionCents, isTiny, signedOfCents, traceFigure } from "./figure";
 
 /** One node on a path, as the slice names it (`SliceNode`). */
 export type TraceNode = {
@@ -397,15 +397,16 @@ export function levelOne(
   answer: TraceAnswer,
   unfolded: boolean,
 ): { readonly drawn: readonly { index: number; value: string }[]; readonly more: MorePaths | null } {
-  const cents = apportionCents(
-    answer.paths.map((path) => path.contribution),
-    answer.score ?? 0,
-  );
+  const exact = answer.paths.map((path) => path.contribution);
+  const cents = apportionCents(exact, answer.score ?? 0);
   const folds = !unfolded && cents.length > DRAWN_PATHS;
   const shown = folds ? cents.slice(0, DRAWN_PATHS) : cents;
   const rest = folds ? cents.slice(DRAWN_PATHS) : [];
   return {
-    drawn: shown.map((value, index) => ({ index, value: signedOfCents(value) })),
+    drawn: shown.map((value, index) => ({
+      index,
+      value: isTiny(exact[index]!) ? traceFigure(exact[index]!) : signedOfCents(value),
+    })),
     more:
       rest.length > 0
         ? { count: rest.length, value: signedOfCents(rest.reduce((sum, value) => sum + value, 0)) }
