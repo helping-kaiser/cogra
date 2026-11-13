@@ -688,7 +688,7 @@ Object.assign(FLOW_MARKERS, {
   // The same sheet on a phone too narrow for four actions: share has moved in
   // from the action row and leads, so every number below it shifts by one.
   ReaderPostMenuNarrow: [
-    { n: 1, find: ">Share</button>", tag: "button" },
+    { n: 1, find: ">Share this post</button>", tag: "button" },
     { n: 2, find: ">Save</button>", tag: "button" },
     { n: 3, find: ">Cite in a new post</button>", tag: "button" },
     { n: 4, find: ">Hide @ada</button>", tag: "button" },

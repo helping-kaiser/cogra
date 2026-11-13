@@ -1267,11 +1267,10 @@ spelling — one `License terms` everywhere, never the British spelling:
 - `Share this profile` — another's profile.
 - `Share your profile` — your own, the row that closes the profile's ⋮
   under the two private lists.
-- `Share` — the row a narrow phone's post menu gains when the card drops
-  its share glyph (`ReaderPostMenuNarrow`; *carried over — blessed by use
-  (jakob 2026-10-06)*). It stands against *Accessible names*' `Share this
-  post` "everywhere it appears, never a bare Share" — an open question
-  for jakob; the row stays as drawn meanwhile.
+- `Share this post` — the row a narrow phone's post menu gains when the
+  card drops its share glyph (`ReaderPostMenuNarrow`), in *Accessible
+  names*' words for the share control everywhere it appears (jakob
+  2026-11-13, M4, **blessed**).
 - `Report` — the sheet tail of every other-person menu, a post's, a
   comment's, a person's and a deleted account's alike; own menus carry
   none (jakob 2026-10-09, ruling 75, **blessed**). It opens the one
