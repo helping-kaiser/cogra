@@ -284,7 +284,8 @@ steps:
 1. **Prepare** (backend). Validate the gesture against L2 policy
    and envelope conformance, pre-check the write rule (below),
    assemble the canonical proposal — act body, payload envelope,
-   dependency list — and store it as a **staged write** (Postgres
+   dependency list in canonical order (sorted bytewise by act
+   identifier, duplicate-free) — and store it as a **staged write** (Postgres
    row; payload bytes ride the row until confirm promotes them
    into carriage). Return the
    proposal to the client.
@@ -324,7 +325,10 @@ steps:
    proposal through the L1 boundary without the pair: the content
    pre-digest it forms from the payload and the content nonce,
    beside the dependency list and the dependency nonce. The L1 host
-   verifies the pre-commitment, adds the projection salts, and
+   runs the act checks — among them a dependency list strictly
+   ascending by act identifier and free of the act itself —
+   verifies the pre-commitment,
+   adds the projection salts, and
    returns the sealed **verified act**, stored on the staged write.
 4. **Approve** (client, then backend). The device verifies the
    host seal, the exact returned body and pre-commitment, the

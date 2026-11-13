@@ -648,8 +648,9 @@ CREATE TABLE staged_writes (
                          'awaiting_approval', 'relaying', 'landed',
                          'expired')),
     -- Staged as an act carried with an application (auth.md
-    -- "Application"): held in 'carried' until the landing appends the
-    -- admission Registration and the winning vouch to deps and moves it
+    -- "Application"): held in 'carried' until the landing merges the
+    -- admission Registration and the winning vouch into deps, keeping
+    -- the list in canonical order (sorted, duplicate-free), and moves it
     -- to 'awaiting_pre_sign'; the flag stays, marking the batch the
     -- device signs without a prompt.
     carried        BOOLEAN     NOT NULL DEFAULT FALSE,

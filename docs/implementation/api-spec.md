@@ -3605,7 +3605,8 @@ type PreparedWrite {
    alter it nor author one unasked. Deterministic CBOR
    `[1, body, payload, deps]`: the structural body's canonical
    bytes, the payload bytes, and the dependency list as act
-   identifiers. Its envelope version is its own and is 1."
+   identifiers, strictly ascending bytewise by their text form.
+   Its envelope version is its own and is 1."
   canonicalProposal: String!
   "Epoch budget: a staged write that never completes the handshake
    and lands is garbage-collected — staged payload included — after
