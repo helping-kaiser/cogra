@@ -65,15 +65,21 @@ beside it flags its clip sensitive
 ([auth.md "Key recovery"](auth.md#key-recovery)); both live in
 `core:designsystem`, since the ceremony and settings show the
 same code the same way.
-Before it signs an approval the app runs five checks: the returned
-act carries the same body, payload and dependency list this device
-pre-signed, under the same pre-signature and nonce; it carries the
-pre-commitment this device formed, under the expected edition tags;
-the host seal verifies under the host key; and the content and
-dependency commitments open over the act identifier, that
-pre-commitment and the bytes the device itself holds. The approval
-then signs the verified act together with its host seal. The
-payload rides as opaque bytes, so what the five establish is that
+The app pre-signs each act under two nonces drawn independently —
+a content nonce and a dependency nonce — and keeps both on the
+device until approval; the sealed act the host returns carries
+neither nonce and no payload. Before it signs an approval the app
+runs five checks: the returned act carries the body and
+pre-signature this device pre-signed; it carries the
+pre-commitment this device formed, under the expected edition
+tags; the host seal verifies under the host key; the content
+commitment recomputes over the act identifier, that
+pre-commitment and the content pre-digest the device forms from
+its own payload and content nonce; and the dependency commitment
+recomputes over the act identifier, that pre-commitment and the
+dependency list the device holds. The approval then signs the
+verified act together with its host seal. The payload is opaque
+bytes to these checks, so what the five establish is that
 the host returned the act this device signed — not that the
 envelope encodes what the user typed
 ([open-questions.md Q54](../open-questions.md#q54--semantic-verification-of-the-payload-envelope-on-clients)).
