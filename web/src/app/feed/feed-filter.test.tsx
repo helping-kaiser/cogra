@@ -15,7 +15,7 @@ import { stanceHandlers } from "@/test/stance";
 import { byNode } from "@/test/data-node";
 import { FEED_FILTER_DEFAULT } from "@/lib/feed/feed-filter";
 import { writeReaderDefault } from "@/lib/feed/reader-default";
-import { FeedView, SHOWING_NOTHING, SHOW_POSTS_AGAIN } from "./feed-view";
+import { FeedView, SHOW_POSTS_AGAIN } from "./feed-view";
 import { forgetFeed } from "./feed-memory";
 
 const replace = vi.fn();
@@ -588,7 +588,7 @@ describe("the feed filter", () => {
       fireEvent.click(chip("kinds.postsChip"));
       done();
       const empty = await screen.findByTestId(byNode("feed.nothing"));
-      expect(empty).toHaveTextContent(SHOWING_NOTHING);
+      expect(empty).toHaveTextContent(/Everything is switched off\.$/);
       // In the list's own column, 8px under the band (FeedNothing.jsx `8px 24px`).
       expect(empty.parentElement?.className).toBe("px-6 pb-2");
       expect(trigger()).toHaveTextContent(/^Nothing$/);

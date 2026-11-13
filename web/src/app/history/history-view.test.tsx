@@ -37,7 +37,6 @@ import { fakeWriteSigner } from "@/test/registration";
 import { keepPick } from "@/lib/stance/kept-picks";
 import { stanceHandlers } from "@/test/stance";
 import {
-  HISTORY_EMPTY,
   HISTORY_NONE_KINDS,
   HISTORY_NONE_SEARCH,
   SEARCH_YOUR_HISTORY,
@@ -1192,7 +1191,7 @@ describe("History — nothing seen yet (HistoryEmpty.md)", () => {
     // HistoryEmpty.md:3, :5, :7.
     serveHistory(() => page([]));
     render();
-    expect(await screen.findByTestId("history.empty.title")).toHaveTextContent(HISTORY_EMPTY);
+    expect(await screen.findByTestId("history.empty.title")).toHaveTextContent(/^Nothing here yet\.$/);
     expect(within(screen.getByTestId("history.empty")).queryByRole("button")).toBeNull();
     expect(screen.getByTestId("history.empty.title").className).not.toContain("text-error");
     expect(screen.queryByRole("searchbox")).toBeNull();

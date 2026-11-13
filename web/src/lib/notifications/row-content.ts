@@ -41,8 +41,7 @@ export function bellRootOf(from: string | null | undefined): BellRoot {
 }
 
 /** NotificationsEmpty.md:3, verbatim. */
-export const NOTIFICATIONS_EMPTY =
-  "Nothing here yet. Comments, replies, citations, mentions and opinions on you arrive here as they happen, along with what becomes of your invites and your own application.";
+export const NOTIFICATIONS_EMPTY = "Nothing here yet.";
 
 /** The prose name a deleted actor takes inside a sentence (design digest item 18). */
 export const DELETED_ACTOR_PROSE = "A deleted account";

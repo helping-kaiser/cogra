@@ -1021,7 +1021,7 @@ describe("ProfileScreen", () => {
     );
     // The applicant's empty chronicle says what fills it, and when.
     expect(screen.getByTestId(byNode("profile.chronicle.empty.title"))).toHaveTextContent(
-      "Nothing here yet. Your posts and opinions show up here once you're in.",
+      /^Nothing here yet\.$/,
     );
   });
 
