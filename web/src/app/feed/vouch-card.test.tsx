@@ -142,7 +142,7 @@ describe("VouchCard", () => {
     server.use(meHandler(() => me()));
     renderCard();
     expect(await screen.findByTestId("feed.vouchCard.body")).toHaveTextContent(
-      "Vouch back to open the way from your side — your opinion toward @mira, and your feed grows from it. Vouching opens the opinion control, set to a gentle default.",
+      "Vouch back to open the way from your side — your opinion toward @mira, and your feed grows from it.",
     );
     expect(screen.getByTestId("feed.vouchCard.dismiss")).toHaveTextContent("Got it");
     // The olive register.
@@ -373,6 +373,18 @@ describe("VouchCard", () => {
       expect(help).toHaveTextContent(
         "The pad is how you shape what reaches you — for or against, and how much. Nothing is signed until Set.",
       );
+      // The first-ever pad's coaching, moved in whole (VouchBackPad.md:15, :17;
+      // copy-voice *Your vouch back*): the shortcut with its face drawn, the
+      // pair a geek-mode tail and the spoken twin saying both, then the swap.
+      expect(help).toHaveTextContent(
+        "Later, tap the small face under a post to open this — press and hold it instead and a gentle",
+      );
+      expect(help).toHaveTextContent("is signed on the spot.");
+      expect(help).toHaveTextContent("Nice, For or against +0.10, How much reaches you +0.10");
+      const tail = help.querySelector(".cg-exact");
+      expect(tail).toHaveTextContent("(+0.10 / +0.10)");
+      expect(tail).toHaveAttribute("aria-hidden", "true");
+      expect(help).toHaveTextContent("Prefer sliders or exact numbers? Swap the input in settings.");
       expect(screen.getByTestId("feed.vouchCard.stance.pad")).toContainElement(help);
       expect(screen.getByTestId("feed.vouchCard.stance.pad.set")).toBeDisabled();
       // The pad is the one dialog (it is modal, StanceControl.jsx); the help
