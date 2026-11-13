@@ -146,9 +146,14 @@ class ApplicantCommentGateTest {
         compose.onNodeWithTag("feed.card:p1").performClick()
         waitForTag("postDetail.card.actionRow.comments")
         compose.onNodeWithTag("postDetail.card.actionRow.comments").performClick()
-        waitForTag("detail_add_comment")
-        compose.onNodeWithTag("detail_add_comment").performClick()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            compose.onAllNodesWithTag(REPLY, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag(REPLY, useUnmergedTree = true).performClick()
         waitForLine()
+        compose.waitForIdle()
+        assertThat(composerOnTheStack()).isFalse()
+        compose.onNodeWithTag("detail_add_comment").performClick()
         compose.waitForIdle()
         assertThat(composerOnTheStack()).isFalse()
     }
@@ -177,5 +182,8 @@ class ApplicantCommentGateTest {
 
     private companion object {
         const val COMMENT_LOCKED = "You can comment once you're in."
+
+        /** The one comment's Reply in the thread (`postDetail.threadSheet`). */
+        const val REPLY = "postDetail.threadSheet.commentCard.actionRow.reply"
     }
 }
