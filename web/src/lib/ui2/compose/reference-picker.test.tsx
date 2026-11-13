@@ -2,14 +2,15 @@
 // (design/designs/canonical/behavior/ReferencePicker.md), driven through a
 // host that holds the composer's references.
 
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { useState } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { newReferenceDraft, type ReferenceDraft } from "@/lib/references/draft";
 import { PICK_ADDED, PICK_REMOVED } from "@/lib/topics/picker";
 import { byNode } from "@/test/data-node";
+import { settleFetches } from "@/test/fetch";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 
@@ -41,9 +42,16 @@ const SALT_MAPS = {
 /** The wire kind each fixture's target is (`NodeKind`). */
 const WIRE: Record<string, string> = { User: "USER", Post: "POST", Comment: "COMMENT" };
 
+// Every lookup the handlers below have answered in this test.
+let lookups = 0;
+beforeEach(() => {
+  lookups = 0;
+});
+
 /** The candidates served, narrowed the way the server narrows: by the asked `kinds`. */
 function candidates(...served: readonly { target: { __typename: string } }[]) {
   return gqlLink.query("ReferenceCandidates", ({ variables }) => {
+    lookups += 1;
     const kinds = (variables as { kinds?: string[] | null }).kinds ?? null;
     const answer = kinds === null ? served : served.filter((c) => kinds.includes(WIRE[c.target.__typename] ?? ""));
     return HttpResponse.json({ data: { referenceCandidates: answer } });
@@ -93,11 +101,18 @@ const results = () =>
 const result = (id: string) => resultRows()[results().indexOf(id)]!;
 const staged = () => screen.queryAllByTestId(byNode("referencePicker.staged.stagedReference"));
 
-async function settle() {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 20));
-  });
+// THE ANSWER IS AWAITED, NEVER SLEPT ON. A lookup is a real round trip (msw 3
+// answers through undici's own send path, test/fetch.ts), so a fixed sleep
+// before reading the results is a race the runner can lose. A test that
+// expects something to APPEAR waits for it (Testing Library's async
+// methods); one that expects something to stay ABSENT first waits for the
+// lookup to be answered and delivered, so it reads the settled screen.
+async function answered(count = 1) {
+  await waitFor(() => expect(lookups).toBeGreaterThanOrEqual(count));
+  await act(() => settleFetches());
 }
+
+const showing = (expected: readonly string[]) => waitFor(() => expect(results()).toEqual(expected));
 
 const salMention = () =>
   newReferenceDraft("u-sal", { kind: "User", label: "@saltorres", href: "/u/saltorres", handle: "saltorres", displayName: "Sal Torres" });
@@ -109,8 +124,7 @@ describe("ReferencePicker", () => {
     const onDone = vi.fn();
     renderWithProviders(<Host spy={spy} onDone={onDone} />);
     type("salt");
-    await settle();
-    expect(results()).toEqual(["u-sal", "p-salt"]);
+    await showing(["u-sal", "p-salt"]);
     expect(resultRows().map((row) => row.getAttribute("data-testid-key"))).toEqual(["1", "2"]);
 
     fireEvent.click(result("p-salt"));
@@ -126,8 +140,7 @@ describe("ReferencePicker", () => {
     server.use(candidates(SAL, SALT_MAPS));
     renderWithProviders(<Host initial={[salMention()]} />);
     type("salt");
-    await settle();
-    expect(results()).toEqual(["p-salt"]);
+    await showing(["p-salt"]);
     expect(staged()).toHaveLength(1);
     expect(staged()[0]).toHaveTextContent("Sal Torres");
   });
@@ -138,7 +151,8 @@ describe("ReferencePicker", () => {
     const onDone = vi.fn();
     renderWithProviders(<Host initial={[salMention()]} spy={spy} onDone={onDone} />);
     type("salt");
-    await settle();
+    // The answer holds only the staged Sal, so nothing new appears to wait on.
+    await answered();
     fireEvent.click(screen.getByRole("button", { name: "Remove Sal Torres" }));
     expect(spy).toHaveBeenLastCalledWith([]);
     expect(staged()).toHaveLength(0);
@@ -214,15 +228,14 @@ describe("ReferencePicker — the filter", () => {
     server.use(candidates(SAL, SALT_MAPS));
     renderWithProviders(<Host />);
     type("salt");
-    await settle();
+    await showing(["u-sal", "p-salt"]);
     fireEvent.click(screen.getByTestId(byNode("referencePicker.filterTrigger")));
     fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.kinds.profilesChip")));
     // Staged, not applied: the results do not move under the sheet.
     expect(results()).toEqual(["u-sal", "p-salt"]);
     fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.foot.done")));
     // The server narrows: the picker asks again with the committed kinds.
-    await settle();
-    expect(results()).toEqual(["u-sal"]);
+    await showing(["u-sal"]);
     expect(screen.getByTestId(byNode("referencePicker.filterTrigger"))).toHaveTextContent("Profiles");
   });
 
@@ -236,23 +249,27 @@ describe("ReferencePicker — the filter", () => {
     );
     renderWithProviders(<Host />);
     type("salt");
-    await settle();
+    await waitFor(() => expect(asked).toHaveLength(1));
     fireEvent.click(screen.getByTestId(byNode("referencePicker.filterTrigger")));
     fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.kinds.postsChip")));
     fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.kinds.profilesChip")));
     fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.foot.done")));
-    await settle();
-    expect(asked).toEqual([
-      { query: "salt", limit: 10 },
-      { query: "salt", limit: 10, kinds: ["POST", "USER"] },
-    ]);
+    await waitFor(() =>
+      expect(asked).toEqual([
+        { query: "salt", limit: 10 },
+        { query: "salt", limit: 10, kinds: ["POST", "USER"] },
+      ]),
+    );
+    // Delivered and settled, and still only the two: nothing else asked.
+    await act(() => settleFetches());
+    expect(asked).toHaveLength(2);
   });
 
   it("drops the staged kinds when the sheet is dismissed", async () => {
     server.use(candidates(SAL, SALT_MAPS));
     renderWithProviders(<Host />);
     type("salt");
-    await settle();
+    await showing(["u-sal", "p-salt"]);
     fireEvent.click(screen.getByTestId(byNode("referencePicker.filterTrigger")));
     fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.kinds.postsChip")));
     const sheet = screen.getByTestId(byNode("referencePicker.filterSheet")) as HTMLDialogElement;
@@ -285,7 +302,7 @@ describe("ReferencePicker — the state chip's cap and fault (rounds 24-25)", ()
     server.use(candidates(SAL));
     renderWithProviders(<Host initial={ten} />);
     type("salt");
-    await settle();
+    await showing(["u-sal"]);
     const cap = screen.getByTestId(byNode("referencePicker.cap"));
     expect(cap).toHaveTextContent("Up to 10 citations per post.");
     expect(cap.compareDocumentPosition(result("u-sal")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -303,8 +320,7 @@ describe("ReferencePicker — the state chip's cap and fault (rounds 24-25)", ()
     const spy = vi.fn();
     renderWithProviders(<Host initial={ten} spy={spy} />);
     type("salt");
-    await settle();
-    expect(results()).toEqual(["u-sal", "p-salt"]);
+    await showing(["u-sal", "p-salt"]);
     for (const row of resultRows()) {
       expect(row).toBeDisabled();
       expect(row.parentElement).toHaveClass("opacity-[var(--state-disabled)]");
@@ -319,7 +335,7 @@ describe("ReferencePicker — the state chip's cap and fault (rounds 24-25)", ()
     server.use(candidates(SAL));
     renderWithProviders(<Host initial={ten} />);
     type("salt");
-    await settle();
+    await showing(["u-sal"]);
     fireEvent.click(screen.getByRole("button", { name: "Remove @held0" }));
     expect(staged()).toHaveLength(9);
     expect(screen.queryByTestId(byNode("referencePicker.cap"))).not.toBeInTheDocument();
@@ -336,9 +352,8 @@ describe("ReferencePicker — the state chip's cap and fault (rounds 24-25)", ()
     server.use(failing());
     renderWithProviders(<Host />);
     type("salt");
-    await settle();
+    const fault = await screen.findByTestId(byNode("referencePicker.fault"));
     expect(resultRows()).toHaveLength(0);
-    const fault = screen.getByTestId(byNode("referencePicker.fault"));
     expect(fault).toHaveTextContent("Can't reach the server — results can't load right now.");
     expect(fault.textContent).not.toMatch(/try again/i);
     expect(screen.getByTestId(byNode("referencePicker.fault.retry"))).toHaveTextContent("Retry");
@@ -352,12 +367,11 @@ describe("ReferencePicker — the state chip's cap and fault (rounds 24-25)", ()
     server.use(failing(() => (calls += 1)));
     renderWithProviders(<Host />);
     type("salt");
-    await settle();
+    await screen.findByTestId(byNode("referencePicker.fault"));
     expect(calls).toBe(1);
     server.use(candidates(SAL));
     fireEvent.click(screen.getByTestId(byNode("referencePicker.fault.retry")));
-    await settle();
-    expect(results()).toEqual(["u-sal"]);
+    await showing(["u-sal"]);
     expect(screen.queryByTestId(byNode("referencePicker.fault"))).not.toBeInTheDocument();
   });
 
@@ -367,13 +381,11 @@ describe("ReferencePicker — the state chip's cap and fault (rounds 24-25)", ()
     server.use(failing(() => (calls += 1)));
     renderWithProviders(<Host />);
     type("salt");
-    await settle();
-    expect(screen.getByTestId(byNode("referencePicker.fault"))).toBeInTheDocument();
+    await screen.findByTestId(byNode("referencePicker.fault"));
     server.use(candidates(SAL));
     type("salto");
-    await settle();
+    await showing(["u-sal"]);
     expect(calls).toBe(1);
-    expect(results()).toEqual(["u-sal"]);
     expect(screen.queryByTestId(byNode("referencePicker.fault"))).not.toBeInTheDocument();
   });
 
@@ -382,7 +394,9 @@ describe("ReferencePicker — the state chip's cap and fault (rounds 24-25)", ()
     renderWithProviders(<Host />);
     type("salt");
     expect(screen.queryByTestId(byNode("referencePicker.fault"))).not.toBeInTheDocument();
-    await settle();
+    // The file's own empty handler answers; only once it is delivered does
+    // the screen say what an empty answer says.
+    await answered();
     expect(resultRows()).toHaveLength(0);
     expect(screen.queryByTestId(byNode("referencePicker.fault"))).not.toBeInTheDocument();
   });
