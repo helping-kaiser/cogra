@@ -188,9 +188,10 @@ This section covers redaction only.
 Every L1 record carries a payload projection — the content bytes —
 and presents in two projections, **full** and **reduced**
 ([layer1-interface.md §8.4](layer1-interface.md#84-the-act-record-and-payload-carriage)).
-Redaction is **payload removal**: the payload and the private
-value beside it are removed from carriage, and the record drops to
-its reduced projection. Three L1 facts fix the mechanism's shape:
+Redaction is **payload removal**: the payload, the private value
+beside it — its content nonce — and the content salt are removed
+from carriage together, and the record drops to its reduced
+projection. Three L1 facts fix the mechanism's shape:
 
 - **Removal erases, never rewrites.** The content commitment is
   binding — no second payload is consistent with it — so a record
@@ -213,13 +214,14 @@ its reduced projection. Three L1 facts fix the mechanism's shape:
 **Who removes.** L1 places removal authority with the act's
 author — a hyper-edge carries one act payload, owned by its
 initiating author; there is no per-leg controller
-(``def:graph:act-payload-controller``). CoGra runs the
-carriage-obligation shape of ``rem:graph:act-payload-custody-phases``
-ahead of decentralization: Layer 1 tracks only the witness, while
-payload and private value live in CoGra's carriage, and CoGra as
-the carriage service also executes removals under its published
-policy — the authorization paths below. CoGra exposes no other
-removal path.
+(``def:graph:act-payload-controller``). CoGra runs centralized
+append with decentralized carriage, one of the four combinations of
+``rem:graph:act-payload-custody-phases``: Layer 1 tracks only the
+witness, and the content pair — the payload and its content nonce —
+lives in CoGra's carriage with the content salt; the host never
+receives it. CoGra as the carriage service also executes removals
+under its published policy — the authorization paths below. CoGra
+exposes no other removal path.
 
 **The visible mark.** The invariant "never erase silently" is
 carried by the pair the substrate leaves behind: the **immutable
