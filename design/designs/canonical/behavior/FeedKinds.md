@@ -28,9 +28,9 @@ WHEN feed.commentCard is tapped outside feed.commentCard.target and its own cont
 
 WHEN feed.commentCard.actionRow.reply is tapped -> the post's comment section opens scrolled to that comment AND the reply composer opens aimed at that comment
 
-ALWAYS feed.commentCard.actionRow.reply wears the locked look, at the disabled opacity and still tappable GIVEN the reader is an applicant
+ALWAYS feed.commentCard.actionRow.reply stands at full strength for an applicant as for anyone, the door to reading the thread
 
-WHEN feed.commentCard.actionRow.reply is tapped GIVEN the reader is an applicant -> feed.snackbar reads You can comment once you're in. AND NEVER the comment section opens AND NEVER the reply composer opens
+WHEN feed.commentCard.actionRow.reply is tapped GIVEN the reader is an applicant -> the post's comment section opens scrolled to that comment AND its Add a comment foot and every Reply wear the locked look, answering You can comment once you're in. AND NEVER the reply composer opens
 
 ALWAYS the comments sheet a feed card raises is postDetail.threadSheet, the thread drawn once, one path wherever it is raised
 

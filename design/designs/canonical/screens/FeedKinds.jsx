@@ -41,24 +41,19 @@
    never carries more than two decimals; the trace says more
    (`FeedEntry`'s own `score` chip). `ExplainableNumber` holds the rule.
 
-   AN APPLICANT'S REPLY GLYPH (the `reader` chip; jakob 2026-11-13, seam
-   320-2): the comment card's glyph wears the locked look and answers on the
-   card — `You can comment once you're in.`, drawn as the snackbar it raises —
-   exactly as the thread's `Reply` does (`ReplyEntry`'s reader chip) and the
-   profile's Comments tab's. The chip draws the comment's act only; the
-   applicant's own shell is `ApplicantFeed`'s.
+   AN APPLICANT'S COMMENT BUTTON IS NEVER LOCKED (jakob 2026-11-13, on round
+   48's screens): it is the door to READING the thread, so it opens the post's
+   comment sheet scrolled to the comment as for anyone; what is locked lives
+   inside the thread — the `Add a comment` foot and each `Reply` (`ReplyEntry`'s
+   `reader` chip draws them).
 
    REGISTERED under the `feed` prefix (seam 248), the cards named as
-   `History` names them: `commentCard`, `profileCard`, `tagCard`, `card`; the
-   snackbar `snackbar`, the feed's own. */
+   `History` names them: `commentCard`, `profileCard`, `tagCard`, `card`. */
 const EVERY_KIND = { ...FEED_FILTER_DEFAULT, kinds: FEED_KINDS.map((kind) => kind.value) };
 
 export const NODE = "feed";
-export const PROPS = {
-  score: { editor: "enum", options: ["usual", "tiny", "tiny-negative"], default: "usual" },
-  reader: { editor: "enum", options: ["member", "applicant"], default: "member" },
-};
-export const VALS = `postScore: this.props.score === "tiny" ? "0.01" : this.props.score === "tiny-negative" ? "−0.01" : "9.10", lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none"`;
+export const PROPS = { score: { editor: "enum", options: ["usual", "tiny", "tiny-negative"], default: "usual" } };
+export const VALS = `postScore: this.props.score === "tiny" ? "0.01" : this.props.score === "tiny-negative" ? "−0.01" : "9.10"`;
 export function Screen() {
   return (
     <>
@@ -73,7 +68,6 @@ export function Screen() {
           topics={["glovebox", "coastroad"]}
           references={1}
           score="12.40"
-          replyOpacity="{{lockOpacity}}"
           node="commentCard"
         />
         <ProfileFeedCard person={MIRA} src="inviter.jpg" bio="Runs the stand by the sea wall — honey from the headland hives." score="11.70" node="profileCard" />
@@ -81,9 +75,6 @@ export function Screen() {
         <PostCard {...SOL_POST} score="{{postScore}}" bundle={mkBundle(0.3, 0.45)} node="card" />
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
-      <div style={{ display: "{{lockedLine}}" }}>
-        <Snackbar message="You can comment once you're in." node="snackbar" />
-      </div>
     </>
   );
 }

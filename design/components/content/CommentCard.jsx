@@ -133,9 +133,9 @@ export function CommentCard({
      once you're in.` The value is the opacity itself — `var(--state-disabled)`
      — so a board's reader chip can pass it as a hole, exactly as the foot's
      `fieldOpacity`; it carries down to the replies, as `signedIn` does. The
-     feed card's reply glyph (`replyGlyph`) wears it too, answering on the card
-     with the same line (jakob 2026-11-13, seam 320-2: one behaviour on every
-     host). */
+     list card's comment glyph (`replyGlyph`) never wears it: it is the door to
+     READING the thread, open to an applicant (jakob 2026-11-13); the lock is the
+     thread's foot and its `Reply`. */
   replyOpacity,
   /* SHARE CLOSES THE ROW where it is given — the feed card's — exactly as
      `PostCard`'s does. A thread passes none. */
@@ -426,7 +426,7 @@ export function CommentCard({
             <ExplainableNumber glyph="graph" label="Feed score" value={score} onOpenDetail={onOpenScore ?? (() => {})} node={node && "score"} />
           )}
           {signedIn && onReply && replyGlyph && (
-            <GlyphAction glyph="chat_bubble" label={author ? `Reply to @${author.handle}` : "Reply"} onPress={onReply} opacity={replyOpacity} node={node && "reply"} />
+            <GlyphAction glyph="chat_bubble" label={author ? `Reply to @${author.handle}` : "Reply"} onPress={onReply} node={node && "reply"} />
           )}
           {signedIn && onReply && !replyGlyph && (
             <Button variant="text" size="sm" onClick={onReply} style={replyOpacity !== undefined ? { opacity: replyOpacity } : undefined} node={node && "reply"}>

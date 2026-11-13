@@ -54,9 +54,9 @@ WHEN history.commentCard is tapped outside history.commentCard.target and its ow
 
 WHEN the comment glyph on a history.commentCard is tapped -> the post's comment section opens scrolled to that comment AND the reply composer opens aimed at that comment
 
-ALWAYS history.commentCard.actionRow.reply wears the locked look, at the disabled opacity and still tappable GIVEN the reader is an applicant
+ALWAYS history.commentCard.actionRow.reply stands at full strength for an applicant as for anyone, the door to reading the thread
 
-WHEN history.commentCard.actionRow.reply is tapped GIVEN the reader is an applicant -> history.snackbar reads You can comment once you're in. AND NEVER the comment section opens AND NEVER the reply composer opens
+WHEN history.commentCard.actionRow.reply is tapped GIVEN the reader is an applicant -> the post's comment section opens scrolled to that comment AND its Add a comment foot and every Reply wear the locked look, answering You can comment once you're in. AND NEVER the reply composer opens
 
 ALWAYS the comments sheet a History card raises is postDetail.threadSheet, the thread drawn once, one path wherever it is raised
 
