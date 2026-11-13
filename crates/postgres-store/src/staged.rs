@@ -143,6 +143,19 @@ pub struct SealedParts {
     pub host_seal: Vec<u8>,
 }
 
+impl From<&PreSigned> for PreSignedParts {
+    /// The leg a pre-signed proposal submits: its key, both nonces and its
+    /// signature, without the proposal the staged row already holds.
+    fn from(pre: &PreSigned) -> Self {
+        Self {
+            author_pubkey: pre.author_pubkey.clone(),
+            content_nonce: pre.content_nonce.clone(),
+            dependency_nonce: pre.dependency_nonce.clone(),
+            pre_signature: pre.pre_signature.clone(),
+        }
+    }
+}
+
 impl PreSignedParts {
     /// The leg joined to the proposal it covers — the carrier's whole
     /// pre-signed proposal, content pair included.
@@ -173,7 +186,12 @@ impl StagedWrite {
     /// staged payload and the device's content nonce, and the pair itself
     /// stays behind. None before the pre-commitment leg.
     pub fn submission(&self) -> Option<Submission> {
-        Some(self.pre_signed.as_ref()?.pre_signed(&self.proposal).submission())
+        Some(
+            self.pre_signed
+                .as_ref()?
+                .pre_signed(&self.proposal)
+                .submission(),
+        )
     }
 
     /// The host-sealed verified act, once the seal has returned.

@@ -312,7 +312,9 @@ pub async fn reduce_in(
     }
 
     done.reduced = content_store::reduce_act_payload(tx, r.act_id).await?;
-    let sealed_copy = copy.as_ref().is_some_and(|s| s.content_commitment.is_some());
+    let sealed_copy = copy
+        .as_ref()
+        .is_some_and(|s| s.content_commitment.is_some());
     if !carried_before && !done.promoted_first && carries_bytes && sealed_copy {
         content_store::insert_reduced_act_payload(tx, r.act_id, None).await?;
         done.reduced = true;
