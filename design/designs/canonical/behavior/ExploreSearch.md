@@ -28,8 +28,6 @@ ALWAYS explore.filterTrigger reads Everything GIVEN the search filter is at its 
 
 ALWAYS explore.filterTrigger's spoken name is its reading followed by what the search shows
 
-ALWAYS a result the reader has already seen stays out GIVEN Show what you've already seen is off
-
 ALWAYS search matches names and titles, and never a body, a description or a bio
 
 ALWAYS plain text matches a person when any word of their display name or their handle starts with what is typed, as Mod finds Genesis Moderator and enesis finds nobody, and never needs an @

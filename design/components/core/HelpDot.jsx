@@ -3,7 +3,9 @@ import React from "react";
 /* The "?" affordance — the one-per-screen door to a plain dialog (readme §13:
    captions stay to one short line; the full explanation lives behind a small
    "?", at most one per screen, top-right of the header or of the sheet/card it
-   explains). A 32px ring inside the 48px target. It began as a screen helper
+   explains — save the stopper's, and Settings', which carries one beside each
+   section heading that needs it, jakob 2026-11-12). A 32px ring inside the
+   48px target. It began as a screen helper
    on the search boards and moved into the system when the filter sheet — a
    master — needed to carry one.
 

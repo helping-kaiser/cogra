@@ -50,8 +50,7 @@ export function Screen() {
           }}
           data-node="body"
         >
-          Your account is deleted in 6 days, on 08.10.2026. Until then nothing has changed, and canceling keeps
-          everything as it is.
+          Your account is deleted in 6 days, on 08.10.2026.
         </p>
 
         <div style={{ marginTop: 24 }}>

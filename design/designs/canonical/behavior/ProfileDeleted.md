@@ -18,7 +18,7 @@ ALWAYS every act still stands in the chronicle with its words gone GIVEN the del
 
 ALWAYS the actions row reads the opinion on the account, worn wide, then the ⋮, and carries no Message
 
-ALWAYS the figures are one tap target, spoken as each figure's number and words — Posts, Opinions on them, Opinions by them — then opinions on and by this account
+ALWAYS the two opinion figures are two doors and the Posts figure is no door, each door spoken as its figure's number and visible words and nothing more, as on another's profile
 
 ALWAYS the wide anchor's accessible name says this account and never a handle
 
@@ -44,7 +44,11 @@ WHEN a guest taps the wide anchor -> the guest gate opens
 
 WHEN tap the ⋮ in the actions row -> the deleted account's menu opens over the page
 
-WHEN tap the figures -> the opinions page opens on this account
+WHEN tap the Opinions on figure -> the opinions page opens on this account on its On state
+
+WHEN tap the Opinions by figure -> the opinions page opens on this account on its By state
+
+WHEN tap the Posts figure -> NEVER anything happens
 
 WHEN tap profile.tabRow.postsTab -> the account's posts stand below profile.tabRow as post cards AND the header above stays as it was
 

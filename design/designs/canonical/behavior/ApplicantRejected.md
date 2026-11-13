@@ -6,7 +6,7 @@ ALWAYS the closed application's card has no way to put it away
 
 ALWAYS the card is titled by the member who closed the application, @kel closed your application
 
-ALWAYS the ask link stands whole on the card with its label Ask someone you know to vouch for you and its caption Send it to anyone who is already in. It does not expire, and it works however many people you send it to.
+ALWAYS the ask link stands whole on the card with its label Ask someone you know to vouch for you and its caption Send it to anyone who is already in. It does not expire.
 
 ALWAYS the account reads, ranks and browses exactly as before the close
 
@@ -32,4 +32,4 @@ WHEN tap the closed application's notification -> this shell opens at the card w
 
 WHEN tap Profile on the bar -> the applicant's own profile opens
 
-WHEN a member takes the application up through the ask link -> the card flips to the landing card AND the band's line reads Browsing from @kel's view while your application lands. AND the band still names @kel
+WHEN a member takes the application up through the ask link -> the card flips to the landing card AND the band's line reads Browsing from @kel's view. AND the band still names @kel

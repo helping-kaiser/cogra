@@ -1,6 +1,6 @@
 # HistoryHidden · `spec:design:behavior-history-hidden`
 
-WHEN tap Hide on a person in the reader's post menu opened from a card in History -> the sheet closes AND History stands as it stood, every card in its place AND history.snackbar reads @ada is hidden — their posts stay out of your feed. with Undo on history.snackbar.action AND NEVER a confirm step appears
+WHEN tap Hide on a person in the reader's post menu opened from a card in History -> the sheet closes AND History stands as it stood, every card in its place AND history.snackbar reads @ada is hidden. with Undo on history.snackbar.action AND NEVER a confirm step appears
 
 ALWAYS nothing marks a hidden person's cards while the open History stands
 

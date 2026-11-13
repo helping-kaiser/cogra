@@ -12,8 +12,8 @@
    open or pull, where every other change does. Her own profile card would
    stay even then (jakob 2026-10-07, ruling 11).
 
-   THE SNACKBAR IS THE FEED'S, WORD FOR WORD — `@ada is hidden — their posts
-   stay out of your feed.` with `Undo` — because the act's reach is the same
+   THE SNACKBAR IS THE FEED'S, WORD FOR WORD — `@ada is hidden.` with
+   `Undo` — because the act's reach is the same
    whichever surface the tap was made on. It lands over History, above its
    bar (`Snackbar`'s 80px).
 
@@ -50,7 +50,7 @@ export function Screen() {
         />
         <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />
       </FeedList>
-      <Snackbar message="@ada is hidden — their posts stay out of your feed." action="Undo" offset={80} node="snackbar" />
+      <Snackbar message="@ada is hidden." action="Undo" offset={80} node="snackbar" />
       <BottomNav active="profile" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );

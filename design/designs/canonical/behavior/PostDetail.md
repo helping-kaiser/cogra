@@ -4,7 +4,7 @@ ALWAYS postDetail.header.menu is the post's one overflow and postDetail.card car
 
 ALWAYS postDetail.card holds the post as it was when the detail opened, never changing under the reader, until the reader asks for the newest
 
-WHEN a fresh read finds the post changed since the detail opened -> postDetail.newerVersion appears between postDetail.header and postDetail.card reading Edited since you opened it — tap for the newest version. AND NEVER postDetail.card changes
+WHEN a fresh read finds the post changed since the detail opened -> postDetail.newerVersion appears between postDetail.header and postDetail.card reading Edited since you opened it AND NEVER postDetail.card changes
 
 WHEN a fresh read finds the post's tags or citations changed since the detail opened -> postDetail.newerVersion appears the same way, in the same words AND NEVER postDetail.card changes
 
@@ -63,3 +63,5 @@ ALWAYS postDetail.bottomBar keeps lit the slot of the root the bell was tapped o
 ALWAYS postDetail.card.actionRow.stance.pending reads Waiting for your key under the kept pick's face GIVEN a pick is kept pending on the post and the key is not on this device
 
 ALWAYS postDetail.card.actionRow.stance.pending reads Waiting for your review under the kept pick's face GIVEN the key is on this device and the kept picks' review was left unsigned
+
+ALWAYS the back arrow names the screen the post was opened from by the post detail's origin table, Back to the profile GIVEN it was opened from a card on another's profile, and Back to your profile from a card on the reader's own

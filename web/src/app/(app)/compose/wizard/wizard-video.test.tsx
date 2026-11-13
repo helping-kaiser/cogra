@@ -21,6 +21,7 @@ import type { ComposeDraftStore } from "@/lib/compose/draft-store";
 import { emptyWizard, type WizardState } from "@/lib/compose/wizard";
 import { ComposeWizard } from "./wizard-view";
 import { byAnyTestId, byNode } from "@/test/data-node";
+import { declared } from "@/test/css";
 
 const FRAME = new Blob([new Uint8Array([9]) as BlobPart], { type: "image/png" });
 // A frame distinct from `FRAME` above, so a test can tell "the tray's frames"
@@ -293,7 +294,7 @@ describe("picking a video", () => {
       await pickFiles([aVideo()]);
       fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
 
-      expect(await previewRatio()).toBe(`${1920 / 1080} / 1`);
+      expect(await previewRatio()).toBe(declared("aspect-ratio", `${1920 / 1080} / 1`));
     });
 
     it("shows a square clip square", async () => {

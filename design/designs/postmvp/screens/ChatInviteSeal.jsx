@@ -3,7 +3,7 @@
 
    THE FOUNDING SEAL'S ANATOMY, one step later in a chat's life
    (`ChatCreateSeal`, and `ProfileEditSeal` before it): `WizardHeader` with its
-   two ways out, the stage named `Last step` and the seal's "?", the chat shown
+   two ways out and the seal's "?", the chat shown
    back at the top, the acts card, one quiet true line, and `SealFooter`.
 
    ONE INVITATION PER PERSON, AND THE CARD COUNTS THEM (chats.md §2, §4). Each
@@ -43,14 +43,13 @@
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" leaveLabel="Leave — nobody is invited" stageLabel="Last step" help="How signing works" />
+      <WizardHeader title="What you sign" leaveLabel="Leave — nobody is invited" help="How signing works" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <ChatSealSubject image="post-photo.jpg" name="Coast walkers" line="Inviting two people into the chat." />
 
         <ActsCard
           rows={[{ label: "Invitations", value: "Wren Aliyev, Nadia Rask", count: "2", countNoun: "invitation" }]}
           total="2 things, signed together"
-          note="They land together, or none does."
         />
 
         <TextField label="Message" corner="Optional — public, with each invitation" rows={1} value="Walks leave from the harbour office — come along on Friday." />

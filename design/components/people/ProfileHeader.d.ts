@@ -42,8 +42,10 @@ export interface ProfileHeaderProps {
   onInvites?: () => void;
   /** The viewer's own avatar only: the change badge over the monogram/photo. */
   onAvatarChange?: () => void;
-  /** Opens the figures as one tap target, both directions, on the opinions page. */
-  onCounts?: () => void;
+  /** Makes the two opinion figures doors to the opinions page: `Opinions on …`
+   *  calls it with `"on"`, `Opinions by …` with `"by"` — the page's state to
+   *  open on. The Posts figure is never a door. */
+  onCounts?: (direction: "on" | "by") => void;
   /** The page's own overflow, closing the actions row — an `OverflowMenu` with
    *  `placement="row"`. No band carries a ⋮ (the band law), so a profile's
    *  rare acts hang off the row that holds its other acts. */

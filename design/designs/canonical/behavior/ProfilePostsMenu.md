@@ -6,7 +6,7 @@ ALWAYS the post card's menu on the profile reads Save or Unsave, then Cite in a 
 
 ALWAYS the post card's menu keeps Hide with the author's handle on the author's own profile, though the profile's own menu carries the same row
 
-WHEN tap profile.menuSheet.hide -> the sheet closes AND the reader stays on the profile AND the snackbar reads @ada is hidden — their posts stay out of your feed. with Undo AND NEVER a confirm step appears
+WHEN tap profile.menuSheet.hide -> the sheet closes AND the reader stays on the profile AND the snackbar reads @ada is hidden. with Undo AND NEVER a confirm step appears
 
 WHEN tap profile.menuSheet.license -> the menu closes AND the post's terms come up in a sheet over the profile
 

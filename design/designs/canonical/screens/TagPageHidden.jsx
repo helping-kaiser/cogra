@@ -29,7 +29,7 @@ export function Screen() {
   return (
     <>
       <TagPageBody />
-      <Snackbar message="@tobias is hidden — their posts stay out of your feed." action="Undo" offset={16} node="snackbar" />
+      <Snackbar message="@tobias is hidden." action="Undo" offset={16} node="snackbar" />
     </>
   );
 }

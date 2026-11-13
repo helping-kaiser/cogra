@@ -22,8 +22,8 @@ surfaces*).
 
 | Control | Where it stands | Opens | On screen |
 |---|---|---|---|
-| The bottom bar's Wallet slot (`nav · Wallet`, 60 edges) | every bottom bar, every reader state, guests included | `WalletComingSoon` | `Wallet — coming soon.` · `Your earnings will be here.` |
-| The band's chats icon (`chats`, 25 edges) | every root band, signed-in readers; a guest's band (`Main`, `FeedBare`, `WalletComingSoon`) sends it to `GuestGate` | `ChatsComingSoon` | `Chats — coming soon.` · `Your conversations will be here.` |
+| The bottom bar's Wallet slot (`nav · Wallet`, 60 edges) | every bottom bar, every reader state, guests included | `WalletComingSoon` | `Wallet — coming soon.` |
+| The band's chats icon (`chats`, 25 edges) | every root band, signed-in readers; a guest's band (`Main`, `FeedBare`, `WalletComingSoon`) sends it to `GuestGate` | `ChatsComingSoon` | `Chats — coming soon` |
 | `Message` (4 edges) | `ProfileOther`, `ProfileOtherHeld`, `ProfilePosts`, `ProfileComments` | `ChatsComingSoon` | the same page, back arrow `Back to the profile` |
 | The Sky card | `Explore` at rest, between the search field and Your tags | nothing — an announcement, no flow number | `The Sky — coming soon` · `Your sky — every account a star, sized by your own paths to it.` |
 
@@ -70,7 +70,7 @@ the roadmap. Each row says what the build shows until its slice lands.
 | The default order — the feed's filter, search's filter, Settings' Reading default (`OrderSection`) | slice 3's ranker | the build serves `Newest` and the order section's default reads it; the drawn default `Ranked` takes over when the ranker ships (readme §13, *The audit answers* and *The settings round*; `SettingsReading.md`) — see *Unresolved* 1 |
 | The guest and applicant feeds (`Main`, `FeedBare`, `ApplicantFeed` and its family) | slice 3's ranker | the band names the vantage and stands; the borrowed order, the invite-link vantage's contract field and the band's line about ranking wait, and the feed reads newest like every feed (readme §13, *The shell round's stops*) |
 | The tag page's list and the comment thread | the ranker | newest first, with no order control and no label naming the order (readme §13, *The tag round*; backlog 115) |
-| A video picked at an edit — `EditWords`' `+ Add pictures or a video`, and a words comment's edit (seam 248) | the edit's cover step (`EditWords.md`: the clip's face is chosen on the cover step before the edit takes it) | the media row refuses the clip in words, `A video can't join an edit yet — post it on its own.`, with `Remove it` alone (copy-voice, *Refused files*); the drawn path takes over when the cover step ships — at comment scale the clip arrives with its cover row, as `CommentEditVideo` draws it (backlog 148, ruled 2026-11-10) |
+| A video picked at a post's edit — `EditWords`' `+ Add pictures or a video` (seam 248) | the edit's cover step (`EditWords.md`: the clip's face is chosen on the cover step before the edit takes it) | the media row refuses the clip in words, `A video can't join an edit yet — post it on its own.`, with `Remove it` alone (copy-voice, *Refused files*); the drawn path takes over when the cover step ships (backlog 148, ruled 2026-11-10). A words comment's edit takes its clip as drawn — `CommentEditVideo`'s `clip` setting (round 44, seam 295) |
 | A portrait or square clip's tap on a feed card | slice 3's stream (`Reel`) | it opens the post detail, where every other media tap goes (readme §13, *The slice-2.5 rulings*) |
 
 ## Placeholders swapped at publication

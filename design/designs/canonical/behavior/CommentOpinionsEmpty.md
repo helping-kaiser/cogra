@@ -4,7 +4,7 @@ ALWAYS the comment's opinions sheet opens stacked over the thread, the thread st
 
 ALWAYS the comment's opinions sheet is titled Opinions on this comment
 
-ALWAYS the comment's opinions sheet reads No opinions yet — yours would be the first. GIVEN no opinion is held on the comment
+ALWAYS the comment's opinions sheet reads No opinions yet GIVEN no opinion is held on the comment
 
 ALWAYS the empty sheet never scolds and wears no error colour
 

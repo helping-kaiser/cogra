@@ -8,7 +8,7 @@ ALWAYS the grace page says nothing has changed until the deadline and canceling 
 
 ALWAYS the deletion band does not stand on the grace page
 
-WHEN press Cancel -> the deletion is called off AND settings returns with the deletion band gone AND the Delete account row reads Delete account AND the snackbar reads Canceled — your account stays, and nothing was deleted. AND NEVER the snackbar offers Undo AND NEVER a dialog asks
+WHEN press Cancel -> the deletion is called off AND settings returns with the deletion band gone AND the Delete account row reads Delete account AND the snackbar reads Canceled — your account stays. AND NEVER the snackbar offers Undo AND NEVER a dialog asks
 
 WHEN the cancel has not answered 200ms after the press -> Cancel reads Canceling… in its own place AND NEVER a spinner appears
 

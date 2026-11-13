@@ -2,7 +2,7 @@
    #3; jakob 2026-09-23).
 
    THE PROFILE SAVE'S PRECEDENT: a form, then a seal. `ProfileEditSeal`'s
-   anatomy — `WizardHeader` with its two ways out, the stage named `Last step`
+   anatomy — `WizardHeader` with its two ways out
    and the seal's "?", the thing being signed shown back at the top, the acts
    card, one quiet true line, and `SealFooter` at the foot.
 
@@ -33,7 +33,7 @@
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" leaveLabel="Leave — nothing is started" stageLabel="Last step" help="How signing works" />
+      <WizardHeader title="What you sign" leaveLabel="Leave — nothing is started" help="How signing works" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <ChatSealSubject name="Low-tide walks" line="A new group chat — invite only." />
 
@@ -43,7 +43,6 @@ export function Screen() {
             { label: "Invitations", value: "Ada Okonkwo, Tobias Lindqvist", count: "2", countNoun: "invitation" },
           ]}
           total="3 things, signed together"
-          note="They land together, or none does."
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>

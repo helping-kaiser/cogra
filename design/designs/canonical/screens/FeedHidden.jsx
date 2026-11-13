@@ -16,10 +16,8 @@
    the graph is untouched either way (her profile still opens, her comments
    still stand under other people's posts).
 
-   THE SNACKBAR SAYS HOW FAR IT REACHES. `@ada is hidden — their posts stay out
-   of your feed.` — the second clause is the one that matters, because the
-   thing a reader wonders after hiding someone is whether they have done
-   something TO that person. `Undo` beside it: hiding is a comfort, the reader
+   THE SNACKBAR IS ONE LINE. `@ada is hidden.` — hidden already says how far it
+   reaches (jakob 2026-11-12). `Undo` beside it: hiding is a comfort, the reader
    may have meant it for one post rather than for a person, and the way back
    costs nothing (`Snackbar`'s one action).
 
@@ -47,7 +45,7 @@ export function Screen() {
         <PostCard {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} node="card" />
         <PostCard {...SOL_POST} bundle={mkBundle(0.3, 0.45)} node="card" />
       </FeedList>
-      <Snackbar message="@ada is hidden — their posts stay out of your feed." action="Undo" offset={80} node="snackbar" />
+      <Snackbar message="@ada is hidden." action="Undo" offset={80} node="snackbar" />
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );

@@ -33,11 +33,21 @@
    NO SECOND ALGORITHM. All four kinds rank by the ordinary rank, side by side
    — the default feed's order, the kinds only widening what it may admit.
 
+   A TINY SCORE NEVER READS ZERO (jakob 2026-11-12, the re-ask's twentieth;
+   the `score` chip). The post at the foot, whose figure the three above
+   outrank whatever it reads: `usual` its 9.10; `tiny` a computed figure
+   under 0.005, which two decimals would print as `0.00`, rounded away from
+   zero to `0.01`; `tiny-negative` its twin below zero, `−0.01`. The card
+   never carries more than two decimals; the trace says more
+   (`FeedEntry`'s own `score` chip). `ExplainableNumber` holds the rule.
+
    REGISTERED under the `feed` prefix (seam 248), the cards named as
    `History` names them: `commentCard`, `profileCard`, `tagCard`, `card`. */
 const EVERY_KIND = { ...FEED_FILTER_DEFAULT, kinds: FEED_KINDS.map((kind) => kind.value) };
 
 export const NODE = "feed";
+export const PROPS = { score: { editor: "enum", options: ["usual", "tiny", "tiny-negative"], default: "usual" } };
+export const VALS = `postScore: this.props.score === "tiny" ? "0.01" : this.props.score === "tiny-negative" ? "−0.01" : "9.10"`;
 export function Screen() {
   return (
     <>
@@ -56,7 +66,7 @@ export function Screen() {
         />
         <ProfileFeedCard person={MIRA} src="inviter.jpg" bio="Runs the stand by the sea wall — honey from the headland hives." score="11.70" node="profileCard" />
         <TagFeedCard id={SALTMAPS_TAG_ID} name="#saltmaps" through={["ada", "tobias"]} tagged={SALTMAPS_TAGGED} score="10.30" node="tagCard" />
-        <PostCard {...SOL_POST} bundle={mkBundle(0.3, 0.45)} node="card" />
+        <PostCard {...SOL_POST} score="{{postScore}}" bundle={mkBundle(0.3, 0.45)} node="card" />
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>

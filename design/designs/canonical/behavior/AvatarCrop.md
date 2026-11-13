@@ -4,13 +4,15 @@ ALWAYS the crop frames the profile's one picture in a circle at 1:1
 
 ALWAYS the crop offers no shape chips
 
-ALWAYS the lines Drag to move, pinch to zoom. and One picture, shown everywhere you appear. stand under the zoom slider
+ALWAYS the circle stands still as the crop's frame, 342 × 342 at 24 below the top of the 390 × 390 stage, and the picture is what moves and zooms under it, on both platforms
+
+ALWAYS the picture outside the circle stays in view under a 45 % black
 
 ALWAYS Next is pinned in the foot
 
-WHEN drag inside the crop -> the picture moves within the circle
+WHEN drag inside the crop -> the picture moves under the circle AND NEVER the circle moves
 
-WHEN pinch inside the crop -> the picture zooms within the circle AND the zoom slider follows
+WHEN pinch inside the crop -> the picture zooms under the circle AND the zoom slider follows AND NEVER the circle changes size
 
 WHEN press Next GIVEN the crop was opened from the avatar's change badge -> the picture's own seal opens
 
@@ -27,5 +29,3 @@ WHEN move the zoom slider -> the picture zooms in place AND NEVER below the fill
 WHEN press an arrow key GIVEN the crop has focus -> the picture moves 1 % that way AND NEVER past where its edge meets the crop's
 
 WHEN press an arrow key with Shift held GIVEN the crop has focus -> the picture moves 10 % that way AND NEVER past where its edge meets the crop's
-
-ALWAYS the line Drag to move, pinch to zoom. reads Drag or use the arrow keys to move, the slider to zoom. GIVEN a device with no touch to pinch

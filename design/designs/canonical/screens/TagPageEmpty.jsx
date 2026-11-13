@@ -50,7 +50,7 @@ export function Screen() {
       <PageHeader title="#slipwaylight" backHref="#" backLabel="Back to Explore" />
       <TopicStanceRow name="#slipwaylight" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "4px 24px 0" }}>
-        <EmptyState title="Nothing carries this tag right now. The name is still a place — anyone can use it." />
+        <EmptyState title="Nothing carries this tag right now." />
       </div>
     </>
   );

@@ -8,7 +8,7 @@ ALWAYS invites.createSheet.options.singleUse, Only one person can use it, stands
 
 ALWAYS invites.createSheet.options.expiry, Expires after, reads 7 days when the sheet opens
 
-ALWAYS invites.createSheet.options.footnote reads With it off, anyone holding the link can apply until it expires. Either way each person still needs your approval, one at a time.
+ALWAYS invites.createSheet.options.footnote reads Either way each person still needs your approval, one at a time.
 
 ALWAYS the invites list stays beneath the sheet, and nothing beneath the scrim takes a tap
 

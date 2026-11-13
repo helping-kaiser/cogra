@@ -275,25 +275,35 @@ export function SettingsRow({
   );
 }
 
-export function SettingsGroup({ label, footnote, children, ariaLabel, bare = false, node }) {
+/* `help` is the heading's "?" (jakob 2026-11-12: Settings alone carries one
+   beside a section heading that needs it — `Giving an opinion`, `Reading`):
+   a `HelpDot` trailing the heading in its own row, `SheetTitle`'s `trailing`
+   construction, opening that section's background in a plain dialog. */
+const GROUP_LABEL = {
+  margin: "0 0 8px",
+  padding: "0 var(--space-4)",
+  fontSize: "var(--text-title-small)",
+  lineHeight: "var(--text-title-small--line-height)",
+  fontWeight: "var(--text-title-small--font-weight)",
+  letterSpacing: "var(--text-title-small--letter-spacing)",
+  color: "var(--text-secondary)",
+};
+export function SettingsGroup({ label, footnote, children, ariaLabel, bare = false, help, node }) {
   const rows = React.Children.toArray(children).filter(Boolean);
   return (
     <section aria-label={label ? undefined : ariaLabel} style={{ display: "flex", flexDirection: "column" }} data-node={node}>
-      {label && (
-        <h2
-          data-node={node && "label"}
-          style={{
-            margin: "0 0 8px",
-            padding: "0 var(--space-4)",
-            fontSize: "var(--text-title-small)",
-            lineHeight: "var(--text-title-small--line-height)",
-            fontWeight: "var(--text-title-small--font-weight)",
-            letterSpacing: "var(--text-title-small--letter-spacing)",
-            color: "var(--text-secondary)",
-          }}
-        >
+      {label && !help && (
+        <h2 data-node={node && "label"} style={GROUP_LABEL}>
           {label}
         </h2>
+      )}
+      {label && help && (
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", margin: GROUP_LABEL.margin }}>
+          <h2 data-node={node && "label"} style={{ ...GROUP_LABEL, margin: 0, flex: 1 }}>
+            {label}
+          </h2>
+          {help}
+        </div>
       )}
       <div
         style={

@@ -9,11 +9,8 @@
    still in it; the last one unhidden closes it onto settings instead, its
    row reading `None`, and the same line answers there.
 
-   THE SNACKBAR SAYS HOW FAR IT REACHES. `@juno is unhidden — their posts can
-   reach your feed again.` with `Undo` — the hide's own construction turned
-   round, the second clause again the one that matters: unhiding brings a
-   person's posts back to where the ranker can place them, it does not put
-   them anywhere. `Undo` hides them again.
+   THE SNACKBAR IS ONE LINE. `@juno is unhidden.` with `Undo` — the hide's own
+   line turned round (jakob 2026-11-12). `Undo` hides them again.
 
    THE LINE RIDES ABOVE THE SHEET. The tap was made in the sheet and the
    sheet is still up, so the message is raised over it — at the screen's
@@ -72,7 +69,7 @@ export function Screen() {
       </BottomSheet>
 
       <div style={{ position: "relative", zIndex: 50 }}>
-        <Snackbar message="@juno is unhidden — their posts can reach your feed again." action="Undo" offset={16} node="snackbar" />
+        <Snackbar message="@juno is unhidden." action="Undo" offset={16} node="snackbar" />
       </div>
     </>
   );

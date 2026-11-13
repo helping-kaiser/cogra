@@ -5,13 +5,16 @@
    returns to the edit instead: ONE seal covers picture and fields together,
    so nobody pays twice for one profile update.
 
+   ONE CROP MODEL (jakob 2026-11-11, seam 301): the circle is a FIXED frame,
+   342 × 342 at top 24 in the 390 × 390 stage (`CropViewport`'s inset 24),
+   and the PICTURE moves (drag) and zooms (pinch, or the zoom track) under it;
+   outside the circle the picture stays in view, darkened.
+
    THE ZOOM IS ON SCREEN (the K13 round): `CropZoom` under the circle, its
    thumb at this crop's 1.2× between the fill (1×) and about 4×, on both
-   platforms; the focused circle pans with the arrow keys (`CropViewport`),
-   1 % a press, 10 % with Shift (jakob 2026-10-05). On a device with no touch
-   to pinch the first line reads `Drag or use the arrow keys to move, the
-   slider to zoom.` (new, flagged for blessing; copy-voice, *The crops' how-to
-   line*). */
+   platforms; the focused stage moves the picture with the arrow keys
+   (`CropViewport`), 1 % a press, 10 % with Shift (jakob 2026-10-05). No line
+   says how to move it (round 44, the removable-text pass). */
 export function Screen() {
   return (
     <>
@@ -19,8 +22,6 @@ export function Screen() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 16px", overflow: "hidden" }}>
         <CropViewport src="comment-camera.jpg" shape="circle" scale={1.2} origin="50% 35%" />
         <CropZoom scale={1.2} />
-        <QuietNote>Drag to move, pinch to zoom.</QuietNote>
-        <QuietNote>One picture, shown everywhere you appear.</QuietNote>
         <div style={{ flex: 1 }} />
         <Button style={{ width: "100%" }}>Next</Button>
       </div>

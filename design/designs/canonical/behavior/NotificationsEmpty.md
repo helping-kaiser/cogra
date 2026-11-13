@@ -1,6 +1,6 @@
 # NotificationsEmpty · `spec:design:behavior-notifications-empty`
 
-ALWAYS Notifications reads Nothing here yet. Comments, replies, citations, mentions and opinions on you arrive here as they happen, along with what becomes of your invites and your own application. GIVEN nothing has arrived for the reader
+ALWAYS Notifications reads Nothing here yet. GIVEN nothing has arrived for the reader
 
 ALWAYS the empty Notifications offers no action button and wears no error colour
 
