@@ -2810,7 +2810,12 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
    on its way to the composer. So the door is a `button` named by its words,
    `Add a comment`, drawn exactly as `TextField` draws a one-line field — the
    label above, the empty 1px box under it — with the state layer and focus
-   ring every pressable carries, and no cap: there is nothing here to count. */
+   ring every pressable carries, and no cap: there is nothing here to count.
+
+   REGISTERED under the sheet that holds it (round 48, seam 320-4): the row is
+   `foot`, as every sheet's foot is (`filterSheet.foot`), and the door
+   `foot.addComment` — `postDetail.threadSheet.foot.addComment` wherever the
+   thread is raised. The faces stay unnamed. */
 const FOOT_LABEL = {
   fontSize: "var(--text-label-large)",
   lineHeight: "var(--text-label-large--line-height)",
@@ -2825,9 +2830,9 @@ const FOOT_BOX = {
   borderRadius: "var(--radius-extra-small)",
   border: "1px solid var(--border-field)",
 };
-function CommentComposerFoot({ fieldOpacity, shown }) {
+function CommentComposerFoot({ fieldOpacity, shown, node }) {
   return (
-    <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 0", borderTop: "1px solid var(--border-hairline)" }}>
+    <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 0", borderTop: "1px solid var(--border-hairline)" }} data-node={node}>
       {shown ? (
         <>
           <span style={{ display: shown.member }}>
@@ -2845,6 +2850,7 @@ function CommentComposerFoot({ fieldOpacity, shown }) {
           type="button"
           className="cg-state cg-focus"
           style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)", width: "100%", border: 0, background: "none", padding: 0, margin: 0, borderRadius: "var(--radius-extra-small)", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left", cursor: "pointer" }}
+          data-node={node && "addComment"}
         >
           <span style={FOOT_LABEL}>Add a comment</span>
           <span aria-hidden="true" style={FOOT_BOX} />
@@ -2882,7 +2888,7 @@ function CommentsSheet({ children, scrolledBy = 0, footOpacity, shown, node }) {
         {scrolledBy > 0 && <li aria-hidden="true" style={{ flex: "none", height: 0, marginTop: -(scrolledBy + COMMENTS_GAP) }} />}
         {children}
       </ul>
-      <CommentComposerFoot fieldOpacity={footOpacity} shown={shown} />
+      <CommentComposerFoot fieldOpacity={footOpacity} shown={shown} node={node && "foot"} />
     </BottomSheet>
   );
 }
@@ -4790,9 +4796,13 @@ const AFFINITY_AXES = {
    never hidden. A ⋮ here would open a sheet holding one row, so share stands
    as itself, the `ShareButton` glyph every card's row ends with — one tap, the
    platform's own sheet. */
-function TopicStanceRow({ name, bundle, stanceOpen, stanceDefaultPick }) {
+/* `node` names the row where a placer registers it (`TagPageHeldPad`, round
+   48, seam 320-16): `actionRow`, the wide anchor `stance` — `StanceControl`'s
+   anatomy, its open pad `stance.pad.*` — and `share`, as the profile's head
+   names its row (`profile.identity.actionRow.stance`). */
+function TopicStanceRow({ name, bundle, stanceOpen, stanceDefaultPick, node }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", padding: "4px 16px 8px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", padding: "4px 16px 8px" }} data-node={node}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <StanceControl
           wide
@@ -4802,18 +4812,19 @@ function TopicStanceRow({ name, bundle, stanceOpen, stanceDefaultPick }) {
           defaultOpen={stanceOpen}
           defaultPick={stanceDefaultPick}
           onCommit={() => {}}
+          node={node && "stance"}
         />
       </div>
-      <ShareButton targetLabel={name} onShare={() => {}} />
+      <ShareButton targetLabel={name} onShare={() => {}} node={node && "share"} />
     </div>
   );
 }
 
-function TagPageBody({ bundle, stanceOpen, stanceDefaultPick } = {}) {
+function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false } = {}) {
   return (
     <>
-      <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" />
-      <TopicStanceRow name="#saltmaps" bundle={bundle} stanceOpen={stanceOpen} stanceDefaultPick={stanceDefaultPick} />
+      <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" node={named ? "header" : undefined} />
+      <TopicStanceRow name="#saltmaps" bundle={bundle} stanceOpen={stanceOpen} stanceDefaultPick={stanceDefaultPick} node={named ? "actionRow" : undefined} />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "4px 0 0" }}>
         <TaggedRow pair={{ pDirected: 0.1, pInterest: 1 }} pending>
           <PostCard attach {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
