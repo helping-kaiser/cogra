@@ -162,6 +162,11 @@ export function ProfileHeader({
   invitesOpacity,
   redacted = false,
   showHandle = true,
+  /* A BOARD'S SHOW-ONLY OVERRIDE of the name's size and leading, for the
+     shrink jakob asked to see (2026-11-13, backlog 214) — no rule rides it;
+     the role's own size stands everywhere else. */
+  nameSize,
+  nameLineHeight,
   node,
 }) {
   const name = redacted ? REDACTED_ACTOR_NAME : displayName && displayName.trim() ? displayName : handle;
@@ -258,7 +263,7 @@ export function ProfileHeader({
         </div>
         <div className="cg-profile-name" style={{ gridArea: "name", alignSelf: "end", display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
           <h1
-            style={{ margin: 0, fontSize: "var(--text-title-large)", letterSpacing: "var(--text-title-large--letter-spacing)", lineHeight: "var(--text-title-large--line-height)", fontWeight: "var(--text-title-large--font-weight)", overflowWrap: "anywhere", color: redacted ? "var(--text-secondary)" : undefined }}
+            style={{ margin: 0, fontSize: nameSize ?? "var(--text-title-large)", letterSpacing: "var(--text-title-large--letter-spacing)", lineHeight: nameLineHeight ?? "var(--text-title-large--line-height)", fontWeight: "var(--text-title-large--font-weight)", overflowWrap: "break-word", wordBreak: "normal", color: redacted ? "var(--text-secondary)" : undefined }}
             data-node={node && "name"}
           >
             {name}
@@ -267,8 +272,13 @@ export function ProfileHeader({
               carry it — a drill-in is titled @handle, so it passes showHandle
               false (jakob 2026-09-01). A redacted actor has none to repeat.
               The handle line is a ONE-LINE PLACE (round 40): it never wraps,
-              and a handle too long for it is cut with "…"; the name above is
-              a heading and wraps, breaking inside a word it cannot fit. */}
+              and a handle too long for it is cut with "…". THE NAME ABOVE IS THE
+              NAMED EXCEPTION (seam 318; ruled by jakob 2026-11-13: "i still want
+              people to be able to see the full name"): on the profile's head
+              alone the display name is always shown whole — it wraps at its
+              spaces, a word wider than the line breaks INSIDE the word (the one
+              place in the tree a name may), no end-cut and no line cap
+              (`ProfileOther`'s `name` setting draws it). */}
           {showHandle && !redacted && (
             <span style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} data-node={node && "handle"}>
               @{handle}

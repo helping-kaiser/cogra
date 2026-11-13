@@ -145,6 +145,15 @@
       "page": "profile"
     },
     {
+      "file": "ProfileCommentsRemovedMenu.dc.html",
+      "title": "Profile · the comments view, a removed comment's menu",
+      "x": 7680,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "ProfilePostsOwn.dc.html",
       "title": "Profile · your own posts view",
       "x": 6720,

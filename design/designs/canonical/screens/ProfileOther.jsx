@@ -16,12 +16,27 @@
    one rule every page a profile's card opens follows (`Back to your profile`
    from a card on the reader's own).
 
+   THE `name` CHIP DRAWS THE HEAD'S NAME AT ITS EXTREMES (seam 318; jakob
+   2026-11-13: "wouldnt this look shitty? please show me"): `sample` @ada's
+   name; `two-lines` a 40-character name of three words, wrapping at a
+   space onto a second line; `three-lines` the 50-character legal maximum in
+   four words, which needs THREE lines at the head's 262px — drawn, not
+   capped; `one-word` a 50-character single word, which breaks inside the word
+   onto as many lines as it needs — the head's name is always shown whole
+   (ruled by jakob 2026-11-13, backlog 213). `three-lines-shrunk` is SHOW-ONLY,
+   no rule: the 50-character sample at 19px on a 24px line, the largest whole
+   size at which it holds two lines at the head's 262px (jakob's idea,
+   backlog 214).
+
    REGISTERED under the `profile` prefix (design ⇄ impl seam 059/061): another
    person's page is the same surface as your own, named by the same body
    names. */
 export const NODE = "profile";
-export const PROPS = { from: { editor: "enum", options: ["feed", "profile"], default: "feed" } };
-export const VALS = `backLabel: this.props.from === "profile" ? "Back to the profile" : "Back to feed"`;
+export const PROPS = {
+  from: { editor: "enum", options: ["feed", "profile"], default: "feed" },
+  name: { editor: "enum", options: ["sample", "two-lines", "three-lines", "one-word", "three-lines-shrunk"], default: "sample" },
+};
+export const VALS = `backLabel: this.props.from === "profile" ? "Back to the profile" : "Back to feed", displayName: this.props.name === "two-lines" ? "Maximiliana Wilhelmina Featherstonehaugh" : this.props.name === "three-lines" || this.props.name === "three-lines-shrunk" ? "Maximiliana Wilhelmina Featherstonehaugh Okonkwoli" : this.props.name === "one-word" ? "MaximilianaWilhelminaFeatherstonehaughOkonkwoLiang" : "Ada Okonkwo", nameSize: this.props.name === "three-lines-shrunk" ? "19px" : "var(--text-title-large)", nameLineHeight: this.props.name === "three-lines-shrunk" ? "24px" : "var(--text-title-large--line-height)"`;
 export function Screen() {
-  return <ProfileOtherBody backLabel="{{backLabel}}" />;
+  return <ProfileOtherBody backLabel="{{backLabel}}" displayName="{{displayName}}" nameSize="{{nameSize}}" nameLineHeight="{{nameLineHeight}}" />;
 }

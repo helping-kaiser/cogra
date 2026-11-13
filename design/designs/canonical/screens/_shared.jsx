@@ -723,11 +723,12 @@ const OWN_POST_MENU = [
 /* YOUR OWN REMOVED POST KEEPS A MENU (jakob 2026-11-12, question 18: "i can
    still cite this (maybe in a folloup post to explain why i deleted it)";
    and on License terms: "even if the media is now removed someone might have
-   used my content already under its license regulations"): `OWN_POST_MENU`
-   less Edit and Remove alone — Save, Cite in a new post, Mark as sensitive,
-   License terms, in the own menu's order. The detail's header carries it
-   whole; a card's ⋮ is handed it less the license, which `PostCard` appends. */
-const OWN_REMOVED_POST_MENU = OWN_POST_MENU.filter((row) => row !== EDIT_ROW && row !== REMOVE_ROW);
+   used my content already under its license regulations"; and 2026-11-13,
+   point B: Mark as sensitive "goes"): `OWN_POST_MENU` less Edit, Mark as
+   sensitive and Remove — Save, Cite in a new post, License terms, in the own
+   menu's order. The detail's header carries it whole; a card's ⋮ is handed
+   it less the license, which `PostCard` appends. */
+const OWN_REMOVED_POST_MENU = OWN_POST_MENU.filter((row) => row !== EDIT_ROW && row !== REMOVE_ROW && row.node !== "markSensitive");
 const OWN_REMOVED_CARD_MENU = OWN_REMOVED_POST_MENU.filter((row) => row !== LICENSE_ROW);
 /* The reader's post menu for a post by `handle`, so a host whose drawn card
    is someone else's than @ada's names its author in the Hide row
@@ -787,6 +788,13 @@ const OWN_COMMENT_MENU = [...CARD_MENU, EDIT_ROW, REMOVE_ROW, CITED_BY_ROW, OPIN
    report row standing after it. */
 const COMMENT_CARD_MENU = COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
 const OWN_COMMENT_CARD_MENU = OWN_COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
+/* A REMOVED COMMENT'S MENUS FOLLOW THE POST'S (jakob 2026-11-13, point C):
+   another's raises the reader's comment menu whole (`COMMENT_MENU`, the
+   license row kept); your own raises `OWN_COMMENT_MENU` less Edit and Remove
+   — Save, Cite in a new post, Cited by, Opinions on this, License terms. The
+   card's ⋮ takes each less the license, which `CommentCard` appends. */
+const OWN_REMOVED_COMMENT_MENU = OWN_COMMENT_MENU.filter((row) => row !== EDIT_ROW && row !== REMOVE_ROW);
+const OWN_REMOVED_COMMENT_CARD_MENU = OWN_REMOVED_COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
 
 /* THE THINK-TWICE DIALOG BEHIND AN AUTHOR'S `Remove`, ONE ANATOMY PER KIND
    (`RemoveConfirm`'s, shared the moment the comment's confirm drew it a second
@@ -1276,7 +1284,7 @@ function ProfileOwnBody({ tail = null, headLine = null }) {
 
    Named as `ProfileOwnBody` names its page, under the same `profile` prefix:
    `ProfileOther` and `ProfileMenu` register it. */
-function ProfileOtherBody({ bundle, backLabel = "Back to feed" } = {}) {
+function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "Ada Okonkwo", nameSize, nameLineHeight } = {}) {
   return (
     <>
       <PageHeader title="@ada" backHref="#" backLabel={backLabel} node="header" />
@@ -1285,7 +1293,9 @@ function ProfileOtherBody({ bundle, backLabel = "Back to feed" } = {}) {
           <ProfileHeader
             node="identity"
             handle="ada"
-            displayName="Ada Okonkwo"
+            displayName={displayName}
+            nameSize={nameSize}
+            nameLineHeight={nameLineHeight}
             avatarSrc="comment-camera.jpg"
             bio="A dozen tries at the third headland light and counting."
             posts={12}
@@ -2941,10 +2951,10 @@ const TOBIAS_REPLIES = [
    THE MARK IS ONE LINE AND ITS DATE, as on a post (jakob 2026-11-12): the
    thread standing around it shows what remains.
 
-   A REMOVED COMMENT HAS NO MENU LEFT: nothing on its card is left to save,
-   cite or read the terms of, so its ⋮ goes with the payload. (A removed
-   POST keeps its menu since jakob's 2026-11-12 ruling; whether a removed
-   comment follows is not ruled.) What survives is what survives a removed post — the author, the
+   A REMOVED COMMENT KEEPS A MENU, as a removed post does (jakob 2026-11-13,
+   point C): your own raises `OWN_REMOVED_COMMENT_MENU` — Save, Cite in a new
+   post, Cited by, Opinions on this, License terms; another's the reader's
+   comment menu whole. `CommentRemovedMenu` draws yours open. What survives is what survives a removed post — the author, the
    opinion a reader can still give, and the way to answer. */
 /* WHERE THE READER STANDS IN THE THREAD for the whole removal — the menu, the
    dialog and the mark (`ReplySettled`'s `scrolledBy`, the reply-return
@@ -3072,7 +3082,7 @@ function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, remov
   const ownSol = (
     <CommentCard
       {...solComment}
-      menuItems={removed ? [] : OWN_THREAD_MENU}
+      menuItems={removed ? OWN_REMOVED_COMMENT_CARD_MENU : OWN_THREAD_MENU}
       redacted={removed ? { reason: "author", when: "now" } : undefined}
       node={card}
     />

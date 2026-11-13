@@ -15,3 +15,5 @@ ALWAYS a handle or name in wrapping text never stands on two lines: it moves who
 ALWAYS a handle or name longer than a full line of wrapping text is cut at its end with an ellipsis, its trailing punctuation kept whole beside it
 
 ALWAYS wrapping text is never ellipsized as a whole
+
+ALWAYS a display name on the profile's head is the named exception, always shown whole: it wraps at its spaces, a word wider than the line breaks inside the word — the one place in the tree a name may — and it is never end-cut and never capped in lines, as ProfileOther's name setting draws it

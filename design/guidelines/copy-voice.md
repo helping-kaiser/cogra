@@ -422,7 +422,9 @@ noun):
   post — the post itself, every tag, every citation — is signed on
   its own, in your name. They sign together: all of them land, or
   none does. / Each signing is paid for — the cost is real, so each
-  one still counts. *(Payer-neutral by the v1.0.0 scope cut, jakob
+  one still counts. An edit is signed too — the new version is a new
+  record in your name, and it costs like any signing. *(The edit's
+  sentence blessed by jakob 2026-11-13, point D. Payer-neutral by the v1.0.0 scope cut, jakob
   2026-09-25: no copy names who pays until a pool that pays and
   members who pay past it exist.)*
 - **The license**: Terms for anyone who reuses what you publish —
@@ -576,7 +578,7 @@ noun):
   typed values take both numbers exactly. *(One paragraph naming the
   three inputs, from the rows' labels and their old hints — jakob
   2026-11-12: "one or a couple actual sentences instead of two disconnect
-  ones"; drafted 2026-11-12, review-pending.)*
+  ones"; drafted 2026-11-12; *blessed (jakob 2026-11-13)*.)*
 - **Reading** (Settings, beside the section's heading): Every feed starts
   from what it shows, and a change made inside a feed lasts until you
   change it back. Both choices stay on this device. *(The group's
@@ -3193,7 +3195,9 @@ the row is the part cut, never the act: `@maximiliana_feathe… commented
 on your post` — the sentence's words keep their room first (readme §13,
 *A long name or handle takes one of three cases*; in running text the
 sentence wraps and the handle moves whole to the next line — a handle or
-name never stands on two lines). Ten kinds, ten
+name never stands on two lines; the profile's head is the named exception,
+its display name always shown whole: it wraps at its spaces and a word
+wider than the line breaks inside the word, no end-cut — jakob 2026-11-13). Ten kinds, ten
 sentences, all present tense of the act that happened:
 
 - `@ada commented on your post` — a comment on a post of yours.

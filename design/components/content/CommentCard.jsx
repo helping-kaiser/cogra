@@ -187,11 +187,12 @@ export function CommentCard({
 }) {
   // Same rule as PostCard: the license is a rare read, so it arrives from the
   // menu rather than sitting on the comment, and it comes up in a sheet over
-  // the thread rather than on the card. It rode the payload, so a redacted
-  // record has none to show. A row marked `tail` stands after the license, as
+  // the thread rather than on the card. A REMOVED comment keeps the row, as a
+  // removed post does (jakob 2026-11-13, point C): its terms still bind every
+  // use already made. A row marked `tail` stands after the license, as
   // on `PostCard`: the report row, at the sheet tail (ruling 75).
   const items =
-    license && !redacted
+    license || redacted
       ? [
           ...menuItems.filter((item) => !item.tail),
           { label: LICENSE_MENU_LABEL, onSelect: () => {} },
