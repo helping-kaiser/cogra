@@ -26,7 +26,6 @@ describe("previewTagName", () => {
     expect(previewTagName("a-b_c.d9")).toEqual({
       canonical: "a-b_c.d9",
       valid: true,
-      reason: null,
     });
   });
 
