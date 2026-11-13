@@ -22,8 +22,8 @@
    always enforce the dimension of the clip"). The frame takes the clip's
    shape as the clip stands in a card (`clipFrame`: its own ratio, a clip
    taller than 4:5 at 4:5), never another, and what the crop exports is that
-   shape. The stage is the post crop's, 390 × 488 under every shape (the
-   orchestrator's reading, shown to jakob); the frame takes the stage's width
+   shape — a tall clip's cover at 4:5 (confirmed by jakob 2026-11-13, point E).
+   The stage is the post crop's, 390 × 488 under every shape; the frame takes the stage's width
    less the 24 gutters, centred in its height. The `clip` setting draws the
    three: `wide` a 16:9 clip's 342 × 192 at top 148 (the default), `tall` a
    4:5 frame's 342 × 427.5 at top 30.25, `square` 342 × 342 at top 73 — the

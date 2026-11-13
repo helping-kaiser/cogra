@@ -11790,8 +11790,8 @@ vouch-back pad and Wallet; lane B's crop, composer side, feed and profile).
 - **The cover's frame always has the clip's dimensions** (review, 1;
   backlog 200): tall clip a tall cover, square a square, wide a wide —
   the shape the clip stands at in a card — and the crop exports only that
-  shape. The cover crop takes the post crop's 390 × 488 stage (the
-  orchestrator's reading); `CoverCrop`'s `clip` chip measures wide 342 ×
+  shape, a tall clip's at 4:5 (confirmed by jakob 2026-11-13). The cover
+  crop takes the post crop's 390 × 488 stage; `CoverCrop`'s `clip` chip measures wide 342 ×
   192 at 148, tall 342 × 427.5 at 30.25, square 342 × 342 at 73.
   `CropViewport` takes a `stageHeight`.
 - **A picked clip and a new cover upload under one gate** (2; backlog
@@ -11814,8 +11814,8 @@ vouch-back pad and Wallet; lane B's crop, composer side, feed and profile).
   backlog 206). Another's: the reader's post menu — Save, Cite in a new
   post, Hide @author, License terms, Report — on the card and in the
   detail's header (`RemovedOther`, new). Your own: your post's menu less
-  Edit and Remove — Save, Cite in a new post, Mark as sensitive, License
-  terms — on the card (`FeedRemoved`; `FeedRemovedMenuOwn`, new) and in
+  Edit, Mark as sensitive and Remove — Save, Cite in a new post, License
+  terms (jakob 2026-11-13) — on the card (`FeedRemoved`; `FeedRemovedMenuOwn`, new) and in
   the detail's header (`Removed`). License terms stays because the terms
   still bind every use already made. `FeedRemovedMenu`'s card carries its
   removal date.

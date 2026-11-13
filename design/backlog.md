@@ -5932,7 +5932,7 @@ takes the post crop's 390 × 488 stage, the frame 342 wide at every shape
 the square stage by height (312 × 390), narrower than the others; (c) the
 stage grows with the shape (the model jakob's ruling replaced).
 
-Closed by round 46 (jakob 2026-11-12, on the review and question 1): the cover's frame always has the clip's dimensions — tall a tall cover, square a square, wide a wide — and the crop enforces it. Drawn on the post crop's 390 × 488 stage (the orchestrator's reading, shown to him): `CoverCrop`'s `clip` chip, wide 342 × 192 at 148, tall 342 × 427.5 at 30.25, square 342 × 342 at 73.
+Closed by round 46 (jakob 2026-11-12, on the review and question 1): the cover's frame always has the clip's dimensions — tall a tall cover, square a square, wide a wide — and the crop enforces it. Drawn on the post crop's 390 × 488 stage, a tall clip's cover at 4:5 (confirmed by jakob 2026-11-13, point E): `CoverCrop`'s `clip` chip, wide 342 × 192 at 148, tall 342 × 427.5 at 30.25, square 342 × 342 at 73.
 
 ### 201 · A clip picked in a comment's edit: what the board does not draw · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
