@@ -2455,7 +2455,7 @@ class ContentScreensTest {
             onShare = { shared += it },
         )
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_share").assertExists().performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.share").assertExists().performClick()
         assertThat(shared).containsExactly("p1")
     }
 

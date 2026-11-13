@@ -92,7 +92,7 @@ internal fun postMenuRows(
         // moment ago (design/readme.md). Only the reader's menu gains it — no
         // board draws it leaving the author's own.
         if (!own && onShare != null) {
-            add(MenuRow(share, "${testTagPrefix}_share", onShare))
+            add(MenuRow(share, tag(PostMenuRow.Share, "share"), onShare))
         }
         add(MenuRow(saveRow?.label ?: save, tag(PostMenuRow.Save, "save"), saveRow?.onSelect ?: {}))
         // CITE STANDS SECOND ON BOTH MENUS (`_shared.jsx:414-420`, backlog
