@@ -85,7 +85,7 @@ import { REPORTED, REPORT_NOT_SENT } from "@/lib/ui2/post-menu-host";
 import { ReportConfirm } from "@/lib/ui2/report-confirm";
 import { sendReport } from "@/lib/api/report-api";
 import { COMMENT_SETTLING } from "@/lib/compose/comment-edit-door";
-import { useReaderIsApplicant } from "@/lib/session/reader-state";
+import { COMMENT_LOCKED, useReaderIsApplicant } from "@/lib/session/reader-state";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { StageHost } from "@/lib/ui2/media/stage-host";
 import { commentTarget, ReplyWizard } from "@/app/posts/[id]/reply/reply-wizard-view";
@@ -647,6 +647,12 @@ export function CommentsSheet({
    * out, because a closed dialog no longer holds one.
    */
   const openComposer = (target: ReplyTarget) => {
+    // AN APPLICANT IS TOLD, NEVER THE COMPOSER (ReplyEntry.md:25; ruling
+    // PR-103): both doors, and a landing aimed at a reply, end here.
+    if (applicant) {
+      notify(COMMENT_LOCKED);
+      return;
+    }
     depart();
     setEditing(null);
     setReplying(target);

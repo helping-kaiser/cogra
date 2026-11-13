@@ -32,6 +32,7 @@ class CommentsViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
     private val reveals = SensitiveReveals()
+    private val standing = com.cogra.domain.ReaderStanding()
 
     private val content = object : ThrowingContentRepository() {
         /** The thread read's answer; the first page every `start` gets. */
@@ -78,7 +79,7 @@ class CommentsViewModelTest {
         }
     }
 
-    private fun viewModel() = CommentsViewModel(content = content, reveals = reveals)
+    private fun viewModel() = CommentsViewModel(content = content, reveals = reveals, standing = standing)
 
     @Before
     fun setUp() {

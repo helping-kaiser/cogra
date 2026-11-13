@@ -51,7 +51,7 @@ import { useComfortLine } from "@/lib/saved/comfort-line";
 import { REMOVED_BY_AUTHOR, postTitle } from "@/lib/saved/row-content";
 import { useSavedWrites } from "@/lib/saved/provider";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
-import { useReaderIsApplicant } from "@/lib/session/reader-state";
+import { COMMENT_LOCKED, useReaderIsApplicant } from "@/lib/session/reader-state";
 import { useAuthGuard } from "@/lib/session/runtime";
 import type { Notify } from "@/lib/saved/save-row";
 import { CitedBySheet } from "@/lib/ui2/cited-by-sheet";
@@ -104,8 +104,9 @@ import { TopicsLine } from "./topics-line";
 /**
  * An applicant's Reply answers in place (ProfileComments.md:29; the comment
  * foot's twin, staged-surfaces.md): locked, never gone, never the composer.
+ * The wording lives with the family's others (`reader-state.ts`).
  */
-export const COMMENT_LOCKED = "You can comment once you're in.";
+export { COMMENT_LOCKED };
 
 /** What the line shape's text Reply does for this reader. */
 export type LineReply =
