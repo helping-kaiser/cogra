@@ -28,6 +28,10 @@ WHEN feed.commentCard is tapped outside feed.commentCard.target and its own cont
 
 WHEN feed.commentCard.actionRow.reply is tapped -> the post's comment section opens scrolled to that comment AND the reply composer opens aimed at that comment
 
+ALWAYS feed.commentCard.actionRow.reply wears the locked look, at the disabled opacity and still tappable GIVEN the reader is an applicant
+
+WHEN feed.commentCard.actionRow.reply is tapped GIVEN the reader is an applicant -> feed.snackbar reads You can comment once you're in. AND NEVER the comment section opens AND NEVER the reply composer opens
+
 ALWAYS the comments sheet a feed card raises is postDetail.threadSheet, the thread drawn once, one path wherever it is raised
 
 WHEN feed.tagCard.actionRow.compose, Tag a new post with it, is tapped -> the post composer opens at its first stage AND the tag rides staged among the new post's tags

@@ -113,7 +113,9 @@ export interface CommentCardProps {
   /**
    * The locked look on the text `Reply` for an applicant reader (auth.md):
    * `var(--state-disabled)`, the button still tappable, its tap answering
-   * `You can comment once you're in.` Carried down to the replies.
+   * `You can comment once you're in.` Carried down to the replies, and worn
+   * by the reply glyph too where `replyGlyph` draws one (the feed's and
+   * History's cards).
    */
   replyOpacity?: string | number;
   /** Shows `ShareButton`, closing the row — the feed card's. A thread passes none. */

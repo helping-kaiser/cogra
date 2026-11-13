@@ -4946,7 +4946,13 @@ const commentTarget = (parent, kind) =>
           cover: parent.media?.[0]?.src,
         };
 
-function CommentFeedCard({ id, author, content, timestamp, parent, parentKind = "post", media, sensitive, topics = [], references = 0, score, bundle, own = false, stancePendingPick, stancePendingReview, node }) {
+/* AN APPLICANT'S REPLY GLYPH IS LOCKED, NOT GONE (jakob 2026-11-13, seam
+   320-2, as recommended: one behaviour on every host). `replyOpacity` is
+   `CommentCard`'s own, the thread's and the profile's: the glyph stands at the
+   disabled opacity, still tappable, and the tap answers on the card with
+   `You can comment once you're in.` — the thread never opens. A board's
+   `reader` chip passes the hole (`FeedKinds`, `History`). */
+function CommentFeedCard({ id, author, content, timestamp, parent, parentKind = "post", media, sensitive, topics = [], references = 0, score, bundle, own = false, stancePendingPick, stancePendingReview, replyOpacity, node }) {
   const target = commentTarget(parent, parentKind);
   return (
     <CommentCard
@@ -4972,6 +4978,7 @@ function CommentFeedCard({ id, author, content, timestamp, parent, parentKind = 
       onOpenScore={() => {}}
       onReply={() => {}}
       replyGlyph
+      replyOpacity={replyOpacity}
       onShare={() => {}}
       license={{ attribution: 0, provenance: 0 }}
       menuItems={own ? FEED_OWN_COMMENT_MENU : FEED_COMMENT_MENU}

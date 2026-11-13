@@ -54,6 +54,10 @@ WHEN history.commentCard is tapped outside history.commentCard.target and its ow
 
 WHEN the comment glyph on a history.commentCard is tapped -> the post's comment section opens scrolled to that comment AND the reply composer opens aimed at that comment
 
+ALWAYS history.commentCard.actionRow.reply wears the locked look, at the disabled opacity and still tappable GIVEN the reader is an applicant
+
+WHEN history.commentCard.actionRow.reply is tapped GIVEN the reader is an applicant -> history.snackbar reads You can comment once you're in. AND NEVER the comment section opens AND NEVER the reply composer opens
+
 ALWAYS the comments sheet a History card raises is postDetail.threadSheet, the thread drawn once, one path wherever it is raised
 
 WHEN tap a portrait or square clip on history.card -> the stream opens on that clip, History's rows narrowed to their portrait and square clips in History's order, AND its back arrow reads Back to History
