@@ -640,7 +640,11 @@ async fn a_content_nonce_is_refused_for_a_second_act_by_its_author(pool: PgPool)
         Err(StagedError::ContentNonceReused(id)) if id == second
     ));
     let w = staged::load(&pool, second).await.expect("loads");
-    assert_eq!(w.state, StagedState::AwaitingPreSign, "nothing was recorded");
+    assert_eq!(
+        w.state,
+        StagedState::AwaitingPreSign,
+        "nothing was recorded"
+    );
     assert!(w.pre_signed.is_none());
     staged::record_pre_signed(&pool, theirs, &pre_parts())
         .await
@@ -721,7 +725,9 @@ async fn the_payload_mark_follows_carriage(pool: PgPool) {
         records,
         closure: Default::default(),
     };
-    mirror::ingest_epoch(&pool, &package).await.expect("ingests");
+    mirror::ingest_epoch(&pool, &package)
+        .await
+        .expect("ingests");
     let marks = || async {
         sqlx::query_as::<_, (String, bool)>(
             "SELECT record_id, payload_marked FROM mirror_records ORDER BY position",

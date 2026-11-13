@@ -520,9 +520,9 @@ async fn removing_a_post_reduces_every_revision_and_archives_each_unit(pool: PgP
         .expect("units");
         assert_eq!(units, 1, "one unit per act: {act}");
         let (carriage, staged): (bool, bool) = sqlx::query_as(
-            "SELECT (SELECT payload IS NULL AND payload_state = 'reduced'
+            "SELECT (SELECT payload IS NULL AND content_nonce IS NULL AND payload_state = 'reduced'
                      FROM act_payloads WHERE act_id = $1),
-                    (SELECT payload IS NULL AND nonce IS NULL AND content_salt IS NULL
+                    (SELECT payload IS NULL AND content_nonce IS NULL AND content_salt IS NULL
                      FROM staged_writes WHERE act_id = $1)",
         )
         .bind(act)

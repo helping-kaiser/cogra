@@ -253,21 +253,17 @@ async fn sign(
     staged_id: Uuid,
 ) {
     let write = staged::load(pool, staged_id).await.expect("loads");
-    let pre = key.pre_sign(write.proposal.clone());
+    let pre = common::l1::proposal::PreSigned::sign(key, write.proposal.clone());
     let sealed = api::relay::submit_pre_signed(
         boundary,
         pool,
         staged_id,
-        staged::PreSignedParts {
-            author_pubkey: pre.author_pubkey.clone(),
-            nonce: pre.nonce.clone(),
-            pre_signature: pre.pre_signature.clone(),
-        },
+        staged::PreSignedParts::from(&pre),
     )
     .await
     .expect("seals");
     let host_key = standin.host_public_key().await.expect("host key");
-    let witness = key.approve(&pre, &sealed, &host_key).expect("approves");
+    let witness = pre.approve(key, &sealed, &host_key).expect("approves");
     api::relay::submit_approval(boundary, pool, staged_id, witness.approval_signature)
         .await
         .expect("relays");
@@ -321,7 +317,7 @@ async fn pre_sign_only(rig: &WireRig, token: &str, key: &ActorKey, writes: &Valu
                 .expect("b64"),
         )
         .expect("decodes");
-        let pre = key.pre_sign(proposal);
+        let pre = common::l1::proposal::PreSigned::sign(key, proposal);
         let sealed = rig
             .gql(
                 Some(token),
@@ -330,7 +326,7 @@ async fn pre_sign_only(rig: &WireRig, token: &str, key: &ActorKey, writes: &Valu
                  }",
                 json!({ "input": { "proposals": [{
                     "stagedWriteId": write["id"],
-                    "signature": B64.encode(wire::encode_pre_commitment_of(&pre)),
+                    "signature": B64.encode(pre.pre_commitment_blob().encode()),
                 }]}}),
             )
             .await;
