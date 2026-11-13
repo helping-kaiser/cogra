@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
@@ -15,7 +15,12 @@ vi.mock("next/navigation", async (importOriginal) => ({
   useRouter: () => ({ push, replace: vi.fn(), back: vi.fn(), forward: vi.fn(), refresh: vi.fn(), prefetch: vi.fn() }),
 }));
 
-beforeEach(() => push.mockClear());
+beforeEach(() => {
+  push.mockClear();
+  // The token store persists in localStorage: an earlier test's session must
+  // not sign in the next one, or a "guest" is a member in disguise.
+  window.localStorage.clear();
+});
 
 startMswServer(...stanceHandlers());
 
@@ -155,13 +160,19 @@ describe("TagFeedCard's Tag a new post with it", () => {
   });
 
   // FeedTagShapes.md:29's other half — the card's face, the shared control.
-  it("a_guests_tap_on_the_tag_cards_face_opens_the_guest_gate", () => {
+  it("a_guests_tap_on_the_tag_cards_face_opens_the_guest_gate", async () => {
     renderWithProviders(
       <TagFeedCard topic={TOPIC} from="feed" testId="tag" node={{ path: "feed.tagCard", key: "t1" }} onLinkCopied={() => {}} />,
       { reader: null },
     );
-    fireEvent.click(screen.getByTestId("feed.tagCard.actionRow.stance.anchor"));
-    expect(screen.getByTestId("join-prompt")).toHaveTextContent("Join the conversation");
+    // The face's own gesture, as `stance-control.test.tsx` drives it.
+    const face = await screen.findByTestId("feed.tagCard.actionRow.stance.anchor");
+    await act(async () => {
+      fireEvent.pointerDown(face, { pointerId: 9, clientX: 0, clientY: 0 });
+      fireEvent.pointerUp(face, { pointerId: 9 });
+      fireEvent.click(face);
+    });
+    expect(await screen.findByTestId("join-prompt")).toHaveTextContent("Join the conversation");
     expect(push).not.toHaveBeenCalled();
   });
 });
