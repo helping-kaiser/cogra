@@ -1164,12 +1164,17 @@ pub async fn lock_copy(
 /// reduction a lie. A carried act is never reaped; it is deleted outright
 /// with its account. Idempotent: a reaped row is not touched again, so
 /// the reap moment stays the first one.
+///
+/// A full-empty payload is not reaped. Its content nonce conceals
+/// nothing, as with the genesis nonces, and a reaped row could no longer
+/// say the payload was empty: the landing would record a reduced carriage
+/// row and mark an act that carried no bytes.
 pub async fn reap_payload(conn: &mut PgConnection, act_id: &str) -> Result<u64, StagedError> {
     Ok(sqlx::query!(
         "UPDATE staged_writes
          SET payload = NULL, content_salt = NULL, content_nonce = NULL,
              payload_reaped_at = NOW(), updated_at = NOW()
-         WHERE act_id = $1 AND state <> 'carried' AND payload IS NOT NULL",
+         WHERE act_id = $1 AND state <> 'carried' AND length(payload) > 0",
         act_id,
     )
     .execute(conn)

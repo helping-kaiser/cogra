@@ -439,7 +439,9 @@ A redaction of one act (the erasure engines decide which acts;
    dependency nonce stays with the rest of the pre-commitment leg: it
    was disclosed to the host with the dependency list and opens no
    content. The content nonce's digest stays in
-   `content_nonce_digests`, so the nonce is still refused.
+   `content_nonce_digests`, so the nonce is still refused. A
+   full-empty payload is not reaped: its content nonce conceals
+   nothing, and its record lands with no carriage row, unmarked.
 5. **Hold** each asset the envelope names whose last live placement
    is now gone.
 

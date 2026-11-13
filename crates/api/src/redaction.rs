@@ -211,7 +211,8 @@ impl Reduced {
 ///    is the record's payload mark, and a record landing later must read
 ///    marked from its first read, as one landing first and reduced after.
 /// 4. **Reap** the staged row: payload, content salt and content nonce to
-///    NULL.
+///    NULL. A full-empty payload is left as it is (see
+///    [`staged::reap_payload`]).
 ///
 /// Every read runs on that transaction's connection: an engine holding
 /// one pooled connection for the transaction never waits on a second one

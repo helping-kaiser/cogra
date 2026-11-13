@@ -737,6 +737,59 @@ async fn land_admission_shaped_registration(rig: &Rig, actor: Uuid, key: &ActorK
     prepared.proposal.body.act_id().to_string()
 }
 
+/// An act with an empty payload, redacted after its approval and before
+/// its record lands, still lands as an act that carried no bytes. It has
+/// no carriage row and reads unmarked, so the redaction does not turn an
+/// empty payload into a reduced one.
+///
+/// A redacted act whose payload was empty lands with no carriage row and reads unmarked.
+/// ´claim:redaction:an-empty-payload-never-lands-reduced´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_redacted_empty_payload_act_lands_with_no_carriage_and_unmarked(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.funded_actor("ada").await;
+    let prepared = api::prepare::prepare(
+        &rig.boundary,
+        &rig.pool,
+        GC,
+        actor,
+        Gesture {
+            author: key.address(),
+            family: Family::Registration,
+            middle: None,
+            target: Target::Node(NodeId::Prof(key.address())),
+            p_d: 1.0,
+            p_i: 1.0,
+            settlement_ref: None,
+            license: None,
+            asserted_parents: vec![],
+            deps: vec![],
+            payload: vec![],
+            node: None,
+        },
+    )
+    .await
+    .expect("prepares an empty-payload Registration");
+    let act_id = prepared.proposal.body.act_id().to_string();
+    rig.sign_and_relay(prepared.id, &key).await;
+
+    let done = rig.redact(actor, &act_id).await;
+    assert!(done.archived.is_none(), "no bytes, nothing to archive");
+    assert!(!done.reduced, "no carriage to reduce");
+    rig.close_and_ingest().await;
+
+    assert_eq!(
+        rig.copies(&act_id).await.carriage,
+        None,
+        "an empty payload has no carriage row"
+    );
+    let record = mirror::record_full(&rig.pool, &act_id)
+        .await
+        .expect("reads")
+        .expect("landed");
+    assert!(!record.payload_marked, "an act that carried no bytes reads unmarked");
+}
+
 /// The admission Registration's handle reaches carriage at its landing
 /// like any landed payload, instead of living on only in its staged row.
 ///
