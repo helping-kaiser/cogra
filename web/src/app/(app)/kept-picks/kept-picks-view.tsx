@@ -56,7 +56,7 @@ import {
   type StanceAxes,
 } from "@/lib/ui/stance-format";
 import { TransportError } from "@/lib/ui/transport-error";
-import { ActsCard, actsTotal, ALL_OR_NOTHING, SLOW_SIGNING_LINE, type ActsRow } from "@/lib/ui2/compose/acts-card";
+import { ActsCard, actsTotal, SLOW_SIGNING_LINE, type ActsRow } from "@/lib/ui2/compose/acts-card";
 import { StagedRow } from "@/lib/ui2/compose/staged-reference";
 import { HeaderBar } from "@/lib/ui2/header-bar";
 import { HELP_TOPICS, HelpDialog, type HelpTopic } from "@/lib/ui2/help-dialog";
@@ -80,7 +80,7 @@ export const KEPT_PICKS_INTRO =
  */
 export const KEPT_PICKS_INVITES = "/invites?from=kept-picks";
 
-export const KEPT_APPROVAL_LINE = "An approval waits in your invites — go there to sign it.";
+export const KEPT_APPROVAL_LINE = "An approval waits in your invites.";
 export const NOTHING_LEFT = "Nothing left to sign.";
 const WRITE_RULE_TITLE = "You can't sign right now";
 const WRITE_RULE_FACT =
@@ -353,8 +353,7 @@ export function KeptPicksView() {
       ),
     };
   });
-  const many = rows.length > 1;
-  const note = slow ? SLOW_SIGNING_LINE : many ? ALL_OR_NOTHING : null;
+  const note = slow ? SLOW_SIGNING_LINE : null;
   // Past 200ms the ways out refuse a press, never dimmed (KeptPicksSeal.md:23).
   const locked = signing && swapped;
 
@@ -370,7 +369,6 @@ export function KeptPicksView() {
           if (!locked) leave();
         }}
         leaveLabel="Leave — your picks are kept"
-        stageLabel="Last step"
         help={
           <HelpDot
             ariaLabel="How signing works"

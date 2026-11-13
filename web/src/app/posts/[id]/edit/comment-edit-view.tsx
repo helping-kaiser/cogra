@@ -166,6 +166,7 @@ export function CommentEditView({
   onSensitiveReason,
   onSensitiveOpen,
   onSensitiveHelp,
+  onSigningHelp,
   onPick,
   onDismissRefusal = () => {},
   onRemovePicture,
@@ -241,6 +242,8 @@ export function CommentEditView({
   onSensitiveReason: (next: string) => void;
   onSensitiveOpen: (open: boolean) => void;
   onSensitiveHelp: () => void;
+  /** The acts sheet's `?`: How signing works over the sheet (CommentEditActs.md). */
+  onSigningHelp: () => void;
   onPick: (files: readonly File[]) => void;
   onDismissRefusal?: (id: string) => void;
   onRemovePicture: (id: string) => void;
@@ -794,6 +797,7 @@ export function CommentEditView({
         open={actsOpen}
         rows={acts}
         onClose={() => onActs(false)}
+        onHelp={onSigningHelp}
         testId="comment-edit-acts-sheet"
       />
     </div>

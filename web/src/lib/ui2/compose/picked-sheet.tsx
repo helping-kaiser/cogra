@@ -236,12 +236,9 @@ export function PickedSheet({
           );
         })}
       </ul>
-      {/* PickedSheet.jsx: the footnote in label-small whole, then the Done row
-          on its own 8 · 16 · 8 inset — 16 from the sheet's edge, not the
-          column's 24. */}
-      <p className="m-0 px-6 pt-3 text-label-small text-on-surface-variant" {...testAttributes(part(node, "note"))}>
-        The first one is the cover.
-      </p>
+      {/* PickedSheet.jsx: no footnote (seam 314: the Cover badge says it), then
+          the Done row on its own 8 · 16 · 8 inset — 16 from the sheet's edge,
+          not the column's 24. */}
       <div className="flex justify-end px-4 py-2">
         <PillButton testId={`${testId}-done`} node={part(node, "done")} variant="text" onClick={onClose}>
           Done

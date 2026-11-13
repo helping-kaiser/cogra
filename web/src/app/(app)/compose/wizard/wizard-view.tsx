@@ -1005,12 +1005,10 @@ export function ComposeWizard({
         }}
         // The seal board's `?` (`HelpDot`), opening the house help dialog with
         // copy-voice's "How signing works". One `?` per screen, so only the
-        // seal carries one — beside its stage's name, "Last step".
+        // seal carries one, alone: the seal has no stage label (seam 314).
         // The stage's name in the header's own slot (WizardHeader's
-        // `stageLabel`): the seal's "Last step", the cover's "Video only".
-        stageLabel={
-          state.step === "seal" ? "Last step" : state.step === "cover" ? "Video only" : undefined
-        }
+        // `stageLabel`): only the cover's "Video only".
+        stageLabel={state.step === "cover" ? "Video only" : undefined}
         help={
           state.step === "seal" ? (
             <HelpDot
@@ -1077,21 +1075,6 @@ export function ComposeWizard({
         />
       )}
 
-      {/* The other way out of the offer, said rather than drawn: the pick screen
-          below is already the way to start fresh, so this names it instead of
-          adding a second control that would compete with Continue. Discarding
-          is the card's own affordance and the only route to it. */}
-      {offered !== null && (
-        <div className="flex flex-none items-center gap-2 px-6 py-2">
-          <p
-            data-testid="wizard-draft-fresh"
-            className="m-0 flex-1 text-body-medium text-on-surface-variant"
-          >
-            Or start fresh —
-          </p>
-        </div>
-      )}
-
       {state.step === "pick" && (
         // CW-42 (ComposeDraft.jsx): while the draft offer shows, the pick
         // step underneath is present, clearly not the subject, and the
@@ -1118,7 +1101,6 @@ export function ComposeWizard({
             error={gate.ok ? null : gate.reason}
             blocked={!gate.ok}
             coverSrc={coverPreview}
-            vertical={skipsCoverStep(state)}
             durationMs={durationMs}
             clipFace={clipFace}
             onWords={(words) => dispatch({ type: "words", words })}
@@ -1154,7 +1136,7 @@ export function ComposeWizard({
           previews={previews}
           shape={state.shape}
           focused={state.focused}
-          onShape={(shape, frameWidth) => dispatch({ type: "shape", shape, frameWidth })}
+          onShape={(shape, stageWidth) => dispatch({ type: "shape", shape, stageWidth })}
           onFocus={(index) => dispatch({ type: "focus", index })}
           onCrop={(id, crop) => dispatch({ type: "crop", id, crop })}
           onNext={() => dispatch({ type: "advance" })}
@@ -1398,7 +1380,7 @@ export function ComposeWizard({
         <DialogSurface
           title="Discard your draft?"
           body={[
-            "Picking pictures starts a new post, and this draft is what stands in the way. Discarding is the only thing that loses it.",
+            "Picking pictures starts a new post.",
           ]}
           onDismiss={() => setAskingDraft(false)}
           testId="wizard-draft-discard-ask"

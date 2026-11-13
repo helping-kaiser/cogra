@@ -7,6 +7,7 @@ import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { answerLog } from "@/test/answers";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { ApplicationCard } from "./application-card";
@@ -20,10 +21,15 @@ function signedInStore() {
   return store;
 }
 
+// Every application read answered: a card's ABSENCE is read only once the read
+// that would draw it has answered (test/answers.ts).
+const reads = answerLog();
+
 function mine(fields: { approvedAt?: string | null; rejectedAt?: string | null; approver?: string }) {
   server.use(
-    gqlLink.query("MyApplication", () =>
-      HttpResponse.json({
+    gqlLink.query("MyApplication", () => {
+      reads.answer();
+      return HttpResponse.json({
         data: {
           me: {
             __typename: "User",
@@ -39,8 +45,8 @@ function mine(fields: { approvedAt?: string | null; rejectedAt?: string | null; 
             },
           },
         },
-      }),
-    ),
+      });
+    }),
   );
 }
 
@@ -72,7 +78,7 @@ describe("the waiting card (behavior/ApplicantWaiting.md)", () => {
   it(":3 does not stand while a step is still owed", async () => {
     mine({});
     show("feed", false);
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await reads.answered();
     expect(screen.queryByTestId("feed.application")).not.toBeInTheDocument();
   });
 
@@ -93,15 +99,16 @@ describe("the waiting card (behavior/ApplicantWaiting.md)", () => {
     fireEvent.click(await screen.findByTestId("feed.application.dismiss"));
     expect(screen.queryByTestId("feed.application")).not.toBeInTheDocument();
     first.unmount();
+    const before = reads.count();
     show("feed");
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await reads.answered(before + 1);
     expect(screen.queryByTestId("feed.application")).not.toBeInTheDocument();
   });
 
   it(":17 an approved application is the landing card's, not this one", async () => {
     mine({ approvedAt: "2026-09-15T12:00:00Z" });
     show("feed");
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await reads.answered();
     expect(screen.queryByTestId("feed.application")).not.toBeInTheDocument();
   });
 });
@@ -112,14 +119,14 @@ describe("the closed card (behavior/ApplicantRejected.md)", () => {
     show("feed", false);
     expect(await screen.findByTestId("feed.application.title")).toHaveTextContent("@kel closed your application");
     expect(screen.getByTestId("feed.application.body")).toHaveTextContent(
-      "That was @kel's call, and it is the only thing it decides. Your account stays exactly as it is, you can keep reading, and any member you know can vouch you in instead.",
+      "That was @kel's call. Your account stays as it is, and any member you know can vouch you in instead.",
     );
     expect(screen.queryByTestId("feed.application.dismiss")).not.toBeInTheDocument();
     expect(screen.getByTestId("feed.application.link.label")).toHaveTextContent(
       "Ask someone you know to vouch for you",
     );
     expect(screen.getByTestId("feed.application.link.caption")).toHaveTextContent(
-      "Send it to anyone who is already in. It does not expire, and it works however many people you send it to.",
+      "Send it to anyone who is already in. It does not expire.",
     );
   });
 
@@ -171,7 +178,7 @@ describe("the profile's card (behavior/ProfileApplicant.md)", () => {
     show("profile", false);
     expect(await screen.findByTestId("profile.application.title")).toHaveTextContent("Waiting on @mira");
     expect(screen.getByTestId("profile.application.body")).toHaveTextContent(
-      "Their approval brings you in. Until then, you can read everything.",
+      "Their approval brings you in.",
     );
     expect(screen.getByTestId("profile.application.link.label")).toHaveTextContent("Your ask link");
     expect(screen.getByTestId("profile.application.link.caption")).toHaveTextContent(

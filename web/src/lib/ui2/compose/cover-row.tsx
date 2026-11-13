@@ -153,12 +153,14 @@ export function CoverRow({
           )}
         </button>
       </div>
-      {/* CoverRow.jsx: the line in label-small whole. */}
-      <p data-testid={`${testIdPrefix}-cover-caption`} className={`m-0 text-label-small text-on-surface-variant`}>
-        {noFrames
-          ? "This clip gave no frames — choose a picture of your own, or leave it without one."
-          : "A frame, or a picture of your own."}
-      </p>
+      {/* CoverRow.jsx: a caption only where it says why — the clip gave no
+          frames (ComposeCoverNoFrames); the row explains itself otherwise
+          (seam 314). The line in label-small whole. */}
+      {noFrames && (
+        <p data-testid={`${testIdPrefix}-cover-caption`} className="m-0 text-label-small text-on-surface-variant">
+          This clip gave no frames
+        </p>
+      )}
     </div>
   );
 }

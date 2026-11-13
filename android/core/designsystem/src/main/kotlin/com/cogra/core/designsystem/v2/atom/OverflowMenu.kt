@@ -17,7 +17,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,6 +34,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.NameInLine
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.media.CoverKind
 import com.cogra.core.designsystem.v2.media.CoversSurface
@@ -167,7 +167,10 @@ fun CograOverflowMenu(
                             .heightIn(min = Layout.TouchTargetMin)
                             .padding(horizontal = Space.x6),
                     ) {
-                        Text(
+                        // A ONE-LINE PLACE (NamesLong.md; `BottomSheet.jsx`
+                        // `SheetItem`): the row never wraps and clips at its
+                        // end, so `Hide @…` cuts the handle and keeps its verb.
+                        NameInLine(
                             text = row.label,
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurface,

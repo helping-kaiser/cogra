@@ -251,19 +251,25 @@ export const HELP_TOPICS = {
   // (copy-voice, *The filter*: the feed's seen sentence follows the seen tail,
   // jakob 2026-10-14; FeedSheet.md: "the feed filter's \"?\" says What you've
   // already seen waits below the Already seen line unless you ask for it back").
+  // The Ranked / Newest explainer and the veil pointer stand here, not on the
+  // sheet (moved whole, jakob 2026-11-12).
   theFeedFilter: {
     title: "How the filter works",
     paragraphs: [
-      "What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen waits below the Already seen line unless you ask for it back. Nothing changes until you press Done, and nothing here is signed or shared.",
-      "It lasts until you change it, on this device only. Reset brings back your defaults, to change them go to settings.",
+      "What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen waits below the Already seen line unless you ask for it back. Nothing changes until you press Done, and nothing here is signed or shared. Ranked puts what's closest to you first — your view, no one else's. Newest ignores it and lists by time.",
+      "It lasts until you change it, on this device only. Reset brings back your defaults, to change them go to settings. How sensitive content is veiled is set in Settings.",
     ],
   },
-  // The search filter sheet's "?" (copy-voice, *The filter*: the search's own
-  // seen sentence; the Reset sentence jakob's own, blessed 2026-10-02).
+  // The search filter sheet's "?": the one filter text (copy-voice, *The
+  // filter*) with its seen clause absent, since that clause is scoped
+  // "— on the feed —" and search never looks at the seen list (seam 296;
+  // seam 324 on 323-1). The Ranked / Newest explainer stands here, not on the
+  // sheet; search has no Also show, so no veil pointer. The Reset sentence is
+  // jakob's own, blessed 2026-10-02.
   theSearchFilter: {
     title: "How the filter works",
     paragraphs: [
-      "What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen stays out unless you ask for it back. Nothing changes until you press Done, and nothing here is signed or shared.",
+      "What you let in, and in what order — the kinds combine freely, ranked or newest is one choice. Nothing changes until you press Done, and nothing here is signed or shared. Ranked puts what's closest to you first — your view, no one else's. Newest ignores it and lists by time.",
       "It lasts until you change it, on this device only. Reset brings back your defaults, to change them go to settings.",
     ],
   },
