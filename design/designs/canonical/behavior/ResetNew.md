@@ -6,7 +6,7 @@ WHEN the reset mail's link is opened -> the link is checked before the form stan
 
 WHEN the check has not answered 200ms after the link opened -> reset.loading reads Loading… at the column's head AND NEVER a spinner appears
 
-WHEN the check gets no answer -> reset.fault reads Can't reach the server — this page can't load right now. over reset.fault.retry, outlined and reading Retry, in the form's place AND NEVER the form stands
+WHEN the check gets no answer -> reset.fault reads Can't reach the server — this link can't be checked right now. over reset.fault.retry, outlined and reading Retry, in the form's place AND NEVER the form stands
 
 WHEN the check is refused by its budget -> reset.fault reads Too many tries. Wait a little, then try again. over the same reset.fault.retry AND NEVER the form stands
 

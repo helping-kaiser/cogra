@@ -92,8 +92,7 @@
    this tag can't load right now.`, over an outlined `Retry` leading the
    column (copy-voice, *No answer at all*). The noun is the page's own, as
    `this profile` is the profile's; the picker's `tags can't load right now.`
-   names a list of tags, not this page. Worded by the round-48 lane, to be
-   blessed. */
+   names a list of tags, not this page. Blessed (jakob 2026-11-13, N10). */
 
 export const FRAME = { width: 390, height: 1344 };
 export const PROPS = { load: { editor: "enum", options: ["loaded", "failed"], default: "loaded" } };
