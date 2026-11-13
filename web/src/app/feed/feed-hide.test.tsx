@@ -165,7 +165,7 @@ describe("hiding from the feed", () => {
     renderWithProviders(<FeedView />, { store: signedInStore() });
     await hideFrom("p1");
     const bar = await screen.findByTestId("feed.snackbar");
-    expect(bar).toHaveTextContent("@ada is hidden — their posts stay out of your feed.");
+    expect(bar).toHaveTextContent("@ada is hidden.");
     await waitFor(() => expect(log.hides).toHaveLength(1));
     fireEvent.click(screen.getByTestId("feed.snackbar.action"));
     expect(card("p1")).toBeInTheDocument();

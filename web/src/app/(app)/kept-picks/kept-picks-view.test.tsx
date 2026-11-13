@@ -220,12 +220,13 @@ describe("the kept picks' review", () => {
 });
 
 describe("the kept picks' seal", () => {
-  it("is the standard seal: What you sign, Last step, the ?, the acts card, Sign the picks over Back", async () => {
+  it("is the standard seal: What you sign, the ?, the acts card, Sign the picks over Back", async () => {
     // KeptPicksSeal.md:3-7.
     await keepTheBoardsPicks();
     mount();
     await openSeal();
-    expect(screen.getByTestId("keptPicksSeal.header.stage")).toHaveTextContent("Last step");
+    // No stage label and no land-together line (seam 314): the "?" says it.
+    expect(screen.queryByTestId("keptPicksSeal.header.stage")).toBeNull();
     expect(screen.getByRole("button", { name: "How signing works" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Leave — your picks are kept" })).toBeInTheDocument();
     const acts = screen.getByTestId("keptPicksSeal.acts");
@@ -239,7 +240,7 @@ describe("the kept picks' seal", () => {
     expect(screen.getByTestId("keptPicksSeal.header.help")).toHaveAccessibleName("How signing works");
     expect(screen.getByTestId("keptPicksSeal.foot")).toContainElement(screen.getByTestId("keptPicksSeal.foot.sign"));
     expect(screen.getByTestId("keptPicksSeal.acts.total")).toHaveTextContent("3 things, signed together");
-    expect(screen.getByTestId("keptPicksSeal.acts.note")).toHaveTextContent("They land together, or none does.");
+    expect(screen.queryByTestId("keptPicksSeal.acts.note")).toBeNull();
     expect(screen.getByTestId("keptPicksSeal.foot.sign")).toHaveTextContent("Sign the picks");
     expect(screen.getByTestId("keptPicksSeal.foot.back")).toHaveTextContent("Back");
     // Nothing on the seal is removable.

@@ -4,8 +4,8 @@
 // ReaderPostMenu.md:19 — ALWAYS the hide row reads Unhide with the author's
 // handle GIVEN the author is already hidden … and keeps its one name.
 // ReaderPostMenu.md:21 — WHEN tap Unhide with the author's handle -> … the
-// author is unhidden AND the snackbar reads @ada is unhidden — their posts can
-// reach your feed again. with Undo AND NEVER a confirm step appears.
+// author is unhidden AND the snackbar reads @ada is unhidden.
+// with Undo AND NEVER a confirm step appears.
 // HistoryProfileMenu.md:11 — WHEN tap Undo on the snackbar GIVEN the unhide
 // was made from the menu -> the person is hidden again.
 // ProfileDeletedMenu.md:7 — the hide row reads Hide this account … and never
@@ -59,7 +59,7 @@ describe("the hide row", () => {
     expect(set.has("a")).toBe(false);
     expect(notify).toHaveBeenCalledTimes(1);
     const [message, action] = notify.mock.calls[0]!;
-    expect(message).toBe("@ada is unhidden — their posts can reach your feed again.");
+    expect(message).toBe("@ada is unhidden.");
     expect(action.label).toBe("Undo");
     await vi.waitFor(() => expect(sent).toEqual(["unhide a"]));
     action.onAction();
