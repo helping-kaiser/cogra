@@ -1,5 +1,6 @@
 package com.cogra.feature.content.wizard
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -32,12 +33,16 @@ import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
 import com.cogra.core.designsystem.v2.compose.HelpTopic
+import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
+import com.cogra.core.designsystem.v2.token.MediaShape
 import com.cogra.crypto.ActorKey
 import com.cogra.domain.ReferenceContentKind
 import com.cogra.domain.ReferenceTargetView
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
+import com.cogra.domain.compose.DraftShape
+import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceMedia
 import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.ProcessedPicture
@@ -735,17 +740,49 @@ class ComposeWizardScreenTest {
 
     @Test
     fun theCropStageCarriesTheQuietNoteExactlyOnce() {
-        // CW-11's audit citation ("CropStep.kt — no such note anywhere in
-        // the file") was true of this file's own text but not of what the
-        // stage renders: `MediaCrop` already defaults its `caption` param to
-        // this exact string (core/designsystem/.../media/MediaCrop.kt:62).
-        // This pins ComposeCrop's caption to appearing once, not zero times
-        // and not twice — a regression this lane's first draft introduced by
-        // adding a second, unaware of MediaCrop's own default.
+        // ComposeCrop.md: "the line under the zoom slider reads One shape for
+        // the whole post." — once, and with no how-to after it (round 44's
+        // removable-text pass took `Drag to move, pinch to zoom.` off every crop).
         compose.setContent { Wizard(withPicks.copy(step = WizardStep.Crop)) }
-        compose
-            .onAllNodesWithText("One shape for the whole post. Drag to move, pinch to zoom.")
-            .assertCountEquals(1)
+        compose.onAllNodesWithText("One shape for the whole post.").assertCountEquals(1)
+        compose.onAllNodesWithText("pinch to zoom", substring = true).assertCountEquals(0)
+    }
+
+    /**
+     * ComposeCrop.md:17-23 for a post of several pictures: a shape chip
+     * re-shapes EVERY picture, the ones off the stage too, so none uploads or
+     * previews a framing of a shape the post no longer has.
+     */
+    @Test
+    fun aShapeChipReshapesThePicturesOffTheStageToo() {
+        val reported = mutableListOf<Map<String, CropSpec>>()
+        var shape by mutableStateOf(DraftShape.Tall)
+        compose.setContent {
+            Cogra2PreviewTheme {
+                Column {
+                    CropFrames(
+                        picked = withPicks.picked.map { it.copy(sourceRatio = 1.5f) },
+                        crops = emptyMap(),
+                        shape = shape,
+                        framingIndex = 0,
+                        onShapeChange = { shape = it },
+                        onFrameAsset = {},
+                        onCropsChanged = { reported += it },
+                    )
+                }
+            }
+        }
+        compose.onNodeWithTag("crop_shape_wide").performClick()
+        compose.waitForIdle()
+        val last = reported.last()
+        assertThat(last).hasSize(withPicks.picked.size)
+        last.values.forEach { spec ->
+            val window = requireNotNull(spec.window)
+            assertThat(spec.targetRatio).isEqualTo(MediaShape.Wide.ratio)
+            // Every window is the Wide shape on its 3:2 picture: its width
+            // over its height, times the picture's own ratio, is 1.91.
+            assertThat(window.width / window.height * 1.5f).isWithin(1e-3f).of(MediaShape.Wide.ratio)
+        }
     }
 
     @Test

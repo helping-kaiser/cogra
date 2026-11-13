@@ -1,8 +1,15 @@
 package com.cogra.core.designsystem.v2.media
 
+import android.os.Build
+import android.util.TypedValue
+import android.view.ViewConfiguration
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculateCentroid
+import androidx.compose.foundation.gestures.calculateCentroidSize
+import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -35,9 +42,12 @@ import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.PointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -62,6 +72,7 @@ import com.cogra.core.designsystem.v2.token.MediaOverlay
 import com.cogra.core.designsystem.v2.token.MediaShape
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
+import kotlin.math.abs
 
 /**
  * The post's crop (`ComposeCrop`): one shape for the whole post, framed per
@@ -181,6 +192,7 @@ private fun SyncFrame(state: CropState, item: MediaItem, ratio: Float) {
 private fun CropViewport(item: MediaItem, state: CropState, bleed: Dp, testTag: String?) {
     val actions = remember(state) { cropActions(state) }
     val gutter = with(LocalDensity.current) { Layout.ScreenGutter.toPx() }
+    val minimumSpan = minimumScalingSpan()
     Box(
         modifier = Modifier
             .bleedHorizontally(bleed)
@@ -190,7 +202,7 @@ private fun CropViewport(item: MediaItem, state: CropState, bleed: Dp, testTag: 
             .aspectRatio(CropGeometry.stageRatio(state.kind))
             .clipToBounds()
             .onSizeChanged { state.onStage(it.width.toFloat(), gutter) }
-            .cropGestures(state)
+            .cropGestures(state, minimumSpan)
             .onPreviewKeyEvent { event -> panByKey(event, state) }
             .focusable()
             .semantics {
@@ -211,22 +223,82 @@ private fun CropViewport(item: MediaItem, state: CropState, bleed: Dp, testTag: 
 /**
  * The gestures: ONE owner for every finger.
  *
- * `detectTransformGestures` is Compose's documented detector for panning and
- * zooming together (developer.android.com/develop/ui/compose/touch-input/
- * pointer-input/multi-touch). Each step it reports is the centroid of the
- * fingers, the centroid's travel and the spread's ratio, and it counts only
- * the fingers that were down both before and after the event
- * (`calculateCentroid` / `calculatePan` / `calculateZoom`) — so a finger
- * landing or lifting mid-gesture never makes the picture jump, and one finger
- * left down keeps panning. The step itself is [CropGeometry.transformed]:
- * the point under the fingers stays under the fingers, the zoom held to its
- * bounds before the anchor is computed, the picture held to the frame after.
+ * This is `detectTransformGestures`' own loop — Compose's documented detector
+ * for panning and zooming together, and the `awaitEachGesture` recipe its
+ * page gives for writing it out (developer.android.com/develop/ui/compose/
+ * touch-input/pointer-input/multi-touch) — with one addition, the platform's
+ * own: a spread is read as a zoom only while the fingers stand at least the
+ * minimum scaling span apart (`ScaleGestureDetector`,
+ * `ViewConfiguration.getScaledMinimumScalingSpan`), because the ratio of two
+ * small spans swings wildly as fingers close on each other or cross.
+ *
+ * Each step counts only the fingers down both before and after the event
+ * (`calculateCentroid` / `calculatePan` / `calculateCentroidSize`), so a
+ * finger landing or lifting mid-gesture never moves the picture and one
+ * finger left down keeps panning. Nothing moves until the fingers are past
+ * the touch slop, as with the detector; from there every moved change is
+ * consumed, so a scrolling parent never takes the gesture. The step itself
+ * is [CropGeometry.transformed]: the point that stood under the fingers'
+ * previous centroid is carried to their current one, scaled by the zoom
+ * actually taken.
  */
-private fun Modifier.cropGestures(state: CropState): Modifier = pointerInput(state) {
-    detectTransformGestures { centroid, pan, zoom, _ ->
-        if (centroid.isSpecified) state.transform(centroid.x, centroid.y, pan.x, pan.y, zoom)
+private fun Modifier.cropGestures(state: CropState, minimumSpan: Float): Modifier =
+    pointerInput(state, minimumSpan) {
+        awaitEachGesture {
+            awaitFirstDown(requireUnconsumed = false)
+            var pastSlop = false
+            var slopZoom = 1f
+            var slopPan = Offset.Zero
+            do {
+                val event = awaitPointerEvent()
+                if (event.changes.any { it.isConsumed }) break
+                val zoom = event.spanZoom(minimumSpan)
+                val pan = event.calculatePan()
+                if (!pastSlop) {
+                    slopZoom *= zoom
+                    slopPan += pan
+                    val zoomMotion = abs(1f - slopZoom) * event.calculateCentroidSize(useCurrent = false)
+                    pastSlop = zoomMotion > viewConfiguration.touchSlop || slopPan.getDistance() > viewConfiguration.touchSlop
+                }
+                if (pastSlop) {
+                    val previous = event.calculateCentroid(useCurrent = false)
+                    if (previous.isSpecified && (zoom != 1f || pan != Offset.Zero)) {
+                        state.transform(previous.x + pan.x, previous.y + pan.y, pan.x, pan.y, zoom)
+                    }
+                    event.changes.forEach { if (it.positionChanged()) it.consume() }
+                }
+            } while (event.changes.any { it.pressed })
+        }
+    }
+
+/**
+ * `calculateZoom`'s ratio — the fingers' spread now over their spread before
+ * — taken only while they stand at least [minimumSpan] apart on both sides of
+ * the event, and 1 otherwise: below it the fingers still carry the picture,
+ * they only stop resizing it.
+ */
+private fun PointerEvent.spanZoom(minimumSpan: Float): Float {
+    // A centroid size is the mean distance to the centroid: half a two-finger span.
+    val now = calculateCentroidSize(useCurrent = true) * 2f
+    val before = calculateCentroidSize(useCurrent = false) * 2f
+    return if (now >= minimumSpan && before >= minimumSpan) now / before else 1f
+}
+
+/** The platform's minimum pinch span in pixels (`ScaleGestureDetector`'s). */
+@Composable
+private fun minimumScalingSpan(): Float {
+    val context = LocalContext.current
+    return remember(context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ViewConfiguration.get(context).scaledMinimumScalingSpan.toFloat()
+        } else {
+            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_MM, MIN_SCALING_SPAN_MM, context.resources.displayMetrics)
+        }
     }
 }
+
+/** `config_minScalingSpan`, the framework's value before the API 29 accessor. */
+private const val MIN_SCALING_SPAN_MM = 27f
 
 /**
  * The picture, laid whole in the stage at 1× and moved and scaled by one
