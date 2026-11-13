@@ -41,7 +41,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
@@ -56,10 +58,25 @@ private val HANDLE = Regex("""(?<![\w@])@[A-Za-z0-9_]+""")
 private val UNIT_TAIL = Regex("""^(?:['’]s\b|[?.,!:;)’]+)""")
 
 /** U+2060 WORD JOINER: no line break on either side (UAX #14 LB11). */
-const val WORD_JOINER = '⁠'
+val WORD_JOINER: Char = Char(0x2060)
 
 /** The ellipsis `TextOverflow.Ellipsis` draws. */
-private const val ELLIPSIS = "…"
+internal val ELLIPSIS: String = Char(0x2026).toString()
+
+/**
+ * Marks a one-line place that [NameInLine] split, with the handle that yields
+ * (web's `data-name-line`): for tests and the conformance harness.
+ */
+val NameLineHandle = SemanticsPropertyKey<String>("NameLineHandle", mergePolicy = ::outerFirst)
+
+/**
+ * Marks wrapping text that holds units, with the text as drawn — joined, and
+ * cut where a unit passed a full line (web's `data-name-unit`).
+ */
+val NameInTextShown = SemanticsPropertyKey<String>("NameInTextShown", mergePolicy = ::outerFirst)
+
+/** A mark merges up to the node that merges its children (a tagged, merged row reads it). */
+private fun outerFirst(parent: String?, child: String): String = parent ?: child
 
 /** A one-line place split around its first handle: the words, the handle, the words. */
 data class NameLine(val before: String, val handle: String, val after: String)
@@ -80,7 +97,7 @@ data class NameUnit(val start: Int, val nameEnd: Int, val end: Int)
 
 /** Every handle in [text], and every one of [names], as units with their trailing punctuation. */
 fun nameUnits(text: String, names: List<String> = emptyList()): List<NameUnit> {
-    val given = names.filter { it.isNotBlank() }.map(Regex::escape)
+    val given = names.filter { it.isNotBlank() }.map { Regex.escape(it) }
     val pattern = if (given.isEmpty()) HANDLE else Regex((listOf(HANDLE.pattern) + given).joinToString("|"))
     val units = mutableListOf<NameUnit>()
     var from = 0
@@ -123,7 +140,8 @@ fun cutName(name: String, tail: String, lineWidth: Int, widthOf: (String) -> Int
     var high = cuts.size
     while (low < high) {
         val middle = (low + high + 1) / 2
-        if (widthOf(name.substring(0, cuts[middle - 1]) + ELLIPSIS + tail) <= lineWidth) low = middle else high = middle - 1
+        val fits = widthOf(name.substring(0, cuts[middle - 1]) + ELLIPSIS + tail) <= lineWidth
+        if (fits) low = middle else high = middle - 1
     }
     return (if (low == 0) "" else name.substring(0, cuts[low - 1])) + ELLIPSIS
 }
@@ -171,7 +189,12 @@ fun NameInLine(
     // space would be measured away from the words it follows.
     val lead = line.before.trimEnd()
     val gap = line.before.substring(lead.length)
-    Row(modifier.clearAndSetSemantics { this.text = AnnotatedString(text) }) {
+    Row(
+        modifier.clearAndSetSemantics {
+            this.text = AnnotatedString(text)
+            this[NameLineHandle] = line.handle
+        },
+    ) {
         if (lead.isNotEmpty()) {
             Text(lead, color = color, style = style, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
@@ -208,13 +231,23 @@ fun NameInText(
         return
     }
     val measurer = rememberTextMeasurer()
-    BoxWithConstraints(modifier.clearAndSetSemantics { this.text = AnnotatedString(text) }) {
+    // Merged, so the caller's node (its tag, its heading) speaks the text the
+    // Text inside sets — the shaped string is chosen only once the width is known.
+    BoxWithConstraints(modifier.semantics(mergeDescendants = true) {}) {
         val lineWidth = constraints.maxWidth.takeIf { constraints.hasBoundedWidth }
         val shown = remember(text, units, lineWidth, style, measurer) {
             shapeNamesInText(text, units, lineWidth) { piece ->
                 measurer.measure(piece, style, softWrap = false, maxLines = 1).size.width
             }
         }
-        Text(shown, color = color, style = style)
+        Text(
+            text = shown,
+            color = color,
+            style = style,
+            modifier = Modifier.clearAndSetSemantics {
+                this.text = AnnotatedString(text)
+                this[NameInTextShown] = shown
+            },
+        )
     }
 }
