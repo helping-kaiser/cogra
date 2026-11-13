@@ -93,6 +93,14 @@ describe("level one (FeedEntry.md)", () => {
     expect(levelOne(answer, true).drawn.map((row) => row.value)).toEqual(["+1.50", "+0.0031"]);
   });
 
+  it("a_tiny_path_reads_the_same_on_its_own_level_what_it_adds", () => {
+    const answer: TraceAnswer = {
+      score: 0.0031,
+      paths: [{ ...ownAnswer().paths[0]!, contribution: 0.0031 }],
+    };
+    expect(pathValue(answer, 0)).toBe("+0.0031");
+  });
+
   it("a path reads the same value on the list and on its own level", () => {
     expect(pathValue(ownAnswer(), 0)).toBe("+6.80");
   });

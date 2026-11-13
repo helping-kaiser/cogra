@@ -83,6 +83,12 @@ describe("a tiny score never reads zero (ExplainableNumber.jsx; seam 315, 319)",
     expect(traceFigure(0.005)).toBe("+0.01");
   });
 
+  it("the_edge_of_tiny_reads_the_same_on_both", () => {
+    expect(cardFigure(-0.005)).toBe("−0.01");
+    expect(cardFigure(0.004999)).toBe("0.01");
+    expect(traceFigure(0.004999)).toBe("+0.0050");
+  });
+
   it("the_flag_prints_a_tiny_score_in_significant_digits", () => {
     expect(flagFigure(0.0031)).toBe("+0.0031");
     expect(flagFigure(-0.001)).toBe("−0.0010");
