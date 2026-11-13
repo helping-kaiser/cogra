@@ -59,9 +59,17 @@ function client() {
   });
 }
 
+/**
+ * The device key every test starts with. Fixed, because the device signs only
+ * proposals that name its own address as author, and the staged proposal
+ * below is a module constant.
+ */
+const DEVICE_SEED = Uint8Array.from({ length: 32 }, (_, i) => i + 1);
+const DEVICE_ADDRESS = await (await ActorKey.fromSeed(DEVICE_SEED)).address();
+
 function sampleProposal(): Proposal {
   const body = new StructuralBody({
-    author: "aa".repeat(20),
+    author: DEVICE_ADDRESS,
     seq: 1n,
     family: "registration",
     middle: null,
@@ -177,8 +185,7 @@ describe("write signer", () => {
     globalThis.indexedDB = new IDBFactory();
     store = createIdentityStore({ activeAccountId: () => "acct-1" });
     carried = createCarriedExpectationStore({ activeAccountId: () => "acct-1" });
-    const seed = randomBytes(32);
-    const saved = await store.saveActor(seed, true);
+    const saved = await store.saveActor(DEVICE_SEED.slice(), true);
     actorPub = saved.publicKeyBytes();
     host = await ActorKey.generate();
     hostHandler = gqlLink.query("HostPublicKey", () =>
@@ -422,8 +429,8 @@ describe("write signer", () => {
     expect(await store.handshake(ID)).not.toBeNull();
   });
 
-  it("a stored one-nonce record is no material: an awaiting approval waits for the re-stage", async () => {
-    // The record shape this device wrote before it kept both nonces.
+  /** Writes the record shape this device wrote before it kept both nonces, raw, under `ID`. */
+  async function seedOneNonceRecord(): Promise<PreSignedProposal> {
     const key = await store.actorKey();
     if (key === null) throw new Error("expected a key");
     const pre = await key.preSign(PROPOSAL);
@@ -449,6 +456,11 @@ describe("write signer", () => {
       };
       req.onerror = () => reject(req.error);
     });
+    return pre;
+  }
+
+  it("a stored one-nonce record is no material: an awaiting approval waits for the re-stage", async () => {
+    const pre = await seedOneNonceRecord();
     let approvals = 0;
     server.use(
       hostHandler,

@@ -25,14 +25,17 @@ import { ActorKey, HandshakeError } from "./actor-key";
 
 const utf8 = (s: string) => new TextEncoder().encode(s);
 
-function body(author: string, fields?: Partial<{ pI: number; assertedParents: ActId[] }>): StructuralBody {
+function body(
+  author: string,
+  fields?: Partial<{ pD: number; pI: number; assertedParents: ActId[] }>,
+): StructuralBody {
   return new StructuralBody({
     author,
     seq: 1n,
     family: "opinion",
     middle: null,
     target: new ProfId("bob"),
-    pD: 1.0,
+    pD: fields?.pD ?? 1.0,
     pI: fields?.pI ?? -0.25,
     settlementRef: null,
     license: null,
@@ -250,6 +253,49 @@ it("approve rejects a dependency commitment over another dependency list", async
   const sealed = await sealBy(host, sent, { deps: [ActId.parse("act:carol:2:registration")] });
   await expect(actor.approve(sent, sealed, host.publicKeyBytes())).rejects.toThrow(
     new HandshakeError("dependency commitment does not open over the dependency list"),
+  );
+});
+
+it("preSign refuses a proposal that names another author", async () => {
+  const actor = await ActorKey.generate();
+  const other = await ActorKey.generate();
+  await expect(actor.preSign(proposal(await other.address()))).rejects.toThrow(
+    new HandshakeError("the proposal is not this actor's"),
+  );
+});
+
+it("approve refuses stored material whose body names another author", async () => {
+  // Material as IndexedDB could hand it back: this key's pubkey, another
+  // author in the body. It never reaches a signature check.
+  const actor = await ActorKey.generate();
+  const other = await ActorKey.generate();
+  const host = await ActorKey.generate();
+  const sent = new PreSignedProposal({
+    proposal: proposal(await other.address()),
+    authorPubkey: actor.publicKeyBytes(),
+    contentNonce: new Uint8Array(32).fill(1),
+    dependencyNonce: new Uint8Array(32).fill(2),
+    preSignature: new Uint8Array(64),
+  });
+  const sealed = await sealBy(host, sent);
+  await expect(actor.approve(sent, sealed, host.publicKeyBytes())).rejects.toThrow(
+    new HandshakeError("the proposal is not this actor's"),
+  );
+});
+
+it("approve refuses a stored pre-signature that is not this key's over the held proposal", async () => {
+  // A real signature of this key, but over another proposal's P; the host
+  // echoes it and seals over the held proposal's P, so every equality holds
+  // and only the re-verification can refuse.
+  const actor = await ActorKey.generate();
+  const host = await ActorKey.generate();
+  const author = await actor.address();
+  const held = await actor.preSign(proposal(author));
+  const elsewhere = await actor.preSign(new Proposal(body(author), utf8("another payload"), []));
+  const sent = new PreSignedProposal({ ...held, preSignature: elsewhere.preSignature });
+  const sealed = await sealBy(host, sent);
+  await expect(actor.approve(sent, sealed, host.publicKeyBytes())).rejects.toThrow(
+    new HandshakeError("the stored pre-signature is not this key's over the held proposal"),
   );
 });
 

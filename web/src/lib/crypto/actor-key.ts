@@ -5,7 +5,7 @@
 // "Key custody").
 
 import { concat, equalBytes, fromBase64Url, fromHex, randomBytes } from "./bytes";
-import { addressOf, CryptoUnavailableError, SALT_LEN, sign, signDigest, Tags, verify } from "./hashing";
+import { addressOf, CryptoUnavailableError, SALT_LEN, sign, signDigest, Tags, verify, verifyDigest } from "./hashing";
 import {
   ApprovalWitness,
   CONTENT_EDITION,
@@ -118,6 +118,12 @@ export class ActorKey {
     if (equalBytes(contentNonce, dependencyNonce)) {
       throw new RangeError("content nonce and dependency nonce must differ");
     }
+    // This key signs only proposals that name it as author — the reference's
+    // `PreSigned::recover` rule, checked here as well as at approval so no
+    // material for another author is ever stored or sent.
+    if (proposal.body.author !== (await this.address())) {
+      throw new HandshakeError("the proposal is not this actor's");
+    }
     const unsigned = new PreSignedProposal({
       proposal,
       authorPubkey: this.publicKeyBytes(),
@@ -155,6 +161,14 @@ export class ActorKey {
     if (!equalBytes(sent.authorPubkey, this.publicKey)) {
       throw new HandshakeError("handshake material was pre-signed by a different key");
     }
+    // Web material is ALWAYS recovered material — reloaded from IndexedDB —
+    // so authorship is proven, not matched, as the reference's
+    // `PreSigned::recover` proves it (crates/common/src/l1/proposal/device.rs):
+    // the body names this key's address, and the stored pre-signature verifies
+    // under this key over the P recomputed from the held proposal and nonces.
+    if (sent.proposal.body.author !== (await this.address())) {
+      throw new HandshakeError("the proposal is not this actor's");
+    }
     const act = sealed.act;
     if (
       !equalBytes(act.body.canonicalBytes(), sent.proposal.body.canonicalBytes()) ||
@@ -163,6 +177,9 @@ export class ActorKey {
       throw new HandshakeError("host returned a different act than was pre-signed");
     }
     const formed = await sent.preCommitment();
+    if (!(await verifyDigest(this.publicKey, formed, sent.preSignature))) {
+      throw new HandshakeError("the stored pre-signature is not this key's over the held proposal");
+    }
     if (!equalBytes(act.preCommitment, formed)) {
       throw new HandshakeError("host returned a different pre-commitment than was formed");
     }

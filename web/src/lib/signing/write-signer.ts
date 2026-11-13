@@ -272,7 +272,7 @@ export function createWriteSigner(deps: {
           fresh = await key.preSign(decodeProposal(fromBase64(staged.canonicalProposal)));
         } catch (e) {
           if (e instanceof CryptoUnavailableError) return { kind: "failed", id, cause: e };
-          if (e instanceof WireError) return reject(id, e.message);
+          if (e instanceof WireError || e instanceof HandshakeError) return reject(id, e.message);
           throw e;
         }
         await store.saveHandshake(id, fresh);
