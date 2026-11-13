@@ -16,6 +16,8 @@
 //! host seal covers, and the approval witness over it. Bare section
 //! references below are layer1-interface.md's.
 
+use std::fmt;
+
 use ed25519_dalek::SigningKey;
 
 use super::crypto;
@@ -152,7 +154,7 @@ impl ContentPair {
 /// The actor's pre-signed proposal: the proposal it signed, both nonces it
 /// drew, and its signature over P. Held by the device until approval and by
 /// the carriage layer, which turns it into the host-facing [`Submission`].
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct PreSigned {
     pub proposal: Proposal,
     /// The actor's public key (32 bytes, Ed25519 interim realization).
@@ -160,6 +162,23 @@ pub struct PreSigned {
     pub content_nonce: Vec<u8>,
     pub dependency_nonce: Vec<u8>,
     pub pre_signature: Vec<u8>,
+}
+
+/// The content nonce is the secret that conceals the payload, so `Debug`
+/// shows its length and never its bytes.
+impl fmt::Debug for PreSigned {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PreSigned")
+            .field("proposal", &self.proposal)
+            .field("author_pubkey", &self.author_pubkey)
+            .field(
+                "content_nonce",
+                &format_args!("<{} bytes>", self.content_nonce.len()),
+            )
+            .field("dependency_nonce", &self.dependency_nonce)
+            .field("pre_signature", &self.pre_signature)
+            .finish()
+    }
 }
 
 impl PreSigned {

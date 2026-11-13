@@ -366,7 +366,10 @@ fn approval_compares_the_body_by_its_canonical_bytes() {
     );
     let mut sealed = host_side(&pre.submission(), &host);
     sealed.act.body.p_d = -0.0;
-    assert_eq!(sealed.act.body, pre.proposal.body, "derived equality agrees");
+    assert_eq!(
+        sealed.act.body, pre.proposal.body,
+        "derived equality agrees"
+    );
     assert_ne!(
         sealed.act.body.canonical_bytes(),
         pre.proposal.body.canonical_bytes()
@@ -378,6 +381,28 @@ fn approval_compares_the_body_by_its_canonical_bytes() {
         }
         other => panic!("expected the different-act refusal, got {other:?}"),
     }
+}
+
+/// The content nonce conceals the payload, so a log line of the pre-signed proposal must not carry its bytes.
+///
+/// The pre-signed proposal's Debug output omits the content nonce's bytes and still shows the act.
+/// ´claim:proposal:the-pre-signed-debug-output-omits-the-content-nonce´
+#[test]
+fn the_pre_signed_debug_output_omits_the_content_nonce() {
+    let actor = ActorKey::from_seed([7u8; 32]);
+    let pre = PreSigned::sign_with_nonces(
+        &actor,
+        proposal(&actor.address(), b"hello"),
+        vec![0xc7; crypto::SALT_LEN],
+        DEPENDENCY_NONCE.to_vec(),
+    );
+    let shown = format!("{pre:?}");
+    assert!(!shown.contains(&"c7".repeat(crypto::SALT_LEN)));
+    let decimal = format!("{:?}", pre.content_nonce);
+    assert!(!shown.contains(&decimal));
+    assert!(!shown.contains("199, 199"));
+    assert!(shown.contains(&actor.address()));
+    assert!(shown.contains("<32 bytes>"));
 }
 
 /// The host refuses a key that parses but is not the body author's, even when the signature verifies under it.
