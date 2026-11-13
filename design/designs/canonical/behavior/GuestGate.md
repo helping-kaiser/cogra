@@ -2,6 +2,8 @@
 
 WHEN a guest reaches for a stance, New post, the profile slot, the chats, Message, the comment sheet's foot or a comment's Reply -> the ask Join the conversation opens over the screen they were on with Posting and profiles need an account. AND NEVER the reader is bounced to another screen
 
+ALWAYS every door the ask answers stands for a guest at full strength, drawn as Main and FeedBare draw a guest's stance and New post, and a comment card's Reply and comment glyph stand for a guest as for anyone, the glyph opening the thread (the look follows the drawn guest boards; told to jakob, not separately ruled)
+
 WHEN a guest taps Save, Cite in a new post, Mention in a new post, Hide or Report on a menu -> the menu closes AND the ask Join the conversation opens over the read
 
 ALWAYS Share, License terms, Cited by and Opinions on this open for a guest without the ask, a reading and never an act
