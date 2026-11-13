@@ -4549,6 +4549,8 @@
         "feed.profileCard.name": [
           "cdbd41fc-faec-4c16-9813-7f718b8a0989"
         ],
+        "feed.snackbar": [],
+        "feed.snackbar.message": [],
         "feed.tagCard": [
           "fc7d18fe-c334-4c2a-82b3-eed28f2eaa26"
         ],
@@ -6608,6 +6610,8 @@
         "history.searchField": [],
         "history.searchField.glyph": [],
         "history.searchField.input": [],
+        "history.snackbar": [],
+        "history.snackbar.message": [],
         "history.tagCard": [
           "fc7d18fe-c334-4c2a-82b3-eed28f2eaa26"
         ],
@@ -13116,6 +13120,7 @@
         "reset.header": [],
         "reset.header.back": [],
         "reset.note": [],
+        "reset.status": [],
         "reset.title": []
       }
     },
@@ -13131,7 +13136,9 @@
     },
     "ResetNew": {
       "prefix": "reset",
-      "keys": {},
+      "keys": {
+        "reset.fault": "the link chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+      },
       "nodes": {
         "reset.body": [],
         "reset.commit": [],
@@ -13140,6 +13147,15 @@
         "reset.confirm.input": [],
         "reset.confirm.label": [],
         "reset.confirm.reveal": [],
+        "reset.fault": [
+          "fault",
+          "limited"
+        ],
+        "reset.fault.retry": [
+          "fault",
+          "limited"
+        ],
+        "reset.loading": [],
         "reset.note": [],
         "reset.password": [],
         "reset.password.input": [],
