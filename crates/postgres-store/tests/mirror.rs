@@ -17,7 +17,6 @@ fn registration(author: &str, epoch: i64, position: i64) -> PublishedRecord {
         epoch,
         act_time: position + 1,
         position,
-        payload_marked: true,
         payload_witness: vec![0xAB; 32],
         legs: vec![PublishedLeg {
             role: LegRole::Binary,
