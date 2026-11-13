@@ -30,7 +30,8 @@ import { useRouter } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
 import { prepareComment } from "@/lib/api/content-api";
-import { hasFieldErrors, partitionFieldErrors } from "@/lib/api/field-errors";
+import { hasFieldErrors, partitionFieldErrors, pathIndex } from "@/lib/api/field-errors";
+import { refusesTagName, tagNameRefusal } from "@/lib/topics/picker";
 import { writeRefusalMessage } from "@/lib/ui/error-messages";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { fetchGraphIds, graphIdOf } from "@/lib/api/graph-ids-api";
@@ -494,9 +495,11 @@ export function ReplyWizard({
       // A tag or citation the server named by its place is said on its own
       // acts-card row with `Remove it` (`ActsCard`'s fault row) — no line at
       // the foot, the commit staying. Anything else is the bug notice.
-      const partition = partitionFieldErrors(prepared.errors, (error) =>
-        writeRefusalMessage(error.code),
-      );
+      // A refused tag NAME reads as the picker's own line for it (TagPickerRefused).
+      const partition = partitionFieldErrors(prepared.errors, (error) => {
+        const name = state.tags[pathIndex(error.field, "tags") ?? -1]?.name;
+        return name !== undefined && refusesTagName(error) ? tagNameRefusal(name) : writeRefusalMessage(error.code);
+      });
       if (hasFieldErrors(partition)) {
         setTagErrors(partition.perTag);
         setReferenceErrors(partition.perReference);
