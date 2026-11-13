@@ -329,19 +329,20 @@ describe("DetailsStep — the staged pairs", () => {
     expect((screen.getByTestId("wizard-reference-pair") as HTMLDialogElement).open).toBe(false);
   });
 
-  // `ComposeUploading` draws the aside while something is still going up; the
-  // stage at rest (`ComposeDetails`) draws none.
-  it("says pictures upload while you write only while one is still going up", () => {
+  // Seam 314 (round 42): the stage says nothing about uploading — the tiles'
+  // own progress shows it, and the seal's gate says why signing waits.
+  it("draws no upload aside, even while a picture is still going up", () => {
     const picture = (upload: PickedAsset["upload"]): PickedAsset => ({ ...VIDEO_ASSET, id: "p0", kind: "picture", upload });
     renderStep({ mode: "media", assets: [picture({ kind: "uploading" })] });
-    expect(screen.getByTestId("wizard-upload-aside")).toHaveTextContent(
-      "Pictures upload while you write — signing waits for them.",
-    );
+    expect(screen.queryByTestId("wizard-upload-aside")).toBeNull();
+    expect(screen.queryByText(/Pictures upload while you write/)).toBeNull();
   });
 
-  it("draws no upload aside once every picture has landed", () => {
-    renderStep({ mode: "media", assets: [{ ...VIDEO_ASSET, id: "p0", kind: "picture" }] });
-    expect(screen.queryByTestId("wizard-upload-aside")).toBeNull();
+  // Seam 319 (round 46): the cover door's note is cut everywhere.
+  it("draws the cover door without its note", () => {
+    renderStep({ mode: "media", assets: [VIDEO_ASSET], coverDoor: true });
+    expect(screen.getByTestId("wizard-cover-door")).toBeInTheDocument();
+    expect(screen.queryByText(/It plays the moment it is on screen/)).toBeNull();
   });
 });
 
