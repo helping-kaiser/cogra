@@ -300,18 +300,19 @@ budget stops being a preview of release, and a document refused
 only in production is the failure this rule exists to prevent.
 
 **The request body is bounded before the parse.** A `/graphql`
-body that is not a multipart upload is at most **320 KiB**,
+body that is not a multipart upload is at most **384 KiB**,
 measured the same way. The longest operation either client sends
 is about 6 KB with its fragments; the widest content gesture is a
 media post at every text cap — 10 740 characters, at most six
 bytes each once JSON-encoded — at about 75 KB; and the widest
 request of all is a relay carrying the longest batch one prepare
 can stage under the shipped signing budget ("A list is bounded by
-the longest batch"), a thousand entries at about 210 bytes each.
-320 KiB is the smallest multiple of 64 KiB above 1.5× that relay,
-and a standing test re-measures both requests against it. A
-multipart upload holds its `operations` and `map` fields to the
-same 320 KiB each and the rest of its envelope — boundaries, part
+the longest batch"), a thousand entries at about 256 bytes each —
+a staged-write id and a base64 pre-commitment blob of two 32-byte nonces
+and a 64-byte signature. 384 KiB is the smallest multiple of 64 KiB
+above 1.5× that relay, and a standing test re-measures both
+requests against it. A multipart upload holds its `operations` and
+`map` fields to the same 384 KiB each and the rest of its envelope — boundaries, part
 headers, parts it ignores — to 64 KiB, and carries one file after
 them, which alone answers to the media transport's own ceiling
 (twice the larger upload cap, under "Content authoring"). A body
@@ -331,7 +332,7 @@ always got — `200`, `data: null`, one error coded
 for any expired access token. Its body is never parsed: it is
 absorbed and dropped up to the largest request a client sends
 (the still cap or the resumable threshold, whichever is larger,
-plus the envelope — 10 MiB + 704 KiB at the defaults) so the
+plus the envelope — 10 MiB + 832 KiB at the defaults) so the
 answer reaches a client that sends its whole body before reading,
 instead of being lost to the connection reset an early close
 causes (RFC 9112 §9.6). A body that declares or carries more is
@@ -373,10 +374,13 @@ The mutation surface therefore has three legs:
   list — and returns them for the device to check against the
   gesture its user ordered and pre-sign. Nothing has happened on
   the graph yet.
-- **`submitProposals`** relays the pre-signed proposals to L1's
-  seal round trip and returns each host-sealed **verified act**
+- **`submitProposals`** checks each proposal's content pair as its
+  carrier, relays the pre-signed proposals to L1's seal round trip
+  without the pair, and returns each host-sealed **verified act**
   for the device to verify — seal, exact body and pre-commitment,
-  editions, both commitment openings — and sign the approval
+  editions, the content commitment over the content pre-digest it
+  recomputes from its own payload and content nonce, the dependency
+  commitment over the dependency list — and sign the approval
   witness over, together with its seal.
 - **`approveActs`** relays the approval witnesses — only an
   approved act is orderable — and drives retries across epoch
@@ -799,9 +803,12 @@ type Record {
    display — the ages ladder reads it; `landingEpoch` and the causal
    key carry the order."
   landedAt: DateTime!
-  "True when the record is payload-marked — folds then read it
-   individually, never through the author's netted bundle (ballots,
-   edits, membership records — substrate.md §9)."
+  "Whether the act carried a non-empty payload: CoGra carries it,
+   full or reduced. An empty payload, or one CoGra does not carry,
+   reads false (data-model.md \"Act payload carriage\"). Folds read
+   a payload-marked record individually, never through the author's
+   netted bundle (ballots, edits, membership records —
+   substrate.md §9)."
   payloadMarked: Boolean!
   "The payload state: FULL while the content is carried, REDUCED
    after payload removal — the one-way erasure that leaves the
@@ -3573,10 +3580,13 @@ the write, and returns the canonical material.
 The device checks every proposal of the batch against the gesture
 its user ordered, refusing the whole batch on any difference
 ([architecture.md "The write path"](architecture.md#the-write-path)),
-then recomputes the pre-digests and pre-signs; after `submitProposals` returns the host-sealed
-verified act, it verifies the seal, the exact body and
-pre-commitment, the editions, and both commitment openings before
-signing the approval witness over the act and its seal — **the
+then draws a fresh content nonce and dependency nonce, forms the
+two pre-digests and pre-signs; after `submitProposals` returns the
+host-sealed verified act, it verifies the seal, the exact body and
+pre-commitment, the editions, the content commitment over its own
+content pre-digest and the dependency commitment over the
+dependency list before signing the approval witness over the act
+and its seal — **the
 user never signs blind bytes, at either step**
 ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
 `approveActs` relays the approvals; `stagedWrite` (and
@@ -3665,9 +3675,14 @@ type StagedWrite {
    from here."
   canonicalProposal: String!
   "The host-sealed verified act once AWAITING_APPROVAL (base64):
-   the exact body the device verifies — seal, equality with what
-   it pre-signed, both commitment openings — and signs the
-   approval witness over. Null in earlier states."
+   deterministic CBOR `[2, body, preCommitment, preSignature,
+   contentCommitment, dependencyCommitment, contentEdition,
+   dependencyEdition, contentSalt, dependencySalt, hostSeal]` —
+   every host-added field the device verifies before approving,
+   with both salts. It carries neither the payload nor a nonce: the
+   device checks the seal, equality with what it pre-signed, and
+   both commitments against what it holds itself, then signs the
+   approval witness over it. Null in earlier states."
   verifiedAct: String
   "The accepted record once LANDED; null before."
   record: Record
@@ -3685,10 +3700,14 @@ type StagedWriteEdge {
 input ProposalSignatureInput {
   stagedWriteId: UUID!
   "The pre-commitment blob (base64): deterministic CBOR
-   `[1, nonce, preSignature]` — the device's private nonce and its
+   `[2, contentNonce, dependencyNonce, preSignature]` — the device's
+   content nonce and dependency nonce, 32 bytes each, and its
    pre-commitment signature over the canonical proposal, produced
-   with the actor's device-held key; opaque to this API. For a
-   co-signed Collective act the signature half is the member-side
+   with the actor's device-held key. The API carries the content
+   nonce beside the payload and never sends it to Layer 1; the
+   dependency nonce goes to the host with the dependency list. A
+   blob of another version, or malformed, refuses as BAD_INPUT. For
+   a co-signed Collective act the signature half is the member-side
    contribution (see \"Acting as a Collective\")."
   signature: String!
   "Collective acts only: the acting member's instruction, signed
@@ -3731,7 +3750,13 @@ extend type Mutation {
    staged writes are already AWAITING_APPROVAL, verified act
    included; otherwise observe via stagedWrite. Resubmitting a
    sealed proposal is idempotent only for the exact signature that
-   was sealed; differing bytes refuse as BAD_INPUT. A carried write
+   was sealed; differing bytes refuse as BAD_INPUT. The API carries
+   the content pair, so it checks the pair before relaying anything:
+   a content nonce or dependency nonce of the wrong length, a
+   content nonce equal to the dependency nonce or already used for
+   another of the author's acts, or a payload past M_payload refuses
+   as BAD_INPUT, with nothing sent to L1 and nothing recorded; the
+   device re-signs under fresh nonces. A carried write
    the landing released signs only once every asset it names is
    published to the live store; the submit runs that move, and one
    whose move has not landed refuses as CARRIED_MEDIA_UNPUBLISHED —
