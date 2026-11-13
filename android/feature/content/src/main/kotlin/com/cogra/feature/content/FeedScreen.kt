@@ -1528,7 +1528,9 @@ private fun CardMenuHeader(
                     post.viewerBookmarkedAt,
                     "${tag}_menu_save",
                 ),
-                onHide = post.author?.let { LocalSavedHost.current?.hideAct(it.asHiddenPerson(), post.id) },
+                hideRow = post.author?.let {
+                    LocalSavedHost.current?.hideRow(it.asHiddenPerson(), post.id, "${tag}_menu_hide")
+                },
             )
         },
         menuContentDescription = stringResource(R.string.content_menu_post),

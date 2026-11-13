@@ -6,13 +6,20 @@
 // its guest gate to every menu under it. web's twin is
 // `web/src/lib/hidden/hide-row.ts`.
 //
-// - the row reads `Hide @ada`, or `Hide this account` for a deleted account,
-//   always — hiding is not a toggle (ReaderPostMenu.md:3; ProfileMenu.md:3);
+// - the row reads `Hide @ada`, or `Hide this account` for a deleted account;
+// - THE ROW IS A TOGGLE (round 41, seam 305): while the person is hidden it
+//   reads `Unhide @ada` and keeps its one name (ReaderPostMenu.md:19,
+//   HistoryPostMenu.md:17, SavedPostMenu.md:19); the tap unhides at once — no
+//   confirm — and the snackbar's Undo hides them again at the moment they were
+//   first hidden, so their Hidden accounts row keeps its place
+//   (ReaderPostMenu.md:21, HistoryPostMenu.md:19). A deleted account's row
+//   stays `Hide this account`: `Unhide this account` is not drawn yet;
 // - a guest is asked to join, and nothing is sent (GuestGate.md:5);
 // - otherwise the person joins the hidden set at the tap — no confirm, ever —
 //   and the host's snackbar names them with `Undo`, which takes the hide back;
 // - a hide of someone already hidden sends nothing and its Undo sends nothing:
-//   Undo restores what was, and what was is hidden (packet §15 F1);
+//   Undo restores what was, and what was is hidden (packet §15 F1) — the path
+//   a deleted account's row still takes;
 // - a failure reverts, and the row the gesture was made from says so — never
 //   the snackbar, which [ClearHideSnackbarOnRevert] takes down.
 
@@ -69,6 +76,7 @@ fun ActorRef.asHiddenPerson(): HiddenPerson =
 data class HiddenWords(
     private val hideNamed: String,
     private val hideNameless: String,
+    private val unhideNamed: String,
     private val hiddenNamed: String,
     private val hiddenNameless: String,
     private val unhiddenNamed: String,
@@ -77,6 +85,9 @@ data class HiddenWords(
 ) {
     /** `Hide @ada`, or `Hide this account` (`ActorChip.jsx:67`). */
     fun row(person: HiddenPerson): String = if (person.nameless) hideNameless else hideNamed.format("@${person.handle}")
+
+    /** `Unhide @ada` — the hide row while the person is hidden. */
+    fun unhideRow(person: HiddenPerson): String = unhideNamed.format("@${person.handle}")
 
     fun hidden(person: HiddenPerson): String =
         if (person.nameless) hiddenNameless else hiddenNamed.format("@${person.handle}")
@@ -89,6 +100,7 @@ data class HiddenWords(
 fun rememberHiddenWords(): HiddenWords = HiddenWords(
     hideNamed = stringResource(R.string.hidden_menu_hide),
     hideNameless = stringResource(R.string.hidden_menu_hide_account),
+    unhideNamed = stringResource(R.string.hidden_menu_unhide),
     hiddenNamed = stringResource(R.string.hidden_snackbar_hidden),
     hiddenNameless = stringResource(R.string.hidden_snackbar_hidden_account),
     unhiddenNamed = stringResource(R.string.hidden_snackbar_unhidden),
@@ -135,9 +147,12 @@ fun hidePerson(store: HiddenSet, view: HiddenView, person: HiddenPerson, origin:
     }
 }
 
-/** Unhides [entry]'s person from their Hidden accounts row, and says so on the host. */
-fun unhidePerson(store: HiddenSet, entry: HiddenEntry, snackbar: HiddenSnackbar) {
-    val origin = entry.person.id
+/**
+ * Unhides [entry]'s person from the row [origin] — their Hidden accounts row
+ * by default, or the hide row of a menu reading `Unhide @ada` — and says so on
+ * the host; Undo hides them again at the moment they were first hidden.
+ */
+fun unhidePerson(store: HiddenSet, entry: HiddenEntry, snackbar: HiddenSnackbar, origin: String = entry.person.id) {
     store.unhide(entry, origin)
     snackbar.say(snackbar.words.unhidden(entry.person), origin) {
         store.hide(entry.person, origin, entry.hiddenAt, HiddenComfort.UNDO_UNHIDE)
