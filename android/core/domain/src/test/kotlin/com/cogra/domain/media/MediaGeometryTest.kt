@@ -202,4 +202,39 @@ class MediaGeometryTest {
         val hours = 3 * 60 * 60 * 1000
         assertThat(coverFrameAtMs(hours, 3, 4)).isEqualTo(hours * 7 / 8)
     }
+
+    // -- cropSampleSize --
+
+    @Test
+    fun aPictureNoLargerThanTheOutputIsDecodedWhole() {
+        assertThat(cropSampleSize(1080, 1350, CropSpec(0.8f), 1080)).isEqualTo(1)
+        assertThat(cropSampleSize(800, 600, CropSpec(1f), 1080)).isEqualTo(1)
+    }
+
+    @Test
+    fun aLargePictureIsSubsampledWhileTheCutStillFillsTheOutput() {
+        // A 108 MP camera picture cut whole to 4:5: the cut is 7200 × 9000,
+        // so 8 leaves it 1125 on its long edge — at least 1080, under 2160.
+        val sample = cropSampleSize(12000, 9000, CropSpec(0.8f), 1080)
+        assertThat(sample).isEqualTo(8)
+        val tallCut = 9000 / sample
+        assertThat(tallCut).isAtLeast(1080)
+        assertThat(9000 / (sample * 2)).isLessThan(1081)
+    }
+
+    @Test
+    fun aZoomedInCutIsSampledLessThanTheWholePicture() {
+        // The same picture framed at a quarter of its width: the cut is
+        // small, so the decode keeps more of the source's pixels.
+        val zoomed = CropSpec(1f, CropWindow(0.4f, 0.4f, 0.55f, 0.6f))
+        val whole = cropSampleSize(12000, 9000, CropSpec(1f), 1080)
+        val near = cropSampleSize(12000, 9000, zoomed, 1080)
+        assertThat(near).isLessThan(whole)
+        assertThat(12000 * 0.15f / near).isAtLeast(1080f)
+    }
+
+    @Test
+    fun aDegeneratePictureDecodesWhole() {
+        assertThat(cropSampleSize(0, 100, CropSpec(1f), 1080)).isEqualTo(1)
+    }
 }

@@ -154,6 +154,12 @@ up is an AGP and Kotlin migration, not a dependency bump.
   forward, so location and device serial are gone before the
   bytes leave the phone — and the server strips again rather than
   trusting that.
+- **The crop is one model on both clients**: a fixed frame of the
+  chosen shape, the picture moved and zoomed under it. The geometry
+  is the web twin's (`crop.ts`), ported to `CropGeometry`; the
+  gestures are Compose's own `detectTransformGestures`. The framing
+  travels as fractions of the upright picture (EXIF applied), which
+  is what the upload and every later preview cut.
 
 ## Accessibility
 
