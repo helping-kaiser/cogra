@@ -353,8 +353,8 @@ Every emailed or shared link is a web URL on the per-environment
 web origin — the web app serves everyone the native apps don't
 reach. Every URL below but the verification URL opens the app
 where one is installed (Android App Links on the same paths); the
-verification URL is the web's alone, and the app takes the same
-token pasted in place:
+web alone handles the verification URL, and the app has no
+verification entry of its own:
 
 - Invite: `https://<web-origin>/join/<link-id>`
 - Ask: `https://<web-origin>/vouch/<link-id>`
