@@ -2582,6 +2582,18 @@ type PageInfo {
 }
 
 """
+The anonymous view of a live password-reset link (the
+`passwordResetLink` query). Holding the token is holding the link.
+"""
+type PasswordResetLinkCheck {
+	"""
+	The login email of the account the link resets — the username a
+	password manager files the new password under. Never in the link.
+	"""
+	email: String!
+}
+
+"""
 An act payload's one-way state (layer1-interface.md §8.4): FULL
 until the controller removes, REDUCED forever after.
 """
@@ -3219,16 +3231,25 @@ type Query {
 	"""
 	emailChangeLinkCheck(token: String!): EmailChangeLinkCheck
 	"""
-	Anonymous check of a password-reset link, so the app opens the
-	expired-link screen rather than a form that can only fail. True
-	while the link is live — the token known, unused and unexpired —
-	the predicate `confirmPasswordReset` consumes it under.
-	It reads and never writes: nothing is consumed. Unknown, malformed,
-	used and expired all answer false alike, and the answer carries
-	nothing about the account the link belongs to. Spends the per-IP
-	token-confirmation budget, a tripped one answering RATE_LIMITED.
+	The Boolean form of `passwordResetLink`: true exactly where that
+	is non-null, carrying nothing about the account. Same budget.
 	"""
-	passwordResetLinkCheck(token: String!): Boolean!
+	passwordResetLinkCheck(token: String!): Boolean! @deprecated(reason: "Use `passwordResetLink`, null exactly where this answers false.")
+	"""
+	Anonymous check of a password-reset link, so the app opens the
+	expired-link screen rather than a form that can only fail, and
+	the form can name the account a password manager files the new
+	password under. Non-null while the link is live — the token
+	known, unused and unexpired — the predicate `confirmPasswordReset`
+	consumes it under. It reads and never writes: nothing is
+	consumed. Unknown, malformed, used and expired all answer null
+	alike. Holding the live 256-bit token is the proof: it was mailed
+	to the account and already lets its holder set the password, so
+	the address it reveals is no more than the link grants. Spends the
+	per-IP token-confirmation budget, a tripped one answering
+	RATE_LIMITED.
+	"""
+	passwordResetLink(token: String!): PasswordResetLinkCheck
 	"""
 	The viewer's own account, resolved from the request's auth token.
 	Null when the request is unauthenticated.
@@ -5320,6 +5341,10 @@ type VouchedInEdge {
 	cursor: String!
 }
 
+"""
+Marks an element of a GraphQL schema as no longer supported.
+"""
+directive @deprecated(reason: String = "No longer supported") on FIELD_DEFINITION | ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION | ENUM_VALUE
 """
 Directs the executor to include this field or fragment only when the `if` argument is true.
 """
