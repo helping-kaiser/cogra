@@ -2,7 +2,8 @@
    help affordance a screen is allowed, opened. Captions stay to one short line
    and the full explanation lives behind a small "?", at most one per screen;
    this is what is behind it, drawn on the seal whose "How signing works" is the
-   longest thing the system has to explain.
+   longest thing the system has to explain. Its third paragraph is the edit's
+   (jakob 2026-11-13, point D): the edit sheets open the same dialog.
 
    IT IS A PLAIN DIALOG, and deliberately the dullest surface in the system: a
    heading naming the thing asked about, prose, and one way out. No links, no
@@ -24,6 +25,7 @@ export function Screen() {
         body={[
           "Each piece of a post — the post itself, every tag, every citation — is signed on its own, in your name. They sign together: all of them land, or none does.",
           "Each signing is paid for — the cost is real, so each one still counts.",
+          "An edit is signed too — the new version is a new record in your name, and it costs like any signing.",
         ]}
         actions={<Button>Close</Button>}
       />

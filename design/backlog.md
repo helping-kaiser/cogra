@@ -6048,7 +6048,7 @@ own, his words. Nothing waits on it.
 
 Closed by round 46 (jakob 2026-11-12, question 19, as recommended): the row stays quiet and takes the first-page family's words, `Can't reach the server — posts can't load right now.` / `… comments can't load right now.`, with `Retry`; `Couldn't load more` is a failed next page's line alone.
 
-### 210 · How signing works on an edit · *design* · **filed 2026-11-12**
+### 210 · How signing works on an edit · *design* · **filed 2026-11-12** · **closed 2026-11-13**
 
 Round 46 (question 12). The edit sheets now open the seals' `How signing
 works`, which says each piece of a POST is signed on its own, that the pieces
@@ -6057,6 +6057,8 @@ say why an edit is signed at all (a new version is a new record) or that
 withdrawing a tag or a citation is an act that costs too. For jakob: (a) the
 dialog stays as written, one text for every seal [as built]; (b) an edit
 section is added to it — new prose, his to word.
+
+Closed by jakob 2026-11-13 (point D, the wording blessed): `How signing works` takes a third paragraph, `An edit is signed too — the new version is a new record in your name, and it costs like any signing.` (`HelpDialog`, copy-voice, the canvas's help contents).
 
 ### 211 · A removed comment's menu · *design* · **filed 2026-11-12** · **closed 2026-11-13**
 
