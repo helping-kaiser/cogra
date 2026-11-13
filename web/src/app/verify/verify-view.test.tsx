@@ -59,9 +59,8 @@ describe("VerifyView", () => {
     expect(flow.ensureAdvancing).toHaveBeenCalled();
     // Verified.md: the heading and line, and Back to CoGra — the sign-in without a session.
     expect(screen.getByTestId("verify_success")).toHaveTextContent("Email verified");
-    expect(
-      screen.getByText("Your application moved a step. You can go back to the app — it already knows."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("You can go back to the app — it already knows.")).toBeInTheDocument();
+    expect(screen.queryByText(/moved a step/)).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Back" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Back to CoGra" }));
     expect(replace).toHaveBeenCalledWith("/login");
@@ -81,8 +80,9 @@ describe("VerifyView", () => {
     renderWithProviders(<VerifyView />);
     expect(await screen.findByTestId("verify.title")).toHaveTextContent("This link doesn't work anymore");
     expect(screen.getByTestId("verify.body")).toHaveTextContent(
-      "It may have expired or already been used. Send yourself a fresh one — if your account is still waiting on its email, the new link picks it back up.",
+      "It may have expired or already been used. If your account is still waiting on its email, the new link picks it back up.",
     );
+    expect(screen.getByTestId("verify.body")).not.toHaveTextContent("Send yourself");
     // VerifyExpired.md: without a session the first press opens the field and sends nothing.
     expect(screen.queryByTestId("resend_email")).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId("verify.resend"));
