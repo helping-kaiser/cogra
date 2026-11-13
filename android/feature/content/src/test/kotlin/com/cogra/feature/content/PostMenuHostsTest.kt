@@ -112,7 +112,7 @@ class PostMenuHostsTest {
                 Column {
                     SavedScreen(
                         state = SavedUiState(
-                            entries = listOf(SavedEntry(SavedCard.Post(byAda), Instant.now())),
+                            entries = listOf(SavedEntry(SavedCard.Post(byAda.copy(viewerBookmarkedAt = Instant.now())), Instant.now())),
                             loading = false,
                         ),
                         writes = writes(),
