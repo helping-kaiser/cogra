@@ -312,7 +312,7 @@ CoGra is the carriage service for its users' content. The model is
 - **CoGra carries the content pair; Layer 1 keeps the witness.**
   CoGra runs centralized append with decentralized carriage. The
   content pair — the payload and its content nonce — never reaches
-  the host: it forms the content commitment over the content
+  the host, which forms the content commitment over the content
   pre-digest the backend sends
   ([layer1-interface.md §8.2](layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake)).
   The backend runs the pair's carriage checks before anything
