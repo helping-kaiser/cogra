@@ -12,6 +12,7 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
 import { echoedMedia } from "@/test/media-echo";
 import { fakeWriteSigner } from "@/test/registration";
+import { settleFetches } from "@/test/fetch";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { DEFAULT_P_DIRECTED, emptyWizard, type WizardState } from "@/lib/compose/wizard";
@@ -735,8 +736,11 @@ describe("the compose wizard", () => {
     fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "words" } });
     fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
 
-    expect(await screen.findByTestId(byNode("composeDetails.references.stagedReference", "1"))).toHaveTextContent(
-      "@carol: On folding",
+    // The row stands at once; its label is resolved by the lookup's answer.
+    await waitFor(() =>
+      expect(screen.getByTestId(byNode("composeDetails.references.stagedReference", "1"))).toHaveTextContent(
+        "@carol: On folding",
+      ),
     );
   });
 
@@ -1226,7 +1230,7 @@ describe("the license a new post starts from", () => {
     // The seal's License row reads the seeded pair, never public domain.
     const licenseRow = screen.getByTestId("wizard-open-license").parentElement!;
     await waitFor(() => expect(licenseRow).toHaveTextContent("Credit always"));
-    expect(licenseRow).toHaveTextContent("every use credits you");
+    expect(licenseRow).toHaveTextContent("Credit always · Not logged");
     expect(licenseRow).not.toHaveTextContent("Public domain");
   });
 
@@ -1699,13 +1703,13 @@ describe("the already-published marker", () => {
   });
 
   it("draws nothing when no published post carries it", async () => {
-    placement(null);
+    const asked = placement(null);
     render(fakeDrafts(landed()));
     fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
     await screen.findByTestId(byNode("composeDetails.title.input"));
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    });
+    // Read once the placement's own read has answered and been delivered.
+    await waitFor(() => expect(asked).toHaveLength(1));
+    await act(() => settleFetches());
     expect(screen.queryByTestId("composeDetails.published")).toBeNull();
   });
 });

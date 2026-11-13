@@ -57,7 +57,7 @@ import { TransportError } from "@/lib/ui/transport-error";
 import { bundleReadout, EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
-import { licenseReading, type License } from "@/lib/license";
+import { licenseName, type License } from "@/lib/license";
 import type { ReferenceDraft } from "@/lib/references/draft";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { WizardState } from "@/lib/compose/wizard";
@@ -302,7 +302,7 @@ export function SealStep({
       <div className="flex flex-col">
         <FactRow
           label="License"
-          value={licenseReading(state.license)}
+          value={licenseName(state.license)}
           action="Change"
           testId="wizard-open-license"
           onAction={guard(() => onSheet("license"))}
@@ -600,10 +600,9 @@ function LicenseSheet({
       maxHeight={SHEET_RAISED}
     >
       <div className="flex flex-col gap-2">
-        <QuietNote>Terms for anyone who reuses this.</QuietNote>
         <LicenseRows value={staged} onChange={setStaged} testIdPrefix="wizard" flat />
         <div className="flex items-center gap-2 border-0 border-t border-solid border-outline-variant pt-2.5">
-          <span className="flex-1 text-body-small text-on-surface-variant">{licenseReading(staged)}</span>
+          <span className="flex-1 text-body-small text-on-surface-variant">{licenseName(staged)}</span>
           <PillButton testId="wizard-license-done" onClick={() => onDone(staged)}>
             Done
           </PillButton>
