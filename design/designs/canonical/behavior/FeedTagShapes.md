@@ -27,3 +27,5 @@ ALWAYS a tag card keeps its why-line, reads Nothing carries this tag right now. 
 ALWAYS a negative score reads with a minus sign and no colour
 
 WHEN a guest taps a tag card's face or its compose glyph -> the guest gate opens
+
+WHEN an applicant taps a tag card's compose glyph -> the snackbar reads You can post once you're in. AND NEVER the composer opens

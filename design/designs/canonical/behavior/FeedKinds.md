@@ -31,3 +31,5 @@ WHEN feed.commentCard.actionRow.reply is tapped -> the post's comment section op
 ALWAYS the comments sheet a feed card raises is postDetail.threadSheet, the thread drawn once, one path wherever it is raised
 
 WHEN feed.tagCard.actionRow.compose, Tag a new post with it, is tapped -> the post composer opens at its first stage AND the tag rides staged among the new post's tags
+
+WHEN feed.tagCard.actionRow.compose is tapped GIVEN the reader is an applicant -> the snackbar reads You can post once you're in. AND NEVER the composer opens

@@ -70,6 +70,8 @@ WHEN a card's Feed score is tapped -> the score's trace opens AND its back arrow
 
 WHEN Tag a new post with it on a history.tagCard is tapped -> the post composer opens at its first stage AND the tag rides staged among the new post's tags
 
+WHEN Tag a new post with it on a history.tagCard is tapped GIVEN the reader is an applicant -> the snackbar reads You can post once you're in. AND NEVER the composer opens
+
 WHEN a press-and-hold on a card's stance face signs -> the face refuses a second press-and-hold until the signing answers AND NEVER the face moves before the signature is taken
 
 WHEN the hold's signing has not answered 200ms after the hold -> the line under the face reads Signing… AND NEVER a spinner appears

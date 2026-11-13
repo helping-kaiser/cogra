@@ -4,6 +4,8 @@ WHEN tap the ⋮ on feed.profileCard -> feed.menuSheet rises over the feed AND t
 
 ALWAYS feed.menuSheet reads Save or Unsave, then Mention in a new post, then Hide with the person's handle, then feed.menuSheet.report at the sheet tail, the profile menu's rows less Share this profile
 
+WHEN an applicant taps feed.menuSheet.mention, on the feed, History or Saved alike -> the menu closes AND the snackbar reads You can post once you're in. AND NEVER the wizard opens
+
 ALWAYS the menu of feed.profileCard holds the same rows on every host the card stands on, the feed, History and Saved, Saved's first row reading Unsave
 
 WHEN tap feed.menuSheet.mention -> the post wizard opens fresh at its first stage AND the person rides along as a staged reference, unseen until the details stage

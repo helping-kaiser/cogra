@@ -1067,7 +1067,19 @@ doors answer in the same register (PR-103, **blessed (jakob
 Every control the family answers wears the locked look (auth.md):
 visibly inactive, still tappable — the foot, `Reply` and `Invites` (jakob
 2026-10-02), and `New post` and the stance faces alike (jakob
-2026-10-16).
+2026-10-16) — except the doors into the composer below.
+
+**Every door into the composer answers alike** (jakob 2026-11-13, seam
+320-1, as recommended): a post's and a comment's `Cite in a new post`, a
+person card's `Mention in a new post`, a tag card's compose glyph (`Tag a
+new post with it`), the expired-draft notice's `Open the draft`, and the
+composer's own address opened directly answer an applicant with `You can
+post once you're in.`, and nothing opens — an address leaves the reader
+where app-open lands for them, as the Invites page's own address does.
+These doors look as they do for a member: a menu row or a card's glyph has
+no locked treatment, as `ProfileMenu`'s `Mention in a new post` stands at
+full strength. The line rides the surface's own snackbar where it has one
+(the profile's, the thread's), else the shell's.
 
 The applicant's own profile (`ProfileApplicant`) says the same in its
 own places, **blessed (jakob 2026-10-16)**: the open
