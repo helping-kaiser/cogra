@@ -389,10 +389,10 @@ CREATE TABLE act_payloads (
 );
 ```
 
-A full row opens the record's published witness on its own: the
-payload and the content nonce reproduce the content pre-digest, and
-the salt with it opens the content commitment over the act
-identifier and the record's pre-commitment. `payload_state` moves
+A full row, with the record's pre-commitment, opens the record's
+published witness: the payload and the content nonce reproduce the
+content pre-digest, and the salt with it opens the content
+commitment over the act identifier and the pre-commitment. `payload_state` moves
 toward `'reduced'` only. A reduction sets `payload`,
 `content_nonce` and `content_salt` to NULL in one statement and
 stamps `reduced_at`; the row itself is never deleted. NULL is never
