@@ -399,8 +399,10 @@ describe("the compose wizard", () => {
     fireEvent.keyDown(screen.getByTestId("composeCrop.viewport"), { key: "+" });
     fireEvent.click(screen.getByTestId("composeCrop.shapes.wideChip"));
 
+    // The stage keeps its size under every shape (ComposeCrop.md:7); the
+    // frame inside it changes, and the zoom stays.
     const frame = screen.getByTestId("composeCrop.viewport");
-    expect(frame.style.aspectRatio).toBe("1.91 / 1");
+    expect(frame.style.aspectRatio).toBe("390 / 488");
     expect(zoomOf()).toBeCloseTo(1.1, 6);
     // The picture the cropper works from is the picked original, never a
     // rectangle a previous shape left behind.
