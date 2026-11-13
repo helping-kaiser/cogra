@@ -5781,9 +5781,11 @@
         ],
         "feed.menuSheet": [],
         "feed.menuSheet.cite": [],
+        "feed.menuSheet.citedBy": [],
         "feed.menuSheet.dragHandle": [],
         "feed.menuSheet.hide": [],
         "feed.menuSheet.license": [],
+        "feed.menuSheet.opinions": [],
         "feed.menuSheet.report": [],
         "feed.menuSheet.save": []
       }
@@ -5915,10 +5917,12 @@
         ],
         "feed.menuSheet": [],
         "feed.menuSheet.cite": [],
+        "feed.menuSheet.citedBy": [],
         "feed.menuSheet.dragHandle": [],
         "feed.menuSheet.edit": [],
         "feed.menuSheet.license": [],
         "feed.menuSheet.markSensitive": [],
+        "feed.menuSheet.opinions": [],
         "feed.menuSheet.remove": [],
         "feed.menuSheet.save": []
       }
@@ -6443,9 +6447,11 @@
         ],
         "feed.menuSheet": [],
         "feed.menuSheet.cite": [],
+        "feed.menuSheet.citedBy": [],
         "feed.menuSheet.dragHandle": [],
         "feed.menuSheet.hide": [],
         "feed.menuSheet.license": [],
+        "feed.menuSheet.opinions": [],
         "feed.menuSheet.report": [],
         "feed.menuSheet.save": []
       }
@@ -6574,8 +6580,10 @@
         ],
         "feed.menuSheet": [],
         "feed.menuSheet.cite": [],
+        "feed.menuSheet.citedBy": [],
         "feed.menuSheet.dragHandle": [],
         "feed.menuSheet.license": [],
+        "feed.menuSheet.opinions": [],
         "feed.menuSheet.save": []
       }
     },
@@ -8402,9 +8410,11 @@
         "history.header.title": [],
         "history.menuSheet": [],
         "history.menuSheet.cite": [],
+        "history.menuSheet.citedBy": [],
         "history.menuSheet.dragHandle": [],
         "history.menuSheet.hide": [],
         "history.menuSheet.license": [],
+        "history.menuSheet.opinions": [],
         "history.menuSheet.report": [],
         "history.menuSheet.save": [],
         "history.searchField": [],
@@ -8513,10 +8523,12 @@
         "history.header.title": [],
         "history.menuSheet": [],
         "history.menuSheet.cite": [],
+        "history.menuSheet.citedBy": [],
         "history.menuSheet.dragHandle": [],
         "history.menuSheet.edit": [],
         "history.menuSheet.license": [],
         "history.menuSheet.markSensitive": [],
+        "history.menuSheet.opinions": [],
         "history.menuSheet.remove": [],
         "history.menuSheet.save": [],
         "history.searchField": [],
@@ -12640,9 +12652,11 @@
         "profile.identity.name": [],
         "profile.menuSheet": [],
         "profile.menuSheet.cite": [],
+        "profile.menuSheet.citedBy": [],
         "profile.menuSheet.dragHandle": [],
         "profile.menuSheet.hide": [],
         "profile.menuSheet.license": [],
+        "profile.menuSheet.opinions": [],
         "profile.menuSheet.report": [],
         "profile.menuSheet.save": [],
         "profile.posts": [],
@@ -12772,10 +12786,12 @@
         "profile.identity.website": [],
         "profile.menuSheet": [],
         "profile.menuSheet.cite": [],
+        "profile.menuSheet.citedBy": [],
         "profile.menuSheet.dragHandle": [],
         "profile.menuSheet.edit": [],
         "profile.menuSheet.license": [],
         "profile.menuSheet.markSensitive": [],
+        "profile.menuSheet.opinions": [],
         "profile.menuSheet.remove": [],
         "profile.menuSheet.save": [],
         "profile.posts": [],
@@ -13330,9 +13346,11 @@
         "postDetail.header.menu": [],
         "postDetail.menuSheet": [],
         "postDetail.menuSheet.cite": [],
+        "postDetail.menuSheet.citedBy": [],
         "postDetail.menuSheet.dragHandle": [],
         "postDetail.menuSheet.hide": [],
         "postDetail.menuSheet.license": [],
+        "postDetail.menuSheet.opinions": [],
         "postDetail.menuSheet.report": [],
         "postDetail.menuSheet.save": []
       }
@@ -13423,9 +13441,11 @@
         "postDetail.header.menu": [],
         "postDetail.menuSheet": [],
         "postDetail.menuSheet.cite": [],
+        "postDetail.menuSheet.citedBy": [],
         "postDetail.menuSheet.dragHandle": [],
         "postDetail.menuSheet.hide": [],
         "postDetail.menuSheet.license": [],
+        "postDetail.menuSheet.opinions": [],
         "postDetail.menuSheet.report": [],
         "postDetail.menuSheet.save": [],
         "postDetail.menuSheet.share": []
@@ -13495,6 +13515,7 @@
         "reel.rail": [],
         "reel.rail.author": [],
         "reel.rail.comments": [],
+        "reel.rail.menu": [],
         "reel.rail.score": [
           "playing",
           "settling",
@@ -13527,6 +13548,134 @@
         "reel.washTop": []
       }
     },
+    "ReelMenu": {
+      "prefix": "reel",
+      "keys": {
+        "reel.caption": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.menuSheet.cite": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.menuSheet.citedBy": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.menuSheet.edit": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.menuSheet.hide": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.menuSheet.license": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.menuSheet.markSensitive": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.menuSheet.opinions": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.menuSheet.remove": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.menuSheet.report": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.menuSheet.save": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.rail": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+      },
+      "nodes": {
+        "reel.backDisc": [],
+        "reel.bottomBar": [],
+        "reel.bottomBar.composeSlot": [],
+        "reel.bottomBar.feedSlot": [],
+        "reel.bottomBar.profileSlot": [],
+        "reel.bottomBar.searchSlot": [],
+        "reel.bottomBar.walletSlot": [],
+        "reel.caption": [
+          "reader",
+          "own"
+        ],
+        "reel.caption.description": [
+          "reader",
+          "own"
+        ],
+        "reel.caption.handle": [
+          "reader",
+          "own"
+        ],
+        "reel.caption.more": [
+          "reader",
+          "own"
+        ],
+        "reel.caption.title": [
+          "reader",
+          "own"
+        ],
+        "reel.menuSheet": [],
+        "reel.menuSheet.cite": [
+          "reader",
+          "own"
+        ],
+        "reel.menuSheet.citedBy": [
+          "reader",
+          "own"
+        ],
+        "reel.menuSheet.dragHandle": [],
+        "reel.menuSheet.edit": [
+          "own"
+        ],
+        "reel.menuSheet.hide": [
+          "reader"
+        ],
+        "reel.menuSheet.license": [
+          "reader",
+          "own"
+        ],
+        "reel.menuSheet.markSensitive": [
+          "own"
+        ],
+        "reel.menuSheet.opinions": [
+          "reader",
+          "own"
+        ],
+        "reel.menuSheet.remove": [
+          "own"
+        ],
+        "reel.menuSheet.report": [
+          "reader"
+        ],
+        "reel.menuSheet.save": [
+          "reader",
+          "own"
+        ],
+        "reel.rail": [
+          "reader",
+          "own"
+        ],
+        "reel.rail.author": [
+          "reader",
+          "own"
+        ],
+        "reel.rail.comments": [
+          "reader",
+          "own"
+        ],
+        "reel.rail.menu": [
+          "reader",
+          "own"
+        ],
+        "reel.rail.score": [
+          "reader",
+          "own"
+        ],
+        "reel.rail.score.value": [
+          "reader",
+          "own"
+        ],
+        "reel.rail.share": [
+          "reader",
+          "own"
+        ],
+        "reel.rail.stance": [
+          "reader",
+          "own"
+        ],
+        "reel.rail.stance.anchor": [
+          "reader",
+          "own"
+        ],
+        "reel.rail.stance.anchor.face": [
+          "reader",
+          "own"
+        ],
+        "reel.seekLine": [],
+        "reel.soundDisc": [],
+        "reel.stage": [],
+        "reel.washBottom": [],
+        "reel.washTop": []
+      }
+    },
     "ReelSensitive": {
       "prefix": "reel",
       "keys": {},
@@ -13547,6 +13696,7 @@
         "reel.rail": [],
         "reel.rail.author": [],
         "reel.rail.comments": [],
+        "reel.rail.menu": [],
         "reel.rail.score": [],
         "reel.rail.score.value": [],
         "reel.rail.share": [],
@@ -14153,10 +14303,12 @@
         "postDetail.header.menu": [],
         "postDetail.menuSheet": [],
         "postDetail.menuSheet.cite": [],
+        "postDetail.menuSheet.citedBy": [],
         "postDetail.menuSheet.dragHandle": [],
         "postDetail.menuSheet.edit": [],
         "postDetail.menuSheet.license": [],
         "postDetail.menuSheet.markSensitive": [],
+        "postDetail.menuSheet.opinions": [],
         "postDetail.menuSheet.remove": [],
         "postDetail.menuSheet.save": []
       }
@@ -15292,9 +15444,11 @@
         "saved.header.title": [],
         "saved.menuSheet": [],
         "saved.menuSheet.cite": [],
+        "saved.menuSheet.citedBy": [],
         "saved.menuSheet.dragHandle": [],
         "saved.menuSheet.hide": [],
         "saved.menuSheet.license": [],
+        "saved.menuSheet.opinions": [],
         "saved.menuSheet.report": [],
         "saved.menuSheet.save": [],
         "saved.searchField": [],
@@ -17553,9 +17707,11 @@
       "nodes": {
         "tagPage.menuSheet": [],
         "tagPage.menuSheet.cite": [],
+        "tagPage.menuSheet.citedBy": [],
         "tagPage.menuSheet.dragHandle": [],
         "tagPage.menuSheet.hide": [],
         "tagPage.menuSheet.license": [],
+        "tagPage.menuSheet.opinions": [],
         "tagPage.menuSheet.report": [],
         "tagPage.menuSheet.save": []
       }

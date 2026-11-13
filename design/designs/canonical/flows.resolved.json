@@ -1951,6 +1951,7 @@
         "ProfilePostsMenuOwn",
         "ReaderPostMenu",
         "ReaderPostMenuNarrow",
+        "ReelMenu",
         "RemoveMenu",
         "SavedCommentMenu",
         "SavedCommentMenuOwn",
@@ -1958,7 +1959,7 @@
         "TagPageMenu"
       ],
       "steps": [
-        "start · «Cite in a new post» — to ComposePick on 25 boards → ComposePick",
+        "start · «Cite in a new post» — to ComposePick on 26 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -1987,6 +1988,7 @@
         "ProfilePostsMenuOwn",
         "ReaderPostMenu",
         "ReaderPostMenuNarrow",
+        "ReelMenu",
         "RemoveMenu",
         "SavedCommentMenu",
         "SavedCommentMenuOwn",
@@ -3839,7 +3841,7 @@
       "status": "resolved",
       "steps": [
         "start · ReaderPostMenuNarrow",
-        "end · ReaderPostMenuNarrow · 1 «Share» → os — the platform's own share sheet — the row the action row could not hold, doing exactly what the glyph does on a wider phone"
+        "end · ReaderPostMenuNarrow · 1 «Share this post» → os — the platform's own share sheet — the row the action row could not hold, doing exactly what the glyph does on a wider phone"
       ],
       "boards": [
         "ReaderPostMenuNarrow"
@@ -6617,6 +6619,12 @@
         "watch-the-stream"
       ]
     },
+    "ReelMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
     "ReelSensitive": {
       "flows": [
         "publish-a-post",
@@ -7612,6 +7620,8 @@
     "Join/10: the Privacy Policy page — the notice's door stands at the form's foot (ruling 76); the page it opens is design still owed",
     "Join/9: the Terms page — the door stands in the accept sentence (ruling 76); the page it opens is design still owed",
     "JoinErrors/8: the Terms page — the door stands in the accept sentence (ruling 76); the page it opens is design still owed",
-    "JoinErrors/9: the Privacy Policy page — the notice's door stands at the form's foot (ruling 76); the page it opens is design still owed"
+    "JoinErrors/9: the Privacy Policy page — the notice's door stands at the form's foot (ruling 76); the page it opens is design still owed",
+    "ReelMenu/11: what the stream shows once your own clip is removed — not ruled for the stream (round 49 question)",
+    "ReelMenu/3: what hiding the clip's author leaves on the stream — the host's aftermath is not ruled for the stream (round 49 question)"
   ]
 }
