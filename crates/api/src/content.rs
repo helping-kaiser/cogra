@@ -1288,7 +1288,7 @@ async fn lock_unreaped(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     id: Uuid,
 ) -> Result<(), ContentError> {
-    match staged::lock_unreaped(&mut **tx, id).await {
+    match staged::lock_unreaped(tx, id).await {
         Ok(()) => Ok(()),
         Err(staged::StagedError::Reaped(_)) => Err(ContentError::Reaped),
         Err(e) => Err(ContentError::Internal(e.to_string())),

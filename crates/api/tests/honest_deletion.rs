@@ -683,7 +683,10 @@ async fn a_redaction_racing_the_ingestion_of_its_act_ends_reduced_in_either_orde
         .expect("promotes");
     let racing = tokio::spawn(redaction_of(first.clone()));
     wait_until_blocked_by(&rig.pool, ingestion_pid).await;
-    assert!(!racing.is_finished(), "the redaction waits on the ingestion");
+    assert!(
+        !racing.is_finished(),
+        "the redaction waits on the ingestion"
+    );
     ingesting.commit().await.expect("commits");
     let done = racing.await.expect("joins").expect("redacts");
     assert!(done.reduced && done.staged_reaped);
@@ -718,7 +721,10 @@ async fn a_redaction_racing_the_ingestion_of_its_act_ends_reduced_in_either_orde
         })
     };
     wait_until_blocked_by(&rig.pool, redaction_pid).await;
-    assert!(!promoting.is_finished(), "the promotion waits on the redaction");
+    assert!(
+        !promoting.is_finished(),
+        "the promotion waits on the redaction"
+    );
     redacting.commit().await.expect("commits");
     promoting.await.expect("joins").expect("promotes");
 
