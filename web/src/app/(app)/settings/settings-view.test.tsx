@@ -717,8 +717,11 @@ describe("the default license", () => {
     expect(document.activeElement).toHaveTextContent("Default license");
     const chosen = byNode("settings.licenseSheet.credit.tier", "3").querySelector("input");
     expect(chosen).toBeChecked();
-    expect(screen.getByTestId("settings.licenseSheet.foot.summary")).toHaveTextContent(
-      "Credit always · Not logged — every use credits you, and uses go unlogged.",
+    expect(screen.getByTestId("settings.licenseSheet.foot.summary").textContent).toBe("Credit always · Not logged");
+    // No name-repeating hints, and the note keeps only what it adds (round 42).
+    expect(within(sheet).queryByTestId(byNode("settings.licenseSheet.credit.tier.hint", "1"))).toBeNull();
+    expect(within(sheet).getByTestId("settings.licenseSheet.note").textContent).toBe(
+      "A post's terms settle when it is first signed, so changing this never reaches one you have already published.",
     );
   });
 
