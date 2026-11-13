@@ -11977,8 +11977,9 @@ spoken unit.
 
 ### Round 49, the menus' readings, the reel's ⋮, the tags and the covers — 2026-11-13
 
-jakob's answers of 2026-11-13 on the menus audit (M1–M4) and on N2–N7, and
-V1 (the viewer follows the reel), built on round 48's tree.
+jakob's answers of 2026-11-13 on the menus audit (M1–M4) and on N2–N7, V1
+(the viewer follows the reel) and the android hand test's profile landing,
+built on round 48's final tree (merged in, fe728bfd7).
 
 - **Every post menu carries the two readings** (M1): `Cited by` ·
   `Opinions on this` just before `License terms`, as the comment's menu
@@ -11996,7 +11997,11 @@ V1 (the viewer follows the reel), built on round 48's tree.
   rail keeps last as its door out; it follows the acts with glyphs of
   their own, named `More on this post` as the card's ⋮. It raises the
   card's own rows over the stream: `ReelMenu` (new), its `whose` chip the
-  reader's menu on @mira's clip or the own menu on @sol's. What `Hide`
+  reader's menu on @mira's clip or the own menu on @sol's. Measured
+  (headless Chromium, 390 × 844): the rail's top at 330, 286px under the
+  sound disc; the ⋮ at 580–620, 16px above the score; the caption's right
+  edge 16px clear of the rail; the sheet in the app's theme over the
+  stream, its rows as the card's. What `Hide`
   and your own `Remove` leave on the stream, and whether the clip pauses
   under the sheet, are not ruled (backlog 231; two gaps in the graph).
 - **The narrow phone's share row leads and reads `Share this post`** (M3,
@@ -12021,16 +12026,33 @@ V1 (the viewer follows the reel), built on round 48's tree.
   load may show its cover there, whole at 4:5, centred, nothing cropped.
   No board draws a clip that did not load (backlog 230). The viewer's
   boards already draw the clip's own 9:16 frame, so none changed.
-- **The seals stay unregistered** (backlog 220): one drawn copy per
-  `state` value is keyed by that value, and the value `tagRefused` is no
-  legal key (a key is lowercase letters, digits, `-` and `_`); `ReplySeal`'s
-  cards also vary on two chips at once. Both wait on a registry choice.
-- **The gate**: against round 48 (0fab13b43), 209 → 210 screens
-  (`ReelMenu`), 8130 → 8197 board paths, 2152 → 2167 distinct — 15 added
-  (`tagPage.menuSheet.citedBy` / `.opinions`, `reel.rail.menu`,
-  `reel.menuSheet` and its rows), none gone; the narrow phone's row keeps
-  `menuSheet.share`. `cite-a-post` re-blessed, 25 → 26 origins. Backlog
-  230 and 231 filed; 220 and 223 amended.
+- **Every profile lands on its Posts tab** (jakob 2026-11-13, the android
+  hand test: "learned behavior from other socials"), one's own and
+  another's. `ProfileTabs` draws the tab row and what stands under it;
+  `Profile`, `ProfileOther`, `ProfileApplicant`, `ProfileMenu`,
+  `ProfileOwnMenu` and `ProfileOtherHidden` take a `tab` chip — `posts`
+  the landing, `everything` the chronicle, drawn behind its hole so its
+  names and keys stand (the registry is append-only per board), the row
+  keyed by the chip. `ProfileOtherHeld`, `EmptySignConfirm` and
+  `SigningAfterClose` draw the landing; `ProfileMoreFailed` keeps
+  Everything, its subject being the chronicle's failed page. A deleted
+  account's page (`ProfileDeleted`, `ProfileDeletedMenu`) keeps
+  Everything: what its Posts tab shows is not drawn anywhere.
+- **The seals register** (backlog 220, options a + c): the `state` value
+  `tagRefused` reads `tag-refused` (a key is lowercase letters, digits, `-`
+  and `_`); `ComposeSeal`'s card and foot are drawn once per value
+  (`composeSeal`), `ReplySeal`'s card once per `state` and, inside a
+  box-less `card` wrapper, once per `tags`, its foot once per `state`
+  (`replySeal`). Pixel-identical to the earlier drawings at all 3 and 15
+  combinations (headless Chromium, screenshot hashes).
+- **The gate**: against round 48's final tree (fe728bfd7), 209 → 212
+  screens (`ReelMenu`, `ComposeSeal`, `ReplySeal`), 8126 → 8389 board
+  paths, 2151 → 2229 distinct — 78 added, none gone, and no board lost a
+  path; the narrow phone's row keeps `menuSheet.share`. Flows re-blessed:
+  `cite-a-post` 25 → 26 origins, and the landing card's six (`reply-to-a-post`,
+  `take-a-stance-on-a-post`, `open-a-posts-pictures`, `watch-the-stream`,
+  `follow-a-citation`, `trace-a-score-to-its-records`). Backlog 230 and 231
+  filed; 220 closed; 223 amended.
 ---
 
 ## 14. The canvases

@@ -6125,7 +6125,7 @@ widest); 50 × `m` and 50 `W` in words take 12px, the 50-character sample
 
 Closed as ruled by jakob 2026-11-13 ("F1 as drawn so two lines is the hard cap and it shrinks until it fits"): (a), no floor — the head's name shrinks until it holds two lines, the widest legal name at 10px on 13px.
 
-### 220 · The seals and the edit sheets have no registry rows · *system* · **filed 2026-11-13**
+### 220 · The seals and the edit sheets have no registry rows · *system* · **filed 2026-11-13** · **closed 2026-11-13**
 
 Round 48 (seam 323-6). `ComposeSeal`, `ReplySeal`, `EditActs` and
 `CommentEditActs` export no `NODE`, so the clients' harness has no verdict
@@ -6160,6 +6160,13 @@ named node between them. The choice that unblocks both: rename the chip value
 camelCase chip values; and for `ReplySeal`, a named wrapper between its two
 chips' copies (a new path segment). The attempt is kept as a patch in round
 49's scratch folder.
+
+Closed by round 49, act 2 (the orchestrator's call: the rename and the
+wrapper): `tagRefused` reads `tag-refused` on both boards; `ComposeSeal`
+registers as `composeSeal`, `ReplySeal` as `replySeal` with its box-less
+`card` wrapper between the `state` and `tags` copies — each pixel-identical
+to its earlier drawing at every chip combination (3 and 15, headless
+Chromium).
 
 ### 221 · `PadKeyAbsent`'s pad is hand-built, so it cannot register yet · *system* · **filed 2026-11-13**
 
