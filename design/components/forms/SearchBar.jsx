@@ -137,6 +137,7 @@ export function SearchBar({ query = "", placeholder = "Search", ariaLabel = "Sea
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
+                minWidth: 0,
               }}
             >
               {query || placeholder}
