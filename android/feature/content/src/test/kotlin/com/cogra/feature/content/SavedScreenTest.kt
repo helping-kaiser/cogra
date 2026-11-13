@@ -252,7 +252,7 @@ class SavedScreenTest {
     fun `the first row of every card's menu reads unsave`() {
         render(all)
         compose.onNodeWithTag("saved.card.menu").performClick()
-        compose.onNodeWithTag("saved_p1_menu_save").assertIsDisplayed()
+        compose.onNodeWithTag("saved.menuSheet.save").assertIsDisplayed()
         compose.onNodeWithText("Unsave").assertIsDisplayed()
     }
 
@@ -293,7 +293,7 @@ class SavedScreenTest {
     fun `the last card's unsave stands the empty state`() {
         render(listOf(post))
         compose.onNodeWithTag("saved.card.menu").performClick()
-        compose.onNodeWithTag("saved_p1_menu_save").performClick()
+        compose.onNodeWithTag("saved.menuSheet.save").performClick()
         compose.waitForIdle()
         compose.onNodeWithTag("saved.empty.title").assertIsDisplayed()
         compose.onNodeWithText("Removed from Saved.").assertIsDisplayed()
@@ -374,7 +374,7 @@ class SavedScreenTest {
     fun `unsaving the last card a query narrowed to stands saved none`() {
         render(listOf(post), typed = "long", narrowedBy = "long")
         compose.onNodeWithTag("saved.card.menu").performClick()
-        compose.onNodeWithTag("saved_p1_menu_save").performClick()
+        compose.onNodeWithTag("saved.menuSheet.save").performClick()
         compose.waitForIdle()
         compose.onNodeWithTag("saved.empty.action").assertIsDisplayed()
         compose.onNodeWithText("Removed from Saved.").assertIsDisplayed()

@@ -46,7 +46,7 @@ import { fetchCitingArtifacts, type CitingArtifactView } from "@/lib/api/referen
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { ActorChip } from "@/lib/ui/actor-chip";
-import { Button } from "@/lib/ui/button";
+import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import type { License } from "@/lib/license";
@@ -976,20 +976,18 @@ export function CommentsSheet({
               node={part(card, "actionRow.stance")}
             />
             {phase === "signedIn" && (
-              <Button
-                testId={`comment-reply-${comment.id}`}
-                node={part(card, "actionRow.reply")}
-                variant="text"
-                size="sm"
-                onClick={() => {
-                  // ReplyEntry via=5: the composer, PRE-TARGETED at this
-                  // comment. The other door — "Add a comment" at the foot of
-                  // the thread — pins the post instead.
-                  openComposer(commentTarget(comment));
-                }}
+              // ReplyEntry via=5: the composer, PRE-TARGETED at this comment.
+              // The other door — "Add a comment" at the foot of the thread —
+              // pins the post instead. An applicant's stands at the disabled
+              // opacity and stays tappable (ReplyEntry.md:29).
+              <button
+                type="button"
+                {...testAttributes(part(card, "actionRow.reply"), `comment-reply-${comment.id}`)}
+                onClick={() => openComposer(commentTarget(comment))}
+                className={`${buttonClassName({ variant: "text", size: "sm" })}${applicant ? " opacity-[var(--state-disabled)]" : ""}`}
               >
                 Reply
-              </Button>
+              </button>
             )}
           </div>
           {/* THE ROW LINE under the face (RowSigning.md): a save or unsave of
@@ -1112,7 +1110,9 @@ export function CommentsSheet({
                   type="button"
                   data-testid="comment-add"
                   onClick={() => openComposer(postTarget(post))}
-                  className="cg-state cg-focus min-h-14 flex-1 rounded-extra-small border border-outline px-3 text-left text-body-large text-on-surface-variant"
+                  // An applicant's stands at the disabled opacity, still
+                  // tappable (ReplyEntry.md:27).
+                  className={`cg-state cg-focus min-h-14 flex-1 rounded-extra-small border border-outline px-3 text-left text-body-large text-on-surface-variant${applicant ? " opacity-[var(--state-disabled)]" : ""}`}
                 >
                   Add a comment
                 </button>

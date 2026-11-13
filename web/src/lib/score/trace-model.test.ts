@@ -82,6 +82,25 @@ describe("level one (FeedEntry.md)", () => {
     expect(levelOne(answer, false).drawn.map((row) => row.value)).toEqual(["−0.50", "+1.50"]);
   });
 
+  it("a_tiny_path_prints_in_significant_digits_the_rest_in_cents", () => {
+    const answer: TraceAnswer = {
+      score: 1.5031,
+      paths: [
+        { ...ownAnswer().paths[0]!, contribution: 1.5 },
+        { ...ownAnswer().paths[1]!, contribution: 0.0031 },
+      ],
+    };
+    expect(levelOne(answer, true).drawn.map((row) => row.value)).toEqual(["+1.50", "+0.0031"]);
+  });
+
+  it("a_tiny_path_reads_the_same_on_its_own_level_what_it_adds", () => {
+    const answer: TraceAnswer = {
+      score: 0.0031,
+      paths: [{ ...ownAnswer().paths[0]!, contribution: 0.0031 }],
+    };
+    expect(pathValue(answer, 0)).toBe("+0.0031");
+  });
+
   it("a path reads the same value on the list and on its own level", () => {
     expect(pathValue(ownAnswer(), 0)).toBe("+6.80");
   });
@@ -195,13 +214,13 @@ describe("level three (RankHop.md)", () => {
   const ada = ownAnswer().paths[0]!;
   const first = stepsOf(ada)[0]!;
 
-  it("the note names the step by its title and its place", () => {
-    expect(placeNote("Your opinion of @ada", 1, 2)).toBe("Your opinion of @ada — the first of this path's two steps.");
+  it("the note names the step by its title alone", () => {
+    expect(placeNote("Your opinion of @ada")).toBe("Your opinion of @ada");
   });
 
-  it("the fold's note reads in the reader's own word, with the pad", () => {
+  it("the fold's note reads in the reader's own word, and leaves the pad out", () => {
     expect(foldNote(ada, first, own)).toBe(
-      "You have given @ada two opinions. They add up to one, and that one is what carries — the same adding up the pad shows you as your current opinion.",
+      "You have given @ada two opinions. They add up to one, and that one is what carries.",
     );
   });
 

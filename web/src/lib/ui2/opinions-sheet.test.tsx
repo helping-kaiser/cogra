@@ -140,7 +140,7 @@ describe("OpinionsSheet", () => {
     expect(screen.queryByTestId("opinions-sheet-empty")).toBeNull();
     rerender(<OpinionsSheet open onClose={() => {}} on="comment" opinions={[]} />);
     const empty = screen.getByTestId("opinions-sheet-empty");
-    expect(empty).toHaveTextContent("No opinions yet — yours would be the first.");
+    expect(empty).toHaveTextContent(/^No opinions yet$/);
     expect(empty.innerHTML).not.toMatch(/error/);
   });
 });

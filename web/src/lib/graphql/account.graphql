@@ -43,6 +43,14 @@ query Me {
   }
 }
 
+# THE READER'S ACCOUNT STATE AS THE CACHE HOLDS IT — never sent, only
+# watched (`account-preferences-sync.tsx`): every later `me` read writes
+# it into the account's own entry, so the doors open once one says member.
+fragment ReaderAccountState on User {
+  id
+  accountState
+}
+
 mutation DismissVouchBack {
   dismissVouchBack {
     user {

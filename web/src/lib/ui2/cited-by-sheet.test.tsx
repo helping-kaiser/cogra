@@ -121,7 +121,7 @@ describe("CitedBySheet", () => {
   it("says the empty line rather than nothing — the comment's door is the only way here", () => {
     render(<CitedBySheet open onClose={() => {}} artifacts={[]} />);
     expect(screen.getByTestId("cited-by-sheet-empty")).toHaveTextContent(
-      "Nothing cites this yet — yours would be the first.",
+      /^Nothing cites this yet$/,
     );
   });
 

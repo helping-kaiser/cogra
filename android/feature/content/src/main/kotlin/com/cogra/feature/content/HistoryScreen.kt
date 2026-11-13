@@ -132,11 +132,12 @@ private val HISTORY = DataNode("history")
 /** History's post card: the feed's own, keyed by the post's id as the feed keys it. */
 private val HISTORY_PLACEMENT = CardPlacement(
     card = HISTORY / "card",
-    // No sheet of History's is drawn: the card's menu and terms keep their tags.
-    menuSheet = null,
+    // THE CARD'S ⋮ RAISES `history.menuSheet` (HistoryPostMenu, HistoryPostMenuOwn);
+    // no terms sheet of History's is registered, so the terms keep their tags.
+    menuSheet = HISTORY / "menuSheet",
     licenseSheet = null,
     tag = "history",
-    menuRows = emptySet(),
+    menuRows = POST_MENU_ROWS,
 )
 
 /** The report confirm over History — no History board draws one, so it keeps its tag. */

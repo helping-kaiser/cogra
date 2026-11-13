@@ -87,7 +87,7 @@ import { SearchBar } from "@/lib/ui2/search-bar";
 import { SectionLabel } from "@/lib/ui2/section-label";
 
 /** HistoryEmpty.md:3, verbatim. */
-export const HISTORY_EMPTY = "Nothing here yet. Everything you see shows up here on its own, newest first.";
+export const HISTORY_EMPTY = "Nothing here yet.";
 
 /** HistoryNone.md:3, verbatim — a query nothing seen carries. */
 export const HISTORY_NONE_SEARCH =
@@ -104,9 +104,6 @@ export const SEARCH_YOUR_HISTORY = "Search your history";
 
 /** HistoryFilter.md:3: the sheet's title, and the trigger's purpose. */
 export const WHAT_YOUR_HISTORY_SHOWS = "What your history shows";
-
-/** HistoryFilter.jsx: the kinds section's hint, search's own words (copy-voice). */
-export const KINDS_HINT = "Combine as many as you like. All, until you narrow it.";
 
 /** HistorySearch.md:3, :11 — the sections' captions. */
 export const PROFILES = "Profiles";
@@ -627,7 +624,7 @@ export function HistoryScreen({
         node={{ path: "history.filterSheet" }}
         rows
       >
-        <FilterSection label="Kinds" hint={KINDS_HINT} node={{ path: "history.filterSheet.kinds" }}>
+        <FilterSection label="Kinds" node={{ path: "history.filterSheet.kinds" }}>
           {HISTORY_KINDS.map((kind) => (
             <Chip
               key={kind.value}
