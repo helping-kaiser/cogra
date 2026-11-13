@@ -57,8 +57,6 @@
     <ID>MagicNumber:KeyBackup.kt:RecoveryCode.Companion$5</ID>
     <ID>MagicNumber:KeyBackup.kt:RecoveryCode.Companion$8</ID>
     <ID>MagicNumber:KeyExport.kt:32</ID>
-    <ID>MagicNumber:Wire.kt:3UL</ID>
-    <ID>MagicNumber:Wire.kt:3u</ID>
     <ID>MagicNumber:Wire.kt:4UL</ID>
     <ID>MagicNumber:Wire.kt:4u</ID>
     <ID>MagicNumber:Wire.kt:9UL</ID>
@@ -68,9 +66,7 @@
     <ID>ThrowsCount:Identifiers.kt:ActId.Companion$fun parse: ActId</ID>
     <ID>ThrowsCount:KeyBackup.kt:RecoveryCode.Companion$fun fromInput: RecoveryCode</ID>
     <ID>ThrowsCount:KeyBackup.kt:fun openKeyBackup: ByteArray</ID>
-    <ID>ThrowsCount:Wire.kt:fun decodePreCommitment: PreCommitment</ID>
     <ID>ThrowsCount:Wire.kt:fun decodeProposal: Proposal</ID>
-    <ID>ThrowsCount:Wire.kt:fun decodeVerifiedAct: VerifiedAct</ID>
     <ID>ThrowsCount:Wire.kt:private fun decodeBody: StructuralBody</ID>
   </CurrentIssues>
 </SmellBaseline>
