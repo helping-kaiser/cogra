@@ -781,9 +781,13 @@ pinned to the offending field (`handle` / `email`).
    single-use, short-lived (default 15 min) reset token and
    emails it as a link.
 3. The user clicks the link; the app checks it first, read-only
-   (`passwordResetLinkCheck`), and a link already used or past its
-   time opens the expired-link screen instead of the form. On a live
-   link the user submits a new password (subject to
+   (`passwordResetLink`), and a link already used or past its
+   time opens the expired-link screen instead of the form. A live
+   link's check names the account's login email — only a live one;
+   every dead link answers alike — and the form carries it in a
+   hidden username field, so a password manager files the new
+   password under the right account. The email is never in the link.
+   On a live link the user submits a new password (subject to
    the requirements above). The server validates the token,
    rotates the password hash, and revokes all existing refresh
    tokens for the account — password change is a security event.
@@ -1176,7 +1180,8 @@ limits survive restarts and hold across instances.
   limited — it only deletes the caller's own rows.
 - Token confirmations (`verifyEmail`, `confirmPasswordReset`,
   `confirmEmailChange`, `confirmAccountDeletion`) and the reset link's
-  read-only check (`passwordResetLinkCheck`) — one per-IP budget. The
+  read-only checks (`passwordResetLink`, `passwordResetLinkCheck`) —
+  one per-IP budget. The
   tokens are high-entropy; the budget bounds guessing anyway, and a
   check that answered for free would be a guessing oracle beside it.
 
