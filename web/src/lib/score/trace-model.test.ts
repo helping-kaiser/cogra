@@ -82,6 +82,17 @@ describe("level one (FeedEntry.md)", () => {
     expect(levelOne(answer, false).drawn.map((row) => row.value)).toEqual(["−0.50", "+1.50"]);
   });
 
+  it("a_tiny_path_prints_in_significant_digits_the_rest_in_cents", () => {
+    const answer: TraceAnswer = {
+      score: 1.5031,
+      paths: [
+        { ...ownAnswer().paths[0]!, contribution: 1.5 },
+        { ...ownAnswer().paths[1]!, contribution: 0.0031 },
+      ],
+    };
+    expect(levelOne(answer, true).drawn.map((row) => row.value)).toEqual(["+1.50", "+0.0031"]);
+  });
+
   it("a path reads the same value on the list and on its own level", () => {
     expect(pathValue(ownAnswer(), 0)).toBe("+6.80");
   });
