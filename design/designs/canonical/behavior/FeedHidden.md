@@ -1,6 +1,6 @@
 # FeedHidden · `spec:design:behavior-feed-hidden`
 
-WHEN tap Hide on a person in the reader's post menu opened from a feed card -> the sheet closes AND that person's rows leave the feed AND the rows behind them move up AND the snackbar reads @ada is hidden — their posts stay out of your feed. with Undo AND NEVER a confirm step appears
+WHEN tap Hide on a person in the reader's post menu opened from a feed card -> the sheet closes AND that person's rows leave the feed AND the rows behind them move up AND the snackbar reads @ada is hidden. with Undo AND NEVER a confirm step appears
 
 ALWAYS nothing marks the space a hidden person's rows left in the feed
 

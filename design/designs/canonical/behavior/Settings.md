@@ -22,6 +22,18 @@ ALWAYS the theme follows the device's own light-or-dark setting GIVEN Auto is ch
 
 ALWAYS one of The pad, Sliders and Typed values stands selected
 
+ALWAYS settings.stance.help and settings.reading.help, a "?" each, trail their section's heading — the page's only "?", the one-per-screen law's Settings exception (jakob 2026-11-12)
+
+ALWAYS The pad and Sliders carry no second line, their background standing behind settings.stance.help
+
+WHEN tap settings.stance.help -> the dialog Giving an opinion opens over the page with Three ways to give an opinion: the pad opens on a tap, and you drift to where it feels right; sliders give each side of the opinion its own slider; typed values take both numbers exactly. and Close
+
+WHEN tap settings.reading.help -> the dialog Reading opens over the page with Every feed starts from what it shows, and a change made inside a feed lasts until you change it back. Both choices stay on this device. and Close
+
+ALWAYS the Reading group carries no footnote, its scope standing behind settings.reading.help
+
+WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN a section's dialog is open -> the dialog closes AND the page stands as it was
+
 WHEN tap The pad, Sliders or Typed values -> that input is how every opinion and every backing is taken, everywhere AND the other two stand unselected AND the choice stays on this device
 
 WHEN tap Confirm multi-action submits -> the switch flips AND NEVER a dialog asks
@@ -40,9 +52,9 @@ WHEN tap Always unveil sensitive content GIVEN the switch is off -> the switch t
 
 WHEN tap Always unveil sensitive content GIVEN the switch is on -> the switch turns off AND sensitive content stays veiled until it is tapped
 
-ALWAYS settings.sensitive.unveil.status reads Off, the veil stays until you tap it. GIVEN the switch is off
+ALWAYS settings.sensitive.unveil carries no second line, on or off
 
-ALWAYS settings.sensitive.unveil.status reads On, sensitive content stands unveiled wherever you read. GIVEN the switch is on
+ALWAYS settings.sensitive carries no footnote: a setting that follows the account never says so
 
 ALWAYS the Sensitive content choice follows the account, never this device alone
 
@@ -138,9 +150,9 @@ ALWAYS settings.backup.footnote reads Your key signs everything you publish and 
 
 ALWAYS settings.backup.footnote reads Your key signs everything you publish and lives only in this browser. Until you make a recovery code, it can't be brought back. on the web and Your key signs everything you publish and lives only in this app. Until you make a recovery code, it can't be brought back. on android GIVEN no recovery code exists
 
-ALWAYS settings.clearing.footnote reads Your key lives only in this browser. Clear CoGra's data here and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in. on the web and Your key lives only in this app. Clear the app's data, or uninstall it without keeping the data, and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in. on android GIVEN a recovery code exists
+ALWAYS settings.clearing.footnote reads Clear CoGra's data here and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. on the web and Clear the app's data, or uninstall it without keeping the data, and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. on android GIVEN a recovery code exists
 
-ALWAYS settings.clearing.footnote reads Your key lives only in this browser, and it has no recovery code yet. Clear CoGra's data here and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in. on the web and Your key lives only in this app, and it has no recovery code yet. Clear the app's data, or uninstall it without keeping the data, and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in. on android GIVEN no recovery code exists
+ALWAYS settings.clearing.footnote reads Clear CoGra's data here and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. on the web and Clear the app's data, or uninstall it without keeping the data, and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. on android GIVEN no recovery code exists
 
 ALWAYS settings.clearing.footnote opens on the key and says the account is gone for good before it names anything else that goes
 
@@ -174,9 +186,7 @@ WHEN tap Sign out GIVEN the don't-remember switch is on and this device holds th
 
 WHEN the sign-out has not answered 200ms after the press -> Sign out reads Signing out… in its own place AND NEVER a spinner appears
 
-ALWAYS the deletion group's footnote reads Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you. GIVEN User.deletionPath reads BY_LINK and no deletion is in its grace
-
-ALWAYS the deletion group's footnote reads Nothing is deleted here. The next screen says what goes and what stays. GIVEN User.deletionPath reads IMMEDIATE or LOCKED
+ALWAYS the deletion group carries no footnote
 
 ALWAYS the Delete account row's state reads User.deletionPath, the one value the server computes, and never the application's fields
 
@@ -190,6 +200,22 @@ ALWAYS a handle change closed on while in flight carries its wait and its answer
 
 WHEN tap settings.credentials.handle GIVEN its second line reads Changing handle… -> NEVER the form opens
 
+ALWAYS settings.credentials.handle reads That didn't go through. with Retry in its trailing slot GIVEN a handle change was closed on and did not go through — a handle change's retry needs nothing typed again, unlike the password and email rows, whose tap reopens the form (jakob 2026-11-12)
+
 ALWAYS settings.backup.kept reads That didn't sign. in the failure voice in its second line followed by Retry in its trailing slot GIVEN the kept picks' batch was closed on while it signed and did not go through, the row inert apart from its Retry
 
 WHEN tap Retry on settings.backup.kept -> the whole batch is asked to sign again AND each target's row reads Signing… under its face until the batch answers AND NEVER part of the batch is signed alone
+
+ALWAYS settings.credentials.password reads That didn't go through. in the failure voice in its second line, with no Retry, GIVEN a password change was closed on after its press and did not go through
+
+ALWAYS settings.credentials.email reads That didn't go through. in the failure voice under the address the account still has, with no Retry, GIVEN an email change's request, its confirm or an applicant's change was closed on after its press and did not go through
+
+ALWAYS settings.credentials.password reads Changing password… in its second line, the row refusing a second open, GIVEN a password change was closed on after its press and has not answered
+
+ALWAYS settings.credentials.email reads Changing email… in its second line, the row refusing a second open, GIVEN an email change's request or an applicant's change was closed on after its press and has not answered
+
+ALWAYS settings.credentials.email reads Confirming the code… in its second line, the row refusing a second open, GIVEN an email change's confirm was closed on after its press and has not answered
+
+WHEN tap settings.credentials.password GIVEN its second line reads That didn't go through. -> the password change opens AND the line leaves the row AND the form stands at rest AND a refusal about one field, as a wrong current password, stands beside that field in the form's own field-error line
+
+WHEN tap settings.credentials.email GIVEN its second line reads That didn't go through. -> the form that failed opens again AND the line leaves the row AND the form stands at rest AND a refusal about one field, as a wrong current password, stands beside that field in the form's own field-error line

@@ -4,8 +4,6 @@ WHEN tap postDetail.menuSheet.report -> the menu closes AND postDetail.reportShe
 
 ALWAYS postDetail.reportSheet.title names the thing: Report this post? over a post, Report this comment? over a comment, Report @ada? on a person and Report this account? on a deleted account
 
-ALWAYS postDetail.reportSheet.body reads It goes to the people who run CoGra for a look.
-
 ALWAYS the surface the menu's Report row was opened from stands unchanged beneath the sheet, the thread's own sheet included
 
 WHEN tap postDetail.reportSheet.report -> the sheet closes AND the report goes out AND the snackbar reads Reported. AND NEVER ReportProblem opens AND NEVER a mark lands on the reported thing

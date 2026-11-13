@@ -141,20 +141,6 @@ export function PickedSheet({ open = false, onClose, items = [], onDone, inline 
           </div>
         ))}
       </div>
-      <p
-        style={{
-          margin: 0,
-          padding: "var(--space-3) var(--space-6) 0",
-          fontSize: "var(--text-label-small)",
-          fontWeight: "var(--text-label-small--font-weight)",
-          lineHeight: "var(--text-label-small--line-height)",
-          letterSpacing: "var(--text-label-small--letter-spacing)",
-          color: "var(--text-secondary)",
-        }}
-        data-node={part("note")}
-      >
-        The first one is the cover.
-      </p>
       <div style={{ display: "flex", justifyContent: "flex-end", padding: "var(--space-2) var(--space-4) var(--space-2)" }}>
         <Button variant="text" onClick={onDone ?? onClose} node={part("done")}>
           Done

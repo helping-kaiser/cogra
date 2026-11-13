@@ -27,9 +27,9 @@ import { Icon } from "../navigation/Icon.jsx";
 
    WHICH IS WHY `stageLabel` AND `help` ARE SLOTS OF THEIR OWN (item 17, the
    conformance round). "Passive trailing info" turned out to be one thing in
-   practice: on every seal in the system — the post's, the reply's, the
-   picture's, the profile's, the address's, the wallet change's — it is the
-   stage's name and the screen's one "?", in that order. Six boards were
+   practice: on every seal in the system it was the stage's name and the
+   screen's one "?", in that order — and the canonical seals now carry the
+   "?" alone (jakob 2026-11-12: `What you sign` already says it is the end). Six boards were
    assembling that pair by hand through the generic slot, which is six chances
    for the gap, the colour or the wrap to drift. The header now names it.
 

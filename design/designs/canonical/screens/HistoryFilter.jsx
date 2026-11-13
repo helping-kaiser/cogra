@@ -60,7 +60,7 @@ export function Screen() {
 
       <BottomSheet open ariaLabel="What your history shows" node="filterSheet">
         <SheetTitle node="title">What your history shows</SheetTitle>
-        <FilterSection label="Kinds" hint="Combine as many as you like. All, until you narrow it." node="kinds">
+        <FilterSection label="Kinds" node="kinds">
           {FEED_KINDS.map((kind) => (
             <Chip key={kind.value} label={kind.label} selected={false} node={`${kind.value}Chip`} />
           ))}

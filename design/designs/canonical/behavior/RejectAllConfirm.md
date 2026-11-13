@@ -36,8 +36,10 @@ WHEN tap the scrim, press the system's Back or press Escape GIVEN Close them was
 
 WHEN press Close them -> Keep them reads Close in its place from the press itself, filled and live AND NEVER Close dims
 
-WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN Close them was pressed and has not answered -> the dialog closes AND the closing goes on AND the group's own rows on Invites reads Closing them… in the pending marker's quiet register until it answers AND NEVER the closing is cancelled
+WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN Close them was pressed and has not answered -> the dialog closes AND the closing goes on AND one line under the group's label on Invites reads Closing them… in the pending marker's quiet register until it answers AND NEVER the closing is cancelled
 
 WHEN the closing is taken GIVEN the dialog was closed while it answered -> the line goes AND every application still waiting on that link leaves this list AND each person is told
 
-WHEN the closing does not go through GIVEN the dialog was closed while it answered -> the group's own rows on Invites stands as it was AND says That didn't sign. in the failure voice followed by Retry, which asks the same act again, AND NEVER the snackbar carries the failure
+WHEN the closing does not go through GIVEN the dialog was closed while it answered -> the group and its rows on Invites stand as they were AND one line under the group's label reads That didn't sign. in the failure voice followed by Retry, which asks the whole closing again, AND NEVER a row carries a line of its own AND NEVER the snackbar carries the failure
+
+ALWAYS the failed group closing says it once, in one line under the group's label where Close all stands, never once per row

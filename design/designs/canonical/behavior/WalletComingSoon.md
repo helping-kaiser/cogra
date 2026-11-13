@@ -1,6 +1,6 @@
 # WalletComingSoon · `spec:design:behavior-wallet-coming-soon`
 
-WHEN tap wallet.bottomBar.walletSlot -> the Wallet tab's root opens, wallet.comingSoonCard reading Wallet — coming soon and Your earnings will be here. AND wallet.bottomBar.walletSlot stands selected AND NEVER the tap does nothing
+WHEN tap wallet.bottomBar.walletSlot -> the Wallet tab's root opens, wallet.comingSoonCard reading Wallet — coming soon and nothing more AND wallet.bottomBar.walletSlot stands selected AND NEVER the tap does nothing
 
 ALWAYS the wallet's coming-soon page serves every reader state with one face: a member, a member whose key is elsewhere, an applicant, a turned-down applicant and a guest
 

@@ -353,6 +353,15 @@
       "page": "entry"
     },
     {
+      "file": "ResetNewErrors.dc.html",
+      "title": "Set a new password · the errors in place",
+      "x": 2400,
+      "y": 6168,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "InviteEntryError.dc.html",
       "title": "Enter your invite · that isn't a link",
       "x": 480,
@@ -983,6 +992,15 @@
       "page": "compose"
     },
     {
+      "file": "RemovedOther.dc.html",
+      "title": "Removed by its author · another's post",
+      "x": 5760,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
       "file": "EditActs.dc.html",
       "title": "Edit · the actions",
       "x": 1920,
@@ -1442,6 +1460,24 @@
       "page": "feed"
     },
     {
+      "file": "FeedRemovedMenu.dc.html",
+      "title": "Feed · a removed post's menu",
+      "x": 12480,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "FeedRemovedMenuOwn.dc.html",
+      "title": "Feed · your removed post's menu",
+      "x": 12960,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "FeedWordsSensitive.dc.html",
       "title": "Feed · a words-only post, veiled",
       "x": 8160,
@@ -1812,9 +1848,9 @@
     },
     {
       "file": "MapCompose.dc.html",
-      "x": -3900,
+      "x": -4190,
       "y": 0,
-      "w": 3480,
+      "w": 3770,
       "h": 4864,
       "page": "compose",
       "title": "Compose · flow map"
@@ -1824,16 +1860,16 @@
       "x": -5640,
       "y": 0,
       "w": 5220,
-      "h": 3601,
+      "h": 3605,
       "page": "comments",
       "title": "Comments · flow map"
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -7960,
+      "x": -8540,
       "y": 0,
-      "w": 7540,
-      "h": 5545,
+      "w": 8120,
+      "h": 5502,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1896,7 +1932,7 @@
       "x": -5930,
       "y": 0,
       "w": 5510,
-      "h": 8803,
+      "h": 9489,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -2058,6 +2094,15 @@
       "title": "Settings · change your password",
       "x": 2400,
       "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ChangePasswordErrors.dc.html",
+      "title": "Settings · change your password · the errors in place",
+      "x": 7680,
+      "y": 2988,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -3009,7 +3054,7 @@
       "x": -340,
       "y": 4240,
       "w": 290,
-      "text": "ENTRY · Sign in & restore\n\nSign in (with the APK line), password reset (no account enumeration; reset revokes every session), restoring the key, and the key-elsewhere banner. 'Restore your key' and 'Key elsewhere' carry a wording tweak: browser ('on this browser') vs app ('in this app') — the Android app says app, the web says browser. Login restores the service session; only the recovery code restores the key. The code is read folded (case, dashes and I/L/O never matter); a wrong length is named, every other failure is one line. An account with no backup gets a card with no restore — the way the key can come instead; an applicant whose key was made elsewhere may restore it or make a new one.",
+      "text": "ENTRY · Sign in & restore\n\nSign in (with the APK line), password reset (no account enumeration; reset revokes every session), restoring the key, and the key-elsewhere banner. 'Key elsewhere' carries a wording tweak: browser ('on this browser') vs app ('in this app') — the Android app says app, the web says browser. Login restores the service session; only the recovery code restores the key. The code is read folded (case, dashes and I/L/O never matter); a wrong length is named, every other failure is one line. An account with no backup gets a card with no restore — the way the key can come instead; an applicant whose key was made elsewhere may restore it or make a new one.",
       "page": "entry"
     },
     {
@@ -3025,7 +3070,7 @@
       "x": -340,
       "y": 0,
       "w": 290,
-      "text": "COMPOSE · The wizard\n\nBody first (the Instagram/YouTube spine): pick the body → crop → (cover, video only) → details → the seal; 'Write words instead' is the text path and skips crop and cover. The body is words OR what you show, never both. The pick screen: a PICKED TRAY on top (one line, 'Show all' on overflow) over the newest-first grid; the grid's first tile opens the device's own photos app, and picks made there land in the tray. THE CROP (Instagram's model): one shape for the whole post — Tall 4:5, Square 1:1, or Wide 1.91:1 — with drag-to-move and pinch-to-zoom per picture; 4:5 as the tallest shape is what guarantees the post ladder's height cap. Screens carry no step numbers (paths differ in length; the title names the stage, only the seal says 'Last step'). COPY RULE (2026-08-27): captions are one short line; the full explanation lives behind a small ? that opens a plain dialog — AT MOST ONE ? PER SCREEN, top-right of the header (or of the sheet/card it explains: the pads carry their own). It covers every compose explainer: cost and the community pool, the all-or-nothing batch, license terms and immutability, the stance side effects, the pending lifecycle, edit history. BUTTONS: filled and outlined pills carry 24px side padding and a 64px minimum width, so short labels (Next, Set, Done) keep their weight. The example everywhere: 1 post + 2 topics + 1 reference = 4 signed actions.",
+      "text": "COMPOSE · The wizard\n\nBody first (the Instagram/YouTube spine): pick the body → crop → (cover, video only) → details → the seal; 'Write words instead' is the text path and skips crop and cover. The body is words OR what you show, never both. The pick screen: a PICKED TRAY on top (one line, 'Show all' on overflow) over the newest-first grid; the grid's first tile opens the device's own photos app, and picks made there land in the tray. THE CROP (Instagram's model): one shape for the whole post — Tall 4:5, Square 1:1, or Wide 1.91:1 — with drag-to-move and pinch-to-zoom per picture; 4:5 as the tallest shape is what guarantees the post ladder's height cap. Screens carry no step numbers (paths differ in length; the title names the stage). COPY RULE (2026-08-27): captions are one short line; the full explanation lives behind a small ? that opens a plain dialog — AT MOST ONE ? PER SCREEN, top-right of the header (or of the sheet/card it explains: the pads carry their own). It covers every compose explainer: cost and the community pool, the all-or-nothing batch, license terms and immutability, the stance side effects, the pending lifecycle, edit history. BUTTONS: filled and outlined pills carry 24px side padding and a 64px minimum width, so short labels (Next, Set, Done) keep their weight. The example everywhere: 1 post + 2 topics + 1 reference = 4 signed actions.",
       "page": "compose"
     },
     {
@@ -3065,7 +3110,7 @@
       "x": -340,
       "y": 0,
       "w": 640,
-      "text": "THE ? CONTENTS — each ? opens a plain dialog (see 'The ? dialog' board): title, at most two short paragraphs, Close; a stance pad's ? shows its text in place, in the pad. The copy, verbatim:\n\nSEAL (post + reply) · 'How signing works': Each piece of a post — the post itself, every tag, every citation — is signed on its own, in your name. They sign together: all of them land, or none does. / Each signing is paid for — the cost is real, so each one still counts.\n\nLICENSE SHEET · 'The license': Terms for anyone who reuses what you publish — credit, and a public record of use. They are not a statement about how you made it. / The license is set when the post is first signed and can never change, not even by an edit. Your default lives in settings — Public domain until you change it.\n\nSENSITIVE SHEET · 'Marking as sensitive': The mark veils the pictures and the words until a reader chooses to look. The title stays readable, so choosing is informed. / Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.\n\nKEY ABSENT · 'Your key' (the seal and the two settings screens — on the stance pad, whose notice already says signing needs the key and the code restores it, the dialog reads Your key lives where you made it or last restored it, never held by CoGra — nothing is signed in your name without it. / Your recovery code brings it here. A pick you keep waits on this browser until then, and you review every kept pick before it's signed.): Signing needs your key, and it isn't on this browser — nothing is signed without it. / A recovery code brings the key to any device. Until it's here, anything waiting on it stays on this device.\n\nWRITE RULE · 'Why signing waits' (the seal and the stance pad — the pad's dialog drops the draft clause, and a reply's seal ends it with your reply is still here): There's a limit to how many signed actions can go through in a short time — it keeps the network safe from flooding. You've hit it for now. / Nothing was signed or spent, and your draft is kept. Try again in a little while.\n\nPOST PAD · 'Your backing on your post' (the seal's pad and a post edit's): Publishing also signs your backing of your own post — for or against, from a gentle 🙂 (+0.10) by default. An edit adds to it, starting at nothing, so an edit you don't adjust leaves it as it is. / How much of it reaches you isn't part of publishing: once the post is out, give it an opinion on its face, like anyone's. Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nREPLY PAD · 'Toward what you answer': Replying also signs an opinion on what you answer — for or against, and how much of it reaches you. It starts at a gentle 🙂 (+0.10 / +0.10) and rides the same signature as your reply. / Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nVOUCH-BACK PAD · 'Your vouch back': Vouching back signs your opinion of the person who vouched you in, and your feed grows from it. / The pad is how you shape what reaches you — for or against, and how much. Nothing is signed until Set.\n\nVOUCHING PADS · 'How vouching works' (the approval pad and the ask link's pad, in place): A link lets someone make an account. Your vouch — the opinion you sign when you approve them — is what brings them in. / Nothing is signed until Set.\n\nEDIT · 'Editing': An edit signs a full new version on top; earlier versions stay public under 'Edited'. An edit never bumps it as new. / Tag and citation changes ride the same signing, each as its own signed action. The license never changes.\n\nCITE · 'Citing': A citation is its own signed action and carries an opinion of what you cite. You can cite a post, a comment or a person. / A comment can also be cited from itself — open its menu and choose 'Cite in a new post'.\n\nSEARCH · 'Searching' (the Explore tab and the citing picker): Search reads names, handles and titles, never bodies. Start with @ to find people by their handle — what they made follows them. Start with # to find tags and what carries them. / Results put what's closest to you first — the numbers are your view, no one else's. Below the line, what's still beyond your reach, newest first. Your searches stay on this device.\n\nFILTER SHEET · 'The filter' (the feed's and search's sheets; the seen sentence is the surface's own, jakob 2026-10-14): What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and — on the feed — what you've already seen waits below the Already seen line unless you ask for it back; on search, what you've already seen stays out unless you ask for it back. Nothing changes until you press Done, and nothing here is signed or shared. / It lasts until you change it, on this device only. Reset brings back your defaults, to change them go to settings.\n\nDESCRIBE SHEET · 'Describing pictures': A description is read aloud by screen readers and shown when a picture can't load — plain words about what's there. It travels with the picture, public like the rest of the post. A video takes one description for the whole clip; its cover takes none of its own. / Nothing is described for you: a picture without a description is skipped by screen readers, never guessed at.\n\nPROFILE-PICTURE SEAL · 'Changing your picture': Your profile is a public record, and changes to it are signed actions in your name. / The signing is paid for, like your posts. The record that you changed it stays, like every signed action.",
+      "text": "THE ? CONTENTS — each ? opens a plain dialog (see 'The ? dialog' board): title, at most two short paragraphs, Close; a stance pad's ? shows its text in place, in the pad. The copy, verbatim:\n\nSEAL (post + reply) · 'How signing works': Each piece of a post — the post itself, every tag, every citation — is signed on its own, in your name. They sign together: all of them land, or none does. / Each signing is paid for — the cost is real, so each one still counts.\n\nLICENSE SHEET · 'The license': Terms for anyone who reuses what you publish — credit, and a public record of use. They are not a statement about how you made it. / The license is set when the post is first signed and can never change, not even by an edit. Your default lives in settings — Public domain until you change it.\n\nSENSITIVE SHEET · 'Marking as sensitive': The mark veils the pictures and the words until a reader chooses to look. The title stays readable, so choosing is informed. / Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.\n\nKEY ABSENT · 'Your key' (the seal and the two settings screens — on the stance pad, whose notice already says signing needs the key and the code restores it, the dialog reads Your key lives where you made it or last restored it, never held by CoGra — nothing is signed in your name without it. / Your recovery code brings it here. A pick you keep waits on this browser until then, and you review every kept pick before it's signed.): Signing needs your key, and it isn't on this browser — nothing is signed without it. / A recovery code brings the key to any device. Until it's here, anything waiting on it stays on this device.\n\nWRITE RULE · 'Why signing waits' (the seal and the stance pad — the pad's dialog drops the draft clause, and a reply's seal ends it with your reply is still here): There's a limit to how many signed actions can go through in a short time — it keeps the network safe from flooding. You've hit it for now. / Nothing was signed or spent, and your draft is kept. Try again in a little while.\n\nPOST PAD · 'Your backing on your post' (the seal's pad and a post edit's): Publishing also signs your backing of your own post — for or against, from a gentle 🙂 (+0.10) by default. An edit adds to it, starting at nothing, so an edit you don't adjust leaves it as it is. / How much of it reaches you isn't part of publishing: once the post is out, give it an opinion on its face, like anyone's. Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nREPLY PAD · 'Toward what you answer': Replying also signs an opinion on what you answer — for or against, and how much of it reaches you. It starts at a gentle 🙂 (+0.10 / +0.10) and rides the same signature as your reply. / Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nVOUCH-BACK PAD · 'Your vouch back': Vouching back signs your opinion of the person who vouched you in, and your feed grows from it. / The pad is how you shape what reaches you — for or against, and how much. Nothing is signed until Set. / Later, tap the small face under a post to open this — press and hold it instead and a gentle 🙂 (+0.10 / +0.10) is signed on the spot. / Prefer sliders or exact numbers? Swap the input in settings.\n\nVOUCHING PADS · 'How vouching works' (the approval pad and the ask link's pad, in place; on the empty Invites, beside Create invite, a dialog with the first paragraph alone): A link lets someone make an account. Your vouch — the opinion you sign when you approve them — is what brings them in. / Nothing is signed until Set.\n\nEDIT · 'Editing': An edit signs a full new version on top; earlier versions stay public under 'Edited'. An edit never bumps it as new. / Tag and citation changes ride the same signing, each as its own signed action. The license never changes.\n\nCITE · 'Citing': A citation is its own signed action and carries an opinion of what you cite. You can cite a post, a comment or a person. / A comment can also be cited from itself — open its menu and choose 'Cite in a new post'.\n\nSEARCH · 'Searching' (the Explore tab and the citing picker): Search reads names, handles and titles, never bodies. Start with @ to find people by their handle — what they made follows them. Start with # to find tags and what carries them. / Results put what's closest to you first — the numbers are your view, no one else's. Below the line, what's still beyond your reach, newest first. Your searches stay on this device.\n\nFILTER SHEET · 'The filter' (the feed's and search's sheets; the seen sentence is the surface's own, jakob 2026-10-14): What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and — on the feed — what you've already seen waits below the Already seen line unless you ask for it back. Nothing changes until you press Done, and nothing here is signed or shared. Ranked puts what's closest to you first — your view, no one else's. Newest ignores it and lists by time. / It lasts until you change it, on this device only. Reset brings back your defaults, to change them go to settings. How sensitive content is veiled is set in Settings.\n\nSETTINGS · 'Giving an opinion' (beside the section's heading): Three ways to give an opinion: the pad opens on a tap, and you drift to where it feels right; sliders give each side of the opinion its own slider; typed values take both numbers exactly.\n\nSETTINGS · 'Reading' (beside the section's heading): Every feed starts from what it shows, and a change made inside a feed lasts until you change it back. Both choices stay on this device.\n\nDESCRIBE SHEET · 'Describing pictures': A description is read aloud by screen readers and shown when a picture can't load — plain words about what's there. It travels with the picture, public like the rest of the post. A video takes one description for the whole clip; its cover takes none of its own. / Nothing is described for you: a picture without a description is skipped by screen readers, never guessed at.\n\nPROFILE-PICTURE SEAL · 'Changing your picture': Your profile is a public record, and changes to it are signed actions in your name. / The signing is paid for, like your posts. The record that you changed it stays, like every signed action.",
       "page": "patterns"
     },
     {
@@ -3097,7 +3142,7 @@
       "x": -340,
       "y": 1060,
       "w": 290,
-      "text": "FEED · The filter (item 19, growing item 4). The trigger sits on the CograBand's right edge — the band never spends its full width on identity alone — and scrolls away and back with it. EVERY feed view wears it, guests and applicants too: filtering is a read control. The trigger speaks deviations only ('Posts' at rest; 'Posts · photos · newest' when flipped; past the pill's budget the extras collapse to a count — '3 kinds · 4 changes', the far-from-default board). The sheet: four kinds that combine, the ones V1.0 serves (Posts, Comments, Profiles, Tags — readme §13, the V1.0 scope cut) — ONE list shared with search, 'Profiles' everywhere — forms of post, the Order section (Ranked/Newest + 'Show what you've already seen', DEFAULT OFF: what you've seen stays out until asked back; impression-based, device-local, shared transiently with the viewer's ranker; identical section on search), what else is admitted, Reset, and the sheet's own '?' (The filter dialog — names the settings default). The chips stage and Done commits — one re-query per visit; the scrim, a swipe down and Back discard (the sheet law). Everything off is allowed: the feed's empty state answers, not the chip.",
+      "text": "FEED · The filter (item 19, growing item 4). The trigger sits on the CograBand's right edge — the band never spends its full width on identity alone — and scrolls away and back with it. EVERY feed view wears it, guests and applicants too: filtering is a read control. The trigger speaks deviations only ('Posts' at rest; 'Posts · photos · newest' when flipped; past the pill's budget the extras collapse to a count — '3 kinds · 4 changes', the far-from-default board). The sheet: four kinds that combine, the ones V1.0 serves (Posts, Comments, Profiles, Tags — readme §13, the V1.0 scope cut) — ONE list shared with search, 'Profiles' everywhere — forms of post, the Order section (Ranked/Newest + 'Show what you've already seen', DEFAULT OFF: what you've seen stays out until asked back; impression-based, the reader's own record, cut on the device and leaving it only for an outside ranker the reader picks; identical section on search), what else is admitted, Reset, and the sheet's own '?' (The filter dialog — names the settings default). The chips stage and Done commits — one re-query per visit; the scrim, a swipe down and Back discard (the sheet law). Everything off is allowed: the feed's empty state answers, not the chip.",
       "page": "feed"
     },
     {
@@ -3153,7 +3198,7 @@
       "x": -340,
       "y": 2120,
       "w": 290,
-      "text": "COMMENTS · Removing your own comment\n\nIN V1.0 (jakob 2026-10-01): the erasure half at comment scale, drawn in the post's own idiom. Your own comment's ⋮ opens the reader's sheet with REMOVE joined as the last of the acts — after Save and Cite, before the two readings, the license closing it; no Edit row (the card carries Edit) and no sensitive row (the mark rides the edit). Remove raises the post's think-twice dialog with the nouns swapped: the safe action filled, the removal a text button, no error colour. Removal takes the payload, never the record (comment.md §5): the comment keeps its place in the thread, its author and its time, and 'Removed by its author' stands where its words were. The replies beneath keep their parent and stay readable — removal never breaks a thread, and nothing disappears in silence. Like a removed post, the removed comment has no menu left. Boards: your own comment's menu · remove, think twice · your comment, removed.",
+      "text": "COMMENTS · Removing your own comment\n\nIN V1.0 (jakob 2026-10-01): the erasure half at comment scale, drawn in the post's own idiom. Your own comment's ⋮ opens the reader's sheet with REMOVE joined as the last of the acts — after Save, Cite and Edit, before the two readings, the license closing it — Edit is a row of this menu, never a button on the card (round 41) — and no sensitive row (the mark rides the edit). Remove raises the post's think-twice dialog with the nouns swapped: the safe action filled, the removal a text button, no error colour. Removal takes the payload, never the record (comment.md §5): the comment keeps its place in the thread, its author and its time, and 'Removed by its author' stands where its words were. The replies beneath keep their parent and stay readable — removal never breaks a thread, and nothing disappears in silence. The removed comment has no menu left. Boards: your own comment's menu · remove, think twice · your comment, removed.",
       "page": "comments"
     },
     {
@@ -3162,7 +3207,7 @@
       "y": 3616,
       "w": 290,
       "page": "feed",
-      "text": "THE POST SCORE’S DRILL-DOWN (jakob 2026-09-11, backlog item 13). Four levels — the paths, one path, one step, the records behind it — each carrying a small cover of the post it came from. The register is paths and people, never a chart: a bar would turn a reader’s own connections into a statistic about the post. Level one shows the strongest handful and a quiet row that unfolds the rest in place (never a second page), and that row carries what they add, so the drawn figures still sum to the score. The fifth board is the same screen when the trace's fetch finds no paths — the dash and a quiet line — or for a thing still settling."
+      "text": "THE POST SCORE’S DRILL-DOWN (jakob 2026-09-11, backlog item 13). Four levels — the paths, one path, one step, the records behind it — each carrying a small cover of the post it came from. The register is paths and people, never a chart: a bar would turn a reader’s own connections into a statistic about the post. Level one shows every path, strongest first, one continuous list that is never capped (jakob 2026-11-12), and the drawn figures sum to the score. The fifth board is the same screen when the trace's fetch finds no paths — the dash and a quiet line — or for a thing still settling."
     }
   ],
   "launch": {

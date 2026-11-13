@@ -24,7 +24,16 @@ import { SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
 
    `More` ANSWERS TO 48px (readme §4, the K13 round): `cg-hit` grows its target
    around the word, which keeps its ink. There is no real option; the floor is
-   ruled. */
+   ruled.
+
+   `More` STANDS ONLY WHERE THE WORDS ARE CLAMPED (jakob's finding, seam 276
+   item 2): a description that fits its two lines whole carries no opener. A
+   static render cannot measure, so the board offers it on `PostCard`'s
+   estimate from the same tokens — at `--text-body-small` (0.75rem = 12px)
+   about half an em to the glyph, across the caption's 298px (the 390 frame
+   less its 16 and 76 insets), 298 / 6 ≈ 49 characters to the line. */
+const DESCRIPTION_CLAMP_LINES = 2;
+const CHARS_PER_LINE = 49;
 
 /* THE STREAM'S OWN LINE RIDES AT THE CAPTION'S HEAD (`notice`, jakob
    2026-10-12, the slice-3 round): the last clip's line and the load that did
@@ -89,7 +98,7 @@ export function ReelCaption({ handle, title, description, bottom = 86, onMore, s
           {description}
         </span>
       )}
-      {description && (
+      {description && description.length > DESCRIPTION_CLAMP_LINES * CHARS_PER_LINE && (
         <button
           type="button"
           onClick={onMore ?? (() => {})}

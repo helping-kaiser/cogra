@@ -46,20 +46,6 @@ export function Screen() {
         >
           @noor is already in
         </h1>
-        <p
-          style={{
-            margin: "8px 0 0",
-            fontSize: "var(--text-body-medium)",
-            fontWeight: "var(--text-body-medium--font-weight)",
-            lineHeight: "var(--text-body-medium--line-height)",
-            letterSpacing: "var(--text-body-medium--letter-spacing)",
-            color: "var(--text-secondary)",
-          }}
-          data-node="body"
-        >
-          Someone has vouched them in already, so this ask has nothing left to do.
-        </p>
-
         <div style={{ marginTop: 24 }}>
           <Button variant="text" style={{ width: "100%" }} node="profileDoor">
             See @noor's profile

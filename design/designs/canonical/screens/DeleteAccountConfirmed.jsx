@@ -107,8 +107,7 @@ export function Screen() {
           }}
           data-node="sweepHint"
         >
-          The words and pictures go out of your posts and comments, each leaving its mark. Leave this off and they stay
-          as you wrote them.
+          The words and pictures go out of your posts and comments, each leaving its mark.
         </p>
       </div>
 

@@ -16,12 +16,12 @@ WHEN tap feed.menuSheet.save GIVEN the post is kept -> the sheet closes AND feed
 
 WHEN tap feed.menuSheet.cite -> the post wizard opens fresh at its first stage AND the post rides along unseen until the details stage
 
-WHEN tap feed.menuSheet.hide -> the sheet closes AND that person's rows leave the feed AND the rows behind them move up AND feed.snackbar reads @ada is hidden — their posts stay out of your feed. with Undo AND NEVER a confirm step appears
+WHEN tap feed.menuSheet.hide -> the sheet closes AND that person's rows leave the feed AND the rows behind them move up AND feed.snackbar reads @ada is hidden. with Undo AND NEVER a confirm step appears
 
 WHEN tap feed.menuSheet.license -> the menu closes AND the post's terms come up in feed.licenseSheet over the feed
 
 WHEN tap feed.menuSheet.report -> the menu closes AND feed.reportSheet rises over the feed, feed.reportSheet.title reading Report this post? AND NEVER anything is sent yet
 
-WHEN a guest taps any row of a post's menu, on any host -> the guest gate opens, the profile menu's rule
+WHEN a guest taps Save, Cite in a new post, Hide or Report on a post's menu, on any host -> the guest gate opens AND NEVER License terms raises it
 
 WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND nothing changes

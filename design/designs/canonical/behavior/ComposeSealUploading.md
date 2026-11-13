@@ -26,7 +26,7 @@ WHEN press the header back arrow GIVEN Sign and publish was not pressed -> the d
 
 WHEN press Back GIVEN Sign and publish was not pressed -> the details stage comes back with its uploads running
 
-WHEN press the header X GIVEN Sign and publish was not pressed -> the whole flow is left AND the draft is kept AND the uploads finish quietly AND NEVER a dialog asks
+WHEN press the header X GIVEN Sign and publish was not pressed -> the whole flow is left for where the composer was opened from AND the draft is kept AND the uploads finish quietly AND NEVER a dialog asks
 
 WHEN press Sign and publish GIVEN an upload is running -> Back reads Close in its place from the press itself AND the header X is named Close
 

@@ -31,12 +31,22 @@
    `CommentsThreadSheet`'s `redacted`) — `RedactedContent` in the words'
    place over the thread's own note, the author, the age, the reply and the
    pointer to what it answered kept, no menu's license. Its mark registers as `removalMark` under the card
-   (round 28's promise, seam 259), the card keyed by its id in both copies. */
+   (round 28's promise, seam 259), the card keyed by its id in both copies.
+   The mark carries its removal's date under it (jakob 2026-11-12, the
+   re-ask's seventeenth: "knowing when something was removed is good info"),
+   `removalMark.when`, as the feed's card, the post and the thread's comment
+   draw it — `2h`, the removal's own moment, never the comment's `4d`.
+
+   THE FIRST PAGE'S OTHER MOMENTS (round 45) are the `load` chip,
+   `ProfileTabFirstPage`'s, as on `ProfilePosts`. */
 export const NODE = "profile";
 const ADA_COMMENT_ID = "5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e";
 const ADA_SECOND_COMMENT_ID = "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f";
-export const PROPS = { comments: { editor: "enum", options: ["some", "none", "removed"], default: "some" } };
-export const VALS = `someShown: this.props.comments === "none" ? "none" : "flex", noneShown: this.props.comments === "none" ? "flex" : "none", secondLive: this.props.comments === "removed" ? "none" : "contents", secondRemoved: this.props.comments === "removed" ? "contents" : "none"`;
+export const PROPS = {
+  comments: { editor: "enum", options: ["some", "none", "removed"], default: "some" },
+  load: { editor: "enum", options: ["loaded", "loading", "failed"], default: "loaded" },
+};
+export const VALS = `someShown: this.props.load === "loaded" && this.props.comments !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "flex" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", secondLive: this.props.comments === "removed" ? "none" : "contents", secondRemoved: this.props.comments === "removed" ? "contents" : "none"`;
 
 export function Screen() {
   return (
@@ -100,7 +110,7 @@ export function Screen() {
             <CommentCard
               author={ADA}
               timestamp="4d"
-              redacted={{ reason: "author", note: REMOVED_COMMENT_NOTE }}
+              redacted={{ reason: "author", when: "2h" }}
               onReply={() => {}}
               target="“Salt maps of the coast road” — @sol"
               onOpenTarget={() => {}}
@@ -112,6 +122,7 @@ export function Screen() {
         <div style={{ flex: 1, overflow: "hidden", display: "{{noneShown}}", flexDirection: "column", padding: "8px 16px 0" }}>
           <EmptyState title="Nothing here yet." node="empty" />
         </div>
+        <ProfileTabFirstPage kind="comments" />
         </div>
       </div>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />

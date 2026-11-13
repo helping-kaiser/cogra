@@ -1,8 +1,8 @@
 # SignInExpired · `spec:design:behavior-sign-in-expired`
 
-WHEN any call mid-use is answered UNAUTHENTICATED or REFRESH_TOKEN_INVALID -> the sign-in screen opens with You've been signed out. Sign in again to carry on. where the welcome line stands AND NEVER a fault line or the failure voice appears
+WHEN any call mid-use is answered UNAUTHENTICATED or REFRESH_TOKEN_INVALID -> the sign-in screen opens with You've been signed out. under the heading AND NEVER a fault line or the failure voice appears
 
-ALWAYS the signed-out sentence stands in the welcome line's own secondary ink
+ALWAYS the signed-out sentence stands under the heading in the secondary ink
 
 ALWAYS the draft and any picks kept pending stay on the device through the sign-in
 
@@ -50,7 +50,7 @@ ALWAYS a line the server answered stands until the next press of Sign in, and on
 
 WHEN no answer has come 5s after the press of Sign in -> Sign in still reads Signing in… AND NEVER a slow line or a progress indicator appears
 
-ALWAYS the screen's ways out stay live while Sign in waits on its answer
+ALWAYS the screen's ways out refuse a press, undimmed and unchanged in face, from 200ms after the press of Sign in until its answer comes — an entry form keeps its exits held while it submits, the named exception to Close (jakob 2026-11-11)
 
 ALWAYS the sign-in lands wherever app-open lands for the account, never back on the surface where the session ended
 
@@ -58,6 +58,6 @@ ALWAYS the page scrolls when its content outgrows the screen at any width or tex
 
 WHEN press system Back -> the screen the header's back arrow links to opens, exactly as the arrow's press opens it AND NEVER Back walks the history instead
 
-ALWAYS Sign in stands disabled with Waiting for your email and password right above it GIVEN Email or Password is empty
+ALWAYS Sign in stands disabled with no line above it and its spoken description reads Waiting for your email and password GIVEN Email or Password is empty
 
-WHEN both fields hold a character -> Sign in wakes AND the line Waiting for your email and password goes
+WHEN both fields hold a character -> Sign in wakes AND its spoken description Waiting for your email and password goes

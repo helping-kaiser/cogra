@@ -1,6 +1,6 @@
 # SavedEmpty · `spec:design:behavior-saved-empty`
 
-ALWAYS Saved reads Nothing saved yet. A post, a comment or a person can be saved from its own menu, and it waits here. GIVEN the reader has kept nothing
+ALWAYS Saved reads Nothing saved yet. GIVEN the reader has kept nothing
 
 ALWAYS the empty Saved offers no action button and wears no error colour
 

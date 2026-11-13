@@ -1,6 +1,6 @@
 # TagPageHidden · `spec:design:behavior-tag-page-hidden`
 
-WHEN tap Hide on a person in the reader's post menu opened from a tagged post's card -> the sheet closes AND the tag's page stands as it stood, every row in its place AND tagPage.snackbar reads @tobias is hidden — their posts stay out of your feed. with Undo on tagPage.snackbar.action AND NEVER a confirm step appears
+WHEN tap Hide on a person in the reader's post menu opened from a tagged post's card -> the sheet closes AND the tag's page stands as it stood, every row in its place AND tagPage.snackbar reads @tobias is hidden. with Undo on tagPage.snackbar.action AND NEVER a confirm step appears
 
 ALWAYS a hidden actor's tagged things and their claims stay on the tag's page, now and at the next read, the hidden list being the feed's
 

@@ -8,20 +8,20 @@
 <style>body{padding:16px}.grid{display:grid;grid-template-columns:342px 342px;gap:24px;align-items:start}.col{display:flex;flex-direction:column;gap:16px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}.switches{display:flex;gap:16px;align-items:center}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { SettingsGroup, SettingsRow, Switch, SegmentedFilter, InlineAction } = window.CoGraDesignSystem_9084ba;
+const { SettingsGroup, SettingsRow, Switch, SegmentedFilter, InlineAction, HelpDot } = window.CoGraDesignSystem_9084ba;
 function Demo(){return (
 <div className="grid">
   <div className="col">
     <span className="lbl">A group: heading, card of rows, footnote — the footnote is what keeps a row short</span>
     <SettingsGroup label="Writing" footnote="Every signed action is paid for separately.">
-      <SettingsRow checked label="Confirm multi-action submits" status="Ask first when one submit signs more than one action."/>
+      <SettingsRow checked label="Confirm multi-action submits"/>
       <SettingsRow label="Default license" value="Public domain"/>
     </SettingsGroup>
 
-    <span className="lbl">Choice rows — one radio group, the license sheet's own dot</span>
-    <SettingsGroup label="Giving an opinion" footnote="A tap opens this, everywhere. Press and hold instead, and a small positive one is signed on the spot.">
-      <SettingsRow name="card-stance" selected label="The pad" status="A tap opens it; drift to where it feels right."/>
-      <SettingsRow name="card-stance" selected={false} label="Sliders" status="One slider per side of the opinion."/>
+    <span className="lbl">Choice rows — one radio group, the license sheet's own dot; the heading's "?" holds the background (Settings only)</span>
+    <SettingsGroup label="Giving an opinion" help={<HelpDot ariaLabel="Giving an opinion"/>}>
+      <SettingsRow name="card-stance" selected label="The pad"/>
+      <SettingsRow name="card-stance" selected={false} label="Sliders"/>
     </SettingsGroup>
 
     <span className="lbl">The house switch, both states — the knob travels as well as changing colour</span>

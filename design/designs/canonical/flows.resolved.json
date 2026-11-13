@@ -61,6 +61,7 @@
         "Reel",
         "ReelSensitive",
         "Removed",
+        "RemovedOther",
         "Saved",
         "SavedEmpty",
         "SavedNone",
@@ -70,7 +71,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 62 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 63 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -136,6 +137,7 @@
         "Reel",
         "ReelSensitive",
         "Removed",
+        "RemovedOther",
         "Saved",
         "SavedEmpty",
         "SavedNone",
@@ -239,6 +241,7 @@
         "Reel",
         "ReelSensitive",
         "Removed",
+        "RemovedOther",
         "Saved",
         "SavedSearch",
         "SavedUndo",
@@ -248,7 +251,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 36 boards → ReplyEntry",
+        "start · «comment count» on 37 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
@@ -287,6 +290,7 @@
         "Reel",
         "ReelSensitive",
         "Removed",
+        "RemovedOther",
         "Saved",
         "SavedSearch",
         "SavedUndo",
@@ -573,13 +577,14 @@
         "Reel",
         "ReelSensitive",
         "Removed",
+        "RemovedOther",
         "TagPage",
         "TagPageHeld",
         "TagPageHidden",
         "VouchBack"
       ],
       "steps": [
-        "start · «stance face» — to VouchBackPad on 28 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 29 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -608,6 +613,7 @@
         "Reel",
         "ReelSensitive",
         "Removed",
+        "RemovedOther",
         "TagPage",
         "TagPageHeld",
         "TagPageHidden",
@@ -835,6 +841,7 @@
         "Reel",
         "ReelSensitive",
         "Removed",
+        "RemovedOther",
         "Saved",
         "SavedEmpty",
         "SavedNone",
@@ -844,7 +851,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 62 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 63 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeDetailsWords — the words path skips crop and cover — details without the media row or a description",
         "ComposeDetailsWords · 8 «Next» → ComposeSeal — the words path never waits on uploads",
@@ -910,6 +917,7 @@
         "Reel",
         "ReelSensitive",
         "Removed",
+        "RemovedOther",
         "Saved",
         "SavedEmpty",
         "SavedNone",
@@ -979,6 +987,7 @@
         "Reel",
         "ReelSensitive",
         "Removed",
+        "RemovedOther",
         "Saved",
         "SavedEmpty",
         "SavedNone",
@@ -988,7 +997,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 62 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 63 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -1054,6 +1063,7 @@
         "Reel",
         "ReelSensitive",
         "Removed",
+        "RemovedOther",
         "Saved",
         "SavedEmpty",
         "SavedNone",
@@ -1123,6 +1133,7 @@
         "Reel",
         "ReelSensitive",
         "Removed",
+        "RemovedOther",
         "Saved",
         "SavedEmpty",
         "SavedNone",
@@ -1132,7 +1143,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 62 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 63 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -1196,6 +1207,7 @@
         "Reel",
         "ReelSensitive",
         "Removed",
+        "RemovedOther",
         "Saved",
         "SavedEmpty",
         "SavedNone",
@@ -1416,7 +1428,7 @@
     },
     {
       "name": "see-who-stands-with-someone",
-      "description": "The figures row, on any profile, opens the stance lists; reading who stands with them is the whole journey.",
+      "description": "The Opinions on figure, on any profile, opens the opinions page on its On state; reading who stands with them is the whole journey.",
       "status": "resolved",
       "startsOn": [
         "Profile",
@@ -1431,7 +1443,41 @@
         "ProfilePostsOwn"
       ],
       "steps": [
-        "start · «the figures row» on 10 boards → ProfileStances",
+        "start · «the Opinions on figure» on 10 boards → ProfileStances",
+        "end · arrival at ProfileStances"
+      ],
+      "boards": [
+        "ProfileStances",
+        "Profile",
+        "ProfileApplicant",
+        "ProfileComments",
+        "ProfileCommentsOwn",
+        "ProfileDeleted",
+        "ProfileOther",
+        "ProfileOtherHeld",
+        "ProfileOtherHidden",
+        "ProfilePosts",
+        "ProfilePostsOwn"
+      ]
+    },
+    {
+      "name": "see-who-someone-stands-with",
+      "description": "The Opinions by figure, on any profile, opens the opinions page on its By state; reading whom they hold an opinion on is the whole journey.",
+      "status": "resolved",
+      "startsOn": [
+        "Profile",
+        "ProfileApplicant",
+        "ProfileComments",
+        "ProfileCommentsOwn",
+        "ProfileDeleted",
+        "ProfileOther",
+        "ProfileOtherHeld",
+        "ProfileOtherHidden",
+        "ProfilePosts",
+        "ProfilePostsOwn"
+      ],
+      "steps": [
+        "start · «the Opinions by figure» on 10 boards → ProfileStances",
         "end · arrival at ProfileStances"
       ],
       "boards": [
@@ -1587,6 +1633,7 @@
         "Reel",
         "ReelSensitive",
         "Removed",
+        "RemovedOther",
         "Saved",
         "SavedSearch",
         "SavedUndo",
@@ -1596,7 +1643,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «author chip» on 41 boards → ProfileOther",
+        "start · «author chip» on 42 boards → ProfileOther",
         "end · arrival at ProfileOther"
       ],
       "boards": [
@@ -1635,6 +1682,7 @@
         "Reel",
         "ReelSensitive",
         "Removed",
+        "RemovedOther",
         "Saved",
         "SavedSearch",
         "SavedUndo",
@@ -1887,6 +1935,8 @@
         "CommentMenuOwn",
         "FeedPostMenu",
         "FeedPostMenuOwn",
+        "FeedRemovedMenu",
+        "FeedRemovedMenuOwn",
         "HistoryCommentMenu",
         "HistoryCommentMenuOwn",
         "HistoryPostMenu",
@@ -1903,7 +1953,7 @@
         "TagPageMenu"
       ],
       "steps": [
-        "start · «Cite in a new post» — to ComposePick on 18 boards → ComposePick",
+        "start · «Cite in a new post» — to ComposePick on 20 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -1916,6 +1966,8 @@
         "CommentMenuOwn",
         "FeedPostMenu",
         "FeedPostMenuOwn",
+        "FeedRemovedMenu",
+        "FeedRemovedMenuOwn",
         "HistoryCommentMenu",
         "HistoryCommentMenuOwn",
         "HistoryPostMenu",
@@ -2009,6 +2061,7 @@
         "ProfilePosts",
         "ProfilePostsOwn",
         "Removed",
+        "RemovedOther",
         "Saved",
         "SavedSearch",
         "SavedUndo",
@@ -2018,7 +2071,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «Feed score» — to FeedEntry on 41 boards → FeedEntry",
+        "start · «Feed score» — to FeedEntry on 42 boards → FeedEntry",
         "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
         "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
         "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",
@@ -2063,6 +2116,7 @@
         "ProfilePosts",
         "ProfilePostsOwn",
         "Removed",
+        "RemovedOther",
         "Saved",
         "SavedSearch",
         "SavedUndo",
@@ -2556,7 +2610,7 @@
       "description": "The Password row asks for the current password and a new one; the change answers with the snackbar, and every other device is signed out.",
       "status": "resolved",
       "steps": [
-        "start · Settings · 12 «Password» → ChangePassword",
+        "start · Settings · 12 «Password» → ChangePassword — the change form — also once the row reads That didn't go through. after a change closed on did not go through: the form opens at rest, the passwords typed again",
         "end · ChangePassword · 5 «Change password» → Settings — changed — the snackbar answers, and every other device is signed out"
       ],
       "boards": [
@@ -2584,7 +2638,7 @@
       "description": "The Email row takes the new address and the current password and sends both messages; the code from the current address is typed here, and with the new address's link clicked too the address moves.",
       "status": "resolved",
       "steps": [
-        "start · Settings · 14 «Email» → ChangeEmail — the request; the confirmation is its own board — also once a change ran out before both sides landed: the row reads the address alone again and opens the request",
+        "start · Settings · 14 «Email» → ChangeEmail — the request; the confirmation is its own board — also once a change ran out before both sides landed: the row reads the address alone again and opens the request; and once the row reads That didn't go through. after a request closed on did not go through",
         "ChangeEmail · 5 «Change email» → ChangeEmailConfirm — both messages sent — the code is typed here, the link is clicked there",
         "end · ChangeEmailConfirm · 3 «Confirm the code» → Settings — the link was clicked too — the address moves and the snackbar answers"
       ],
@@ -2644,7 +2698,7 @@
       "description": "Cancel the change on the confirmation calls a change in flight off without asking first — a change is started again from the row — and settings reads the address alone.",
       "status": "resolved",
       "steps": [
-        "start · Settings · 14 «Email» → ChangeEmailConfirm — a change already in flight — the row returns to the side still owed",
+        "start · Settings · 14 «Email» → ChangeEmailConfirm — a change already in flight — the row returns to the side still owed, also once a confirm closed on did not go through",
         "end · ChangeEmailConfirm · 5 «Cancel the change» → Settings — the change is called off — the row reads the address alone, and the snackbar answers; nothing asks first, since a change is started again from the row"
       ],
       "boards": [
@@ -5511,6 +5565,18 @@
       ],
       "endpoint": []
     },
+    "FeedRemovedMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "FeedRemovedMenuOwn": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
     "FeedScrolled": {
       "flows": [
         "follow-a-citation",
@@ -6150,6 +6216,7 @@
         "publish-a-video",
         "publish-words",
         "read-your-history",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone",
         "send-someone-an-invite",
         "send-your-first-invite",
@@ -6176,6 +6243,7 @@
     "ProfileApplicant": {
       "flows": [
         "read-your-own-page-as-an-applicant",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone"
       ],
       "endpoint": [
@@ -6189,6 +6257,7 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person"
       ],
@@ -6212,6 +6281,7 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone"
       ],
       "endpoint": []
@@ -6223,6 +6293,7 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person"
       ],
@@ -6293,6 +6364,7 @@
         "publish-words",
         "read-someones-posts",
         "search-and-open-a-person",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person",
         "visit-an-author"
@@ -6315,6 +6387,7 @@
         "publish-a-video",
         "publish-words",
         "revise-a-standing-opinion",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone",
         "walk-back-an-opinion"
       ],
@@ -6330,6 +6403,7 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person"
       ],
@@ -6356,6 +6430,7 @@
         "publish-words",
         "read-someones-posts",
         "reply-to-a-post",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person",
         "take-a-stance-on-a-post",
@@ -6385,6 +6460,7 @@
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-post",
         "trace-a-score-to-its-records"
@@ -6397,9 +6473,11 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone"
       ],
       "endpoint": [
+        "see-who-someone-stands-with",
         "see-who-stands-with-someone"
       ]
     },
@@ -6595,6 +6673,19 @@
       "endpoint": [
         "remove-your-post"
       ]
+    },
+    "RemovedOther": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
+        "visit-an-author"
+      ],
+      "endpoint": []
     },
     "ReplyCited": {
       "flows": [

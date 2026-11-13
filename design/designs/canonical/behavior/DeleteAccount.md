@@ -24,6 +24,8 @@ WHEN press Send the confirmation link GIVEN the deletion's mail budget is spent 
 
 WHEN press the header back arrow -> settings returns AND NEVER a link is mailed AND NEVER anything is deleted
 
+ALWAYS the request's ways out keep their names and acts as drawn while Send the confirmation link waits on its answer, never renamed Close (jakob 2026-11-12)
+
 WHEN the board opens GIVEN User.deletionPath reads IMMEDIATE -> the body reads Nothing has landed yet — deleting removes your application and your account right away. AND Delete my account stands as the one commitment AND NEVER Send the confirmation link stands AND NEVER Also remove what I posted stands
 
 WHEN Delete my account is pressed GIVEN User.deletionPath reads IMMEDIATE -> the account and its application are deleted at once AND the reader lands signed out on the bare view AND the snackbar reads Your account is deleted. AND NEVER a confirmation link is mailed AND NEVER the seven-day grace runs AND NEVER the deletion band stands AND NEVER DeleteAccountConfirmed opens AND NEVER anything is erased from this device

@@ -17,7 +17,7 @@
    would put credentials near the top with identity; a reader reaches for the
    theme far more often than they change their email. People sits next to
    Reading because hiding someone is a reading comfort — and in a group of its
-   own because Reading's footnote promises its choices stay on this device,
+   own because Reading's "?" promises its choices stay on this device,
    which a hidden account does not. About is last before leaving for the same
    rule read from the other end: doors onto words about the product, and the
    ways to answer it (the support stack, jakob 2026-10-01), are the
@@ -88,22 +88,19 @@
                                 7-day grace runs — the grace protects landed
                                 records, and an applicant has none; with the
                                 address unverified, the in-app confirm
-                                suffices and no emailed link gates it; the
-                                footnote drops the mailed link (jakob
-                                2026-10-05), drawn by the reader chip
+                                suffices and no emailed link gates it
      About · the support stack  as for a member
 
    THE DELETION ROW READS `User.deletionPath` (OS-15, seam 140/162; ER-G18):
    one server-computed value, never a pair and never derived from
    `application.*` fields. `BY_LINK` (a member, or an applicant whose
-   Registration landed) reads the member's footnote and opens the request;
-   `IMMEDIATE` (an applicant never funded) the applicant's footnote; `LOCKED`
-   (funded, Registration not yet landed) the applicant's footnote under the
-   locked look, its tap answering `You can delete your account once your
+   Registration landed) opens the request; `IMMEDIATE` (an applicant never
+   funded) the in-app confirm; `LOCKED` (funded, Registration not yet landed)
+   wears the locked look, its tap answering `You can delete your account once your
    registration lands.` — the moment the path turns `BY_LINK`, which can
-   come before the vouch lets them in. The reader chip's `member` value
-   draws `BY_LINK`, `applicant` draws `IMMEDIATE`; the grace stays
-   `accountDeletion`'s (`SettingsDeleting`).
+   come before the vouch lets them in. The group carries no footnote: the
+   row's chevron promises the next screen, which says it all (jakob
+   2026-11-12). The grace stays `accountDeletion`'s (`SettingsDeleting`).
 
    THE KEPT PICKS' ROW IS DRAWN PRESENT, to show where it stands (backlog item
    113, jakob's ruling B3): `4 kept picks waiting` (`KEPT_PICKS`, counted), last in the Key backup
@@ -139,6 +136,26 @@
    batch again — the Handle row's failed form. While the batch signs, the wait
    stands on each target's row (`KeptPicksSeal`), not here.
 
+   THE `forms` CHIP DRAWS A FORM'S SUBMIT FAILING AFTER CLOSE (round 43,
+   jakob 2026-11-12, the re-ask's 9 (a)): Close on a signed-in plain form —
+   `ChangePassword`, `ChangeEmail`, `ChangeEmailConfirm`, `ApplicantEmail` —
+   leaves while the submit goes on, and one that does not go through says
+   so on the form's row: `password` draws the Password row, `email` the
+   Email row (the email forms share it), each reading `That didn't go
+   through.` — the Handle row's failed line without its `Retry` — and the
+   row's tap opens the form again, the line leaving with that tap. While the
+   submit runs the row reads the form's own in-flight label, as the Handle row
+   reads `Changing handle…` (jakob 2026-11-12, 8): `password-changing`
+   (`Changing password…`), `email-changing` (`Changing email…`, the request's
+   and the applicant's change), `email-confirming` (`Confirming the code…`).
+
+   TWO SECTIONS CARRY A "?" (jakob 2026-11-12, the re-ask's 8 (a)): the one
+   "?" per screen gives way here, beside `Giving an opinion` and `Reading`,
+   and the background that stood on the page moves behind them whole — the
+   pad's and the sliders' hints, and the Reading footnote. Each opens a plain
+   dialog titled by its heading (`SettingsInstallHelp`'s `HelpDialog` shape,
+   on this page); the `help` chip draws them open, `opinion` and `reading`.
+
    THE FRAME FITS EVERY SETTING (backlog 175): 3103px, the page whole with the
    install row shown; the default draws 57px more surface under its last line.
    A second line costs a row nothing — a two-line row is 54px inside its 56px
@@ -151,13 +168,14 @@
 export const NODE = "settings";
 export const FRAME = { width: 390, height: 3103 };
 export const PROPS = {
-  reader: { editor: "enum", options: ["member", "applicant"], default: "member" },
   handle: { editor: "enum", options: ["rest", "changing", "failed", "taken"], default: "rest" },
   install: { editor: "enum", options: ["absent", "shown"], default: "absent" },
   kept: { editor: "enum", options: ["waiting", "failed"], default: "waiting" },
+  forms: { editor: "enum", options: ["rest", "password-changing", "password", "email-changing", "email-confirming", "email"], default: "rest" },
+  help: { editor: "enum", options: ["closed", "opinion", "reading"], default: "closed" },
 };
-export const VALS = `keptRestShown: this.props.kept === "failed" ? "none" : "block", keptFailedShown: this.props.kept === "failed" ? "block" : "none", installShown: this.props.install === "shown" ? "block" : "none",handleRestShown: this.props.handle === "rest" ? "block" : "none", handleChangingShown: this.props.handle === "changing" ? "block" : "none", handleFailedShown: this.props.handle === "failed" ? "block" : "none", handleTakenShown: this.props.handle === "taken" ? "block" : "none", deleteFootnote: this.props.reader === "applicant" ? "Nothing is deleted here. The next screen says what goes and what stays." : "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."`;
+export const VALS = `helpOpinionShown: this.props.help === "opinion" ? "block" : "none", helpReadingShown: this.props.help === "reading" ? "block" : "none", passwordRestShown: this.props.forms === "password" || this.props.forms === "password-changing" ? "none" : "block", passwordChangingShown: this.props.forms === "password-changing" ? "block" : "none", passwordFailedShown: this.props.forms === "password" ? "block" : "none", emailRestShown: ["email", "email-changing", "email-confirming"].includes(this.props.forms) ? "none" : "block", emailChangingShown: this.props.forms === "email-changing" ? "block" : "none", emailConfirmingShown: this.props.forms === "email-confirming" ? "block" : "none", emailFailedShown: this.props.forms === "email" ? "block" : "none", keptRestShown: this.props.kept === "failed" ? "none" : "block", keptFailedShown: this.props.kept === "failed" ? "block" : "none", installShown: this.props.install === "shown" ? "block" : "none",handleRestShown: this.props.handle === "rest" ? "block" : "none", handleChangingShown: this.props.handle === "changing" ? "block" : "none", handleFailedShown: this.props.handle === "failed" ? "block" : "none", handleTakenShown: this.props.handle === "taken" ? "block" : "none"`;
 
 export function Screen() {
-  return <SettingsBody handleChip keptChip keptPicks={KEPT_PICKS.length} deleteFootnote="{{deleteFootnote}}" install="{{installShown}}" />;
+  return <SettingsBody handleChip keptChip formsChip helpChip keptPicks={KEPT_PICKS.length} install="{{installShown}}" />;
 }
