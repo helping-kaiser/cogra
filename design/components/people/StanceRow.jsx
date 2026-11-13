@@ -1,5 +1,10 @@
 import React from "react";
-import { MonogramAvatar, REDACTED_ACTOR_NAME } from "./ActorChip.jsx";
+import { MonogramAvatar, REDACTED_ACTOR_NAME, nameInLine } from "./ActorChip.jsx";
+
+/* THE NAME AND THE HANDLE ARE ONE-LINE PLACES (the long-names law, case 2;
+   round 48, seam 320-12): each line never wraps and clips at its end with
+   "…", passed through `nameInLine` as every one-line master's text is. */
+const ONE_LINE = { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 };
 import { EMPTY_PICK_LABEL, SEVERED_LABEL, StanceValue } from "../stance/StanceReadout.jsx";
 
 /* A person on an opinions list (item 17, the conformance round): their face,
@@ -72,8 +77,8 @@ export function StanceRow({ name: nameGiven, handle, src, redacted = false, pDir
     >
       <MonogramAvatar name={name} size={40} src={redacted ? undefined : src} redacted={redacted} node={node && "avatar"} />
       <span style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-        <span style={{ fontSize: "var(--text-label-large)", letterSpacing: "var(--text-label-large--letter-spacing)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", ...(redacted ? { color: "var(--text-secondary)" } : null) }} data-node={node && "name"}>{name}</span>
-        {!redacted && <span style={{ fontSize: "var(--text-label-small)", letterSpacing: "var(--text-label-small--letter-spacing)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "handle"}>@{handle}</span>}
+        <span style={{ ...ONE_LINE, fontSize: "var(--text-label-large)", letterSpacing: "var(--text-label-large--letter-spacing)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", ...(redacted ? { color: "var(--text-secondary)" } : null) }} data-node={node && "name"}>{nameInLine(name)}</span>
+        {!redacted && <span style={{ ...ONE_LINE, fontSize: "var(--text-label-small)", letterSpacing: "var(--text-label-small--letter-spacing)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "handle"}>{nameInLine("@" + handle)}</span>}
       </span>
       {!onOpenHistory && <StanceValue pDirected={pDirected} pInterest={pInterest} zeroLabel={zeroLabel} node={node && "value"} />}
     </button>

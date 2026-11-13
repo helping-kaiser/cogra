@@ -5055,7 +5055,10 @@ function ProfileFeedCard({ person, src, bio, score, bundle, redacted = false, no
                 <span style={FEED_LEAD_TITLE} data-node={node && "name"}>
                   {person.displayName}
                 </span>
-                <span style={FEED_LEAD_SMALL} data-node={node && "handle"}>
+                {/* The handle line is a one-line place, as the name above it is
+                    (the long-names law, case 2; round 48, seam 320-12): it never
+                    wraps and clips at its end with "…". */}
+                <span style={{ ...FEED_LEAD_SMALL, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} data-node={node && "handle"}>
                   @{person.handle}
                 </span>
               </>
@@ -5575,8 +5578,14 @@ const ApplicationGroup = ({ label, count, node, nodeKey }) => (
 
    Named by its placer, as a master is: given `node`, it names its `avatar`,
    `title` and `body`, and the buttons `actions` hands it are named where they
-   are placed. */
-function VouchBackCard({ body, actions, node }) {
+   are placed.
+
+   THE TITLE IS WRAPPING TEXT (the long-names law, case 3; round 48, seam
+   320-12): the inviter's handle, in the title and the body alike, passes
+   through `nameInText`, one unit that never stands on two lines, as
+   `VouchAsk`'s title does. `handle` draws it
+   (`NamesLong` passes the longest legal one). */
+function VouchBackCard({ body, actions, handle = "mira", node }) {
   return (
     <Card style={{ flex: "none", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)" }} node={node}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -5584,6 +5593,8 @@ function VouchBackCard({ body, actions, node }) {
         <h2
           style={{
             margin: 0,
+            minWidth: 0,
+            overflowWrap: "anywhere",
             fontSize: "var(--text-title-medium)",
             letterSpacing: "var(--text-title-medium--letter-spacing)",
             lineHeight: "var(--text-title-medium--line-height)",
@@ -5591,11 +5602,11 @@ function VouchBackCard({ body, actions, node }) {
           }}
           data-node={node && "title"}
         >
-          @mira vouched you in
+          <NameInText text={`@${handle} vouched you in`} />
         </h2>
       </div>
-      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node && "body"}>
-        {body}
+      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", minWidth: 0, overflowWrap: "anywhere" }} data-node={node && "body"}>
+        <NameInText text={body} />
       </p>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>{actions}</div>
     </Card>
