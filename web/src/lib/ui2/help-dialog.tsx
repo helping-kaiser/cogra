@@ -260,15 +260,16 @@ export const HELP_TOPICS = {
       "It lasts until you change it, on this device only. Reset brings back your defaults, to change them go to settings. How sensitive content is veiled is set in Settings.",
     ],
   },
-  // The search filter sheet's "?" (copy-voice, *The filter*: the search's own
-  // seen sentence; the Reset sentence jakob's own, blessed 2026-10-02). The
-  // Ranked / Newest explainer stands here, not on the sheet; search has no
-  // Also show, so no veil pointer. The seen clause is held as it stands until
-  // design draws search's own text.
+  // The search filter sheet's "?": the one filter text (copy-voice, *The
+  // filter*) with its seen clause absent, since that clause is scoped
+  // "— on the feed —" and search never looks at the seen list (seam 296;
+  // seam 324 on 323-1). The Ranked / Newest explainer stands here, not on the
+  // sheet; search has no Also show, so no veil pointer. The Reset sentence is
+  // jakob's own, blessed 2026-10-02.
   theSearchFilter: {
     title: "How the filter works",
     paragraphs: [
-      "What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen stays out unless you ask for it back. Nothing changes until you press Done, and nothing here is signed or shared. Ranked puts what's closest to you first — your view, no one else's. Newest ignores it and lists by time.",
+      "What you let in, and in what order — the kinds combine freely, ranked or newest is one choice. Nothing changes until you press Done, and nothing here is signed or shared. Ranked puts what's closest to you first — your view, no one else's. Newest ignores it and lists by time.",
       "It lasts until you change it, on this device only. Reset brings back your defaults, to change them go to settings.",
     ],
   },
