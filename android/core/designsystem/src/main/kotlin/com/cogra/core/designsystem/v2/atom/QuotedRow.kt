@@ -32,6 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.NameInText
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.media.CograAvatar
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
@@ -84,7 +85,9 @@ fun QuotedRow(
             Box(Modifier.dataNode(node?.div("disc"))) { CograAvatar(name = name, size = DISC, url = src) }
         }
         Column(Modifier.weight(1f)) {
-            Text(
+            // TEXT THAT WRAPS (NamesLong.md; `QuotedRow.jsx`): the title wraps
+            // at its spaces and a handle in it is one unit, whole or end-cut.
+            NameInText(
                 text = title,
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurface,

@@ -355,7 +355,7 @@ class RemovalScreensTest {
 
     /**
      * ALWAYS the reader's own comment's menu reads Save or Unsave, then Cite,
-     * then Remove, then Cited by, then Opinions on this, then License terms;
+     * then Edit, then Remove, then Cited by, then Opinions on this, then License terms;
      * ALWAYS no Report row.
      */
     @Test
@@ -363,12 +363,11 @@ class RemovalScreensTest {
         openThread()
         compose.onNodeIn(threadCard("c1"), threadPart("menu")).performClick()
 
-        val rows = listOf("save", "cite", "remove", "citedBy", "opinions", "license").map { row ->
+        val rows = listOf("save", "cite", "edit", "remove", "citedBy", "opinions", "license").map { row ->
             compose.onNodeWithTag("postDetail.menuSheet.$row").getUnclippedBoundsInRoot().top
         }
         assertThat(rows).isInStrictOrder()
         compose.onNodeWithTag("postDetail.menuSheet.report").assertDoesNotExist()
-        compose.onNodeWithTag("postDetail.menuSheet.edit").assertDoesNotExist()
     }
 
     @Test

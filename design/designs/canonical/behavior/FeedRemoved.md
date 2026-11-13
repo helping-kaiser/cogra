@@ -6,7 +6,7 @@ ALWAYS feed.card.removalMark.line reads Removed by its author
 
 ALWAYS feed.card.removalMark carries the line and the removal's date and no detail
 
-ALWAYS the removed card keeps feed.card.menu, its rows Save or Unsave, then Cite in a new post, then Mark as sensitive, then License terms, your own post's menu less Edit and Remove
+ALWAYS the removed card keeps feed.card.menu, its rows Save or Unsave, then Cite in a new post, then License terms, your own post's menu less Edit, Mark as sensitive and Remove
 
 ALWAYS the removed card keeps feed.card.authorChip, feed.card.actionRow.stance, feed.card.actionRow.score, feed.card.actionRow.comments.count and feed.card.actionRow.share
 

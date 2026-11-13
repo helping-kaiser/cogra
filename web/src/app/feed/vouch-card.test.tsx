@@ -6,6 +6,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createTokenStore } from "@/lib/session/token-store";
 import { createStubStanceData } from "@/lib/stance/stub-stance-data";
 import type { StanceData } from "@/lib/stance/stance-data";
+import { answerLog } from "@/test/answers";
+import { settleFetches } from "@/test/fetch";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { expectWrapsWithUnits, LONG_HANDLE } from "@/test/names";
 import { renderWithProviders } from "@/test/providers";
@@ -56,8 +58,15 @@ function me(shape: MeShape = {}) {
   };
 }
 
+// Every Me read answered, so a card's ABSENCE is read only once the read that
+// would draw it has answered (test/answers.ts).
+const meReads = answerLog();
+
 function meHandler(read: () => ReturnType<typeof me>) {
-  return gqlLink.query("Me", () => HttpResponse.json({ data: { me: read() } }));
+  return gqlLink.query("Me", () => {
+    meReads.answer();
+    return HttpResponse.json({ data: { me: read() } });
+  });
 }
 
 function signedInStore() {
@@ -114,10 +123,9 @@ describe("VouchCard", () => {
       { hasReciprocated: true },
     ]) {
       server.use(meHandler(() => me(shape)));
+      const reads = meReads.count();
       const { unmount } = renderCard();
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 30));
-      });
+      await meReads.answered(reads + 1);
       expect(screen.queryByTestId("feed.vouchCard")).not.toBeInTheDocument();
       unmount();
     }
@@ -142,7 +150,7 @@ describe("VouchCard", () => {
     server.use(meHandler(() => me()));
     renderCard();
     expect(await screen.findByTestId("feed.vouchCard.body")).toHaveTextContent(
-      "Vouch back to open the way from your side — your opinion toward @mira, and your feed grows from it. Vouching opens the opinion control, set to a gentle default.",
+      "Vouch back to open the way from your side — your opinion toward @mira, and your feed grows from it.",
     );
     expect(screen.getByTestId("feed.vouchCard.dismiss")).toHaveTextContent("Got it");
     // The olive register.
@@ -217,9 +225,8 @@ describe("VouchCard", () => {
     // Gone the moment it is pressed — before the server has answered.
     expect(screen.queryByTestId("feed.vouchCard")).not.toBeInTheDocument();
     await waitFor(() => expect(calls.n).toBe(1));
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 30));
-    });
+    // The answer delivered and acted on, so what it would draw has had its turn.
+    await act(() => settleFetches());
     // Nothing stands in its place: no snackbar, no line, no reminder.
     expect(container.querySelector("ul")).toBeEmptyDOMElement();
   });
@@ -249,9 +256,7 @@ describe("VouchCard", () => {
   it("a put-away card stays away on a fresh device", async () => {
     server.use(meHandler(() => me({ vouchBackDismissed: true })));
     renderCard();
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 30));
-    });
+    await meReads.answered();
     expect(screen.queryByTestId("feed.vouchCard")).not.toBeInTheDocument();
   });
 
@@ -281,9 +286,7 @@ describe("VouchCard", () => {
       );
     }
     renderWithProviders(<Harness />, { store: signedInStore() });
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 30));
-    });
+    await meReads.answered();
     expect(screen.queryByTestId("feed.vouchCard")).not.toBeInTheDocument();
 
     // The signed vouch-back expired: the pair is incomplete again.
@@ -373,6 +376,18 @@ describe("VouchCard", () => {
       expect(help).toHaveTextContent(
         "The pad is how you shape what reaches you — for or against, and how much. Nothing is signed until Set.",
       );
+      // The first-ever pad's coaching, moved in whole (VouchBackPad.md:15, :17;
+      // copy-voice *Your vouch back*): the shortcut with its face drawn, the
+      // pair a geek-mode tail and the spoken twin saying both, then the swap.
+      expect(help).toHaveTextContent(
+        "Later, tap the small face under a post to open this — press and hold it instead and a gentle",
+      );
+      expect(help).toHaveTextContent("is signed on the spot.");
+      expect(help).toHaveTextContent("Nice, For or against +0.10, How much reaches you +0.10");
+      const tail = help.querySelector(".cg-exact");
+      expect(tail).toHaveTextContent("(+0.10 / +0.10)");
+      expect(tail).toHaveAttribute("aria-hidden", "true");
+      expect(help).toHaveTextContent("Prefer sliders or exact numbers? Swap the input in settings.");
       expect(screen.getByTestId("feed.vouchCard.stance.pad")).toContainElement(help);
       expect(screen.getByTestId("feed.vouchCard.stance.pad.set")).toBeDisabled();
       // The pad is the one dialog (it is modal, StanceControl.jsx); the help

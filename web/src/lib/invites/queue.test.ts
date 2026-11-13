@@ -94,14 +94,14 @@ describe("the batch dialog's words (RejectAllConfirm.md:3-9)", () => {
   it("puts the count in the title and names no handles", () => {
     expect(rejectAllTitle(4)).toBe("Close all 4 applications from this link?");
     expect(rejectAllBody(4)[0]).toBe(
-      "All four leave your list and all four people are told. Their accounts stay exactly as they are — signed in, and free to keep reading.",
+      "All four leave your list and all four people are told. Their accounts stay as they are.",
     );
   });
 
   it(":7 at two the count is a pair — Both leave… and either of them", () => {
     expect(rejectAllBody(2)).toEqual([
-      "Both leave your list and both people are told. Their accounts stay exactly as they are — signed in, and free to keep reading.",
-      "This is your call and nobody else's. Any member can still vouch either of them in, and each gets a link to ask with.",
+      "Both leave your list and both people are told. Their accounts stay as they are.",
+      "Any member can still vouch either of them in, and each gets a link to ask with.",
     ]);
   });
 

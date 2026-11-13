@@ -83,3 +83,9 @@ WHEN a link to the profile opens GIVEN the app was already open -> the profile o
 WHEN pull down GIVEN the profile stands all the way at its top -> the profile refreshes AND the platform's own refresh indicator shows
 
 WHEN the profile's read never reaches the server -> the profile's unreachable state stands in its place
+
+ALWAYS profile.identity.name is shown whole on at most two lines, the named exception to the long-names rule, the head alone: at 22px on 28px it wraps at its spaces and a word wider than its line breaks inside the word, the one place a name may, and it is never cut GIVEN the display name is longer than its line
+
+ALWAYS profile.identity.name takes the largest whole-pixel size, from 22 down in steps of 1, at which it holds two lines, its line-height round(size × 28 / 22) px, and the handle line and the rest of the head keep their sizes GIVEN at 22px it would take more than two lines, several words or one long word alike, with no smallest size: two lines are the hard cap
+
+ALWAYS the name setting's values carry the size the two-line rule gives each sample at the head's 262px: sample and two-lines 22px on 28px, fifty 19px on 24px, one-word 20px on 25px, widest 10px on 13px — two lines are the hard cap, the size has no floor (round 47)
