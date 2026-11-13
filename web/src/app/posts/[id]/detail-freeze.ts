@@ -1,8 +1,8 @@
 // THE DETAIL HOLDS WHAT WAS OPENED (jakob 2026-10-09, seam 120; drawn
 // 2026-10-12, PostDetail.md:5-15). The post a reader opened is the post they
 // read: a fresh read that finds it changed never lands under them mid-sentence.
-// It waits behind one line — `Edited since you opened it — tap for the newest
-// version.` — and the reader's tap is what swaps it in.
+// It waits behind one line — `Edited since you opened it` — and the reader's
+// tap is what swaps it in.
 //
 // This is the whole of that rule, kept apart from the page so every way a read
 // can land is one case of one function. The page owns the read; this owns what

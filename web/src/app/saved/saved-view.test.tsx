@@ -4,7 +4,7 @@
 // the returned card; the one search law over the saved set, run on the server
 // (`bookmarks(query:)`); hidden accounts' things staying.
 
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { delay } from "msw/utils/delay";
 import { describe, expect, it, vi } from "vitest";
@@ -15,6 +15,7 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { byNode } from "@/test/data-node";
+import { settleFetches } from "@/test/fetch";
 import { hiddenPage } from "@/test/hidden";
 import { intersect } from "@/test/media-env";
 import { gqlLink, startMswServer } from "@/test/msw";
@@ -24,7 +25,6 @@ import { keepPick } from "@/lib/stance/kept-picks";
 import { bookmarkHandlers, bookmarkLog } from "@/test/saved";
 import { stanceHandlers } from "@/test/stance";
 import {
-  SAVED_EMPTY,
   SAVED_NONE,
   SEARCH_WHAT_YOU_SAVED,
   SHOW_EVERYTHING,
@@ -477,7 +477,7 @@ describe("SavedScreen — the unsave is the card's own ⋮ first row", () => {
     renderWithProviders(<SavedScreen />, { store: signedIn() });
     await screen.findByTestId("saved-list");
     fireEvent.click(postMenu()[0]!);
-    expect(screen.getByTestId("saved.empty.title")).toHaveTextContent(SAVED_EMPTY);
+    expect(screen.getByTestId("saved.empty.title")).toHaveTextContent(/^Nothing saved yet\.$/);
     expect(screen.getByTestId("saved.snackbar.message")).toHaveTextContent("Removed from Saved.");
     await waitFor(() => expect(document.activeElement).toBe(screen.getByTestId("saved.empty.title")));
     // Undo from the empty Saved puts the card back as it stood.
@@ -680,7 +680,8 @@ describe("SavedScreen — search what you saved", () => {
     await waitFor(() => expect(reads.map((read) => read.query)).toContain("slow"));
     search("slower");
     await waitFor(() => expect(cards()).toEqual(["saved.commentCard:c1"]));
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    // Every answer still out, the older query's among them, delivered and acted on.
+    await act(() => settleFetches());
     expect(cards()).toEqual(["saved.commentCard:c1"]);
   });
 
@@ -722,7 +723,7 @@ describe("SavedScreen — states", () => {
   it("saved_empty_names_the_save_in_words_and_draws_no_field_and_no_action", async () => {
     serve([]);
     renderWithProviders(<SavedScreen />, { store: signedIn() });
-    expect(await screen.findByTestId("saved.empty.title")).toHaveTextContent(SAVED_EMPTY);
+    expect(await screen.findByTestId("saved.empty.title")).toHaveTextContent(/^Nothing saved yet\.$/);
     expect(within(screen.getByTestId("saved.empty")).queryByRole("button")).not.toBeInTheDocument();
     expect(screen.getByTestId("saved.empty.title").className).not.toContain("text-error");
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();

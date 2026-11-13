@@ -104,10 +104,7 @@ export function RestoreForm({
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-4 px-6 py-12">
       <h1 className="text-headline-small">Restore your key</h1>
-      <p className="text-body-medium text-on-surface-variant">
-        Enter your recovery code to bring your signing key onto this browser.
-      </p>
-      <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
+      <form onSubmit={onSubmit} className="mt-4 flex flex-col gap-4" noValidate>
         <div className="flex flex-col gap-1">
           <label htmlFor="restore-code" className="text-label-large">
             Recovery code

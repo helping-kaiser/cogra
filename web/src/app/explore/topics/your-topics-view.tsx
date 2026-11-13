@@ -48,7 +48,7 @@ import { ReferenceRow } from "@/lib/ui2/reference-row";
 export const YOUR_TOPICS_TITLE = "Your tags";
 
 /** The empty list (copy-voice, *The empty list*), verbatim. */
-export const NO_TOPICS_YET = "No tags yet — say how you feel about one from its page.";
+export const NO_TOPICS_YET = "No tags yet";
 
 /** The load-more fault (design digest item 57). */
 export const COULDNT_LOAD_MORE = "Couldn't load more";
