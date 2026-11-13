@@ -83,3 +83,5 @@ WHEN a link to the profile opens GIVEN the app was already open -> the profile o
 WHEN pull down GIVEN the profile stands all the way at its top -> the profile refreshes AND the platform's own refresh indicator shows
 
 WHEN the profile's read never reaches the server -> the profile's unreachable state stands in its place
+
+ALWAYS profile.identity.name wraps at its spaces onto further lines, never breaks inside a word, and a single word longer than its line is end-cut with an ellipsis, the named exception to the long-names rule, the head alone, shown to jakob 2026-11-13 and awaiting his word GIVEN the display name is longer than its line

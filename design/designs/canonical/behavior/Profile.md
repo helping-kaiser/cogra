@@ -81,3 +81,5 @@ ALWAYS a return to the profile keeps the list below profile.tabRow and its place
 ALWAYS a line under the head reads Signing… in the pending marker's quiet register GIVEN a profile or picture change was closed on while it signs, the head standing as it was until the change is taken
 
 ALWAYS the line under the head reads That didn't sign. in the failure voice followed by Retry GIVEN that change did not go through, and stands until Retry or the next change
+
+ALWAYS profile.identity.name wraps at its spaces onto further lines, never breaks inside a word, and a single word longer than its line is end-cut with an ellipsis, the named exception to the long-names rule, the head alone, shown to jakob 2026-11-13 and awaiting his word GIVEN the display name is longer than its line

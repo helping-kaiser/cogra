@@ -6080,3 +6080,14 @@ jakob: (a) keep it, the mark being the record's [as built]; (b) it leaves the
 removed post's menu with Edit and Remove.
 
 Closed by jakob 2026-11-13 (point B, as recommended: "it goes"): your own removed post's menu, card and detail, reads Save, Cite in a new post, License terms (`FeedRemoved`, `Removed`, `FeedRemovedMenuOwn`).
+
+### 213 · The display name on the profile's head · *design* · **filed 2026-11-13**
+
+Round 46, act 3 (seam 318: `ProfileHeader` broke the name inside a word,
+against the long-names rule). jakob chose (b) and asked to see it: on the head
+alone the display name wraps at its spaces, never inside a word, and a single
+word longer than the line is end-cut with "…" (`ProfileOther`'s `name`
+setting: `two-lines` takes 2 lines, `three-lines` — the 50-character maximum
+in four words — takes 3 at the head's 262px, `one-word` 1 line, end-cut). For
+jakob: keep (b) as drawn [built, awaiting his word]; or (a) one line,
+end-cut, as every one-line place.

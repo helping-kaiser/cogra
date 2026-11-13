@@ -8009,7 +8009,11 @@ jakob's rulings closing the day's rounds, executed in one lane.
   a handle that still does not fit ellipsizes, `ActorChip`'s law.
 - **A long name or handle takes one of three cases** (jakob 2026-11-11,
   round 40; limits: handle 3–30 characters, display name at most 50;
-  drawn on `NamesLong`).
+  drawn on `NamesLong`). THE NAMED EXCEPTION, the profile's head (seam 318;
+  jakob chose it 2026-11-13 and asked to see it — shown to him, awaiting his
+  word, backlog 213): there the display name wraps at its spaces onto
+  further lines, never inside a word, a single word longer than the line
+  end-cut with "…".
   1. *Person rows* — the actor chip: the row never wraps, the name
      ellipsizes first, the handle stays whole until it alone cannot fit
      (`ActorChip`; `ContentRow`'s bare-handle aside reads the same law).
