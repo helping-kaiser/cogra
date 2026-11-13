@@ -6058,7 +6058,7 @@ withdrawing a tag or a citation is an act that costs too. For jakob: (a) the
 dialog stays as written, one text for every seal [as built]; (b) an edit
 section is added to it — new prose, his to word.
 
-Closed by jakob 2026-11-13 (point D, the wording blessed): `How signing works` takes a third paragraph, `An edit is signed too — the new version is a new record in your name, and it costs like any signing.` (`HelpDialog`, copy-voice, the canvas's help contents).
+Closed by jakob 2026-11-13 (point D, the wording blessed): `How signing works` ends its cost paragraph on `An edit is signed too — the new version is a new record in your name, and it costs like any signing.` (`HelpDialog`, copy-voice, the canvas's help contents).
 
 ### 211 · A removed comment's menu · *design* · **filed 2026-11-12** · **closed 2026-11-13**
 

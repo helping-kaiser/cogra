@@ -11853,7 +11853,7 @@ vouch-back pad and Wallet; lane B's crop, composer side, feed and profile).
   terms (B). A removed comment's menu follows the post's (C): another's
   raises the reader's comment menu whole, your own your comment menu less
   Edit and Remove (`ProfileCommentsRemovedMenu`, `CommentRemovedMenu`,
-  new). `How signing works` takes `An edit is signed too — the new version
+  new). `How signing works` takes a sentence at the end of the cost paragraph, `An edit is signed too — the new version
   is a new record in your name, and it costs like any signing.` (D). The
   tall cover's 4:5 and a reader's removed-post License row are confirmed
   (E). The profile head's display name wraps at its spaces, never inside a

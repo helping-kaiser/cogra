@@ -422,7 +422,7 @@ noun):
   post — the post itself, every tag, every citation — is signed on
   its own, in your name. They sign together: all of them land, or
   none does. / Each signing is paid for — the cost is real, so each
-  one still counts. / An edit is signed too — the new version is a new
+  one still counts. An edit is signed too — the new version is a new
   record in your name, and it costs like any signing. *(The edit's
   sentence blessed by jakob 2026-11-13, point D. Payer-neutral by the v1.0.0 scope cut, jakob
   2026-09-25: no copy names who pays until a pool that pays and
