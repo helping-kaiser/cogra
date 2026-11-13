@@ -12,6 +12,7 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
 import { echoedMedia } from "@/test/media-echo";
 import { fakeWriteSigner } from "@/test/registration";
+import { settleFetches } from "@/test/fetch";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { DEFAULT_P_DIRECTED, emptyWizard, type WizardState } from "@/lib/compose/wizard";
@@ -1722,13 +1723,13 @@ describe("the already-published marker", () => {
   });
 
   it("draws nothing when no published post carries it", async () => {
-    placement(null);
+    const asked = placement(null);
     render(fakeDrafts(landed()));
     fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
     await screen.findByTestId(byNode("composeDetails.title.input"));
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    });
+    // Read once the placement's own read has answered and been delivered.
+    await waitFor(() => expect(asked).toHaveLength(1));
+    await act(() => settleFetches());
     expect(screen.queryByTestId("composeDetails.published")).toBeNull();
   });
 });

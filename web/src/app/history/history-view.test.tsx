@@ -21,7 +21,7 @@
 //   (`crates/api/tests/view_history.rs`); the screen's duty is to ask with the
 //   reader's query and draw the answer as served, which is pinned here.
 
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -29,6 +29,7 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { byNode } from "@/test/data-node";
+import { settleFetches } from "@/test/fetch";
 import { hiddenHandlers, hiddenLog, hiddenPage } from "@/test/hidden";
 import { intersect } from "@/test/media-env";
 import { gqlLink, startMswServer } from "@/test/msw";
@@ -769,7 +770,8 @@ describe("History — search your history (History.md:85-103; HistorySearch.md)"
     search("slow");
     search("slower");
     await waitFor(() => expect(cards()).toEqual(["history.commentCard:c1"]));
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Every answer still out, the older query's among them, delivered and acted on.
+    await act(() => settleFetches());
     expect(cards()).toEqual(["history.commentCard:c1"]);
   });
 });

@@ -7,6 +7,7 @@ import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { answerLog } from "@/test/answers";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { ApplicationCard } from "./application-card";
@@ -20,10 +21,15 @@ function signedInStore() {
   return store;
 }
 
+// Every application read answered: a card's ABSENCE is read only once the read
+// that would draw it has answered (test/answers.ts).
+const reads = answerLog();
+
 function mine(fields: { approvedAt?: string | null; rejectedAt?: string | null; approver?: string }) {
   server.use(
-    gqlLink.query("MyApplication", () =>
-      HttpResponse.json({
+    gqlLink.query("MyApplication", () => {
+      reads.answer();
+      return HttpResponse.json({
         data: {
           me: {
             __typename: "User",
@@ -39,8 +45,8 @@ function mine(fields: { approvedAt?: string | null; rejectedAt?: string | null; 
             },
           },
         },
-      }),
-    ),
+      });
+    }),
   );
 }
 
@@ -72,7 +78,7 @@ describe("the waiting card (behavior/ApplicantWaiting.md)", () => {
   it(":3 does not stand while a step is still owed", async () => {
     mine({});
     show("feed", false);
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await reads.answered();
     expect(screen.queryByTestId("feed.application")).not.toBeInTheDocument();
   });
 
@@ -93,15 +99,16 @@ describe("the waiting card (behavior/ApplicantWaiting.md)", () => {
     fireEvent.click(await screen.findByTestId("feed.application.dismiss"));
     expect(screen.queryByTestId("feed.application")).not.toBeInTheDocument();
     first.unmount();
+    const before = reads.count();
     show("feed");
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await reads.answered(before + 1);
     expect(screen.queryByTestId("feed.application")).not.toBeInTheDocument();
   });
 
   it(":17 an approved application is the landing card's, not this one", async () => {
     mine({ approvedAt: "2026-09-15T12:00:00Z" });
     show("feed");
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await reads.answered();
     expect(screen.queryByTestId("feed.application")).not.toBeInTheDocument();
   });
 });
