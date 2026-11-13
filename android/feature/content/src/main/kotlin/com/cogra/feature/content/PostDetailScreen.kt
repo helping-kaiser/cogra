@@ -692,7 +692,7 @@ private fun DetailMenu(
             // wears its `postDetail.menuSheet` path.
             rowNode = { row -> menuSheet / row.nodeName },
             saveRow = saved?.menuRow(post.id, post.viewerBookmarkedAt, "detail_menu_save"),
-            onHide = post.author?.let { saved?.hideAct(it.asHiddenPerson(), post.id) },
+            hideRow = post.author?.let { saved?.hideRow(it.asHiddenPerson(), post.id, "detail_menu_hide") },
         ),
         contentDescription = stringResource(R.string.content_menu_post),
         testTag = node.tag,
