@@ -16,7 +16,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { StagedWriteState } from "@/__generated__/graphql";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { ActorKey } from "@/lib/crypto/actor-key";
-import { fromBase64, randomBytes, toBase64 } from "@/lib/crypto/bytes";
+import { fromBase64, randomBytes, toBase64, toHex } from "@/lib/crypto/bytes";
 import { Tags, verifyDigest } from "@/lib/crypto/hashing";
 import {
   CONTENT_EDITION,
@@ -342,6 +342,39 @@ describe("write signer", () => {
     const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("refused");
     expect(await store.handshake(ID)).toBeNull();
+  });
+
+  it("after a BAD_INPUT submit the next pass pre-signs under fresh nonces", async () => {
+    const blobs: { contentNonce: Uint8Array; dependencyNonce: Uint8Array }[] = [];
+    server.use(
+      gqlLink.mutation("SubmitProposals", ({ variables }) => {
+        const input = (variables as { input: { proposals: { signature: string }[] } }).input;
+        const blob = decodePreCommitment(fromBase64(input.proposals[0].signature));
+        blobs.push({ contentNonce: blob.contentNonce, dependencyNonce: blob.dependencyNonce });
+        return HttpResponse.json({
+          data: {
+            submitProposals: {
+              __typename: "SubmitProposalsPayload",
+              stagedWrites: null,
+              userErrors: [{ __typename: "UserError", message: "reused", code: "BAD_INPUT", field: null }],
+            },
+          },
+        });
+      }),
+    );
+
+    const first = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
+    expect(first.kind).toBe("refused");
+    expect(await store.handshake(ID)).toBeNull();
+    // The staged write is still AWAITING_PRE_SIGN server-side; the next pass
+    // holds no material, so it draws both nonces anew.
+    const second = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
+    expect(second.kind).toBe("refused");
+
+    expect(blobs).toHaveLength(2);
+    const [a, b] = blobs;
+    expect(toHex(b.contentNonce)).not.toBe(toHex(a.contentNonce));
+    expect(toHex(b.dependencyNonce)).not.toBe(toHex(a.dependencyNonce));
   });
 
   it("a rate-limited approve keeps the material and resume completes", async () => {
