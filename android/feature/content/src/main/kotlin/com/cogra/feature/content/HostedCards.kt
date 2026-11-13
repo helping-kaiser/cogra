@@ -220,16 +220,24 @@ private fun HostedPostCard(
 }
 
 /**
+ * The sheet a hosted card's ⋮ raises. The profile's tabs are the one host of
+ * these cards (this file's header), and their boards register the cards' menus
+ * under the profile's own sheet (seam 300: the added `profile.menuSheet.*` rows).
+ */
+private val PROFILE_MENU_SHEET = DataNode("profile") / "menuSheet"
+
+/**
  * A hosted post card's place: the host's registered card, keyed by the
- * post's id; no sheet of the host's is drawn, so the card's menu and terms
- * keep their tags; and the author chip inert, the author being the page.
+ * post's id; its ⋮ raises the host's registered sheet (`profile.menuSheet` on
+ * a profile's posts view — ProfilePostsMenu, ProfilePostsMenuOwn), the terms
+ * keeping their tags; and the author chip inert, the author being the page.
  */
 private fun hostedPlacement(node: DataNode, tag: String) = CardPlacement(
     card = node,
-    menuSheet = null,
+    menuSheet = PROFILE_MENU_SHEET,
     licenseSheet = null,
     tag = tag,
-    menuRows = emptySet(),
+    menuRows = POST_MENU_ROWS,
     authorHere = true,
 )
 

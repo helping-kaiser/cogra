@@ -59,6 +59,27 @@ class SavedHost(
     }
 
     /**
+     * THE HIDE ROW FOR [person], MADE FROM [origin] — a toggle: `Hide @ada`,
+     * or `Unhide @ada` while they are hidden (ReaderPostMenu.md:21), the act
+     * following the words. A guest's tap raises the join prompt whatever it
+     * reads (GuestGate.md:5). Null with no hidden set, so the row stands inert.
+     */
+    fun hideRow(person: HiddenPerson, origin: String, testTag: String): MenuRow? {
+        val store = hidden ?: return null
+        val say = hiddenSnackbar ?: return null
+        val hiddenEntry = hiddenView.entries.firstOrNull { it.person.id == person.id }
+        val label = if (hiddenEntry != null) say.words.unhideRow(person) else say.words.row(person)
+        val guest = onGuest
+        return MenuRow(label, testTag) {
+            when {
+                guest != null -> guest()
+                hiddenEntry != null -> unhidePerson(store, hiddenEntry, say, origin)
+                else -> hidePerson(store, hiddenView, person, origin, say)
+            }
+        }
+    }
+
+    /**
      * The row line [node]'s own row carries: a save, unsave or Undo on it,
      * or a hide or its Undo made from it, that did not go through.
      */
