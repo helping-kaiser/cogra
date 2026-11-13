@@ -168,8 +168,9 @@ const val DEPENDENCY_EDITION: ULong = 1u
 
 /**
  * The actor's pre-signed proposal: the proposal it signed, both nonces
- * it drew, and its signature over P. Both nonces exist only on this
- * device until approval — the host never returns them.
+ * it drew, and its signature over P. Both nonces go to CoGra's API on
+ * the submit leg, which keeps the content nonce and passes the host only
+ * the dependency nonce; nothing returns either, so the device keeps its own.
  */
 class PreSignedProposal(
     val proposal: Proposal,

@@ -65,9 +65,9 @@ interface TokenStore {
  * survive process death: the actor seed (exportable — it goes into the
  * backup blob), the sealed backup blob awaiting a retried upload, and
  * the per-write handshake material the approve step verifies against
- * (the content nonce, the dependency nonce and the pre-signature exist
- * only on the device — the sealed act carries no nonce, so "the device
- * verifies what it signs" rests on this copy).
+ * (the content nonce, the dependency nonce and the pre-signature — the
+ * sealed act carries no nonce, so "the device verifies what it signs"
+ * rests on this copy).
  *
  * Every value is bound to the account it belongs to, never to a
  * device-global slot (auth.md "Multi-account device custody"). The
