@@ -45,8 +45,9 @@ type HandshakeRecord = {
 /**
  * Whether a stored value is material of the current handshake. A record of
  * any other shape — one written before both nonces were kept — cannot be
- * approved under this handshake, so it reads as absent and the signer takes
- * the path it takes for material it never held.
+ * approved under this handshake: it reads as absent, so the signer takes
+ * the path it takes for material it never held, and the store deletes it
+ * where it meets it.
  */
 function isHandshakeRecord(value: unknown): value is HandshakeRecord {
   if (typeof value !== "object" || value === null) return false;
@@ -381,21 +382,60 @@ export function createIdentityStore(deps: {
     await landed;
   }
 
-  async function allKeys(store: string): Promise<string[]> {
-    const tx = (await db()).transaction(store, "readonly");
-    const keys = await asPromise(tx.objectStore(store).getAllKeys());
-    return keys.map(String);
-  }
-
   function handshakeKey(account: string, stagedWriteId: string): string {
     return `${account}${KEY_SEPARATOR}${stagedWriteId}`;
   }
 
+  /**
+   * The account's handshake ids, deleting on sight every record not of the
+   * current shape — in the same transaction as the listing.
+   *
+   * Such a record can never be completed by this client: it is never
+   * approved, never resumed, and so never cleared by any path that finishes
+   * a write. Listing it would count it forever (the Home resume card) while
+   * it kept a content nonce and a pre-signature at rest for nothing.
+   */
   async function handshakeIdsOf(account: string): Promise<string[]> {
     const prefix = account + KEY_SEPARATOR;
-    return (await allKeys(HANDSHAKE))
-      .filter((key) => key.startsWith(prefix))
-      .map((key) => key.slice(prefix.length));
+    const range = IDBKeyRange.bound(prefix, prefix + "￿");
+    const tx = (await db()).transaction(HANDSHAKE, "readwrite");
+    const landed = committed(tx);
+    const objectStore = tx.objectStore(HANDSHAKE);
+    const keys = objectStore.getAllKeys(range);
+    const values = objectStore.getAll(range);
+    const ids: string[] = [];
+    // Both requests share the transaction, which answers them in order: by
+    // the time `getAll` succeeds the keys are in, and the deletes issued here
+    // still run inside it.
+    values.onsuccess = () => {
+      keys.result.forEach((key, i) => {
+        if (isHandshakeRecord(values.result[i])) ids.push(String(key).slice(prefix.length));
+        else objectStore.delete(key);
+      });
+    };
+    await landed;
+    return ids;
+  }
+
+  /**
+   * One handshake record, or null — a record not of the current shape is
+   * deleted in the same transaction and reads as absent (see
+   * {@link handshakeIdsOf}).
+   */
+  async function takeHandshake(key: string): Promise<HandshakeRecord | null> {
+    const tx = (await db()).transaction(HANDSHAKE, "readwrite");
+    const landed = committed(tx);
+    const objectStore = tx.objectStore(HANDSHAKE);
+    const request = objectStore.get(key);
+    const found: { record: HandshakeRecord | null } = { record: null };
+    request.onsuccess = () => {
+      const value: unknown = request.result;
+      if (value === undefined) return;
+      if (isHandshakeRecord(value)) found.record = value;
+      else objectStore.delete(key);
+    };
+    await landed;
+    return found.record;
   }
 
   /** Moves a legacy singleton record into the account's slot — only when vacant. */
@@ -555,8 +595,8 @@ export function createIdentityStore(deps: {
     async handshake(stagedWriteId) {
       const account = await forRead();
       if (account === null) return null;
-      const record = await read<unknown>(HANDSHAKE, handshakeKey(account, stagedWriteId));
-      if (!isHandshakeRecord(record)) return null;
+      const record = await takeHandshake(handshakeKey(account, stagedWriteId));
+      if (record === null) return null;
       return new PreSignedProposal({
         proposal: decodeProposal(record.proposal),
         authorPubkey: record.authorPubkey,
