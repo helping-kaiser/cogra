@@ -576,7 +576,7 @@ noun):
   typed values take both numbers exactly. *(One paragraph naming the
   three inputs, from the rows' labels and their old hints — jakob
   2026-11-12: "one or a couple actual sentences instead of two disconnect
-  ones"; drafted 2026-11-12, review-pending.)*
+  ones"; drafted 2026-11-12; *blessed (jakob 2026-11-13)*.)*
 - **Reading** (Settings, beside the section's heading): Every feed starts
   from what it shows, and a change made inside a feed lasts until you
   change it back. Both choices stay on this device. *(The group's
