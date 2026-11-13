@@ -865,7 +865,8 @@ impl Record {
     }
 
     /// When the record landed: its epoch's asserted boundary timestamp
-    /// (layer1-interface.md, the Host Contract). Wall-clock time for
+    /// (layer1-interface.md, the Host Contract; checkable only for
+    /// consistency with the published duration bounds). Wall-clock time for
     /// display; the key of record (`landingEpoch`, `position`) carries the
     /// order.
     async fn landed_at(&self, ctx: &Context<'_>) -> async_graphql::Result<DateTime<Utc>> {
