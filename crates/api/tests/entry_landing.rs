@@ -1512,7 +1512,10 @@ async fn the_carried_batch_signs_at_the_landing(pool: PgPool) {
         assert!(write.carried);
         let mut expected = old;
         expected.extend([registration.clone(), vouch.clone()]);
-        assert_eq!(deps_of(&rig, *id).await, expected);
+        expected.sort();
+        expected.dedup();
+        let deps = deps_of(&rig, *id).await;
+        assert_eq!(deps, expected, "the canonical list: text bytes ascending");
     }
     let on_graph: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM mirror_records WHERE author = $1")
         .bind(noa.key.address())
