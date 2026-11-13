@@ -84,10 +84,36 @@
    People tabs are refused twice over: a segmented row of tiers the contract
    cannot serve, on a page that would then just be search again. Tumblr's
    "post this tag" button is a compose entrance nothing has ruled, so it is not
-   invented here. */
+   invented here.
+
+   THE FIRST PAGE THAT GETS NO ANSWER (round 48; the `load` chip's `failed`):
+   the fault family's one shape, `ProfileUnreachable`'s — the header standing,
+   the house line's noun form in the page's place, `Can't reach the server —
+   this tag can't load right now.`, over an outlined `Retry` leading the
+   column (copy-voice, *No answer at all*). The noun is the page's own, as
+   `this profile` is the profile's; the picker's `tags can't load right now.`
+   names a list of tags, not this page. Worded by the round-48 lane, to be
+   blessed. */
 
 export const FRAME = { width: 390, height: 1344 };
+export const PROPS = { load: { editor: "enum", options: ["loaded", "failed"], default: "loaded" } };
+export const VALS = `loadedShown: this.props.load === "failed" ? "none" : "contents", failedShown: this.props.load === "failed" ? "contents" : "none"`;
 
 export function Screen() {
-  return <TagPageBody />;
+  return (
+    <>
+      <div style={{ display: "{{loadedShown}}" }}>
+        <TagPageBody />
+      </div>
+      <div style={{ display: "{{failedShown}}" }}>
+        <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" />
+        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-3)", padding: "16px 24px" }}>
+          <TransportError message="Can't reach the server — this tag can't load right now." />
+          <Button variant="outline" size="sm" selfStart>
+            Retry
+          </Button>
+        </div>
+      </div>
+    </>
+  );
 }

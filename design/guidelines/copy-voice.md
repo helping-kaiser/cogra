@@ -1465,7 +1465,7 @@ the review fixes' lines, jakob 2026-10-01), all of them (the last flags cleared 
   `RowSigning`.
 - A read with nothing loaded: the house line's noun form, `Can't reach
   the server — {what} can't load right now.`, over an outlined `Retry`
-  — `this profile`, `notifications`, `tags`, `results` (one rule, round
+  — `this profile`, `notifications`, `tags`, `results`, and the tag page's `this tag` (*worded by the round-48 lane, to be blessed*) (one rule, round
   25: `ProfileUnreachable`, `Notifications`, the two pickers, search);
   the deletion mail's landing, whose act is a confirm, says `Can't reach
   the server — the deletion can't be confirmed right now.` over its `Try

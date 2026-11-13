@@ -3115,7 +3115,12 @@ const tagPageBody = ({ topicStance }) => [
 ];
 
 Object.assign(FLOW_MARKERS, {
-  TagPage: tagPageBody({ topicStance: 'aria-label="Give your opinion on #saltmaps"' }),
+  // The `load` chip's `failed` copy (round 48) repeats the header's back and adds Retry.
+  TagPage: [
+    { n: 1, find: 'aria-label="Back to Explore"', tag: "a", all: true },
+    ...tagPageBody({ topicStance: 'aria-label="Give your opinion on #saltmaps"' }).filter((m) => m.n !== 1),
+    { n: 16, find: ">Retry</button>", tag: "button" },
+  ],
   /* The page a moment after a hide (item 83): the same body, so the same
      markers; the snackbar's Undo takes the next free number. */
   TagPageHidden: [
