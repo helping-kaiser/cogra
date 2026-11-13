@@ -11957,7 +11957,10 @@ spoken unit.
   `Tags`; `CropViewport`'s cover frame on the 390 × 488 stage; History's
   kept search tail; Hide's place among the person menu's acts;
   `RemoveMenu`'s order; `OverflowMenu`'s two readings; backlog 162 closed.
-- **The gate**: GATELINE---
+- **The gate**: against main, 194 → 209 screens, 7387 → 8126 board paths,
+  2029 → 2151 distinct — 123 added, one gone by ruling
+  (`profile.comments.viewReplies`). Backlog 222 closed, 220 partly, 162
+  closed as stale; 220, 221 and 223 open.---
 
 ## 14. The canvases
 
