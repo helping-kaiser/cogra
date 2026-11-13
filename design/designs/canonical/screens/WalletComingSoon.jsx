@@ -33,8 +33,8 @@
    the bar and the band go next, which is the graph's `case` work, not a
    second drawing: a guest's band and bar are the bare view's, its gated
    slots — chats, New post, Profile — open the guest gate, and its band
-   carries no bell (jakob 2026-10-05). The line `Your earnings will be here.` is blessed
-   (copy-voice, the coming-soon surfaces; jakob 2026-09-25).
+   carries no bell (jakob 2026-10-05). The card says `Wallet — coming soon`
+   and nothing more (jakob 2026-11-12).
 
    NO ACTION, so no "keep browsing" (the audit's F38 finding). A door has
    nothing a reader can do in it, and the bar is already the way on; were an
@@ -52,7 +52,7 @@ export function Screen() {
     <>
       <CograBand node="band" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 0 0" }}>
-        <ComingSoonCard thing="Wallet" line="Your earnings will be here." node="comingSoonCard" />
+        <ComingSoonCard thing="Wallet" node="comingSoonCard" />
         <div style={{ flex: 1 }} />
       </div>
       <BottomNav active="wallet" slots={ALL_SLOTS} inline node="bottomBar" />

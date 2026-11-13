@@ -1,6 +1,6 @@
 # TagPickerTyping · `spec:design:behavior-tag-picker-typing`
 
-ALWAYS the list's first row is the typed name canonicalized, one leading # stripped and lowercased, with Signs as #name as its second line
+ALWAYS the list's first row is the typed name canonicalized, one leading # stripped and lowercased, with Signs as #name as its second line GIVEN the canonical name differs from what was typed
 
 ALWAYS a name in use that is the typed name stands as the first row alone, never listed twice
 

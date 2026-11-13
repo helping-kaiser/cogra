@@ -6,13 +6,15 @@ ALWAYS the search filter's kind chips combine
 
 ALWAYS no kind chip is on and the search reads every kind GIVEN the search filter is at its default
 
-ALWAYS the search filter's order section is the feed filter's own: Ranked or Newest, with Show what you've already seen under it
+ALWAYS the search filter's order section is the feed filter's own Ranked or Newest, with no Show what you've already seen under it
 
-ALWAYS the search filter's order and Show what you've already seen stand at the reader's default GIVEN the search filter is at its default
+ALWAYS the search filter's order stands at the reader's default GIVEN the search filter is at its default
 
 ALWAYS the reader's default is the one feed filter default, set in Settings, the app's until they set their own
 
-ALWAYS Ranked is the order and Show what you've already seen stands off GIVEN the search filter is at its default and the reader has set no default of their own in Settings
+ALWAYS Ranked is the order GIVEN the search filter is at its default and the reader has set no default of their own in Settings
+
+ALWAYS the search reads every node, the ones the reader has already seen among them, people and tags included
 
 ALWAYS explore.filterTrigger speaks only the deviations from the search filter's default, a deviation back toward the app's default included
 
@@ -26,8 +28,6 @@ WHEN tap a kind chip -> the chip's change is staged AND NEVER the results behind
 
 WHEN tap Ranked or Newest -> that order is staged AND NEVER the results behind the sheet move before Done
 
-WHEN tap Show what you've already seen -> the toggle flips, staged AND NEVER the results behind the sheet move before Done
-
 WHEN tap Reset -> the sheet stages the search filter's default AND NEVER the search re-queries
 
 WHEN tap Done -> the sheet closes AND the search re-queries once with the staged filter
@@ -38,4 +38,4 @@ WHEN swipe the sheet down, press system Back or press Escape -> the sheet closes
 
 ALWAYS a result counts as seen only once it is opened, never by standing in the viewport, and the opened thing then counts by History's own rules and never becomes a graph record
 
-ALWAYS the search filter carries no explore.filterSheet.order, so no Ranked, no Newest and no Show what you've already seen, and holds explore.filterSheet.kinds and explore.filterSheet.foot alone GIVEN the reader is a guest
+ALWAYS the search filter carries no explore.filterSheet.order, so no Ranked and no Newest, and holds explore.filterSheet.kinds and explore.filterSheet.foot alone GIVEN the reader is a guest

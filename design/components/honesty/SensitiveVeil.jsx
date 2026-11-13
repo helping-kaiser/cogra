@@ -321,10 +321,11 @@ const REASONS = {
   /* Removed by choice (erasure §1). The docs are explicit that this must read
      differently from removed-for-cause — collapsing the two would let a
      moderation verdict hide behind an author's own decision, or the reverse.
-     Both texts are the decided marks of guidelines/copy-voice.md. */
+     Both marks are the decided ones of guidelines/copy-voice.md. */
   author: {
     line: "Removed by its author",
-    detail: "The words and pictures are gone. The post's place in the thread, and every response, remain.",
+    /* No detail (jakob 2026-11-12): the mark says the content is gone, and
+       the thread standing around it shows what remains. */
   },
   /* A WHOLE ACCOUNT, deleted by the person who had it (erasure §2, the
      account-deletion round). The third mark, and it is the same mechanism at a
@@ -409,9 +410,11 @@ export function RedactedContent({ reason = "illegal", when, note, node }) {
       <span style={{ ...REDACTED_TYPE["body-medium"], color: "var(--text-body)" }} data-node={node && "line"}>
         {copy.line}
       </span>
-      <span style={{ ...REDACTED_TYPE["body-small"], color: "var(--text-secondary)", textWrap: "pretty" }} data-node={node && "detail"}>
-        {note ?? copy.detail}
-      </span>
+      {(note ?? copy.detail) && (
+        <span style={{ ...REDACTED_TYPE["body-small"], color: "var(--text-secondary)", textWrap: "pretty" }} data-node={node && "detail"}>
+          {note ?? copy.detail}
+        </span>
+      )}
       {when && (
         <span style={{ ...REDACTED_TYPE["label-small"], color: "var(--text-secondary)" }} data-node={node && "when"}>
           {when}

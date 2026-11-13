@@ -131,3 +131,5 @@ ALWAYS the back arrow reads Back to your profile
 ALWAYS saved.card.actionRow.stance.pending and saved.commentCard.actionRow.stance.pending read Waiting for your key under the kept pick's face GIVEN a pick is kept pending on the card's thing and the key is not on this device
 
 ALWAYS saved.card.actionRow.stance.pending and saved.commentCard.actionRow.stance.pending read Waiting for your review under the kept pick's face GIVEN the key is on this device and the kept picks' review was left unsigned
+
+WHEN the edit of a comment of the reader's own, opened from its menu on Saved, is signed -> Saved comes back as it was left AND the comment's card settles in place wearing Still settling AND NEVER the thread opens

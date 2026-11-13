@@ -6,14 +6,13 @@
    THE VEHICLE IS THE SURFACE: THE SIGN-IN SCREEN ITSELF. Nothing the reader
    did failed, and nothing short of signing in again lets them carry on, so
    the whole screen is the answer — `SignIn`, unchanged in every control, with
-   the one sentence that says why it is here standing where the welcome line
-   stood: `You've been signed out. Sign in again to carry on.` Calm, in the
-   welcome line's own secondary ink, never the failure voice: being signed
+   the one sentence that says why it is here standing under the heading:
+   `You've been signed out.` Calm, in the secondary ink, never the failure voice: being signed
    out is a fact about the session, not a fault of the reader's.
 
    NOTHING IS LOST. The draft and any picks stay kept on the device
-   through the sign-in (copy-voice, *Faults by code*), so the line promises
-   carrying on, not starting over.
+   through the sign-in (copy-voice, *Faults by code*): signing in carries on,
+   it does not start over.
 
    EVERY CONTROL IS `SignIn`'s, and so is every outcome: the fields, the
    remember switch, `Sign in` and the four ways round it.
@@ -49,7 +48,7 @@ export function Screen() {
           }}
           data-node="body"
         >
-          You&apos;ve been signed out. Sign in again to carry on.
+          You&apos;ve been signed out.
         </p>
 
         <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 16 }}>

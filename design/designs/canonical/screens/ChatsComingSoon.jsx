@@ -56,7 +56,7 @@ export function Screen() {
     <>
       <PageHeader title="Chats" backHref="#" backLabel="Back to feed" node="header" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 0 0" }}>
-        <ComingSoonCard thing="Chats" line="Your conversations will be here." node="comingSoonCard" />
+        <ComingSoonCard thing="Chats" node="comingSoonCard" />
         <div style={{ flex: 1 }} />
       </div>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />

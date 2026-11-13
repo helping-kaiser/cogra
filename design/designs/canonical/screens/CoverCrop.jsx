@@ -13,13 +13,27 @@
    pager's square in a comment. There are no shape chips: choosing a shape
    here would let the cover disagree with the thing it is the face of.
 
-   THE ZOOM IS ON SCREEN (the K13 round): `CropZoom` under the window, its
+   ONE CROP MODEL (jakob 2026-11-11, seam 301): the frame is FIXED at the
+   video's shape and the PICTURE moves (drag) and zooms (pinch, or the zoom
+   track) under it.
+
+   THE FRAME ALWAYS HAS THE CLIP'S DIMENSIONS (jakob 2026-11-12: "tall video
+   = tall cover, square square and wide wide" — "the crop of the cover must
+   always enforce the dimension of the clip"). The frame takes the clip's
+   shape as the clip stands in a card (`clipFrame`: its own ratio, a clip
+   taller than 4:5 at 4:5), never another, and what the crop exports is that
+   shape. The stage is the post crop's, 390 × 488 under every shape (the
+   orchestrator's reading, shown to jakob); the frame takes the stage's width
+   less the 24 gutters, centred in its height. The `clip` setting draws the
+   three: `wide` a 16:9 clip's 342 × 192 at top 148 (the default), `tall` a
+   4:5 frame's 342 × 427.5 at top 30.25, `square` 342 × 342 at top 73 — the
+   comment's square too. No line says so and no chip offers another shape
+   (round 44, the removable-text pass).
+
+   THE ZOOM IS ON SCREEN (the K13 round): `CropZoom` under the stage, its
    thumb at this crop's 1.15× between the fill (1×) and about 4×, on both
-   platforms; the focused window pans with the arrow keys (`CropViewport`),
-   1 % a press, 10 % with Shift (jakob 2026-10-05). On a device with no touch
-   to pinch the first line reads `Drag or use the arrow keys to move, the
-   slider to zoom.` (new, flagged for blessing; copy-voice, *The crops' how-to
-   line*).
+   platforms; the focused stage moves the picture with the arrow keys
+   (`CropViewport`), 1 % a press, 10 % with Shift (jakob 2026-10-05).
 
    THE X SAYS WHAT LEAVING KEEPS, BY ENTRANCE (copy-voice, *The wizard's two
    ends*). The board draws the post's entrance, `Leave — your draft is kept`;
@@ -28,18 +42,18 @@
    that opened the crop, asking first where that flow's X asks.
 
    REGISTERED under its own `coverCrop` prefix (seam 248): `header`, the
-   `viewport`, the `zoom` slider, the `howTo` line, the `shapeNote` and
-   `next` — the step every flow that crops a cover shares. */
+   `viewport`, the `zoom` slider and `next` — the step every flow that crops
+   a cover shares. */
 export const NODE = "coverCrop";
+export const PROPS = { clip: { editor: "enum", options: ["wide", "tall", "square"], default: "wide" } };
+export const VALS = `frameHeight: this.props.clip === "tall" ? "427.5px" : this.props.clip === "square" ? "342px" : "192px"`;
 export function Screen() {
   return (
     <>
       <WizardHeader title="The cover" leaveLabel="Leave — your draft is kept" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 16px", overflow: "hidden" }}>
-        <CropViewport src="gallery-market.jpg" shape="rect" height={192} scale={1.15} origin="50% 45%" node="viewport" />
+        <CropViewport src="gallery-market.jpg" shape="rect" stageHeight={488} height="{{frameHeight}}" scale={1.15} origin="50% 45%" node="viewport" />
         <CropZoom scale={1.15} node="zoom" />
-        <QuietNote node="howTo">Drag to move, pinch to zoom.</QuietNote>
-        <QuietNote node="shapeNote">The cover takes the video's shape.</QuietNote>
         <div style={{ flex: 1 }} />
         <Button style={{ width: "100%" }} node="next">Next</Button>
       </div>

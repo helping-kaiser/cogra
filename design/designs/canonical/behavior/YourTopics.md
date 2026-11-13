@@ -18,7 +18,7 @@ ALWAYS Your tags carries no bottom bar
 
 ALWAYS the word follow appears nowhere on Your tags
 
-ALWAYS yourTopics.empty alone reads No tags yet — say how you feel about one from its page. GIVEN the reader holds no topic
+ALWAYS yourTopics.empty alone reads No tags yet GIVEN the reader holds no topic
 
 ALWAYS a topic the reader holds whose name was removed stands as yourTopics.redactedTopic in its place in the order, keeping its mark and its Affinity pair, yourTopics.redactedTopic.name reading Removed under the platform's rules in the system's voice
 

@@ -20,15 +20,23 @@ WHEN press Change email GIVEN the account's mail budget is spent -> the line Too
 
 WHEN the address changes -> NEVER the seven days restart AND NEVER the screen speaks of them
 
-WHEN tap the back arrow GIVEN the change opened from the applicant's feed -> the applicant's feed comes back at the verify card AND nothing is sent AND the address on file stands
+WHEN tap the back arrow GIVEN the change opened from the applicant's feed and Change email has not been pressed -> the applicant's feed comes back at the verify card AND nothing is sent AND the address on file stands
 
-WHEN tap the back arrow GIVEN the change opened from settings -> settings comes back AND nothing is sent AND the address on file stands
+WHEN tap the back arrow GIVEN the change opened from settings and Change email has not been pressed -> settings comes back AND nothing is sent AND the address on file stands
+
+ALWAYS the header's arrow is named Close from the press of Change email until its answer comes
+
+WHEN tap Close GIVEN Change email was pressed -> the surface the change opened from comes back AND the change goes on AND NEVER the change is canceled
+
+WHEN the change fails GIVEN the form was closed after the press -> the Email row in settings reads That didn't go through. AND the address on file stands AND NEVER Retry stands on the row
+
+WHEN tap the Email row GIVEN it reads That didn't go through. after an applicant's change -> the change opens again AND the line leaves the row AND the form stands at rest AND a refusal about one field, as a wrong current password, stands beside that field in the form's own field-error line
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 
-ALWAYS Change email stands disabled with Waiting for a new email and your password right above it GIVEN New email or Current password is empty
+ALWAYS Change email stands disabled with no line above it and its spoken description reads Waiting for a new email and your password GIVEN New email or Current password is empty
 
-WHEN both fields hold a character -> Change email wakes AND the line Waiting for a new email and your password goes
+WHEN both fields hold a character -> Change email wakes AND its spoken description Waiting for a new email and your password goes
 
 WHEN press Change email GIVEN the current password is wrong -> the Current password field reads That password isn't right. AND NEVER a link is sent
 

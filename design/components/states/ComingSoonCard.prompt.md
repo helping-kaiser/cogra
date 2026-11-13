@@ -1,7 +1,7 @@
 Use `ComingSoonCard` for what a **slot or icon** opens while its surface is drawn after v1.0.0 — the band's chats icon, the bottom bar's wallet slot. It is the page's one moment, under the shell the page already wears.
 
 ```jsx
-<ComingSoonCard thing="Chats" line="Your conversations will be here." />
+<ComingSoonCard thing="Wallet" />
 ```
 
 What holds (readme §13, *The v1.0.0 scope cut*):

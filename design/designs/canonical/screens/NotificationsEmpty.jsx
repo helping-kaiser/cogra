@@ -22,7 +22,7 @@ export function Screen() {
       <PageHeader title="Notifications" backHref="#" backLabel="Back to feed" node="header" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 24px" }}>
         <EmptyState
-          title="Nothing here yet. Comments, replies, citations, mentions and opinions on you arrive here as they happen, along with what becomes of your invites and your own application."
+          title="Nothing here yet."
           node="empty"
         />
       </div>

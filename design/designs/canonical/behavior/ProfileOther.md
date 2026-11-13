@@ -6,7 +6,7 @@ ALWAYS the profile carries no cover image and no banner
 
 ALWAYS the figures read Posts, Opinions on them and Opinions by them, each labelled, and never one merged figure
 
-ALWAYS the figures are one tap target, spoken as each figure's number and words — Posts, Opinions on them, Opinions by them — then opinions on and by with the person's handle
+ALWAYS the two opinion figures are two doors and the Posts figure is no door, each door spoken as its figure's number and visible words and nothing more, as 6 Opinions on them and 6 Opinions by them
 
 ALWAYS the actions row reads the opinion on the person, worn wide, then Message sized by its word, then the ⋮ that closes the row
 
@@ -54,7 +54,11 @@ WHEN a guest taps Message -> the guest gate opens
 
 WHEN tap the ⋮ in the actions row -> the profile's menu opens over the page
 
-WHEN tap the figures -> the opinions page opens on this profile
+WHEN tap the Opinions on figure -> the opinions page opens on this profile on its On state
+
+WHEN tap the Opinions by figure -> the opinions page opens on this profile on its By state
+
+WHEN tap the Posts figure -> NEVER anything happens
 
 WHEN tap profile.tabRow.postsTab -> the person's posts stand below profile.tabRow as post cards AND the header above stays as it was
 
@@ -70,7 +74,7 @@ WHEN tap profile.bottomBar.profileSlot -> the reader's own profile opens
 
 WHEN tap the back arrow -> the reader returns to where they came from, in the state they left it AND the arrow's label names that origin
 
-ALWAYS the back arrow reads Back to feed from the feed in any of its states, Back to the post from a post's author chip, opinions or references, Back to the comments from the comments sheet, Back to the stream from the stream, Back to Notifications from Notifications, Back to Saved from Saved, Back to History from History, Back to the opinions from a profile's opinions list, Back to the search from Explore mid-query, Back to Invites from the people you let in on Invites and Back to with the tag's name from a tag's page
+ALWAYS the back arrow reads Back to feed from the feed in any of its states, Back to the post from a post's author chip, opinions or references, Back to the comments from the comments sheet, Back to the stream from the stream, Back to Notifications from Notifications, Back to Saved from Saved, Back to History from History, Back to the opinions from a profile's opinions list, Back to the profile from a card on another's profile, Back to your profile from a card on the reader's own, Back to the search from Explore mid-query, Back to Invites from the people you let in on Invites and Back to with the tag's name from a tag's page
 
 ALWAYS the back arrow reads Back to feed and leads to the feed GIVEN the profile was entered with no history behind it
 

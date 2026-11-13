@@ -2,7 +2,7 @@
 
 WHEN the reference picker hands back a pick -> the reply's seal shows the citation as a row of its acts card AND the total counts it
 
-ALWAYS the reply's seal carries the all-or-nothing subline GIVEN its signature carries more than one thing
+ALWAYS the reply's seal carries no all-or-nothing line, its "?" How signing works saying it
 
 ALWAYS a staged citation reads back as itself, its name over its pair under the Reference label, its remove control beside it, GIVEN one citation is staged
 

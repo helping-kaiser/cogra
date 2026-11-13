@@ -28,7 +28,7 @@
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" />
+      <WizardHeader title="What you sign" help="How signing works" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
 
@@ -49,7 +49,6 @@ export function Screen() {
             citedOneRow(),
           ]}
           total="4 things, signed together"
-          note="They land together, or none does."
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>

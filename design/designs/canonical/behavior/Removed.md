@@ -4,11 +4,13 @@ ALWAYS postDetail.card.removalMark stands in the post's words and pictures' plac
 
 ALWAYS postDetail.card.removalMark.line reads Removed by its author GIVEN the post went with its author's account deletion, its content sweep chosen
 
-ALWAYS postDetail.card.removalMark.detail reads The words and pictures are gone. The post's place in the thread, and every response, remain.
+ALWAYS postDetail.card.removalMark carries the line and the removal's date and no detail
 
 ALWAYS the author's mark never reads like Removed under the platform's rules
 
-ALWAYS postDetail.header carries postDetail.header.back alone and no menu
+ALWAYS postDetail.header carries postDetail.header.back and postDetail.header.menu, whose rows read Save or Unsave, then Cite in a new post, then Mark as sensitive, then License terms, your own post's menu less Edit and Remove GIVEN the post is the reader's own
+
+WHEN tap postDetail.header.menu -> the sheet rises over the detail with those rows AND NEVER Edit or Remove stands
 
 ALWAYS the post keeps postDetail.card.authorChip, postDetail.card.actionRow.stance, postDetail.card.actionRow.score, postDetail.card.actionRow.comments.count and postDetail.card.actionRow.share
 

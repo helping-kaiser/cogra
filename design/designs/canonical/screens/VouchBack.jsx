@@ -51,7 +51,7 @@ export function Screen() {
       </CograBand>
       <FeedList>
         <VouchBackCard
-          body="Vouch back to open the way from your side — your opinion toward @mira, and your feed grows from it. Vouching opens the opinion control, set to a gentle default."
+          body="Vouch back to open the way from your side — your opinion toward @mira, and your feed grows from it."
           actions={
             <>
               <Button variant="text" style={{ color: "var(--on-tertiary-container)" }} node="dismiss">

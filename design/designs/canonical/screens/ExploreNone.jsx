@@ -13,7 +13,7 @@ export function Screen() {
         <SearchTriggerRow reading="Everything" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 24px" }}>
-        <EmptyState title="Nothing carries that name. Search reads names and titles, never bodies — fewer words reach further." node="empty" />
+        <EmptyState title="Nothing carries that name." node="empty" />
       </div>
       <BottomNav active="search" slots={ALL_SLOTS} inline node="bottomBar" />
     </>

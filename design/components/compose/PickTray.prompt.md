@@ -5,12 +5,12 @@ The band under the pick step's caption: what has been picked, the way to manage 
   {picked.map((p) => <MediaThumb key={p.src} src={p.src} alt={p.alt} />)}
 </PickTray>
 
-<PickTray count={2} onShowAll={openSheet} caption="The first one is the cover.">
+<PickTray count={2} onShowAll={openSheet}>
   <MediaThumb src="post-photo.jpg" cover/>
   <MediaThumb src="gallery-market.jpg" onRemove={remove}/>
 </PickTray>
 
-<PickTray count={1} caption="A video is the whole post. Its cover comes next.">
+<PickTray count={1} caption="A video is the whole post.">
   <MediaThumb src="frame.jpg" width={114} height={64} video onRemove={remove} removeLabel="Remove this video"/>
 </PickTray>
 ```

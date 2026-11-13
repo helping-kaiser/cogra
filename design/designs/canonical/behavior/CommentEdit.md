@@ -16,13 +16,13 @@ WHEN tap + Add pictures -> the platform's own picker opens AND NEVER a pick stag
 
 ALWAYS the comment edit's add row reads + Add pictures or a video GIVEN the comment holds words alone, no picture and no clip
 
+ALWAYS whether the comment holds words alone is read on the edit's own state, so a comment whose pictures or clip were removed in this edit holds words alone and may take a video
+
 ALWAYS commentEdit.pictures holds commentEdit.pictures.add alone, with no commentEdit.pictures.label, no commentEdit.pictures.thumb and no commentEdit.pictures.describeRow, GIVEN the comment holds words alone
 
 WHEN tap + Add pictures or a video -> the platform's own picker opens AND NEVER a pick stage opens
 
 WHEN a video is picked from + Add pictures or a video -> the clip arrives as the comment's video with its cover row, as CommentEditVideo draws it
-
-WHEN a video is picked at the edit GIVEN the comment holds no picture and no clip and the edit's video path is still staged -> the refusal A video can't join an edit yet — post it on its own. stands under commentEdit.pictures with Remove it alone AND NEVER the video is taken AND NEVER a dialog opens
 
 WHEN a video is picked at the edit GIVEN the comment holds pictures -> the refusal A comment carries pictures or one video, not both. stands under commentEdit.pictures with Remove it alone AND NEVER the video is taken
 
@@ -84,7 +84,9 @@ WHEN tap Sign the edit -> Sign the edit refuses a second press until the signing
 
 WHEN the signing has not answered 200ms after the press -> Sign the edit reads Signing the edit… AND NEVER a spinner appears
 
-WHEN the signing is taken -> the thread reopens AND the edit settles on its card wearing Still settling
+WHEN the signing is taken GIVEN the edit was opened from the thread -> the thread reopens AND the edit settles on its card wearing Still settling
+
+WHEN the signing is taken GIVEN the edit was opened off the thread, from History, Saved or the profile's Comments tab -> that host comes back as it was left AND the edited comment's card settles in place there wearing Still settling, as the thread's card settles AND NEVER the thread opens
 
 WHEN the signing does not go through GIVEN no answer reached the edit -> the network error answers AND everything the reader chose stays as it was
 

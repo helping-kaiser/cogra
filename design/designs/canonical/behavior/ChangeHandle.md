@@ -1,6 +1,6 @@
 # ChangeHandle · `spec:design:behavior-change-handle`
 
-ALWAYS the screen says before the act that everything published stays the reader's, and after the commitment that links to the old handle stop working and anyone can claim it
+ALWAYS the screen says before the act that everything published stays the reader's, and the cost of the change is said by the confirm dialog alone
 
 ALWAYS the handle's rules stand under the field while it is typed: 3 to 30 characters, letters, numbers and underscore, always lowercase
 
@@ -16,9 +16,9 @@ WHEN press Change handle GIVEN the new handle breaks the field's rules -> the Ne
 
 WHEN typing in New handle GIVEN the field reads its format line -> the line re-checks as the reader types and goes once the handle keeps the rules
 
-ALWAYS Change handle stands disabled with Waiting for a new handle right above it GIVEN New handle is empty
+ALWAYS Change handle stands disabled with no line above it and its spoken description reads Waiting for a new handle GIVEN New handle is empty
 
-WHEN the first character is typed in New handle -> Change handle wakes AND the line Waiting for a new handle goes
+WHEN the first character is typed in New handle -> Change handle wakes AND its spoken description Waiting for a new handle goes
 
 ALWAYS a handle change moves nothing the reader has signed
 

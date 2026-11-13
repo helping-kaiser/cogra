@@ -69,8 +69,8 @@ export function Screen() {
         }}
         data-node="body"
       >
-        It may have expired or already been used. Send yourself a fresh one — if your account is still waiting on its
-        email, the new link picks it back up.
+        It may have expired or already been used. If your account is still waiting on its email, the new link picks it
+        back up.
       </p>
 
       <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8 }}>

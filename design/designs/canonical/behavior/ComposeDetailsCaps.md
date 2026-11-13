@@ -16,6 +16,6 @@ ALWAYS Next stays visible and inert GIVEN a field is over its cap
 
 WHEN press Next GIVEN a field is over its cap -> NEVER the step advances
 
-WHEN press the header X GIVEN a field is over its cap -> the whole flow is left AND the draft is kept with its over-long words AND NEVER a dialog asks
+WHEN press the header X GIVEN a field is over its cap -> the whole flow is left for where the composer was opened from AND the draft is kept with its over-long words AND NEVER a dialog asks
 
 WHEN press the header back arrow -> the crop comes back, one stage behind

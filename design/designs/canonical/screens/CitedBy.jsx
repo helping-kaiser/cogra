@@ -42,8 +42,8 @@
 
    THE `list` CHIP DRAWS THE SHEET EMPTY AT POST SCALE (seam 248): reached
    only when the count it was opened from had gone stale, it says so in the
-   comment sheet's words (`CommentCitedByEmpty`), `Nothing cites this yet —
-   yours would be the first.`, the line alone, as `empty`. */
+   comment sheet's words (`CommentCitedByEmpty`), `Nothing cites this yet`,
+   the line alone, as `empty`. */
 export const NODE = "postDetail";
 export const PROPS = { list: { editor: "enum", options: ["rows", "empty"], default: "rows" } };
 export const VALS = `rowsShown: this.props.list === "empty" ? "none" : "flex", emptyShown: this.props.list === "empty" ? "block" : "none"`;
@@ -64,7 +64,7 @@ export function Screen() {
           ))}
         </div>
         <div style={{ display: "{{emptyShown}}", padding: "0 24px 8px" }} data-node-chip="list" data-node-key="empty">
-          <EmptyState title="Nothing cites this yet — yours would be the first." node="empty" />
+          <EmptyState title="Nothing cites this yet" node="empty" />
         </div>
       </BottomSheet>
     </>

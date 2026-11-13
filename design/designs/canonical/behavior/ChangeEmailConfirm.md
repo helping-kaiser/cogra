@@ -51,12 +51,22 @@ WHEN tap Cancel the change -> the change is called off AND settings returns AND 
 
 WHEN tap Cancel the change GIVEN the reader is offline -> the network error answers AND the change still stands
 
-WHEN press the header back arrow -> settings returns AND the change stays live for its window AND the Email row reads Change pending
+ALWAYS Cancel the change refuses a press, undimmed and unchanged in face, from the press of Confirm the code until its answer comes — submit is submit (jakob 2026-11-12)
+
+WHEN press the header back arrow GIVEN Confirm the code has not been pressed -> settings returns AND the change stays live for its window AND the Email row reads Change pending
+
+ALWAYS the header's arrow is named Close from the press of Confirm the code until its answer comes
+
+WHEN press Close GIVEN Confirm the code was pressed -> settings returns AND the confirm goes on AND NEVER the confirm is canceled
+
+WHEN the confirm fails GIVEN the confirmation was closed after the press -> the Email row in settings reads That didn't go through. AND NEVER Retry stands on the row
+
+WHEN tap the Email row GIVEN it reads That didn't go through. after a confirm -> the confirmation opens again on the side still owed AND the line leaves the row AND the form stands at rest AND a refusal about one field, as a wrong current password, stands beside that field in the form's own field-error line
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 
-ALWAYS Confirm the code stands disabled with Waiting for the code right above it GIVEN Confirmation code is empty
+ALWAYS Confirm the code stands disabled with no line above it and its spoken description reads Waiting for the code GIVEN Confirmation code is empty
 
-WHEN the first character is typed in Confirmation code -> Confirm the code wakes AND the line Waiting for the code goes
+WHEN the first character is typed in Confirmation code -> Confirm the code wakes AND its spoken description Waiting for the code goes
 
 ALWAYS Confirmation code takes a 6-digit single-use code, on the numeric keyboard, offered by the platform's one-time-code autofill

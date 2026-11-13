@@ -136,13 +136,18 @@ const TAG_AXES = {
   top: "Certain",
 };
 
+/* REGISTERED under the `postEdit` prefix (round 45, seam 308), the edit
+   beneath as `EditCompose` names it, the sheet named as `RefPair`'s:
+   `pairSheet` with its `title`, the readout `pick` (`label`, `face`,
+   `exact`), `pad.field`, the foot's line `note`, `untag` and `done`. */
+export const NODE = "postEdit";
 export function Screen() {
   return (
     <>
       <EditComposeBody />
 
-      <BottomSheet open ariaLabel="#saltmaps">
-        <SheetTitle>#saltmaps</SheetTitle>
+      <BottomSheet open ariaLabel="#saltmaps" node="pairSheet">
+        <SheetTitle node="title">#saltmaps</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "0 24px 4px" }}>
           <button type="button" className="cg-sr-focusable cg-state cg-focus cg-hit" style={{ fontFamily: "var(--font-sans)" }}>
             Set exact values for #saltmaps
@@ -153,16 +158,17 @@ export function Screen() {
               `aria-hidden` beside a screen-reader reading that carries the
               anchor's word and names both axes — the numbers alone say nothing
               about which slot they fill. */}
-          <div aria-live="polite" style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div aria-live="polite" style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }} data-node="pick">
             <span
               aria-hidden="true"
+              data-node="label"
               style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}
             >
               Your pick
             </span>
             <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)" }}>
-              <span style={{ fontSize: "var(--text-title-large)", letterSpacing: "var(--text-title-large--letter-spacing)", fontWeight: "var(--text-title-large--font-weight)", lineHeight: 1.2 }}>🔍</span>
-              <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", whiteSpace: "nowrap" }}>
+              <span data-node="face" style={{ fontSize: "var(--text-title-large)", letterSpacing: "var(--text-title-large--letter-spacing)", fontWeight: "var(--text-title-large--font-weight)", lineHeight: 1.2 }}>🔍</span>
+              <span className="cg-exact" data-node="exact" style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", whiteSpace: "nowrap" }}>
                 +0.10 / 1.00
               </span>
             </span>
@@ -171,8 +177,8 @@ export function Screen() {
             </span>
           </div>
 
-          <div role="group" aria-label="The pair this tag signs" style={{ alignSelf: "stretch" }}>
-            <StancePad value={{ pDirected: 0.1, pInterest: 1 }} axes={TAG_AXES} ranges={TAG_RANGES} />
+          <div role="group" data-node="pad" aria-label="The pair this tag signs" style={{ alignSelf: "stretch" }}>
+            <StancePad value={{ pDirected: 0.1, pInterest: 1 }} axes={TAG_AXES} ranges={TAG_RANGES} node="field" />
           </div>
 
           {/* The line carries both outcomes — a pair set and a tag withdrawn
@@ -180,12 +186,12 @@ export function Screen() {
               over the row rather than beside `Done`, leaving the left slot for
               the walk-away the opinion pad's action row puts there. */}
           <div style={{ display: "flex", flexDirection: "column", gap: 10, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
-            <span style={{ fontSize: "var(--text-body-small)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
+            <span style={{ fontSize: "var(--text-body-small)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }} data-node="note">
               {"{{signedWith}}"}
             </span>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "var(--space-2)" }}>
-              <Button variant="text" style={{ marginRight: "auto" }}>Un-tag</Button>
-              <Button>Done</Button>
+              <Button variant="text" style={{ marginRight: "auto" }} node="untag">Un-tag</Button>
+              <Button node="done">Done</Button>
             </div>
           </div>
         </div>

@@ -11,7 +11,7 @@ Use `BorrowedViewBand` in the collapsing top of a read surface whose feed shows 
 
 <BorrowedViewBand
   handle="mira"
-  line="Browsing from @mira's view while your application lands."
+  line="Browsing from @mira's view."
 />
 
 <BorrowedViewBand

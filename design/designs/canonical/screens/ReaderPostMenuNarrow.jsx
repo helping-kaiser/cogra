@@ -37,22 +37,28 @@
    width: small phones are rare but real, and everything must WORK on them —
    masterful is not yet owed. So the rule is one number and a row that moves,
    and no second design language for narrow screens. */
+/* REGISTERED under the `postDetail` prefix (round 46, seam 316): the same
+   surface `ReaderPostMenu` draws at 360 and up, so it rides that board's
+   paths — `header`, `card`, `bottomBar`, `menuSheet` and its rows — and
+   the share row the narrow width moves into the sheet is `menuSheet.share`,
+   the profile menu's name for its own share row. */
+export const NODE = "postDetail";
 export const FRAME = { width: 320, height: 568 };
 
-const NARROW_MENU = [{ label: "Share", onSelect: () => {} }, ...READER_POST_MENU];
+const NARROW_MENU = [{ label: "Share", onSelect: () => {}, node: "share" }, ...READER_POST_MENU];
 
 export function Screen() {
   return (
     <>
-      <DetailHeader items={NARROW_MENU} />
+      <DetailHeader items={NARROW_MENU} node="header" />
       <DetailColumn>
-        <PostCard {...ADA_POST} variant="detail" showShare={false} />
+        <PostCard {...ADA_POST} variant="detail" showShare={false} node="card" />
       </DetailColumn>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
 
-      <BottomSheet open ariaLabel="Post actions">
+      <BottomSheet open ariaLabel="Post actions" node="menuSheet">
         {NARROW_MENU.map((item) => (
-          <SheetItem key={item.label} label={item.label} />
+          <SheetItem key={item.label} label={item.label} node={item.node} />
         ))}
       </BottomSheet>
     </>

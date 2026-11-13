@@ -2,8 +2,6 @@
 
 ALWAYS each picture still uploading wears its progress as a ring on its thumbnail
 
-ALWAYS the line Pictures upload while you write — signing waits for them. stands above Next GIVEN an upload is running
-
 ALWAYS the picked row carries no crop or edit shortcut of its own
 
 ALWAYS the picked row's first picture wears the Cover badge
@@ -28,4 +26,4 @@ WHEN press Next GIVEN every upload has landed -> the seal opens ungated
 
 WHEN press the header back arrow -> the crop comes back, one stage behind
 
-WHEN press the header X -> the whole flow is left AND the draft is kept AND the uploads finish quietly AND NEVER a dialog asks
+WHEN press the header X -> the whole flow is left for where the composer was opened from AND the draft is kept AND the uploads finish quietly AND NEVER a dialog asks

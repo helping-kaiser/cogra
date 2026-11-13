@@ -2,9 +2,9 @@
 
 WHEN a guest reaches for a stance, New post, the profile slot, the chats, Message, the comment sheet's foot or a comment's Reply -> the ask Join the conversation opens over the screen they were on with Posting and profiles need an account. AND NEVER the reader is bounced to another screen
 
-WHEN a guest taps Save, Cite in a new post, Mention in a new post or Hide on a menu -> the menu closes AND the ask Join the conversation opens over the read
+WHEN a guest taps Save, Cite in a new post, Mention in a new post, Hide or Report on a menu -> the menu closes AND the ask Join the conversation opens over the read
 
-ALWAYS Share and License terms open for a guest without the ask
+ALWAYS Share, License terms, Cited by and Opinions on this open for a guest without the ask, a reading and never an act
 
 ALWAYS a stance face a guest reaches for wears the borrowed view's own stance, read-only, at the member's anchor geometry, and the hollow face wherever the borrowed view holds none
 

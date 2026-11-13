@@ -13,16 +13,13 @@ export const VALS = `restFootShown: this.props.state === "signing" ? "none" : "f
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" leaveLabel="Leave" stageLabel="Last step" help="Changing your profile" />
+      <WizardHeader title="What you sign" leaveLabel="Leave" help="Changing your profile" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <MonogramAvatar name="Sol Ferreira" size={64} />
           <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
             <span style={{ fontSize: "var(--text-label-large)", letterSpacing: "var(--text-label-large--letter-spacing)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>
               Your profile
-            </span>
-            <span style={{ fontSize: "var(--text-label-small)", letterSpacing: "var(--text-label-small--letter-spacing)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
-              Picture, name, bio, and website — one signed change.
             </span>
           </span>
         </div>

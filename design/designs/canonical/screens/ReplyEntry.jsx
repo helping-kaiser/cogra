@@ -41,7 +41,9 @@
    comment `commentCard` keyed by its id. @sol's two readings are the
    `reader` chip's copies of one card. THE `pick` CHIP draws a kept pick on
    @tobias's comment (`PickCopies`), adding the stance control's `pending`
-   line to `threadSheet.commentCard`. */
+   line to `threadSheet.commentCard`. The snackbar laid over the sheet is
+   `snackbar`, the page's own, as `SettingsUnhidden` names the one over its
+   sheet (round 45, seam 297; android tagged it `comments_snackbar`). */
 export const NODE = "postDetail";
 export const PROPS = { reader: { editor: "enum", options: ["member", "applicant"], default: "member" }, ...PICK_CHIP };
 export const VALS = `lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none", memberShown: this.props.reader === "applicant" ? "none" : "flex", applicantShown: this.props.reader === "applicant" ? "flex" : "none", ${PICK_VALS}`;
@@ -58,7 +60,7 @@ export function Screen() {
         node="threadSheet"
       />
       <div style={{ display: "{{lockedLine}}" }}>
-        <Snackbar message="You can comment once you're in." offset={88} />
+        <Snackbar message="You can comment once you're in." offset={88} node="snackbar" />
       </div>
     </>
   );
