@@ -2,11 +2,11 @@ Use `SettingsGroup` and `SettingsRow` for every setting in the product. The grou
 
 ```jsx
 <SettingsGroup label="Writing" footnote="Every signed action is paid for separately.">
-  <SettingsRow label="Confirm multi-action submits" status="Ask first when one submit signs more than one action." checked />
+  <SettingsRow label="Confirm multi-action submits" checked />
   <SettingsRow label="Default license" value="Public domain" onOpen={openLicenseSheet} />
 </SettingsGroup>
 
-<SettingsGroup label="Giving an opinion" footnote="A tap opens this, everywhere. Press and hold instead, and a small positive one is signed on the spot." help={<HelpDot ariaLabel="Giving an opinion" onOpen={openHelp} />}>
+<SettingsGroup label="Giving an opinion" footnote="Press and hold instead, and a small positive one is signed on the spot." help={<HelpDot ariaLabel="Giving an opinion" onOpen={openHelp} />}>
   <SettingsRow name="stance-input" selected label="The pad" />
   <SettingsRow name="stance-input" selected={false} label="Sliders" />
 </SettingsGroup>

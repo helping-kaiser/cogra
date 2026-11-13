@@ -1,8 +1,7 @@
 /* Restore — brings a signing key onto a device that doesn't have it
    (readme §13, entry): reached from KeyElsewhere and every key-absent state
    that offers the restore — the composer's seal, the pad, the backup settings
-   and Your key. The wording chip flips the body
-   copy between the browser and the installed app, same as KeyElsewhere.
+   and Your key.
 
    THE CODE IS READ THE WAY EVERY CODE INPUT READS IT (auth.md, "Blob
    format"; `readRecoveryCode`, the `RecoveryCode` master's fold): case,
@@ -25,8 +24,6 @@
    not sign on their own: with any waiting, success opens the kept picks'
    review (`KeptPicksReview`) under the same snackbar, and they sign together
    from its seal, one batch the reader has looked over. */
-export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
-export const VALS = `restoreBody: this.props.wording === "app" ? "Enter your recovery code to bring your signing key into this app." : "Enter your recovery code to bring your signing key onto this browser."`;
 
 export function Screen() {
   return <RestoreBody />;

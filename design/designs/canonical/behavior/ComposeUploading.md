@@ -2,8 +2,6 @@
 
 ALWAYS each picture still uploading wears its progress as a ring on its thumbnail
 
-ALWAYS the line Pictures upload while you write — signing waits for them. stands above Next GIVEN an upload is running
-
 ALWAYS the picked row carries no crop or edit shortcut of its own
 
 ALWAYS the picked row's first picture wears the Cover badge

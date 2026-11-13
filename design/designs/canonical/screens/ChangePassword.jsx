@@ -125,12 +125,6 @@ export function Screen() {
           <ChangePasswordFields pending />
         </div>
 
-        <div style={{ marginTop: 24 }}>
-          <QuietNote node="note">
-            Your current password is asked for even though you are signed in: a live session is not
-            proof enough to change the credential behind it.
-          </QuietNote>
-        </div>
       </div>
     </>
   );

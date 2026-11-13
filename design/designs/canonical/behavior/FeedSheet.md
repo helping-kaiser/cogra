@@ -82,6 +82,8 @@ ALWAYS feed.band.filterTrigger reads everyone among its deviations GIVEN the rea
 
 ALWAYS the filter's "?" says Reset brings back your defaults, to change them go to settings.
 
+ALWAYS the filter's "?" says Ranked puts what's closest to you first — your view, no one else's. Newest ignores it and lists by time. and How sensitive content is veiled is set in Settings.
+
 ALWAYS the feed filter's "?" says What you've already seen waits below the Already seen line unless you ask for it back. and the search sheet's carries no seen sentence
 
 WHEN the last kind chip is switched off -> NEVER the chip refuses the tap
@@ -90,9 +92,7 @@ WHEN pull down inside feed.filterSheet -> NEVER the feed refreshes
 
 ALWAYS the trigger's spoken name is its reading followed by what your feed shows
 
-ALWAYS the People section's second row reads the borrowed view's account's name the band's way, as @mira's people, over Only the people @mira holds an opinion of — the same rank, narrowed to them. GIVEN the feed borrows a view
-
-ALWAYS Everyone's line reads The whole feed, as far as @mira's eyes reach. GIVEN the feed borrows a view
+ALWAYS the People section's second row reads the borrowed view's account's name the band's way, as @mira's people, over Only the people @mira holds an opinion of. GIVEN the feed borrows a view
 
 ALWAYS @mira's people narrows the feed to the people the borrowed view's account holds an opinion of, by that account's marks and never the reader's, and For, Against and Either narrow it by that account's sign GIVEN the feed borrows a view
 
@@ -100,9 +100,7 @@ ALWAYS the sign row's spoken name is Which of @mira's people GIVEN the feed borr
 
 ALWAYS the trigger reads the people extra by the borrowed view's account's name, as @mira's people, @mira's people, for or @mira's people, against, and past the pill's budget collapses to the count like any extra GIVEN the feed borrows a view and @mira's people is on
 
-ALWAYS Order's line reads Ranked puts what's closest to @mira first — the view you're browsing from. Newest ignores it and lists by time. GIVEN the feed borrows a view
-
-ALWAYS the topic chips are the topics the borrowed view's account holds and is for, under Tags @mira holds and is for. A tag @mira holds against stays a record — it just never narrows a feed. GIVEN the feed borrows a view
+ALWAYS the topic chips are the topics the borrowed view's account holds and is for, under Tags @mira holds and is for. GIVEN the feed borrows a view
 
 ALWAYS Show what you've already seen, the kinds, the kinds of post, Also show, Reset and the "?" keep the reader's own first person GIVEN the feed borrows a view
 

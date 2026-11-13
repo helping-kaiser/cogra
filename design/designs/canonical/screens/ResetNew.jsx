@@ -60,7 +60,7 @@ export function Screen() {
         }}
         data-node="body"
       >
-        Setting a new password signs out every device. You sign in again with the new one.
+        Setting a new password signs out every device.
       </p>
 
       <div style={{ marginTop: 32 }}>

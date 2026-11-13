@@ -88,22 +88,19 @@
                                 7-day grace runs — the grace protects landed
                                 records, and an applicant has none; with the
                                 address unverified, the in-app confirm
-                                suffices and no emailed link gates it; the
-                                footnote drops the mailed link (jakob
-                                2026-10-05), drawn by the reader chip
+                                suffices and no emailed link gates it
      About · the support stack  as for a member
 
    THE DELETION ROW READS `User.deletionPath` (OS-15, seam 140/162; ER-G18):
    one server-computed value, never a pair and never derived from
    `application.*` fields. `BY_LINK` (a member, or an applicant whose
-   Registration landed) reads the member's footnote and opens the request;
-   `IMMEDIATE` (an applicant never funded) the applicant's footnote; `LOCKED`
-   (funded, Registration not yet landed) the applicant's footnote under the
-   locked look, its tap answering `You can delete your account once your
+   Registration landed) opens the request; `IMMEDIATE` (an applicant never
+   funded) the in-app confirm; `LOCKED` (funded, Registration not yet landed)
+   wears the locked look, its tap answering `You can delete your account once your
    registration lands.` — the moment the path turns `BY_LINK`, which can
-   come before the vouch lets them in. The reader chip's `member` value
-   draws `BY_LINK`, `applicant` draws `IMMEDIATE`; the grace stays
-   `accountDeletion`'s (`SettingsDeleting`).
+   come before the vouch lets them in. The group carries no footnote: the
+   row's chevron promises the next screen, which says it all (jakob
+   2026-11-12). The grace stays `accountDeletion`'s (`SettingsDeleting`).
 
    THE KEPT PICKS' ROW IS DRAWN PRESENT, to show where it stands (backlog item
    113, jakob's ruling B3): `4 kept picks waiting` (`KEPT_PICKS`, counted), last in the Key backup
@@ -167,15 +164,14 @@
 export const NODE = "settings";
 export const FRAME = { width: 390, height: 3103 };
 export const PROPS = {
-  reader: { editor: "enum", options: ["member", "applicant"], default: "member" },
   handle: { editor: "enum", options: ["rest", "changing", "failed", "taken"], default: "rest" },
   install: { editor: "enum", options: ["absent", "shown"], default: "absent" },
   kept: { editor: "enum", options: ["waiting", "failed"], default: "waiting" },
   forms: { editor: "enum", options: ["rest", "password", "email"], default: "rest" },
   help: { editor: "enum", options: ["closed", "opinion", "reading"], default: "closed" },
 };
-export const VALS = `helpOpinionShown: this.props.help === "opinion" ? "block" : "none", helpReadingShown: this.props.help === "reading" ? "block" : "none", passwordRestShown: this.props.forms === "password" ? "none" : "block", passwordFailedShown: this.props.forms === "password" ? "block" : "none", emailRestShown: this.props.forms === "email" ? "none" : "block", emailFailedShown: this.props.forms === "email" ? "block" : "none", keptRestShown: this.props.kept === "failed" ? "none" : "block", keptFailedShown: this.props.kept === "failed" ? "block" : "none", installShown: this.props.install === "shown" ? "block" : "none",handleRestShown: this.props.handle === "rest" ? "block" : "none", handleChangingShown: this.props.handle === "changing" ? "block" : "none", handleFailedShown: this.props.handle === "failed" ? "block" : "none", handleTakenShown: this.props.handle === "taken" ? "block" : "none", deleteFootnote: this.props.reader === "applicant" ? "Nothing is deleted here. The next screen says what goes and what stays." : "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."`;
+export const VALS = `helpOpinionShown: this.props.help === "opinion" ? "block" : "none", helpReadingShown: this.props.help === "reading" ? "block" : "none", passwordRestShown: this.props.forms === "password" ? "none" : "block", passwordFailedShown: this.props.forms === "password" ? "block" : "none", emailRestShown: this.props.forms === "email" ? "none" : "block", emailFailedShown: this.props.forms === "email" ? "block" : "none", keptRestShown: this.props.kept === "failed" ? "none" : "block", keptFailedShown: this.props.kept === "failed" ? "block" : "none", installShown: this.props.install === "shown" ? "block" : "none",handleRestShown: this.props.handle === "rest" ? "block" : "none", handleChangingShown: this.props.handle === "changing" ? "block" : "none", handleFailedShown: this.props.handle === "failed" ? "block" : "none", handleTakenShown: this.props.handle === "taken" ? "block" : "none"`;
 
 export function Screen() {
-  return <SettingsBody handleChip keptChip formsChip helpChip keptPicks={KEPT_PICKS.length} deleteFootnote="{{deleteFootnote}}" install="{{installShown}}" />;
+  return <SettingsBody handleChip keptChip formsChip helpChip keptPicks={KEPT_PICKS.length} install="{{installShown}}" />;
 }

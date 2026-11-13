@@ -14,14 +14,19 @@ import { Button } from "../core/Button.jsx";
 
    IT IS A TEXT BUTTON, at `sm`, deliberately quieter than anything in the tray
    below. Picking is what this step is for; writing instead is the alternative,
-   offered without being urged. */
+   offered without being urged.
+
+   THE LINE IS OPTIONAL (jakob 2026-11-12): the roll is the instruction, so the
+   pick steps pass no caption and the escape keeps its end of the row alone. */
 
 export function PickPrompt({ caption, escapeLabel, onEscape }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 24px" }}>
-      <p style={{ margin: 0, flex: 1, fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
-        {caption}
-      </p>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, padding: "8px 24px" }}>
+      {caption && (
+        <p style={{ margin: 0, flex: 1, fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
+          {caption}
+        </p>
+      )}
       <Button variant="text" size="sm" onClick={onEscape}>{escapeLabel}</Button>
     </div>
   );

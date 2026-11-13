@@ -2,7 +2,7 @@
 
 ALWAYS the cancel's confirmation is a snackbar on the surface the reader was on and never a screen of its own
 
-ALWAYS the snackbar reads Canceled — your account stays, and nothing was deleted. and offers no Undo
+ALWAYS the snackbar reads Canceled — your account stays. and offers no Undo
 
 ALWAYS the deletion band is gone from every surface GIVEN the deletion was canceled
 

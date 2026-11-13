@@ -34,9 +34,7 @@ ALWAYS every act the signature commits is read back in the acts card, one row pe
 
 ALWAYS the acts card's total reads the number of things signed together
 
-ALWAYS the acts card carries the line They land together, or none does. GIVEN the seal signs more than one act
-
-ALWAYS the acts card carries no all-or-nothing line GIVEN the seal signs one act
+ALWAYS the acts card carries no all-or-nothing line, the seal's "?" How signing works saying it
 
 ALWAYS the References row reads the one staged citation by its name over its pair GIVEN one citation is staged
 

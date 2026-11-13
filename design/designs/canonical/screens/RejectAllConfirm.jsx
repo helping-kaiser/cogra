@@ -58,8 +58,8 @@ export function Screen() {
           onScrimPress={() => {}}
           title="Close all 4 applications from this link?"
           body={[
-            "All four leave your list and all four people are told. Their accounts stay exactly as they are — signed in, and free to keep reading.",
-            "This is your call and nobody else's. Any member can still vouch any of them in, and each gets a link to ask with.",
+            "All four leave your list and all four people are told. Their accounts stay as they are.",
+            "Any member can still vouch any of them in, and each gets a link to ask with.",
           ]}
           actions={
             <>
@@ -74,8 +74,8 @@ export function Screen() {
           onScrimPress={() => {}}
           title="Close all 4 applications from this link?"
           body={[
-            "All four leave your list and all four people are told. Their accounts stay exactly as they are — signed in, and free to keep reading.",
-            "This is your call and nobody else's. Any member can still vouch any of them in, and each gets a link to ask with.",
+            "All four leave your list and all four people are told. Their accounts stay as they are.",
+            "Any member can still vouch any of them in, and each gets a link to ask with.",
           ]}
           actions={
             <>

@@ -4,7 +4,7 @@ ALWAYS a post the reader removed from the feed stands in its own place in the fe
 
 ALWAYS feed.card.removalMark.line reads Removed by its author
 
-ALWAYS feed.card.removalMark.detail reads The words and pictures are gone. The post's place in the thread, and every response, remain.
+ALWAYS feed.card.removalMark carries the line and the removal's date and no detail
 
 ALWAYS the removed card carries no feed.card.menu
 

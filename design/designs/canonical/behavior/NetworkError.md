@@ -18,7 +18,7 @@ WHEN the server answers BAD_INPUT naming no field -> the line That didn't go thr
 
 WHEN the server answers EMAIL_NOT_VERIFIED -> the line Verify your email first — the link is in your inbox. takes the commit's place
 
-WHEN the server answers UNAUTHENTICATED or REFRESH_TOKEN_INVALID mid-session -> the sign-in screen opens with You've been signed out. Sign in again to carry on. where its welcome line stood AND the draft and any kept picks stay on this device
+WHEN the server answers UNAUTHENTICATED or REFRESH_TOKEN_INVALID mid-session -> the sign-in screen opens with You've been signed out. under its heading AND the draft and any kept picks stay on this device
 
 WHEN press Retry -> the same signing is asked again AND past 200ms the commit's slot reads the original commit's in-flight label AND Back reads Close again
 

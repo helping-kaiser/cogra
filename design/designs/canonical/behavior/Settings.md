@@ -52,9 +52,9 @@ WHEN tap Always unveil sensitive content GIVEN the switch is off -> the switch t
 
 WHEN tap Always unveil sensitive content GIVEN the switch is on -> the switch turns off AND sensitive content stays veiled until it is tapped
 
-ALWAYS settings.sensitive.unveil.status reads Off, the veil stays until you tap it. GIVEN the switch is off
+ALWAYS settings.sensitive.unveil carries no second line GIVEN the switch is off
 
-ALWAYS settings.sensitive.unveil.status reads On, sensitive content stands unveiled wherever you read. GIVEN the switch is on
+ALWAYS the unveil switch's second line reads On, sensitive content stands unveiled wherever you read. GIVEN the switch is on
 
 ALWAYS the Sensitive content choice follows the account, never this device alone
 
@@ -150,9 +150,9 @@ ALWAYS settings.backup.footnote reads Your key signs everything you publish and 
 
 ALWAYS settings.backup.footnote reads Your key signs everything you publish and lives only in this browser. Until you make a recovery code, it can't be brought back. on the web and Your key signs everything you publish and lives only in this app. Until you make a recovery code, it can't be brought back. on android GIVEN no recovery code exists
 
-ALWAYS settings.clearing.footnote reads Your key lives only in this browser. Clear CoGra's data here and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in. on the web and Your key lives only in this app. Clear the app's data, or uninstall it without keeping the data, and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in. on android GIVEN a recovery code exists
+ALWAYS settings.clearing.footnote reads Clear CoGra's data here and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. on the web and Clear the app's data, or uninstall it without keeping the data, and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. on android GIVEN a recovery code exists
 
-ALWAYS settings.clearing.footnote reads Your key lives only in this browser, and it has no recovery code yet. Clear CoGra's data here and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in. on the web and Your key lives only in this app, and it has no recovery code yet. Clear the app's data, or uninstall it without keeping the data, and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in. on android GIVEN no recovery code exists
+ALWAYS settings.clearing.footnote reads Clear CoGra's data here and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. on the web and Clear the app's data, or uninstall it without keeping the data, and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. on android GIVEN no recovery code exists
 
 ALWAYS settings.clearing.footnote opens on the key and says the account is gone for good before it names anything else that goes
 
@@ -186,9 +186,7 @@ WHEN tap Sign out GIVEN the don't-remember switch is on and this device holds th
 
 WHEN the sign-out has not answered 200ms after the press -> Sign out reads Signing out… in its own place AND NEVER a spinner appears
 
-ALWAYS the deletion group's footnote reads Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you. GIVEN User.deletionPath reads BY_LINK and no deletion is in its grace
-
-ALWAYS the deletion group's footnote reads Nothing is deleted here. The next screen says what goes and what stays. GIVEN User.deletionPath reads IMMEDIATE or LOCKED
+ALWAYS the deletion group carries no footnote
 
 ALWAYS the Delete account row's state reads User.deletionPath, the one value the server computes, and never the application's fields
 

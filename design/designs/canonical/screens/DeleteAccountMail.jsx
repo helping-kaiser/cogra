@@ -64,13 +64,6 @@ export function Screen() {
         </p>
 
         <div style={{ marginTop: 24 }}>
-          <QuietNote node="note">
-            Until you open it nothing is scheduled and nothing has changed. Closing this screen
-            changes nothing either — the link is the whole of it.
-          </QuietNote>
-        </div>
-
-        <div style={{ marginTop: 24 }}>
           <Button variant="outline" style={{ width: "100%" }} node="resend">
             Resend the link
           </Button>

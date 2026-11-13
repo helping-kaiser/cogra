@@ -188,7 +188,6 @@
         "feed.keyCard.title": [],
         "feed.verifyCard": [],
         "feed.verifyCard.address": [],
-        "feed.verifyCard.body": [],
         "feed.verifyCard.note": [],
         "feed.verifyCard.resend": [],
         "feed.verifyCard.title": [],
@@ -938,7 +937,6 @@
       "prefix": "changeEmail",
       "keys": {},
       "nodes": {
-        "changeEmail.body": [],
         "changeEmail.cancel": [],
         "changeEmail.code": [],
         "changeEmail.code.input": [],
@@ -992,7 +990,6 @@
         "changeHandle.handle.support": [],
         "changeHandle.header": [],
         "changeHandle.header.back": [],
-        "changeHandle.note": [],
         "changeHandle.title": []
       }
     },
@@ -1014,7 +1011,6 @@
         "changeHandle.handle.support": [],
         "changeHandle.header": [],
         "changeHandle.header.back": [],
-        "changeHandle.note": [],
         "changeHandle.title": []
       }
     },
@@ -1035,7 +1031,6 @@
         "changePassword.current.reveal": [],
         "changePassword.header": [],
         "changePassword.header.back": [],
-        "changePassword.note": [],
         "changePassword.password": [],
         "changePassword.password.input": [],
         "changePassword.password.label": [],
@@ -1055,7 +1050,6 @@
         "chats.bottomBar.searchSlot": [],
         "chats.bottomBar.walletSlot": [],
         "chats.comingSoonCard": [],
-        "chats.comingSoonCard.line": [],
         "chats.comingSoonCard.title": [],
         "chats.header": [],
         "chats.header.back": [],
@@ -2229,9 +2223,6 @@
         "postDetail.threadSheet.commentCard.removalMark": [
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
-        "postDetail.threadSheet.commentCard.removalMark.detail": [
-          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
-        ],
         "postDetail.threadSheet.commentCard.removalMark.line": [
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
@@ -2440,7 +2431,6 @@
         "composeDetails.pickedSheet": [],
         "composeDetails.pickedSheet.done": [],
         "composeDetails.pickedSheet.dragHandle": [],
-        "composeDetails.pickedSheet.note": [],
         "composeDetails.pickedSheet.picture": [
           "1",
           "2",
@@ -2678,7 +2668,6 @@
         "deleteAccount.body": [],
         "deleteAccount.header": [],
         "deleteAccount.header.back": [],
-        "deleteAccount.note": [],
         "deleteAccount.resend": [],
         "deleteAccount.title": []
       }
@@ -2968,7 +2957,6 @@
         "postEdit.pickedSheet": [],
         "postEdit.pickedSheet.done": [],
         "postEdit.pickedSheet.dragHandle": [],
-        "postEdit.pickedSheet.note": [],
         "postEdit.pickedSheet.picture": [
           "1",
           "2"
@@ -3162,7 +3150,6 @@
         "settings.credentials.email.chevron": [],
         "settings.credentials.email.label": [],
         "settings.credentials.email.value": [],
-        "settings.credentials.footnote": [],
         "settings.credentials.handle": [],
         "settings.credentials.handle.chevron": [],
         "settings.credentials.handle.label": [],
@@ -3190,7 +3177,6 @@
         "settings.ending.delete": [],
         "settings.ending.delete.chevron": [],
         "settings.ending.delete.label": [],
-        "settings.ending.footnote": [],
         "settings.header": [],
         "settings.header.back": [],
         "settings.header.title": [],
@@ -3224,7 +3210,6 @@
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
-        "settings.sensitive.unveil.status": [],
         "settings.sensitive.unveil.switch": [],
         "settings.sessions": [],
         "settings.sessions.elsewhere": [],
@@ -3263,9 +3248,7 @@
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
-        "settings.stance.typed.status": [],
         "settings.theme": [],
-        "settings.theme.footnote": [],
         "settings.theme.label": [],
         "settings.theme.picker": [],
         "settings.theme.picker.autoOption": [],
@@ -3274,7 +3257,6 @@
         "settings.writing": [],
         "settings.writing.confirm": [],
         "settings.writing.confirm.label": [],
-        "settings.writing.confirm.status": [],
         "settings.writing.confirm.switch": [],
         "settings.writing.footnote": [],
         "settings.writing.label": [],
@@ -3358,15 +3340,11 @@
         "explore.filterSheet.help": [],
         "explore.filterSheet.kinds": [],
         "explore.filterSheet.kinds.commentsChip": [],
-        "explore.filterSheet.kinds.hint": [],
         "explore.filterSheet.kinds.label": [],
         "explore.filterSheet.kinds.postsChip": [],
         "explore.filterSheet.kinds.profilesChip": [],
         "explore.filterSheet.kinds.topicsChip": [],
         "explore.filterSheet.order": [
-          "member"
-        ],
-        "explore.filterSheet.order.hint": [
           "member"
         ],
         "explore.filterSheet.order.label": [
@@ -5511,9 +5489,6 @@
         "feed.card.removalMark": [
           "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
         ],
-        "feed.card.removalMark.detail": [
-          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
-        ],
         "feed.card.removalMark.line": [
           "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
         ],
@@ -5656,7 +5631,6 @@
           "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
         ],
         "feed.reportSheet": [],
-        "feed.reportSheet.body": [],
         "feed.reportSheet.cancel": [],
         "feed.reportSheet.dragHandle": [],
         "feed.reportSheet.report": [],
@@ -5934,7 +5908,6 @@
         ],
         "feed.filterSheet": [],
         "feed.filterSheet.also": [],
-        "feed.filterSheet.also.hint": [],
         "feed.filterSheet.also.label": [],
         "feed.filterSheet.also.removedChip": [],
         "feed.filterSheet.also.sensitiveChip": [],
@@ -5944,7 +5917,6 @@
         "feed.filterSheet.foot.done": [],
         "feed.filterSheet.foot.reset": [],
         "feed.filterSheet.forms": [],
-        "feed.filterSheet.forms.hint": [],
         "feed.filterSheet.forms.label": [],
         "feed.filterSheet.forms.photosChip": [],
         "feed.filterSheet.forms.textChip": [],
@@ -5952,13 +5924,11 @@
         "feed.filterSheet.help": [],
         "feed.filterSheet.kinds": [],
         "feed.filterSheet.kinds.commentsChip": [],
-        "feed.filterSheet.kinds.hint": [],
         "feed.filterSheet.kinds.label": [],
         "feed.filterSheet.kinds.postsChip": [],
         "feed.filterSheet.kinds.profilesChip": [],
         "feed.filterSheet.kinds.topicsChip": [],
         "feed.filterSheet.order": [],
-        "feed.filterSheet.order.hint": [],
         "feed.filterSheet.order.label": [],
         "feed.filterSheet.order.picker": [],
         "feed.filterSheet.order.picker.newestOption": [],
@@ -5975,15 +5945,10 @@
           "everyone",
           "your-people"
         ],
-        "feed.filterSheet.people.everyone.hint": [
-          "everyone",
-          "your-people"
-        ],
         "feed.filterSheet.people.everyone.label": [
           "everyone",
           "your-people"
         ],
-        "feed.filterSheet.people.hint": [],
         "feed.filterSheet.people.label": [],
         "feed.filterSheet.people.sign": [
           "your-people"
@@ -6888,7 +6853,6 @@
         "history.filterSheet.foot.reset": [],
         "history.filterSheet.kinds": [],
         "history.filterSheet.kinds.commentsChip": [],
-        "history.filterSheet.kinds.hint": [],
         "history.filterSheet.kinds.label": [],
         "history.filterSheet.kinds.postsChip": [],
         "history.filterSheet.kinds.profilesChip": [],
@@ -8455,7 +8419,6 @@
           "3",
           "4"
         ],
-        "keptPicksSeal.acts.note": [],
         "keptPicksSeal.acts.total": [],
         "keptPicksSeal.approval": [],
         "keptPicksSeal.approval.open": [],
@@ -8466,7 +8429,6 @@
         "keptPicksSeal.header.back": [],
         "keptPicksSeal.header.help": [],
         "keptPicksSeal.header.leave": [],
-        "keptPicksSeal.header.stage": [],
         "keptPicksSeal.header.title": []
       }
     },
@@ -8805,7 +8767,6 @@
         "onboarding.body": [],
         "onboarding.dots": [],
         "onboarding.next": [],
-        "onboarding.note": [],
         "onboarding.skip": [],
         "onboarding.stage": [],
         "onboarding.stage.inviter": [],
@@ -9738,9 +9699,6 @@
           "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
         ],
         "profile.comments.commentCard.removalMark": [
-          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
-        ],
-        "profile.comments.commentCard.removalMark.detail": [
           "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
         ],
         "profile.comments.commentCard.removalMark.line": [
@@ -11583,9 +11541,6 @@
         "referencePicker.filterSheet.kinds.commentsChip": [
           "filter"
         ],
-        "referencePicker.filterSheet.kinds.hint": [
-          "filter"
-        ],
         "referencePicker.filterSheet.kinds.label": [
           "filter"
         ],
@@ -12112,9 +12067,6 @@
         "postDetail.card.removalMark": [
           "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
         ],
-        "postDetail.card.removalMark.detail": [
-          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
-        ],
         "postDetail.card.removalMark.line": [
           "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
         ],
@@ -12374,7 +12326,6 @@
         "postDetail.header.back": [],
         "postDetail.header.menu": [],
         "postDetail.reportSheet": [],
-        "postDetail.reportSheet.body": [],
         "postDetail.reportSheet.cancel": [],
         "postDetail.reportSheet.dragHandle": [],
         "postDetail.reportSheet.report": [],
@@ -13297,7 +13248,6 @@
         "settings.credentials.email.chevron": [],
         "settings.credentials.email.label": [],
         "settings.credentials.email.value": [],
-        "settings.credentials.footnote": [],
         "settings.credentials.handle": [],
         "settings.credentials.handle.chevron": [],
         "settings.credentials.handle.label": [],
@@ -13311,7 +13261,6 @@
         "settings.ending.delete": [],
         "settings.ending.delete.chevron": [],
         "settings.ending.delete.label": [],
-        "settings.ending.footnote": [],
         "settings.header": [],
         "settings.header.back": [],
         "settings.header.title": [],
@@ -13345,7 +13294,6 @@
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
-        "settings.sensitive.unveil.status": [],
         "settings.sensitive.unveil.switch": [],
         "settings.sessions": [],
         "settings.sessions.elsewhere": [],
@@ -13384,9 +13332,7 @@
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
-        "settings.stance.typed.status": [],
         "settings.theme": [],
-        "settings.theme.footnote": [],
         "settings.theme.label": [],
         "settings.theme.picker": [],
         "settings.theme.picker.autoOption": [],
@@ -13395,7 +13341,6 @@
         "settings.writing": [],
         "settings.writing.confirm": [],
         "settings.writing.confirm.label": [],
-        "settings.writing.confirm.status": [],
         "settings.writing.confirm.switch": [],
         "settings.writing.footnote": [],
         "settings.writing.label": [],
@@ -13518,7 +13463,6 @@
         "settings.credentials.email.chevron": [],
         "settings.credentials.email.label": [],
         "settings.credentials.email.value": [],
-        "settings.credentials.footnote": [],
         "settings.credentials.handle": [],
         "settings.credentials.handle.chevron": [],
         "settings.credentials.handle.label": [],
@@ -13569,7 +13513,6 @@
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
-        "settings.sensitive.unveil.status": [],
         "settings.sensitive.unveil.switch": [],
         "settings.sessions": [],
         "settings.sessions.elsewhere": [],
@@ -13608,9 +13551,7 @@
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
-        "settings.stance.typed.status": [],
         "settings.theme": [],
-        "settings.theme.footnote": [],
         "settings.theme.label": [],
         "settings.theme.picker": [],
         "settings.theme.picker.autoOption": [],
@@ -13619,7 +13560,6 @@
         "settings.writing": [],
         "settings.writing.confirm": [],
         "settings.writing.confirm.label": [],
-        "settings.writing.confirm.status": [],
         "settings.writing.confirm.switch": [],
         "settings.writing.footnote": [],
         "settings.writing.label": [],
@@ -13681,7 +13621,6 @@
         "settings.credentials.email.label": [],
         "settings.credentials.email.status": [],
         "settings.credentials.email.value": [],
-        "settings.credentials.footnote": [],
         "settings.credentials.handle": [],
         "settings.credentials.handle.chevron": [],
         "settings.credentials.handle.label": [],
@@ -13695,7 +13634,6 @@
         "settings.ending.delete": [],
         "settings.ending.delete.chevron": [],
         "settings.ending.delete.label": [],
-        "settings.ending.footnote": [],
         "settings.header": [],
         "settings.header.back": [],
         "settings.header.title": [],
@@ -13729,7 +13667,6 @@
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
-        "settings.sensitive.unveil.status": [],
         "settings.sensitive.unveil.switch": [],
         "settings.sessions": [],
         "settings.sessions.elsewhere": [],
@@ -13768,9 +13705,7 @@
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
-        "settings.stance.typed.status": [],
         "settings.theme": [],
-        "settings.theme.footnote": [],
         "settings.theme.label": [],
         "settings.theme.picker": [],
         "settings.theme.picker.autoOption": [],
@@ -13779,7 +13714,6 @@
         "settings.writing": [],
         "settings.writing.confirm": [],
         "settings.writing.confirm.label": [],
-        "settings.writing.confirm.status": [],
         "settings.writing.confirm.switch": [],
         "settings.writing.footnote": [],
         "settings.writing.label": [],
@@ -13842,7 +13776,6 @@
         "settings.credentials.email.chevron": [],
         "settings.credentials.email.label": [],
         "settings.credentials.email.value": [],
-        "settings.credentials.footnote": [],
         "settings.credentials.handle": [],
         "settings.credentials.handle.chevron": [],
         "settings.credentials.handle.label": [],
@@ -13856,7 +13789,6 @@
         "settings.ending.delete": [],
         "settings.ending.delete.chevron": [],
         "settings.ending.delete.label": [],
-        "settings.ending.footnote": [],
         "settings.header": [],
         "settings.header.back": [],
         "settings.header.title": [],
@@ -13947,7 +13879,6 @@
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
-        "settings.sensitive.unveil.status": [],
         "settings.sensitive.unveil.switch": [],
         "settings.sessions": [],
         "settings.sessions.elsewhere": [],
@@ -13986,9 +13917,7 @@
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
-        "settings.stance.typed.status": [],
         "settings.theme": [],
-        "settings.theme.footnote": [],
         "settings.theme.label": [],
         "settings.theme.picker": [],
         "settings.theme.picker.autoOption": [],
@@ -13997,7 +13926,6 @@
         "settings.writing": [],
         "settings.writing.confirm": [],
         "settings.writing.confirm.label": [],
-        "settings.writing.confirm.status": [],
         "settings.writing.confirm.switch": [],
         "settings.writing.footnote": [],
         "settings.writing.label": [],
@@ -14061,7 +13989,6 @@
         "settings.credentials.email.chevron": [],
         "settings.credentials.email.label": [],
         "settings.credentials.email.value": [],
-        "settings.credentials.footnote": [],
         "settings.credentials.handle": [],
         "settings.credentials.handle.chevron": [],
         "settings.credentials.handle.label": [],
@@ -14079,7 +14006,6 @@
         "settings.ending.delete": [],
         "settings.ending.delete.chevron": [],
         "settings.ending.delete.label": [],
-        "settings.ending.footnote": [],
         "settings.header": [],
         "settings.header.back": [],
         "settings.header.title": [],
@@ -14113,7 +14039,6 @@
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
-        "settings.sensitive.unveil.status": [],
         "settings.sensitive.unveil.switch": [],
         "settings.sessions": [],
         "settings.sessions.elsewhere": [],
@@ -14152,9 +14077,7 @@
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
-        "settings.stance.typed.status": [],
         "settings.theme": [],
-        "settings.theme.footnote": [],
         "settings.theme.label": [],
         "settings.theme.picker": [],
         "settings.theme.picker.autoOption": [],
@@ -14163,7 +14086,6 @@
         "settings.writing": [],
         "settings.writing.confirm": [],
         "settings.writing.confirm.label": [],
-        "settings.writing.confirm.status": [],
         "settings.writing.confirm.switch": [],
         "settings.writing.footnote": [],
         "settings.writing.label": [],
@@ -14226,7 +14148,6 @@
         "settings.credentials.email.chevron": [],
         "settings.credentials.email.label": [],
         "settings.credentials.email.value": [],
-        "settings.credentials.footnote": [],
         "settings.credentials.handle": [],
         "settings.credentials.handle.chevron": [],
         "settings.credentials.handle.label": [],
@@ -14240,7 +14161,6 @@
         "settings.ending.delete": [],
         "settings.ending.delete.chevron": [],
         "settings.ending.delete.label": [],
-        "settings.ending.footnote": [],
         "settings.header": [],
         "settings.header.back": [],
         "settings.header.title": [],
@@ -14264,9 +14184,7 @@
           "3"
         ],
         "settings.licenseSheet.credit.tier.hint": [
-          "1",
-          "2",
-          "3"
+          "2"
         ],
         "settings.licenseSheet.credit.tier.label": [
           "1",
@@ -14291,7 +14209,6 @@
           "3"
         ],
         "settings.licenseSheet.record.tier.hint": [
-          "1",
           "2",
           "3"
         ],
@@ -14326,7 +14243,6 @@
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
-        "settings.sensitive.unveil.status": [],
         "settings.sensitive.unveil.switch": [],
         "settings.sessions": [],
         "settings.sessions.elsewhere": [],
@@ -14365,9 +14281,7 @@
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
-        "settings.stance.typed.status": [],
         "settings.theme": [],
-        "settings.theme.footnote": [],
         "settings.theme.label": [],
         "settings.theme.picker": [],
         "settings.theme.picker.autoOption": [],
@@ -14376,7 +14290,6 @@
         "settings.writing": [],
         "settings.writing.confirm": [],
         "settings.writing.confirm.label": [],
-        "settings.writing.confirm.status": [],
         "settings.writing.confirm.switch": [],
         "settings.writing.footnote": [],
         "settings.writing.label": [],
@@ -14440,7 +14353,6 @@
         "settings.credentials.email.chevron": [],
         "settings.credentials.email.label": [],
         "settings.credentials.email.value": [],
-        "settings.credentials.footnote": [],
         "settings.credentials.handle": [],
         "settings.credentials.handle.chevron": [],
         "settings.credentials.handle.label": [],
@@ -14454,10 +14366,8 @@
         "settings.ending.delete": [],
         "settings.ending.delete.chevron": [],
         "settings.ending.delete.label": [],
-        "settings.ending.footnote": [],
         "settings.feedSheet": [],
         "settings.feedSheet.also": [],
-        "settings.feedSheet.also.hint": [],
         "settings.feedSheet.also.label": [],
         "settings.feedSheet.also.removedChip": [],
         "settings.feedSheet.also.sensitiveChip": [],
@@ -14467,21 +14377,17 @@
         "settings.feedSheet.foot.done": [],
         "settings.feedSheet.foot.reset": [],
         "settings.feedSheet.forms": [],
-        "settings.feedSheet.forms.hint": [],
         "settings.feedSheet.forms.label": [],
         "settings.feedSheet.forms.photosChip": [],
         "settings.feedSheet.forms.textChip": [],
         "settings.feedSheet.forms.videoChip": [],
         "settings.feedSheet.kinds": [],
         "settings.feedSheet.kinds.commentsChip": [],
-        "settings.feedSheet.kinds.hint": [],
         "settings.feedSheet.kinds.label": [],
         "settings.feedSheet.kinds.postsChip": [],
         "settings.feedSheet.kinds.profilesChip": [],
         "settings.feedSheet.kinds.topicsChip": [],
-        "settings.feedSheet.note": [],
         "settings.feedSheet.order": [],
-        "settings.feedSheet.order.hint": [],
         "settings.feedSheet.order.label": [],
         "settings.feedSheet.order.picker": [],
         "settings.feedSheet.order.picker.newestOption": [],
@@ -14498,15 +14404,10 @@
           "everyone",
           "your-people"
         ],
-        "settings.feedSheet.people.everyone.hint": [
-          "everyone",
-          "your-people"
-        ],
         "settings.feedSheet.people.everyone.label": [
           "everyone",
           "your-people"
         ],
-        "settings.feedSheet.people.hint": [],
         "settings.feedSheet.people.label": [],
         "settings.feedSheet.people.sign": [
           "your-people"
@@ -14571,7 +14472,6 @@
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
-        "settings.sensitive.unveil.status": [],
         "settings.sensitive.unveil.switch": [],
         "settings.sessions": [],
         "settings.sessions.elsewhere": [],
@@ -14610,9 +14510,7 @@
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
-        "settings.stance.typed.status": [],
         "settings.theme": [],
-        "settings.theme.footnote": [],
         "settings.theme.label": [],
         "settings.theme.picker": [],
         "settings.theme.picker.autoOption": [],
@@ -14621,7 +14519,6 @@
         "settings.writing": [],
         "settings.writing.confirm": [],
         "settings.writing.confirm.label": [],
-        "settings.writing.confirm.status": [],
         "settings.writing.confirm.switch": [],
         "settings.writing.footnote": [],
         "settings.writing.label": [],
@@ -14683,7 +14580,6 @@
         "settings.credentials.email.chevron": [],
         "settings.credentials.email.label": [],
         "settings.credentials.email.value": [],
-        "settings.credentials.footnote": [],
         "settings.credentials.handle": [],
         "settings.credentials.handle.chevron": [],
         "settings.credentials.handle.label": [],
@@ -14697,7 +14593,6 @@
         "settings.ending.delete": [],
         "settings.ending.delete.chevron": [],
         "settings.ending.delete.label": [],
-        "settings.ending.footnote": [],
         "settings.header": [],
         "settings.header.back": [],
         "settings.header.title": [],
@@ -14763,7 +14658,6 @@
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
-        "settings.sensitive.unveil.status": [],
         "settings.sensitive.unveil.switch": [],
         "settings.sessions": [],
         "settings.sessions.elsewhere": [],
@@ -14805,9 +14699,7 @@
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
-        "settings.stance.typed.status": [],
         "settings.theme": [],
-        "settings.theme.footnote": [],
         "settings.theme.label": [],
         "settings.theme.picker": [],
         "settings.theme.picker.autoOption": [],
@@ -14816,7 +14708,6 @@
         "settings.writing": [],
         "settings.writing.confirm": [],
         "settings.writing.confirm.label": [],
-        "settings.writing.confirm.status": [],
         "settings.writing.confirm.switch": [],
         "settings.writing.footnote": [],
         "settings.writing.label": [],
@@ -14831,7 +14722,6 @@
       "keys": {},
       "nodes": {
         "signIn.apk": [],
-        "signIn.body": [],
         "signIn.browse": [],
         "signIn.commit": [],
         "signIn.commit.action": [],
@@ -14857,7 +14747,6 @@
       "keys": {},
       "nodes": {
         "signIn.apk": [],
-        "signIn.body": [],
         "signIn.browse": [],
         "signIn.commit": [],
         "signIn.commit.action": [],
@@ -14910,7 +14799,6 @@
       "keys": {},
       "nodes": {
         "signIn.apk": [],
-        "signIn.body": [],
         "signIn.browse": [],
         "signIn.commit": [],
         "signIn.commit.action": [],
@@ -14983,7 +14871,6 @@
         "settings.credentials.email.chevron": [],
         "settings.credentials.email.label": [],
         "settings.credentials.email.value": [],
-        "settings.credentials.footnote": [],
         "settings.credentials.handle": [],
         "settings.credentials.handle.chevron": [],
         "settings.credentials.handle.label": [],
@@ -15003,7 +14890,6 @@
         "settings.ending.delete": [],
         "settings.ending.delete.chevron": [],
         "settings.ending.delete.label": [],
-        "settings.ending.footnote": [],
         "settings.header": [],
         "settings.header.back": [],
         "settings.header.title": [],
@@ -15037,7 +14923,6 @@
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
-        "settings.sensitive.unveil.status": [],
         "settings.sensitive.unveil.switch": [],
         "settings.sessions": [],
         "settings.sessions.elsewhere": [],
@@ -15076,9 +14961,7 @@
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
-        "settings.stance.typed.status": [],
         "settings.theme": [],
-        "settings.theme.footnote": [],
         "settings.theme.label": [],
         "settings.theme.picker": [],
         "settings.theme.picker.autoOption": [],
@@ -15087,7 +14970,6 @@
         "settings.writing": [],
         "settings.writing.confirm": [],
         "settings.writing.confirm.label": [],
-        "settings.writing.confirm.status": [],
         "settings.writing.confirm.switch": [],
         "settings.writing.footnote": [],
         "settings.writing.label": [],
@@ -15205,9 +15087,6 @@
           "saltmaps",
           "saltcrust"
         ],
-        "tagPicker.tag.sub": [
-          "salt"
-        ],
         "tagPicker.tag.trailing": [
           "salt",
           "saltmaps",
@@ -15280,7 +15159,6 @@
       "prefix": "verify",
       "keys": {},
       "nodes": {
-        "verify.body": [],
         "verify.mark": [],
         "verify.onward": [],
         "verify.title": []
@@ -15368,7 +15246,6 @@
       "prefix": "vouchAsk",
       "keys": {},
       "nodes": {
-        "vouchAsk.body": [],
         "vouchAsk.header": [],
         "vouchAsk.header.back": [],
         "vouchAsk.profileDoor": [],
@@ -15578,7 +15455,6 @@
           "0-1-1",
           "0-1-0"
         ],
-        "whatsNew.footnote": [],
         "whatsNew.header": [],
         "whatsNew.header.back": [],
         "whatsNew.header.title": [],
@@ -15607,7 +15483,6 @@
           "0-1-1",
           "0-1-0"
         ],
-        "whatsNew.footnote": [],
         "whatsNew.header": [],
         "whatsNew.header.back": [],
         "whatsNew.header.title": [],
@@ -15657,7 +15532,6 @@
         "yourKey.header.back": [],
         "yourKey.header.title": [],
         "yourKey.notice": [],
-        "yourKey.notice.body": [],
         "yourKey.notice.help": [],
         "yourKey.notice.restore": [],
         "yourKey.notice.title": []

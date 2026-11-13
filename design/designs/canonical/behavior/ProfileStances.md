@@ -32,7 +32,7 @@ WHEN tap profileStances.tabRow.byTab -> the people this person holds an opinion 
 
 ALWAYS profileStances.empty stands in profileStances.list's place, calm and in no error colour, GIVEN the tab holds no one
 
-ALWAYS profileStances.empty.title reads No opinions yet — yours would be the first. GIVEN another person's On them holds no one
+ALWAYS profileStances.empty.title reads No opinions yet. GIVEN another person's On them holds no one
 
 ALWAYS profileStances.empty.title reads No opinions by @ada yet. GIVEN another person's By them holds no one
 

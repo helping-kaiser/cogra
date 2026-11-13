@@ -4,8 +4,8 @@
  * every pick board, above the tray.
  */
 export interface PickPromptProps {
-  /** What this step will take: "Pick one picture, several, or one video." */
-  caption: string;
+  /** Optional; the pick steps pass none (jakob 2026-11-12): the roll is the instruction. */
+  caption?: string;
   /** The way out of the media path: "Write words instead". */
   escapeLabel: string;
   onEscape?: () => void;

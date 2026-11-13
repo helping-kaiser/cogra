@@ -2,8 +2,6 @@
 
 WHEN press Restore the key on a key-absent card, the composer's seal, the key-absent pad, the backup settings or Your key -> Restore opens
 
-ALWAYS the body reads Enter your recovery code to bring your signing key onto this browser. on the web and Enter your recovery code to bring your signing key into this app. in the app
-
 ALWAYS the header's arrow reads Back and is a link to the reader's own home, never history
 
 WHEN press the header's back arrow GIVEN a member -> KeyElsewhere opens

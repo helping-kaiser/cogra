@@ -41,7 +41,7 @@ export function Screen() {
       <DialogSurface
         onScrimPress={() => {}}
         title="Discard your draft?"
-        body="Picking pictures starts a new post, and this draft is what stands in the way. Discarding is the only thing that loses it."
+        body="Picking pictures starts a new post."
         actions={
           <>
             <Button variant="text">Discard it</Button>

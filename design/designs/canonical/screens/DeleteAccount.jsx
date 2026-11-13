@@ -144,7 +144,6 @@ export function Screen() {
             <Checkbox id="delete-content" label="Also remove what I posted" node="sweep" />
             <p style={{ ...LINE, marginTop: "var(--space-1)", paddingLeft: 30, color: "var(--text-secondary)" }} data-node="sweepHint">
               The words and pictures go out of your posts and comments, each leaving its mark.
-              Leave this off and they stay as you wrote them.
             </p>
           </div>
 

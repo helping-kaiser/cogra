@@ -23,8 +23,7 @@
    key was elsewhere, at the head of Applications as its own row reading
    `Waiting for your key` (`KeptApprovalRow`). Once the key is back it reads
    `Ready for your approval`, and it is the row the kept picks' line `An
-   approval waits in your invites — go there to sign it.` sends the reader
-   to.
+   approval waits in your invites.` sends the reader to.
 
    THE `revoke` CHIP DRAWS A REVOKE IN FLIGHT (the check round's Q10, jakob
    2026-10-06): `waiting` is the first link's card past 200ms after its

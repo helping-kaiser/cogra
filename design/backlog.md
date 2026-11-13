@@ -5795,6 +5795,48 @@ after Close reads `That didn't go through.` on the form's Settings row, no
 forms' sidecars hold their exits from 200ms after the press. `YourKeyGate`
 is not in the family (a reveal, not a submit) — backlog 197.
 
+### 192 · The removable-text pass: the moves to a "?" that are not ruled · *design* · **filed 2026-11-12**
+
+Round 42 built the digest's REMOVE and SHORTEN rows and the A families jakob
+ruled. Digest rows marked MOVE TO "?" outside A2, A5 and A8 were never put to
+him and stand as drawn: Feed score's `Every path here starts with an opinion you
+gave.` (`FeedEntry`, `FeedEntryKinds`; no "?" there); `YourKey`'s `Nothing here
+is sent anywhere — the key is read from this browser and shown.`; History's and
+Saved's `Search reads names and titles, never bodies — fewer words reach
+further.` (`HistoryNone`, `SavedNone` — Explore's twin is cut, its "?" holds
+it); `ChangeHandle`'s `@sol is how people mention and find you. …`;
+`ChangeEmail`'s `Your email signs you in, and it is the only way back if you
+lose your password — so a change is proved from both ends.`; the edits'
+`A post's body is words or media, never both.` and `A video is the whole post.`
+(`EditWords`, `EditComposeVideo`); the tag picker's `Letters, digits, dot, dash
+and underscore. Capitals become lowercase.`; the clip's `It plays the moment it
+is on screen, so it starts on its own first frame.` Each is jakob's: move
+(where a "?" exists, or a new one), cut, or keep.
+
+### 193 · Two cuts of one caption, and lines the pass left asymmetric · *design* · **filed 2026-11-12**
+
+Round 42 built each canvas's row as written, which leaves: (1) the ask link's
+caption cut two ways — `Send it to anyone who is already in. It does not
+expire.` on `ProfileApplicant`, `It does not expire, and it works however many
+people you send it to.` on `ApplicantRejected` and `ApplicantFellThrough`;
+(2) `Always unveil sensitive content` with no line while off but `On, sensitive
+content stands unveiled wherever you read.` while on; (3) `Wallet — coming
+soon` keeps `Your earnings will be here.` while Chats carries no line;
+(4) closed by round 42 (act 2): the post-MVP twins take the canonical cuts —
+the same rulings. Points (1)–(3) are jakob's to align or keep.
+
+### 194 · Lines round 42 stopped: no "?" holds them, and the sign-out drift · *design* · **filed 2026-11-12**
+
+(1) A5 ruled cutting a line that repeats its sheet's "?" — checked before each
+cut. The vouch-back pad's `Later, tap the small face …` and `Prefer sliders or
+exact numbers? Swap the input in settings.` are in no "?" (`Your vouch back`
+says neither), and the edit acts sheets (`EditActs`, `CommentEditActs`) have no
+"?" at all, so `They land together, or none does.` stays there. Ways: (a)
+the lines move into the pad's "?" whole / the sheets keep the subline [lean];
+(b) they go anyway. (2) C7, the sign-out drift — closed by round 42 (act 2,
+jakob 2026-11-12 "fix the wrong side"): the drawn line, which names the seen
+record sign-out clears (PR-69), is the true side; copy-voice takes it.
+
 ### 195 · Live links: the order a cap would keep · *design* · **filed 2026-11-12**
 
 Round 43 (backlog 182). The cap is ruled — three, then `Show all`, People

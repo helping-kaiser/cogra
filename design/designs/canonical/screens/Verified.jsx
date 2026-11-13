@@ -56,7 +56,7 @@ export function Screen() {
         }}
         data-node="body"
       >
-        Your application moved a step. You can go back to the app — it already knows.
+        You can go back to the app — it already knows.
       </p>
       <div style={{ marginTop: 24 }}>
         <Button variant="text" node="onward">Back to CoGra</Button>

@@ -33,7 +33,7 @@ export function Screen() {
       <PageHeader title="Saved" backHref="#" backLabel="Back to your profile" node="header" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 24px" }}>
         <EmptyState
-          title="Nothing saved yet. A post, a comment or a person can be saved from its own menu, and it waits here."
+          title="Nothing saved yet."
           node="empty"
         />
       </div>

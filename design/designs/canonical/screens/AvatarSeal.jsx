@@ -13,7 +13,7 @@ export const VALS = `restFootShown: this.props.state === "signing" ? "none" : "f
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" leaveLabel="Leave" stageLabel="Last step" help="Changing your picture" />
+      <WizardHeader title="What you sign" leaveLabel="Leave" help="Changing your picture" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <MonogramAvatar name="Sol Ferreira" size={64} src="comment-camera.jpg" />

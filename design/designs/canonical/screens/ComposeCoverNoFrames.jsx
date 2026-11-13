@@ -41,7 +41,7 @@ export function Screen() {
           label="No frame"
         />
 
-        <CoverRow frames={[]} caption="This clip gave no frames — choose a picture of your own, or leave it without one." />
+        <CoverRow frames={[]} caption="This clip gave no frames" />
 
         <div style={{ flex: 1 }} />
 

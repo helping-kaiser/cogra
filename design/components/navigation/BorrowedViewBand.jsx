@@ -16,8 +16,9 @@ import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
    sign-in-or-join entry. The label is what makes the borrowed view honest
    (§9); it exposes nothing the public record does not already carry.
 
-   `action` drops away for the signed-in applicant, where the line changes
-   ("… while your application lands.") but the vantage point does not, and
+   `action` drops away for the signed-in applicant, where the line drops the
+   guest's invitation ("Browsing from @mira's view.") but the vantage point
+   does not, and
    for a landed member who has not opined yet, whose line says what ends the
    borrowing. The view ends on the member's first opinion, on anyone: their
    own graph then exists, so their own feed does. The band carries no

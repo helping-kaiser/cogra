@@ -55,12 +55,12 @@ export function Screen() {
           handle="mira"
           displayName="Mira Voss"
           avatarSrc="inviter.jpg"
-          line="Browsing from @mira's view while your application lands."
+          line="Browsing from @mira's view."
           node="borrowedViewBand"
         />
       </CograBand>
       <FeedList>
-        <TaskCard title="All set — waiting on @mira" body="Their approval brings you in. Nothing else is needed from you." node="application">
+        <TaskCard title="All set — waiting on @mira" body="Their approval brings you in." node="application">
           <PayoutAddress
             bare
             label="Your ask link"

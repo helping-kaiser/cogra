@@ -152,7 +152,7 @@ service did something on the reader's behalf.
 
 - `Your key isn't on this browser`
 - `Current opinion 😊 +0.55 / +0.20`
-- `We sent you a verification link — open it to prove this email is yours.`
+- `We sent a link to sol@solferreira.art.`
 
 **Sentence case everywhere.** Titles, buttons, labels, dialog headings.
 `Sign in or join`, `Keep browsing`, `New post`, `Edit profile`,
@@ -1547,8 +1547,7 @@ may serve any actor's view of the shared record to any reader. So:
   feed's filter and the Settings default among them; and, by *Only a
   nobody borrows stances* (stance-control), every face a signed-in
   reader can act on. Every first-person readout of the vantage's read
-  speaks its name, the band's way — `@mira's people`, `as far as
-  @mira's eyes reach` — and a control whose words outgrow it falls back
+  speaks its name, the band's way — `@mira's people` — and a control whose words outgrow it falls back
   on its own overflow law, the trigger's collapse to a count among
   them. A control with no overflow law that a long handle breaks falls
   back to *their*, as a flagged exception for jakob. The law holds for
@@ -1622,9 +1621,9 @@ Instagram's model: one shape for the whole post — Tall 4:5, Square
 per picture: the frame stands still at the shape and the picture moves
 and zooms under it, on a stage that keeps its 390 × 488 under every
 shape (round 44, one crop model on both clients); 4:5 as the tallest shape is what guarantees the feed
-card's height cap (below). Wizard screens carry no step numbers
-(paths differ in length; the title names the stage, only the seal
-says "Last step").
+card's height cap (below). Wizard screens carry no step numbers and
+no stage label (paths differ in length; the title names the stage,
+and `What you sign` names the end — jakob 2026-11-12).
 
 **The seal is a place, not a popup.** "What you sign" lists every
 act with its cost, aggregated per kind — one row per kind, its items
@@ -2146,11 +2145,10 @@ next to brands like Instagram):
   file picker button and a drop target ("Choose from your files" /
   "…or drop them here") — the caption, the picked tray, and the text
   path identical to the app's (*Pick · the web variant*).
-- **The seal's total row carries the all-or-nothing subline on every
-  multi-act seal** — "They land together, or none does." — and omits it
-  on a single-act seal. It had drifted across the hand boards (on the
-  key-absent and sheet states, missing from the seal itself); it now
-  lives once, as `ActsCard`'s `note`. On the key-absent seal the one
+- **A seal's total row carries no all-or-nothing subline** — the seal's
+  `How signing works` says it (jakob 2026-11-12); the edit's acts
+  sheets, which carry no "?", keep "They land together, or none does."
+  as `ActsCard`'s `note`. On the key-absent seal the one
   "?" belongs to the key notice (the *Your key* dialog), not the
   header — one "?" per screen, and the key story outranks the seal
   story there. Every "?" opens the house plain dialog (the pattern the
@@ -2991,7 +2989,7 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   pixels apart, in two sizes — the sheet's name lives on its
   `aria-label`. The read side got its
   **own readings**: the chooser's hints address the author declaring
-  the terms, and on a read surface "Every use credits you" tells a
+  the terms, and on a read surface "Commercial uses credit you" tells a
   reuser they are owed the credit they in fact owe.
 - **Citing and mentioning are one fact.** Both stage a **Reference
   edge**; the word only records what sits at the far end — citing for
@@ -11513,6 +11511,51 @@ jakob's answers to rounds 36–39 (M1–M3, R2, S1–S6, I1–I2), executed.
   out is a back arrow has no drawn precedent for that arrow reading Close.
   Backlog 176 stays open: `FeedRemoved.md` says a removed card carries no
   menu.
+
+### Round 42, the removable text goes — 2026-11-12
+
+jakob's rulings on the removable-text digest (2026-11-11: B, C1–C7, "shortening
+are always good"; 2026-11-12: A1–A8), executed for A2, A4–A7, B, C and D; A1,
+A3, A8 and the Invites boards are rounds 43 and 44. The rule is copy-voice's
+*The app does not explain itself*, in his words.
+
+- **Cut whole:** the filter sheets' hints (the Ranked / Newest explainer and the
+  veil pointer moved whole into the sheet's "?"); the sentence after each empty
+  line; the lines that repeat their sheet's "?" (the seals' all-or-nothing
+  subline, the license and sensitive sheets' intros); the license tiers' hints
+  that repeat their names, the pair's reading now its name alone; the digest's
+  single lines but `The two records behind your opinion of @ada.`; the author's
+  removal mark's second line (the comment's too — the mark keeps its line and
+  date); the onboarding's ask-around note; the change-handle form's cost note
+  (the dialog keeps it). An element that only held a cut line goes with it, and
+  so do two chips that only drew one (`Restore`'s `wording`, `Settings`'
+  `reader`); `TaskCard`, `PickPrompt`, `CoverRow` and `ComingSoonCard` take
+  their line as optional, `RedactedContent` draws a detail only where one is
+  given.
+- **Shortened, cut-only**, as the digest's rows say (the clearing footnote, the
+  erase dialog and the delete-account lines among them; the key ceremony's
+  recovery-code line kept whole). The hide snackbars read `@ada is hidden.` /
+  `@juno is unhidden.`, Undo kept.
+- **Kept by ruling:** `Read aloud to people who can't see it.`, About's `This
+  page grows`, `Sensitive — tap to view`, `Signed — it's in the thread now,
+  still settling.`, the question-fronted doors.
+- **Stopped, at jakob (backlog 194):** the vouch-back pad's two coaching lines
+  and the edit acts sheets' subline — no "?" holds them.
+- **Filed:** the digest's MOVE rows nobody ruled (192); two cuts of the ask
+  link's caption and lines the pass left asymmetric (193).
+- **After rounds 43 and 44 (act 2):** the reject dialogs' two rows are cut
+  (`RejectConfirm`, `RejectAllConfirm`); the post-MVP twins take the
+  canonical cuts (`PushSettings`, `PushDenied`, the chat and wallet seals);
+  copy-voice takes the drawn sign-out line, which names the seen record
+  sign-out clears (C7). ComposeCrop's line was round 44's.
+- **The gate**: no board added or removed (185 registered screens). The
+  registry loses ruled paths, a named breaking change: **7117 → 7014** board
+  paths, **2000 → 1960** distinct — 46 paths leave 103 board entries (the
+  filter sheets' hints and `settings.feedSheet.note`, the Settings footnotes
+  and second lines, `*.removalMark.detail`, the report sheets' `body`,
+  `keptPicksSeal.header.stage` and `.acts.note`, `tagPicker.tag.sub`, the
+  picked sheets' `note`, and the single lines' nodes); six of them stay on
+  other boards. Backlog 192–194 filed.
 
 ### Round 43, forms without a waiting line, Close on the signed-in forms, Settings' two "?", Invites capped — 2026-11-12
 

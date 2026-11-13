@@ -26,8 +26,8 @@
    THE DETAIL HOLDS WHAT WAS OPENED (jakob 2026-10-09, seam 120; the
    `read` chip's `changed`, 2026-10-12). When a fresh read finds the post — or
    its tags or citations — changed since the detail opened, one line stands
-   between the header and the post, `Edited since you opened it — tap for the
-   newest version.`, and the tap swaps the newest in place. A redaction never
+   between the header and the post, `Edited since you opened it`, a
+   line that is its own door, and the tap swaps the newest in place. A redaction never
    waits behind it.
 
    A CALIBRATION SCREEN (design ⇄ impl seam 002): `NODE` registers the board,

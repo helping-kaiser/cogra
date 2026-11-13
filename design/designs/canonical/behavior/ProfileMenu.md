@@ -20,11 +20,11 @@ WHEN tap Mention in a new post GIVEN the reader is an applicant -> the menu clos
 
 WHEN tap Share this profile -> the platform's own share sheet opens
 
-WHEN tap Hide with the person's handle -> the sheet closes AND the reader stays on the profile AND the snackbar reads @ada is hidden — their posts stay out of your feed. with Undo AND NEVER a confirm step appears
+WHEN tap Hide with the person's handle -> the sheet closes AND the reader stays on the profile AND the snackbar reads @ada is hidden. with Undo AND NEVER a confirm step appears
 
 WHEN tap Hide with the person's handle GIVEN the hide does not go through -> the hide reverts AND the target's row says That didn't go through. with Retry, the profile's actions row when the menu opened on the profile
 
-WHEN tap Hide with the person's handle GIVEN the menu was opened from a profile card in the feed -> the sheet closes AND that person's rows leave the feed AND the rows behind them move up AND the snackbar reads @ada is hidden — their posts stay out of your feed. with Undo
+WHEN tap Hide with the person's handle GIVEN the menu was opened from a profile card in the feed -> the sheet closes AND that person's rows leave the feed AND the rows behind them move up AND the snackbar reads @ada is hidden. with Undo
 
 ALWAYS the menu carries no Share this profile row GIVEN it was opened from a profile card in the feed, whose own row carries the share
 
@@ -32,9 +32,9 @@ ALWAYS the menu opened from a profile card reads Save or Unsave, then Mention in
 
 ALWAYS the hide row reads Unhide with the person's handle GIVEN the person is already hidden, wherever their card or profile stands — the profile card in History, Saved or a search of either, and the profile itself reached by a link, a search or a row
 
-WHEN tap Unhide with the person's handle on the profile's own menu -> the sheet closes AND the reader stays on the profile AND the person is unhidden AND the snackbar reads @ada is unhidden — their posts can reach your feed again. with Undo AND NEVER a dialog asks
+WHEN tap Unhide with the person's handle on the profile's own menu -> the sheet closes AND the reader stays on the profile AND the person is unhidden AND the snackbar reads @ada is unhidden. with Undo AND NEVER a dialog asks
 
-WHEN tap Unhide on a profile card's menu -> the sheet closes AND the person is unhidden AND the snackbar reads the handle, then is unhidden — their posts can reach your feed again., as @ada is unhidden — their posts can reach your feed again., with Undo AND NEVER a dialog asks
+WHEN tap Unhide on a profile card's menu -> the sheet closes AND the person is unhidden AND the snackbar reads the handle, then is unhidden., as @ada is unhidden., with Undo AND NEVER a dialog asks
 
 ALWAYS a hidden person's profile still opens
 

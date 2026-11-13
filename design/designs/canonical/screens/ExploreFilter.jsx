@@ -80,7 +80,7 @@ export function Screen() {
           <HelpDot ariaLabel="How the filter works" node="help" />
         </div>
         <SheetTitle node="title">What the search shows</SheetTitle>
-        <FilterSection label="Kinds" hint="Combine as many as you like. All, until you narrow it." node="kinds">
+        <FilterSection label="Kinds" node="kinds">
           {FEED_KINDS.map((kind) => (
             <Chip key={kind.value} label={kind.label} selected={false} node={`${kind.value}Chip`} />
           ))}

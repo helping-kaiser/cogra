@@ -1,8 +1,8 @@
 # SignInExpired · `spec:design:behavior-sign-in-expired`
 
-WHEN any call mid-use is answered UNAUTHENTICATED or REFRESH_TOKEN_INVALID -> the sign-in screen opens with You've been signed out. Sign in again to carry on. where the welcome line stands AND NEVER a fault line or the failure voice appears
+WHEN any call mid-use is answered UNAUTHENTICATED or REFRESH_TOKEN_INVALID -> the sign-in screen opens with You've been signed out. under the heading AND NEVER a fault line or the failure voice appears
 
-ALWAYS the signed-out sentence stands in the welcome line's own secondary ink
+ALWAYS the signed-out sentence stands under the heading in the secondary ink
 
 ALWAYS the draft and any picks kept pending stay on the device through the sign-in
 

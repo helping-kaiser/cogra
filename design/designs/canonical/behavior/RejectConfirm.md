@@ -1,6 +1,6 @@
 # RejectConfirm · `spec:design:behavior-reject-confirm`
 
-WHEN tap a row's close on Invites -> the dialog Close @imke's application? opens, named for the row it was raised from, with It leaves your list and @imke is told. Their account stays exactly as it is — signed in, and free to keep reading. and This is your call and nobody else's. Any member can still vouch them in, and @imke gets a link to ask with.
+WHEN tap a row's close on Invites -> the dialog Close @imke's application? opens, named for the row it was raised from, with It leaves your list and @imke is told. Their account stays as it is. and Any member can still vouch them in, and @imke gets a link to ask with.
 
 ALWAYS one dialog serves every row's close, a ready application's, one not fully registered yet and a kept approval's alike
 

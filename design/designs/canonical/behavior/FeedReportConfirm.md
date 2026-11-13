@@ -4,8 +4,6 @@ WHEN tap feed.menuSheet.report -> the menu closes AND feed.reportSheet rises in 
 
 ALWAYS feed.reportSheet.title reads Report this post?
 
-ALWAYS feed.reportSheet.body reads It goes to the people who run CoGra for a look.
-
 ALWAYS the feed stands unchanged beneath the sheet
 
 WHEN tap feed.reportSheet.report -> the sheet closes AND the report goes out AND feed.snackbar reads Reported. AND NEVER ReportProblem opens AND NEVER a mark lands on the reported thing

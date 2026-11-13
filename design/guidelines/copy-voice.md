@@ -66,6 +66,15 @@ or a helper line explains new, novel, un-learned behavior — never what
 is common, obvious or expected. A reader who already expects it is told
 nothing, and the screen is wordier for it.
 
+**The app does not explain itself** (jakob 2026-11-11, the rule behind
+the removable-text pass): "an app that explains itself all the time is
+just badly designed. we just need to inform users about NOVEL stuff and
+if we have some "maybe usefull infos" we can always put them into a
+"?"" — and, ruling the pass, "shortening are always good". A novel
+mechanic keeps its line where the page has room: "the path thingy is
+generally novel stuff for 99% of the users so the explainer doesn't
+hurt" (`RankRecords`' caption).
+
 This is greppable and should be enforced as a check over Android's
 `strings.xml` and the web copy, rather than left to review — the check
 does not exist yet.
@@ -149,11 +158,11 @@ glyph used as punctuation.
   and the trigger reads the deviation as `settled only` (blessed
   2026-10-01, jakob).
 - `Edited` — an edit, marked softly.
-- `Edited since you opened it — tap for the newest version.` — the one
+- `Edited since you opened it` — the one
   line a post's detail raises when a fresh read finds the post, its tags
   or its citations changed while it was being read (`PostDetail`'s
-  `read` chip). It says what happened and offers the newer state in the
-  same breath; the detail never changes under the reader on its own. A
+  `read` chip). It says what happened, and the line itself is the door to the
+  newer state; the detail never changes under the reader on its own. A
   tag or citation change is not an edit on the graph, and the line still
   says *Edited*: the reader's word for "this is not what you opened",
   one rule with no taxonomy (jakob 2026-10-12). (*new 2026-10-12, drafted
@@ -327,46 +336,38 @@ deviations outgrow the pill they collapse to a count after the head,
 `SettingsReading`; search's sheet and History's take the parts they
 carry, `ExploreFilter`, `HistoryFilter`):
 
-- `Kinds` — `Everything that can reach your feed. Combine as many as you
-  like.` — with the chips `Posts` · `Comments` · `Profiles` · `Tags`.
-- `Kinds of post` — `Combine them: photos and video with no text posts is
-  a legitimate feed.` — with `Text` · `Photos` · `Video`.
-- `Order` — `Ranked puts what's closest to you first — your view, no one
-  else's. Newest ignores it and lists by time.` — with `Ranked` ·
-  `Newest` and the checkbox `Show what you've already seen`.
-- `Also show` — `How sensitive content is veiled is set in Settings.` —
-  with `Sensitive` · `Removed` · `Still settling`. The hint carries the
-  one thing the chips don't say themselves — where the veil behavior is
-  changed — and explains nothing else (jakob 2026-10-09: tapping a veil
-  and reading a removed post's husk explain themselves).
-- `People` — `Whose things reach this feed.` — the rows `Everyone` over
-  `The whole feed, as far as your eyes reach.` and `Your people` over
-  `Only the people you hold an opinion of — the same rank, narrowed to
-  them.`, and under `Your people`, only while it is chosen, the one-line
-  sign row `For` · `Against` · `Either` (the pair's labels blessed, jakob
-  2026-10-09, ruling 77; the Everyone line's wording jakob's own,
-  2026-10-09; the Your-people line and the three words jakob's own,
-  2026-10-12, item 7; the sign row's spoken name `Which of your people`
-  *drafted — jakob's at review*; *the section word and the Also-show
-  pointer drafted — their wording jakob's at review*).
+- `Kinds` — the chips `Posts` · `Comments` · `Profiles` · `Tags`, no
+  hint: chips that combine explain themselves (jakob 2026-11-12).
+- `Kinds of post` — `Text` · `Photos` · `Video`; the hint `Applies once
+  posts or comments are in.` stands only while no kind that has forms is
+  on.
+- `Order` — `Ranked` · `Newest` and the checkbox `Show what you've
+  already seen`, no hint. The Ranked / Newest explainer lives in the
+  sheet's "?" (*The filter*).
+- `Also show` — `Sensitive` · `Removed` · `Still settling`, no hint;
+  where the veil behavior is changed is said in the sheet's "?"
+  (jakob 2026-10-09: tapping a veil and reading a removed post's husk
+  explain themselves).
+- `People` — no hint; the rows `Everyone`, with no line of its own, and
+  `Your people` over `Only the people you hold an opinion of.`, and
+  under `Your people`, only while it is chosen, the one-line sign row
+  `For` · `Against` · `Either` (the pair's labels blessed, jakob
+  2026-10-09, ruling 77; the Your-people line and the three words
+  jakob's own, 2026-10-12, item 7; the sign row's spoken name `Which of your people` *drafted — jakob's
+  at review*).
 
 **Under a borrowed view the sheet speaks the vantage's name** (the
 vantage law, jakob 2026-10-13, readme §13): what the sheet reads from
 the vantage's graph is the vantage's, so its first person becomes the
 vantage account's handle, the band's way. The row `@mira's people` over
-`Only the people @mira holds an opinion of — the same rank, narrowed to
-them.`; `Everyone` over `The whole feed, as far as @mira's eyes reach.`;
-the sign row's spoken name `Which of @mira's people`; the trigger's
-extra `@mira's people`, `@mira's people, for`, `@mira's people,
-against`, which past the pill's 154px collapses to the count like any
-extra — so for most handles it reads `Posts · 1 change`; `Order` over
-`Ranked puts what's closest to @mira first — the view you're browsing
-from. Newest ignores it and lists by time.`; and `One tag` over
-`Tags @mira holds and is for. A tag @mira holds against stays a
-record — it just never narrows a feed.` The reader's own axes keep the
-first person: the kinds' line, `Show what you've already seen`, `Also
-show`, `Reset` and the "?". (*new 2026-10-13, drafted — jakob's at
-review*, save `@mira's people`, the ruling's own example.)
+`Only the people @mira holds an opinion of.`; the sign row's spoken
+name `Which of @mira's people`; the trigger's extra `@mira's people`,
+`@mira's people, for`, `@mira's people, against`, which past the
+pill's 154px collapses to the count like any extra — so for most
+handles it reads `Posts · 1 change`; and `One tag` over `Tags @mira
+holds and is for.` The reader's own axes keep the first person:
+`Show what you've already seen`, `Also show`, `Reset` and the "?".
+(*new 2026-10-13, drafted — jakob's at review*, save `@mira's people`, the ruling's own example.)
 
 ## Platform nouns
 
@@ -543,12 +544,17 @@ noun):
   newest is one choice, and — on the feed — what you've already seen
   waits below the Already seen line unless you ask for it back.
   Nothing changes until you press Done,
-  and nothing here is signed or shared. / It lasts until you change it,
-  on this device only. Reset brings back your defaults, to change
-  them go to settings. *(The Reset
+  and nothing here is signed or shared. Ranked puts what's closest to
+  you first — your view, no one else's. Newest ignores it and lists by
+  time. / It lasts until you change it, on this device only. Reset
+  brings back your defaults, to change them go to settings. How
+  sensitive content is veiled is set in Settings. *(The Reset
   sentence is jakob's own, blessed 2026-10-02: one sentence for the
   feed's, search's and the settings sheet. The feed's seen sentence
-  follows the seen tail, jakob 2026-10-14.)*
+  follows the seen tail, jakob 2026-10-14. The Ranked / Newest
+  explainer and the veil pointer stand here and not on the sheet,
+  moved whole, jakob 2026-11-12; the veil pointer is the feed's and
+  the settings sheet's, where `Also show` stands.)*
 - **Giving an opinion** (Settings, beside the section's heading): A tap
   opens it; drift to where it feels right. / One slider per side of the
   opinion. *(The pad's and the sliders' row hints, moved whole from the
@@ -627,8 +633,9 @@ taken is refused by the mixed-kind line. One file, one line, the
 nearest reason.
 
 Two removal marks, never interchangeable: `Removed by its author` —
-"The words and pictures are gone. The post's place in the thread, and
-every response, remain." — and `Removed under the platform's rules` —
+the line and the removal's date, nothing under it (jakob 2026-11-12:
+the thread standing around it shows what remains) — and `Removed under
+the platform's rules` —
 "A passed proposal removed it. The decision is public." Content swept
 with its author's account deletion wears `Removed by its author` too
 (jakob 2026-10-07): the author chose the sweep.
@@ -636,18 +643,13 @@ with its author's account deletion wears `Removed by its author` too
 The post's own confirm (`RemoveConfirm`; *carried over — blessed by use
 (jakob 2026-10-06)*) is titled `Remove this post?` over `The words and
 pictures leave every reader's view, along with every earlier version's.
-A visible mark stays in their place — "Removed by its author" — and the
-post's spot in threads stays with it.`, then `This is immediate and
+A visible mark stays in their place.`, then `This is immediate and
 permanent.`, `Remove` and `Keep it`.
 
-At comment scale the author's mark swaps its noun and nothing else
-(the comment-removal round; blessed, jakob 2026-10-01). The removed
-comment's second line is `The comment's place in the thread, and every
-response, remain.` (`CommentRemoved`). The confirm is titled `Remove
+At comment scale the author's mark is the post's, line and date
+(`CommentRemoved`). The confirm is titled `Remove
 this comment?` over `The words and pictures leave every reader's view,
-along with every earlier version's. A visible mark stays in their place
-— "Removed by its author" — and the comment's spot in its thread stays
-with it.` (`CommentRemoveConfirm`), then the post's own `This is
+along with every earlier version's. A visible mark stays in their place.` (`CommentRemoveConfirm`), then the post's own `This is
 immediate and permanent.`, `Remove` and `Keep it`.
 
 ## Staging a video
@@ -655,7 +657,7 @@ immediate and permanent.`, `Remove` and `Keep it`.
 **A video is the whole body** — the quiet line where the add control
 used to be, once a clip is staged:
 
-- `A video is the whole post. Its cover comes next.`
+- `A video is the whole post.`
 - `A video is the whole comment. Give it a cover below.`
 - `A video is the whole post.` — the edit's trim of the staging
   line: the cover sits on the edit's own screen, so the second
@@ -704,8 +706,7 @@ through, from an edit:
   frame.` — the quiet line under the `Cover` row's door where a clip has
   no cover (`ComposeDetailsVideo`, `EditComposeVideo`,
   `ReplyVideoFailed`).
-- `This clip gave no frames — choose a picture of your own, or leave it
-  without one.` — the frame strip's caption when the device cut no frames
+- `This clip gave no frames` — the frame strip's caption when the device cut no frames
   from the clip (`ComposeCoverNoFrames`).
 - `No frame` — the neutral tile's label in that state
   (`ComposeCoverNoFrames`).
@@ -751,33 +752,31 @@ recorded so the registry is whole.
 - **The stages' titles** — `Details`, `Crop`, `The video's face` (its
   stage label `Video only`), `The cover` (`CoverCrop`), `Edit post`,
   `Edit comment`.
-- **The words stage** — the field `What do you want to publish?`, and
-  under the pick door `The body is your words.` (`ComposeWords`,
-  `EditWords`).
+- **The words stage** — the field `What do you want to publish?`, no
+  line by the pick door (`ComposeWords`, `EditWords`).
 - **The draft's card** (`ComposeDraft`) — `Your draft is here`, its
   media read back as `2 pictures — kept on this device`, `Continue`
-  beside `Discard`, and under the card `Or start fresh —` over the roll.
-- **The pick** — `Pick one picture, several, or one video.`
-  (`ComposePick` and its family), the roll's door `Your photos app`, the
+  beside `Discard`, the roll under the card.
+- **The pick** — no prompt line: the roll is the instruction
+  (`ComposePick` and its family); the roll's door `Your photos app`, the
   tray's `Show all`; on the web `Choose from your files` and `…or drop
   them here.` (`ComposePickWeb`), the reply's `…or drop pictures or a
   video here.` (`ReplyPicturesWeb`). A clip that came with its face reads
-  `A video is the whole post. This one has its cover.`
+  `A video is the whole post.`
   (`ComposePickVideoCover`).
 - **The picked sheet** (`ComposePicked`, `EditPicked`) — rows named
   `Cover — shown first` and `Picture 2`, their acts `Make it the cover`
-  · `Move up` · `Move down`, and the one rule under them, `The first one
-  is the cover.`
+  · `Move up` · `Move down`; the first row's name says the rule.
 - **The crop's shapes** (`ComposeCrop`) — `Tall 4:5` · `Square 1:1` ·
   `Wide 1.91:1`.
-- **The frame picker** — `A frame, or a picture of your own.` under the
-  strip (`ComposeCover`, `ComposeCoverPlaying`, `ReplyVideo`).
+- **The frame picker** — the strip and the own-picture tile, no line
+  under them (`ComposeCover`, `ComposeCoverPlaying`, `ReplyVideo`).
 - **The details stage** — the field `Title`; the picked row's caption
   `2 pictures — the body`; the describe counter `· 0 of 2 described`
   beside its door `Describe the pictures` (`Describe the video` on a
   clip); the clip's row label `Cover`; the Sensitive row's action `Mark`
-  beside `Not marked`; and while pictures upload, `Pictures upload while
-  you write — signing waits for them.` (`ComposeUploading`).
+  beside `Not marked`; while pictures upload, each thumb shows its own
+  upload and the seal states the wait (`ComposeUploading`).
 - **The describe sheet** — the field `What's in the picture` (`What's in
   the video` on a clip).
 - **The sensitive sheet** — the `Why?` field's corner, `Optional — shown
@@ -1051,11 +1050,9 @@ visibly inactive, still tappable — the foot, `Reply` and `Invites` (jakob
 
 The applicant's own profile (`ProfileApplicant`) says the same in its
 own places, **blessed (jakob 2026-10-16)**: the open
-application's card reads `Their approval brings you in. Until then, you
-can read everything.` under `Waiting on @mira` — `ApplicantWaiting`'s
-first sentence, then what is open meanwhile — and the empty chronicle
-reads `Nothing here yet. Your posts and opinions show up here once you're
-in.`, `HistoryEmpty`'s shape.
+application's card reads `Their approval brings you in.` under `Waiting on @mira` — `ApplicantWaiting`'s
+line — and the empty chronicle
+reads `Nothing here yet.`, the line alone, as every empty state.
 
 ## In-flight labels
 
@@ -1247,9 +1244,7 @@ spelling — one `License terms` everywhere, never the British spelling:
   `Report this post?` / `Report @ada?` (**blessed**), with the comment's
   `Report this comment?` and the nameless `Report this account?` as
   their twins (*drafted 2026-10-09 — their wording jakob's at review*) —
-  over one body line, `It goes to the people who run CoGra for a look.`
-  (*drafted 2026-10-09; the commit mails the report for MVP and the line
-  names no mechanism*), the pair `Report` · `Cancel` and the snackbar
+  over no body line, the pair `Report` · `Cancel` and the snackbar
   `Reported.` (**blessed**). It never connects to Report-a-problem. A
   report the server refuses — the day's reports spent, or the thing gone —
   answers as no answer does, the sheet staying and the shared snackbar
@@ -1291,11 +1286,12 @@ said the opposite of the truth.
 
 **The tiers' hints**, under each tier name in the chooser (`ComposeLicense`,
 `SettingsLicense`; *carried over — blessed by use (jakob 2026-10-06)*):
-credit — `Nobody owes you a name.` · `Commercial uses credit you;
-everything else is free.` · `Every use credits you.`; the public record
-of use — `Uses go unlogged.` · `Commercial uses are logged publicly and
-stay open to audit.` · `Every use is logged publicly and stays open to
-audit.` These are the hints the joining rule below lowercases.
+credit — `Commercial uses credit you; everything else is free.` under
+`Credit commercially`; the public record of use — `Commercial uses are
+logged publicly and stay open to audit.` · `Every use is logged
+publicly and stays open to audit.` `No credit`, `Credit always` and
+`Not logged` carry no hint: a hint that repeats its tier's name goes
+(jakob 2026-11-12).
 
 **The block's own furniture**:
 
@@ -1309,16 +1305,12 @@ audit.` These are the hints the joining rule below lowercases.
   own legends, so a reader who published a post meets the same two
   words on both sides.
 
-**The author's reading of a pair is one joining rule** (`licenseSummary`;
-jakob 2026-10-01, the sheet law's round) — what the seal's License row,
-the license sheets' foot and the settings default all read: the pair's
-name, ` — `, the credit tier's hint and the record tier's hint joined by
-`, and`, each hint lowercased at its head with its full stop dropped,
-the whole closed by one full stop. The zero pair's name is `Public
+**The author's reading of a pair is its name** (`licenseSummary`;
+jakob 2026-10-01, the sheet law's round; the name alone, jakob
+2026-11-12) — what the seal's License row, the license sheets' foot and
+the settings default all read. The zero pair's name is `Public
 domain`; every other pair is named by its two tier names joined by
-` · `. So `Public domain — nobody owes you a name, and uses go
-unlogged.` and `Credit always · Not logged — every use credits you, and
-uses go unlogged.` The seal's row carries no `your default`: the
+` · `, so `Credit always · Not logged`. The seal's row carries no `your default`: the
 reading says what the post's terms are, wherever they came from. The
 rule and the eight non-zero readings it composes are blessed (jakob 2026-10-02).
 
@@ -1460,9 +1452,9 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
 
 - `UNAUTHENTICATED`, `REFRESH_TOKEN_INVALID` mid-session — the
   surface: the sign-in screen, with the draft and any picks kept on
-  the device. `You've been signed out. Sign in again to carry on.`
-  **Drawn** on `SignInExpired`, where the welcome line stood, in its
-  secondary ink.
+  the device. `You've been signed out.`
+  **Drawn** on `SignInExpired`, under the heading, in the secondary
+  ink.
 - `INTERNAL`, `FORBIDDEN` — in place: `That didn't go through. Try
   again.` The house line says "can't reach the server", which is false
   for a fault the server answered.
@@ -1619,17 +1611,14 @@ Blessed with the audit-states round:
 - `Set a new password` · `New password` · `Set the new password` — the
   reset link's destination (`ResetNew`): heading, field label,
   commitment; `Repeat password` under the field (*Field errors*).
-- `Setting a new password signs out every device. You sign in again
-  with the new one.` — the consequence, said where the act happens
+- `Setting a new password signs out every device.` — the consequence, said where the act happens
   (auth.md: password reset revokes every session).
-- `Your application moved a step. The rest of it is waiting for you on
-  the feed.` · `Go to the feed` — the app's verification landing
-  (`VerifiedApp`); the way on names its destination.
+- `Go to the feed` — the app's verification landing (`VerifiedApp`),
+  under the heading alone; the way on names its destination.
 - `This link doesn't work anymore` — the dead verify link's heading
   (`VerifyExpired`), in `JoinInvalid`'s idiom.
-- `It may have expired or already been used. Send yourself a fresh one
-  — if your account is still waiting on its email, the new link picks it
-  back up.` — the two possibilities, the way forward, and the
+- `It may have expired or already been used. If your account is still waiting on its email, the new link picks it
+  back up.` — the two possibilities and the
   reassurance a reader who reads "expired" needs, kept to what is true:
   an account left unverified for seven days has been reaped (jakob
   2026-10-01, audit K3.3; blessed 2026-10-02).
@@ -1665,8 +1654,7 @@ blessed (jakob 2026-10-02).*
 **Wrong address?** (`ApplicantEmail`) keeps `ChangeEmail`'s heading,
 fields and commitment (`Change your email`, `New email`, `Current
 password`, `Change email`) and says the carve-out in its own paragraph:
-`Your email isn't verified yet, so the new address is all a change
-needs. A fresh link goes there, and the one sent to noor@fieldmail.org
+`A fresh link goes there, and the one sent to noor@fieldmail.org
 stops working.` Its snackbar: `Sent — the link is on its way to
 noor@fieldnotes.org.`
 
@@ -1685,8 +1673,7 @@ sign-in*, never the token underneath it.
 **An ask that can't be taken up** (`VouchAskUnusable`), in `JoinInvalid`'s
 idiom, one pair per case:
 
-- `@noor is already in` · `Someone has vouched them in already, so this
-  ask has nothing left to do.` — then `See @noor's profile` (jakob
+- `@noor is already in`, the title alone — then `See @noor's profile` (jakob
   2026-10-02, F4: the member came to vouch, so they will want to look;
   *new 2026-10-02, blessed (jakob 2026-10-02)*).
 - `@noor is waiting on someone else` · `Another member is deciding on
@@ -1751,9 +1738,8 @@ round*; every one blessed (jakob 2026-10-02).
   this app and stays in your hands — CoGra never holds it and can never
   reissue it.`; `YourKey`'s `This key signs everything you publish, and
   it lives only in this app.` and `Nothing here is sent anywhere — the
-  key is read from this app and shown.`; `YourKeyAbsent`'s `There is no
-  key in this app to show.` under `KeyElsewhere`'s blessed `Your key
-  isn't in this app`. *New 2026-10-05, blessed (jakob 2026-10-05).*
+  key is read from this app and shown.`; `YourKeyAbsent`'s title,
+  `KeyElsewhere`'s blessed `Your key isn't in this app`. *New 2026-10-05, blessed (jakob 2026-10-05).*
 - `VerifyExpired`'s resend answers in `Reset`'s construction, never saying
   whether the account was still waiting: signed in, `If your account is
   still waiting on its email, a fresh link is on its way to
@@ -1762,8 +1748,7 @@ round*; every one blessed (jakob 2026-10-02).
   *New 2026-10-05, blessed (jakob 2026-10-05).*
 - A spent or expired reset link (`ResetExpired`, `RESET_TOKEN_INVALID`)
   takes `VerifyExpired`'s blessed heading, `This link doesn't work
-  anymore`, over `It may have expired or already been used. A reset link
-  works once and expires after 15 minutes — ask for a fresh one.`, with
+  anymore`, over `A reset link works once and expires after 15 minutes.`, with
   `Reset your password` (`Reset`'s own heading, naming where it goes)
   and `Sign in` (`VerifyExpired`'s signed-out way on). *The paragraph is
   new 2026-10-05, blessed (jakob 2026-10-05).*
@@ -1786,51 +1771,44 @@ round*; every one blessed (jakob 2026-10-02).
 ### The landing card and the entry screens' carried-over lines — 2026-10-06
 
 **The landing card** (`ApplicantLanding`): its title is `Approved — your
-registration is landing` (*blessed (jakob 2026-10-06)*), over `@mira
-approved your application. Nothing is needed from you while it lands.`
-(carried over — blessed by use, jakob 2026-10-06); the `keyAt` chip's
-other body is under *The key's lifecycle*.
+registration is landing` (*blessed (jakob 2026-10-06)*), the title alone
+with the key here; the `keyAt` chip's other body is under *The key's
+lifecycle*.
 
 Every other line here is **carried over — blessed by use (jakob
 2026-10-06)**, recorded so the registry is whole:
 
 - **Sign in** (`SignIn`, `SignInError`, `SignInExpired`, `SignInLimited`)
-  — heading `Sign in to CoGra`, lead `Welcome back — your feed is where
-  you left it.` (the expired state puts its own line there), and the
+  — heading `Sign in to CoGra`, no lead (the expired state puts its own
+  line there), and the
   link stack `Forgot password?` · `New here? Enter your invite` above
   the two already recorded.
 - **The invite door** (`InviteEntry`, `InviteEntryError`) — heading
-  `Enter your invite`, lead `CoGra is invite-only. Paste your invite link
-  to get started.`, the field `Invite link` (`JoinInvalid` too), and
+  `Enter your invite`, lead `CoGra is invite-only.`, the field `Invite link` (`JoinInvalid` too), and
   `Continue`.
 - **Join's lead** (`Join`, `JoinErrors`) — `CoGra is invite-only — a
   member vouches for you, and @mira's approval brings you in.`
-- **The reset** (`Reset`) — `Enter the email you signed up with and we
-  send a reset link. Resetting the password signs out every device.`;
+- **The reset** (`Reset`) — `Resetting the password signs out every device.`;
   sent, `If that email has an account, a reset link is on its way. The
   link works once and expires after 15 minutes.`; and on both reset
   screens (`ResetNew` too), `This restores your sign-in only. Your key
   stays wherever it is — restoring the key is its own step, with your
   recovery code.`
 - **The verified landing** (`Verified`, `VerifiedApp`) — heading `Email
-  verified`; on the web, `Your application moved a step. You can go back
-  to the app — it already knows.`
+  verified`; on the web, `You can go back to the app — it already knows.`
 - **The guest's gate** (`GuestGate`) — the dialog `Join the conversation`
   · `Posting and profiles need an account.` · `Keep browsing` · `Sign in
   or join` (the last also the guest band's door, `Main`, `FeedBare`).
 - **The borrowed view's bands** — a guest's `Browsing from @mira's view —
   join to build your own.` (`Main`, `GuestGate`; `FeedBare` names its own
-  view's handle), an applicant's `Browsing from @mira's view while your
-  application lands.` (`ApplicantFeed`, `ApplicantWaiting`,
+  view's handle), an applicant's `Browsing from @mira's view.` (`ApplicantFeed`, `ApplicantWaiting`,
   `ApplicantLanding`, `ApplicantKeyElsewhere`).
-- **The applicant's task cards** (`ApplicantFeed`) — `Verify your email`
-  over `We sent you a verification link — open it to prove this email is
-  yours.`; `Create your key` over `Your application needs a key on this
+- **The applicant's task cards** (`ApplicantFeed`) — `Verify your email`,
+  its title alone over the address and `Resend the link`; `Create your key` over `Your application needs a key on this
   browser before @mira can approve it.` (the app's rendering above), with
   `Create my key`.
 - **The waiting card** (`ApplicantWaiting`) — under `All set — waiting on
-  @mira`, `Their approval brings you in. Nothing else is needed from
-  you.`; its ask link labelled `Your ask link`, captioned `It does not
+  @mira`, `Their approval brings you in.`; its ask link labelled `Your ask link`, captioned `It does not
   expire.` (jakob 2026-10-07, item 58). On the applicant's own profile
   (`ProfileApplicant`) the caption goes on in the second person: `It does
   not expire. Anyone who holds your ask can let you in — the first vouch
@@ -1875,34 +1853,24 @@ place the product changes vocabulary. A switch is the exception to
 "status, not description", because its label alone cannot say what
 turning it on does.
 
-**Theme**: `Light` · `Dark` · `Auto`, and under them
-`Auto follows your device's own setting, and the choice stays on this
-device.` It is the one place a bare "device" is right: what Auto follows
-is the device's own light-or-dark setting, which is neither the browser's
-nor the app's.
+**Theme**: `Light` · `Dark` · `Auto`, no footnote: Auto following the
+system theme is a platform convention (jakob 2026-11-12).
 
 **Giving an opinion** keeps the shipped readings — `The pad`, `Sliders`,
-`Typed values` / `Type both numbers exactly.` — over a footnote read
-once for the group: `A tap opens this, everywhere. Press and hold
-instead, and a small positive one is signed on the spot.` The pad's and
-the sliders' background stands behind the heading's "?" (*The "?"
-dialogs*, jakob 2026-11-12).
+`Typed values`, no hints — over a footnote read once for the group:
+`Press and hold instead, and a small positive one is signed on the
+spot.` The pad's and the sliders' background stands behind the
+heading's "?" (*The "?" dialogs*, jakob 2026-11-12).
 
 **The multi-action switch**, merged from the two apps:
-`Confirm multi-action submits` with
-`Ask first when one submit signs more than one action.` Web's clause
-about paying was the better fact and the worse place for it — a row is
-scanned — so it moves to the group's footnote:
+`Confirm multi-action submits`, no second line: the label says what it
+does (jakob 2026-11-12). The paying fact stands in the group's footnote:
 `Every signed action is paid for separately. A post's license is settled
-when it is first signed and never changes.` Android's *Ask before
-signing a submit that stages more than one action* loses on "stages",
-which is the repo's word for it, not the reader's.
+when it is first signed and never changes.`
 
 **The default license** row reads `Default license`, and its value is
 the current default in the words the license block already uses —
-`Public domain`. It opens the sheet the seal opens; that sheet's own
-`Terms for anyone who reuses this.` is written for one post and is the
-one line the settings route still owes a reading.
+`Public domain`. It opens the sheet the seal opens.
 
 **Reading**: `What your feed shows` — the filter sheet's own accessible
 name and the purpose the trigger's name ends on, so the row and the
@@ -1912,9 +1880,9 @@ behind the heading's "?" (*The "?" dialogs*, jakob 2026-11-12).
 
 **Sensitive content**: one switch, `Always unveil sensitive content`
 (jakob's own wording, 2026-10-09 — never a sheet, never a pair of
-rows), off by default, with the switch-exception second line
-`Off, the veil stays until you tap it.` — and switched on, `On,
-sensitive content stands unveiled wherever you read.` (*new 2026-10-12,
+rows), off by default, no second line while off (jakob 2026-11-12: it restates
+the switch) — and switched on, `On, sensitive content stands unveiled
+wherever you read.` (*new 2026-10-12,
 ruled (jakob 2026-10-12)*) — and the group footnote
 `This choice follows your account to every device.` — the one settings
 group whose value travels (the People group's hiding travels too, but
@@ -1941,23 +1909,18 @@ second sentence's place (*the app's lines blessed (jakob
 clearing the stored data erases, and what comes back, under a heading
 one string serves on both platforms. The key leads and the account is
 named, because a reader who misses it loses the account for good
-(jakob: "Even more emphasis on KEY"). In the browser: `Your key lives
-only in this browser. Clear CoGra's data here and the key is erased
+(jakob: "Even more emphasis on KEY"). In the browser: `Clear CoGra's data here and the key is erased
 with it — without your recovery code, your account is gone for good.
-Your draft, any kept picks and the choices kept on this device go too,
-and you're signed out. What you've seen comes back when you sign in.`
-— in the app: `Your key lives only in this app. Clear the app's data,
+Your draft, any kept picks and the choices kept on this device go too, and you're signed out.`
+— in the app: `Clear the app's data,
 or uninstall it without keeping the data, and the key is erased with
 it — without your recovery code, your account is gone for good. Your
-draft, any kept picks and the choices kept on this device go too, and
-you're signed out. What you've seen comes back when you sign in.` With
-no code yet the first two sentences read `Your key lives only in this
-browser, and it has no recovery code yet. Clear CoGra's data here and
-the key is erased with it — your account is gone for good.` (`…in this
-app, and it has no recovery code yet. Clear the app's data, or
+draft, any kept picks and the choices kept on this device go too, and you're signed out.` With
+no code yet the first sentence reads `Clear CoGra's data here and
+the key is erased with it — your account is gone for good.` (`Clear the app's data, or
 uninstall it without keeping the data, and the key is erased with it —
 your account is gone for good.`). The seen list is a copy of the
-server's and returns on sign-in, so the words never call it lost;
+server's and returns on sign-in, so the words never name it among what goes;
 `the choices kept on this device` echoes Theme's and Reading's own
 phrase. (*New 2026-10-13, drafted — wording jakob's at review.*)
 
@@ -1975,8 +1938,7 @@ answers are `Make a recovery code`, filled and leading, and `Erase
 everything and sign out`. With a code made the body reads `Your key is
 erased with everything else, and only your recovery code can bring it
 back — without the code, your account is gone for good. Your draft, any
-kept picks and the choices kept on this device go too, and you're
-signed out. What you've seen comes back when you sign in.`, and the
+kept picks and the choices kept on this device go too, and you're signed out.`, and the
 answers are `Erase everything and sign out` and `Cancel`, the safe one
 filled. `Erase everything and sign out` is `Erase them and sign out`'s
 construction for the whole device. (*New 2026-10-13, drafted — wording
@@ -2002,8 +1964,8 @@ and `Sign out everywhere else` answers `Signed out everywhere else.`
 (*new 2026-10-05, blessed (jakob 2026-10-05)*).
 
 **Credentials**: `Password`, `Handle`, `Email`, each showing where it
-stands, with `Changing your password signs out every other device.`
-under them — the fact `ResetNew` already says, moved in front of the act.
+stands, no footnote: the password form says the sign-out where the act is
+(jakob 2026-11-12).
 
 **About** — the support stack (jakob, 2026-10-01; every line here
 blessed the same day). Three
@@ -2013,13 +1975,13 @@ and before `Privacy` and `Terms`, each one string for app and web:
 - `What's new`, its value the version running here (`0.1.2`). It opens
   the release chronicle, titled by the row: each release's dateline
   reads `Version 0.1.2 · installed · 30.09.2026` for the running one and
-  `Version 0.1.1 · 28.09.2026` for the rest, and the page's footnote
-  reads `Newest first.` Each release's card ends in `See it on GitHub`,
+  `Version 0.1.1 · 28.09.2026` for the rest, with no footnote — the
+  datelines show the order (jakob 2026-11-12). Each release's card ends in `See it on GitHub`,
   named `See version 0.1.2 on GitHub` for a listener — the patch notes'
   only door to the deeper level, that release's public page (jakob
   2026-10-02, blessed); the newest release's card in the behind state
   carries its own. A release's notes are written when it ships, never
-  here. *`installed` and the footnote blessed (jakob 2026-10-02),
+  here. *`installed` blessed (jakob 2026-10-02),
   2026-10-02.*
 - **A running version behind the newest** (jakob 2026-10-01). Atop the
   chronicle, one quiet line: `A newer version exists.` ending in `Update
@@ -2038,13 +2000,12 @@ and before `Privacy` and `Terms`, each one string for app and web:
   version 0.1.3`, `installed` and `newest` blessed (jakob 2026-10-02),
   2026-10-02.*
 - `Report a problem` opens the report: the heading `Report a problem`;
-  `Say what happened, in your own words. Sending opens your email with
+  `Sending opens your email with
   everything below filled in — nothing goes until you send it there.`;
   the field `What happened`; then the four facts that travel with the
   words, as a read-back list — `To` · the address, `Version`, `Running
   on`, `Time` — and under them `That's all that goes with your words —
-  no account, no key, nothing you've posted. It's sent from your own
-  email, so we can write back.` The commitment is `Send by email`,
+  no account, no key, nothing you've posted.` The commitment is `Send by email`,
   because the press opens the reader's mail and sends nothing itself.
   It is live from an empty field (`ReportProblemEmpty`; jakob
   2026-10-05): the press only prefills a draft in the reader's own mail,
@@ -2064,16 +2025,17 @@ below), and a session whose device gave no name reads `Unnamed device`
 
 **Sign out** carries the login form's own line verbatim —
 `Don't remember this account on this device` — with what it decides
-underneath: `Your key, your draft and any kept picks are cleared from
-this browser when you sign out.` (*blessed (jakob 2026-10-05)*); in the
-app, `Your key, your draft and any kept picks are cleared from this app
-when you sign out.` (*blessed (jakob 2026-10-07)*). The three app lines
+underneath: `Your key, your draft, any kept picks and what you've seen
+are cleared from this browser when you sign out.`; in the app, `Your
+key, your draft, any kept picks and what you've seen are cleared from
+this app when you sign out.` (*blessed (jakob 2026-10-05 / 2026-10-07);
+the seen record named since sign-out clears it (PR-69), the drawn line
+taken, jakob 2026-11-12*). The three app lines
 say `this app`, never `this phone`, since the app runs on tablets and
 emulators too; Sessions' `This phone` stays its own case.
 
 **A new recovery code** (`SettingsBackup`): the heading, then
-`A new code re-encrypts your key and replaces the old backup — recovery
-always uses the newest one. Your current code was made on 12.08.2026.`,
+`A new code replaces the old backup. Your current code was made on 12.08.2026.`,
 the field `Current recovery code`, the commitment `Create a new recovery
 code`, and last: `The new code is shown once and never stored. Have
 somewhere to write it down before you go on — the old code keeps working
@@ -2100,20 +2062,13 @@ The six the round's review added. A sheet opened from settings is titled
 by the row that opened it, so each heading below is a row's own words.
 
 **The default license** (`SettingsLicense`) is titled `Default license`
-and says what a default does, which the seal's sheet cannot: `Where
-every new post starts. A post's terms settle when it is first signed, so
-changing this never reaches one you have already published.` The seal's
-`Terms for anyone who reuses this.` is written for the post in front of
-it and stays there. The reading under the axes names the pair the way
-the read surfaces do — `Public domain — nobody owes you a name, and uses
-go unlogged.`, the two tier hints joined, so the word and what it means
-arrive together.
+and says what a default does, which the seal's sheet cannot: `A post's terms settle when it is first signed, so
+changing this never reaches one you have already published.` The reading under the axes is the pair's name,
+`Public domain`, as on the seal's row.
 
 **What your feed shows** (`SettingsReading`) is titled with the row and
-the filter's accessible name, and carries the group footnote's opening
-where a covering sheet hides the footnote: `Every feed starts from
-this.` The rest stays under the group, where the reader meets it first.
-The sections and hints are the feed's own, and so is the
+the filter's accessible name, and carries no note under the title
+(jakob 2026-11-12: what a default is needs no line). The sections and hints are the feed's own, and so is the
 foot: `Reset` in its corner and `Done`, the word both of the page's
 sheets use, at its end. Here `Reset` brings back CoGra's own default —
 the one place a reader gets back to it; on a feed's sheet the same word
@@ -2135,10 +2090,7 @@ revokes the session doing it and a change does not, and the two lines
 exist to keep that difference visible. Fields `Current password`,
 `New password` with `At least 12 characters.` and `Repeat password`
 (*Field errors*), the commitment `Change
-password`, and last, the reason the first field is there at all:
-`Your current password is asked for even though you are signed in: a
-live session is not proof enough to change the credential behind it.`
-A wrong current password reads `That password isn't right.` under its
+password`. A wrong current password reads `That password isn't right.` under its
 field — on `ChangeEmail` and `ApplicantEmail` too, which ask for it the
 same way, drawn once on `ChangeEmail`'s `fault` chip — and a
 change that lands answers `Password changed — other devices are signed
@@ -2150,10 +2102,9 @@ have published stays yours — the handle is a name, not the account.`
 The field is `New handle` with the rules where they are typed:
 `3 to 30 characters: letters, numbers and underscore. Handles are always
 lowercase.` — the fold is said because a reader who types capitals will
-otherwise think the field ate them. The commitment is `Change handle`,
-and the cost is last and unsoftened: `Links to your old handle stop
-working the moment you change it, and anyone can claim it afterwards.`
-The press asks first (jakob 2026-10-05, §11's think-twice list;
+otherwise think the field ate them. The commitment is `Change handle`;
+the cost is said once, unsoftened, where it is read at the press (jakob
+2026-11-11, C4). The press asks first (jakob 2026-10-05, §11's think-twice list;
 `ChangeHandleConfirm`): `Change your handle to @solferreira?` over
 `Links to @sol stop working the moment it changes, and anyone can claim
 @sol afterwards.`, with `Keep it` filled and `Change it` the quiet answer
@@ -2175,10 +2126,7 @@ that is not true. Both apps say *Check both inboxes — either message's
 code confirms the change*, which reads as one message being enough;
 `auth.md` and `api-spec.md` say the change applies only once both sides
 have landed, and that the two sides are not the same errand. The board
-names the asymmetry first: `Two messages, two different errands — a
-code to type here, and a link to open at the new address. Your email
-moves when both have been answered, in either order.` Then it draws the
-pair, captioned `Both have to land`, each side its address and its
+draws the pair, captioned `Both have to land`, each side its address and its
 state — `Code` / `sol@solferreira.art — still waiting` and `Link` /
 `sol@ferreira.studio — still waiting`. `Still waiting` is the resting
 state said the way `Still settling` says its own: what has not happened
@@ -2234,8 +2182,7 @@ your account keeps the address it has, and a reset still goes there.`
 **The new address's link, opened** (`ChangeEmailLinked`, `Verified`'s
 idiom), first side: `New address confirmed` · `One side left: the code
 we sent to sol@solferreira.art. Your email moves once it's typed in.` ·
-`Enter the code`; last side: `Email changed` · `You sign in with
-sol@ferreira.studio from now on, and resets go there too.` · `Back to
+`Enter the code`; last side: `Email changed` · `You sign in with sol@ferreira.studio from now on.` · `Back to
 settings`. Past the window it takes `VerifyExpired`'s heading, `This
 link doesn't work anymore` (blessed), with `The change it belonged to
 ran out before both sides landed. Your email is still
@@ -2254,13 +2201,11 @@ email stays as it is.` (*a draft of 2026-10-07*) and `VerifyExpired`'s
 way on, `Go to the feed` with a session and `Sign in` without (jakob
 2026-10-07). Signed
 out (`ChangeEmailLinkedSignedOut`): `Sign in to finish the change` ·
-`This link confirms sol@ferreira.studio as your new address. It counts
-once you're signed in.` · `Sign in`. A link whose change ran out, was
+`This link confirms sol@ferreira.studio as your new address.` · `Sign in`. A link whose change ran out, was
 canceled or already applied, or one the app does not know, opened signed
 out: one address-free landing (jakob 2026-10-07, ruling 38) —
 `VerifyExpired`'s heading, `This link doesn't work anymore` (blessed), over
-`The change it belonged to may have run out, been canceled or already
-happened — this link can't move your email anymore.` and `Sign in` (*new
+`The change it belonged to may have run out, been canceled or already happened.` and `Sign in` (*new
 2026-10-07, the body drafted — its wording jakob's at review*). Signed IN,
 a token the app does not know lands in the same family (jakob 2026-10-09,
 item 98): the dead-link heading over `It isn't a link CoGra knows — it
@@ -2349,8 +2294,8 @@ rulings B1-B3, 2026-10-01). Every line here is *new 2026-10-01, blessed (jakob 2
 - The commit, `Sign them` (the ruling's own words).
 - The last pick dropped: the snackbar `Nothing left to sign.` (a draft,
   per the ruling).
-- The seal keeps the standard seal's words — `What you sign`, `Last step`,
-  `3 things, signed together`, `They land together, or none does.` — and
+- The seal keeps the standard seal's words — `What you sign`,
+  `3 things, signed together` — and
   adds its own: each row's label `Opinion`, the X's name `Leave — your
   picks are kept`, and the commit `Sign the picks` (`Signing the
   picks…` in flight). The commit names the batch by the review's own
@@ -2391,8 +2336,7 @@ The kept-picks rulings (jakob 2026-10-02) add these, each *new
   names what is SIGNED — the record's family, beside `Opinion` (seam
   248). *Topic* there is the held-position word of *Your tags*.
 - A kept approval beside the picks (jakob 2026-10-05, the B round's 7,
-  amended): the review and its seal each carry one quiet line, `An
-  approval waits in your invites — go there to sign it.`, ending in the
+  amended): the review and its seal each carry one quiet line, `An approval waits in your invites.`, ending in the
   door `Open Invites` (*jakob's own words, blessed (jakob 2026-10-05)*),
   so signing the picks never reads as the approval done too — the line
   is a call to act, because nothing signs the approval but the reader.
@@ -2412,8 +2356,7 @@ above it: `This key signs everything you publish, and it lives only on
 the device it was made on.`
 
 **The key behind its gate** (`YourKeyGate`, a browser whose seed is
-sealed): `On this browser your key is sealed inside its backup. Enter
-your recovery code to open it and see the key.` — the field `Current
+sealed): `On this browser your key is sealed inside its backup.` — the field `Current
 recovery code`, the commitment `Show my key`, a refused code in
 Restore's line and a code of the wrong length in `RestoreLength`'s, `A
 recovery code is 26 characters.` (jakob 2026-10-05). Either copy on `YourKey` answers with the snackbar
@@ -2470,8 +2413,7 @@ app's renderings are above):
   safe.`, `Copy`, the field `Type or paste the code to confirm`, and `I've
   written it down`.
 - **The restore** (`Restore`, `RestoreError`, `RestoreLength`) — heading
-  `Restore your key`, `Enter your recovery code to bring your signing key
-  onto this browser.` (`…into this app.`), and `This is the only way to
+  `Restore your key` over the field, and `This is the only way to
   restore your key. If the code is gone too, the key can't be brought
   back — your sign-in still works.`; every recovery-code field shows the
   code's shape as its placeholder, `XXXXX-XXXXX-XXXXX-XXXXX-XXXXXX`.
@@ -2484,8 +2426,8 @@ app's renderings are above):
   recovery code keeps working.` (`SettingsBackupKeyAbsent`).
 - **Your key's paragraph** goes on after its first sentence: `Store a copy
   somewhere safe and you keep it whatever happens to CoGra. Anyone who
-  has a copy can act as you.` (`YourKey`, `YourKeyAbsent`); and with no
-  key here, `There is no key on this browser to show.` (`YourKeyAbsent`).
+  has a copy can act as you.` (`YourKey`, `YourKeyAbsent`); with no key
+  here the notice's title says so alone (`YourKeyAbsent`).
 
 ## The profile save
 
@@ -2520,16 +2462,13 @@ words, recorded so the registry is whole:
   one's own, in the own figures' second person (round 26, seam 250). A
   deleted account's page is titled `Opinions`, the handle dropped and
   never replaced. An empty tab says the figure's own noun at zero, in the
-  empty sheet's calm register: another's `On them` keeps `No opinions yet
-  — yours would be the first.`; `No opinions by @ada yet.` · `No opinions
+  empty sheet's calm register: another's `On them` keeps `No opinions yet.`; `No opinions by @ada yet.` · `No opinions
   on you yet.` · `No opinions by you yet.` · `No opinions on this account
   yet.` — and a deleted account, which will give none again, `This
   account gave no opinions.` (*blessed (jakob 2026-11-10)*).
 - **The edit** (`ProfileEdit`) — titled `Edit profile`, its fields
-  `Display name` · `Bio` · `Website`, and `Your handle changes in
-  Settings.`
-- **The profile's seal** (`ProfileEditSeal`) — `Your profile` over
-  `Picture, name, bio, and website — one signed change.`; the acts row
+  `Display name` · `Bio` · `Website`.
+- **The profile's seal** (`ProfileEditSeal`) — `Your profile`; the acts row
   `Profile` reading `A new picture, bio and website`, its count spoken
   `1 profile change`; under the card `Every change to your profile is
   signed in your name and stays in your public record.`; its "?" is named
@@ -2576,9 +2515,8 @@ words. A record is one row, whatever gesture signed it.
 **A member's empty chronicle says only that** (seam 245, ask 11;
 *new 2026-10-28, blessed (jakob 2026-11-10)*): a tab
 with nothing in it reads `Nothing here yet.` at `EmptyState`, the line
-alone. A member knows why their own is empty, and another's needs no
-reason; only the applicant's empty chronicle says what fills it and
-when, because that is new (`ProfileApplicant`, above). A member's
+alone. An empty state says one thing (jakob 2026-11-12), the applicant's
+empty chronicle among them (`ProfileApplicant`, above). A member's
 `Everything` always holds their registration, so the line meets a
 member on `Posts` or `Comments` (`ProfileComments`' `comments` chip).
 
@@ -2616,8 +2554,7 @@ profile, forever.
 others first while the card stands, so one wording is true in every
 state (jakob 2026-10-02, **blessed**). The card's body, on `VouchBack`
 and `VouchBackPad`: `Vouch back to open the way from your side — your
-opinion toward @mira, and your feed grows from it.` (`VouchBack` adds
-`Vouching opens the opinion control, set to a gentle default.`). The
+opinion toward @mira, and your feed grows from it.` (`VouchBack`). The
 card's act is the stance face, and one line beside it teaches the tap:
 `Tap the face to vouch back.` — on the deleted voucher's card too, and
 with no first-opinion words, because the card stands while the member
@@ -2683,8 +2620,7 @@ then the pair, on a flag attached to every card's top edge — the word
 names the act, the glyph and the numbers say what it claimed, and the
 tag itself is not repeated because the page is titled by it.
 
-**An unused tag is not a miss.** `Nothing carries this tag right now.
-The name is still a place — anyone can use it.` No "not found",
+**An unused tag is not a miss.** `Nothing carries this tag right now.` No "not found",
 because the tag was found; what is empty is the list. No "first"
 either: the line states the present and promises no past (jakob
 2026-09-15, `TagPageEmpty`). *Still a place*
@@ -2791,8 +2727,7 @@ belongs.
 **The gesture, said in the settings group.** `Giving an opinion` is the
 group, `A tap opens it; drift to where it feels right.` the pad's hint
 behind its "?", and
-`A tap opens this, everywhere. Press and hold instead, and a small
-positive one is signed on the spot.` the footnote — the one place the
+`Press and hold instead, and a small positive one is signed on the spot.` the footnote — the one place the
 shortcut and the price are said together.
 
 **The first-ever pad teaches in two coaching lines, and nothing else
@@ -2902,8 +2837,11 @@ non-drag route's three blessed, jakob 2026-10-20.*)
 
 **What one signature commits is counted in things.** The footer reads
 `You're signing 2 things`, the total `2 things, signed together`
-(`1 thing, signed` in the singular), the rows carry bare counts, and
-the subline is `They land together, or none does.` everywhere.
+(`1 thing, signed` in the singular), the rows carry bare counts. A seal
+carries no all-or-nothing line: its `How signing works` says it, and
+the line would repeat the `?` on the same sheet (jakob 2026-11-12).
+The edit's acts sheets (`EditActs`, `CommentEditActs`), which carry
+no `?`, keep `They land together, or none does.`
 
 **The wallet says reach, not paths.** `In escrow` · `Held` ·
 `…paid when an advertiser's reach flows through you.` ·
@@ -2913,7 +2851,7 @@ through you.` · `Every payout is traceable to the reach it paid for.` ·
 default) · `When it settles`.
 
 **The straight fixes.** `What your feed shows` as the filter's first
-section · `Your feed is showing nothing — everything is switched off.`
+section · `Everything is switched off.`
 (its action, `Show posts again`, carried over — blessed by use, jakob
 2026-10-06; `FeedNothing`)
 · `Your sky — every account a star, sized by your own paths to it.`
@@ -3083,20 +3021,18 @@ Saved, the tag's page, a post or profile reached by a link or a search —
 the hide row reads `Unhide @ada`: Settings' word in the row's own form, the
 handle after it (`Unhide this account` where the actor is redacted, as
 `Hide this account` is). It answers with Settings' snackbar, `@ada is
-unhidden — their posts can reach your feed again.` with `Undo` (jakob
+unhidden.` with `Undo` (jakob
 2026-11-11, M1; round 41). **Drawn** on `HistoryPostMenu` (`author`
 hidden) and `HistoryProfileMenu`. (*`Unhide @ada` and `Unhide this
 account` are `Unhide` taking the row's handle, review-pending.*)
 
 **Hiding is confirm-free, and the snackbar is the whole ceremony.**
-`@ada is hidden — their posts stay out of your feed.` with `Undo`
-beside it. It says what changed and how far it reaches, which is what
-stops a reader wondering whether they have done something to someone.
-It lands wherever the tap was made, in the same words: over the feed
+`@ada is hidden.` with `Undo` beside it — hidden already says how far
+it reaches (jakob 2026-11-12). It lands wherever the tap was made, in the same words: over the feed
 (`FeedHidden`), over the post being read (`PostDetailHidden`) and over
 the person's profile (`ProfileOtherHidden`).
 A deleted account has no handle to spell, so hiding one answers `This
-account is hidden — its posts stay out of your feed.`, with the same
+account is hidden.`, with the same
 `Undo` (`ProfileDeletedMenu`; *blessed (jakob 2026-10-05)*).
 
 **Saving is confirmed like every other completed act.** `Saved.` The
@@ -3108,16 +3044,17 @@ as a feed, newest-seen first. *View history* is the contract's word and
 stays there. Its field reads and is named `Search your history`, its
 trigger `Everything` at rest — search's word for nothing narrowed — and
 the trigger's purpose and the sheet's title are `What your history
-shows`, the feed's and search's construction. The sheet's kind hint is
-search's own, `Combine as many as you like. All, until you narrow it.`
-(*new 2026-10-05, blessed (jakob 2026-10-05)*: `Search your history`,
+shows`, the feed's and search's construction. The sheet's kinds carry
+no hint, as search's do. (*new 2026-10-05, blessed (jakob 2026-10-05)*: `Search your history`,
 `What your history shows`.) The field matches by Explore's one rule
 (readme §4, *Search*).
 
 **A history narrowed to nothing says what the narrowing found**
 (`HistoryNone`): a query nothing seen carries reads `Nothing you've seen
-carries that name.` before `ExploreNone`'s blessed `Search reads names
-and titles, never bodies — fewer words reach further.`; kinds that hold
+carries that name.` before `Search reads names and titles, never bodies —
+fewer words reach further.` (the sentence `ExploreNone` no longer
+carries: its `How searching works` "?" holds it; here, whether it moves
+behind a "?" is open); kinds that hold
 nothing seen read `Nothing you've seen is of that kind.`; and both offer
 `Show everything`, which clears the query and the kinds at once (*new
 2026-10-05, blessed (jakob 2026-10-05)*: the two first sentences and
@@ -3133,31 +3070,20 @@ sentence, over `Show everything`, which clears the query (*blessed
 jakob 2026-10-14*: `Search what you saved`,
 `Nothing you've saved carries that name.`).
 
-**Two empty states, and each says why the list is empty.**
-`Nothing saved yet. A post, a comment or a person can be saved from its
-own menu, and it waits here.` names the gesture, because no card shows
-a saving affordance at rest and a reader who has never opened a ⋮ has
-no other way to find it. `Nothing here yet. Everything you see shows
-up here on its own, newest first.` (*new 2026-10-05, blessed (jakob
-2026-10-05); `see` a draft of 2026-10-07, History being everything
-seen*) says the opposite thing — that this one fills without being
-asked — and names no kind, because the list holds every kind.
+**Two empty states, each one line.** `Nothing saved yet.` and
+`Nothing here yet.` — an empty state says one thing (jakob
+2026-11-12).
 
 **The settings group is `People`,** its row `Hidden accounts` with a
-bare count, and its footnote `Hiding someone clears your own feed of
-them. Nothing changes for them, and their profile still opens if you go
-looking. Your opinions on them still count in your friends' feeds until
-you walk them back.` The footnote carries the whole of what hiding
-means, which is the group anatomy's own rule; its last sentence is
+bare count, and its footnote `Nothing changes for them. Your opinions on them still count in your friends' feeds until you walk them back.` Its last sentence is
 feed-ranking §8.2's required hint (jakob 2026-10-07; *the sentence a
 draft*). With nobody hidden the row reads `None`.
-`Unhide` answers in the hiding snackbar's shape, `@juno is unhidden —
-their posts can reach your feed again.` with `Undo` beside it (*new
+`Unhide` answers in the hiding snackbar's shape, `@juno is unhidden.`
+with `Undo` beside it (*new
 2026-10-05, blessed (jakob 2026-10-05)*), raised over the sheet while
 others stay hidden (`SettingsUnhidden`). A deleted account's row
 reads `Deleted account` on the reserved disc, and its unhide answers
-with the nameless twin, `This account is unhidden — its posts can reach
-your feed again.` (*blessed (jakob 2026-10-07)*). A failed unhide or
+with the nameless twin, `This account is unhidden.` (*blessed (jakob 2026-10-07)*). A failed unhide or
 Undo says `That didn't go through.` on the row it was made from, in its
 second line, with `Retry` in the trailing slot.
 
@@ -3286,15 +3212,9 @@ name changes with the drawing, because a marker a listener cannot hear
 is not a marker. Never a number in either: the count belongs to no
 sentence a reader needs.
 
-**The empty state names the kinds.** `Nothing here yet. Comments,
-replies, citations, mentions and opinions on you arrive here as they
-happen, along with what becomes of your invites and your own
-application.` The list has no gesture of its own — it fills from what
-other people do — so naming what arrives is the only way to say the
-channel is empty rather than broken. The kinds that reach a node are
-named one by one and the four that reach the account are one clause: a
-reader counting nine names has stopped reading a sentence. No action
-button: nothing the reader can do from here fills it.
+**The empty state is one line.** `Nothing here yet.` — an empty
+state says one thing (jakob 2026-11-12). No action button: nothing the
+reader can do from here fills it.
 
 **The surface is `Notifications`,** in the page header and wherever it
 is named. Not *Activity*, which describes a log, and not *Alerts*, which
@@ -3309,18 +3229,11 @@ flow's words carry the product's erasure ethic, so the register is held
 tighter here than anywhere: honest, quiet, no drama, and nothing that
 argues with a decision the reader has made.
 
-**The settings row is two words and a footnote.** `Delete account` on a
-navigating row, and under the group: `Nothing is deleted here. The next
-screen says what goes and what stays, and the deletion is confirmed by a
-link we email you.` The row is quiet by ruling; the footnote is what lets
-it be, because the fact a reader needs before tapping is that the tap
-deletes nothing. An applicant's deletion is confirmed in the app and
-nothing is mailed, so their footnote stops at `Nothing is deleted here.
-The next screen says what goes and what stays.` (`Settings`' reader chip;
-**blessed**, jakob 2026-10-05). Which footnote stands, and whether the
-row is open, is read from `User.deletionPath` and never from the
-application: `BY_LINK` takes the mailed-link footnote, `IMMEDIATE` and
-`LOCKED` the applicant's. An applicant whose address is funded but
+**The settings row is two words.** `Delete account` on a navigating
+row, no footnote: the chevron promises a surface, and `DeleteAccount`
+says what goes, what stays and how it is confirmed (jakob 2026-11-12).
+Whether the row is open is read from `User.deletionPath` and never from
+the application. An applicant whose address is funded but
 whose Registration has not landed (`LOCKED`) meets the row in the
 applicant locked look, and its tap answers `You can delete your account
 once your registration lands.` — the moment deletion opens, which can
@@ -3347,8 +3260,7 @@ as yours — what goes is everything that says it was you.`
 
 **The content sweep is the reader's own sentence, in the first person.**
 `Also remove what I posted`, with `The words and pictures go out of your
-posts and comments, each leaving its mark. Leave this off and
-they stay as you wrote them.` under it. *Also* is what makes it an
+posts and comments, each leaving its mark.` under it. *Also* is what makes it an
 addition to a decision already made rather than a second question.
 
 **The commitment is `Send the confirmation link`** — what the press does,
@@ -3376,9 +3288,7 @@ the product trying to talk them out of it.
 
 **The mail state is the errand and the address.** `Check your mail` ·
 `We sent a link to sol@solferreira.art. Opening it confirms the deletion
-and starts the seven days.` · `Until you open it nothing is scheduled and
-nothing has changed. Closing this screen changes nothing either — the
-link is the whole of it.` · `Resend the link`. No expiry is claimed: the
+and starts the seven days.` · `Resend the link`. No expiry is claimed: the
 reset link states its fifteen minutes because `auth.md` gives it fifteen
 minutes, and `erasure.md` sets no window on this one. A resend that goes
 out answers in the email change's resend register, naming the inbox:
@@ -3408,13 +3318,10 @@ in` instead of `Go to the feed`.
 **During the grace the settings row reads the deadline** —
 `Deletion in 6 days`, the forward ladder — and the group's footnote
 goes, since it describes a request not yet made (`SettingsDeleting`).
-The row opens `DeleteAccountPending`: `Delete account` · `Your account
-is deleted in 6 days, on 08.10.2026. Until then nothing has changed, and
-canceling keeps everything as it is.` · `Cancel`, the band's word, which
+The row opens `DeleteAccountPending`: `Delete account` · `Your account is deleted in 6 days, on 08.10.2026.` · `Cancel`, the band's word, which
 ends in the canceled snackbar below.
 
-**The cancel says what happened, and offers no way back.** `Canceled —
-your account stays, and nothing was deleted.` Every other snackbar in the
+**The cancel says what happened, and offers no way back.** `Canceled — your account stays.` Every other snackbar in the
 product carries an Undo; this one cannot, because its undo would re-arm
 an irreversible countdown from a control that disappears in four seconds.
 
@@ -3446,8 +3353,7 @@ handle a reader could try to reach.
 
 **A sentence that names a deleted actor says `a deleted account`**
 (jakob 2026-10-07): the handle gives way to the phrase and the sentence
-keeps its shape — `Browsing from a deleted account's view while your
-application lands.`, `your opinion toward a deleted account` — never a
+keeps its shape — `Browsing from a deleted account's view.`, `your opinion toward a deleted account` — never a
 blank and never the store's redacted value (*the forms a draft of
 2026-10-07*). No board prints a raw null.
 
@@ -3459,11 +3365,8 @@ them lets a verdict hide behind a person's own decision, or the reverse
 (`erasure.md` §7). Specced here, drawn nowhere yet: no board shows a
 community-redacted actor.
 
-**Hiding's snackbar, now that it has a board.** `@ada is hidden — their
-posts stay out of your feed.` with `Undo`. The second clause is the one
-that matters: what a reader wonders after hiding someone is whether
-they have done something *to* that person, and the answer is that they
-have changed their own feed and nothing else. `Undo` beside it: hiding
+**Hiding's snackbar, now that it has a board.** `@ada is hidden.` with
+`Undo` beside it: hiding
 is a comfort a reader may have meant for one post rather than for a
 person, and the way back costs nothing.
 
@@ -3527,9 +3430,7 @@ it`, with `@ada's own opinion rides the post` under the second. A publish is
 a step like any other, and what makes it one is the opinion the author
 signed with it — which the composer's seal already told them.
 
-**The fold, said once**: `You have given @ada two opinions. They add up
-to one, and that one is what carries — the same adding up the pad shows
-you as your current opinion.` It speaks faces and counts rather than
+**The fold, said once**: `You have given @ada two opinions. They add up to one, and that one is what carries.` It speaks faces and counts rather than
 arithmetic, the geek round's rule for a sentence about pairs: it has to
 hold for a reader who has never turned the digits on.
 
@@ -3543,8 +3444,7 @@ what makes it true.
 **Carried over — blessed by use (jakob 2026-10-06)**, the trace's
 furniture: level one's list is labelled `Strongest first` (`FeedEntry`),
 a path's list of steps `The steps`, a step's second line `2 opinions
-behind it` (`RankPath`); one step opens under `Your opinion of @ada — the
-first of this path's two steps.`, its `Behind it` reading `2 opinions`
+behind it` (`RankPath`); one step opens under `Your opinion of @ada`, its `Behind it` reading `2 opinions`
 (`RankHop`).
 
 **The moved-on line**: `The paths that carried it here have moved on.`
@@ -3600,9 +3500,8 @@ comment`. *Opinion* throughout, never *stance* — the reader's word
 (*Naming*, above) — and the count is bare beside it, the row's own words
 having already said what was counted.
 
-**The empty sheet**: `No opinions yet — yours would be the first.` The
-`Nothing here yet — write the first post.` shape: calm, and naming the
-one thing that would fill it. It never scolds and it carries no `error`
+**The empty sheet**: `No opinions yet`. An empty state says one thing
+(jakob 2026-11-12): what is empty, and nothing after it. It never scolds and it carries no `error`
 colour; a comment nobody has answered is not a fault.
 
 ## The feed cards
@@ -3688,10 +3587,10 @@ Three places stand in for something not here yet: the screen the
 band's chats icon opens (`ChatsComingSoon`, backlog item 68), the door
 the bar's wallet slot opens (`WalletComingSoon`, the v1.0.0 scope cut),
 and the hero card on Explore (backlog item 16). **All name the promise
-the same way** — the thing, an em dash, `coming soon`, then one
-sentence of what will be there:
+the same way** — the thing, an em dash, `coming soon`, then, where it
+says more than the headline, one sentence of what will be there:
 
-- `Chats — coming soon. Your conversations will be here.`
+- `Chats — coming soon`, alone: chats are conversations (jakob 2026-11-12).
 - `Wallet — coming soon. Your earnings will be here.` *(Ruled by jakob
   2026-09-25.)*
 - `The Sky — coming soon` · `Your sky — every account a star, sized by
@@ -3748,9 +3647,8 @@ recorded so the registry is whole.
   stays readable.`
 - **5** — `Someone brings you in` · `You are here because @mira invited
   you. @mira's link is your first way in to everyone else, and theirs
-  to you.` (the inviter by handle, *Naming*; jakob 2026-11-11), with the quiet note `A friend who's already in has to let you
-  in. Ask around once you have verified your email.` (*blessed (jakob
-  2026-10-07)*)
+  to you.` (the inviter by handle, *Naming*; jakob 2026-11-11), and no note
+  under it (jakob 2026-11-11, C3).
 
 ## About
 
@@ -3828,13 +3726,8 @@ because the door beside it already carries one (`5 held`). *Held* is the
 word for having a position on a topic, and it is the predicate said
 plainly: a topic is held while the netted pair is not nothing.
 
-**The empty list**: `No tags yet — say how you feel about one from
-its page.` The `Nothing here yet — write the first post.` shape: calm,
-and naming the one thing that would fill it — including where the
-gesture lives, because a reader with no topics has not met the tag
-page's row yet. *How you feel* is the pad's own register (`How much
-you like it`); the stand-wording is banned from the screen (jakob
-2026-09-24, amending this line at blessing).
+**The empty list**: `No tags yet`. One thing, as every empty state
+(jakob 2026-11-12).
 
 **The Affinity pad's six words.** The pad a topic's stance row opens
 fills the same two signed slots as an opinion's with different
@@ -3855,11 +3748,9 @@ route asks what the drawn one asks. Ruled 2026-09-15; drawn on
 `TagPageHeldPad`.
 
 **The feed filter's section**: label `One tag`, hint `Tags you hold
-and are for. A tag you hold against stays a record — it just never
-narrows a feed.` The label says the cardinality, because it is the one
-section here that does not combine. The hint answers the question the
-section raises by existing — where is the topic I hold against — rather
-than leaving a reader to decide their own record went missing.
+and are for.` The label says the cardinality, because it is the one
+section here that does not combine. The hint names the predicate, so a
+topic held against is missing by the rule the section states.
 
 **The trigger spells the tag itself**, hash and all, leading the
 deviations: `Posts · #saltmaps`. It is an extra rather than the head for
@@ -3877,8 +3768,8 @@ counted. There is no *by whom* in the title: the list holds ARTIFACTS,
 not people, which is exactly what separates it from `Opinions on this
 post`.
 
-**The inbound empty sheet**: `Nothing cites this yet — yours would be
-the first.` `No opinions yet — yours would be the first.`'s twin, and
+**The inbound empty sheet**: `Nothing cites this yet` — `No opinions
+yet`'s twin, and
 kept a twin on purpose: the two sheets are reached the same way, from
 the same menu, and a reader who has met one should recognize the other.
 
@@ -3961,10 +3852,7 @@ reject extension's lines* below). The buttons are `Close it` and `Keep
 it`, `Keep it` being the house word for *don't*, from `RemoveConfirm`
 and `SeveranceConfirm`. The batch dialog's two sentences are the row's
 in the plural (`RejectAllConfirm`; *carried over — blessed by use (jakob
-2026-10-06)*): `All four leave your list and all four people are told.
-Their accounts stay exactly as they are — signed in, and free to keep
-reading.` and `This is your call and nobody else's. Any member can still
-vouch any of them in, and each gets a link to ask with.`
+2026-10-06)*): `All four leave your list and all four people are told. Their accounts stay as they are.` and `Any member can still vouch any of them in, and each gets a link to ask with.`
 
 The count is the sentence's, so it takes the count's English (seam 248;
 *new 2026-10-29, blessed (jakob 2026-11-10)*). A
@@ -3987,10 +3875,8 @@ screen and its accessible name is its only one.
 **The create sheet's switch is worded as the RESTRICTION**: `Only one
 person can use it`. That is what makes the label alone enough, and why
 the row carries no status line under it. What OFF does is the group's
-footnote: `With it off, anyone holding the link can apply until it
-expires. Either way each person still needs your approval, one at a
-time.` The second sentence is the one that matters — what scales is the
-queue, never the vouching.
+footnote: `Either way each person still needs your approval, one at a
+time.` What scales is the queue, never the vouching.
 
 **Expiry is a DURATION and not a moment, so it does not take the
 forward ladder.** The row reads `Expires after` · `7 days` and the
@@ -4013,9 +3899,7 @@ on screen it is a link.
 **The approval pad's two lines state what `Set` does, every time.**
 `Vouching is the act. Set signs your opinion on @rafa and brings them
 in.` — the drawn line, which copy-voice follows (jakob 2026-10-05, the
-collected brief's D3; *blessed (jakob 2026-10-05)*) — and `It is one signed,
-priced act — and it is theirs to answer: their opinion back completes
-the pair.` They are not `VouchBackPad`'s one-time coaching: approving is
+collected brief's D3; *blessed (jakob 2026-10-05)*) — and `It is one signed, priced act.` They are not `VouchBackPad`'s one-time coaching: approving is
 rare and priced, and §3's honesty rule wants anything priced to say so
 before it is signed. The ask link's pad carries the same two lines. The
 pad's "?" is named `How vouching works`, and its text stands in place in
@@ -4043,18 +3927,13 @@ same state.
 ### The reject extension's lines — same round, same day
 
 **The dialog says both effects.** `Close @imke's application?` then
-`It leaves your list and @imke is told. Their account stays exactly as
-it is — signed in, and free to keep reading.` and `This is your call
-and nobody else's. Any member can still vouch them in, and @imke gets a
-link to ask with.` The first sentence is the one a reader would
+`It leaves your list and @imke is told. Their account stays as it is.` and `Any member can still vouch them in, and @imke gets a link to ask with.` The first sentence is the one a reader would
 otherwise assume away: closing is not private, and a product that let
 somebody press it thinking it was would be lying by omission. The
 second is what stops the first from reading as expulsion.
 
 **The rejected applicant's card**: title `@kel closed your
-application`, body `That was @kel's call, and it is the only thing it
-decides. Your account stays exactly as it is, you can keep reading, and
-any member you know can vouch you in instead.` *closed* is the control's
+application`, body `That was @kel's call. Your account stays as it is, and any member you know can vouch you in instead.` *closed* is the control's
 own word, carried through from the button to the dialog to the
 notification to this card — four surfaces, one verb, so the product
 never tells two stories about one act.
@@ -4066,12 +3945,14 @@ in.` (jakob 2026-10-02, **blessed**). An application has no timer, so
 closing is the one ending the page names.
 
 **The ask link is labelled by what to do with it**, not by what it is:
-`Ask someone you know to vouch for you`, with `Send it to anyone who is
-already in. It does not expire, and it works however many people you
-send it to.` underneath. The caption is doing the work the invite
-link's expiry caption does — saying what kind of link this is — and
-both of its facts are the differences from an invite link, said as
-reassurance rather than as spec. Its copy control is `Copy your ask
+`Ask someone you know to vouch for you`, captioned `It does not expire,
+and it works however many people you send it to.` on the feed's cards
+(`ApplicantRejected`, `ApplicantFellThrough`) and `Send it to anyone
+who is already in. It does not expire.` on the applicant's own profile
+(`ProfileApplicant`) — two cuts of one caption, each canvas's own row of
+the removable-text pass (jakob 2026-11-12; unifying them is open). The
+caption says what kind of link this is: the differences from an invite
+link, said as reassurance rather than as spec. Its copy control is `Copy your ask
 link`; the snackbar is `Link copied`, the same one the invite link's
 copy gives, because it is the same act on the same kind of thing.
 
@@ -4081,9 +3962,7 @@ line promised an approval that is not coming; the new one keeps the
 vantage honest and says what would end it.
 
 **The member-side landing**: the page is titled `A vouch, asked for`,
-the card reads `@noor is asking to be vouched in` over `They have an
-account and can read; what they do not have yet is anyone standing for
-them. Your opinion is what brings them in.` Nobody else is named and no
+the card reads `@noor is asking to be vouched in` over `Your opinion is what brings them in.` Nobody else is named and no
 reason is given — an ask link carries a person, not a case file. `Not
 now` leaves it standing, which costs the asker nothing, because the
 link does not expire and is not used up.
@@ -4162,11 +4041,8 @@ tap on it used to reach nothing, and now it raises this:
 
 - Title `Discard your draft?` — the question the tap actually asked.
   Reaching for the roll is reaching past the draft.
-- `Picking pictures starts a new post, and this draft is what stands in
-  the way. Discarding is the only thing that loses it.` The first
-  sentence says why the tap did nothing; the second says what the two
-  answers cost, which is the honesty rule's own requirement before a
-  destructive word is pressed.
+- `Picking pictures starts a new post.` It says why the tap did nothing;
+  the title names the loss.
 - `Discard it` (quiet) and `Keep the draft` (filled) — `DiscardConfirm`'s
   weighting, with both words carrying their object. The card behind the
   scrim has a bare `Discard` of its own, inert under the wash, and two
@@ -4361,9 +4237,8 @@ and, under it, the past queries' section `Recent` (`Explore`); a tag
 result's second line `tagged by @sol` (`ExploreSearch`,
 `ExploreFilter`); the line that starts what is still out of reach,
 `Beyond your reach — newest first` (`ExploreSearch`); a query nothing
-carries, `Nothing carries that name.` ahead of the blessed `Search reads
-names and titles, never bodies — fewer words reach further.`
-(`ExploreNone`); and the results' "?", named `How searching works`, over
+carries, `Nothing carries that name.`, the line alone (`ExploreNone`;
+jakob 2026-11-12); and the results' "?", named `How searching works`, over
 the *Searching* dialog.
 
 **The result sections' captions** (jakob 2026-11-11, *blessed*): every
@@ -4517,11 +4392,10 @@ each line says what a joiner meets and never who decides, because
 governance ships silently. `Invite only` starts chosen. The forward
 action is `Next`.
 
-**The founding's seal.** `What you sign`, `Last step`, the leave named
+**The founding's seal.** `What you sign`, the leave named
 `Leave — nothing is started`; the chat shown back as `Low-tide walks` ·
 `A new group chat — invite only.`; the acts card `Chat` · the name and
-`Invitations` · the names, `3 things, signed together`, `They land
-together, or none does.`; the fact `Who can join` · `Invite only`; the
+`Invitations` · the names, `3 things, signed together`; the fact `Who can join` · `Invite only`; the
 line `A chat is public: its name, who is in it and who talks to whom
 are there for anyone to read.`; the act `Sign and start the chat`.
 
@@ -4556,14 +4430,14 @@ chat` for a member, `Ask to join` or `Join` for a reader outside.
 
 **Editing the chat.** `Edit chat` titles it; its way back is `Back to
 chat details`. `Change picture`; `Name` and `Description`, each
-`Optional`; `Save`. The seal: `What you sign`, `Last step`, the leave
+`Optional`; `Save`. The seal: `What you sign`, the leave
 `Leave`, the "?" `How signing works`; the chat shown back as `Coast
 walkers` · `Name, picture and description — one change to the chat.`;
 the acts card in three rows — `Change` · `A new description`, `Chat` ·
 `Coast walkers`, `Your opinion` · `For the change` (spoken `1 change`,
 `1 link to the chat`, `1 opinion`) — totalled `3 things, signed
-together` over `They land together, or none does.`, the founding seal's
-own pair (jakob's fix pass: the proposal's anchor, its reference to the
+together`, the founding seal's
+own total (jakob's fix pass: the proposal's anchor, its reference to the
 chat and the proposer's own ballot, named in the reader's words and
 never as proposal, ballot or tally); the line `The change is public, and the chat's earlier
 versions stay readable in its edit history.`; the act `Sign the change`
@@ -4670,10 +4544,9 @@ before the dash on a voted row.
 **Adding people.** Titled `Add people`, back `Back to chat details`, the
 field `Search people`, the forward action `Next`; under the list `People
 already in the chat, or already invited, aren't listed.` The seal: `What
-you sign`, `Last step`, the leave `Leave — nobody is invited`; the chat
+you sign`, the leave `Leave — nobody is invited`; the chat
 shown back as `Coast walkers` · `Inviting two people into the chat.`; the
-acts card `Invitations` · the names, `2 things, signed together`, `They
-land together, or none does.`; the line `An invitation is public and
+acts card `Invitations` · the names, `2 things, signed together`; the line `An invitation is public and
 vouches that they belong here. They join only if they accept.`; the act
 `Sign and invite`.
 

@@ -18,7 +18,7 @@ WHEN tap Unsave -> the sheet closes AND profile.snackbar reads Removed from Save
 
 WHEN tap Share this profile -> the platform's own share sheet opens
 
-WHEN tap Hide this account -> the sheet closes AND the reader stays on the page AND the account's posts leave the reader's feed AND the snackbar reads This account is hidden — its posts stay out of your feed. with Undo AND NEVER a confirm step appears
+WHEN tap Hide this account -> the sheet closes AND the reader stays on the page AND the account's posts leave the reader's feed AND the snackbar reads This account is hidden. with Undo AND NEVER a confirm step appears
 
 WHEN tap Hide this account GIVEN the hide does not go through -> the hide reverts AND the line That didn't go through. with Retry stands in the page's actions row
 

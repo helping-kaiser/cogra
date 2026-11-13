@@ -18,8 +18,8 @@
    WHAT STAYS IS THE PARAGRAPH, with one clause changed (the key-loss round).
    It says what the key is, where it lives, and what holding a copy means —
    every word of which is exactly why the screen is empty. `YourKey`'s "lives
-   only in this browser" would sit one line under "There is no key on this
-   browser to show", two opposite facts a line apart, so here the key lives
+   only in this browser" would sit under `Your key isn't on this browser`,
+   two opposite facts a few lines apart, so here the key lives
    "only on the device it was made on". A reader who arrives here without a
    key learns the thing the screen exists to teach, and the notice above says
    how to see it.
@@ -28,10 +28,10 @@
    out.
 
    THE PLATFORM NOUN IS THE `wording` CHIP (jakob 2026-10-05, E13), as on
-   `KeyElsewhere` and `Restore`: the title takes `KeyElsewhere`'s blessed app title, and the line under it says `in this app`. The app renderings are blessed
+   `KeyElsewhere` and `Restore`: the title takes `KeyElsewhere`'s blessed app title. The app renderings are blessed
    (jakob 2026-10-05; copy-voice, *The collected rulings' entry lines*). */
 export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
-export const VALS = `keyTitle: this.props.wording === "app" ? "Your key isn't in this app" : "Your key isn't on this browser", noKey: this.props.wording === "app" ? "There is no key in this app to show." : "There is no key on this browser to show."`;
+export const VALS = `keyTitle: this.props.wording === "app" ? "Your key isn't in this app" : "Your key isn't on this browser"`;
 
 /* REGISTERED under the `yourKey` prefix (round 28): the panel `notice` —
    `SettingsBackupKeyAbsent`'s names, the key card's (`feed.keyCard`) — then the
@@ -43,7 +43,6 @@ export function Screen() {
       <PageHeader title="Your key" backHref="/settings" backLabel="Back to settings" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 32px", overflow: "hidden" }}>
         <NoticePanel title="{{keyTitle}}" helpLabel="Your key" corner="large" node="notice">
-          <NoticeLine node="body">{"{{noKey}}"}</NoticeLine>
           <Button variant="inverse" style={{ width: "100%" }} node="restore">Restore the key</Button>
         </NoticePanel>
 

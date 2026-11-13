@@ -1,6 +1,6 @@
 # ChangeHandle · `spec:design:behavior-change-handle`
 
-ALWAYS the screen says before the act that everything published stays the reader's, and after the commitment that links to the old handle stop working and anyone can claim it
+ALWAYS the screen says before the act that everything published stays the reader's, and the cost of the change is said by the confirm dialog alone
 
 ALWAYS the handle's rules stand under the field while it is typed: 3 to 30 characters, letters, numbers and underscore, always lowercase
 

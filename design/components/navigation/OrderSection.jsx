@@ -48,7 +48,7 @@ export function FilterSection({ label, hint, children, node }) {
 
 export function OrderSection({ order = "ranked", onOrder, seen = false, onSeen, seenToggle = true, node }) {
   return (
-    <FilterSection label="Order" hint="Ranked puts what's closest to you first — your view, no one else's. Newest ignores it and lists by time." node={node}>
+    <FilterSection label="Order" node={node}>
       <SegmentedFilter ariaLabel="Order" options={FILTER_ORDER} value={order} onChange={onOrder} node={node && "picker"} />
       {seenToggle && (
         <div style={{ flexBasis: "100%" }}>

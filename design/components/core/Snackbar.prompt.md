@@ -2,7 +2,7 @@ Use `Snackbar` to confirm a completed action — a signed write, a saved edit. F
 
 ```jsx
 <Snackbar message={signed} onDismiss={() => setSigned(null)} />
-<Snackbar message="@ada is hidden — their posts stay out of your feed." action="Undo" onAction={unhide} />
+<Snackbar message="@ada is hidden." action="Undo" onAction={unhide} />
 ```
 
 **One action at most, and only where a way back is worth offering.** `action` draws a word — never a pill — on the message's own line, in `--action-on-snackbar`. Hiding someone takes `Undo`; a confirmation of something cheap to repeat takes none, and so does an act whose undo would be worse than living with it (the canceled deletion).
