@@ -30,11 +30,11 @@ pub use wall::{DECLARATION, Declaration, REFERENCE_THETA_MICRO, REFERENCE_WALL};
 
 use std::sync::Arc;
 
+use common::l1::StructuralBody;
 use common::l1::handshake::{
     AccountBalance, ApprovalWitness, BoundaryPolicy, BurnSettlement, BurnTicket, EMPTY_BOUNDARY,
     EpochPackage,
 };
-use common::l1::StructuralBody;
 use common::l1::identifier::ActId;
 use common::l1::proposal::{SealedAct, Submission};
 use ed25519_dalek::SigningKey;
