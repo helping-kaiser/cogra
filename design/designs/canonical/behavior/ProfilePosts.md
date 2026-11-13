@@ -6,6 +6,14 @@ ALWAYS the posts view lists a post the person signed that is still settling amon
 
 ALWAYS profile.posts.empty below profile.tabRow reads Nothing here yet., the line alone, GIVEN the person has published no post
 
+WHEN the tab's first page has not arrived 200ms after it was asked for -> profile.posts.loading stands in the list's place, reading Loading… AND NEVER profile.posts.empty stands meanwhile AND NEVER a skeleton card or a spinner appears
+
+WHEN the tab's first page does not arrive -> profile.posts.moreFault stands where the list would stand, reading Can't reach the server — posts can't load right now., then profile.posts.moreFault.retry as an inline action, Couldn't load more being a failed next page's line alone AND NEVER the line takes the error colour AND NEVER a full-tab fault stands
+
+WHEN the first page has not arrived 200ms after profile.posts.moreFault.retry is tapped -> Loading… stands in the row's place AND NEVER a spinner appears
+
+WHEN the retried first page arrives -> its cards stand below profile.tabRow AND profile.posts.moreFault goes
+
 ALWAYS at most one clip plays in the posts view, by the feed's stage law
 
 WHEN scroll settles at the posts view's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in the posts view's order
@@ -28,7 +36,11 @@ WHEN tap profile.posts.card.authorChip on one of the person's own cards -> NEVER
 
 WHEN tap the ⋮ in the actions row -> the profile's menu opens over the page
 
-WHEN tap the figures -> the opinions page opens on this profile
+WHEN tap the Opinions on figure -> the opinions page opens on this profile on its On state
+
+WHEN tap the Opinions by figure -> the opinions page opens on this profile on its By state
+
+WHEN tap the Posts figure -> NEVER anything happens
 
 WHEN tap Message -> the chats coming-soon screen opens
 
@@ -52,7 +64,7 @@ WHEN tap a card's media GIVEN it is not a portrait or square clip and the profil
 
 WHEN tap the back arrow -> the reader returns to where they came from, in the state they left it AND the arrow's label names that origin
 
-ALWAYS the back arrow reads Back to feed from the feed in any of its states, Back to the post from a post's author, opinions or references, Back to the comments from the comments sheet, Back to the stream from the stream, Back to Notifications from Notifications, Back to Saved from Saved, Back to History from History, Back to the opinions from a profile's opinions list, Back to the search from Explore mid-query, Back to Invites from the people you let in on Invites and Back to with the tag's name from a tag's page
+ALWAYS the back arrow reads Back to feed from the feed in any of its states, Back to the post from a post's author, opinions or references, Back to the comments from the comments sheet, Back to the stream from the stream, Back to Notifications from Notifications, Back to Saved from Saved, Back to History from History, Back to the opinions from a profile's opinions list, Back to the profile from a card on another's profile, Back to your profile from a card on the reader's own, Back to the search from Explore mid-query, Back to Invites from the people you let in on Invites and Back to with the tag's name from a tag's page
 
 ALWAYS the back arrow reads Back to feed and leads to the feed GIVEN the profile was entered with no history behind it
 

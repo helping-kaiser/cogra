@@ -2,7 +2,7 @@
 
 ALWAYS a removed comment keeps its author, its time and its place in the thread's order
 
-ALWAYS postDetail.threadSheet.commentCard.removalMark.line reads Removed by its author where the comment's words were, over postDetail.threadSheet.commentCard.removalMark.detail reading The comment's place in the thread, and every response, remain.
+ALWAYS postDetail.threadSheet.commentCard.removalMark.line reads Removed by its author where the comment's words were,, and nothing under it but the removal's date
 
 ALWAYS postDetail.threadSheet.commentCard.removalMark.line reads Removed by its author GIVEN the comment went with its author's account deletion, its content sweep chosen
 

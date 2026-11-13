@@ -74,6 +74,8 @@ export interface SettingsGroupProps {
   label?: React.ReactNode;
   /** The line under the card: the fact the group owes the reader. */
   footnote?: React.ReactNode;
+  /** The heading's "?" — a `HelpDot` trailing the label in its row. Settings alone carries one, beside a heading that needs it (jakob 2026-11-12). */
+  help?: React.ReactNode;
   /** Accessible name for a group with no visible heading. */
   ariaLabel?: string;
   /**

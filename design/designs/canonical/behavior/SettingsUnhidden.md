@@ -1,6 +1,6 @@
 # SettingsUnhidden · `spec:design:behavior-settings-unhidden`
 
-WHEN tap Unhide GIVEN another hidden account stays in the sheet -> that account's row leaves the sheet AND the rows behind it move up AND settings.snackbar reads @juno is unhidden — their posts can reach your feed again. with Undo AND NEVER a dialog asks
+WHEN tap Unhide GIVEN another hidden account stays in the sheet -> that account's row leaves the sheet AND the rows behind it move up AND settings.snackbar reads @juno is unhidden. with Undo AND NEVER a dialog asks
 
 ALWAYS nothing marks the space an unhidden account's row left in the sheet
 

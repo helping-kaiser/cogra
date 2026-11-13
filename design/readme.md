@@ -152,7 +152,7 @@ service did something on the reader's behalf.
 
 - `Your key isn't on this browser`
 - `Current opinion 😊 +0.55 / +0.20`
-- `We sent you a verification link — open it to prove this email is yours.`
+- `We sent a link to sol@solferreira.art.`
 
 **Sentence case everywhere.** Titles, buttons, labels, dialog headings.
 `Sign in or join`, `Keep browsing`, `New post`, `Edit profile`,
@@ -538,15 +538,14 @@ rule covers all three button variants:
 - **Disabled** — **38%** opacity on the whole control (Material's value,
   and the one place the AA guarantee is waived by convention: a disabled
   control is not an available target). **A submit that cannot go yet is
-  visible-but-disabled, with the reason on screen** (jakob, the key-loss
-  round): never hidden, and never left live only to refuse on press — the
-  reader sees the commitment exists and reads what it is waiting for.
-  The reason is one quiet line right above the commit, in the voice for
-  what something waits on — `Waiting for your email` — and the
-  commit's description (`WaitingCommit`; drawn on every credential and
-  entry form, jakob 2026-10-05; the reasons blessed the same day). A wait
-  that explains itself carries no line — change password's three fields
-  (jakob 2026-11-11).
+  visible-but-disabled** (jakob, the key-loss round): never hidden, and
+  never left live only to refuse on press — the reader sees the commitment
+  exists. **Nothing on screen says what it waits for** (jakob 2026-11-12):
+  the empty fields above it say so. The reason is the commit's spoken
+  description alone, in the voice for what something waits on — `Waiting
+  for your email` — so a listener hears it with the control
+  (`WaitingCommit`; every credential and entry form, the reasons blessed
+  2026-10-05).
   **The law gates commits; a handoff that only prefills another app's
   draft is not a commit** (jakob 2026-10-05): `Report a problem`'s `Send
   by email` stays live from an empty field, because what it enforces is
@@ -952,8 +951,10 @@ paper over:
   hold an opinion on the person; `Opinions by them` the people they hold
   an opinion on. One person's opinions toward one target are one
   bundle, counted once however often they were revised; a revision count
-  belongs only inside that person's bundle view. The figures are one tap target toward the
-  stances page. On another's profile the stance wears the wide anchor with
+  belongs only inside that person's bundle view. Each opinion figure is
+  a door to the opinions page on its own direction — `Opinions on …` its
+  On state, `Opinions by …` its By — and Posts is no door (jakob
+  2026-11-11). On another's profile the stance wears the wide anchor with
   Message beside it; one's own avatar wears the change badge (the
   standalone crop-and-seal shortcut). No cover image: the largest thing on
   a person's screen should not be decoration.
@@ -1361,6 +1362,18 @@ vocabulary is the stance readout, and a second face on the same card
 would make both unreadable. Uncapped, negative allowed, never coloured —
 `error` is failure, and a low score is not one.
 
+**A tiny score never reads zero** (jakob 2026-11-12, round 45). A score
+with 0 < |s| < 0.005 is tiny. The card — every ranked card, the tag
+page's included — prints two decimals, never more, and a tiny score
+rounds away from zero to `0.01` or `−0.01`, so `0.00` is a severed
+one's alone. The trace (everything behind the graph glyph: the flag,
+the paths, a path's `adds`) prints two decimals too, and
+a tiny figure in two significant digits — `0.0031`, `0.00042` — at most
+six decimals, a still smaller one reading `0.000001`; the trace's `+`
+on a positive stands. The minus is U+2212. A screen reader reads the
+printed figure. The thresholds and the rounding, stated once:
+`ExplainableNumber`'s source.
+
 **Media runs full-bleed** and is the largest thing in the card, with the
 title above it and the caption clamped below behind a `More` opener. The
 author chip still leads: §1 is not negotiable even where every other
@@ -1548,8 +1561,7 @@ may serve any actor's view of the shared record to any reader. So:
   feed's filter and the Settings default among them; and, by *Only a
   nobody borrows stances* (stance-control), every face a signed-in
   reader can act on. Every first-person readout of the vantage's read
-  speaks its name, the band's way — `@mira's people`, `as far as
-  @mira's eyes reach` — and a control whose words outgrow it falls back
+  speaks its name, the band's way — `@mira's people` — and a control whose words outgrow it falls back
   on its own overflow law, the trigger's collapse to a count among
   them. A control with no overflow law that a long handle breaks falls
   back to *their*, as a flagged exception for jakob. The law holds for
@@ -1620,10 +1632,12 @@ the newest-first device grid, whose first tile opens the device's
 own photos app — picks made there land in the tray. **The crop** is
 Instagram's model: one shape for the whole post — Tall 4:5, Square
 1:1, or Wide 1.91:1 — with drag-to-move and pinch-to-zoom framing
-per picture; 4:5 as the tallest shape is what guarantees the feed
-card's height cap (below). Wizard screens carry no step numbers
-(paths differ in length; the title names the stage, only the seal
-says "Last step").
+per picture: the frame stands still at the shape and the picture moves
+and zooms under it, on a stage that keeps its 390 × 488 under every
+shape (round 44, one crop model on both clients); 4:5 as the tallest shape is what guarantees the feed
+card's height cap (below). Wizard screens carry no step numbers and
+no stage label (paths differ in length; the title names the stage,
+and `What you sign` names the end — jakob 2026-11-12).
 
 **The seal is a place, not a popup.** "What you sign" lists every
 act with its cost, aggregated per kind — one row per kind, its items
@@ -1695,7 +1709,10 @@ opening a plain dialog: title, at most two short paragraphs, Close.
 one act its surface exists for carries its own "?" on the panel,
 beside the header's. The header's "?" explains the surface; the
 stopper's explains how the stop resolves, and one dialog cannot do
-both. `WriteRuleFailed` is the first. The dialog texts live in
+both. `WriteRuleFailed` is the first. **The Settings exception**
+(jakob 2026-11-12): Settings, and only Settings, carries a "?" beside a
+section heading that needs one — two in all, beside `Giving an opinion`
+and `Reading` — each opening its section's background. The dialog texts live in
 [guidelines/copy-voice.md](guidelines/copy-voice.md). **Button
 rule:** filled and outlined pills render a TRUE 40px tall (border
 box) with 24px side padding and a 64px minimum width; header pills
@@ -1784,10 +1801,13 @@ as Q46 in docs/open-questions.md):
   seen" toggle — default off since the feed-filter session
   (2026-08-28, flipping this session's first call): what you've
   seen stays out until you ask for it back. Seen = the card's
-  impression entered the viewport; device-local, never a record,
-  shared transiently with the viewer's chosen ranker. **The feed
+  impression entered the viewport; the reader's own record, never a
+  graph record, cut on the device and leaving it only for an outside
+  ranker the reader picks (seam 312). **The feed
   carries this same ordering section** (backlog item 19 — the
-  canonical feed screens never drew the filter at all).
+  canonical feed screens never drew the filter at all). Round 44
+  (jakob 2026-11-11) takes the toggle off search: search reads every
+  node, seen or not; the toggle is the feed's alone.
 - **Scope operators**: `@handle <text>` and `#tag <text>` scope
   the query; the remainder matches the scoped author's own content
   AND the names of their acts' targets — a comment through its
@@ -2140,11 +2160,10 @@ next to brands like Instagram):
   file picker button and a drop target ("Choose from your files" /
   "…or drop them here") — the caption, the picked tray, and the text
   path identical to the app's (*Pick · the web variant*).
-- **The seal's total row carries the all-or-nothing subline on every
-  multi-act seal** — "They land together, or none does." — and omits it
-  on a single-act seal. It had drifted across the hand boards (on the
-  key-absent and sheet states, missing from the seal itself); it now
-  lives once, as `ActsCard`'s `note`. On the key-absent seal the one
+- **A seal's total row carries no all-or-nothing subline** — the seal's
+  `How signing works` says it (jakob 2026-11-12); the edit's acts
+  sheets carry the same `?` beside their title and no line either (round
+  46). On the key-absent seal the one
   "?" belongs to the key notice (the *Your key* dialog), not the
   header — one "?" per screen, and the key story outranks the seal
   story there. Every "?" opens the house plain dialog (the pattern the
@@ -2985,7 +3004,7 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   pixels apart, in two sizes — the sheet's name lives on its
   `aria-label`. The read side got its
   **own readings**: the chooser's hints address the author declaring
-  the terms, and on a read surface "Every use credits you" tells a
+  the terms, and on a read surface "Commercial uses credit you" tells a
   reuser they are owed the credit they in fact owe.
 - **Citing and mentioning are one fact.** Both stage a **Reference
   edge**; the word only records what sits at the far end — citing for
@@ -4836,7 +4855,9 @@ one. The height cap is gone; what bounds a card tile is its shape.
   pinned. A 16:9 clip's would be 342 × 192; a vertical clip never reaches
   the step at all, because its default is no cover.
 - **The card's text clamps were already conform** — title one line,
-  description two, and `More` under a media post's caption always. What
+  description two, and `More` under a media post's caption once it runs
+  past its two lines (round 44: never under one that fits whole; the
+  sample boards lag, backlog 202). What
   was stale was the `media` card's own inventory, which had the
   description clamping to one. The text body's ceiling stays at 18 lines;
   its derivation had been floor(376 ÷ 20) against the capped tile, and
@@ -5207,7 +5228,8 @@ pass: one board, one law, and two sweeps.
   `Unsave` control moved into the shared screen helpers on the way —
   it is drawn on two boards now, and a control spelled twice drifts.
 - **A hide row cannot say a name that is gone.** On a deleted author's
-  post the reader's menu reads `Hide this account`; everywhere else it
+  post the reader's menu reads `Hide this account` (`Unhide this
+  account` where that account is already hidden); everywhere else it
   spells the handle. The ROW stays either way —
   hiding is a read-side comfort about an ACTOR, and a redacted actor
   still ranks into the reader's feed — so only the wording gives way.
@@ -5754,7 +5776,8 @@ none of them needing a board. Ruled by jakob the same day.
   | the feed, in any of its states | `Back to feed` |
   | a post, through its tags-and-references sheet | `Back to the post` |
   | a comment's chips, in the thread | `Back to the comments` |
-  | a profile's posts | `Back to the profile` |
+  | a card on another's profile (round 45) | `Back to the profile` |
+  | a card on your own profile (round 45) | `Back to your profile` |
   | History (jakob 2026-10-05) | `Back to History` |
   | another tag's page | `Back to #<thattag>` |
   | nowhere — a shared URL | `Back to Explore` |
@@ -8418,6 +8441,8 @@ the rest as recommended. Both laws stand in §4.
   | Saved | `Back to Saved` |
   | History (jakob 2026-10-05) | `Back to History` |
   | a profile's opinions list | `Back to the opinions` |
+  | a card on another's profile — its references (round 45) | `Back to the profile` |
+  | a card on your own profile — its references (round 45) | `Back to your profile` |
   | Explore, mid-query (jakob 2026-10-07) | `Back to the search` |
   | a tag's page | `Back to #<thattag>` |
   | nowhere — a link | `Back to feed` |
@@ -10577,8 +10602,9 @@ marked *blessed (jakob 2026-11-10)*.
   details and edit row does; `Reading the video…`, `3 pictures didn't
   upload.` with `Remove them`, and `A post carries one video.` are
   blessed; `ComposePickedErrors` keeps the live grid (`PickGrid`, shared
-  with `ComposePick`) under its refusals; the crop's arrow keys move the
-  window the arrow's way where the picture stays whole; the clip tiles
+  with `ComposePick`) under its refusals; the crop's arrow keys moved the
+  window the arrow's way where the picture stayed whole (replaced in round
+  44: the frame is fixed and the keys move the picture); the clip tiles
   keep their 114×64 and 54×96 boxes for every shape. The tray-drag law
   is gone — reorder lives in Show all.
 - **The gate**: edges **2127 → 2135** (`ExploreComingSoon`'s seven,
@@ -11027,7 +11053,8 @@ jakob's answers to round 30's proposals (Q1–Q7), the ruled part.
   leaves the page, and no "show fewer" follows. A page or sheet whose
   PURPOSE is the list — History, Saved, Notifications, the profile's
   chronicle, posts and comments, the tag page, the opinions page, the
-  opinions and cited-by sheets, Your tags, hidden accounts — is a
+  opinions and cited-by sheets, Your tags, hidden accounts, the score's
+  trace (jakob 2026-11-12) — is a
   continuous scroll and is never capped. Drawn on Invites' People you
   let in (backlog 181).
 - **The way out while an act signs** is round 34's: once the commit is
@@ -11505,6 +11532,314 @@ jakob's answers to rounds 36–39 (M1–M3, R2, S1–S6, I1–I2), executed.
   Backlog 176 stays open: `FeedRemoved.md` says a removed card carries no
   menu.
 
+### Round 42, the removable text goes — 2026-11-12
+
+jakob's rulings on the removable-text digest (2026-11-11: B, C1–C7, "shortening
+are always good"; 2026-11-12: A1–A8), executed for A2, A4–A7, B, C and D; A1,
+A3, A8 and the Invites boards are rounds 43 and 44. The rule is copy-voice's
+*The app does not explain itself*, in his words.
+
+- **Cut whole:** the filter sheets' hints (the Ranked / Newest explainer and the
+  veil pointer moved whole into the sheet's "?"); the sentence after each empty
+  line; the lines that repeat their sheet's "?" (the seals' all-or-nothing
+  subline, the license and sensitive sheets' intros); the license tiers' hints
+  that repeat their names, the pair's reading now its name alone; the digest's
+  single lines but `The two records behind your opinion of @ada.`; the author's
+  removal mark's second line (the comment's too — the mark keeps its line and
+  date); the onboarding's ask-around note; the change-handle form's cost note
+  (the dialog keeps it). An element that only held a cut line goes with it, and
+  so do two chips that only drew one (`Restore`'s `wording`, `Settings`'
+  `reader`); `TaskCard`, `PickPrompt`, `CoverRow` and `ComingSoonCard` take
+  their line as optional, `RedactedContent` draws a detail only where one is
+  given.
+- **Shortened, cut-only**, as the digest's rows say (the clearing footnote, the
+  erase dialog and the delete-account lines among them; the key ceremony's
+  recovery-code line kept whole). The hide snackbars read `@ada is hidden.` /
+  `@juno is unhidden.`, Undo kept.
+- **Kept by ruling:** `Read aloud to people who can't see it.`, About's `This
+  page grows`, `Sensitive — tap to view`, `Signed — it's in the thread now,
+  still settling.`, the question-fronted doors.
+- **Stopped, at jakob (backlog 194):** the vouch-back pad's two coaching lines
+  and the edit acts sheets' subline — no "?" holds them.
+- **Filed:** the digest's MOVE rows nobody ruled (192); two cuts of the ask
+  link's caption and lines the pass left asymmetric (193).
+- **After rounds 43 and 44 (act 2):** the reject dialogs' two rows are cut
+  (`RejectConfirm`, `RejectAllConfirm`); the post-MVP twins take the
+  canonical cuts (`PushSettings`, `PushDenied`, the chat and wallet seals);
+  copy-voice takes the drawn sign-out line, which names the seen record
+  sign-out clears (C7). ComposeCrop's line was round 44's.
+- **The gate**: no board added or removed (185 registered screens). The
+  registry loses ruled paths, a named breaking change: **7117 → 7014** board
+  paths, **2000 → 1960** distinct — 46 paths leave 103 board entries (the
+  filter sheets' hints and `settings.feedSheet.note`, the Settings footnotes
+  and second lines, `*.removalMark.detail`, the report sheets' `body`,
+  `keptPicksSeal.header.stage` and `.acts.note`, `tagPicker.tag.sub`, the
+  picked sheets' `note`, and the single lines' nodes); six of them stay on
+  other boards. Backlog 192–194 filed.
+
+### Round 43, forms without a waiting line, Close on the signed-in forms, Settings' two "?", Invites capped — 2026-11-12
+
+jakob's answers to the re-ask (1, 4, 8, 9 and 10 "as rec") and his ruling on
+round 41's fourth and fifth questions, executed.
+
+- **A form's commit waits silently** (the re-ask's 1). The line above a
+  disabled commit is gone on every form — `ChangePassword`, `ChangeHandle`,
+  `ChangeEmail`, `ApplicantEmail`, `ChangeEmailConfirm`, `SettingsBackup`,
+  `SignIn`, `SignInExpired`, `InviteEntry`, `JoinInvalid`, `Reset`,
+  `YourKeyGate`, `Restore`, `Join`, `ResetNew` — and what it waits for is
+  the commit's spoken description alone: `WaitingCommit` keeps `reason` in a
+  visually hidden span the button names in `aria-describedby`.
+  `ChangePassword` speaks `Waiting for both passwords` again, so every form
+  is one shape. `Waiting for your key` and `Waiting for your review` under a
+  kept pick's face are not of this family and stay.
+- **Close on the signed-in plain forms** (backlog 191 (a); the re-ask's 9
+  (a)). `ChangePassword`, `ChangeEmail`, `ChangeEmailConfirm` and
+  `ApplicantEmail` gain `submit: pending`: the commit's in-flight label, and
+  the header's arrow named `Close` from the press — the seals' X — leaving
+  while the submit goes on. A failure after Close reads `That didn't go
+  through.` on the form's own Settings row, the Handle row's line without
+  `Retry`, and the row's tap opens the form again (`Settings`' `forms`
+  chip: `password`, `email`). The entry forms hold their ways out from
+  200ms after the press until the answer — the named exception, written into
+  each sidecar in place of the older live-ways-out line. `YourKeyGate`
+  reveals and submits nothing, and stays as it was (backlog 197).
+- **Settings carries two "?"** (the re-ask's 8 (a)) — the one-per-screen
+  law's Settings exception, beside `Giving an opinion` and `Reading`
+  (`SettingsGroup`'s `help`, `SheetTitle`'s trailing construction). The
+  pad's and the sliders' hints and the Reading footnote move behind them
+  whole, each a plain dialog titled by its heading (`SettingsInstallHelp`'s
+  shape); `Settings`' `help` chip draws them open. The Sensitive content
+  footnote stays on the page (backlog 196).
+- **Invites' queue is capped** (backlog 180; the re-ask's 10 (a)): the
+  first three rows in its grouped order, then `Show all` under the third —
+  People you let in's door — opening the rest in place; a kept approval
+  stands above the three (`Invites`' `applications` chip, `capped` the
+  default, `opened`). Live links' cap waits on its order (backlog 195).
+- **A closing that fails after Close** (backlog 190): `RejectConfirm`'s
+  `answer` gains `closedFailed`, `That didn't sign.` with `Retry` under the
+  row, `FeedRemoveConfirm`'s form; `RejectAllConfirm`'s draws one line under
+  the group's label, where `Close all` stands.
+- **The empty Invites says one thing** (the re-ask's 4): `No invites out
+  yet.`, and the vouching explainer behind a "?" beside `Create invite`, its
+  name `How vouching works`, the dialog carrying the first paragraph.
+- **The last three long-name overflows** (backlog 183): `Join`'s and
+  `JoinErrors`' heading, `ChangeHandleBody`'s line and `IntroCaption` pass
+  their text through `NameInText`; the caption cuts within its own 88px.
+- **Measured** at `@maximiliana_featherstone_haugh`, the widest legal handle
+  and the 50-character unbroken name: `Join`'s heading 110px past both sides
+  → the name one line, cut inside the 24px gutter; `ChangeHandleBody`'s line
+  13px past (widest handle) → cut at the gutter, the long sample whole on
+  one line; the inviter caption 30.5 / 151px past → cut inside its 88px.
+  At the drawn sample names nothing moved (the heading's box by under
+  0.05px). Settings' last line stands where it stood at every setting
+  (`install` shown: 3071 of 3103px).
+- **The gate**: no board added; chips added on `ChangePassword`,
+  `ChangeEmail`, `ChangeEmailConfirm`, `ApplicantEmail` (`submit`),
+  `Settings` (`forms`, `help`), `Invites` (`applications`), and
+  `closedFailed` on the reject dialogs' `answer`. Edges **2315 → 2323**
+  (the two "?", their dialog's Close and scrim, the queue's door, the two
+  Retries, the empty page's "?"); flows hold at **227**, three start cases
+  re-blessed. The registry **7117 → 7096** board paths, **2000 → 1993**
+  distinct on 185 screens: `invites.applicationsDoor`, `invites.empty.help`,
+  `settings.stance.help` and `settings.reading.help` added; eight
+  `*.commit.reason` paths deleted on thirteen boards (ruled), and three
+  whose words moved behind a "?" — `settings.reading.footnote`,
+  `settings.stance.pad.status`, `settings.stance.sliders.status` — named
+  breaking changes for impl.
+
+### Round 44, one crop model, the comment edit's video, the composer's way out, search without the seen list — 2026-11-12
+
+jakob's crop ruling (seam 301), the re-ask's answers (questions 3 and 19)
+and the implementers' findings (seams 292, 295, 296, 308), executed.
+
+- **One crop model on both clients** (jakob 2026-11-11: "the instagram
+  approach (fixed frame with mooving and zooming image) for both
+  platforms"). Every crop's frame stands still at its shape and the
+  picture moves (drag, the arrow keys) and zooms (pinch, the zoom track)
+  under it; no window moves over a still picture and no stage changes size
+  with the shape. The post crop's stage is 390 × 488 under every shape,
+  the frame full width and centred: Tall 4:5 390 × 488, Square 1:1 390 ×
+  390 at top 49, Wide 1.91:1 390 × 204 at top 142, the outside darkened by
+  `CropViewport`'s 45 % shadow; `ComposeCrop`'s `shape` setting draws each
+  (the stage's constancy is the orchestrator's reading of his words, shown
+  to him on the board). The avatar crop keeps its 390 × 390 stage, the
+  circle 342 × 342 at top 24; the cover crop keeps the same stage with the
+  frame at the video's shape, 342 wide — the drawn 16:9 clip's 342 × 192 at
+  top 99, the comment's square 342 × 342 — because the cover is that
+  video's face. A shape switch keeps each picture's scale and position and
+  lifts a scale only to the new frame's fill (unchanged law; nothing in the
+  tree contradicts it).
+- **The zoom track is drawn** (seam 292-2, option A): 8px, fully rounded,
+  its ground `--border-field` — `Timeline`'s page-ground track
+  (`VideoControls`, `tone="surface"`) and the off `Switch` take the same —
+  the part up to the thumb `primary`, a 16px `primary` thumb with no rim,
+  in a 48px input; `CropZoom` carries the rules, never the platform's
+  default.
+- **The crops say nothing about moving** (re-ask 3, digest A3): `Drag to
+  move, pinch to zoom.` and its pointer variant, `One picture, shown
+  everywhere you appear.`, `Shown everywhere you appear.` (the avatar seal)
+  and `The cover takes the video's shape.` are gone; `One shape for the
+  whole post.` stays. `coverCrop.howTo` and `coverCrop.shapeNote` are
+  deleted, a named breaking change.
+- **A words comment's edit takes a video** (seam 295): the staged refusal
+  is retired for the comment (the post's edit keeps it); words alone is
+  read on the edit's own state. `CommentEditVideo`'s `clip` setting draws a
+  clip picked in the edit — `picked` (uploading, the `Add a cover` door,
+  `commentEdit.cover.add`), `failed` (`That video didn't upload.` with
+  `Retry · Remove it`, the gate's fault reading, Sign disabled), `second` (`A
+  comment carries one video.`), every string copied from the reply's and the
+  composer's boards.
+- **`More` stands only under a clamped caption** — the law in `PostCard`
+  and `ReelCaption` (seam 292-3). The reel draws it so; the sample feed
+  card's caption fits whole, so the boards that register its opener wait on
+  jakob (backlog 202).
+- **Search never looks at the seen list** (seam 296): the search filter's
+  Order section stands without `Show what you've already seen`
+  (`OrderSection`'s `seenToggle`), the filter's "?" drops its search clause,
+  and the reader's saved default still gives search its order.
+  `explore.filterSheet.order.seen` and its two parts are deleted, a named
+  breaking change. No other surface in the tree reads the list (backlog
+  203).
+- **Leaving the composer returns to where it was opened** (re-ask 19): the
+  bar's New post, Cite in a new post, Mention in a new post, a tag card's
+  compose glyph and the didn't-land card's Open the draft each carry their
+  surface, and leaving before Sign and publish returns there from every
+  stage; publishing lands as drawn. `ComposePick.md` says it once, every
+  stage's leave line and the first stage's leave edges name it. No visible
+  string changes.
+- **Not drawn, at jakob:** the cover crop under a tall clip (backlog 200),
+  a picked clip uploading beside a new cover (backlog 201), the sample
+  card's opener (202), who else reads the seen list (203).
+
+### Round 45, the figures' two doors, the card tabs, the way back, a removed card's menu, the tiny score — 2026-11-12
+
+jakob's rulings of 2026-11-11 (J-A, the figures) and of the 2026-11-12
+re-ask (11, 12, 14–18, 20), and two registry gaps impl found (seam 297,
+308), executed.
+
+- **The figures are two doors and a fact** (J-A; seam 297, 299). `Opinions
+  on …` opens the opinions page on its On state, `Opinions by …` on By; the
+  Posts figure is inert, the posts standing at the page's foot. Each door is
+  spoken by its figure's number and words, then the one door's purpose split
+  by direction (`6 Opinions on them, opinions on @ada` · `5 Opinions by you,
+  your opinions, by you`). The doors are the registered `figures.stancesOn`
+  and `figures.stancesTaken`, the row keeps `figures`: no path moved.
+  Measured on `ProfileOther` and `Profile` against main: every head part at
+  the same pixel; the doors' targets 96×48 and 95.7×48 (another's), 88×48
+  and 87.7×48 (one's own), 20px apart. Graph: «the Opinions on figure» and «the
+  Opinions by figure» on all ten profile boards; a second flow,
+  `see-who-someone-stands-with`.
+- **The card tabs' other moments** (re-ask 14–16). A first page in flight
+  shows nothing for 200ms, then `Loading…`; a first page that does not come
+  shows `ProfileMoreFailed`'s quiet row with `Retry` where the list would
+  stand (`ProfileTabFirstPage`; the `load` chip on `ProfilePosts`,
+  `ProfileComments` and their own twins, whose `posts` / `comments` chip draws
+  the plain `Nothing here yet.` — an applicant's own tab as a member's).
+- **A removed comment on the Comments tab carries its date** (re-ask 17):
+  `removalMark.when` under the mark, the removal's own moment (`2h`).
+- **The way back names the profile** (re-ask 18). Every page a profile's card
+  opens — the post, its thread, the stream, the trace, a tag, and a profile
+  reached through the card's references — reads `Back to the profile`, or
+  `Back to your profile` from the reader's own; the tag page's and the
+  profile's tables gain the rows, the post's had them. `ProfileOther`'s
+  `from` chip draws it.
+- **A removed post's card keeps the reader's whole menu** (re-ask 11,
+  overruling the lean; backlog 176 closed). Save, Cite in a new post, Hide
+  with the author's handle, Report — no license row, the license having gone
+  with the payload. `LadderStates`' two cards; `FeedRemovedMenu` (new, *Feed ·
+  a removed post's menu*) draws it open. The reader's own just-removed card
+  (`FeedRemoved`, no ⋮) was not ruled and stands.
+- **`Unhide this account` is blessed** (re-ask 12), and every place that
+  writes `Hide this account` names its twin.
+- **A tiny score never reads zero** (re-ask 20; seam 293-2, 310). Tiny is
+  0 < |s| < 0.005. The card prints `0.01` or `−0.01`, never more than two
+  decimals; the trace prints two significant digits, six decimals at most,
+  `0.000001` the floor; the screen reader reads the print. The rule whole
+  is `ExplainableNumber`'s source; `FeedKinds`' and `FeedEntry`'s `score`
+  chips draw both signs.
+- **Registry**: the snackbar over the thread sheet is `postDetail.snackbar`
+  on `ReplyEntry` (seam 297). `PadStanding`, `RefPair` and `TagPad` register
+  (seam 308; backlog 205): `PadStanding`'s two chips fold into one, `state`
+  (parked · held · no-side · explained), so its card keys once per value and
+  its pad takes `feed.card.actionRow.stance.pad.*`; the two pair sheets are
+  `pairSheet` — `title`, the readout `pick` with the pads' `label`, `face` and
+  `exact`, `pad.field`, `note`, `done`, `untag`. Over rounds 42–44: 1956 → 2032
+  distinct paths, 185 → 189 screens, additions only.
+
+
+### Round 46, the review's answers — 2026-11-12
+
+jakob's review of rounds 42–45 and his answers to questions 1–22, executed
+(both lanes: lane A's forms, Settings, Invites, entry boards, the
+vouch-back pad and Wallet; lane B's crop, composer side, feed and profile).
+
+- **Forms, Settings, Invites and entry (lane A).** jakob's answers 4–10, 11 and 13–16, 20, and his two review notes on round 43, executed.
+  - Live links stand newest made first, three, then `Show all` in place (`Invites`' `links` chip).
+  - `This choice follows your account to every device.` is cut. Copy-voice now holds the rule: only a setting that stays on this device says where it lives.
+  - `Show my key`, `Create a new recovery code` and `Send the confirmation link` keep their exits, the recovery-code form holding them while it submits. The Handle row keeps `Retry`, since a handle retry needs nothing typed again.
+  - After Close, a form's Settings row reads the form's own in-flight label (`forms`: `password-changing`, `email-changing`, `email-confirming`). The failure line leaves on the tap that reopens the form at rest, with a one-field refusal beside its field.
+  - `Cancel the change` is held while the code confirms, and `ChangeEmailConfirm` draws the link confirmed with the code owed (`confirmed: link`).
+  - A group's failed closing says it once, under the group label.
+  - Giving an opinion's "?" is one paragraph naming the three inputs (*drafted, review-pending*).
+  - The vouch-back pad's two coaching lines live in its "?".
+  - Cut: the handle and email forms' bodies, the unveil switch's On line, Wallet's line.
+  - The ask-link caption is one on all three boards.
+  - Join's failure line stands above the Terms line above `Create account` (`answer: failed`). `JoinErrors` says it is a composite and carries Join's "?".
+  - Two boards added: `ChangePasswordErrors` and `ResetNewErrors`, `JoinErrors`' construction, each the mismatch in place; through them `changePassword.confirm.support` and `reset.confirm.support` are registered.
+  - Registry on this lane: `invites.linksDoor`, `changePassword.confirm.support` and `reset.confirm.support` registered; `settings.sensitive.footnote`, `changeHandle.body`, `wallet.comingSoonCard.line` and ChangeEmail's `changeEmail.body` entry deleted (ruled).
+- **The cover's frame always has the clip's dimensions** (review, 1;
+  backlog 200): tall clip a tall cover, square a square, wide a wide —
+  the shape the clip stands at in a card — and the crop exports only that
+  shape. The cover crop takes the post crop's 390 × 488 stage (the
+  orchestrator's reading); `CoverCrop`'s `clip` chip measures wide 342 ×
+  192 at 148, tall 342 × 427.5 at 30.25, square 342 × 342 at 73.
+  `CropViewport` takes a `stageHeight`.
+- **A picked clip and a new cover upload under one gate** (2; backlog
+  201): the video's line, then the cover's; no note under the cover row
+  (`CommentEditVideo`'s `picked-cover`).
+- **The sample captions run past two lines** (3; backlog 202) and
+  `PostCard` offers `More` on a media caption only past its two lines'
+  estimate, `ReelCaption`'s way. No path moved.
+- **The edit sheets carry `How signing works`** (12; backlog 194): the
+  "?" trails `EditActs`' and `CommentEditActs`' title as `ComposeLicense`'s
+  trails its own; the all-or-nothing subline leaves them.
+- **The pass's last open lines** (13; backlog 192): the clip's first-frame
+  line is cut; the rest are kept and blessed in copy-voice.
+- **The score's trace is uncapped** (review): every path stands, a
+  continuous list; `feedEntry.morePaths` and its `label` and `value` are
+  deleted. The cap rule names the trace among the lists that are the page.
+- **A figure's door is spoken by its number and words alone** (17):
+  `6 Opinions on them`, `5 Opinions by you`.
+- **A removed post keeps a menu** (18, and jakob's word on the license;
+  backlog 206). Another's: the reader's post menu — Save, Cite in a new
+  post, Hide @author, License terms, Report — on the card and in the
+  detail's header (`RemovedOther`, new). Your own: your post's menu less
+  Edit and Remove — Save, Cite in a new post, Mark as sensitive, License
+  terms — on the card (`FeedRemoved`; `FeedRemovedMenuOwn`, new) and in
+  the detail's header (`Removed`). License terms stays because the terms
+  still bind every use already made. `FeedRemovedMenu`'s card carries its
+  removal date.
+- **A failed first page on the profile's tabs** (19; backlog 207):
+  `Can't reach the server — posts can't load right now.` / `… comments
+  can't load right now.` with `Retry`, still the quiet row; `Couldn't load
+  more` is a next page's line alone.
+- **A comment edit opened off the thread returns to its host** (21):
+  History, Saved and the profile's Comments tab, the card settling in
+  place.
+- **A guest reads Cited by, Opinions on this and License terms** (22):
+  five menu edges dropped their guest gate.
+- **Follow-ups**: the component demo cards and the canvas annotations take
+  the cut strings; `Signs as #…` stands only where the typed name changes;
+  `ReaderPostMenuNarrow` registers on `ReaderPostMenu`'s paths, its share
+  row `menuSheet.share` (seam 316).
+- **The gate, both lanes merged**: 189 → 194 screens, 7252 → 7387 board
+  paths, 2032 → 2029 distinct. Lane B removed four by ruling
+  (`feedEntry.morePaths` ×3, `postEdit.cover.note`) and added one
+  (`postDetail.menuSheet.share`); lane A added three (`invites.linksDoor`,
+  `changePassword.confirm.support`, `reset.confirm.support`) and deleted three
+  by ruling (`settings.sensitive.footnote`, `changeHandle.body`,
+  `wallet.comingSoonCard.line`) plus ChangeEmail's `changeEmail.body` entry. Against main: 63 distinct gone, 92 added, none of rounds 42–46's
+  ruled removals back.
 ---
 
 ## 14. The canvases

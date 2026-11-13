@@ -9,10 +9,19 @@
    The body is a `_shared.jsx` helper: the menu's own board draws this same page
    with the sheet raised over it.
 
+   THE `from` CHIP DRAWS THE WAY BACK'S OTHER ORIGIN (round 45; jakob
+   2026-11-12, the re-ask's eighteenth): `feed` the author chip's feed,
+   `Back to feed`; `profile` the profile opened from a card on another's
+   profile — a person in its references sheet — `Back to the profile`, the
+   one rule every page a profile's card opens follows (`Back to your profile`
+   from a card on the reader's own).
+
    REGISTERED under the `profile` prefix (design ⇄ impl seam 059/061): another
    person's page is the same surface as your own, named by the same body
    names. */
 export const NODE = "profile";
+export const PROPS = { from: { editor: "enum", options: ["feed", "profile"], default: "feed" } };
+export const VALS = `backLabel: this.props.from === "profile" ? "Back to the profile" : "Back to feed"`;
 export function Screen() {
-  return <ProfileOtherBody />;
+  return <ProfileOtherBody backLabel="{{backLabel}}" />;
 }

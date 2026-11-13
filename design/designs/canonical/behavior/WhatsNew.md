@@ -1,6 +1,6 @@
 # WhatsNew · `spec:design:behavior-whats-new`
 
-ALWAYS What's new lists whole releases, newest first, one card each, with Newest first. under the list
+ALWAYS What's new lists whole releases, newest first, one card each, and no footnote under the list
 
 ALWAYS each release's dateline reads Version, the version, and its date
 

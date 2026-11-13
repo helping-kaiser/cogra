@@ -22,10 +22,18 @@
    `posts` chip's `settling`: the second post, signed and not yet landed,
    wearing `Still settling` as the feed's card does (FeedSheet.md), its score
    slot bare; the card keyed by its id in both copies, as `ProfileComments`'
-   `removed` is. */
+   `removed` is.
+
+   THE FIRST PAGE'S OTHER MOMENTS (round 45; jakob 2026-11-12, the re-ask's
+   fourteenth and fifteenth) are the `load` chip, `ProfileTabFirstPage`'s:
+   `loading` the chronicle's `Loading…` in the list's place, `failed`
+   `ProfileMoreFailed`'s quiet row with `Retry` where the list would stand. */
 export const NODE = "profile";
-export const PROPS = { posts: { editor: "enum", options: ["some", "none", "settling"], default: "some" } };
-export const VALS = `someShown: this.props.posts === "none" ? "none" : "flex", noneShown: this.props.posts === "none" ? "block" : "none", secondLanded: this.props.posts === "settling" ? "none" : "contents", secondSettling: this.props.posts === "settling" ? "contents" : "none"`;
+export const PROPS = {
+  posts: { editor: "enum", options: ["some", "none", "settling"], default: "some" },
+  load: { editor: "enum", options: ["loaded", "loading", "failed"], default: "loaded" },
+};
+export const VALS = `someShown: this.props.load === "loaded" && this.props.posts !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.posts === "none" ? "block" : "none", secondLanded: this.props.posts === "settling" ? "none" : "contents", secondSettling: this.props.posts === "settling" ? "contents" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none"`;
 const ADA_SECOND_POST = {
   id: "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a",
   author: ADA,
@@ -78,6 +86,7 @@ export function Screen() {
           <div style={{ display: "{{noneShown}}", padding: "8px 16px 0" }}>
             <EmptyState title="Nothing here yet." node="empty" />
           </div>
+          <ProfileTabFirstPage />
         </div>
       </div>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />

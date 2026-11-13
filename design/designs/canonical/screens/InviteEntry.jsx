@@ -6,7 +6,7 @@
 
    REGISTERED under the `inviteEntry` prefix (round 28, seam 254 A1), with
    `InviteEntryError` and `JoinInvalid` — the entry step in its three states:
-   `title`, `body`, the field `link`, the commit with its reason `commit`, and
+   `title`, `body`, the field `link`, the commit `commit`, and
    the ways out `signInDoor` and `browse`, `Join`'s and `SignIn`'s names for the
    same rows. */
 export const NODE = "inviteEntry";
@@ -38,7 +38,7 @@ export function Screen() {
           }}
           data-node="body"
         >
-          CoGra is invite-only. Paste your invite link to get started.
+          CoGra is invite-only.
         </p>
 
         <div style={{ marginTop: 32 }}>

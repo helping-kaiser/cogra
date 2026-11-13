@@ -4,7 +4,7 @@ WHEN tap settings.clearing.erase -> settings.dialog opens over settings, its set
 
 ALWAYS settings.dialog.body reads This browser holds the only copy of your key, and it has no recovery code. Erase everything and your account is gone for good — no one, including CoGra, can bring it back. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. on the web and This app holds the only copy of your key, and it has no recovery code. Erase everything and your account is gone for good — no one, including CoGra, can bring it back. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. on android GIVEN no recovery code exists
 
-ALWAYS settings.dialog.body reads Your key is erased with everything else, and only your recovery code can bring it back — without the code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in. GIVEN a recovery code exists
+ALWAYS settings.dialog.body reads Your key is erased with everything else, and only your recovery code can bring it back — without the code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. GIVEN a recovery code exists
 
 ALWAYS settings.dialog.body names the key and the account gone for good before anything else that goes
 

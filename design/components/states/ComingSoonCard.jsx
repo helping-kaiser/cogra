@@ -24,8 +24,9 @@ import { WashCard } from "../wallet/WashCard.jsx";
    wear the same card, so neither grows a mark of its own.
 
    HEADLINE, THEN ONE LINE. The construction is copy-voice's "coming-soon
-   surfaces": the thing, an em dash, `coming soon` — and then one sentence of
-   what will be there. The master spells the promise itself, so no door can
+   surfaces": the thing, an em dash, `coming soon` — and then, where it says
+   more than the headline, one sentence of what will be there (`Chats — coming
+   soon` carries none: chats are conversations, jakob 2026-11-12). The master spells the promise itself, so no door can
    phrase it differently: a product that says `coming soon` in one place and
    something else in another has two answers to one question. `Coming soon` is
    the whole of what is promised — no date, no release, no "next".
@@ -55,7 +56,7 @@ export function ComingSoonCard({ thing, line, node }) {
       >
         {thing} — coming soon
       </h2>
-      <p
+      {line && <p
         data-node={node && "line"}
         style={{
           margin: 0,
@@ -66,7 +67,7 @@ export function ComingSoonCard({ thing, line, node }) {
         }}
       >
         {line}
-      </p>
+      </p>}
     </WashCard>
   );
 }

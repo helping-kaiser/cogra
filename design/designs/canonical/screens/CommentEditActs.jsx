@@ -1,7 +1,8 @@
 /* Edit comment · the acts (comment-media round, 2026-08-31): the footer's
    "You're signing 5 things" opened — an M3 modal bottom sheet, the EditActs
    pattern at comment scale, rendered with ActsCard (the sheet title carries
-   the count, so the card carries rows and the all-or-nothing note). The sheet
+   the count and the `?` — `How signing works`, as on `EditActs` — so the
+   card carries the rows alone; jakob 2026-11-12, question 12). The sheet
    is the peek-from-a-composer pattern; ceremony screens keep the inline
    ActsCard — two patterns, one component.
 
@@ -25,7 +26,7 @@ export function Screen() {
       <CommentEditBody />
 
       <BottomSheet open ariaLabel="What the edit signs">
-        <SheetTitle>5 things, signed together</SheetTitle>
+        <SheetTitle trailing={<HelpDot ariaLabel="How signing works" onOpen={() => {}} />}>5 things, signed together</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "0 24px 16px" }}>
           <ActsCard
             rows={[
@@ -34,7 +35,6 @@ export function Screen() {
               { label: "Tags withdrawn", value: "#coastroad", count: "1", countNoun: "tag" },
               { label: "Citations withdrawn", value: "Tide tables and the third headland — @juno", count: "2", countNoun: "thing" },
             ]}
-            note="They land together, or none does."
           />
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <Button variant="text">Done</Button>

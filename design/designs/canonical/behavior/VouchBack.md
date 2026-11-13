@@ -4,9 +4,9 @@ ALWAYS feed.vouchCard stands GIVEN the account has landed, the pair with the mem
 
 ALWAYS feed.vouchCard names the member whose approval landed the account
 
-ALWAYS feed.vouchCard reads Vouch back to open the way from your side — your opinion toward @mira, and your feed grows from it. Vouching opens the opinion control, set to a gentle default.
+ALWAYS feed.vouchCard reads Vouch back to open the way from your side — your opinion toward @mira, and your feed grows from it.
 
-ALWAYS feed.vouchCard reads Vouch back to open the way from your side — your opinion toward a deleted account, and your feed grows from it. Vouching opens the opinion control, set to a gentle default. GIVEN the member who vouched the account in deleted their account
+ALWAYS feed.vouchCard reads Vouch back to open the way from your side — your opinion toward a deleted account, and your feed grows from it. GIVEN the member who vouched the account in deleted their account
 
 ALWAYS feed.vouchCard's act is feed.vouchCard.stance.anchor, the stance control's own face, at the end of its row of controls, with Got it leading the row
 

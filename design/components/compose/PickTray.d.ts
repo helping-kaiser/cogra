@@ -11,7 +11,7 @@ export interface PickTrayProps {
    *  one staged video is not a set to reorder. */
   onShowAll?: () => void;
   showAllLabel?: string;
-  /** The quiet line beside the thumbs: "The first one is the cover." */
+  /** The quiet line beside the thumbs — a staged clip's; pictures carry none (jakob 2026-11-12). */
   caption?: string;
   /** Clips the thumb row instead of letting a full batch push the band wide. */
   clip?: boolean;

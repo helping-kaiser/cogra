@@ -20,9 +20,9 @@ ALWAYS a hidden account's row is inert apart from its Unhide
 
 WHEN tap a hidden account's row outside Unhide -> NEVER the profile opens
 
-WHEN tap Unhide GIVEN another hidden account stays in the sheet -> that account's row goes AND their posts return to the reader's feed AND the snackbar reads the handle, then is unhidden — their posts can reach your feed again., as @juno is unhidden — their posts can reach your feed again., with Undo AND focus moves to the next row, else the previous AND NEVER a dialog asks
+WHEN tap Unhide GIVEN another hidden account stays in the sheet -> that account's row goes AND their posts return to the reader's feed AND the snackbar reads the handle, then is unhidden., as @juno is unhidden., with Undo AND focus moves to the next row, else the previous AND NEVER a dialog asks
 
-WHEN tap Unhide GIVEN the account was deleted -> its row goes AND the snackbar reads This account is unhidden — its posts can reach your feed again. with Undo AND NEVER a dialog asks
+WHEN tap Unhide GIVEN the account was deleted -> its row goes AND the snackbar reads This account is unhidden. with Undo AND NEVER a dialog asks
 
 WHEN tap Unhide GIVEN it is the last hidden account -> the sheet closes onto settings AND the Hidden accounts row reads None AND focus lands on the Hidden accounts row AND the same snackbar answers with Undo AND NEVER an empty sheet stands
 

@@ -719,6 +719,7 @@ export function CommentEditor({
         onSensitiveReason={(sensitiveReason) => update(() => ({ sensitiveReason }), true)}
         onSensitiveOpen={setSensitiveOpen}
         onSensitiveHelp={() => setHelp(HELP_TOPICS.markingAsSensitive)}
+        onSigningHelp={() => setHelp(HELP_TOPICS.howSigningWorks)}
         onPick={(files) => void pick(files)}
         onDismissRefusal={(id) => setRefusals((current) => current.filter((one) => one.id !== id))}
         onRemovePicture={(id) => update((current) => ({ gallery: removeFrom(current.gallery, id) }), true)}

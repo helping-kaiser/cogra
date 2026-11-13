@@ -10,13 +10,13 @@ import React from "react";
    content was made. */
 
 export const ATTRIBUTION_TIERS = [
-  { value: 0, label: "No credit", hint: "Nobody owes you a name." },
+  { value: 0, label: "No credit" },
   { value: 0.5, label: "Credit commercially", hint: "Commercial uses credit you; everything else is free." },
-  { value: 1, label: "Credit always", hint: "Every use credits you." },
+  { value: 1, label: "Credit always" },
 ];
 
 export const PROVENANCE_TIERS = [
-  { value: 0, label: "Not logged", hint: "Uses go unlogged." },
+  { value: 0, label: "Not logged" },
   { value: 0.5, label: "Log commercial use", hint: "Commercial uses are logged publicly and stay open to audit." },
   { value: 1, label: "Log every use", hint: "Every use is logged publicly and stays open to audit." },
 ];
@@ -30,7 +30,7 @@ export const PUBLIC_DOMAIN = { attribution: 0, provenance: 0 };
 export const LICENSE_MENU_LABEL = "License terms";
 
 /* THE READER'S READINGS, not the author's. The chooser's hints address the
-   author declaring the terms ("Every use credits you"), which on a read surface
+   author declaring the terms ("Commercial uses credit you"), which on a read surface
    would tell a reader they are owed the credit they in fact owe. So the read
    side has its own table, in the reuser's second person, one line per axis. */
 const READER_READINGS = {
@@ -50,20 +50,18 @@ export function licenseReadings(license) {
   ];
 }
 
-/* THE AUTHOR'S READING OF A PAIR, ONE JOINING RULE (the sheet law's round,
-   readme §13, the navigation-and-sheets round): the pair's name, a dash, then
-   the two tier hints joined — `Public domain — nobody owes you a name, and uses
-   go unlogged.` The zero pair's name is `Public domain`; every other pair is
-   named by its two tier names, `Credit always · Not logged`. One rule, so the
-   nine pairs are composed rather than written, and the seal's row, the license
+/* THE AUTHOR'S READING OF A PAIR IS ITS NAME (jakob 2026-11-12; the joining
+   rule of the navigation-and-sheets round, readme §13). The zero pair's name
+   is `Public domain`; every other pair is named by its two tier names,
+   `Credit always · Not logged`. A tier's hint stands only where it says more
+   than the tier's name, and never joins the reading. One rule, so the nine
+   pairs are composed rather than written, and the seal's row, the license
    sheets' foot and the settings default cannot say different things. */
 export function licenseSummary(license = PUBLIC_DOMAIN) {
   const credit = tierOf(ATTRIBUTION_TIERS, license.attribution);
   const record = tierOf(PROVENANCE_TIERS, license.provenance);
   if (!credit || !record) return "";
-  const name = license.attribution === 0 && license.provenance === 0 ? "Public domain" : `${credit.label} · ${record.label}`;
-  const clause = (hint) => hint.charAt(0).toLowerCase() + hint.slice(1).replace(/\.$/, "");
-  return `${name} — ${clause(credit.hint)}, and ${clause(record.hint)}.`;
+  return license.attribution === 0 && license.provenance === 0 ? "Public domain" : `${credit.label} · ${record.label}`;
 }
 
 /* THE SEAL'S ROW TAKES THE SENTENCE AS A STRING (seam 245, ask 3). `FactRow`

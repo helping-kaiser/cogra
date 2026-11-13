@@ -22,14 +22,18 @@
 //     (`area.width * 100 / areaPercent.width`), which is what lets a thumbnail
 //     anywhere downstream show the framing without decoding the picture first.
 //
-// WHY THE OLD FOCAL-POINT MODEL IS GONE. It cover-fitted the picture to the
-// frame, so at rest a wide photograph in a 4:5 frame showed a vertical slice
-// and the rest of the picture was simply not on screen — the reader could not
-// see what they were choosing between. The library's default `objectFit`
-// ("contain") shows the picture WHOLE and puts the crop rectangle inside it,
-// which is the behaviour the hand test asked for, and the crop rectangle is
-// recomputed from the media whenever the shape changes — so switching shape
-// re-frames against the original picture rather than against the last crop.
+// ONE CROP MODEL, EVERY CROP (jakob 2026-11-11, seam 301: "fixed frame with
+// mooving and zooming image"; sizes ComposeCrop.md, CoverCrop.md, AvatarCrop.md).
+// Each crop has ONE STAGE that never changes size with the shape, and a FIXED
+// FRAME of the shape centred in it; the picture moves and zooms under the
+// frame and the rest of it stays in view under the scrim. The library lays the
+// picture fitted whole into the stage ("contain") at zoom 1, so the stage's
+// size, not the frame's, is what a zoom is relative to — which is why a shape
+// switch can keep the zoom and the offset as they are: the picture does not
+// move, only the frame around it changes. The zoom's floor is the frame's FILL
+// (the picture just covers the frame), never the contained 1×.
+
+import { POST_SHAPES } from "./aspect";
 
 /** A rectangle of the source picture, in the source's own pixels. */
 export type CropArea = {
@@ -43,7 +47,10 @@ export type Crop = {
   /** The library's media offset, in container pixels. Opaque outside the frame. */
   readonly x: number;
   readonly y: number;
-  /** Between `MIN_ZOOM` and `MAX_ZOOM`. */
+  /**
+   * The library's zoom: the picture's scale over its whole-picture fit in the
+   * stage. Held between the frame's fill and about 4× of it (`zoomBounds`).
+   */
   readonly zoom: number;
   /**
    * What the frame currently shows, in source pixels. Null until the picture
@@ -58,20 +65,23 @@ export type Crop = {
   readonly areaPercent: CropArea | null;
 };
 
+/**
+ * The zoom track's two ends, as shares of the frame's fill: the floor is the
+ * fill itself, the ceiling about 4× (CropViewport.jsx `CROP_ZOOM_MIN` /
+ * `CROP_ZOOM_MAX`; each crop's sidecar).
+ */
 export const MIN_ZOOM = 1;
-/** About 4× — the crop's ceiling (CropViewport.jsx `CROP_ZOOM_MAX`; ComposeCrop.md). */
 export const MAX_ZOOM = 4;
 
-export const CENTERED: Crop = { x: 0, y: 0, zoom: MIN_ZOOM, area: null, areaPercent: null };
+/**
+ * Untouched. Its zoom of 1 is the whole picture in the stage, under the floor
+ * of almost every frame: the frame raises it to the fill on first sight.
+ */
+export const CENTERED: Crop = { x: 0, y: 0, zoom: 1, area: null, areaPercent: null };
 
 function clamp(value: number, low: number, high: number): number {
   if (!Number.isFinite(value)) return low;
   return Math.min(high, Math.max(low, value));
-}
-
-/** Guards the zoom the library is handed; the offset is the library's to bound. */
-export function clampZoom(zoom: number): number {
-  return clamp(zoom, MIN_ZOOM, MAX_ZOOM);
 }
 
 /**
@@ -103,8 +113,8 @@ function sameArea(a: CropArea | null, b: CropArea | null): boolean {
 export type Size = { readonly width: number; readonly height: number };
 
 /**
- * The picture as the frame lays it at 1× — react-easy-crop 6.2.4
- * `computeSizes`, `objectFit: "contain"`: fitted whole into the box, and never
+ * The picture as the library lays it at 1× in the stage — react-easy-crop
+ * 6.2.4 `computeSizes`, `objectFit: "contain"`: fitted whole into the box, and never
  * scaled past its own pixels (a picture smaller than the box stands at its own
  * size).
  */
@@ -117,13 +127,96 @@ export function fittedPicture(source: Size, box: Size): Size {
 }
 
 /**
- * The cut — the library's `getCropSize`: the largest rectangle of the shape's
- * ratio inside both the fitted picture and the box.
+ * Which crop a stage belongs to: the post's (three shapes, chosen), a video's
+ * cover (the clip's shape, locked) or the profile picture (the circle).
  */
-export function cutOf(picture: Size, box: Size, ratio: number): Size {
-  const width = Math.min(picture.width, box.width);
-  const height = Math.min(picture.height, box.height);
-  return width > height * ratio ? { width: height * ratio, height } : { width, height: width / ratio };
+export type CropKind = "post" | "cover" | "avatar";
+
+/**
+ * The boards' stages at their 390 artboard — one per crop, the same under
+ * every shape (ComposeCrop.md:7, CoverCrop.md:11, AvatarCrop.md:7). On a
+ * wider column the stage keeps this proportion at the column's width.
+ */
+export const CROP_STAGE: Readonly<Record<CropKind, Size>> = {
+  post: { width: 390, height: 488 },
+  cover: { width: 390, height: 488 },
+  avatar: { width: 390, height: 390 },
+};
+
+/**
+ * The column's gutter. The post's frame spans the stage; the cover's and the
+ * circle stand between the gutters (CropViewport.jsx `inset`).
+ */
+export const CROP_GUTTER = 24;
+
+/** A frame inside its stage: where it stands and how large it is, in CSS pixels. */
+export type Frame = Size & { readonly left: number; readonly top: number };
+
+/** The stage at `width`, in the board's proportion. */
+export function stageOf(kind: CropKind, width: number): Size {
+  const board = CROP_STAGE[kind];
+  return { width, height: (width * board.height) / board.width };
+}
+
+/**
+ * The fixed frame of `ratio` (width ÷ height) in a stage `stageWidth` wide:
+ * the stage's full width for a post, the width between the gutters for a
+ * cover or the circle, at the ratio EXACTLY — what is cut is what is uploaded,
+ * so the frame never rounds to a board's whole pixel — and centred.
+ * A ratio too tall for the stage stands at the stage's height instead.
+ */
+export function frameOf(kind: CropKind, ratio: number, stageWidth: number): Frame {
+  const stage = stageOf(kind, stageWidth);
+  const across = kind === "post" ? stageWidth : stageWidth - 2 * CROP_GUTTER;
+  const width = Math.min(across, stage.height * ratio);
+  const height = width / ratio;
+  return { width, height, left: (stageWidth - width) / 2, top: (stage.height - height) / 2 };
+}
+
+/** The zoom at which the laid picture just covers the frame. */
+export function fillOf(picture: Size, frame: Size): number {
+  return Math.max(frame.width / picture.width, frame.height / picture.height);
+}
+
+/** Where a crop's zoom may stand, in the library's units. */
+export type ZoomBounds = { readonly floor: number; readonly ceiling: number };
+
+/**
+ * The zoom's floor and ceiling for a picture laid `picture` (the library's 1×
+ * fit, `fittedPicture`) under the frame of `ratio`.
+ *
+ * The floor is the frame's fill: nothing outside the picture can show inside
+ * the frame. The ceiling is about 4× — of the TALLEST frame the stage holds on
+ * a post, so that a shape switch, which may only ever raise the zoom
+ * (ComposeCrop.md:19-21), never meets a ceiling below where the picture
+ * stands. A cover and the circle have one frame, so theirs is 4× their fill.
+ */
+export function zoomBounds(kind: CropKind, picture: Size, ratio: number, stageWidth: number): ZoomBounds {
+  const floor = fillOf(picture, frameOf(kind, ratio, stageWidth));
+  const tallest = kind === "post" ? fillOf(picture, frameOf(kind, POST_SHAPES.tall.ratio, stageWidth)) : floor;
+  return { floor, ceiling: MAX_ZOOM * Math.max(floor, tallest) };
+}
+
+/** A zoom held between the bounds; a value that is not a number stands at the floor. */
+export function holdZoom(zoom: number, bounds: ZoomBounds): number {
+  return clamp(zoom, bounds.floor, bounds.ceiling);
+}
+
+/**
+ * The offset held where an edge of the picture meets the frame's — the
+ * library's own bound (`restrictPosition`: |offset| ≤ |picture · zoom − frame| / 2).
+ */
+export function holdOffset(
+  offset: { readonly x: number; readonly y: number },
+  picture: Size,
+  frame: Size,
+  zoom: number,
+): { x: number; y: number } {
+  const hold = (value: number, laid: number, window: number) => {
+    const limit = Math.abs((laid * zoom) / 2 - window / 2);
+    return Math.max(-limit, Math.min(limit, value));
+  };
+  return { x: hold(offset.x, picture.width, frame.width), y: hold(offset.y, picture.height, frame.height) };
 }
 
 /**
@@ -138,41 +231,31 @@ export function sourceOf(crop: Crop): Size | null {
 }
 
 /**
- * The framing a picture keeps when the post's shape changes from ratio `from`
- * to ratio `to`: the shape changes around the picture, never the picture.
+ * The framing a picture keeps when the post's shape changes to ratio `to`:
+ * the frame changes around the picture, never the picture (ComposeCrop.md:19-23).
  *
- * WHY THE ZOOM MOVES. A post's viewport takes the shape's own ratio at the
- * frame's full width, and the library lays the picture at 1× to fit that box —
- * so at an unchanged zoom a wide box draws a portrait picture at less than
- * half the size a tall one does (hand test 2026-11-11: "when swapping from tall
- * to square or wide the image shrinks"). The zoom is rescaled so the picture
- * stands at the size it stood, and the offset — the picture's centre from the
- * box's, in CSS pixels — stays, so the new shape is centred on what the old
- * one was.
- *
- * ONLY THE CROP'S OWN BOUNDS MOVE THEM (ComposeCrop.md:29 — never below the
- * fill or past about 4×): the zoom is held between the two, and the offset
- * where an edge of the picture meets the cut's (the library's
- * `restrictPosition`), each by the least that bound asks.
+ * THE STAGE DOES NOT CHANGE, so the picture's laid size does not either, and
+ * the zoom and the offset — the picture's centre from the stage's, in CSS
+ * pixels — simply stay. Only the new frame's own bounds move them, each by the
+ * least it asks: the zoom rises to the new frame's fill where it stood below
+ * it (never further, and never down), and the offset shifts just enough that
+ * no edge of the picture comes inside the frame.
  *
  * The measured rectangle always goes: it is the old shape's (`area` above).
- * Without a measurement or a frame width there is nothing to keep the picture
- * at, and the position and zoom stay as they were.
+ * Without a measurement or a stage width there is nothing to measure the
+ * bounds against; the zoom and offset stay, and the frame holds them to the
+ * new bounds the moment the picture is on screen again.
  */
-export function reshape(crop: Crop, from: number, to: number, frameWidth: number | null): Crop {
+export function reshape(crop: Crop, to: number, stageWidth: number | null): Crop {
   const kept: Crop = { ...crop, area: null, areaPercent: null };
   const source = sourceOf(crop);
-  if (source === null || frameWidth === null || !(frameWidth > 0) || from === to) return kept;
-  const box = (ratio: number): Size => ({ width: frameWidth, height: frameWidth / ratio });
-  const before = fittedPicture(source, box(from));
-  const after = fittedPicture(source, box(to));
-  const zoom = clampZoom((clampZoom(crop.zoom) * before.width) / after.width);
-  const cut = cutOf(after, box(to), to);
-  const hold = (offset: number, picture: number, window: number) => {
-    const limit = Math.abs((picture * zoom) / 2 - window / 2);
-    return Math.max(-limit, Math.min(limit, offset));
-  };
-  return { ...kept, zoom, x: hold(crop.x, after.width, cut.width), y: hold(crop.y, after.height, cut.height) };
+  if (source === null || stageWidth === null || !(stageWidth > 0)) return kept;
+  const picture = fittedPicture(source, stageOf("post", stageWidth));
+  const bounds = zoomBounds("post", picture, to, stageWidth);
+  // The ceiling is the same under every post shape (`zoomBounds`), so holding
+  // the zoom can only ever raise it here.
+  const zoom = holdZoom(crop.zoom, bounds);
+  return { ...kept, zoom, ...holdOffset(crop, picture, frameOf("post", to, stageWidth), zoom) };
 }
 
 /**

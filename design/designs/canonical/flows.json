@@ -371,8 +371,13 @@
     },
     {
       "name": "see-who-stands-with-someone",
-      "description": "The figures row, on any profile, opens the stance lists; reading who stands with them is the whole journey.",
-      "start": { "control": "the figures row" }
+      "description": "The Opinions on figure, on any profile, opens the opinions page on its On state; reading who stands with them is the whole journey.",
+      "start": { "control": "the Opinions on figure" }
+    },
+    {
+      "name": "see-who-someone-stands-with",
+      "description": "The Opinions by figure, on any profile, opens the opinions page on its By state; reading whom they hold an opinion on is the whole journey.",
+      "start": { "control": "the Opinions by figure" }
     },
     {
       "name": "find-the-thread-a-comment-answers",

@@ -12,7 +12,7 @@ ALWAYS the pad opens with the pick at the default +0.10 / +0.10, the hold's own 
 
 WHEN tap Set GIVEN the pick was never moved -> the default +0.10 / +0.10 is signed, as the hold signs it
 
-ALWAYS the pad parks at the same spot every time, 16px above the bottom bar where the surface has one and 16px off the bottom edge where it does not, never anchored to the target
+ALWAYS the pad parks at the same spot every time, 16px above feed.bottomBar, or the bar of whatever surface it blooms over, and 16px off the bottom edge where the surface has no bar, never anchored to the target
 
 ALWAYS the surface beneath the pad's wash stays inert while the pad is up
 

@@ -12,11 +12,9 @@ ALWAYS the pad carries no Walk it back GIVEN the pad opened as the vouch-back
 
 ALWAYS the line Your vouch back. The pad is how you shape what reaches you — for or against, and how much. stands above the field GIVEN the pad opened as the vouch-back
 
-ALWAYS the two coaching lines, the press-and-hold shortcut and Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings., stand under it only on the account's first-ever pad open, wherever that pad opens
+ALWAYS Nothing is signed until Set. stands under it on the account's first-ever pad open, wherever that pad opens, and the coaching — the press-and-hold shortcut and Prefer sliders or exact numbers? Swap the input in settings. — stands only in the help Your vouch back, never on the pad (jakob 2026-11-12)
 
-WHEN the pad closes GIVEN it carried the two coaching lines -> NEVER the two coaching lines show on a later open
-
-ALWAYS the coaching's exact pair shows only when the reader has asked for exact values, and its spoken twin says the face and the pair either way
+ALWAYS the help's exact pair shows only when the reader has asked for exact values, and its spoken twin says the face and the pair either way
 
 ALWAYS the line You'd keep your borrowed view — no feed of your own yet. stands under the landing line, and Set still signs, GIVEN the pick lands a number at zero and the member holds no opinion with neither number at zero
 

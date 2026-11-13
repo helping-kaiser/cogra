@@ -50,7 +50,7 @@
    `feedSheet`, under `settings.` and named for the row that opens it, as
    `SettingsHidden`'s and `SettingsLicense`'s are — never sharing a path with
    the feed filter's (jakob 2026-10-07, ruling 37): its `title` with the
-   `help` on its row, the `note`, the sections as the search and history
+   `help` on its row, the sections as the search and history
    sheets name theirs, and the `foot`.
 
    THE `people` CHIP (jakob 2026-10-12, item 7), `FeedSheet`'s own: the
@@ -76,9 +76,6 @@ export function Screen() {
             <SheetTitle trailing={<HelpDot ariaLabel="How the filter works" node="help" />} node="title">
               What your feed shows
             </SheetTitle>
-            <div style={{ padding: "0 var(--space-6) var(--space-4)" }}>
-              <QuietNote node="note">Every feed starts from this.</QuietNote>
-            </div>
           </>
         }
         foot={<FilterFoot node="foot" />}

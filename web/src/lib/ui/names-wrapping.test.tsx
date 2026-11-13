@@ -48,7 +48,7 @@ function expectWraps(box: HTMLElement, sentence: string, tail?: string) {
 
 describe("a long handle in text that wraps", () => {
   it("Snackbar's message (FeedHidden's line)", () => {
-    const message = `${H} is hidden — their posts stay out of your feed.`;
+    const message = `${H} is hidden.`;
     render(<Snackbar testId="snack" node={{ path: "feed.snackbar" }} message={message} onDismiss={() => {}} />);
     expectWraps(screen.getByTestId("feed.snackbar.message"), message);
   });

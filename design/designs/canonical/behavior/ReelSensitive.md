@@ -44,4 +44,4 @@ WHEN press reel.backDisc GIVEN the stream was opened from the feed it narrowed -
 
 WHEN press reel.backDisc GIVEN the stream was opened from anywhere else -> the stream closes onto where it was opened, the state the reader left exactly
 
-ALWAYS reel.backDisc reads Back to feed from the feed it narrowed, Back to Saved from Saved, Back to History from History, Back to the profile from another's posts, Back to your profile from the reader's own and Back to with the tag's name from a tag page
+ALWAYS reel.backDisc reads Back to feed from the feed it narrowed, Back to Saved from Saved, Back to History from History, Back to the profile from a card on another's profile, Back to your profile from a card on the reader's own and Back to with the tag's name from a tag page

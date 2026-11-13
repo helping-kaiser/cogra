@@ -1,6 +1,6 @@
 # RejectConfirm · `spec:design:behavior-reject-confirm`
 
-WHEN tap a row's close on Invites -> the dialog Close @imke's application? opens, named for the row it was raised from, with It leaves your list and @imke is told. Their account stays exactly as it is — signed in, and free to keep reading. and This is your call and nobody else's. Any member can still vouch them in, and @imke gets a link to ask with.
+WHEN tap a row's close on Invites -> the dialog Close @imke's application? opens, named for the row it was raised from, with It leaves your list and @imke is told. Their account stays as it is. and Any member can still vouch them in, and @imke gets a link to ask with.
 
 ALWAYS one dialog serves every row's close, a ready application's, one not fully registered yet and a kept approval's alike
 
@@ -33,3 +33,5 @@ WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN Clo
 WHEN the closing is taken GIVEN the dialog was closed while it answered -> the line goes AND the row leaves this reader's list AND the applicant is told
 
 WHEN the closing does not go through GIVEN the dialog was closed while it answered -> the application's own row on Invites stands as it was AND says That didn't sign. in the failure voice followed by Retry, which asks the same act again, AND NEVER the snackbar carries the failure
+
+ALWAYS the failed closing's line stands under the application's row, its words and its Retry drawn as a removal's after Close

@@ -2,8 +2,6 @@
 
 WHEN press Restore the key on a key-absent card, the composer's seal, the key-absent pad, the backup settings or Your key -> Restore opens
 
-ALWAYS the body reads Enter your recovery code to bring your signing key onto this browser. on the web and Enter your recovery code to bring your signing key into this app. in the app
-
 ALWAYS the header's arrow reads Back and is a link to the reader's own home, never history
 
 WHEN press the header's back arrow GIVEN a member -> KeyElsewhere opens
@@ -48,6 +46,6 @@ ALWAYS the page scrolls when its content outgrows the screen at any width or tex
 
 WHEN press system Back -> the screen the header's back arrow links to opens, exactly as the arrow's press opens it AND NEVER Back walks the history instead
 
-ALWAYS Restore the key stands disabled with Waiting for your recovery code right above it GIVEN Recovery code is empty
+ALWAYS Restore the key stands disabled with no line above it and its spoken description reads Waiting for your recovery code GIVEN Recovery code is empty
 
-WHEN the first character is typed in Recovery code -> Restore the key wakes AND the line Waiting for your recovery code goes
+WHEN the first character is typed in Recovery code -> Restore the key wakes AND its spoken description Waiting for your recovery code goes

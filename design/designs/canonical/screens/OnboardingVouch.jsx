@@ -89,11 +89,9 @@
    for the link would teach the wrong order — the confusion item 92 was filed
    about, met on the very first screen instead.
 
-   THE APPLICANT LINE IS THE CARD'S SECOND DUTY (jakob's draft, polished). The
-   intro fires from applicant on, and an applicant who does not know that a
-   human still has to let them in reads the empty days as a broken product. It
-   sits as a `QuietNote` under the words rather than in them: it is a task, not
-   a principle, and the four cards before it were principles.
+   NO APPLICANT LINE UNDER THE WORDS (jakob 2026-11-11, C3): the headline says
+   someone brings you in, and the line above names @mira — a note sending the
+   reader to ask around read against both.
 
    THE LAST BUTTON READS `Start reading` — sentence case, the reader's own next
    act, and never "Done" or "Finish", which name the tour instead of the
@@ -103,7 +101,7 @@
    parts (`IntroFrame`); this board names the stage's labelled pieces — the
    inviter's face `inviter` (the face the client personalizes) with its
    caption `inviterCaption`, and the reader's dot `you` with its dashed ring
-   `youRing` and its caption `youCaption` — and the applicant line `note`. The other members' dots and
+   `youRing` and its caption `youCaption`. The other members' dots and
    every edge are the drawing, unnamed, as a scrim is. */
 export const NODE = "onboarding";
 
@@ -188,11 +186,6 @@ export function Screen() {
       cta="Start reading"
       headline="Someone brings you in"
       lines={["You are here because @mira invited you. @mira's link is your first way in to everyone else, and theirs to you."]}
-      note={
-        <div style={{ paddingTop: 12 }}>
-          <QuietNote node="note">A friend who's already in has to let you in. Ask around once you have verified your email.</QuietNote>
-        </div>
-      }
     >
       <IntroStage {...STAGE}>
         <IntroLines {...STAGE}>

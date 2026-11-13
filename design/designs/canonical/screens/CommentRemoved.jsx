@@ -8,7 +8,7 @@
    removal takes the payload, whole-record, and the structural record is the
    visible mark. So @sol's card stands where it stood in the order, under its
    author and its time, with `Removed by its author` where its words were — the
-   same mark a removed post wears, its second line naming the comment.
+   same mark a removed post wears, the line and its date alone.
 
    THE BRANCH UNDER IT IS THE PROOF. Two replies hang from the removed comment,
    and both stay, under their parent and readable: removal never breaks a

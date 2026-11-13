@@ -24,8 +24,7 @@ import { ladderAge } from "@/lib/ui/timestamp";
 import type { SearchOrder } from "./search-filter";
 
 /** ExploreNone.md:3, verbatim. */
-export const NOTHING_CARRIES_THAT_NAME =
-  "Nothing carries that name. Search reads names and titles, never bodies — fewer words reach further.";
+export const NOTHING_CARRIES_THAT_NAME = "Nothing carries that name.";
 
 /** ExploreUnscoped.md:3, the search-scope line (copy-voice.md, blessed 2026-10-06). */
 export const FOUND_THROUGH_PEOPLE_AND_TAGS = "Found through people and tags — start with @handle or #tag.";

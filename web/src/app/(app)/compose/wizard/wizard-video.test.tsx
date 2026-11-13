@@ -7,7 +7,7 @@
 // the cover screen, that the offers appear with the first one taken, and that
 // the composition rule is enforced where an author can see it.
 
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
@@ -21,6 +21,7 @@ import type { ComposeDraftStore } from "@/lib/compose/draft-store";
 import { emptyWizard, type WizardState } from "@/lib/compose/wizard";
 import { ComposeWizard } from "./wizard-view";
 import { byAnyTestId, byNode } from "@/test/data-node";
+import { declared } from "@/test/css";
 
 const FRAME = new Blob([new Uint8Array([9]) as BlobPart], { type: "image/png" });
 // A frame distinct from `FRAME` above, so a test can tell "the tray's frames"
@@ -212,8 +213,8 @@ describe("picking a video", () => {
     await pickFiles([aVideo()]);
     fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
 
-    // WizardHeader's own `stageLabel` slot: label-small whole (round 28) — the
-    // seal's "Last step" pair.
+    // WizardHeader's own `stageLabel` slot: label-small whole (round 28); the
+    // cover is the one stage that names itself (the seal does not, seam 314).
     const stage = await screen.findByTestId("header-stage");
     expect(stage).toHaveTextContent("Video only");
     expect(stage.className.split(" ")).toContain("text-label-small");
@@ -293,7 +294,7 @@ describe("picking a video", () => {
       await pickFiles([aVideo()]);
       fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
 
-      expect(await previewRatio()).toBe(`${1920 / 1080} / 1`);
+      expect(await previewRatio()).toBe(declared("aspect-ratio", `${1920 / 1080} / 1`));
     });
 
     it("shows a square clip square", async () => {
@@ -732,6 +733,8 @@ describe("picking a video", () => {
   // test is whether the still gets MATERIALIZED at all, not whether a
   // browser can re-encode it.
   describe("the silent auto-cover", () => {
+    // Kept only where a test asserts a still was NOT made: an absence has no
+    // landing to wait for, and a slow runner can only make it pass sooner.
     async function settle() {
       // The 200ms coalescing window `draft-store.ts` documents, plus the
       // microtask the capture and the materializing dispatch each cost.
@@ -751,7 +754,9 @@ describe("picking a video", () => {
       // Straight through the cover screen — no tap on any offer.
       fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
       await screen.findByTestId(byNode("composeDetails.title.input"));
-      await settle();
+      // The still lands once the store's coalescing window has written it:
+      // waited for, not slept on.
+      await waitFor(async () => expect((await drafts.load())?.autoCover?.file).toBe(FRAME_ZERO), { timeout: 3000 });
 
       const saved = await drafts.load();
       // The door's own state is untouched: nothing was CHOSEN.
@@ -929,9 +934,8 @@ describe("a vertical clip", () => {
     await pickVertical();
     fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
     await screen.findByTestId(byNode("composeDetails.title.input"));
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-    });
+    // The still lands once the store's coalescing window has written it.
+    await waitFor(async () => expect((await drafts.load())?.autoCover?.file).toBe(FRAME_ZERO), { timeout: 3000 });
 
     const saved = await drafts.load();
     expect(saved?.cover).toBeNull();

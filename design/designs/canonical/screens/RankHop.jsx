@@ -35,7 +35,7 @@ export function Screen() {
           <PathTrace people={[SCORE_VIEWER, ADA_FACED]} size={32} node="trace" />
         </div>
 
-        <QuietNote node="note">Your opinion of @ada — the first of this path&apos;s two steps.</QuietNote>
+        <QuietNote node="note">Your opinion of @ada</QuietNote>
 
         <StepSummary
           pair={{ pDirected: 0.55, pInterest: 0.2 }}
@@ -45,8 +45,7 @@ export function Screen() {
         />
 
         <QuietNote node="foldNote">
-          You have given @ada two opinions. They add up to one, and that one is what carries — the same adding up the pad
-          shows you as your current opinion.
+          You have given @ada two opinions. They add up to one, and that one is what carries.
         </QuietNote>
       </ScoreColumn>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />

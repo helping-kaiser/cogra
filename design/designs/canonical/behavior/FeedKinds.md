@@ -14,6 +14,12 @@ WHEN the feed is fetched again GIVEN a card's score reads what its trace's fetch
 
 ALWAYS a feed card's score slot stands bare only for a thing still settling and reads zero only for a severed one, the dash standing for every other figure not computed
 
+ALWAYS a feed card's score prints two decimals and never more, rounded half away from zero, whatever kind the card is
+
+ALWAYS a feed card's score reads 0.01, or −0.01 below zero, GIVEN its computed figure is not zero and under 0.005 either way, so the slot reads 0.00 only for a severed one
+
+ALWAYS a screen reader reads the score's printed figure after Feed score, never the computed one
+
 ALWAYS a reply is a comment targeting a comment: as standalone content a reply card may appear in any feed, and the under-card reply expansion never appears in a feed
 
 ALWAYS feed.commentCard carries no view-replies line

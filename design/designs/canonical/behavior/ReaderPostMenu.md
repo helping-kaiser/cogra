@@ -14,13 +14,13 @@ WHEN tap Save GIVEN the save does not go through -> the save reverts AND the tar
 
 WHEN tap Unsave -> the sheet closes AND postDetail.snackbar reads Removed from Saved. with Undo on postDetail.snackbar.action
 
-WHEN tap Hide with the author's handle GIVEN the menu was opened from the post being read -> the sheet closes AND the reader stays on the post being read AND the snackbar reads @ada is hidden — their posts stay out of your feed. with Undo AND NEVER a confirm step appears
+WHEN tap Hide with the author's handle GIVEN the menu was opened from the post being read -> the sheet closes AND the reader stays on the post being read AND the snackbar reads @ada is hidden. with Undo AND NEVER a confirm step appears
 
 WHEN tap Hide with the author's handle GIVEN the hide does not go through -> the hide reverts AND the target's row says so with Retry
 
 ALWAYS the hide row reads Unhide with the author's handle GIVEN the author is already hidden, wherever their post still stands — the post reached by a link or a search, Saved, the tag's page, and History until its next load — and keeps its one name whatever it reads
 
-WHEN tap Unhide with the author's handle -> the sheet closes AND the reader stays where the menu was opened AND the author is unhidden AND the snackbar reads @ada is unhidden — their posts can reach your feed again. with Undo AND NEVER a confirm step appears
+WHEN tap Unhide with the author's handle -> the sheet closes AND the reader stays where the menu was opened AND the author is unhidden AND the snackbar reads @ada is unhidden. with Undo AND NEVER a confirm step appears
 
 WHEN tap Unhide with the author's handle GIVEN the unhide does not go through -> the unhide reverts AND the target's row says That didn't go through. with Retry
 

@@ -41,7 +41,7 @@
    reading it back. The code is 6 digits, single-use (auth.md, *Email change*;
    jakob 2026-10-05), so the field is the `digits` kind: the numeric keyboard
    and the platform's one-time-code fill. At rest `Confirm the code` waits on
-   it, disabled, its reason above it (`WaitingCommit`).
+   it, disabled, its reason spoken only (`WaitingCommit`).
 
    NO BACK TRAP. Nothing is lost by leaving — the change is live on the server
    for its window and this screen is reachable again from the row — so the
@@ -75,15 +75,40 @@
    settings packet). The inset is `pair`: its `label` and `resend`, then each
    side's caption and reading — `codeLabel` / `codeSide`, `linkLabel` /
    `linkSide`. Under it, on the chip's `code` only, the line `interim`.
-   The field is `code`, the commit with its reason `commit`, the line under
-   it `note`, and `Cancel the change` is `cancel`. */
+   The field is `code`, the commit `commit`, the line under
+   it `note`, and `Cancel the change` is `cancel`.
+
+   THE `submit` CHIP'S `pending` IS THE CONFIRM CLOSED ON (round 43; jakob
+   2026-11-11, backlog 191 (a): submit is submit), on the chip `confirmed`'s
+   `none`, the one state with a commit. From the press on `Confirm the code`
+   nothing cancels it: past 200ms it reads `Confirming the code…`, and the
+   header's arrow is named `Close` from the press itself — the seals' X
+   (`WizardHeader`'s `closing`); it leaves for settings and the confirm goes
+   on. A confirm that fails after Close says so on the Email row (`Settings`'
+   `forms` chip, jakob 2026-11-12). The pending header and field are drawn
+   copies; the rest ones alone carry the names. `Cancel the change` is held
+   while the confirm runs — submit is submit (jakob 2026-11-12, 9): the
+   pending copy refuses a press, undimmed, its face unchanged.
+
+   THE LINK CONFIRMED, THE CODE STILL OWED, is the `confirmed` chip's `link`
+   (jakob 2026-11-12, on round 43's review): the link's side reads `—
+   confirmed` where `— still waiting` stood and the code's still waits; the
+   field and `Confirm the code` stay, and `Resend` sends the code alone. */
 export const NODE = "changeEmail";
-export const PROPS = { confirmed: { editor: "enum", options: ["none", "code"], default: "none" } };
-export const VALS = `codeSideReading: this.props.confirmed === "code" ? "sol@solferreira.art — confirmed" : "sol@solferreira.art — still waiting", interimShown: this.props.confirmed === "code" ? "block" : "none", fieldShown: this.props.confirmed === "code" ? "none" : "block"`;
+export const PROPS = {
+  confirmed: { editor: "enum", options: ["none", "code", "link"], default: "none" },
+  submit: { editor: "enum", options: ["rest", "pending"], default: "rest" },
+};
+export const VALS = `linkSideReading: this.props.confirmed === "link" ? "sol@ferreira.studio — confirmed" : "sol@ferreira.studio — still waiting", codeSideReading: this.props.confirmed === "code" ? "sol@solferreira.art — confirmed" : "sol@solferreira.art — still waiting", interimShown: this.props.confirmed === "code" ? "block" : "none", fieldShown: this.props.confirmed === "code" || this.props.submit === "pending" ? "none" : "block", pendingShown: this.props.confirmed !== "code" && this.props.submit === "pending" ? "block" : "none", headerShown: this.props.confirmed !== "code" && this.props.submit === "pending" ? "none" : "block"`;
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="/settings" backLabel="Back to settings" node="header" />
+      <div style={{ display: "{{headerShown}}" }}>
+        <PageHeader backHref="/settings" backLabel="Back to settings" node="header" />
+      </div>
+      <div style={{ display: "{{pendingShown}}" }}>
+        <PageHeader backHref="/settings" backLabel="Close" />
+      </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
@@ -97,21 +122,6 @@ export function Screen() {
         >
           Confirm the change
         </h1>
-        <p
-          style={{
-            margin: "8px 0 0",
-            fontSize: "var(--text-body-medium)",
-            fontWeight: "var(--text-body-medium--font-weight)",
-            lineHeight: "var(--text-body-medium--line-height)",
-            letterSpacing: "var(--text-body-medium--letter-spacing)",
-            color: "var(--text-secondary)",
-          }}
-          data-node="body"
-        >
-          Two messages, two different errands — a code to type here, and a link to open at the new
-          address. Your email moves when both have been answered, in either order.
-        </p>
-
         <div
           style={{
             marginTop: 24,
@@ -152,7 +162,7 @@ export function Screen() {
               Link
             </span>
             <span style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)" }} data-node="linkSide">
-              sol@ferreira.studio — still waiting
+              {"{{linkSideReading}}"}
             </span>
           </div>
         </div>
@@ -180,6 +190,26 @@ export function Screen() {
           </div>
         </div>
 
+        <div style={{ display: "{{pendingShown}}" }}>
+          <div style={{ marginTop: 24 }}>
+            <TextField
+              id="email-change-code-pending"
+              label="Confirmation code"
+              mono
+              kind="digits"
+              enterKeyHint="go"
+              value="482913"
+              hint="From the message to sol@solferreira.art."
+            />
+          </div>
+
+          <div style={{ marginTop: 24 }}>
+            <Button style={{ width: "100%" }} busy busyLabel="Confirming the code…">
+              Confirm the code
+            </Button>
+          </div>
+        </div>
+
         <div style={{ marginTop: 24 }}>
           <QuietNote node="note">
             Until both sides land your account keeps the address it has, and a reset still goes
@@ -187,8 +217,13 @@ export function Screen() {
           </QuietNote>
         </div>
 
-        <div style={{ marginTop: 16 }}>
+        <div style={{ marginTop: 16, display: "{{headerShown}}" }}>
           <InlineAction size="sm" onClick={() => {}} node="cancel">
+            Cancel the change
+          </InlineAction>
+        </div>
+        <div style={{ marginTop: 16, display: "{{pendingShown}}" }}>
+          <InlineAction size="sm" busy>
             Cancel the change
           </InlineAction>
         </div>

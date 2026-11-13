@@ -8,7 +8,7 @@ ALWAYS the menu of feed.profileCard holds the same rows on every host the card s
 
 WHEN tap feed.menuSheet.mention -> the post wizard opens fresh at its first stage AND the person rides along as a staged reference, unseen until the details stage
 
-WHEN tap feed.menuSheet.hide -> the sheet closes AND that person's rows leave the feed AND the rows behind them move up AND the snackbar reads @mira is hidden — their posts stay out of your feed. with Undo AND NEVER a confirm step appears
+WHEN tap feed.menuSheet.hide -> the sheet closes AND that person's rows leave the feed AND the rows behind them move up AND the snackbar reads @mira is hidden. with Undo AND NEVER a confirm step appears
 
 WHEN tap feed.menuSheet.report -> the sheet closes AND the report confirm sheet rises over the feed, its title reading Report @mira? AND NEVER anything is sent yet
 
