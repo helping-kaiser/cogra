@@ -765,7 +765,7 @@ async fn after_removal_no_copy_of_the_words_remains_anywhere(pool: PgPool) {
         let copies: i64 = sqlx::query_scalar(
             "SELECT (SELECT COUNT(*) FROM act_payloads WHERE act_id = $1 AND payload IS NOT NULL)
                   + (SELECT COUNT(*) FROM staged_writes WHERE act_id = $1 AND payload IS NOT NULL)
-                  + (SELECT COUNT(*) FROM l1_acts WHERE act_id = $1 AND payload IS NOT NULL)",
+                  + (SELECT COUNT(*) FROM l1_acts WHERE act_id = $1 AND content_salt IS NOT NULL)",
         )
         .bind(&act)
         .fetch_one(&rig.pool)
