@@ -6067,10 +6067,12 @@ Save, Cite in a new post, Cited by, Opinions on this, License terms, Report
 for another's, the own rows less Edit and Remove for yours [lean]; (b) it
 stays menu-less.
 
-### 212 · Mark as sensitive on your own removed post · *design* · **filed 2026-11-12**
+### 212 · Mark as sensitive on your own removed post · *design* · **filed 2026-11-12** · **closed 2026-11-13**
 
 Round 46. The correction to ruling 18 keeps every own row but Edit and
 Remove, so `Mark as sensitive` stands on a removed post's menu; the row opens
 the edit, and a removed post has no words or pictures left to veil. For
 jakob: (a) keep it, the mark being the record's [as built]; (b) it leaves the
 removed post's menu with Edit and Remove.
+
+Closed by jakob 2026-11-13 (point B, as recommended: "it goes"): your own removed post's menu, card and detail, reads Save, Cite in a new post, License terms (`FeedRemoved`, `Removed`, `FeedRemovedMenuOwn`).

@@ -723,11 +723,12 @@ const OWN_POST_MENU = [
 /* YOUR OWN REMOVED POST KEEPS A MENU (jakob 2026-11-12, question 18: "i can
    still cite this (maybe in a folloup post to explain why i deleted it)";
    and on License terms: "even if the media is now removed someone might have
-   used my content already under its license regulations"): `OWN_POST_MENU`
-   less Edit and Remove alone — Save, Cite in a new post, Mark as sensitive,
-   License terms, in the own menu's order. The detail's header carries it
-   whole; a card's ⋮ is handed it less the license, which `PostCard` appends. */
-const OWN_REMOVED_POST_MENU = OWN_POST_MENU.filter((row) => row !== EDIT_ROW && row !== REMOVE_ROW);
+   used my content already under its license regulations"; and 2026-11-13,
+   point B: Mark as sensitive "goes"): `OWN_POST_MENU` less Edit, Mark as
+   sensitive and Remove — Save, Cite in a new post, License terms, in the own
+   menu's order. The detail's header carries it whole; a card's ⋮ is handed
+   it less the license, which `PostCard` appends. */
+const OWN_REMOVED_POST_MENU = OWN_POST_MENU.filter((row) => row !== EDIT_ROW && row !== REMOVE_ROW && row.node !== "markSensitive");
 const OWN_REMOVED_CARD_MENU = OWN_REMOVED_POST_MENU.filter((row) => row !== LICENSE_ROW);
 /* The reader's post menu for a post by `handle`, so a host whose drawn card
    is someone else's than @ada's names its author in the Hide row

@@ -740,7 +740,6 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: ">Save</button>", tag: "button" },
     { n: 2, find: ">Cite in a new post</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
-    { n: 4, find: ">Mark as sensitive</button>", tag: "button" },
     { n: 5, find: ">License terms</button>", tag: "button" },
   ],
   FeedRemoveConfirm: [
