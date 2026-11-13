@@ -2449,6 +2449,7 @@
     { "from": "ProfileOther", "via": 20, "kind": "detour", "label": "Feed score", "to": [{ "board": "FeedEntry" }] },
     { "from": "ProfileOther", "via": 21, "kind": "advance", "label": "reference count", "to": [{ "board": "RefsSheet" }] },
     { "from": "ProfileOther", "via": 22, "kind": "advance", "label": "comment count", "to": [{ "board": "ReplyEntry" }] },
+    { "from": "ProfileOther", "via": 23, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
 
     { "from": "ProfileOtherHidden", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to wherever the reader came from, by the profile's noun table — the feed, if that is where they return, holds none of the hidden person's rows" }] },
     { "from": "ProfileOtherHidden", "via": 2, "kind": "detour", "label": "profile overflow ⋮", "to": [{ "board": "ProfileMenu", "case": "another's profile sheet (master)" }] },
@@ -2473,6 +2474,7 @@
     { "from": "ProfileOtherHidden", "via": 21, "kind": "detour", "label": "Feed score", "to": [{ "board": "FeedEntry" }] },
     { "from": "ProfileOtherHidden", "via": 22, "kind": "advance", "label": "reference count", "to": [{ "board": "RefsSheet" }] },
     { "from": "ProfileOtherHidden", "via": 23, "kind": "advance", "label": "comment count", "to": [{ "board": "ReplyEntry" }] },
+    { "from": "ProfileOtherHidden", "via": 24, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
 
     { "from": "ProfileOtherHeld", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to wherever the reader came from — the layer law: the state they left, exactly — and the label names that origin by the profile's noun table (readme §13, the navigation-and-sheets round) — `Back to feed`, `Back to the post`, `Back to the comments`, `Back to the stream`, `Back to Notifications`, `Back to Saved`, `Back to History`, `Back to the opinions`, `Back to the search`, `Back to #<thattag>`, `Back to the profile` from a card on another's profile and `Back to your profile` from a card on the reader's own (round 45); a cold entry with no history lands on Feed under `Back to feed`, the state the boards draw" }] },
     { "from": "ProfileOtherHeld", "via": 2, "kind": "detour", "label": "profile overflow ⋮", "to": [{ "board": "ProfileMenu", "case": "another's profile sheet (master)" }] },
@@ -2495,6 +2497,7 @@
     { "from": "ProfileOtherHeld", "via": 20, "kind": "detour", "label": "Feed score", "to": [{ "board": "FeedEntry" }] },
     { "from": "ProfileOtherHeld", "via": 21, "kind": "advance", "label": "reference count", "to": [{ "board": "RefsSheet" }] },
     { "from": "ProfileOtherHeld", "via": 22, "kind": "advance", "label": "comment count", "to": [{ "board": "ReplyEntry" }] },
+    { "from": "ProfileOtherHeld", "via": 23, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
 
     { "from": "ProfileStances", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to the profile whose figures row was tapped — the layer law: the state they left, exactly — and the label names it (readme §13, *The nav-noun sweep*): `Back to your profile` from the reader's own, `Back to the profile` from another's, the state the board draws" }] },
     { "from": "ProfileStances", "via": 2, "kind": "advance", "label": "On them", "to": [{ "terminal": "self", "case": "the inbound direction — On you on the reader's own page; held by no one, its empty line in the list's place (the list chip's empty)" }] },

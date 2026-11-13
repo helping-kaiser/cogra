@@ -1639,6 +1639,7 @@ const otherLandingCard = (base) => [
   { n: base + 6, find: ">Feed score</span>", tag: "button", all: true },
   { n: base + 7, find: ">· 1 reference<", tag: "button" },
   { n: base + 8, find: 'aria-label="3 comments"', tag: "button" },
+  { n: base + 9, find: 'aria-label="Share this post"', tag: "button", all: true },
 ];
 Object.assign(FLOW_MARKERS, {
   // The own profile's Posts and Comments views (round 41, M2): `Profile`'s
@@ -1729,7 +1730,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: 'aria-label="Everything"', tag: "button", all: true },
     { n: 7, find: "The long way home — the light does something", tag: "button" },
     { n: 7, find: "The glovebox camera earns its keep", tag: "button" },
-    { n: 7, find: "Took the coast road instead of the tunnel", tag: "button" },
+    // The whole line, end and all: the landing's card description opens the same way (round 49).
+    { n: 7, find: "Took the coast road instead of the tunnel. Four hours longer, worth every minute.</span", tag: "button" },
     ...nav(8),
     ...otherLandingCard(14),
   ],
@@ -1748,7 +1750,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: 'aria-label="Everything"', tag: "button", all: true },
     { n: 7, find: "The long way home — the light does something", tag: "button" },
     { n: 7, find: "The glovebox camera earns its keep", tag: "button" },
-    { n: 7, find: "Took the coast road instead of the tunnel", tag: "button" },
+    // The whole line, end and all: the landing's card description opens the same way (round 49).
+    { n: 7, find: "Took the coast road instead of the tunnel. Four hours longer, worth every minute.</span", tag: "button" },
     ...nav(8),
     { n: 13, find: ">Undo</button>", tag: "button" },
     // The landing's post card (round 49), the board's `tab` chip at `posts`.
