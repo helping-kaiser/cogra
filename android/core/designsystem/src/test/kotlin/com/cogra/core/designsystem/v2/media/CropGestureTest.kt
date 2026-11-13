@@ -332,15 +332,18 @@ class CropGestureTest {
 
     @Test
     fun aPinchInStopsAtTheFillAndThePictureStillCoversTheFrame() {
-        stage(zoomShare = 2f)
-        val mid = crop().centerNow() + Offset(50f, -80f)
+        stage(zoomShare = 1.6f)
+        // Both fingers land ON the stage (a finger landing outside it is not
+        // the stage's), 30 short of its width apart, and close to 110: the spread zooms until
+        // they are the minimum scaling span apart, past the floor however
+        // much the slop takes.
+        val mid = crop().centerNow() + Offset(0f, -80f)
+        val start = crop().fetchSemanticsNode().size.width / 2f - EDGE_ROOM
         touch {
-            down(0, mid - Offset(SPAN * 1.5f, 0f))
-            down(1, mid + Offset(SPAN * 1.5f, 0f))
+            down(0, mid - Offset(start, 0f))
+            down(1, mid + Offset(start, 0f))
             repeat(FAR_STEPS) { step ->
-                // From 660 apart to 220: a third of the spread, past the
-                // floor however much the slop takes.
-                val half = (SPAN * 1.5f - (step + 1) * STEP * 2).coerceAtLeast(SPAN / 2f)
+                val half = (start - (step + 1) * STEP).coerceAtLeast(SPAN / 4f)
                 updatePointerTo(0, mid - Offset(half, 0f))
                 updatePointerTo(1, mid + Offset(half, 0f))
                 move()
@@ -449,5 +452,8 @@ class CropGestureTest {
          * which a spread does not zoom.
          */
         const val SPAN = 220f
+
+        /** How far inside the stage's edge a finger lands. */
+        const val EDGE_ROOM = 15f
     }
 }
