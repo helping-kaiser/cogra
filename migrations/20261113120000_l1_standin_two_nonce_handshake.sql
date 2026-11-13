@@ -56,9 +56,9 @@ ALTER TABLE l1_acts
     ADD COLUMN dependency_nonce BYTEA NOT NULL,
     -- The content salt is host-drawn opening material of the content
     -- commitment: held from seal until acceptance, or until a redaction
-    -- drops it from an act that never got there.
+    -- drops it from an act that never got there — and only until then.
     ADD CONSTRAINT l1_acts_content_salt_held_until_acceptance CHECK (
-        content_salt IS NOT NULL OR status = 'accepted' OR carriage_dropped_at IS NOT NULL
+        (content_salt IS NULL) = (status = 'accepted' OR carriage_dropped_at IS NOT NULL)
     );
 
 COMMENT ON COLUMN l1_acts.content_salt IS

@@ -1,19 +1,24 @@
 //! ´mod:module:seal´
 //!
 //! Host side of the admission handshake's two relay legs
-//! (layer1-interface.md §8.2). `seal` verifies the pre-signed proposal,
-//! adds salts, forms the binding commitments, and seals the verified
-//! act; `approve` verifies the approval witness over that exact verified
-//! act and its seal. Ordering admits only a verified act carrying a valid
+//! (layer1-interface.md §8.2). `seal` runs the act checks on a submission,
+//! adds salts, forms the binding commitments, and seals the verified act;
+//! `approve` verifies the approval witness over that exact verified act
+//! and its seal. Ordering admits only a verified act carrying a valid
 //! approval witness.
+//!
+//! The submission carries no content pair, and this host never asks for
+//! one: every act check, both commitments and the seal are computed from
+//! the body, the dependency list and nonce, the opaque content pre-digest,
+//! the pre-commitment and the pre-signature (§8.2, "Verified act").
 
 use common::l1::census::FamilyKind;
-use common::l1::crypto::{self, tags};
-use common::l1::handshake::{
-    ApprovalWitness, EDITION, PreSignedProposal, SealFrame, VerifiedAct, approval_digest,
-    content_commitment, deps_commitment, seal_message,
-};
+use common::l1::crypto;
+use common::l1::handshake::{ApprovalWitness, approval_digest};
 use common::l1::identifier::{ActId, NodeId};
+use common::l1::proposal::{
+    CONTENT_EDITION, DEPENDENCY_EDITION, SealedAct, Submission, SubmissionError, VerifiedAct,
+};
 use rand::RngCore;
 use rand::rngs::OsRng;
 
@@ -28,8 +33,8 @@ fn formation(msg: impl Into<String>) -> StandInError {
     StandInError::Formation(msg.into())
 }
 
-/// Verifies a pre-signed proposal and seals it into a verified act
-/// (layer1-interface.md §8.2), enforcing:
+/// Runs the act checks on a submission and seals it into a verified act
+/// (layer1-interface.md §8.2, "Verified act"), enforcing:
 ///
 /// - **Formation.** The act identifier is well-formed by construction of
 ///   the typed body; endpoint typing and the (p_d, p_i) tuple are
@@ -47,15 +52,13 @@ fn formation(msg: impl Into<String>) -> StandInError {
 ///   toward an existing Offer would hang a second Item's incidence on
 ///   it — real raw incidence, live in CAN and sentiment even where no
 ///   fold reads it. Offer revision is a new Offer.
-/// - **Carriage and dependency bounds**, checked against
-///   `StandInConfig::max_payload_bytes` and `MAX_DEPS`.
-/// - **The nonce's checkable part** (layer1-interface.md §8.2, "Proposal
-///   pre-commitment"): its length is the published entropy floor
-///   `crypto::SALT_LEN`, and it is fresh across the author's acts. The
-///   nonce itself is removed at acceptance, so non-reuse is held by its
-///   digest ([`crypto::nonce_digest`]), which the act's row keeps for
-///   good under `UNIQUE (author, nonce_digest)`: a reuse is refused as a
-///   conflict whether the first act is still in custody or accepted.
+/// - **Dependency bounds**, checked against `MAX_DEPS`. The payload bound
+///   is a carriage check and the content nonce's format, length,
+///   freshness and non-reuse are carriage obligations, none of them a
+///   condition of the act (§8.2, "Verified act" and "Proposal
+///   pre-commitment"); with no pair here, they are the carrier's. The
+///   dependency nonce has no rule of its own beyond being the bytes the
+///   dependency pre-digest recomputes from.
 /// - **Storable sequence.** The author-local sequence is a `u64` in the
 ///   identifier and a BIGINT in storage. A value above `i64::MAX` would
 ///   store as a negative beside an `act_id` text carrying the unsigned
@@ -63,16 +66,19 @@ fn formation(msg: impl Into<String>) -> StandInError {
 ///   so it is refused where the two meet rather than narrowing the
 ///   identifier grammar the clients share.
 /// - **Authorship.** The stated author's key binds to the address, and
-///   the pre-commitment verifies over the exact proposal. Key
-///   consistency across the author's history needs no separate check:
-///   the address derives from the key, so this binding already pins it.
+///   the pre-commitment recomputes from the body, the received content
+///   pre-digest and the dependency pre-digest formed here, under a
+///   pre-signature that verifies over it. Key consistency across the
+///   author's history needs no separate check: the address derives from
+///   the key, so this binding already pins it.
 /// - **Host additions.** Fresh domain-separated salts meeting the
-///   entropy floor, the binding and concealing commitments, and the
-///   host seal.
+///   entropy floor, the content commitment over the content pre-digest,
+///   the dependency commitment over the dependency list, and the host
+///   seal over the header. The content pre-digest is not stored: the
+///   header does not carry it and nothing after the seal reads it.
 /// - **Persistence.** The insert is the uniqueness check — a second
 ///   record claiming the same act identifier, or reusing the
-///   author-local sequence, is equivocation, and one reusing the
-///   author's nonce is refused alike; neither produces a Layer-1
+///   author-local sequence, is equivocation and produces no Layer-1
 ///   object. Sealed-but-never-approved rows are never collected:
 ///   unbounded, but stand-in-scoped, since the whole l1_* table set
 ///   drops at the swap, so a reaper here would only be machinery for
@@ -82,9 +88,9 @@ fn formation(msg: impl Into<String>) -> StandInError {
 ///   act whose key was never learned.
 pub(crate) async fn seal(
     standin: &StandIn,
-    pre: PreSignedProposal,
-) -> Result<VerifiedAct, StandInError> {
-    let body = &pre.proposal.body;
+    submission: Submission,
+) -> Result<SealedAct, StandInError> {
+    let body = &submission.body;
     let family = body.family;
 
     let act_id = ActId::new(&body.author, body.seq, family)
@@ -115,21 +121,7 @@ pub(crate) async fn seal(
         ));
     }
 
-    if pre.proposal.payload.len() > standin.config().max_payload_bytes {
-        return Err(formation(format!(
-            "payload exceeds M_payload ({} > {})",
-            pre.proposal.payload.len(),
-            standin.config().max_payload_bytes
-        )));
-    }
-    if pre.nonce.len() != crypto::SALT_LEN {
-        return Err(formation(format!(
-            "the proposal nonce is {} bytes; the entropy floor is {}",
-            pre.nonce.len(),
-            crypto::SALT_LEN
-        )));
-    }
-    if pre.proposal.deps.len() + body.asserted_parents.len() > MAX_DEPS {
+    if submission.deps.len() + body.asserted_parents.len() > MAX_DEPS {
         return Err(formation("dependency list exceeds the bound"));
     }
     if body.seq > i64::MAX as u64 {
@@ -139,17 +131,11 @@ pub(crate) async fn seal(
         )));
     }
 
-    let author_key = crypto::verifying_key_from_bytes(&pre.author_pubkey)
+    let author_key = crypto::verifying_key_from_bytes(&submission.author_pubkey)
         .ok_or_else(|| StandInError::Authentication("malformed author public key".into()))?;
     if crypto::address_of(&author_key) != body.author {
         return Err(StandInError::Authentication(
             "author public key does not bind to the author address".into(),
-        ));
-    }
-    let pre_commitment = pre.pre_commitment();
-    if !crypto::verify_digest(&author_key, &pre_commitment, &pre.pre_signature) {
-        return Err(StandInError::Authentication(
-            "pre-commitment signature does not verify".into(),
         ));
     }
 
@@ -157,57 +143,32 @@ pub(crate) async fn seal(
     let mut deps_salt = vec![0u8; crypto::SALT_LEN];
     OsRng.fill_bytes(&mut content_salt);
     OsRng.fill_bytes(&mut deps_salt);
-    let content_commitment = content_commitment(
-        &act_id,
-        &pre_commitment,
-        &content_salt,
-        &pre.proposal.payload,
-    )
-    .to_vec();
-    let deps_commitment =
-        deps_commitment(&act_id, &pre_commitment, &deps_salt, &pre.proposal.deps).to_vec();
-
-    let mut act = VerifiedAct {
-        proposal: pre.proposal.clone(),
-        author_pubkey: pre.author_pubkey.clone(),
-        nonce: pre.nonce.clone(),
-        pre_signature: pre.pre_signature.clone(),
-        pre_commitment: pre_commitment.to_vec(),
-        content_salt,
-        deps_salt,
-        content_commitment,
-        deps_commitment,
-        content_edition: EDITION,
-        deps_edition: EDITION,
-        host_seal: vec![],
-    };
     let host_key = standin.host_key().await?;
-    act.host_seal = crypto::sign(&host_key, tags::HOST_SEAL, &act.seal_msg());
+    let sealed = submission
+        .seal(&host_key, content_salt, deps_salt)
+        .map_err(|e: SubmissionError| StandInError::Authentication(e.to_string()))?;
+    let act = &sealed.act;
 
     let parents: Vec<String> = body
         .asserted_parents
         .iter()
         .map(|p| p.to_string())
         .collect();
-    let deps: Vec<String> = pre.proposal.deps.iter().map(|d| d.to_string()).collect();
-    let payload_len = i64::try_from(pre.proposal.payload.len())
-        .map_err(|_| formation("payload length exceeds the stored range"))?;
-    let nonce_digest = crypto::nonce_digest(&body.author, &pre.nonce);
+    let deps: Vec<String> = submission.deps.iter().map(|d| d.to_string()).collect();
     let mut tx = standin.pool().begin().await?;
     let inserted = sqlx::query!(
         "INSERT INTO l1_acts (
             act_id, author, seq, family, author_pubkey, middle, target,
             p_d, p_i, settlement_ref, license, asserted_parents, deps,
-            payload, payload_len, nonce, pre_signature, pre_commitment,
-            content_salt, deps_salt, content_commitment, deps_commitment,
-            host_seal, nonce_digest, status
-         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,'sealed')
+            dependency_nonce, pre_signature, pre_commitment, content_salt,
+            deps_salt, content_commitment, deps_commitment, host_seal, status
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,'sealed')
          ON CONFLICT DO NOTHING",
         act_id.to_string(),
         body.author,
         body.seq as i64,
         family.as_str(),
-        &pre.author_pubkey,
+        &submission.author_pubkey,
         body.middle.as_ref().map(|m| m.to_string()),
         body.target.to_string(),
         body.p_d,
@@ -216,63 +177,69 @@ pub(crate) async fn seal(
         body.license,
         &parents,
         &deps,
-        &pre.proposal.payload,
-        payload_len,
-        &pre.nonce,
-        &pre.pre_signature,
+        &submission.dependency_nonce,
+        &act.pre_signature,
         &act.pre_commitment,
-        &act.content_salt,
-        &act.deps_salt,
+        &sealed.content_salt,
+        &sealed.dependency_salt,
         &act.content_commitment,
-        &act.deps_commitment,
-        &act.host_seal,
-        &nonce_digest[..],
+        &act.dependency_commitment,
+        &sealed.host_seal,
     )
     .execute(&mut *tx)
     .await?;
     if inserted.rows_affected() == 0 {
-        let identifier_taken = sqlx::query_scalar!(
-            r#"SELECT EXISTS(
-                   SELECT 1 FROM l1_acts WHERE act_id = $1 OR (author = $2 AND seq = $3)
-               ) AS "taken!""#,
-            act_id.to_string(),
-            body.author,
-            body.seq as i64,
-        )
-        .fetch_one(&mut *tx)
-        .await?;
-        return Err(StandInError::Conflict(if identifier_taken {
-            format!("act identifier {act_id} (or its author-local sequence) already exists")
-        } else {
-            format!("the proposal nonce of {act_id} was already used by its author")
-        }));
+        return Err(StandInError::Conflict(format!(
+            "act identifier {act_id} (or its author-local sequence) already exists"
+        )));
     }
 
     sqlx::query!(
         "INSERT INTO l1_accounts (address, pubkey) VALUES ($1, $2)
          ON CONFLICT (address) DO UPDATE SET pubkey = COALESCE(l1_accounts.pubkey, EXCLUDED.pubkey)",
         body.author,
-        &pre.author_pubkey,
+        &submission.author_pubkey,
     )
     .execute(&mut *tx)
     .await?;
     tx.commit().await?;
 
-    Ok(act)
+    Ok(sealed)
 }
 
-/// Reads back the act stored under an identifier: its structural record,
-/// and — while the host still holds the handshake custody — the exact
-/// sealed object the host returned to its author, with whether its
-/// approval is recorded (crate::StandIn::sealed_act).
+/// The verified-act header a stored row was sealed as. Every act this
+/// host seals carries the one content and one dependency edition, so the
+/// editions are the constants, not columns.
+fn stored_header(
+    body: common::l1::StructuralBody,
+    pre_commitment: Vec<u8>,
+    pre_signature: Vec<u8>,
+    content_commitment: Vec<u8>,
+    dependency_commitment: Vec<u8>,
+) -> VerifiedAct {
+    VerifiedAct {
+        body,
+        pre_commitment,
+        pre_signature,
+        content_commitment,
+        dependency_commitment,
+        content_edition: CONTENT_EDITION,
+        dependency_edition: DEPENDENCY_EDITION,
+    }
+}
+
+/// Reads back the act stored under an identifier: its structural record
+/// and dependency opening, and — while the host still holds the content
+/// salt — the exact sealed act the host returned to its author, with
+/// whether its approval is recorded (crate::StandIn::sealed_act).
 pub(crate) async fn sealed_act(
     standin: &StandIn,
     act_id: &ActId,
 ) -> Result<Option<crate::StoredAct>, StandInError> {
     let row = sqlx::query!(
-        "SELECT author, seq, family, author_pubkey, middle, target, p_d, p_i,
-                settlement_ref, license, asserted_parents, deps, payload,
-                payload_len, nonce, pre_signature, pre_commitment,
+        "SELECT author, seq, family, middle, target, p_d, p_i,
+                settlement_ref, license, asserted_parents, deps,
+                dependency_nonce, pre_signature, pre_commitment,
                 content_salt, deps_salt, content_commitment, deps_commitment,
                 host_seal, status
          FROM l1_acts WHERE act_id = $1",
@@ -288,36 +255,24 @@ pub(crate) async fn sealed_act(
         .map(|d| ActId::parse(d))
         .collect::<Result<Vec<_>, _>>()
         .map_err(|e| StandInError::Formation(e.to_string()))?;
-    let payload_len = u64::try_from(row.payload_len).map_err(|_| {
-        StandInError::Formation(format!("stored act {act_id} has a negative length"))
-    })?;
-    let sealed = match (row.payload, row.content_salt, row.nonce) {
-        (Some(payload), Some(content_salt), Some(nonce)) => Some(VerifiedAct {
-            proposal: common::l1::handshake::Proposal {
-                body: body.clone(),
-                payload,
-                deps: deps.clone(),
-            },
-            author_pubkey: row.author_pubkey,
-            nonce,
-            pre_signature: row.pre_signature,
-            pre_commitment: row.pre_commitment.clone(),
-            content_salt,
-            deps_salt: row.deps_salt,
-            content_commitment: row.content_commitment.clone(),
-            deps_commitment: row.deps_commitment,
-            content_edition: EDITION,
-            deps_edition: EDITION,
-            host_seal: row.host_seal,
-        }),
-        _ => None,
-    };
+    let sealed = row.content_salt.map(|content_salt| SealedAct {
+        act: stored_header(
+            body.clone(),
+            row.pre_commitment.clone(),
+            row.pre_signature,
+            row.content_commitment.clone(),
+            row.deps_commitment,
+        ),
+        content_salt,
+        dependency_salt: row.deps_salt,
+        host_seal: row.host_seal,
+    });
     Ok(Some(crate::StoredAct {
         body,
         deps,
+        dependency_nonce: row.dependency_nonce,
         pre_commitment: row.pre_commitment,
         content_commitment: row.content_commitment,
-        payload_len,
         sealed,
         approved: row.status != "sealed",
     }))
@@ -348,15 +303,14 @@ pub(crate) async fn approve(
     }
 
     let body = stored_body!(row).to_body()?;
-    let seal_msg = seal_message(&SealFrame {
-        body: &body,
-        pre_commitment: &row.pre_commitment,
-        pre_signature: &row.pre_signature,
-        content_commitment: &row.content_commitment,
-        deps_commitment: &row.deps_commitment,
-        content_edition: EDITION,
-        deps_edition: EDITION,
-    });
+    let seal_msg = stored_header(
+        body,
+        row.pre_commitment,
+        row.pre_signature,
+        row.content_commitment,
+        row.deps_commitment,
+    )
+    .seal_message();
     let author_key = crypto::verifying_key_from_bytes(&row.author_pubkey)
         .ok_or_else(|| StandInError::Authentication("stored author key malformed".into()))?;
     if !crypto::verify_digest(

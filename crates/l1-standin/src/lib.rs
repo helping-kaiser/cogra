@@ -34,8 +34,9 @@ use common::l1::handshake::{
     AccountBalance, ApprovalWitness, BoundaryPolicy, BurnSettlement, BurnTicket, EMPTY_BOUNDARY,
     EpochPackage,
 };
+use common::l1::StructuralBody;
 use common::l1::identifier::ActId;
-use common::l1::{PreSignedProposal, StructuralBody, VerifiedAct};
+use common::l1::proposal::{SealedAct, Submission};
 use ed25519_dalek::SigningKey;
 use rand::RngCore;
 use rand::rngs::OsRng;
@@ -57,8 +58,11 @@ pub struct StandInConfig {
     /// projections (layer1-interface.md §8.4), stated in bytes of the
     /// deployment's declared payload encoding. That encoding is the
     /// identity over the proposal's payload bytes, which already are the
-    /// encoded envelope ([`Declaration::payload_encoding`]), so the bound
-    /// is compared against their length as they arrive.
+    /// encoded envelope ([`Declaration::payload_encoding`]).
+    ///
+    /// Declared here, enforced by whoever carries the content pair: it is
+    /// a carriage bound, not an act check (§8.2, "Verified act"), and this
+    /// host never receives the pair.
     pub max_payload_bytes: usize,
     /// How many epoch closes an admission burn waits before it settles
     /// (`L1_STANDIN_SETTLEMENT_DELAY_EPOCHS`, development.md). Zero — the
@@ -194,21 +198,23 @@ pub enum StandInError {
 /// An act read back from the host's store, and whether an approval
 /// witness has been recorded for it.
 ///
-/// The structural record — body, dependency list, pre-commitment, the
-/// content commitment (the witness) and the payload length — is held in
-/// every status. The payload, content salt and nonce are transient
-/// handshake custody: held from seal until acceptance, when the host
-/// keeps only the witness (data-model.md "Act payload carriage").
+/// The structural record — body, pre-commitment and the content commitment
+/// (the witness) — and the dependency opening — list, nonce and salt — are
+/// held in every status. The host never held the payload or the content
+/// nonce (layer1-interface.md §8.2, "Verified act"); a crash-recovering
+/// author rebuilds its pre-signed proposal from its own pair and the
+/// dependency nonce read back here.
 #[derive(Debug, Clone, PartialEq)]
 pub struct StoredAct {
     pub body: StructuralBody,
     pub deps: Vec<ActId>,
+    pub dependency_nonce: Vec<u8>,
     pub pre_commitment: Vec<u8>,
     pub content_commitment: Vec<u8>,
-    pub payload_len: u64,
-    /// The exact sealed object as returned to its author at seal time,
-    /// while the host still holds its custody; `None` once accepted.
-    pub sealed: Option<VerifiedAct>,
+    /// The exact sealed act as returned to its author, while the host
+    /// still holds the content salt it was sealed with; `None` once
+    /// accepted, or once a redaction dropped the salt.
+    pub sealed: Option<SealedAct>,
     pub approved: bool,
 }
 
@@ -427,10 +433,11 @@ impl StandIn {
         close::current_theta(self).await
     }
 
-    /// Relay leg 1 — seal: verify the pre-signed proposal, add salts and
-    /// commitments, seal the verified act (seal.rs).
-    pub async fn seal(&self, pre: PreSignedProposal) -> Result<VerifiedAct, StandInError> {
-        seal::seal(self, pre).await
+    /// Relay leg 1 — seal: run the act checks on the submission, add salts
+    /// and commitments, seal the verified act (seal.rs). The submission
+    /// carries no payload and no content nonce.
+    pub async fn seal(&self, submission: Submission) -> Result<SealedAct, StandInError> {
+        seal::seal(self, submission).await
     }
 
     /// Crash-recovery read (a substrate-side surface like `credit_burn`
@@ -442,23 +449,21 @@ impl StandIn {
         seal::sealed_act(self, act_id).await
     }
 
-    /// Drops the transient custody — payload, content salt and proposal
-    /// nonce — of every listed act that still holds it, returning how many
-    /// acts this call emptied.
+    /// Drops the content salt — the host-drawn opening material of the
+    /// content commitment — of every listed act that still holds it,
+    /// returning how many acts this call emptied.
     ///
-    /// Acceptance already empties an act (the host is witness-only from
-    /// then on), so what a redaction finds here is the residue that never
-    /// reached acceptance: a sealed act, or an approved one deferred for a
-    /// missing dependency or an insolvent author. The drop is recorded on
-    /// the row, and the act stays exactly as orderable as it was — nothing
-    /// after the seal reads those three values. Idempotent: an accepted or
-    /// already-dropped act is not touched.
+    /// Acceptance already drops it, so what a redaction finds here is the
+    /// residue that never reached acceptance: a sealed act, or an approved
+    /// one deferred for a missing dependency or an insolvent author. The
+    /// drop is recorded on the row, and the act stays exactly as orderable
+    /// as it was — nothing after the seal reads the salt. Idempotent: an
+    /// accepted or already-dropped act is not touched.
     pub async fn drop_carriage(&self, act_ids: &[String]) -> Result<u64, StandInError> {
         Ok(sqlx::query!(
             "UPDATE l1_acts
-             SET payload = NULL, content_salt = NULL, nonce = NULL,
-                 carriage_dropped_at = NOW()
-             WHERE act_id = ANY($1) AND payload IS NOT NULL",
+             SET content_salt = NULL, carriage_dropped_at = NOW()
+             WHERE act_id = ANY($1) AND content_salt IS NOT NULL",
             act_ids,
         )
         .execute(&self.pool)

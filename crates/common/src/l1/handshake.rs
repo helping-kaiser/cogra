@@ -316,8 +316,6 @@ pub struct PublishedRecord {
     pub act_time: i64,
     /// The act's place in its epoch, numbered from [`FIRST_POSITION`].
     pub position: i64,
-    /// Non-empty payload committed under the witness.
-    pub payload_marked: bool,
     /// The content commitment — the payload witness.
     pub payload_witness: Vec<u8>,
     pub legs: Vec<PublishedLeg>,
@@ -760,7 +758,6 @@ mod tests {
                     epoch,
                     act_time: 1,
                     position: *position,
-                    payload_marked: false,
                     payload_witness: vec![],
                     legs: vec![],
                 })
