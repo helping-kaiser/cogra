@@ -352,9 +352,9 @@ describe("the reply wizard", () => {
     it("carries the license row, on the default", async () => {
       draw();
       await toSeal();
-      expect(screen.getByTestId("reply-seal")).toHaveTextContent(
-        "Public domain — nobody owes you a name, and uses go unlogged.",
-      );
+      // The reading is the pair's name alone (round 42, `licenseSummary`).
+      expect(screen.getByTestId("reply-seal")).toHaveTextContent("Public domain");
+      expect(screen.getByTestId("reply-seal")).not.toHaveTextContent("nobody owes you a name");
       expect(screen.getByTestId("reply-seal")).not.toHaveTextContent("your default");
       expect(screen.getByTestId("reply-open-license")).toBeInTheDocument();
     });

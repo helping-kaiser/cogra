@@ -88,9 +88,8 @@ export function SensitiveSheet({
           ceiling, and the growing box is the one child here that can give
           the room back. */}
       <div className="flex min-h-0 flex-col gap-3">
-        <p className="m-0 flex-none text-body-medium">
-          Veils the pictures and the words until a reader chooses to look.
-        </p>
+        {/* No line under the title (seam 314): the sheet's "?" says what the
+            mark does (copy-voice *Marking as sensitive*; ComposeSensitive.jsx). */}
         {/* ONE LINE TO START, AND IT GROWS (jakob 2026-09-22). */}
         <TextField
           label="Why?"
