@@ -41,7 +41,11 @@ import React from "react";
    the minimum the picture just fills the window (1×, nothing outside the
    picture can show), at the maximum it stands at about 4×. The viewport
    itself takes focus, and the arrow keys pan the picture inside the window,
-   stopping where an edge of the picture meets the window's edge. A pinch
+   stopping where an edge of the picture meets the window's edge. THE POST
+   CROP HAS ONE CEILING under every shape (round 48, ComposeCrop.md): about 4×
+   the Tall frame's fill, the largest, so a shape switch — which never shrinks
+   a picture — never meets a ceiling below the scale it keeps. Every figure
+   here is the stage at a 390 column; the stage scales with the column. A pinch
    moves the slider with it, and the slider moves the picture: one value, two
    ways to set it. */
 

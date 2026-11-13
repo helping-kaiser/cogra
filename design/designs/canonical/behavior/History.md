@@ -141,3 +141,5 @@ ALWAYS the back arrow reads Back to your profile
 ALWAYS history.card.actionRow.stance.pending and history.commentCard.actionRow.stance.pending read Waiting for your key under the kept pick's face GIVEN a pick is kept pending on the card's thing and the key is not on this device
 
 ALWAYS history.card.actionRow.stance.pending and history.commentCard.actionRow.stance.pending read Waiting for your review under the kept pick's face GIVEN the key is on this device and the kept picks' review was left unsigned
+
+ALWAYS history.searchField.input fills its row, whatever the query's length, and a board's width for it is its sample text's

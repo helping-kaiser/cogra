@@ -21,7 +21,10 @@ import { Icon } from "../navigation/Icon.jsx";
 
    This is a STATIC-RENDER-FRIENDLY control: `query` is the shown text and a
    caret bar stands in for focus on prototype boards; the product binds a real
-   input in its place.
+   input in its place. THAT INPUT FILLS ITS ROW (`flex: 1`, `minWidth: 0`, as
+   the bound branch below draws it); the static span hugs its sample text, so a
+   board's measured width of `searchField.input` is the sample's, never a claim
+   about the field (round 48, seam 323-12).
 
    `error` IS THE FIELD-ERROR STATE IN THE PILL'S IDIOM (the caps-affordance
    round). The one drawn field error is an `--error` outline with the refusal in

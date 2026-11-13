@@ -46,6 +46,10 @@ ALWAYS the zoom slider stands under the crop on both platforms, its thumb at the
 
 WHEN move the zoom slider -> the picture zooms in place AND NEVER below the fill or past about 4×
 
+ALWAYS the post crop has one zoom ceiling under every shape, about 4× the Tall frame's fill, so a shape switch never has to shrink a picture to meet a lower one
+
+ALWAYS the stage scales with the column width, its 390 × 488 and every frame inside it being the figures at a 390 column
+
 WHEN press an arrow key GIVEN the crop has focus -> the picture moves 1 % that way AND NEVER past where its edge meets the crop's
 
 WHEN press an arrow key with Shift held GIVEN the crop has focus -> the picture moves 10 % that way AND NEVER past where its edge meets the crop's
