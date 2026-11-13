@@ -3277,7 +3277,7 @@ class ContentScreensTest {
         compose.onNodeWithTag("feed.menuSheet.hide").performClick()
         compose.waitForIdle()
         assertThat(host.currentSnackbarData?.visuals?.message)
-            .isEqualTo("@ada is hidden — their posts stay out of your feed.")
+            .isEqualTo("@ada is hidden.")
         assertThat(host.currentSnackbarData?.visuals?.actionLabel).isEqualTo("Undo")
 
         host.currentSnackbarData?.performAction()

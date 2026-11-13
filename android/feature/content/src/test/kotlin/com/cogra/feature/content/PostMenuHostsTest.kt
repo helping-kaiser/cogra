@@ -237,7 +237,7 @@ class PostMenuHostsTest {
         compose.waitForIdle()
         assertThat(hiddenRepository.hides).containsExactly(ada.id to null)
         compose.onNodeWithTag("history.card:p1").assertExists()
-        assertThat(snackbarMessage()).isEqualTo("@ada is hidden — their posts stay out of your feed.")
+        assertThat(snackbarMessage()).isEqualTo("@ada is hidden.")
     }
 
     /** HistoryPostMenu.md:17 — the row reads `Unhide @ada` while the author is hidden, under its one name. */
@@ -261,7 +261,7 @@ class PostMenuHostsTest {
         assertThat(hiddenRepository.unhides).containsExactly(ada.id)
         assertThat(hiddenRepository.hides).isEmpty()
         compose.onNodeWithTag("history.card:p1").assertExists()
-        assertThat(snackbarMessage()).isEqualTo("@ada is unhidden — their posts can reach your feed again.")
+        assertThat(snackbarMessage()).isEqualTo("@ada is unhidden.")
         assertThat(host.currentSnackbarData?.visuals?.actionLabel).isEqualTo("Undo")
 
         host.currentSnackbarData?.performAction()
@@ -298,7 +298,7 @@ class PostMenuHostsTest {
         compose.onNodeWithTag("saved.menuSheet.hide").assertTextEquals("Unhide @ada").performClick()
         compose.waitForIdle()
         assertThat(hiddenRepository.unhides).containsExactly(ada.id)
-        compose.onNodeWithText("@ada is unhidden — their posts can reach your feed again.").assertExists()
+        compose.onNodeWithText("@ada is unhidden.").assertExists()
     }
 
     /**
@@ -362,7 +362,7 @@ class PostMenuHostsTest {
         compose.onNodeWithTag("profile.menuSheet.hide").assertTextEquals("Unhide @ada").performClick()
         compose.waitForIdle()
         assertThat(hiddenRepository.unhides).containsExactly(ada.id)
-        assertThat(snackbarMessage()).isEqualTo("@ada is unhidden — their posts can reach your feed again.")
+        assertThat(snackbarMessage()).isEqualTo("@ada is unhidden.")
     }
 
     // -- The post detail --
@@ -375,7 +375,7 @@ class PostMenuHostsTest {
         compose.onNodeWithTag("postDetail.menuSheet.hide").assertTextEquals("Unhide @ada").performClick()
         compose.waitForIdle()
         assertThat(hiddenRepository.unhides).containsExactly(ada.id)
-        compose.onNodeWithText("@ada is unhidden — their posts can reach your feed again.").assertExists()
+        compose.onNodeWithText("@ada is unhidden.").assertExists()
         compose.onNodeWithTag("postDetail.menuSheet").assertDoesNotExist()
     }
 
@@ -414,7 +414,7 @@ class PostMenuHostsTest {
         compose.onNodeWithTag("hide_row").performClick()
         compose.waitForIdle()
         assertThat(hiddenRepository.unhides).containsExactly("del-id")
-        assertThat(snackbarMessage()).isEqualTo("This account is unhidden — its posts can reach your feed again.")
+        assertThat(snackbarMessage()).isEqualTo("This account is unhidden.")
     }
 
     /** GuestGate.md:5 — a guest's tap on the hide row raises the join prompt and sends nothing. */
