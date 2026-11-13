@@ -314,11 +314,9 @@ fun CommentsSheet(
     val guard = rememberCommentGuard(state.commentLocked, snackbar)
     val listState = rememberLazyListState()
     ThreadPlacement(state, listState, restoreTo, onRestored, onLanded)
-    // WHICH OF THE READER'S OWN COMMENTS THE THINK-TWICE DIALOG IS UP FOR
-    // (CommentMenuOwn.md:11): the menu closes and the dialog comes up over the
-    // thread, which stays where the reader opened the menu.
-    var removeFor by remember { mutableStateOf<CommentView?>(null) }
-    var reportFor by remember { mutableStateOf<String?>(null) }
+    // WHICH CONFIRM STANDS OVER THE THREAD ([ThreadConfirm]): the menu closes and
+    // it comes up over the thread, which stays where the reader opened the menu.
+    var confirm by remember { mutableStateOf<ThreadConfirm?>(null) }
     val depart: (() -> Unit) -> Unit = { go ->
         onDepart(
             CommentsScroll(
@@ -379,8 +377,8 @@ fun CommentsSheet(
                 onOpenTopic = onOpenTopic,
                 onReference = onReference,
                 onLicense = onLicense,
-                onRemoveComment = { comment -> removeFor = comment },
-                onReportComment = { comment -> reportFor = comment.id },
+                onRemoveComment = { comment -> confirm = ThreadConfirm.Remove(comment) },
+                onReportComment = { comment -> confirm = ThreadConfirm.Report(comment.id) },
                 stanceControl = stanceControl,
             )
         }
@@ -390,8 +388,31 @@ fun CommentsSheet(
     // the dialog is its own window, raised after the sheet's. Taken, only the
     // one comment gives way to its mark — the list is not re-read, so the
     // reader's place and every unfolded branch hold (CommentRemoved.md:19).
-    removeFor?.let { comment -> CommentRemoveConfirm(comment, onClose = { removeFor = null }) }
-    reportFor?.let { id -> ThreadReport(id, reportSheet, snackbar, onClose = { reportFor = null }) }
+    ThreadConfirms(confirm, reportSheet, snackbar, onClose = { confirm = null })
+}
+
+/**
+ * The confirm over the thread: the think-twice dialog for the reader's own
+ * comment (CommentMenuOwn.md:19), or another's report (CommentMenu.md:29).
+ */
+private sealed interface ThreadConfirm {
+    data class Remove(val comment: CommentView) : ThreadConfirm
+
+    data class Report(val commentId: String) : ThreadConfirm
+}
+
+@Composable
+private fun ThreadConfirms(
+    confirm: ThreadConfirm?,
+    reportSheet: ReportSheetSlot,
+    snackbar: SnackbarHostState,
+    onClose: () -> Unit,
+) {
+    when (confirm) {
+        is ThreadConfirm.Remove -> CommentRemoveConfirm(confirm.comment, onClose = onClose)
+        is ThreadConfirm.Report -> ThreadReport(confirm.commentId, reportSheet, snackbar, onClose)
+        null -> Unit
+    }
 }
 
 /**
