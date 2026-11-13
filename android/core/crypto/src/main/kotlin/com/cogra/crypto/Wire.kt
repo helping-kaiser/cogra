@@ -1,7 +1,8 @@
 // Transport encodings for the handshake objects that cross the API
-// (reference: crates/common/src/l1/wire.rs) — the prepared proposal the
-// device signs (`canonicalProposal`), the sealed verified act it
-// approves (`verifiedAct`), and the pre-commitment blob it submits (the
+// (reference: crates/common/src/l1/wire.rs for the proposal,
+// crates/common/src/l1/proposal/transport.rs for the rest) — the prepared
+// proposal the device signs (`canonicalProposal`), the sealed verified act
+// it approves (`verifiedAct`), and the pre-commitment blob it submits (the
 // opaque `signature` input). The wire form is versioned CBOR over the
 // same deterministic subset as the signing bases; the structural body
 // travels as its exact canonical bytes, so what the device parses is
@@ -12,24 +13,48 @@ package com.cogra.crypto
 /** A wire blob that does not parse. */
 class WireException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
-/** The wire format version every envelope opens with. */
-private const val WIRE_VERSION = 1UL
+/** The wire format version of the prepared proposal. */
+private const val PROPOSAL_WIRE_VERSION = 1UL
 
 /**
- * Items in a verified act's wire array: version, body, payload, deps,
- * author key, nonce, pre-signature, pre-commitment, both salts, both
- * commitments, both editions, and the host seal.
+ * The wire format version of the two-nonce handshake's envelopes — the
+ * pre-commitment blob and the sealed act.
  */
-private const val VERIFIED_ACT_ITEMS = 15UL
+private const val HANDSHAKE_WIRE_VERSION = 2UL
 
-/** The device's pre-commitment leg: nonce plus pre-commitment signature. */
-class PreCommitment(val nonce: ByteArray, val preSignature: ByteArray) {
+/** Items in the pre-commitment blob: version, content nonce, dependency nonce, pre-signature. */
+private const val PRE_COMMITMENT_ITEMS = 4UL
+
+/**
+ * Items in a sealed act's wire array: version, body, pre-commitment,
+ * pre-signature, both commitments, both editions, both salts, and the
+ * host seal.
+ */
+private const val SEALED_ACT_ITEMS = 11UL
+
+/**
+ * The device's pre-commitment leg, as `ProposalSignatureInput.signature`
+ * carries it: both nonces and the pre-commitment signature. The author's
+ * public key never rides the wire — the backend binds it from the
+ * account's identity association.
+ */
+class PreCommitmentBlob(
+    val contentNonce: ByteArray,
+    val dependencyNonce: ByteArray,
+    val preSignature: ByteArray,
+) {
     override fun equals(other: Any?): Boolean =
-        other is PreCommitment &&
-            nonce.contentEquals(other.nonce) &&
+        other is PreCommitmentBlob &&
+            contentNonce.contentEquals(other.contentNonce) &&
+            dependencyNonce.contentEquals(other.dependencyNonce) &&
             preSignature.contentEquals(other.preSignature)
 
-    override fun hashCode(): Int = 31 * nonce.contentHashCode() + preSignature.contentHashCode()
+    override fun hashCode(): Int {
+        var result = contentNonce.contentHashCode()
+        result = 31 * result + dependencyNonce.contentHashCode()
+        result = 31 * result + preSignature.contentHashCode()
+        return result
+    }
 }
 
 private fun encodeBodyBytes(body: StructuralBody): ByteArray = body.canonicalBytes()
@@ -82,7 +107,7 @@ private fun decodeDeps(d: CborDecoder): List<ActId> {
 fun encodeProposal(p: Proposal): ByteArray {
     val e = CborEncoder()
     e.array(4u)
-    e.uint(WIRE_VERSION)
+    e.uint(PROPOSAL_WIRE_VERSION)
     e.bytes(encodeBodyBytes(p.body))
     e.bytes(p.payload)
     e.deps(p.deps)
@@ -94,7 +119,7 @@ fun decodeProposal(bytes: ByteArray): Proposal {
     try {
         if (d.array() != 4UL) throw WireException("malformed proposal")
         val version = d.uint()
-        if (version != WIRE_VERSION) throw WireException("unsupported wire version $version")
+        if (version != PROPOSAL_WIRE_VERSION) throw WireException("unsupported wire version $version")
         val body = decodeBody(d.bytes())
         val payload = d.bytes()
         val deps = decodeDeps(d)
@@ -108,90 +133,92 @@ fun decodeProposal(bytes: ByteArray): Proposal {
 }
 
 /**
- * The host-sealed verified act, as `StagedWrite.verifiedAct` carries it
- * — every host-added field visible to the device before approval.
+ * Opens a handshake envelope: its version is judged before its arity, so
+ * a frame of another version — the one-nonce frames among them — is
+ * refused as that version rather than as a malformed frame.
  */
-fun encodeVerifiedAct(act: VerifiedAct): ByteArray {
+private fun CborDecoder.openHandshake(arity: ULong, what: String) {
+    val n = array()
+    val version = uint()
+    if (version != HANDSHAKE_WIRE_VERSION) throw WireException("unsupported wire version $version")
+    if (n != arity) throw WireException("malformed $what")
+}
+
+/**
+ * The sealed act, as `StagedWrite.verifiedAct` carries it — every
+ * host-added field visible to the device before approval. It carries no
+ * payload and no nonce: the device holds those itself.
+ */
+fun encodeSealedAct(sealed: SealedAct): ByteArray {
+    val act = sealed.act
     val e = CborEncoder()
-    e.array(VERIFIED_ACT_ITEMS)
-    e.uint(WIRE_VERSION)
-    e.bytes(encodeBodyBytes(act.proposal.body))
-    e.bytes(act.proposal.payload)
-    e.deps(act.proposal.deps)
-    e.bytes(act.authorPubkey)
-    e.bytes(act.nonce)
-    e.bytes(act.preSignature)
+    e.array(SEALED_ACT_ITEMS)
+    e.uint(HANDSHAKE_WIRE_VERSION)
+    e.bytes(encodeBodyBytes(act.body))
     e.bytes(act.preCommitment)
-    e.bytes(act.contentSalt)
-    e.bytes(act.depsSalt)
+    e.bytes(act.preSignature)
     e.bytes(act.contentCommitment)
-    e.bytes(act.depsCommitment)
+    e.bytes(act.dependencyCommitment)
     e.uint(act.contentEdition)
-    e.uint(act.depsEdition)
-    e.bytes(act.hostSeal)
+    e.uint(act.dependencyEdition)
+    e.bytes(sealed.contentSalt)
+    e.bytes(sealed.dependencySalt)
+    e.bytes(sealed.hostSeal)
     return e.finish()
 }
 
-fun decodeVerifiedAct(bytes: ByteArray): VerifiedAct {
+fun decodeSealedAct(bytes: ByteArray): SealedAct {
     val d = CborDecoder(bytes)
     try {
-        if (d.array() != VERIFIED_ACT_ITEMS) throw WireException("malformed verified act")
-        val version = d.uint()
-        if (version != WIRE_VERSION) throw WireException("unsupported wire version $version")
-        val body = decodeBody(d.bytes())
-        val payload = d.bytes()
-        val deps = decodeDeps(d)
+        d.openHandshake(SEALED_ACT_ITEMS, "verified act")
         val act = VerifiedAct(
-            proposal = Proposal(body, payload, deps),
-            authorPubkey = d.bytes(),
-            nonce = d.bytes(),
-            preSignature = d.bytes(),
+            body = decodeBody(d.bytes()),
             preCommitment = d.bytes(),
-            contentSalt = d.bytes(),
-            depsSalt = d.bytes(),
+            preSignature = d.bytes(),
             contentCommitment = d.bytes(),
-            depsCommitment = d.bytes(),
+            dependencyCommitment = d.bytes(),
             contentEdition = d.uint(),
-            depsEdition = d.uint(),
+            dependencyEdition = d.uint(),
+        )
+        val sealed = SealedAct(
+            act = act,
+            contentSalt = d.bytes(),
+            dependencySalt = d.bytes(),
             hostSeal = d.bytes(),
         )
         d.finish()
-        return act
+        return sealed
     } catch (e: CborDecodeException) {
-        throw WireException("malformed verified act: ${e.message}", e)
-    } catch (e: IdentifierException) {
         throw WireException("malformed verified act: ${e.message}", e)
     }
 }
 
-/**
- * The device's pre-commitment leg as the opaque `signature` input
- * carries it. The author's public key never rides the wire — the
- * backend binds it from the account's identity association.
- */
-fun encodePreCommitment(nonce: ByteArray, preSignature: ByteArray): ByteArray {
+/** The pre-commitment blob: `[2, content nonce, dependency nonce, pre-signature]`. */
+fun encodePreCommitment(blob: PreCommitmentBlob): ByteArray {
     val e = CborEncoder()
-    e.array(3u)
-    e.uint(WIRE_VERSION)
-    e.bytes(nonce)
-    e.bytes(preSignature)
+    e.array(PRE_COMMITMENT_ITEMS)
+    e.uint(HANDSHAKE_WIRE_VERSION)
+    e.bytes(blob.contentNonce)
+    e.bytes(blob.dependencyNonce)
+    e.bytes(blob.preSignature)
     return e.finish()
 }
 
 /** Convenience for the device side: the pre-signed proposal's wire blob. */
 fun encodePreCommitmentOf(pre: PreSignedProposal): ByteArray =
-    encodePreCommitment(pre.nonce, pre.preSignature)
+    encodePreCommitment(PreCommitmentBlob(pre.contentNonce, pre.dependencyNonce, pre.preSignature))
 
-fun decodePreCommitment(bytes: ByteArray): PreCommitment {
+fun decodePreCommitment(bytes: ByteArray): PreCommitmentBlob {
     val d = CborDecoder(bytes)
     try {
-        if (d.array() != 3UL) throw WireException("malformed pre-commitment")
-        val version = d.uint()
-        if (version != WIRE_VERSION) throw WireException("unsupported wire version $version")
-        val nonce = d.bytes()
-        val signature = d.bytes()
+        d.openHandshake(PRE_COMMITMENT_ITEMS, "pre-commitment")
+        val blob = PreCommitmentBlob(
+            contentNonce = d.bytes(),
+            dependencyNonce = d.bytes(),
+            preSignature = d.bytes(),
+        )
         d.finish()
-        return PreCommitment(nonce, signature)
+        return blob
     } catch (e: CborDecodeException) {
         throw WireException("malformed pre-commitment: ${e.message}", e)
     }

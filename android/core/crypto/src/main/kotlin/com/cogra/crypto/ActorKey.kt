@@ -1,5 +1,5 @@
 // The device side of the admission handshake (reference:
-// crates/common/src/l1/client.rs; substrate.md §6 — client-signed,
+// crates/common/src/l1/proposal/device.rs; substrate.md §6 — client-signed,
 // backend-relayed). The signing side of a write is always this object;
 // the backend relays, never signs.
 
@@ -22,67 +22,94 @@ class ActorKey private constructor(private val key: Ed25519PrivateKeyParameters)
     fun address(): String = addressOf(publicKeyBytes())
 
     /**
-     * Step 2 of the write — pre-sign: bind the exact proposal under a
-     * fresh private nonce.
+     * Step 2 of the write — pre-sign: draw the content nonce and the
+     * dependency nonce as two independent [SALT_LEN]-byte draws from the
+     * platform CSPRNG, form P, and sign it.
      *
      * This is the production form, and the only one outside this
-     * module: the nonce is drawn here rather than accepted, so no call
+     * module: the nonces are drawn here rather than accepted, so no call
      * site can supply a constant. The deterministic form the golden
      * vectors pin is [preSignWith], mirroring the Rust reference's own
-     * split (`crates/common/src/l1/client.rs`).
+     * split (`crates/common/src/l1/proposal/device.rs`).
      */
-    fun preSign(proposal: Proposal): PreSignedProposal = preSignWith(proposal, Entropy.bytes(SALT_LEN))
+    fun preSign(proposal: Proposal): PreSignedProposal =
+        preSignWith(proposal, Entropy.bytes(SALT_LEN), Entropy.bytes(SALT_LEN))
 
-    /** The deterministic form the golden vectors pin. */
-    internal fun preSignWith(proposal: Proposal, nonce: ByteArray): PreSignedProposal {
-        require(nonce.size == SALT_LEN) { "nonce must be $SALT_LEN bytes" }
-        val preSignature = signDigest(key, preCommitment(proposal, nonce))
+    /**
+     * The deterministic form the golden vectors pin. The lengths and the
+     * distinctness are the ones the API refuses a submission over, so a
+     * pair it would refuse is never signed.
+     */
+    internal fun preSignWith(
+        proposal: Proposal,
+        contentNonce: ByteArray,
+        dependencyNonce: ByteArray,
+    ): PreSignedProposal {
+        require(contentNonce.size == SALT_LEN) { "the content nonce must be $SALT_LEN bytes" }
+        require(dependencyNonce.size == SALT_LEN) { "the dependency nonce must be $SALT_LEN bytes" }
+        require(!contentNonce.contentEquals(dependencyNonce)) { "the two nonces must differ" }
+        val actId = proposal.body.actId()
+        val formed = preCommitment(
+            proposal.body,
+            contentPreDigest(actId, contentNonce, proposal.payload),
+            dependencyPreDigest(actId, dependencyNonce, proposal.deps),
+        )
         return PreSignedProposal(
             proposal = proposal,
             authorPubkey = publicKeyBytes(),
-            nonce = nonce,
-            preSignature = preSignature,
+            contentNonce = contentNonce,
+            dependencyNonce = dependencyNonce,
+            preSignature = signDigest(key, formed),
         )
     }
 
     /**
-     * Step 4 of the write — approve: verify the exact returned act, the
-     * pre-commitment and the editions, the host seal, and both
-     * commitment openings, then sign the approval witness over the
-     * verified act and its seal. [sent] is the proposal the client
-     * pre-signed; the check is exact equality against what the host
-     * returned.
+     * Step 4 of the write — approve: the actor's checks, then the witness
+     * over the encoded verified act and its seal. [sent] is what this
+     * device pre-signed; every check recomputes from material it holds
+     * itself, never from anything the host could have chosen:
+     *
+     * 1. the returned body and pre-signature equal what was pre-signed;
+     * 2. the returned P equals the P this device forms from its own
+     *    proposal and both nonces;
+     * 3. the editions are [CONTENT_EDITION] and [DEPENDENCY_EDITION];
+     * 4. the host seal verifies strictly under [hostPubkey];
+     * 5. C_c recomputes over this device's own content pre-digest (its
+     *    payload and content nonce) with the returned content salt — a
+     *    commitment the host formed over anything else, the payload bytes
+     *    included, does not recompute;
+     * 6. C_d recomputes over this device's own canonical dependency list
+     *    with the returned dependency salt.
+     *
+     * The hyper-edge legs are census renderings of the one body, so body
+     * equality is their agreement.
      */
-    fun approve(sent: PreSignedProposal, sealed: VerifiedAct, hostPubkey: ByteArray): ApprovalWitness {
-        if (sealed.proposal != sent.proposal ||
-            !sealed.preSignature.contentEquals(sent.preSignature) ||
-            !sealed.nonce.contentEquals(sent.nonce)
-        ) {
+    fun approve(sent: PreSignedProposal, sealed: SealedAct, hostPubkey: ByteArray): ApprovalWitness {
+        val act = sealed.act
+        if (act.body != sent.proposal.body || !act.preSignature.contentEquals(sent.preSignature)) {
             throw HandshakeException("host returned a different act than was pre-signed")
         }
         val formed = sent.preCommitment()
-        if (!sealed.preCommitment.contentEquals(formed)) {
+        if (!act.preCommitment.contentEquals(formed)) {
             throw HandshakeException("host returned a different pre-commitment than was formed")
         }
-        if (sealed.contentEdition != EDITION || sealed.depsEdition != EDITION) {
+        if (act.contentEdition != CONTENT_EDITION || act.dependencyEdition != DEPENDENCY_EDITION) {
             throw HandshakeException(
-                "unexpected editions (content ${sealed.contentEdition}, dependencies ${sealed.depsEdition}); " +
-                    "this device signs edition $EDITION",
+                "unexpected editions (content ${act.contentEdition}, dependencies ${act.dependencyEdition}); " +
+                    "this device signs content edition $CONTENT_EDITION and dependency edition $DEPENDENCY_EDITION",
             )
         }
-        if (!verify(hostPubkey, Tags.HOST_SEAL, sealed.sealMsg(), sealed.hostSeal)) {
+        if (!sealed.verifySeal(hostPubkey)) {
             throw HandshakeException("invalid host seal")
         }
-        // Both commitment openings: recompute from the returned salts, the
-        // pre-commitment the client formed, and the bytes it holds.
-        val actId = sent.proposal.body.actId()
-        val content = contentCommitment(actId, formed, sealed.contentSalt, sent.proposal.payload)
-        if (!content.contentEquals(sealed.contentCommitment)) {
-            throw HandshakeException("content commitment does not open over the sent payload")
+        val actId = sent.actId()
+        val content = contentCommitment(actId, formed, sealed.contentSalt, sent.contentPreDigest())
+        if (!content.contentEquals(act.contentCommitment)) {
+            throw HandshakeException("content commitment is not formed over this device's content pre-digest")
         }
-        val deps = depsCommitment(actId, formed, sealed.depsSalt, sent.proposal.deps)
-        if (!deps.contentEquals(sealed.depsCommitment)) {
-            throw HandshakeException("dependency commitment does not open over the sent list")
+        val deps = dependencyCommitment(actId, formed, sealed.dependencySalt, sent.proposal.deps)
+        if (!deps.contentEquals(act.dependencyCommitment)) {
+            throw HandshakeException("dependency commitment does not open over the dependency list")
         }
         return ApprovalWitness(
             actId = actId,
