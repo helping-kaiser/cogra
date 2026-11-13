@@ -477,6 +477,21 @@ describe("write signer", () => {
     expect(approvals).toBe(0);
   });
 
+  it("a stored one-nonce record is never pending: resume reports nothing and keeps nothing", async () => {
+    await seedOneNonceRecord();
+    let reads = 0;
+    server.use(
+      gqlLink.query("StagedWrite", () => {
+        reads += 1;
+        return HttpResponse.json({ data: { stagedWrite: stagedJson(ID, "AWAITING_APPROVAL", null) } });
+      }),
+    );
+
+    expect(await signer.resume()).toEqual([]);
+    expect(reads).toBe(0);
+    expect(await store.handshakeIds()).toEqual([]);
+  });
+
   it("a transport fault keeps the material and resume re-sends the same nonces", async () => {
     server.use(gqlLink.mutation("SubmitProposals", () => HttpResponse.error()));
     const first = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
