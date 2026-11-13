@@ -80,7 +80,7 @@ export const KEPT_PICKS_INTRO =
  */
 export const KEPT_PICKS_INVITES = "/invites?from=kept-picks";
 
-export const KEPT_APPROVAL_LINE = "An approval waits in your invites — go there to sign it.";
+export const KEPT_APPROVAL_LINE = "An approval waits in your invites.";
 export const NOTHING_LEFT = "Nothing left to sign.";
 const WRITE_RULE_TITLE = "You can't sign right now";
 const WRITE_RULE_FACT =

@@ -30,12 +30,13 @@ import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 
 export type RemovalReason = "author" | "platform";
 
-const WORDING: Record<RemovalReason, { line: string; detail: string }> = {
+const WORDING: Record<RemovalReason, { line: string; detail?: string }> = {
   // Removed by choice (erasure §1). Reads as the author's decision, because it
-  // is one — the decided mark of copy-voice, both lines.
+  // is one — the mark line and its date, no detail sentence, on every surface
+  // (seam 314; SensitiveVeil.jsx `RedactedContent` draws a detail only when
+  // its reason has one).
   author: {
     line: "Removed by its author",
-    detail: "The words and pictures are gone. The post's place in the thread, and every response, remain.",
   },
   // Removed for cause, by a passed proposal. Says what happened in the reader's
   // words — the verdict is about the content, not an accusation of the author,
@@ -47,11 +48,6 @@ const WORDING: Record<RemovalReason, { line: string; detail: string }> = {
   },
 };
 
-/**
- * A comment's second line (copy-voice, the comment-removal round; the board's
- * `REMOVED_COMMENT_NOTE`): the noun swaps, and the mark itself does not.
- */
-export const REMOVED_COMMENT_NOTE = "The comment's place in the thread, and every response, remain.";
 
 export function RemovedPlaceholder({
   reason,
@@ -86,12 +82,14 @@ export function RemovedPlaceholder({
       <span className="text-body-medium text-on-surface" {...testAttributes(part(node, "line"))}>
         {copy.line}
       </span>
-      <span
-        className="text-pretty text-body-small text-on-surface-variant"
-        {...testAttributes(part(node, "detail"))}
-      >
-        {note ?? copy.detail}
-      </span>
+      {(note ?? copy.detail) !== undefined && (
+        <span
+          className="text-pretty text-body-small text-on-surface-variant"
+          {...testAttributes(part(node, "detail"))}
+        >
+          {note ?? copy.detail}
+        </span>
+      )}
       {when !== undefined && when !== "" && (
         <span className="text-label-small text-on-surface-variant" {...testAttributes(part(node, "when"))}>
           {when}

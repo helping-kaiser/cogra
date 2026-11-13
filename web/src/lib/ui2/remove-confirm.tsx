@@ -45,11 +45,11 @@ export type RemoveKind = "post" | "comment";
 export const REMOVE_CONFIRM_COPY: Record<RemoveKind, { title: string; body: string }> = {
   post: {
     title: "Remove this post?",
-    body: `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place — "Removed by its author" — and the post's spot in threads stays with it.`,
+    body: `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place.`,
   },
   comment: {
     title: "Remove this comment?",
-    body: `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place — "Removed by its author" — and the comment's spot in its thread stays with it.`,
+    body: `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place.`,
   },
 };
 
