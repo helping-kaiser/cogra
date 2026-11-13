@@ -12,6 +12,7 @@ import { resetSeenSyncForTests } from "@/lib/history/seen-sync";
 import { resetKeptPicksForTests } from "@/lib/stance/kept-picks";
 import { resetSettlingForTests } from "@/lib/stance/settling";
 import { resetCarriedSnackbarForTests } from "@/lib/ui/carried-snackbar";
+import { resetProfileChangeForTests } from "@/lib/profile/profile-change";
 import { resetAnnouncerForTests } from "@/lib/release/newer-version-announcer";
 import { resetReaderStateForTests } from "@/lib/session/reader-state";
 import { resetClipMemoryForTests } from "@/lib/ui2/media/clip-memory";
@@ -53,6 +54,8 @@ beforeEach(() => {
   resetKeptPicksForTests(() => custody);
   resetSettlingForTests();
   resetCarriedSnackbarForTests();
+  // A profile change one test left signing must not stand under the next head.
+  resetProfileChangeForTests();
 });
 // The newer-version announcer's one read and one decision are per page load:
 // each test is a fresh load.
