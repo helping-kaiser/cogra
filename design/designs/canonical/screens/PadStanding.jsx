@@ -50,46 +50,53 @@
    pick would have said nothing at all: at +1.00 the fold is already at the cap,
    so the landing would have read back unchanged and the pad would look inert.
 
-   THE `knob` CHIP DRAWS THE FINGER STILL DOWN (the K13 round). `held` is the
+   THE `state` CHIP'S `held` DRAWS THE FINGER STILL DOWN (the K13 round). It is the
    same pick a moment before release: the knob wears M3's pressed state layer,
    a 40px disc in its own orange at 10 %, and nothing scales. Release lifts the
    layer and parks the pick — the `parked` state this board draws by default.
    On Android the drag ticks once where the knob crosses a zero line or meets
    the field's edge (readme §4, *Haptics*); the drawing has no tick to show.
 
-   THE `landing` CHIP DRAWS THE PICK THAT TAKES NO SIDE (jakob 2026-10-20,
+   THE `state` CHIP'S `no-side` DRAWS THE PICK THAT TAKES NO SIDE (jakob 2026-10-20,
    seam 240). −1.00 / −0.15 against the same +1.00 / +1.00 lands at
    +0.00 / +0.85: interested, no side taken — held, unreachable, and not
    severance, so Set signs it like any other pick and no dialog asks.
-   `noSide` draws the landing reading the state under 🤔; `explained` draws
-   the 🤔 tapped, its three lines in the pad's body, the "?"'s grammar. */
-export const PROPS = {
-  knob: { editor: "enum", options: ["parked", "held"], default: "parked" },
-  landing: { editor: "enum", options: ["pulledBack", "noSide", "explained"], default: "pulledBack" },
-};
-export const VALS = `parkedShown: this.props.landing === "pulledBack" && this.props.knob !== "held" ? "block" : "none", heldShown: this.props.landing === "pulledBack" && this.props.knob === "held" ? "block" : "none", noSideShown: this.props.landing === "noSide" ? "block" : "none", explainedShown: this.props.landing === "explained" ? "block" : "none"`;
+   `no-side` draws the landing reading the state under 🤔; `explained` draws
+   the 🤔 tapped, its three lines in the pad's body, the "?"'s grammar.
+
+   ONE CHIP, FOUR STATES (round 45, seam 308): `state` is parked · held ·
+   no-side · explained — the two chips it replaces drew one card four times,
+   and a keyed card repeats once per value of one chip, so the fold is what
+   lets the board register. REGISTERED under the `feed` prefix, as
+   `VouchBackPad` names the same pad over the same feed: the band, its
+   `filterTrigger`, the bottom bar, and the post `card` keyed by its id in
+   each of the four copies, its open pad `card.actionRow.stance.pad.*` —
+   `StanceControl`'s anatomy. The wash stays unnamed, as it does there. */
+export const NODE = "feed";
+export const PROPS = { state: { editor: "enum", options: ["parked", "held", "no-side", "explained"], default: "parked" } };
+export const VALS = `parkedShown: this.props.state === "parked" ? "block" : "none", heldShown: this.props.state === "held" ? "block" : "none", noSideShown: this.props.state === "no-side" ? "block" : "none", explainedShown: this.props.state === "explained" ? "block" : "none"`;
 
 const NO_SIDE_PICK = { pDirected: -1, pInterest: -0.15 };
 
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />} />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band" />
       <FeedList>
-        <div style={{ display: "{{parkedShown}}" }}>
-          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={{ pDirected: -0.55, pInterest: -0.15 }} />
+        <div style={{ display: "{{parkedShown}}" }} data-node-chip="state" data-node-key="parked">
+          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={{ pDirected: -0.55, pInterest: -0.15 }} node="card" />
         </div>
-        <div style={{ display: "{{heldShown}}" }}>
-          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={{ pDirected: -0.55, pInterest: -0.15 }} stanceKnobHeld />
+        <div style={{ display: "{{heldShown}}" }} data-node-chip="state" data-node-key="held">
+          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={{ pDirected: -0.55, pInterest: -0.15 }} stanceKnobHeld node="card" />
         </div>
-        <div style={{ display: "{{noSideShown}}" }}>
-          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={NO_SIDE_PICK} />
+        <div style={{ display: "{{noSideShown}}" }} data-node-chip="state" data-node-key="no-side">
+          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={NO_SIDE_PICK} node="card" />
         </div>
-        <div style={{ display: "{{explainedShown}}" }}>
-          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={NO_SIDE_PICK} stanceExplaining="zero" />
+        <div style={{ display: "{{explainedShown}}" }} data-node-chip="state" data-node-key="explained">
+          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={NO_SIDE_PICK} stanceExplaining="zero" node="card" />
         </div>
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
 
       {/* The wash sits over the shell; the parked pad (fixed, above it) stays
           sharp. */}

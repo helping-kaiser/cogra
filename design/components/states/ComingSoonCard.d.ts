@@ -7,8 +7,8 @@
 export interface ComingSoonCardProps {
   /** What is behind the door, as the headline names it: "Chats", "Wallet". The master adds " — coming soon". */
   thing: string;
-  /** One sentence of what will be there: "Your conversations will be here." */
-  line: string;
+  /** One sentence of what will be there, where it says more than the headline: "Your sky — every account a star, sized by your own paths to it." Optional; Wallet and Chats carry none. */
+  line?: string;
   /** The data-node name its placer gives this card (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `title` and `line`. */
   node?: string;
 }

@@ -10,7 +10,7 @@ ALWAYS the avatar wears the monogram GIVEN the reader has no picture
 
 ALWAYS the figures read Posts, Opinions on you and Opinions by you, each labelled, and never one merged figure
 
-ALWAYS the figures are one tap target, spoken as each figure's number and words — Posts, Opinions on you, Opinions by you — then your opinions, both directions
+ALWAYS the two opinion figures are two doors and the Posts figure is no door, each door spoken as its figure's number and visible words and nothing more, as 5 Opinions on you and 5 Opinions by you
 
 ALWAYS Invites wears the bell's dot, never a count, and is spoken as Invites — someone is waiting GIVEN an application of the reader's is ready for their approval
 
@@ -46,7 +46,11 @@ WHEN tap the ⋮ -> the sheet holding Saved, History and Share your profile open
 
 WHEN tap profile.identity.changeBadge -> the picture's crop opens AND its Next leads to the picture's own seal
 
-WHEN tap the figures -> the opinions page opens on this profile
+WHEN tap the Opinions on figure -> the opinions page opens on this profile on its On state
+
+WHEN tap the Opinions by figure -> the opinions page opens on this profile on its By state
+
+WHEN tap the Posts figure -> NEVER anything happens
 
 WHEN tap Edit profile -> the profile edit opens
 

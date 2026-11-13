@@ -355,9 +355,11 @@ export function FeedPeopleRows({ people = "everyone", sign = "either", onPeople,
                 <span style={{ fontSize: "var(--text-body-medium)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }} data-node={node && "label"}>
                   {entry.label}
                 </span>
-                <span style={{ fontSize: "var(--text-body-small)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }} data-node={node && "hint"}>
-                  {entry.value === "everyone" ? "The whole feed, as far as your eyes reach." : "Only the people you hold an opinion of — the same rank, narrowed to them."}
-                </span>
+                {entry.value !== "everyone" && (
+                  <span style={{ fontSize: "var(--text-body-small)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }} data-node={node && "hint"}>
+                    Only the people you hold an opinion of.
+                  </span>
+                )}
               </span>
             </label>
           );
@@ -456,12 +458,12 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
 
   const sections = (
     <>
-      <FilterSection label="Kinds" hint="Everything that can reach your feed. Combine as many as you like." node={node && "kinds"}>
+      <FilterSection label="Kinds" node={node && "kinds"}>
         {FEED_KINDS.map((kind) => (
           <Chip key={kind.value} label={kind.label} selected={(value.kinds || []).includes(kind.value)} onToggle={() => toggle("kinds", kind.value)} node={node && `${kind.value}Chip`} />
         ))}
       </FilterSection>
-      <FilterSection label="Kinds of post" hint={postsish ? "Combine them: photos and video with no text posts is a legitimate feed." : "Applies once posts or comments are in."} node={node && "forms"}>
+      <FilterSection label="Kinds of post" hint={postsish ? undefined : "Applies once posts or comments are in."} node={node && "forms"}>
         {FEED_FORMS.map((form) => (
           <Chip key={form.value} label={form.label} selected={(value.forms || []).includes(form.value)} onToggle={() => toggle("forms", form.value)} disabled={!postsish} node={node && `${form.value}Chip`} />
         ))}
@@ -470,7 +472,7 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
       {/* `Still settling` is the group's one chip on by default (`FEED_ALSO`):
           on, what has not landed is woven in among the landed rows; off is
           the landed-only view. */}
-      <FilterSection label="Also show" hint="How sensitive content is veiled is set in Settings." node={node && "also"}>
+      <FilterSection label="Also show" node={node && "also"}>
         {FEED_ALSO.map((entry) => (
           <Chip key={entry.value} label={entry.label} selected={(value.also || []).includes(entry.value)} onToggle={() => toggle("also", entry.value)} node={node && `${entry.value}Chip`} />
         ))}
@@ -480,7 +482,7 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
           body's tail, the topic section staying last (the one that grows).
           `peopleRows` is a static board's: the section drawn once per state,
           under the board's own chip. */}
-      <FilterSection label="People" hint="Whose things reach this feed." node={node && "people"}>
+      <FilterSection label="People" node={node && "people"}>
         {peopleRows ?? (
           <FeedPeopleRows people={value.people} sign={value.peopleSign} onPeople={(people) => set({ people })} onSign={(peopleSign) => set({ peopleSign })} node={node} />
         )}
@@ -502,8 +504,7 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
           that is not (0, 0), and that includes a topic held AGAINST — a public
           record like any other, and listed as such on Your tags. It is absent
           here because an association below nothing is not something to read
-          more of, and the hint says so rather than leaving a reader to wonder
-          why one of their own topics is missing.
+          more of, and the hint names the predicate — held and for.
 
           AND THE DOOR OUT IS THE FULL LIST. This section holds what can narrow
           the feed; Your tags holds everything held, and the page a row opens
@@ -511,7 +512,7 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
 
           LAST IN THE BODY, because it is the section that grows. */}
       {topics.length > 0 && (
-        <FilterSection label="One tag" hint="Tags you hold and are for. A tag you hold against stays a record — it just never narrows a feed." node={node && "topic"}>
+        <FilterSection label="One tag" hint="Tags you hold and are for." node={node && "topic"}>
           {topics.map((topic) => (
             <Chip
               key={topic}

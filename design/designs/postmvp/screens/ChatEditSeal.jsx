@@ -2,7 +2,7 @@
    chats work; jakob's rulings 2026-09-23).
 
    `ProfileEditSeal`'S PRECEDENT, AND ITS ANATOMY: `WizardHeader` with its two
-   ways out, the stage named `Last step` and the seal's "?", the thing being
+   ways out and the seal's "?", the thing being
    changed shown back at the top, the acts card, one quiet true line, and
    `SealFooter` with `Sign the change`. The founding's seal (`ChatCreateSeal`)
    wears the same parts, so a chat's two signed moments read as one family.
@@ -18,7 +18,7 @@
    · `Your opinion` · `For the change` — the proposer's own +1 ballot, which
      the client signs with the anchor (governance.md: authoring is never a
      vote, so the ballot is its own priced act).
-   They land together, or none does.
+   They land together, or none does — the seal's "?" says so, the card does not.
 
    THE INSTANT PASS, TRUTHFULLY. In this fixture the reader is the founder and
    admin: their ballot is the only one cast, it is 100% of the cast, and its
@@ -46,7 +46,7 @@
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" leaveLabel="Leave" stageLabel="Last step" help="How signing works" />
+      <WizardHeader title="What you sign" leaveLabel="Leave" help="How signing works" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <ChatSealSubject image="post-photo.jpg" name="Coast walkers" line="Name, picture and description — one change to the chat." />
 
@@ -57,7 +57,6 @@ export function Screen() {
             { label: "Your opinion", value: "For the change", count: "1", countNoun: "opinion" },
           ]}
           total="3 things, signed together"
-          note="They land together, or none does."
         />
 
         <QuietNote>The change is public, and the chat's earlier versions stay readable in its edit history.</QuietNote>

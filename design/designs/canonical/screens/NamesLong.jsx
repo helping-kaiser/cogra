@@ -87,7 +87,7 @@ export function Screen() {
       </div>
       <div style={{ display: "{{wrapsShown}}", flex: 1, ...COLUMN }}>
         <BorrowedViewBand handle={LONG_HANDLE} displayName={LONG_NAMES.spaced} />
-        <TaskCard title={`All set — waiting on ${H}`} body="Their approval brings you in. Nothing else is needed from you." />
+        <TaskCard title={`All set — waiting on ${H}`} body="Their approval brings you in." />
         <DialogSurface
           inline
           title={`Change your handle to ${H}?`}
@@ -99,7 +99,7 @@ export function Screen() {
             </>
           }
         />
-        <Snackbar inline message={`${H} is hidden — their posts stay out of your feed.`} action="Undo" />
+        <Snackbar inline message={`${H} is hidden.`} action="Undo" />
       </div>
       <div style={{ display: "{{personShown}}", flex: 1, ...COLUMN }}>
         <div style={{ display: "{{spacedShown}}", flexDirection: "column", gap: 12 }}>

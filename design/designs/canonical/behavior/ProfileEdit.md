@@ -8,8 +8,6 @@ ALWAYS the profile edit's top stays pinned while its fields scroll
 
 ALWAYS the profile edit holds the picture's row, Display name, Bio and Website, and no handle
 
-ALWAYS the line Your handle changes in Settings. stands under the fields
-
 ALWAYS Display name, Bio and Website each read Optional
 
 WHEN tap Change picture -> the picture's crop opens AND its Next brings the picture back to this edit, to be signed with the fields under one seal

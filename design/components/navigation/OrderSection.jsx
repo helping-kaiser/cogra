@@ -9,11 +9,18 @@ import { Checkbox } from "../forms/Checkbox.jsx";
 
    SEEN, PRECISELY. Seen means the content was fully in the viewport, the
    first time only — a re-seeing is never counted. The seen-list is the
-   reader's `History` (feed-ranking.md §9.4): application state, never a
-   graph record, shared transiently with the viewer's chosen ranker. Default
+   reader's `History` (feed-ranking.md §9.4): the reader's own record,
+   application state and never a graph record. The feed's cut happens on the
+   reader's device; the list leaves the device only if the reader picks an
+   outside ranker, which the device then hands it to (seam 312). Default
    OFF (ruled 2026-08-28, flipping the search session's first
    call): what you've seen stays out until you ask for it back, so the box
    arrives unticked and "showing seen" is the deviation the trigger speaks.
+
+   SEARCH CARRIES NO SEEN TOGGLE (jakob 2026-11-11, seam 296: "search should
+   not care about seen or unseen at all"). The seen list is the feed's and
+   History's; search reaches every node, so its sheet takes this section with
+   `seenToggle={false}` — the order alone.
 
    ONE SECTION CHROME. `FilterSection` is the sheet-section shape every filter
    sheet uses — label, an optional hint in the secondary colour, then the
@@ -41,13 +48,15 @@ export function FilterSection({ label, hint, children, node }) {
   );
 }
 
-export function OrderSection({ order = "ranked", onOrder, seen = false, onSeen, node }) {
+export function OrderSection({ order = "ranked", onOrder, seen = false, onSeen, seenToggle = true, node }) {
   return (
-    <FilterSection label="Order" hint="Ranked puts what's closest to you first — your view, no one else's. Newest ignores it and lists by time." node={node}>
+    <FilterSection label="Order" node={node}>
       <SegmentedFilter ariaLabel="Order" options={FILTER_ORDER} value={order} onChange={onOrder} node={node && "picker"} />
-      <div style={{ flexBasis: "100%" }}>
-        <Checkbox label="Show what you've already seen" checked={seen} onChange={onSeen} node={node && "seen"} />
-      </div>
+      {seenToggle && (
+        <div style={{ flexBasis: "100%" }}>
+          <Checkbox label="Show what you've already seen" checked={seen} onChange={onSeen} node={node && "seen"} />
+        </div>
+      )}
     </FilterSection>
   );
 }

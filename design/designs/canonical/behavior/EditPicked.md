@@ -24,8 +24,6 @@ ALWAYS a picture's handle is focusable and named Reorder the cover or Reorder pi
 
 WHEN press the up or down arrow key GIVEN a picture's handle has focus -> the picture moves one place that way AND focus stays on its handle
 
-ALWAYS the footnote under the pictures reads The first one is the cover.
-
 WHEN tap a picture's remove control GIVEN more than one picture is in the body -> the picture leaves the edit's batch
 
 WHEN tap the last picture's remove control -> the sheet closes onto the words edit AND the body becomes words AND the words field arrives empty AND NEVER the removal is refused

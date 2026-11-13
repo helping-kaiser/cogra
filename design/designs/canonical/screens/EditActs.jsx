@@ -33,6 +33,11 @@
    revised upward past 1, so its one name reads `2` and is heard as `2 things`;
    the title, the footer and the rows all add up to the same five.
 
+   THE TITLE CARRIES THE `?` (jakob 2026-11-12, question 12: "signing in
+   itself is a new concept for them"): `How signing works`, the seals' dialog,
+   trailing the sheet title as `ComposeLicense`'s `?` trails its own. The
+   all-or-nothing lives in that dialog, so the card carries no line of it.
+
    SIGN IS THE CONFIRMATION. Withdrawing is an act like adding — nothing is
    deleted, a later layer says the tag or citation no longer stands — which is
    why the card counts it, and the count said here and on the foot is the
@@ -44,7 +49,7 @@ export function Screen() {
       <EditComposeBody />
 
       <BottomSheet open ariaLabel="What the edit signs">
-        <SheetTitle>5 things, signed together</SheetTitle>
+        <SheetTitle trailing={<HelpDot ariaLabel="How signing works" onOpen={() => {}} />}>5 things, signed together</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "0 24px 16px" }}>
           <ActsCard
             rows={[
@@ -53,7 +58,6 @@ export function Screen() {
               { label: "Tags withdrawn", value: "#coastroad", count: "1", countNoun: "tag" },
               { label: "Citations withdrawn", value: "Tide tables and the third headland — @juno", count: "2", countNoun: "thing" },
             ]}
-            note="They land together, or none does."
           />
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <Button variant="text">Done</Button>

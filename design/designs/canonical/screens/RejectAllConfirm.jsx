@@ -36,14 +36,21 @@
    200ms `Close them` reads `Closing them…`, and `Keep them` reads `Close` from the
    press itself; it, the scrim, Back and Escape close the dialog and the
    closing goes on, its wait and its answer on the application's own row on
-   Invites. The copy is drawn unnamed, so no path moves. */
+   Invites. The copy is drawn unnamed, so no path moves.
+   THE `answer` CHIP'S `closedFailed` IS THAT CLOSING FAILING AFTER CLOSE
+   (round 43; jakob 2026-11-11, S5; backlog 190): the dialog is gone, the
+   group stands as it was, and one line under its label — where its `Close
+   all` stands — reads `That didn't sign.` in the failure voice with `Retry`,
+   which asks the whole closing again: the batch fails whole and says so once,
+   as the kept picks' batch does on its one row (`Settings`' `kept`). The
+   line is a drawn copy and carries no name. */
 export const NODE = "invites";
-export const PROPS = { answer: { editor: "enum", options: ["asking", "closing"], default: "asking" } };
-export const VALS = `askingShown: this.props.answer === "closing" ? "none" : "block", closingShown: this.props.answer === "closing" ? "block" : "none"`;
+export const PROPS = { answer: { editor: "enum", options: ["asking", "closing", "closedFailed"], default: "asking" } };
+export const VALS = `askingShown: this.props.answer === "asking" ? "block" : "none", closingShown: this.props.answer === "closing" ? "block" : "none", closedFailedShown: this.props.answer === "closedFailed" ? "block" : "none"`;
 export function Screen() {
   return (
     <>
-      <InvitesBody />
+      <InvitesBody closedFailed={{ row: "none", group: "{{closedFailedShown}}" }} />
 
       <div style={{ display: "{{askingShown}}" }}>
         <DialogSurface
@@ -51,8 +58,8 @@ export function Screen() {
           onScrimPress={() => {}}
           title="Close all 4 applications from this link?"
           body={[
-            "All four leave your list and all four people are told. Their accounts stay exactly as they are — signed in, and free to keep reading.",
-            "This is your call and nobody else's. Any member can still vouch any of them in, and each gets a link to ask with.",
+            "All four leave your list and all four people are told. Their accounts stay as they are.",
+            "Any member can still vouch any of them in, and each gets a link to ask with.",
           ]}
           actions={
             <>
@@ -67,8 +74,8 @@ export function Screen() {
           onScrimPress={() => {}}
           title="Close all 4 applications from this link?"
           body={[
-            "All four leave your list and all four people are told. Their accounts stay exactly as they are — signed in, and free to keep reading.",
-            "This is your call and nobody else's. Any member can still vouch any of them in, and each gets a link to ask with.",
+            "All four leave your list and all four people are told. Their accounts stay as they are.",
+            "Any member can still vouch any of them in, and each gets a link to ask with.",
           ]}
           actions={
             <>

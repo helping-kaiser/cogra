@@ -8,7 +8,7 @@ ALWAYS history.menuSheet.hide reads Unhide with the person's handle GIVEN the pe
 
 ALWAYS nothing on history.profileCard marks that the person is hidden
 
-WHEN tap history.menuSheet.hide GIVEN it reads Unhide -> the sheet closes AND the person is unhidden AND History stands as it stood AND history.snackbar reads @mira is unhidden — their posts can reach your feed again. with Undo AND NEVER a dialog asks
+WHEN tap history.menuSheet.hide GIVEN it reads Unhide -> the sheet closes AND the person is unhidden AND History stands as it stood AND history.snackbar reads @mira is unhidden. with Undo AND NEVER a dialog asks
 
 WHEN tap Undo on history.snackbar GIVEN the unhide was made from the menu -> the person is hidden again AND History stands as it stood
 

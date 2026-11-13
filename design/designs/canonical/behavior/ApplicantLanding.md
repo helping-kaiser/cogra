@@ -4,13 +4,13 @@ ALWAYS the landing card stands GIVEN the application is approved and the account
 
 ALWAYS the landing card is titled Approved — your registration is landing
 
-ALWAYS the landing card reads @mira approved your application. Nothing is needed from you while it lands. and carries no control GIVEN the key is on this device
+ALWAYS the landing card is its title alone and carries no control GIVEN the key is on this device
 
 ALWAYS the landing card reads Your key was made on another device — open CoGra there, or restore the key to land here. and carries Restore the key GIVEN the key is on another device
 
 ALWAYS the landing card has no way to put it away
 
-ALWAYS the band reads Browsing from @mira's view while your application lands. naming the issuer of the reader's invite link
+ALWAYS the band reads Browsing from @mira's view. naming the issuer of the reader's invite link
 
 WHEN the app opens GIVEN the application is approved and the key is on this device -> the device signs the registration's handshake AND NEVER the reader is asked to act
 

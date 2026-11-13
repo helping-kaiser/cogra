@@ -9,12 +9,11 @@
    figures and the chronicle are the page as it stood under the sheet. The
    feed is where the hide shows, the next time it is opened (`FeedHidden`).
 
-   THE SNACKBAR IS THE FEED'S, WORD FOR WORD — `@ada is hidden — their posts
-   stay out of your feed.` with `Undo` — because the reach it names does not
-   depend on where the tap was made. It sits above the bar (`Snackbar`'s
+   THE SNACKBAR IS THE FEED'S, WORD FOR WORD — `@ada is hidden.` with
+   `Undo` — because the act does not depend on where the tap was made. It sits above the bar (`Snackbar`'s
    80px). A deleted account's page takes the same shape from
    `ProfileDeletedMenu`, in the nameless twin its sidecar carries: `This
-   account is hidden — its posts stay out of your feed.`
+   account is hidden.`
 
    IT IS `ProfileOtherBody` WITH THE SNACKBAR OVER IT — the page `ProfileMenu`
    draws under its sheet, as `FeedHidden` is `Feed` with one line over it.
@@ -27,7 +26,7 @@ export function Screen() {
   return (
     <>
       <ProfileOtherBody />
-      <Snackbar message="@ada is hidden — their posts stay out of your feed." action="Undo" offset={80} node="snackbar" />
+      <Snackbar message="@ada is hidden." action="Undo" offset={80} node="snackbar" />
     </>
   );
 }

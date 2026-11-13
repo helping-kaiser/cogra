@@ -22,6 +22,8 @@ ALWAYS the tag page shows no count of people or of uses
 
 ALWAYS a card's score on the tag page is the figure the latest fetch of its thing found — the reader's own last feed fetch, or its trace's fetch since — a dash only where that fetch found none
 
+ALWAYS a card's score on the tag page prints as every feed card's does, two decimals and never more, 0.01 or −0.01 GIVEN a computed figure is not zero and under 0.005 either way
+
 ALWAYS at most one clip plays on the tag page, by the feed's stage law
 
 WHEN tap a portrait or square clip on the tag page -> the stream opens on it, carrying only the clips tagged with this tag that are at least as tall as they are wide, in the tag page's order AND the bar keeps the root the tag page was opened from
@@ -36,7 +38,7 @@ ALWAYS the word follow appears nowhere on the tag page
 
 WHEN tap the back arrow -> the reader returns to where they came from AND the arrow's label names that origin
 
-ALWAYS the back arrow reads Back to Explore from Explore at rest, Back to the search from Explore mid-query, Back to Your tags from Your tags, Back to feed from the feed in any of its states, Back to the post from a post's tags-and-references sheet, Back to the comments from a comment's chips in the thread, Back to the profile from a profile's posts, Back to Saved from Saved, Back to History from History and Back to with the other tag's name from another tag's page
+ALWAYS the back arrow reads Back to Explore from Explore at rest, Back to the search from Explore mid-query, Back to Your tags from Your tags, Back to feed from the feed in any of its states, Back to the post from a post's tags-and-references sheet, Back to the comments from a comment's chips in the thread, Back to the profile from a card on another's profile, Back to your profile from a card on the reader's own, Back to Saved from Saved, Back to History from History and Back to with the other tag's name from another tag's page
 
 ALWAYS the back arrow reads Back to Explore and leads to Explore GIVEN the page was entered with no history behind it
 

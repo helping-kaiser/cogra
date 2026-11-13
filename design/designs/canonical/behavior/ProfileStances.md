@@ -10,6 +10,8 @@ ALWAYS profileStances.tabRow.onTab and profileStances.tabRow.byTab read On them 
 
 ALWAYS profileStances.tabRow.onTab and profileStances.tabRow.byTab read On you and By you GIVEN the page is the reader's own
 
+ALWAYS the page opens on the direction of the profile's figure that opened it, profileStances.tabRow.onTab from the Opinions on figure and profileStances.tabRow.byTab from the Opinions by figure
+
 ALWAYS each profileStances.list.row is a person with the public opinion the row is about, its face leading and its pair in the reader's reading mode
 
 ALWAYS a row's face is 🤔, spoken as the state, as Interested, no side taken on +0.00 / +0.35, never a table face, GIVEN the row's opinion has exactly one number at zero
@@ -32,7 +34,7 @@ WHEN tap profileStances.tabRow.byTab -> the people this person holds an opinion 
 
 ALWAYS profileStances.empty stands in profileStances.list's place, calm and in no error colour, GIVEN the tab holds no one
 
-ALWAYS profileStances.empty.title reads No opinions yet — yours would be the first. GIVEN another person's On them holds no one
+ALWAYS profileStances.empty.title reads No opinions yet. GIVEN another person's On them holds no one
 
 ALWAYS profileStances.empty.title reads No opinions by @ada yet. GIVEN another person's By them holds no one
 

@@ -40,4 +40,4 @@ WHEN press the header back arrow -> the details stage comes back, one stage behi
 
 WHEN press Back -> the details stage comes back, one stage behind
 
-WHEN press the header X -> the whole flow is left AND the draft is kept AND NEVER a dialog asks
+WHEN press the header X -> the whole flow is left for where the composer was opened from AND the draft is kept AND NEVER a dialog asks

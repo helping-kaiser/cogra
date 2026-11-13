@@ -16,7 +16,7 @@
    REGISTERED under the `signIn` prefix (round 28, seam 254 A1), with
    `SignInError`, `SignInExpired` and `SignInLimited`, named as the credential
    family names its screens (`ChangePassword`): `title`, `body`, the fields
-   `email` and `password`, the commit with its reason `commit`. The remember
+   `email` and `password`, the commit `commit`. The remember
    box is `forget`, as Settings names the same words' row; the four ways round
    it are `forgot`, `invite`, `browse` and `apk`. */
 export const NODE = "signIn";
@@ -37,20 +37,6 @@ export function Screen() {
         >
           Sign in to CoGra
         </h1>
-        <p
-          style={{
-            margin: "8px 0 0",
-            fontSize: "var(--text-body-medium)",
-            fontWeight: "var(--text-body-medium--font-weight)",
-            lineHeight: "var(--text-body-medium--line-height)",
-            letterSpacing: "var(--text-body-medium--letter-spacing)",
-            color: "var(--text-secondary)",
-          }}
-          data-node="body"
-        >
-          Welcome back — your feed is where you left it.
-        </p>
-
         <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 16 }}>
           <TextField id="signin-email" label="Email" type="email" autoComplete="username" value="" node="email" />
           <PasswordField id="signin-password" label="Password" autoComplete="current-password" value="" node="password" />

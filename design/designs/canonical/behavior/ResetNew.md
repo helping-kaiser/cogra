@@ -46,6 +46,6 @@ ALWAYS the page scrolls when its content outgrows the screen at any width or tex
 
 WHEN press system Back -> the platform leaves to wherever the mail link was opened from AND NEVER a CoGra screen opens in its place
 
-ALWAYS Set the new password stands disabled with Waiting for a new password right above it GIVEN New password or Repeat password is empty
+ALWAYS Set the new password stands disabled with no line above it and its spoken description reads Waiting for a new password GIVEN New password or Repeat password is empty
 
-WHEN both password fields hold a character -> Set the new password wakes AND the line Waiting for a new password goes
+WHEN both password fields hold a character -> Set the new password wakes AND its spoken description Waiting for a new password goes

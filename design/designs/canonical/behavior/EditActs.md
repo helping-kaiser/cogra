@@ -10,7 +10,9 @@ ALWAYS each row of the acts card counts the records its kind signs, a citation's
 
 ALWAYS the pick the edit carries rides the Edit row's one record, adding no row of its own and nothing to any count
 
-ALWAYS the acts card carries the line They land together, or none does. GIVEN the batch holds more than one act
+ALWAYS the sheet's title carries the ? that opens How signing works, the seals' dialog, which says the acts land together or none does
+
+WHEN tap the sheet's ? -> How signing works opens over the sheet AND NEVER anything is signed
 
 WHEN press Done -> the sheet closes to the edit
 

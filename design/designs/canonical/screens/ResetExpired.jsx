@@ -50,8 +50,7 @@ export function Screen() {
         }}
         data-node="body"
       >
-        It may have expired or already been used. A reset link works once and expires after 15 minutes — ask for a
-        fresh one.
+        A reset link works once and expires after 15 minutes.
       </p>
 
       <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8 }}>

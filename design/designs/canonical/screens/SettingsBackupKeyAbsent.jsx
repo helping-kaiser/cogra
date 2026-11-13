@@ -67,8 +67,7 @@ export function Screen() {
           }}
           data-node="body"
         >
-          A new code re-encrypts your key and replaces the old backup — recovery always uses the
-          newest one. Your current code was made on 12.08.2026.
+          A new code replaces the old backup. Your current code was made on 12.08.2026.
         </p>
       </div>
     </>

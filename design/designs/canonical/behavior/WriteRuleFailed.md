@@ -44,4 +44,4 @@ WHEN tap a fact row's Change, Adjust or Mark GIVEN the notice stands -> that fac
 
 WHEN press the header back arrow -> the details stage comes back, one stage behind
 
-WHEN press the header X -> the whole flow is left AND the draft is kept AND NEVER a dialog asks
+WHEN press the header X -> the whole flow is left for where the composer was opened from AND the draft is kept AND NEVER a dialog asks

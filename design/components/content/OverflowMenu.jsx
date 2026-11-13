@@ -45,8 +45,9 @@ import { nameInLine } from "../people/ActorChip.jsx";
    · A ROW THAT NAMES AN ACTOR TAKES ITS WORDS FROM THE ACTOR'S MASTER. The hide
      row spells a handle — `Hide @ada` — and a redacted author has none, so its
      label comes from `ActorChip`'s `HIDE_ACTOR_LABEL` and reads `Hide this
-     account` there. The row stands either way: hiding is about an actor, and a
-     redacted actor still ranks into the reader's feed. */
+     account` there — `Unhide this account` where that actor is already hidden
+     (`UNHIDE_ACTOR_LABEL`). The row stands either way: hiding is about an
+     actor, and a redacted actor still ranks into the reader's feed. */
 
 export function OverflowMenu({ items = [], ariaLabel = "More", align = "right", presentation = "sheet", placement = "header", node }) {
   const [open, setOpen] = React.useState(false);

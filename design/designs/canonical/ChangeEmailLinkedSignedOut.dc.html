@@ -1287,7 +1287,7 @@ class Component extends DCLogic {
       : mode === "dark";
     const remoteGeek = this.state ? this.state.remoteGeek : null;
     const geek = remoteGeek ?? this.props.geek ?? "off";
-    return { theme: dark ? "dark" : "light", geek, signedOutTitle: this.props.landing === "dead" ? "This link doesn't work anymore" : "Sign in to finish the change", signedOutBody: this.props.landing === "dead" ? "The change it belonged to may have run out, been canceled or already happened — this link can't move your email anymore." : "This link confirms sol@ferreira.studio as your new address. It counts once you're signed in." };
+    return { theme: dark ? "dark" : "light", geek, signedOutTitle: this.props.landing === "dead" ? "This link doesn't work anymore" : "Sign in to finish the change", signedOutBody: this.props.landing === "dead" ? "The change it belonged to may have run out, been canceled or already happened." : "This link confirms sol@ferreira.studio as your new address." };
   }
 }
 </script>

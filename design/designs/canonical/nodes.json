@@ -74,7 +74,6 @@
         "changeEmail.body": [],
         "changeEmail.commit": [],
         "changeEmail.commit.action": [],
-        "changeEmail.commit.reason": [],
         "changeEmail.current": [],
         "changeEmail.current.input": [],
         "changeEmail.current.label": [],
@@ -189,7 +188,6 @@
         "feed.keyCard.title": [],
         "feed.verifyCard": [],
         "feed.verifyCard.address": [],
-        "feed.verifyCard.body": [],
         "feed.verifyCard.note": [],
         "feed.verifyCard.resend": [],
         "feed.verifyCard.title": [],
@@ -877,7 +875,6 @@
         "changeEmail.email": "the fault chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
-        "changeEmail.body": [],
         "changeEmail.commit": [
           "none",
           "password",
@@ -887,9 +884,6 @@
           "none",
           "password",
           "malformed"
-        ],
-        "changeEmail.commit.reason": [
-          "none"
         ],
         "changeEmail.current": [
           "none",
@@ -942,7 +936,6 @@
       "prefix": "changeEmail",
       "keys": {},
       "nodes": {
-        "changeEmail.body": [],
         "changeEmail.cancel": [],
         "changeEmail.code": [],
         "changeEmail.code.input": [],
@@ -950,7 +943,6 @@
         "changeEmail.code.support": [],
         "changeEmail.commit": [],
         "changeEmail.commit.action": [],
-        "changeEmail.commit.reason": [],
         "changeEmail.header": [],
         "changeEmail.header.back": [],
         "changeEmail.interim": [],
@@ -988,17 +980,14 @@
       "prefix": "changeHandle",
       "keys": {},
       "nodes": {
-        "changeHandle.body": [],
         "changeHandle.commit": [],
         "changeHandle.commit.action": [],
-        "changeHandle.commit.reason": [],
         "changeHandle.handle": [],
         "changeHandle.handle.input": [],
         "changeHandle.handle.label": [],
         "changeHandle.handle.support": [],
         "changeHandle.header": [],
         "changeHandle.header.back": [],
-        "changeHandle.note": [],
         "changeHandle.title": []
       }
     },
@@ -1006,7 +995,6 @@
       "prefix": "changeHandle",
       "keys": {},
       "nodes": {
-        "changeHandle.body": [],
         "changeHandle.commit": [],
         "changeHandle.commit.action": [],
         "changeHandle.dialog": [],
@@ -1020,7 +1008,6 @@
         "changeHandle.handle.support": [],
         "changeHandle.header": [],
         "changeHandle.header.back": [],
-        "changeHandle.note": [],
         "changeHandle.title": []
       }
     },
@@ -1041,7 +1028,32 @@
         "changePassword.current.reveal": [],
         "changePassword.header": [],
         "changePassword.header.back": [],
-        "changePassword.note": [],
+        "changePassword.password": [],
+        "changePassword.password.input": [],
+        "changePassword.password.label": [],
+        "changePassword.password.reveal": [],
+        "changePassword.password.support": [],
+        "changePassword.title": []
+      }
+    },
+    "ChangePasswordErrors": {
+      "prefix": "changePassword",
+      "keys": {},
+      "nodes": {
+        "changePassword.body": [],
+        "changePassword.commit": [],
+        "changePassword.commit.action": [],
+        "changePassword.confirm": [],
+        "changePassword.confirm.input": [],
+        "changePassword.confirm.label": [],
+        "changePassword.confirm.reveal": [],
+        "changePassword.confirm.support": [],
+        "changePassword.current": [],
+        "changePassword.current.input": [],
+        "changePassword.current.label": [],
+        "changePassword.current.reveal": [],
+        "changePassword.header": [],
+        "changePassword.header.back": [],
         "changePassword.password": [],
         "changePassword.password.input": [],
         "changePassword.password.label": [],
@@ -1061,7 +1073,6 @@
         "chats.bottomBar.searchSlot": [],
         "chats.bottomBar.walletSlot": [],
         "chats.comingSoonCard": [],
-        "chats.comingSoonCard.line": [],
         "chats.comingSoonCard.title": [],
         "chats.header": [],
         "chats.header.back": [],
@@ -1288,7 +1299,14 @@
       "prefix": "commentEdit",
       "keys": {
         "commentEdit.acts": "the upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
-        "commentEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+        "commentEdit.cover.change": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "commentEdit.cover.thumb": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "commentEdit.gate": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "commentEdit.sign": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "commentEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "commentEdit.video.describeRow": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "commentEdit.video.thumb": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "commentEdit.video.uploadError": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "commentEdit.acts": [
@@ -1300,9 +1318,14 @@
           "uploading"
         ],
         "commentEdit.cover": [],
-        "commentEdit.cover.change": [],
+        "commentEdit.cover.add": [],
+        "commentEdit.cover.change": [
+          "picked-cover"
+        ],
         "commentEdit.cover.label": [],
-        "commentEdit.cover.thumb": [],
+        "commentEdit.cover.thumb": [
+          "picked-cover"
+        ],
         "commentEdit.facts": [],
         "commentEdit.facts.license": [],
         "commentEdit.facts.license.label": [],
@@ -1312,8 +1335,26 @@
         "commentEdit.facts.sensitive.action": [],
         "commentEdit.facts.sensitive.label": [],
         "commentEdit.facts.sensitive.value": [],
-        "commentEdit.gate": [],
-        "commentEdit.gate.line": [],
+        "commentEdit.gate": [
+          "picked",
+          "picked-cover",
+          "second",
+          "failed"
+        ],
+        "commentEdit.gate.line": [
+          "picked",
+          "picked-cover",
+          "second"
+        ],
+        "commentEdit.gate.message": [
+          "failed"
+        ],
+        "commentEdit.gate.retry": [
+          "failed"
+        ],
+        "commentEdit.gate.wait": [
+          "failed"
+        ],
         "commentEdit.header": [],
         "commentEdit.header.back": [],
         "commentEdit.header.help": [],
@@ -1322,7 +1363,9 @@
         "commentEdit.references": [],
         "commentEdit.references.add": [],
         "commentEdit.references.label": [],
-        "commentEdit.sign": [],
+        "commentEdit.sign": [
+          "failed"
+        ],
         "commentEdit.tags": [],
         "commentEdit.tags.add": [],
         "commentEdit.tags.label": [],
@@ -1336,13 +1379,54 @@
         "commentEdit.tags.withdrawn.undo": [],
         "commentEdit.target": [],
         "commentEdit.video": [],
-        "commentEdit.video.describeRow": [],
-        "commentEdit.video.describeRow.count": [],
-        "commentEdit.video.describeRow.describe": [],
-        "commentEdit.video.describeRow.reason": [],
+        "commentEdit.video.describeRow": [
+          "picked",
+          "picked-cover",
+          "failed",
+          "second"
+        ],
+        "commentEdit.video.describeRow.count": [
+          "picked",
+          "picked-cover",
+          "failed",
+          "second"
+        ],
+        "commentEdit.video.describeRow.describe": [
+          "picked",
+          "picked-cover",
+          "failed",
+          "second"
+        ],
+        "commentEdit.video.describeRow.reason": [
+          "picked",
+          "picked-cover",
+          "failed",
+          "second"
+        ],
         "commentEdit.video.label": [],
-        "commentEdit.video.thumb": [],
-        "commentEdit.video.thumb.remove": [],
+        "commentEdit.video.thumb": [
+          "picked",
+          "picked-cover",
+          "failed",
+          "second"
+        ],
+        "commentEdit.video.thumb.remove": [
+          "picked",
+          "picked-cover",
+          "second"
+        ],
+        "commentEdit.video.uploadError": [
+          "failed"
+        ],
+        "commentEdit.video.uploadError.message": [
+          "failed"
+        ],
+        "commentEdit.video.uploadError.remove": [
+          "failed"
+        ],
+        "commentEdit.video.uploadError.retry": [
+          "failed"
+        ],
         "commentEdit.words": [],
         "commentEdit.words.input": [],
         "commentEdit.words.label": []
@@ -2176,9 +2260,6 @@
         "postDetail.threadSheet.commentCard.removalMark": [
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
-        "postDetail.threadSheet.commentCard.removalMark.detail": [
-          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
-        ],
         "postDetail.threadSheet.commentCard.removalMark.line": [
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
@@ -2195,7 +2276,8 @@
     "ComposeCrop": {
       "prefix": "composeCrop",
       "keys": {
-        "composeCrop.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)"
+        "composeCrop.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
+        "composeCrop.shapes": "the shape chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "composeCrop.header": [],
@@ -2209,10 +2291,26 @@
           "1",
           "2"
         ],
-        "composeCrop.shapes": [],
-        "composeCrop.shapes.squareChip": [],
-        "composeCrop.shapes.tallChip": [],
-        "composeCrop.shapes.wideChip": [],
+        "composeCrop.shapes": [
+          "tall",
+          "square",
+          "wide"
+        ],
+        "composeCrop.shapes.squareChip": [
+          "tall",
+          "square",
+          "wide"
+        ],
+        "composeCrop.shapes.tallChip": [
+          "tall",
+          "square",
+          "wide"
+        ],
+        "composeCrop.shapes.wideChip": [
+          "tall",
+          "square",
+          "wide"
+        ],
         "composeCrop.viewport": [],
         "composeCrop.zoom": [],
         "composeCrop.zoom.input": []
@@ -2370,7 +2468,6 @@
         "composeDetails.pickedSheet": [],
         "composeDetails.pickedSheet.done": [],
         "composeDetails.pickedSheet.dragHandle": [],
-        "composeDetails.pickedSheet.note": [],
         "composeDetails.pickedSheet.picture": [
           "1",
           "2",
@@ -2426,9 +2523,7 @@
         "coverCrop.header.back": [],
         "coverCrop.header.leave": [],
         "coverCrop.header.title": [],
-        "coverCrop.howTo": [],
         "coverCrop.next": [],
-        "coverCrop.shapeNote": [],
         "coverCrop.viewport": [],
         "coverCrop.zoom": [],
         "coverCrop.zoom.input": []
@@ -2610,7 +2705,6 @@
         "deleteAccount.body": [],
         "deleteAccount.header": [],
         "deleteAccount.header.back": [],
-        "deleteAccount.note": [],
         "deleteAccount.resend": [],
         "deleteAccount.title": []
       }
@@ -2795,7 +2889,6 @@
         "postEdit.cover.add": [],
         "postEdit.cover.change": [],
         "postEdit.cover.label": [],
-        "postEdit.cover.note": [],
         "postEdit.cover.thumb": [],
         "postEdit.description": [],
         "postEdit.description.corner": [],
@@ -2900,7 +2993,6 @@
         "postEdit.pickedSheet": [],
         "postEdit.pickedSheet.done": [],
         "postEdit.pickedSheet.dragHandle": [],
-        "postEdit.pickedSheet.note": [],
         "postEdit.pickedSheet.picture": [
           "1",
           "2"
@@ -3094,7 +3186,6 @@
         "settings.credentials.email.chevron": [],
         "settings.credentials.email.label": [],
         "settings.credentials.email.value": [],
-        "settings.credentials.footnote": [],
         "settings.credentials.handle": [],
         "settings.credentials.handle.chevron": [],
         "settings.credentials.handle.label": [],
@@ -3122,7 +3213,6 @@
         "settings.ending.delete": [],
         "settings.ending.delete.chevron": [],
         "settings.ending.delete.label": [],
-        "settings.ending.footnote": [],
         "settings.header": [],
         "settings.header.back": [],
         "settings.header.title": [],
@@ -3149,14 +3239,12 @@
         "settings.reading.feed.chevron": [],
         "settings.reading.feed.label": [],
         "settings.reading.feed.value": [],
-        "settings.reading.footnote": [],
+        "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
-        "settings.sensitive.footnote": [],
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
-        "settings.sensitive.unveil.status": [],
         "settings.sensitive.unveil.switch": [],
         "settings.sessions": [],
         "settings.sessions.elsewhere": [],
@@ -3184,21 +3272,18 @@
         ],
         "settings.stance": [],
         "settings.stance.footnote": [],
+        "settings.stance.help": [],
         "settings.stance.label": [],
         "settings.stance.pad": [],
         "settings.stance.pad.choice": [],
         "settings.stance.pad.label": [],
-        "settings.stance.pad.status": [],
         "settings.stance.sliders": [],
         "settings.stance.sliders.choice": [],
         "settings.stance.sliders.label": [],
-        "settings.stance.sliders.status": [],
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
-        "settings.stance.typed.status": [],
         "settings.theme": [],
-        "settings.theme.footnote": [],
         "settings.theme.label": [],
         "settings.theme.picker": [],
         "settings.theme.picker.autoOption": [],
@@ -3207,7 +3292,6 @@
         "settings.writing": [],
         "settings.writing.confirm": [],
         "settings.writing.confirm.label": [],
-        "settings.writing.confirm.status": [],
         "settings.writing.confirm.switch": [],
         "settings.writing.footnote": [],
         "settings.writing.label": [],
@@ -3291,15 +3375,11 @@
         "explore.filterSheet.help": [],
         "explore.filterSheet.kinds": [],
         "explore.filterSheet.kinds.commentsChip": [],
-        "explore.filterSheet.kinds.hint": [],
         "explore.filterSheet.kinds.label": [],
         "explore.filterSheet.kinds.postsChip": [],
         "explore.filterSheet.kinds.profilesChip": [],
         "explore.filterSheet.kinds.topicsChip": [],
         "explore.filterSheet.order": [
-          "member"
-        ],
-        "explore.filterSheet.order.hint": [
           "member"
         ],
         "explore.filterSheet.order.label": [
@@ -3312,15 +3392,6 @@
           "member"
         ],
         "explore.filterSheet.order.picker.rankedOption": [
-          "member"
-        ],
-        "explore.filterSheet.order.seen": [
-          "member"
-        ],
-        "explore.filterSheet.order.seen.box": [
-          "member"
-        ],
-        "explore.filterSheet.order.seen.label": [
           "member"
         ],
         "explore.filterSheet.title": [],
@@ -4009,9 +4080,6 @@
         "feedEntry.header": [],
         "feedEntry.header.back": [],
         "feedEntry.header.title": [],
-        "feedEntry.morePaths": [],
-        "feedEntry.morePaths.label": [],
-        "feedEntry.morePaths.value": [],
         "feedEntry.note": [],
         "feedEntry.origin": [],
         "feedEntry.origin.flag": [],
@@ -4024,31 +4092,41 @@
           "1",
           "2",
           "3",
-          "4"
+          "4",
+          "5",
+          "6"
         ],
         "feedEntry.path.chevron": [
           "1",
           "2",
           "3",
-          "4"
+          "4",
+          "5",
+          "6"
         ],
         "feedEntry.path.through": [
           "1",
           "2",
           "3",
-          "4"
+          "4",
+          "5",
+          "6"
         ],
         "feedEntry.path.trace": [
           "1",
           "2",
           "3",
-          "4"
+          "4",
+          "5",
+          "6"
         ],
         "feedEntry.path.value": [
           "1",
           "2",
           "3",
-          "4"
+          "4",
+          "5",
+          "6"
         ],
         "feedEntry.pathsLabel": []
       }
@@ -5445,15 +5523,13 @@
           "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
         ],
         "feed.card.menu": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
           "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
         ],
         "feed.card.opener": [
           "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
         ],
         "feed.card.removalMark": [
-          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
-        ],
-        "feed.card.removalMark.detail": [
           "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
         ],
         "feed.card.removalMark.line": [
@@ -5479,6 +5555,243 @@
         "feed.card.title": [
           "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
         ]
+      }
+    },
+    "FeedRemovedMenu": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the post's id, the lowercase UUID the wire carries (PostCard)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.body": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.menu": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.removalMark": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.removalMark.line": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.removalMark.when": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.menuSheet": [],
+        "feed.menuSheet.cite": [],
+        "feed.menuSheet.dragHandle": [],
+        "feed.menuSheet.hide": [],
+        "feed.menuSheet.license": [],
+        "feed.menuSheet.report": [],
+        "feed.menuSheet.save": []
+      }
+    },
+    "FeedRemovedMenuOwn": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.comments": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.score": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.score.value": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.share": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip.avatar": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip.handle": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip.name": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "feed.card.menu": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.opener": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.removalMark": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.removalMark.line": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.removalMark.when": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.menuSheet": [],
+        "feed.menuSheet.cite": [],
+        "feed.menuSheet.dragHandle": [],
+        "feed.menuSheet.license": [],
+        "feed.menuSheet.markSensitive": [],
+        "feed.menuSheet.save": []
       }
     },
     "FeedReportConfirm": {
@@ -5598,7 +5911,6 @@
           "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
         ],
         "feed.reportSheet": [],
-        "feed.reportSheet.body": [],
         "feed.reportSheet.cancel": [],
         "feed.reportSheet.dragHandle": [],
         "feed.reportSheet.report": [],
@@ -5876,7 +6188,6 @@
         ],
         "feed.filterSheet": [],
         "feed.filterSheet.also": [],
-        "feed.filterSheet.also.hint": [],
         "feed.filterSheet.also.label": [],
         "feed.filterSheet.also.removedChip": [],
         "feed.filterSheet.also.sensitiveChip": [],
@@ -5886,7 +6197,6 @@
         "feed.filterSheet.foot.done": [],
         "feed.filterSheet.foot.reset": [],
         "feed.filterSheet.forms": [],
-        "feed.filterSheet.forms.hint": [],
         "feed.filterSheet.forms.label": [],
         "feed.filterSheet.forms.photosChip": [],
         "feed.filterSheet.forms.textChip": [],
@@ -5894,13 +6204,11 @@
         "feed.filterSheet.help": [],
         "feed.filterSheet.kinds": [],
         "feed.filterSheet.kinds.commentsChip": [],
-        "feed.filterSheet.kinds.hint": [],
         "feed.filterSheet.kinds.label": [],
         "feed.filterSheet.kinds.postsChip": [],
         "feed.filterSheet.kinds.profilesChip": [],
         "feed.filterSheet.kinds.topicsChip": [],
         "feed.filterSheet.order": [],
-        "feed.filterSheet.order.hint": [],
         "feed.filterSheet.order.label": [],
         "feed.filterSheet.order.picker": [],
         "feed.filterSheet.order.picker.newestOption": [],
@@ -5917,15 +6225,10 @@
           "everyone",
           "your-people"
         ],
-        "feed.filterSheet.people.everyone.hint": [
-          "everyone",
-          "your-people"
-        ],
         "feed.filterSheet.people.everyone.label": [
           "everyone",
           "your-people"
         ],
-        "feed.filterSheet.people.hint": [],
         "feed.filterSheet.people.label": [],
         "feed.filterSheet.people.sign": [
           "your-people"
@@ -6830,7 +7133,6 @@
         "history.filterSheet.foot.reset": [],
         "history.filterSheet.kinds": [],
         "history.filterSheet.kinds.commentsChip": [],
-        "history.filterSheet.kinds.hint": [],
         "history.filterSheet.kinds.label": [],
         "history.filterSheet.kinds.postsChip": [],
         "history.filterSheet.kinds.profilesChip": [],
@@ -7750,7 +8052,6 @@
         "inviteEntry.browse": [],
         "inviteEntry.commit": [],
         "inviteEntry.commit.action": [],
-        "inviteEntry.commit.reason": [],
         "inviteEntry.header": [],
         "inviteEntry.header.back": [],
         "inviteEntry.link": [],
@@ -8013,10 +8314,12 @@
       "prefix": "invites",
       "keys": {
         "invites.application": "the asker's id, the lowercase UUID the wire carries (Invites' applications, a kept approval's row among them)",
+        "invites.applicationsDoor": "the applications chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "invites.applicationsEmpty": "the sections chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
         "invites.link": "the invite link's id, the link's last path segment (Invites' live links)",
         "invites.link.copyFault": "the copy chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "invites.linksDoor": "the links chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "invites.linksEmpty": "the sections chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "invites.peopleDoor": "the letIn chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "invites.person": "the person's id, the lowercase UUID the wire carries (Invites' people you let in)",
@@ -8072,6 +8375,9 @@
           "b7b20d2c-a1b1-4c3a-a6ba-60156276bff5",
           "39fe9a1a-85c4-41b4-a1e2-c5de97325ef4"
         ],
+        "invites.applicationsDoor": [
+          "capped"
+        ],
         "invites.applicationsEmpty": [
           "no-applications"
         ],
@@ -8093,30 +8399,45 @@
         "invites.header.title": [],
         "invites.link": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
-          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025",
+          "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90"
         ],
         "invites.link.action": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
-          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025",
+          "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90"
         ],
         "invites.link.address": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
-          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025",
+          "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90"
         ],
         "invites.link.caption": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
-          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025",
+          "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90"
         ],
         "invites.link.copy": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
-          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025",
+          "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90"
         ],
         "invites.link.copyFault": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15/failed"
         ],
         "invites.link.label": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
-          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025",
+          "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90"
+        ],
+        "invites.linksDoor": [
+          "capped"
         ],
         "invites.linksEmpty": [
           "no-links"
@@ -8202,6 +8523,7 @@
       "nodes": {
         "invites.empty": [],
         "invites.empty.create": [],
+        "invites.empty.help": [],
         "invites.empty.title": [],
         "invites.header": [],
         "invites.header.back": [],
@@ -8216,7 +8538,6 @@
         "join.body": [],
         "join.commit": [],
         "join.commit.action": [],
-        "join.commit.reason": [],
         "join.confirm": [],
         "join.confirm.input": [],
         "join.confirm.label": [],
@@ -8266,6 +8587,7 @@
         "join.handle.support": [],
         "join.header": [],
         "join.header.back": [],
+        "join.header.help": [],
         "join.password": [],
         "join.password.input": [],
         "join.password.label": [],
@@ -8287,7 +8609,6 @@
         "inviteEntry.browse": [],
         "inviteEntry.commit": [],
         "inviteEntry.commit.action": [],
-        "inviteEntry.commit.reason": [],
         "inviteEntry.header": [],
         "inviteEntry.header.back": [],
         "inviteEntry.link": [],
@@ -8395,7 +8716,6 @@
           "3",
           "4"
         ],
-        "keptPicksSeal.acts.note": [],
         "keptPicksSeal.acts.total": [],
         "keptPicksSeal.approval": [],
         "keptPicksSeal.approval.open": [],
@@ -8406,7 +8726,6 @@
         "keptPicksSeal.header.back": [],
         "keptPicksSeal.header.help": [],
         "keptPicksSeal.header.leave": [],
-        "keptPicksSeal.header.stage": [],
         "keptPicksSeal.header.title": []
       }
     },
@@ -8745,7 +9064,6 @@
         "onboarding.body": [],
         "onboarding.dots": [],
         "onboarding.next": [],
-        "onboarding.note": [],
         "onboarding.skip": [],
         "onboarding.stage": [],
         "onboarding.stage.inviter": [],
@@ -8915,6 +9233,200 @@
           "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
         ],
         "feed.card.actionRow.stance.pending": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "feed.card.menu": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.opener": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ]
+      }
+    },
+    "PadStanding": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.cancel": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.bottom": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.left": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.right": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.square": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.square.knob": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.square.knobLayer": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.square.zeroAcross": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.square.zeroDown": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.top": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.help": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.landing": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.landing.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.landing.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.landing.label": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.landing.words": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.landing.zero": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.set": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.sever": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.current": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.current.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.current.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.current.label": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.pick": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.pick.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.pick.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.pick.label": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.zeroPanel": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.zeroPanel.back": [
           "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
         ],
         "feed.card.authorChip": [
@@ -9680,10 +10192,10 @@
         "profile.comments.commentCard.removalMark": [
           "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
         ],
-        "profile.comments.commentCard.removalMark.detail": [
+        "profile.comments.commentCard.removalMark.line": [
           "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
         ],
-        "profile.comments.commentCard.removalMark.line": [
+        "profile.comments.commentCard.removalMark.when": [
           "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
         ],
         "profile.comments.commentCard.target": [
@@ -9692,6 +10204,9 @@
         ],
         "profile.comments.empty": [],
         "profile.comments.empty.title": [],
+        "profile.comments.loading": [],
+        "profile.comments.moreFault": [],
+        "profile.comments.moreFault.retry": [],
         "profile.comments.viewReplies": [
           "5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e"
         ],
@@ -9964,6 +10479,11 @@
         "profile.comments.commentCard.target": [
           "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
         ],
+        "profile.comments.empty": [],
+        "profile.comments.empty.title": [],
+        "profile.comments.loading": [],
+        "profile.comments.moreFault": [],
+        "profile.comments.moreFault.retry": [],
         "profile.identity": [],
         "profile.identity.actionRow": [],
         "profile.identity.actionRow.edit": [],
@@ -10615,6 +11135,9 @@
         ],
         "profile.posts.empty": [],
         "profile.posts.empty.title": [],
+        "profile.posts.loading": [],
+        "profile.posts.moreFault": [],
+        "profile.posts.moreFault.retry": [],
         "profile.tabRow": [],
         "profile.tabRow.commentsTab": [],
         "profile.tabRow.everythingTab": [],
@@ -11002,6 +11525,11 @@
         "profile.posts.card.title": [
           "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
         ],
+        "profile.posts.empty": [],
+        "profile.posts.empty.title": [],
+        "profile.posts.loading": [],
+        "profile.posts.moreFault": [],
+        "profile.posts.moreFault.retry": [],
         "profile.tabRow": [],
         "profile.tabRow.commentsTab": [],
         "profile.tabRow.everythingTab": [],
@@ -11352,6 +11880,100 @@
         "postDetail.menuSheet.save": []
       }
     },
+    "ReaderPostMenuNarrow": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "postDetail.card.opinions": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.menuSheet": [],
+        "postDetail.menuSheet.cite": [],
+        "postDetail.menuSheet.dragHandle": [],
+        "postDetail.menuSheet.hide": [],
+        "postDetail.menuSheet.license": [],
+        "postDetail.menuSheet.report": [],
+        "postDetail.menuSheet.save": [],
+        "postDetail.menuSheet.share": []
+      }
+    },
     "RecoveryCode": {
       "prefix": "recoveryCode",
       "keys": {},
@@ -11480,6 +12102,96 @@
         "reel.washTop": []
       }
     },
+    "RefPair": {
+      "prefix": "composeDetails",
+      "keys": {
+        "composeDetails.mediaRow.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
+        "composeDetails.references.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)",
+        "composeDetails.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "composeDetails.describeRow": [],
+        "composeDetails.describeRow.count": [],
+        "composeDetails.describeRow.describe": [],
+        "composeDetails.describeRow.reason": [],
+        "composeDetails.description": [],
+        "composeDetails.description.corner": [],
+        "composeDetails.description.input": [],
+        "composeDetails.description.label": [],
+        "composeDetails.header": [],
+        "composeDetails.header.back": [],
+        "composeDetails.header.leave": [],
+        "composeDetails.header.title": [],
+        "composeDetails.mediaRow": [],
+        "composeDetails.mediaRow.caption": [],
+        "composeDetails.mediaRow.thumb": [
+          "1",
+          "2"
+        ],
+        "composeDetails.next": [],
+        "composeDetails.pairSheet": [],
+        "composeDetails.pairSheet.done": [],
+        "composeDetails.pairSheet.dragHandle": [],
+        "composeDetails.pairSheet.note": [],
+        "composeDetails.pairSheet.pad": [],
+        "composeDetails.pairSheet.pad.field": [],
+        "composeDetails.pairSheet.pad.field.bottom": [],
+        "composeDetails.pairSheet.pad.field.left": [],
+        "composeDetails.pairSheet.pad.field.right": [],
+        "composeDetails.pairSheet.pad.field.square": [],
+        "composeDetails.pairSheet.pad.field.square.knob": [],
+        "composeDetails.pairSheet.pad.field.square.zeroAcross": [],
+        "composeDetails.pairSheet.pad.field.square.zeroDown": [],
+        "composeDetails.pairSheet.pad.field.top": [],
+        "composeDetails.pairSheet.pick": [],
+        "composeDetails.pairSheet.pick.exact": [],
+        "composeDetails.pairSheet.pick.face": [],
+        "composeDetails.pairSheet.pick.label": [],
+        "composeDetails.pairSheet.title": [],
+        "composeDetails.references": [],
+        "composeDetails.references.add": [],
+        "composeDetails.references.label": [],
+        "composeDetails.references.stagedReference": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.kind": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.mark": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.name": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.pair": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.pair.exact": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.pair.face": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.remove": [
+          "1"
+        ],
+        "composeDetails.tags": [],
+        "composeDetails.tags.add": [],
+        "composeDetails.tags.label": [],
+        "composeDetails.tags.tag": [
+          "fieldnotes",
+          "coastroad"
+        ],
+        "composeDetails.tags.tag.remove": [
+          "fieldnotes",
+          "coastroad"
+        ],
+        "composeDetails.title": [],
+        "composeDetails.title.corner": [],
+        "composeDetails.title.input": [],
+        "composeDetails.title.label": []
+      }
+    },
     "ReferencePicker": {
       "prefix": "referencePicker",
       "keys": {
@@ -11521,9 +12233,6 @@
           "filter"
         ],
         "referencePicker.filterSheet.kinds.commentsChip": [
-          "filter"
-        ],
-        "referencePicker.filterSheet.kinds.hint": [
           "filter"
         ],
         "referencePicker.filterSheet.kinds.label": [
@@ -12052,9 +12761,6 @@
         "postDetail.card.removalMark": [
           "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
         ],
-        "postDetail.card.removalMark.detail": [
-          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
-        ],
         "postDetail.card.removalMark.line": [
           "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
         ],
@@ -12065,7 +12771,82 @@
           "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
         ],
         "postDetail.header": [],
-        "postDetail.header.back": []
+        "postDetail.header.back": [],
+        "postDetail.header.menu": []
+      }
+    },
+    "RemovedOther": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the post's id, the lowercase UUID the wire carries (PostCard)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.removalMark": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.removalMark.line": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.removalMark.when": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": []
       }
     },
     "ReplyEntry": {
@@ -12157,6 +12938,8 @@
         "postDetail.header": [],
         "postDetail.header.back": [],
         "postDetail.header.menu": [],
+        "postDetail.snackbar": [],
+        "postDetail.snackbar.message": [],
         "postDetail.threadSheet": [],
         "postDetail.threadSheet.commentCard": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
@@ -12314,7 +13097,6 @@
         "postDetail.header.back": [],
         "postDetail.header.menu": [],
         "postDetail.reportSheet": [],
-        "postDetail.reportSheet.body": [],
         "postDetail.reportSheet.cancel": [],
         "postDetail.reportSheet.dragHandle": [],
         "postDetail.reportSheet.report": [],
@@ -12328,7 +13110,6 @@
         "reset.body": [],
         "reset.commit": [],
         "reset.commit.action": [],
-        "reset.commit.reason": [],
         "reset.email": [],
         "reset.email.input": [],
         "reset.email.label": [],
@@ -12355,11 +13136,31 @@
         "reset.body": [],
         "reset.commit": [],
         "reset.commit.action": [],
-        "reset.commit.reason": [],
         "reset.confirm": [],
         "reset.confirm.input": [],
         "reset.confirm.label": [],
         "reset.confirm.reveal": [],
+        "reset.note": [],
+        "reset.password": [],
+        "reset.password.input": [],
+        "reset.password.label": [],
+        "reset.password.reveal": [],
+        "reset.password.support": [],
+        "reset.title": []
+      }
+    },
+    "ResetNewErrors": {
+      "prefix": "reset",
+      "keys": {},
+      "nodes": {
+        "reset.body": [],
+        "reset.commit": [],
+        "reset.commit.action": [],
+        "reset.confirm": [],
+        "reset.confirm.input": [],
+        "reset.confirm.label": [],
+        "reset.confirm.reveal": [],
+        "reset.confirm.support": [],
         "reset.note": [],
         "reset.password": [],
         "reset.password.input": [],
@@ -13239,7 +14040,6 @@
         "settings.credentials.email.chevron": [],
         "settings.credentials.email.label": [],
         "settings.credentials.email.value": [],
-        "settings.credentials.footnote": [],
         "settings.credentials.handle": [],
         "settings.credentials.handle.chevron": [],
         "settings.credentials.handle.label": [],
@@ -13253,7 +14053,6 @@
         "settings.ending.delete": [],
         "settings.ending.delete.chevron": [],
         "settings.ending.delete.label": [],
-        "settings.ending.footnote": [],
         "settings.header": [],
         "settings.header.back": [],
         "settings.header.title": [],
@@ -13280,14 +14079,12 @@
         "settings.reading.feed.chevron": [],
         "settings.reading.feed.label": [],
         "settings.reading.feed.value": [],
-        "settings.reading.footnote": [],
+        "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
-        "settings.sensitive.footnote": [],
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
-        "settings.sensitive.unveil.status": [],
         "settings.sensitive.unveil.switch": [],
         "settings.sessions": [],
         "settings.sessions.elsewhere": [],
@@ -13315,21 +14112,18 @@
         ],
         "settings.stance": [],
         "settings.stance.footnote": [],
+        "settings.stance.help": [],
         "settings.stance.label": [],
         "settings.stance.pad": [],
         "settings.stance.pad.choice": [],
         "settings.stance.pad.label": [],
-        "settings.stance.pad.status": [],
         "settings.stance.sliders": [],
         "settings.stance.sliders.choice": [],
         "settings.stance.sliders.label": [],
-        "settings.stance.sliders.status": [],
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
-        "settings.stance.typed.status": [],
         "settings.theme": [],
-        "settings.theme.footnote": [],
         "settings.theme.label": [],
         "settings.theme.picker": [],
         "settings.theme.picker.autoOption": [],
@@ -13338,7 +14132,6 @@
         "settings.writing": [],
         "settings.writing.confirm": [],
         "settings.writing.confirm.label": [],
-        "settings.writing.confirm.status": [],
         "settings.writing.confirm.switch": [],
         "settings.writing.footnote": [],
         "settings.writing.label": [],
@@ -13355,7 +14148,6 @@
         "settingsBackup.body": [],
         "settingsBackup.commit": [],
         "settingsBackup.commit.action": [],
-        "settingsBackup.commit.reason": [],
         "settingsBackup.current": [],
         "settingsBackup.current.input": [],
         "settingsBackup.current.label": [],
@@ -13462,7 +14254,6 @@
         "settings.credentials.email.chevron": [],
         "settings.credentials.email.label": [],
         "settings.credentials.email.value": [],
-        "settings.credentials.footnote": [],
         "settings.credentials.handle": [],
         "settings.credentials.handle.chevron": [],
         "settings.credentials.handle.label": [],
@@ -13506,14 +14297,12 @@
         "settings.reading.feed.chevron": [],
         "settings.reading.feed.label": [],
         "settings.reading.feed.value": [],
-        "settings.reading.footnote": [],
+        "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
-        "settings.sensitive.footnote": [],
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
-        "settings.sensitive.unveil.status": [],
         "settings.sensitive.unveil.switch": [],
         "settings.sessions": [],
         "settings.sessions.elsewhere": [],
@@ -13541,21 +14330,18 @@
         ],
         "settings.stance": [],
         "settings.stance.footnote": [],
+        "settings.stance.help": [],
         "settings.stance.label": [],
         "settings.stance.pad": [],
         "settings.stance.pad.choice": [],
         "settings.stance.pad.label": [],
-        "settings.stance.pad.status": [],
         "settings.stance.sliders": [],
         "settings.stance.sliders.choice": [],
         "settings.stance.sliders.label": [],
-        "settings.stance.sliders.status": [],
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
-        "settings.stance.typed.status": [],
         "settings.theme": [],
-        "settings.theme.footnote": [],
         "settings.theme.label": [],
         "settings.theme.picker": [],
         "settings.theme.picker.autoOption": [],
@@ -13564,7 +14350,6 @@
         "settings.writing": [],
         "settings.writing.confirm": [],
         "settings.writing.confirm.label": [],
-        "settings.writing.confirm.status": [],
         "settings.writing.confirm.switch": [],
         "settings.writing.footnote": [],
         "settings.writing.label": [],
@@ -13626,7 +14411,6 @@
         "settings.credentials.email.label": [],
         "settings.credentials.email.status": [],
         "settings.credentials.email.value": [],
-        "settings.credentials.footnote": [],
         "settings.credentials.handle": [],
         "settings.credentials.handle.chevron": [],
         "settings.credentials.handle.label": [],
@@ -13640,7 +14424,6 @@
         "settings.ending.delete": [],
         "settings.ending.delete.chevron": [],
         "settings.ending.delete.label": [],
-        "settings.ending.footnote": [],
         "settings.header": [],
         "settings.header.back": [],
         "settings.header.title": [],
@@ -13667,14 +14450,12 @@
         "settings.reading.feed.chevron": [],
         "settings.reading.feed.label": [],
         "settings.reading.feed.value": [],
-        "settings.reading.footnote": [],
+        "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
-        "settings.sensitive.footnote": [],
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
-        "settings.sensitive.unveil.status": [],
         "settings.sensitive.unveil.switch": [],
         "settings.sessions": [],
         "settings.sessions.elsewhere": [],
@@ -13702,21 +14483,18 @@
         ],
         "settings.stance": [],
         "settings.stance.footnote": [],
+        "settings.stance.help": [],
         "settings.stance.label": [],
         "settings.stance.pad": [],
         "settings.stance.pad.choice": [],
         "settings.stance.pad.label": [],
-        "settings.stance.pad.status": [],
         "settings.stance.sliders": [],
         "settings.stance.sliders.choice": [],
         "settings.stance.sliders.label": [],
-        "settings.stance.sliders.status": [],
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
-        "settings.stance.typed.status": [],
         "settings.theme": [],
-        "settings.theme.footnote": [],
         "settings.theme.label": [],
         "settings.theme.picker": [],
         "settings.theme.picker.autoOption": [],
@@ -13725,7 +14503,6 @@
         "settings.writing": [],
         "settings.writing.confirm": [],
         "settings.writing.confirm.label": [],
-        "settings.writing.confirm.status": [],
         "settings.writing.confirm.switch": [],
         "settings.writing.footnote": [],
         "settings.writing.label": [],
@@ -13788,7 +14565,6 @@
         "settings.credentials.email.chevron": [],
         "settings.credentials.email.label": [],
         "settings.credentials.email.value": [],
-        "settings.credentials.footnote": [],
         "settings.credentials.handle": [],
         "settings.credentials.handle.chevron": [],
         "settings.credentials.handle.label": [],
@@ -13802,7 +14578,6 @@
         "settings.ending.delete": [],
         "settings.ending.delete.chevron": [],
         "settings.ending.delete.label": [],
-        "settings.ending.footnote": [],
         "settings.header": [],
         "settings.header.back": [],
         "settings.header.title": [],
@@ -13886,14 +14661,12 @@
         "settings.reading.feed.chevron": [],
         "settings.reading.feed.label": [],
         "settings.reading.feed.value": [],
-        "settings.reading.footnote": [],
+        "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
-        "settings.sensitive.footnote": [],
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
-        "settings.sensitive.unveil.status": [],
         "settings.sensitive.unveil.switch": [],
         "settings.sessions": [],
         "settings.sessions.elsewhere": [],
@@ -13921,21 +14694,18 @@
         ],
         "settings.stance": [],
         "settings.stance.footnote": [],
+        "settings.stance.help": [],
         "settings.stance.label": [],
         "settings.stance.pad": [],
         "settings.stance.pad.choice": [],
         "settings.stance.pad.label": [],
-        "settings.stance.pad.status": [],
         "settings.stance.sliders": [],
         "settings.stance.sliders.choice": [],
         "settings.stance.sliders.label": [],
-        "settings.stance.sliders.status": [],
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
-        "settings.stance.typed.status": [],
         "settings.theme": [],
-        "settings.theme.footnote": [],
         "settings.theme.label": [],
         "settings.theme.picker": [],
         "settings.theme.picker.autoOption": [],
@@ -13944,7 +14714,6 @@
         "settings.writing": [],
         "settings.writing.confirm": [],
         "settings.writing.confirm.label": [],
-        "settings.writing.confirm.status": [],
         "settings.writing.confirm.switch": [],
         "settings.writing.footnote": [],
         "settings.writing.label": [],
@@ -14008,7 +14777,6 @@
         "settings.credentials.email.chevron": [],
         "settings.credentials.email.label": [],
         "settings.credentials.email.value": [],
-        "settings.credentials.footnote": [],
         "settings.credentials.handle": [],
         "settings.credentials.handle.chevron": [],
         "settings.credentials.handle.label": [],
@@ -14026,7 +14794,6 @@
         "settings.ending.delete": [],
         "settings.ending.delete.chevron": [],
         "settings.ending.delete.label": [],
-        "settings.ending.footnote": [],
         "settings.header": [],
         "settings.header.back": [],
         "settings.header.title": [],
@@ -14053,14 +14820,12 @@
         "settings.reading.feed.chevron": [],
         "settings.reading.feed.label": [],
         "settings.reading.feed.value": [],
-        "settings.reading.footnote": [],
+        "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
-        "settings.sensitive.footnote": [],
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
-        "settings.sensitive.unveil.status": [],
         "settings.sensitive.unveil.switch": [],
         "settings.sessions": [],
         "settings.sessions.elsewhere": [],
@@ -14088,21 +14853,18 @@
         ],
         "settings.stance": [],
         "settings.stance.footnote": [],
+        "settings.stance.help": [],
         "settings.stance.label": [],
         "settings.stance.pad": [],
         "settings.stance.pad.choice": [],
         "settings.stance.pad.label": [],
-        "settings.stance.pad.status": [],
         "settings.stance.sliders": [],
         "settings.stance.sliders.choice": [],
         "settings.stance.sliders.label": [],
-        "settings.stance.sliders.status": [],
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
-        "settings.stance.typed.status": [],
         "settings.theme": [],
-        "settings.theme.footnote": [],
         "settings.theme.label": [],
         "settings.theme.picker": [],
         "settings.theme.picker.autoOption": [],
@@ -14111,7 +14873,6 @@
         "settings.writing": [],
         "settings.writing.confirm": [],
         "settings.writing.confirm.label": [],
-        "settings.writing.confirm.status": [],
         "settings.writing.confirm.switch": [],
         "settings.writing.footnote": [],
         "settings.writing.label": [],
@@ -14174,7 +14935,6 @@
         "settings.credentials.email.chevron": [],
         "settings.credentials.email.label": [],
         "settings.credentials.email.value": [],
-        "settings.credentials.footnote": [],
         "settings.credentials.handle": [],
         "settings.credentials.handle.chevron": [],
         "settings.credentials.handle.label": [],
@@ -14188,7 +14948,6 @@
         "settings.ending.delete": [],
         "settings.ending.delete.chevron": [],
         "settings.ending.delete.label": [],
-        "settings.ending.footnote": [],
         "settings.header": [],
         "settings.header.back": [],
         "settings.header.title": [],
@@ -14212,9 +14971,7 @@
           "3"
         ],
         "settings.licenseSheet.credit.tier.hint": [
-          "1",
-          "2",
-          "3"
+          "2"
         ],
         "settings.licenseSheet.credit.tier.label": [
           "1",
@@ -14239,7 +14996,6 @@
           "3"
         ],
         "settings.licenseSheet.record.tier.hint": [
-          "1",
           "2",
           "3"
         ],
@@ -14267,14 +15023,12 @@
         "settings.reading.feed.chevron": [],
         "settings.reading.feed.label": [],
         "settings.reading.feed.value": [],
-        "settings.reading.footnote": [],
+        "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
-        "settings.sensitive.footnote": [],
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
-        "settings.sensitive.unveil.status": [],
         "settings.sensitive.unveil.switch": [],
         "settings.sessions": [],
         "settings.sessions.elsewhere": [],
@@ -14302,21 +15056,18 @@
         ],
         "settings.stance": [],
         "settings.stance.footnote": [],
+        "settings.stance.help": [],
         "settings.stance.label": [],
         "settings.stance.pad": [],
         "settings.stance.pad.choice": [],
         "settings.stance.pad.label": [],
-        "settings.stance.pad.status": [],
         "settings.stance.sliders": [],
         "settings.stance.sliders.choice": [],
         "settings.stance.sliders.label": [],
-        "settings.stance.sliders.status": [],
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
-        "settings.stance.typed.status": [],
         "settings.theme": [],
-        "settings.theme.footnote": [],
         "settings.theme.label": [],
         "settings.theme.picker": [],
         "settings.theme.picker.autoOption": [],
@@ -14325,7 +15076,6 @@
         "settings.writing": [],
         "settings.writing.confirm": [],
         "settings.writing.confirm.label": [],
-        "settings.writing.confirm.status": [],
         "settings.writing.confirm.switch": [],
         "settings.writing.footnote": [],
         "settings.writing.label": [],
@@ -14389,7 +15139,6 @@
         "settings.credentials.email.chevron": [],
         "settings.credentials.email.label": [],
         "settings.credentials.email.value": [],
-        "settings.credentials.footnote": [],
         "settings.credentials.handle": [],
         "settings.credentials.handle.chevron": [],
         "settings.credentials.handle.label": [],
@@ -14403,10 +15152,8 @@
         "settings.ending.delete": [],
         "settings.ending.delete.chevron": [],
         "settings.ending.delete.label": [],
-        "settings.ending.footnote": [],
         "settings.feedSheet": [],
         "settings.feedSheet.also": [],
-        "settings.feedSheet.also.hint": [],
         "settings.feedSheet.also.label": [],
         "settings.feedSheet.also.removedChip": [],
         "settings.feedSheet.also.sensitiveChip": [],
@@ -14416,21 +15163,17 @@
         "settings.feedSheet.foot.done": [],
         "settings.feedSheet.foot.reset": [],
         "settings.feedSheet.forms": [],
-        "settings.feedSheet.forms.hint": [],
         "settings.feedSheet.forms.label": [],
         "settings.feedSheet.forms.photosChip": [],
         "settings.feedSheet.forms.textChip": [],
         "settings.feedSheet.forms.videoChip": [],
         "settings.feedSheet.kinds": [],
         "settings.feedSheet.kinds.commentsChip": [],
-        "settings.feedSheet.kinds.hint": [],
         "settings.feedSheet.kinds.label": [],
         "settings.feedSheet.kinds.postsChip": [],
         "settings.feedSheet.kinds.profilesChip": [],
         "settings.feedSheet.kinds.topicsChip": [],
-        "settings.feedSheet.note": [],
         "settings.feedSheet.order": [],
-        "settings.feedSheet.order.hint": [],
         "settings.feedSheet.order.label": [],
         "settings.feedSheet.order.picker": [],
         "settings.feedSheet.order.picker.newestOption": [],
@@ -14447,15 +15190,10 @@
           "everyone",
           "your-people"
         ],
-        "settings.feedSheet.people.everyone.hint": [
-          "everyone",
-          "your-people"
-        ],
         "settings.feedSheet.people.everyone.label": [
           "everyone",
           "your-people"
         ],
-        "settings.feedSheet.people.hint": [],
         "settings.feedSheet.people.label": [],
         "settings.feedSheet.people.sign": [
           "your-people"
@@ -14513,14 +15251,12 @@
         "settings.reading.feed.chevron": [],
         "settings.reading.feed.label": [],
         "settings.reading.feed.value": [],
-        "settings.reading.footnote": [],
+        "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
-        "settings.sensitive.footnote": [],
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
-        "settings.sensitive.unveil.status": [],
         "settings.sensitive.unveil.switch": [],
         "settings.sessions": [],
         "settings.sessions.elsewhere": [],
@@ -14548,21 +15284,18 @@
         ],
         "settings.stance": [],
         "settings.stance.footnote": [],
+        "settings.stance.help": [],
         "settings.stance.label": [],
         "settings.stance.pad": [],
         "settings.stance.pad.choice": [],
         "settings.stance.pad.label": [],
-        "settings.stance.pad.status": [],
         "settings.stance.sliders": [],
         "settings.stance.sliders.choice": [],
         "settings.stance.sliders.label": [],
-        "settings.stance.sliders.status": [],
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
-        "settings.stance.typed.status": [],
         "settings.theme": [],
-        "settings.theme.footnote": [],
         "settings.theme.label": [],
         "settings.theme.picker": [],
         "settings.theme.picker.autoOption": [],
@@ -14571,7 +15304,6 @@
         "settings.writing": [],
         "settings.writing.confirm": [],
         "settings.writing.confirm.label": [],
-        "settings.writing.confirm.status": [],
         "settings.writing.confirm.switch": [],
         "settings.writing.footnote": [],
         "settings.writing.label": [],
@@ -14633,7 +15365,6 @@
         "settings.credentials.email.chevron": [],
         "settings.credentials.email.label": [],
         "settings.credentials.email.value": [],
-        "settings.credentials.footnote": [],
         "settings.credentials.handle": [],
         "settings.credentials.handle.chevron": [],
         "settings.credentials.handle.label": [],
@@ -14647,7 +15378,6 @@
         "settings.ending.delete": [],
         "settings.ending.delete.chevron": [],
         "settings.ending.delete.label": [],
-        "settings.ending.footnote": [],
         "settings.header": [],
         "settings.header.back": [],
         "settings.header.title": [],
@@ -14706,14 +15436,12 @@
         "settings.reading.feed.chevron": [],
         "settings.reading.feed.label": [],
         "settings.reading.feed.value": [],
-        "settings.reading.footnote": [],
+        "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
-        "settings.sensitive.footnote": [],
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
-        "settings.sensitive.unveil.status": [],
         "settings.sensitive.unveil.switch": [],
         "settings.sessions": [],
         "settings.sessions.elsewhere": [],
@@ -14744,21 +15472,18 @@
         "settings.snackbar.message": [],
         "settings.stance": [],
         "settings.stance.footnote": [],
+        "settings.stance.help": [],
         "settings.stance.label": [],
         "settings.stance.pad": [],
         "settings.stance.pad.choice": [],
         "settings.stance.pad.label": [],
-        "settings.stance.pad.status": [],
         "settings.stance.sliders": [],
         "settings.stance.sliders.choice": [],
         "settings.stance.sliders.label": [],
-        "settings.stance.sliders.status": [],
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
-        "settings.stance.typed.status": [],
         "settings.theme": [],
-        "settings.theme.footnote": [],
         "settings.theme.label": [],
         "settings.theme.picker": [],
         "settings.theme.picker.autoOption": [],
@@ -14767,7 +15492,6 @@
         "settings.writing": [],
         "settings.writing.confirm": [],
         "settings.writing.confirm.label": [],
-        "settings.writing.confirm.status": [],
         "settings.writing.confirm.switch": [],
         "settings.writing.footnote": [],
         "settings.writing.label": [],
@@ -14782,11 +15506,9 @@
       "keys": {},
       "nodes": {
         "signIn.apk": [],
-        "signIn.body": [],
         "signIn.browse": [],
         "signIn.commit": [],
         "signIn.commit.action": [],
-        "signIn.commit.reason": [],
         "signIn.email": [],
         "signIn.email.input": [],
         "signIn.email.label": [],
@@ -14809,7 +15531,6 @@
       "keys": {},
       "nodes": {
         "signIn.apk": [],
-        "signIn.body": [],
         "signIn.browse": [],
         "signIn.commit": [],
         "signIn.commit.action": [],
@@ -14840,7 +15561,6 @@
         "signIn.browse": [],
         "signIn.commit": [],
         "signIn.commit.action": [],
-        "signIn.commit.reason": [],
         "signIn.email": [],
         "signIn.email.input": [],
         "signIn.email.label": [],
@@ -14863,7 +15583,6 @@
       "keys": {},
       "nodes": {
         "signIn.apk": [],
-        "signIn.body": [],
         "signIn.browse": [],
         "signIn.commit": [],
         "signIn.commit.action": [],
@@ -14936,7 +15655,6 @@
         "settings.credentials.email.chevron": [],
         "settings.credentials.email.label": [],
         "settings.credentials.email.value": [],
-        "settings.credentials.footnote": [],
         "settings.credentials.handle": [],
         "settings.credentials.handle.chevron": [],
         "settings.credentials.handle.label": [],
@@ -14956,7 +15674,6 @@
         "settings.ending.delete": [],
         "settings.ending.delete.chevron": [],
         "settings.ending.delete.label": [],
-        "settings.ending.footnote": [],
         "settings.header": [],
         "settings.header.back": [],
         "settings.header.title": [],
@@ -14983,14 +15700,12 @@
         "settings.reading.feed.chevron": [],
         "settings.reading.feed.label": [],
         "settings.reading.feed.value": [],
-        "settings.reading.footnote": [],
+        "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
-        "settings.sensitive.footnote": [],
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
-        "settings.sensitive.unveil.status": [],
         "settings.sensitive.unveil.switch": [],
         "settings.sessions": [],
         "settings.sessions.elsewhere": [],
@@ -15018,21 +15733,18 @@
         ],
         "settings.stance": [],
         "settings.stance.footnote": [],
+        "settings.stance.help": [],
         "settings.stance.label": [],
         "settings.stance.pad": [],
         "settings.stance.pad.choice": [],
         "settings.stance.pad.label": [],
-        "settings.stance.pad.status": [],
         "settings.stance.sliders": [],
         "settings.stance.sliders.choice": [],
         "settings.stance.sliders.label": [],
-        "settings.stance.sliders.status": [],
         "settings.stance.typed": [],
         "settings.stance.typed.choice": [],
         "settings.stance.typed.label": [],
-        "settings.stance.typed.status": [],
         "settings.theme": [],
-        "settings.theme.footnote": [],
         "settings.theme.label": [],
         "settings.theme.picker": [],
         "settings.theme.picker.autoOption": [],
@@ -15041,7 +15753,6 @@
         "settings.writing": [],
         "settings.writing.confirm": [],
         "settings.writing.confirm.label": [],
-        "settings.writing.confirm.status": [],
         "settings.writing.confirm.switch": [],
         "settings.writing.footnote": [],
         "settings.writing.label": [],
@@ -15049,6 +15760,116 @@
         "settings.writing.license.chevron": [],
         "settings.writing.license.label": [],
         "settings.writing.license.value": []
+      }
+    },
+    "TagPad": {
+      "prefix": "postEdit",
+      "keys": {
+        "postEdit.body.mediaRow.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
+        "postEdit.references.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)",
+        "postEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "postEdit.acts": [],
+        "postEdit.acts.line": [],
+        "postEdit.body": [],
+        "postEdit.body.add": [],
+        "postEdit.body.mediaRow": [],
+        "postEdit.body.mediaRow.caption": [],
+        "postEdit.body.mediaRow.thumb": [
+          "1",
+          "2"
+        ],
+        "postEdit.body.rule": [],
+        "postEdit.description": [],
+        "postEdit.description.corner": [],
+        "postEdit.description.input": [],
+        "postEdit.description.label": [],
+        "postEdit.facts": [],
+        "postEdit.facts.backing": [],
+        "postEdit.facts.backing.action": [],
+        "postEdit.facts.backing.label": [],
+        "postEdit.facts.backing.value": [],
+        "postEdit.facts.backing.value.exact": [],
+        "postEdit.facts.backing.value.face": [],
+        "postEdit.facts.license": [],
+        "postEdit.facts.license.label": [],
+        "postEdit.facts.license.lock": [],
+        "postEdit.facts.license.value": [],
+        "postEdit.facts.sensitive": [],
+        "postEdit.facts.sensitive.action": [],
+        "postEdit.facts.sensitive.label": [],
+        "postEdit.facts.sensitive.value": [],
+        "postEdit.header": [],
+        "postEdit.header.back": [],
+        "postEdit.header.help": [],
+        "postEdit.header.leave": [],
+        "postEdit.header.title": [],
+        "postEdit.pairSheet": [],
+        "postEdit.pairSheet.done": [],
+        "postEdit.pairSheet.dragHandle": [],
+        "postEdit.pairSheet.note": [],
+        "postEdit.pairSheet.pad": [],
+        "postEdit.pairSheet.pad.field": [],
+        "postEdit.pairSheet.pad.field.bottom": [],
+        "postEdit.pairSheet.pad.field.left": [],
+        "postEdit.pairSheet.pad.field.right": [],
+        "postEdit.pairSheet.pad.field.square": [],
+        "postEdit.pairSheet.pad.field.square.knob": [],
+        "postEdit.pairSheet.pad.field.top": [],
+        "postEdit.pairSheet.pick": [],
+        "postEdit.pairSheet.pick.exact": [],
+        "postEdit.pairSheet.pick.face": [],
+        "postEdit.pairSheet.pick.label": [],
+        "postEdit.pairSheet.title": [],
+        "postEdit.pairSheet.untag": [],
+        "postEdit.references": [],
+        "postEdit.references.add": [],
+        "postEdit.references.label": [],
+        "postEdit.references.stagedReference": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.kind": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.mark": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.name": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.pair": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.pair.exact": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.pair.face": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.remove": [
+          "1"
+        ],
+        "postEdit.references.withdrawn": [],
+        "postEdit.references.withdrawn.undo": [],
+        "postEdit.sign": [],
+        "postEdit.tags": [],
+        "postEdit.tags.add": [],
+        "postEdit.tags.label": [],
+        "postEdit.tags.tag": [
+          "fieldnotes",
+          "saltmaps"
+        ],
+        "postEdit.tags.tag.remove": [
+          "fieldnotes",
+          "saltmaps"
+        ],
+        "postEdit.tags.withdrawn": [],
+        "postEdit.tags.withdrawn.undo": [],
+        "postEdit.title": [],
+        "postEdit.title.corner": [],
+        "postEdit.title.input": [],
+        "postEdit.title.label": []
       }
     },
     "TagPageHidden": {
@@ -15159,9 +15980,6 @@
           "saltmaps",
           "saltcrust"
         ],
-        "tagPicker.tag.sub": [
-          "salt"
-        ],
         "tagPicker.tag.trailing": [
           "salt",
           "saltmaps",
@@ -15234,7 +16052,6 @@
       "prefix": "verify",
       "keys": {},
       "nodes": {
-        "verify.body": [],
         "verify.mark": [],
         "verify.onward": [],
         "verify.title": []
@@ -15322,7 +16139,6 @@
       "prefix": "vouchAsk",
       "keys": {},
       "nodes": {
-        "vouchAsk.body": [],
         "vouchAsk.header": [],
         "vouchAsk.header.back": [],
         "vouchAsk.profileDoor": [],
@@ -15516,7 +16332,6 @@
         "wallet.bottomBar.searchSlot": [],
         "wallet.bottomBar.walletSlot": [],
         "wallet.comingSoonCard": [],
-        "wallet.comingSoonCard.line": [],
         "wallet.comingSoonCard.title": []
       }
     },
@@ -15532,7 +16347,6 @@
           "0-1-1",
           "0-1-0"
         ],
-        "whatsNew.footnote": [],
         "whatsNew.header": [],
         "whatsNew.header.back": [],
         "whatsNew.header.title": [],
@@ -15561,7 +16375,6 @@
           "0-1-1",
           "0-1-0"
         ],
-        "whatsNew.footnote": [],
         "whatsNew.header": [],
         "whatsNew.header.back": [],
         "whatsNew.header.title": [],
@@ -15611,7 +16424,6 @@
         "yourKey.header.back": [],
         "yourKey.header.title": [],
         "yourKey.notice": [],
-        "yourKey.notice.body": [],
         "yourKey.notice.help": [],
         "yourKey.notice.restore": [],
         "yourKey.notice.title": []
@@ -15624,7 +16436,6 @@
         "yourKey.body": [],
         "yourKey.commit": [],
         "yourKey.commit.action": [],
-        "yourKey.commit.reason": [],
         "yourKey.current": [],
         "yourKey.current.input": [],
         "yourKey.current.label": [],

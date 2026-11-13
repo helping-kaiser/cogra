@@ -33,7 +33,7 @@
    draws no element twice, so nothing is keyed. */
 export const NODE = "changeEmail";
 export const PROPS = { landing: { editor: "enum", options: ["pending", "dead"], default: "pending" } };
-export const VALS = `signedOutTitle: this.props.landing === "dead" ? "This link doesn't work anymore" : "Sign in to finish the change", signedOutBody: this.props.landing === "dead" ? "The change it belonged to may have run out, been canceled or already happened — this link can't move your email anymore." : "This link confirms sol@ferreira.studio as your new address. It counts once you're signed in."`;
+export const VALS = `signedOutTitle: this.props.landing === "dead" ? "This link doesn't work anymore" : "Sign in to finish the change", signedOutBody: this.props.landing === "dead" ? "The change it belonged to may have run out, been canceled or already happened." : "This link confirms sol@ferreira.studio as your new address."`;
 
 export function Screen() {
   return (

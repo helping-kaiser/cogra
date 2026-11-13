@@ -75,7 +75,8 @@ describe("InviteEntry", () => {
     renderWithProviders(<InviteEntry />);
     expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute("href", "/feed");
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Enter your invite");
-    expect(screen.getByText("CoGra is invite-only. Paste your invite link to get started.")).toBeInTheDocument();
+    expect(screen.getByText("CoGra is invite-only.")).toBeInTheDocument();
+    expect(screen.queryByText(/Paste your invite link/)).not.toBeInTheDocument();
     expect(screen.getByLabelText("Invite link")).toBeInTheDocument();
   });
 
