@@ -377,7 +377,7 @@ fun HistoryScreen(
     val listState = rememberLazyListState()
     val layers = remember { CoveringLayers() }
     var commentsFor by rememberSaveable { mutableStateOf<String?>(null) }
-    var reportFor by remember { mutableStateOf<String?>(null) }
+    var reportFor by remember { mutableStateOf<ReportAsk?>(null) }
     var sheetOpen by rememberSaveable { mutableStateOf(false) }
     val notify = rememberHistoryNotify(snackbar)
     LoadNextAtTheTail(listState, state.hasNextPage, state.moreFailed, view.rows.size, callbacks.onLoadMore)
@@ -416,7 +416,7 @@ fun HistoryScreen(
             )
         }
         commentsFor?.let { postId -> commentsSheet(postId) { commentsFor = null } }
-        reportFor?.let { postId -> reportSheet(postId, { reportFor = null }, notify) }
+        reportFor?.let { ask -> reportSheet(ask, { reportFor = null }, notify) }
     }
 }
 
@@ -711,7 +711,7 @@ private fun HistoryCardFor(entry: HistoryEntry, actions: CardActions, tags: TagC
             viewerId = actions.viewerId,
             onEdit = actions.onEditPost,
             onCite = actions.onCitePost,
-            onReport = { actions.onReport(card.post.id) },
+            onReport = { actions.onReport(ReportAsk(card.post.id, ReportKind.Post)) },
             revealed = actions.reveals.isRevealed(card.post.id, card.post.sensitiveMark()),
             onReveal = { actions.onReveal(card.post.id, card.post.sensitiveMark()) },
             stanceControl = actions.stanceControl,

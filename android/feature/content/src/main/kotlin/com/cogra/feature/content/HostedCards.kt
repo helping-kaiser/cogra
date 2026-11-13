@@ -145,7 +145,7 @@ internal fun HostedCardsScope(
     // away and back; the post itself is the one whose count was tapped.
     var commentsFor by rememberSaveable { mutableStateOf<String?>(null) }
     var commentsPost by remember { mutableStateOf<PostView?>(null) }
-    var reportFor by remember { mutableStateOf<String?>(null) }
+    var reportFor by remember { mutableStateOf<ReportAsk?>(null) }
     val actions = CardActions(
         hooks = hooks,
         doors = doors,
@@ -184,8 +184,8 @@ internal fun HostedCardsScope(
                 onCommentsDepart = routes.onCommentsDepart,
             )
         }
-        reportFor?.let { postId ->
-            reportDoor(routes.onRequireAccount, "${tag}_report_sheet")(postId, { reportFor = null }, notify)
+        reportFor?.let { ask ->
+            reportDoor(routes.onRequireAccount, "${tag}_report_sheet")(ask, { reportFor = null }, notify)
         }
     }
 }
@@ -211,7 +211,7 @@ private fun HostedPostCard(
         viewerId = actions.viewerId,
         onEdit = actions.onEditPost,
         onCite = actions.onCitePost,
-        onReport = { actions.onReport(post.id) },
+        onReport = { actions.onReport(ReportAsk(post.id, ReportKind.Post)) },
         revealed = actions.reveals.isRevealed(post.id, post.sensitiveMark()),
         onReveal = { actions.onReveal(post.id, post.sensitiveMark()) },
         stanceControl = actions.stanceControl,

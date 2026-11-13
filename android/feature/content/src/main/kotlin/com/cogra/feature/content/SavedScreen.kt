@@ -263,7 +263,7 @@ fun SavedScreen(
     val listState = rememberLazyListState()
     val layers = remember { CoveringLayers() }
     var commentsFor by rememberSaveable { mutableStateOf<String?>(null) }
-    var reportFor by remember { mutableStateOf<String?>(null) }
+    var reportFor by remember { mutableStateOf<ReportAsk?>(null) }
     val notify = rememberSavedNotify(snackbar)
     LoadNextAtTheTail(listState, state.hasNextPage, state.moreFailed, view.shown.size, onLoadMore)
     val actions = CardActions(hooks, doors, state.reveals, { commentsFor = it }, { reportFor = it })
@@ -281,7 +281,7 @@ fun SavedScreen(
             onBack = onBack,
         )
         commentsFor?.let { postId -> commentsSheet(postId) { commentsFor = null } }
-        reportFor?.let { postId -> reportSheet(postId, { reportFor = null }, notify) }
+        reportFor?.let { ask -> reportSheet(ask, { reportFor = null }, notify) }
     }
 }
 
@@ -436,7 +436,7 @@ private fun SavedCardFor(entry: SavedEntry, actions: CardActions) {
             viewerId = actions.viewerId,
             onEdit = actions.onEditPost,
             onCite = actions.onCitePost,
-            onReport = { actions.onReport(card.post.id) },
+            onReport = { actions.onReport(ReportAsk(card.post.id, ReportKind.Post)) },
             revealed = actions.reveals.isRevealed(card.post.id, card.post.sensitiveMark()),
             onReveal = { actions.onReveal(card.post.id, card.post.sensitiveMark()) },
             stanceControl = actions.stanceControl,

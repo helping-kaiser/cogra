@@ -521,7 +521,7 @@ fun FeedScreen(
     // Which post's report confirm is up. Remembered, not saved: a reader who
     // comes back to the feed finds it as they left it, never a sheet still
     // standing over it (Feed.md:97).
-    var reportFor by remember { mutableStateOf<String?>(null) }
+    var reportFor by remember { mutableStateOf<ReportAsk?>(null) }
     // THE FEED'S SNACKBAR (`feed.snackbar`) is the shell's host, which the
     // feed hands its own node. The scope is the screen's, so a confirmation
     // outlives the sheet that raised it.
@@ -794,7 +794,7 @@ fun FeedScreen(
                                                 viewerId = viewerId,
                                                 onEdit = onEditPost,
                                                 onCite = onCitePost,
-                                                onReport = { reportFor = post.id },
+                                                onReport = { reportFor = ReportAsk(post.id, ReportKind.Post) },
                                                 revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
                                                 onReveal = { onReveal(post.id, post.sensitiveMark()) },
                                                 stanceControl = stanceControl,
@@ -848,8 +848,8 @@ fun FeedScreen(
         commentsFor?.let { postId ->
             commentsSheet(postId) { commentsFor = null }
         }
-        reportFor?.let { postId ->
-            reportSheet(postId, { reportFor = null }, notify)
+        reportFor?.let { ask ->
+            reportSheet(ask, { reportFor = null }, notify)
         }
         FeedFilterLayer(sheet, state, filter, purpose, readingOf)
     }

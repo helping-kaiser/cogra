@@ -64,7 +64,7 @@ internal data class CardActions(
     val doors: CardDoors,
     val reveals: Map<String, SensitiveMark>,
     val onOpenComments: (String) -> Unit,
-    val onReport: (String) -> Unit,
+    val onReport: (ReportAsk) -> Unit,
 ) {
     val viewerId: String? get() = hooks.viewerId
     val onShare: (String) -> Unit get() = hooks.onShare
