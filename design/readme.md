@@ -11934,6 +11934,44 @@ or that needed no ruling, built in one lane on main beside round 47.
 - **The gate**: 194 → 197 screens (`PadFailed`, `PadWriteRule`,
   `TagPageHeldPad`), 7387 → 7565 board paths, 2029 → 2072 distinct — 43
   added, none gone. Backlog 220–222 filed.
+Act 2, on round 47's tree (merged in; its `ActsCard`, the head's whole
+name and the head's sentence in the long-names law stand beside this
+round's spoken unit):
+
+- **Drawn where the law already spoke**: the tag picker's length refusal
+  (`TagPickerRefused`, `refusal` chip); the tag page's first page with no
+  answer, `Can't reach the server — this tag can't load right now.` over
+  `Retry` (`TagPage`, `load` chip; *the noun worded by the lane, to be
+  blessed* — the picker's `tags` names a list, not the page); the feed
+  filter with no kind that has forms (`FeedSheetFormsOff`, new), so
+  `feed.filterSheet.forms.hint` registers again; the batch close for two,
+  `Both…` / `either of them` (`RejectAllConfirm`, `count` chip); the
+  vouch-back pad's help in place (`VouchBackPad`, `pad` chip, a drawn copy
+  with no names); an applicant's locked `Reply` on the profile's Comments
+  tab (`ProfileComments`, `reader` chip).
+- **The menu boards impl registers against**: `FeedCommentMenu`,
+  `FeedCommentMenuOwn` and `SavedCommentMenuOwn`, the rows exactly as the
+  law states them; the other law-only hosts are backlog 223. The
+  `cite-a-post` flow re-blessed: 22 → 25 origins.
+- **Registered, names only**: `EditActs`, `CommentEditActs` (`actsSheet`),
+  `AvatarCrop`, `AvatarSeal`, `ProfileEdit`, `ProfileEditSeal` — each
+  render byte-identical once its annotations are stripped. `ComposeSeal`
+  and `ReplySeal` wait: their chip copies stand for more than one chip
+  value (backlog 220).
+- **Written down**: the post crop's one zoom ceiling, about 4× the Tall
+  frame's fill under every shape, and the stage scaling with the column
+  (`ComposeCrop.md`, `CropViewport`); `SearchBar`'s input fills its row, a
+  board's width for it being its sample's.
+- **Stale text**: History's kept search tail (copy-voice), Hide's place
+  among the person menu's acts, `RemoveMenu`'s full order,
+  `OverflowMenu`'s two readings; backlog 162 closed as stale.
+- **Measured** (headless Chromium, the conformance harness's chips):
+  `NamesLong`'s `wraps` column stood at 848 against 844 with the vouch
+  card, now spaced at 10; every other new state stands inside its frame.
+- **The gate**: against main, 194 → 209 screens, 7387 → 8130 board paths,
+  2029 → 2152 distinct (123 added across both acts, round 47's and act 1's
+  included), none gone against main, round 47 or act 1. Backlog 222
+  closed, 220 partly, 162 closed as stale; 223 filed.
 ---
 
 ## 14. The canvases

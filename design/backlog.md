@@ -6124,6 +6124,18 @@ down; the acts card itself, `ActsCard`, names no rows, and round 47 (PR
 the seal prefixes (`composeSeal`, `replySeal`, or under `composeDetails` /
 `postEdit` / `commentEdit` for the edit sheets) and `ActsCard`'s row names.
 
+Partly closed by round 48, act 2 (2026-11-13): `ActsCard` already names its rows
+(`actRow` by place, `total`) once placed with a `node`, so `EditActs` and
+`CommentEditActs` register (`postEdit.actsSheet`, `commentEdit.actsSheet`), and
+so do `AvatarCrop`, `AvatarSeal`, `ProfileEdit` and `ProfileEditSeal` — names
+only, each render byte-identical with its annotations stripped. Still open:
+`ComposeSeal` and `ReplySeal`. No written rule keeps them out (round 35's gate
+line only describes them); their chip copies do: `ComposeSeal`'s rest card stands
+for two values of `state` (`rest` and `signing`), and `ReplySeal`'s seven copies
+are drawn per pair of `tags` × `state`, while a chip-drawn copy is keyed by one
+value of one chip (`node-paths.mjs`). Registering them first redraws the copies
+one per value — pixel-identical, but a restructuring of both boards' bodies.
+
 ### 221 · `PadKeyAbsent`'s pad is hand-built, so it cannot register yet · *system* · **filed 2026-11-13**
 
 Round 48 (seam 320-16). `PadFailed`, `PadWriteRule` and `TagPageHeldPad`
@@ -6134,7 +6146,7 @@ The fix is a key-absent state on `StanceControl` (the board then renders it
 as `PadStanding` does) — a drawing change, so it waits for a round that may
 redraw.
 
-### 222 · The feed's comment-card menu and your own comment's menu on Saved are undrawn · *design* · **filed 2026-11-13**
+### 222 · The feed's comment-card menu and your own comment's menu on Saved are undrawn · *design* · **filed 2026-11-13** · **closed 2026-11-13**
 
 Round 48 (seam 320-14). The clients draw `feed.menuSheet.citedBy` /
 `.opinions` (a comment card's ⋮ on the feed) and `saved.menuSheet.edit` /
@@ -6144,3 +6156,19 @@ there is nothing to register. Each is one board when drawn, by round 36's
 rule (one menu board per place a card's menu is raised): `FeedCommentMenu`
 and `SavedCommentMenuOwn`. Held while the menus audit (jakob 2026-11-13,
 round 47's review) runs, since it may reorder the rows.
+
+Closed by round 48, act 2: `FeedCommentMenu`, `FeedCommentMenuOwn` and
+`SavedCommentMenuOwn` draw the rows exactly as the law states them, nothing
+reordered; the four paths register. The other undrawn hosts are backlog 223.
+
+### 223 · The menu hosts the sidecars name but no board draws · *design* · **filed 2026-11-13**
+
+Round 48 (the menus audit of 2026-11-13, §3 item 11). Round 36's rule is one
+menu board per place a card's menu is raised; round 48 drew the feed's comment
+card menus and your own comment's menu on Saved. Still law-only: your own post
+in Saved and on a tag page (`FeedPostMenuOwn.md:7`); another's removed comment
+over the thread (`CommentRemoved.md:9`); your own removed comment on your own
+profile and in History; removed posts in History, Saved, the profile and the tag
+page; the Saved profile card (`FeedProfileMenu.md:7`); the deleted account's
+feed card (`FEED_DELETED_PROFILE_MENU`). Each is one board drawn exactly as its
+law states the rows; held while jakob decides whether post menus gain rows (M1).
