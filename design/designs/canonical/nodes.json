@@ -867,6 +867,61 @@
         "invites.linksLabel": []
       }
     },
+    "AvatarCrop": {
+      "prefix": "avatarCrop",
+      "keys": {},
+      "nodes": {
+        "avatarCrop.header": [],
+        "avatarCrop.header.back": [],
+        "avatarCrop.header.leave": [],
+        "avatarCrop.header.title": [],
+        "avatarCrop.next": [],
+        "avatarCrop.viewport": [],
+        "avatarCrop.zoom": [],
+        "avatarCrop.zoom.input": []
+      }
+    },
+    "AvatarSeal": {
+      "prefix": "avatarSeal",
+      "keys": {
+        "avatarSeal.acts.actRow": "the row's position in the acts card, counted from 1 (ActsCard)",
+        "avatarSeal.foot": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+      },
+      "nodes": {
+        "avatarSeal.acts": [],
+        "avatarSeal.acts.actRow": [
+          "1"
+        ],
+        "avatarSeal.acts.actRow.count": [
+          "1"
+        ],
+        "avatarSeal.acts.actRow.label": [
+          "1"
+        ],
+        "avatarSeal.acts.actRow.value": [
+          "1"
+        ],
+        "avatarSeal.acts.total": [],
+        "avatarSeal.foot": [
+          "rest",
+          "signing"
+        ],
+        "avatarSeal.foot.back": [
+          "rest",
+          "signing"
+        ],
+        "avatarSeal.foot.sign": [
+          "rest",
+          "signing"
+        ],
+        "avatarSeal.header": [],
+        "avatarSeal.header.back": [],
+        "avatarSeal.header.help": [],
+        "avatarSeal.header.leave": [],
+        "avatarSeal.header.title": [],
+        "avatarSeal.note": []
+      }
+    },
     "ChangeEmail": {
       "prefix": "changeEmail",
       "keys": {
@@ -1230,6 +1285,121 @@
         "commentEdit.facts.sensitive.value": [],
         "commentEdit.gate": [],
         "commentEdit.gate.line": [],
+        "commentEdit.header": [],
+        "commentEdit.header.back": [],
+        "commentEdit.header.help": [],
+        "commentEdit.header.leave": [],
+        "commentEdit.header.title": [],
+        "commentEdit.pictures": [],
+        "commentEdit.pictures.add": [],
+        "commentEdit.pictures.describeRow": [],
+        "commentEdit.pictures.describeRow.count": [],
+        "commentEdit.pictures.describeRow.describe": [],
+        "commentEdit.pictures.describeRow.reason": [],
+        "commentEdit.pictures.label": [],
+        "commentEdit.pictures.thumb": [
+          "1"
+        ],
+        "commentEdit.pictures.thumb.remove": [
+          "1"
+        ],
+        "commentEdit.references": [],
+        "commentEdit.references.add": [],
+        "commentEdit.references.label": [],
+        "commentEdit.references.stagedReference": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.kind": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.mark": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.name": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.pair": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.pair.exact": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.pair.face": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.remove": [
+          "1"
+        ],
+        "commentEdit.references.withdrawn": [],
+        "commentEdit.references.withdrawn.undo": [],
+        "commentEdit.sign": [],
+        "commentEdit.tags": [],
+        "commentEdit.tags.add": [],
+        "commentEdit.tags.label": [],
+        "commentEdit.tags.tag": [
+          "glovebox"
+        ],
+        "commentEdit.tags.tag.remove": [
+          "glovebox"
+        ],
+        "commentEdit.tags.withdrawn": [],
+        "commentEdit.tags.withdrawn.undo": [],
+        "commentEdit.target": [],
+        "commentEdit.words": [],
+        "commentEdit.words.input": [],
+        "commentEdit.words.label": []
+      }
+    },
+    "CommentEditActs": {
+      "prefix": "commentEdit",
+      "keys": {
+        "commentEdit.actsSheet.acts.actRow": "the row's position in the acts card, counted from 1 (ActsCard)",
+        "commentEdit.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
+        "commentEdit.references.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)",
+        "commentEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "commentEdit.acts": [],
+        "commentEdit.acts.line": [],
+        "commentEdit.actsSheet": [],
+        "commentEdit.actsSheet.acts": [],
+        "commentEdit.actsSheet.acts.actRow": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "commentEdit.actsSheet.acts.actRow.count": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "commentEdit.actsSheet.acts.actRow.label": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "commentEdit.actsSheet.acts.actRow.value": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "commentEdit.actsSheet.done": [],
+        "commentEdit.actsSheet.dragHandle": [],
+        "commentEdit.actsSheet.title": [],
+        "commentEdit.actsSheet.title.help": [],
+        "commentEdit.facts": [],
+        "commentEdit.facts.license": [],
+        "commentEdit.facts.license.label": [],
+        "commentEdit.facts.license.lock": [],
+        "commentEdit.facts.license.value": [],
+        "commentEdit.facts.sensitive": [],
+        "commentEdit.facts.sensitive.action": [],
+        "commentEdit.facts.sensitive.label": [],
+        "commentEdit.facts.sensitive.value": [],
         "commentEdit.header": [],
         "commentEdit.header.back": [],
         "commentEdit.header.help": [],
@@ -2911,6 +3081,129 @@
         "deleteAccount.body": [],
         "deleteAccount.onward": [],
         "deleteAccount.title": []
+      }
+    },
+    "EditActs": {
+      "prefix": "postEdit",
+      "keys": {
+        "postEdit.actsSheet.acts.actRow": "the row's position in the acts card, counted from 1 (ActsCard)",
+        "postEdit.body.mediaRow.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
+        "postEdit.references.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)",
+        "postEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "postEdit.acts": [],
+        "postEdit.acts.line": [],
+        "postEdit.actsSheet": [],
+        "postEdit.actsSheet.acts": [],
+        "postEdit.actsSheet.acts.actRow": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "postEdit.actsSheet.acts.actRow.count": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "postEdit.actsSheet.acts.actRow.label": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "postEdit.actsSheet.acts.actRow.value": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "postEdit.actsSheet.done": [],
+        "postEdit.actsSheet.dragHandle": [],
+        "postEdit.actsSheet.title": [],
+        "postEdit.actsSheet.title.help": [],
+        "postEdit.body": [],
+        "postEdit.body.add": [],
+        "postEdit.body.mediaRow": [],
+        "postEdit.body.mediaRow.caption": [],
+        "postEdit.body.mediaRow.thumb": [
+          "1",
+          "2"
+        ],
+        "postEdit.body.rule": [],
+        "postEdit.description": [],
+        "postEdit.description.corner": [],
+        "postEdit.description.input": [],
+        "postEdit.description.label": [],
+        "postEdit.facts": [],
+        "postEdit.facts.backing": [],
+        "postEdit.facts.backing.action": [],
+        "postEdit.facts.backing.label": [],
+        "postEdit.facts.backing.value": [],
+        "postEdit.facts.backing.value.exact": [],
+        "postEdit.facts.backing.value.face": [],
+        "postEdit.facts.license": [],
+        "postEdit.facts.license.label": [],
+        "postEdit.facts.license.lock": [],
+        "postEdit.facts.license.value": [],
+        "postEdit.facts.sensitive": [],
+        "postEdit.facts.sensitive.action": [],
+        "postEdit.facts.sensitive.label": [],
+        "postEdit.facts.sensitive.value": [],
+        "postEdit.header": [],
+        "postEdit.header.back": [],
+        "postEdit.header.help": [],
+        "postEdit.header.leave": [],
+        "postEdit.header.title": [],
+        "postEdit.references": [],
+        "postEdit.references.add": [],
+        "postEdit.references.label": [],
+        "postEdit.references.stagedReference": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.kind": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.mark": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.name": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.pair": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.pair.exact": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.pair.face": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.remove": [
+          "1"
+        ],
+        "postEdit.references.withdrawn": [],
+        "postEdit.references.withdrawn.undo": [],
+        "postEdit.sign": [],
+        "postEdit.tags": [],
+        "postEdit.tags.add": [],
+        "postEdit.tags.label": [],
+        "postEdit.tags.tag": [
+          "fieldnotes",
+          "saltmaps"
+        ],
+        "postEdit.tags.tag.remove": [
+          "fieldnotes",
+          "saltmaps"
+        ],
+        "postEdit.tags.withdrawn": [],
+        "postEdit.tags.withdrawn.undo": [],
+        "postEdit.title": [],
+        "postEdit.title.corner": [],
+        "postEdit.title.input": [],
+        "postEdit.title.label": []
       }
     },
     "EditCompose": {
@@ -11766,6 +12059,70 @@
         "profile.tabRow.commentsTab": [],
         "profile.tabRow.everythingTab": [],
         "profile.tabRow.postsTab": []
+      }
+    },
+    "ProfileEdit": {
+      "prefix": "profileEdit",
+      "keys": {},
+      "nodes": {
+        "profileEdit.bio": [],
+        "profileEdit.bio.corner": [],
+        "profileEdit.bio.input": [],
+        "profileEdit.bio.label": [],
+        "profileEdit.header": [],
+        "profileEdit.header.back": [],
+        "profileEdit.header.title": [],
+        "profileEdit.name": [],
+        "profileEdit.name.corner": [],
+        "profileEdit.name.input": [],
+        "profileEdit.name.label": [],
+        "profileEdit.picture": [],
+        "profileEdit.save": [],
+        "profileEdit.website": [],
+        "profileEdit.website.corner": [],
+        "profileEdit.website.input": [],
+        "profileEdit.website.label": []
+      }
+    },
+    "ProfileEditSeal": {
+      "prefix": "profileEditSeal",
+      "keys": {
+        "profileEditSeal.acts.actRow": "the row's position in the acts card, counted from 1 (ActsCard)",
+        "profileEditSeal.foot": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+      },
+      "nodes": {
+        "profileEditSeal.acts": [],
+        "profileEditSeal.acts.actRow": [
+          "1"
+        ],
+        "profileEditSeal.acts.actRow.count": [
+          "1"
+        ],
+        "profileEditSeal.acts.actRow.label": [
+          "1"
+        ],
+        "profileEditSeal.acts.actRow.value": [
+          "1"
+        ],
+        "profileEditSeal.acts.total": [],
+        "profileEditSeal.foot": [
+          "rest",
+          "signing"
+        ],
+        "profileEditSeal.foot.back": [
+          "rest",
+          "signing"
+        ],
+        "profileEditSeal.foot.sign": [
+          "rest",
+          "signing"
+        ],
+        "profileEditSeal.header": [],
+        "profileEditSeal.header.back": [],
+        "profileEditSeal.header.help": [],
+        "profileEditSeal.header.leave": [],
+        "profileEditSeal.header.title": [],
+        "profileEditSeal.note": []
       }
     },
     "ProfileMenu": {
