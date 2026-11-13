@@ -1055,7 +1055,7 @@
     { "from": "FeedKinds", "via": 23, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "FeedKinds", "via": 24, "kind": "nav", "label": "chats", "to": [{ "board": "ChatsComingSoon" }] },
     { "from": "FeedKinds", "via": 25, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
-    { "from": "FeedKinds", "via": 26, "kind": "advance", "label": "Tag a new post with it (the compose glyph)", "to": [{ "board": "ComposePick", "case": "the post wizard opens fresh at its first stage — #saltmaps rides along staged, met among the details stage's tags" }, { "terminal": "self", "case": "an applicant — the snackbar answers: You can post once you're in. The wizard never opens (round 48)", "info": true }] },
+    { "from": "FeedKinds", "via": 26, "kind": "advance", "label": "Tag a new post with it (the compose glyph)", "to": [{ "board": "ComposePick", "case": "the post wizard opens fresh at its first stage — #saltmaps rides along staged, met among the details stage's tags" }, { "terminal": "self", "case": "an applicant — the compose button wears the locked look and the snackbar answers: You can post once you're in. The wizard never opens (round 48; the reader chip)", "info": true }] },
     { "from": "FeedKinds", "via": 27, "kind": "advance", "label": "reference count", "to": [{ "board": "RefsSheet", "case": "the comment's tags and references — the one sheet every node kind opens" }] },
 
     { "from": "ReplySettled", "via": 1, "kind": "advance", "label": "comment author chips", "to": [{ "board": "ProfileOther", "case": "back returns the post with this sheet up, at its offset, its expanded branches still expanded (readme §4, Navigation)" }] },
@@ -2016,7 +2016,7 @@
 
     { "from": "ComposeExpired", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "ComposeExpired", "via": 2, "kind": "back", "label": "Dismiss", "to": [{ "terminal": "self", "case": "the notice leaves — nothing was spent" }] },
-    { "from": "ComposeExpired", "via": 3, "kind": "advance", "label": "Open the draft", "to": [{ "board": "ComposeDraft" }] },
+    { "from": "ComposeExpired", "via": 3, "kind": "advance", "label": "Open the draft", "to": [{ "board": "ComposeDraft" }, { "terminal": "self", "case": "an applicant — the button wears the locked look and the snackbar answers: You can post once you're in. Compose never opens (jakob 2026-11-13, N1; the reader chip)", "info": true }] },
     { "from": "ComposeExpired", "via": 4, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
     { "from": "ComposeExpired", "via": 5, "kind": "detour", "label": "post overflow ⋮", "to": [{ "board": "ReaderPostMenu", "case": "the reader's sheet (master)" }] },
     { "from": "ComposeExpired", "via": 6, "kind": "advance", "label": "post media", "to": [{ "board": "PostDetail", "case": "pictures — the post opens" }, { "board": "PostDetailVideo", "case": "a clip wider than tall — the post opens" }, { "board": "Reel", "case": "a portrait or square clip — the stream opens" }] },

@@ -28,4 +28,6 @@ ALWAYS a negative score reads with a minus sign and no colour
 
 WHEN a guest taps a tag card's face or its compose glyph -> the guest gate opens
 
+ALWAYS a tag card's compose glyph wears the locked look, at the disabled opacity and still tappable GIVEN the reader is an applicant
+
 WHEN an applicant taps a tag card's compose glyph -> the snackbar reads You can post once you're in. AND NEVER the composer opens

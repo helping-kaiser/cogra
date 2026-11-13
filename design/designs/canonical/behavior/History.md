@@ -74,6 +74,8 @@ WHEN a card's Feed score is tapped -> the score's trace opens AND its back arrow
 
 WHEN Tag a new post with it on a history.tagCard is tapped -> the post composer opens at its first stage AND the tag rides staged among the new post's tags
 
+ALWAYS Tag a new post with it on a history.tagCard wears the locked look, at the disabled opacity and still tappable GIVEN the reader is an applicant
+
 WHEN Tag a new post with it on a history.tagCard is tapped GIVEN the reader is an applicant -> the snackbar reads You can post once you're in. AND NEVER the composer opens
 
 WHEN a press-and-hold on a card's stance face signs -> the face refuses a second press-and-hold until the signing answers AND NEVER the face moves before the signature is taken

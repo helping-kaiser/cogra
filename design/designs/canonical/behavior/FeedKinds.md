@@ -36,4 +36,6 @@ ALWAYS the comments sheet a feed card raises is postDetail.threadSheet, the thre
 
 WHEN feed.tagCard.actionRow.compose, Tag a new post with it, is tapped -> the post composer opens at its first stage AND the tag rides staged among the new post's tags
 
-WHEN feed.tagCard.actionRow.compose is tapped GIVEN the reader is an applicant -> the snackbar reads You can post once you're in. AND NEVER the composer opens
+ALWAYS feed.tagCard.actionRow.compose wears the locked look, at the disabled opacity and still tappable GIVEN the reader is an applicant
+
+WHEN feed.tagCard.actionRow.compose is tapped GIVEN the reader is an applicant -> feed.snackbar reads You can post once you're in. AND NEVER the composer opens

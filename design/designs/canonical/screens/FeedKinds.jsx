@@ -47,13 +47,22 @@
    inside the thread — the `Add a comment` foot and each `Reply` (`ReplyEntry`'s
    `reader` chip draws them).
 
+   THE `reader` CHIP'S `applicant` DRAWS THE TAG CARD'S COMPOSE BUTTON LOCKED
+   (jakob 2026-11-13, N1): its only destination is an act, so it stands at the
+   disabled opacity, still tappable, and answers `You can post once you're in.`
+   in the feed's snackbar (`snackbar`). The chip draws that one control; the
+   applicant's shell is `ApplicantFeed`'s.
+
    REGISTERED under the `feed` prefix (seam 248), the cards named as
    `History` names them: `commentCard`, `profileCard`, `tagCard`, `card`. */
 const EVERY_KIND = { ...FEED_FILTER_DEFAULT, kinds: FEED_KINDS.map((kind) => kind.value) };
 
 export const NODE = "feed";
-export const PROPS = { score: { editor: "enum", options: ["usual", "tiny", "tiny-negative"], default: "usual" } };
-export const VALS = `postScore: this.props.score === "tiny" ? "0.01" : this.props.score === "tiny-negative" ? "−0.01" : "9.10"`;
+export const PROPS = {
+  score: { editor: "enum", options: ["usual", "tiny", "tiny-negative"], default: "usual" },
+  reader: { editor: "enum", options: ["member", "applicant"], default: "member" },
+};
+export const VALS = `postScore: this.props.score === "tiny" ? "0.01" : this.props.score === "tiny-negative" ? "−0.01" : "9.10", lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none"`;
 export function Screen() {
   return (
     <>
@@ -71,10 +80,13 @@ export function Screen() {
           node="commentCard"
         />
         <ProfileFeedCard person={MIRA} src="inviter.jpg" bio="Runs the stand by the sea wall — honey from the headland hives." score="11.70" node="profileCard" />
-        <TagFeedCard id={SALTMAPS_TAG_ID} name="#saltmaps" through={["ada", "tobias"]} tagged={SALTMAPS_TAGGED} score="10.30" node="tagCard" />
+        <TagFeedCard id={SALTMAPS_TAG_ID} name="#saltmaps" through={["ada", "tobias"]} tagged={SALTMAPS_TAGGED} score="10.30" composeOpacity="{{lockOpacity}}" node="tagCard" />
         <PostCard {...SOL_POST} score="{{postScore}}" bundle={mkBundle(0.3, 0.45)} node="card" />
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
+      <div style={{ display: "{{lockedLine}}" }}>
+        <Snackbar message="You can post once you're in." node="snackbar" />
+      </div>
     </>
   );
 }
