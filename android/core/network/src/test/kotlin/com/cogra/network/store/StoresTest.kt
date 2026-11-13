@@ -762,6 +762,23 @@ class StoresTest {
         assertThat(StorageHealthImpl(interleaving.inner).storageLost.first()).isFalse()
     }
 
+    // The listing decrypts each record to find the one-nonce ones; a record
+    // it cannot open is simply not one. It is listed, kept and not marked
+    // by the listing, as before the listing looked inside — and the listing
+    // answers rather than throws.
+    @Test
+    fun anUnopenableRecordIsListedKeptAndUnmarkedByTheListing() = runTest {
+        val file = File(tmp.newFolder(), "test.preferences_pb")
+        val dataStore = PreferenceDataStoreFactory.create(scope = scope) { file }
+        val stores = Stores(EncryptedStore(dataStore, IoFailingCipher()))
+        stores.signIn("u1")
+        EncryptedStore(dataStore, PoisonCipher()).put("acct:u1:handshake:w1", "unopenable".encodeToByteArray())
+
+        assertThat(stores.identity.handshakeIds()).containsExactly("w1")
+        assertThat(dataStore.data.first().asMap().keys.map { it.name }).contains("acct:u1:handshake:w1")
+        assertThat(StorageHealthImpl(dataStore).storageLost.first()).isFalse()
+    }
+
     // Listed before anything reads it, the record is still never counted:
     // the home card's count and the resume set both come from this list.
     @Test
@@ -824,4 +841,25 @@ private class BrokenCipher : StoreCipher {
 
     override fun open(sealed: ByteArray): ByteArray =
         throw java.security.GeneralSecurityException("decryption failed")
+}
+
+/**
+ * [FakeCipher], except that a value [PoisonCipher] sealed throws on open
+ * as Tink's lazy keyset load can: an `IOException`, which `Editor.get`
+ * itself does not catch.
+ */
+private class IoFailingCipher : StoreCipher {
+    private val fake = FakeCipher()
+
+    override fun seal(plaintext: ByteArray): ByteArray = fake.seal(plaintext)
+
+    override fun open(sealed: ByteArray): ByteArray =
+        if (sealed[0] == 0.toByte()) throw java.io.IOException("keyset unavailable") else fake.open(sealed)
+}
+
+/** Seals with the leading byte [IoFailingCipher] will not open. */
+private class PoisonCipher : StoreCipher {
+    override fun seal(plaintext: ByteArray): ByteArray = byteArrayOf(0) + plaintext
+
+    override fun open(sealed: ByteArray): ByteArray = sealed.drop(1).toByteArray()
 }

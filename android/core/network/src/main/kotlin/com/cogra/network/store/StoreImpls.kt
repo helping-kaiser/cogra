@@ -60,9 +60,19 @@ private fun isOneNonceRecord(text: String): Boolean = try {
     false
 }
 
-/** Whether [name] holds a one-nonce record as this transaction sees it. */
-private fun EncryptedStore.Editor.holdsOneNonceRecord(name: String): Boolean =
+/**
+ * Whether [name] holds a one-nonce record as this transaction sees it. A
+ * value that cannot be opened is not one, so the listing never throws on
+ * it: `Editor.get` answers null for what it catches, and this catches the
+ * rest of what the store's own read path does (`EncryptedStore.openOrMark`).
+ * Such a value is left in place and unmarked here; its loss is marked
+ * where it is read.
+ */
+private fun EncryptedStore.Editor.holdsOneNonceRecord(name: String): Boolean = try {
     get(name)?.let { isOneNonceRecord(it.decodeToString()) } == true
+} catch (_: java.io.IOException) {
+    false
+}
 
 private val json = Json
 
