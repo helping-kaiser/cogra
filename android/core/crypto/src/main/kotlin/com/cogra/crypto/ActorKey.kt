@@ -87,9 +87,10 @@ class ActorKey private constructor(private val key: Ed25519PrivateKeyParameters)
      */
     fun approve(sent: PreSignedProposal, sealed: SealedAct, hostPubkey: ByteArray): ApprovalWitness {
         val act = sealed.act
-        // By the signed bytes, not by field equality: floating-point
-        // equality can call two bodies equal whose canonical bytes differ
-        // (0.0 against -0.0), and the seal and the approval cover the bytes.
+        // By the signed bytes, not by field equality: float equality calls
+        // two bodies equal whose canonical bytes differ — 0.0 and -0.0
+        // under IEEE 754, NaNs of other bits under Double.equals — and the
+        // seal and the approval cover the bytes.
         if (!act.body.canonicalBytes().contentEquals(sent.proposal.body.canonicalBytes()) ||
             !act.preSignature.contentEquals(sent.preSignature)
         ) {

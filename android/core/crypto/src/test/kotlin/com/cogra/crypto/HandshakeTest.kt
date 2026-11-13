@@ -95,20 +95,38 @@ class HandshakeTest {
             .isEqualTo("host returned a different act than was pre-signed")
     }
 
-    // A body the host re-renders with -0.0 where the device signed 0.0:
-    // whatever float equality says, the signed bytes differ, and the seal
-    // and approval would cover the host's bytes.
-    @Test
-    fun approveRejectsABodyThatDiffersOnlyInTheSignOfZero() {
+    /**
+     * A returned body whose one float has other bits than the signed one
+     * is refused. The pair below is chosen so that field equality fails
+     * to tell the bodies apart in one of them under EITHER semantics the
+     * generated `equals` may use: IEEE 754 calls 0.0 and -0.0 equal, and
+     * `Double.equals` / `Double.compare` call every NaN equal. Together
+     * the two pin the canonical-bytes comparison, whichever one the
+     * compiler emits; neither alone proves it.
+     */
+    private fun refusesAReturnedFloat(signedPI: Double, returnedPI: Double) {
         val p = proposal(actor.address())
-        val zero = Proposal(p.body.copy(pI = 0.0), p.payload, p.deps)
-        val signed = actor.preSign(zero)
-        val negativeZero = zero.body.copy(pI = -0.0)
-        assertThat(negativeZero.canonicalBytes()).isNotEqualTo(zero.body.canonicalBytes())
+        val signed = actor.preSign(Proposal(p.body.copy(pI = signedPI), p.payload, p.deps))
+        val returned = signed.proposal.body.copy(pI = returnedPI)
+        // The encoder writes the raw bits, so the signed bytes do differ.
+        assertThat(returned.canonicalBytes()).isNotEqualTo(signed.proposal.body.canonicalBytes())
         val e = assertThrows(HandshakeException::class.java) {
-            actor.approve(signed, seal(signed, host, body = negativeZero), host.publicKeyBytes())
+            actor.approve(signed, seal(signed, host, body = returned), host.publicKeyBytes())
         }
         assertThat(e).hasMessageThat().isEqualTo("host returned a different act than was pre-signed")
+    }
+
+    @Test
+    fun approveRejectsABodyThatDiffersOnlyInTheSignOfZero() {
+        refusesAReturnedFloat(signedPI = 0.0, returnedPI = -0.0)
+    }
+
+    @Test
+    fun approveRejectsABodyThatDiffersOnlyInTheBitsOfANaN() {
+        refusesAReturnedFloat(
+            signedPI = Double.fromBits(0x7ff8000000000001L),
+            returnedPI = Double.fromBits(0x7ff8000000000002L),
+        )
     }
 
     @Test
