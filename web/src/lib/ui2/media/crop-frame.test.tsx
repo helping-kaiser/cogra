@@ -122,6 +122,8 @@ describe("the stage", () => {
     expect(stage().className).toContain("-mx-6");
     expect(stage().className).not.toContain("w-full");
     expect(stage().style.borderRadius).toBe("");
+    // The boards' stage has no ground of its own (harness, w-crop: it drew one).
+    expect(stage().className).not.toMatch(/\bbg-/);
     expect(given().cropShape).toBe("round");
     rerender(<CropFrame src="blob:x" shape="square" onChange={() => {}} />);
     expect(given().cropShape).toBe("rect");
@@ -435,6 +437,14 @@ describe("the keyboard route", () => {
     expect(slider).toHaveAttribute("min", "1");
     expect(Number(slider.getAttribute("max"))).toBeCloseTo(4, 9);
     expect(Number((slider as HTMLInputElement).value)).toBeCloseTo(2.5 / (487.5 / 292.5), 2);
+  });
+
+  it("states the slider's top in hundredths, the step it moves in", () => {
+    withStage();
+    render(<Host shape="wide" zoomSlider />);
+    loads(4000, 3000);
+    // Wide's fill is 1, the ceiling 4 × Tall's 487.5 / 292.5 = 6.666….
+    expect(screen.getByRole("slider", { name: "Zoom" })).toHaveAttribute("max", "6.67");
   });
 
   it("zooms from the slider by shares of the fill", () => {

@@ -288,7 +288,9 @@ export function CropFrame({
         ref={setStage}
         {...testAttributes(part(node, "viewport"), testId)}
         style={{ aspectRatio: `${board.width} / ${board.height}` }}
-        className="relative -mx-6 flex-none overflow-hidden bg-surface-container-high"
+        // No ground of its own: every crop board's stage is transparent, so
+        // what the picture leaves uncovered is the page under the scrim.
+        className="relative -mx-6 flex-none overflow-hidden"
         onKeyDown={onKeyDown}
         onKeyDownCapture={onArrow}
       >
@@ -337,7 +339,9 @@ export function CropFrame({
       {zoomSlider && (
         <ZoomTrack
           value={zoom / floor}
-          max={ceiling / floor}
+          // The input's own step is a hundredth; its bounds are too, so a
+          // reader's assistive tech never hears "5.000000000000001".
+          max={Math.round((ceiling / floor) * 100) / 100}
           onChange={(share) => emit({ zoom: geometry === null ? share * floor : holdZoom(share * floor, geometry) })}
           node={node}
           testId={testId}

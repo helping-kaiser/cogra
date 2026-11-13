@@ -73,7 +73,8 @@ export function CropStep({
           screen reader about what it will find inside. */}
       {!locked && (
         <div
-          className="flex gap-2"
+          // `self-start`: the board's chip row is as wide as its chips, not the column.
+          className="flex gap-2 self-start"
           role="group"
           aria-label="The post's shape"
           {...testAttributes(part(node, "shapes"))}
