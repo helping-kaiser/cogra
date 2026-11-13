@@ -104,8 +104,9 @@ describe("RemoveConfirm (RemoveConfirm.md)", () => {
     const dialog = screen.getByTestId("remove");
     expect(dialog).toHaveAccessibleName("Remove this post?");
     expect(dialog).toHaveTextContent(
-      `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place — "Removed by its author" — and the post's spot in threads stays with it.`,
+      `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place.`,
     );
+    expect(dialog).not.toHaveTextContent("Removed by its author");
     expect(dialog).toHaveTextContent("This is immediate and permanent.");
   });
 
@@ -271,8 +272,9 @@ describe("CommentRemoveConfirm (CommentRemoveConfirm.md)", () => {
     const dialog = screen.getByTestId("remove");
     expect(dialog).toHaveAccessibleName("Remove this comment?");
     expect(dialog).toHaveTextContent(
-      `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place — "Removed by its author" — and the comment's spot in its thread stays with it.`,
+      `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place.`,
     );
+    expect(dialog).not.toHaveTextContent("Removed by its author");
   });
 
   // :5 ALWAYS Keep it is the filled answer and Remove a text button in no colour
