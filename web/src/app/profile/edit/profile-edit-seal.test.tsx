@@ -76,7 +76,7 @@ describe("what the seal reads back", () => {
 
   it("opens Changing your profile from its ?", () => {
     draw();
-    fireEvent.click(screen.getByLabelText("Changing your profile"));
+    fireEvent.click(screen.getByTestId("profile-edit-seal-help"));
     expect(screen.getByTestId("profile-edit-seal-help-dialog")).toHaveAttribute("aria-label", "Changing your profile");
   });
 });

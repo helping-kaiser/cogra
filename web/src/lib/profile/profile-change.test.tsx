@@ -12,12 +12,19 @@ import {
   type ProfileChangeState,
 } from "./profile-change";
 
-let seen: ProfileChangeState | null = null;
 function Readout() {
-  const change = useProfileChange();
+  const change: ProfileChangeState | null = useProfileChange();
   const landed = useProfileChangesLanded();
-  seen = change;
-  return <output data-testid="readout">{`${change?.kind ?? "none"} ${landed}`}</output>;
+  return (
+    <>
+      <output data-testid="readout">{`${change?.kind ?? "none"} ${landed}`}</output>
+      {change?.kind === "failed" && (
+        <button type="button" data-testid="retry" onClick={change.retry}>
+          Retry
+        </button>
+      )}
+    </>
+  );
 }
 
 function deferred() {
@@ -66,7 +73,7 @@ describe("a profile change and the seal that started it", () => {
     await act(async () => first.answer({ kind: "offline" }));
     expect(readout()).toBe("failed 0");
 
-    act(() => (seen as Extract<ProfileChangeState, { kind: "failed" }>).retry());
+    act(() => screen.getByTestId("retry").click());
     expect(readout()).toBe("signing 0");
     expect(run).toHaveBeenCalledTimes(2);
     await act(async () => second.answer({ kind: "taken" }));
