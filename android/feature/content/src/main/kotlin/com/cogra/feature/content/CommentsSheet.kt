@@ -389,9 +389,13 @@ fun CommentsSheet(
                 onEditComment = { c -> depart { onEditComment(c) } },
                 onLoadMoreReplies = onLoadMoreReplies,
                 onReveal = onReveal,
-                onOpenActor = onOpenActor,
-                onOpenTopic = onOpenTopic,
-                onReference = onReference,
+                // EVERY DOOR THAT LEAVES THE SURFACE LEAVES ITS PLACE BEHIND
+                // (ReplyEntry.md: back returns at the offset it was left): a
+                // profile, a tag page and the composer a citation opens, as
+                // the composer's own doors already do.
+                onOpenActor = { handle -> depart { onOpenActor(handle) } },
+                onOpenTopic = { name -> depart { onOpenTopic(name) } },
+                onReference = { id -> depart { onReference(id) } },
                 onLicense = onLicense,
                 onRemoveComment = { comment -> confirm = ThreadConfirm.Remove(comment) },
                 onReportComment = { comment -> confirm = ThreadConfirm.Report(comment.id) },
