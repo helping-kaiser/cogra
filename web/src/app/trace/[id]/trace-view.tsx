@@ -461,7 +461,7 @@ function StepLevel({
           node={at("trace")}
         />
       </div>
-      <QuietNote node={at("note")}>{placeNote(title, place, steps.length)}</QuietNote>
+      <QuietNote node={at("note")}>{placeNote(title)}</QuietNote>
       <div className="flex flex-col">
         <FactRow
           label="What carries it"
