@@ -91,6 +91,7 @@ export function Screen() {
             license={{ attribution: 0, provenance: 0 }}
             bundle={mkBundle(0.1, 0.1)}
             onReply={() => {}}
+            onOpen={() => {}}
             replyOpacity="{{lockOpacity}}"
             target="“The long way home” — @ada"
             onOpenTarget={() => {}}
@@ -105,8 +106,9 @@ export function Screen() {
               timestamp="4d"
               license={{ attribution: 0, provenance: 0 }}
               onReply={() => {}}
+              onOpen={() => {}}
               replyOpacity="{{lockOpacity}}"
-            replyOpacity="{{lockOpacity}}"
+
               target="“Salt maps of the coast road” — @sol"
               onOpenTarget={() => {}}
               menuItems={COMMENT_CARD_MENU}
@@ -124,8 +126,9 @@ export function Screen() {
               redacted={{ reason: "author", when: "2h" }}
               menuItems={COMMENT_CARD_MENU}
               onReply={() => {}}
+
               replyOpacity="{{lockOpacity}}"
-            replyOpacity="{{lockOpacity}}"
+
               target="“Salt maps of the coast road” — @sol"
               onOpenTarget={() => {}}
               node="commentCard"
