@@ -88,11 +88,7 @@ describe("the reset request (Reset)", () => {
     renderWithProviders(<ResetForm />);
     expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute("href", "/login");
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Reset your password");
-    expect(
-      screen.getByText(
-        "Enter the email you signed up with and we send a reset link. Resetting the password signs out every device.",
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Resetting the password signs out every device.")).toBeInTheDocument();
     expect(screen.getByText(SIGN_IN_ONLY)).toBeInTheDocument();
     expect(screen.queryByText(/reset token/i)).not.toBeInTheDocument();
   });
@@ -143,9 +139,7 @@ describe("the new password (ResetNew)", () => {
   it("holds the link's own secret and never asks for it; no header, the new password twice, one commitment", async () => {
     await renderNew();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Set a new password");
-    expect(
-      screen.getByText("Setting a new password signs out every device. You sign in again with the new one."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Setting a new password signs out every device.")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Back" })).not.toBeInTheDocument();
     expect(screen.queryAllByRole("textbox")).toHaveLength(0);
     expect(screen.getByLabelText("New password")).toBeInTheDocument();
@@ -312,11 +306,7 @@ describe("the spent link (ResetExpired)", () => {
     await renderNew();
     fillConfirm();
     expect(await screen.findByRole("heading", { level: 1, name: "This link doesn't work anymore" })).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "It may have expired or already been used. A reset link works once and expires after 15 minutes — ask for a fresh one.",
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText("A reset link works once and expires after 15 minutes.")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Back" })).not.toBeInTheDocument();
     expect(nav.replace).not.toHaveBeenCalledWith("/login");
     fireEvent.click(screen.getByRole("button", { name: "Reset your password" }));

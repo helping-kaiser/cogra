@@ -5,6 +5,8 @@ package com.cogra.feature.content
  * (`feed.menuSheet.save`, `postDetail.menuSheet.markSensitive`).
  */
 internal enum class PostMenuRow(val nodeName: String) {
+    /** The narrow phone's Share, leading the reader's menu (ReaderPostMenuNarrow.md:3). */
+    Share("share"),
     Save("save"),
     Cite("cite"),
     Hide("hide"),

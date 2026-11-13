@@ -7,7 +7,7 @@
 // the cover screen, that the offers appear with the first one taken, and that
 // the composition rule is enforced where an author can see it.
 
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
@@ -21,6 +21,7 @@ import type { ComposeDraftStore } from "@/lib/compose/draft-store";
 import { emptyWizard, type WizardState } from "@/lib/compose/wizard";
 import { ComposeWizard } from "./wizard-view";
 import { byAnyTestId, byNode } from "@/test/data-node";
+import { declared } from "@/test/css";
 
 const FRAME = new Blob([new Uint8Array([9]) as BlobPart], { type: "image/png" });
 // A frame distinct from `FRAME` above, so a test can tell "the tray's frames"
@@ -212,8 +213,8 @@ describe("picking a video", () => {
     await pickFiles([aVideo()]);
     fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
 
-    // WizardHeader's own `stageLabel` slot: label-small whole (round 28) — the
-    // seal's "Last step" pair.
+    // WizardHeader's own `stageLabel` slot: label-small whole (round 28); the
+    // cover is the one stage that names itself (the seal does not, seam 314).
     const stage = await screen.findByTestId("header-stage");
     expect(stage).toHaveTextContent("Video only");
     expect(stage.className.split(" ")).toContain("text-label-small");
@@ -253,9 +254,7 @@ describe("picking a video", () => {
     expect(await screen.findByTestId("wizard-cover-no-frame")).toHaveTextContent("No frame");
     expect(screen.getByTestId("wizard-cover-duration")).toBeInTheDocument();
     expect(screen.queryByTestId("wizard-cover-play")).toBeNull();
-    expect(screen.getByTestId("wizard-cover-caption")).toHaveTextContent(
-      "This clip gave no frames — choose a picture of your own, or leave it without one.",
-    );
+    expect(screen.getByTestId("wizard-cover-caption").textContent).toBe("This clip gave no frames");
   });
 
   // F3-4, ruled final 2026-09-11: the preview shows the ACTUAL OUTPUT FORMAT.
@@ -293,7 +292,7 @@ describe("picking a video", () => {
       await pickFiles([aVideo()]);
       fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
 
-      expect(await previewRatio()).toBe(`${1920 / 1080} / 1`);
+      expect(await previewRatio()).toBe(declared("aspect-ratio", `${1920 / 1080} / 1`));
     });
 
     it("shows a square clip square", async () => {
@@ -476,15 +475,9 @@ describe("picking a video", () => {
     await pickFiles([aVideo()]);
 
     expect(await screen.findByTestId("wizard-picked-count")).toHaveTextContent("Picked · 1");
-    expect(
-      screen.getByText("A video is the whole post. Its cover comes next."),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId("wizard-tray-caption").textContent).toBe("A video is the whole post.");
     expect(screen.queryByTestId("wizard-show-all")).toBeNull();
-    // The tray's picture caption, not the closed Show-all sheet's footnote,
-    // which since the K13 round reads the same words.
-    expect(
-      screen.queryByText("The first one is the cover.", { selector: "span" }),
-    ).toBeNull();
+    expect(screen.queryByText("The first one is the cover.")).toBeNull();
   });
 
   // CW-08 (ComposePickVideo.jsx:57): the tray's own remove control names what
@@ -636,11 +629,7 @@ describe("picking a video", () => {
     // NEW-2 (ComposeCoverNoFrames.jsx:44): the terminal caption says why the
     // choice is smaller than it was, once extraction is done and came back
     // with nothing.
-    expect(
-      screen.getByText(
-        "This clip gave no frames — choose a picture of your own, or leave it without one.",
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText("This clip gave no frames")).toBeInTheDocument();
     // Next stays open even with no face chosen — a faceless video is no
     // longer a wall (jakob, 2026-09-10, "going without a cover is always
     // possible"), so a capture failure that leaves no offers still has to
@@ -732,6 +721,8 @@ describe("picking a video", () => {
   // test is whether the still gets MATERIALIZED at all, not whether a
   // browser can re-encode it.
   describe("the silent auto-cover", () => {
+    // Kept only where a test asserts a still was NOT made: an absence has no
+    // landing to wait for, and a slow runner can only make it pass sooner.
     async function settle() {
       // The 200ms coalescing window `draft-store.ts` documents, plus the
       // microtask the capture and the materializing dispatch each cost.
@@ -751,7 +742,9 @@ describe("picking a video", () => {
       // Straight through the cover screen — no tap on any offer.
       fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
       await screen.findByTestId(byNode("composeDetails.title.input"));
-      await settle();
+      // The still lands once the store's coalescing window has written it:
+      // waited for, not slept on.
+      await waitFor(async () => expect((await drafts.load())?.autoCover?.file).toBe(FRAME_ZERO), { timeout: 3000 });
 
       const saved = await drafts.load();
       // The door's own state is untouched: nothing was CHOSEN.
@@ -839,12 +832,12 @@ describe("a vertical clip", () => {
     expect(screen.queryByText(/Its cover comes next./)).toBeNull();
   });
 
-  it("keeps the cover promise on a horizontal clip's tray", async () => {
+  // Seam 314: a horizontal clip's tray reads the same line as a vertical
+  // one's — the cover step promises itself by arriving.
+  it("reads the one video line on a horizontal clip's tray too", async () => {
     render();
     await pickFiles([aVideo()]);
-    expect(await screen.findByTestId("wizard-tray-caption")).toHaveTextContent(
-      "A video is the whole post. Its cover comes next.",
-    );
+    expect(await screen.findByTestId("wizard-tray-caption")).toHaveTextContent(/^A video is the whole post.$/);
   });
 
   it("opens details with the Add a cover door on Next, and never the cover step", async () => {
@@ -929,9 +922,8 @@ describe("a vertical clip", () => {
     await pickVertical();
     fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
     await screen.findByTestId(byNode("composeDetails.title.input"));
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-    });
+    // The still lands once the store's coalescing window has written it.
+    await waitFor(async () => expect((await drafts.load())?.autoCover?.file).toBe(FRAME_ZERO), { timeout: 3000 });
 
     const saved = await drafts.load();
     expect(saved?.cover).toBeNull();

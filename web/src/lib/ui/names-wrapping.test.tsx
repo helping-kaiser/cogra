@@ -48,7 +48,7 @@ function expectWraps(box: HTMLElement, sentence: string, tail?: string) {
 
 describe("a long handle in text that wraps", () => {
   it("Snackbar's message (FeedHidden's line)", () => {
-    const message = `${H} is hidden — their posts stay out of your feed.`;
+    const message = `${H} is hidden.`;
     render(<Snackbar testId="snack" node={{ path: "feed.snackbar" }} message={message} onDismiss={() => {}} />);
     expectWraps(screen.getByTestId("feed.snackbar.message"), message);
   });
@@ -81,7 +81,7 @@ describe("a long handle in text that wraps", () => {
     render(
       <TaskCard
         title={`All set — waiting on ${H}`}
-        body="Their approval brings you in. Nothing else is needed from you."
+        body="Their approval brings you in."
         node={{ path: "feed.application" }}
       />,
     );
@@ -91,7 +91,7 @@ describe("a long handle in text that wraps", () => {
   });
 
   it("TaskCard's body", () => {
-    const body = `${H} approved your application. Nothing is needed from you while it lands.`;
+    const body = `That was ${H}'s call. Your account stays as it is, and any member you know can vouch you in instead.`;
     render(<TaskCard title="Approved" body={body} node={{ path: "feed.landing" }} />);
     expectWraps(screen.getByTestId("feed.landing.body"), body);
   });

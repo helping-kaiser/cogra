@@ -23,6 +23,7 @@ import { isMuted, resetMuteForTests, setMuted } from "./mute";
 import { VideoPlayer } from "./video-player";
 import { MediaTile } from "./media-tile";
 import { PORTRAIT_CAP } from "./aspect";
+import { declared } from "@/test/css";
 import { StageHost } from "./stage-host";
 import { resetVideoStageForTests } from "./video-stage";
 
@@ -816,7 +817,7 @@ describe("a clip's shape", () => {
   it("reserves the clip's own shape, full-width and uncapped", () => {
     render(<MediaTile src={CLIP} mimeType="video/mp4" sourceRatio={16 / 9} testId="moving" />);
     const frame = screen.getByTestId("moving-frame");
-    expect(frame.style.aspectRatio).toBe(`${16 / 9} / 1`);
+    expect(frame.style.aspectRatio).toBe(declared("aspect-ratio", `${16 / 9} / 1`));
     // The default frame's ratio is already clamped by `tileRatio`, so no
     // separate height cap competes with it here.
     expect(frame.style.maxHeight).toBe("");

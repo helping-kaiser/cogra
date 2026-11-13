@@ -26,7 +26,6 @@
 // Both composers take it: a reply and an edit alike put what was just written
 // in front of its author (jakob 2026-09-15, Q6).
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
@@ -46,7 +45,7 @@ import { fetchCitingArtifacts, type CitingArtifactView } from "@/lib/api/referen
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { ActorChip } from "@/lib/ui/actor-chip";
-import { Button } from "@/lib/ui/button";
+import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import type { License } from "@/lib/license";
@@ -71,7 +70,7 @@ import {
   sensitiveSignature,
 } from "@/lib/ui/post-media";
 import { withRemoval, type Removal } from "@/lib/api/removal-api";
-import { REMOVED_COMMENT_NOTE, RemovedPlaceholder } from "@/lib/ui2/media/removed-placeholder";
+import { RemovedPlaceholder } from "@/lib/ui2/media/removed-placeholder";
 import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
 import { shortTimestamp } from "@/lib/ui/timestamp";
 import { TopicsLine } from "@/lib/ui/topics-line";
@@ -647,8 +646,13 @@ export function CommentsSheet({
    * out, because a closed dialog no longer holds one.
    */
   const openComposer = (target: ReplyTarget) => {
-    // AN APPLICANT IS TOLD, NEVER THE COMPOSER (ReplyEntry.md:25; ruling
-    // PR-103): both doors, and a landing aimed at a reply, end here.
+    // A GUEST IS ASKED OVER THE SHEET, never bounced (ReplyEntry.md:23,
+    // GuestGate.md:3); AN APPLICANT IS TOLD, NEVER THE COMPOSER (ReplyEntry.md:25;
+    // ruling PR-103): both doors, and a landing aimed at a reply, end here.
+    if (phase === "signedOut") {
+      setJoinOpen(true);
+      return;
+    }
     if (applicant) {
       notify(COMMENT_LOCKED);
       return;
@@ -876,13 +880,12 @@ export function CommentsSheet({
             </div>
           </div>
           {/* THE MARK IN THE WORDS' PLACE (`CommentsThreadSheet removed`): the
-              author's mark, its second line naming the comment, dated by the
-              removal's own moment. */}
+              author's mark line, dated by the removal's own moment, with no
+              detail sentence (seam 314). */}
           {removed ? (
             <RemovedPlaceholder
               reason={removalReason(comment)}
               when={removalWhen(comment)}
-              note={removalReason(comment) === "author" ? REMOVED_COMMENT_NOTE : undefined}
               testId={`comment-${comment.id}-removed`}
               node={part(card, "removalMark")}
             />
@@ -975,21 +978,20 @@ export function CommentsSheet({
               testIdPrefix={`comment-stance-${comment.id}`}
               node={part(card, "actionRow.stance")}
             />
-            {phase === "signedIn" && (
-              <Button
-                testId={`comment-reply-${comment.id}`}
-                node={part(card, "actionRow.reply")}
-                variant="text"
-                size="sm"
-                onClick={() => {
-                  // ReplyEntry via=5: the composer, PRE-TARGETED at this
-                  // comment. The other door — "Add a comment" at the foot of
-                  // the thread — pins the post instead.
-                  openComposer(commentTarget(comment));
-                }}
+            {phase !== "resolving" && (
+              // ReplyEntry via=5: the composer, PRE-TARGETED at this comment;
+              // a guest's asks to join instead (ReplyEntry.md:23).
+              // The other door — "Add a comment" at the foot of the thread —
+              // pins the post instead. An applicant's stands at the disabled
+              // opacity and stays tappable (ReplyEntry.md:29).
+              <button
+                type="button"
+                {...testAttributes(part(card, "actionRow.reply"), `comment-reply-${comment.id}`)}
+                onClick={() => openComposer(commentTarget(comment))}
+                className={`${buttonClassName({ variant: "text", size: "sm" })}${applicant ? " opacity-[var(--state-disabled)]" : ""}`}
               >
                 Reply
-              </Button>
+              </button>
             )}
           </div>
           {/* THE ROW LINE under the face (RowSigning.md): a save or unsave of
@@ -1102,8 +1104,9 @@ export function CommentsSheet({
                 draws the viewer's own avatar beside it; drawing one here would
                 mean a profile read this surface does not otherwise make, which
                 is exactly the cost the read restructure is removing, so the row
-                is the field alone. */}
-            {phase === "signedIn" && (
+                is the field alone. It stands for every reader, a guest
+                included (ReplyEntry.md:31): a guest's press asks to join. */}
+            {phase !== "resolving" && (
               <div
                 data-testid="comment-entry"
                 className="flex items-center gap-3 border-t border-outline-variant px-4 pt-3"
@@ -1112,22 +1115,13 @@ export function CommentsSheet({
                   type="button"
                   data-testid="comment-add"
                   onClick={() => openComposer(postTarget(post))}
-                  className="cg-state cg-focus min-h-14 flex-1 rounded-extra-small border border-outline px-3 text-left text-body-large text-on-surface-variant"
+                  // An applicant's stands at the disabled opacity, still
+                  // tappable (ReplyEntry.md:27).
+                  className={`cg-state cg-focus min-h-14 flex-1 rounded-extra-small border border-outline px-3 text-left text-body-large text-on-surface-variant${applicant ? " opacity-[var(--state-disabled)]" : ""}`}
                 >
                   Add a comment
                 </button>
               </div>
-            )}
-            {/* The write affordance swaps, never merely disables: a member gets
-                the composer's door, an anonymous reader gets the join entry. */}
-            {phase === "signedOut" && (
-              <Link
-                href="/login"
-                data-testid="comment-signin"
-                className="block border-t border-outline-variant px-4 pt-3 text-body-medium text-on-surface-variant underline"
-              >
-                Sign in or join to comment
-              </Link>
             )}
           </>
         }

@@ -11,14 +11,13 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.NameInLine
 import com.cogra.core.designsystem.R
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
@@ -105,12 +104,12 @@ fun PageHeader(
         if (title == null) {
             Spacer(Modifier.weight(1f))
         } else {
-            Text(
+            // A ONE-LINE PLACE (NamesLong.md): `@ada · Opinions` cuts the
+            // handle and keeps its words; `@ada` alone clips at its end.
+            NameInLine(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
                 // 8dp after the arrow and nothing more (`PageHeader.jsx`: the
                 // arrow and the title share one `gap: 8` group).
                 modifier = Modifier

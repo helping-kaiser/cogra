@@ -6,7 +6,7 @@
 //
 // ONE SURFACE, THE SYSTEM'S OWN MASTERS. The quiet line that says what is
 // answered, the acts card (`ActsCard`: the comment, the staged tags and
-// citations, then the two action rows, the total and its all-or-nothing
+// citations, then the two action rows, the total and its slow
 // subline), the three fact rows (`FactRow`), the note that replying signs an
 // opinion, and the foot. A comment's seal is also its details stage, so the
 // action rows ride along in every state — what could still be added, lined up
@@ -48,7 +48,6 @@ import { ReadoutChip } from "@/lib/ui2/chip";
 import {
   ActsCard,
   actsTotal,
-  ALL_OR_NOTHING,
   SLOW_SIGNING_LINE,
   type ActsAction,
   type ActsRow,
@@ -69,7 +68,7 @@ import { unlandedCitationLine } from "@/app/(app)/compose/wizard/seal-step";
 import { bundleReadout, EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
-import { licenseReading, type License } from "@/lib/license";
+import { licenseName, type License } from "@/lib/license";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
 import {
@@ -343,7 +342,7 @@ export function ReplySealStep({
         // Past 5s from the press the subline says the network is slow, in its
         // own place, whether the bytes have landed yet or not
         // (ReplySealUploading.md:13, SealSigningSlow.md).
-        note={slow ? SLOW_SIGNING_LINE : acts > 1 ? ALL_OR_NOTHING : null}
+        note={slow ? SLOW_SIGNING_LINE : null}
         noteTone={slow ? "slow" : "quiet"}
         testId="reply-seal-acts"
       />
@@ -358,7 +357,7 @@ export function ReplySealStep({
         />
         <FactRow
           label="License"
-          value={licenseReading(state.license)}
+          value={licenseName(state.license)}
           action="Change"
           testId="reply-open-license"
           onAction={guard(() => onSheet("license"))}
@@ -518,9 +517,6 @@ export function ReplySealStep({
         title="License"
         testId="reply-license-sheet"
       >
-        <p className="m-0 text-label-small text-on-surface-variant">
-          Terms for anyone who reuses this.
-        </p>
         {/* The board's own row anatomy — a dot, the reading, its hint —
             rather than `LicenseChooser`'s settings-page fieldset
             (`ComposeLicense.jsx:5-11`): the post seal's license sheet's
@@ -528,7 +524,7 @@ export function ReplySealStep({
         <LicenseRows value={state.license} onChange={onLicense} testIdPrefix="reply" />
         <div className="flex items-center gap-2 border-t border-outline-variant pt-2.5">
           <span className="flex-1 text-label-small text-on-surface-variant">
-            {licenseReading(state.license)}
+            {licenseName(state.license)}
           </span>
           <PillButton testId="reply-license-done" onClick={() => onSheet("none")}>
             Done
