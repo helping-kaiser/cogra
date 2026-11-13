@@ -73,7 +73,6 @@ private class ScriptedAccount : ThrowingAccountRepository() {
 
 private class ScriptedOnboarding : ThrowingOnboardingRepository() {
     var status: ApplicationStatus = ApplicationStatus(AccountState.APPLICANT, null, null, null)
-    var verify: Outcome<Unit> = Outcome.Success(Unit)
     var resend: Outcome<Unit> = Outcome.Success(Unit)
     var polls = 0
     var resendCalls = 0
@@ -82,8 +81,6 @@ private class ScriptedOnboarding : ThrowingOnboardingRepository() {
         polls += 1
         return Outcome.Success(status)
     }
-
-    override suspend fun verifyEmail(verificationToken: String): Outcome<Unit> = verify
 
     override suspend fun resendVerificationEmail(email: String): Outcome<Unit> {
         resendCalls += 1
@@ -393,32 +390,6 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun verifyingTheEmailReportsBackAndKicksThePoll() = homeTest {
-        account.profile = applicant()
-        onboarding.status = applicantStatus(applicationView(verified = false))
-        val vm = viewModel()
-        dispatcher.scheduler.runCurrent()
-        val pollsBefore = onboarding.polls
-
-        vm.onTokenChange("token-1")
-        onboarding.verify = Outcome.Refused(emptyList())
-        vm.onVerify()
-        dispatcher.scheduler.runCurrent()
-        assertThat(vm.state.value.verifyError).isEqualTo(ErrorCode.INTERNAL)
-
-        // Editing the field clears the refusal; a good token verifies
-        // and pokes the loop instead of waiting out its delay.
-        vm.onTokenChange("token-2")
-        assertThat(vm.state.value.verifyError).isNull()
-        onboarding.verify = Outcome.Success(Unit)
-        onboarding.status = applicantStatus(applicationView(verified = true))
-        vm.onVerify()
-        dispatcher.scheduler.runCurrent()
-        assertThat(vm.state.value.verified).isTrue()
-        assertThat(onboarding.polls).isGreaterThan(pollsBefore)
-    }
-
-    @Test
     fun resendingReportsBack() = homeTest {
         account.profile = applicant()
         onboarding.status = applicantStatus(applicationView(verified = false))
@@ -446,21 +417,6 @@ class HomeViewModelTest {
         assertThat(onboarding.resendCalls).isEqualTo(1)
         assertThat(vm.state.value.resending).isFalse()
         assertThat(vm.state.value.resent).isTrue()
-    }
-
-    @Test
-    fun aRateLimitedVerifySurfacesTheCode() = homeTest {
-        account.profile = applicant()
-        onboarding.status = applicantStatus(applicationView(verified = false))
-        onboarding.verify = Outcome.Refused(listOf(UserError(ErrorCode.RATE_LIMITED, "slow down")))
-        val vm = viewModel()
-        dispatcher.scheduler.runCurrent()
-
-        vm.onTokenChange("token-1")
-        vm.onVerify()
-        dispatcher.scheduler.runCurrent()
-        assertThat(vm.state.value.verifyError).isEqualTo(ErrorCode.RATE_LIMITED)
-        assertThat(vm.state.value.verified).isFalse()
     }
 
     @Test
