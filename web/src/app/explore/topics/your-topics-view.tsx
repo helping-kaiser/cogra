@@ -44,11 +44,11 @@ import { useScrollHost } from "@/lib/ui/scroll-host";
 import { TransportError } from "@/lib/ui/transport-error";
 import { ReferenceRow } from "@/lib/ui2/reference-row";
 
-/** The page title (copy-voice, *The list is `Your topics`*). */
-export const YOUR_TOPICS_TITLE = "Your topics";
+/** The page title (copy-voice, *The list is `Your tags`*). */
+export const YOUR_TOPICS_TITLE = "Your tags";
 
 /** The empty list (copy-voice, *The empty list*), verbatim. */
-export const NO_TOPICS_YET = "No topics yet — say how you feel about one from its page.";
+export const NO_TOPICS_YET = "No tags yet — say how you feel about one from its page.";
 
 /** The load-more fault (design digest item 57). */
 export const COULDNT_LOAD_MORE = "Couldn't load more";

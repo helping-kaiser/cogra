@@ -19,7 +19,6 @@ query SliceNodes($viewer: UUID!, $dustFloor: Float, $gamma: Float, $asOfEpoch: I
           kind
           genesis {
             landingEpoch
-            actTime
             position
           }
         }
@@ -42,7 +41,6 @@ query SliceRecords($viewer: UUID!, $dustFloor: Float, $gamma: Float, $asOfEpoch:
           family
           authorId
           landingEpoch
-          actTime
           position
           legs {
             role

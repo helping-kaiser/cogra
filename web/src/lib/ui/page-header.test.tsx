@@ -57,4 +57,29 @@ describe("PageHeader", () => {
       "text-title-large",
     );
   });
+
+  // NamesLong.md:5, :7 and :9 at the longest legal handle (NamesLong.jsx).
+  describe("a long handle in the title", () => {
+    const H = "@maximiliana_featherstone_haugh";
+
+    it("clips a title the handle ends at its end, on one line", () => {
+      render(<PageHeader title={H} backHref="/feed" backLabel="Back to feed" />);
+      const title = screen.getByRole("heading", { name: H });
+      expect(title.className.split(" ")).toEqual(
+        expect.arrayContaining(["min-w-0", "truncate", "whitespace-nowrap"]),
+      );
+      expect(title.querySelector("[data-name-line]")).toBeNull();
+    });
+
+    it("cuts the handle and keeps the words that follow it", () => {
+      render(<PageHeader title={`${H} · Opinions`} backHref="/feed" backLabel="Back to feed" />);
+      // By role alone: dom-accessibility-api trims each part's text, so jsdom
+      // would read `…haugh· Opinions`; the text itself is whole.
+      const heading = screen.getByRole("heading");
+      expect(heading).toHaveTextContent(`${H} · Opinions`);
+      const line = heading.querySelector("[data-name-line]");
+      expect(line?.lastElementChild?.textContent).toBe(" · Opinions");
+      expect(line?.lastElementChild?.className).toContain("flex-none");
+    });
+  });
 });

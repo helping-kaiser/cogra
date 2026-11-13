@@ -207,7 +207,7 @@ export function TagEntryField({
                   add();
                 }
               }}
-              placeholder="Add a topic"
+              placeholder="Add a tag"
               aria-describedby={`${testIdPrefix}-tag-preview`}
               className="rounded-extra-small border border-outline bg-transparent px-3 py-2"
             />
@@ -250,7 +250,7 @@ export function TagEntryField({
           )}
           {atCap && (
             <p data-testid={`${testIdPrefix}-tag-cap`} className="text-body-small text-on-surface-variant">
-              Up to {cap} topics per post.
+              Up to {cap} tags per post.
             </p>
           )}
         </>

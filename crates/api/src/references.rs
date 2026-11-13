@@ -484,8 +484,8 @@ pub async fn prepare_reference<B: L1Boundary>(
 /// Prepares the withdrawal of one citation: the counter-records that net
 /// the author's `(author, artifact, target)` bundle to `(0, 0)` (D11).
 ///
-/// Records are never deleted, and Reference withdrawal is per-leg net
-/// stance — not Tag's newest-wins-at-relevance-0, which exists only
+/// Records are never deleted, and a Reference is withdrawn by its author
+/// through netting — not Tag's newest-wins-at-relevance-0, which exists only
 /// because Tag's confidence is census-bounded to `[0, 1]` and cannot be
 /// netted. Both Reference parameters are signed, so netting is expressible
 /// here, and the cost is `⌈max(|Σ_d|, |Σ_i|)⌉` acts rather than one.

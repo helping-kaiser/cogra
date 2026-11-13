@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO posts\n             (id, author_id, l1_node_id, license, landed_epoch, position,\n              created_at)\n         VALUES ($1, $2, $3, $4, $5, $6, $7)\n         ON CONFLICT (id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f7bbb69cf864b3ec22c9775da9d4a85805b3b56b47978c0b8748496912da620d"
+}

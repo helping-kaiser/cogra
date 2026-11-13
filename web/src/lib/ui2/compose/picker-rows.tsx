@@ -31,6 +31,7 @@
 import type { ReactNode } from "react";
 
 import { Icon } from "@/lib/ui/icons";
+import { nameInLine } from "@/lib/ui/names";
 import { NodeMark } from "@/lib/ui/node-mark";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { TransportError } from "@/lib/ui/transport-error";
@@ -91,7 +92,9 @@ function RowText({
           className="truncate text-body-small text-on-surface-variant"
           {...testAttributes(part(node, subPart))}
         >
-          {sub}
+          {/* One line: `@ada · 3d` cuts the handle, the age keeps its room
+              (NamesLong.md:5-7). */}
+          {nameInLine(sub)}
         </span>
       )}
     </span>

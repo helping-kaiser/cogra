@@ -1146,12 +1146,11 @@ pub async fn first_own_placement(
                  WHERE post_id = p.id
                  ORDER BY pending DESC,
                           landed_epoch DESC NULLS LAST,
-                          act_time DESC NULLS LAST,
                           position DESC NULLS LAST,
                           created_at DESC, version_id DESC
                  LIMIT 1
              )
-           ORDER BY p.landed_epoch, p.act_time, p.position, p.id
+           ORDER BY p.landed_epoch, p.position, p.id
            LIMIT 1"#,
         author_id,
         named,

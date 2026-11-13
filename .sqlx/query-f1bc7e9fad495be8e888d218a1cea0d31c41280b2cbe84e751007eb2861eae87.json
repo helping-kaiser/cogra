@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT landed_epoch, position FROM actor_profile_versions\n         WHERE actor_id = $1 AND NOT pending\n         ORDER BY landed_epoch DESC NULLS LAST,\n                  position DESC NULLS LAST, created_at DESC, version_id DESC\n         LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "landed_epoch",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "position",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "f1bc7e9fad495be8e888d218a1cea0d31c41280b2cbe84e751007eb2861eae87"
+}

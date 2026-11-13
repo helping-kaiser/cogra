@@ -16,10 +16,11 @@ fn at(secs: i64) -> Timestamp {
     chrono::DateTime::from_timestamp(1_800_000_000 + secs, 0).expect("in range")
 }
 
+/// A landing at the key of record `(epoch, position)` (layer1-interface.md
+/// §8.3).
 fn order(epoch: i64, position: i64) -> LandingOrder {
     LandingOrder {
         landed_epoch: epoch,
-        act_time: position + 1,
         position,
     }
 }

@@ -25,7 +25,7 @@ A convenience subset; the ledger is the authority.
 | `Ψ_e`, `Ψ_e^[P]` | Stored 3×3 sentiment slice; its 2×2 path view. |
 | `ε(e)`, `ε(p)` | Determinant sign of an edge / parity product of a path — the coherence bit. |
 | `w̃(e)` | Damped edge weight: coherence × maturity × boundary. |
-| `𝕋^act_q`, `τ_e`, `≺` | Act-owned authoritative logical time, maturity scalar, authoritative-order precedence. |
+| `𝕋^act_q`, `τ_e`, `≺` | Act time (a recomputable summary of the order of record, deciding no precedence), maturity scalar, precedence by the key of record `(k, pos)`. |
 | `E_k` | Epoch-`k` snapshot edge set. |
 | `α_i` | Standing — gate input on L1, freely readable downstream. |
 | `r_i`, `b_i`, `N_i` | Commitment rate, residual balance, action count. |

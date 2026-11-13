@@ -55,6 +55,14 @@ data object Login
 @Serializable
 data object PasswordReset
 
+/** The reset mail's landing (`ResetNew`) — the App Link on `/reset?token=`. */
+@Serializable
+data class ResetNew(val token: String)
+
+/** A spent or expired reset link (`ResetExpired`), opened in ResetNew's place. */
+@Serializable
+data object ResetExpired
+
 @Serializable
 data object Restore
 
@@ -313,6 +321,9 @@ internal const val DELETE_ACCOUNT_PATH = "/delete-account"
 
 /** The ask link's path (auth.md "Link URLs"), claimed beside `/join`. */
 internal const val VOUCH_PATH = "/vouch"
+
+/** The password reset's link path (auth.md "Link URLs"), claimed beside `/join`. */
+internal const val RESET_PATH = "/reset"
 
 /** What `ManageSpaceActivity` relays the system storage screen's "Manage space" as. */
 const val ACTION_MANAGE_SPACE = "com.cogra.app.action.MANAGE_SPACE"

@@ -9,6 +9,7 @@ import { byNode } from "@/test/data-node";
 import { opinionGiven, opinionRecord, userOpinions } from "@/test/inbound";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
+import { wholeText } from "@/test/text";
 import { opinionsOrigin } from "@/lib/profile/opinions-route";
 import { OpinionsScreen } from "./opinions-view";
 
@@ -95,7 +96,9 @@ describe("OpinionsScreen", () => {
   it("is titled with the person's handle and Opinions (ProfileStances.md:3)", async () => {
     server.use(theirProfile(), userOpinions("on", [[]]));
     renderWithProviders(<OpinionsScreen handle="ada" />);
-    expect(await screen.findByRole("heading", { name: "@ada · Opinions" })).toBeInTheDocument();
+    // The title splits at the handle (`nameInLine`); jsdom's name computation
+    // trims each part, so the whole line is matched by its text, in the heading.
+    expect((await screen.findByText(wholeText("@ada · Opinions"))).closest("h1")).not.toBeNull();
   });
 
   it("stands the two directions on two tabs named in words, On them and By them (:5, :7)", async () => {
@@ -222,7 +225,9 @@ describe("OpinionsScreen", () => {
     const back = await screen.findByTestId(byNode("profileStances.header.back"));
     expect(back).toHaveAccessibleName("Back to your profile");
     expect(back).toHaveAttribute("href", "/profile");
-    expect(await screen.findByRole("heading", { name: "@me · Opinions" })).toBeInTheDocument();
+    // The title splits at the handle (`nameInLine`); jsdom's name computation
+    // trims each part, so the whole line is matched by its text, in the heading.
+    expect((await screen.findByText(wholeText("@me · Opinions"))).closest("h1")).not.toBeNull();
   });
 
   it("reads Back to your profile when the reader's own drill-in opened it", async () => {

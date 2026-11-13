@@ -262,15 +262,24 @@ pub async fn record_ids_in_epoch(pool: &PgPool, epoch: i64) -> Result<Vec<String
     .await?)
 }
 
-/// One mirror record's identity and causal key (the slice-1 read
+/// One mirror record's identity and key of record (the slice-1 read
 /// surface; the full record read arrives with the content slice).
 #[derive(Debug, Clone)]
 pub struct RecordMeta {
     pub record_id: String,
     pub family: String,
     pub epoch: i64,
-    pub act_time: i64,
     pub position: i64,
+}
+
+impl RecordMeta {
+    /// The key of record a display row promoted from this record stamps.
+    pub fn landing(&self) -> crate::content::LandingOrder {
+        crate::content::LandingOrder {
+            landed_epoch: self.epoch,
+            position: self.position,
+        }
+    }
 }
 
 pub async fn record_meta(
@@ -278,7 +287,7 @@ pub async fn record_meta(
     record_id: &str,
 ) -> Result<Option<RecordMeta>, MirrorError> {
     Ok(sqlx::query!(
-        "SELECT record_id, family, epoch, act_time, position
+        "SELECT record_id, family, epoch, position
          FROM mirror_records WHERE record_id = $1",
         record_id,
     )
@@ -288,7 +297,6 @@ pub async fn record_meta(
         record_id: r.record_id,
         family: r.family,
         epoch: r.epoch,
-        act_time: r.act_time,
         position: r.position,
     }))
 }
@@ -507,7 +515,6 @@ pub async fn payload_witness(
 pub struct ChainRecord {
     pub record_id: String,
     pub epoch: i64,
-    pub act_time: i64,
     pub position: i64,
 }
 
@@ -527,12 +534,12 @@ pub async fn chain_records(
 ) -> Result<Vec<ChainRecord>, MirrorError> {
     Ok(sqlx::query_as!(
         ChainRecord,
-        "SELECT r.record_id, r.epoch, r.act_time, r.position
+        "SELECT r.record_id, r.epoch, r.position
          FROM mirror_records r
          JOIN mirror_record_legs l ON l.record_id = r.record_id
          WHERE r.author = $1 AND r.family = $2
            AND l.leg IN ('binary', 't') AND l.target = $3
-         ORDER BY r.epoch, r.act_time, r.position",
+         ORDER BY r.epoch, r.position",
         author,
         family.as_str(),
         node,
@@ -653,7 +660,7 @@ pub(crate) struct RecordRow {
 
 /// The chronicle read (api-spec `records`): filterable along the
 /// mirror's own indexes, newest-first in landing order — keyset cursor
-/// on the authoritative causal key `(epoch, act_time, position)`.
+/// on the key of record `(epoch, position)`.
 /// `backward` serves `last`/`before`; results always come back
 /// newest-first.
 ///
@@ -666,13 +673,13 @@ pub(crate) struct RecordRow {
 pub async fn records(
     pool: &PgPool,
     filter: &RecordFilter,
-    cursor: Option<(i64, i64, i64)>,
+    cursor: Option<(i64, i64)>,
     backward: bool,
     limit: i64,
 ) -> Result<Vec<RecordFull>, MirrorError> {
-    let (ce, ca, cp) = match cursor {
-        Some((e, a, p)) => (Some(e), Some(a), Some(p)),
-        None => (None, None, None),
+    let (ce, cp) = match cursor {
+        Some((e, p)) => (Some(e), Some(p)),
+        None => (None, None),
     };
     let (anchor_source, anchor_target) = match &filter.anchor {
         Some(anchor) => match anchor.direction {
@@ -708,59 +715,59 @@ pub async fn records(
                              SELECT 1 FROM mirror_record_legs l
                              WHERE l.record_id = r.record_id
                                AND l.leg = 't' AND l.target = $7))
-                     AND ($12::text[] IS NULL OR EXISTS (
+                     AND ($11::text[] IS NULL OR EXISTS (
                              SELECT 1 FROM mirror_record_legs l
                              WHERE l.record_id = r.record_id
-                               AND l.source = ANY($12)
-                               AND ($14::text IS NULL OR CASE
-                                     WHEN $14 = 'post' THEN EXISTS (
+                               AND l.source = ANY($11)
+                               AND ($13::text IS NULL OR CASE
+                                     WHEN $13 = 'post' THEN EXISTS (
                                           SELECT 1 FROM posts p
                                           WHERE p.l1_node_id = l.target)
-                                     WHEN $14 = 'comment' THEN EXISTS (
+                                     WHEN $13 = 'comment' THEN EXISTS (
                                           SELECT 1 FROM comments c
                                           WHERE c.l1_node_id = l.target)
-                                     WHEN $14 = 'hashtag' THEN l.target LIKE 'name:%'
-                                     WHEN $14 IN ('user', 'collective') THEN EXISTS (
+                                     WHEN $13 = 'hashtag' THEN l.target LIKE 'name:%'
+                                     WHEN $13 IN ('user', 'collective') THEN EXISTS (
                                           SELECT 1 FROM actors a
-                                          WHERE a.kind = $14
+                                          WHERE a.kind = $13
                                             AND (l.target LIKE 'prof:%'
                                                  OR l.target LIKE 'addr:%')
                                             AND a.realization_address = split_part(l.target, ':', 2))
                                      ELSE FALSE END)))
-                     AND ($13::text[] IS NULL OR EXISTS (
+                     AND ($12::text[] IS NULL OR EXISTS (
                              SELECT 1 FROM mirror_record_legs l
                              WHERE l.record_id = r.record_id
-                               AND l.target = ANY($13)
-                               AND ($14::text IS NULL OR CASE
-                                     WHEN $14 = 'post' THEN EXISTS (
+                               AND l.target = ANY($12)
+                               AND ($13::text IS NULL OR CASE
+                                     WHEN $13 = 'post' THEN EXISTS (
                                           SELECT 1 FROM posts p
                                           WHERE p.l1_node_id = l.source)
-                                     WHEN $14 = 'comment' THEN EXISTS (
+                                     WHEN $13 = 'comment' THEN EXISTS (
                                           SELECT 1 FROM comments c
                                           WHERE c.l1_node_id = l.source)
-                                     WHEN $14 = 'hashtag' THEN l.source LIKE 'name:%'
-                                     WHEN $14 IN ('user', 'collective') THEN EXISTS (
+                                     WHEN $13 = 'hashtag' THEN l.source LIKE 'name:%'
+                                     WHEN $13 IN ('user', 'collective') THEN EXISTS (
                                           SELECT 1 FROM actors a
-                                          WHERE a.kind = $14
+                                          WHERE a.kind = $13
                                             AND (l.source LIKE 'prof:%'
                                                  OR l.source LIKE 'addr:%')
                                             AND a.realization_address = split_part(l.source, ':', 2))
                                      ELSE FALSE END)))
-                     AND (($15::text IS NULL AND $16::text IS NULL) OR EXISTS (
+                     AND (($14::text IS NULL AND $15::text IS NULL) OR EXISTS (
                              SELECT 1 FROM mirror_record_legs s
                              WHERE s.record_id = r.record_id
                                AND s.leg IN ('binary', 'a')
-                               AND ($15::text IS NULL OR CASE
-                                     WHEN $15 = 'positive' THEN s.p_d > 0
-                                     WHEN $15 = 'negative' THEN s.p_d < 0
-                                     WHEN $15 = 'zero' THEN s.p_d = 0
+                               AND ($14::text IS NULL OR CASE
+                                     WHEN $14 = 'positive' THEN s.p_d > 0
+                                     WHEN $14 = 'negative' THEN s.p_d < 0
+                                     WHEN $14 = 'zero' THEN s.p_d = 0
                                      ELSE FALSE END)
-                               AND ($16::text IS NULL OR CASE
-                                     WHEN $16 = 'positive' THEN s.p_i > 0
-                                     WHEN $16 = 'negative' THEN s.p_i < 0
-                                     WHEN $16 = 'zero' THEN s.p_i = 0
+                               AND ($15::text IS NULL OR CASE
+                                     WHEN $15 = 'positive' THEN s.p_i > 0
+                                     WHEN $15 = 'negative' THEN s.p_i < 0
+                                     WHEN $15 = 'zero' THEN s.p_i = 0
                                      ELSE FALSE END)))
-                     AND ($17::boolean IS NULL OR $17 = (
+                     AND ($16::boolean IS NULL OR $16 = (
                              EXISTS (SELECT 1 FROM mirror_record_legs g
                                      WHERE g.record_id = r.record_id
                                        AND g.leg IN ('binary', 't')
@@ -768,14 +775,14 @@ pub async fn records(
                              OR (r.family = 'registration' AND NOT EXISTS (
                                      SELECT 1 FROM mirror_records e
                                      WHERE e.family = 'registration' AND e.author = r.author
-                                       AND (e.epoch, e.act_time, e.position)
-                                           < (r.epoch, r.act_time, r.position)))))
+                                       AND (e.epoch, e.position)
+                                           < (r.epoch, r.position)))))
                      AND ($8::bigint IS NULL
-                          OR (r.epoch, r.act_time, r.position) > ($8, $9, $10))
-                   ORDER BY r.epoch ASC, r.act_time ASC, r.position ASC
-                   LIMIT $11
+                          OR (r.epoch, r.position) > ($8, $9))
+                   ORDER BY r.epoch ASC, r.position ASC
+                   LIMIT $10
                ) page
-               ORDER BY epoch DESC, act_time DESC, position DESC"#,
+               ORDER BY epoch DESC, position DESC"#,
             filter.author.as_deref(),
             filter.family.as_deref(),
             filter.payload_marked,
@@ -784,7 +791,6 @@ pub async fn records(
             filter.target.as_deref(),
             filter.terminal.as_deref(),
             ce,
-            ca,
             cp,
             limit,
             anchor_source,
@@ -815,59 +821,59 @@ pub async fn records(
                          SELECT 1 FROM mirror_record_legs l
                          WHERE l.record_id = r.record_id
                            AND l.leg = 't' AND l.target = $7))
-                 AND ($12::text[] IS NULL OR EXISTS (
+                 AND ($11::text[] IS NULL OR EXISTS (
                          SELECT 1 FROM mirror_record_legs l
                          WHERE l.record_id = r.record_id
-                           AND l.source = ANY($12)
-                           AND ($14::text IS NULL OR CASE
-                                 WHEN $14 = 'post' THEN EXISTS (
+                           AND l.source = ANY($11)
+                           AND ($13::text IS NULL OR CASE
+                                 WHEN $13 = 'post' THEN EXISTS (
                                       SELECT 1 FROM posts p
                                       WHERE p.l1_node_id = l.target)
-                                 WHEN $14 = 'comment' THEN EXISTS (
+                                 WHEN $13 = 'comment' THEN EXISTS (
                                       SELECT 1 FROM comments c
                                       WHERE c.l1_node_id = l.target)
-                                 WHEN $14 = 'hashtag' THEN l.target LIKE 'name:%'
-                                 WHEN $14 IN ('user', 'collective') THEN EXISTS (
+                                 WHEN $13 = 'hashtag' THEN l.target LIKE 'name:%'
+                                 WHEN $13 IN ('user', 'collective') THEN EXISTS (
                                       SELECT 1 FROM actors a
-                                      WHERE a.kind = $14
+                                      WHERE a.kind = $13
                                         AND (l.target LIKE 'prof:%'
                                              OR l.target LIKE 'addr:%')
                                         AND a.realization_address = split_part(l.target, ':', 2))
                                  ELSE FALSE END)))
-                 AND ($13::text[] IS NULL OR EXISTS (
+                 AND ($12::text[] IS NULL OR EXISTS (
                          SELECT 1 FROM mirror_record_legs l
                          WHERE l.record_id = r.record_id
-                           AND l.target = ANY($13)
-                           AND ($14::text IS NULL OR CASE
-                                 WHEN $14 = 'post' THEN EXISTS (
+                           AND l.target = ANY($12)
+                           AND ($13::text IS NULL OR CASE
+                                 WHEN $13 = 'post' THEN EXISTS (
                                       SELECT 1 FROM posts p
                                       WHERE p.l1_node_id = l.source)
-                                 WHEN $14 = 'comment' THEN EXISTS (
+                                 WHEN $13 = 'comment' THEN EXISTS (
                                       SELECT 1 FROM comments c
                                       WHERE c.l1_node_id = l.source)
-                                 WHEN $14 = 'hashtag' THEN l.source LIKE 'name:%'
-                                 WHEN $14 IN ('user', 'collective') THEN EXISTS (
+                                 WHEN $13 = 'hashtag' THEN l.source LIKE 'name:%'
+                                 WHEN $13 IN ('user', 'collective') THEN EXISTS (
                                       SELECT 1 FROM actors a
-                                      WHERE a.kind = $14
+                                      WHERE a.kind = $13
                                         AND (l.source LIKE 'prof:%'
                                              OR l.source LIKE 'addr:%')
                                         AND a.realization_address = split_part(l.source, ':', 2))
                                  ELSE FALSE END)))
-                 AND (($15::text IS NULL AND $16::text IS NULL) OR EXISTS (
+                 AND (($14::text IS NULL AND $15::text IS NULL) OR EXISTS (
                          SELECT 1 FROM mirror_record_legs s
                          WHERE s.record_id = r.record_id
                            AND s.leg IN ('binary', 'a')
-                           AND ($15::text IS NULL OR CASE
-                                 WHEN $15 = 'positive' THEN s.p_d > 0
-                                 WHEN $15 = 'negative' THEN s.p_d < 0
-                                 WHEN $15 = 'zero' THEN s.p_d = 0
+                           AND ($14::text IS NULL OR CASE
+                                 WHEN $14 = 'positive' THEN s.p_d > 0
+                                 WHEN $14 = 'negative' THEN s.p_d < 0
+                                 WHEN $14 = 'zero' THEN s.p_d = 0
                                  ELSE FALSE END)
-                           AND ($16::text IS NULL OR CASE
-                                 WHEN $16 = 'positive' THEN s.p_i > 0
-                                 WHEN $16 = 'negative' THEN s.p_i < 0
-                                 WHEN $16 = 'zero' THEN s.p_i = 0
+                           AND ($15::text IS NULL OR CASE
+                                 WHEN $15 = 'positive' THEN s.p_i > 0
+                                 WHEN $15 = 'negative' THEN s.p_i < 0
+                                 WHEN $15 = 'zero' THEN s.p_i = 0
                                  ELSE FALSE END)))
-                 AND ($17::boolean IS NULL OR $17 = (
+                 AND ($16::boolean IS NULL OR $16 = (
                          EXISTS (SELECT 1 FROM mirror_record_legs g
                                  WHERE g.record_id = r.record_id
                                    AND g.leg IN ('binary', 't')
@@ -875,12 +881,12 @@ pub async fn records(
                          OR (r.family = 'registration' AND NOT EXISTS (
                                  SELECT 1 FROM mirror_records e
                                  WHERE e.family = 'registration' AND e.author = r.author
-                                   AND (e.epoch, e.act_time, e.position)
-                                       < (r.epoch, r.act_time, r.position)))))
+                                   AND (e.epoch, e.position)
+                                       < (r.epoch, r.position)))))
                  AND ($8::bigint IS NULL
-                      OR (r.epoch, r.act_time, r.position) < ($8, $9, $10))
-               ORDER BY r.epoch DESC, r.act_time DESC, r.position DESC
-               LIMIT $11"#,
+                      OR (r.epoch, r.position) < ($8, $9))
+               ORDER BY r.epoch DESC, r.position DESC
+               LIMIT $10"#,
             filter.author.as_deref(),
             filter.family.as_deref(),
             filter.payload_marked,
@@ -889,7 +895,6 @@ pub async fn records(
             filter.target.as_deref(),
             filter.terminal.as_deref(),
             ce,
-            ca,
             cp,
             limit,
             anchor_source,
@@ -1037,8 +1042,8 @@ pub async fn count_records(pool: &PgPool, filter: &RecordFilter) -> Result<i64, 
                      OR (r.family = 'registration' AND NOT EXISTS (
                              SELECT 1 FROM mirror_records e
                              WHERE e.family = 'registration' AND e.author = r.author
-                               AND (e.epoch, e.act_time, e.position)
-                                   < (r.epoch, r.act_time, r.position)))))"#,
+                               AND (e.epoch, e.position)
+                                   < (r.epoch, r.position)))))"#,
         filter.author.as_deref(),
         filter.family.as_deref(),
         filter.payload_marked,
@@ -1168,8 +1173,8 @@ pub async fn count_bundles(pool: &PgPool, filter: &RecordFilter) -> Result<i64, 
                      OR (r.family = 'registration' AND NOT EXISTS (
                              SELECT 1 FROM mirror_records e
                              WHERE e.family = 'registration' AND e.author = r.author
-                               AND (e.epoch, e.act_time, e.position)
-                                   < (r.epoch, r.act_time, r.position)))))"#,
+                               AND (e.epoch, e.position)
+                                   < (r.epoch, r.position)))))"#,
         filter.author.as_deref(),
         filter.family.as_deref(),
         filter.payload_marked,
@@ -1221,8 +1226,8 @@ pub async fn genesis_records(
                   OR (r.family = 'registration' AND NOT EXISTS (
                           SELECT 1 FROM mirror_records e
                           WHERE e.family = 'registration' AND e.author = r.author
-                            AND (e.epoch, e.act_time, e.position)
-                                < (r.epoch, r.act_time, r.position))))"#,
+                            AND (e.epoch, e.position)
+                                < (r.epoch, r.position))))"#,
         record_ids,
     )
     .fetch_all(pool)
@@ -1288,7 +1293,7 @@ pub async fn chain_head(
          JOIN mirror_record_legs l ON l.record_id = r.record_id
          WHERE r.author = $1 AND r.family = $2
            AND l.leg IN ('binary', 't') AND l.target = $3
-         ORDER BY r.epoch DESC, r.act_time DESC, r.position DESC
+         ORDER BY r.epoch DESC, r.position DESC
          LIMIT 1",
         author,
         family.as_str(),
@@ -1319,7 +1324,7 @@ pub async fn minting_epoch(
          FROM mirror_records r
          JOIN mirror_record_legs l ON l.record_id = r.record_id
          WHERE r.family = $1 AND l.leg IN ('binary', 't') AND l.target = $2
-         ORDER BY r.epoch ASC, r.act_time ASC, r.position ASC
+         ORDER BY r.epoch ASC, r.position ASC
          LIMIT 1",
         family.as_str(),
         node,

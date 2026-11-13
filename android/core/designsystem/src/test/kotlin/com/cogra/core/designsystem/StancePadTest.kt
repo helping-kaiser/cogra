@@ -40,7 +40,10 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -56,6 +59,19 @@ private fun ComposeContentTestRule.exactPair() =
 
 /** The field's value space. */
 private fun ComposeContentTestRule.field() = onNodeWithTag("${TAG}_stance_field")
+
+/**
+ * The fault line's type role, read off its laid-out text: the master's
+ * `TransportError` sets it at body-medium (TransportError.jsx:22-25), which the
+ * unthemed test composition's M3 baseline carries as 14sp on 20sp.
+ */
+private fun ComposeContentTestRule.faultStyle(): Pair<TextUnit, TextUnit> {
+    val layouts = mutableListOf<TextLayoutResult>()
+    onNodeWithTag("${TAG}_stance_failed").fetchSemanticsNode()
+        .config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+    val style = layouts.single().layoutInput.style
+    return style.fontSize to style.lineHeight
+}
 
 /**
  * The opinion pad against its masters (StanceControl.jsx, StancePad.jsx,
@@ -758,7 +774,7 @@ class StancePadTest {
             zeroWords = StanceZeroWords.Disconnected,
         )
         compose.onNodeWithTag("${TAG}_stance_landing_zero", useUnmergedTree = true).performClick()
-        compose.onNodeWithText("It still counts among your opinions — #saltmaps stays on Your topics.").assertExists()
+        compose.onNodeWithText("It still counts among your opinions — #saltmaps stays on Your tags.").assertExists()
     }
 
     @Test
@@ -1007,6 +1023,13 @@ class StancePadTest {
         assertThat(fault.bottom).isAtMost(set.top)
     }
 
+    /** PadFailed's fault line is the master's `TransportError`: body-medium, never body-small. */
+    @Test
+    fun thePadsFaultLineIsSetAtBodyMedium() {
+        show(open.copy(failed = true))
+        assertThat(compose.faultStyle()).isEqualTo(14.sp to 20.sp)
+    }
+
     // -- The `?` (PadStanding.md:41-43) --
 
     @Test
@@ -1049,7 +1072,7 @@ class StancePadTest {
         show(open, zeroWords = StanceZeroWords.Disconnected)
         compose.onNodeWithTag("${TAG}_stance_explain").performClick()
         compose.onNodeWithText(
-            "Disconnect takes everything you've said about the topic to nothing. It has its own confirmation, " +
+            "Disconnect takes everything you've said about the tag to nothing. It has its own confirmation, " +
                 "and each thing you've said is cleared by its own signature.",
         ).assertExists()
     }
@@ -1402,6 +1425,13 @@ class StancePadTest {
         assertThat(committed).isEqualTo(1)
         compose.onNodeWithTag("${TAG}_stance_cancel").assertExists()
         compose.onNodeWithTag("${TAG}_stance_sever").assertExists()
+    }
+
+    /** The alternates' fault is the same `TransportError` (StanceAlternates.jsx:425): body-medium. */
+    @Test
+    fun theAlternatesFaultLineIsSetAtBodyMedium() {
+        show(alternates.copy(standing = heldStanding, failed = true))
+        assertThat(compose.faultStyle()).isEqualTo(14.sp to 20.sp)
     }
 
     // PadWriteRule.md (round 21): the write rule's notice where the landing line

@@ -268,6 +268,9 @@ const val POST_ORIGIN = "post"
 /** The `from` the comments sheet opens a profile with (`Back to the comments`). */
 const val COMMENTS_ORIGIN = "comments"
 
+/** The `from` People you let in opens a profile with (`Back to Invites`, Invites.md:23, :27). */
+const val INVITES_ORIGIN = "invites"
+
 /** The `from` a search result opens a profile with (`Back to the search`, ProfileOther.md:73). */
 const val SEARCH_ORIGIN = "search"
 
@@ -288,6 +291,7 @@ internal fun backLabel(from: String?): String = when {
     from == COMMENTS_ORIGIN -> stringResource(R.string.profile_back_comments)
     from == SEARCH_ORIGIN -> stringResource(R.string.profile_back_search)
     from == OPINIONS_ORIGIN -> stringResource(R.string.profile_back_opinions)
+    from == INVITES_ORIGIN -> stringResource(R.string.profile_back_invites)
     from != null && from.startsWith("#") -> stringResource(R.string.profile_back_topic, from.removePrefix("#"))
     else -> stringResource(R.string.profile_back_feed)
 }

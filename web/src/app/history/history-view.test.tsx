@@ -402,7 +402,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
     render();
     await screen.findByTestId("history-list");
     fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p5")));
-    fireEvent.click(screen.getByTestId("history-menu-remove"));
+    fireEvent.click(screen.getByTestId("history.menuSheet.remove"));
     fireEvent.click(await screen.findByTestId("history-menu-remove-confirm-remove"));
     expect(await screen.findByTestId(byNode("history.card.removalMark", "p5"))).toHaveTextContent("Removed by its author");
     expect(cards()).toEqual(["history.commentCard:c1", "history.card:p5", "history.card:p1"]);
@@ -428,7 +428,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
     await screen.findByTestId("history-list");
     expect(screen.queryByRole("button", { name: /clear/i })).toBeNull();
     fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
-    const menu = within(screen.getByTestId("history-menu-sheet")).getAllByRole("button");
+    const menu = within(screen.getByTestId("history.menuSheet")).getAllByRole("button");
     expect(menu.map((row) => row.textContent)).not.toContainEqual(expect.stringMatching(/history/i));
   });
 
@@ -504,7 +504,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
     serveHistory(() => page([PERSON]));
     render();
     fireEvent.click(await screen.findByTestId(byNode("history.profileCard.menu", "u3")));
-    fireEvent.click(screen.getByTestId("history-person-u3-menu-mention"));
+    fireEvent.click(screen.getByTestId("history.menuSheet.mention"));
     expect(push).toHaveBeenCalledWith("/compose?reference=u3");
   });
 
@@ -906,7 +906,7 @@ describe("History — hiding from a card in it (HistoryHidden.md)", () => {
     render();
     await screen.findByTestId("history-list");
     fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
-    fireEvent.click(screen.getByTestId("history-menu-hide"));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
     // No confirm step: the snackbar is the whole ceremony.
     expect(screen.queryByRole("alertdialog")).toBeNull();
     expect(screen.getByTestId("history.snackbar.message")).toHaveTextContent(
@@ -944,7 +944,7 @@ describe("History — hiding from a card in it (HistoryHidden.md)", () => {
     );
     await screen.findByTestId("history-list");
     fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
-    fireEvent.click(screen.getByTestId("history-menu-hide"));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
     expect(cards()).toEqual(["history.commentCard:c1", "history.card:p1", "history.profileCard:u1"]);
     await waitFor(() => expect(log.hides).toHaveLength(1));
     pull(scroller);
@@ -960,7 +960,7 @@ describe("History — hiding from a card in it (HistoryHidden.md)", () => {
     render();
     await screen.findByTestId("history-list");
     fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
-    fireEvent.click(screen.getByTestId("history-menu-hide"));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
     await waitFor(() => expect(log.hides).toHaveLength(1));
     fireEvent.click(screen.getByTestId("history.snackbar.action"));
     await waitFor(() => expect(log.unhides).toEqual(["u1"]));
@@ -975,13 +975,215 @@ describe("History — hiding from a card in it (HistoryHidden.md)", () => {
     render();
     await screen.findByTestId("history-list");
     fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
-    fireEvent.click(screen.getByTestId("history-menu-hide"));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
     await waitFor(() => expect(log.hides).toHaveLength(1));
     fireEvent.click(screen.getByTestId("history.snackbar.action"));
     const line = await screen.findByTestId("history-post-p1-row-line");
     expect(line).toHaveTextContent("That didn't go through.");
     expect(within(line).getByRole("button", { name: "Retry" })).toBeInTheDocument();
     expect(cards()).toEqual(["history.commentCard:c1", "history.card:p1"]);
+  });
+});
+
+describe("History — the comment menu (HistoryCommentMenu.md, round 41)", () => {
+  /** The open sheet's rows, as `[node, words]`. */
+  function rows() {
+    return within(screen.getByTestId("history.menuSheet"))
+      .getAllByRole("button")
+      .map((row) => [row.getAttribute("data-testid"), row.textContent]);
+  }
+
+  it("someone_elses_comment_reads_its_rows_as_history_menuSheet_rows_report_at_the_tail", async () => {
+    // HistoryCommentMenu.md:3 (the sheet over History), :5 (rows and order).
+    serveHistory(() => page([COMMENT, POST]));
+    render();
+    await screen.findByTestId("history-list");
+    fireEvent.click(screen.getByTestId(byNode("history.commentCard.menu", "c1")));
+    expect(rows()).toEqual([
+      ["history.menuSheet.save", "Save"],
+      ["history.menuSheet.cite", "Cite in a new post"],
+      ["history.menuSheet.citedBy", "Cited by"],
+      ["history.menuSheet.opinions", "Opinions on this"],
+      ["history.menuSheet.license", "License terms"],
+      ["history.menuSheet.report", "Report"],
+    ]);
+  });
+
+  it("your_own_comment_reads_edit_then_remove_after_cite_and_no_report", async () => {
+    // HistoryCommentMenuOwn.md:5; :7 — Edit opens the comment's edit over History.
+    const own: Entry = { node: commentNode("c5", author("me", "me", "Me")), firstSeenAt: hoursAgo(0.5) };
+    serveHistory(() => page([own, POST]));
+    render();
+    await screen.findByTestId("history-list");
+    fireEvent.click(screen.getByTestId(byNode("history.commentCard.menu", "c5")));
+    expect(rows().map(([node]) => node)).toEqual([
+      "history.menuSheet.save",
+      "history.menuSheet.cite",
+      "history.menuSheet.edit",
+      "history.menuSheet.remove",
+      "history.menuSheet.citedBy",
+      "history.menuSheet.opinions",
+      "history.menuSheet.license",
+    ]);
+    fireEvent.click(screen.getByTestId("history.menuSheet.edit"));
+    expect(await screen.findByTestId("comment-edit")).toBeInTheDocument();
+    expect(screen.getByTestId("history-list")).toBeInTheDocument();
+  });
+});
+
+describe("History — the post menu (HistoryPostMenu.md, round 36 + 41)", () => {
+  /** The open sheet's rows, as `[node, words]`. */
+  function rows() {
+    return within(screen.getByTestId("history.menuSheet"))
+      .getAllByRole("button")
+      .map((row) => [row.getAttribute("data-testid"), row.textContent]);
+  }
+
+  it("the_reader_menu_reads_save_cite_hide_license_report_as_history_menuSheet_rows", async () => {
+    // HistoryPostMenu.md:3 (the sheet over History), :5 (the rows and their order).
+    serveHistory(() => page([COMMENT, POST]));
+    render();
+    await screen.findByTestId("history-list");
+    fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
+    expect(rows()).toEqual([
+      ["history.menuSheet.save", "Save"],
+      ["history.menuSheet.cite", "Cite in a new post"],
+      ["history.menuSheet.hide", "Hide @ada"],
+      ["history.menuSheet.license", "License terms"],
+      ["history.menuSheet.report", "Report"],
+    ]);
+  });
+
+  it("the_hide_row_reads_unhide_with_the_handle_once_the_author_is_hidden_keeping_its_node", async () => {
+    // HistoryPostMenu.md:17 — the post standing in the History open when the
+    // hide was made; the row keeps its one name whatever it reads.
+    const log = hiddenLog();
+    serveHistory(() => page([COMMENT, POST]));
+    server.use(...hiddenHandlers(log));
+    render();
+    await screen.findByTestId("history-list");
+    fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
+    await waitFor(() => expect(log.hides).toHaveLength(1));
+    fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
+    expect(screen.getByTestId("history.menuSheet.hide")).toHaveTextContent(/^Unhide @ada$/);
+  });
+
+  it("unhide_closes_the_sheet_unhides_keeps_history_and_snackbars_with_undo_and_no_confirm", async () => {
+    // HistoryPostMenu.md:19.
+    const log = hiddenLog();
+    serveHistory(() => page([COMMENT, POST]));
+    server.use(...hiddenHandlers(log));
+    render();
+    await screen.findByTestId("history-list");
+    fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
+    await waitFor(() => expect(log.hides).toHaveLength(1));
+    fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    await waitFor(() =>
+      expect((screen.getByTestId("history.menuSheet") as HTMLDialogElement).open).toBe(false),
+    );
+    expect(screen.getByTestId("history.snackbar.message")).toHaveTextContent(
+      "@ada is unhidden — their posts can reach your feed again.",
+    );
+    expect(screen.getByTestId("history.snackbar.action")).toHaveTextContent("Undo");
+    expect(cards()).toEqual(["history.commentCard:c1", "history.card:p1"]);
+    await waitFor(() => expect(log.unhides).toEqual(["u1"]));
+  });
+});
+
+describe("History — a hidden person's card menu (HistoryProfileMenu.md, round 41)", () => {
+  const MIRA: Entry = { node: personNode("u7", "mira", "Mira"), firstSeenAt: daysAgo(1) };
+  const hiddenMira = () =>
+    hiddenHandlers(hiddenLogged, {
+      entries: [{ id: "u7", handle: "mira", displayName: "Mira", hiddenAt: "2026-10-01T00:00:00Z" }],
+    });
+  let hiddenLogged = hiddenLog();
+  beforeEach(() => {
+    hiddenLogged = hiddenLog();
+  });
+
+  async function openMiraMenu() {
+    render();
+    await waitFor(() => expect(hiddenLogged.reads).toBeGreaterThan(0));
+    fireEvent.click(await screen.findByTestId(byNode("history.profileCard.menu", "u7")));
+    return screen.getByTestId("history.menuSheet") as HTMLDialogElement;
+  }
+
+  it("reads_save_mention_unhide_report_as_history_menuSheet_rows_and_nothing_on_the_card_marks_the_hide", async () => {
+    // HistoryProfileMenu.md:3, :5, :7, :9.
+    serveHistory(() => page([MIRA]));
+    server.use(...hiddenMira());
+    const sheet = await openMiraMenu();
+    expect(sheet.open).toBe(true);
+    await waitFor(() =>
+      expect(
+        within(sheet)
+          .getAllByRole("button")
+          .map((row) => [row.getAttribute("data-testid"), row.textContent]),
+      ).toEqual([
+        ["history.menuSheet.save", "Save"],
+        ["history.menuSheet.mention", "Mention in a new post"],
+        ["history.menuSheet.hide", "Unhide @mira"],
+        ["history.menuSheet.report", "Report"],
+      ]),
+    );
+    expect(screen.getByTestId(byNode("history.profileCard", "u7"))).not.toHaveTextContent(/hidden/i);
+  });
+
+  it("unhide_closes_the_sheet_unhides_keeps_history_and_undo_hides_again", async () => {
+    // HistoryProfileMenu.md:11, :13.
+    serveHistory(() => page([MIRA]));
+    server.use(...hiddenMira());
+    const sheet = await openMiraMenu();
+    await waitFor(() => expect(screen.getByTestId("history.menuSheet.hide")).toHaveTextContent("Unhide @mira"));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    await waitFor(() => expect(sheet.open).toBe(false));
+    expect(screen.getByTestId("history.snackbar.message")).toHaveTextContent(
+      "@mira is unhidden — their posts can reach your feed again.",
+    );
+    expect(cards()).toEqual(["history.profileCard:u7"]);
+    await waitFor(() => expect(hiddenLogged.unhides).toEqual(["u7"]));
+    fireEvent.click(screen.getByTestId("history.snackbar.action"));
+    await waitFor(() => expect(hiddenLogged.hides).toEqual([{ actor: "u7", at: "2026-10-01T00:00:00Z" }]));
+    expect(cards()).toEqual(["history.profileCard:u7"]);
+  });
+
+  it("a_failed_unhide_reverts_and_the_card_says_so_with_retry", async () => {
+    // HistoryProfileMenu.md:15.
+    serveHistory(() => page([MIRA]));
+    server.use(
+      ...hiddenHandlers(hiddenLogged, {
+        entries: [{ id: "u7", handle: "mira", displayName: "Mira", hiddenAt: "2026-10-01T00:00:00Z" }],
+        failUnhide: true,
+      }),
+    );
+    await openMiraMenu();
+    await waitFor(() => expect(screen.getByTestId("history.menuSheet.hide")).toHaveTextContent("Unhide @mira"));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
+    const line = await screen.findByTestId("history-person-u7-row-line");
+    expect(line).toHaveTextContent("That didn't go through.");
+    expect(within(line).getByRole("button", { name: "Retry" })).toBeInTheDocument();
+  });
+
+  it("report_closes_the_menu_and_the_confirm_names_the_person_sending_nothing", async () => {
+    // HistoryProfileMenu.md:17; FeedProfileMenu.md:13 for the title.
+    const reports: unknown[] = [];
+    serveHistory(() => page([MIRA]));
+    server.use(
+      ...hiddenMira(),
+      gqlLink.mutation("SendReport", ({ variables }) => {
+        reports.push(variables);
+        return HttpResponse.json({ data: null });
+      }),
+    );
+    await openMiraMenu();
+    fireEvent.click(screen.getByTestId("history.menuSheet.report"));
+    expect(await screen.findByTestId("history-person-u7-menu-report-sheet")).toHaveAccessibleName("Report @mira?");
+    expect(reports).toEqual([]);
   });
 });
 

@@ -416,6 +416,5 @@ fragment OpinionRecordFields on Record {
   severed
   payloadMarked
   landingEpoch
-  actTime
   position
 }

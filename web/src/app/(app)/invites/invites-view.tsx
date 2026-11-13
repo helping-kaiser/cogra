@@ -6,15 +6,18 @@
 // the create sheet, the expiry chooser, the fresh link, the approval pad and
 // the two closing dialogs are all drawn over this same page.
 //
-// APPLICATIONS LEAD, LIVE LINKS FOLLOW (Invites.md:7). The queue is the one
-// read spanning both ends of the funnel (`approvalQueue`): rows taken up
-// through the reader's ask-link door head the list, every other row stands
-// grouped by the link it came through, by age and never by readiness
-// (`layoutQueue`). Each row carries its own close; a group carries `Close
-// all` past one waiting. Both halves stand whenever one holds something, an
-// empty half keeping its label over `No applications waiting.` or `No live
-// links.` (:9-15); a copy that did not go through says `That didn't go
-// through.` with Retry as the link card's last line (:59-61).
+// APPLICATIONS LEAD, LIVE LINKS FOLLOW (Invites.md:7), People you let in
+// between them once the reader has vouched someone in (`PeopleLetIn`,
+// :7-27). The queue is the one read spanning both ends of the funnel
+// (`approvalQueue`): rows taken up through the reader's ask-link door head
+// the list, every other row stands grouped by the link it came through, by
+// age and never by readiness (`layoutQueue`). Each row carries its own
+// close; a group carries `Close all` past one waiting. Both halves stand
+// whenever one holds something, an empty half keeping its label over `No
+// applications waiting.` or `No live links.` (:29-35) — unless only people
+// let in remain, when both halves go (:21); a copy that did not go through
+// says `That didn't go through.` with Retry as the link card's last line
+// (:79-81).
 //
 // APPROVING IS VOUCHING (ApprovePad.md:5): a ready row's tap blooms the
 // ordinary opinion pad from an anchor that takes the close's slot, over the
@@ -117,9 +120,11 @@ import { ladderAge } from "@/lib/ui/timestamp";
 import { TransportError } from "@/lib/ui/transport-error";
 import { AddressCard } from "@/lib/ui2/address-card";
 import { ContentRow } from "@/lib/ui2/content-row";
+import { SectionLabel } from "@/lib/ui2/section-label";
 
 import { CloseDialog } from "./close-dialog";
 import { InviteSheet } from "./invite-sheet";
+import { PeopleLetIn } from "./people-let-in";
 
 const ROOT: DataNode = { path: "invites" };
 
@@ -236,8 +241,14 @@ export function InvitesView({
 
   const layout = useMemo(() => layoutQueue(read?.queue ?? []), [read]);
   const links = useMemo(() => liveLinks(read?.links ?? []), [read]);
-  const empty =
-    read !== null && layout.head.length === 0 && layout.groups.length === 0 && links.length === 0;
+  const people = read?.people ?? [];
+  const halvesEmpty = layout.head.length === 0 && layout.groups.length === 0 && links.length === 0;
+  // The empty Invites never stands for a reader who let someone in
+  // (InvitesEmpty.md:3, :5); with only people let in, New invite and People
+  // you let in stand, and both halves go, labels and empty lines with them
+  // (Invites.md:21).
+  const empty = read !== null && halvesEmpty && people.length === 0;
+  const onlyLetIn = read !== null && halvesEmpty && people.length > 0;
 
   // FOCUS FOLLOWS A REMOVAL (Invites.md:61): the next row, else the previous,
   // else the empty state. And an ask link's arrival stands at its row.
@@ -395,75 +406,88 @@ export function InvitesView({
             </button>
           </div>
 
-          {/* BOTH HALVES STAND WHENEVER ONE HOLDS SOMETHING (Invites.md:9): a
+          {/* BOTH HALVES STAND WHENEVER ONE HOLDS SOMETHING (Invites.md:29): a
               half with nothing in it keeps its label and says so in one quiet
-              line (:11, :13, :15) — only both empty is InvitesEmpty. */}
-          <SectionLabel node={part(ROOT, "applicationsLabel")}>{APPLICATIONS_LABEL}</SectionLabel>
-          {layout.head.length === 0 && layout.groups.length === 0 && (
-            <EmptyHalf node={part(ROOT, "applicationsEmpty")}>{NO_APPLICATIONS_WAITING}</EmptyHalf>
-          )}
-          {layout.head.length > 0 && (
-            <div className="flex flex-col gap-2 px-4 pb-2">{layout.head.map(rowFor)}</div>
-          )}
-          {layout.groups.length > 0 && (
-            <div className="flex flex-col gap-2 px-4">
-              {layout.groups.map((group) => (
-                <GroupBlock
-                  key={group.linkId}
-                  group={group}
-                  onCloseAll={() => setClosing({ kind: "all", group })}
-                >
-                  {group.rows.map(rowFor)}
-                </GroupBlock>
-              ))}
-            </div>
+              line (:31, :33, :35) — only both empty is InvitesEmpty, or, with
+              someone let in, the page without either half (:21). */}
+          {!onlyLetIn && (
+            <>
+              <SectionLabel node={part(ROOT, "applicationsLabel")}>{APPLICATIONS_LABEL}</SectionLabel>
+              {layout.head.length === 0 && layout.groups.length === 0 && (
+                <EmptyHalf node={part(ROOT, "applicationsEmpty")}>{NO_APPLICATIONS_WAITING}</EmptyHalf>
+              )}
+              {layout.head.length > 0 && (
+                <div className="flex flex-col gap-2 px-4 pb-2">{layout.head.map(rowFor)}</div>
+              )}
+              {layout.groups.length > 0 && (
+                <div className="flex flex-col gap-2 px-4">
+                  {layout.groups.map((group) => (
+                    <GroupBlock
+                      key={group.linkId}
+                      group={group}
+                      onCloseAll={() => setClosing({ kind: "all", group })}
+                    >
+                      {group.rows.map(rowFor)}
+                    </GroupBlock>
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
-          <SectionLabel node={part(ROOT, "linksLabel")}>{LIVE_LINKS_LABEL}</SectionLabel>
-          {links.length === 0 && <EmptyHalf node={part(ROOT, "linksEmpty")}>{NO_LIVE_LINKS}</EmptyHalf>}
-          {links.length > 0 && (
-            <div className="flex flex-col gap-2 px-4">
-              {links.map((link, index) => {
-                const url = joinUrl(window.location.origin, link.id);
-                const card = instance(ROOT, "link", link.id);
-                const copy = () =>
-                  void copyLink(url).then((copied) => {
-                    if (copied) {
-                      setCopyFailed((current) => (current === link.id ? null : current));
-                      notify(LINK_COPIED);
-                    } else {
-                      // Invites.md:59 — the comfort's line on the link's own
-                      // card, never `Link copied`, never a dialog.
-                      setCopyFailed(link.id);
-                    }
-                  });
-                return (
-                  <AddressCard
-                    key={link.id}
-                    address={url}
-                    label={linkLabel(link)}
-                    copyLabel={COPY_THE_LINK}
-                    onCopy={copy}
-                    action={{
-                      label: REVOKE,
-                      busyLabel: REVOKING,
-                      // Inert from the press, `Revoking…` past 200ms,
-                      // never dimmed and never a spinner (:49-51).
-                      busy: revoking?.id === link.id && revoking.slow,
-                      onClick: () => void onRevoke(link, index),
-                    }}
-                    caption={linkCaption(link, now())}
-                    node={card}
-                  >
-                    {copyFailed === link.id && (
-                      <div {...testAttributes(part(card, "copyFault"))}>
-                        <RowLine state={{ kind: "didntGoThrough", onRetry: copy }} testId="invites-copy-fault" />
-                      </div>
-                    )}
-                  </AddressCard>
-                );
-              })}
-            </div>
+          {/* PEOPLE YOU LET IN stands between the halves, the newest first,
+              absent until someone is let in (Invites.md:7-27). */}
+          <PeopleLetIn people={people} now={now()} from={from} root={ROOT} />
+
+          {!onlyLetIn && (
+            <>
+              <SectionLabel node={part(ROOT, "linksLabel")}>{LIVE_LINKS_LABEL}</SectionLabel>
+              {links.length === 0 && <EmptyHalf node={part(ROOT, "linksEmpty")}>{NO_LIVE_LINKS}</EmptyHalf>}
+              {links.length > 0 && (
+                <div className="flex flex-col gap-2 px-4">
+                  {links.map((link, index) => {
+                    const url = joinUrl(window.location.origin, link.id);
+                    const card = instance(ROOT, "link", link.id);
+                    const copy = () =>
+                      void copyLink(url).then((copied) => {
+                        if (copied) {
+                          setCopyFailed((current) => (current === link.id ? null : current));
+                          notify(LINK_COPIED);
+                        } else {
+                          // Invites.md:59 — the comfort's line on the link's own
+                          // card, never `Link copied`, never a dialog.
+                          setCopyFailed(link.id);
+                        }
+                      });
+                    return (
+                      <AddressCard
+                        key={link.id}
+                        address={url}
+                        label={linkLabel(link)}
+                        copyLabel={COPY_THE_LINK}
+                        onCopy={copy}
+                        action={{
+                          label: REVOKE,
+                          busyLabel: REVOKING,
+                          // Inert from the press, `Revoking…` past 200ms,
+                          // never dimmed and never a spinner (:49-51).
+                          busy: revoking?.id === link.id && revoking.slow,
+                          onClick: () => void onRevoke(link, index),
+                        }}
+                        caption={linkCaption(link, now())}
+                        node={card}
+                      >
+                        {copyFailed === link.id && (
+                          <div {...testAttributes(part(card, "copyFault"))}>
+                            <RowLine state={{ kind: "didntGoThrough", onRetry: copy }} testId="invites-copy-fault" />
+                          </div>
+                        )}
+                      </AddressCard>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           )}
           {revokeFailed && (
             <div className="px-6 pt-2">
@@ -523,18 +547,6 @@ function EmptyHalf({ children, node }: { children: string; node: DataNode }) {
     <p {...testAttributes(node)} className="m-0 px-6 pb-2 text-body-medium text-on-surface-variant">
       {children}
     </p>
-  );
-}
-
-/** A quiet section caption (`SectionLabel.jsx`): label-small, secondary ink. */
-function SectionLabel({ children, node }: { children: string; node: DataNode }) {
-  return (
-    <span
-      {...testAttributes(node)}
-      className="block px-6 pb-1 pt-3 text-label-small text-on-surface-variant"
-    >
-      {children}
-    </span>
   );
 }
 

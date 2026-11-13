@@ -24,6 +24,7 @@ import {
 
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { exitDuration, SHEET_OUT_MS } from "@/lib/ui/motion";
+import { nameInLine, nameInText } from "@/lib/ui/names";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 
@@ -382,6 +383,9 @@ export function BottomSheet({
           className="mx-auto mb-3 mt-2 h-1 w-8 flex-none rounded-full bg-outline-variant"
           {...testAttributes(part(node, "dragHandle"))}
         />
+        {/* A heading is TEXT THAT WRAPS (NamesLong.md:11): `Report @…?` wraps
+            at its spaces and the handle is one unit (`nameInText`), whole on a
+            line or end-cut past one. */}
         {titleHidden ? null : titleTrailing === undefined ? (
           <h2
             ref={titleRef}
@@ -389,15 +393,15 @@ export function BottomSheet({
             className="m-0 px-6 pb-2 text-title-medium outline-none"
             {...testAttributes(part(node, "title"))}
           >
-            {title}
+            {nameInText(title)}
           </h2>
         ) : (
           <div
             className="flex items-center gap-2 px-6 pb-2"
             {...testAttributes(part(node, "title"))}
           >
-            <h2 ref={titleRef} tabIndex={-1} className="m-0 flex-1 text-title-medium outline-none">
-              {title}
+            <h2 ref={titleRef} tabIndex={-1} className="m-0 min-w-0 flex-1 text-title-medium outline-none">
+              {nameInText(title)}
             </h2>
             {titleTrailing}
           </div>
@@ -435,6 +439,10 @@ export function BottomSheet({
 
 // A row inside a sheet: the overflow menu's items, the license options.
 //
+// A ONE-LINE PLACE (BottomSheet.jsx `SheetItem`, round 40): the label never
+// wraps and clips at its end with "…"; a handle in it — `Hide @ada` — is the
+// part cut, the words keep their room (`nameInLine`).
+//
 // There is no destructive variant. "Remove" rides an ordinary row and the
 // think-twice dialog behind it carries the weight — a removal is a deliberate
 // act, not a failure, so it takes no new colour.
@@ -465,7 +473,7 @@ export function SheetItem({
         selected ? "text-primary" : "text-on-surface"
       }`}
     >
-      {children}
+      <span className="min-w-0 flex-1 truncate">{nameInLine(children)}</span>
     </button>
   );
 }

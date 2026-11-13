@@ -109,7 +109,7 @@ pub trait L1Boundary: Send + Sync {
 
     /// The published per-act carriage bound M_payload the prepare
     /// pre-check reads — consume-only, like every binding constant
-    /// (layer1-interface.md "Payload envelope convention (L2)").
+    /// (data-model.md "The payload envelope").
     fn max_payload_bytes(&self) -> impl Future<Output = Result<usize, BoundaryError>> + Send;
 
     /// Request the community-funded admission burn to `address` — CoGra

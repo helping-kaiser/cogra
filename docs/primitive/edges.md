@@ -13,8 +13,8 @@ CoGra's gestures onto them.
 ## 1. The edge record and CoGra's two axes
 
 Every L1 edge record carries: its author (intrinsic — authorship is
-never a separate edge), its endpoints, its act's authoritative time
-and its own maturity,
+never a separate edge), its endpoints, its act's key of record and
+act time, its own maturity,
 **two continuous user parameters `(p_d, p_i)`**, its act's payload
 projection with its witness, and the act identifier. Everything else
 on the record — the stored 3×3 sentiment slice, the path view, the

@@ -35,7 +35,6 @@
 // composer's preview) is handed none and draws no slot.
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, ViewTransition, type ReactNode } from "react";
 
 import { isPending, type PostView } from "@/lib/api/content-api";
@@ -44,15 +43,9 @@ import { isStreamClip } from "@/lib/reel/stream-clip";
 import { reelClipName } from "@/lib/reel/squish";
 import { ScoreSlot } from "@/lib/score/score-slot";
 import type { TraceOrigin } from "@/lib/score/trace-session";
-import { withRemoval, type Removal } from "@/lib/api/removal-api";
-import type { License } from "@/lib/license";
-import { useActiveAccountId } from "@/lib/session/provider";
-import { LicenseSheet } from "@/lib/ui2/license-sheet";
 import { RemovedPlaceholder } from "@/lib/ui2/media/removed-placeholder";
-import { OverflowMenu, OverflowTrigger } from "@/lib/ui2/overflow-menu";
-import { postMenuItems } from "@/lib/ui2/post-menu";
+import { OverflowTrigger } from "@/lib/ui2/overflow-menu";
 import { RefsSheet } from "@/lib/ui2/refs-sheet";
-import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
 import { ActorChip } from "./actor-chip";
 import { Card } from "./card";
 import { useClampFold } from "./clamp-fold";
@@ -62,8 +55,6 @@ import { useNarrowShare } from "./narrow-share";
 import { PendingMarker } from "./pending-marker";
 import { RowLine } from "./row-line";
 import { useComfortLine } from "@/lib/saved/comfort-line";
-import { useSavedWrites } from "@/lib/saved/provider";
-import { saveRow, type Notify } from "@/lib/saved/save-row";
 import {
   VeilPart,
   PostMedia,
@@ -74,8 +65,7 @@ import {
   removalWhen,
   sensitiveSignature,
 } from "./post-media";
-import { ShareButton, useShareCapable } from "./share-button";
-import { shareLink } from "./share";
+import { ShareButton } from "./share-button";
 import { StanceControl } from "./stance-control";
 import { shortTimestamp } from "./timestamp";
 import { TopicsLine } from "./topics-line";
@@ -147,7 +137,7 @@ function CommentCount({
 export const OPEN_THE_STREAM = "Open the stream";
 
 export function PostCard({
-  post: given,
+  post,
   variant = "summary",
   href,
   shareHref = href,
@@ -170,7 +160,6 @@ export function PostCard({
   onOpenMenu,
   menuOpen = false,
   node,
-  onNotify,
   scoreOrigin,
 }: {
   post: PostView;
@@ -181,15 +170,10 @@ export function PostCard({
    */
   scoreOrigin?: TraceOrigin;
   /**
-   * The host's snackbar, for the card's own menu (`Saved.`, `Removed from
-   * Saved.` with `Undo`). A surface hosting the menu itself never needs it.
-   */
-  onNotify?: Notify;
-  /**
    * THE SURFACE HOSTS THE MENU (ruling 84; `PostMenuHost`): the card draws its
    * ⋮ and the tap asks the host to raise the one sheet it keeps for every
-   * card, instead of the card keeping a sheet of its own. Absent, the card is
-   * its own menu's host.
+   * card. Every surface that draws a summary card hosts it (round 36); the
+   * detail's menu is its page header's.
    */
   onOpenMenu?: () => void;
   /** The host's sheet is up for this card — what the hosted ⋮ says it is. */
@@ -286,37 +270,15 @@ export function PostCard({
   doorFrom?: string | null;
 }) {
   const detail = variant === "detail";
-  const router = useRouter();
-  // WHOSE POST THIS IS, read here rather than threaded in from every surface
-  // that draws a card. The stance control beside it already reaches the
-  // session the same way: a card-level control that needs the viewer asks for
-  // the viewer, and a prop would be one more thing a new call site can forget.
-  const viewerId = useActiveAccountId();
   const [open, setOpen] = useState(false);
   // The tags-and-references sheet, raised by the line that counts them.
   const [refsOpen, setRefsOpen] = useState(false);
-  // THE LICENSE IS NEVER A STATE OF THE CARD (`ReaderPostMenu.jsx:27-29`): the
-  // license it shows outlives the `open` flag so the block does not blank out
-  // mid-exit.
-  const [licenseShown, setLicenseShown] = useState<License | null>(null);
-  const [licenseOpen, setLicenseOpen] = useState(false);
-  const [removeOpen, setRemoveOpen] = useState(false);
-  // A CARD THAT IS ITS OWN MENU'S HOST (the topic page) has no surface above
-  // it holding the post, so a removal taken from its menu is kept here: the
-  // card stands as its mark in place the moment the removal is taken (RM-G9's
-  // build word), and the cache it was patched into carries it to every later
-  // read.
-  const [taken, setTaken] = useState<Removal | null>(null);
-  const post = taken === null ? given : withRemoval(given, taken);
   // THE NARROW-SHARE FOLD (design/readme.md, jakob 2026-09-17, sharpened
   // 2026-09-22 — PR #794): strictly below 360px the row sheds Share and the
-  // menu leads with it instead; at 360 the wide layout stands. Capability
-  // gated the same way the button itself is — a browser with no share door
-  // never grows a dead row (`share.ts`).
+  // host's menu leads with it instead (`PostMenuHost`); at 360 the wide
+  // layout stands.
   const narrow = useNarrowShare();
-  const shareCapable = useShareCapable();
   const comfort = useComfortLine(post.id);
-  const writes = useSavedWrites();
 
   const redacted = payloadIsRedacted(post);
   const media = !redacted && hasMedia(post);
@@ -337,43 +299,6 @@ export function PostCard({
   const [holdDescription, descriptionFolds] = useClampFold(clamped, description);
   const folded = bodyFolds || descriptionFolds;
   const stamp = shortTimestamp(post.createdAt);
-
-  const menuItems = postMenuItems({
-    postId: post.id,
-    own: viewerId !== null && post.author?.id === viewerId,
-    handle: post.author?.handle ?? null,
-    license: post.license,
-    navigate: (route) => router.push(route),
-    openLicense: (license) => {
-      setLicenseShown(license);
-      setLicenseOpen(true);
-    },
-    openRemove: () => setRemoveOpen(true),
-    shareRow:
-      narrow && shareCapable
-        ? {
-            label: "Share",
-            onSelect: () => {
-              void shareLink(new URL(shareHref, window.location.href).toString()).then((outcome) => {
-                if (outcome === "copied") onLinkCopied();
-              });
-            },
-            testId: `${testId}-menu-share`,
-          }
-        : null,
-    // The card's own menu serves the surfaces that host none of their own; it
-    // saves the same way, and says so on the host's snackbar where there is
-    // one (`onNotify`).
-    save: saveRow({
-      writes,
-      node: post.id,
-      server: post.viewerBookmarkedAt ?? null,
-      notify: onNotify ?? (() => {}),
-      onGuest: null,
-      testId: `${testId}-menu-save`,
-    }),
-    testIdPrefix: `${testId}-menu`,
-  });
 
   // The SUMMARY title clamps to one line — readme §13's collapse order has the
   // title give way before media or the affordance row ever shrink. The detail
@@ -496,11 +421,9 @@ export function PostCard({
           )}
           {/* A REMOVED POST HAS NO MENU LEFT (`Removed.jsx:5-6`): there is
               nothing of it to edit, cite or license, so the ⋮ is dropped
-              wholesale rather than a row at a time.
-              THE SHEETS ITS ROWS OPEN RIDE THE MENU, the way the refs sheet
-              rides this card: the same card is the feed's, the topic page's
-              and the detail's, and each of them carries the rows that raise
-              them. */}
+              wholesale rather than a row at a time. The menu itself, and the
+              sheets its rows open, belong to the host the card stands on
+              (`PostMenuHost`, every host's one sheet). */}
           {!detail && !redacted && onOpenMenu !== undefined && (
             <OverflowTrigger
               ariaLabel="More on this post"
@@ -508,37 +431,6 @@ export function PostCard({
               node={part(node, "menu")}
               expanded={menuOpen}
               onOpen={onOpenMenu}
-            />
-          )}
-          {!detail && !redacted && onOpenMenu === undefined && (
-            <OverflowMenu
-              items={menuItems}
-              ariaLabel="More on this post"
-              sheetLabel="Post actions"
-              testId={`${testId}-menu`}
-              node={part(node, "menu")}
-              trailing={
-                <>
-                  {licenseShown !== null && (
-                    <LicenseSheet
-                      open={licenseOpen}
-                      onClose={() => setLicenseOpen(false)}
-                      license={licenseShown}
-                      testId={`${testId}-license-sheet`}
-                    />
-                  )}
-                  {removeOpen && (
-                    <RemoveConfirm
-                      kind="post"
-                      nodeId={post.id}
-                      record={post.genesisRecordId}
-                      onClose={() => setRemoveOpen(false)}
-                      onRemoved={setTaken}
-                      testId={`${testId}-remove-confirm`}
-                    />
-                  )}
-                </>
-              }
             />
           )}
         </div>

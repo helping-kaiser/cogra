@@ -1253,7 +1253,7 @@ pub async fn stage_pending(
         &DisplayWrite {
             actor_id: write.actor_id,
             target: &target,
-            order: None,
+            landing: None,
             created_at,
             content: &content,
             gallery: &gallery,
@@ -1292,12 +1292,12 @@ enum ContentShape {
 
 /// The display-row fields a content write carries, gathered once.
 ///
-/// `order` is what separates the two paths: a pre-commitment write has
+/// `landing` is what separates the two paths: a pre-commitment write has
 /// no landing order yet, and a landed one does.
 struct DisplayWrite<'a> {
     actor_id: Uuid,
     target: &'a str,
-    order: Option<LandingOrder>,
+    landing: Option<LandingOrder>,
     created_at: chrono::DateTime<chrono::Utc>,
     content: &'a CograContent,
     gallery: &'a [postgres_store::media::GalleryPlacement],
@@ -1326,7 +1326,7 @@ async fn write_display_rows(
                 write.actor_id,
                 write.target,
                 record_license(write.body)?,
-                write.order,
+                write.landing,
                 write.created_at,
                 clear_to_null(&content.title),
                 clear_to_null(&content.description),
@@ -1344,7 +1344,7 @@ async fn write_display_rows(
                 clear_to_null(&content.description),
                 content.body.as_deref().unwrap_or_default(),
                 content.sensitive.as_ref(),
-                write.order,
+                write.landing,
                 write.created_at,
             )
             .await?;
@@ -1360,7 +1360,7 @@ async fn write_display_rows(
                 write.actor_id,
                 write.target,
                 record_license(write.body)?,
-                write.order,
+                write.landing,
                 write.created_at,
                 content.body.as_deref().unwrap_or_default(),
                 content.sensitive.as_ref(),
@@ -1374,7 +1374,7 @@ async fn write_display_rows(
                 comment_id,
                 content.body.as_deref().unwrap_or_default(),
                 content.sensitive.as_ref(),
-                write.order,
+                write.landing,
                 write.created_at,
             )
             .await?;
@@ -1546,11 +1546,7 @@ async fn land_one(
     let meta = mirror::record_meta(pool, &write.act_id)
         .await?
         .ok_or_else(|| ContentError::Internal("promoted record missing from mirror".into()))?;
-    let order = LandingOrder {
-        landed_epoch: meta.epoch,
-        act_time: meta.act_time,
-        position: meta.position,
-    };
+    let landing = meta.landing();
     let body = &staged_row.proposal.body;
     let (target, is_genesis) = genesis_shape(body);
 
@@ -1584,8 +1580,9 @@ async fn land_one(
 
     let shape = match (family, is_genesis) {
         (ContentFamily::Post, true) => {
-            if content_store::land_post(&mut tx, content.node, order).await? {
-                content_store::land_post_version(&mut tx, content.node, created_at, order).await?;
+            if content_store::land_post(&mut tx, content.node, landing).await? {
+                content_store::land_post_version(&mut tx, content.node, created_at, landing)
+                    .await?;
                 None
             } else {
                 Some(ContentShape::MintPost)
@@ -1595,15 +1592,15 @@ async fn land_one(
             let post = content_store::post_by_node(pool, &target)
                 .await?
                 .ok_or_else(|| ContentError::Internal("edited post has no display row".into()))?;
-            if content_store::land_post_version(&mut tx, post.id, created_at, order).await? {
+            if content_store::land_post_version(&mut tx, post.id, created_at, landing).await? {
                 None
             } else {
                 Some(ContentShape::EditPost(post.id))
             }
         }
         (ContentFamily::Comment, true) => {
-            if content_store::land_comment(&mut tx, content.node, order).await? {
-                content_store::land_comment_version(&mut tx, content.node, created_at, order)
+            if content_store::land_comment(&mut tx, content.node, landing).await? {
+                content_store::land_comment_version(&mut tx, content.node, created_at, landing)
                     .await?;
                 None
             } else {
@@ -1616,7 +1613,8 @@ async fn land_one(
                 .ok_or_else(|| {
                     ContentError::Internal("edited comment has no display row".into())
                 })?;
-            if content_store::land_comment_version(&mut tx, comment.id, created_at, order).await? {
+            if content_store::land_comment_version(&mut tx, comment.id, created_at, landing).await?
+            {
                 None
             } else {
                 Some(ContentShape::EditComment(comment.id))
@@ -1631,7 +1629,7 @@ async fn land_one(
             &DisplayWrite {
                 actor_id: write.actor_id,
                 target: &target,
-                order: Some(order),
+                landing: Some(landing),
                 created_at,
                 content: &content,
                 gallery: &gallery,
@@ -1664,11 +1662,7 @@ async fn land_reduced(
     let meta = mirror::record_meta(pool, &write.act_id)
         .await?
         .ok_or_else(|| ContentError::Internal("promoted record missing from mirror".into()))?;
-    let order = LandingOrder {
-        landed_epoch: meta.epoch,
-        act_time: meta.act_time,
-        position: meta.position,
-    };
+    let landing = meta.landing();
     let (target, is_genesis) = genesis_shape(&reaped.body);
     let edited = match (family, is_genesis) {
         (_, true) => None,
@@ -1687,20 +1681,20 @@ async fn land_reduced(
     if let Some(created_at) = reaped.pre_signed_at {
         match (family, is_genesis, reaped.node_id, edited) {
             (ContentFamily::Post, true, Some(node), _) => {
-                if content_store::land_post(&mut tx, node, order).await? {
-                    content_store::land_post_version(&mut tx, node, created_at, order).await?;
+                if content_store::land_post(&mut tx, node, landing).await? {
+                    content_store::land_post_version(&mut tx, node, created_at, landing).await?;
                 }
             }
             (ContentFamily::Comment, true, Some(node), _) => {
-                if content_store::land_comment(&mut tx, node, order).await? {
-                    content_store::land_comment_version(&mut tx, node, created_at, order).await?;
+                if content_store::land_comment(&mut tx, node, landing).await? {
+                    content_store::land_comment_version(&mut tx, node, created_at, landing).await?;
                 }
             }
             (ContentFamily::Post, false, _, Some(post)) => {
-                content_store::land_post_version(&mut tx, post, created_at, order).await?;
+                content_store::land_post_version(&mut tx, post, created_at, landing).await?;
             }
             (ContentFamily::Comment, false, _, Some(comment)) => {
-                content_store::land_comment_version(&mut tx, comment, created_at, order).await?;
+                content_store::land_comment_version(&mut tx, comment, created_at, landing).await?;
             }
             _ => {}
         }

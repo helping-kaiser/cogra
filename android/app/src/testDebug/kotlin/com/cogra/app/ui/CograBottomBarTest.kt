@@ -12,6 +12,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationItemColors
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -113,6 +114,29 @@ class CograBottomBarTest {
         }
         compose.onNodeWithTag("bottom_bar").assertDoesNotExist()
         compose.onNodeWithTag("bar_feed").assertDoesNotExist()
+    }
+
+    // ApplicantFeed.md:51 — the locked look is "visibly inactive at the disabled
+    // opacity and still tappable": the slot is never disabled, its tap still
+    // answers (the opacity itself is the harness dump's claim).
+    @Test
+    fun aLockedComposeSlotStaysEnabledAndItsTapStillAnswers() {
+        var taps = 0
+        compose.setContent {
+            CograTheme {
+                CograBottomBar(
+                    feedSelected = true,
+                    profileSelected = false,
+                    onFeed = {},
+                    onCompose = { taps++ },
+                    onProfile = {},
+                    composeLocked = true,
+                )
+            }
+        }
+
+        compose.onNodeWithTag("bar_compose").assertIsEnabled().performClick()
+        assertThat(taps).isEqualTo(1)
     }
 
     @Test
