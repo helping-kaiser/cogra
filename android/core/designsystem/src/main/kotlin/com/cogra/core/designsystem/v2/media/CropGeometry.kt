@@ -48,7 +48,12 @@ data class CropPlacement(val zoom: Float, val x: Float, val y: Float)
  * shares of the fill on both, and the framed region is the same region.
  *
  * Pure functions over floats, so every branch is a JVM test.
+ *
+ * `TooManyFunctions` is suppressed with its reason: this object mirrors the
+ * web twin's module function for function, so a diff between the two reads
+ * one to one; splitting it to meet a count would break that correspondence.
  */
+@Suppress("TooManyFunctions")
 object CropGeometry {
 
     /**
@@ -216,7 +221,12 @@ object CropGeometry {
      * (never further, never down), and the offset shifts just enough that no
      * edge of the picture comes inside the frame. The web twin's `reshape`.
      */
-    fun reshape(placement: CropPlacement, sourceRatio: Float, to: Float, stageWidth: Float = BOARD_WIDTH): CropPlacement {
+    fun reshape(
+        placement: CropPlacement,
+        sourceRatio: Float,
+        to: Float,
+        stageWidth: Float = BOARD_WIDTH,
+    ): CropPlacement {
         val picture = fittedPicture(sourceRatio, stageOf(CropKind.Post, stageWidth))
         val bounds = zoomBounds(CropKind.Post, picture, to, stageWidth)
         return hold(placement, picture, frameOf(CropKind.Post, to, stageWidth).size, bounds)
@@ -268,7 +278,13 @@ object CropGeometry {
      * and the zoom actions' move: what stands in the middle of the frame stays
      * there — held to the bounds.
      */
-    fun zoomedTo(zoom: Float, placement: CropPlacement, picture: CropSize, frame: CropSize, bounds: ZoomBounds): CropPlacement {
+    fun zoomedTo(
+        zoom: Float,
+        placement: CropPlacement,
+        picture: CropSize,
+        frame: CropSize,
+        bounds: ZoomBounds,
+    ): CropPlacement {
         val held = holdZoom(zoom, bounds)
         val k = held / placement.zoom
         return holdOffset(CropPlacement(held, placement.x * k, placement.y * k), picture, frame)

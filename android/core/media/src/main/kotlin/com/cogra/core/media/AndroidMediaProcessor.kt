@@ -120,4 +120,3 @@ internal fun Bitmap.cropped(crop: CropSpec): Bitmap {
     if (rect.isWhole(width, height)) return this
     return Bitmap.createBitmap(this, rect.left, rect.top, rect.width, rect.height)
 }
-

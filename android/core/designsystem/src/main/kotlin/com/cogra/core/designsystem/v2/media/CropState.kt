@@ -211,10 +211,14 @@ class CropState internal constructor(
     /** The slider's move: the zoom at [share] of the fill, about the frame's centre. */
     fun zoomTo(share: Float) {
         val layout = geometry() ?: return
-        commit(
-            CropGeometry.zoomedTo(share * layout.bounds.floor, placement(layout), layout.picture, layout.frame.size, layout.bounds),
-            layout,
+        val next = CropGeometry.zoomedTo(
+            zoom = share * layout.bounds.floor,
+            placement = placement(layout),
+            picture = layout.picture,
+            frame = layout.frame.size,
+            bounds = layout.bounds,
         )
+        commit(next, layout)
     }
 
     /**
@@ -327,7 +331,7 @@ class CropState internal constructor(
         fun restored(values: List<Float?>): CropState {
             fun at(index: Int): Float? = values.getOrNull(index)
             val window = (3..6).mapNotNull(::at).takeIf { it.size == 4 }
-                ?.let { (left, top, right, bottom) -> CropFraming(left, top, right, bottom) }
+                ?.let { edges -> CropFraming(edges[0], edges[1], edges[2], edges[3]) }
             val moved = (7..9).mapNotNull(::at).takeIf { it.size == 3 }
                 ?.let { (zoom, x, y) -> CropPlacement(zoom, x, y) }
             return CropState(

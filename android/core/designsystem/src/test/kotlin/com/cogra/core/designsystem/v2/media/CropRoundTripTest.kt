@@ -152,7 +152,9 @@ class CropRoundTripTest {
             .transformations(CropTransformation(framing))
             .build()
         val result = runBlocking { loader.execute(request) }
-        assertWithMessage("Coil could not decode the fixture: $result").that(result).isInstanceOf(SuccessResult::class.java)
+        assertWithMessage("Coil could not decode the fixture: $result")
+            .that(result)
+            .isInstanceOf(SuccessResult::class.java)
         return (result as SuccessResult).image.toBitmap()
     }
 

@@ -98,18 +98,7 @@ internal fun ColumnScope.CropFrames(
     // author who stepped on to the details stage and came back — or who
     // walked forward into the stage a second time — would find their
     // crop reset (jakob 2026-09-01).
-    val framings: Map<String, CropState> = picked.associate { asset ->
-        asset.uri to key(asset.uri) {
-            rememberCropState(
-                initial = crops[asset.uri].toFraming(),
-                sourceRatio = asset.sourceRatio,
-                frameRatio = mediaShape.ratio,
-            )
-        }
-    }
-    // The picker reads each pick's upright ratio from its header; one that
-    // arrives after the stage opened reaches the framing here.
-    SideEffect { picked.forEach { asset -> asset.sourceRatio?.let { framings[asset.uri]?.learnSource(it) } } }
+    val framings = rememberFramings(picked, crops, mediaShape)
 
     // Reported after every composition rather than only on `Next`: a
     // process death between the last nudge and the next tap would
@@ -123,15 +112,7 @@ internal fun ColumnScope.CropFrames(
     if (!locked) {
         CropShapeChips(
             selected = mediaShape,
-            onSelect = { next ->
-                // EVERY picture takes the new shape, the ones off the stage
-                // too, each keeping its scale and position and rising only to
-                // the new fill (ComposeCrop.md:17-23) — the web twin's rule
-                // (web/src/lib/compose/wizard.ts:796-806). A picture left at
-                // the old shape would upload and preview a different section.
-                framings.values.forEach { it.reshape(next.ratio) }
-                onShapeChange(next.toDraftShape())
-            },
+            onSelect = { next -> reshapeAll(framings, next, onShapeChange) },
             modifier = if (node == null) Modifier.testTag("${testTagPrefix}_crop_shapes") else Modifier,
             node = node?.div("shapes"),
         )
@@ -191,6 +172,43 @@ internal fun ColumnScope.CropFrames(
             }
         }
     }
+}
+
+/**
+ * One framing per pick, keyed by the asset so re-ordering or dropping a pick
+ * cannot hand its framing to a different picture, each started from the
+ * window the wizard remembers for it and the upright ratio the picker read
+ * from its header (EXIF applied). A ratio that arrives after the stage opened
+ * reaches its framing in the [SideEffect].
+ */
+@Composable
+private fun rememberFramings(
+    picked: List<PickedAsset>,
+    crops: Map<String, CropSpec>,
+    shape: MediaShape,
+): Map<String, CropState> {
+    val framings = picked.associate { asset ->
+        asset.uri to key(asset.uri) {
+            rememberCropState(
+                initial = crops[asset.uri].toFraming(),
+                sourceRatio = asset.sourceRatio,
+                frameRatio = shape.ratio,
+            )
+        }
+    }
+    SideEffect { picked.forEach { asset -> asset.sourceRatio?.let { framings[asset.uri]?.learnSource(it) } } }
+    return framings
+}
+
+/**
+ * A shape chip: EVERY picture takes the new shape, the ones off the stage too,
+ * each keeping its scale and position and rising only to the new fill
+ * (ComposeCrop.md:17-23) — the web twin's rule (web/src/lib/compose/wizard.ts:796-806).
+ * A picture left at the old shape would upload and preview a different section.
+ */
+private fun reshapeAll(framings: Map<String, CropState>, next: MediaShape, onShapeChange: (DraftShape) -> Unit) {
+    framings.values.forEach { it.reshape(next.ratio) }
+    onShapeChange(next.toDraftShape())
 }
 
 /** The framing as the pipeline takes it, plus the post's own shape. */

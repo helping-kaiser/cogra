@@ -305,7 +305,9 @@ class CropGeometryTest {
     private fun pictureFraction(placement: CropPlacement, stageX: Float, stageY: Float): Pair<Float, Float> {
         val left = stage.width / 2f + placement.x - landscape.width * placement.zoom / 2f
         val top = stage.height / 2f + placement.y - landscape.height * placement.zoom / 2f
-        return (stageX - left) / (landscape.width * placement.zoom) to (stageY - top) / (landscape.height * placement.zoom)
+        val across = (stageX - left) / (landscape.width * placement.zoom)
+        val down = (stageY - top) / (landscape.height * placement.zoom)
+        return across to down
     }
 
     @Test
