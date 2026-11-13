@@ -825,7 +825,7 @@ describe("PostView", () => {
     fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
     fireEvent.click(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.citedBy"));
     expect(await screen.findByTestId("cited-by-sheet-empty")).toHaveTextContent(
-      "Nothing cites this yet — yours would be the first.",
+      /^Nothing cites this yet$/,
     );
     expect(screen.getByTestId("cited-by-sheet").className).toContain(
       "bg-surface-container-highest",
@@ -843,7 +843,7 @@ describe("PostView", () => {
     fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
     fireEvent.click(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.opinions"));
     expect(await screen.findByTestId("opinions-sheet-empty")).toHaveTextContent(
-      "No opinions yet — yours would be the first.",
+      /^No opinions yet$/,
     );
     expect(screen.getByRole("dialog", { name: "Opinions on this comment" })).toBeInTheDocument();
     expect(screen.getByTestId("opinions-sheet").className).toContain("bg-surface-container-highest");
@@ -3876,7 +3876,7 @@ describe("PostView — opened from the feed", () => {
 
   // ---- FC-7b · THE DETAIL HOLDS WHAT WAS OPENED (PostDetail.md:5-13) ---------
 
-  const LINE = "Edited since you opened it — tap for the newest version.";
+  const LINE = /^Edited since you opened it$/;
   const line = () => screen.queryByTestId(byNode("postDetail.newerVersion"));
 
   /** The reader's own pull, from the top (the "pulling down at the top" suite's gesture). */
