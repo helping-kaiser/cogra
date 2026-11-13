@@ -20,7 +20,7 @@ ALWAYS the header collapses on the way down and returns on the way up
 
 ALWAYS profile.tabRow reads Posts, Comments and Everything, by glyph, each named in the accessibility tree
 
-WHEN the reader's own profile opens, from any door -> it lands on its Posts tab, profile.tabRow.postsTab lit and profile.posts below it as post cards AND NEVER it lands on Everything or Comments
+WHEN the reader's own profile opens, from any door -> it lands with profile.tabRow.postsTab lit and profile.posts below it as post cards AND NEVER it lands on Everything or Comments
 
 WHEN tap profile.tabRow.everythingTab -> the chronicle stands below profile.tabRow AND the header above stays as it was
 

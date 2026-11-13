@@ -19,7 +19,7 @@ WHEN tap Invites -> the snackbar reads You can invite once you're in. AND NEVER 
 
 WHEN tap the ask link's copy control -> the ask link lands on the clipboard AND the snackbar reads Link copied
 
-ALWAYS the page lands on its Posts tab, as every profile does, profile.posts.empty reading Nothing here yet.
+ALWAYS the page lands with profile.tabRow.postsTab lit, as every profile does, profile.posts.empty reading Nothing here yet.
 
 ALWAYS profile.chronicle holds no act, and profile.chronicle.empty reads Nothing here yet., GIVEN profile.tabRow.everythingTab is lit
 

@@ -16,7 +16,7 @@ ALWAYS the header collapses on the way down and returns on the way up
 
 ALWAYS profile.bottomBar keeps lit the slot of the root the profile was opened from, profile.bottomBar.feedSlot from the feed
 
-WHEN another's profile opens, from any door -> it lands on its Posts tab, profile.tabRow.postsTab lit and profile.posts below it as post cards AND NEVER it lands on Everything or Comments
+WHEN another's profile opens, from any door -> it lands with profile.tabRow.postsTab lit and profile.posts below it as post cards AND NEVER it lands on Everything or Comments
 
 WHEN tap profile.tabRow.everythingTab -> the person's chronicle stands below profile.tabRow AND the header above stays as it was
 
@@ -78,7 +78,7 @@ WHEN tap profile.bottomBar.profileSlot -> the reader's own profile opens
 
 WHEN tap the back arrow -> the reader returns to where they came from, in the state they left it AND the arrow's label names that origin
 
-ALWAYS the back arrow reads Back to feed from the feed in any of its states, Back to the post from a post's author chip, opinions or references, Back to the comments from the comments sheet, Back to the stream from the stream, Back to Notifications from Notifications, Back to Saved from Saved, Back to History from History, Back to the opinions from a profile's opinions list, Back to the profile from a card on another's profile, Back to your profile from a card on the reader's own, Back to the search from Explore mid-query, Back to Invites from the people you let in on Invites and Back to with the tag's name from a tag's page
+ALWAYS the back arrow reads Back to feed from the feed in any of its states, Back to the post from the author on a post's detail, its opinions or its references, Back to the comments from the comments sheet, Back to the stream from the stream, Back to Notifications from Notifications, Back to Saved from Saved, Back to History from History, Back to the opinions from a profile's opinions list, Back to the profile from a card on another's profile, Back to your profile from a card on the reader's own, Back to the search from Explore mid-query, Back to Invites from the people you let in on Invites and Back to with the tag's name from a tag's page
 
 ALWAYS the back arrow reads Back to feed and leads to the feed GIVEN the profile was entered with no history behind it
 
