@@ -57,64 +57,70 @@ class WireTest {
     }
 
     @Test
-    fun verifiedActRoundTrips() {
-        val act = fullAct()
-        assertThat(decodeVerifiedAct(encodeVerifiedAct(act))).isEqualTo(act)
+    fun sealedActRoundTrips() {
+        val sealed = fullSealed()
+        assertThat(decodeSealedAct(encodeSealedAct(sealed))).isEqualTo(sealed)
     }
 
-    private fun fullAct() = VerifiedAct(
-        proposal = fullProposal(),
-        authorPubkey = ByteArray(32) { 1 },
-        nonce = ByteArray(32) { 2 },
-        preSignature = ByteArray(64) { 3 },
-        preCommitment = ByteArray(32) { 9 },
+    private fun fullSealed() = SealedAct(
+        act = VerifiedAct(
+            body = fullProposal().body,
+            preCommitment = ByteArray(32) { 9 },
+            preSignature = ByteArray(64) { 3 },
+            contentCommitment = ByteArray(32) { 6 },
+            dependencyCommitment = ByteArray(32) { 7 },
+            contentEdition = 2u,
+            dependencyEdition = 1u,
+        ),
         contentSalt = ByteArray(32) { 4 },
-        depsSalt = ByteArray(32) { 5 },
-        contentCommitment = ByteArray(32) { 6 },
-        depsCommitment = ByteArray(32) { 7 },
-        contentEdition = 1u,
-        depsEdition = 2u,
+        dependencySalt = ByteArray(32) { 5 },
         hostSeal = ByteArray(64) { 8 },
     )
 
     @Test
-    fun verifiedActDecodeIsFieldOrderSensitive() {
+    fun sealedActDecodeIsFieldOrderSensitive() {
         // Two same-length salts swapped: the whole-value comparison
         // catches it, which is what a field-by-field list only does if
         // every field was remembered.
-        val act = fullAct()
-        val swapped = VerifiedAct(
-            proposal = act.proposal,
-            authorPubkey = act.authorPubkey,
-            nonce = act.nonce,
-            preSignature = act.preSignature,
-            preCommitment = act.preCommitment,
-            contentSalt = act.depsSalt,
-            depsSalt = act.contentSalt,
-            contentCommitment = act.contentCommitment,
-            depsCommitment = act.depsCommitment,
-            contentEdition = act.contentEdition,
-            depsEdition = act.depsEdition,
-            hostSeal = act.hostSeal,
-        )
-        assertThat(decodeVerifiedAct(encodeVerifiedAct(act))).isNotEqualTo(swapped)
+        val sealed = fullSealed()
+        val swapped = SealedAct(sealed.act, sealed.dependencySalt, sealed.contentSalt, sealed.hostSeal)
+        assertThat(decodeSealedAct(encodeSealedAct(sealed))).isNotEqualTo(swapped)
     }
 
     @Test
-    fun theVerifiedActCarriesThePreCommitmentAndBothEditionTags() {
-        val act = fullAct()
-        val decoded = decodeVerifiedAct(encodeVerifiedAct(act))
-        assertThat(decoded.preCommitment).isEqualTo(act.preCommitment)
-        assertThat(decoded.contentEdition).isEqualTo(1UL)
-        assertThat(decoded.depsEdition).isEqualTo(2UL)
-        assertThat(CborDecoder(encodeVerifiedAct(act)).array()).isEqualTo(15UL)
+    fun theSealedActIsTheElevenItemVersionTwoFrame() {
+        val sealed = fullSealed()
+        val decoded = decodeSealedAct(encodeSealedAct(sealed))
+        assertThat(decoded.act.preCommitment).isEqualTo(sealed.act.preCommitment)
+        assertThat(decoded.act.contentEdition).isEqualTo(2UL)
+        assertThat(decoded.act.dependencyEdition).isEqualTo(1UL)
+        val d = CborDecoder(encodeSealedAct(sealed))
+        assertThat(d.array()).isEqualTo(11UL)
+        assertThat(d.uint()).isEqualTo(2UL)
     }
 
     @Test
     fun preCommitmentRoundTrips() {
-        val blob = encodePreCommitment(ByteArray(32) { 9 }, ByteArray(64) { 7 })
-        assertThat(decodePreCommitment(blob))
-            .isEqualTo(PreCommitment(ByteArray(32) { 9 }, ByteArray(64) { 7 }))
+        val blob = PreCommitmentBlob(ByteArray(32) { 9 }, ByteArray(32) { 8 }, ByteArray(64) { 7 })
+        val wire = encodePreCommitment(blob)
+        assertThat(decodePreCommitment(wire)).isEqualTo(blob)
+        val d = CborDecoder(wire)
+        assertThat(d.array()).isEqualTo(4UL)
+        assertThat(d.uint()).isEqualTo(2UL)
+    }
+
+    @Test
+    fun aHandshakeFrameIsJudgedByItsVersionBeforeItsArity() {
+        // A version-1 frame of the right v2 arity, and a v2 frame of the
+        // one-nonce arity: each is refused, the first by its version.
+        val oneNonceVersionAtV2Arity = CborEncoder().array(4u).uint(1u)
+            .bytes(ByteArray(32)).bytes(ByteArray(32)).bytes(ByteArray(64)).finish()
+        assertThat(assertThrows(WireException::class.java) { decodePreCommitment(oneNonceVersionAtV2Arity) })
+            .hasMessageThat().isEqualTo("unsupported wire version 1")
+        val v2AtOneNonceArity = CborEncoder().array(3u).uint(2u)
+            .bytes(ByteArray(32)).bytes(ByteArray(64)).finish()
+        assertThat(assertThrows(WireException::class.java) { decodePreCommitment(v2AtOneNonceArity) })
+            .hasMessageThat().isEqualTo("malformed pre-commitment")
     }
 
     @Test
@@ -149,10 +155,15 @@ class WireTest {
         assertThrows(WireException::class.java) { decodeProposal(badBodyVersion) }
         // The same refusals hold for the other envelopes.
         assertThrows(WireException::class.java) {
-            decodeVerifiedAct(CborEncoder().array(2u).uint(1u).bytes(ByteArray(0)).finish())
+            decodeSealedAct(CborEncoder().array(2u).uint(2u).bytes(ByteArray(0)).finish())
         }
+        val sealed = encodeSealedAct(fullSealed())
+        assertThrows(WireException::class.java) { decodeSealedAct(sealed.copyOfRange(0, sealed.size - 3)) }
+        assertThrows(WireException::class.java) { decodeSealedAct(sealed + byteArrayOf(0)) }
         assertThrows(WireException::class.java) {
-            decodePreCommitment(CborEncoder().array(3u).uint(9u).bytes(ByteArray(0)).bytes(ByteArray(0)).finish())
+            decodePreCommitment(
+                CborEncoder().array(4u).uint(9u).bytes(ByteArray(0)).bytes(ByteArray(0)).bytes(ByteArray(0)).finish(),
+            )
         }
         assertThrows(WireException::class.java) { decodePreCommitment(ByteArray(0)) }
     }
