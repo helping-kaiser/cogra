@@ -256,6 +256,22 @@ it("approve rejects a dependency commitment over another dependency list", async
   );
 });
 
+it("approve refuses a body whose p_d is -0 where the device signed 0", async () => {
+  // The two zeros are equal to `===` but not to the canonical bytes, which
+  // carry the sign bit; the reference compares by canonical bytes too.
+  expect(0 === -0).toBe(true);
+  const actor = await ActorKey.generate();
+  const host = await ActorKey.generate();
+  const author = await actor.address();
+  const sent = await actor.preSign(new Proposal(body(author, { pD: 0 }), utf8("hello, cogra"), []));
+  // Validly re-sealed by the host over the -0 body.
+  const sealed = await sealBy(host, sent, { body: body(author, { pD: -0 }) });
+  expect(await verify(host.publicKeyBytes(), Tags.HOST_SEAL, sealed.act.sealMsg(), sealed.hostSeal)).toBe(true);
+  await expect(actor.approve(sent, sealed, host.publicKeyBytes())).rejects.toThrow(
+    new HandshakeError("host returned a different act than was pre-signed"),
+  );
+});
+
 it("preSign refuses a proposal that names another author", async () => {
   const actor = await ActorKey.generate();
   const other = await ActorKey.generate();
