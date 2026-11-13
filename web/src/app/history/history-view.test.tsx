@@ -792,9 +792,8 @@ describe("History — what your history shows (HistoryFilter.md)", () => {
     ]);
     expect(within(sheet()).queryByRole("checkbox")).toBeNull();
     expect(within(sheet()).queryByRole("button", { name: /how|\?/i })).toBeNull();
-    expect(screen.getByTestId("history.filterSheet.kinds.hint")).toHaveTextContent(
-      "Combine as many as you like. All, until you narrow it.",
-    );
+    // Chips that combine explain themselves: the section carries no hint (seam 314).
+    expect(screen.queryByTestId("history.filterSheet.kinds.hint")).toBeNull();
     // The foot: Reset in its corner, Done at its end, and no reading.
     expect(screen.getByTestId("history.filterSheet.foot").textContent).toBe("ResetDone");
   });

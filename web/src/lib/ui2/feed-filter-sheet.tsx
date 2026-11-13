@@ -41,7 +41,6 @@ import { BottomSheet, SHEET_RAISED } from "./bottom-sheet";
 import { Chip } from "./chip";
 import { FilterFoot, FilterSection, OrderSection } from "./filter-sheet";
 import { HelpDot } from "./help-dot";
-import { QuietNote } from "./quiet-note";
 
 /** The sheet's accessible name, and the trigger's purpose (copy-voice *Reading*). */
 export const WHAT_YOUR_FEED_SHOWS = "What your feed shows";
@@ -49,44 +48,39 @@ export const WHAT_YOUR_FEED_SHOWS = "What your feed shows";
 /** The "?"'s name: the dialog it opens (copy-voice, *A "?" is named by the dialog it opens*). */
 export const HOW_THE_FILTER_WORKS = "How the filter works";
 
-/** The settings sheet's note under its title (SettingsReading.jsx; copy-voice *Reading*). */
-export const EVERY_FEED_STARTS_FROM_THIS = "Every feed starts from this.";
-
-const KINDS_HINT = "Everything that can reach your feed. Combine as many as you like.";
-const FORMS_HINT_ON = "Combine them: photos and video with no text posts is a legitimate feed.";
+/**
+ * The one section hint left (copy-voice *The filter's words*, `Kinds of
+ * post`): it stands only while no kind that has forms is on. Every other
+ * section carries no hint — chips that combine explain themselves, and the
+ * Ranked / Newest explainer and the veil pointer live in the sheet's "?"
+ * (jakob 2026-11-12; FeedFilter.jsx).
+ */
 const FORMS_HINT_OFF = "Applies once posts or comments are in.";
-const ALSO_HINT = "How sensitive content is veiled is set in Settings.";
-const PEOPLE_HINT = "Whose things reach this feed.";
 const TOPIC_LABEL = "One tag";
 const ALL_YOUR_TOPICS = "All your tags";
 
 /**
- * Whose words the people rows, the order hint and the topic hint speak in:
- * the reader's own, or — on a feed that borrows a view — the borrowed
- * account's (FeedSheet.md, "GIVEN the feed borrows a view"). Show what
- * you've already seen, the kinds, the forms, Also show, Reset and the "?"
- * keep the reader's own first person either way.
+ * Whose words the people rows and the topic hint speak in: the reader's own,
+ * or — on a feed that borrows a view — the borrowed account's (FeedSheet.md,
+ * "GIVEN the feed borrows a view"). Show what you've already seen, the kinds,
+ * the forms, Also show, Reset and the "?" keep the reader's own first person
+ * either way (copy-voice, *Under a borrowed view*).
  */
 export function viewWords(borrowedHandle: string | null) {
   if (borrowedHandle === null) {
     return {
       yourPeople: "Your people",
-      everyoneHint: "The whole feed, as far as your eyes reach.",
-      yourPeopleHint: "Only the people you hold an opinion of — the same rank, narrowed to them.",
+      yourPeopleHint: "Only the people you hold an opinion of.",
       signName: "Which of your people",
-      orderHint:
-        "Ranked puts what's closest to you first — your view, no one else's. Newest ignores it and lists by time.",
-      topicHint: "Tags you hold and are for. A tag you hold against stays a record — it just never narrows a feed.",
+      topicHint: "Tags you hold and are for.",
     };
   }
   const at = `@${borrowedHandle}`;
   return {
     yourPeople: `${at}'s people`,
-    everyoneHint: `The whole feed, as far as ${at}'s eyes reach.`,
-    yourPeopleHint: `Only the people ${at} holds an opinion of — the same rank, narrowed to them.`,
+    yourPeopleHint: `Only the people ${at} holds an opinion of.`,
     signName: `Which of ${at}'s people`,
-    orderHint: `Ranked puts what's closest to ${at} first — the view you're browsing from. Newest ignores it and lists by time.`,
-    topicHint: `Tags ${at} holds and is for. A tag ${at} holds against stays a record — it just never narrows a feed.`,
+    topicHint: `Tags ${at} holds and is for.`,
   };
 }
 
@@ -121,8 +115,9 @@ function PeopleRows({
 }) {
   const words = viewWords(borrowedHandle);
   const state = people === "everyone" ? "everyone" : "your-people";
-  const rows: readonly { value: FeedPeople; tail: string; label: string; hint: string }[] = [
-    { value: "everyone", tail: "everyone", label: "Everyone", hint: words.everyoneHint },
+  // `Everyone` draws no line of its own (FeedFilter.jsx `FeedPeopleRows`).
+  const rows: readonly { value: FeedPeople; tail: string; label: string; hint?: string }[] = [
+    { value: "everyone", tail: "everyone", label: "Everyone" },
     { value: "yourPeople", tail: "yourPeople", label: words.yourPeople, hint: words.yourPeopleHint },
   ];
   const keyed = (tail: string): DataNode | undefined =>
@@ -160,9 +155,11 @@ function PeopleRows({
                 <span {...testAttributes(part(rowNode, "label"))} className="text-body-medium">
                   {row.label}
                 </span>
-                <span {...testAttributes(part(rowNode, "hint"))} className="text-body-small text-on-surface-variant">
-                  {row.hint}
-                </span>
+                {row.hint !== undefined && (
+                  <span {...testAttributes(part(rowNode, "hint"))} className="text-body-small text-on-surface-variant">
+                    {row.hint}
+                  </span>
+                )}
               </span>
             </label>
           );
@@ -280,16 +277,14 @@ export function FeedFilterSheet({
       testId={testId}
       foot={<FilterFoot node={part(node, "foot")} testId={`${testId}-foot`} onReset={onReset} onDone={onDone} />}
     >
-      {titled ? (
-        <div className="px-6 pb-4">
-          <QuietNote node={part(node, "note")}>{EVERY_FEED_STARTS_FROM_THIS}</QuietNote>
-        </div>
-      ) : (
+      {!titled && (
         // THE "?" RIDES THE SHEET'S CORNER (FeedFilter.jsx: absolute at
         // `--space-1` / `--space-2`): the dialog is the box it measures from.
+        // Titled, it stands on the title's row and nothing stands under the
+        // title (SettingsReading.jsx: the lead is the `SheetTitle` alone).
         <div className="absolute top-1 right-2">{help}</div>
       )}
-      <FilterSection label="Kinds" hint={KINDS_HINT} node={part(node, "kinds")}>
+      <FilterSection label="Kinds" node={part(node, "kinds")}>
         {FEED_KINDS.map((kind) => (
           <Chip
             key={kind.value}
@@ -304,7 +299,7 @@ export function FeedFilterSheet({
           </Chip>
         ))}
       </FilterSection>
-      <FilterSection label="Kinds of post" hint={postsish ? FORMS_HINT_ON : FORMS_HINT_OFF} node={part(node, "forms")}>
+      <FilterSection label="Kinds of post" hint={postsish ? undefined : FORMS_HINT_OFF} node={part(node, "forms")}>
         {FEED_FORMS.map((form) => (
           <Chip
             key={form.value}
@@ -324,10 +319,9 @@ export function FeedFilterSheet({
         onOrder={(order) => set({ order })}
         seen={staged.seen}
         onSeen={(seen) => set({ seen })}
-        hint={words.orderHint}
         node={part(node, "order")}
       />
-      <FilterSection label="Also show" hint={ALSO_HINT} node={part(node, "also")}>
+      <FilterSection label="Also show" node={part(node, "also")}>
         {FEED_ALSO.map((entry) => (
           <Chip
             key={entry.value}
@@ -342,7 +336,7 @@ export function FeedFilterSheet({
       </FilterSection>
       {/* WHO THE FEED READS FROM (ruling 77; the sign row, item 7): with the
           scope narrowers at the body's tail, the topic section staying last. */}
-      <FilterSection label="People" hint={PEOPLE_HINT} node={part(node, "people")}>
+      <FilterSection label="People" node={part(node, "people")}>
         <PeopleRows
           people={staged.people}
           sign={staged.peopleSign}
