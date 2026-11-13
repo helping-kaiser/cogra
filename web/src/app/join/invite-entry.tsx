@@ -50,7 +50,7 @@ export function InviteEntry({ invalid = false }: { invalid?: boolean } = {}) {
       lead={
         invalid
           ? "It may have expired or already been used. Ask the person who invited you for a new link."
-          : "CoGra is invite-only. Paste your invite link to get started."
+          : "CoGra is invite-only."
       }
     >
       <form onSubmit={onContinue} className="flex flex-col" noValidate>

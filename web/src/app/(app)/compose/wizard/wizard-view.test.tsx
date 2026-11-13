@@ -330,10 +330,9 @@ describe("the compose wizard", () => {
     expect(screen.getByTestId("wizard-unreachable")).toHaveAttribute("open");
   });
 
-  // CW-26: WizardHeader.jsx's stageLabel slot draws at --text-label-small's
-  // size and leading, at the ground's weight (the master sets none), and the
-  // seal's one "?" stands after it, named "How signing works".
-  it("labels the seal stage at the label-small size, then the seal's one help", async () => {
+  // Seam 314 (round 42): the seal carries no stage label; its header holds
+  // the screen's one "?", named "How signing works", alone.
+  it("gives the seal no stage label, only its one help", async () => {
     render();
     fireEvent.click(await screen.findByTestId("wizard-to-words"));
     fireEvent.change(screen.getByTestId("wizard-words"), {
@@ -343,12 +342,9 @@ describe("the compose wizard", () => {
     await screen.findByTestId(byNode("composeDetails.title.input"));
     fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
 
-    const stage = await screen.findByText("Last step");
-    // label-small whole (`WizardHeader.jsx` stage, round 28).
-    expect(stage.className.split(" ")).toContain("text-label-small");
-    expect(stage.className).not.toContain("text-[length:");
-    const help = screen.getByRole("button", { name: "How signing works" });
-    expect(stage.compareDocumentPosition(help) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "How signing works" })).toBeInTheDocument();
+    expect(screen.queryByTestId("header-stage")).toBeNull();
+    expect(screen.queryByText("Last step")).toBeNull();
   });
 
   // The hand test found framing dead on everything past the first picture, so
@@ -1107,7 +1103,7 @@ describe("the compose wizard", () => {
       fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
       await screen.findByTestId(byNode("composeDetails.title.input"));
       fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
-      await screen.findByText("Last step");
+      await screen.findByRole("button", { name: "How signing works" });
     }
 
     it("steps back one stage per press, and leaves the pick to the browser", async () => {
@@ -1117,7 +1113,7 @@ describe("the compose wizard", () => {
 
       window.history.back();
       expect(await screen.findByTestId(byNode("composeDetails.title.input"))).toBeInTheDocument();
-      expect(screen.queryByText("Last step")).toBeNull();
+      expect(screen.queryByRole("button", { name: "How signing works" })).toBeNull();
 
       window.history.back();
       expect(await screen.findByTestId("wizard-words")).toBeInTheDocument();
@@ -1161,7 +1157,7 @@ describe("the compose wizard", () => {
       await screen.findByTestId(byNode("composeDetails.title.input"));
 
       window.history.forward();
-      expect(await screen.findByText("Last step")).toBeInTheDocument();
+      expect(await screen.findByRole("button", { name: "How signing works" })).toBeInTheDocument();
       expect(stageDepth()).toBe(2);
     });
 
@@ -1226,7 +1222,7 @@ describe("the license a new post starts from", () => {
     fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
     await screen.findByTestId(byNode("composeDetails.title.input"));
     fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
-    await screen.findByText("Last step");
+    await screen.findByRole("button", { name: "How signing works" });
     // The seal's License row reads the seeded pair, never public domain.
     const licenseRow = screen.getByTestId("wizard-open-license").parentElement!;
     await waitFor(() => expect(licenseRow).toHaveTextContent("Credit always"));

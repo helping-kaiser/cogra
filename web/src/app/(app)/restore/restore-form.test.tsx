@@ -135,4 +135,10 @@ describe("RestoreForm", () => {
     renderWithProviders(<RestoreForm />, { store: signedInStore() });
     expect(screen.getByTestId("restore_submit")).toBeDisabled();
   });
+
+  it("draws no line between the title and the field (Restore)", () => {
+    renderWithProviders(<RestoreForm />, { store: signedInStore() });
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Restore your key");
+    expect(screen.queryByText(/bring your signing key/)).not.toBeInTheDocument();
+  });
 });

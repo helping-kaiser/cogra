@@ -33,13 +33,13 @@ describe("the filter idiom's parts", () => {
 
   it("draws a section's label, its hint and its controls", () => {
     render(
-      <FilterSection label="Kinds" hint="Combine as many as you like." node={{ path: "history.filterSheet.kinds" }}>
-        <button type="button">Posts</button>
+      <FilterSection label="Kinds of post" hint="Applies once posts or comments are in." node={{ path: "feed.filterSheet.forms" }}>
+        <button type="button">Text</button>
       </FilterSection>,
     );
-    expect(screen.getByTestId("history.filterSheet.kinds.label")).toHaveTextContent("Kinds");
-    expect(screen.getByTestId("history.filterSheet.kinds.hint")).toHaveTextContent("Combine as many as you like.");
-    expect(screen.getByRole("group", { name: "Kinds" })).toContainElement(screen.getByText("Posts"));
+    expect(screen.getByTestId("feed.filterSheet.forms.label")).toHaveTextContent("Kinds of post");
+    expect(screen.getByTestId("feed.filterSheet.forms.hint")).toHaveTextContent("Applies once posts or comments are in.");
+    expect(screen.getByRole("group", { name: "Kinds of post" })).toContainElement(screen.getByText("Text"));
   });
 
   it("ends on Reset in the corner and Done at the end, with no reading", () => {

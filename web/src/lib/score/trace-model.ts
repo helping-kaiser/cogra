@@ -18,7 +18,7 @@
 
 import type { NodeKind, RecordFamily, RecordLegRole } from "@/__generated__/graphql";
 import { ladderAge } from "@/lib/ui/timestamp";
-import { apportionCents, signedOfCents } from "./figure";
+import { apportionCents, isTiny, signedOfCents, traceFigure } from "./figure";
 
 /** One node on a path, as the slice names it (`SliceNode`). */
 export type TraceNode = {
@@ -109,15 +109,10 @@ const LIMIT = 1;
 const LIMIT_EPSILON = 1e-9;
 
 const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
-const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth"];
 
 /** `two` — the boards' own counts are words (`two opinions`, `two steps`). */
 export function countWord(n: number): string {
   return NUMBER_WORDS[n] ?? String(n);
-}
-
-function ordinal(n: number): string {
-  return ORDINALS[n - 1] ?? `${n}th`;
 }
 
 /** Persons fold: an address and its profile are one node (feed-ranking.md §2; RankHop.records). */
@@ -402,15 +397,16 @@ export function levelOne(
   answer: TraceAnswer,
   unfolded: boolean,
 ): { readonly drawn: readonly { index: number; value: string }[]; readonly more: MorePaths | null } {
-  const cents = apportionCents(
-    answer.paths.map((path) => path.contribution),
-    answer.score ?? 0,
-  );
+  const exact = answer.paths.map((path) => path.contribution);
+  const cents = apportionCents(exact, answer.score ?? 0);
   const folds = !unfolded && cents.length > DRAWN_PATHS;
   const shown = folds ? cents.slice(0, DRAWN_PATHS) : cents;
   const rest = folds ? cents.slice(DRAWN_PATHS) : [];
   return {
-    drawn: shown.map((value, index) => ({ index, value: signedOfCents(value) })),
+    drawn: shown.map((value, index) => ({
+      index,
+      value: isTiny(exact[index]!) ? traceFigure(exact[index]!) : signedOfCents(value),
+    })),
     more:
       rest.length > 0
         ? { count: rest.length, value: signedOfCents(rest.reduce((sum, value) => sum + value, 0)) }
@@ -485,17 +481,14 @@ export function memberSum(path: TracePath, step: TraceStep): { pDirected: number
 const CLIPPED_FOLD = "Added up, they go past the limit an opinion can reach, so the step carries the limit.";
 export const CLIPPED_RECORDS = "Added up, these go past the limit an opinion can reach, so the step carries the limit.";
 
-/** `Your opinion of @ada — the first of this path's two steps.` (RankHop.md:7). */
-export function placeNote(title: string, place: number, steps: number): string {
-  return steps === 1
-    ? `${title} — this path's one step.`
-    : `${title} — the ${ordinal(place)} of this path's ${countWord(steps)} steps.`;
+/** The note over a step: its title alone, `Your opinion of @ada` (RankHop.md:7). */
+export function placeNote(title: string): string {
+  return title;
 }
 
 /**
- * The fold's note (RankHop.md:9-13): the reader's own word with the pad's
- * clause, or the giver's handle without it, closing on the limit when the
- * records pass it.
+ * The fold's note (RankHop.md:9-13): the reader's own word or the giver's
+ * handle, closing on the limit when the records pass it.
  */
 export function foldNote(path: TracePath, step: TraceStep, context: TraceContext): string {
   const giver = giverOf(step, path, context);
@@ -503,11 +496,10 @@ export function foldNote(path: TracePath, step: TraceStep, context: TraceContext
   const object = thingName(path, step.to, context);
   const n = carryingHop(step).records.length;
   const given = own ? `You have given ${object}` : `${subject(giver)} has given ${object}`;
-  const pad = own ? " — the same adding up the pad shows you as your current opinion" : "";
   const body =
     n === 1
-      ? `${given} one opinion, and that one is what carries${pad}.`
-      : `${given} ${countWord(n)} opinions. They add up to one, and that one is what carries${pad}.`;
+      ? `${given} one opinion, and that one is what carries.`
+      : `${given} ${countWord(n)} opinions. They add up to one, and that one is what carries.`;
   return memberSum(path, step).clipped ? `${body} ${CLIPPED_FOLD}` : body;
 }
 

@@ -331,12 +331,12 @@ describe("LoginForm", () => {
 
 // SignIn.jsx / SignIn.md: the drawn anatomy, line for line.
 describe("the sign-in screen (SignIn)", () => {
-  it("heads with Back to the bare view, the title and the welcome line", () => {
+  it("heads with Back to the bare view and the title, with no line under it", () => {
     renderWithProviders(<LoginForm />);
     const back = screen.getByRole("link", { name: "Back" });
     expect(back).toHaveAttribute("href", "/feed");
     expect(screen.getByRole("heading", { level: 1, name: "Sign in to CoGra" })).toBeInTheDocument();
-    expect(screen.getByText("Welcome back — your feed is where you left it.")).toBeInTheDocument();
+    expect(screen.queryByText(/Welcome back/)).not.toBeInTheDocument();
   });
 
   it("sign_in_stands_disabled_with_its_waiting_line_until_both_fields_hold_a_character", () => {

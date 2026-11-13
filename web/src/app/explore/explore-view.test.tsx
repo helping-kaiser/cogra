@@ -674,6 +674,22 @@ describe("the search filter sheet", () => {
     expect(within(foot).getAllByRole("button").map((button) => button.textContent)).toEqual(["Reset", "Done"]);
   });
 
+  // Seam 314 / copy-voice *The filter*: the sections carry no hint; the
+  // Ranked / Newest explainer moved whole into the sheet's "?".
+  it("explains nothing in its sections; the ? holds the Ranked / Newest explainer", async () => {
+    serveSearch(() => answer([]));
+    renderExplore();
+    const sheet = await openSheet();
+    expect(within(sheet).queryByTestId("explore.filterSheet.kinds.hint")).toBeNull();
+    expect(within(sheet).queryByTestId("explore.filterSheet.order.hint")).toBeNull();
+    expect(sheet).not.toHaveTextContent("Combine");
+    expect(sheet).not.toHaveTextContent("Ranked puts");
+    fireEvent.click(within(sheet).getByTestId(byNode("explore.filterSheet.help")));
+    expect(await screen.findByTestId("explore-filter-help-dialog")).toHaveTextContent(
+      "Ranked puts what's closest to you first — your view, no one else's. Newest ignores it and lists by time.",
+    );
+  });
+
   it("explore_filter_md_5_25_33_chips_combine_stage_and_done_requeries_once", async () => {
     const asks = serveSearch(() => answer([]));
     renderExplore();
@@ -743,7 +759,7 @@ describe("nothing found, and comments without a scope", () => {
     renderExplore();
     type("@nobody brackish");
     expect(await screen.findByTestId(byNode("explore.empty.title"))).toHaveTextContent(
-      "Nothing carries that name. Search reads names and titles, never bodies — fewer words reach further.",
+      /^Nothing carries that name\.$/,
     );
     type("salt");
     await waitFor(() => expect(rowNames()).toEqual(["Salt maps"]));

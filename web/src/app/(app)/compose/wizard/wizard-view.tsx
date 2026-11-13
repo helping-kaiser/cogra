@@ -1005,12 +1005,10 @@ export function ComposeWizard({
         }}
         // The seal board's `?` (`HelpDot`), opening the house help dialog with
         // copy-voice's "How signing works". One `?` per screen, so only the
-        // seal carries one — beside its stage's name, "Last step".
+        // seal carries one, alone: the seal has no stage label (seam 314).
         // The stage's name in the header's own slot (WizardHeader's
-        // `stageLabel`): the seal's "Last step", the cover's "Video only".
-        stageLabel={
-          state.step === "seal" ? "Last step" : state.step === "cover" ? "Video only" : undefined
-        }
+        // `stageLabel`): only the cover's "Video only".
+        stageLabel={state.step === "cover" ? "Video only" : undefined}
         help={
           state.step === "seal" ? (
             <HelpDot
