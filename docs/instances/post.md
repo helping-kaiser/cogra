@@ -68,7 +68,8 @@ the envelope carries either a body text — at most 5000 characters
 
 One act, two homes. L1 accepts the structural record with the
 payload witness; CoGra — the carriage service — holds the payload
-bytes and the salt (Postgres rows; media bytes in blob storage).
+bytes, their content nonce and the salt (Postgres rows; media bytes
+in blob storage).
 The bytes are no copy of anything: carriage is their only home,
 verifiable against the witness. The record mirror caches the
 structural record for traversal — it may lag L1, never diverge.

@@ -2192,8 +2192,8 @@ CREATE INDEX honor_entries_member_idx
   the admission balance is the realization's, read as `B_i`. Postgres
   holds pointers and bookkeeping, never amounts that bind.
 - **Payload integrity.** The content witness is L1's evidence;
-  the carriage tables hold bytes and salts that verify against
-  it, and deletion is payload removal — the witness and the
+  the carriage tables hold bytes, content nonces and salts that
+  verify against it, and deletion is payload removal — the witness and the
   structural record remain.
 
 ---
