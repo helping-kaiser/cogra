@@ -351,8 +351,10 @@ unusable.
 
 Every emailed or shared link is a web URL on the per-environment
 web origin — the web app serves everyone the native apps don't
-reach, and one URL opens the app where one is installed
-(Android App Links on the same paths):
+reach. Every URL below but the verification URL opens the app
+where one is installed (Android App Links on the same paths); the
+web alone handles the verification URL, and the app has no
+verification entry of its own:
 
 - Invite: `https://<web-origin>/join/<link-id>`
 - Ask: `https://<web-origin>/vouch/<link-id>`
@@ -479,12 +481,14 @@ latency is a UX cost, not a correctness problem. Clients take that
 literally: an applicant lands in the same shell as a member and
 browses the read surfaces immediately, with the application riding
 along as cards and dismissible hints — the actionable
-email-verification step, the approval wait, the landing. Every
-acting surface stays visible but locked: styled as disabled yet
-still tappable, the tap answering in place and never opening the
-surface — `You can post once you're in.` at every door into the
+email-verification step, the approval wait, the landing. A
+control on a card, bar or header whose only destination is an act
+wears the locked look — dimmed, still tappable — and answers in
+place: `You can post once you're in.` at every door into the
 composer, `You can give your opinion once you're in.` at every
-stance face. Account management —
+stance face. A door to reading is never locked. A menu row looks
+normal and answers in place the same way. The composer opened by
+its address lands where app-open lands. Account management —
 settings, sign-out, password change — is never gated; the
 applicant is an ordinary logged-in account.
 The waiting state is never a wall, and the poll/sign loop that
@@ -777,9 +781,13 @@ pinned to the offending field (`handle` / `email`).
    single-use, short-lived (default 15 min) reset token and
    emails it as a link.
 3. The user clicks the link; the app checks it first, read-only
-   (`passwordResetLinkCheck`), and a link already used or past its
-   time opens the expired-link screen instead of the form. On a live
-   link the user submits a new password (subject to
+   (`passwordResetLink`), and a link already used or past its
+   time opens the expired-link screen instead of the form. A live
+   link's check names the account's login email — only a live one;
+   every dead link answers alike — and the form carries it in a
+   hidden username field, so a password manager files the new
+   password under the right account. The email is never in the link.
+   On a live link the user submits a new password (subject to
    the requirements above). The server validates the token,
    rotates the password hash, and revokes all existing refresh
    tokens for the account — password change is a security event.
@@ -1172,7 +1180,8 @@ limits survive restarts and hold across instances.
   limited — it only deletes the caller's own rows.
 - Token confirmations (`verifyEmail`, `confirmPasswordReset`,
   `confirmEmailChange`, `confirmAccountDeletion`) and the reset link's
-  read-only check (`passwordResetLinkCheck`) — one per-IP budget. The
+  read-only checks (`passwordResetLink`, `passwordResetLinkCheck`) —
+  one per-IP budget. The
   tokens are high-entropy; the budget bounds guessing anyway, and a
   check that answered for free would be a guessing oracle beside it.
 

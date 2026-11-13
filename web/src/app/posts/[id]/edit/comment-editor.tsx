@@ -38,6 +38,7 @@ import { commentEdit, type ExpectedWrite } from "@/lib/signing/intent";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { signedValues, tagChanges, type TagDraft } from "@/lib/topics/draft";
+import { refusesTagName, tagNameRefusal } from "@/lib/topics/picker";
 import { referenceDrafts } from "@/lib/references/claims";
 import { referenceChanges, type ReferenceDraft } from "@/lib/references/draft";
 import { PUBLIC_DOMAIN, type License } from "@/lib/license";
@@ -457,8 +458,11 @@ export function CommentEditor({
         }
         // A PRE-STAGING refusal is a field error, never the signing line
         // (F2). An added tag carries it on its own chip; a withdrawal has no
-        // chip left to carry it, so it reads on the general line.
-        const message = firstRefusalMessage(prepared.errors, "The server refused this write.");
+        // chip left to carry it, so it reads on the general line. A refused
+        // NAME reads as the picker's own line for it (TagPickerRefused).
+        const message = prepared.errors.some(refusesTagName)
+          ? tagNameRefusal(change.tag.name)
+          : firstRefusalMessage(prepared.errors, "The server refused this write.");
         const index =
           change.kind === "tag" ? editing.tags.findIndex((tag) => tag.name === change.tag.name) : -1;
         if (index >= 0) perTag[index] = message;

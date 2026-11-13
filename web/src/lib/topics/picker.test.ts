@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import {
   readTagName,
+  refusesTagName,
   signsAs,
   TAG_NAME_CHARSET_REFUSAL,
   TAG_NAME_LENGTH_REFUSAL,
+  tagNameRefusal,
 } from "./picker";
 
 describe("readTagName", () => {
@@ -45,5 +47,39 @@ describe("readTagName", () => {
 describe("signsAs", () => {
   it("reads the record the tap will sign", () => {
     expect(signsAs("saltmaps")).toBe("Signs as #saltmaps");
+  });
+});
+
+// jakob 2026-11-13 (seam 327): the picker's two refusal lines are the law, and
+// a server refusal of a staged tag's name reads as them — never the server's
+// own `a topic name …` text (TagPickerRefused.md).
+describe("tagNameRefusal", () => {
+  it("states the two lines exactly as TagPickerRefused draws them", () => {
+    expect(TAG_NAME_CHARSET_REFUSAL).toBe("A tag name is letters, digits, dot, dash and underscore.");
+    expect(TAG_NAME_LENGTH_REFUSAL).toBe("A tag name is at most 128 characters.");
+  });
+
+  it("reads a refused name with the picker's line for it, whitespace as the charset case", () => {
+    expect(tagNameRefusal("salt maps")).toBe(TAG_NAME_CHARSET_REFUSAL);
+    expect(tagNameRefusal(" salt")).toBe(TAG_NAME_CHARSET_REFUSAL);
+    expect(tagNameRefusal("münchen")).toBe(TAG_NAME_CHARSET_REFUSAL);
+    expect(tagNameRefusal("a".repeat(129))).toBe(TAG_NAME_LENGTH_REFUSAL);
+  });
+
+  it("falls back to the charset line when the client reads the name as legal", () => {
+    expect(tagNameRefusal("salt")).toBe(TAG_NAME_CHARSET_REFUSAL);
+  });
+});
+
+describe("refusesTagName", () => {
+  it("names a BAD_INPUT on a tag's name, alone or in a batch", () => {
+    expect(refusesTagName({ code: "BAD_INPUT", field: ["name"] })).toBe(true);
+    expect(refusesTagName({ code: "BAD_INPUT", field: ["tags", "0", "name"] })).toBe(true);
+  });
+
+  it("leaves every other refusal to the code's own sentence", () => {
+    expect(refusesTagName({ code: "BAD_INPUT", field: ["tags", "0", "pInterest"] })).toBe(false);
+    expect(refusesTagName({ code: "NOT_FOUND", field: ["name"] })).toBe(false);
+    expect(refusesTagName({ code: "BAD_INPUT", field: null })).toBe(false);
   });
 });

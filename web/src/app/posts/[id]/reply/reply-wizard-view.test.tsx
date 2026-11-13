@@ -679,6 +679,40 @@ describe("the reply wizard", () => {
       expect(screen.queryByTestId("reply-seal-tags")).toBeNull();
     });
 
+    // jakob 2026-11-13 (seam 327): a refused tag NAME reads as the picker's
+    // own line (TagPickerRefused), never the server's `a topic name …` text.
+    it("reads a refused tag name as the picker's line, never the server's text", async () => {
+      server.use(
+        tagNames(),
+        gqlLink.mutation("PrepareComment", () =>
+          HttpResponse.json({
+            data: {
+              prepareComment: {
+                __typename: "PrepareContentPayload",
+                node: null,
+                writes: null,
+                userErrors: [
+                  {
+                    __typename: "UserError",
+                    message: "`reserved` is not a legal topic name: ASCII letters, digits, `.`, `-`, `_` only",
+                    code: "BAD_INPUT",
+                    field: ["tags", "0", "name"],
+                  },
+                ],
+              },
+            },
+          }),
+        ),
+      );
+      draw();
+      await toSeal();
+      stageTag("reserved");
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      const fault = await screen.findByTestId("reply-seal-tags-fault");
+      expect(fault).toHaveTextContent("A tag name is letters, digits, dot, dash and underscore.");
+      expect(screen.getByTestId("reply-seal")).not.toHaveTextContent(/topic name/);
+    });
+
     // ReplySeal.md:19 — the fault line and Retry IN THE FOOT, in Sign
     // comment's place; Retry is the same signing, asked again.
     it("surfaces a submit that never reached the server in the foot, and Retry asks again", async () => {
