@@ -41,13 +41,13 @@
    wait (`ProfileTabFirstPage`). `fault` is the check with no answer: the
    fault family's one shape in the form's place (`DeleteAccountConfirmed`'s
    landing, `ProfileUnreachable`) — the house line's noun form, `Can't reach
-   the server — this page can't load right now.`, over an OUTLINED `Retry`,
+   the server — this link can't be checked right now.` (jakob 2026-11-13, N9),
+   over an OUTLINED `Retry`,
    sized to its word and leading the column; the read's word, since checking
    a link signs and confirms nothing. `limited` is the check refused by its
    budget: the reset's `RATE_LIMITED` line (copy-voice, *Faults by code*),
    `Too many tries. Wait a little, then try again.`, over the same control,
-   as `DeleteAccountConfirmed`'s `limited` draws it. The fault's line is
-   worded by the round-48 lane, to be blessed. Named `loading`, `fault` and
+   as `DeleteAccountConfirmed`'s `limited` draws it. Named `loading`, `fault` and
    its `retry`, each fault copy keyed by the chip's value; `live` is the form. */
 export const NODE = "reset";
 export const PROPS = { link: { editor: "enum", options: ["live", "checking", "fault", "limited"], default: "live" } };
@@ -69,7 +69,7 @@ export function Screen() {
         </div>
       </div>
       <div style={{ display: "{{faultShown}}" }} data-node-chip="link" data-node-key="fault">
-        {FAULT("Can't reach the server — this page can't load right now.")}
+        {FAULT("Can't reach the server — this link can't be checked right now.")}
       </div>
       <div style={{ display: "{{limitedShown}}" }} data-node-chip="link" data-node-key="limited">
         {FAULT("Too many tries. Wait a little, then try again.")}

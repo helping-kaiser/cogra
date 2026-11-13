@@ -1068,23 +1068,25 @@ doors answer in the same register (PR-103, **blessed (jakob
   the face's own name (`Give your opinion on this post`). The pad never
   blooms, and nothing is signed or staged.
 
-Every control the family answers wears the locked look (auth.md):
-visibly inactive, still tappable — the foot, `Reply` and `Invites` (jakob
-2026-10-02), and `New post` and the stance faces alike (jakob
-2026-10-16) — except the doors into the composer below.
+**The applicant lock, one rule** (jakob 2026-11-13, N1, as recommended):
 
-**Every door into the composer answers alike** (jakob 2026-11-13, seam
-320-1, as recommended): a post's and a comment's `Cite in a new post`, a
-person card's `Mention in a new post`, a tag card's compose glyph (`Tag a
-new post with it`), the expired-draft notice's `Open the draft`, and the
-composer's own address opened directly answer an applicant with `You can
-post once you're in.`, and nothing opens — an address leaves the reader
-where app-open lands for them, as the Invites page's own address does.
-These doors look as they do for a member: a menu row or a card's glyph has
-no locked treatment, as `ProfileMenu`'s `Mention in a new post` stands at
-full strength. The line rides the surface's own snackbar where it has one
-(the profile's, the thread's), else the shell's.
+- A control on a card, a bar or a header whose only destination is an act
+  wears the locked look — visibly inactive at the disabled opacity, still
+  tappable — and answers in place with its line: the thread's `Add a
+  comment` foot and every `Reply`, `Invites`, the bar's `New post`, every
+  stance face, a tag card's compose button (`Tag a new post with it`) and
+  the expired-draft notice's `Open the draft`.
+- A door to READING is never locked: a comment card's comment button opens
+  its thread as for anyone, the lock standing inside it (jakob
+  2026-11-13).
+- A menu row looks as it does for a member and answers in place — `Cite in
+  a new post`, `Mention in a new post` — the menu closing first.
+- The composer opened by its own address leaves the reader where app-open
+  lands for them, with `You can post once you're in.`, as the Invites
+  page's own address does.
 
+The line rides the surface's own snackbar where it has one (the
+profile's, the thread's), else the shell's; nothing opens.
 The applicant's own profile (`ProfileApplicant`) says the same in its
 own places, **blessed (jakob 2026-10-16)**: the open
 application's card reads `Their approval brings you in.` under `Waiting on @mira` — `ApplicantWaiting`'s
@@ -1508,14 +1510,14 @@ the review fixes' lines, jakob 2026-10-01), all of them (the last flags cleared 
   `RowSigning`.
 - A read with nothing loaded: the house line's noun form, `Can't reach
   the server — {what} can't load right now.`, over an outlined `Retry`
-  — `this profile`, `notifications`, `tags`, `results`, and the tag page's `this tag` (*worded by the round-48 lane, to be blessed*) (one rule, round
+  — `this profile`, `notifications`, `tags`, `results`, and the tag page's `this tag` (*blessed (jakob 2026-11-13, N10)*) (one rule, round
   25: `ProfileUnreachable`, `Notifications`, the two pickers, search);
   the deletion mail's landing, whose act is a confirm, says `Can't reach
   the server — the deletion can't be confirmed right now.` over its `Try
   again` (`DeleteAccountConfirmed`); the reset link's landing, whose
-  check signs nothing, says `Can't reach the server — this page can't
-  load right now.` over `Retry` (`ResetNew`'s `link` chip; *worded by the
-  round-48 lane, to be blessed*). A
+  check signs nothing, says `Can't reach the server — this link can't
+  be checked right now.` over `Retry` (`ResetNew`'s `link` chip; *blessed (jakob
+  2026-11-13, N9)*). A
   fault line never says "try again" beside a control that does it, so the
   long line, `Can't reach the server. Check your connection and try
   again.`, is `TransportError`'s fallback for a surface that names no
@@ -3250,8 +3252,10 @@ on your post` — the sentence's words keep their room first (readme §13,
 *A long name or handle takes one of three cases*; in running text the
 sentence wraps and the handle moves whole to the next line — a handle or
 name never stands on two lines; the profile's head is the named exception,
-its display name always shown whole: it wraps at its spaces and a word
-wider than the line breaks inside the word, no end-cut — jakob 2026-11-13). Ten kinds, ten
+its display name always shown whole on at most two lines: it wraps at its
+spaces, a word wider than the line breaks inside the word, and a name that
+would need more lines takes the largest size that holds two — never cut,
+jakob 2026-11-13). Ten kinds, ten
 sentences, all present tense of the act that happened:
 
 - `@ada commented on your post` — a comment on a post of yours.

@@ -4,7 +4,7 @@
 // held open where a line needs it running), a press is held at the gate, and
 // a clip's new face is signed as the clip's cover pointer.
 
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -370,9 +370,10 @@ describe("CommentEditor — a clip's face (CommentEditVideo)", () => {
     const { onSigned } = draw(comment([CLIP]));
     fireEvent.click(await screen.findByTestId("commentEdit.cover.change"));
     await pickInto("comment-edit-cover-input", [picture("face.jpg")]);
-    expect(await screen.findByTestId("comment-edit-cover-crop")).toHaveTextContent(
-      "The cover takes the video's shape.",
-    );
+    // The crop explains nothing (round 44): the stage, the zoom and Next.
+    const crop = await screen.findByTestId("comment-edit-cover-crop");
+    expect(within(crop).getByTestId("coverCrop.viewport")).toBeInTheDocument();
+    expect(crop).not.toHaveTextContent("The cover takes the video's shape.");
     fireEvent.click(screen.getByTestId("coverCrop.next"));
     expect(await screen.findByTestId("commentEdit.gate")).toHaveTextContent(
       "Uploading 0 of 1 — signing waits for the cover.",

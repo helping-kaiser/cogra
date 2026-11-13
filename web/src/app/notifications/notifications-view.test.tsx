@@ -10,7 +10,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { bellLit, resetBell, setBell } from "@/lib/notifications/bell";
 import { resetMarks } from "@/lib/notifications/marks";
 import { notificationsHref, resetNotificationsOrigin } from "@/lib/notifications/origin";
-import { NOTIFICATIONS_EMPTY } from "@/lib/notifications/row-content";
 import { createTokenStore } from "@/lib/session/token-store";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { hiddenHandlers, hiddenLog } from "@/test/hidden";
@@ -265,7 +264,7 @@ describe("NotificationsScreen", () => {
     const marks = serve([]);
     renderWithProviders(<NotificationsScreen from="feed" />, { store: signedIn() });
     const empty = await screen.findByTestId("notifications.empty.title");
-    expect(empty).toHaveTextContent(NOTIFICATIONS_EMPTY);
+    expect(empty).toHaveTextContent(/^Nothing here yet\.$/);
     expect(empty.className).not.toContain("error");
     expect(within(screen.getByTestId("notifications.empty")).queryByRole("button")).not.toBeInTheDocument();
     // An empty first page sends no mark.

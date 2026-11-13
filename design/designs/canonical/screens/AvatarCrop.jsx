@@ -11,7 +11,7 @@
    outside the circle the picture stays in view, darkened.
 
    THE ZOOM IS ON SCREEN (the K13 round): `CropZoom` under the circle, its
-   thumb at this crop's 1.2× between the fill (1×) and about 4×, on both
+   thumb at this crop's 1.2× between the fill (1×) and 10×, on both
    platforms; the focused stage moves the picture with the arrow keys
    (`CropViewport`), 1 % a press, 10 % with Shift (jakob 2026-10-05). No line
    says how to move it (round 44, the removable-text pass). */

@@ -63,6 +63,7 @@ import type { TraceOrigin } from "@/lib/score/trace-session";
 import { usePinnedPlace, type ScrollPlace } from "@/lib/ui/scroll-pin";
 import { COMMENTS_NODE, ProfileCommentsList } from "./profile-comments";
 import { POSTS_NODE, ProfilePostsList } from "./profile-posts";
+import { useReaderIsApplicant } from "@/lib/session/reader-state";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { StatusBanners } from "@/app/status-banners";
@@ -104,8 +105,7 @@ export const CHRONICLE_TABS_LABEL = "What the chronicle shows";
 /** ProfileApplicant.md:17. */
 export const INVITE_LOCKED = "You can invite once you're in.";
 /** ProfileApplicant.md:21 — the applicant-foot family's `once you're in`. */
-export const APPLICANT_CHRONICLE_EMPTY =
-  "Nothing here yet. Your posts and opinions show up here once you're in.";
+export const APPLICANT_CHRONICLE_EMPTY = "Nothing here yet.";
 /** The chronicle page that did not arrive (Profile.md:35; copy-voice.md). */
 export const COULDNT_LOAD_MORE = "Couldn't load more";
 /** How long a next page may take before `Loading…` stands for it (Profile.md:33). */
@@ -166,7 +166,10 @@ export function ProfileScreen({
 
   const [profile, setProfile] = useState<Profile | null>(returned?.profile ?? null);
   const [own, setOwn] = useState(returned?.own ?? false);
-  const [applicant, setApplicant] = useState(returned?.applicant ?? false);
+  // THE READER IS AN APPLICANT by the session's one reader state
+  // (`reader-state.ts`) — the Invites lock, the empty chronicle's line and a
+  // comment card's Reply all read it, never a verdict of this page's own.
+  const applicant = useReaderIsApplicant();
   const [loading, setLoading] = useState(returned === null);
   const [notFound, setNotFound] = useState(false);
   const [transportFailed, setTransportFailed] = useState(false);
@@ -289,7 +292,6 @@ export function ProfileScreen({
         const mine = me !== null && me.id === loaded.id;
         setViewer(me);
         setOwn(mine);
-        setApplicant(me?.accountState === "APPLICANT");
         if (list === "land") {
           setFilter("everything");
           void loadRows(loaded.id, "everything", null, mine);
@@ -436,12 +438,11 @@ export function ProfileScreen({
       figures,
       viewer,
       own,
-      applicant,
       list: filter === "posts" ? { tab: "posts", posts } : { tab: "comments", comments },
       endCursor,
       hasNextPage: hasMore,
     });
-  }, [memoryReader, handle, openedFrom, profile, figures, viewer, own, applicant, filter, cardView, rowsLoading, listed, posts, comments, endCursor, hasMore]);
+  }, [memoryReader, handle, openedFrom, profile, figures, viewer, own, filter, cardView, rowsLoading, listed, posts, comments, endCursor, hasMore]);
 
   // A PORTRAIT CLIP'S TAP OPENS THE STREAM OVER THE POSTS VIEW (Reel.md:3,
   // ProfilePosts.md:43-45), in its order, and past the page on screen through

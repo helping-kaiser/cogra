@@ -457,9 +457,10 @@ describe("the stance control at rest", () => {
 });
 
 describe("teaching the gesture", () => {
-  // stance-control.md "Teaching it": the pad is the teacher. The
-  // account's first open ever carries two coaching lines; they close with
-  // the pad and never show again, and nothing else teaches it.
+  // copy-voice "The first-ever pad's coaching stands behind its ?" (jakob
+  // 2026-11-12; VouchBackPad.md:15): the account's first open ever says only
+  // `Nothing is signed until Set.`; it closes with the pad and never shows
+  // again. The shortcut is said in the vouch-back pad's "?".
 
   it("teaches on the first open ever, inside the pad, and stages nothing", async () => {
     const data = mount();
@@ -471,26 +472,15 @@ describe("teaching the gesture", () => {
     expect(screen.queryByTestId(`${PREFIX}-signed`)).toBeNull();
   });
 
-  it("says the shortcut, and that nothing is signed until Set", async () => {
+  it("says only that nothing is signed until Set — never the shortcut, on the pad", async () => {
     mount();
     await settle();
     await openPad();
     const coaching = screen.getByTestId(`${PREFIX}-coaching`);
-    expect(coaching).toHaveTextContent(
-      "Later, tap the small face under a post to open this — press and hold it instead and a gentle",
-    );
-    expect(coaching).toHaveTextContent("is signed on the spot.");
-    expect(coaching).toHaveTextContent(
-      "Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.",
-    );
-    // The face is drawn; its spoken twin says the face and the pair.
-    expect(coaching).toHaveTextContent("Nice, For or against +0.10, How much reaches you +0.10");
-    // The pair itself rides a geek-mode tail (VouchBackPad.md: "the
-    // coaching's exact pair shows only when the reader has asked for exact
-    // values").
-    const tail = coaching.querySelector(".cg-exact");
-    expect(tail).toHaveTextContent("(+0.10 / +0.10)");
-    expect(tail).toHaveAttribute("aria-hidden", "true");
+    expect(coaching.textContent).toBe("Nothing is signed until Set.");
+    const pad = screen.getByTestId(`${PREFIX}-pad`);
+    expect(pad).not.toHaveTextContent("Later, tap the small face");
+    expect(pad).not.toHaveTextContent("Prefer sliders or exact numbers?");
   });
 
   it("never teaches twice: the lines close with the pad", async () => {

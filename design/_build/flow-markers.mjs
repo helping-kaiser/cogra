@@ -1802,7 +1802,10 @@ Object.assign(FLOW_MARKERS, {
        the skip-link text under the same via (jakob 2026-09-10). */
     { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
     { n: 10, find: ">Reply</button>", tag: "button", all: true },
-    { n: 11, find: "View 2 replies", tag: "button" },
+    // A list's comment card carries no replies' line (jakob 2026-11-13): via 11
+    // is the card itself, the door to its thread.
+    { n: 11, find: ">The glovebox camera earns its keep", tag: "a" },
+    { n: 11, find: ">Low tide is kinder to the rubbings", tag: "a" },
     { n: 17, find: ">On “", tag: "button", all: true },
     ...nav(12),
     // The load chip's failed first page (round 45): its Retry.

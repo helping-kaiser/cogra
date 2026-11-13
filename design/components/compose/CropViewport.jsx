@@ -39,10 +39,10 @@ import React from "react";
    platforms — a desktop browser has no pinch, so zoom has to be on screen for
    everyone, not only for assistive tech. Its bounds are the crop's own: at
    the minimum the picture just fills the window (1×, nothing outside the
-   picture can show), at the maximum it stands at about 4×. The viewport
+   picture can show), at the maximum it stands at 10× (jakob 2026-11-13). The viewport
    itself takes focus, and the arrow keys pan the picture inside the window,
    stopping where an edge of the picture meets the window's edge. THE POST
-   CROP HAS ONE CEILING under every shape (round 48, ComposeCrop.md): about 4×
+   CROP HAS ONE CEILING under every shape (jakob 2026-11-13; ComposeCrop.md): 10×
    the Tall frame's fill, the largest, so a shape switch — which never shrinks
    a picture — never meets a ceiling below the scale it keeps. Every figure
    here is the stage at a 390 column; the stage scales with the column. A pinch
@@ -50,7 +50,7 @@ import React from "react";
    ways to set it. */
 
 export const CROP_ZOOM_MIN = 1;
-export const CROP_ZOOM_MAX = 4;
+export const CROP_ZOOM_MAX = 10;
 
 export function CropViewport({
   src,

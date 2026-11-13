@@ -17,10 +17,10 @@ import { Icon } from "../navigation/Icon.jsx";
    row on one line.
 
    `opacity` CARRIES THE LOCKED LOOK where an act is locked for its reader
-   (auth.md): a comment card's reply glyph for an applicant, at
-   `var(--state-disabled)` and still tappable, as `CommentCard`'s text `Reply`
-   wears it (round 48). A door that answers with the family's line but stays
-   unlocked in look — the tag card's compose glyph — passes none. */
+   (the applicant lock, copy-voice): a tag card's compose glyph for an
+   applicant, at `var(--state-disabled)` and still tappable — its only
+   destination is an act. A glyph that opens something to READ (a comment
+   card's, which opens its thread) is never locked and passes none. */
 
 export function GlyphAction({ glyph, label, onPress, opacity, node }) {
   return (

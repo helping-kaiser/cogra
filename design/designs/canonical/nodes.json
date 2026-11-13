@@ -7570,8 +7570,6 @@
         "history.searchField": [],
         "history.searchField.glyph": [],
         "history.searchField.input": [],
-        "history.snackbar": [],
-        "history.snackbar.message": [],
         "history.tagCard": [
           "fc7d18fe-c334-4c2a-82b3-eed28f2eaa26"
         ],
@@ -11439,8 +11437,7 @@
     "ProfileComments": {
       "prefix": "profile",
       "keys": {
-        "profile.comments.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
-        "profile.comments.viewReplies": "the comment's id, the lowercase UUID the wire carries — the key of the card the line hangs under (CommentCard)"
+        "profile.comments.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
       },
       "nodes": {
         "profile.bottomBar": [],
@@ -11515,9 +11512,6 @@
         "profile.comments.loading": [],
         "profile.comments.moreFault": [],
         "profile.comments.moreFault.retry": [],
-        "profile.comments.viewReplies": [
-          "5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e"
-        ],
         "profile.header": [],
         "profile.header.back": [],
         "profile.header.title": [],
@@ -11552,8 +11546,7 @@
     "ProfileCommentsMenu": {
       "prefix": "profile",
       "keys": {
-        "profile.comments.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
-        "profile.comments.viewReplies": "the comment's id, the lowercase UUID the wire carries — the key of the card the line hangs under (CommentCard)"
+        "profile.comments.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
       },
       "nodes": {
         "profile.bottomBar": [],
@@ -11600,9 +11593,6 @@
           "5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e"
         ],
         "profile.comments.commentCard.target": [
-          "5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e"
-        ],
-        "profile.comments.viewReplies": [
           "5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e"
         ],
         "profile.header": [],

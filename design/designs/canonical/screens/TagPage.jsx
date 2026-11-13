@@ -92,8 +92,7 @@
    this tag can't load right now.`, over an outlined `Retry` leading the
    column (copy-voice, *No answer at all*). The noun is the page's own, as
    `this profile` is the profile's; the picker's `tags can't load right now.`
-   names a list of tags, not this page. Worded by the round-48 lane, to be
-   blessed.
+   names a list of tags, not this page. Blessed (jakob 2026-11-13, N10).
 
    A NAME THAT CANNOT BE A TAG (jakob 2026-11-13, N4; the `load` chip's
    `notFound`): a link or a typed address whose name breaks the naming gate

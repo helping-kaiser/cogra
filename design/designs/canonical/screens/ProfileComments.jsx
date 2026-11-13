@@ -20,10 +20,12 @@
    `ProfilePosts` is: a tab of the profile page takes the page's prefix. The
    list is `comments`, each `commentCard` in it keyed by the comment's id
    as every comment card is, and `empty` in the
-   cards' place. A card's pointer to what it answers is its `target`; the
-   collapsed replies' line hangs under the card, outside its surface, so it is
-   `viewReplies` beside the card, keyed by the same id (round 28, seam 254
-   A3).
+   cards' place. A card's pointer to what it answers is its `target`.
+
+   A COMMENT CARD IN A LIST IS ABOUT THE COMMENT ITSELF (jakob 2026-11-13): no
+   `View n replies` under it. The card is the door to its thread — a tap lands
+   on the post with the thread sheet open, scrolled to that comment — and the
+   replies' line lives there (`CommentCard`).
 
    A REMOVED COMMENT IN THE LIST (round 30, jakob 2026-11-11, Q13) is the
    `comments` chip's `removed`: the second comment, removed by its author,
@@ -88,9 +90,8 @@ export function Screen() {
             timestamp="1d"
             license={{ attribution: 0, provenance: 0 }}
             bundle={mkBundle(0.1, 0.1)}
-            replyCount={2}
-            onOpenReplies={() => {}}
             onReply={() => {}}
+            onOpen={() => {}}
             replyOpacity="{{lockOpacity}}"
             target="“The long way home” — @ada"
             onOpenTarget={() => {}}
@@ -104,10 +105,10 @@ export function Screen() {
               content="Low tide is kinder to the rubbings than noon ever was."
               timestamp="4d"
               license={{ attribution: 0, provenance: 0 }}
-              onOpenReplies={() => {}}
               onReply={() => {}}
+              onOpen={() => {}}
               replyOpacity="{{lockOpacity}}"
-            replyOpacity="{{lockOpacity}}"
+
               target="“Salt maps of the coast road” — @sol"
               onOpenTarget={() => {}}
               menuItems={COMMENT_CARD_MENU}
@@ -125,8 +126,9 @@ export function Screen() {
               redacted={{ reason: "author", when: "2h" }}
               menuItems={COMMENT_CARD_MENU}
               onReply={() => {}}
+
               replyOpacity="{{lockOpacity}}"
-            replyOpacity="{{lockOpacity}}"
+
               target="“Salt maps of the coast road” — @sol"
               onOpenTarget={() => {}}
               node="commentCard"

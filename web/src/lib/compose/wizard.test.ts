@@ -342,7 +342,7 @@ describe("the picker", () => {
   // 3000×4000 picture framed at 1× in tall stands 386.25 wide in a 412 frame;
   // a kept zoom would draw it 161.78 wide in wide. The shape changes around it
   // instead: the zoom rises to 2.3875, and the place it stood stays.
-  it("keeps each measured picture at the size it stood at when the shape changes", () => {
+  it("keeps each measured picture's scale and position when the shape changes", () => {
     const framed = run(
       emptyWizard(),
       picks(2),
@@ -352,15 +352,15 @@ describe("the picker", () => {
         crop: {
           x: 10,
           y: -20,
-          zoom: 1,
+          zoom: 1.2,
           area: { x: 0, y: 250, width: 3000, height: 3750 },
           areaPercent: { x: 0, y: 6.25, width: 100, height: 93.75 },
         },
       },
-      { type: "shape", shape: "wide", frameWidth: 412 },
+      { type: "shape", shape: "wide", stageWidth: 412 },
     );
     const crop = framed.assets[1]!.crop;
-    expect(crop.zoom).toBeCloseTo(2.3875, 4);
+    expect(crop.zoom).toBe(1.2);
     expect(crop.x).toBe(10);
     expect(crop.y).toBe(-20);
     expect(crop.area).toBeNull();

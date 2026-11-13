@@ -10,6 +10,10 @@ WHEN tap the ⋮ on profile.comments.commentCard -> profile.menuSheet rises over
 
 WHEN tap profile.comments.commentCard.target -> the thread it lives in opens scrolled to that comment
 
+ALWAYS a profile.comments.commentCard carries no view-replies line
+
+WHEN profile.comments.commentCard is tapped outside profile.comments.commentCard.target and its own controls -> the post's comment section opens scrolled to that comment
+
 WHEN tap profile.tabRow.postsTab -> the reader's own posts stand below profile.tabRow AND the head above stays as it was
 
 WHEN tap profile.tabRow.everythingTab -> the reader's own chronicle stands below profile.tabRow AND the head above stays as it was

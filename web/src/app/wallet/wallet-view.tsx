@@ -11,7 +11,7 @@
 // open the guest gate (:13-15).
 //
 // ONE FACE FOR EVERY READER STATE (:5) and NO ACTION, NO DATE (:7): the
-// coming-soon card, `Wallet — coming soon` over `Your earnings will be here.`
+// coming-soon card, `Wallet — coming soon`, and nothing under it.
 //
 // The board is not registered in nodes.json, so nothing here wears a design
 // node id yet.
@@ -25,9 +25,6 @@ import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { CograBand } from "@/lib/ui/cogra-band";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
 import { ComingSoonCard } from "@/lib/ui2/coming-soon-card";
-
-/** WalletComingSoon.md:3, the blessed line (copy-voice, the coming-soon surfaces). */
-export const WALLET_LINE = "Your earnings will be here.";
 
 export function WalletView() {
   const router = useRouter();
@@ -57,7 +54,7 @@ export function WalletView() {
         }
       />
       <div className="flex flex-1 flex-col pt-2">
-        <ComingSoonCard thing="Wallet" line={WALLET_LINE} node={{ path: "wallet.comingSoonCard" }} />
+        <ComingSoonCard thing="Wallet" node={{ path: "wallet.comingSoonCard" }} />
       </div>
       <JoinPrompt open={joinPrompt} onClose={() => setJoinPrompt(false)} />
     </main>

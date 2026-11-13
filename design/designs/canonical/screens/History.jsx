@@ -69,17 +69,11 @@
    THE `pick` CHIP DRAWS A KEPT PICK on the first comment card and the first
    post card (round 27, seam 252; `PickCopies`): `key` and `review` add the
    stance control's `pending` line to `commentCard` and `card` as the feed's
-   `PadPending` and `PadPendingReview` draw it.
-
-   THE `reader` CHIP DRAWS AN APPLICANT'S REPLY GLYPH (jakob 2026-11-13, seam
-   320-2): the comment card's glyph wears the locked look and answers on the
-   card with `You can comment once you're in.`, drawn as the snackbar it
-   raises (`snackbar`, History's own) — the thread's and the feed's rule
-   (`ReplyEntry`, `FeedKinds`). The chip draws the comment's act only. */
+   `PadPending` and `PadPendingReview` draw it. */
 export const NODE = "history";
 export const FRAME = { width: 390, height: 1720 };
-export const PROPS = { ...PICK_CHIP, reader: { editor: "enum", options: ["member", "applicant"], default: "member" } };
-export const VALS = `${PICK_VALS}, lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none"`;
+export const PROPS = PICK_CHIP;
+export const VALS = PICK_VALS;
 
 export function Screen() {
   return (
@@ -106,7 +100,6 @@ export function Screen() {
               topics={["glovebox", "coastroad"]}
               score="12.40"
               {...pick}
-              replyOpacity="{{lockOpacity}}"
               node="commentCard"
             />
           )}
@@ -131,9 +124,6 @@ export function Screen() {
         <PostCard {...TOBIAS_POST} timestamp="3d" bundle={mkBundle(0.1, 0.1)} node="card" />
       </FeedList>
       <BottomNav active="profile" slots={ALL_SLOTS} inline node="bottomBar" />
-      <div style={{ display: "{{lockedLine}}" }}>
-        <Snackbar message="You can comment once you're in." node="snackbar" />
-      </div>
     </>
   );
 }

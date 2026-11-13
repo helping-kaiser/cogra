@@ -30,7 +30,7 @@ export interface CropViewportProps {
 
 export declare function CropViewport(props: CropViewportProps): JSX.Element;
 
-/** The zoom's bounds: 1× is the fill (the picture just covers the window), 4× the most. */
+/** The zoom's bounds: 1× is the fill (the picture just covers the window), 10× the most (jakob 2026-11-13). */
 export declare const CROP_ZOOM_MIN: number;
 export declare const CROP_ZOOM_MAX: number;
 /** The spoken names of the focusable viewport (`Move the picture`) and the slider (`Zoom`). */

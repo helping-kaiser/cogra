@@ -6100,7 +6100,7 @@ end-cut, as every one-line place.
 
 Closed as ruled by jakob 2026-11-13 ("i still want people to be able to see the full name"): on the head alone the name is always shown whole — it wraps at its spaces, a word wider than the line breaks inside the word, no end-cut, no line cap. (a) is not taken.
 
-### 214 · The head's name shrinks to hold two lines · *design* · **filed 2026-11-13**
+### 214 · The head's name shrinks to hold two lines · *design* · **filed 2026-11-13** · **closed 2026-11-13**
 
 Round 47 (jakob's idea: "how much smaller would we need to make the font for
 it to fit two lines?"). Shown, not ruled. At the head's 262px the name is
@@ -6111,6 +6111,19 @@ at 10px; the 40-character two-lines sample needs 13px for one line.
 `ProfileOther`'s `name` = three-lines-shrunk draws the sample at 19px on a
 24px line. For jakob: whether the head shrinks at all, and if so by what rule
 (steps, a floor) — nothing is built beyond the one sample.
+
+Closed as ruled by jakob 2026-11-13 ("i prefer the shrunk 2 line version over the 3 liner"): a head name that would take more than two lines at 22px takes the largest whole-pixel size that holds two, its line-height round(size × 28 / 22), several words or one word alike (`ProfileHeader`'s `nameFitSize`). The smallest size is backlog 215.
+
+### 215 · The smallest size of the head's name · *design* · **filed 2026-11-13** · **closed 2026-11-13**
+
+Round 47. The two-line rule shrinks the head's name to the largest whole
+pixel that holds two lines, and no floor is ruled, so the widest legal name —
+50 × `W` with no space — stands at 10px on 13px (`ProfileOther`'s `name` =
+widest); 50 × `m` and 50 `W` in words take 12px, the 50-character sample
+19px. For jakob, now that he has seen the widest: (a) no floor, as drawn;
+(b) a floor (a size he names), the name past it taking a third line.
+
+Closed as ruled by jakob 2026-11-13 ("F1 as drawn so two lines is the hard cap and it shrinks until it fits"): (a), no floor — the head's name shrinks until it holds two lines, the widest legal name at 10px on 13px.
 
 ### 220 · The seals and the edit sheets have no registry rows · *system* · **filed 2026-11-13**
 

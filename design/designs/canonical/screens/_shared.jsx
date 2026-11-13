@@ -4971,13 +4971,7 @@ const commentTarget = (parent, kind) =>
           cover: parent.media?.[0]?.src,
         };
 
-/* AN APPLICANT'S REPLY GLYPH IS LOCKED, NOT GONE (jakob 2026-11-13, seam
-   320-2, as recommended: one behaviour on every host). `replyOpacity` is
-   `CommentCard`'s own, the thread's and the profile's: the glyph stands at the
-   disabled opacity, still tappable, and the tap answers on the card with
-   `You can comment once you're in.` — the thread never opens. A board's
-   `reader` chip passes the hole (`FeedKinds`, `History`). */
-function CommentFeedCard({ id, author, content, timestamp, parent, parentKind = "post", media, sensitive, topics = [], references = 0, score, bundle, own = false, stancePendingPick, stancePendingReview, replyOpacity, node }) {
+function CommentFeedCard({ id, author, content, timestamp, parent, parentKind = "post", media, sensitive, topics = [], references = 0, score, bundle, own = false, stancePendingPick, stancePendingReview, node }) {
   const target = commentTarget(parent, parentKind);
   return (
     <CommentCard
@@ -5003,7 +4997,6 @@ function CommentFeedCard({ id, author, content, timestamp, parent, parentKind = 
       onOpenScore={() => {}}
       onReply={() => {}}
       replyGlyph
-      replyOpacity={replyOpacity}
       onShare={() => {}}
       license={{ attribution: 0, provenance: 0 }}
       menuItems={own ? FEED_OWN_COMMENT_MENU : FEED_COMMENT_MENU}
@@ -5329,7 +5322,10 @@ const SALTMAPS_TAG_ID = "fc7d18fe-c334-4c2a-82b3-eed28f2eaa26";
    names them; the lead's are `mark`, `name` and the why-line `through`, the
    glimpse is `glimpse` with its newest thing's `newest` and `by` (or the
    empty tag's one line as `nothing`), and the kind's own act is `compose`. */
-function TagFeedCard({ id, name, through, tagged, score, bundle, node }) {
+/* `composeOpacity` is the applicant lock on the compose button (copy-voice,
+   *The applicant lock, one rule*; jakob 2026-11-13, N1): its only destination
+   is an act, so an applicant meets it dimmed, still tappable. */
+function TagFeedCard({ id, name, through, tagged, score, bundle, composeOpacity, node }) {
   const [newest, ...rest] = tagged;
   const glimpse = newest ? (
     <span style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", minWidth: 0 }} data-node={node && "glimpse"}>
@@ -5376,7 +5372,7 @@ function TagFeedCard({ id, name, through, tagged, score, bundle, node }) {
       score={score}
       onOpenScore={() => {}}
       stanceAxes={AFFINITY_AXES}
-      act={<GlyphAction glyph="add" label={TAG_ACT} onPress={() => {}} node={node && "compose"} />}
+      act={<GlyphAction glyph="add" label={TAG_ACT} onPress={() => {}} opacity={composeOpacity} node={node && "compose"} />}
       onOpen={() => {}}
       node={node}
       nodeKey={id}
