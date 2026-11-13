@@ -2279,6 +2279,38 @@ describe("PostView", () => {
     expect(screen.queryByTestId("reply-wizard")).not.toBeInTheDocument();
   });
 
+  // ReplyEntry.md:27, :29 — GIVEN the reader is an applicant, Add a comment and
+  // every comment's Reply stand at the disabled opacity, and stay tappable.
+  it("an_applicants_add_and_reply_stand_at_the_disabled_opacity", async () => {
+    server.use(...thread("u1", [{ id: "c1", body: "First!" }]));
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("u2"),
+      writeSigner: fakeWriteSigner(),
+      reader: "APPLICANT",
+    });
+    await openComments();
+    const add = await screen.findByTestId("comment-add");
+    const reply = await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.reply", "c1"));
+    for (const door of [add, reply]) {
+      expect(door.className).toContain("opacity-[var(--state-disabled)]");
+      expect(door).not.toBeDisabled();
+    }
+  });
+
+  // ...and a member's stand at full strength.
+  it("a_members_add_and_reply_stand_at_full_strength", async () => {
+    server.use(...thread("u1", [{ id: "c1", body: "First!" }]));
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("u2"),
+      writeSigner: fakeWriteSigner(),
+      reader: "MEMBER",
+    });
+    await openComments();
+    const add = await screen.findByTestId("comment-add");
+    const reply = await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.reply", "c1"));
+    for (const door of [add, reply]) expect(door.className).not.toContain("opacity-[var(--state-disabled)]");
+  });
+
   // ApplicantFeed.md:45-53's face on the post's own detail (the shared
   // control): locked, and a tap tells AND NEVER the pad blooms.
   it("an_applicants_stance_anchor_on_the_detail_is_locked_and_tells", async () => {
