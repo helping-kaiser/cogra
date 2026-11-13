@@ -93,7 +93,9 @@ pub struct Redacted {
     /// archive: the act was already redacted, or carried no bytes.
     pub archived: Option<Uuid>,
     /// The carriage row was missing and the landed staged row still held
-    /// the payload, so it was promoted before anything was reaped.
+    /// the payload, so this call promoted it before anything was reaped.
+    /// A row an ingestion committed after this transaction's first read
+    /// is found, not promoted, and does not count.
     pub promoted_first: bool,
     /// This call left the carriage `reduced`: it moved a full row there,
     /// or recorded the reduced row of an act carried only in its sealed
@@ -238,7 +240,7 @@ pub async fn reduce_in(
         (None, Some(copy)) if copy.state == staged::StagedState::Landed.as_str() => {
             match (&copy.payload, &copy.content_nonce, &copy.content_salt) {
                 (Some(payload), Some(nonce), Some(salt)) if !payload.is_empty() => {
-                    content_store::insert_act_payload(
+                    done.promoted_first = content_store::insert_act_payload(
                         tx,
                         r.act_id,
                         content_store::CarriedPair {
@@ -248,7 +250,6 @@ pub async fn reduce_in(
                         },
                     )
                     .await?;
-                    done.promoted_first = true;
                     Some(content_store::ActPayload {
                         payload: Some(payload.clone()),
                         content_nonce: Some(nonce.clone()),

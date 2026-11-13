@@ -1134,6 +1134,32 @@ pub async fn staged_act(pool: &PgPool, act_id: &str) -> Result<Option<StagedAct>
     .await?)
 }
 
+/// Holds one staged write `FOR SHARE` on the caller's transaction and
+/// refuses it if a redaction has reaped it ([`StagedError::Reaped`]).
+///
+/// Pre-commitment staging writes display rows from bytes it loaded
+/// before this transaction. A redaction can reap the write after its leg
+/// was recorded and before staging. The share lock conflicts with the
+/// redaction's `FOR UPDATE` ([`lock_copy`]): if the redaction holds the
+/// row, this waits and then reads the reaped version; if this holds it,
+/// the redaction waits until the staged rows are committed and its scope
+/// sees them. The caller takes this lock before any other lock in the
+/// transaction, so the order matches the redaction's: staged row first,
+/// then node or profile rows.
+pub async fn lock_unreaped(conn: &mut PgConnection, id: Uuid) -> Result<(), StagedError> {
+    let reaped = sqlx::query_scalar!(
+        "SELECT payload IS NULL AS \"reaped!\" FROM staged_writes WHERE id = $1 FOR SHARE",
+        id,
+    )
+    .fetch_optional(conn)
+    .await?;
+    match reaped {
+        None => Err(StagedError::NotFound(id)),
+        Some(true) => Err(StagedError::Reaped(id)),
+        Some(false) => Ok(()),
+    }
+}
+
 /// Locks and reads the staged write of one act, if any row stages it.
 pub async fn lock_copy(
     conn: &mut PgConnection,

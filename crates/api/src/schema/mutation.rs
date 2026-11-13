@@ -485,7 +485,7 @@ fn relay_error(e: RelayError, list: &str, index: usize) -> UserError {
         ),
         RelayError::ReplayMismatch(_) => UserError::at(
             ErrorCode::BadInput,
-            "resubmission does not match the sealed pre-commitment",
+            "resubmission does not match the pre-commitment already submitted",
             path,
         ),
         RelayError::Staged(staged::StagedError::NotFound(_) | staged::StagedError::Reaped(_)) => {
@@ -1285,7 +1285,7 @@ impl PrepareContentPayload {
             ContentError::References(e) => UserError::at(ErrorCode::BadInput, e.message, e.path),
             ContentError::Gallery(e) => UserError::at(ErrorCode::BadInput, e.message, e.path),
             ContentError::Prepare(e) => UserError::from_onboarding(&OnboardingError::from(e), ""),
-            e @ ContentError::Internal(_) => internal(e),
+            e @ (ContentError::Reaped | ContentError::Internal(_)) => internal(e),
         }])
     }
 }

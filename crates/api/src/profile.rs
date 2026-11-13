@@ -50,6 +50,10 @@ pub enum ProfileError {
     Media(#[from] crate::media::GalleryError),
     #[error(transparent)]
     Prepare(#[from] PrepareError),
+    /// The profile update being materialized was reaped by a redaction
+    /// after its leg was recorded. Nothing was staged.
+    #[error("the staged write was reaped by a redaction")]
+    Reaped,
     #[error("internal: {0}")]
     Internal(String),
 }
@@ -263,6 +267,12 @@ pub async fn prepare_profile_update<B: L1Boundary>(
 /// the staged node — the key expiry discards the row by — and one
 /// without it is a fault, not a quiet success, for the reason
 /// `content::stage_pending` gives.
+///
+/// The row is built from bytes loaded before the leg was recorded, so
+/// the transaction first takes the staged row's share lock and refuses a
+/// write a redaction has reaped since as [`ProfileError::Reaped`]
+/// (`staged::lock_unreaped`). An account deletion takes the staged row
+/// before it blanks the profile rows, so the two lock in the same order.
 pub async fn stage_pending(
     pool: &PgPool,
     write: &staged::StagedWrite,
@@ -283,6 +293,11 @@ pub async fn stage_pending(
         .begin()
         .await
         .map_err(|e| ProfileError::Internal(e.to_string()))?;
+    match staged::lock_unreaped(&mut tx, write.id).await {
+        Ok(()) => {}
+        Err(staged::StagedError::Reaped(_)) => return Err(ProfileError::Reaped),
+        Err(e) => return Err(e.into()),
+    }
     profile::insert_profile_version(
         &mut tx,
         write.actor_id,
