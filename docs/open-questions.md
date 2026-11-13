@@ -35,6 +35,8 @@ within a phase, order is flexible.
 | 6. If Layer 1 cannot land a batch whole | 1 | **Q57** | Batch atomicity — how the seals' land-together guarantee holds if Layer 1 never backs it, without breaking the mirror. Deferred: the product builds to the guarantee. |
 | 7. At the L1 swap | 3 | **Q56, Q58, Q61** | What the seam exposes of the burn realization (its computational inputs and audit evidence); the write rule's second gate on the surface — whether a W2a stamp-wall refusal needs its own reading once real stamps exist (on the stand-in W2a cannot fire, so one `WRITE_RULE_FAILED` reads the solvency words); and who in CoGra is the deployment that publishes the marker policy, with which finality-breach response. Deferred to the swap. |
 | 8. When everyone can tag anything | 1 | **Q59** | Semi-passable Types — whether a path may cross a Type along tag edges whose author the viewer reaches, at viewer-to-tagger strength. The sinks invariant stands until open tagging makes a topic's crowd worth routing through; stored so the option is not lost. |
+| 9. When a second party writes to Layer 1 | 1 | **Q63** | The payload mark of an act CoGra does not carry — a CoGra actor writing through a third-party Layer 2. It reads unmarked until then. |
+| — Parked | 1 | **Q62** | An authenticated carriage receipt beside the seal. None is issued now. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -166,16 +168,22 @@ is easier to hit than on Android.
 
 ### The question
 
-A device holding the same restored actor key could instead verify
-the served act's embedded pre-signature under its own public key
-(recomputing the pre-commitment message from the served body,
-nonce, and payload) and approve — cryptographically sound, since
-a valid pre-signature proves a holder of this key signed exactly
-that body. It widens the trust posture from "what THIS device
-signed" to "what SOME holder of this key signed", so it is a
-deliberate design change, not an implementation shortcut. The
-whole interim handshake is stand-in-scoped (Q30); decide only if
-the wait proves painful before the substrate swap.
+A device holding the same restored actor key can verify the served
+act's pre-signature over its pre-commitment under its own public
+key: a valid pre-signature proves a holder of this key signed
+exactly that pre-commitment. The served act carries neither nonce,
+so that device can neither recompute the pre-commitment from the
+body, payload and dependency list nor check the content commitment —
+the first needs both the content and the dependency nonce, the
+second the content nonce. The content nonce sits only on the
+pre-signing device and in the API's staged write; the dependency
+nonce is also held by the host. Approving from a second device
+therefore needs both nonces to reach it, and it
+widens the trust posture from "what THIS device signed" to "what
+SOME holder of this key signed", so it is a deliberate design
+change, not an implementation shortcut. The whole interim handshake
+is stand-in-scoped (Q30); decide only if the wait proves painful
+before the substrate swap.
 
 ---
 
@@ -770,3 +778,65 @@ stand-in has no burn realization behind it
 
 Q56 (what the seam exposes of the realization); Q58 (the other
 deferred swap question).
+
+## Q62 — An authenticated carriage receipt
+
+**Where it shows up:**
+[layer1-interface.md §8.2](primitive/layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake)
+("Verified act": the seal does not attest carriage),
+[data-model.md "Act payload carriage"](implementation/data-model.md#act-payload-carriage)
+**Status:** open (parked — no carriage receipt is issued now; jakob,
+2026-11-13)
+
+### Context
+
+The host's seal attests receipt, pre-commitment verification,
+formation validity and salt addition; it does not attest carriage of
+the content pair. Where carriage matters to the actor, the interface
+has the layer that accepts it return an authenticated carriage result
+separate from the seal, in a form the deployment chooses. CoGra's API
+carries the content pair of every act it relays: it runs the carriage
+checks before anything reaches the host and refuses a failing pair as
+`BAD_INPUT`. It issues no separate authenticated carriage result.
+
+### The question
+
+Does CoGra return an authenticated carriage result to the author
+beside the seal — and if so, in what form?
+
+### Related
+
+Q63 (the payload mark of an act CoGra does not carry).
+
+## Q63 — The payload mark of an act CoGra does not carry
+
+**Where it shows up:**
+[data-model.md "Act payload carriage"](implementation/data-model.md#act-payload-carriage)
+(the payload mark),
+[api-spec.md "The record"](implementation/api-spec.md#the-record) (`Record.payloadMarked`)
+**Status:** open (deferred — until a second party writes to Layer 1;
+jakob, 2026-11-13)
+
+### Context
+
+The payload mark is CoGra's, derived from its own carriage: a record
+is payload-marked exactly when its act has a carriage row, full or
+reduced. Layer 1 publishes no mark. CoGra runs centralized append
+with decentralized carriage, and its API never relays an act whose
+content pair fails a carriage check, so every act the API relays
+with a non-empty payload is carried and marked. An act whose payload
+CoGra does not carry — a CoGra actor writing through a third-party
+Layer 2 — has no carriage row and reads unmarked today, so the folds
+that read payload-marked records individually (ballots, edits,
+membership records —
+[substrate.md §9](primitive/substrate.md#9-node-values-and-updates))
+do not read it as one.
+
+### The question
+
+How does CoGra read an act whose payload it does not carry? This is
+decided only once a second party writes to Layer 1.
+
+### Related
+
+Q62 (an authenticated carriage receipt).
