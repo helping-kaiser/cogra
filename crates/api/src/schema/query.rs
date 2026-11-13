@@ -20,11 +20,11 @@ use super::ranked_search::{self, ReadOrder};
 use super::types::{
     Actor, AskLinkCheck, CommentType, DEFAULT_PAGE_SIZE, EmailChangeLinkCheck,
     EmailChangeLinkState, HashtagType, InviteLinkCheck, KeysetConnection, MediaAttachmentType,
-    Node, NodeKind, PasswordResetLinkCheck, PostType, Record, RecordConnection, RecordFamily, RecordId, ReferenceCandidate,
-    ReferenceTarget, SearchConnection, SearchConnectionFields, SearchEdgeFields, SearchResult,
-    StagedWriteType, User, borrowed_vantage, connection_cost, content_cursor, content_cursor_key,
-    keyset_connection, keyset_page, list_cost, list_limit, record_connection,
-    resolve_reference_target, validate_page_args, viewer_address,
+    Node, NodeKind, PasswordResetLinkCheck, PostType, Record, RecordConnection, RecordFamily,
+    RecordId, ReferenceCandidate, ReferenceTarget, SearchConnection, SearchConnectionFields,
+    SearchEdgeFields, SearchResult, StagedWriteType, User, borrowed_vantage, connection_cost,
+    content_cursor, content_cursor_key, keyset_connection, keyset_page, list_cost, list_limit,
+    record_connection, resolve_reference_target, validate_page_args, viewer_address,
 };
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
@@ -160,14 +160,8 @@ impl Query {
         )
     }
 
-    /// Anonymous check of a password-reset link, so the app opens the
-    /// expired-link screen rather than a form that can only fail. True
-    /// while the link is live — the token known, unused and unexpired —
-    /// the predicate `confirmPasswordReset` consumes it under.
-    /// It reads and never writes: nothing is consumed. Unknown, malformed,
-    /// used and expired all answer false alike, and the answer carries
-    /// nothing about the account the link belongs to. Spends the per-IP
-    /// token-confirmation budget, a tripped one answering RATE_LIMITED.
+    /// The Boolean form of `passwordResetLink`: true exactly where that
+    /// is non-null, carrying nothing about the account. Same budget.
     #[graphql(deprecation = "Use `passwordResetLink`, null exactly where this answers false.")]
     async fn password_reset_link_check(
         &self,
