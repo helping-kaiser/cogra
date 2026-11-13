@@ -297,7 +297,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="How the filter works"', tag: "button" },
     { n: 2, find: 'role="switch"', tag: "button", all: true },
     { n: 3, find: "aria-pressed=", tag: "button", all: true },
-    { n: 4, find: "already seen", tag: "label" },
+    // No 4: search carries no seen toggle (round 44, seam 296).
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 6, find: ">Done</button>", tag: "button" },
     { n: 7, find: ">Reset</button>", tag: "button" },
@@ -921,9 +921,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
-    { n: 4, find: ">Tall 4:5</button>", tag: "button" },
-    { n: 4, find: ">Square 1:1</button>", tag: "button" },
-    { n: 4, find: ">Wide 1.91:1</button>", tag: "button" },
+    // The `shape` chip draws the chips once per value (round 44): every copy.
+    { n: 4, find: ">Tall 4:5</button>", tag: "button", all: true },
+    { n: 4, find: ">Square 1:1</button>", tag: "button", all: true },
+    { n: 4, find: ">Wide 1.91:1</button>", tag: "button", all: true },
     { n: 5, find: "transform:scale(1.15)", tag: "div" },
     { n: 6, find: "position:relative;width:48px", tag: "div", all: true },
     { n: 7, find: 'data-field="Zoom"', tag: "div" },
@@ -1211,19 +1212,26 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Leave — the edit is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
     { n: 4, find: 'data-field="Words"', tag: "div" },
-    { n: 5, find: 'aria-label="Remove this video"', tag: "button" },
-    { n: 6, find: ">Describe the video</button>", tag: "button" },
+    // The `clip` chip draws the clip's tile and its describe row once per value (round 44).
+    { n: 5, find: 'aria-label="Remove this video"', tag: "button", all: true },
+    { n: 6, find: ">Describe the video</button>", tag: "button", all: true },
     { n: 7, find: ">Change the cover</button>", tag: "button" },
     { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
     { n: 9, find: "+ Add a tag", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
     // Both `upload` copies count alike: a new face rides the Edit record (seam 248).
     { n: 11, find: "signing 3 things", tag: "button", all: true },
-    { n: 12, find: ">Sign the edit</button>", tag: "button" },
+    // At rest, and disabled under the `clip` chip's failed copy.
+    { n: 12, find: ">Sign the edit</button>", tag: "button", all: true },
     { n: 12, find: ">Signing the edit…</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
     // The withdrawn tag's Undo (the readme's edit-withdrawal law), as on CommentEdit.
     { n: 15, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
+    // The `clip` chip's picked clip (round 44, seam 295-3): the cover door,
+    // and the failure's and the refusal's ways out in their copies.
+    { n: 16, find: ">Add a cover</button>", tag: "button" },
+    { n: 17, find: ">Retry</button>", tag: "button", all: true },
+    { n: 18, find: ">Remove it</button>", tag: "button", all: true },
   ],
   EditComposeVideo: [
     { n: 14, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },

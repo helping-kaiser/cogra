@@ -4,6 +4,22 @@ ALWAYS the comment's clip is never swapped in an edit
 
 WHEN tap the clip's remove control -> the clip leaves whole, taking the comment's media with it AND the comment is its words
 
+WHEN a video is picked at the edit GIVEN the comment holds words alone on the edit's own state -> the clip takes the Video row AND starts uploading at once AND the cover row reads Add a cover with no picture AND NEVER a crop step opens
+
+WHEN a clip is picked at the edit -> the clip rides the edit's own record, staged once AND NEVER a record of the clip's own is staged
+
+ALWAYS the line Uploading N of M — signing waits for the video. stands above the acts footer GIVEN the clip picked in the edit is uploading
+
+WHEN tap Add a cover GIVEN the clip was picked in the edit -> the platform's own picker opens AND NEVER the clip's frames are offered
+
+WHEN the clip picked in the edit fails to upload -> its thumbnail is marked AND the line That video didn't upload. stands under it with Retry and Remove it AND the gate line reads The video didn't upload. Signing waits for it. followed by Retry AND Sign the edit is disabled
+
+WHEN press Retry GIVEN the clip picked in the edit failed -> the clip's upload tries again AND the gate runs again
+
+WHEN press Remove it under the failed clip -> the clip leaves the batch AND the comment is its words again AND the gate line goes AND Sign the edit is enabled
+
+WHEN a second video is picked GIVEN the edit holds a clip -> the second is refused under the Video row with A comment carries one video. and Remove it alone AND NEVER the second replaces the first
+
 WHEN tap the × of a tag the comment already carries -> the withdrawal of that tag is staged in the batch AND the chip leaves the row for the line Withdrawn: under the tags AND the footer counts one more AND NEVER a dialog asks
 
 WHEN tap the × of a tag picked in this same edit -> the pick is unstaged AND the chip leaves the row AND the footer counts one fewer AND NEVER a withdrawal is staged AND NEVER a dialog asks

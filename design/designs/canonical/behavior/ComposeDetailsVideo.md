@@ -34,4 +34,4 @@ WHEN press the header back arrow GIVEN the clip skipped the cover step -> the pi
 
 WHEN press the header back arrow GIVEN the clip came through the cover step -> the cover step comes back with its choice
 
-WHEN press the header X -> the whole flow is left AND the draft is kept AND NEVER a dialog asks
+WHEN press the header X -> the whole flow is left for where the composer was opened from AND the draft is kept AND NEVER a dialog asks

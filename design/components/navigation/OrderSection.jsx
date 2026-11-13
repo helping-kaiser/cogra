@@ -15,6 +15,11 @@ import { Checkbox } from "../forms/Checkbox.jsx";
    call): what you've seen stays out until you ask for it back, so the box
    arrives unticked and "showing seen" is the deviation the trigger speaks.
 
+   SEARCH CARRIES NO SEEN TOGGLE (jakob 2026-11-11, seam 296: "search should
+   not care about seen or unseen at all"). The seen list is the feed's and
+   History's; search reaches every node, so its sheet takes this section with
+   `seenToggle={false}` — the order alone.
+
    ONE SECTION CHROME. `FilterSection` is the sheet-section shape every filter
    sheet uses — label, an optional hint in the secondary colour, then the
    controls. The feed's sheet and the search sheet had each drawn their own;
@@ -41,13 +46,15 @@ export function FilterSection({ label, hint, children, node }) {
   );
 }
 
-export function OrderSection({ order = "ranked", onOrder, seen = false, onSeen, node }) {
+export function OrderSection({ order = "ranked", onOrder, seen = false, onSeen, seenToggle = true, node }) {
   return (
     <FilterSection label="Order" hint="Ranked puts what's closest to you first — your view, no one else's. Newest ignores it and lists by time." node={node}>
       <SegmentedFilter ariaLabel="Order" options={FILTER_ORDER} value={order} onChange={onOrder} node={node && "picker"} />
-      <div style={{ flexBasis: "100%" }}>
-        <Checkbox label="Show what you've already seen" checked={seen} onChange={onSeen} node={node && "seen"} />
-      </div>
+      {seenToggle && (
+        <div style={{ flexBasis: "100%" }}>
+          <Checkbox label="Show what you've already seen" checked={seen} onChange={onSeen} node={node && "seen"} />
+        </div>
+      )}
     </FilterSection>
   );
 }

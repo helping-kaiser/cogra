@@ -1,4 +1,4 @@
-The crop step's surface: the picture, the window it will be cut to, and the darkened remainder.
+The crop step's surface: a fixed frame (the window it will be cut to), the picture moving and zooming under it, and the darkened remainder. The frame never moves and the stage never changes size; the picture does all the moving.
 
 ```jsx
 <CropViewport src="portrait.jpg" shape="circle" scale={1.2} origin="50% 35%"/>
@@ -11,4 +11,4 @@ The crop step's surface: the picture, the window it will be cut to, and the dark
 
 `scale` and `origin` are the picture's zoom and position under the window — what pinching and dragging would change on a live surface. A frame cut from the clip needs no crop at all: it already carries the clip's shape, so only a picture of your own is ever asked to fit.
 
-The step's words live outside the viewport: "Drag to move, pinch to zoom." and then the line that says what the crop is for.
+No line says how to move the picture (round 44); a crop's own words, where it has any, stand under the zoom ("One shape for the whole post." on the post crop).

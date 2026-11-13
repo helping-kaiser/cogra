@@ -13,13 +13,19 @@
    pager's square in a comment. There are no shape chips: choosing a shape
    here would let the cover disagree with the thing it is the face of.
 
-   THE ZOOM IS ON SCREEN (the K13 round): `CropZoom` under the window, its
+   ONE CROP MODEL (jakob 2026-11-11, seam 301): the frame is FIXED at the
+   video's shape and the PICTURE moves (drag) and zooms (pinch, or the zoom
+   track) under it, in the 390 × 390 stage every locked crop shares. The frame
+   takes the stage's width less the 24 gutters, centred: the drawn 16:9 clip's
+   342 × 192 at top 99, the comment's square 342 × 342 at top 24. Its shape is
+   the video's, not the author's, because the cover is that video's face — so
+   no line says so, and no chip offers another (round 44, the removable-text
+   pass: the how-to and the shape lines go).
+
+   THE ZOOM IS ON SCREEN (the K13 round): `CropZoom` under the stage, its
    thumb at this crop's 1.15× between the fill (1×) and about 4×, on both
-   platforms; the focused window pans with the arrow keys (`CropViewport`),
-   1 % a press, 10 % with Shift (jakob 2026-10-05). On a device with no touch
-   to pinch the first line reads `Drag or use the arrow keys to move, the
-   slider to zoom.` (new, flagged for blessing; copy-voice, *The crops' how-to
-   line*).
+   platforms; the focused stage moves the picture with the arrow keys
+   (`CropViewport`), 1 % a press, 10 % with Shift (jakob 2026-10-05).
 
    THE X SAYS WHAT LEAVING KEEPS, BY ENTRANCE (copy-voice, *The wizard's two
    ends*). The board draws the post's entrance, `Leave — your draft is kept`;
@@ -28,8 +34,8 @@
    that opened the crop, asking first where that flow's X asks.
 
    REGISTERED under its own `coverCrop` prefix (seam 248): `header`, the
-   `viewport`, the `zoom` slider, the `howTo` line, the `shapeNote` and
-   `next` — the step every flow that crops a cover shares. */
+   `viewport`, the `zoom` slider and `next` — the step every flow that crops
+   a cover shares. */
 export const NODE = "coverCrop";
 export function Screen() {
   return (
@@ -38,8 +44,6 @@ export function Screen() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 16px", overflow: "hidden" }}>
         <CropViewport src="gallery-market.jpg" shape="rect" height={192} scale={1.15} origin="50% 45%" node="viewport" />
         <CropZoom scale={1.15} node="zoom" />
-        <QuietNote node="howTo">Drag to move, pinch to zoom.</QuietNote>
-        <QuietNote node="shapeNote">The cover takes the video's shape.</QuietNote>
         <div style={{ flex: 1 }} />
         <Button style={{ width: "100%" }} node="next">Next</Button>
       </div>
