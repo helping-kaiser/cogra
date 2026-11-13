@@ -9,7 +9,7 @@ use api::prepare::{self, Gesture, PrepareError};
 use api::relay::{self, RelayError};
 use common::l1::Family;
 use common::l1::client::ActorKey;
-use common::l1::identifier::NodeId;
+use common::l1::identifier::{ActId, NodeId};
 use common::l1::proposal::PreSigned;
 use l1_standin::{StandIn, StandInConfig};
 use postgres_store::staged::{self, PreSignedParts, StagedState};
@@ -228,6 +228,62 @@ async fn prepare_refuses_a_malformed_gesture_before_staging(pool: PgPool) {
         .await
         .expect("count");
     assert_eq!(staged_count, 0);
+}
+
+/// A gesture naming the act prepare is about to allocate as its own
+/// dependency is refused before staging, as the host would refuse it at
+/// seal; a refused prepare rolls its sequence value back, so the next
+/// value is still 0.
+///
+/// A gesture declaring its own act as a dependency is refused at prepare, before anything is staged.
+/// ´claim:relay:a-self-dependency-is-refused-before-staging´
+#[sqlx::test(migrations = "../../migrations")]
+async fn prepare_refuses_a_self_dependency_before_staging(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor_id, key) = rig.funded_actor("alice").await;
+    let mut gesture = rig.registration(&key);
+    gesture.deps = vec![ActId::new(&key.address(), 0, Family::Registration).expect("act")];
+    assert!(matches!(
+        prepare::prepare(&rig.boundary, &rig.pool, GC, actor_id, gesture).await,
+        Err(PrepareError::Formation(_))
+    ));
+    let staged_count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM staged_writes")
+        .fetch_one(&rig.pool)
+        .await
+        .expect("count");
+    assert_eq!(staged_count, 0);
+}
+
+/// Prepare is the one point a gesture's dependency list enters the
+/// proposal, so a list handed in reversed and with a repeat comes out
+/// canonical — in what prepare returns and in what the device is later
+/// served from the staged row — and the host seals it.
+///
+/// Prepare forms the dependency list in canonical order before the device ever sees it, and the host seals it.
+/// ´claim:relay:prepare-forms-the-canonical-dependency-list´
+#[sqlx::test(migrations = "../../migrations")]
+async fn prepare_forms_the_canonical_dependency_list(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor_id, key) = rig.funded_actor("alice").await;
+    let id = |s: &str| ActId::parse(s).expect("act");
+    let (ten, nine, bob) = (
+        id("act:elsewhere:10:opinion"),
+        id("act:elsewhere:9:opinion"),
+        id("act:other:0:opinion"),
+    );
+    let mut gesture = rig.registration(&key);
+    gesture.deps = vec![bob.clone(), nine.clone(), bob.clone(), ten.clone()];
+    let prepared = prepare::prepare(&rig.boundary, &rig.pool, GC, actor_id, gesture)
+        .await
+        .expect("prepares");
+    let canonical = vec![ten, nine, bob];
+    assert_eq!(prepared.proposal.deps, canonical);
+    let stored = staged::load(&rig.pool, prepared.id).await.expect("loads");
+    assert_eq!(stored.proposal.deps, canonical);
+    let pre = PreSigned::sign(&key, stored.proposal);
+    relay::submit_pre_signed(&rig.boundary, &rig.pool, prepared.id, PreSignedParts::from(&pre))
+        .await
+        .expect("the host seals the canonical list");
 }
 
 /// An author with no burn has b_i = 0 < θ. That is a normal, visible
