@@ -759,8 +759,11 @@ describe("the compose wizard", () => {
     fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "words" } });
     fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
 
-    expect(await screen.findByTestId(byNode("composeDetails.references.stagedReference", "1"))).toHaveTextContent(
-      "@carol: On folding",
+    // The row stands at once; its label is resolved by the lookup's answer.
+    await waitFor(() =>
+      expect(screen.getByTestId(byNode("composeDetails.references.stagedReference", "1"))).toHaveTextContent(
+        "@carol: On folding",
+      ),
     );
   });
 

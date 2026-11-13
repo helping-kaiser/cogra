@@ -756,7 +756,7 @@ describe("picking a video", () => {
       await screen.findByTestId(byNode("composeDetails.title.input"));
       // The still lands once the store's coalescing window has written it:
       // waited for, not slept on.
-      await waitFor(async () => expect((await drafts.load())?.autoCover).not.toBeNull(), { timeout: 3000 });
+      await waitFor(async () => expect((await drafts.load())?.autoCover?.file).toBe(FRAME_ZERO), { timeout: 3000 });
 
       const saved = await drafts.load();
       // The door's own state is untouched: nothing was CHOSEN.
@@ -935,7 +935,7 @@ describe("a vertical clip", () => {
     fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
     await screen.findByTestId(byNode("composeDetails.title.input"));
     // The still lands once the store's coalescing window has written it.
-    await waitFor(async () => expect((await drafts.load())?.autoCover).not.toBeNull(), { timeout: 3000 });
+    await waitFor(async () => expect((await drafts.load())?.autoCover?.file).toBe(FRAME_ZERO), { timeout: 3000 });
 
     const saved = await drafts.load();
     expect(saved?.cover).toBeNull();
