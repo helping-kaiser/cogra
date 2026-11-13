@@ -84,7 +84,8 @@ describe("every stage and frame at the board's 390", () => {
   });
 
   it("keeps the proportions on a wider column (the harness's 412)", () => {
-    expect(stageOf("post", 412).height).toBeCloseTo(515.49, 2);
+    // 412 · 488 / 390.
+    expect(stageOf("post", 412).height).toBeCloseTo(515.528, 3);
     expect(frameOf("post", ratio.square, 412)).toMatchObject({ width: 412, height: 412 });
     expect(frameOf("cover", 1, 412)).toMatchObject({ width: 364, height: 364, left: 24 });
   });

@@ -47,7 +47,7 @@
 // `initialCroppedAreaPixels`, whose rounding the README warns "may result in a
 // slight drifting crop/zoom".
 
-import { useCallback, useEffect, useMemo, useRef, useState, type Ref } from "react";
+import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from "react";
 import Cropper, { type Area, type MediaSize, type Point } from "react-easy-crop";
 
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
@@ -168,13 +168,11 @@ export function CropFrame({
   // it. The ref is the host's too (`viewportRef`).
   const [stage, setStage] = useState<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(0);
-  const holdStage = useCallback(
-    (element: HTMLDivElement | null) => {
-      setStage(element);
-      if (typeof viewportRef === "function") viewportRef(element);
-      else if (viewportRef) viewportRef.current = element;
-    },
-    [viewportRef],
+  // The host's ref is handed the same element (React: `useImperativeHandle`).
+  useImperativeHandle<HTMLDivElement | null, HTMLDivElement | null>(
+    viewportRef as Ref<HTMLDivElement | null> | undefined,
+    () => stage,
+    [stage],
   );
   useMeasureEffect(() => {
     if (stage === null) return;
@@ -287,7 +285,7 @@ export function CropFrame({
       {/* No `w-full`: an auto width plus the negative margins is what makes the
           stage the column's width PLUS its padding. */}
       <div
-        ref={holdStage}
+        ref={setStage}
         {...testAttributes(part(node, "viewport"), testId)}
         style={{ aspectRatio: `${board.width} / ${board.height}` }}
         className="relative -mx-6 flex-none overflow-hidden bg-surface-container-high"
