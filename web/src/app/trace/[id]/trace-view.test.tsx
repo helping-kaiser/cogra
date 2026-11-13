@@ -472,7 +472,7 @@ describe("RankHop.md — one step", () => {
   it("the_steps_value_is_the_fold_of_its_records — said in the reader's own word", async () => {
     render(ownAnswer(), { level });
     expect(await screen.findByTestId(byNode("feedEntry.foldNote"))).toHaveTextContent(
-      "You have given @ada two opinions. They add up to one, and that one is what carries — the same adding up the pad shows you as your current opinion.",
+      /^You have given @ada two opinions. They add up to one, and that one is what carries.$/,
     );
   });
 

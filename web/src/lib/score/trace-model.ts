@@ -493,9 +493,8 @@ export function placeNote(title: string, place: number, steps: number): string {
 }
 
 /**
- * The fold's note (RankHop.md:9-13): the reader's own word with the pad's
- * clause, or the giver's handle without it, closing on the limit when the
- * records pass it.
+ * The fold's note (RankHop.md:9-13): the reader's own word or the giver's
+ * handle, closing on the limit when the records pass it.
  */
 export function foldNote(path: TracePath, step: TraceStep, context: TraceContext): string {
   const giver = giverOf(step, path, context);
@@ -503,11 +502,10 @@ export function foldNote(path: TracePath, step: TraceStep, context: TraceContext
   const object = thingName(path, step.to, context);
   const n = carryingHop(step).records.length;
   const given = own ? `You have given ${object}` : `${subject(giver)} has given ${object}`;
-  const pad = own ? " — the same adding up the pad shows you as your current opinion" : "";
   const body =
     n === 1
-      ? `${given} one opinion, and that one is what carries${pad}.`
-      : `${given} ${countWord(n)} opinions. They add up to one, and that one is what carries${pad}.`;
+      ? `${given} one opinion, and that one is what carries.`
+      : `${given} ${countWord(n)} opinions. They add up to one, and that one is what carries.`;
   return memberSum(path, step).clipped ? `${body} ${CLIPPED_FOLD}` : body;
 }
 
