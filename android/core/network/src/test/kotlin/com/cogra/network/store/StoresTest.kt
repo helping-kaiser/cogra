@@ -215,6 +215,18 @@ class StoresTest {
         }
     }
 
+    /** Runs [beforeNextEdit] once, just before the next edit reaches the store. */
+    private class InterleavingDataStore(val inner: DataStore<Preferences>) : DataStore<Preferences> {
+        var beforeNextEdit: (suspend () -> Unit)? = null
+
+        override val data: Flow<Preferences> get() = inner.data
+
+        override suspend fun updateData(transform: suspend (t: Preferences) -> Preferences): Preferences {
+            beforeNextEdit?.also { beforeNextEdit = null }?.invoke()
+            return inner.updateData(transform)
+        }
+    }
+
     /** Signs in, then gives the account a seed, a blob, handshakes, flags and a draft. */
     private suspend fun seedCustody(encrypted: EncryptedStore, account: String): Stores {
         val stores = Stores(encrypted)
@@ -723,6 +735,31 @@ class StoresTest {
         assertThat(encrypted.get("acct:u1:handshake:w1")).isNull()
         assertThat(stores.identity.handshakeIds()).isEmpty()
         assertThat(StorageHealthImpl(dataStore).storageLost.first()).isFalse()
+    }
+
+    // Another pass saves fresh material for the same id after this read saw
+    // the one-nonce record and before its removal: the removal re-checks in
+    // its own transaction, so the fresh record survives.
+    @Test
+    fun aRecordSavedBetweenTheReadAndTheRemovalSurvivesIt() = runTest {
+        val file = File(tmp.newFolder(), "test.preferences_pb")
+        val interleaving = InterleavingDataStore(PreferenceDataStoreFactory.create(scope = scope) { file })
+        val encrypted = EncryptedStore(interleaving, FakeCipher())
+        val stores = Stores(encrypted)
+        stores.signIn("u1")
+        val actor = ActorKey.generate()
+        val fresh = actor.preSign(decodeProposal(proposalOf(actor)))
+        stores.identity.saveHandshake("staging", fresh)
+        val freshBytes = checkNotNull(encrypted.get("acct:u1:handshake:staging"))
+        encrypted.put("acct:u1:handshake:w1", oneNonceRecord(actor))
+
+        val otherPass = EncryptedStore(interleaving.inner, FakeCipher())
+        interleaving.beforeNextEdit = { otherPass.put("acct:u1:handshake:w1", freshBytes) }
+        assertThat(stores.identity.handshake("w1")).isNull()
+
+        assertThat(interleaving.beforeNextEdit).isNull()
+        assertThat(stores.identity.handshake("w1")).isEqualTo(fresh)
+        assertThat(StorageHealthImpl(interleaving.inner).storageLost.first()).isFalse()
     }
 
     // Listed before anything reads it, the record is still never counted:

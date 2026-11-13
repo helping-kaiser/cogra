@@ -60,6 +60,10 @@ private fun isOneNonceRecord(text: String): Boolean = try {
     false
 }
 
+/** Whether [name] holds a one-nonce record as this transaction sees it. */
+private fun EncryptedStore.Editor.holdsOneNonceRecord(name: String): Boolean =
+    get(name)?.let { isOneNonceRecord(it.decodeToString()) } == true
+
 private val json = Json
 
 private fun b64(bytes: ByteArray): String = Base64.getEncoder().encodeToString(bytes)
@@ -192,7 +196,7 @@ class IdentityStoreImpl @Inject constructor(
                     preSignature = unb64(stored.preSignature),
                 )
             } catch (_: SerializationException) {
-                if (isOneNonceRecord(text)) store.remove(name) else store.markStorageLost()
+                if (isOneNonceRecord(text)) removeIfOneNonce(name) else store.markStorageLost()
                 null
             } catch (_: WireException) {
                 store.markStorageLost()
@@ -238,9 +242,18 @@ class IdentityStoreImpl @Inject constructor(
     private suspend fun dropOneNonceRecords(prefix: String) {
         store.edit {
             for (name in names(prefix)) {
-                if (get(name)?.let { isOneNonceRecord(it.decodeToString()) } == true) remove(name)
+                if (holdsOneNonceRecord(name)) remove(name)
             }
         }
+    }
+
+    /**
+     * Removes [name] only if it still holds a one-nonce record: re-checked
+     * and removed in one transaction, so a record another pass saved since
+     * the read is never the one removed.
+     */
+    private suspend fun removeIfOneNonce(name: String) {
+        store.edit { if (holdsOneNonceRecord(name)) remove(name) }
     }
 
     // No adoption: carried expectations arrived after multi-account custody,
