@@ -320,7 +320,8 @@ content nonce and the dependency nonce are each 32 bytes
 (`crypto::SALT_LEN`), the content nonce differs from the dependency
 nonce, the payload is within M_payload, and the content nonce is not
 one its author already used for another act. A failure refuses the
-write as `BAD_INPUT`, with nothing recorded and nothing relayed. The
+write as `BAD_INPUT`: the pre-commitment is not recorded and
+nothing is relayed. The
 stand-in applies no nonce policy of its own. Non-reuse is held in
 `content_nonce_digests`: SHA-256 over a tag, the author's address
 and the nonce, reserved for the act it was first used for, so the

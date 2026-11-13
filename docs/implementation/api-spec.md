@@ -3749,14 +3749,14 @@ extend type Mutation {
    per proposal. When the seal returns synchronously the payload's
    staged writes are already AWAITING_APPROVAL, verified act
    included; otherwise observe via stagedWrite. Resubmitting a
-   sealed proposal is idempotent only for the exact signature that
-   was sealed; differing bytes refuse as BAD_INPUT. The API carries
-   the content pair, so it checks the pair before relaying anything:
-   a content nonce or dependency nonce of the wrong length, a
-   content nonce equal to the dependency nonce or already used for
-   another of the author's acts, or a payload past M_payload refuses
-   as BAD_INPUT, with nothing sent to L1 and nothing recorded; the
-   device re-signs under fresh nonces. A carried write
+   proposal already submitted is idempotent only for the exact
+   signature first submitted; differing bytes refuse as BAD_INPUT.
+   The API carries the content pair, so it checks the pair before
+   relaying anything: a content nonce or dependency nonce of the
+   wrong length, a content nonce equal to the dependency nonce or
+   already used for another of the author's acts, or a payload past
+   M_payload refuses the write as BAD_INPUT. Nothing is sent to L1
+   and the pre-commitment is not recorded. A carried write
    the landing released signs only once every asset it names is
    published to the live store; the submit runs that move, and one
    whose move has not landed refuses as CARRIED_MEDIA_UNPUBLISHED —

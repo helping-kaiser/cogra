@@ -31,8 +31,8 @@ pub enum RelayError {
     /// The content pair failed a carriage check (layer1-interface.md
     /// §8.2, "Entropy custody" and "Verified act"): CoGra carries the
     /// pair, and never relays an act whose pair it cannot carry. Refused
-    /// before anything reached the host — no act was formed and nothing
-    /// was recorded — so the device re-signs under fresh nonces.
+    /// as `BAD_INPUT` before anything reached the host: no act was formed
+    /// and the pre-commitment was not recorded.
     #[error("carriage refused: {0}")]
     Carriage(String),
     /// The staged write lost its sealed act — a relay crash between seal
