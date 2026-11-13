@@ -71,7 +71,7 @@ import {
   sensitiveSignature,
 } from "@/lib/ui/post-media";
 import { withRemoval, type Removal } from "@/lib/api/removal-api";
-import { REMOVED_COMMENT_NOTE, RemovedPlaceholder } from "@/lib/ui2/media/removed-placeholder";
+import { RemovedPlaceholder } from "@/lib/ui2/media/removed-placeholder";
 import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
 import { shortTimestamp } from "@/lib/ui/timestamp";
 import { TopicsLine } from "@/lib/ui/topics-line";
@@ -876,13 +876,12 @@ export function CommentsSheet({
             </div>
           </div>
           {/* THE MARK IN THE WORDS' PLACE (`CommentsThreadSheet removed`): the
-              author's mark, its second line naming the comment, dated by the
-              removal's own moment. */}
+              author's mark line, dated by the removal's own moment, with no
+              detail sentence (seam 314). */}
           {removed ? (
             <RemovedPlaceholder
               reason={removalReason(comment)}
               when={removalWhen(comment)}
-              note={removalReason(comment) === "author" ? REMOVED_COMMENT_NOTE : undefined}
               testId={`comment-${comment.id}-removed`}
               node={part(card, "removalMark")}
             />
