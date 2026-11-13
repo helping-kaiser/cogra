@@ -2342,10 +2342,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Already have an account? Sign in</button>", tag: "button" },
     { n: 5, find: ">Just looking? Browse the feed", tag: "button" },
   ],
+  // The `request` chip's `sent` copy (round 48) carries the same field and commit.
   Reset: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'data-field="Email"', tag: "div" },
-    { n: 3, find: ">Send reset link</button>", tag: "button" },
+    { n: 2, find: 'data-field="Email"', tag: "div", all: true },
+    { n: 3, find: ">Send reset link</button>", tag: "button", all: true },
   ],
   // No back arrow: a mail link has no previous screen of ours behind it.
   ResetNew: [
@@ -2353,6 +2354,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Show password"', tag: "button", all: true },
     { n: 3, find: ">Set the new password</button>", tag: "button" },
     { n: 4, find: 'data-field="Repeat password"', tag: "div" },
+    // The `link` chip's fault and budget copies (round 48): one Retry.
+    { n: 5, find: ">Retry</button>", tag: "button", all: true },
   ],
   // Round 46 (seam 316, entry 5): the mismatch in place, `JoinErrors`' way —
   // the base form's numbers.
