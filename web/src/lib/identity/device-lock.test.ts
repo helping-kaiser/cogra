@@ -119,9 +119,9 @@ function world(): World {
   return { idb, identity, drafts, seals, engine, server, active, seenForgotten };
 }
 
-function sampleProposal(): Proposal {
+function sampleProposal(author: string): Proposal {
   const body = new StructuralBody({
-    author: "aa".repeat(20),
+    author,
     seq: 1n,
     family: "registration",
     middle: null,
@@ -149,7 +149,8 @@ async function signedInForget(w: World, opts: { holdLock?: boolean; backed?: boo
   await w.identity.saveActor(seed, !opts.backed);
   await w.identity.setEphemeral(true);
   await w.identity.savePendingBackupBlob(Uint8Array.of(9, 9, 9));
-  const pre = await (await w.identity.actorKey())!.preSign(sampleProposal());
+  const key = (await w.identity.actorKey())!;
+  const pre = await key.preSign(sampleProposal(await key.address()));
   await w.identity.saveHandshake("staged-1", pre);
   await w.seals.seal(words("sealed post"), { node: "node-1", writes: ["write-1"] });
   await w.drafts.save(words("working draft"));

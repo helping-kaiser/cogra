@@ -13,10 +13,16 @@ import { commitment, preDigest, sha256Tagged, Tags, verify, verifyDigest } from 
 import { ActId, FAMILIES, NodeId, parseFamily } from "./identifiers";
 import {
   canonicalDeps,
-  EDITION,
+  CONTENT_EDITION,
+  contentCommitment,
+  contentPreDigest,
+  DEPENDENCY_EDITION,
+  dependencyCommitment,
+  dependencyPreDigest,
   preCommitment,
   preCommitmentMsg,
   Proposal,
+  SealedAct,
   StructuralBody,
   VerifiedAct,
 } from "./handshake";
@@ -28,6 +34,7 @@ import {
   encodePreCommitmentOf,
   encodeProposal,
   encodeVerifiedAct,
+  WireError,
 } from "./wire";
 import {
   KeyBackupError,
@@ -86,32 +93,49 @@ interface Vectors {
     samples: { msgUtf8: string; signatureHex: string; tagUtf8: string }[];
   };
   structuralBodies: BodyVector[];
+  /** The proposal envelope only: the one-nonce handshake fields of this group are not read. */
   handshake: {
+    proposal: { body: BodyVector; deps: string[]; payloadHex: string };
+    wireProposalHex: string;
+  };
+  proposalHandshake: {
     approvalActId: string;
     approvalDigestHex: string;
     approvalSignatureHex: string;
     canonicalDepsHex: string;
     contentCommitmentHex: string;
     contentEdition: number;
+    contentNonceHex: string;
     contentPreDigestHex: string;
     contentSaltHex: string;
-    depsCommitmentHex: string;
-    depsEdition: number;
-    depsPreDigestHex: string;
-    depsSaltHex: string;
+    dependencyCommitmentHex: string;
+    dependencyEdition: number;
+    dependencyNonceHex: string;
+    dependencyPreDigestHex: string;
+    dependencySaltHex: string;
     host: { publicKeyHex: string; seedHex: string };
     hostSealHex: string;
-    nonceHex: string;
     preCommitmentHex: string;
     preCommitmentMsgHex: string;
     preSignatureHex: string;
     proposal: { body: BodyVector; deps: string[]; payloadHex: string };
     sealMsgHex: string;
+    tags: {
+      approvalUtf8: string;
+      contentCommitmentUtf8: string;
+      contentPreDigestUtf8: string;
+      dependencyCommitmentUtf8: string;
+      dependencyPreDigestUtf8: string;
+      hostSealUtf8: string;
+      preCommitmentUtf8: string;
+    };
     wirePreCommitmentHex: string;
-    wireProposalHex: string;
     wireVerifiedActHex: string;
   };
-  handshakeRefusals: { case: string; wireVerifiedActHex: string }[];
+  proposalHandshakeRefusals: (
+    | { case: string; what: "approve"; wireVerifiedActHex: string }
+    | { case: string; what: "decodePreCommitment" | "decodeVerifiedAct"; hex: string; refusal: string }
+  )[];
   keyBackup: {
     aesNonceHex: string;
     blobBase64: string;
@@ -228,94 +252,188 @@ it("structural body vectors match", () => {
   }
 });
 
-/** The handshake fixture's proposal, actor and pre-signed proposal. */
-async function handshakeFixture() {
+it("the prepared-proposal envelope matches", () => {
+  // `canonicalProposal` keeps its one envelope; its vector rides in the
+  // `handshake` group, over the same proposal `proposalHandshake` signs.
   const h = vectors.handshake;
-  const actor = await ActorKey.fromSeed(fromHex(vectors.signing.seedHex));
   const proposal = new Proposal(
     bodyOf(h.proposal.body),
     fromHex(h.proposal.payloadHex),
     h.proposal.deps.map((d) => ActId.parse(d)),
   );
-  const pre = await actor.preSign(proposal, fromHex(h.nonceHex));
-  return { h, actor, proposal, pre };
-}
-
-it("the device reproduces every conformant handshake vector", async () => {
-  const { h, actor, proposal, pre } = await handshakeFixture();
-  expect(toHex(canonicalDeps(proposal.deps))).toBe(h.canonicalDepsHex);
   expect(toHex(encodeProposal(proposal))).toBe(h.wireProposalHex);
   expect(decodeProposal(fromHex(h.wireProposalHex)).equals(proposal)).toBe(true);
+  const p = vectors.proposalHandshake.proposal;
+  expect(p).toEqual(h.proposal);
+});
 
-  const nonce = fromHex(h.nonceHex);
-  const actId = utf8(proposal.body.actId().toString());
-  expect(toHex(await preDigest(Tags.PRE_DIGEST_CONTENT, actId, nonce, proposal.payload))).toBe(
+/** The two-nonce fixture: the proposal, actor, host and pre-signed proposal, from the inputs alone. */
+async function proposalHandshakeFixture() {
+  const h = vectors.proposalHandshake;
+  const actor = await ActorKey.fromSeed(fromHex(vectors.signing.seedHex));
+  const host = await ActorKey.fromSeed(fromHex(h.host.seedHex));
+  const proposal = new Proposal(
+    bodyOf(h.proposal.body),
+    fromHex(h.proposal.payloadHex),
+    h.proposal.deps.map((d) => ActId.parse(d)),
+  );
+  const pre = await actor.preSign(proposal, fromHex(h.contentNonceHex), fromHex(h.dependencyNonceHex));
+  return { h, actor, host, proposal, pre };
+}
+
+it("the two-nonce handshake tags are the reference's", () => {
+  const t = vectors.proposalHandshake.tags;
+  expect(Tags.PRE_DIGEST_CONTENT).toBe(t.contentPreDigestUtf8);
+  expect(Tags.PRE_DIGEST_DEPS).toBe(t.dependencyPreDigestUtf8);
+  expect(Tags.PRE_COMMITMENT).toBe(t.preCommitmentUtf8);
+  expect(Tags.COMMIT_CONTENT).toBe(t.contentCommitmentUtf8);
+  expect(Tags.COMMIT_DEPS).toBe(t.dependencyCommitmentUtf8);
+  expect(Tags.HOST_SEAL).toBe(t.hostSealUtf8);
+  expect(Tags.APPROVAL).toBe(t.approvalUtf8);
+});
+
+it("the device reproduces every two-nonce handshake vector from the inputs", async () => {
+  const { h, actor, host, proposal, pre } = await proposalHandshakeFixture();
+  const actId = proposal.body.actId();
+  const actIdUtf8 = utf8(actId.toString());
+  const contentNonce = fromHex(h.contentNonceHex);
+  const dependencyNonce = fromHex(h.dependencyNonceHex);
+  // The nonce inputs are the fixed byte runs the reference names.
+  expect(contentNonce).toEqual(Uint8Array.from({ length: 32 }, (_, i) => 0x2a + i));
+  expect(dependencyNonce).toEqual(Uint8Array.from({ length: 32 }, (_, i) => 0x6a + i));
+
+  expect(toHex(canonicalDeps(proposal.deps))).toBe(h.canonicalDepsHex);
+
+  // Each pre-digest under its own nonce, by the helper and by the raw formula.
+  const hC = await contentPreDigest(actId, contentNonce, proposal.payload);
+  const hD = await dependencyPreDigest(actId, dependencyNonce, proposal.deps);
+  expect(toHex(hC)).toBe(h.contentPreDigestHex);
+  expect(toHex(hD)).toBe(h.dependencyPreDigestHex);
+  expect(toHex(await preDigest(Tags.PRE_DIGEST_CONTENT, actIdUtf8, contentNonce, proposal.payload))).toBe(
     h.contentPreDigestHex,
   );
-  expect(toHex(await preDigest(Tags.PRE_DIGEST_DEPS, actId, nonce, canonicalDeps(proposal.deps)))).toBe(
-    h.depsPreDigestHex,
-  );
   expect(
-    toHex(preCommitmentMsg(proposal.body, fromHex(h.contentPreDigestHex), fromHex(h.depsPreDigestHex))),
-  ).toBe(h.preCommitmentMsgHex);
-  expect(toHex(await preCommitment(proposal, nonce))).toBe(h.preCommitmentHex);
+    toHex(await preDigest(Tags.PRE_DIGEST_DEPS, actIdUtf8, dependencyNonce, canonicalDeps(proposal.deps))),
+  ).toBe(h.dependencyPreDigestHex);
+  expect(toHex(await pre.contentPreDigest())).toBe(h.contentPreDigestHex);
+  expect(toHex(await pre.dependencyPreDigest())).toBe(h.dependencyPreDigestHex);
+
+  expect(toHex(preCommitmentMsg(proposal.body, hC, hD))).toBe(h.preCommitmentMsgHex);
+  const formed = await preCommitment(proposal.body, hC, hD);
+  expect(toHex(formed)).toBe(h.preCommitmentHex);
+  expect(toHex(await pre.preCommitment())).toBe(h.preCommitmentHex);
   expect(toHex(pre.preSignature)).toBe(h.preSignatureHex);
-  expect(await verifyDigest(actor.publicKeyBytes(), fromHex(h.preCommitmentHex), pre.preSignature)).toBe(true);
+  expect(await verifyDigest(actor.publicKeyBytes(), formed, pre.preSignature)).toBe(true);
+
   expect(toHex(encodePreCommitmentOf(pre))).toBe(h.wirePreCommitmentHex);
   // Both directions. The pre-commitment is the one wire object this app
   // only ever writes, so nothing else exercises the reader — and a codec
   // pinned in one direction is half a codec.
   const readBack = decodePreCommitment(fromHex(h.wirePreCommitmentHex));
-  expect(toHex(readBack.nonce)).toBe(h.nonceHex);
+  expect(toHex(readBack.contentNonce)).toBe(h.contentNonceHex);
+  expect(toHex(readBack.dependencyNonce)).toBe(h.dependencyNonceHex);
   expect(toHex(readBack.preSignature)).toBe(h.preSignatureHex);
 
+  // The host's half, played from its seed and the salts: C_c over h_c.
   const contentSalt = fromHex(h.contentSaltHex);
-  const depsSalt = fromHex(h.depsSaltHex);
-  const preCommitmentBytes = fromHex(h.preCommitmentHex);
-  const sealed = new VerifiedAct({
-    proposal,
-    authorPubkey: actor.publicKeyBytes(),
-    nonce,
+  const depsSalt = fromHex(h.dependencySaltHex);
+  const cC = await contentCommitment(actId, formed, contentSalt, hC);
+  const cD = await dependencyCommitment(actId, formed, depsSalt, proposal.deps);
+  expect(toHex(cC)).toBe(h.contentCommitmentHex);
+  expect(toHex(cD)).toBe(h.dependencyCommitmentHex);
+  expect(toHex(await commitment(Tags.COMMIT_CONTENT, actIdUtf8, formed, contentSalt, hC))).toBe(
+    h.contentCommitmentHex,
+  );
+  expect(
+    toHex(await commitment(Tags.COMMIT_DEPS, actIdUtf8, formed, depsSalt, canonicalDeps(proposal.deps))),
+  ).toBe(h.dependencyCommitmentHex);
+  expect(CONTENT_EDITION).toBe(BigInt(h.contentEdition));
+  expect(DEPENDENCY_EDITION).toBe(BigInt(h.dependencyEdition));
+
+  const act = new VerifiedAct({
+    body: proposal.body,
+    preCommitment: formed,
     preSignature: pre.preSignature,
-    preCommitment: preCommitmentBytes,
-    contentSalt,
-    depsSalt,
-    contentCommitment: fromHex(h.contentCommitmentHex),
-    depsCommitment: fromHex(h.depsCommitmentHex),
-    contentEdition: BigInt(h.contentEdition),
-    depsEdition: BigInt(h.depsEdition),
-    hostSeal: fromHex(h.hostSealHex),
+    contentCommitment: cC,
+    depsCommitment: cD,
+    contentEdition: CONTENT_EDITION,
+    depsEdition: DEPENDENCY_EDITION,
   });
-  expect(
-    toHex(await commitment(Tags.COMMIT_CONTENT, actId, preCommitmentBytes, contentSalt, proposal.payload)),
-  ).toBe(h.contentCommitmentHex);
-  expect(
-    toHex(await commitment(Tags.COMMIT_DEPS, actId, preCommitmentBytes, depsSalt, canonicalDeps(proposal.deps))),
-  ).toBe(h.depsCommitmentHex);
-  expect(BigInt(h.contentEdition)).toBe(EDITION);
-  expect(BigInt(h.depsEdition)).toBe(EDITION);
-  expect(toHex(sealed.sealMsg())).toBe(h.sealMsgHex);
+  expect(toHex(act.sealMsg())).toBe(h.sealMsgHex);
+  expect(toHex(host.publicKeyBytes())).toBe(h.host.publicKeyHex);
+  const hostSeal = await host.signTagged(Tags.HOST_SEAL, act.sealMsg());
+  expect(toHex(hostSeal)).toBe(h.hostSealHex);
+  const sealed = new SealedAct({ act, contentSalt, depsSalt, hostSeal });
   expect(toHex(await sealed.approvalDigest())).toBe(h.approvalDigestHex);
   expect(toHex(encodeVerifiedAct(sealed))).toBe(h.wireVerifiedActHex);
-  const decoded = decodeVerifiedAct(fromHex(h.wireVerifiedActHex));
-  expect(decoded.proposal.equals(proposal)).toBe(true);
-  expect(toHex(decoded.preCommitment)).toBe(h.preCommitmentHex);
-  expect(decoded.contentEdition).toBe(EDITION);
-  expect(toHex(decoded.hostSeal)).toBe(h.hostSealHex);
 
-  const witness = await actor.approve(pre, sealed, fromHex(h.host.publicKeyHex));
+  const decoded = decodeVerifiedAct(fromHex(h.wireVerifiedActHex));
+  expect(toHex(decoded.act.body.canonicalBytes())).toBe(h.proposal.body.canonicalBytesHex);
+  expect(toHex(decoded.act.preCommitment)).toBe(h.preCommitmentHex);
+  expect(toHex(decoded.act.preSignature)).toBe(h.preSignatureHex);
+  expect(toHex(decoded.act.contentCommitment)).toBe(h.contentCommitmentHex);
+  expect(toHex(decoded.act.depsCommitment)).toBe(h.dependencyCommitmentHex);
+  expect(decoded.act.contentEdition).toBe(CONTENT_EDITION);
+  expect(decoded.act.depsEdition).toBe(DEPENDENCY_EDITION);
+  expect(toHex(decoded.contentSalt)).toBe(h.contentSaltHex);
+  expect(toHex(decoded.depsSalt)).toBe(h.dependencySaltHex);
+  expect(toHex(decoded.hostSeal)).toBe(h.hostSealHex);
+  expect(toHex(encodeVerifiedAct(decoded))).toBe(h.wireVerifiedActHex);
+
+  // The device approves the act exactly as it arrives on the wire.
+  const witness = await actor.approve(pre, decoded, fromHex(h.host.publicKeyHex));
   expect(witness.actId.toString()).toBe(h.approvalActId);
   expect(toHex(witness.approvalSignature)).toBe(h.approvalSignatureHex);
 });
 
-it("the device refuses every handshake rejection vector", async () => {
-  const { h, actor, pre } = await handshakeFixture();
-  expect(vectors.handshakeRefusals.length).toBeGreaterThan(0);
-  for (const r of vectors.handshakeRefusals) {
-    const act = decodeVerifiedAct(fromHex(r.wireVerifiedActHex));
-    await expect(actor.approve(pre, act, fromHex(h.host.publicKeyHex)), r.case).rejects.toBeInstanceOf(
-      HandshakeError,
-    );
+it("the sealed act carries no payload and no nonce", () => {
+  const h = vectors.proposalHandshake;
+  const wire = h.wireVerifiedActHex;
+  expect(wire).not.toContain(h.proposal.payloadHex);
+  expect(wire).not.toContain(h.contentNonceHex);
+  expect(wire).not.toContain(h.dependencyNonceHex);
+  // The positive control: the search finds what the frame does carry.
+  expect(wire).toContain(h.preSignatureHex);
+});
+
+/**
+ * Why each approve refusal must be refused — the check that names it. A
+ * case this table does not know fails, so a new vector cannot pass for
+ * the wrong reason.
+ */
+const APPROVE_REFUSALS: Record<string, string> = {
+  "a content commitment over the payload bytes":
+    "content commitment is not formed over this device's content pre-digest",
+  "a pre-commitment the device did not form": "host returned a different pre-commitment than was formed",
+  "an unexpected content edition": "unexpected editions (content 1, dependencies 1)",
+  "an unexpected dependency edition": "unexpected editions (content 2, dependencies 2)",
+};
+
+it("the device refuses every two-nonce refusal vector, for its stated reason", async () => {
+  const { h, actor, pre } = await proposalHandshakeFixture();
+  const hostKey = fromHex(h.host.publicKeyHex);
+  expect(vectors.proposalHandshakeRefusals).toHaveLength(6);
+  for (const r of vectors.proposalHandshakeRefusals) {
+    if (r.what === "approve") {
+      const reason = APPROVE_REFUSALS[r.case];
+      expect(reason, `no expected reason for "${r.case}"`).toBeDefined();
+      const sealed = decodeVerifiedAct(fromHex(r.wireVerifiedActHex));
+      // Validly resealed: the seal is not what refuses it.
+      expect(await verify(hostKey, Tags.HOST_SEAL, sealed.act.sealMsg(), sealed.hostSeal), r.case).toBe(true);
+      const refused = actor.approve(pre, sealed, hostKey);
+      await expect(refused, r.case).rejects.toBeInstanceOf(HandshakeError);
+      await expect(refused, r.case).rejects.toThrow(reason);
+    } else {
+      const decode = r.what === "decodePreCommitment" ? decodePreCommitment : decodeVerifiedAct;
+      let thrown: unknown;
+      try {
+        decode(fromHex(r.hex));
+      } catch (e) {
+        thrown = e;
+      }
+      expect(thrown, r.case).toBeInstanceOf(WireError);
+      expect((thrown as Error).message, r.case).toBe(`unsupported wire ${r.refusal}`);
+    }
   }
 });
 

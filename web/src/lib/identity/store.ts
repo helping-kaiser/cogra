@@ -28,12 +28,55 @@ type ActorRecord = {
   seed: Uint8Array | null;
 };
 
+/**
+ * One staged write's handshake material, kept from pre-sign to approval:
+ * the proposal and BOTH nonces, since the sealed act the host returns
+ * carries neither the payload nor a nonce, and the device recomputes both
+ * commitments from what it holds here.
+ */
 type HandshakeRecord = {
   proposal: Uint8Array;
   authorPubkey: Uint8Array;
-  nonce: Uint8Array;
+  contentNonce: Uint8Array;
+  dependencyNonce: Uint8Array;
   preSignature: Uint8Array;
 };
+
+const CURRENT_FIELDS = ["proposal", "authorPubkey", "contentNonce", "dependencyNonce", "preSignature"] as const;
+
+/**
+ * The record this client wrote before it kept both nonces — exactly
+ * `{proposal, authorPubkey, nonce, preSignature}` (the type at 18b2d577d).
+ */
+const ONE_NONCE_FIELDS = ["proposal", "authorPubkey", "nonce", "preSignature"] as const;
+
+/** Whether `value` is an object whose own fields are exactly `fields`, every one a byte string. */
+function hasExactlyByteFields(value: unknown, fields: readonly string[]): boolean {
+  if (typeof value !== "object" || value === null) return false;
+  const keys = Object.keys(value);
+  if (keys.length !== fields.length) return false;
+  const r = value as Record<string, unknown>;
+  return fields.every((f) => r[f] instanceof Uint8Array);
+}
+
+/**
+ * What a stored handshake value is, to this build:
+ *
+ * - `current`: material of this handshake, exactly this build's shape.
+ * - `oneNonce`: the RECOGNISED earlier shape. It can never be approved under
+ *   this handshake, and no later build will complete it either, so the store
+ *   deletes it where it meets it — on a read and on a listing.
+ * - `unknown`: anything else (a shape a later build writes, a stored
+ *   `undefined`). It is not this build's to judge: it reads as absent and is
+ *   not listed — this build can neither complete nor clear it, so counting it
+ *   would wedge the resume card — and it is NEVER deleted, so a later build's
+ *   live material survives a tab still running this one.
+ */
+function classifyHandshake(value: unknown): "current" | "oneNonce" | "unknown" {
+  if (hasExactlyByteFields(value, CURRENT_FIELDS)) return "current";
+  if (hasExactlyByteFields(value, ONE_NONCE_FIELDS)) return "oneNonce";
+  return "unknown";
+}
 
 type UxRecord = {
   ephemeral: boolean;
@@ -356,21 +399,61 @@ export function createIdentityStore(deps: {
     await landed;
   }
 
-  async function allKeys(store: string): Promise<string[]> {
-    const tx = (await db()).transaction(store, "readonly");
-    const keys = await asPromise(tx.objectStore(store).getAllKeys());
-    return keys.map(String);
-  }
-
   function handshakeKey(account: string, stagedWriteId: string): string {
     return `${account}${KEY_SEPARATOR}${stagedWriteId}`;
   }
 
+  /**
+   * The account's handshake ids: only records of the current shape are
+   * listed. A one-nonce record is deleted on sight, in the same transaction
+   * as the listing — it can never be completed, so listing it would count it
+   * forever (the Home resume card) while it kept a nonce and a pre-signature
+   * at rest for nothing. A record of an unknown shape is neither listed nor
+   * deleted (see {@link classifyHandshake}).
+   */
   async function handshakeIdsOf(account: string): Promise<string[]> {
     const prefix = account + KEY_SEPARATOR;
-    return (await allKeys(HANDSHAKE))
-      .filter((key) => key.startsWith(prefix))
-      .map((key) => key.slice(prefix.length));
+    const range = IDBKeyRange.bound(prefix, prefix + "￿");
+    const tx = (await db()).transaction(HANDSHAKE, "readwrite");
+    const landed = committed(tx);
+    const objectStore = tx.objectStore(HANDSHAKE);
+    const keys = objectStore.getAllKeys(range);
+    const values = objectStore.getAll(range);
+    const ids: string[] = [];
+    // Both requests share the transaction, which answers them in order: by
+    // the time `getAll` succeeds the keys are in, and the deletes issued here
+    // still run inside it.
+    values.onsuccess = () => {
+      keys.result.forEach((key, i) => {
+        const kind = classifyHandshake(values.result[i]);
+        if (kind === "current") ids.push(String(key).slice(prefix.length));
+        else if (kind === "oneNonce") objectStore.delete(key);
+      });
+    };
+    await landed;
+    return ids;
+  }
+
+  /**
+   * One handshake record, or null. Every stored value is judged by the rule
+   * the listing uses ({@link classifyHandshake}): anything but the current
+   * shape reads as absent, and only a one-nonce record is deleted, in the
+   * same transaction.
+   */
+  async function takeHandshake(key: string): Promise<HandshakeRecord | null> {
+    const tx = (await db()).transaction(HANDSHAKE, "readwrite");
+    const landed = committed(tx);
+    const objectStore = tx.objectStore(HANDSHAKE);
+    const request = objectStore.get(key);
+    const found: { record: HandshakeRecord | null } = { record: null };
+    request.onsuccess = () => {
+      const value: unknown = request.result;
+      const kind = classifyHandshake(value);
+      if (kind === "current") found.record = value as HandshakeRecord;
+      else if (kind === "oneNonce") objectStore.delete(key);
+    };
+    await landed;
+    return found.record;
   }
 
   /** Moves a legacy singleton record into the account's slot — only when vacant. */
@@ -521,7 +604,8 @@ export function createIdentityStore(deps: {
       await write(HANDSHAKE, handshakeKey(account, stagedWriteId), {
         proposal: encodeProposal(pre.proposal),
         authorPubkey: pre.authorPubkey.slice(),
-        nonce: pre.nonce.slice(),
+        contentNonce: pre.contentNonce.slice(),
+        dependencyNonce: pre.dependencyNonce.slice(),
         preSignature: pre.preSignature.slice(),
       } satisfies HandshakeRecord);
     },
@@ -529,12 +613,13 @@ export function createIdentityStore(deps: {
     async handshake(stagedWriteId) {
       const account = await forRead();
       if (account === null) return null;
-      const record = await read<HandshakeRecord>(HANDSHAKE, handshakeKey(account, stagedWriteId));
+      const record = await takeHandshake(handshakeKey(account, stagedWriteId));
       if (record === null) return null;
       return new PreSignedProposal({
         proposal: decodeProposal(record.proposal),
         authorPubkey: record.authorPubkey,
-        nonce: record.nonce,
+        contentNonce: record.contentNonce,
+        dependencyNonce: record.dependencyNonce,
         preSignature: record.preSignature,
       });
     },

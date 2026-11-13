@@ -2,8 +2,9 @@
 
 // The device half of the handshake against a simulated host: MSW scripts
 // the API while the test plays the host with real crypto — commitments
-// over the submitted payload, a real Ed25519 host seal — so every
-// verification branch runs against genuine bytes.
+// over the submitted content pre-digest and dependency list, a real
+// Ed25519 host seal — so every verification branch runs against genuine
+// bytes.
 
 import "fake-indexeddb/auto";
 import { IDBFactory } from "fake-indexeddb";
@@ -15,14 +16,16 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { StagedWriteState } from "@/__generated__/graphql";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { ActorKey } from "@/lib/crypto/actor-key";
-import { fromBase64, randomBytes, toBase64 } from "@/lib/crypto/bytes";
+import { fromBase64, randomBytes, toBase64, toHex } from "@/lib/crypto/bytes";
 import { Tags, verifyDigest } from "@/lib/crypto/hashing";
 import {
+  CONTENT_EDITION,
   contentCommitment,
-  depsCommitment,
-  EDITION,
+  DEPENDENCY_EDITION,
+  dependencyCommitment,
   PreSignedProposal,
   Proposal,
+  SealedAct,
   StructuralBody,
   VerifiedAct,
 } from "@/lib/crypto/handshake";
@@ -56,9 +59,17 @@ function client() {
   });
 }
 
+/**
+ * The device key every test starts with. Fixed, because the device signs only
+ * proposals that name its own address as author, and the staged proposal
+ * below is a module constant.
+ */
+const DEVICE_SEED = Uint8Array.from({ length: 32 }, (_, i) => i + 1);
+const DEVICE_ADDRESS = await (await ActorKey.fromSeed(DEVICE_SEED)).address();
+
 function sampleProposal(): Proposal {
   const body = new StructuralBody({
-    author: "aa".repeat(20),
+    author: DEVICE_ADDRESS,
     seq: 1n,
     family: "registration",
     middle: null,
@@ -72,34 +83,41 @@ function sampleProposal(): Proposal {
   return new Proposal(body, new Uint8Array(), [new ActId("cc".repeat(20), 3n, "opinion")]);
 }
 
+/**
+ * The host's seal over what the device submitted: C_c over the content
+ * pre-digest, C_d over the dependency list, both under fresh salts. `body`
+ * overrides the body the host seals, to play a host that returns an act the
+ * device never pre-signed.
+ */
 async function sealOver(
   host: ActorKey,
   pre: PreSignedProposal,
-  proposal: Proposal = pre.proposal,
-): Promise<VerifiedAct> {
+  body: StructuralBody = pre.proposal.body,
+): Promise<SealedAct> {
   const contentSalt = randomBytes(32);
   const depsSalt = randomBytes(32);
   const formed = await pre.preCommitment();
-  const actId = proposal.body.actId();
-  const fields = {
-    proposal,
-    authorPubkey: pre.authorPubkey,
-    nonce: pre.nonce,
-    preSignature: pre.preSignature,
+  const actId = body.actId();
+  const act = new VerifiedAct({
+    body,
     preCommitment: formed,
+    preSignature: pre.preSignature,
+    contentCommitment: await contentCommitment(actId, formed, contentSalt, await pre.contentPreDigest()),
+    depsCommitment: await dependencyCommitment(actId, formed, depsSalt, pre.proposal.deps),
+    contentEdition: CONTENT_EDITION,
+    depsEdition: DEPENDENCY_EDITION,
+  });
+  return new SealedAct({
+    act,
     contentSalt,
     depsSalt,
-    contentCommitment: await contentCommitment(actId, formed, contentSalt, proposal.payload),
-    depsCommitment: await depsCommitment(actId, formed, depsSalt, proposal.deps),
-    contentEdition: EDITION,
-    depsEdition: EDITION,
-    hostSeal: new Uint8Array(64),
-  };
-  const unsealed = new VerifiedAct(fields);
-  return new VerifiedAct({
-    ...fields,
-    hostSeal: await host.signTagged(Tags.HOST_SEAL, unsealed.sealMsg()),
+    hostSeal: await host.signTagged(Tags.HOST_SEAL, act.sealMsg()),
   });
+}
+
+/** The same body with another p_i — an act the device never pre-signed. */
+function otherBody(body: StructuralBody): StructuralBody {
+  return new StructuralBody({ ...body, pI: body.pI === -0.5 ? 0.5 : -0.5 });
 }
 
 function stagedJson(id: string, state: StagedWriteState, verifiedAct: string | null) {
@@ -149,7 +167,8 @@ function submittedPre(signature: string, actorPub: Uint8Array): PreSignedProposa
   return new PreSignedProposal({
     proposal: PROPOSAL,
     authorPubkey: actorPub,
-    nonce: blob.nonce,
+    contentNonce: blob.contentNonce,
+    dependencyNonce: blob.dependencyNonce,
     preSignature: blob.preSignature,
   });
 }
@@ -166,8 +185,7 @@ describe("write signer", () => {
     globalThis.indexedDB = new IDBFactory();
     store = createIdentityStore({ activeAccountId: () => "acct-1" });
     carried = createCarriedExpectationStore({ activeAccountId: () => "acct-1" });
-    const seed = randomBytes(32);
-    const saved = await store.saveActor(seed, true);
+    const saved = await store.saveActor(DEVICE_SEED.slice(), true);
     actorPub = saved.publicKeyBytes();
     host = await ActorKey.generate();
     hostHandler = gqlLink.query("HostPublicKey", () =>
@@ -188,7 +206,7 @@ describe("write signer", () => {
   });
 
   it("runs the full handshake on a synchronous seal and clears the material", async () => {
-    let sealed: VerifiedAct | null = null;
+    let sealed: SealedAct | null = null;
     server.use(
       hostHandler,
       gqlLink.mutation("SubmitProposals", async ({ variables }) => {
@@ -326,6 +344,39 @@ describe("write signer", () => {
     expect(await store.handshake(ID)).toBeNull();
   });
 
+  it("after a BAD_INPUT submit the next pass pre-signs under fresh nonces", async () => {
+    const blobs: { contentNonce: Uint8Array; dependencyNonce: Uint8Array }[] = [];
+    server.use(
+      gqlLink.mutation("SubmitProposals", ({ variables }) => {
+        const input = (variables as { input: { proposals: { signature: string }[] } }).input;
+        const blob = decodePreCommitment(fromBase64(input.proposals[0].signature));
+        blobs.push({ contentNonce: blob.contentNonce, dependencyNonce: blob.dependencyNonce });
+        return HttpResponse.json({
+          data: {
+            submitProposals: {
+              __typename: "SubmitProposalsPayload",
+              stagedWrites: null,
+              userErrors: [{ __typename: "UserError", message: "reused", code: "BAD_INPUT", field: null }],
+            },
+          },
+        });
+      }),
+    );
+
+    const first = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
+    expect(first.kind).toBe("refused");
+    expect(await store.handshake(ID)).toBeNull();
+    // The staged write is still AWAITING_PRE_SIGN server-side; the next pass
+    // holds no material, so it draws both nonces anew.
+    const second = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
+    expect(second.kind).toBe("refused");
+
+    expect(blobs).toHaveLength(2);
+    const [a, b] = blobs;
+    expect(toHex(b.contentNonce)).not.toBe(toHex(a.contentNonce));
+    expect(toHex(b.dependencyNonce)).not.toBe(toHex(a.dependencyNonce));
+  });
+
   it("a rate-limited approve keeps the material and resume completes", async () => {
     let sealedB64: string | null = null;
     let rateLimit = true;
@@ -411,15 +462,78 @@ describe("write signer", () => {
     expect(await store.handshake(ID)).not.toBeNull();
   });
 
-  it("a transport fault keeps the material and resume re-sends the same nonce", async () => {
+  /** Writes the record shape this device wrote before it kept both nonces, raw, under `ID`. */
+  async function seedOneNonceRecord(): Promise<PreSignedProposal> {
+    const key = await store.actorKey();
+    if (key === null) throw new Error("expected a key");
+    const pre = await key.preSign(PROPOSAL);
+    await new Promise<void>((resolve, reject) => {
+      const req = indexedDB.open("cogra.identity");
+      req.onsuccess = () => {
+        const db = req.result;
+        const tx = db.transaction("handshake", "readwrite");
+        tx.objectStore("handshake").put(
+          {
+            proposal: encodeProposal(PROPOSAL),
+            authorPubkey: pre.authorPubkey,
+            nonce: pre.contentNonce,
+            preSignature: pre.preSignature,
+          },
+          `acct-1/${ID}`,
+        );
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        tx.onerror = () => reject(tx.error);
+      };
+      req.onerror = () => reject(req.error);
+    });
+    return pre;
+  }
+
+  it("a stored one-nonce record is no material: an awaiting approval waits for the re-stage", async () => {
+    const pre = await seedOneNonceRecord();
+    let approvals = 0;
+    server.use(
+      hostHandler,
+      gqlLink.mutation("ApproveActs", () => {
+        approvals += 1;
+        return HttpResponse.json({ data: {} });
+      }),
+    );
+    const sealed = toBase64(encodeVerifiedAct(await sealOver(host, pre)));
+
+    const result = await signer.signStaged(view(ID, "AWAITING_APPROVAL", sealed), REGISTRATION_EXEMPTION);
+    expect(result.kind).toBe("refused");
+    if (result.kind === "refused") expect(result.errors[0].message).toMatch(/awaiting re-stage/);
+    expect(approvals).toBe(0);
+  });
+
+  it("a stored one-nonce record is never pending: resume reports nothing and keeps nothing", async () => {
+    await seedOneNonceRecord();
+    let reads = 0;
+    server.use(
+      gqlLink.query("StagedWrite", () => {
+        reads += 1;
+        return HttpResponse.json({ data: { stagedWrite: stagedJson(ID, "AWAITING_APPROVAL", null) } });
+      }),
+    );
+
+    expect(await signer.resume()).toEqual([]);
+    expect(reads).toBe(0);
+    expect(await store.handshakeIds()).toEqual([]);
+  });
+
+  it("a transport fault keeps the material and resume re-sends the same nonces", async () => {
     server.use(gqlLink.mutation("SubmitProposals", () => HttpResponse.error()));
     const first = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(first.kind).toBe("failed");
     const parked = await store.handshake(ID);
     expect(parked).not.toBeNull();
 
-    let resent: Uint8Array | null = null;
-    let sealed: VerifiedAct | null = null;
+    let resent: { contentNonce: Uint8Array; dependencyNonce: Uint8Array } | null = null;
+    let sealed: SealedAct | null = null;
     server.use(
       hostHandler,
       gqlLink.query("StagedWrite", () =>
@@ -427,7 +541,8 @@ describe("write signer", () => {
       ),
       gqlLink.mutation("SubmitProposals", async ({ variables }) => {
         const input = (variables as { input: { proposals: { signature: string }[] } }).input;
-        resent = decodePreCommitment(fromBase64(input.proposals[0].signature)).nonce;
+        const blob = decodePreCommitment(fromBase64(input.proposals[0].signature));
+        resent = { contentNonce: blob.contentNonce, dependencyNonce: blob.dependencyNonce };
         const pre = submittedPre(input.proposals[0].signature, actorPub);
         sealed = await sealOver(host, pre);
         return HttpResponse.json({
@@ -457,7 +572,7 @@ describe("write signer", () => {
 
     const results = await signer.resume();
     expect(results).toEqual([{ kind: "done", id: ID, state: "RELAYING" }]);
-    expect(resent).toEqual(parked?.nonce);
+    expect(resent).toEqual({ contentNonce: parked?.contentNonce, dependencyNonce: parked?.dependencyNonce });
   });
 
   it("rejects a seal over a body the device never signed", async () => {
@@ -466,8 +581,7 @@ describe("write signer", () => {
       gqlLink.mutation("SubmitProposals", async ({ variables }) => {
         const input = (variables as { input: { proposals: { signature: string }[] } }).input;
         const pre = submittedPre(input.proposals[0].signature, actorPub);
-        const other = new Proposal(PROPOSAL.body, new TextEncoder().encode("swapped"), []);
-        const sealed = await sealOver(host, pre, other);
+        const sealed = await sealOver(host, pre, otherBody(PROPOSAL.body));
         return HttpResponse.json({
           data: {
             submitProposals: {
@@ -759,7 +873,8 @@ describe("write signer", () => {
         const pre = new PreSignedProposal({
           proposal,
           authorPubkey: actorPub,
-          nonce: blob.nonce,
+          contentNonce: blob.contentNonce,
+          dependencyNonce: blob.dependencyNonce,
           preSignature: blob.preSignature,
         });
         const sealed = await sealOver(host, pre);
@@ -927,11 +1042,11 @@ describe("write signer", () => {
         const pre = new PreSignedProposal({
           proposal,
           authorPubkey: actorPub,
-          nonce: blob.nonce,
+          contentNonce: blob.contentNonce,
+          dependencyNonce: blob.dependencyNonce,
           preSignature: blob.preSignature,
         });
-        const swapped = new Proposal(proposal.body, new TextEncoder().encode("swapped"), proposal.deps);
-        const sealed = await sealOver(host, pre, swapped);
+        const sealed = await sealOver(host, pre, otherBody(proposal.body));
         return HttpResponse.json({
           data: {
             submitProposals: {

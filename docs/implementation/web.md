@@ -328,7 +328,7 @@ parity, not doc-fixed:
   landing the loop watched live. Web addition: sign-out resets
   the loop; the next session starts clean.
 - Handshake material lost (a staged write at `SEALING` or
-  `AWAITING_APPROVAL` with no local nonce — pre-signed in another
+  `AWAITING_APPROVAL` with no local nonces — pre-signed in another
   browser, or custody cleared): the device refuses with a
   synthesized `INTERNAL` "awaiting re-stage" and keeps polling;
   the staging garbage-collects and the approved application
@@ -343,10 +343,11 @@ leaves parked surfaces on Home as a resume card.
 
 The signing orchestration lives in `src/lib/signing/` (write
 signer, registration signer, flow) over the custody store in
-`src/lib/identity/`; handshake material — the private nonce and
-pre-signature, keyed by staged-write id — persists in IndexedDB
-before the submit, so the approve step verifies against what THIS
-browser pre-signed across page reloads. One write signer serves
+`src/lib/identity/`; handshake material — the proposal, the
+content nonce and the dependency nonce, and the pre-signature,
+keyed by staged-write id — persists in IndexedDB before the
+submit, so the approve step recomputes both commitments from what
+THIS browser pre-signed across page reloads. One write signer serves
 the whole app — `resume()` spans every persisted handshake,
 whichever surface started it.
 
