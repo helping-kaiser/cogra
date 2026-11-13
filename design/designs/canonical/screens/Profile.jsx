@@ -3,7 +3,11 @@
    flow), name/handle/figures beside it, bio, then Edit profile + Invites sharing
    the row. The gear and the overflow hang off the band per design.md §6 — never
    down in the header — and the ⋮ opens the sheet holding Saved, History and
-   Share your profile. The chronicle sits under the icon tab row. Sol has no
+   Share your profile. The icon tab row reads Posts, Comments, Everything, and
+   THE PROFILE LANDS ON POSTS (jakob 2026-11-13, the android hand test: "land
+   on posts as the default (learned behavior from other socials)"): the `tab`
+   chip draws `posts`, the landing, and `everything`, the chronicle the tab
+   opens (`ProfileTabs`). Sol has no
    picture: the monogram is the designed fallback, and the badge on it reads as
    "add one".
 
@@ -27,12 +31,14 @@
 export const NODE = "profile";
 export const PROPS = {
   change: { editor: "enum", options: ["none", "signing", "failed"], default: "none" },
+  ...TAB_CHIP,
 };
-export const VALS = `changeSigningShown: this.props.change === "signing" ? "block" : "none", changeFailedShown: this.props.change === "failed" ? "block" : "none"`;
+export const VALS = `changeSigningShown: this.props.change === "signing" ? "block" : "none", changeFailedShown: this.props.change === "failed" ? "block" : "none", ${TAB_VALS}`;
 const HEAD_LINE = { padding: "var(--space-2) var(--space-4) var(--space-3)" };
 export function Screen() {
   return (
     <ProfileOwnBody
+      tab="chip"
       headLine={
         <>
           <div style={{ display: "{{changeSigningShown}}", ...HEAD_LINE }}>

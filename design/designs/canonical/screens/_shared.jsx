@@ -1227,7 +1227,52 @@ function ThreadDetail({ menuItems = READER_POST_MENU }) {
    closed on while it signs shows its wait and its failure (round 41, S3;
    `SigningAfterClose`'s edit form, the head standing as it was until the
    change is taken). Given none, nothing stands there. */
-function ProfileOwnBody({ tail = null, headLine = null }) {
+/* A PROFILE LANDS ON ITS POSTS TAB (jakob 2026-11-13, the android hand test:
+   "i'd rather have it land on posts as the default (learned behavior from
+   other socials)"), every profile, your own and another's. `ProfileTabs`
+   draws the tab row and what stands under it: `posts` (the landing),
+   `everything` (the chronicle, reached by its tab), or `chip` — both, the
+   board's `tab` chip choosing (`TAB_CHIP` / `TAB_VALS`): the row drawn once
+   per value, keyed by it, and the two lists behind holes, so each keeps its
+   own names and keys. */
+const TAB_CHIP = { tab: { editor: "enum", options: ["posts", "everything"], default: "posts" } };
+const TAB_VALS = `tabPostsShown: this.props.tab === "everything" ? "none" : "flex", tabEverythingShown: this.props.tab === "everything" ? "flex" : "none"`;
+function ProfileTabs({ tab = "posts", posts, chronicle }) {
+  const postsList = (
+    <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "8px 0 0 0" }} data-node="posts">
+      {posts}
+    </div>
+  );
+  if (tab === "posts") {
+    return (
+      <>
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="posts" tabs={CHRONICLE_TABS} node="tabRow" />
+        {postsList}
+      </>
+    );
+  }
+  if (tab === "everything") {
+    return (
+      <>
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
+        {chronicle}
+      </>
+    );
+  }
+  return (
+    <>
+      <div style={{ display: "{{tabPostsShown}}", flexDirection: "column" }} data-node-chip="tab" data-node-key="posts">
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="posts" tabs={CHRONICLE_TABS} node="tabRow" />
+      </div>
+      <div style={{ display: "{{tabEverythingShown}}", flexDirection: "column" }} data-node-chip="tab" data-node-key="everything">
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
+      </div>
+      <div style={{ display: "{{tabPostsShown}}", flex: 1, minHeight: 0, flexDirection: "column" }}>{postsList}</div>
+      <div style={{ display: "{{tabEverythingShown}}", flex: 1, minHeight: 0, flexDirection: "column" }}>{chronicle}</div>
+    </>
+  );
+}
+function ProfileOwnBody({ tail = null, headLine = null, tab = "posts" }) {
   return (
     <>
       <ProfileBand node="band" />
@@ -1257,15 +1302,20 @@ function ProfileOwnBody({ tail = null, headLine = null }) {
           />
         </div>
         {headLine}
-        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
-        <ChronicleList node="chronicle">
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="3d" second="Salt maps of the coast road — rubbings from three weekends at low tide." onOpen={() => {}} node="act" nodeKey="1" />
-          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="4d" second="The third headland light is real — I have a print from 2019 that almost catches it." onOpen={() => {}} node="act" nodeKey="2" />
-          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.4, pInterest: 0.5 }} title="Gave an opinion" titleAside="on @mira" trailing="5d" inert node="act" nodeKey="3" />
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="7d" second="Three weekends of walking the same stretch at low tide." onOpen={() => {}} node="act" nodeKey="4" />
-          <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated your profile" trailing="14d" inert node="act" nodeKey="5" />
-          {tail}
-        </ChronicleList>
+        <ProfileTabs
+          tab={tab}
+          posts={<PostCard {...SOL_POST} menuItems={OWN_POST_MENU.filter((row) => row !== LICENSE_ROW)} bundle={mkBundle(0.1, 1)} node="card" />}
+          chronicle={
+            <ChronicleList node="chronicle">
+              <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="3d" second="Salt maps of the coast road — rubbings from three weekends at low tide." onOpen={() => {}} node="act" nodeKey="1" />
+              <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="4d" second="The third headland light is real — I have a print from 2019 that almost catches it." onOpen={() => {}} node="act" nodeKey="2" />
+              <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.4, pInterest: 0.5 }} title="Gave an opinion" titleAside="on @mira" trailing="5d" inert node="act" nodeKey="3" />
+              <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="7d" second="Three weekends of walking the same stretch at low tide." onOpen={() => {}} node="act" nodeKey="4" />
+              <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated your profile" trailing="14d" inert node="act" nodeKey="5" />
+              {tail}
+            </ChronicleList>
+          }
+        />
       </div>
       <BottomNav active="profile" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
@@ -1286,7 +1336,7 @@ function ProfileOwnBody({ tail = null, headLine = null }) {
 
    Named as `ProfileOwnBody` names its page, under the same `profile` prefix:
    `ProfileOther` and `ProfileMenu` register it. */
-function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "Ada Okonkwo", nameSize, nameLineHeight } = {}) {
+function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "Ada Okonkwo", nameSize, nameLineHeight, tab = "posts" } = {}) {
   return (
     <>
       <PageHeader title="@ada" backHref="#" backLabel={backLabel} node="header" />
@@ -1311,14 +1361,19 @@ function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "A
             showHandle={false}
           />
         </div>
-        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
-        <ChronicleList node="chronicle">
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="2h" second="The long way home — the light does something at the third headland." onOpen={() => {}} node="act" nodeKey="1" />
-          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="1d" second="The glovebox camera earns its keep — this is the print from 2019." onOpen={() => {}} node="act" nodeKey="2" />
-          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @tobias" trailing="2d" inert node="act" nodeKey="3" />
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="5d" second="Took the coast road instead of the tunnel. Four hours longer, worth every minute." onOpen={() => {}} node="act" nodeKey="4" />
-          <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated their profile" trailing="7d" inert node="act" nodeKey="5" />
-        </ChronicleList>
+        <ProfileTabs
+          tab={tab}
+          posts={<PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />}
+          chronicle={
+            <ChronicleList node="chronicle">
+              <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="2h" second="The long way home — the light does something at the third headland." onOpen={() => {}} node="act" nodeKey="1" />
+              <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="1d" second="The glovebox camera earns its keep — this is the print from 2019." onOpen={() => {}} node="act" nodeKey="2" />
+              <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @tobias" trailing="2d" inert node="act" nodeKey="3" />
+              <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="5d" second="Took the coast road instead of the tunnel. Four hours longer, worth every minute." onOpen={() => {}} node="act" nodeKey="4" />
+              <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated their profile" trailing="7d" inert node="act" nodeKey="5" />
+            </ChronicleList>
+          }
+        />
       </div>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>

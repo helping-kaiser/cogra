@@ -957,7 +957,10 @@ paper over:
   2026-11-11). On another's profile the stance wears the wide anchor with
   Message beside it; one's own avatar wears the change badge (the
   standalone crop-and-seal shortcut). No cover image: the largest thing on
-  a person's screen should not be decoration.
+  a person's screen should not be decoration. Under it the tab row reads
+  Posts, Comments, Everything, and **every profile lands on Posts** —
+  one's own and another's (jakob 2026-11-13: "learned behavior from other
+  socials"); the chronicle is the Everything tab.
 - **Media avatars** — `MonogramAvatar` and `ActorChip` take a photo at both
   sizes. The monogram stays the designed fallback rather than a gap waiting
   for one, and a broken image falls back to it silently.

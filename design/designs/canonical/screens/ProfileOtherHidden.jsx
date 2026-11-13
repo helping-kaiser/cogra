@@ -6,7 +6,8 @@
    THE PAGE STAYS WHOLE. Hiding is a comfort over the reader's own feed, not
    an act on the person: their profile still opens and still reads in full,
    so nothing here dims, collapses or gains a mark — the stance anchor, the
-   figures and the chronicle are the page as it stood under the sheet. The
+   figures and the Posts tab the page lands on are the page as it stood
+   under the sheet. The
    feed is where the hide shows, the next time it is opened (`FeedHidden`).
 
    THE SNACKBAR IS THE FEED'S, WORD FOR WORD — `@ada is hidden.` with

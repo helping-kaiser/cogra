@@ -1618,9 +1618,25 @@ const ownProfile = () => [
   // is no longer the last thing before the closing tag: the find stops at the
   // word, which matches the applicant's dotless button just as well.
   { n: 7, find: ">Invites<", tag: "button" },
-  { n: 8, find: 'aria-label="Posts"', tag: "button" },
-  { n: 8, find: 'aria-label="Comments"', tag: "button" },
-  { n: 8, find: 'aria-label="Everything"', tag: "button" },
+  // `all`: a landing board's `tab` chip draws the row twice (round 49).
+  { n: 8, find: 'aria-label="Posts"', tag: "button", all: true },
+  { n: 8, find: 'aria-label="Comments"', tag: "button", all: true },
+  { n: 8, find: 'aria-label="Everything"', tag: "button", all: true },
+];
+// The landing's post card (round 49, the profile lands on Posts): the card
+// controls `ProfilePosts` / `ProfilePostsOwn` number, at each board's next
+// free numbers.
+const otherLandingCard = (base) => [
+  { n: base, find: '<a href="/u/', tag: "a", all: true },
+  { n: base + 1, find: 'aria-label="More on this post"', tag: "button", all: true },
+  { n: base + 2, find: "aspect-ratio:1.91 / 1", tag: "div" },
+  { n: base + 3, find: ">More</button>", tag: "button", all: true },
+  { n: base + 4, find: '<a href="/t/', tag: "a", all: true },
+  { n: base + 5, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
+  { n: base + 5, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
+  { n: base + 6, find: ">Feed score</span>", tag: "button", all: true },
+  { n: base + 7, find: ">· 1 reference<", tag: "button" },
+  { n: base + 8, find: 'aria-label="3 comments"', tag: "button" },
 ];
 Object.assign(FLOW_MARKERS, {
   // The own profile's Posts and Comments views (round 41, M2): `Profile`'s
@@ -1666,6 +1682,16 @@ Object.assign(FLOW_MARKERS, {
     // The `change` chip's failed line under the head (round 41, S3): the next
     // free number after the bell's 15.
     { n: 16, find: ">Retry</button>", tag: "button" },
+    // The landing's own post card (round 49): `ProfilePostsOwn`'s card controls.
+    { n: 18, find: '<a href="/u/', tag: "a", all: true },
+    { n: 19, find: 'aria-label="More on this post"', tag: "button", all: true },
+    { n: 20, find: ">More</button>", tag: "button", all: true },
+    { n: 21, find: '<a href="/t/', tag: "a", all: true },
+    { n: 22, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
+    { n: 22, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
+    { n: 23, find: ">Feed score</span>", tag: "button", all: true },
+    { n: 24, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 25, find: 'aria-label="Share this post"', tag: "button", all: true },
   ],
   // The failed next page is this board's whole subject; the profile beneath it
   // is `Profile`'s and is wired there (the pattern-exemplar exemption).
@@ -1696,13 +1722,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
     { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
     { n: 5, find: ">Message</button>", tag: "button" },
-    { n: 6, find: 'aria-label="Posts"', tag: "button" },
-    { n: 6, find: 'aria-label="Comments"', tag: "button" },
-    { n: 6, find: 'aria-label="Everything"', tag: "button" },
+    { n: 6, find: 'aria-label="Posts"', tag: "button", all: true },
+    { n: 6, find: 'aria-label="Comments"', tag: "button", all: true },
+    { n: 6, find: 'aria-label="Everything"', tag: "button", all: true },
     { n: 7, find: "The long way home — the light does something", tag: "button" },
     { n: 7, find: "The glovebox camera earns its keep", tag: "button" },
     { n: 7, find: "Took the coast road instead of the tunnel", tag: "button" },
     ...nav(8),
+    ...otherLandingCard(14),
   ],
   // The page a moment after Hide @ada (ruling 65): `ProfileOther`'s numbers,
   // to the number, and the snackbar's Undo as the next free one.
@@ -1717,11 +1744,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: 'aria-label="Posts"', tag: "button" },
     { n: 6, find: 'aria-label="Comments"', tag: "button" },
     { n: 6, find: 'aria-label="Everything"', tag: "button" },
-    { n: 7, find: "The long way home — the light does something", tag: "button" },
-    { n: 7, find: "The glovebox camera earns its keep", tag: "button" },
-    { n: 7, find: "Took the coast road instead of the tunnel", tag: "button" },
     ...nav(8),
     { n: 13, find: ">Undo</button>", tag: "button" },
+    // The landing's post card (round 49); 7, the chronicle's row, is not drawn.
+    ...otherLandingCard(15),
   ],
   ProfileOtherHeld: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
@@ -1734,10 +1760,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: 'aria-label="Posts"', tag: "button" },
     { n: 6, find: 'aria-label="Comments"', tag: "button" },
     { n: 6, find: 'aria-label="Everything"', tag: "button" },
-    { n: 7, find: "The long way home — the light does something", tag: "button" },
-    { n: 7, find: "The glovebox camera earns its keep", tag: "button" },
-    { n: 7, find: "Took the coast road instead of the tunnel", tag: "button" },
     ...nav(8),
+    // The landing's post card (round 49); 7, the chronicle's row, is not drawn.
+    ...otherLandingCard(14),
   ],
   ProfileStances: [
     // The words are the `whose` chip's holes, and the tab row is drawn once

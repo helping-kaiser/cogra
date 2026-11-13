@@ -20,6 +20,10 @@ ALWAYS the header collapses on the way down and returns on the way up
 
 ALWAYS profile.tabRow reads Posts, Comments and Everything, by glyph, each named in the accessibility tree
 
+WHEN the reader's own profile opens, from any door -> it lands on its Posts tab, profile.tabRow.postsTab lit and profile.posts below it as post cards AND NEVER it lands on Everything or Comments
+
+WHEN tap profile.tabRow.everythingTab -> the chronicle stands below profile.tabRow AND the header above stays as it was
+
 ALWAYS the chronicle stands one act to a card, newest first, each card leading with its act's disc, then its verb and snippet, its age on the trailing edge
 
 ALWAYS a chronicle card reads Still settling GIVEN its act still pends
@@ -58,7 +62,7 @@ WHEN tap Invites GIVEN an application waits or a link is live -> Invites opens
 
 WHEN tap Invites GIVEN no application waits and no link is live -> Invites opens on its empty state
 
-WHEN tap profile.tabRow.postsTab -> the reader's posts stand below profile.tabRow as post cards AND the header above stays as it was
+WHEN tap profile.tabRow.postsTab GIVEN another tab is lit -> the reader's posts stand below profile.tabRow as post cards AND the header above stays as it was
 
 WHEN tap profile.tabRow.commentsTab -> the reader's comments stand below profile.tabRow as comment cards AND the header above stays as it was
 

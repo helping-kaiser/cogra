@@ -16,6 +16,10 @@ ALWAYS the header collapses on the way down and returns on the way up
 
 ALWAYS profile.bottomBar keeps lit the slot of the root the profile was opened from, profile.bottomBar.feedSlot from the feed
 
+WHEN another's profile opens, from any door -> it lands on its Posts tab, profile.tabRow.postsTab lit and profile.posts below it as post cards AND NEVER it lands on Everything or Comments
+
+WHEN tap profile.tabRow.everythingTab -> the person's chronicle stands below profile.tabRow AND the header above stays as it was
+
 ALWAYS the chronicle stands one act to a card, newest first, each card leading with its act's disc, then its verb and snippet, its age on the trailing edge
 
 ALWAYS a chronicle card with no destination is the same card, inert
@@ -60,7 +64,7 @@ WHEN tap the Opinions by figure -> the opinions page opens on this profile on it
 
 WHEN tap the Posts figure -> NEVER anything happens
 
-WHEN tap profile.tabRow.postsTab -> the person's posts stand below profile.tabRow as post cards AND the header above stays as it was
+WHEN tap profile.tabRow.postsTab GIVEN another tab is lit -> the person's posts stand below profile.tabRow as post cards AND the header above stays as it was
 
 WHEN tap profile.tabRow.commentsTab -> the person's comments stand below profile.tabRow as comment cards AND the header above stays as it was
 

@@ -2534,7 +2534,8 @@ words, recorded so the registry is whole:
   another's, each opinion figure counting people, never records — one
   person's bundle is one, however often revised (jakob 2026-11-10); the
   own page's `Edit profile`. The chronicle's tabs `Posts` ·
-  `Comments` · `Everything`, named `What the chronicle shows`; its rows
+  `Comments` · `Everything`, named `What the chronicle shows`, every
+  profile landing on `Posts` (jakob 2026-11-13); its rows
   `Published a post` (the post's title under it), `Commented` (the
   comment's words), `Gave an opinion` (`on @mira`), and `Updated your
   profile` · `Updated their profile`.
