@@ -230,7 +230,7 @@ fn handles(page: &Value) -> Vec<String> {
 /// `Record.landedAt` reads.
 async fn landed_at_of(rig: &WireRig, vouch: &Prepared) -> chrono::DateTime<chrono::Utc> {
     sqlx::query_scalar(
-        "SELECT e.attested_at FROM mirror_records m
+        "SELECT e.asserted_at FROM mirror_records m
          JOIN mirror_epochs e ON e.epoch = m.epoch WHERE m.record_id = $1",
     )
     .bind(vouch.proposal.body.act_id().to_string())

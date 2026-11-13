@@ -1141,7 +1141,7 @@ async fn claim_pair(
         pool,
         &EpochPackage {
             epoch,
-            attested_at: chrono::Utc::now(),
+            asserted_at: chrono::Utc::now(),
             records: vec![record],
             closure: Default::default(),
         },

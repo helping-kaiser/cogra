@@ -67,10 +67,12 @@ Conventions:
   ([layer1-interface.md §8.3](../primitive/layer1-interface.md#83-temporal-structure));
   ingestion appends records and advances it
   ([architecture.md "Record ingestion"](architecture.md#record-ingestion-the-mirror-contract)).
-- **Per epoch, the attested boundary timestamp** the package
+- **Per epoch, the asserted boundary timestamp** the package
   publishes (layer1-interface.md, the Host Contract) — when the
   epoch's records landed, the wall-clock instant a record's display
-  reads (`Record.landedAt`). The stand-in attests its own close time.
+  reads (`Record.landedAt`). The host asserts it; it is checkable only
+  for consistency with the published duration bounds. The stand-in
+  asserts its own close time.
   An ingested epoch missing its instant is filled by the next
   ingestion pass from the published sequence, through the seam.
 

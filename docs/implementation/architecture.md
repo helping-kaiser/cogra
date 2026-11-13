@@ -390,7 +390,9 @@ Who funds the debits is economics
 Per epoch, the backend ingests the accepted ordered act sequence
 `𝒬_k` through the L1 boundary and appends it to the mirror
 tables — each record with its key of record (epoch, position) and
-the act time it carries, each epoch with its attested boundary timestamp —
+the act time it carries, each epoch with its asserted boundary timestamp
+(the host's assertion, checkable only for consistency with the
+published duration bounds) —
 advancing a stored epoch cursor. The contract is
 exactly the mirror's truth relationship: it may lag L1; it must
 never diverge; it is rebuildable from the published sequence,
