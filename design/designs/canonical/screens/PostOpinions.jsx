@@ -38,10 +38,11 @@
    carries — `opinion`'s rule names the handle, and a registered rule is never
    reworded (`redactedRow`'s precedent, itself `redactedAccount`'s). */
 /* THE `list` CHIP DRAWS THE SHEET EMPTY AT POST SCALE (seam 248). The count
-   line drops away at zero, so a post's sheet meets nothing only when the
-   count it was opened from had gone stale — every opinion walked back since
-   — and then it says so in the comment sheet's words (`CommentOpinionsEmpty`):
-   `No opinions yet`, the line alone, as `empty`. */
+   line drops away at zero, but the post's ⋮ menu carries `Opinions on this`
+   at any count (jakob 2026-11-13, M1), so a reader meets this sheet empty
+   from that row on a post nobody holds an opinion on — or past a count line
+   gone stale — and it says so in the comment sheet's words
+   (`CommentOpinionsEmpty`): `No opinions yet`, the line alone, as `empty`. */
 export const NODE = "postDetail";
 export const PROPS = { list: { editor: "enum", options: ["rows", "empty"], default: "rows" } };
 export const VALS = `rowsShown: this.props.list === "empty" ? "none" : "flex", emptyShown: this.props.list === "empty" ? "block" : "none"`;

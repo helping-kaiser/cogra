@@ -1,6 +1,8 @@
 # CitedBy · `spec:design:behavior-cited-by`
 
-ALWAYS postDetail.citedBySheet opens over the post detail, the post still open beneath it
+ALWAYS postDetail.citedBySheet opens over the post detail, the post still open beneath it, GIVEN it was opened from the detail's count line or the detail's menu
+
+ALWAYS the post's Cited by sheet opens over the host, the list still open beneath it, GIVEN it was opened from Cited by in a card's menu — the feed, History, Saved, a profile or a tag page
 
 ALWAYS postDetail.citedBySheet lists what cites the post, newest first
 
@@ -14,4 +16,4 @@ WHEN tap a citing comment's row -> the thread opens on the post the comment answ
 
 WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND the post stands open beneath it as it was
 
-ALWAYS postDetail.citedBySheet.empty alone reads Nothing cites this yet GIVEN the sheet's read finds nothing citing the post, as when the count it was opened from has gone stale
+ALWAYS postDetail.citedBySheet.empty alone reads Nothing cites this yet GIVEN the sheet's read finds nothing citing the post, as when Cited by is tapped on a post nothing cites, or the count it was opened from has gone stale

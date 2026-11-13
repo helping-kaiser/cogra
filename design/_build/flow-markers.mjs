@@ -39,6 +39,14 @@ const guestBand = [
 ];
 const secondComments = (n) => ({ n, find: 'aria-label="1 comment"', tag: "button" });
 
+// The two readings every post menu carries (round 49, M1): arrived after the
+// rows were numbered, so they take the next free numbers on each board — the
+// badge is an identity, not a position.
+const postReadingMarks = (n) => [
+  { n, find: ">Cited by</button>", tag: "button" },
+  { n: n + 1, find: ">Opinions on this</button>", tag: "button" },
+];
+
 // The card menus on their hosts (round 36): `FeedPostMenu`'s, `FeedPostMenuOwn`'s,
 // `CommentMenu`'s and `CommentMenuOwn`'s numbers, the first row's words and the
 // Hide row's handle per board.
@@ -49,6 +57,7 @@ const readerMenuMarks = (save, hide) => [
   { n: 4, find: ">License terms</button>", tag: "button" },
   { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
   { n: 6, find: ">Report</button>", tag: "button" },
+  ...postReadingMarks(7),
 ];
 const ownPostMenuMarks = [
   { n: 1, find: ">Save</button>", tag: "button" },
@@ -58,6 +67,7 @@ const ownPostMenuMarks = [
   { n: 5, find: ">License terms</button>", tag: "button" },
   { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
   { n: 7, find: ">Cite in a new post</button>", tag: "button" },
+  ...postReadingMarks(8),
 ];
 const commentMenuMarks = (save) => [
   { n: 1, find: save, tag: "button" },
@@ -659,6 +669,7 @@ Object.assign(FLOW_MARKERS, {
     // number rather than the second one it reads at — the settings page's
     // rule, for its reason: the badge is an identity, not a position.
     { n: 7, find: ">Cite in a new post</button>", tag: "button" },
+    ...postReadingMarks(8),
   ],
   // The menus round: four sheet boards, one per surface a ⋮ opens on. Each is
   // scanExempt, so only the sheet's own rows and its scrim carry numbers, and
@@ -672,6 +683,7 @@ Object.assign(FLOW_MARKERS, {
     // Report arrived at the sheet tail (ruling 75) and takes the next free
     // number — the badge is an identity, not a position.
     { n: 6, find: ">Report</button>", tag: "button" },
+    ...postReadingMarks(7),
   ],
   // The same sheet on a phone too narrow for four actions: share has moved in
   // from the action row and leads, so every number below it shifts by one.
@@ -683,6 +695,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">License terms</button>", tag: "button" },
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 7, find: ">Report</button>", tag: "button" },
+    ...postReadingMarks(8),
   ],
   // The feed's own menu state (ruling 84): the same sheet on its second host,
   // scanExempt like the detail's, numbered as ReaderPostMenu numbers it.
@@ -693,6 +706,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">License terms</button>", tag: "button" },
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 6, find: ">Report</button>", tag: "button" },
+    ...postReadingMarks(7),
   ],
   // The own menu off the detail (seam 248, RM-G9): `RemoveMenu`'s sheet on the
   // feed, scanExempt like it, numbered as it numbers its rows; the confirm on
@@ -706,12 +720,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">License terms</button>", tag: "button" },
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 7, find: ">Cite in a new post</button>", tag: "button" },
+    ...postReadingMarks(8),
   ],
   // The host-card menus (round 36, backlog 149): each host's sheet numbered as
   // the feed's or the detail's numbers the same sheet — the badge is an
   // identity, not a position — scanExempt like every menu board.
-  // Round 41 (M1): the `author` chip's hidden copy of the hide row.
-  HistoryPostMenu: [...readerMenuMarks(">Save</button>", ">Hide @ada</button>"), { n: 7, find: ">Unhide @ada</button>", tag: "button" }],
+  // Round 41 (M1): the `author` chip's hidden copy of the hide row, at 9 since
+  // round 49 gave 7 and 8 to the two readings every reader menu numbers so.
+  HistoryPostMenu: [...readerMenuMarks(">Save</button>", ">Hide @ada</button>"), { n: 9, find: ">Unhide @ada</button>", tag: "button" }],
   // A hidden person's profile card in History (round 41, M1): `FeedProfileMenu`'s
   // numbers, the hide row reading Unhide.
   HistoryProfileMenu: [
@@ -756,6 +772,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 5, find: ">Report</button>", tag: "button" },
     { n: 6, find: ">License terms</button>", tag: "button" },
+    ...postReadingMarks(7),
   ],
   // Your own removed post's menu open (round 46, question 18).
   FeedRemovedMenuOwn: [
@@ -763,6 +780,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Cite in a new post</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 5, find: ">License terms</button>", tag: "button" },
+    ...postReadingMarks(6),
   ],
   FeedRemoveConfirm: [
     { n: 1, find: ">Remove</button>", tag: "button" },

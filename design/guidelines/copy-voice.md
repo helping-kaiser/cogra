@@ -3534,8 +3534,8 @@ review*).
 **The opinions list.** The post's door reads `8 opinions on this post`
 (`1 opinion on this post` in the singular), and those words are its
 accessible name — the count rides inside the name (*Manage the N
-citations*, above; the K13 round); the comment's menu row reads
-`Opinions on this`.
+citations*, above; the K13 round); the menu row of a post and of a
+comment reads `Opinions on this` (a post's, jakob 2026-11-13, M1).
 The sheets are titled `Opinions on this post` and `Opinions on this
 comment`. *Opinion* throughout, never *stance* — the reader's word
 (*Naming*, above) — and the count is bare beside it, the row's own words
@@ -3800,7 +3800,7 @@ cannot hold has to be able to leave it.
 
 **`Cited by N`** — the inbound count line on a post's detail, whose
 accessible name is its own words, `Cited by 4`; and `Cited by` as the
-sheet's title and the comment menu's row. *Cited* is
+sheet's title and the row of a post's menu and a comment's. *Cited* is
 already the product's verb for a Reference (*"@ada cited your post"*),
 and the line reads from the artifact's side: what points at this. The
 count is bare beside it, the row's own words having said what was

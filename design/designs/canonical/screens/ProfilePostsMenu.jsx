@@ -1,7 +1,7 @@
 /* THE PROFILE'S POSTS VIEW, A POST CARD'S MENU OPEN (round 36, backlog 149;
    jakob 2026-11-11, H4 and H7). A card on @ada's posts tab is the feed's own
    card, so its ⋮ raises the reader's post menu whole — Save, Cite, Hide @ada,
-   License terms, Report at the tail.
+   Cited by, Opinions on this, License terms, Report at the tail.
 
    HIDE @ada STAYS, though the profile's own ⋮ carries the same row (jakob,
    H4: "if users expect it there (because they can find it there when in the

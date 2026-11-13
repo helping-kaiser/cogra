@@ -5,7 +5,8 @@
    the hosting surface gives the drawn state its own paths, `feed.menuSheet.*`.
 
    THE ROWS ARE `OWN_POST_MENU`, the one atom the detail's own menu reads —
-   Save, Cite, Edit, Mark as sensitive, Remove, the license closing it — so the
+   Save, Cite, Edit, Mark as sensitive, Remove, Cited by, Opinions on this,
+   the license closing it — so the
    feed's own sheet and the detail's cannot disagree. Own menus carry no Hide
    and no Report. The same sheet stands on every host a reader's own card
    stands on off the detail: the own profile's Posts and Comments tabs, and a

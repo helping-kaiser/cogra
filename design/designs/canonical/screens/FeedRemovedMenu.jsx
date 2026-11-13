@@ -4,7 +4,7 @@
    removed by its author, stands as its mark in the feed — `LadderStates`'
    first redacted card — and its ⋮ raises the reader's card menu whole
    (`readerCardMenu`, the license appended): Save, Cite in a new post, Hide
-   @ada, License terms, then Report at the tail. The mark carries its removal's date under it, `2d`, as every feed
+   @ada, Cited by, Opinions on this, License terms, then Report at the tail. The mark carries its removal's date under it, `2d`, as every feed
    card's mark does (`FeedRemoved`'s `now`).
 
    THE LICENSE ROW STAYS (jakob 2026-11-12: "someone might have used my

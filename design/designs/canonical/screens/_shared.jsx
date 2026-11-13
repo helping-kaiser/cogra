@@ -258,15 +258,41 @@ const CARD_MENU = [SAVE_ROW, CITE_ROW];
    a reader has nothing to report themselves for. `tail` tells a card's own ⋮
    the same: the card appends the license, and the row stays after it. */
 const REPORT_ROW = { label: "Report", onSelect: () => {}, node: "report", tail: true };
+/* THE TWO READINGS — WHO HOLDS AN OPINION ON THIS, AND WHAT CITES IT (backlog
+   item 55; the topic round, 2026-09-14; jakob 2026-11-13, M1: "they belong on
+   a details screen and in the menu"). Every content menu carries both rows,
+   a post's and a comment's, live or removed, your own or another's. A post
+   has two doors to each list: the count line on its detail and the row in
+   its menu. A comment, which has no detail surface of its own, has the row.
+
+   A ROW STANDS WHATEVER THE COUNT IS, which is the difference between a menu
+   row and a count line: the line drops away at zero because a tap that can
+   only open an empty list is a tap spent on nothing, while a menu row that
+   came and went with a number would make the menu a different menu every
+   time. So the row is the door to an empty list — the post's sheets'
+   `list: empty` and the comment's `CommentOpinionsEmpty` /
+   `CommentCitedByEmpty` — and on a removed post, whose detail carries no
+   count lines, the row is the one door.
+
+   THEY SIT AFTER THE ACTS AND BEFORE THE LICENSE. A menu leads with the acts
+   it was opened for and closes on the license (`CARD_MENU`'s order); reading
+   who holds an opinion, or what points at a thing, is not an act, so the two
+   fall between. Inbound before opinions, because it is a fact about the
+   artifact and the other is a fact about people. */
+const CITED_BY_ROW = { label: "Cited by", onSelect: () => {}, node: "citedBy" };
+const OPINIONS_ROW = { label: "Opinions on this", onSelect: () => {}, node: "opinions" };
 /* A POST CARD'S OWN ⋮ IS THE MENU THE BOARDS DRAW (round 36): the reader's
    post menu (`READER_POST_MENU`) less the license the card appends — Save,
-   Cite, Hide with the author's handle, then Report after the license — so a
-   card and the sheet its ⋮ raises cannot disagree. A board drawing a card of
-   the reader's own hands it the own rows instead (`FeedPostMenuOwn`). */
+   Cite, Hide with the author's handle, Cited by, Opinions on this, then
+   Report after the license — so a card and the sheet its ⋮ raises cannot
+   disagree. A board drawing a card of the reader's own hands it the own rows
+   instead (`FeedPostMenuOwn`). */
 const readerCardMenu = (handle) => [
   SAVE_ROW,
   CITE_ROW,
   { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {}, node: "hide" },
+  CITED_BY_ROW,
+  OPINIONS_ROW,
   REPORT_ROW,
 ];
 
@@ -718,6 +744,8 @@ const OWN_POST_MENU = [
   EDIT_ROW,
   { label: "Mark as sensitive", onSelect: () => {}, node: "markSensitive" },
   REMOVE_ROW,
+  CITED_BY_ROW,
+  OPINIONS_ROW,
   LICENSE_ROW,
 ];
 /* YOUR OWN REMOVED POST KEEPS A MENU (jakob 2026-11-12, question 18: "i can
@@ -725,52 +753,23 @@ const OWN_POST_MENU = [
    and on License terms: "even if the media is now removed someone might have
    used my content already under its license regulations"; and 2026-11-13,
    point B: Mark as sensitive "goes"): `OWN_POST_MENU` less Edit, Mark as
-   sensitive and Remove — Save, Cite in a new post, License terms, in the own
-   menu's order. The detail's header carries it whole; a card's ⋮ is handed
+   sensitive and Remove — Save, Cite in a new post, Cited by, Opinions on
+   this, License terms, in the own menu's order. The detail's header carries it whole; a card's ⋮ is handed
    it less the license, which `PostCard` appends. */
 const OWN_REMOVED_POST_MENU = OWN_POST_MENU.filter((row) => row !== EDIT_ROW && row !== REMOVE_ROW && row.node !== "markSensitive");
 const OWN_REMOVED_CARD_MENU = OWN_REMOVED_POST_MENU.filter((row) => row !== LICENSE_ROW);
 /* The reader's post menu for a post by `handle`, so a host whose drawn card
    is someone else's than @ada's names its author in the Hide row
    (`TagPageMenu`'s @tobias). */
-const readerPostMenu = (handle) => [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {}, node: "hide" }, LICENSE_ROW, REPORT_ROW];
+const readerPostMenu = (handle) => [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {}, node: "hide" }, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW, REPORT_ROW];
 const READER_POST_MENU = readerPostMenu("ada");
 /* SAVED'S MENUS READ `Unsave` FIRST (Saved.md: every card there is kept), the
    row keeping its one name, `save`, whatever its label reads. */
 const UNSAVE_ROW = { ...SAVE_ROW, label: "Unsave" };
 const keptMenu = (rows) => rows.map((row) => (row === SAVE_ROW ? UNSAVE_ROW : row));
-/* THE COMMENT'S MENU IS WHERE ITS OPINIONS LIVE (backlog item 55; jakob ruled
-   both doors, and this is the comment's). A post's door is a count row on its
-   detail surface; a comment has no detail surface of its own — it lives inside a
-   sheet — so its door is the ⋮ that every other act on it already uses.
-
-   IT STANDS WHATEVER THE COUNT IS, which is the difference between a menu row
-   and a count line: the line drops away at zero because a tap that can only open
-   an empty list is a tap spent on nothing, while a menu row that came and went
-   with a number would make the menu a different menu every time. That is also
-   why the empty sheet is reachable only from here.
-
-   IT SITS AFTER THE ACTS AND BEFORE THE LICENSE. A menu leads with the acts it
-   was opened for and closes on the license (`CARD_MENU`'s order); reading who
-   holds an opinion is not an act, so it falls between them. */
-const OPINIONS_ROW = { label: "Opinions on this", onSelect: () => {}, node: "opinions" };
-/* ── WHAT CITES THIS (the topic round, 2026-09-14) ─────────────────────────
-   The inbound mirror of the opinions round (backlog item 55), and the same two
-   doors: a count line on the post's detail, and the comment's ⋮ — because a
-   comment has no detail surface of its own, and its ⋮ is where every other act
-   on it already lives.
-
-   THE ROW STANDS AT ANY COUNT, the menus round's rule: a count LINE drops away
-   at zero because a tap that can only open an empty list is a tap spent on
-   nothing, while a menu row that came and went with a number would make the
-   menu a different menu every time. So the empty sheet is reachable only here.
-
-   IT SITS BESIDE THE OPINIONS ROW, between the acts and the license, for that
-   row's reason: reading who has pointed at this is not an act. Inbound before
-   opinions, because it is a fact about the artifact and the other is a fact
-   about people. */
-const CITED_BY_ROW = { label: "Cited by", onSelect: () => {}, node: "citedBy" };
-
+/* THE COMMENT'S MENU carries the two readings (`CITED_BY_ROW`,
+   `OPINIONS_ROW`) as every content menu does; a comment has no detail
+   surface, so the rows are its one door to each list. */
 const COMMENT_MENU = [...CARD_MENU, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW, REPORT_ROW];
 /* YOUR OWN COMMENT'S MENU (the comment-removal round, 2026-10-01; round 41):
    the reader's menu with `Edit` and `Remove` joined among the acts — after

@@ -1,6 +1,8 @@
 # PostOpinions · `spec:design:behavior-post-opinions`
 
-ALWAYS postDetail.opinionsSheet opens over the post detail, the post still open beneath it
+ALWAYS postDetail.opinionsSheet opens over the post detail, the post still open beneath it, GIVEN it was opened from the detail's count line or the detail's menu
+
+ALWAYS the post's opinions sheet opens over the host, the list still open beneath it, GIVEN it was opened from Opinions on this in a card's menu — the feed, History, Saved, a profile or a tag page
 
 ALWAYS postDetail.opinionsSheet lists everyone holding an opinion on the post, the same for every reader, the author included
 
@@ -20,4 +22,4 @@ ALWAYS postDetail.opinionsSheet.opinion.value.face is 🤔, spoken as the state,
 
 WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND the post stands open beneath it as it was
 
-ALWAYS postDetail.opinionsSheet.empty alone reads No opinions yet GIVEN the sheet's read finds no opinion, as when the count it was opened from has gone stale
+ALWAYS postDetail.opinionsSheet.empty alone reads No opinions yet GIVEN the sheet's read finds no opinion, as when Opinions on this is tapped on a post nobody holds an opinion on, or the count it was opened from has gone stale

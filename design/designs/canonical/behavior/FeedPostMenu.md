@@ -2,7 +2,7 @@
 
 WHEN tap a feed card's ⋮ -> feed.menuSheet rises over the feed AND the feed stands unchanged beneath its wash
 
-ALWAYS feed.menuSheet reads Save or Unsave, then Cite in a new post, then Hide with the author's handle, then License terms, then feed.menuSheet.report at the sheet tail, the reader's post menu's own rows
+ALWAYS feed.menuSheet reads Save or Unsave, then Cite in a new post, then Hide with the author's handle, then feed.menuSheet.citedBy, then Opinions on this, then License terms, then feed.menuSheet.report at the sheet tail, the reader's post menu's own rows
 
 ALWAYS feed.menuSheet.save reads Save GIVEN the post is not kept
 
@@ -22,7 +22,7 @@ WHEN tap feed.menuSheet.license -> the menu closes AND the post's terms come up 
 
 WHEN tap feed.menuSheet.report -> the menu closes AND feed.reportSheet rises over the feed, feed.reportSheet.title reading Report this post? AND NEVER anything is sent yet
 
-WHEN a guest taps Save, Cite in a new post, Hide or Report on a post's menu, on any host -> the guest gate opens AND NEVER License terms raises it
+WHEN a guest taps Save, Cite in a new post, Hide or Report on a post's menu, on any host -> the guest gate opens AND NEVER feed.menuSheet.citedBy, Opinions on this or License terms raise it, a reading being open to a guest
 
 WHEN an applicant taps Cite in a new post on a post's menu, on any host -> the menu closes AND the snackbar reads You can post once you're in. AND NEVER the wizard opens
 

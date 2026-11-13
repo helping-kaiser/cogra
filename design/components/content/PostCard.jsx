@@ -436,8 +436,10 @@ export function PostCard({
           AT ZERO THERE IS NO ROW, exactly as the counts line drops a kind it has
           none of — and for `SettingsHidden`'s reason: a tap that can only open an
           empty list is a tap spent on nothing. A post nobody has answered says so
-          by having nothing to open. The comment's door is its ⋮ menu, where the
-          row stands whatever the count is, and the empty sheet lives there. */}
+          by having nothing to open. THE LINE IS ONE OF A POST'S TWO DOORS: the
+          other is `Opinions on this` in the post's ⋮ menu, on every card and
+          host, live or removed, where the row stands whatever the count is and
+          the empty sheet is reached. A comment has the row alone. */}
       {/* THE COUNT RIDES INSIDE THE NAME (copy-voice, *The opinions list*; the
           K13 round). The line's own words are its accessible name — `8
           opinions on this post`, `Cited by 4` — because a door's name replaces
@@ -491,9 +493,11 @@ export function PostCard({
           colour, same discipline.
 
           AT ZERO THERE IS NO ROW, `SettingsHidden`'s rule again — a tap that
-          can only open an empty list is a tap spent on nothing. The comment's
-          door is its ⋮, where the row stands whatever the count is, and that is
-          where the empty sheet lives. */}
+          can only open an empty list is a tap spent on nothing. THE LINE IS
+          ONE OF A POST'S TWO DOORS: the other is `Cited by` in the post's ⋮
+          menu, on every card and host, live or removed, where the row stands
+          whatever the count is and the empty sheet is reached. A comment has
+          the row alone. */}
       {!redacted && detail && citedBy > 0 && (
         <button
           type="button"
