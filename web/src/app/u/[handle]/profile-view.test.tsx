@@ -1039,12 +1039,16 @@ describe("ProfileScreen", () => {
       recordsHandler([]),
     );
     renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore(), reader: "APPLICANT" });
-    const invites = await screen.findByTestId(byNode("profile.identity.actionRow.invites"));
+    // The page's own read says member; the shared state says applicant, and the
+    // lock follows the shared state. The Invites lock is what still tells the
+    // applicant apart here: the empty chronicle reads the same for both
+    // (round 42 cut its applicant tail).
     await waitFor(() => expect(screen.getByTestId(byNode("profile.chronicle.empty.title"))).toBeInTheDocument());
+    const invites = screen.getByTestId(byNode("profile.identity.actionRow.invites"));
     expect(invites).not.toHaveAttribute("href");
-    expect(screen.getByTestId(byNode("profile.chronicle.empty.title"))).toHaveTextContent(
-      "Nothing here yet. Your posts and opinions show up here once you're in.",
-    );
+    expect(invites.className).toContain("opacity-[var(--state-disabled)]");
+    fireEvent.click(invites);
+    expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent("You can invite once you're in.");
   });
 
   // AN APPLICANT LET IN MID-SESSION: the profile's own fresh `me` read says
