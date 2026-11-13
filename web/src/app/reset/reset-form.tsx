@@ -117,7 +117,7 @@ function ResetRequest() {
       backHref="/login"
       backLabel="Back"
       title="Reset your password"
-      lead="Enter the email you signed up with and we send a reset link. Resetting the password signs out every device."
+      lead="Resetting the password signs out every device."
     >
       <form onSubmit={onRequest} className="flex flex-col" noValidate>
         <div className="mt-8">
@@ -207,7 +207,7 @@ function ResetNew({ token, onExpired }: { token: string; onExpired: () => void }
     <TaskPage
       node={RESET_NEW}
       title="Set a new password"
-      lead="Setting a new password signs out every device. You sign in again with the new one."
+      lead="Setting a new password signs out every device."
     >
       <form onSubmit={onConfirm} className="flex flex-col" noValidate>
         <div className="mt-8">
@@ -256,7 +256,7 @@ function ResetExpired() {
   return (
     <TaskPage
       title="This link doesn't work anymore"
-      lead="It may have expired or already been used. A reset link works once and expires after 15 minutes — ask for a fresh one."
+      lead="A reset link works once and expires after 15 minutes."
     >
       <div className="mt-6 flex flex-col gap-2">
         <button

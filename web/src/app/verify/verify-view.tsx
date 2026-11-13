@@ -133,7 +133,7 @@ function Verified() {
         Email verified
       </h1>
       <p className="m-0 mt-2 max-w-[300px] text-body-medium text-on-surface-variant">
-        Your application moved a step. You can go back to the app — it already knows.
+        You can go back to the app — it already knows.
       </p>
       <div className="mt-6">
         <button
@@ -210,7 +210,7 @@ function VerifyExpired() {
     <TaskPage
       node={NODE}
       title="This link doesn't work anymore"
-      lead="It may have expired or already been used. Send yourself a fresh one — if your account is still waiting on its email, the new link picks it back up."
+      lead="It may have expired or already been used. If your account is still waiting on its email, the new link picks it back up."
     >
       {fieldOpen && (
         <div className="mt-6">
