@@ -788,6 +788,13 @@ const OWN_COMMENT_MENU = [...CARD_MENU, EDIT_ROW, REMOVE_ROW, CITED_BY_ROW, OPIN
    report row standing after it. */
 const COMMENT_CARD_MENU = COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
 const OWN_COMMENT_CARD_MENU = OWN_COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
+/* A REMOVED COMMENT'S MENUS FOLLOW THE POST'S (jakob 2026-11-13, point C):
+   another's raises the reader's comment menu whole (`COMMENT_MENU`, the
+   license row kept); your own raises `OWN_COMMENT_MENU` less Edit and Remove
+   — Save, Cite in a new post, Cited by, Opinions on this, License terms. The
+   card's ⋮ takes each less the license, which `CommentCard` appends. */
+const OWN_REMOVED_COMMENT_MENU = OWN_COMMENT_MENU.filter((row) => row !== EDIT_ROW && row !== REMOVE_ROW);
+const OWN_REMOVED_COMMENT_CARD_MENU = OWN_REMOVED_COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
 
 /* THE THINK-TWICE DIALOG BEHIND AN AUTHOR'S `Remove`, ONE ANATOMY PER KIND
    (`RemoveConfirm`'s, shared the moment the comment's confirm drew it a second
@@ -2936,10 +2943,10 @@ const TOBIAS_REPLIES = [
    THE MARK IS ONE LINE AND ITS DATE, as on a post (jakob 2026-11-12): the
    thread standing around it shows what remains.
 
-   A REMOVED COMMENT HAS NO MENU LEFT: nothing on its card is left to save,
-   cite or read the terms of, so its ⋮ goes with the payload. (A removed
-   POST keeps its menu since jakob's 2026-11-12 ruling; whether a removed
-   comment follows is not ruled.) What survives is what survives a removed post — the author, the
+   A REMOVED COMMENT KEEPS A MENU, as a removed post does (jakob 2026-11-13,
+   point C): your own raises `OWN_REMOVED_COMMENT_MENU` — Save, Cite in a new
+   post, Cited by, Opinions on this, License terms; another's the reader's
+   comment menu whole. `CommentRemovedMenu` draws yours open. What survives is what survives a removed post — the author, the
    opinion a reader can still give, and the way to answer. */
 /* WHERE THE READER STANDS IN THE THREAD for the whole removal — the menu, the
    dialog and the mark (`ReplySettled`'s `scrolledBy`, the reply-return
@@ -3067,7 +3074,7 @@ function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, remov
   const ownSol = (
     <CommentCard
       {...solComment}
-      menuItems={removed ? [] : OWN_THREAD_MENU}
+      menuItems={removed ? OWN_REMOVED_COMMENT_CARD_MENU : OWN_THREAD_MENU}
       redacted={removed ? { reason: "author", when: "now" } : undefined}
       node={card}
     />

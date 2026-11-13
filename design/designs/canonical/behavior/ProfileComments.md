@@ -6,7 +6,7 @@ ALWAYS profile.comments.commentCard leads with profile.comments.commentCard.targ
 
 ALWAYS a removed comment keeps its place in the list, profile.comments.commentCard.removalMark.line reading Removed by its author where its words were,, and nothing more under it
 
-ALWAYS a removed comment keeps profile.comments.commentCard.authorChip, its time and profile.comments.commentCard.target, and carries no profile.comments.commentCard.menu
+ALWAYS a removed comment keeps profile.comments.commentCard.authorChip, its time and profile.comments.commentCard.target, and keeps profile.comments.commentCard.menu, the reader's comment menu whole — Save or Unsave, Cite in a new post, Cited by, Opinions on this, License terms, then Report at the sheet tail — GIVEN the comment is someone else's
 
 ALWAYS profile.comments.empty below profile.tabRow reads Nothing here yet., the line alone, GIVEN the person has written no comment
 

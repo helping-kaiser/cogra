@@ -713,6 +713,8 @@ Object.assign(FLOW_MARKERS, {
   HistoryCommentMenu: commentMenuMarks(">Save</button>"),
   SavedCommentMenu: commentMenuMarks(">Unsave</button>"),
   ProfileCommentsMenu: commentMenuMarks(">Save</button>"),
+  // A removed comment's menu on the profile (round 46, point C): the same rows.
+  ProfileCommentsRemovedMenu: commentMenuMarks(">Save</button>"),
   HistoryCommentMenuOwn: ownCommentMenuMarks,
   ProfileCommentsMenuOwn: ownCommentMenuMarks,
   // The profile card's menu (round 36, H2): `ProfileMenu`'s rows less Share,
@@ -799,6 +801,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: ">Remove</button>", tag: "button" },
     // Edit (round 41, jakob 2026-11-11): a row in the menu, never on the card.
     { n: 8, find: ">Edit</button>", tag: "button" },
+  ],
+  // Your removed comment's menu (round 46, jakob 2026-11-13, point C): CommentMenuOwn's numbers, Edit and Remove gone.
+  CommentRemovedMenu: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+    { n: 3, find: ">License terms</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div", all: true },
+    { n: 5, find: ">Opinions on this</button>", tag: "button" },
+    { n: 6, find: ">Cited by</button>", tag: "button" },
   ],
   ProfileMenu: [
     { n: 1, find: ">Save</button>", tag: "button" },

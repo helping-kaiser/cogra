@@ -6058,7 +6058,7 @@ withdrawing a tag or a citation is an act that costs too. For jakob: (a) the
 dialog stays as written, one text for every seal [as built]; (b) an edit
 section is added to it — new prose, his to word.
 
-### 211 · A removed comment's menu · *design* · **filed 2026-11-12**
+### 211 · A removed comment's menu · *design* · **filed 2026-11-12** · **closed 2026-11-13**
 
 Round 46. jakob's ruling 18 gives a removed POST a menu (cite it, read its
 license); a removed comment still has none (`CommentRemoved`, "a removed
@@ -6066,6 +6066,8 @@ comment has no menu left"). For jakob: (a) the comment follows the post —
 Save, Cite in a new post, Cited by, Opinions on this, License terms, Report
 for another's, the own rows less Edit and Remove for yours [lean]; (b) it
 stays menu-less.
+
+Closed by jakob 2026-11-13 (point C, as recommended): a removed comment's menu follows the post's — another's raises the reader's comment menu whole (`ProfileCommentsRemovedMenu`), your own your comment menu less Edit and Remove (`CommentRemovedMenu`).
 
 ### 212 · Mark as sensitive on your own removed post · *design* · **filed 2026-11-12** · **closed 2026-11-13**
 
