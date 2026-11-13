@@ -588,7 +588,7 @@ describe("the feed filter", () => {
       fireEvent.click(chip("kinds.postsChip"));
       done();
       const empty = await screen.findByTestId(byNode("feed.nothing"));
-      expect(empty).toHaveTextContent(/Everything is switched off\.$/);
+      expect(within(empty).getByTestId(byNode("feed.nothing.title"))).toHaveTextContent(/^Everything is switched off\.$/);
       // In the list's own column, 8px under the band (FeedNothing.jsx `8px 24px`).
       expect(empty.parentElement?.className).toBe("px-6 pb-2");
       expect(trigger()).toHaveTextContent(/^Nothing$/);
