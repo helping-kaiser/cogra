@@ -143,7 +143,11 @@
    so on the form's row: `password` draws the Password row, `email` the
    Email row (the email forms share it), each reading `That didn't go
    through.` — the Handle row's failed line without its `Retry` — and the
-   row's tap opens the form again.
+   row's tap opens the form again, the line leaving with that tap. While the
+   submit runs the row reads the form's own in-flight label, as the Handle row
+   reads `Changing handle…` (jakob 2026-11-12, 8): `password-changing`
+   (`Changing password…`), `email-changing` (`Changing email…`, the request's
+   and the applicant's change), `email-confirming` (`Confirming the code…`).
 
    TWO SECTIONS CARRY A "?" (jakob 2026-11-12, the re-ask's 8 (a)): the one
    "?" per screen gives way here, beside `Giving an opinion` and `Reading`,
@@ -167,10 +171,10 @@ export const PROPS = {
   handle: { editor: "enum", options: ["rest", "changing", "failed", "taken"], default: "rest" },
   install: { editor: "enum", options: ["absent", "shown"], default: "absent" },
   kept: { editor: "enum", options: ["waiting", "failed"], default: "waiting" },
-  forms: { editor: "enum", options: ["rest", "password", "email"], default: "rest" },
+  forms: { editor: "enum", options: ["rest", "password-changing", "password", "email-changing", "email-confirming", "email"], default: "rest" },
   help: { editor: "enum", options: ["closed", "opinion", "reading"], default: "closed" },
 };
-export const VALS = `helpOpinionShown: this.props.help === "opinion" ? "block" : "none", helpReadingShown: this.props.help === "reading" ? "block" : "none", passwordRestShown: this.props.forms === "password" ? "none" : "block", passwordFailedShown: this.props.forms === "password" ? "block" : "none", emailRestShown: this.props.forms === "email" ? "none" : "block", emailFailedShown: this.props.forms === "email" ? "block" : "none", keptRestShown: this.props.kept === "failed" ? "none" : "block", keptFailedShown: this.props.kept === "failed" ? "block" : "none", installShown: this.props.install === "shown" ? "block" : "none",handleRestShown: this.props.handle === "rest" ? "block" : "none", handleChangingShown: this.props.handle === "changing" ? "block" : "none", handleFailedShown: this.props.handle === "failed" ? "block" : "none", handleTakenShown: this.props.handle === "taken" ? "block" : "none"`;
+export const VALS = `helpOpinionShown: this.props.help === "opinion" ? "block" : "none", helpReadingShown: this.props.help === "reading" ? "block" : "none", passwordRestShown: this.props.forms === "password" || this.props.forms === "password-changing" ? "none" : "block", passwordChangingShown: this.props.forms === "password-changing" ? "block" : "none", passwordFailedShown: this.props.forms === "password" ? "block" : "none", emailRestShown: ["email", "email-changing", "email-confirming"].includes(this.props.forms) ? "none" : "block", emailChangingShown: this.props.forms === "email-changing" ? "block" : "none", emailConfirmingShown: this.props.forms === "email-confirming" ? "block" : "none", emailFailedShown: this.props.forms === "email" ? "block" : "none", keptRestShown: this.props.kept === "failed" ? "none" : "block", keptFailedShown: this.props.kept === "failed" ? "block" : "none", installShown: this.props.install === "shown" ? "block" : "none",handleRestShown: this.props.handle === "rest" ? "block" : "none", handleChangingShown: this.props.handle === "changing" ? "block" : "none", handleFailedShown: this.props.handle === "failed" ? "block" : "none", handleTakenShown: this.props.handle === "taken" ? "block" : "none"`;
 
 export function Screen() {
   return <SettingsBody handleChip keptChip formsChip helpChip keptPicks={KEPT_PICKS.length} install="{{installShown}}" />;

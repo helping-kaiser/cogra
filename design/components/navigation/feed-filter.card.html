@@ -29,7 +29,7 @@ function Demo(){
     <div className="inner">
       <div className="top"><span className="wordmark">cogra</span><FeedFilter value={filter} onChange={setFilter}/></div>
       {nothing ? (
-        <EmptyState title="Your feed is showing nothing — everything is switched off." actionLabel="Show posts again" onAction={()=>setFilter({...filter,kinds:["posts"]})}/>
+        <EmptyState title="Everything is switched off." actionLabel="Show posts again" onAction={()=>setFilter({...filter,kinds:["posts"]})}/>
       ) : (
         <>
         <PostCard author={{handle:"ada",displayName:"Ada Okonkwo"}} timestamp="2h" score="15.20" comments={3}

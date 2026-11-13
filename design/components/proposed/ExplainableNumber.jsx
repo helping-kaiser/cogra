@@ -51,7 +51,7 @@ const SR_ONLY = {
      the card reads `0.00` only for a score that is exactly zero — a severed
      one — and a reader never meets a computed figure that looks like none.
    · THE TRACE — every figure behind the graph glyph: the held thing's flag,
-     each path's figure, the quiet row's, a path's `adds`: two decimals as on
+     each path's figure, a path's `adds`: two decimals as on
      the card, and a tiny one in two significant digits instead — its
      magnitude rounded to two significant digits and written in plain
      decimals (`0.0031`, `0.00042`, `0.000050`, `0.0010`), then cut to at most

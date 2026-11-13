@@ -277,7 +277,7 @@ const ADA_POST = {
   id: "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
   author: ADA,
   title: "The long way home",
-  description: "Took the coast road instead of the tunnel. Four hours longer, worth every minute.",
+  description: "Took the coast road instead of the tunnel. Four hours longer, worth every minute — the light over the third headland alone paid for the detour.",
   timestamp: "2h",
   media: [{ src: "post-photo.jpg", ratio: "wide", fit: "cover" }],
   topics: ["photography", "coastroad"],
@@ -720,6 +720,15 @@ const OWN_POST_MENU = [
   REMOVE_ROW,
   LICENSE_ROW,
 ];
+/* YOUR OWN REMOVED POST KEEPS A MENU (jakob 2026-11-12, question 18: "i can
+   still cite this (maybe in a folloup post to explain why i deleted it)";
+   and on License terms: "even if the media is now removed someone might have
+   used my content already under its license regulations"): `OWN_POST_MENU`
+   less Edit and Remove alone — Save, Cite in a new post, Mark as sensitive,
+   License terms, in the own menu's order. The detail's header carries it
+   whole; a card's ⋮ is handed it less the license, which `PostCard` appends. */
+const OWN_REMOVED_POST_MENU = OWN_POST_MENU.filter((row) => row !== EDIT_ROW && row !== REMOVE_ROW);
+const OWN_REMOVED_CARD_MENU = OWN_REMOVED_POST_MENU.filter((row) => row !== LICENSE_ROW);
 /* The reader's post menu for a post by `handle`, so a host whose drawn card
    is someone else's than @ada's names its author in the Hide row
    (`TagPageMenu`'s @tobias). */
@@ -2926,9 +2935,10 @@ const TOBIAS_REPLIES = [
    THE MARK IS ONE LINE AND ITS DATE, as on a post (jakob 2026-11-12): the
    thread standing around it shows what remains.
 
-   A REMOVED COMMENT HAS NO MENU LEFT, the post's `Removed` rule: nothing on
-   its card is left to save, cite or read the terms of, so its ⋮ goes with the
-   payload. What survives is what survives a removed post — the author, the
+   A REMOVED COMMENT HAS NO MENU LEFT: nothing on its card is left to save,
+   cite or read the terms of, so its ⋮ goes with the payload. (A removed
+   POST keeps its menu since jakob's 2026-11-12 ruling; whether a removed
+   comment follows is not ruled.) What survives is what survives a removed post — the author, the
    opinion a reader can still give, and the way to answer. */
 /* WHERE THE READER STANDS IN THE THREAD for the whole removal — the menu, the
    dialog and the mark (`ReplySettled`'s `scrolledBy`, the reply-return
@@ -3196,7 +3206,7 @@ const TOBIAS_CANOE_POST = {
   author: TOBIAS,
   title: "Crossing at the narrows before the wind got up",
   description:
-    "Four of us out, one camera wedged in the bow. The far bank is closer than it looks from the road.",
+    "Four of us out, one camera wedged in the bow. The far bank is closer than it looks from the road, and further than it looks from the water.",
   timestamp: "2h",
   media: [{ ...CLIP_CANOE, resting: true }],
   topics: ["stillwater"],
@@ -3548,19 +3558,6 @@ function ChangeHandleBody({ value = "" } = {}) {
         >
           Change your handle
         </h1>
-        <p
-          style={{
-            margin: "8px 0 0",
-            fontSize: "var(--text-body-medium)",
-            fontWeight: "var(--text-body-medium--font-weight)",
-            lineHeight: "var(--text-body-medium--line-height)",
-            letterSpacing: "var(--text-body-medium--letter-spacing)",
-            color: "var(--text-secondary)",
-          }}
-          data-node="body"
-        >
-          <NameInText text="@sol is how people mention and find you. Everything you have published stays yours — the handle is a name, not the account." />
-        </p>
 
         <div style={{ marginTop: 32 }}>
           <TextField
@@ -3667,7 +3664,10 @@ function ReportProblemBody({ words }) {
    shape as `SettingsInstallHelp` draws it on this page. `helpChip` draws the
    two open states on `Settings` (its `help` chip); the dialogs are drawn
    copies and carry no name. */
-const GIVING_AN_OPINION_HELP = ["A tap opens it; drift to where it feels right.", "One slider per side of the opinion."];
+/* Giving an opinion's text is one paragraph naming the three inputs (jakob
+   2026-11-12: "one or a couple actual sentences instead of two disconnect
+   ones") — drafted from the rows' labels and their old hints, review-pending. */
+const GIVING_AN_OPINION_HELP = "Three ways to give an opinion: the pad opens on a tap, and you drift to where it feels right; sliders give each side of the opinion its own slider; typed values take both numbers exactly.";
 const READING_HELP = "Every feed starts from what it shows, and a change made inside a feed lasts until you change it back. Both choices stay on this device.";
 
 function SettingsBody({ handleChip = false, keptChip = false, formsChip = false, helpChip = false, backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, hidden = "3", recoveryStatus, backupFootnote, clearingFootnote, install } = {}) {
@@ -3784,11 +3784,7 @@ function SettingsBody({ handleChip = false, keptChip = false, formsChip = false,
             (jakob's shape). It stands in a group of its own for the same
             reason hiding does: the Reading "?"'s this-device promise
             is not true of it. */}
-        <SettingsGroup
-          label="Sensitive content"
-          footnote="This choice follows your account to every device."
-          node="sensitive"
-        >
+        <SettingsGroup label="Sensitive content" node="sensitive">
           <SettingsRow
             checked={false}
             label="Always unveil sensitive content"
@@ -3952,11 +3948,16 @@ function SettingsBody({ handleChip = false, keptChip = false, formsChip = false,
                says so on the form's own row — `That didn't go through.`, the
                Handle row's failed line, with no `Retry` (a password change
                would need the passwords typed again) — and the row's tap opens
-               the form again. The failed states are drawn copies; the rest row
-               alone carries the name. */
+               the form again. While the submit runs, the row reads the form's
+               own in-flight label and refuses a second open, the Handle row's
+               `Changing handle…` (jakob 2026-11-12, 8). The waiting and failed
+               states are drawn copies; the rest row alone carries the name. */
             <div>
               <div style={{ display: "{{passwordRestShown}}" }}>
                 <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} node="password" />
+              </div>
+              <div style={{ display: "{{passwordChangingShown}}" }}>
+                <SettingsRow label="Password" status="Changing password…" inert />
               </div>
               <div style={{ display: "{{passwordFailedShown}}" }}>
                 <SettingsRow
@@ -4012,6 +4013,12 @@ function SettingsBody({ handleChip = false, keptChip = false, formsChip = false,
             <div>
               <div style={{ display: "{{emailRestShown}}" }}>
                 <SettingsRow label="Email" value="sol@solferreira.art" status={emailPending ? "Change pending" : undefined} onOpen={() => {}} node="email" />
+              </div>
+              <div style={{ display: "{{emailChangingShown}}" }}>
+                <SettingsRow label="Email" value="sol@solferreira.art" status="Changing email…" inert />
+              </div>
+              <div style={{ display: "{{emailConfirmingShown}}" }}>
+                <SettingsRow label="Email" value="sol@solferreira.art" status="Confirming the code…" inert />
               </div>
               <div style={{ display: "{{emailFailedShown}}" }}>
                 <SettingsRow
@@ -4327,9 +4334,10 @@ const SCORE_VIEWER = SOL;
 /* THE PATH SET, and it ADDS UP (feed-ranking.md §6.1: the score is the sum of
    the signed, decayed terms of up to `k` internally disjoint paths, strongest
    first, and `k` is governed at order 4–8). Six paths here, disjoint by person:
-   6.80 + 4.20 + 2.60 + 1.10 + 0.50 = 15.20, which is `ADA_POST`'s own score.
-   The two weakest ride the "more paths" row rather than being spelled out, so
-   the arithmetic still closes on the drawn surface. */
+   6.80 + 4.20 + 2.60 + 1.10 + 0.30 + 0.20 = 15.20, which is `ADA_POST`'s own
+   score. Every path is drawn: the trace is a page whose purpose is the list,
+   so it is never capped (jakob 2026-11-12), and the arithmetic closes on the
+   drawn rows themselves. */
 const ADA_FACED = { ...ADA, src: "comment-camera.jpg" };
 const MIRA_FACED = { ...MIRA, src: "inviter.jpg" };
 const SCORE_PATHS = [
@@ -4337,8 +4345,9 @@ const SCORE_PATHS = [
   { through: "@tobias", people: [SCORE_VIEWER, TOBIAS], value: "+4.20" },
   { through: "@mira", people: [SCORE_VIEWER, MIRA_FACED], value: "+2.60" },
   { through: "@kel and @wren", people: [SCORE_VIEWER, KEL, WREN], value: "+1.10" },
+  { through: "@nadia", people: [SCORE_VIEWER, NADIA], value: "+0.30" },
+  { through: "@juno", people: [SCORE_VIEWER, JUNO], value: "+0.20" },
 ];
-const SCORE_MORE_PATHS = { count: 2, value: "+0.50" };
 
 /* THE SAME SET UNDER A BORROWED VIEW (jakob 2026-10-12, SR-G3): a guest on
    @mira's invite link, or an applicant she let in, reads the walk from HER
@@ -4349,6 +4358,8 @@ const SCORE_PATHS_BORROWED = [
   { through: "@tobias", people: [MIRA_FACED, TOBIAS], value: "+4.20" },
   { through: "@sol", people: [MIRA_FACED, SOL], value: "+2.60" },
   { through: "@kel and @wren", people: [MIRA_FACED, KEL, WREN], value: "+1.10" },
+  { through: "@nadia", people: [MIRA_FACED, NADIA], value: "+0.30" },
+  { through: "@juno", people: [MIRA_FACED, JUNO], value: "+0.20" },
 ];
 
 /* ScoreOrigin — THE THING THE SCORE BELONGS TO, carried on all four levels so
@@ -5122,11 +5133,14 @@ const SOL_OWN_COMMENT = {
    · IN FLIGHT, the chronicle's own wait (`Profile`, `ProfileMoreFailed`):
      nothing for the first 200ms — no empty line meanwhile — then
      `LoadingState`'s `Loading…`, no skeleton cards and no spinner.
-   · NOT COMING, `ProfileMoreFailed`'s quiet row, word for word —
-     `Couldn't load more — Retry` at body-medium in the secondary colour,
-     never `--error` — standing where the list would stand, never a full-tab
-     fault. Named as `Notifications` names the same row: `moreFault` and its
-     `retry`; the wait `loading`. */
+   · NOT COMING, `ProfileMoreFailed`'s quiet row — body-medium in the
+     secondary colour, never `--error`, standing where the list would stand,
+     never a full-tab fault — in the first-page family's words (jakob
+     2026-11-12, question 19): `Can't reach the server — posts can't load
+     right now.` or `… comments can't load right now.`, then `Retry`.
+     `Couldn't load more` stays a failed NEXT page's line alone. Named
+     `moreFault` and its `retry` (round 45's paths, kept); the wait
+     `loading`. */
 const PROFILE_TAB_FAULT = {
   margin: 0,
   padding: "8px 4px 16px",
@@ -5138,7 +5152,7 @@ const PROFILE_TAB_FAULT = {
 };
 /* `top` is the list's own top padding still owed: `ProfileTabTop`'s list
    already carries its 8px, the posts and comments boards' own do not. */
-function ProfileTabFirstPage({ top = 8 }) {
+function ProfileTabFirstPage({ top = 8, kind = "posts" }) {
   return (
     <>
       <div style={{ display: "{{loadingShown}}", padding: `${top}px 16px 0` }}>
@@ -5148,7 +5162,7 @@ function ProfileTabFirstPage({ top = 8 }) {
       </div>
       <div style={{ display: "{{failedShown}}", padding: "0 12px", marginTop: top - 8 }}>
         <p style={PROFILE_TAB_FAULT} data-node="moreFault">
-          Couldn&apos;t load more <span aria-hidden="true">—</span> <InlineAction size="sm" node="retry">Retry</InlineAction>
+          Can&apos;t reach the server — {kind} can&apos;t load right now. <InlineAction size="sm" node="retry">Retry</InlineAction>
         </p>
       </div>
     </>
@@ -5444,6 +5458,10 @@ const SOL_INVITE_LINK_OPEN = "https://cogra.social/join/c47b19e0-3a52-4f68-b1d9-
    it used it up, so it keys his group and never stands under Live links: a
    link that no longer works is not live (Invites.md). */
 const SOL_INVITE_USED_ID = "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64";
+/* Two older live links, Invites' cap only (round 46): made 05.09 and 01.09,
+   both for 30 days. */
+const SOL_INVITE_OLDER_ID = "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025";
+const SOL_INVITE_OLDEST_ID = "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90";
 
 /* THE ASK LINK — the invite link's mirror, and shaped as its mirror: the same
    origin, its own path, one id. What it is NOT is the difference that matters.
@@ -5651,6 +5669,15 @@ const HOW_VOUCHING_WORKS_HELP = [
 const YOUR_VOUCH_BACK_HELP = [
   "Vouching back signs your opinion of the person who vouched you in, and your feed grows from it.",
   "The pad is how you shape what reaches you — for or against, and how much. Nothing is signed until Set.",
+  /* The pad's own coaching lines, moved in whole (jakob 2026-11-12, 11). */
+  {
+    text: "Later, tap the small face under a post to open this — press and hold it instead and a gentle ",
+    face: "🙂",
+    exact: " (+0.10 / +0.10)",
+    tail: " is signed on the spot.",
+    spoken: "Later, tap the small face under a post to open this — press and hold it instead and a gentle Nice, For or against +0.10, How much reaches you +0.10, is signed on the spot.",
+  },
+  "Prefer sliders or exact numbers? Swap the input in settings.",
 ];
 
 /* THE PAGE ITSELF.
@@ -6051,6 +6078,43 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown, closedFa
             node="link"
             nodeKey={SOL_INVITE_LINK_OPEN.split("/").at(-1)}
           />
+          {/* LIVE LINKS ARE CAPPED (jakob 2026-11-12, 4): newest made first,
+              three, then `Show all` under the third — the queue's door, the
+              rest opening in place. Two older sample links, by the drawn
+              cards' form, stand on `Invites` alone (its `links` chip). */}
+          {shown && (
+            <>
+              <PayoutAddress
+                label="Single use · not used yet"
+                address={`https://cogra.social/join/${SOL_INVITE_OLDER_ID}`}
+                onCopy={() => {}}
+                copyLabel="Copy the link"
+                onChange={() => {}}
+                changeLabel="Revoke"
+                caption="Expires in 20 days · 05.10.2026"
+                node="link"
+                nodeKey={SOL_INVITE_OLDER_ID}
+              />
+              <div style={{ display: shown.linksDoor }} data-node-chip="links" data-node-key="capped">
+                <InlineAction size="sm" selfStart node="linksDoor">
+                  Show all
+                </InlineAction>
+              </div>
+              <div style={{ display: shown.linksRest, flexDirection: "column", gap: 8 }}>
+                <PayoutAddress
+                  label="Many uses"
+                  address={`https://cogra.social/join/${SOL_INVITE_OLDEST_ID}`}
+                  onCopy={() => {}}
+                  copyLabel="Copy the link"
+                  onChange={() => {}}
+                  changeLabel="Revoke"
+                  caption="Expires in 16 days · 01.10.2026"
+                  node="link"
+                  nodeKey={SOL_INVITE_OLDEST_ID}
+                />
+              </div>
+            </>
+          )}
         </div>
         </div>
 

@@ -66,6 +66,14 @@ ALWAYS a live link's card holds the link whole, never truncated, labelled Single
 
 ALWAYS a link that no longer works never stands under Live links
 
+ALWAYS Live links stand newest made first
+
+ALWAYS Live links shows the three newest links and under the third invites.linksDoor, Show all, an inline action under the cards GIVEN more than three links are live
+
+ALWAYS Live links shows every link and no invites.linksDoor GIVEN three links are live or fewer
+
+WHEN tap invites.linksDoor -> every live link stands in the section, newest made first, in place AND invites.linksDoor leaves AND NEVER anything else leaves the page AND NEVER a control to show fewer appears
+
 ALWAYS the inviter reward appears nowhere on the page
 
 ALWAYS the word token appears nowhere on the page

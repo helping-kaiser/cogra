@@ -78,7 +78,9 @@ WHEN the registration is refused because the password turned up in a data breach
 
 ALWAYS an errored field's line replaces its hint, and an unerrored field keeps its own
 
-WHEN press Create account GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Create account AND Create account stays, the retry
+WHEN press Create account GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands first under the fields, above the Terms line, which stands directly above Create account AND Create account stays, the retry
+
+ALWAYS the commit stack reads, in order, the failure line, the line By creating your account you accept the Terms., then Create account GIVEN a press got no answer
 
 WHEN tap Already have an account? Sign in -> SignIn opens
 

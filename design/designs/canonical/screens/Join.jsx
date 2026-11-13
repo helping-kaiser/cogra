@@ -52,6 +52,13 @@
    switch `signInDoor` — a name that does not bar the sidecar's `Sign in`
    (round 23: a name never forbids its own words). */
 export const NODE = "join";
+/* THE `answer` CHIP'S `failed` IS A REGISTRATION THAT GOT NO ANSWER (round
+   46; jakob 2026-11-12, 20): the fields keep what was typed, `That didn't
+   send. Try again.` stands first under them, then the Terms line, then
+   `Create account`, live — the retry. The failed fields and commit are drawn
+   copies; the rest ones alone carry the names. */
+export const PROPS = { answer: { editor: "enum", options: ["rest", "failed"], default: "rest" } };
+export const VALS = `restShown: this.props.answer === "failed" ? "none" : "flex", failedShown: this.props.answer === "failed" ? "flex" : "none"`;
 export function Screen() {
   return (
     <>
@@ -87,16 +94,34 @@ export function Screen() {
           </p>
         </div>
 
-        <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ marginTop: 32, display: "{{restShown}}", flexDirection: "column", gap: 16 }}>
           <TextField id="handle" label="Handle" kind="handle" value="" hint="3–30 characters: a–z, 0–9, _" node="handle" />
           <TextField id="email" label="Email" type="email" autoComplete="username" value="" node="email" />
           <PasswordField id="password" label="Password" autoComplete="new-password" enterKeyHint="next" value="" hint="At least 12 characters." node="password" />
           <PasswordField id="password-repeat" label="Repeat password" autoComplete="new-password" value="" node="confirm" />
         </div>
+        <div style={{ marginTop: 32, display: "{{failedShown}}", flexDirection: "column", gap: 16 }}>
+          <TextField id="handle-failed" label="Handle" kind="handle" value="noor" hint="3–30 characters: a–z, 0–9, _" />
+          <TextField id="email-failed" label="Email" type="email" autoComplete="username" value="noor@fieldmail.org" />
+          <PasswordField id="password-failed" label="Password" autoComplete="new-password" enterKeyHint="next" value="fieldday-notes" hint="At least 12 characters." />
+          <PasswordField id="password-repeat-failed" label="Repeat password" autoComplete="new-password" value="fieldday-notes" />
+        </div>
 
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8 }}>
+          {/* THE ORDER UNDER THE FIELDS (jakob 2026-11-12, 20): the failure
+              line, then the Terms line, then `Create account` — the fault in
+              `SignInError`'s slot above the commit stack, the accept sentence
+              still directly above the commit it accepts. */}
+          <p role="alert" style={{ display: "{{failedShown}}", margin: 0, fontSize: "var(--text-body-medium)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)", color: "var(--error)" }}>
+            That didn&apos;t send. Try again.
+          </p>
           <JoinTermsLine />
-          <WaitingCommit id="join" label="Create account" reason="Waiting for a handle, your email and a password" node="commit" />
+          <div style={{ display: "{{restShown}}" }}>
+            <WaitingCommit id="join" label="Create account" reason="Waiting for a handle, your email and a password" node="commit" />
+          </div>
+          <div style={{ display: "{{failedShown}}" }}>
+            <Button style={{ width: "100%" }}>Create account</Button>
+          </div>
           <Button variant="text" style={{ width: "100%" }} node="signInDoor">
             Already have an account? Sign in
           </Button>

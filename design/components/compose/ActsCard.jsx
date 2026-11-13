@@ -191,9 +191,9 @@ export function ActsCard({ rows = [], total, note, noteTone = "quiet", node }) {
         >
           {total}
         </span>
-        {/* The subline under the total. A seal draws none at rest — its "?"
-            says the all-or-nothing (jakob 2026-11-12); the edit's acts sheets,
-            which carry no "?", pass "They land together, or none does." Past 5s
+        {/* The subline under the total. No surface draws one at rest — the
+            seals' and the edit sheets' "?" (`How signing works`) says the
+            all-or-nothing (jakob 2026-11-12). Past 5s
             of signing the slow line takes the place in the olive `--tertiary`
             (`noteTone="slow"`, jakob 2026-10-01): the wait said honestly in
             words, no progress the signing cannot measure. */}

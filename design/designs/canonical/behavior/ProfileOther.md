@@ -6,7 +6,7 @@ ALWAYS the profile carries no cover image and no banner
 
 ALWAYS the figures read Posts, Opinions on them and Opinions by them, each labelled, and never one merged figure
 
-ALWAYS the two opinion figures are two doors and the Posts figure is no door, each door spoken as its figure's number and words, then its purpose — Opinions on them, then opinions on with the person's handle; Opinions by them, then opinions by with the person's handle
+ALWAYS the two opinion figures are two doors and the Posts figure is no door, each door spoken as its figure's number and visible words and nothing more, as 6 Opinions on them and 6 Opinions by them
 
 ALWAYS the actions row reads the opinion on the person, worn wide, then Message sized by its word, then the ⋮ that closes the row
 

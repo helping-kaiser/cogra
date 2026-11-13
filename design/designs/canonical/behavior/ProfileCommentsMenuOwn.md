@@ -13,3 +13,5 @@ WHEN tap profile.menuSheet.opinions -> the menu closes AND the comment's opinion
 WHEN tap profile.menuSheet.citedBy -> the menu closes AND what cites the comment comes up over the profile
 
 WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND nothing changes
+
+WHEN the comment's edit opened from profile.menuSheet.edit is signed -> the own profile comes back as it was left, profile.tabRow.commentsTab lit AND the comment's card settles in place wearing Still settling AND NEVER the thread opens

@@ -5703,7 +5703,7 @@ Never capped: History, Saved, Notifications, the profile's chronicle, posts
 and comments, `TagPage`, `ProfileStances`, `PostOpinions`, `CitedBy`,
 `YourTopics`, Hidden accounts (readme §13, beside the search sections' cap).
 
-### 182 · Invites' Live links: the cap is not drawn · *design* · **filed 2026-11-11**
+### 182 · Invites' Live links: the cap is not drawn · *design* · **filed 2026-11-11** · **closed 2026-11-12**
 
 Round 40. The ruling caps Live links at three in the screen's order, but the
 page draws two links, so no setting can show the cap without two more sample
@@ -5711,7 +5711,7 @@ links (their ids, addresses and captions — fixture data, no new words). Left
 for the next round on Invites, with backlog 180. Round 43 left it undrawn:
 nothing writes the order Live links stands in (the queue's is by age, the
 people's newest first), so which three a cap shows is not settled — backlog
-195.
+195. Closed by round 46 with 195: the cap drawn on `Invites`' `links` chip.
 
 ### 183 · Long names on the boards round 40 did not touch · *design* · **filed 2026-11-11** · **closed 2026-11-12**
 
@@ -5798,7 +5798,7 @@ after Close reads `That didn't go through.` on the form's Settings row, no
 forms' sidecars hold their exits from 200ms after the press. `YourKeyGate`
 is not in the family (a reveal, not a submit) — backlog 197.
 
-### 192 · The removable-text pass: the moves to a "?" that are not ruled · *design* · **filed 2026-11-12**
+### 192 · The removable-text pass: the moves to a "?" that are not ruled · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 42 built the digest's REMOVE and SHORTEN rows and the A families jakob
 ruled. Digest rows marked MOVE TO "?" outside A2, A5 and A8 were never put to
@@ -5816,7 +5816,9 @@ and underscore. Capitals become lowercase.`; the clip's `It plays the moment it
 is on screen, so it starts on its own first frame.` Each is jakob's: move
 (where a "?" exists, or a new one), cut, or keep.
 
-### 193 · Two cuts of one caption, and lines the pass left asymmetric · *design* · **filed 2026-11-12**
+Closed by round 46 (jakob 2026-11-12, question 13, all as recommended): the clip's line is cut (`ComposeDetailsVideo`, `EditComposeVideo`, `ReplyVideoFailed`; `postEdit.cover.note` deleted); the Feed score note, YourKey's, History's and Saved's search line, the edits' two body lines and the tag picker's rule are kept and marked blessed in copy-voice; ChangeHandle's and ChangeEmail's lines are lane A's to cut.
+
+### 193 · Two cuts of one caption, and lines the pass left asymmetric · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 42 built each canvas's row as written, which leaves: (1) the ask link's
 caption cut two ways — `Send it to anyone who is already in. It does not
@@ -5826,9 +5828,12 @@ people you send it to.` on `ApplicantRejected` and `ApplicantFellThrough`;
 content stands unveiled wherever you read.` while on; (3) `Wallet — coming
 soon` keeps `Your earnings will be here.` while Chats carries no line;
 (4) closed by round 42 (act 2): the post-MVP twins take the canonical cuts —
-the same rulings. Points (1)–(3) are jakob's to align or keep.
+the same rulings. Points (1)–(3) are jakob's to align or keep. Round 46
+(jakob 2026-11-12): (1) closed — `Send it to anyone who is already in. It
+does not expire.` on all three boards; (2) closed — the On line is cut too;
+(3) closed — Wallet's line is cut.
 
-### 194 · Lines round 42 stopped: no "?" holds them, and the sign-out drift · *design* · **filed 2026-11-12**
+### 194 · Lines round 42 stopped: no "?" holds them, and the sign-out drift · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 (1) A5 ruled cutting a line that repeats its sheet's "?" — checked before each
 cut. The vouch-back pad's `Later, tap the small face …` and `Prefer sliders or
@@ -5840,7 +5845,9 @@ the lines move into the pad's "?" whole / the sheets keep the subline [lean];
 jakob 2026-11-12 "fix the wrong side"): the drawn line, which names the seen
 record sign-out clears (PR-69), is the true side; copy-voice takes it.
 
-### 195 · Live links: the order a cap would keep · *design* · **filed 2026-11-12**
+Closed by round 46 (jakob 2026-11-12, question 12): the edit sheets (`EditActs`, `CommentEditActs`) carry the `?` that opens `How signing works` beside their title, as `ComposeLicense` places its own; the card's subline leaves them. Whether that dialog says why an EDIT is signed and what it costs is round 46's question back to him.
+
+### 195 · Live links: the order a cap would keep · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 43 (backlog 182). The cap is ruled — three, then `Show all`, People
 you let in's door — but no law says in what order Live links stand: the
@@ -5849,9 +5856,11 @@ queue stands by age, the people newest first, and the two drawn links
 as drawn. Which three a capped section shows follows from the order, and
 two more sample links follow from it too. For jakob: (a) newest made first,
 People you let in's order [lean — the drawn pair already reads so]; (b)
-soonest to expire first; (c) single-use links first, then many-use.
+soonest to expire first; (c) single-use links first, then many-use. Closed
+by round 46 (jakob 2026-11-12, 4 "as rec"): newest made first, three, then
+`Show all` in place (`Invites`' `links` chip; two older sample links).
 
-### 196 · The Sensitive content footnote and the Reading "?" · *design* · **filed 2026-11-12**
+### 196 · The Sensitive content footnote and the Reading "?" · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 43 (the re-ask's 8 (a)). The digest put `This choice follows your
 account to every device.` behind the Reading "?", but it is the Sensitive
@@ -5861,9 +5870,12 @@ of Reading's rows, and copy-voice gives it the group's whole job (the
 travel a future iOS build may honour but not offer). It stays on the page.
 For jakob: (a) it stays as the Sensitive content footnote [lean]; (b) it
 moves into the Reading dialog as the digest said; (c) a third "?" beside
-`Sensitive content`.
+`Sensitive content`. Closed by round 46 (jakob 2026-11-12, 5, overruling
+the lean): the line is cut — per-account is what people expect; only a
+setting that stays on this device says where it lives (copy-voice, the
+settings page). `settings.sensitive.footnote` leaves the registry.
 
-### 197 · Signed-in submits the Close rule did not reach · *design* · **filed 2026-11-12**
+### 197 · Signed-in submits the Close rule did not reach · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 43 (backlog 191). Three signed-in forms with a commit were left as
 they are: `YourKeyGate`'s `Show my key` reveals the key on the next screen
@@ -5874,9 +5886,11 @@ showed would lose it; `DeleteAccount`'s `Send the confirmation link` mails
 the link and opens the mail screen. For jakob: (a) all three keep their
 exits as they are, `SettingsBackup` holding them while it submits, the
 entry forms' exception [lean]; (b) `DeleteAccount` takes Close, its failure
-on the Delete account row.
+on the Delete account row. Closed by round 46 (jakob 2026-11-12, 6 "as
+rec"): the three keep their ways out as drawn, `SettingsBackup` holding them
+from 200ms after the press until the answer (the sidecars say so).
 
-### 198 · The Handle row's Retry beside the forms' rows without one · *design* · **filed 2026-11-12**
+### 198 · The Handle row's Retry beside the forms' rows without one · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 43 (the re-ask's 9 (a)). After Close a failed password or email change
 reads `That didn't go through.` on its row with no `Retry`, the tap
@@ -5884,9 +5898,11 @@ reopening the form; a failed handle change (round 37) reads the same words
 with `Retry`, the row inert. Two shapes for one failure on one group of one
 page. For jakob: (a) keep both — a handle retry needs no secret typed again
 [lean if Retry is wanted where it can work]; (b) the Handle row as the
-others, its tap reopening the form with the handle typed.
+others, its tap reopening the form with the handle typed. Closed by round 46
+(jakob 2026-11-12, 7: "with retry so as rec"): the Handle row keeps `Retry`,
+the law saying why — a handle retry needs nothing typed again.
 
-### 199 · After Close: the forms' rows while they wait, and what the reopened form shows · *design* · **filed 2026-11-12**
+### 199 · After Close: the forms' rows while they wait, and what the reopened form shows · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 43. Drawn: the failure on the Password and Email rows. Not drawn,
 and not ruled: (1) the wait between Close and the answer — the Handle row
@@ -5897,9 +5913,12 @@ form shows after a field refusal (a wrong current password) — the handle's
 feed fails onto the Settings Email row, a page the applicant did not come
 from, while the verify card keeps the old address. Lean: (1) the Handle
 row's form, each row its form's in-flight label; (2) on the tap; (3) the
-form at rest, the field's line beside its field; (4) as built.
+form at rest, the field's line beside its field; (4) as built. Closed by
+round 46 (jakob 2026-11-12, 8 "as rec"): all four as leaned — `Settings`'
+`forms` chip gains `password-changing`, `email-changing` and
+`email-confirming`; the sidecars carry (2)–(4).
 
-### 200 · The cover crop under a tall clip: the frame does not fit the stage · *design* · **filed 2026-11-12**
+### 200 · The cover crop under a tall clip: the frame does not fit the stage · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 44 wrote the one crop model: a fixed frame of the locked shape, the
 picture moving under it, in `CropViewport`'s 390 × 390 stage with the frame
@@ -5913,7 +5932,9 @@ takes the post crop's 390 × 488 stage, the frame 342 wide at every shape
 the square stage by height (312 × 390), narrower than the others; (c) the
 stage grows with the shape (the model jakob's ruling replaced).
 
-### 201 · A clip picked in a comment's edit: what the board does not draw · *design* · **filed 2026-11-12**
+Closed by round 46 (jakob 2026-11-12, on the review and question 1): the cover's frame always has the clip's dimensions — tall a tall cover, square a square, wide a wide — and the crop enforces it. Drawn on the post crop's 390 × 488 stage (the orchestrator's reading, shown to him): `CoverCrop`'s `clip` chip, wide 342 × 192 at 148, tall 342 × 427.5 at 30.25, square 342 × 342 at 73.
+
+### 201 · A clip picked in a comment's edit: what the board does not draw · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 44 drew a clip picked in the edit (`CommentEditVideo`'s `clip`
 setting: picked, failed, second) from strings already on the reply's and
@@ -5933,7 +5954,9 @@ video didn't upload.` (the reply's, copy-voice), the gate's fault `The
 video didn't upload. Signing waits for it.`; the web built `The video
 didn't upload.` under the clip.
 
-### 202 · `More` under a media caption that fits whole, on the sample boards · *design* · **filed 2026-11-12**
+Closed by round 46 (jakob 2026-11-12, question 2, as recommended): the gate names what is still uploading in its two existing lines, the video's first, then the cover's; no note under the cover row (`CommentEditVideo`'s `clip` = picked-cover). The failed clip's line reads `That video didn't upload.` on the board and in the sidecar.
+
+### 202 · `More` under a media caption that fits whole, on the sample boards · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 44 (seam 292-3, jakob's finding in seam 276 item 2): the law is that a
 media caption carries `More` only when it is clamped, and `PostCard` and
@@ -5951,6 +5974,8 @@ no path moves [lean — fixture data, the law unchanged]; (b) the opener leaves
 those boards: four registered paths removed across 32 boards and the flows'
 `More` steps dropped (an announced breaking change for both clients); (c)
 leave the boards as they are and read the law from the docblocks.
+
+Closed by round 46 (jakob 2026-11-12, question 3, as recommended, (a)): the sample captions were lengthened in their own voice — `ADA_POST`'s to 143 characters, the canoe clip's to 139 — so `More` stands where the caption is cut, and `PostCard` now offers it on a media caption only past two lines' estimate, `ReelCaption`'s way. No registered path moved.
 
 ### 203 · Who else reads the seen list · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
@@ -6001,7 +6026,7 @@ Closed by round 45's second act, by (a), the registry's call: `PadStanding`'s
 (`label`, `face`, `exact`, the pads' `standing.pick` names), `pad.field`,
 `note`, `done`, and `TagPad`'s `untag`.
 
-### 206 · Another's removed post, opened: the detail's ⋮ · *design* · **filed 2026-11-12**
+### 206 · Another's removed post, opened: the detail's ⋮ · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 45. jakob's ruling (re-ask 11) gives another's removed post's CARD the
 reader's whole menu. The only drawn removed detail is the reader's own
@@ -6011,10 +6036,41 @@ detail header carries the reader's post menu as the card does, no license row
 [lean — one menu per post, wherever it is opened]; (b) the detail stays
 menu-less; and whether the reader's own removed card and detail keep none.
 
-### 207 · A first page that failed reads `Couldn't load more` · *design* · **filed 2026-11-12**
+Closed by round 46 (jakob 2026-11-12, question 18): another's removed post in detail carries the reader's menu in its header, as the card (`RemovedOther`), License terms kept on both (jakob: "someone might have used my content already under its license regulations"); and, overruling the lean, your own removed post KEEPS a menu, card and detail — Save, Cite in a new post, Mark as sensitive, License terms, its own menu less Edit and Remove (`OWN_REMOVED_POST_MENU`; `FeedRemoved`, `Removed`, `FeedRemovedMenuOwn`).
+
+### 207 · A first page that failed reads `Couldn't load more` · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 45 (re-ask 15, as recommended: `ProfileMoreFailed`'s quiet row where the
 list would stand). The row is copied word for word, so a tab whose first page
 never came says `more` with nothing above it. For jakob: (a) keep it, one row
 for every page [as drawn]; (b) the first page's row takes a line of its
 own, his words. Nothing waits on it.
+
+Closed by round 46 (jakob 2026-11-12, question 19, as recommended): the row stays quiet and takes the first-page family's words, `Can't reach the server — posts can't load right now.` / `… comments can't load right now.`, with `Retry`; `Couldn't load more` is a failed next page's line alone.
+
+### 210 · How signing works on an edit · *design* · **filed 2026-11-12**
+
+Round 46 (question 12). The edit sheets now open the seals' `How signing
+works`, which says each piece of a POST is signed on its own, that the pieces
+land together or none does, and that each signing is paid for. It does not
+say why an edit is signed at all (a new version is a new record) or that
+withdrawing a tag or a citation is an act that costs too. For jakob: (a) the
+dialog stays as written, one text for every seal [as built]; (b) an edit
+section is added to it — new prose, his to word.
+
+### 211 · A removed comment's menu · *design* · **filed 2026-11-12**
+
+Round 46. jakob's ruling 18 gives a removed POST a menu (cite it, read its
+license); a removed comment still has none (`CommentRemoved`, "a removed
+comment has no menu left"). For jakob: (a) the comment follows the post —
+Save, Cite in a new post, Cited by, Opinions on this, License terms, Report
+for another's, the own rows less Edit and Remove for yours [lean]; (b) it
+stays menu-less.
+
+### 212 · Mark as sensitive on your own removed post · *design* · **filed 2026-11-12**
+
+Round 46. The correction to ruling 18 keeps every own row but Edit and
+Remove, so `Mark as sensitive` stands on a removed post's menu; the row opens
+the edit, and a removed post has no words or pictures left to veil. For
+jakob: (a) keep it, the mark being the record's [as built]; (b) it leaves the
+removed post's menu with Edit and Remove.

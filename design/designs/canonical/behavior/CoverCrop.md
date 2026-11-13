@@ -1,12 +1,14 @@
 # CoverCrop · `spec:design:behavior-cover-crop`
 
-ALWAYS the crop's shape is locked to the clip's display shape, the clip's own ratio in a post and the comment's square in a comment
+ALWAYS the crop's frame has the clip's dimensions and never another, the shape the clip stands at in a card — its own ratio, a clip taller than 4:5 at 4:5 — in a post and the comment's square in a comment, tall clip a tall cover, square a square, wide a wide
+
+ALWAYS the crop exports the frame's shape and only that shape, so the cover can never disagree with the clip it is the face of
 
 ALWAYS the crop offers no shape chips
 
 ALWAYS the crop's frame stands still at the locked shape, and the picture is what moves and zooms under it, on both platforms
 
-ALWAYS the crop's stage stands 390 × 390, the frame inside it 342 wide between the 24 gutters and centred in its height: 342 × 192 at 99 below the stage's top for a 16:9 clip, 342 × 342 at 24 for the comment's square
+ALWAYS the crop's stage stands 390 × 488 under every shape, the post crop's stage, the frame inside it 342 wide between the 24 gutters and centred in its height: 342 × 192 at 148 below the stage's top for a 16:9 clip, 342 × 427.5 at 30.25 for a tall clip's 4:5, 342 × 342 at 73 for a square clip and the comment's square
 
 ALWAYS the picture outside the frame stays in view under a 45 % black
 

@@ -122,7 +122,7 @@ export function Screen() {
         <div style={{ flex: 1, overflow: "hidden", display: "{{noneShown}}", flexDirection: "column", padding: "8px 16px 0" }}>
           <EmptyState title="Nothing here yet." node="empty" />
         </div>
-        <ProfileTabFirstPage />
+        <ProfileTabFirstPage kind="comments" />
         </div>
       </div>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />

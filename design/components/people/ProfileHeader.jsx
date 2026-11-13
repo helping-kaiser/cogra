@@ -168,14 +168,10 @@ export function ProfileHeader({
   const hasFigures = posts !== undefined || stancesOn !== undefined || stancesTaken !== undefined;
   const onLabel = own ? "Opinions on you" : "Opinions on them";
   const byLabel = own ? "Opinions by you" : "Opinions by them";
-  /* EACH DOOR'S NAME CARRIES WHAT THE EYE READS (readme §10, K13.11): its
-     figure's number and words first, then the door's purpose — the one
-     door's purpose split by direction: `opinions on @ada` · `opinions by
-     @ada`, `opinions on this account` · `opinions by this account`, and on
-     one's own `your opinions, on you` · `your opinions, by you`, the
-     direction in the opinions page's own tab words. */
-  const purpose = (direction) =>
-    own ? `your opinions, ${direction} you` : redacted ? `opinions ${direction} this account` : `opinions ${direction} @${handle}`;
+  /* EACH DOOR IS SPOKEN AS THE EYE READS IT, AND NO MORE (jakob 2026-11-12,
+     question 17): its figure's number and visible words — `6 Opinions on
+     them`, `5 Opinions by you` — no purpose clause; the words already say
+     where the door leads. */
   const figures = (
     <>
       {posts !== undefined && <Figure value={posts} label="Posts" node={node && "posts"} />}
@@ -185,7 +181,7 @@ export function ProfileHeader({
           label={onLabel}
           node={node && "stancesOn"}
           onOpen={onCounts && (() => onCounts("on"))}
-          ariaLabel={`${stancesOn} ${onLabel}, ${purpose("on")}`}
+          ariaLabel={`${stancesOn} ${onLabel}`}
         />
       )}
       {stancesTaken !== undefined && (
@@ -194,7 +190,7 @@ export function ProfileHeader({
           label={byLabel}
           node={node && "stancesTaken"}
           onOpen={onCounts && (() => onCounts("by"))}
-          ariaLabel={`${stancesTaken} ${byLabel}, ${purpose("by")}`}
+          ariaLabel={`${stancesTaken} ${byLabel}`}
         />
       )}
     </>

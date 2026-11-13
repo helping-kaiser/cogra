@@ -90,7 +90,6 @@ export function Screen() {
               <InlineAction size="sm" selfStart node="add">
                 Add a cover
               </InlineAction>
-              <QuietNote node="note">It plays the moment it is on screen, so it starts on its own first frame.</QuietNote>
             </div>
             <div style={{ display: "{{coverShown}}", alignItems: "center", gap: 8 }}>
               <MediaThumb src="post-photo.jpg" alt="" width={54} height={96} fit="cover" node="thumb" />

@@ -115,20 +115,6 @@ export function Screen() {
         >
           Change your email
         </h1>
-        <p
-          style={{
-            margin: "8px 0 0",
-            fontSize: "var(--text-body-medium)",
-            fontWeight: "var(--text-body-medium--font-weight)",
-            lineHeight: "var(--text-body-medium--line-height)",
-            letterSpacing: "var(--text-body-medium--letter-spacing)",
-            color: "var(--text-secondary)",
-          }}
-          data-node="body"
-        >
-          Your email signs you in, and it is the only way back if you lose your password — so a
-          change is proved from both ends.
-        </p>
 
         <ChangeEmailFields shown="{{restShown}}" fault="none" waiting />
         <ChangeEmailFields

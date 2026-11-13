@@ -875,7 +875,6 @@
         "changeEmail.email": "the fault chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
-        "changeEmail.body": [],
         "changeEmail.commit": [
           "none",
           "password",
@@ -981,7 +980,6 @@
       "prefix": "changeHandle",
       "keys": {},
       "nodes": {
-        "changeHandle.body": [],
         "changeHandle.commit": [],
         "changeHandle.commit.action": [],
         "changeHandle.handle": [],
@@ -997,7 +995,6 @@
       "prefix": "changeHandle",
       "keys": {},
       "nodes": {
-        "changeHandle.body": [],
         "changeHandle.commit": [],
         "changeHandle.commit.action": [],
         "changeHandle.dialog": [],
@@ -1025,6 +1022,32 @@
         "changePassword.confirm.input": [],
         "changePassword.confirm.label": [],
         "changePassword.confirm.reveal": [],
+        "changePassword.current": [],
+        "changePassword.current.input": [],
+        "changePassword.current.label": [],
+        "changePassword.current.reveal": [],
+        "changePassword.header": [],
+        "changePassword.header.back": [],
+        "changePassword.password": [],
+        "changePassword.password.input": [],
+        "changePassword.password.label": [],
+        "changePassword.password.reveal": [],
+        "changePassword.password.support": [],
+        "changePassword.title": []
+      }
+    },
+    "ChangePasswordErrors": {
+      "prefix": "changePassword",
+      "keys": {},
+      "nodes": {
+        "changePassword.body": [],
+        "changePassword.commit": [],
+        "changePassword.commit.action": [],
+        "changePassword.confirm": [],
+        "changePassword.confirm.input": [],
+        "changePassword.confirm.label": [],
+        "changePassword.confirm.reveal": [],
+        "changePassword.confirm.support": [],
         "changePassword.current": [],
         "changePassword.current.input": [],
         "changePassword.current.label": [],
@@ -1276,6 +1299,8 @@
       "prefix": "commentEdit",
       "keys": {
         "commentEdit.acts": "the upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "commentEdit.cover.change": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "commentEdit.cover.thumb": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "commentEdit.gate": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "commentEdit.sign": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "commentEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
@@ -1294,9 +1319,13 @@
         ],
         "commentEdit.cover": [],
         "commentEdit.cover.add": [],
-        "commentEdit.cover.change": [],
+        "commentEdit.cover.change": [
+          "picked-cover"
+        ],
         "commentEdit.cover.label": [],
-        "commentEdit.cover.thumb": [],
+        "commentEdit.cover.thumb": [
+          "picked-cover"
+        ],
         "commentEdit.facts": [],
         "commentEdit.facts.license": [],
         "commentEdit.facts.license.label": [],
@@ -1308,11 +1337,13 @@
         "commentEdit.facts.sensitive.value": [],
         "commentEdit.gate": [
           "picked",
+          "picked-cover",
           "second",
           "failed"
         ],
         "commentEdit.gate.line": [
           "picked",
+          "picked-cover",
           "second"
         ],
         "commentEdit.gate.message": [
@@ -1350,32 +1381,38 @@
         "commentEdit.video": [],
         "commentEdit.video.describeRow": [
           "picked",
+          "picked-cover",
           "failed",
           "second"
         ],
         "commentEdit.video.describeRow.count": [
           "picked",
+          "picked-cover",
           "failed",
           "second"
         ],
         "commentEdit.video.describeRow.describe": [
           "picked",
+          "picked-cover",
           "failed",
           "second"
         ],
         "commentEdit.video.describeRow.reason": [
           "picked",
+          "picked-cover",
           "failed",
           "second"
         ],
         "commentEdit.video.label": [],
         "commentEdit.video.thumb": [
           "picked",
+          "picked-cover",
           "failed",
           "second"
         ],
         "commentEdit.video.thumb.remove": [
           "picked",
+          "picked-cover",
           "second"
         ],
         "commentEdit.video.uploadError": [
@@ -2852,7 +2889,6 @@
         "postEdit.cover.add": [],
         "postEdit.cover.change": [],
         "postEdit.cover.label": [],
-        "postEdit.cover.note": [],
         "postEdit.cover.thumb": [],
         "postEdit.description": [],
         "postEdit.description.corner": [],
@@ -3206,7 +3242,6 @@
         "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
-        "settings.sensitive.footnote": [],
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
@@ -4045,9 +4080,6 @@
         "feedEntry.header": [],
         "feedEntry.header.back": [],
         "feedEntry.header.title": [],
-        "feedEntry.morePaths": [],
-        "feedEntry.morePaths.label": [],
-        "feedEntry.morePaths.value": [],
         "feedEntry.note": [],
         "feedEntry.origin": [],
         "feedEntry.origin.flag": [],
@@ -4060,31 +4092,41 @@
           "1",
           "2",
           "3",
-          "4"
+          "4",
+          "5",
+          "6"
         ],
         "feedEntry.path.chevron": [
           "1",
           "2",
           "3",
-          "4"
+          "4",
+          "5",
+          "6"
         ],
         "feedEntry.path.through": [
           "1",
           "2",
           "3",
-          "4"
+          "4",
+          "5",
+          "6"
         ],
         "feedEntry.path.trace": [
           "1",
           "2",
           "3",
-          "4"
+          "4",
+          "5",
+          "6"
         ],
         "feedEntry.path.value": [
           "1",
           "2",
           "3",
-          "4"
+          "4",
+          "5",
+          "6"
         ],
         "feedEntry.pathsLabel": []
       }
@@ -5481,6 +5523,7 @@
           "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
         ],
         "feed.card.menu": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
           "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
         ],
         "feed.card.opener": [
@@ -5605,6 +5648,9 @@
         "feed.card.removalMark.line": [
           "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
         ],
+        "feed.card.removalMark.when": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
         "feed.card.timestamp": [
           "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
           "dd44f5de-d68c-4931-aabc-915cefadab7f"
@@ -5613,7 +5659,138 @@
         "feed.menuSheet.cite": [],
         "feed.menuSheet.dragHandle": [],
         "feed.menuSheet.hide": [],
+        "feed.menuSheet.license": [],
         "feed.menuSheet.report": [],
+        "feed.menuSheet.save": []
+      }
+    },
+    "FeedRemovedMenuOwn": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.comments": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.score": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.score.value": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.share": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip.avatar": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip.handle": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip.name": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "feed.card.menu": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.opener": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.removalMark": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.removalMark.line": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.removalMark.when": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.menuSheet": [],
+        "feed.menuSheet.cite": [],
+        "feed.menuSheet.dragHandle": [],
+        "feed.menuSheet.license": [],
+        "feed.menuSheet.markSensitive": [],
         "feed.menuSheet.save": []
       }
     },
@@ -8142,6 +8319,7 @@
         "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
         "invites.link": "the invite link's id, the link's last path segment (Invites' live links)",
         "invites.link.copyFault": "the copy chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "invites.linksDoor": "the links chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "invites.linksEmpty": "the sections chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "invites.peopleDoor": "the letIn chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "invites.person": "the person's id, the lowercase UUID the wire carries (Invites' people you let in)",
@@ -8221,30 +8399,45 @@
         "invites.header.title": [],
         "invites.link": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
-          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025",
+          "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90"
         ],
         "invites.link.action": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
-          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025",
+          "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90"
         ],
         "invites.link.address": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
-          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025",
+          "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90"
         ],
         "invites.link.caption": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
-          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025",
+          "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90"
         ],
         "invites.link.copy": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
-          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025",
+          "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90"
         ],
         "invites.link.copyFault": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15/failed"
         ],
         "invites.link.label": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
-          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025",
+          "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90"
+        ],
+        "invites.linksDoor": [
+          "capped"
         ],
         "invites.linksEmpty": [
           "no-links"
@@ -8394,6 +8587,7 @@
         "join.handle.support": [],
         "join.header": [],
         "join.header.back": [],
+        "join.header.help": [],
         "join.password": [],
         "join.password.input": [],
         "join.password.label": [],
@@ -11686,6 +11880,100 @@
         "postDetail.menuSheet.save": []
       }
     },
+    "ReaderPostMenuNarrow": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "postDetail.card.opinions": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.menuSheet": [],
+        "postDetail.menuSheet.cite": [],
+        "postDetail.menuSheet.dragHandle": [],
+        "postDetail.menuSheet.hide": [],
+        "postDetail.menuSheet.license": [],
+        "postDetail.menuSheet.report": [],
+        "postDetail.menuSheet.save": [],
+        "postDetail.menuSheet.share": []
+      }
+    },
     "RecoveryCode": {
       "prefix": "recoveryCode",
       "keys": {},
@@ -12483,7 +12771,82 @@
           "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
         ],
         "postDetail.header": [],
-        "postDetail.header.back": []
+        "postDetail.header.back": [],
+        "postDetail.header.menu": []
+      }
+    },
+    "RemovedOther": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the post's id, the lowercase UUID the wire carries (PostCard)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.removalMark": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.removalMark.line": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.removalMark.when": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": []
       }
     },
     "ReplyEntry": {
@@ -12777,6 +13140,27 @@
         "reset.confirm.input": [],
         "reset.confirm.label": [],
         "reset.confirm.reveal": [],
+        "reset.note": [],
+        "reset.password": [],
+        "reset.password.input": [],
+        "reset.password.label": [],
+        "reset.password.reveal": [],
+        "reset.password.support": [],
+        "reset.title": []
+      }
+    },
+    "ResetNewErrors": {
+      "prefix": "reset",
+      "keys": {},
+      "nodes": {
+        "reset.body": [],
+        "reset.commit": [],
+        "reset.commit.action": [],
+        "reset.confirm": [],
+        "reset.confirm.input": [],
+        "reset.confirm.label": [],
+        "reset.confirm.reveal": [],
+        "reset.confirm.support": [],
         "reset.note": [],
         "reset.password": [],
         "reset.password.input": [],
@@ -13698,7 +14082,6 @@
         "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
-        "settings.sensitive.footnote": [],
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
@@ -13917,7 +14300,6 @@
         "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
-        "settings.sensitive.footnote": [],
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
@@ -14071,7 +14453,6 @@
         "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
-        "settings.sensitive.footnote": [],
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
@@ -14283,7 +14664,6 @@
         "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
-        "settings.sensitive.footnote": [],
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
@@ -14443,7 +14823,6 @@
         "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
-        "settings.sensitive.footnote": [],
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
@@ -14647,7 +15026,6 @@
         "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
-        "settings.sensitive.footnote": [],
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
@@ -14876,7 +15254,6 @@
         "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
-        "settings.sensitive.footnote": [],
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
@@ -15062,7 +15439,6 @@
         "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
-        "settings.sensitive.footnote": [],
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
@@ -15327,7 +15703,6 @@
         "settings.reading.help": [],
         "settings.reading.label": [],
         "settings.sensitive": [],
-        "settings.sensitive.footnote": [],
         "settings.sensitive.label": [],
         "settings.sensitive.unveil": [],
         "settings.sensitive.unveil.label": [],
@@ -15957,7 +16332,6 @@
         "wallet.bottomBar.searchSlot": [],
         "wallet.bottomBar.walletSlot": [],
         "wallet.comingSoonCard": [],
-        "wallet.comingSoonCard.line": [],
         "wallet.comingSoonCard.title": []
       }
     },

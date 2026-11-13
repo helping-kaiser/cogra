@@ -32,7 +32,9 @@ WHEN the new code is typed back on the code screen -> the new backup uploads AND
 
 WHEN the code screen is left before the new code is typed back -> the old backup stands exactly as it was AND the old code keeps working
 
-WHEN press the header back arrow -> settings returns AND NEVER a code is made AND NEVER the old backup changes
+WHEN press the header back arrow GIVEN Create a new recovery code has not been pressed -> settings returns AND NEVER a code is made AND NEVER the old backup changes
+
+ALWAYS the screen's ways out refuse a press, undimmed and unchanged in face, from 200ms after the press of Create a new recovery code until its answer comes — the new code is shown once, so a Close that left before it showed would lose it; the entry forms' held exits, the named exception to Close (jakob 2026-11-12)
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 
