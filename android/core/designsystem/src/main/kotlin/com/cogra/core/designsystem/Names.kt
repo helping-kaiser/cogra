@@ -140,7 +140,11 @@ fun cutName(name: String, tail: String, lineWidth: Int, widthOf: (String) -> Int
     while (low < high) {
         val middle = (low + high + 1) / 2
         val fits = widthOf(name.substring(0, cuts[middle - 1]) + ELLIPSIS + tail) <= lineWidth
-        if (fits) low = middle else high = middle - 1
+        if (fits) {
+            low = middle
+        } else {
+            high = middle - 1
+        }
     }
     return (if (low == 0) "" else name.substring(0, cuts[low - 1])) + ELLIPSIS
 }
