@@ -15,10 +15,11 @@
 //
 // THE PROFILE FEED CARD'S ⋮ IS THE SAME MENU LESS THE SHARE ROW the card's own
 // row already carries (`_shared.jsx` `FEED_PROFILE_MENU`,
-// `FEED_DELETED_PROFILE_MENU`): a person's reads Save · Mention · Hide, a
-// deleted account's Save · Hide · Report. `feed` places it on a card: the
-// card names the trigger, and the sheet and its rows carry the card's test
-// ids rather than the profile page's registered paths.
+// `FEED_DELETED_PROFILE_MENU`): a person's reads Save · Mention · Hide ·
+// Report, a deleted account's Save · Hide · Report. `feed` places it on a
+// card: the card names the trigger, and the open sheet and its rows wear the
+// host's `menuSheet` paths (`history.menuSheet.mention`) rather than the
+// profile page's.
 //
 // MENTION IS THE CITE DOOR WITH A PERSON BEHIND IT (ProfileMenu.md:17; api-spec
 // `ReferenceTarget`: a citation whose target is a User is a mention): the new
@@ -31,22 +32,20 @@ import { useRouter } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
 import { sendReport } from "@/lib/api/report-api";
-import { hideAct, hideLabel, hiddenPersonOf, type ActorLike } from "@/lib/hidden/hide-row";
+import { hideRow, hiddenPersonOf, type ActorLike } from "@/lib/hidden/hide-row";
 import { useHiddenSet } from "@/lib/hidden/provider";
 import { useSavedWrites } from "@/lib/saved/provider";
 import { saveRow, type Notify } from "@/lib/saved/save-row";
+import { POST_LOCKED, useReaderIsApplicant } from "@/lib/session/reader-state";
 import { useAuthGuard } from "@/lib/session/runtime";
 import type { DataNode } from "@/lib/ui/data-node";
 import { LINK_COPIED, shareLink } from "@/lib/ui/share";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
-import { MenuSheet, OverflowTrigger, type MenuItem } from "@/lib/ui2/overflow-menu";
+import { MenuSheet, OverflowTrigger, menuSheetNodes, type MenuItem } from "@/lib/ui2/overflow-menu";
 import { ReportConfirm } from "@/lib/ui2/report-confirm";
 import { REPORTED, REPORT_NOT_SENT } from "@/lib/ui2/post-menu-host";
 
 export type ProfileMenuKind = "own" | "other" | "deleted";
-
-/** ProfileMenu.md:19 — an applicant's Mention; the applicant family's `once you're in`. */
-export const POST_LOCKED = "You can post once you're in.";
 
 const SHEET = { path: "profile.menuSheet" };
 const pageRow = (name: string): DataNode => ({ path: `profile.menuSheet.${name}` });
@@ -55,21 +54,20 @@ const pageRow = (name: string): DataNode => ({ path: `profile.menuSheet.${name}`
 export type FeedPlacement = {
   readonly trigger?: DataNode;
   readonly testId: string;
+  /** The screen the card stands on (`menuHostOf`), whose `menuSheet` the open sheet wears. */
+  readonly host?: string;
 };
 
 export function ProfileMenu({
   kind,
   profile,
   signedIn,
-  applicant = false,
   notify,
   feed,
 }: {
   kind: ProfileMenuKind;
   profile: ActorLike & { handle: string; viewerBookmarkedAt?: string | null };
   signedIn: boolean;
-  /** The reader is an applicant, where the host knows it: Mention tells rather than opens. */
-  applicant?: boolean;
   /** The host's own snackbar. */
   notify: Notify;
   /** The menu on a profile feed card instead of the profile page. */
@@ -80,13 +78,22 @@ export function ProfileMenu({
   const guard = useAuthGuard();
   const writes = useSavedWrites();
   const hidden = useHiddenSet();
+  // THE READER'S STATE IS THE SESSION'S, not the host's (`reader-state.ts`):
+  // a card's host does not know who is reading, and the page's own read is
+  // not the one every door shares.
+  const applicant = useReaderIsApplicant();
   const [open, setOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
 
   const prefix = feed?.testId ?? "profile-menu";
-  const row = (name: string): DataNode | undefined => (feed === undefined ? pageRow(name) : undefined);
+  // A CARD'S MENU WEARS ITS HOST'S SHEET (`history.menuSheet`, `feed.menuSheet.mention`;
+  // FeedProfileMenu, HistoryProfileMenu) while it is up: every card on a page
+  // mounts its own sheet, and one registered node may name one open sheet only.
+  const cardNodes = feed?.host === undefined || !open ? undefined : menuSheetNodes(feed.host);
+  const row = (name: string): DataNode | undefined =>
+    feed === undefined ? pageRow(name) : cardNodes?.row(name);
 
   // A guest who taps any row but Share is asked to join (ProfileMenu.md;
   // GuestGate.md:5).
@@ -131,10 +138,13 @@ export function ProfileMenu({
   // HIDING KEEPS THE READER WHERE THEY ARE (ProfileMenu.md:23): the person
   // leaves the feed, the page stays, and the host's snackbar offers Undo.
   // A deleted account's row and snackbar name no one (ProfileDeletedMenu.md:19).
+  // WHILE THE PERSON IS HIDDEN THE ROW READS `Unhide @ada` and unhides, on the
+  // profile reached by a link and on their card in History, Saved or a search
+  // (ProfileMenu.md:31-35, HistoryProfileMenu.md:5-9; round 41), keeping its
+  // one node.
   const person = hiddenPersonOf(kind === "deleted" ? { ...profile, handle: null } : profile);
   const hide: MenuItem = {
-    label: hideLabel(person),
-    onSelect: hideAct({
+    ...hideRow({
       set: hidden,
       person,
       origin: profile.id,
@@ -163,8 +173,10 @@ export function ProfileMenu({
     ariaLabel = `More about @${profile.handle}`;
     // THE READER'S OWN CARD (undrawn: a card of oneself is reached only by
     // saving one's own profile) keeps the one act that is theirs to take on it.
+    // THE CARD'S MENU ENDS IN REPORT LIKE THE PAGE'S (round 36: FeedProfileMenu.md:5,
+    // ProfileMenu.md:29) — the page's rows less the share its own row carries.
     if (kind === "own") items = [save];
-    else items = feed === undefined ? [save, mention, shareRow, hide, report] : [save, mention, hide];
+    else items = feed === undefined ? [save, mention, shareRow, hide, report] : [save, mention, hide, report];
   }
 
   // THE COMMIT SENDS THE MAIL; refused or unanswered, the sheet stays and the
@@ -202,7 +214,7 @@ export function ProfileMenu({
         // `ProfileDeletedMenu.jsx`), while the ⋮ names whose they are.
         ariaLabel={kind === "own" || feed !== undefined ? ariaLabel : "Profile actions"}
         testId={`${prefix}-sheet`}
-        node={feed === undefined ? SHEET : undefined}
+        node={feed === undefined ? SHEET : cardNodes?.sheet}
       />
       {kind !== "own" && (
         <ReportConfirm

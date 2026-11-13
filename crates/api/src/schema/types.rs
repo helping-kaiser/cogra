@@ -866,7 +866,8 @@ impl Record {
 
     /// When the record landed: its epoch's attested boundary timestamp
     /// (layer1-interface.md, the Host Contract). Wall-clock time for
-    /// display; `landingEpoch` and the causal key carry the order.
+    /// display; the key of record (`landingEpoch`, `position`) carries the
+    /// order.
     async fn landed_at(&self, ctx: &Context<'_>) -> async_graphql::Result<DateTime<Utc>> {
         use async_graphql::ErrorExtensions;
         ctx.data::<DataLoader<crate::loaders::EpochInstantLoader>>()?
@@ -883,7 +884,9 @@ impl Record {
             })
     }
 
-    /// Authoritative act time — the first component of the causal key.
+    /// Act time 𝕋^act: the recomputable summary of the order the record
+    /// carries. It decides no precedence — the key of record
+    /// (`landingEpoch`, `position`) orders.
     async fn act_time(&self) -> i64 {
         self.0.act_time
     }
@@ -1747,7 +1750,7 @@ impl User {
     /// Opinion (auth.md "Approval and landing"). A vouch on an account
     /// that has not landed, and a later vouch-Opinion on one that has, is
     /// not one. Newest vouch first, keyset on the vouch record's
-    /// landing-order key; `vouchedAt` is that record's `landedAt`. The
+    /// key of record; `vouchedAt` is that record's `landedAt`. The
     /// admission stands whatever followed it: a stance walked back since,
     /// or the account deleted since, which reads as every deleted account
     /// reads. An invalid cursor is BAD_INPUT. Field-level: viewer-only.
@@ -4543,7 +4546,6 @@ pub(crate) async fn node_records(
 pub(crate) fn record_cursor(r: &mirror::RecordFull) -> CursorKey {
     CursorKey {
         epoch: r.epoch,
-        act_time: r.act_time,
         position: r.position,
         id: None,
     }
@@ -5503,7 +5505,6 @@ async fn hydrate_vouched_in(
         connection.edges.push(Edge::with_additional_fields(
             encode_landing_cursor(CursorKey {
                 epoch: row.epoch,
-                act_time: row.act_time,
                 position: row.position,
                 id: None,
             }),
@@ -5826,16 +5827,15 @@ impl CommentConnectionFields {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CursorKey {
     pub epoch: i64,
-    pub act_time: i64,
     pub position: i64,
     pub id: Option<Uuid>,
 }
 
 impl CursorKey {
-    /// The landing-order triple, for the record-backed reads that
-    /// paginate on it alone.
-    pub fn order(&self) -> (i64, i64, i64) {
-        (self.epoch, self.act_time, self.position)
+    /// The key of record `(epoch, position)`, for the record-backed reads
+    /// that paginate on it alone.
+    pub fn order(&self) -> (i64, i64) {
+        (self.epoch, self.position)
     }
 }
 
@@ -5846,7 +5846,6 @@ pub(crate) fn content_cursor(
     key.map(|k| postgres_store::content::ContentCursor {
         order: postgres_store::content::LandingOrder {
             landed_epoch: k.epoch,
-            act_time: k.act_time,
             position: k.position,
         },
         id: k.id,
@@ -5860,7 +5859,6 @@ pub(crate) fn content_cursor_key(
 ) -> CursorKey {
     CursorKey {
         epoch: order.landed_epoch,
-        act_time: order.act_time,
         position: order.position,
         id: Some(id),
     }
@@ -5927,24 +5925,26 @@ pub fn keyset_page(
 pub fn encode_landing_cursor(key: CursorKey) -> String {
     let CursorKey {
         epoch,
-        act_time,
         position,
         id,
     } = key;
     match id {
-        Some(id) => B64.encode(format!("{epoch}:{act_time}:{position}:{id}")),
-        None => B64.encode(format!("{epoch}:{act_time}:{position}")),
+        Some(id) => B64.encode(format!("{epoch}:{position}:{id}")),
+        None => B64.encode(format!("{epoch}:{position}")),
     }
 }
 
-/// A cursor without the trailing id is accepted and paginates on the
-/// key alone — one issued before the id was carried stays usable.
+/// The wire form is `epoch:position[:id]`, the key of record and the
+/// optional entry id. A cursor without the trailing id is accepted and
+/// paginates on the key alone. Anything else is refused as an invalid
+/// cursor — a cursor is opaque, so a client holding one the server no
+/// longer reads restarts the walk.
 fn decode_landing_cursor(cursor: &str) -> async_graphql::Result<CursorKey> {
     let invalid = || super::query::bad_input("invalid cursor");
     let raw = B64.decode(cursor).map_err(|_| invalid())?;
     let text = String::from_utf8(raw).map_err(|_| invalid())?;
     let parts: Vec<&str> = text.split(':').collect();
-    let [epoch, act_time, position, rest @ ..] = parts.as_slice() else {
+    let [epoch, position, rest @ ..] = parts.as_slice() else {
         return Err(invalid());
     };
     let id = match rest {
@@ -5954,7 +5954,6 @@ fn decode_landing_cursor(cursor: &str) -> async_graphql::Result<CursorKey> {
     };
     Ok(CursorKey {
         epoch: epoch.parse().map_err(|_| invalid())?,
-        act_time: act_time.parse().map_err(|_| invalid())?,
         position: position.parse().map_err(|_| invalid())?,
         id,
     })
@@ -6351,7 +6350,67 @@ impl MediaAttachmentType {
 
 #[cfg(test)]
 mod page_tests {
-    use super::{MAX_PAGE_SIZE, validate_page_args};
+    use super::{
+        B64, CursorKey, MAX_PAGE_SIZE, decode_landing_cursor, encode_landing_cursor,
+        validate_page_args,
+    };
+    use base64::Engine as _;
+    use uuid::Uuid;
+
+    /// The cursor carries the key of record `(epoch, position)` and the
+    /// entry id, and nothing else: a cursor round-trips whole, with or
+    /// without the id, and the key orders by position inside an epoch
+    /// whatever act time the records carried. A cursor in the earlier
+    /// three-component form — `epoch:act time:position[:id]` — is refused
+    /// as an invalid cursor, so a client holding one restarts the walk
+    /// rather than resuming from a misread key.
+    ///
+    /// A cursor carries (epoch, position) and an optional id, round-trips whole, and an old act-time cursor is refused.
+    /// ´claim:pagination:the-cursor-carries-the-key-of-record´
+    #[test]
+    fn the_cursor_carries_the_key_of_record() {
+        let id = Uuid::from_u128(0x0123_4567_89ab_cdef_0123_4567_89ab_cdef);
+        for key in [
+            CursorKey {
+                epoch: 7,
+                position: 3,
+                id: Some(id),
+            },
+            CursorKey {
+                epoch: 7,
+                position: 3,
+                id: None,
+            },
+        ] {
+            let wire = encode_landing_cursor(key);
+            assert_eq!(decode_landing_cursor(&wire).expect("round-trips"), key);
+        }
+        assert_eq!(
+            B64.decode(encode_landing_cursor(CursorKey {
+                epoch: 7,
+                position: 3,
+                id: None,
+            }))
+            .expect("base64"),
+            b"7:3"
+        );
+        let earlier = CursorKey {
+            epoch: 7,
+            position: 3,
+            id: None,
+        };
+        let later = CursorKey {
+            epoch: 7,
+            position: 4,
+            id: None,
+        };
+        assert!(later.order() > earlier.order());
+        for old in [format!("7:900:3:{id}"), "7:900:3".to_string()] {
+            let refused = decode_landing_cursor(&B64.encode(old.as_bytes()))
+                .expect_err("an act-time cursor is refused");
+            assert_eq!(refused.message, "invalid cursor", "{old}");
+        }
+    }
 
     /// The two connection helpers share this, so a client hitting an
     /// offset list and a client hitting a keyset list are refused the

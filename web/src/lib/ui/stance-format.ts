@@ -71,7 +71,7 @@ export const AFFINITY_SEVERANCE: SeveranceWords = {
   gone: (name) => `No opinion towards ${name}.`,
   zero: "No opinion",
   landing: "This leaves you with no opinion towards it.",
-  help: "Disconnect takes everything you've said about the topic to nothing. It has its own confirmation, and each thing you've said is cleared by its own signature.",
+  help: "Disconnect takes everything you've said about the tag to nothing. It has its own confirmation, and each thing you've said is cleared by its own signature.",
   helpAlternates:
     "Disconnect takes everything to nothing, and each thing you've said is cleared by its own signature.",
 };

@@ -28,8 +28,9 @@ type RawLeg = (String, String, f64, f64, i64, i64, i64, bool);
 /// renders a Tag's T-leg: `p_d` carries confidence, `p_i` carries
 /// relevance.
 ///
-/// `claim` is the act tuple `(relevance, confidence)`; `key` is the
-/// causal key `(epoch, act_time, position)` the fold orders on.
+/// `claim` is the act tuple `(relevance, confidence)`; `key` is
+/// `(epoch, act_time, position)`: the key of record `(epoch, position)`
+/// the fold orders on, and the act time the record carries.
 async fn land_tag(
     pool: &PgPool,
     record_id: &str,

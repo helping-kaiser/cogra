@@ -154,6 +154,13 @@ interface AccountRepository {
 
     suspend fun requestPasswordReset(email: String): Outcome<Unit>
 
+    /**
+     * The anonymous, read-only check of a reset link (`passwordResetLinkCheck`):
+     * true while the link is live. Used, expired and unknown all answer false
+     * alike; a tripped token-confirmation budget is a RATE_LIMITED refusal.
+     */
+    suspend fun passwordResetLinkCheck(token: String): Outcome<Boolean>
+
     suspend fun confirmPasswordReset(resetToken: String, newPassword: String): Outcome<Unit>
 }
 

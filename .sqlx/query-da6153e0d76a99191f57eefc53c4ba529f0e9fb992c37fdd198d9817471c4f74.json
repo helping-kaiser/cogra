@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT value FROM network_parameter_versions\n         WHERE parameter = $1\n         ORDER BY landed_epoch DESC NULLS LAST,\n                  position DESC NULLS LAST,\n                  created_at DESC, version_id DESC\n         LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "value",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "da6153e0d76a99191f57eefc53c4ba529f0e9fb992c37fdd198d9817471c4f74"
+}

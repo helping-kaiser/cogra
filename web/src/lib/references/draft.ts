@@ -9,8 +9,8 @@
 // "cite" or "citation", and a reference whose target is a person is a
 // MENTION. D21 fixes the range: topics are TAGGED, not referenced.
 //
-// A reference is never withdrawn by deletion. Reference withdrawal is
-// per-leg net stance (D4, D11), so a removal is the severance shape:
+// A reference is never withdrawn by deletion. Its author withdraws
+// it through netting (D4, D11), so a removal is the severance shape:
 // counter-records until the `(author, artifact, target)` bundle reaches
 // `(0, 0)`. That is why the edit surfaces come out of here as acts
 // rather than as a diff to apply.

@@ -32,7 +32,6 @@ export type ReferenceRecord<T> = {
   readonly pInterest: number;
   readonly payloadMarked: boolean;
   readonly landingEpoch: number;
-  readonly actTime: number;
   readonly position: number;
 };
 

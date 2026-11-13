@@ -1583,8 +1583,7 @@ async fn the_listing_pages_by_keyset_in_landing_order(pool: PgPool) {
     assert!(
         records
             .windows(2)
-            .all(|w| (w[0].epoch, w[0].act_time, w[0].position)
-                > (w[1].epoch, w[1].act_time, w[1].position))
+            .all(|w| (w[0].epoch, w[0].position) > (w[1].epoch, w[1].position))
     );
 }
 
@@ -1764,7 +1763,7 @@ async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) 
         .await
         .expect("records");
     assert!(all.len() >= 2);
-    let newest = (all[0].epoch, all[0].act_time, all[0].position);
+    let newest = (all[0].epoch, all[0].position);
     let older = mirror::records(
         &rig.pool,
         &mirror::RecordFilter::default(),
@@ -1779,7 +1778,7 @@ async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) 
     let back = mirror::records(
         &rig.pool,
         &mirror::RecordFilter::default(),
-        Some((older[0].epoch, older[0].act_time, older[0].position)),
+        Some((older[0].epoch, older[0].position)),
         true,
         5,
     )

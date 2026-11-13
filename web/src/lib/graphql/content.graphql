@@ -252,6 +252,15 @@ query CommentSelfMark($id: UUID!) {
   }
 }
 
+# A COMMENT CARD'S OWN RE-READ once an edit opened from its menu off the
+# thread was signed (`comment-feed-card.tsx`): the card settles in place,
+# wearing the pending words, without its host reading its whole list again.
+query CommentCard($id: UUID!, $includePending: Boolean! = true) {
+  comment(id: $id) {
+    ...CommentFields
+  }
+}
+
 # THE EDIT PAD'S BACKING READ (EditPad.md): the author's own Publish bundle
 # toward their post — the genesis and every edit — as its RAW sum, which
 # `Current backing`, `Backing after`, the cap line and `Walk it all back` all

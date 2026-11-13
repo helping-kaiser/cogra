@@ -102,7 +102,6 @@
         "nodes": [
           {
             "genesis": {
-              "actTime": 5,
               "landingEpoch": 1,
               "position": 5
             },
@@ -112,7 +111,6 @@
           },
           {
             "genesis": {
-              "actTime": 2,
               "landingEpoch": 1,
               "position": 2
             },
@@ -122,7 +120,6 @@
           },
           {
             "genesis": {
-              "actTime": 3,
               "landingEpoch": 1,
               "position": 3
             },
@@ -132,7 +129,6 @@
           },
           {
             "genesis": {
-              "actTime": 1,
               "landingEpoch": 1,
               "position": 1
             },
@@ -142,7 +138,6 @@
           },
           {
             "genesis": {
-              "actTime": 4,
               "landingEpoch": 1,
               "position": 4
             },
@@ -156,7 +151,6 @@
             "author": "z",
             "family": "PUBLISH",
             "key": {
-              "actTime": 5,
               "landingEpoch": 1,
               "position": 5
             },
@@ -176,7 +170,6 @@
             "author": "v",
             "family": "OPINION",
             "key": {
-              "actTime": 6,
               "landingEpoch": 5,
               "position": 6
             },
@@ -196,7 +189,6 @@
             "author": "v",
             "family": "OPINION",
             "key": {
-              "actTime": 7,
               "landingEpoch": 5,
               "position": 7
             },
@@ -216,7 +208,6 @@
             "author": "beta",
             "family": "OPINION",
             "key": {
-              "actTime": 8,
               "landingEpoch": 5,
               "position": 8
             },
@@ -236,7 +227,6 @@
             "author": "alpha",
             "family": "OPINION",
             "key": {
-              "actTime": 9,
               "landingEpoch": 5,
               "position": 9
             },
@@ -317,7 +307,6 @@
         "nodes": [
           {
             "genesis": {
-              "actTime": 5,
               "landingEpoch": 1,
               "position": 5
             },
@@ -327,7 +316,6 @@
           },
           {
             "genesis": {
-              "actTime": 2,
               "landingEpoch": 1,
               "position": 2
             },
@@ -337,7 +325,6 @@
           },
           {
             "genesis": {
-              "actTime": 3,
               "landingEpoch": 1,
               "position": 3
             },
@@ -347,7 +334,6 @@
           },
           {
             "genesis": {
-              "actTime": 1,
               "landingEpoch": 1,
               "position": 1
             },
@@ -357,7 +343,6 @@
           },
           {
             "genesis": {
-              "actTime": 4,
               "landingEpoch": 1,
               "position": 4
             },
@@ -371,7 +356,6 @@
             "author": "z",
             "family": "PUBLISH",
             "key": {
-              "actTime": 5,
               "landingEpoch": 1,
               "position": 5
             },
@@ -391,7 +375,6 @@
             "author": "v",
             "family": "OPINION",
             "key": {
-              "actTime": 6,
               "landingEpoch": 5,
               "position": 6
             },
@@ -411,7 +394,6 @@
             "author": "v",
             "family": "OPINION",
             "key": {
-              "actTime": 7,
               "landingEpoch": 5,
               "position": 7
             },
@@ -431,7 +413,6 @@
             "author": "beta",
             "family": "OPINION",
             "key": {
-              "actTime": 8,
               "landingEpoch": 5,
               "position": 8
             },
@@ -451,7 +432,6 @@
             "author": "alpha",
             "family": "OPINION",
             "key": {
-              "actTime": 9,
               "landingEpoch": 5,
               "position": 9
             },
@@ -3046,7 +3026,6 @@
         "nodes": [
           {
             "genesis": {
-              "actTime": 5,
               "landingEpoch": 1,
               "position": 5
             },
@@ -3056,7 +3035,6 @@
           },
           {
             "genesis": {
-              "actTime": 4,
               "landingEpoch": 1,
               "position": 4
             },
@@ -3066,7 +3044,6 @@
           },
           {
             "genesis": {
-              "actTime": 3,
               "landingEpoch": 1,
               "position": 3
             },
@@ -3076,7 +3053,6 @@
           },
           {
             "genesis": {
-              "actTime": 2,
               "landingEpoch": 1,
               "position": 2
             },
@@ -3086,7 +3062,6 @@
           },
           {
             "genesis": {
-              "actTime": 1,
               "landingEpoch": 1,
               "position": 1
             },
@@ -3100,7 +3075,6 @@
             "author": "owner",
             "family": "PUBLISH",
             "key": {
-              "actTime": 4,
               "landingEpoch": 1,
               "position": 4
             },
@@ -3120,7 +3094,6 @@
             "author": "cited",
             "family": "PUBLISH",
             "key": {
-              "actTime": 5,
               "landingEpoch": 1,
               "position": 5
             },
@@ -3140,7 +3113,6 @@
             "author": "v",
             "family": "OPINION",
             "key": {
-              "actTime": 6,
               "landingEpoch": 1,
               "position": 6
             },
@@ -3160,7 +3132,6 @@
             "author": "owner",
             "family": "REFERENCE",
             "key": {
-              "actTime": 7,
               "landingEpoch": 1,
               "position": 7
             },
@@ -3340,7 +3311,6 @@
         "nodes": [
           {
             "genesis": {
-              "actTime": 6,
               "landingEpoch": 1,
               "position": 6
             },
@@ -3350,7 +3320,6 @@
           },
           {
             "genesis": {
-              "actTime": 5,
               "landingEpoch": 1,
               "position": 5
             },
@@ -3360,7 +3329,6 @@
           },
           {
             "genesis": {
-              "actTime": 4,
               "landingEpoch": 1,
               "position": 4
             },
@@ -3370,7 +3338,6 @@
           },
           {
             "genesis": {
-              "actTime": 2,
               "landingEpoch": 1,
               "position": 2
             },
@@ -3380,7 +3347,6 @@
           },
           {
             "genesis": {
-              "actTime": 3,
               "landingEpoch": 1,
               "position": 3
             },
@@ -3390,7 +3356,6 @@
           },
           {
             "genesis": {
-              "actTime": 1,
               "landingEpoch": 1,
               "position": 1
             },
@@ -3404,7 +3369,6 @@
             "author": "owner",
             "family": "PUBLISH",
             "key": {
-              "actTime": 5,
               "landingEpoch": 1,
               "position": 5
             },
@@ -3424,7 +3388,6 @@
             "author": "cited",
             "family": "PUBLISH",
             "key": {
-              "actTime": 6,
               "landingEpoch": 1,
               "position": 6
             },
@@ -3444,7 +3407,6 @@
             "author": "v",
             "family": "OPINION",
             "key": {
-              "actTime": 7,
               "landingEpoch": 1,
               "position": 7
             },
@@ -3464,7 +3426,6 @@
             "author": "v",
             "family": "OPINION",
             "key": {
-              "actTime": 8,
               "landingEpoch": 1,
               "position": 8
             },
@@ -3484,7 +3445,6 @@
             "author": "referrer",
             "family": "REFERENCE",
             "key": {
-              "actTime": 9,
               "landingEpoch": 1,
               "position": 9
             },
@@ -3620,7 +3580,6 @@
         "nodes": [
           {
             "genesis": {
-              "actTime": 3,
               "landingEpoch": 1,
               "position": 3
             },
@@ -3636,7 +3595,6 @@
           },
           {
             "genesis": {
-              "actTime": 1,
               "landingEpoch": 1,
               "position": 1
             },
@@ -3646,7 +3604,6 @@
           },
           {
             "genesis": {
-              "actTime": 2,
               "landingEpoch": 1,
               "position": 2
             },
@@ -3660,7 +3617,6 @@
             "author": "writer",
             "family": "PUBLISH",
             "key": {
-              "actTime": 3,
               "landingEpoch": 1,
               "position": 3
             },
@@ -3680,7 +3636,6 @@
             "author": "v",
             "family": "OPINION",
             "key": {
-              "actTime": 4,
               "landingEpoch": 1,
               "position": 4
             },
@@ -3700,7 +3655,6 @@
             "author": "writer",
             "family": "TAG",
             "key": {
-              "actTime": 5,
               "landingEpoch": 1,
               "position": 5
             },
@@ -3901,7 +3855,6 @@
         "nodes": [
           {
             "genesis": {
-              "actTime": 6,
               "landingEpoch": 1,
               "position": 6
             },
@@ -3911,7 +3864,6 @@
           },
           {
             "genesis": {
-              "actTime": 3,
               "landingEpoch": 1,
               "position": 3
             },
@@ -3921,7 +3873,6 @@
           },
           {
             "genesis": {
-              "actTime": 2,
               "landingEpoch": 1,
               "position": 2
             },
@@ -3931,7 +3882,6 @@
           },
           {
             "genesis": {
-              "actTime": 1,
               "landingEpoch": 1,
               "position": 1
             },
@@ -3945,7 +3895,6 @@
             "author": "v",
             "family": "OPINION",
             "key": {
-              "actTime": 4,
               "landingEpoch": 1,
               "position": 4
             },
@@ -3965,7 +3914,6 @@
             "author": "friend",
             "family": "OPINION",
             "key": {
-              "actTime": 5,
               "landingEpoch": 1,
               "position": 5
             },
@@ -3985,7 +3933,6 @@
             "author": "far",
             "family": "PUBLISH",
             "key": {
-              "actTime": 6,
               "landingEpoch": 1,
               "position": 6
             },
@@ -4063,7 +4010,6 @@
         "nodes": [
           {
             "genesis": {
-              "actTime": 3,
               "landingEpoch": 1,
               "position": 3
             },
@@ -4079,7 +4025,6 @@
           },
           {
             "genesis": {
-              "actTime": 2,
               "landingEpoch": 1,
               "position": 2
             },
@@ -4089,7 +4034,6 @@
           },
           {
             "genesis": {
-              "actTime": 1,
               "landingEpoch": 1,
               "position": 1
             },
@@ -4103,7 +4047,6 @@
             "author": "stranger",
             "family": "PUBLISH",
             "key": {
-              "actTime": 3,
               "landingEpoch": 1,
               "position": 3
             },
@@ -4123,7 +4066,6 @@
             "author": "v",
             "family": "AFFINITY",
             "key": {
-              "actTime": 4,
               "landingEpoch": 1,
               "position": 4
             },
@@ -4143,7 +4085,6 @@
             "author": "v",
             "family": "REFERENCE",
             "key": {
-              "actTime": 5,
               "landingEpoch": 1,
               "position": 5
             },
@@ -4279,7 +4220,6 @@
         "nodes": [
           {
             "genesis": {
-              "actTime": 3,
               "landingEpoch": 1,
               "position": 3
             },
@@ -4289,7 +4229,6 @@
           },
           {
             "genesis": {
-              "actTime": 2,
               "landingEpoch": 1,
               "position": 2
             },
@@ -4299,7 +4238,6 @@
           },
           {
             "genesis": {
-              "actTime": 1,
               "landingEpoch": 1,
               "position": 1
             },
@@ -4313,7 +4251,6 @@
             "author": "rival",
             "family": "PUBLISH",
             "key": {
-              "actTime": 3,
               "landingEpoch": 1,
               "position": 3
             },
@@ -4333,7 +4270,6 @@
             "author": "v",
             "family": "OPINION",
             "key": {
-              "actTime": 4,
               "landingEpoch": 1,
               "position": 4
             },
@@ -4455,7 +4391,6 @@
         "nodes": [
           {
             "genesis": {
-              "actTime": 5,
               "landingEpoch": 1,
               "position": 5
             },
@@ -4465,7 +4400,6 @@
           },
           {
             "genesis": {
-              "actTime": 2,
               "landingEpoch": 1,
               "position": 2
             },
@@ -4475,7 +4409,6 @@
           },
           {
             "genesis": {
-              "actTime": 3,
               "landingEpoch": 1,
               "position": 3
             },
@@ -4485,7 +4418,6 @@
           },
           {
             "genesis": {
-              "actTime": 1,
               "landingEpoch": 1,
               "position": 1
             },
@@ -4495,7 +4427,6 @@
           },
           {
             "genesis": {
-              "actTime": 4,
               "landingEpoch": 1,
               "position": 4
             },
@@ -4509,7 +4440,6 @@
             "author": "x",
             "family": "PUBLISH",
             "key": {
-              "actTime": 5,
               "landingEpoch": 1,
               "position": 5
             },
@@ -4529,7 +4459,6 @@
             "author": "v",
             "family": "OPINION",
             "key": {
-              "actTime": 6,
               "landingEpoch": 1,
               "position": 6
             },
@@ -4549,7 +4478,6 @@
             "author": "v",
             "family": "OPINION",
             "key": {
-              "actTime": 7,
               "landingEpoch": 1,
               "position": 7
             },
@@ -4569,7 +4497,6 @@
             "author": "a",
             "family": "OPINION",
             "key": {
-              "actTime": 8,
               "landingEpoch": 1,
               "position": 8
             },
@@ -4589,7 +4516,6 @@
             "author": "c",
             "family": "OPINION",
             "key": {
-              "actTime": 9,
               "landingEpoch": 1,
               "position": 9
             },
@@ -4690,7 +4616,6 @@
         "nodes": [
           {
             "genesis": {
-              "actTime": 4,
               "landingEpoch": 1,
               "position": 4
             },
@@ -4700,7 +4625,6 @@
           },
           {
             "genesis": {
-              "actTime": 5,
               "landingEpoch": 1,
               "position": 5
             },
@@ -4710,7 +4634,6 @@
           },
           {
             "genesis": {
-              "actTime": 1,
               "landingEpoch": 1,
               "position": 1
             },
@@ -4720,7 +4643,6 @@
           },
           {
             "genesis": {
-              "actTime": 2,
               "landingEpoch": 1,
               "position": 2
             },
@@ -4730,7 +4652,6 @@
           },
           {
             "genesis": {
-              "actTime": 3,
               "landingEpoch": 1,
               "position": 3
             },
@@ -4744,7 +4665,6 @@
             "author": "x",
             "family": "PUBLISH",
             "key": {
-              "actTime": 4,
               "landingEpoch": 1,
               "position": 4
             },
@@ -4764,7 +4684,6 @@
             "author": "y",
             "family": "PUBLISH",
             "key": {
-              "actTime": 5,
               "landingEpoch": 1,
               "position": 5
             },
@@ -4784,7 +4703,6 @@
             "author": "v",
             "family": "OPINION",
             "key": {
-              "actTime": 6,
               "landingEpoch": 5,
               "position": 6
             },
@@ -4804,7 +4722,6 @@
             "author": "v",
             "family": "OPINION",
             "key": {
-              "actTime": 7,
               "landingEpoch": 5,
               "position": 7
             },

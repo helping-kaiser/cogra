@@ -2,8 +2,10 @@ package com.cogra.feature.content
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cogra.domain.AccountState
 import com.cogra.domain.CommentView
 import com.cogra.domain.Outcome
+import com.cogra.domain.ReaderStanding
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.SensitiveReveals
 import com.cogra.domain.repo.ContentRepository
@@ -38,6 +40,11 @@ data class ReplyThread(
 data class CommentsScroll(val index: Int, val offset: Int)
 
 data class CommentsUiState(
+    /**
+     * The reader is an applicant (`ReaderStanding`): the thread's two doors
+     * into the composer answer in place instead (ReplyEntry.md:25-29).
+     */
+    val commentLocked: Boolean = false,
     /** Nothing to show yet — the thread's own first read is out. */
     val loading: Boolean = true,
     val comments: List<CommentView> = emptyList(),
@@ -88,6 +95,8 @@ data class CommentsUiState(
 class CommentsViewModel @Inject constructor(
     private val content: ContentRepository,
     private val reveals: SensitiveReveals,
+    /** The reader's own account state; collected, so a live landing unlocks the doors. */
+    private val standing: ReaderStanding,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CommentsUiState())
@@ -98,6 +107,9 @@ class CommentsViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             reveals.revealed.collect { revealed -> _state.update { it.copy(reveals = revealed) } }
+        }
+        viewModelScope.launch {
+            standing.state.collect { s -> _state.update { it.copy(commentLocked = s == AccountState.APPLICANT) } }
         }
     }
 

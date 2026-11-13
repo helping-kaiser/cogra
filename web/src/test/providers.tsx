@@ -7,11 +7,14 @@ import { render } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { renderToString } from "react-dom/server";
 
+import { CommentEditor } from "@/app/posts/[id]/edit/comment-editor";
+import { CommentEditDoor } from "@/lib/compose/comment-edit-door";
 import { createGuardedClient } from "@/lib/session/browser-guard";
 import { HiddenProvider } from "@/lib/hidden/provider";
 import type { KeyCeremony } from "@/lib/identity/key-ceremony";
 import { SavedProvider } from "@/lib/saved/provider";
 import { SessionProvider } from "@/lib/session/provider";
+import { settleReaderState, type ReaderAccountState } from "@/lib/session/reader-state";
 import { AuthRuntimeProvider } from "@/lib/session/runtime";
 import { createTokenStore, type TokenStore } from "@/lib/session/token-store";
 import { RegistrationProvider } from "@/lib/signing/provider";
@@ -30,8 +33,15 @@ export function renderWithProviders(
     stanceData,
     cache = new InMemoryCache(),
     hydrate = false,
+    reader,
   }: {
     store?: TokenStore;
+    /**
+     * What the session's one account read answered (`reader-state.ts`), as the
+     * root layout's `AccountPreferencesSync` publishes it — staged, since the
+     * sync is not mounted here. Absent, the reader stays unsettled.
+     */
+    reader?: ReaderAccountState | null;
     /**
      * Arrive cold: server-render the tree, then hydrate it, as a reload or a
      * shared link does. The first client commit then reads the session's
@@ -50,6 +60,7 @@ export function renderWithProviders(
     stanceData?: StanceData;
   } = {},
 ) {
+  if (reader !== undefined) settleReaderState(reader);
   // The same chain the browser builds, over the injected store: which reads
   // carry the viewer's token — and whether they wait for the session to
   // settle before they go at all — is part of what a surface does.
@@ -65,7 +76,10 @@ export function renderWithProviders(
           <RegistrationProvider ceremony={ceremony} flow={flow} writeSigner={writeSigner}>
             <StanceDataProvider data={stanceData}>
               <SavedProvider>
-                <HiddenProvider>{ui}</HiddenProvider>
+                <HiddenProvider>
+                  {/* The shell's door to a comment's edit off its thread (`shell.tsx`). */}
+                  <CommentEditDoor editor={CommentEditor}>{ui}</CommentEditDoor>
+                </HiddenProvider>
               </SavedProvider>
             </StanceDataProvider>
           </RegistrationProvider>

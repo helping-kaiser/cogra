@@ -14,6 +14,7 @@
 import type { ReactNode } from "react";
 
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { nameInText } from "@/lib/ui/names";
 import { MonogramAvatar } from "./monogram-avatar";
 
 export function QuotedRow({
@@ -44,8 +45,10 @@ export function QuotedRow({
     >
       {mark ?? <MonogramAvatar name={name ?? ""} src={src} size={32} node={part(node, "disc")} />}
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="text-label-large" {...testAttributes(part(node, "title"))}>
-          {title}
+        {/* TEXT THAT WRAPS (QuotedRow.jsx, round 40): `The long way home — @…`
+            wraps at its spaces; the handle is one unit (`nameInText`). */}
+        <span className="text-label-large [overflow-wrap:anywhere]" {...testAttributes(part(node, "title"))}>
+          {nameInText(title)}
         </span>
         {snippet !== null && snippet !== undefined && snippet !== "" && (
           <span

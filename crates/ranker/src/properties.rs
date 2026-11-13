@@ -104,7 +104,6 @@ fn t_fwd_inbound_records_never_change_the_feed() {
                     author: atom.clone(),
                     key: CausalKey {
                         landing_epoch: 9,
-                        act_time: 10_000 + i as i64,
                         position: 10_000 + i as i64,
                     },
                     legs: vec![crate::input::SliceLeg {
@@ -631,7 +630,6 @@ fn t_noai_the_input_surface_is_the_allowlist() {
     {
         let CausalKey {
             landing_epoch: _,
-            act_time: _,
             position: _,
         } = key;
         for crate::input::SliceLeg {

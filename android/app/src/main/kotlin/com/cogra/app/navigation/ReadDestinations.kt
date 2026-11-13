@@ -162,7 +162,7 @@ private fun ShellScope.FeedDestination(entry: NavBackStackEntry) {
         onExpiredDismissed = consumeExpired,
         onOpenDraft = {
             consumeExpired()
-            navController.navigate(ComposePost())
+            openComposer(ComposePost())
         },
         onOpenPost = { id -> navController.navigate(PostDetail(id)) },
         // The profile names its way back by the door it came through.
@@ -176,7 +176,7 @@ private fun ShellScope.FeedDestination(entry: NavBackStackEntry) {
         viewerId = accountId,
         onEditPost = { id -> navController.navigate(ComposePost(id)) },
         onCitePost = { id ->
-            navController.navigate(ComposePost(referenceTargetId = id))
+            openComposer(ComposePost(referenceTargetId = id))
         },
         // The chats affordance the band carries (jakob
         // 2026-09-01). A signed-out tap opens the guest gate,
@@ -227,7 +227,7 @@ private fun ShellScope.feedKindDoors() = FeedKindDoors(
     onOpenComment = { postId, commentId, aimReply ->
         navController.navigate(PostDetail(postId, commentId = commentId, aimReply = aimReply))
     },
-    onComposeWithTag = { name -> navController.navigate(ComposePost(tag = name)) },
+    onComposeWithTag = { name -> openComposer(ComposePost(tag = name)) },
     onOpenTopics = { navController.navigate(YourTopics) },
 )
 
@@ -262,7 +262,7 @@ private fun ShellScope.PostDetailDestination(entry: NavBackStackEntry) {
         onOpenPost = { id -> navController.navigate(PostDetail(id)) },
         onOpenTopic = { name -> navController.navigate(Topic(name)) },
         onReference = { id ->
-            navController.navigate(ComposePost(referenceTargetId = id))
+            openComposer(ComposePost(referenceTargetId = id))
         },
         onSignInOrJoin = { navController.navigate(Login) },
         onBack = { navController.navigateUp() },
@@ -376,7 +376,7 @@ private fun ShellScope.ProfileDestination(entry: NavBackStackEntry) {
         onOpenOpinions = { navController.navigate(ProfileStances(route.handle)) },
         cardsHost = cardsHost,
         // The ⋮'s Mention: the wizard, the person staged (ProfileMenu.md:17).
-        onMention = { id -> navController.navigate(ComposePost(referenceTargetId = id)) },
+        onMention = { id -> openComposer(ComposePost(referenceTargetId = id)) },
     )
 }
 
@@ -403,7 +403,7 @@ private fun ShellScope.profileCardsHost(entry: NavBackStackEntry, postFrom: Stri
         viewerId = accountId,
         signedIn = signedIn,
         onEditPost = { id -> navController.navigate(ComposePost(id)) },
-        onCitePost = { id -> navController.navigate(ComposePost(referenceTargetId = id)) },
+        onCitePost = { id -> openComposer(ComposePost(referenceTargetId = id)) },
         onReply = { target -> navController.openReplyWizard(target) },
         onEditComment = { commentId, parentTitle -> navController.navigate(EditComment(commentId, parentTitle)) },
         onSignInOrJoin = { navController.navigate(Login) },
@@ -473,7 +473,7 @@ private fun ShellScope.SavedDestination(entry: NavBackStackEntry) {
         viewerId = accountId,
         signedIn = signedIn,
         onEditPost = { id -> navController.navigate(ComposePost(id)) },
-        onCitePost = { id -> navController.navigate(ComposePost(referenceTargetId = id)) },
+        onCitePost = { id -> openComposer(ComposePost(referenceTargetId = id)) },
         onReply = { target -> navController.openReplyWizard(target) },
         onEditComment = { commentId, parentTitle ->
             navController.navigate(EditComment(commentId, parentTitle))
@@ -504,12 +504,12 @@ private fun ShellScope.HistoryDestination(entry: NavBackStackEntry) {
             ),
             // `Tag a new post with it` (History.md:63): the composer at its
             // first stage, the tag riding staged.
-            onComposeWithTag = { name -> navController.navigate(ComposePost(tag = name)) },
+            onComposeWithTag = { name -> openComposer(ComposePost(tag = name)) },
         ),
         viewerId = accountId,
         signedIn = signedIn,
         onEditPost = { id -> navController.navigate(ComposePost(id)) },
-        onCitePost = { id -> navController.navigate(ComposePost(referenceTargetId = id)) },
+        onCitePost = { id -> openComposer(ComposePost(referenceTargetId = id)) },
         onReply = { target -> navController.openReplyWizard(target) },
         onEditComment = { commentId, parentTitle ->
             navController.navigate(EditComment(commentId, parentTitle))

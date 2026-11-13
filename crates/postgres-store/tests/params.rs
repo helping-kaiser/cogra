@@ -13,13 +13,12 @@ use sqlx::PgPool;
 async fn landed(pool: &PgPool, parameter: &str, value: i64, epoch: i64, position: i64) {
     sqlx::query(
         "INSERT INTO network_parameter_versions
-             (parameter, value, landed_epoch, act_time, position)
-         VALUES ($1, $2, $3, $4, $5)",
+             (parameter, value, landed_epoch, position)
+         VALUES ($1, $2, $3, $4)",
     )
     .bind(parameter)
     .bind(serde_json::json!(value))
     .bind(epoch)
-    .bind(position + 1)
     .bind(position)
     .execute(pool)
     .await

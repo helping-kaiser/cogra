@@ -65,6 +65,7 @@ import { LINK_COPIED } from "@/lib/ui/share";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError } from "@/lib/ui/transport-error";
 import { StageHost } from "@/lib/ui2/media/stage-host";
+import { menuSheetNodes } from "@/lib/ui2/overflow-menu";
 import { PostMenuHost } from "@/lib/ui2/post-menu-host";
 import { SearchBar } from "@/lib/ui2/search-bar";
 
@@ -445,6 +446,8 @@ export function SavedScreen({
         post={menuPost}
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
+        // SavedPostMenu: `saved.menuSheet` and its rows.
+        nodes={menuSheetNodes("saved")}
         testId="saved-menu"
         notify={notify}
         // A kept post the reader removes keeps its place on the shelf, wearing

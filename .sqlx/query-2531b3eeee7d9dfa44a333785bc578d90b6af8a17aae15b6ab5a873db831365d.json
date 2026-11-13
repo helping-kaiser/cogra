@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO post_versions\n                     (post_id, title, description, content, redaction_reason,\n                      pending, landed_epoch, position,\n                      sensitive, sensitive_reason, created_at)\n                 SELECT $1, NULL, NULL, '', $2, FALSE,\n                        landed_epoch, position, FALSE, NULL, NOW()\n                 FROM post_versions WHERE version_id = $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2531b3eeee7d9dfa44a333785bc578d90b6af8a17aae15b6ab5a873db831365d"
+}

@@ -91,7 +91,7 @@ class KeptPicksScreenTest {
         render(review)
         val kinds = compose.onAllNodesWithTag("keptPicks.pick.kind").fetchSemanticsNodes()
             .map { it.config[SemanticsProperties.Text].joinToString() }
-        assertThat(kinds).containsExactly("Post", "Person", "Post", "Topic").inOrder()
+        assertThat(kinds).containsExactly("Post", "Person", "Post", "Tag").inOrder()
     }
 
     @Test

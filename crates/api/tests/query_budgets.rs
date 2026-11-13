@@ -464,9 +464,9 @@ async fn a_full_slice_page_with_legs_fits_the_release_budget(pool: PgPool) {
     let query = "{ feedSlice(viewer: \"00000000-0000-0000-0000-000000000000\") {
         asOfEpoch
         nodes(first: 100) { totalCount pageInfo { hasNextPage endCursor }
-            edges { cursor node { graphId id kind genesis { landingEpoch actTime position } } } }
+            edges { cursor node { graphId id kind genesis { landingEpoch position } } } }
         records(first: 100) { totalCount pageInfo { hasNextPage endCursor }
-            edges { cursor node { id family authorId landingEpoch actTime position
+            edges { cursor node { id family authorId landingEpoch position
                 legs { role sourceId targetId pDirected pInterest maturity censusUnknown } } } }
     } }";
     let response = execute(&schema(pool, QueryBudgets::release()), query).await;

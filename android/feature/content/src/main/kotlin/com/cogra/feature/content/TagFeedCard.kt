@@ -55,6 +55,7 @@ import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.TypeTokens
 import com.cogra.domain.FieldStatus
+import com.cogra.domain.ageLadder
 import com.cogra.domain.history.TagCardTopic
 import com.cogra.domain.score.TraceThingKind
 import java.time.Instant
@@ -155,7 +156,7 @@ private fun TagLead(name: String, through: List<String>, topic: TagCardTopic, ca
         // AN EMPTY TAG SHOWS NO AGE: nothing is newest.
         topic.tagged.firstOrNull()?.let { newest ->
             Text(
-                text = compactAge(newest.createdAt, now),
+                text = ageLadder(newest.createdAt, now),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = Space.x2).dataNode(card / "timestamp"),
