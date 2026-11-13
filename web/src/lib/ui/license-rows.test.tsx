@@ -5,14 +5,15 @@ import { PUBLIC_DOMAIN } from "@/lib/license";
 import { LicenseRows } from "./license-rows";
 
 describe("LicenseRows", () => {
-  it("draws a row per tier, each carrying its own hint", () => {
+  it("draws a row per tier, a hint only where it says more than the name", () => {
     render(<LicenseRows value={PUBLIC_DOMAIN} onChange={vi.fn()} testIdPrefix="wizard" />);
     expect(screen.getByText("No credit")).toBeInTheDocument();
-    expect(screen.getByText("Nobody owes you a name.")).toBeInTheDocument();
+    expect(screen.queryByText("Nobody owes you a name.")).toBeNull();
+    expect(screen.getByText("Commercial uses credit you; everything else is free.")).toBeInTheDocument();
     // The provenance tiers are VERBS — what the author chooses is whether the
     // platform logs (copy-voice.md "The author's own tier names").
     expect(screen.getByText("Not logged")).toBeInTheDocument();
-    expect(screen.getByText("Uses go unlogged.")).toBeInTheDocument();
+    expect(screen.queryByText("Uses go unlogged.")).toBeNull();
   });
 
   it("groups each axis under its own legend, not a shared fieldset legend", () => {
@@ -20,7 +21,7 @@ describe("LicenseRows", () => {
     expect(screen.getByRole("radiogroup", { name: "Credit" })).toBeInTheDocument();
     expect(screen.getByRole("radiogroup", { name: "Public record of use" })).toBeInTheDocument();
     // Neither of `LicenseChooser`'s own words appears: this sheet already
-    // carries its own title and its own "Terms for anyone..." note above.
+    // carries its own title.
     expect(screen.queryByText("License")).not.toBeInTheDocument();
     expect(
       screen.queryByText("Terms for anyone who reuses this — not a statement about how you made it."),

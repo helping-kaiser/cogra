@@ -68,7 +68,7 @@ function AxisRows({
           />
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span className="text-body-medium">{tier.label}</span>
-            <span className="text-body-small text-on-surface-variant">{tier.hint}</span>
+            {tier.hint !== undefined && <span className="text-body-small text-on-surface-variant">{tier.hint}</span>}
           </span>
         </label>
       ))}
