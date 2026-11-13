@@ -6136,6 +6136,18 @@ are drawn per pair of `tags` × `state`, while a chip-drawn copy is keyed by one
 value of one chip (`node-paths.mjs`). Registering them first redraws the copies
 one per value — pixel-identical, but a restructuring of both boards' bodies.
 
+Round 49 tried `ComposeSeal` (one card and one foot per `state` value, names
+after `postEdit`'s: `header`, `summary`, `acts`, `facts.{license,backing,
+sensitive}`, `footer`). The render stops at the join: the copy keyed by the
+value `tagRefused` breaks the key rule — a key is lowercase letters, digits,
+`-` and `_` — and `ReplySeal` has the same value. `ReplySeal`'s cards also
+vary on `tags` × `state`, and a chip copy inside another chip's copy needs a
+named node between them. The choice that unblocks both: rename the chip value
+(`tag-refused`, the boards' settings changing name), or let the key rule take
+camelCase chip values; and for `ReplySeal`, a named wrapper between its two
+chips' copies (a new path segment). The attempt is kept as a patch in round
+49's scratch folder.
+
 ### 221 · `PadKeyAbsent`'s pad is hand-built, so it cannot register yet · *system* · **filed 2026-11-13**
 
 Round 48 (seam 320-16). `PadFailed`, `PadWriteRule` and `TagPageHeldPad`

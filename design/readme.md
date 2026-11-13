@@ -11975,6 +11975,63 @@ round's spoken unit):
   2029 → 2152 distinct (123 added across both acts, round 47's and act 1's
   included), none gone against main, round 47 or act 1. Backlog 222
   closed, 220 partly, 162 closed as stale; 223 filed.
+
+### Round 49, the menus' readings, the reel's ⋮, the tags and the covers — 2026-11-13
+
+jakob's answers of 2026-11-13 on the menus audit (M1–M4) and on N2–N7, and
+V1 (the viewer follows the reel), built on round 48's tree.
+
+- **Every post menu carries the two readings** (M1): `Cited by` ·
+  `Opinions on this` just before `License terms`, as the comment's menu
+  has them — another's post, your own, removed or not, on every host and
+  the narrow phone. One change in the atoms (`readerPostMenu`,
+  `readerCardMenu`, `OWN_POST_MENU`, and the removed menus built from
+  them) reaches all thirteen menu boards and every card's ⋮. The rows
+  open `PostOpinions` and `CitedBy` over the surface the menu was opened
+  from, at any count, so a post's empty lists are reachable; they say so
+  in the comment sheets' words, the sheets' `list` chip. The detail's
+  count lines are unchanged. A post has two doors to each list, the count
+  line on its detail and the row in its menu; a comment has the row.
+- **The reel's rail gains a ⋮** (M2): author · opinion · comments · share
+  · ⋮ · score. It is not an exit, so it stands above the score, which the
+  rail keeps last as its door out; it follows the acts with glyphs of
+  their own, named `More on this post` as the card's ⋮. It raises the
+  card's own rows over the stream: `ReelMenu` (new), its `whose` chip the
+  reader's menu on @mira's clip or the own menu on @sol's. What `Hide`
+  and your own `Remove` leave on the stream, and whether the clip pauses
+  under the sheet, are not ruled (backlog 231; two gaps in the graph).
+- **The narrow phone's share row leads and reads `Share this post`** (M3,
+  M4): copy-voice's Save-first rule and the atom's note name the
+  exception — a control moved off the card into the menu takes the first
+  place; the row keeps its path, `menuSheet.share`. copy-voice's *Menu
+  rows* lists every menu's rows in order.
+- **Tags** (N2, N3, N4): the picker is the only place a tag's name is
+  typed; with nothing typed, or a bare `#`, it offers nothing and refuses
+  nothing (law only — no board draws an empty field). A tag page for a
+  name that cannot be a tag reads `This tag doesn't exist.` — `TagPage`'s
+  `load` chip, `notFound`, `ProfileNotFound`'s shape, the name kept in the
+  header; a legal unused name stays `TagPageEmpty`.
+- **The reply's edit line names the post** (N5), `Your comment on "The long
+  way home".` at every depth and on every host; an untitled post takes its
+  stand-in.
+- **The trace adds up to the cent** (N6), a tiny path printing its exact
+  figure by the tiny rule.
+- **Covers stay on cards** (N7, V1): a tall clip's cover stays 4:5. The
+  stream and the viewer never show a cover — the clip plays at its own
+  shape or stands paused on its own frame — and only a clip that cannot
+  load may show its cover there, whole at 4:5, centred, nothing cropped.
+  No board draws a clip that did not load (backlog 230). The viewer's
+  boards already draw the clip's own 9:16 frame, so none changed.
+- **The seals stay unregistered** (backlog 220): one drawn copy per
+  `state` value is keyed by that value, and the value `tagRefused` is no
+  legal key (a key is lowercase letters, digits, `-` and `_`); `ReplySeal`'s
+  cards also vary on two chips at once. Both wait on a registry choice.
+- **The gate**: against round 48 (0fab13b43), 209 → 210 screens
+  (`ReelMenu`), 8130 → 8197 board paths, 2152 → 2167 distinct — 15 added
+  (`tagPage.menuSheet.citedBy` / `.opinions`, `reel.rail.menu`,
+  `reel.menuSheet` and its rows), none gone; the narrow phone's row keeps
+  `menuSheet.share`. `cite-a-post` re-blessed, 25 → 26 origins. Backlog
+  230 and 231 filed; 220 and 223 amended.
 ---
 
 ## 14. The canvases
