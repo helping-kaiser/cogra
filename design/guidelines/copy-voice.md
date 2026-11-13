@@ -1254,8 +1254,47 @@ draft, which is no commit for the law to gate.
 
 ## Menu rows
 
-The words the four overflow menus put in front of a reader, settled in
-spelling — one `License terms` everywhere, never the British spelling:
+The words every overflow menu puts in front of a reader, settled in
+spelling — one `License terms` everywhere, never the British spelling.
+The tree draws its menus from one atom per row (`_shared.jsx`), and
+each menu's rows stand in one order:
+
+- **A post's, another's** — `Save` · `Cite in a new post` · `Hide @ada` ·
+  `Cited by` · `Opinions on this` · `License terms` · `Report`; on a
+  removed post the same; on `Saved`, `Unsave` first. Every host's card
+  ⋮ raises it — the detail, the feed, History, Saved, a profile's posts,
+  a tag page and the stream's rail.
+- **A post's, your own** — `Save` · `Cite in a new post` · `Edit` ·
+  `Mark as sensitive` · `Remove` · `Cited by` · `Opinions on this` ·
+  `License terms`; removed, `Save` · `Cite in a new post` · `Cited by` ·
+  `Opinions on this` · `License terms`.
+- **A post's on a phone narrower than 360** — `Share this post` first,
+  then another's rows as above.
+- **A comment's, another's** — `Save` · `Cite in a new post` · `Cited by`
+  · `Opinions on this` · `License terms` · `Report`, removed or not; no
+  Hide row.
+- **A comment's, your own** — `Save` · `Cite in a new post` · `Edit` ·
+  `Remove` · `Cited by` · `Opinions on this` · `License terms`; removed,
+  less `Edit` and `Remove`.
+- **A person's** — `Save` · `Mention in a new post` · `Share this
+  profile` · `Hide @ada` · `Report` on the profile; on a profile card
+  the same less the share row, the hide row reading `Unhide @ada` while
+  the person is hidden; a deleted account's `Save` · `Share this
+  profile` · `Hide this account` · `Report`.
+- **Your own profile's** — `Saved` · `History` · `Share your profile`.
+
+The rows, word by word:
+
+- `Cited by` and `Opinions on this` — the two readings, on every
+  content menu, a post's and a comment's, at any count (*The opinions
+  list* and *`Cited by N`*, below). They open the lists a post's count
+  lines open; a guest reads them without the gate.
+- `Edit`, `Mark as sensitive` and `Remove` — the author's acts, on your
+  own menus only (`Mark as sensitive` on a post's alone: a comment's
+  mark rides its edit). Never a button on a card.
+- `Hide @ada` / `Unhide @ada` / `Hide this account` — *Hiding names its
+  person*, below.
+- `Saved` and `History` — your own profile's two private lists.
 
 - `License terms` — the one row, on a post's menu and a comment's
   alike. It closes both menus, the rarest read of the product sitting
