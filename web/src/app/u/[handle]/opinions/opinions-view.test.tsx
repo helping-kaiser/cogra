@@ -401,7 +401,7 @@ describe("OpinionsScreen", () => {
     server.use(theirProfile(), userOpinions("on", [[]]), userOpinions("by", [[]]));
     renderWithProviders(<OpinionsScreen handle="ada" />);
     expect(await screen.findByTestId(byNode("profileStances.empty.title"))).toHaveTextContent(
-      /^No opinions yet.$/,
+      /^No opinions yet\.$/,
     );
     fireEvent.click(screen.getByTestId(byNode("profileStances.tabRow.byTab")));
     await waitFor(() =>
