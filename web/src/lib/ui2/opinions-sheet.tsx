@@ -38,10 +38,9 @@ export const OPINIONS_TITLE = {
 
 /**
  * The empty line — reachable only from a comment's ⋮, since a post's line
- * drops away at zero. Calm, naming the one thing that would fill it; never a
- * scold, never the error colour.
+ * drops away at zero. Calm, never a scold, never the error colour.
  */
-export const NO_OPINIONS = "No opinions yet — yours would be the first.";
+export const NO_OPINIONS = "No opinions yet";
 
 export function OpinionsSheet({
   open,

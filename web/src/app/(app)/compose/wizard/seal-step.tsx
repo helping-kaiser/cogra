@@ -5,7 +5,7 @@
 // canonical/screens/_shared.jsx).
 //
 // THE ANATOMY IS THE MASTERS': the quiet note naming the post, the acts card
-// (`ActsCard`: one row per act kind, the total, the all-or-nothing line), the
+// (`ActsCard`: one row per act kind, the total, the slow line), the
 // three fact rows (`FactRow`'s seal emphasis: License, Your backing,
 // Sensitive), and the foot (`SealFooter`: the commit, and Back under it).
 //
@@ -43,7 +43,7 @@ import { HelpDot } from "@/lib/ui2/help-dot";
 import { ReadoutChip } from "@/lib/ui2/chip";
 import { QuietNote } from "@/lib/ui2/quiet-note";
 import { NoticeLine, NoticePanel } from "@/lib/ui2/notice-panel";
-import { ActsCard, actsTotal, ALL_OR_NOTHING, SLOW_SIGNING_LINE, type ActsRow } from "@/lib/ui2/compose/acts-card";
+import { ActsCard, actsTotal, SLOW_SIGNING_LINE, type ActsRow } from "@/lib/ui2/compose/acts-card";
 import { CitedSheet } from "@/lib/ui2/compose/cited-sheet";
 import { TagsSheet } from "@/lib/ui2/compose/tags-sheet";
 import { ParkedPad } from "@/lib/ui2/compose/parked-pad";
@@ -289,7 +289,7 @@ export function SealStep({
     });
   }
 
-  const note = slow ? SLOW_SIGNING_LINE : acts > 1 ? ALL_OR_NOTHING : null;
+  const note = slow ? SLOW_SIGNING_LINE : null;
 
   return (
     <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 pb-6 pt-2">

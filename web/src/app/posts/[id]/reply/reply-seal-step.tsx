@@ -6,7 +6,7 @@
 //
 // ONE SURFACE, THE SYSTEM'S OWN MASTERS. The quiet line that says what is
 // answered, the acts card (`ActsCard`: the comment, the staged tags and
-// citations, then the two action rows, the total and its all-or-nothing
+// citations, then the two action rows, the total and its slow
 // subline), the three fact rows (`FactRow`), the note that replying signs an
 // opinion, and the foot. A comment's seal is also its details stage, so the
 // action rows ride along in every state — what could still be added, lined up
@@ -48,7 +48,6 @@ import { ReadoutChip } from "@/lib/ui2/chip";
 import {
   ActsCard,
   actsTotal,
-  ALL_OR_NOTHING,
   SLOW_SIGNING_LINE,
   type ActsAction,
   type ActsRow,
@@ -343,7 +342,7 @@ export function ReplySealStep({
         // Past 5s from the press the subline says the network is slow, in its
         // own place, whether the bytes have landed yet or not
         // (ReplySealUploading.md:13, SealSigningSlow.md).
-        note={slow ? SLOW_SIGNING_LINE : acts > 1 ? ALL_OR_NOTHING : null}
+        note={slow ? SLOW_SIGNING_LINE : null}
         noteTone={slow ? "slow" : "quiet"}
         testId="reply-seal-acts"
       />

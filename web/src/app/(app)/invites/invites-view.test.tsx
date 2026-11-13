@@ -649,7 +649,7 @@ describe("the create sheet (behavior/InviteNew.md, InviteExpiry.md, InviteCreate
     );
     expect(within(sheet).getByRole("button", { name: /Expires after/ })).toHaveTextContent("7 days");
     expect(within(sheet).getByTestId("invites.createSheet.options.footnote")).toHaveTextContent(
-      "With it off, anyone holding the link can apply until it expires. Either way each person still needs your approval, one at a time.",
+      "Either way each person still needs your approval, one at a time.",
     );
     // :5 no opinion control.
     expect(within(sheet).queryByRole("slider")).not.toBeInTheDocument();
@@ -767,7 +767,7 @@ describe("the approval pad (behavior/ApprovePad.md)", () => {
     expect(within(row("rafa")).queryByTestId("invites.application.close")).not.toBeInTheDocument();
     expect(within(row("rafa")).getByTestId("invites.application.stance.anchor")).toBeInTheDocument();
     expect(within(pad).getByTestId("invites.application.stance.pad.note")).toHaveTextContent(
-      "Vouching is the act. Set signs your opinion on @rafa and brings them in.It is one signed, priced act — and it is theirs to answer: their opinion back completes the pair.",
+      "Vouching is the act. Set signs your opinion on @rafa and brings them in.It is one signed, priced act.",
     );
     expect(within(pad).getByTestId("invites.application.stance.pad.help")).toHaveAccessibleName(
       "How vouching works",
@@ -921,10 +921,10 @@ describe("the closing dialogs (behavior/RejectConfirm.md, RejectAllConfirm.md)",
     const dialog = await screen.findByTestId("invites.dialog");
     expect(within(dialog).getByTestId("invites.dialog.title")).toHaveTextContent("Close @imke's application?");
     expect(within(dialog).getByTestId("invites.dialog.body")).toHaveTextContent(
-      "It leaves your list and @imke is told. Their account stays exactly as it is — signed in, and free to keep reading.",
+      "It leaves your list and @imke is told. Their account stays as it is.",
     );
     expect(within(dialog).getByTestId("invites.dialog.body")).toHaveTextContent(
-      "This is your call and nobody else's. Any member can still vouch them in, and @imke gets a link to ask with.",
+      "Any member can still vouch them in, and @imke gets a link to ask with.",
     );
     const [first, second] = within(dialog).getAllByRole("button");
     expect(first).toHaveTextContent("Close it");
