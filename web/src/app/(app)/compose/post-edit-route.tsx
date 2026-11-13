@@ -59,6 +59,7 @@ import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { CENTERED, reshape, type Crop } from "@/lib/ui2/media/crop";
 import { POST_SHAPES, type PostShape } from "@/lib/ui2/media/aspect";
 import { signedValues } from "@/lib/topics/draft";
+import { refusesTagName, tagNameRefusal } from "@/lib/topics/picker";
 import { usePreviewUrls } from "@/lib/compose/previews";
 import { newComposeId } from "@/lib/compose/ids";
 import { POST_SCALE, screenPick, VIDEO_AT_EDIT, type PickRefusal } from "@/lib/compose/pick";
@@ -362,7 +363,9 @@ export function PostEditRoute({
         return;
       }
       if (prepared.kind === "refused") {
-        const message = refused(prepared.errors);
+        // A refused NAME reads as the picker's own line for it (TagPickerRefused).
+        const coded = refused(prepared.errors);
+        const message = prepared.errors.some(refusesTagName) ? tagNameRefusal(change.tag.name) : coded;
         const index =
           change.kind === "tag" ? state.tags.findIndex((tag) => tag.name === change.tag.name) : -1;
         if (index >= 0) perTag[index] = message;

@@ -650,6 +650,45 @@ describe("PostEditRoute — one batch (EditCompose, EditActs)", () => {
     expect(footer()).toHaveTextContent("Nothing to sign yet");
   });
 
+  // jakob 2026-11-13 (seam 327): a refused tag NAME reads as the picker's own
+  // line (TagPickerRefused), never the server's `a topic name …` text.
+  it("reads a refused tag name on its chip as the picker's line, never the server's text", async () => {
+    serve(editablePost());
+    server.use(
+      gqlLink.mutation("PrepareTag", () =>
+        HttpResponse.json({
+          data: {
+            prepareTag: {
+              __typename: "PreparePayload",
+              writes: null,
+              userErrors: [
+                {
+                  __typename: "UserError",
+                  message: "a topic name is at most 128 bytes, got 129",
+                  code: "BAD_INPUT",
+                  field: ["name"],
+                },
+              ],
+            },
+          },
+        }),
+      ),
+    );
+    const signer = draw();
+    fireEvent.click(await screen.findByTestId("postEdit.tags.add"));
+    fireEvent.change(await screen.findByRole("searchbox", { name: "Name a tag" }), {
+      target: { value: "saltmaps" },
+    });
+    fireEvent.click(await screen.findByTestId(byNode("tagPicker.tag", "saltmaps")));
+    fireEvent.click(screen.getByTestId("tagPicker.done"));
+    await screen.findByTestId("postEdit.header");
+    fireEvent.click(sign());
+    const line = await screen.findByTestId("post-edit-tag-error-0");
+    expect(line).toHaveTextContent("A tag name is letters, digits, dot, dash and underscore.");
+    expect(screen.getByTestId("post-edit")).not.toHaveTextContent(/topic name/);
+    expect(signer.signStaged).not.toHaveBeenCalled();
+  });
+
   it("counts a citation's withdrawal at its counter-records", async () => {
     serve(editablePost({ references: [referenceClaim("u-juno", "juno", 2)] }));
     draw();
