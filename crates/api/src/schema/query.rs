@@ -20,7 +20,7 @@ use super::ranked_search::{self, ReadOrder};
 use super::types::{
     Actor, AskLinkCheck, CommentType, DEFAULT_PAGE_SIZE, EmailChangeLinkCheck,
     EmailChangeLinkState, HashtagType, InviteLinkCheck, KeysetConnection, MediaAttachmentType,
-    Node, NodeKind, PostType, Record, RecordConnection, RecordFamily, RecordId, ReferenceCandidate,
+    Node, NodeKind, PasswordResetLinkCheck, PostType, Record, RecordConnection, RecordFamily, RecordId, ReferenceCandidate,
     ReferenceTarget, SearchConnection, SearchConnectionFields, SearchEdgeFields, SearchResult,
     StagedWriteType, User, borrowed_vantage, connection_cost, content_cursor, content_cursor_key,
     keyset_connection, keyset_page, list_cost, list_limit, record_connection,
@@ -168,21 +168,41 @@ impl Query {
     /// used and expired all answer false alike, and the answer carries
     /// nothing about the account the link belongs to. Spends the per-IP
     /// token-confirmation budget, a tripped one answering RATE_LIMITED.
+    #[graphql(deprecation = "Use `passwordResetLink`, null exactly where this answers false.")]
     async fn password_reset_link_check(
         &self,
         ctx: &Context<'_>,
         token: String,
     ) -> async_graphql::Result<bool> {
         let pool = ctx.data::<PgPool>()?;
-        let limits = ctx.data::<RateLimitConfig>()?;
-        super::mutation::guard_window(
-            ctx,
-            ratelimit::scope::CONFIRM_IP,
-            &super::mutation::request_ip(ctx)?,
-            limits.confirm_ip,
-        )
-        .await?;
+        guard_reset_link_check(ctx).await?;
         Ok(store::password_reset_live(pool, &crate::auth::hash_of(&token)).await?)
+    }
+
+    /// Anonymous check of a password-reset link, so the app opens the
+    /// expired-link screen rather than a form that can only fail, and
+    /// the form can name the account a password manager files the new
+    /// password under. Non-null while the link is live — the token
+    /// known, unused and unexpired — the predicate `confirmPasswordReset`
+    /// consumes it under. It reads and never writes: nothing is
+    /// consumed. Unknown, malformed, used and expired all answer null
+    /// alike. Holding the live 256-bit token is the proof: it was mailed
+    /// to the account and already lets its holder set the password, so
+    /// the address it reveals is no more than the link grants. Spends the
+    /// per-IP token-confirmation budget, a tripped one answering
+    /// RATE_LIMITED.
+    async fn password_reset_link(
+        &self,
+        ctx: &Context<'_>,
+        token: String,
+    ) -> async_graphql::Result<Option<PasswordResetLinkCheck>> {
+        let pool = ctx.data::<PgPool>()?;
+        guard_reset_link_check(ctx).await?;
+        Ok(
+            store::password_reset_live_email(pool, &crate::auth::hash_of(&token))
+                .await?
+                .map(|email| PasswordResetLinkCheck { email }),
+        )
     }
 
     /// The viewer's own account, resolved from the request's auth token.
@@ -904,6 +924,19 @@ impl Query {
         )
         .await
     }
+}
+
+/// The reset link's checks spend the per-IP token-confirmation budget
+/// beside the confirmation verbs, so reading a token is no free guess.
+async fn guard_reset_link_check(ctx: &Context<'_>) -> async_graphql::Result<()> {
+    let limits = ctx.data::<RateLimitConfig>()?;
+    super::mutation::guard_window(
+        ctx,
+        ratelimit::scope::CONFIRM_IP,
+        &super::mutation::request_ip(ctx)?,
+        limits.confirm_ip,
+    )
+    .await
 }
 
 /// The shared id-or-handle resolution behind `user` and `actor`:
