@@ -16,6 +16,7 @@ import com.cogra.core.designsystem.v2.media.CropGeometry.windowOf
 import com.cogra.core.designsystem.v2.media.CropGeometry.zoomBounds
 import com.cogra.core.designsystem.v2.media.CropGeometry.zoomedTo
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 import kotlin.math.roundToInt
 
@@ -254,10 +255,10 @@ class CropGeometryTest {
                     val window = windowOf(rest(zoomBounds(kind, picture, ratio, width)), picture, frame)
                     val expected = centred(sourceRatio, ratio)
                     val label = "$what under $frameName at $width"
-                    assertThat(window.left).named(label).isWithin(1e-5f).of(expected.left)
-                    assertThat(window.top).named(label).isWithin(1e-5f).of(expected.top)
-                    assertThat(window.right).named(label).isWithin(1e-5f).of(expected.right)
-                    assertThat(window.bottom).named(label).isWithin(1e-5f).of(expected.bottom)
+                    assertWithMessage(label).that(window.left).isWithin(1e-5f).of(expected.left)
+                    assertWithMessage(label).that(window.top).isWithin(1e-5f).of(expected.top)
+                    assertWithMessage(label).that(window.right).isWithin(1e-5f).of(expected.right)
+                    assertWithMessage(label).that(window.bottom).isWithin(1e-5f).of(expected.bottom)
                 }
             }
         }
