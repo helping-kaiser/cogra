@@ -23,10 +23,14 @@
    Hide packet's registration ask), named as `ProfileOther` names the page;
    the snackbar is `snackbar`, its `message` and its `action`. */
 export const NODE = "profile";
+/* The page lands on Posts (round 49); the `tab` chip keeps its Everything
+   drawing, so the page's registered names stand. */
+export const PROPS = { ...TAB_CHIP };
+export const VALS = TAB_VALS;
 export function Screen() {
   return (
     <>
-      <ProfileOtherBody />
+      <ProfileOtherBody tab="chip" />
       <Snackbar message="@ada is hidden." action="Undo" offset={80} node="snackbar" />
     </>
   );
