@@ -26,7 +26,6 @@
 // Both composers take it: a reply and an edit alike put what was just written
 // in front of its author (jakob 2026-09-15, Q6).
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
@@ -647,8 +646,13 @@ export function CommentsSheet({
    * out, because a closed dialog no longer holds one.
    */
   const openComposer = (target: ReplyTarget) => {
-    // AN APPLICANT IS TOLD, NEVER THE COMPOSER (ReplyEntry.md:25; ruling
-    // PR-103): both doors, and a landing aimed at a reply, end here.
+    // A GUEST IS ASKED OVER THE SHEET, never bounced (ReplyEntry.md:23,
+    // GuestGate.md:3); AN APPLICANT IS TOLD, NEVER THE COMPOSER (ReplyEntry.md:25;
+    // ruling PR-103): both doors, and a landing aimed at a reply, end here.
+    if (phase === "signedOut") {
+      setJoinOpen(true);
+      return;
+    }
     if (applicant) {
       notify(COMMENT_LOCKED);
       return;
@@ -975,8 +979,9 @@ export function CommentsSheet({
               testIdPrefix={`comment-stance-${comment.id}`}
               node={part(card, "actionRow.stance")}
             />
-            {phase === "signedIn" && (
-              // ReplyEntry via=5: the composer, PRE-TARGETED at this comment.
+            {phase !== "resolving" && (
+              // ReplyEntry via=5: the composer, PRE-TARGETED at this comment;
+              // a guest's asks to join instead (ReplyEntry.md:23).
               // The other door — "Add a comment" at the foot of the thread —
               // pins the post instead. An applicant's stands at the disabled
               // opacity and stays tappable (ReplyEntry.md:29).
@@ -1100,8 +1105,9 @@ export function CommentsSheet({
                 draws the viewer's own avatar beside it; drawing one here would
                 mean a profile read this surface does not otherwise make, which
                 is exactly the cost the read restructure is removing, so the row
-                is the field alone. */}
-            {phase === "signedIn" && (
+                is the field alone. It stands for every reader, a guest
+                included (ReplyEntry.md:31): a guest's press asks to join. */}
+            {phase !== "resolving" && (
               <div
                 data-testid="comment-entry"
                 className="flex items-center gap-3 border-t border-outline-variant px-4 pt-3"
@@ -1117,17 +1123,6 @@ export function CommentsSheet({
                   Add a comment
                 </button>
               </div>
-            )}
-            {/* The write affordance swaps, never merely disables: a member gets
-                the composer's door, an anonymous reader gets the join entry. */}
-            {phase === "signedOut" && (
-              <Link
-                href="/login"
-                data-testid="comment-signin"
-                className="block border-t border-outline-variant px-4 pt-3 text-body-medium text-on-surface-variant underline"
-              >
-                Sign in or join to comment
-              </Link>
             )}
           </>
         }
