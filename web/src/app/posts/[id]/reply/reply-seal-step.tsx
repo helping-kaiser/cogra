@@ -69,7 +69,7 @@ import { unlandedCitationLine } from "@/app/(app)/compose/wizard/seal-step";
 import { bundleReadout, EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
-import { licenseReading, type License } from "@/lib/license";
+import { licenseName, type License } from "@/lib/license";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
 import {
@@ -358,7 +358,7 @@ export function ReplySealStep({
         />
         <FactRow
           label="License"
-          value={licenseReading(state.license)}
+          value={licenseName(state.license)}
           action="Change"
           testId="reply-open-license"
           onAction={guard(() => onSheet("license"))}
@@ -518,9 +518,6 @@ export function ReplySealStep({
         title="License"
         testId="reply-license-sheet"
       >
-        <p className="m-0 text-label-small text-on-surface-variant">
-          Terms for anyone who reuses this.
-        </p>
         {/* The board's own row anatomy — a dot, the reading, its hint —
             rather than `LicenseChooser`'s settings-page fieldset
             (`ComposeLicense.jsx:5-11`): the post seal's license sheet's
@@ -528,7 +525,7 @@ export function ReplySealStep({
         <LicenseRows value={state.license} onChange={onLicense} testIdPrefix="reply" />
         <div className="flex items-center gap-2 border-t border-outline-variant pt-2.5">
           <span className="flex-1 text-label-small text-on-surface-variant">
-            {licenseReading(state.license)}
+            {licenseName(state.license)}
           </span>
           <PillButton testId="reply-license-done" onClick={() => onSheet("none")}>
             Done
