@@ -186,6 +186,11 @@ fn check_carriage(
 /// being left in `sealing`, where it would wedge until GC and block the
 /// author's next edit of the node.
 ///
+/// A redaction can reap the write between the recorded leg and its
+/// staging. Staging then refuses it under the staged row's lock, writes
+/// no display row from the removed bytes, and the leg is handed back and
+/// answered as reaped, as when the reap came before the leg.
+///
 /// A write the landing released passes [`gate_carried_media`] before it
 /// reaches this leg; `submitProposals` runs the gate.
 pub async fn submit_pre_signed<B: L1Boundary>(
@@ -228,7 +233,12 @@ pub async fn submit_pre_signed<B: L1Boundary>(
                 "staging failed and the revert failed too; the write stays in sealing"
             );
         }
-        return Err(RelayError::Staging(e));
+        return Err(match e {
+            crate::content::ContentError::Reaped => {
+                RelayError::Staged(staged::StagedError::Reaped(id))
+            }
+            e => RelayError::Staging(e),
+        });
     }
     let submission = pre.pre_signed(&write.proposal).submission();
     match boundary.seal(submission).await {

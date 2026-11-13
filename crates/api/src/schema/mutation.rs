@@ -1285,7 +1285,7 @@ impl PrepareContentPayload {
             ContentError::References(e) => UserError::at(ErrorCode::BadInput, e.message, e.path),
             ContentError::Gallery(e) => UserError::at(ErrorCode::BadInput, e.message, e.path),
             ContentError::Prepare(e) => UserError::from_onboarding(&OnboardingError::from(e), ""),
-            e @ ContentError::Internal(_) => internal(e),
+            e @ (ContentError::Reaped | ContentError::Internal(_)) => internal(e),
         }])
     }
 }

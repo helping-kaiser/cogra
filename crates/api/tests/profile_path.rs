@@ -376,6 +376,63 @@ async fn a_retried_pre_sign_stages_one_row(pool: PgPool) {
     assert_eq!(current(&rig.pool, actor).await.display_name, "Ada L");
 }
 
+/// A redaction that reaps an update after its leg was recorded and before
+/// its pending row is staged leaves nothing on screen. The relay loaded
+/// the write's bytes before the leg, and the redaction commits on its own
+/// connection between the leg and the staging. Staging re-checks the
+/// staged row under its lock, refuses the reaped write, and writes no
+/// version row from the removed bytes.
+///
+/// A write reaped between its recorded leg and its staging stages no pending row from the removed bytes.
+/// ´claim:profile:a-reaped-update-stages-no-pending-row´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_update_reaped_before_its_staging_stages_no_pending_row(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.registered_actor("ada").await;
+    let prepared = rig
+        .update(actor, draft(Some("Secret Name"), None, None))
+        .await
+        .expect("prepares update");
+    let write = staged::load(&rig.pool, prepared.id)
+        .await
+        .expect("the relay loads the write");
+    let pre = common::l1::proposal::PreSigned::sign(&key, write.proposal.clone());
+    let at = staged::record_pre_signed(&rig.pool, prepared.id, &PreSignedParts::from(&pre))
+        .await
+        .expect("the leg is recorded");
+
+    let act_id = prepared.proposal.body.act_id().to_string();
+    let by = actor.to_string();
+    let done = api::redaction::redact_act(
+        &rig.pool,
+        &api::redaction::Redaction {
+            actor_id: actor,
+            act_id: &act_id,
+            reason: "user-account-deletion",
+            redacted_by: &by,
+        },
+    )
+    .await
+    .expect("the redaction commits between the leg and the staging");
+    assert!(done.staged_reaped);
+
+    let staged = api::content::stage_pending(&rig.pool, &write, at).await;
+    let shown: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM actor_profile_versions
+         WHERE actor_id = $1 AND display_name = 'Secret Name'",
+    )
+    .bind(actor)
+    .fetch_one(&rig.pool)
+    .await
+    .expect("counts");
+    assert_eq!(shown, 0, "no row shows the removed bytes");
+    assert_eq!(rig.version_count(actor).await, 1, "nothing was staged");
+    assert!(
+        matches!(staged, Err(api::content::ContentError::Reaped)),
+        "staging refuses the reaped write, got {staged:?}"
+    );
+}
+
 /// An update that expires unlanded takes its pending row with it, in the
 /// same transaction, and the previous version renders again — on the
 /// graph nothing was ever written, so nothing is left behind.

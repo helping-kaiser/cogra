@@ -794,6 +794,52 @@ async fn a_redacted_empty_payload_act_lands_with_no_carriage_and_unmarked(pool: 
     );
 }
 
+/// A post reaped after its leg was recorded and before its pending rows
+/// are staged mints no display row. The relay loaded the bytes before the
+/// leg, and the redaction commits between the leg and the staging. Staging
+/// re-checks the staged row under its lock and refuses the reaped write.
+///
+/// A post reaped between its recorded leg and its staging mints no pending display row.
+/// ´claim:redaction:a-reaped-post-stages-no-pending-row´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_post_reaped_before_its_staging_mints_no_pending_row(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.funded_actor("ada").await;
+    let (staged_id, act_id) = rig.prepare_post(actor, "Never shown.", &[]).await;
+    let write = staged::load(&rig.pool, staged_id)
+        .await
+        .expect("the relay loads the write");
+    let node = write.node_id.expect("a mint names its node");
+    let pre = PreSigned::sign(&key, write.proposal.clone());
+    let at = staged::record_pre_signed(&rig.pool, staged_id, &PreSignedParts::from(&pre))
+        .await
+        .expect("the leg is recorded");
+    let done = redaction::redact_act(
+        &rig.pool,
+        &Redaction {
+            actor_id: actor,
+            act_id: &act_id,
+            reason: REASON,
+            redacted_by: &actor.to_string(),
+        },
+    )
+    .await
+    .expect("the redaction commits between the leg and the staging");
+    assert!(done.staged_reaped);
+
+    let staged = content::stage_pending(&rig.pool, &write, at).await;
+    let minted: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM posts WHERE id = $1")
+        .bind(node)
+        .fetch_one(&rig.pool)
+        .await
+        .expect("counts");
+    assert_eq!(minted, 0, "no post row was minted from the removed bytes");
+    assert!(
+        matches!(staged, Err(content::ContentError::Reaped)),
+        "staging refuses the reaped write, got {staged:?}"
+    );
+}
+
 /// The admission Registration's handle reaches carriage at its landing
 /// like any landed payload, instead of living on only in its staged row.
 ///
