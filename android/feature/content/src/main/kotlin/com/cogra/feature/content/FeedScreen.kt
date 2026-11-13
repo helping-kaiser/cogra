@@ -275,6 +275,7 @@ fun FeedRoute(
             viewerId = viewerId,
             onEditPost = onEditPost,
             onCitePost = onCitePost,
+            onEditComment = onEditComment,
             stanceControl = nodeStanceControl,
             saved = rememberSavedWrites(),
             onRequireAccount = onRequireAccount,
@@ -469,6 +470,8 @@ fun FeedScreen(
     viewerId: String? = null,
     onEditPost: (String) -> Unit = {},
     onCitePost: (String) -> Unit = {},
+    /** The own comment card's Edit row: the comment's edit over the feed. */
+    onEditComment: (commentId: String, parentTitle: String) -> Unit = { _, _ -> },
     /** A reader chose to look at one veiled body, as it stands. */
     onReveal: (String, SensitiveMark) -> Unit = { _, _ -> },
     /**
@@ -594,6 +597,7 @@ fun FeedScreen(
             shareUrls = kinds.shareUrls,
             onEditPost = onEditPost,
             onCitePost = onCitePost,
+            onEditComment = onEditComment,
             onReveal = onReveal,
             stanceControl = stanceControl,
         ),
@@ -1048,6 +1052,7 @@ private fun KindCard(
             node = FEED / "commentCard",
             testTagPrefix = "feed_comment_${card.comment.id}",
             actions = actions,
+            menu = FEED_COMMENT_MENU,
         )
         is FeedCard.Person -> ProfileFeedCard(
             profile = card.profile,
@@ -1312,6 +1317,23 @@ internal val POST_MENU_ROWS = setOf(
     PostMenuRow.Edit,
     PostMenuRow.MarkSensitive,
     PostMenuRow.Remove,
+)
+
+/**
+ * The feed's comment card menu: `feed.menuSheet`, its registered rows. `Cited
+ * by` and `Opinions on this` are not registered under the feed (seam 320-14),
+ * so they keep their per-comment tags.
+ */
+internal val FEED_COMMENT_MENU = CommentMenuPlacement(
+    sheet = FEED / "menuSheet",
+    rows = setOf(
+        CommentMenuRow.Save,
+        CommentMenuRow.Cite,
+        CommentMenuRow.Edit,
+        CommentMenuRow.Remove,
+        CommentMenuRow.License,
+        CommentMenuRow.Report,
+    ),
 )
 
 internal val FEED_PLACEMENT = CardPlacement(

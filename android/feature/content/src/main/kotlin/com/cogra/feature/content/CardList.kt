@@ -22,6 +22,7 @@ import com.cogra.domain.content.isRevealed
 import com.cogra.domain.removal.RemovalKind
 import com.cogra.domain.removal.marked
 import com.cogra.domain.saved.CommentTarget
+import com.cogra.domain.saved.headRowOf
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.stance.StanceControlRoute
@@ -53,6 +54,8 @@ data class CardHooks(
     val shareUrls: CardShareUrls = CardShareUrls({ it }, { _, comment -> comment }, { it }),
     val onEditPost: (String) -> Unit = {},
     val onCitePost: (String) -> Unit = {},
+    /** The own comment menu's Edit: the comment's edit over the host, [parentTitle] its caption. */
+    val onEditComment: (commentId: String, parentTitle: String) -> Unit = { _, _ -> },
     val onReveal: (String, SensitiveMark) -> Unit = { _, _ -> },
     val stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit =
         { _, _, _ -> },
@@ -71,6 +74,7 @@ internal data class CardActions(
     val shareUrls: CardShareUrls get() = hooks.shareUrls
     val onEditPost: (String) -> Unit get() = hooks.onEditPost
     val onCitePost: (String) -> Unit get() = hooks.onCitePost
+    val onEditComment: (String, String) -> Unit get() = hooks.onEditComment
     val onReveal: (String, SensitiveMark) -> Unit get() = hooks.onReveal
     val stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit
         get() = hooks.stanceControl
@@ -131,6 +135,8 @@ internal fun ListCommentCard(
     onOpenTarget: (() -> Unit)? = null,
     /** The reply's door where it differs from the thread aimed at the comment — an applicant's lock. */
     onReply: (() -> Unit)? = null,
+    /** The sheet the card's ⋮ raises on this host and the rows its boards register; null keeps the rows' tags. */
+    menu: CommentMenuPlacement? = null,
 ) {
     val doors = actions.doors
     // THE CARD AS THIS DEVICE KNOWS IT NOW: removed here or anywhere since the
@@ -141,11 +147,15 @@ internal fun ListCommentCard(
     val own = actions.viewerId != null && comment.author?.id == actions.viewerId
     CommentFeedCard(
         comment = comment,
-        onRemove = if (own) {
-            { removeOpen = true }
-        } else {
-            null
-        },
+        menu = CommentCardMenu(
+            own = own,
+            // THE EDIT OPENED OFF THE THREAD RETURNS TO THIS HOST (CommentEdit.md:89):
+            // its caption names what the comment answers, as the head row does.
+            onEdit = { actions.onEditComment(comment.id, target?.let { headRowOf(it).label }.orEmpty()) },
+            onRemove = { removeOpen = true },
+            onReport = { actions.onReport(ReportAsk(comment.id, ReportKind.Comment)) },
+            placement = menu,
+        ),
         target = target,
         node = node,
         testTagPrefix = testTagPrefix,
@@ -186,6 +196,29 @@ internal fun ListCommentCard(
             onClose = { removeOpen = false },
             testTag = "${testTagPrefix}_remove_confirm",
         )
+    }
+}
+
+/**
+ * AN EDIT OPENED OFF THE THREAD RETURNS TO ITS HOST (CommentEdit.md:89,
+ * HistoryCommentMenuOwn.md:17, ProfileCommentsMenuOwn.md:17): signed, the host
+ * comes back as it was left and re-reads, so the edited card settles in place
+ * wearing Still settling — and the thread never opens. A return while a thread
+ * stands over the host is the thread's own (it re-reads and says so), so the
+ * host leaves it alone.
+ */
+@Composable
+internal fun EditReturnsToHost(
+    commentsReturn: CommentsReturn,
+    threadOpen: Boolean,
+    onRefresh: () -> Unit,
+    onConsumed: () -> Unit,
+) {
+    LaunchedEffect(commentsReturn.landed, threadOpen) {
+        if (commentsReturn.landed && !threadOpen) {
+            onRefresh()
+            onConsumed()
+        }
     }
 }
 

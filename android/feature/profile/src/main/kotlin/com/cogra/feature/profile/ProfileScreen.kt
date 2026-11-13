@@ -238,10 +238,15 @@ class ProfileCards(
  * raise over it, and tells their aftermath through [notify], on the page's
  * own snackbar.
  */
-typealias ProfileCardsHost = @Composable (notify: (String) -> Unit, content: @Composable (ProfileCards) -> Unit) -> Unit
+typealias ProfileCardsHost = @Composable (
+    notify: (String) -> Unit,
+    /** The page's own re-read, the pull's: an edit signed off a card returns here and re-reads. */
+    refresh: () -> Unit,
+    content: @Composable (ProfileCards) -> Unit,
+) -> Unit
 
 /** No host: the card tabs list nothing — for previews and the screen's own tests. */
-val NoProfileCards: ProfileCardsHost = { _, content -> content(ProfileCards({ _, _ -> }, { _, _, _, _ -> })) }
+val NoProfileCards: ProfileCardsHost = { _, _, content -> content(ProfileCards({ _, _ -> }, { _, _, _, _ -> })) }
 
 /** What the list reports to History as the reader sees it (History.md:11, :13). */
 class ProfileSeen(
@@ -524,7 +529,7 @@ private fun ProfileBody(
                 scope.launch { snackbarHostState.showSnackbar(NodeSnackbarVisuals(text, PROFILE / "snackbar")) }
             }
             CompositionLocalProvider(LocalSavedHost provides savedHost) {
-                cardsHost(notify) { cards ->
+                cardsHost(notify, actions.onRetry) { cards ->
                     ProfileList(
                         state,
                         list,

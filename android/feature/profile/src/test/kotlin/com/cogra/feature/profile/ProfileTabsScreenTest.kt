@@ -53,7 +53,7 @@ class ProfileTabsScreenTest {
      * screen hands it, keyed by the thing's id. A comment's line answers a tap
      * with its locked Reply, when it was handed one.
      */
-    private val cardsDrawn: ProfileCardsHost = { _, content ->
+    private val cardsDrawn: ProfileCardsHost = { _, _, content ->
         content(
             ProfileCards(
                 post = { post, node -> Text(post.id, Modifier.dataNode(node.keyed(post.id))) },

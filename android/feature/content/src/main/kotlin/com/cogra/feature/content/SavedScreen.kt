@@ -121,6 +121,23 @@ private val SAVED_MENU_ROWS = setOf(
     PostMenuRow.Report,
 )
 
+/**
+ * Saved's comment card menu: `saved.menuSheet` (SavedCommentMenu). An own
+ * comment's Edit and Remove are not registered under Saved (seam 320-14), so
+ * they keep their per-comment tags.
+ */
+private val SAVED_COMMENT_MENU = CommentMenuPlacement(
+    sheet = SAVED / "menuSheet",
+    rows = setOf(
+        CommentMenuRow.Save,
+        CommentMenuRow.Cite,
+        CommentMenuRow.CitedBy,
+        CommentMenuRow.Opinions,
+        CommentMenuRow.License,
+        CommentMenuRow.Report,
+    ),
+)
+
 /** Saved's post card: the feed's own, keyed by the post's id as the feed keys it. */
 private val SAVED_PLACEMENT = CardPlacement(
     card = SAVED / "card",
@@ -176,6 +193,7 @@ fun SavedRoute(
                 ),
                 onEditPost = onEditPost,
                 onCitePost = onCitePost,
+                onEditComment = onEditComment,
                 onReveal = viewModel::onReveal,
                 stanceControl = nodeStanceControl,
             ),
@@ -197,6 +215,8 @@ fun SavedRoute(
                 )
             },
             reportSheet = reportDoor(null, SAVED_REPORT_SHEET),
+            commentsReturn = commentsReturn,
+            onCommentsReturnConsumed = onCommentsReturnConsumed,
         )
     }
 }
@@ -253,6 +273,9 @@ fun SavedScreen(
     hooks: CardHooks = CardHooks(),
     commentsSheet: @Composable (postId: String, onDismiss: () -> Unit) -> Unit = { _, _ -> },
     reportSheet: ReportSheetSlot = { _, _, _ -> },
+    /** What came back from a comment edit or reply signed off this page — see [CommentsReturn]. */
+    commentsReturn: CommentsReturn = CommentsReturn(),
+    onCommentsReturnConsumed: () -> Unit = {},
 ) {
     val overlay = writes.overlayState()
     val snackbar = LocalSnackbarHostState.current
@@ -264,6 +287,7 @@ fun SavedScreen(
     val layers = remember { CoveringLayers() }
     var commentsFor by rememberSaveable { mutableStateOf<String?>(null) }
     var reportFor by remember { mutableStateOf<ReportAsk?>(null) }
+    EditReturnsToHost(commentsReturn, threadOpen = commentsFor != null, onRefresh, onCommentsReturnConsumed)
     val notify = rememberSavedNotify(snackbar)
     LoadNextAtTheTail(listState, state.hasNextPage, state.moreFailed, view.shown.size, onLoadMore)
     val actions = CardActions(hooks, doors, state.reveals, { commentsFor = it }, { reportFor = it })
@@ -450,6 +474,7 @@ private fun SavedCardFor(entry: SavedEntry, actions: CardActions) {
             node = SAVED / "commentCard",
             testTagPrefix = "saved_comment_${card.comment.id}",
             actions = actions,
+            menu = SAVED_COMMENT_MENU,
         )
 
         is SavedCard.Person -> ProfileFeedCard(

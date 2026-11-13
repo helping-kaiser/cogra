@@ -110,6 +110,8 @@ fun CardListHost(
     routes: HostedCardRoutes,
     tag: String,
     notify: (String) -> Unit,
+    /** The host page's own re-read: an edit signed off a card returns to the page and re-reads it. */
+    onRefresh: () -> Unit = {},
     viewModel: HostedCardsViewModel = hiltViewModel(),
     content: @Composable (HostedCards) -> Unit,
 ) {
@@ -121,11 +123,12 @@ fun CardListHost(
         shareUrls = viewModel.shareUrls,
         onEditPost = routes.onEditPost,
         onCitePost = routes.onCitePost,
+        onEditComment = routes.onEditComment,
         onReveal = viewModel::onReveal,
         stanceControl = nodeStanceControl,
     )
     ProvideRemoval {
-        HostedCardsScope(doors, routes, hooks, revealed, tag, notify, content)
+        HostedCardsScope(doors, routes, hooks, revealed, tag, notify, onRefresh, content)
     }
 }
 
@@ -138,6 +141,7 @@ internal fun HostedCardsScope(
     revealed: Map<String, SensitiveMark>,
     tag: String,
     notify: (String) -> Unit,
+    onRefresh: () -> Unit = {},
     content: @Composable (HostedCards) -> Unit,
 ) {
     val layers = remember { CoveringLayers() }
@@ -146,6 +150,12 @@ internal fun HostedCardsScope(
     var commentsFor by rememberSaveable { mutableStateOf<String?>(null) }
     var commentsPost by remember { mutableStateOf<PostView?>(null) }
     var reportFor by remember { mutableStateOf<ReportAsk?>(null) }
+    EditReturnsToHost(
+        commentsReturn = routes.commentsReturn,
+        threadOpen = commentsFor != null,
+        onRefresh = onRefresh,
+        onConsumed = routes.onCommentsReturnConsumed,
+    )
     val actions = CardActions(
         hooks = hooks,
         doors = doors,
@@ -226,6 +236,9 @@ private fun HostedPostCard(
  */
 private val PROFILE_MENU_SHEET = DataNode("profile") / "menuSheet"
 
+/** The profile's comment card menus: `profile.menuSheet`, every row registered (ProfileCommentsMenu, -Own). */
+private val PROFILE_COMMENT_MENU = CommentMenuPlacement(PROFILE_MENU_SHEET, CommentMenuPlacement.ALL)
+
 /**
  * A hosted post card's place: the host's registered card, keyed by the
  * post's id; its ⋮ raises the host's registered sheet (`profile.menuSheet` on
@@ -277,6 +290,7 @@ private fun HostedCommentCard(
             actions = actions,
             shape = CommentCardShape.Line(reply),
             authorHere = true,
+            menu = PROFILE_COMMENT_MENU,
             // THE POINTER OPENS THE THREAD THE COMMENT LIVES IN, landed on the
             // comment that answers it (ProfileComments.md:23).
             onOpenTarget = { openPlace() },
