@@ -5932,7 +5932,7 @@ takes the post crop's 390 × 488 stage, the frame 342 wide at every shape
 the square stage by height (312 × 390), narrower than the others; (c) the
 stage grows with the shape (the model jakob's ruling replaced).
 
-Closed by round 46 (jakob 2026-11-12, on the review and question 1): the cover's frame always has the clip's dimensions — tall a tall cover, square a square, wide a wide — and the crop enforces it. Drawn on the post crop's 390 × 488 stage (the orchestrator's reading, shown to him): `CoverCrop`'s `clip` chip, wide 342 × 192 at 148, tall 342 × 427.5 at 30.25, square 342 × 342 at 73.
+Closed by round 46 (jakob 2026-11-12, on the review and question 1): the cover's frame always has the clip's dimensions — tall a tall cover, square a square, wide a wide — and the crop enforces it. Drawn on the post crop's 390 × 488 stage, a tall clip's cover at 4:5 (confirmed by jakob 2026-11-13, point E): `CoverCrop`'s `clip` chip, wide 342 × 192 at 148, tall 342 × 427.5 at 30.25, square 342 × 342 at 73.
 
 ### 201 · A clip picked in a comment's edit: what the board does not draw · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
@@ -6048,7 +6048,7 @@ own, his words. Nothing waits on it.
 
 Closed by round 46 (jakob 2026-11-12, question 19, as recommended): the row stays quiet and takes the first-page family's words, `Can't reach the server — posts can't load right now.` / `… comments can't load right now.`, with `Retry`; `Couldn't load more` is a failed next page's line alone.
 
-### 210 · How signing works on an edit · *design* · **filed 2026-11-12**
+### 210 · How signing works on an edit · *design* · **filed 2026-11-12** · **closed 2026-11-13**
 
 Round 46 (question 12). The edit sheets now open the seals' `How signing
 works`, which says each piece of a POST is signed on its own, that the pieces
@@ -6058,7 +6058,9 @@ withdrawing a tag or a citation is an act that costs too. For jakob: (a) the
 dialog stays as written, one text for every seal [as built]; (b) an edit
 section is added to it — new prose, his to word.
 
-### 211 · A removed comment's menu · *design* · **filed 2026-11-12**
+Closed by jakob 2026-11-13 (point D, the wording blessed): `How signing works` ends its cost paragraph on `An edit is signed too — the new version is a new record in your name, and it costs like any signing.` (`HelpDialog`, copy-voice, the canvas's help contents).
+
+### 211 · A removed comment's menu · *design* · **filed 2026-11-12** · **closed 2026-11-13**
 
 Round 46. jakob's ruling 18 gives a removed POST a menu (cite it, read its
 license); a removed comment still has none (`CommentRemoved`, "a removed
@@ -6067,10 +6069,52 @@ Save, Cite in a new post, Cited by, Opinions on this, License terms, Report
 for another's, the own rows less Edit and Remove for yours [lean]; (b) it
 stays menu-less.
 
-### 212 · Mark as sensitive on your own removed post · *design* · **filed 2026-11-12**
+Closed by jakob 2026-11-13 (point C, as recommended): a removed comment's menu follows the post's — another's raises the reader's comment menu whole (`ProfileCommentsRemovedMenu`), your own your comment menu less Edit and Remove (`CommentRemovedMenu`).
+
+### 212 · Mark as sensitive on your own removed post · *design* · **filed 2026-11-12** · **closed 2026-11-13**
 
 Round 46. The correction to ruling 18 keeps every own row but Edit and
 Remove, so `Mark as sensitive` stands on a removed post's menu; the row opens
 the edit, and a removed post has no words or pictures left to veil. For
 jakob: (a) keep it, the mark being the record's [as built]; (b) it leaves the
 removed post's menu with Edit and Remove.
+
+Closed by jakob 2026-11-13 (point B, as recommended: "it goes"): your own removed post's menu, card and detail, reads Save, Cite in a new post, License terms (`FeedRemoved`, `Removed`, `FeedRemovedMenuOwn`).
+
+### 213 · The display name on the profile's head · *design* · **filed 2026-11-13** · **closed 2026-11-13**
+
+Round 46, act 3 (seam 318: `ProfileHeader` broke the name inside a word,
+against the long-names rule). jakob chose (b) and asked to see it: on the head
+alone the display name wraps at its spaces, never inside a word, and a single
+word longer than the line is end-cut with "…" (`ProfileOther`'s `name`
+setting: `two-lines` takes 2 lines, `three-lines` — the 50-character maximum
+in four words — takes 3 at the head's 262px, `one-word` 1 line, end-cut). For
+jakob: keep (b) as drawn [built, awaiting his word]; or (a) one line,
+end-cut, as every one-line place.
+
+Closed as ruled by jakob 2026-11-13 ("i still want people to be able to see the full name"): on the head alone the name is always shown whole — it wraps at its spaces, a word wider than the line breaks inside the word, no end-cut, no line cap. (a) is not taken.
+
+### 214 · The head's name shrinks to hold two lines · *design* · **filed 2026-11-13** · **closed 2026-11-13**
+
+Round 47 (jakob's idea: "how much smaller would we need to make the font for
+it to fit two lines?"). Shown, not ruled. At the head's 262px the name is
+title-large, 22px / 400 on a 28px line. Measured (Figtree loaded): the
+50-character sample takes 3 lines and fits 2 at 19px; 50 characters of `W` in
+words take 5 and fit 2 at 12px; 50 × `W` without a space takes 5 and fits 2
+at 10px; the 40-character two-lines sample needs 13px for one line.
+`ProfileOther`'s `name` = three-lines-shrunk draws the sample at 19px on a
+24px line. For jakob: whether the head shrinks at all, and if so by what rule
+(steps, a floor) — nothing is built beyond the one sample.
+
+Closed as ruled by jakob 2026-11-13 ("i prefer the shrunk 2 line version over the 3 liner"): a head name that would take more than two lines at 22px takes the largest whole-pixel size that holds two, its line-height round(size × 28 / 22), several words or one word alike (`ProfileHeader`'s `nameFitSize`). The smallest size is backlog 215.
+
+### 215 · The smallest size of the head's name · *design* · **filed 2026-11-13** · **closed 2026-11-13**
+
+Round 47. The two-line rule shrinks the head's name to the largest whole
+pixel that holds two lines, and no floor is ruled, so the widest legal name —
+50 × `W` with no space — stands at 10px on 13px (`ProfileOther`'s `name` =
+widest); 50 × `m` and 50 `W` in words take 12px, the 50-character sample
+19px. For jakob, now that he has seen the widest: (a) no floor, as drawn;
+(b) a floor (a size he names), the name past it taking a third line.
+
+Closed as ruled by jakob 2026-11-13 ("F1 as drawn so two lines is the hard cap and it shrinks until it fits"): (a), no floor — the head's name shrinks until it holds two lines, the widest legal name at 10px on 13px.

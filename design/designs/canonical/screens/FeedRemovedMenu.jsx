@@ -8,8 +8,8 @@
    card's mark does (`FeedRemoved`'s `now`).
 
    THE LICENSE ROW STAYS (jakob 2026-11-12: "someone might have used my
-   content already under its license regulations"; the orchestrator's
-   extension of his ruling on your own to another's): the card appends it as
+   content already under its license regulations"; on another's post too,
+   confirmed by jakob 2026-11-13, point E): the card appends it as
    on any post, its sheet showing the terms the post was published under. The record never left the graph, so it
    can still be saved and cited; Hide acts on the author, who still exists and
    still ranks into the reader's feed; Report stays, because a comment section
