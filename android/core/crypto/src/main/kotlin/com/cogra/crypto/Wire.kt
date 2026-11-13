@@ -57,8 +57,6 @@ class PreCommitmentBlob(
     }
 }
 
-private fun encodeBodyBytes(body: StructuralBody): ByteArray = body.canonicalBytes()
-
 private fun decodeBody(bytes: ByteArray): StructuralBody {
     val d = CborDecoder(bytes)
     try {
@@ -108,7 +106,7 @@ fun encodeProposal(p: Proposal): ByteArray {
     val e = CborEncoder()
     e.array(4u)
     e.uint(PROPOSAL_WIRE_VERSION)
-    e.bytes(encodeBodyBytes(p.body))
+    e.bytes(p.body.canonicalBytes())
     e.bytes(p.payload)
     e.deps(p.deps)
     return e.finish()
@@ -154,7 +152,7 @@ fun encodeSealedAct(sealed: SealedAct): ByteArray {
     val e = CborEncoder()
     e.array(SEALED_ACT_ITEMS)
     e.uint(HANDSHAKE_WIRE_VERSION)
-    e.bytes(encodeBodyBytes(act.body))
+    e.bytes(act.body.canonicalBytes())
     e.bytes(act.preCommitment)
     e.bytes(act.preSignature)
     e.bytes(act.contentCommitment)
