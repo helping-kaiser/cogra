@@ -674,7 +674,7 @@ class StanceViewModel @Inject constructor(
         }
         return when {
             results.any { it.rateLimited() } -> Signed.WriteRule
-            WriteResult.allDone(results) -> Signed.Done
+            results.all { it is WriteResult.Done } -> Signed.Done
             else -> Signed.Failed(needsKey = false)
         }
     }
@@ -754,7 +754,7 @@ class StanceViewModel @Inject constructor(
             return Signed.Failed(needsKey = true)
         }
         return when {
-            WriteResult.allDone(results) -> Signed.Done
+            results.all { it is WriteResult.Done } -> Signed.Done
             results.any { it.rateLimited() } -> Signed.WriteRule
             else -> Signed.Failed(needsKey = false)
         }

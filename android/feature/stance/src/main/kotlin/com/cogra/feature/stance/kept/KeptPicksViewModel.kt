@@ -279,7 +279,7 @@ class KeptPicksViewModel @Inject constructor(
             return KeptSealFault.OFFLINE
         }
         return when {
-            WriteResult.allDone(results) -> null
+            results.all { it is WriteResult.Done } -> null
             results.any { it is WriteResult.Refused && it.errors.any { e -> e.code in WRITE_RULE_CODES } } ->
                 KeptSealFault.WRITE_RULE
             results.any { it is WriteResult.Refused || it is WriteResult.RejectedByDevice } -> KeptSealFault.BUG

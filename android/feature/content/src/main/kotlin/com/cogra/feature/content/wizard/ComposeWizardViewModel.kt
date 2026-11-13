@@ -944,7 +944,7 @@ class ComposeWizardViewModel @Inject constructor(
         writes: List<String>,
     ) {
         when {
-            WriteResult.allDone(results) -> {
+            results.all { it is WriteResult.Done } -> {
                 // The post is published: this wizard has nothing left to
                 // keep. Disarming *before* the clear is what makes the clear
                 // final — `outcome` alone could not, because the route

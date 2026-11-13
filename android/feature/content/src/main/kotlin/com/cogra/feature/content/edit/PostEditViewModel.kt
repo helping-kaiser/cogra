@@ -867,7 +867,7 @@ class PostEditViewModel @Inject constructor(
         } catch (_: NoActorKeyException) {
             return end { it.copy(keyAbsent = true) }
         }
-        if (WriteResult.allDone(results)) {
+        if (results.all { it is WriteResult.Done }) {
             end { it.copy(saved = true) }
         } else {
             end { it.copy(signingFailed = true) }

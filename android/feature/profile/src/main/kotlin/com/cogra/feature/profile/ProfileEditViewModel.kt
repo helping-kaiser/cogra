@@ -254,7 +254,7 @@ class ProfileEditViewModel @Inject constructor(
             val ledger = avatar?.known?.let { mapOf(avatar.mediaId to it) }.orEmpty()
             val profile = profileExpectation(s.profileId, sent, ledger)
             val results = signer.sign(prepared, Expectation(listOf(profileUpdate(profile))))
-            if (WriteResult.allDone(results)) {
+            if (results.all { it is WriteResult.Done }) {
                 _state.update { it.copy(submitting = false, saved = true) }
             } else {
                 _state.update { it.copy(submitting = false, signingFailed = true) }

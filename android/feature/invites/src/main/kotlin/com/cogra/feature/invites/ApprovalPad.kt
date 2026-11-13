@@ -316,8 +316,11 @@ class ApprovalPad(
     }
 
     private suspend fun finish(application: ApplicationInfo, pick: StancePair, results: List<WriteResult>): Ended {
-        // An empty pass signed nothing (a resume over cleared material):
-        // it falls through to Failed, the kept vouch stays.
+        // An empty pass signed nothing: a resume over cleared material, or
+        // an approval that staged no vouch, which the intent check itself
+        // refuses (no write is the Opinion ordered). Signed is the vouch
+        // landing (ApprovePad.md), so it falls through to Failed and the
+        // kept vouch stays.
         if (WriteResult.allDone(results)) {
             signals.announceSigned()
             // A kept vouch signed through this pad is kept no longer (ApprovePad.md:41).
