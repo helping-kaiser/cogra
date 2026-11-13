@@ -2318,6 +2318,13 @@ type Mutation {
 	Resubmitting a sealed proposal is idempotent only for the exact
 	signature that was sealed; differing bytes refuse as BAD_INPUT.
 	
+	The API carries the content pair, so it checks the pair before
+	relaying anything: a content nonce or dependency nonce of the wrong
+	length, a content nonce equal to the dependency nonce or already
+	used for another of the author's acts, or a payload past M_payload
+	refuses as BAD_INPUT, with nothing sent to L1 and nothing recorded.
+	The device re-signs under fresh nonces.
+	
 	A carried write the landing released signs only once every asset
 	it names is published to the live store; the submit runs that
 	move. One whose move has not landed refuses as
@@ -3168,9 +3175,10 @@ type PreparedWrite {
 input ProposalSignatureInput {
 	stagedWriteId: UUID!
 	"""
-	The pre-commitment blob (base64): the device's private nonce and
-	pre-commitment signature — produced with the actor's device-held
-	key; opaque to this API.
+	The pre-commitment blob (base64): the device's content nonce, its
+	dependency nonce and the pre-commitment signature, produced with the
+	actor's device-held key. The API carries the content nonce beside
+	the payload and never sends it to Layer 1.
 	"""
 	signature: String!
 }
@@ -3655,7 +3663,9 @@ type Record {
 	"""
 	position: Int!
 	"""
-	Whether the act committed a non-empty payload.
+	Whether the act carried a non-empty payload: CoGra carries it, full
+	or reduced. An empty payload, or one CoGra does not carry, reads
+	false.
 	"""
 	payloadMarked: Boolean!
 	"""
@@ -4521,8 +4531,10 @@ type StagedWrite {
 	canonicalProposal: String!
 	"""
 	The host-sealed verified act once the seal has returned (base64):
-	every host-added field the device verifies before approving. Null
-	in earlier states.
+	every host-added field the device verifies before approving, with
+	both salts. It carries neither the payload nor a nonce — the device
+	checks the commitments against what it holds itself. Null in
+	earlier states.
 	"""
 	verifiedAct: String
 	"""
