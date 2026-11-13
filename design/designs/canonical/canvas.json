@@ -1235,6 +1235,15 @@
       "page": "profile"
     },
     {
+      "file": "SavedCommentMenuOwn.dc.html",
+      "title": "Saved · your own comment's menu",
+      "x": 3360,
+      "y": 6107,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "HistoryProfileMenu.dc.html",
       "title": "History · a hidden person's card, its menu",
       "x": 4800,
@@ -1481,6 +1490,33 @@
       "file": "FeedRemovedMenuOwn.dc.html",
       "title": "Feed · your removed post's menu",
       "x": 12960,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "FeedCommentMenu.dc.html",
+      "title": "Feed · the comment menu",
+      "x": 13440,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "FeedCommentMenuOwn.dc.html",
+      "title": "Feed · your own comment's menu",
+      "x": 13920,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "FeedSheetFormsOff.dc.html",
+      "title": "Feed · the filter sheet, no kind with forms",
+      "x": 14400,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -1875,10 +1911,10 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -8540,
+      "x": -9410,
       "y": 0,
-      "w": 8120,
-      "h": 5580,
+      "w": 8990,
+      "h": 5623,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
