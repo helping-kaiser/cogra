@@ -82,13 +82,13 @@ impl Rig {
 
     async fn sign_and_relay(&self, id: Uuid, key: &ActorKey) {
         let write = staged::load(&self.pool, id).await.expect("loads");
-        let pre = common::l1::proposal::PreSigned::sign(&key, write.proposal);
+        let pre = common::l1::proposal::PreSigned::sign(key, write.proposal);
         let parts = PreSignedParts::from(&pre);
         let sealed = api::relay::submit_pre_signed(&self.boundary, &self.pool, id, parts)
             .await
             .expect("seals");
         let host_key = self.boundary.host_public_key().await.expect("host key");
-        let witness = pre.approve(&key, &sealed, &host_key).expect("approves");
+        let witness = pre.approve(key, &sealed, &host_key).expect("approves");
         api::relay::submit_approval(&self.boundary, &self.pool, id, witness.approval_signature)
             .await
             .expect("relays");

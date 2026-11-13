@@ -1240,13 +1240,13 @@ async fn registered_applicant(rig: &WireRig, inviter: &Member, handle: &str) -> 
 async fn sign(rig: &WireRig, key: &ActorKey, staged_id: Uuid) {
     let boundary = StandInBoundary(rig.standin.clone());
     let write = staged::load(&rig.pool, staged_id).await.expect("loads");
-    let pre = common::l1::proposal::PreSigned::sign(&key, write.proposal.clone());
+    let pre = common::l1::proposal::PreSigned::sign(key, write.proposal.clone());
     let sealed =
         api::relay::submit_pre_signed(&boundary, &rig.pool, staged_id, PreSignedParts::from(&pre))
             .await
             .expect("seals");
     let host_key = rig.standin.host_public_key().await.expect("host key");
-    let witness = pre.approve(&key, &sealed, &host_key).expect("approves");
+    let witness = pre.approve(key, &sealed, &host_key).expect("approves");
     api::relay::submit_approval(&boundary, &rig.pool, staged_id, witness.approval_signature)
         .await
         .expect("relays");

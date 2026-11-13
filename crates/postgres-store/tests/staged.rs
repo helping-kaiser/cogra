@@ -792,19 +792,16 @@ async fn the_reap_takes_the_content_nonce_and_leaves_the_dependency_nonce(pool: 
     staged::reap_payload(&mut conn, "act:alice:0:opinion")
         .await
         .expect("reaps");
-    let (payload, salt, content_nonce, dependency_nonce): (
-        Option<Vec<u8>>,
-        Option<Vec<u8>>,
-        Option<Vec<u8>>,
-        Option<Vec<u8>>,
-    ) = sqlx::query_as(
-        "SELECT payload, content_salt, content_nonce, dependency_nonce
+    type Bytes = Option<Vec<u8>>;
+    let (payload, salt, content_nonce, dependency_nonce): (Bytes, Bytes, Bytes, Bytes) =
+        sqlx::query_as(
+            "SELECT payload, content_salt, content_nonce, dependency_nonce
          FROM staged_writes WHERE id = $1",
-    )
-    .bind(id)
-    .fetch_one(&pool)
-    .await
-    .expect("reads");
+        )
+        .bind(id)
+        .fetch_one(&pool)
+        .await
+        .expect("reads");
     assert_eq!((payload, salt, content_nonce), (None, None, None));
     assert_eq!(dependency_nonce, Some(vec![9; 32]));
     assert!(
