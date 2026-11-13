@@ -11946,10 +11946,13 @@ spoken unit.
   visually hidden twin speaking name and punctuation. `NamesLong` draws
   each at the longest sample, its wrapping column spaced at 10 to hold the
   vouch card inside 844 (measured, headless Chromium).
-- **Written down**: the post crop's zoom ceiling and the stage scaling with
-  the column (`ComposeCrop.md`, `CropViewport`; the ceiling's value is open
-  at jakob, 2026-11-13); `SearchBar`'s input fills its row, a board's width
-  for it being its sample's.
+- **The crop zooms from the fill to 10×** (jakob 2026-11-13), on the post,
+  cover and avatar crops; the post crop has one ceiling, 10× the Tall frame's
+  fill under every shape, so a shape switch never shrinks a picture; the
+  stage scales with the column (`ComposeCrop.md`, `CropViewport`'s
+  `CROP_ZOOM_MAX`, the three boards' thumbs redrawn on the 10× track).
+  `SearchBar`'s input fills its row, a board's width for it being its
+  sample's.
 - **Stale text**: `KeptPicksReview.md`'s `Tag`; the composer captions'
   `Tags`; `CropViewport`'s cover frame on the 390 × 488 stage; History's
   kept search tail; Hide's place among the person menu's acts;

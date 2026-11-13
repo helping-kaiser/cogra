@@ -29,7 +29,7 @@
 
    THE ZOOM IS ON SCREEN, AND THE PICTURE PANS BY KEY (the K13 round): the
    master's `CropZoom` under the stage, its thumb at this crop's 1.15× between
-   the fill (1×) and about 4×, on both platforms; the stage takes focus under
+   the fill (1×) and 10×, on both platforms; the stage takes focus under
    `CropViewport`'s name and its arrow keys move the picture, stopping where an
    edge of the picture meets the frame's — 1 % a press, 10 % with Shift (jakob
    2026-10-05). The line under the zoom says what the crop decides, `One shape
