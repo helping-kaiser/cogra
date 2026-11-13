@@ -2359,9 +2359,9 @@ pub async fn password_reset_live_email(
     token_hash: &[u8],
 ) -> Result<Option<String>, sqlx::Error> {
     sqlx::query_scalar!(
-        "SELECT c.email FROM auth_password_resets r
+        r#"SELECT c.email AS "email!" FROM auth_password_resets r
          JOIN user_credentials c ON c.actor_id = r.user_id
-         WHERE r.token_hash = $1 AND r.used_at IS NULL AND r.expires_at > NOW()",
+         WHERE r.token_hash = $1 AND r.used_at IS NULL AND r.expires_at > NOW()"#,
         token_hash,
     )
     .fetch_optional(pool)
