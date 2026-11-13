@@ -14,7 +14,7 @@ import { useState } from "react";
 
 import {
   ATTRIBUTION_TIERS,
-  licenseReading,
+  licenseName,
   PROVENANCE_TIERS,
   type License,
   type LicenseTier,
@@ -80,12 +80,14 @@ function Axis({
               <span className="text-body-medium" {...testAttributes(part(tierNode, "label"))}>
                 {tier.label}
               </span>
-              <span
-                className="text-body-small text-on-surface-variant"
-                {...testAttributes(part(tierNode, "hint"))}
-              >
-                {tier.hint}
-              </span>
+              {tier.hint !== undefined && (
+                <span
+                  className="text-body-small text-on-surface-variant"
+                  {...testAttributes(part(tierNode, "hint"))}
+                >
+                  {tier.hint}
+                </span>
+              )}
             </span>
           </label>
         );
@@ -128,7 +130,7 @@ export function SettingsLicenseSheet({
               className="flex-1 text-body-small text-on-surface-variant"
               {...testAttributes(part(SHEET, "foot.summary"))}
             >
-              {licenseReading(staged)}
+              {licenseName(staged)}
             </span>
             <button
               type="button"
@@ -143,8 +145,8 @@ export function SettingsLicenseSheet({
       >
         <div className="flex flex-col gap-2">
           <QuietNote node={part(SHEET, "note")}>
-            Where every new post starts. A post&apos;s terms settle when it is first signed, so
-            changing this never reaches one you have already published.
+            A post&apos;s terms settle when it is first signed, so changing this never reaches one
+            you have already published.
           </QuietNote>
           <AxisLabel node={part(SHEET, "creditLabel")}>Credit</AxisLabel>
           <Axis

@@ -109,9 +109,6 @@ export const WHAT_THE_SEARCH_SHOWS = "What the search shows";
 export const HOW_SEARCHING_WORKS = "How searching works";
 export const HOW_THE_FILTER_WORKS = "How the filter works";
 
-/** The kinds section's words (ExploreFilter.jsx). */
-export const KINDS_HINT = "Combine as many as you like. All, until you narrow it.";
-
 /** The load-more fault (copy-voice; design digest item 27). */
 export const COULDNT_LOAD_MORE = "Couldn't load more";
 
@@ -881,7 +878,7 @@ function FilterSheet({
       <div className="absolute top-1 right-2">
         <HelpDot ariaLabel={HOW_THE_FILTER_WORKS} onOpen={onHelp} node={part(sheet, "help")} />
       </div>
-      <FilterSection label="Kinds" hint={KINDS_HINT} node={part(sheet, "kinds")}>
+      <FilterSection label="Kinds" node={part(sheet, "kinds")}>
         {SEARCH_KINDS.map((kind) => (
           <Chip
             key={kind.value}

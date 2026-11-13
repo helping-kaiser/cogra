@@ -38,7 +38,6 @@ import { fakeWriteSigner } from "@/test/registration";
 import { keepPick } from "@/lib/stance/kept-picks";
 import { stanceHandlers } from "@/test/stance";
 import {
-  HISTORY_EMPTY,
   HISTORY_NONE_KINDS,
   HISTORY_NONE_SEARCH,
   SEARCH_YOUR_HISTORY,
@@ -795,9 +794,8 @@ describe("History — what your history shows (HistoryFilter.md)", () => {
     ]);
     expect(within(sheet()).queryByRole("checkbox")).toBeNull();
     expect(within(sheet()).queryByRole("button", { name: /how|\?/i })).toBeNull();
-    expect(screen.getByTestId("history.filterSheet.kinds.hint")).toHaveTextContent(
-      "Combine as many as you like. All, until you narrow it.",
-    );
+    // Chips that combine explain themselves: the section carries no hint (seam 314).
+    expect(screen.queryByTestId("history.filterSheet.kinds.hint")).toBeNull();
     // The foot: Reset in its corner, Done at its end, and no reading.
     expect(screen.getByTestId("history.filterSheet.foot").textContent).toBe("ResetDone");
   });
@@ -912,7 +910,7 @@ describe("History — hiding from a card in it (HistoryHidden.md)", () => {
     // No confirm step: the snackbar is the whole ceremony.
     expect(screen.queryByRole("alertdialog")).toBeNull();
     expect(screen.getByTestId("history.snackbar.message")).toHaveTextContent(
-      "@ada is hidden — their posts stay out of your feed.",
+      "@ada is hidden.",
     );
     expect(screen.getByTestId("history.snackbar.action")).toHaveTextContent("Undo");
     expect(cards()).toEqual(["history.commentCard:c1", "history.card:p1"]);
@@ -1088,7 +1086,7 @@ describe("History — the post menu (HistoryPostMenu.md, round 36 + 41)", () => 
       expect((screen.getByTestId("history.menuSheet") as HTMLDialogElement).open).toBe(false),
     );
     expect(screen.getByTestId("history.snackbar.message")).toHaveTextContent(
-      "@ada is unhidden — their posts can reach your feed again.",
+      "@ada is unhidden.",
     );
     expect(screen.getByTestId("history.snackbar.action")).toHaveTextContent("Undo");
     expect(cards()).toEqual(["history.commentCard:c1", "history.card:p1"]);
@@ -1145,7 +1143,7 @@ describe("History — a hidden person's card menu (HistoryProfileMenu.md, round 
     expect(screen.queryByRole("alertdialog")).toBeNull();
     await waitFor(() => expect(sheet.open).toBe(false));
     expect(screen.getByTestId("history.snackbar.message")).toHaveTextContent(
-      "@mira is unhidden — their posts can reach your feed again.",
+      "@mira is unhidden.",
     );
     expect(cards()).toEqual(["history.profileCard:u7"]);
     await waitFor(() => expect(hiddenLogged.unhides).toEqual(["u7"]));
@@ -1194,7 +1192,7 @@ describe("History — nothing seen yet (HistoryEmpty.md)", () => {
     // HistoryEmpty.md:3, :5, :7.
     serveHistory(() => page([]));
     render();
-    expect(await screen.findByTestId("history.empty.title")).toHaveTextContent(HISTORY_EMPTY);
+    expect(await screen.findByTestId("history.empty.title")).toHaveTextContent(/^Nothing here yet\.$/);
     expect(within(screen.getByTestId("history.empty")).queryByRole("button")).toBeNull();
     expect(screen.getByTestId("history.empty.title").className).not.toContain("text-error");
     expect(screen.queryByRole("searchbox")).toBeNull();
