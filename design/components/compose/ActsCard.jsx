@@ -179,6 +179,13 @@ export function ActsCard({ rows = [], total, note, noteTone = "quiet", node }) {
           </div>
         )
       )}
+      {/* THE TOTAL'S ROW STANDS ONLY WHERE IT HAS SOMETHING TO SAY (jakob
+          2026-11-13, on `Edit · the actions`: "looks like a line is missing").
+          A sheet whose title carries the count passes no `total`, and with no
+          note either the row would be 60px of nothing under the last act —
+          so it is not drawn, and the card ends after its last row with its
+          own 4px. */}
+      {(total || note) && (
       <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: "2px", minHeight: "48px", padding: "6px 0" }}>
         <span
           data-node={part("total")}
@@ -213,6 +220,7 @@ export function ActsCard({ rows = [], total, note, noteTone = "quiet", node }) {
           </span>
         )}
       </div>
+      )}
     </div>
   );
 }
