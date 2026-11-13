@@ -82,4 +82,6 @@ ALWAYS a line under the head reads Signing… in the pending marker's quiet regi
 
 ALWAYS the line under the head reads That didn't sign. in the failure voice followed by Retry GIVEN that change did not go through, and stands until Retry or the next change
 
-ALWAYS profile.identity.name is shown whole, the named exception to the long-names rule, the head alone: it wraps at its spaces, a word wider than its line breaks inside the word, the one place a name may, and it is never end-cut and never capped in lines GIVEN the display name is longer than its line
+ALWAYS profile.identity.name is shown whole on at most two lines, the named exception to the long-names rule, the head alone: at 22px on 28px it wraps at its spaces and a word wider than its line breaks inside the word, the one place a name may, and it is never cut GIVEN the display name is longer than its line
+
+ALWAYS profile.identity.name takes the largest whole-pixel size, from 22 down in steps of 1, at which it holds two lines, its line-height round(size × 28 / 22) px, and the handle line and the rest of the head keep their sizes GIVEN at 22px it would take more than two lines, several words or one long word alike; a smallest size is not ruled
