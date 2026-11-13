@@ -6,6 +6,6 @@ ALWAYS profile.menuSheet reads Save or Unsave, then Cite in a new post, then pro
 
 WHEN tap profile.menuSheet.license -> the menu closes AND the terms the comment was published under come up over the profile, as any comment's do
 
-WHEN a guest taps Save, Cite in a new post or Report -> the guest gate opens AND NEVER Cited by, Opinions on this or License terms raise it
+WHEN a guest taps Save, Cite in a new post or Report -> the guest gate opens AND NEVER profile.menuSheet.citedBy, Opinions on this or License terms raise it
 
 WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND nothing changes
