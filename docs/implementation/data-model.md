@@ -347,7 +347,9 @@ holds the content salt from the seal on.
 Ingestion promotes the content pair and the content salt from the
 staged row into `act_payloads`, keyed by the L1 act identifier
 verbatim, in the same transaction that inserts the epoch's records
-(`content::promote_staged_carriage`, `mirror::ingest_epoch`). Every
+(`content::promote_staged_carriage`, `mirror::ingest_epoch`). It
+reads the staged rows `FOR SHARE`, so a redaction of the same act
+is ordered before or after the promotion, and its reduction stands. Every
 landed non-empty payload is promoted, the admission Registration's
 handle included, so the staged row is never a payload's last home.
 A genesis act has no staged row. The genesis bootstrap draws both

@@ -589,7 +589,114 @@ async fn a_write_promoting_after_its_payload_was_reaped_lands_reduced_rather_tha
         .await
         .expect("reads")
         .expect("landed");
-    assert!(record.payload_marked, "the record still commits a payload");
+    assert!(
+        record.payload_marked,
+        "the reduced carriage row marks the record"
+    );
+}
+
+/// A redaction racing the ingestion that promotes the same act's staged
+/// carriage ends reduced in both orders. In the first, the ingestion
+/// promotes first and has not committed yet: its full row is invisible to
+/// the redaction, whose own reduced-row insert would otherwise wait on it
+/// and then do nothing. In the second, the redaction runs first and has
+/// not committed yet. Either way, once both commit, carriage and staged
+/// row hold no payload, content nonce or salt, and the record lands
+/// marked.
+///
+/// A redaction racing the ingestion of the same act leaves its carriage reduced, in either order.
+/// ´claim:redaction:a-redaction-racing-ingestion-ends-reduced´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_redaction_racing_the_ingestion_of_its_act_ends_reduced_in_either_order(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.funded_actor("ada").await;
+    let (first_id, first) = rig.prepare_post(actor, "Promoted first.", &[]).await;
+    rig.sign_and_relay(first_id, &key).await;
+    let (second_id, second) = rig.prepare_post(actor, "Redacted first.", &[]).await;
+    rig.sign_and_relay(second_id, &key).await;
+    rig.standin.close_epoch().await.expect("closes");
+    let redaction_of = |act_id: String| {
+        let pool = rig.pool.clone();
+        let by = actor.to_string();
+        async move {
+            redaction::redact_act(
+                &pool,
+                &Redaction {
+                    actor_id: actor,
+                    act_id: &act_id,
+                    reason: REASON,
+                    redacted_by: &by,
+                },
+            )
+            .await
+        }
+    };
+    let settle = || tokio::time::sleep(std::time::Duration::from_millis(500));
+
+    // The ingestion promotes first, the redaction starts before it commits.
+    let mut ingesting = rig.pool.begin().await.expect("begins");
+    content_store::promote_staged_carriage(&mut ingesting, std::slice::from_ref(&first))
+        .await
+        .expect("promotes");
+    let racing = tokio::spawn(redaction_of(first.clone()));
+    settle().await;
+    ingesting.commit().await.expect("commits");
+    let done = racing.await.expect("joins").expect("redacts");
+    assert!(done.reduced && done.staged_reaped);
+
+    // The redaction runs first, the promotion starts before it commits.
+    let mut redacting = rig.pool.begin().await.expect("begins");
+    let by = actor.to_string();
+    let reduced = redaction::reduce_in(
+        &mut redacting,
+        &Redaction {
+            actor_id: actor,
+            act_id: &second,
+            reason: REASON,
+            redacted_by: &by,
+        },
+    )
+    .await
+    .expect("reduces")
+    .hold_in(&mut redacting)
+    .await
+    .expect("holds");
+    assert!(reduced.reduced && reduced.staged_reaped);
+    let pool = rig.pool.clone();
+    let promoting = {
+        let second = second.clone();
+        tokio::spawn(async move {
+            let mut tx = pool.begin().await?;
+            content_store::promote_staged_carriage(&mut tx, std::slice::from_ref(&second))
+                .await
+                .map_err(|e| sqlx::Error::Protocol(e.to_string()))?;
+            tx.commit().await
+        })
+    };
+    settle().await;
+    redacting.commit().await.expect("commits");
+    promoting.await.expect("joins").expect("promotes");
+
+    let outcome = api::ingest::ingest_pending(&rig.boundary, &rig.pool, GC)
+        .await
+        .expect("ingests");
+    assert!(outcome.promotion_failures.is_empty());
+    for act_id in [&first, &second] {
+        assert_eq!(
+            rig.copies(act_id).await,
+            Copies {
+                carriage: Some((false, false, false, "reduced".into())),
+                staged: Some((false, false, false)),
+                l1: Some(false),
+            },
+            "{act_id}: no copy of the payload survives the race"
+        );
+        let record = mirror::record_full(&rig.pool, act_id)
+            .await
+            .expect("reads")
+            .expect("landed");
+        assert!(record.payload_marked, "{act_id}: the reduced row marks the record");
+    }
 }
 
 fn handle_payload(handle: &str) -> Vec<u8> {

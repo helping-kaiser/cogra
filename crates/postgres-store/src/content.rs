@@ -663,6 +663,17 @@ async fn mark_carried(conn: &mut sqlx::PgConnection, act_id: &str) -> Result<(),
 /// there — full or reduced — is kept. A full-empty payload, a write never
 /// sealed and one a redaction reaped promote nothing here; the reap left
 /// its own reduced row.
+///
+/// The staged rows are read `FOR SHARE`, which conflicts with the
+/// redaction's `FOR UPDATE` on the same row. That orders the two against
+/// each other (PostgreSQL manual, "Explicit Locking: Row-Level Locks"
+/// and "Transaction Isolation: Read Committed"). If a redaction holds
+/// the row, this read waits for it and then re-checks its `WHERE` on the
+/// reaped version, so it promotes nothing. If this read holds the row,
+/// the redaction waits for the ingestion to commit and then reduces the
+/// full row it finds. Without the lock, a plain read of a payload being
+/// reaped would land a full row under a redaction that reports it
+/// reduced.
 pub async fn promote_staged_carriage(
     tx: &mut Transaction<'_, Postgres>,
     act_ids: &[String],
@@ -674,6 +685,7 @@ pub async fn promote_staged_carriage(
          WHERE act_id = ANY($1) AND state <> 'carried'
            AND length(payload) > 0
            AND content_nonce IS NOT NULL AND content_salt IS NOT NULL
+         FOR SHARE
          ON CONFLICT (act_id) DO NOTHING",
         act_ids,
     )
