@@ -105,9 +105,6 @@ export const SEARCH_YOUR_HISTORY = "Search your history";
 /** HistoryFilter.md:3: the sheet's title, and the trigger's purpose. */
 export const WHAT_YOUR_HISTORY_SHOWS = "What your history shows";
 
-/** HistoryFilter.jsx: the kinds section's hint, search's own words (copy-voice). */
-export const KINDS_HINT = "Combine as many as you like. All, until you narrow it.";
-
 /** HistorySearch.md:3, :11 — the sections' captions. */
 export const PROFILES = "Profiles";
 export const TAGS = "Tags";
@@ -627,7 +624,7 @@ export function HistoryScreen({
         node={{ path: "history.filterSheet" }}
         rows
       >
-        <FilterSection label="Kinds" hint={KINDS_HINT} node={{ path: "history.filterSheet.kinds" }}>
+        <FilterSection label="Kinds" node={{ path: "history.filterSheet.kinds" }}>
           {HISTORY_KINDS.map((kind) => (
             <Chip
               key={kind.value}
