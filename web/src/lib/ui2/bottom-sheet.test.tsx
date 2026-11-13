@@ -160,8 +160,9 @@ describe("BottomSheet", () => {
     );
   });
 
-  // The column inside the surface is bounded by the same thing — a sheet
-  // whose column could out-grow its surface would put Done past the edge.
+  // The column inside the surface is bounded by the same thing, less the
+  // surface's own padding — a sheet whose column could out-grow its surface
+  // would put Done past the edge.
   it("bounds the column inside it by the same ceiling", () => {
     render(
       <BottomSheet open onClose={() => {}} title="Mark as sensitive">
@@ -169,14 +170,15 @@ describe("BottomSheet", () => {
       </BottomSheet>,
     );
     const column = screen.getByTestId("bottom-sheet-column").style.maxHeight;
-    expect(column).toMatch(/^min\(62dvh,/);
-    expect(column).toBe(screen.getByTestId("bottom-sheet").style.maxHeight);
+    const surface = screen.getByTestId("bottom-sheet").style.maxHeight;
+    expect(surface).toMatch(/^min\(62dvh,/);
+    expect(column.startsWith(`calc(${surface} - `)).toBe(true);
   });
 
   // SHEET-88 (round 25): A HEIGHT CLASS IS THE SURFACE'S WHOLE HEIGHT
   // (`BottomSheet.jsx`: `boxSizing: "border-box"`) — the grip strip and the
-  // bottom inset inside it, never added on top. The surface carries no
-  // padding of its own, and its box is the border box, so 88% is 88%.
+  // bottom inset inside it, never added on top: the surface's padding sits
+  // inside its border box, so 88% is 88%.
   it("draws a height class whole: the raised class is 88dvh, nothing added", () => {
     render(
       <BottomSheet open onClose={() => {}} title="Cited by" maxHeight={SHEET_RAISED}>
@@ -188,7 +190,6 @@ describe("BottomSheet", () => {
     expect(SHEET_DEFAULT).toBe("62dvh");
     expect(surface.style.maxHeight).toMatch(/^min\(88dvh,/);
     expect(surface.style.maxHeight).not.toMatch(/\+|32px/);
-    expect(surface.className).toContain("p-0");
   });
 
   // W-SHEET-PT2: the master's surface adds no gap between the title (its own
