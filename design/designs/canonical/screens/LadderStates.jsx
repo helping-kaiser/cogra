@@ -38,11 +38,12 @@ export function Screen() {
         <div style={{ display: "{{platformShown}}" }}>{VEILED({ source: "platform" })}</div>
         <div style={{ display: "{{bothShown}}" }}>{VEILED({ reason: REASON, source: "both" })}</div>
         {/* A redacted record keeps the reader's whole card menu (jakob
-            2026-11-12, the re-ask's eleventh): the license rode the payload and
-            is gone, but the record can still be saved and cited — it never left
-            the graph — Hide acts on its author, who still exists, and Report
-            stays, for a comment section or a removal the operators should look
-            at. `FeedRemovedMenu` draws it open. */}
+            2026-11-12, the re-ask's eleventh, and his word on the license):
+            the record can still be saved and cited — it never left the graph —
+            Hide acts on its author, who still exists, License terms stays as
+            its terms still bind every use made, and Report stays, for a comment
+            section or a removal the operators should look at.
+            `FeedRemovedMenu` draws it open. */}
         <PostCard author={ADA} timestamp="7d" redacted={{ reason: "author" }} score="15.20" comments={3} menuItems={readerCardMenu("ada")} />
         <PostCard author={TOBIAS} timestamp="14d" redacted={{ reason: "illegal" }} score="4.70" comments={1} menuItems={readerCardMenu("tobias")} />
       </FeedList>

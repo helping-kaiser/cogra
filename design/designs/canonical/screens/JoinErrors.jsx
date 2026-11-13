@@ -1,5 +1,7 @@
 /* Join · the errors in place — the input-error round (readme §13, entry):
-   Join with three errors demonstrated at once, the server answer on Handle,
+   Join with three errors demonstrated at once — a composite, never one
+   reachable moment (seam 316: a local refusal stops the press before the
+   server can answer, and a press clears the server's lines) — the server answer on Handle,
    a local format failure on Password, and the local mismatch on Repeat
    password (round 38), each field checked on its own at the press. M3's
    error supporting line replaces each errored field's own helper span (the
@@ -12,7 +14,7 @@ export const NODE = "join";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back" node="header" />
+      <PageHeader backHref="#" backLabel="Back" action={<HelpDot ariaLabel="About CoGra" onOpen={() => {}} node="help" />} node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
           <MonogramAvatar name="Mira Voss" size={64} src="inviter.jpg" node="avatar" />

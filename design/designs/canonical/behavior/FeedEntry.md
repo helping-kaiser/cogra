@@ -10,11 +10,9 @@ ALWAYS every path's trace leads with that account's face and is spoken from its 
 
 ALWAYS a path's trace shows the people along it and the reached thing's own mark at its end, never a thing the path passed through
 
-ALWAYS the strongest handful stands drawn and the rest ride one quiet row stating how many there are and what they add
+ALWAYS every path stands drawn, strongest first, one continuous list that pages in place as the reader keeps going, never capped and never folded behind a row
 
-ALWAYS the drawn paths and the quiet row add up to the trace's score, the figure its own fetch found
-
-WHEN tap feedEntry.morePaths -> the weakest paths unfold in place AND NEVER a second page opens
+ALWAYS the paths add up to the trace's score, the figure its own fetch found
 
 ALWAYS the trace carries no chart, no bar, no meter, no percentage and no trend arrow
 
@@ -22,7 +20,7 @@ ALWAYS the trace carries a cover of the thing its score was tapped on
 
 ALWAYS the back arrow reads Back to the profile GIVEN the score was tapped on a card on another's profile, and Back to your profile on a card on the reader's own
 
-ALWAYS every figure on the trace — the held thing's flag, each path's figure and the quiet row's — prints two decimals, a positive taking +, a negative −
+ALWAYS every figure on the trace — the held thing's flag and each path's figure — prints two decimals, a positive taking +, a negative −
 
 ALWAYS a figure on the trace prints its magnitude in two significant digits, as +0.0031 or −0.00042, and never past six decimals, GIVEN it is not zero and under 0.005 either way
 

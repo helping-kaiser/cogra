@@ -19,7 +19,7 @@ function Demo(){return (
     <span className="lbl">WizardHeader — the arrow steps ONE stage back; the X leaves the flow. No forward action up here</span>
     <WizardHeader title="New post"/>
     <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing"/>
-    <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works"/>
+    <WizardHeader title="What you sign" help="How signing works"/>
     <span className="lbl">Caret — the still frame of the composer's cursor; it is what makes drawn words read as being written</span>
     <p style={{margin:0,fontSize:"var(--text-body-large)",lineHeight:"var(--text-body-large--line-height)"}}>The glovebox camera earns its keep — this is the print from 2019.<Caret/></p>
     <span className="lbl">MediaThumb — plain, cover, uploading, failed, removable, uncropped</span>
@@ -32,14 +32,14 @@ function Demo(){return (
       <MediaThumb src={P+"05-portrait-4x5.jpg"} alt="A person with a camera" width={38} height={48} fit="contain" onRemove={()=>{}}/>
     </div>
     <span className="lbl">PickPrompt — what the step takes, with the way out of the media path beside it</span>
-    <PickPrompt caption="Pick one picture, several, or one video." escapeLabel="Write words instead" onEscape={()=>{}}/>
+    <PickPrompt escapeLabel="Write words instead" onEscape={()=>{}}/>
     <span className="lbl">PickTray — the pick step's band; Show all is a real button, and one clip has no set to show</span>
     <PickTray count={3} onShowAll={()=>{}}>
       <MediaThumb src={P+"01-landscape-4x3.jpg"} alt="Strawberries" cover/>
       <MediaThumb src={P+"04-square-1x1.jpg"} alt="Honey" onRemove={()=>{}}/>
       <MediaThumb src={P+"10-square-1x1.jpg"} alt="Grapes" onRemove={()=>{}}/>
     </PickTray>
-    <PickTray count={1} caption="A video is the whole post. Its cover comes next.">
+    <PickTray count={1} caption="A video is the whole post.">
       <MediaThumb src={P+"03-landscape-16x9.jpg"} alt="" width={114} height={64} video onRemove={()=>{}} removeLabel="Remove this video"/>
     </PickTray>
     <span className="lbl">The clip's tile before and after a cover exists — the cover rides the clip, never a tile of its own</span>
@@ -74,7 +74,7 @@ function Demo(){return (
     <span className="lbl">ActsCard — what one signature commits, where the surface has room</span>
     <ActsCard rows={[{label:"Post",value:"Sunday at the tide market",count:"1"},{label:"Picture",value:"A new profile picture",count:"1"}]} total="2 things, signed together"/>
     <span className="lbl">ActsCard's door row — a fact that counts a collection opens what it counts; the count is the collection, bare</span>
-    <ActsCard rows={[{label:"Post",value:"Sunday at the tide market",count:"1"},{label:"References",value:"3 cited",count:"3",onOpen:()=>{},openLabel:"Manage the citations"}]} total="4 things, signed together" note="They land together, or none does."/>
+    <ActsCard rows={[{label:"Post",value:"Sunday at the tide market",count:"1"},{label:"References",value:"3 cited",count:"3",onOpen:()=>{},openLabel:"Manage the citations"}]} total="4 things, signed together"/>
     <span className="lbl">ActsFooter + SealFooter — the same fact on one line, and the pair every seal ends with</span>
     <ActsFooter count={2}/>
     <SealFooter signLabel="Sign the edit"/>

@@ -22,7 +22,7 @@ surfaces*).
 
 | Control | Where it stands | Opens | On screen |
 |---|---|---|---|
-| The bottom bar's Wallet slot (`nav · Wallet`, 60 edges) | every bottom bar, every reader state, guests included | `WalletComingSoon` | `Wallet — coming soon.` · `Your earnings will be here.` |
+| The bottom bar's Wallet slot (`nav · Wallet`, 60 edges) | every bottom bar, every reader state, guests included | `WalletComingSoon` | `Wallet — coming soon.` |
 | The band's chats icon (`chats`, 25 edges) | every root band, signed-in readers; a guest's band (`Main`, `FeedBare`, `WalletComingSoon`) sends it to `GuestGate` | `ChatsComingSoon` | `Chats — coming soon` |
 | `Message` (4 edges) | `ProfileOther`, `ProfileOtherHeld`, `ProfilePosts`, `ProfileComments` | `ChatsComingSoon` | the same page, back arrow `Back to the profile` |
 | The Sky card | `Explore` at rest, between the search field and Your tags | nothing — an announcement, no flow number | `The Sky — coming soon` · `Your sky — every account a star, sized by your own paths to it.` |

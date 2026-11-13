@@ -14,12 +14,12 @@ function Demo(){return (
   <div className="col">
     <span className="lbl">A group: heading, card of rows, footnote — the footnote is what keeps a row short</span>
     <SettingsGroup label="Writing" footnote="Every signed action is paid for separately.">
-      <SettingsRow checked label="Confirm multi-action submits" status="Ask first when one submit signs more than one action."/>
+      <SettingsRow checked label="Confirm multi-action submits"/>
       <SettingsRow label="Default license" value="Public domain"/>
     </SettingsGroup>
 
     <span className="lbl">Choice rows — one radio group, the license sheet's own dot; the heading's "?" holds the background (Settings only)</span>
-    <SettingsGroup label="Giving an opinion" footnote="A tap opens this, everywhere. Press and hold instead, and a small positive one is signed on the spot." help={<HelpDot ariaLabel="Giving an opinion"/>}>
+    <SettingsGroup label="Giving an opinion" help={<HelpDot ariaLabel="Giving an opinion"/>}>
       <SettingsRow name="card-stance" selected label="The pad"/>
       <SettingsRow name="card-stance" selected={false} label="Sliders"/>
     </SettingsGroup>

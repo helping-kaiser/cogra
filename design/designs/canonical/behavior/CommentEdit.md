@@ -84,7 +84,9 @@ WHEN tap Sign the edit -> Sign the edit refuses a second press until the signing
 
 WHEN the signing has not answered 200ms after the press -> Sign the edit reads Signing the edit… AND NEVER a spinner appears
 
-WHEN the signing is taken -> the thread reopens AND the edit settles on its card wearing Still settling
+WHEN the signing is taken GIVEN the edit was opened from the thread -> the thread reopens AND the edit settles on its card wearing Still settling
+
+WHEN the signing is taken GIVEN the edit was opened off the thread, from History, Saved or the profile's Comments tab -> that host comes back as it was left AND the edited comment's card settles in place there wearing Still settling, as the thread's card settles AND NEVER the thread opens
 
 WHEN the signing does not go through GIVEN no answer reached the edit -> the network error answers AND everything the reader chose stays as it was
 

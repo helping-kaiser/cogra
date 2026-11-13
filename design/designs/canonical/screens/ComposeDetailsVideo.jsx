@@ -58,7 +58,6 @@ export function Screen() {
           <InlineAction size="sm" selfStart>
             Add a cover
           </InlineAction>
-          <QuietNote>It plays the moment it is on screen, so it starts on its own first frame.</QuietNote>
         </div>
 
         <TextField label="Title" corner="Optional" cap={100} value="Forty seconds of the lake doing nothing" />

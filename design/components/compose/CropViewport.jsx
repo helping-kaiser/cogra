@@ -8,8 +8,9 @@ import React from "react";
    frame — the window below — is FIXED: it stands still at its shape, and the
    PICTURE is what moves (drag, the arrow keys) and zooms (pinch, `CropZoom`)
    under it. No window ever moves over a still picture, and the stage never
-   changes size with the shape: this master's stage is `size` square (390),
-   the post crop's (`ComposeCrop`) 390 × 488 under all three of its shapes.
+   changes size with the shape: this master's stage is `size` square (390)
+   for the profile picture, and 390 × 488 (`stageHeight`) for the post crop
+   (`ComposeCrop`) and the cover crop (`CoverCrop`) under every shape.
 
    THE MASK IS ONE BOX SHADOW, not four dimming panels. `0 0 0 400px` spreads a
    45% black outward from the window's own edges, so the darkened region is
@@ -21,7 +22,10 @@ import React from "react";
    in a circle everywhere it appears, so it is cut in a circle; a video's cover
    is shown at the clip's ratio, so it is cut at that ratio. There are no shape
    chips on either — choosing a shape here would let the result disagree with
-   the thing it is the face of.
+   the thing it is the face of. THE COVER'S FRAME ALWAYS HAS THE CLIP'S
+   DIMENSIONS (jakob 2026-11-12: "tall video = tall cover, square square and
+   wide wide"): the shape the clip stands at in a card (`clipFrame`), and the
+   crop's output is that shape.
 
    THE WINDOW IS ALWAYS CENTRED, and that is why it takes a height and not a
    position: it is inset `inset` from each side, and the leftover height splits
@@ -49,7 +53,12 @@ export function CropViewport({
   scale = 1,
   origin = "50% 50%",
   size = 390,
+  /* The stage's height, `size` unless a crop's stage is taller (the post
+     crop's and the cover crop's 488). */
+  stageHeight = size,
   inset = 24,
+  /* The frame's height: a number in px, or a CSS length string (a board's
+     hole), centred by `calc` then. */
   height,
   onPan,
   node,
@@ -70,7 +79,7 @@ export function CropViewport({
       aria-label={CROP_PAN_NAME}
       onKeyDown={onKeyDown}
       className="cg-focus"
-      style={{ position: "relative", width: size, height: size, margin: `0 -${inset}px`, overflow: "hidden", flex: "none" }}
+      style={{ position: "relative", width: size, height: stageHeight, margin: `0 -${inset}px`, overflow: "hidden", flex: "none" }}
       data-node={node}
     >
       <img
@@ -83,7 +92,7 @@ export function CropViewport({
         style={{
           position: "absolute",
           left: inset,
-          top: (size - windowHeight) / 2,
+          top: typeof windowHeight === "string" ? `calc((${stageHeight}px - ${windowHeight}) / 2)` : (stageHeight - windowHeight) / 2,
           width,
           height: windowHeight,
           borderRadius: shape === "circle" ? "var(--radius-full)" : "var(--radius-small)",

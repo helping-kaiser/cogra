@@ -1367,7 +1367,7 @@ with 0 < |s| < 0.005 is tiny. The card — every ranked card, the tag
 page's included — prints two decimals, never more, and a tiny score
 rounds away from zero to `0.01` or `−0.01`, so `0.00` is a severed
 one's alone. The trace (everything behind the graph glyph: the flag,
-the paths, the quiet row, a path's `adds`) prints two decimals too, and
+the paths, a path's `adds`) prints two decimals too, and
 a tiny figure in two significant digits — `0.0031`, `0.00042` — at most
 six decimals, a still smaller one reading `0.000001`; the trace's `+`
 on a positive stands. The minus is U+2212. A screen reader reads the
@@ -2162,8 +2162,8 @@ next to brands like Instagram):
   path identical to the app's (*Pick · the web variant*).
 - **A seal's total row carries no all-or-nothing subline** — the seal's
   `How signing works` says it (jakob 2026-11-12); the edit's acts
-  sheets, which carry no "?", keep "They land together, or none does."
-  as `ActsCard`'s `note`. On the key-absent seal the one
+  sheets carry the same `?` beside their title and no line either (round
+  46). On the key-absent seal the one
   "?" belongs to the key notice (the *Your key* dialog), not the
   header — one "?" per screen, and the key story outranks the seal
   story there. Every "?" opens the house plain dialog (the pattern the
@@ -11053,7 +11053,8 @@ jakob's answers to round 30's proposals (Q1–Q7), the ruled part.
   leaves the page, and no "show fewer" follows. A page or sheet whose
   PURPOSE is the list — History, Saved, Notifications, the profile's
   chronicle, posts and comments, the tag page, the opinions page, the
-  opinions and cited-by sheets, Your tags, hidden accounts — is a
+  opinions and cited-by sheets, Your tags, hidden accounts, the score's
+  trace (jakob 2026-11-12) — is a
   continuous scroll and is never capped. Drawn on Invites' People you
   let in (backlog 181).
 - **The way out while an act signs** is round 34's: once the commit is
@@ -11765,6 +11766,80 @@ re-ask (11, 12, 14–18, 20), and two registry gaps impl found (seam 297,
   `exact`, `pad.field`, `note`, `done`, `untag`. Over rounds 42–44: 1956 → 2032
   distinct paths, 185 → 189 screens, additions only.
 
+
+### Round 46, the review's answers — 2026-11-12
+
+jakob's review of rounds 42–45 and his answers to questions 1–22, executed
+(both lanes: lane A's forms, Settings, Invites, entry boards, the
+vouch-back pad and Wallet; lane B's crop, composer side, feed and profile).
+
+- **Forms, Settings, Invites and entry (lane A).** jakob's answers 4–10, 11 and 13–16, 20, and his two review notes on round 43, executed.
+  - Live links stand newest made first, three, then `Show all` in place (`Invites`' `links` chip).
+  - `This choice follows your account to every device.` is cut. Copy-voice now holds the rule: only a setting that stays on this device says where it lives.
+  - `Show my key`, `Create a new recovery code` and `Send the confirmation link` keep their exits, the recovery-code form holding them while it submits. The Handle row keeps `Retry`, since a handle retry needs nothing typed again.
+  - After Close, a form's Settings row reads the form's own in-flight label (`forms`: `password-changing`, `email-changing`, `email-confirming`). The failure line leaves on the tap that reopens the form at rest, with a one-field refusal beside its field.
+  - `Cancel the change` is held while the code confirms, and `ChangeEmailConfirm` draws the link confirmed with the code owed (`confirmed: link`).
+  - A group's failed closing says it once, under the group label.
+  - Giving an opinion's "?" is one paragraph naming the three inputs (*drafted, review-pending*).
+  - The vouch-back pad's two coaching lines live in its "?".
+  - Cut: the handle and email forms' bodies, the unveil switch's On line, Wallet's line.
+  - The ask-link caption is one on all three boards.
+  - Join's failure line stands above the Terms line above `Create account` (`answer: failed`). `JoinErrors` says it is a composite and carries Join's "?".
+  - Two boards added: `ChangePasswordErrors` and `ResetNewErrors`, `JoinErrors`' construction, each the mismatch in place; through them `changePassword.confirm.support` and `reset.confirm.support` are registered.
+  - Registry on this lane: `invites.linksDoor`, `changePassword.confirm.support` and `reset.confirm.support` registered; `settings.sensitive.footnote`, `changeHandle.body`, `wallet.comingSoonCard.line` and ChangeEmail's `changeEmail.body` entry deleted (ruled).
+- **The cover's frame always has the clip's dimensions** (review, 1;
+  backlog 200): tall clip a tall cover, square a square, wide a wide —
+  the shape the clip stands at in a card — and the crop exports only that
+  shape. The cover crop takes the post crop's 390 × 488 stage (the
+  orchestrator's reading); `CoverCrop`'s `clip` chip measures wide 342 ×
+  192 at 148, tall 342 × 427.5 at 30.25, square 342 × 342 at 73.
+  `CropViewport` takes a `stageHeight`.
+- **A picked clip and a new cover upload under one gate** (2; backlog
+  201): the video's line, then the cover's; no note under the cover row
+  (`CommentEditVideo`'s `picked-cover`).
+- **The sample captions run past two lines** (3; backlog 202) and
+  `PostCard` offers `More` on a media caption only past its two lines'
+  estimate, `ReelCaption`'s way. No path moved.
+- **The edit sheets carry `How signing works`** (12; backlog 194): the
+  "?" trails `EditActs`' and `CommentEditActs`' title as `ComposeLicense`'s
+  trails its own; the all-or-nothing subline leaves them.
+- **The pass's last open lines** (13; backlog 192): the clip's first-frame
+  line is cut; the rest are kept and blessed in copy-voice.
+- **The score's trace is uncapped** (review): every path stands, a
+  continuous list; `feedEntry.morePaths` and its `label` and `value` are
+  deleted. The cap rule names the trace among the lists that are the page.
+- **A figure's door is spoken by its number and words alone** (17):
+  `6 Opinions on them`, `5 Opinions by you`.
+- **A removed post keeps a menu** (18, and jakob's word on the license;
+  backlog 206). Another's: the reader's post menu — Save, Cite in a new
+  post, Hide @author, License terms, Report — on the card and in the
+  detail's header (`RemovedOther`, new). Your own: your post's menu less
+  Edit and Remove — Save, Cite in a new post, Mark as sensitive, License
+  terms — on the card (`FeedRemoved`; `FeedRemovedMenuOwn`, new) and in
+  the detail's header (`Removed`). License terms stays because the terms
+  still bind every use already made. `FeedRemovedMenu`'s card carries its
+  removal date.
+- **A failed first page on the profile's tabs** (19; backlog 207):
+  `Can't reach the server — posts can't load right now.` / `… comments
+  can't load right now.` with `Retry`, still the quiet row; `Couldn't load
+  more` is a next page's line alone.
+- **A comment edit opened off the thread returns to its host** (21):
+  History, Saved and the profile's Comments tab, the card settling in
+  place.
+- **A guest reads Cited by, Opinions on this and License terms** (22):
+  five menu edges dropped their guest gate.
+- **Follow-ups**: the component demo cards and the canvas annotations take
+  the cut strings; `Signs as #…` stands only where the typed name changes;
+  `ReaderPostMenuNarrow` registers on `ReaderPostMenu`'s paths, its share
+  row `menuSheet.share` (seam 316).
+- **The gate, both lanes merged**: 189 → 194 screens, 7252 → 7387 board
+  paths, 2032 → 2029 distinct. Lane B removed four by ruling
+  (`feedEntry.morePaths` ×3, `postEdit.cover.note`) and added one
+  (`postDetail.menuSheet.share`); lane A added three (`invites.linksDoor`,
+  `changePassword.confirm.support`, `reset.confirm.support`) and deleted three
+  by ruling (`settings.sensitive.footnote`, `changeHandle.body`,
+  `wallet.comingSoonCard.line`) plus ChangeEmail's `changeEmail.body` entry. Against main: 63 distinct gone, 92 added, none of rounds 42–46's
+  ruled removals back.
 ---
 
 ## 14. The canvases

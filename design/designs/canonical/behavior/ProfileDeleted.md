@@ -18,7 +18,7 @@ ALWAYS every act still stands in the chronicle with its words gone GIVEN the del
 
 ALWAYS the actions row reads the opinion on the account, worn wide, then the ⋮, and carries no Message
 
-ALWAYS the two opinion figures are two doors and the Posts figure is no door, each door spoken as its figure's number and words, then its purpose — Opinions on them, then opinions on this account; Opinions by them, then opinions by this account
+ALWAYS the two opinion figures are two doors and the Posts figure is no door, each door spoken as its figure's number and visible words and nothing more, as on another's profile
 
 ALWAYS the wide anchor's accessible name says this account and never a handle
 

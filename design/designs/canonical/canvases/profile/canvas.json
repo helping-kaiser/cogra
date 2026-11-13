@@ -212,7 +212,7 @@
       "x": -5930,
       "y": 0,
       "w": 5510,
-      "h": 9420,
+      "h": 9489,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -374,6 +374,15 @@
       "title": "Settings · change your password",
       "x": 2400,
       "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ChangePasswordErrors.dc.html",
+      "title": "Settings · change your password · the errors in place",
+      "x": 7680,
+      "y": 2988,
       "w": 390,
       "h": 844,
       "page": "profile"

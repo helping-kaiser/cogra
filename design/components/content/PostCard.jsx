@@ -70,7 +70,7 @@ const TEXT_BODY_CLAMP_LINES = 18;
    the line. A media post's caption follows the same law against its two
    lines: `More` stands only where the caption is actually clamped, never
    under one that fits whole (jakob's finding, seam 276 item 2) — clients
-   measure; where the board still lags it is said at `folded` below. */
+   measure; the board decides on this estimate, as `ReelCaption` does. */
 const CHARS_PER_LINE = 51;
 
 export function PostCard({
@@ -198,15 +198,18 @@ export function PostCard({
   // The license is a term over downstream reuse, checked once in a hundred
   // readings — so it is not on the card at all. The menu's row opens it in a
   // sheet over whatever surface the reader asked from (readme §13, the menus
-  // round), and the card's only part in it is carrying the row. The license
-  // rode the payload, so a redacted record has none to show.
+  // round), and the card's only part in it is carrying the row. A REMOVED
+  // post keeps the row (jakob 2026-11-12: "even if the media is now removed
+  // someone might have used my content already under its license
+  // regulations"): the terms it was published under still bind every use made
+  // of it, so its sheet shows them as any post's does.
   //
   // It CLOSES the menu rather than leading it: the rows the menu was opened for
   // come first, the rarest read last — the order the author's own menu has
   // always had, and the one the menu boards draw. A row marked `tail` stands
   // after it — the report row, which sits at the sheet tail of every
   // other-person menu, below even the license (ruling 75).
-  const items = license && !redacted
+  const items = license || redacted
     ? [
         ...menuItems.filter((item) => !item.tail),
         { label: LICENSE_MENU_LABEL, onSelect: () => {} },
@@ -278,13 +281,12 @@ export function PostCard({
   // Only where there is something folded away. "More" is a text control, not a
   // link: it opens the text in place and never navigates. The law: a media
   // post's caption is clamped to two lines and carries it only when it runs
-  // past them; a text post's body has 18 lines to fill first. THE BOARDS LAG
-  // THE LAW ON MEDIA (round 44, backlog 202): the sample feed card's caption
-  // fits its two lines whole, yet some thirty boards register its opener and
-  // walk it in flows, so the board still offers it on a media caption until
-  // jakob rules how those boards are fixed. A client follows the law.
+  // past them; a text post's body has 18 lines to fill first. Both are
+  // judged on the same estimate `ReelCaption` uses for its own caption
+  // (round 46, backlog 202: the sample caption was lengthened so the boards
+  // tell the truth). A client measures.
   const folded = hasMedia
-    ? Boolean(description)
+    ? Boolean(description) && description.length > DESCRIPTION_CLAMP_LINES * CHARS_PER_LINE
     : (words && words.length > TEXT_BODY_CLAMP_LINES * CHARS_PER_LINE) ||
       (description && description.length > DESCRIPTION_CLAMP_LINES * CHARS_PER_LINE);
   const opener =

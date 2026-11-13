@@ -75,6 +75,17 @@ mechanic keeps its line where the page has room: "the path thingy is
 generally novel stuff for 99% of the users so the explainer doesn't
 hurt" (`RankRecords`' caption).
 
+**Kept by jakob, the pass's last open lines** (2026-11-12, all as
+recommended; *blessed*): Feed score's `Every path here starts with an
+opinion you gave.` (`FeedEntry`, `FeedEntryKinds`); `YourKey`'s `Nothing here
+is sent anywhere — the key is read from this browser and shown.`;
+History's and Saved's `Search reads names and titles, never bodies — fewer
+words reach further.` (`HistoryNone`, `SavedNone`); the edits' `A post's
+body is words or media, never both.` and `A video is the whole post.`
+(`EditWords`, `EditComposeVideo`); the tag picker's `Letters, digits, dot,
+dash and underscore. Capitals become lowercase.`. Cut the same day: the
+clip's quiet line under a cover row with no cover.
+
 This is greppable and should be enforced as a check over Android's
 `strings.xml` and the web copy, rather than left to review — the check
 does not exist yet.
@@ -486,8 +497,12 @@ noun):
 - **Your vouch back** (the vouch-back pad): Vouching back signs your
   opinion of the person who vouched you in, and your feed grows from
   it. / The pad is how you shape what reaches you — for or against, and
-  how much. Nothing is signed until Set. *(The title is blessed (jakob
-  2026-10-02); the first paragraph is blessed (jakob 2026-10-05).)*
+  how much. Nothing is signed until Set. / Later, tap the small face
+  under a post to open this — press and hold it instead and a gentle 🙂
+  *(+0.10 / +0.10)* is signed on the spot. / Prefer sliders or exact
+  numbers? Swap the input in settings. *(The title is blessed (jakob
+  2026-10-02); the first paragraph is blessed (jakob 2026-10-05); the
+  pad's two coaching lines moved in whole, jakob 2026-11-12.)*
 - **How vouching works** (the approval pad and the ask link's pad, in
   place): A link lets someone make an account. Your vouch — the opinion
   you sign when you approve them — is what brings them in. / Nothing is
@@ -555,11 +570,13 @@ noun):
   explainer and the veil pointer stand here and not on the sheet,
   moved whole, jakob 2026-11-12; the veil pointer is the feed's and
   the settings sheet's, where `Also show` stands.)*
-- **Giving an opinion** (Settings, beside the section's heading): A tap
-  opens it; drift to where it feels right. / One slider per side of the
-  opinion. *(The pad's and the sliders' row hints, moved whole from the
-  page — jakob 2026-11-12, the re-ask's 8 (a); each blessed with the
-  settings round.)*
+- **Giving an opinion** (Settings, beside the section's heading): Three
+  ways to give an opinion: the pad opens on a tap, and you drift to where
+  it feels right; sliders give each side of the opinion its own slider;
+  typed values take both numbers exactly. *(One paragraph naming the
+  three inputs, from the rows' labels and their old hints — jakob
+  2026-11-12: "one or a couple actual sentences instead of two disconnect
+  ones"; drafted 2026-11-12, review-pending.)*
 - **Reading** (Settings, beside the section's heading): Every feed starts
   from what it shows, and a change made inside a feed lasts until you
   change it back. Both choices stay on this device. *(The group's
@@ -702,10 +719,6 @@ through, from an edit:
 **The video-cover round's lines** (backlog item 49; *blessed (jakob
 2026-10-06)*):
 
-- `It plays the moment it is on screen, so it starts on its own first
-  frame.` — the quiet line under the `Cover` row's door where a clip has
-  no cover (`ComposeDetailsVideo`, `EditComposeVideo`,
-  `ReplyVideoFailed`).
 - `This clip gave no frames` — the frame strip's caption when the device cut no frames
   from the clip (`ComposeCoverNoFrames`).
 - `No frame` — the neutral tile's label in that state
@@ -724,6 +737,13 @@ picture moves and zooms under it on every crop (`ComposeCrop`,
 `ComposeCrop`'s `One shape for the whole post.` — what the crop decides,
 *blessed (jakob 2026-10-06)*. The arrow keys move the picture 1 % a
 press, 10 % with Shift.
+
+**The cover's frame is the clip's, and no line says so** (jakob
+2026-11-12: "tall video = tall cover, square square and wide wide"):
+`CoverCrop`'s frame always has the clip's dimensions — the shape the
+clip stands at in a card, a clip taller than 4:5 at 4:5 — and the crop
+exports that shape only. The rule is a shape, not a sentence: no line on
+the crop states it, and no chip offers another.
 
 ## Editing a media post
 
@@ -958,12 +978,10 @@ Spelled by the round and **blessed (jakob 2026-10-05)**:
 
 **The profile's figures, spoken** — K13.11's form (the check round,
 2026-10-06), on two doors since jakob's 2026-11-11 ruling: each opinion
-figure says its visible number and words, then its purpose, the one
-door's purpose split by direction — `{n} Opinions on them, opinions on
-@handle` · `{n} Opinions by them, opinions by @handle`. One's own reads
-`{n} Opinions on you, your opinions, on you` · `{n} Opinions by you,
-your opinions, by you`; a deleted account's end `opinions on this
-account` · `opinions by this account`. `Posts` is no door and has no
+figure says its number and visible words and nothing more (jakob
+2026-11-12, question 17) — `{n} Opinions on them` · `{n} Opinions by them`,
+one's own `{n} Opinions on you` · `{n} Opinions by you`, a deleted account's
+as another's. `Posts` is no door and has no
 spoken name of its own (`ProfileHeader`; `Profile`, `ProfileOther`,
 `ProfileDeleted`).
 
@@ -1883,17 +1901,15 @@ behind the heading's "?" (*The "?" dialogs*, jakob 2026-11-12).
 
 **Sensitive content**: one switch, `Always unveil sensitive content`
 (jakob's own wording, 2026-10-09 — never a sheet, never a pair of
-rows), off by default, no second line while off (jakob 2026-11-12: it restates
-the switch) — and switched on, `On, sensitive content stands unveiled
-wherever you read.` (*new 2026-10-12,
-ruled (jakob 2026-10-12)*) — and the group footnote
-`This choice follows your account to every device.` — the one settings
-group whose value travels (the People group's hiding travels too, but
-its rows are doors, not switches). The account-travel sentence is the
-footnote's whole job: this is the choice a future iOS build may only
-honor, never offer, so the words promise the travel, not the control.
-(*The second line and the footnote drafted 2026-10-09 — wording
-jakob's at review.*)
+rows), off by default, no second line on or off and no footnote (jakob
+2026-11-12: the switch says it).
+
+**Where a setting lives is said only when it is this device** (jakob
+2026-11-12: "people are used that their settings are per account (and
+follow them to all devices) … for per device infos it might be necesarry
+to state so"). A setting that follows the account says nothing about it;
+one that stays on this device says so where it is set — Reading's
+`Both choices stay on this device.` is that line.
 
 **Key backup**: `Recovery code` and `Your key` are rows, not verbs — and,
 only while kept picks wait unsigned with the key here, `3 kept picks
@@ -2099,10 +2115,8 @@ same way, drawn once on `ChangeEmail`'s `fault` chip — and a
 change that lands answers `Password changed — other devices are signed
 out.` over settings (*new 2026-10-05, blessed (jakob 2026-10-05)*).
 
-**Change your handle** (`ChangeHandle`) says the calm part before the
-costly one. `@sol is how people mention and find you. Everything you
-have published stays yours — the handle is a name, not the account.`
-The field is `New handle` with the rules where they are typed:
+**Change your handle** (`ChangeHandle`) carries no body under its title
+(jakob 2026-11-12). The field is `New handle` with the rules where they are typed:
 `3 to 30 characters: letters, numbers and underscore. Handles are always
 lowercase.` — the fold is said because a reader who types capitals will
 otherwise think the field ate them. The commitment is `Change handle`;
@@ -2116,9 +2130,8 @@ the cost is said once, unsoftened, where it is read at the press (jakob
 answers `Your handle is now @solferreira.` (*new 2026-10-05, blessed
 (jakob 2026-10-05)*).
 
-**Change your email** (`ChangeEmail`) names why it is guarded: `Your
-email signs you in, and it is the only way back if you lose your
-password — so a change is proved from both ends.` Fields `New email` and
+**Change your email** (`ChangeEmail`) carries no body under its title
+(jakob 2026-11-12). Fields `New email` and
 `Current password`, the commitment `Change email`, and what happens
 next, with the address named rather than described: `A code goes to
 sol@solferreira.art and a link to the new address. Your email is
@@ -2734,13 +2747,13 @@ behind its "?", and
 `Press and hold instead, and a small positive one is signed on the spot.` the footnote — the one place the
 shortcut and the price are said together.
 
-**The first-ever pad teaches in two coaching lines, and nothing else
-teaches it** (the check round's 6, jakob 2026-10-06). On the account's
-first-ever pad open, wherever that pad opens: `Later, tap the small face
-under a post to open this — press and hold it instead and a gentle 🙂
-*(+0.10 / +0.10)* is signed on the spot.`, then `Nothing is signed until
-Set. Prefer sliders or exact numbers? Swap the input in settings.`
-(`VouchBackPad`). They close with the pad and never show again.
+**The first-ever pad's coaching stands behind its "?"** (jakob
+2026-11-12, moving the check round's two lines): on the account's
+first-ever pad open the pad itself says only `Nothing is signed until
+Set.`; `Later, tap the small face under a post to open this — press and
+hold it instead and a gentle 🙂 *(+0.10 / +0.10)* is signed on the
+spot.` and `Prefer sliders or exact numbers? Swap the input in
+settings.` stand in `Your vouch back`, the pad's "?" (`VouchBackPad`).
 
 **The pad's four help lines.** `Drag the knob. Left
 to right is against to for; bottom to top is how much more of it you
@@ -2844,8 +2857,9 @@ non-drag route's three blessed, jakob 2026-10-20.*)
 (`1 thing, signed` in the singular), the rows carry bare counts. A seal
 carries no all-or-nothing line: its `How signing works` says it, and
 the line would repeat the `?` on the same sheet (jakob 2026-11-12).
-The edit's acts sheets (`EditActs`, `CommentEditActs`), which carry
-no `?`, keep `They land together, or none does.`
+The edit's acts sheets (`EditActs`, `CommentEditActs`) carry the same
+`?` beside their title and no line either (jakob 2026-11-12: "signing in
+itself is a new concept for them").
 
 **The wallet says reach, not paths.** `In escrow` · `Held` ·
 `…paid when an advertiser's reach flows through you.` ·
@@ -3421,10 +3435,6 @@ the trace that draws it. The trace says the shape; the words say who. The
 handles rather than the names, because the row has one line for them and
 a chain of display names would ellipsise before the last person in it.
 
-**The quiet expand row**: `2 more paths`, with what they add beside it,
-and `Show 2 more paths` as its accessible name. Never `See all`, never a
-page number — the row unfolds the rest in place.
-
 **A path's two facts**: `What it adds` and `Newest opinion on it`. Both
 are questions a reader would actually ask out loud, which is what a
 `FactRow` label is for.
@@ -3601,8 +3611,7 @@ the same way** — the thing, an em dash, `coming soon`, then, where it
 says more than the headline, one sentence of what will be there:
 
 - `Chats — coming soon`, alone: chats are conversations (jakob 2026-11-12).
-- `Wallet — coming soon. Your earnings will be here.` *(Ruled by jakob
-  2026-09-25.)*
+- `Wallet — coming soon`, alone (jakob 2026-11-12).
 - `The Sky — coming soon` · `Your sky — every account a star, sized by
   your own paths to it.`
 
@@ -3955,12 +3964,10 @@ in.` (jakob 2026-10-02, **blessed**). An application has no timer, so
 closing is the one ending the page names.
 
 **The ask link is labelled by what to do with it**, not by what it is:
-`Ask someone you know to vouch for you`, captioned `It does not expire,
-and it works however many people you send it to.` on the feed's cards
-(`ApplicantRejected`, `ApplicantFellThrough`) and `Send it to anyone
-who is already in. It does not expire.` on the applicant's own profile
-(`ProfileApplicant`) — two cuts of one caption, each canvas's own row of
-the removable-text pass (jakob 2026-11-12; unifying them is open). The
+`Ask someone you know to vouch for you`, captioned `Send it to anyone
+who is already in. It does not expire.` wherever it stands — the feed's
+cards (`ApplicantRejected`, `ApplicantFellThrough`) and the applicant's
+own profile (`ProfileApplicant`) alike (jakob 2026-11-12). The
 caption says what kind of link this is: the differences from an invite
 link, said as reassurance rather than as spec. Its copy control is `Copy your ask
 link`; the snackbar is `Link copied`, the same one the invite link's

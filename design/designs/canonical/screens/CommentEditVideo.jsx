@@ -66,14 +66,22 @@
    clip picked while the first uploads: refused, never swapped in, `A comment
    carries one video.` with `Remove it` alone (`ReplyVideo`'s `batch` = two).
    A picked clip rides the edit's own record, as a new face does, so the
-   footer's count holds. */
+   footer's count holds.
+
+   `picked-cover` is a picked clip and a new cover uploading TOGETHER (jakob
+   2026-11-12, question 2, as recommended): the clip with its ring, the cover
+   row holding the chosen picture with its own ring and `Change the cover`,
+   and the gate naming what is still uploading in the two lines that exist —
+   first `Uploading 0 of 2 — signing waits for the video.`, then, the clip
+   landed, `Uploading 1 of 2 — signing waits for the cover.` The board draws
+   the first. No note stands under the cover row. */
 export const NODE = "commentEdit";
 export const PROPS = {
-  clip: { editor: "enum", options: ["kept", "picked", "failed", "second"], default: "kept" },
+  clip: { editor: "enum", options: ["kept", "picked", "picked-cover", "failed", "second"], default: "kept" },
   upload: { editor: "enum", options: ["none", "uploading"], default: "none" },
   signing: { editor: "enum", options: ["none", "signing"], default: "none" },
 };
-export const VALS = `keptShown: this.props.clip === "kept" ? "flex" : "none", pickedShown: this.props.clip === "picked" ? "flex" : "none", failedShown: this.props.clip === "failed" ? "flex" : "none", secondShown: this.props.clip === "second" ? "flex" : "none", doorShown: this.props.clip === "kept" ? "none" : "flex", signRestShown: this.props.signing === "signing" || this.props.clip === "failed" ? "none" : "block", signBusyShown: this.props.signing === "signing" && this.props.clip !== "failed" ? "block" : "none", signFailedShown: this.props.clip === "failed" ? "block" : "none", gateShown: this.props.clip === "kept" && this.props.upload === "uploading" ? "flex" : "none", restShown: this.props.clip === "kept" && this.props.upload === "uploading" ? "none" : "flex"`;
+export const VALS = `keptShown: this.props.clip === "kept" ? "flex" : "none", pickedShown: this.props.clip === "picked" ? "flex" : "none", bothShown: this.props.clip === "picked-cover" ? "flex" : "none", failedShown: this.props.clip === "failed" ? "flex" : "none", secondShown: this.props.clip === "second" ? "flex" : "none", doorShown: this.props.clip === "kept" || this.props.clip === "picked-cover" ? "none" : "flex", signRestShown: this.props.signing === "signing" || this.props.clip === "failed" ? "none" : "block", signBusyShown: this.props.signing === "signing" && this.props.clip !== "failed" ? "block" : "none", signFailedShown: this.props.clip === "failed" ? "block" : "none", gateShown: this.props.clip === "kept" && this.props.upload === "uploading" ? "flex" : "none", restShown: this.props.clip === "kept" && this.props.upload === "uploading" ? "none" : "flex"`;
 
 export function Screen() {
   return (
@@ -102,6 +110,12 @@ export function Screen() {
               </div>
               <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} node="describeRow" />
             </div>
+            <div style={{ display: "{{bothShown}}", flexDirection: "column", gap: 6 }} {...chipCopy("clip", "picked-cover")}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <MediaThumb src="clip-lakeside.jpg" alt="" size={56} fit="contain" video progress={0.55} onRemove={() => {}} removeLabel="Remove this video" node="thumb" />
+              </div>
+              <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} node="describeRow" />
+            </div>
             <div style={{ display: "{{failedShown}}", flexDirection: "column", gap: 6 }} {...chipCopy("clip", "failed")}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <MediaThumb src="clip-lakeside.jpg" alt="" size={56} fit="contain" video failed node="thumb" />
@@ -122,6 +136,11 @@ export function Screen() {
             <FieldLabel node="label">Cover</FieldLabel>
             <div style={{ display: "{{keptShown}}", alignItems: "center", gap: 8 }}>
               <MediaThumb src="comment-camera.jpg" alt="" size={56} fit="contain" node="thumb" />
+              <Button variant="text" size="sm" node="change">Change the cover</Button>
+            </div>
+            {/* A cover set beside the picked clip, uploading with its own ring. */}
+            <div style={{ display: "{{bothShown}}", alignItems: "center", gap: 8 }} {...chipCopy("clip", "picked-cover")}>
+              <MediaThumb src="comment-camera.jpg" alt="" size={56} fit="contain" progress={0.3} node="thumb" />
               <Button variant="text" size="sm" node="change">Change the cover</Button>
             </div>
             {/* A picked clip has no face yet: the door, `EditComposeVideo`'s. */}
@@ -161,6 +180,9 @@ export function Screen() {
         </div>
         <div style={{ display: "{{pickedShown}}", flexDirection: "column" }} {...chipCopy("clip", "picked")}>
           <UploadStatusLine done={0} total={1} media="video" node="gate" />
+        </div>
+        <div style={{ display: "{{bothShown}}", flexDirection: "column" }} {...chipCopy("clip", "picked-cover")}>
+          <UploadStatusLine done={0} total={2} media="video" node="gate" />
         </div>
         <div style={{ display: "{{secondShown}}", flexDirection: "column" }} {...chipCopy("clip", "second")}>
           <UploadStatusLine done={0} total={1} media="video" node="gate" />

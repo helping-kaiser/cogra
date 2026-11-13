@@ -10,16 +10,12 @@
    here and there will not be one: a bar would turn a reader's own connections
    into a statistic about the post.
 
-   THE STRONGEST HANDFUL, THEN A ROW THAT EXPANDS (jakob's ruling). Four paths
-   are drawn and the two weakest ride one quiet row; tapping it unfolds them in
-   place. Never a second page — a reader chasing one number should not have to
-   hold a page number while they do it.
-
-   THE MORE-PATHS ROW CARRIES WHAT THEY ADD, which is this surface's whole
-   obligation: 6.80 + 4.20 + 2.60 + 1.10 + 0.50 is 15.20, and a reader who adds
-   the drawn rows must land on the number they tapped. A row that said only "2
-   more paths" would leave a 0.50 hole in the one place the product promises
-   there is none.
+   EVERY PATH STANDS, A CONTINUOUS LIST (jakob 2026-11-12: "there is just
+   this one list and nothing below it so it is fine if that list grows
+   endless"). The page's purpose is the list, so it is never capped — the
+   cap rule's own wording — and a client pages it in code as the reader keeps
+   going. The drawn rows add up to the number the reader tapped: 6.80 + 4.20 +
+   2.60 + 1.10 + 0.30 + 0.20 is 15.20.
 
    EVERY PATH STARTS WITH AN OPINION THE READER GAVE (§1, the inbound-inert
    rule): nothing anyone points at you moves anything toward you. That is the
@@ -35,24 +31,24 @@
 
    REGISTERED under the `feedEntry` prefix (round 7), the four levels' one
    prefix: the held thing is `origin`, the note `note`, `Strongest first`
-   `pathsLabel`, each path row `path` keyed by its place, strongest first, and
-   the quiet row `morePaths` with its `label` and `value`. The `view` chip
+   `pathsLabel`, and each path row `path` keyed by its place, strongest first.
+   The `view` chip
    draws the path list once per value, so the two lists are one list in two
    states — each row keeping its own key (a chip copy of a keyed instance).
 
    A TINY SCORE'S TRACE (jakob 2026-11-12, the re-ask's twentieth; the
    `score` chip). The figures only change: `usual` the 15.20 the cast's
    paths add up to; `tiny` a score of +0.0031 — the card reading `0.01` —
-   every figure under 0.005 in two significant digits, the quiet row's
-   +0.000050 at the six-decimal edge; `tiny-negative` −0.00042, the weakest
-   paths cut at six decimals (−0.000006, −0.000004). The drawn figures still
+   every figure under 0.005 in two significant digits, the weakest at the
+   six-decimal edge (+0.000030, +0.000020); `tiny-negative` −0.00042, the
+   weakest paths cut at six decimals (−0.000006, −0.000003, −0.000001). The drawn figures still
    add up to the flag. `ExplainableNumber` holds the rule. */
 export const NODE = "feedEntry";
 export const PROPS = {
   view: { editor: "enum", options: ["own", "borrowed"], default: "own" },
   score: { editor: "enum", options: ["usual", "tiny", "tiny-negative"], default: "usual" },
 };
-export const VALS = `traceNote: this.props.view === "borrowed" ? "Every path here starts with an opinion @mira gave." : "Every path here starts with an opinion you gave.", ownPaths: this.props.view === "borrowed" ? "none" : "contents", borrowedPaths: this.props.view === "borrowed" ? "contents" : "none", flagScore: this.props.score === "tiny" ? "+0.0031" : this.props.score === "tiny-negative" ? "−0.00042" : "+15.20", path1: this.props.score === "tiny" ? "+0.0018" : this.props.score === "tiny-negative" ? "−0.00031" : "+6.80", path2: this.props.score === "tiny" ? "+0.00079" : this.props.score === "tiny-negative" ? "−0.000080" : "+4.20", path3: this.props.score === "tiny" ? "+0.00034" : this.props.score === "tiny-negative" ? "−0.000020" : "+2.60", path4: this.props.score === "tiny" ? "+0.00012" : this.props.score === "tiny-negative" ? "−0.000006" : "+1.10", moreScore: this.props.score === "tiny" ? "+0.000050" : this.props.score === "tiny-negative" ? "−0.000004" : "+0.50"`;
+export const VALS = `traceNote: this.props.view === "borrowed" ? "Every path here starts with an opinion @mira gave." : "Every path here starts with an opinion you gave.", ownPaths: this.props.view === "borrowed" ? "none" : "contents", borrowedPaths: this.props.view === "borrowed" ? "contents" : "none", flagScore: this.props.score === "tiny" ? "+0.0031" : this.props.score === "tiny-negative" ? "−0.00042" : "+15.20", path1: this.props.score === "tiny" ? "+0.0018" : this.props.score === "tiny-negative" ? "−0.00031" : "+6.80", path2: this.props.score === "tiny" ? "+0.00079" : this.props.score === "tiny-negative" ? "−0.000080" : "+4.20", path3: this.props.score === "tiny" ? "+0.00034" : this.props.score === "tiny-negative" ? "−0.000020" : "+2.60", path4: this.props.score === "tiny" ? "+0.00012" : this.props.score === "tiny-negative" ? "−0.000006" : "+1.10", path5: this.props.score === "tiny" ? "+0.000030" : this.props.score === "tiny-negative" ? "−0.000003" : "+0.30", path6: this.props.score === "tiny" ? "+0.000020" : this.props.score === "tiny-negative" ? "−0.000001" : "+0.20"`;
 export function Screen() {
   return (
     <>
@@ -90,45 +86,6 @@ export function Screen() {
             ))}
           </div>
 
-          {/* The quiet row. It is a text control and not a card: the four above
-              it are destinations and this one is a state change on this screen,
-              so it must not look like a fifth path. */}
-          <button
-            type="button"
-            className="cg-state cg-focus cg-hit"
-            aria-label={`Show ${SCORE_MORE_PATHS.count} more paths`}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "var(--space-2)",
-              width: "100%",
-              minHeight: "var(--touch-target-min)",
-              border: 0,
-              background: "none",
-              padding: "0 var(--space-3)",
-              cursor: "pointer",
-              fontFamily: "var(--font-sans)",
-              fontSize: "var(--text-label-small)",
-              letterSpacing: "var(--text-label-small--letter-spacing)",
-              fontWeight: "var(--text-label-small--font-weight)",
-              lineHeight: "var(--text-label-small--line-height)",
-              color: "var(--text-secondary)",
-              textAlign: "left",
-              boxSizing: "border-box",
-            }}
-            data-node="morePaths"
-          >
-            <span aria-hidden="true" style={{ flex: 1 }} data-node="label">
-              {SCORE_MORE_PATHS.count} more paths
-            </span>
-            <span
-              aria-hidden="true"
-              style={{ flex: "none", color: "var(--on-surface)", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: 500 }}
-              data-node="value"
-            >
-              {"{{moreScore}}"}
-            </span>
-          </button>
         </div>
       </ScoreColumn>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />

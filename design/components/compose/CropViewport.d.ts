@@ -13,13 +13,15 @@ export interface CropViewportProps {
   scale?: number;
   /** The picture's `transform-origin` — what dragging would change. */
   origin?: string;
-  /** The frame's edge; it is square and bleeds into both gutters. */
+  /** The stage's width (and its height unless `stageHeight` says otherwise); it bleeds into both gutters. */
   size?: number;
+  /** The stage's height: 390 × 488 for the post crop and the cover crop, under every shape. */
+  stageHeight?: number;
   /** The window's inset from left and right — the screen gutter. */
   inset?: number;
   /** The window's height; square by default. It is centred vertically, so a
    *  board states the ratio it wants and never a coordinate. */
-  height?: number;
+  height?: number | string;
   /** The arrow keys' pan, the drag's non-drag twin: called with (−1|0|1, −1|0|1) per press while the focused viewport holds focus; the picture stops where its edge meets the window's. */
   onPan?: (dx: number, dy: number) => void;
   /** The data-node name its placer gives the viewport (design ⇄ impl seam 002; renders as an attribute only). */
