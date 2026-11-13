@@ -43,10 +43,18 @@
    all` stands — reads `That didn't sign.` in the failure voice with `Retry`,
    which asks the whole closing again: the batch fails whole and says so once,
    as the kept picks' batch does on its one row (`Settings`' `kept`). The
-   line is a drawn copy and carries no name. */
+   line is a drawn copy and carries no name.
+
+   THE `count` CHIP DRAWS THE PAIR (round 48, seam 323-4): `two` is the
+   smallest the dialog meets, and two is a pair — the law's `Both leave your
+   list and both people are told.` and `…vouch either of them in…`, the title
+   keeping its digits (copy-voice, *The count is the sentence's*). */
 export const NODE = "invites";
-export const PROPS = { answer: { editor: "enum", options: ["asking", "closing", "closedFailed"], default: "asking" } };
-export const VALS = `askingShown: this.props.answer === "asking" ? "block" : "none", closingShown: this.props.answer === "closing" ? "block" : "none", closedFailedShown: this.props.answer === "closedFailed" ? "block" : "none"`;
+export const PROPS = {
+  answer: { editor: "enum", options: ["asking", "closing", "closedFailed"], default: "asking" },
+  count: { editor: "enum", options: ["four", "two"], default: "four" },
+};
+export const VALS = `askingShown: this.props.answer === "asking" ? "block" : "none", closingShown: this.props.answer === "closing" ? "block" : "none", closedFailedShown: this.props.answer === "closedFailed" ? "block" : "none", title: this.props.count === "two" ? "Close all 2 applications from this link?" : "Close all 4 applications from this link?", first: this.props.count === "two" ? "Both leave your list and both people are told. Their accounts stay as they are." : "All four leave your list and all four people are told. Their accounts stay as they are.", second: this.props.count === "two" ? "Any member can still vouch either of them in, and each gets a link to ask with." : "Any member can still vouch any of them in, and each gets a link to ask with."`;
 export function Screen() {
   return (
     <>
@@ -56,10 +64,10 @@ export function Screen() {
         <DialogSurface
           node="dialog"
           onScrimPress={() => {}}
-          title="Close all 4 applications from this link?"
+          title="{{title}}"
           body={[
-            "All four leave your list and all four people are told. Their accounts stay as they are.",
-            "Any member can still vouch any of them in, and each gets a link to ask with.",
+            "{{first}}",
+            "{{second}}",
           ]}
           actions={
             <>
@@ -72,10 +80,10 @@ export function Screen() {
       <div style={{ display: "{{closingShown}}" }}>
         <DialogSurface
           onScrimPress={() => {}}
-          title="Close all 4 applications from this link?"
+          title="{{title}}"
           body={[
-            "All four leave your list and all four people are told. Their accounts stay as they are.",
-            "Any member can still vouch any of them in, and each gets a link to ask with.",
+            "{{first}}",
+            "{{second}}",
           ]}
           actions={
             <>
