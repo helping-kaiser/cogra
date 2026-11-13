@@ -20,7 +20,7 @@ WHEN tap Mark as sensitive -> the post's edit opens AND NEVER the post is marked
 
 WHEN tap Remove -> the think-twice dialog opens
 
-WHEN tap postDetail.menuSheet.citedBy -> the menu closes AND what cites the post comes up in its Cited by sheet over the surface the menu was opened from
+WHEN tap postDetail.menuSheet.citedBy -> the menu closes AND what cites the post comes up over the surface the menu was opened from
 
 WHEN tap Opinions on this -> the menu closes AND the post's opinions sheet comes up over the surface the menu was opened from
 

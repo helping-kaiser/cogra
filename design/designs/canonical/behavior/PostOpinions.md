@@ -2,7 +2,7 @@
 
 ALWAYS postDetail.opinionsSheet opens over the post detail, the post still open beneath it, GIVEN it was opened from the detail's count line or the detail's menu
 
-ALWAYS the post's opinions sheet opens over the host, the list still open beneath it, GIVEN it was opened from Opinions on this in a card's menu — the feed, History, Saved, a profile or a tag page
+ALWAYS postDetail.opinionsSheet opens over the host, the list still open beneath it, GIVEN it was opened from Opinions on this in a card's menu — the feed, History, Saved, a profile or a tag page
 
 ALWAYS postDetail.opinionsSheet lists everyone holding an opinion on the post, the same for every reader, the author included
 

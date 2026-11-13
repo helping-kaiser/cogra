@@ -28,7 +28,7 @@ WHEN tap Cite in a new post -> the post wizard opens fresh at its first stage AN
 
 WHEN tap Cite in a new post GIVEN the reader is an applicant -> the menu closes AND the snackbar reads You can post once you're in. AND NEVER the wizard opens
 
-WHEN tap postDetail.menuSheet.citedBy -> the menu closes AND what cites the post comes up in its Cited by sheet over the surface the menu was opened from
+WHEN tap postDetail.menuSheet.citedBy -> the menu closes AND what cites the post comes up over the surface the menu was opened from
 
 WHEN tap Opinions on this -> the menu closes AND the post's opinions sheet comes up over the surface the menu was opened from
 

@@ -16,7 +16,7 @@ WHEN tap reel.menuSheet.save GIVEN the post is kept -> the sheet closes AND the 
 
 WHEN tap reel.menuSheet.cite -> the post wizard opens fresh at its first stage AND the post rides along unseen until the details stage
 
-WHEN tap reel.menuSheet.citedBy -> the menu closes AND what cites the post comes up in its Cited by sheet over the stream
+WHEN tap reel.menuSheet.citedBy -> the menu closes AND what cites the post comes up over the stream
 
 WHEN tap Opinions on this -> the menu closes AND the post's opinions sheet comes up over the stream
 
