@@ -128,6 +128,30 @@ fun cropRect(width: Int, height: Int, crop: CropSpec): PixelRect {
 }
 
 /**
+ * The `inSampleSize` to decode a [width] × [height] upright picture at, so
+ * that the region [crop] cuts from it still has at least [maxEdge] pixels on
+ * its long edge — the edge the pipeline downscales to — and no more than
+ * twice that.
+ *
+ * A camera picture of 50 or 200 megapixels decoded whole is hundreds of
+ * megabytes of heap twice over (the decode, then the orientation's copy),
+ * for an output of at most [maxEdge]. Android's own guidance is to decode
+ * large bitmaps subsampled by a power of two
+ * (developer.android.com/topic/performance/graphics/load-bitmap). The
+ * window is a fraction of the picture, so it cuts the same region of the
+ * subsampled bitmap. One pixel of margin keeps the decoder's rounding from
+ * landing the cut a pixel short of [maxEdge].
+ */
+fun cropSampleSize(width: Int, height: Int, crop: CropSpec, maxEdge: Int): Int {
+    if (width <= 0 || height <= 0 || maxEdge <= 0) return 1
+    val rect = cropRect(width, height, crop)
+    val longEdge = maxOf(rect.width, rect.height)
+    var sample = 1
+    while (longEdge / (sample * 2) - 1 >= maxEdge) sample *= 2
+    return sample
+}
+
+/**
  * The displayed dimensions of a recording that reports [rotation].
  *
  * A rotated recording states its *stored* dimensions, so the quarter

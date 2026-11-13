@@ -8,6 +8,7 @@ import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.cropRect
+import com.cogra.domain.media.cropSampleSize
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -32,9 +33,11 @@ class AndroidMediaProcessor(
     override suspend fun process(uri: String, crop: CropSpec): ProcessedPicture? =
         withContext(Dispatchers.IO) {
             val source = readBytes(uri) ?: return@withContext null
-            val decoded = BitmapFactory.decodeByteArray(source, 0, source.size)
-                ?: return@withContext null
-            val upright = decoded.applyOrientation(ImageProcessing.orientationOf(source))
+            val orientation = ImageProcessing.orientationOf(source)
+            val decoded = decodeForCrop(source, orientation, crop) ?: return@withContext null
+            // The window is a fraction of the UPRIGHT picture — what the crop
+            // stage drew — so the orientation is applied before it is cut.
+            val upright = decoded.applyOrientation(orientation)
             val cropped = upright.cropped(crop)
             val processed = ImageProcessing.processBitmap(cropped)
 
@@ -58,6 +61,25 @@ class AndroidMediaProcessor(
         val width = if (rotated) bounds.outHeight else bounds.outWidth
         val height = if (rotated) bounds.outWidth else bounds.outHeight
         width.toFloat() / height.toFloat()
+    }
+
+    /**
+     * The picture decoded subsampled ([cropSampleSize]): large enough that
+     * the framed region still fills the output, and no larger. The header is
+     * read first (`inJustDecodeBounds`); its dimensions are pre-rotation, so
+     * a quarter turn swaps them before the window is measured against them.
+     */
+    private fun decodeForCrop(source: ByteArray, orientation: Int, crop: CropSpec): Bitmap? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(source, 0, source.size, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+        val turned = orientation in QUARTER_TURNS
+        val width = if (turned) bounds.outHeight else bounds.outWidth
+        val height = if (turned) bounds.outWidth else bounds.outHeight
+        val options = BitmapFactory.Options().apply {
+            inSampleSize = cropSampleSize(width, height, crop, ImageProcessing.MAX_EDGE_PX)
+        }
+        return BitmapFactory.decodeByteArray(source, 0, source.size, options)
     }
 
     private fun readBytes(uri: String): ByteArray? = runCatching {
