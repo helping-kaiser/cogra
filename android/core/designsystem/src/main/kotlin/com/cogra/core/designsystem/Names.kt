@@ -57,10 +57,10 @@ private val HANDLE = Regex("""(?<![\w@])@[A-Za-z0-9_]+""")
 private val UNIT_TAIL = Regex("""^(?:['’]s\b|[?.,!:;)’]+)""")
 
 /** U+2060 WORD JOINER: no line break on either side (UAX #14 LB11). */
-val WORD_JOINER: Char = Char(0x2060)
+const val WORD_JOINER: Char = '\u2060'
 
 /** The ellipsis `TextOverflow.Ellipsis` draws. */
-internal val ELLIPSIS: String = Char(0x2026).toString()
+internal const val ELLIPSIS: String = "\u2026"
 
 /**
  * Marks a one-line place that [NameInLine] split, with the handle that yields
