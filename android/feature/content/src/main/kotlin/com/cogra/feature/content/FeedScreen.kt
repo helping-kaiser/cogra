@@ -1298,10 +1298,12 @@ internal data class CardPlacement(
 )
 
 /**
- * The rows the feed's menus register (`feed.menuSheet.*`): the reader's
- * (FeedPostMenu) and the author's own (FeedPostMenuOwn).
+ * The rows a host's post menus register under its sheet: the reader's and the
+ * author's own — `feed.menuSheet.*` (FeedPostMenu, FeedPostMenuOwn), and the
+ * same set under `history.`, `saved.` and `profile.menuSheet` (HistoryPostMenu,
+ * SavedPostMenu, ProfilePostsMenu and their own boards).
  */
-private val FEED_MENU_ROWS = setOf(
+internal val POST_MENU_ROWS = setOf(
     PostMenuRow.Save,
     PostMenuRow.Cite,
     PostMenuRow.Hide,
@@ -1317,7 +1319,7 @@ internal val FEED_PLACEMENT = CardPlacement(
     menuSheet = FEED / "menuSheet",
     licenseSheet = FEED / "licenseSheet",
     tag = "feed",
-    menuRows = FEED_MENU_ROWS,
+    menuRows = POST_MENU_ROWS,
     dialog = FEED / "dialog",
 )
 
