@@ -2593,10 +2593,12 @@ card's act is the stance face, and one line beside it teaches the tap:
 with no first-opinion words, because the card stands while the member
 holds other opinions (jakob's own, 2026-10-13). The
 pad's title and its "?" read `Your vouch back`, and the line above its
-two coaching lines opens on the title: `Your vouch back. The pad is how you shape what
-reaches you — for or against, and how much.` *Carried over — blessed by
+field opens on the title: `Your vouch back. The pad is how you shape what
+reaches you — for or against, and how much.`, `Nothing is signed until
+Set.` under it on the first-ever pad open; the coaching lives in the help
+`Your vouch back` alone (jakob 2026-11-12). *Carried over — blessed by
 use (jakob 2026-10-06):* the card's title `@mira vouched you in`
-(`VouchBack`, `VouchBackPad`), and the pad's first coaching line, `Later,
+(`VouchBack`, `VouchBackPad`), and the help's coaching line, `Later,
 tap the small face under a post to open this — press and hold it instead
 and a gentle 🙂 *(+0.10 / +0.10)* is signed on the spot.` The band's line keeps
 *first opinion*: the borrowed view does end on the first opinion,
@@ -3089,8 +3091,8 @@ no hint, as search's do. (*new 2026-10-05, blessed (jakob 2026-10-05)*: `Search 
 (`HistoryNone`): a query nothing seen carries reads `Nothing you've seen
 carries that name.` before `Search reads names and titles, never bodies —
 fewer words reach further.` (the sentence `ExploreNone` no longer
-carries: its `How searching works` "?" holds it; here, whether it moves
-behind a "?" is open); kinds that hold
+carries: its `How searching works` "?" holds it; here it stays, History
+having no "?" — kept by jakob 2026-11-12, question 13, backlog 192); kinds that hold
 nothing seen read `Nothing you've seen is of that kind.`; and both offer
 `Show everything`, which clears the query and the kinds at once (*new
 2026-10-05, blessed (jakob 2026-10-05)*: the two first sentences and
