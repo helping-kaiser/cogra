@@ -316,6 +316,20 @@ async fn execution_redacts_identity_and_keeps_every_record(pool: PgPool) {
     let address = sol.key.address();
     let records_before = mirrored_by(&rig, &address).await;
     assert!(records_before >= 1, "the profile update landed");
+    // The Registrations that carried bytes, read from the staged rows
+    // before the execution reaps them. The payload mark is itself read off
+    // carriage, so it cannot be what picks the acts whose carriage is
+    // checked.
+    let mut with_bytes: Vec<String> = sqlx::query_scalar(
+        "SELECT m.record_id FROM mirror_records m
+         JOIN staged_writes s ON s.act_id = m.record_id
+         WHERE m.author = $1 AND m.family = 'registration' AND length(s.payload) > 0",
+    )
+    .bind(&address)
+    .fetch_all(&rig.pool)
+    .await
+    .expect("registrations with bytes");
+    with_bytes.sort();
 
     let done = tick(&rig).await;
     assert_eq!(done.executed, vec![sol.id]);
@@ -376,7 +390,7 @@ async fn execution_redacts_identity_and_keeps_every_record(pool: PgPool) {
         Some("user-account-deletion")
     );
     assert_eq!(current.display_name, "");
-    let registration_records: Vec<String> = sqlx::query_scalar(
+    let mut registration_records: Vec<String> = sqlx::query_scalar(
         "SELECT record_id FROM mirror_records
          WHERE author = $1 AND family = 'registration' AND payload_marked",
     )
@@ -384,8 +398,13 @@ async fn execution_redacts_identity_and_keeps_every_record(pool: PgPool) {
     .fetch_all(&rig.pool)
     .await
     .expect("records");
-    assert!(!registration_records.is_empty());
-    for record in &registration_records {
+    registration_records.sort();
+    assert!(!with_bytes.is_empty(), "the admission handle carried bytes");
+    assert_eq!(
+        registration_records, with_bytes,
+        "exactly the Registrations that carried bytes are marked"
+    );
+    for record in &with_bytes {
         let state: String =
             sqlx::query_scalar("SELECT payload_state FROM act_payloads WHERE act_id = $1")
                 .bind(record)
