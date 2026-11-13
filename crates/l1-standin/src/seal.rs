@@ -14,7 +14,7 @@
 
 use common::l1::census::FamilyKind;
 use common::l1::crypto;
-use common::l1::handshake::{ApprovalWitness, approval_digest};
+use common::l1::handshake::{ApprovalWitness, approval_digest, is_canonical_dep_list};
 use common::l1::identifier::{ActId, NodeId};
 use common::l1::proposal::{
     CONTENT_EDITION, DEPENDENCY_EDITION, SealedAct, Submission, SubmissionError, VerifiedAct,
@@ -52,7 +52,10 @@ fn formation(msg: impl Into<String>) -> StandInError {
 ///   toward an existing Offer would hang a second Item's incidence on
 ///   it — real raw incidence, live in CAN and sentiment even where no
 ///   fold reads it. Offer revision is a new Offer.
-/// - **Dependency bounds**, checked against `MAX_DEPS`. The payload bound
+/// - **Dependency bounds**, checked against `MAX_DEPS`, and the list's own
+///   form: no self-dependency, and strictly ascending under
+///   [`common::l1::handshake::dependency_order`] — sorted and
+///   duplicate-free (§8.2, "Act dependency projection"). The payload bound
 ///   is a carriage check and the content nonce's format, length,
 ///   freshness and non-reuse are carriage obligations, none of them a
 ///   condition of the act (§8.2, "Verified act" and "Proposal
@@ -123,6 +126,14 @@ pub(crate) async fn seal(
 
     if submission.deps.len() + body.asserted_parents.len() > MAX_DEPS {
         return Err(formation("dependency list exceeds the bound"));
+    }
+    if submission.deps.contains(&act_id) {
+        return Err(formation(format!("{act_id} names itself as a dependency")));
+    }
+    if !is_canonical_dep_list(&submission.deps) {
+        return Err(formation(
+            "dependency list is not strictly ascending by act identifier",
+        ));
     }
     if body.seq > i64::MAX as u64 {
         return Err(formation(format!(

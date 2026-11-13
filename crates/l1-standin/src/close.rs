@@ -3,8 +3,10 @@
 //! Epoch close and publication (layer1-interface.md §11.6, §8.3, §11.7).
 //!
 //! Selection among valid ordered sequences is host discretion (§11.6):
-//! this host takes approved acts in approval order, defers any act whose
-//! declared dependencies or asserted parents are not yet in history,
+//! this host takes approved acts in approval order, leaves out any act
+//! whose stored dependency list no longer opens its dependency commitment
+//! (§8.2, "Approval witness"), defers any act whose declared dependencies
+//! or asserted parents are not yet in history,
 //! defers any act whose author cannot pay θ (W1 — the author stays free
 //! to burn and land later), and caps the epoch at the act budget. The
 //! W2a/W2b evaluation points are here so the real substrate's verdicts
@@ -80,6 +82,7 @@ use common::l1::handshake::{
     MarkerPolicy, PublishedLeg, PublishedRecord, Ratio, WallStep,
 };
 use common::l1::identifier::NodeId;
+use common::l1::proposal::dependency_commitment;
 use sqlx::PgConnection;
 
 use crate::seal::{projection_legs, stored_body};
@@ -394,7 +397,10 @@ fn linearizes(
 /// Closes the current epoch: loads the approved acts and the ledger state,
 /// runs [`select_and_order`], and persists what it returns (§11.6, §8.3,
 /// §11.7). The lock taken first serializes concurrent closes on the epoch
-/// table.
+/// table. An approved act whose dependency opening does not match
+/// ([`dependency_opening_matches`]) never reaches the selection: it stays
+/// approved, unordered, exactly as a deferred act does, and an act that
+/// depends on it defers with it.
 ///
 /// Persisted with the accepted acts' causal keys and legs: the θ-debit and
 /// count increment, consummated at the writing epoch's price and never
@@ -423,7 +429,7 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, Stand
     let rows = sqlx::query!(
         "SELECT act_id, author, seq, family, middle, target, p_d, p_i,
                 settlement_ref, license, asserted_parents, deps,
-                content_commitment
+                pre_commitment, deps_salt, deps_commitment, content_commitment
          FROM l1_acts WHERE status = 'approved'
          ORDER BY approved_at, act_id",
     )
@@ -432,13 +438,27 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, Stand
 
     let mut candidates = Vec::with_capacity(rows.len());
     for row in &rows {
+        let body = stored_body!(row).to_body()?;
+        if !dependency_opening_matches(
+            &body.act_id(),
+            &row.pre_commitment,
+            &row.deps_salt,
+            &row.deps,
+            &row.deps_commitment,
+        ) {
+            tracing::warn!(
+                act_id = %row.act_id,
+                "dependency opening does not match its commitment; not ordered in this close"
+            );
+            continue;
+        }
         let parents = causal_parents(&row.asserted_parents, row.settlement_ref.as_ref());
         let mut prerequisites = row.deps.clone();
         prerequisites.extend(parents.iter().cloned());
         candidates.push(Candidate {
             act_id: row.act_id.clone(),
             author: row.author.clone(),
-            body: stored_body!(row).to_body()?,
+            body,
             payload_witness: row.content_commitment.clone(),
             prerequisites,
             parents,
@@ -473,6 +493,29 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, Stand
     tx.commit().await?;
 
     Ok(package)
+}
+
+/// Whether a stored act's dependency opening — the act identifier, the
+/// pre-commitment, the dependency salt and the list — still recomputes the
+/// dependency commitment it was sealed and approved under
+/// (layer1-interface.md §8.2, "Approval witness": the host rejects from
+/// candidate ordering an act whose dependency opening no longer matches).
+/// A list that no longer parses opens nothing, so it does not match.
+pub(crate) fn dependency_opening_matches(
+    act_id: &common::l1::ActId,
+    pre_commitment: &[u8],
+    salt: &[u8],
+    deps: &[String],
+    commitment: &[u8],
+) -> bool {
+    let Ok(deps) = deps
+        .iter()
+        .map(|d| common::l1::ActId::parse(d))
+        .collect::<Result<Vec<_>, _>>()
+    else {
+        return false;
+    };
+    dependency_commitment(act_id, pre_commitment, salt, &deps).as_slice() == commitment
 }
 
 /// The ledger state a selection reads, loaded under the close's lock: every
@@ -1378,6 +1421,31 @@ mod tests {
         assert!(matches!(
             linearizes(low_time, &[&unknown[..]], &history),
             Err(StandInError::Host(_))
+        ));
+    }
+
+    /// The opening matches exactly the list it was committed over: a
+    /// reordered, shortened or unparseable list opens nothing.
+    ///
+    /// A dependency opening matches only the exact list its commitment was formed over.
+    /// ´claim:close:a-dependency-opening-matches-only-its-own-list´
+    #[test]
+    fn a_dependency_opening_matches_only_its_own_list() {
+        let act = ActId::new("alice", 4, Family::Opinion).expect("valid");
+        let (pre, salt) = ([7u8; 32], [9u8; 32]);
+        let list = vec![id("bob", 10), id("bob", 9)];
+        let parsed: Vec<ActId> = list
+            .iter()
+            .map(|d| ActId::parse(d).expect("valid"))
+            .collect();
+        let commitment = dependency_commitment(&act, &pre, &salt, &parsed);
+        let opens = |deps: &[String]| dependency_opening_matches(&act, &pre, &salt, deps, &commitment);
+        assert!(opens(&list));
+        assert!(!opens(&[list[1].clone(), list[0].clone()]));
+        assert!(!opens(&list[..1]));
+        assert!(!opens(&["not an act".to_string(), list[1].clone()]));
+        assert!(!dependency_opening_matches(
+            &act, &pre, &[0u8; 32], &list, &commitment
         ));
     }
 

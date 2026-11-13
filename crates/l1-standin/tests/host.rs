@@ -647,6 +647,102 @@ async fn seal_rejects_formation_failures(pool: PgPool) {
     assert!(host.close_epoch().await.expect("ok").records.is_empty());
 }
 
+/// Three foreign opinion identifiers in canonical order: the text bytes
+/// put sequence 10 before sequence 9.
+fn foreign_deps() -> Vec<ActId> {
+    ["act:elsewhere:10:opinion", "act:elsewhere:9:opinion", "act:other:0:opinion"]
+        .into_iter()
+        .map(|s| ActId::parse(s).expect("ok"))
+        .collect()
+}
+
+/// Seals `deps` on a fresh opinion and reports the refusal, after checking
+/// that the refused act left no row behind.
+async fn refused_with(host: &StandIn, actor: &ActorKey, deps: Vec<ActId>) -> StandInError {
+    let proposal = opinion(actor, 1, "bob", deps);
+    let act_id = proposal.body.act_id();
+    let err = seal_of(host, actor, proposal).await.expect_err("refused");
+    assert!(
+        host.sealed_act(&act_id).await.expect("reads").is_none(),
+        "a refused act leaves no row"
+    );
+    err
+}
+
+/// An act whose dependency list names the act itself could never be
+/// ordered: the seal refuses it as a formation failure and stores nothing.
+///
+/// A dependency list naming the act's own identifier is refused at seal and leaves no row.
+/// ´claim:seal:a-self-dependency-is-refused´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_self_dependent_act_is_refused_and_leaves_no_row(pool: PgPool) {
+    let host = standin(pool);
+    let actor = funded_actor(&host, 3 * THETA).await;
+    let own = ActId::new(&actor.address(), 1, Family::Opinion).expect("ok");
+    let mut deps = foreign_deps();
+    deps.push(own);
+    deps.sort_by(common::l1::handshake::dependency_order);
+    assert!(matches!(
+        refused_with(&host, &actor, deps).await,
+        StandInError::Formation(_)
+    ));
+}
+
+/// A dependency list out of canonical order is refused, even when it
+/// names the same acts a canonical one would.
+///
+/// A dependency list that is not sorted by act identifier is refused at seal and leaves no row.
+/// ´claim:seal:an-unsorted-dependency-list-is-refused´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_unsorted_dependency_list_is_refused(pool: PgPool) {
+    let host = standin(pool);
+    let actor = funded_actor(&host, 3 * THETA).await;
+    let mut deps = foreign_deps();
+    deps.reverse();
+    assert!(matches!(
+        refused_with(&host, &actor, deps).await,
+        StandInError::Formation(_)
+    ));
+}
+
+/// A dependency named twice is refused, however the rest is ordered.
+///
+/// A dependency list naming one act twice is refused at seal and leaves no row.
+/// ´claim:seal:a-duplicate-dependency-is-refused´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_dependency_list_with_a_duplicate_is_refused(pool: PgPool) {
+    let host = standin(pool);
+    let actor = funded_actor(&host, 3 * THETA).await;
+    let mut deps = foreign_deps();
+    deps.insert(1, deps[1].clone());
+    assert!(matches!(
+        refused_with(&host, &actor, deps).await,
+        StandInError::Formation(_)
+    ));
+}
+
+/// The canonical empty list and a canonical list of several acts both
+/// seal, and the stored opening carries the list exactly as signed.
+///
+/// The canonical empty list and a strictly ascending list both seal and are stored as signed.
+/// ´claim:seal:canonical-dependency-lists-seal´
+#[sqlx::test(migrations = "../../migrations")]
+async fn canonical_dependency_lists_seal(pool: PgPool) {
+    let host = standin(pool);
+    let actor = funded_actor(&host, 3 * THETA).await;
+    for (seq, deps) in [(1, vec![]), (2, foreign_deps())] {
+        let proposal = opinion(&actor, seq, "bob", deps.clone());
+        let act_id = proposal.body.act_id();
+        seal_of(&host, &actor, proposal).await.expect("seals");
+        let stored = host
+            .sealed_act(&act_id)
+            .await
+            .expect("reads")
+            .expect("stored");
+        assert_eq!(stored.deps, deps);
+    }
+}
+
 /// M_payload is a carriage bound, not an act check (layer1-interface.md
 /// §8.2, "Verified act"), and the host never holds the pair it bounds: a
 /// proposal whose payload is over the configured bound seals and lands.
@@ -1080,6 +1176,58 @@ async fn dependencies_defer_and_order(pool: PgPool) {
         reg_time < op_time,
         "dependency at strictly lower causal key"
     );
+}
+
+/// An approved act whose stored dependency list no longer opens the
+/// commitment it was sealed under is rejected from candidate ordering:
+/// not ordered, and left approved for a later close, like an act whose
+/// dependencies are unsatisfiable — and its dependent defers with it,
+/// while an untouched act in the same close lands. The tampered list here
+/// is the empty one, which any close could satisfy, so the opening alone
+/// keeps the act out. Restoring the row lets both land.
+///
+/// An act whose dependency opening no longer matches is not ordered, its dependents defer with it, and the rest of the close lands.
+/// ´claim:close:a-mismatched-dependency-opening-is-not-ordered´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_mismatched_dependency_opening_is_not_ordered(pool: PgPool) {
+    let host = standin(pool.clone());
+    let alice = funded_actor(&host, 10 * THETA).await;
+    let untouched = submit(&host, &alice, opinion(&alice, 1, "bob", vec![])).await;
+    let tampered = submit(
+        &host,
+        &alice,
+        opinion(&alice, 2, "carol", vec![untouched.clone()]),
+    )
+    .await;
+    let dependent = submit(
+        &host,
+        &alice,
+        opinion(&alice, 3, "dave", vec![tampered.clone()]),
+    )
+    .await;
+
+    sqlx::query("UPDATE l1_acts SET deps = ARRAY[]::TEXT[] WHERE act_id = $1")
+        .bind(tampered.to_string())
+        .execute(&pool)
+        .await
+        .expect("tamper");
+    let package = host.close_epoch().await.expect("closes");
+    let landed: Vec<ActId> = package.records.iter().map(|r| r.act_id.clone()).collect();
+    assert_eq!(landed, vec![untouched.clone()]);
+    for id in [&tampered, &dependent] {
+        let stored = host.sealed_act(id).await.expect("reads").expect("kept");
+        assert!(stored.approved, "{id} stays approved for a later close");
+    }
+
+    sqlx::query("UPDATE l1_acts SET deps = ARRAY[$2] WHERE act_id = $1")
+        .bind(tampered.to_string())
+        .bind(untouched.to_string())
+        .execute(&pool)
+        .await
+        .expect("restore");
+    let package = host.close_epoch().await.expect("closes");
+    let landed: Vec<ActId> = package.records.iter().map(|r| r.act_id.clone()).collect();
+    assert_eq!(landed, vec![tampered, dependent]);
 }
 
 /// A hyper act (Tag) projects two legs at one causal key: the A-leg
