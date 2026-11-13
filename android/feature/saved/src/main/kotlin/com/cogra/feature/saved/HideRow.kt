@@ -87,7 +87,10 @@ data class HiddenWords(
     /** `Hide @ada`, or `Hide this account` (`ActorChip.jsx:67`). */
     fun row(person: HiddenPerson): String = if (person.nameless) hideNameless else hideNamed.format("@${person.handle}")
 
-    /** `Unhide @ada`, or `Unhide this account` — the hide row while the person is hidden (`ActorChip.jsx` `UNHIDE_ACTOR_LABEL`). */
+    /**
+     * `Unhide @ada`, or `Unhide this account` — the hide row while the person
+     * is hidden (`ActorChip.jsx` `UNHIDE_ACTOR_LABEL`).
+     */
     fun unhideRow(person: HiddenPerson): String =
         if (person.nameless) unhideNameless else unhideNamed.format("@${person.handle}")
 

@@ -66,6 +66,9 @@ class PostMenuHostsTest {
     private val adaHiddenAt: Instant = Instant.parse("2026-11-01T09:00:00Z")
     private val byAda: PostView = testPost("p1", author = ada)
 
+    /** The same post as Saved holds it: kept. */
+    private val kept: PostView = byAda.copy(viewerBookmarkedAt = Instant.now())
+
     private val hiddenRepository = RecordingHiddenRepository()
     private val tokens = FakeTokenStore().apply { tokens.value = AuthTokens("a", "r", "reader-id") }
 
@@ -112,7 +115,9 @@ class PostMenuHostsTest {
                 Column {
                     SavedScreen(
                         state = SavedUiState(
-                            entries = listOf(SavedEntry(SavedCard.Post(byAda.copy(viewerBookmarkedAt = Instant.now())), Instant.now())),
+                            entries = listOf(
+                                SavedEntry(SavedCard.Post(kept), Instant.now()),
+                            ),
                             loading = false,
                         ),
                         writes = writes(),
