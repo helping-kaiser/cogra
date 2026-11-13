@@ -16,7 +16,7 @@
    REGISTERED under the `signIn` prefix (round 28, seam 254 A1), with
    `SignInError`, `SignInExpired` and `SignInLimited`, named as the credential
    family names its screens (`ChangePassword`): `title`, `body`, the fields
-   `email` and `password`, the commit with its reason `commit`. The remember
+   `email` and `password`, the commit `commit`. The remember
    box is `forget`, as Settings names the same words' row; the four ways round
    it are `forgot`, `invite`, `browse` and `apk`. */
 export const NODE = "signIn";

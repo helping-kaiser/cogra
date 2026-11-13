@@ -20,8 +20,9 @@
    the form opens — the inviter's approval comes after the account does — so
    the heading reads `Mira Voss invited you`, the entry flow's *invited, never
    vouched*. It names the inviter by the whole display name, else by the
-   handle, and wraps as running text, never cutting the name (jakob
-   2026-11-11, J1).
+   handle, and wraps as running text, the name one unit that never stands on
+   two lines: whole on a line, or cut at its end with "…" when longer than
+   the line (`NameInText`, the long-names rule's case 3; jakob 2026-11-11).
 
    THE ARROW READS A BARE `Back` — the funnel exception (readme §4,
    *Navigation*): the entry funnel's screens carry no origin nouns, and the
@@ -47,7 +48,7 @@
    `email` and `password` (the credential family's names) and the password's
    repeat `confirm` (`RecoveryCode`'s name for the field that types a thing
    back; round 38, jakob's J2: every new password is asked twice), the legal lines
-   `terms` and `privacy`, the commit with its reason `commit`, and the account
+   `terms` and `privacy`, the commit `commit`, and the account
    switch `signInDoor` — a name that does not bar the sidecar's `Sign in`
    (round 23: a name never forbids its own words). */
 export const NODE = "join";
@@ -65,10 +66,11 @@ export function Screen() {
               letterSpacing: "var(--text-headline-small--letter-spacing)",
               lineHeight: "var(--text-headline-small--line-height)",
               fontWeight: "var(--text-headline-small--font-weight)",
+              maxWidth: "100%",
             }}
             data-node="title"
           >
-            Mira Voss invited you
+            <NameInText text="Mira Voss invited you" names={["Mira Voss"]} />
           </h1>
           <p
             style={{

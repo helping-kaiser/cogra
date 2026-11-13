@@ -389,9 +389,11 @@ the wording **blessed (jakob 2026-10-02)**).
 ## The "?" dialogs
 
 Compose keeps captions to one short line; the full explanation lives
-behind a small "?" (at most one per screen, save the stopper exception:
-a notice that stops the surface's one act carries its own beside the
-header's — readme §13, *The compose flow*) opening a plain dialog:
+behind a small "?" (at most one per screen, save two exceptions: a
+notice that stops the surface's one act carries its own beside the
+header's — readme §13, *The compose flow* — and Settings carries one
+beside each section heading that needs it, `Giving an opinion` and
+`Reading`, jakob 2026-11-12) opening a plain dialog:
 title, at most two short paragraphs, Close. On the stance pad the "?"
 opens nothing: its text replaces the pad's body in place, with `Back to
 the pad` (readme §11; jakob 2026-10-05, the collected brief's D4) — the
@@ -490,7 +492,10 @@ noun):
   you sign when you approve them — is what brings them in. / Nothing is
   signed until Set. *(New 2026-10-05, blessed (jakob 2026-10-05) — jakob's D4:
   the Invites empty state's two blessed sentences on the mechanic, then
-  the pads' own `Nothing is signed until Set.`)*
+  the pads' own `Nothing is signed until Set.` On the empty Invites, beside
+  `Create invite`, the same "?" opens it as a dialog with the first
+  paragraph alone — the page has no Set (jakob 2026-11-12, the re-ask's
+  4).)*
 
   *The italicised tails are the `cg-exact` spans: the face is drawn in
   both reading modes, the digits only when the reader has asked for
@@ -544,6 +549,16 @@ noun):
   sentence is jakob's own, blessed 2026-10-02: one sentence for the
   feed's, search's and the settings sheet. The feed's seen sentence
   follows the seen tail, jakob 2026-10-14.)*
+- **Giving an opinion** (Settings, beside the section's heading): A tap
+  opens it; drift to where it feels right. / One slider per side of the
+  opinion. *(The pad's and the sliders' row hints, moved whole from the
+  page — jakob 2026-11-12, the re-ask's 8 (a); each blessed with the
+  settings round.)*
+- **Reading** (Settings, beside the section's heading): Every feed starts
+  from what it shows, and a change made inside a feed lasts until you
+  change it back. Both choices stay on this device. *(The group's
+  footnote, moved whole — jakob 2026-11-12, the re-ask's 8 (a); blessed
+  2026-10-05.)*
 
 **A "?" is named by the dialog it opens.** Its accessible name is that
 dialog's own subject, so a listener hears which explanation the tap
@@ -1183,12 +1198,13 @@ field:
 ## Commits that wait
 
 A form's commit stays disabled until its fields hold something (readme
-§4, *Interaction states*), and one quiet line right above it says what
-it waits for, in the voice for what something waits on (`Waiting for
-your key`) — the construction `Report a problem`'s empty foot first
-drew. One line per form (`WaitingCommit`; *new 2026-10-05, blessed
-(jakob 2026-10-05)*):
+§4, *Interaction states*), with nothing on screen about why (jakob
+2026-11-12). What it waits for is the commit's spoken description
+alone, in the voice for what something waits on (`Waiting for your
+key`). One description per form (`WaitingCommit`; *new 2026-10-05,
+blessed (jakob 2026-10-05)*):
 
+- `Waiting for both passwords` — `ChangePassword`.
 - `Waiting for a new handle` — `ChangeHandle`.
 - `Waiting for a new email and your password` — `ChangeEmail`,
   `ApplicantEmail`.
@@ -1201,9 +1217,7 @@ drew. One line per form (`WaitingCommit`; *new 2026-10-05, blessed
 - `Waiting for a handle, your email and a password` — `Join`.
 - `Waiting for a new password` — `ResetNew`.
 
-`ChangePassword` carries none: its commit simply stays disabled until the
-three fields hold something — the wait explains itself (jakob 2026-11-11,
-R2). `Report a problem` carries none: its `Send by email` only prefills a
+`Report a problem` carries none: its `Send by email` only prefills a
 draft, which is no commit for the law to gate.
 
 ## Menu rows
@@ -1867,12 +1881,12 @@ device.` It is the one place a bare "device" is right: what Auto follows
 is the device's own light-or-dark setting, which is neither the browser's
 nor the app's.
 
-**Giving an opinion** keeps the shipped readings and gives them the
-hints the inverted gesture needs — `The pad` / `A tap opens it; drift to
-where it feels right.`, `Sliders` / `One slider per side of the opinion.`,
+**Giving an opinion** keeps the shipped readings — `The pad`, `Sliders`,
 `Typed values` / `Type both numbers exactly.` — over a footnote read
 once for the group: `A tap opens this, everywhere. Press and hold
-instead, and a small positive one is signed on the spot.`
+instead, and a small positive one is signed on the spot.` The pad's and
+the sliders' background stands behind the heading's "?" (*The "?"
+dialogs*, jakob 2026-11-12).
 
 **The multi-action switch**, merged from the two apps:
 `Confirm multi-action submits` with
@@ -1893,10 +1907,8 @@ one line the settings route still owes a reading.
 **Reading**: `What your feed shows` — the filter sheet's own accessible
 name and the purpose the trigger's name ends on, so the row and the
 trigger cannot say different things — with the default read back
-through the trigger's own words (`Posts`). Under the group: `Every feed
-starts from what it shows, and a change made inside a feed lasts until
-you change it back. Both choices stay on this device.` *(The drawn
-sentence; copy-voice follows the board, blessed (jakob 2026-10-05).)*
+through the trigger's own words (`Posts`). The group's scope stands
+behind the heading's "?" (*The "?" dialogs*, jakob 2026-11-12).
 
 **Sensitive content**: one switch, `Always unveil sensitive content`
 (jakob's own wording, 2026-10-09 — never a sheet, never a pair of
@@ -2777,7 +2789,8 @@ The naming law above is part of the same ruling and is written where it
 belongs.
 
 **The gesture, said in the settings group.** `Giving an opinion` is the
-group, `A tap opens it; drift to where it feels right.` the pad's hint, and
+group, `A tap opens it; drift to where it feels right.` the pad's hint
+behind its "?", and
 `A tap opens this, everywhere. Press and hold instead, and a small
 positive one is signed on the spot.` the footnote — the one place the
 shortcut and the price are said together.
@@ -3897,10 +3910,11 @@ the one the bottom bar (`New post`) and the empty feed (`write the
 first post`) already keep. The button and the sheet it raises say one
 word between them.
 
-**The empty state carries the whole mechanic in three sentences**:
-`No invites out yet. A link lets someone make an account. Your vouch —
-the opinion you sign when you approve them — is what brings them in.`
-The two halves are said APART because every other product conflates
+**The empty state says one thing, and the mechanic stands behind its
+"?"** (jakob 2026-11-12): `No invites out yet.`, and beside `Create
+invite` the "?" `How vouching works` opens `A link lets someone make an
+account. Your vouch — the opinion you sign when you approve them — is
+what brings them in.` The two halves are said APART because every other product conflates
 them and a reader who does will be surprised by the second. *Vouch* is
 the product's word and a reader's unfamiliar one, so it is explained
 where it stands rather than left to be guessed. `brings them in` is

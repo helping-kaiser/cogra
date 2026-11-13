@@ -40,6 +40,14 @@ ALWAYS the groups stand by their oldest waiting application and the rows by age 
 
 ALWAYS the queue is never ordered by whether the reader can act on a row
 
+ALWAYS Applications shows the queue's first three rows in its grouped order, each under its group's label as the groups fall, and under the third invites.applicationsDoor, Show all, an inline action under the rows GIVEN more than three applications wait
+
+ALWAYS Applications shows every row and no invites.applicationsDoor GIVEN three applications wait or fewer
+
+ALWAYS a kept approval stands above the three and is never counted among them
+
+WHEN tap invites.applicationsDoor -> every waiting application stands in the queue, in its grouped order, in place AND invites.applicationsDoor leaves AND NEVER anything else leaves the page AND NEVER a control to show fewer appears
+
 ALWAYS a group carries Close all GIVEN more than one application in it waits
 
 ALWAYS a group carries no batch control GIVEN one application in it waits
