@@ -38,7 +38,9 @@ WHEN tap profile.comments.commentCard.target -> the thread it lives in opens scr
 
 WHEN tap Reply on a comment -> the thread the comment lives in opens scrolled to that comment
 
-WHEN tap profile.comments.viewReplies -> the thread the comment lives in opens scrolled to that comment
+ALWAYS a profile.comments.commentCard carries no view-replies line
+
+WHEN profile.comments.commentCard is tapped outside profile.comments.commentCard.target and its own controls -> the post's comment section opens scrolled to that comment
 
 ALWAYS every profile.comments.commentCard.actionRow.reply wears the locked look, at the disabled opacity and still tappable GIVEN the reader is an applicant
 

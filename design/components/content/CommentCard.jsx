@@ -24,7 +24,13 @@ import { NodeMark } from "./ReferenceRow.jsx";
    and its replies indented once. Anything deeper flattens into that one reply
    level and opens with the @handle it answers — the mention IS the structure,
    so the column never narrows to a word. Replies arrive COLLAPSED behind a
-   "View n replies" line (`replyCount`); `replies` renders them expanded. */
+   "View n replies" line (`replyCount`); `replies` renders them expanded.
+
+   THE REPLIES LIVE IN THE THREAD ONLY (jakob 2026-11-13). A comment card in a
+   list — the feed, History, Saved, a profile's Comments tab, a tag page,
+   search — is about the comment itself and passes neither `replyCount` nor
+   `replies`: a tap on the card lands on its post with the thread sheet open,
+   scrolled to that comment, and the "View n replies" line stands there. */
 
 const MAX_INDENT_DEPTH = 1;
 
