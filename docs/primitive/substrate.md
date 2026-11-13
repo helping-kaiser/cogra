@@ -100,8 +100,9 @@ storage — partitioned around the L1 seam:
   traversals consume (feed ranking, attribution, membership folds);
   the traversal itself runs hop-by-hop in CoGra's own code over
   indexed record tables. The mirror may lag the L1 record; it must
-  never diverge from it; it is fully rebuildable from published
-  records. Nothing in the mirror is authoritative.
+  never diverge from it; it is rebuildable from published records,
+  with the payload mark read from CoGra's carriage. Nothing in the
+  mirror is authoritative.
 - **The overlay.** Operational caches derived from L1 records by
   CoGra's published fold rules — Proposal tally state,
   parameter-carrier state. Rebuildable like the mirror; the

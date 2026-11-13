@@ -120,8 +120,9 @@ holds the shared and backend rules; `android/CLAUDE.md` and
 Every binding fact is an L1 record: priced, signed, witnessed,
 epoch-stamped, visible to every other L2. Nothing CoGra stores is
 authoritative about the graph — the record mirror is a cache (it
-may lag, it must never diverge, it is fully rebuildable from the
-published ordered sequence), and the overlay caches published fold rules
+may lag, it must never diverge, it is rebuildable from the
+published ordered sequence, with the payload mark read from CoGra's
+carriage), and the overlay caches published fold rules
 (the charter's parameter schedule, Proposal tallies,
 `network_role` marks). Where a local table and the L1 record could
 disagree, the record governs — and because every binding value is
@@ -135,7 +136,8 @@ audit CoGra's reads without CoGra's help.
 what a record **is** lives on L1; what it **shows** lives in
 Postgres; what it **weighs** is recomputed from records. Within
 Postgres the schema keeps three kinds of state apart — mirror
-tables (L1's truth, cached), overlay tables (CoGra's own
+tables (L1's truth, cached, the payload mark read from CoGra's
+carriage), overlay tables (CoGra's own
 machinery, itself derived from public records), and authoritative
 L2 tables (identity association, display content, honor ledgers,
 staged applicants). Money sits in none of them; payload bytes,
@@ -387,8 +389,9 @@ tables — each record with its key of record (epoch, position) and
 the act time it carries, each epoch with its attested boundary timestamp —
 advancing a stored epoch cursor. The contract is
 exactly the mirror's truth relationship: it may lag L1; it must
-never diverge; it is fully rebuildable from the published
-sequence, so ingestion state is never precious. Confirmation of staged writes (§ above) and overlay
+never diverge; it is rebuildable from the published sequence,
+with the payload mark read from CoGra's carriage, so ingestion
+state is never precious. Confirmation of staged writes (§ above) and overlay
 fold updates (tallies, the parameter carrier, role marks) are
 driven off the same ingestion pass.
 

@@ -20,7 +20,8 @@ Within the schema, three kinds of state stay apart
 ([substrate.md §3](../primitive/substrate.md#3-cogras-stores)):
 
 - **Mirror tables** — L1's truth, cached. May lag, never diverge,
-  fully rebuildable from the published ordered sequence.
+  rebuildable from the published ordered sequence, with the payload
+  mark read from CoGra's carriage.
 - **Overlay tables** — CoGra's own machinery (Proposal state, the
   parameter carrier, role marks), itself derived from public
   records and published fold rules.
@@ -75,8 +76,9 @@ Conventions:
 
 The contract is the mirror's whole identity: it may lag L1, it
 must never diverge, and it can be rebuilt from the published
-ordered sequence at any time — mirror state is never precious,
-and no backup of it is meaningful.
+ordered sequence at any time, with the payload mark read from
+CoGra's carriage — mirror state is never precious, and no backup
+of it is meaningful.
 
 ---
 
