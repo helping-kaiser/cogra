@@ -1550,7 +1550,10 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
 - `NOT_FOUND` — the surface. For a profile: `This profile doesn't
   exist.` **Drawn** on `ProfileNotFound`. Posts and comments take the
   same construction: `This post doesn't exist.` and `This comment
-  doesn't exist.` **Drawn** on `PostNotFound` and `CommentNotFound`.
+  doesn't exist.` **Drawn** on `PostNotFound` and `CommentNotFound`. A
+  tag page for a name that cannot be a tag: `This tag doesn't exist.`
+  (jakob 2026-11-13, N4, **blessed**), **drawn** on `TagPage`'s
+  `notFound`; a legal name nobody has used is the empty page instead.
 - `BAD_INPUT` — on the field, in the field's own words. Where no field
   is named, in place: `That didn't go through. Try again.`
 
