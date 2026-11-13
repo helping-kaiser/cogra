@@ -130,7 +130,6 @@ fn record(handle: &str, seq: u64, family: Family, legs: Vec<PublishedLeg>) -> Pu
         epoch: 0,
         act_time: 0,
         position: 0,
-        payload_marked: false,
         payload_witness: vec![0; 32],
         legs,
     }

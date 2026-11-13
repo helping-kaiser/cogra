@@ -128,8 +128,9 @@ community's exit is a real fork — the intended failure mode.
 **Posting a Message** is one **Send** act: the terminal leg mints
 the Message node; the importance parameter rides the A-leg; the
 body — plaintext or ciphertext (§7) — rides the payload envelope;
-the witness lands on L1 while the bytes and salt stay in CoGra
-carriage, and the mirror caches the structural record. **A
+the witness lands on L1 while the bytes, their content nonce and
+the salt stay in CoGra carriage, and the mirror caches the
+structural record. **A
 Message belongs to the chat that minted it**: the transcript is
 exactly the Messages minted by Send acts into the lineage, and an
 ordinary-role Send toward an existing Message — legal at L1 — is

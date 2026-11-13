@@ -15,8 +15,9 @@
 use common::l1::Family;
 use common::l1::census::LegRole;
 use common::l1::client::ActorKey;
-use common::l1::handshake::{ApprovalWitness, Proposal, StructuralBody};
+use common::l1::handshake::{ApprovalWitness, Proposal, PublishedRecord, StructuralBody};
 use common::l1::identifier::{ActId, NodeId};
+use common::l1::proposal::{self, PreSigned, SealedAct, Submission};
 use l1_standin::{StandIn, StandInConfig, StandInError};
 use sqlx::PgPool;
 
@@ -82,14 +83,37 @@ fn opinion(actor: &ActorKey, seq: u64, target_addr: &str, deps: Vec<ActId>) -> P
 }
 
 /// Runs the full handshake for a proposal; returns the approval act id.
+/// The host is handed the submission alone; the content pair stays with
+/// the device that approves.
 async fn submit(host: &StandIn, actor: &ActorKey, proposal: Proposal) -> ActId {
     let act_id = proposal.body.act_id();
-    let pre = actor.pre_sign(proposal);
-    let sealed = host.seal(pre.clone()).await.expect("seals");
-    let host_key = host.host_public_key().await.expect("host key");
-    let witness = actor.approve(&pre, &sealed, &host_key).expect("approves");
-    host.approve(witness).await.expect("approval accepted");
+    let pre = PreSigned::sign(actor, proposal);
+    land(host, actor, &pre).await;
     act_id
+}
+
+/// Seals a pre-signed proposal's submission and approves it on the device.
+async fn land(host: &StandIn, actor: &ActorKey, pre: &PreSigned) -> SealedAct {
+    let sealed = host.seal(pre.submission()).await.expect("seals");
+    let host_key = host.host_public_key().await.expect("host key");
+    let witness = pre.approve(actor, &sealed, &host_key).expect("approves");
+    host.approve(witness).await.expect("approval accepted");
+    sealed
+}
+
+/// The host's answer to a freshly pre-signed proposal.
+async fn seal_of(
+    host: &StandIn,
+    actor: &ActorKey,
+    proposal: Proposal,
+) -> Result<SealedAct, StandInError> {
+    host.seal(PreSigned::sign(actor, proposal).submission())
+        .await
+}
+
+/// `n` bytes of a run starting at `from` — fixed nonces a test can find again.
+fn run(from: u8, n: usize) -> Vec<u8> {
+    (0..n).map(|i| from.wrapping_add(i as u8)).collect()
 }
 
 async fn funded_actor(host: &StandIn, micro: i64) -> ActorKey {
@@ -122,7 +146,6 @@ async fn handshake_lands_a_record(pool: PgPool) {
     assert_eq!(record.epoch, 1);
     assert_eq!(record.act_time, 1);
     assert_eq!(record.position, 1, "positions number from 1");
-    assert!(record.payload_marked);
     assert_eq!(record.legs.len(), 1);
     let leg = &record.legs[0];
     assert_eq!(leg.role, LegRole::Binary);
@@ -143,6 +166,104 @@ async fn handshake_lands_a_record(pool: PgPool) {
     );
     assert_eq!(since[0], package);
     assert!(host.epochs_since(1).await.expect("epochs").is_empty());
+}
+
+/// The host is handed only the submission — body, dependency list and
+/// nonce, content pre-digest, pre-commitment, pre-signature and key —
+/// and still seals, the device approves the seal from the pair it kept,
+/// and the act lands. The submission's own rendering shows the dependency
+/// nonce it carries and neither member of the pair it does not. The
+/// record's witness is the content commitment over the content pre-digest
+/// (layer1-interface.md §8.2, "Verified act"), not over the payload bytes.
+///
+/// A submission without its content pair seals, is approved by the device, and lands with the witness formed over the content pre-digest.
+/// ´claim:seal:a-submission-without-its-content-pair-lands´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_submission_without_its_content_pair_seals_approves_and_lands(pool: PgPool) {
+    let host = standin(pool);
+    let actor = funded_actor(&host, 3 * THETA).await;
+    let mut proposal = registration(&actor);
+    proposal.payload = run(0xA0, 32);
+    let pre = PreSigned::sign_with_nonces(&actor, proposal, run(0x10, 32), run(0x50, 32));
+    let submission: Submission = pre.submission();
+    let shown = format!("{submission:?}");
+    assert!(shown.contains(&format!("{:?}", pre.dependency_nonce)));
+    assert!(!shown.contains(&format!("{:?}", pre.content_nonce)));
+    assert!(!shown.contains(&format!("{:?}", pre.proposal.payload)));
+
+    let sealed = host.seal(submission).await.expect("seals with no pair");
+    let host_key = host.host_public_key().await.expect("host key");
+    assert!(sealed.verify_seal(&host_key));
+    let witness = pre
+        .approve(&actor, &sealed, &host_key)
+        .expect("the device approves from the pair it kept");
+    host.approve(witness).await.expect("approval accepted");
+
+    let package = host.close_epoch().await.expect("closes");
+    assert_eq!(package.records.len(), 1);
+    let record = &package.records[0];
+    let act_id = pre.act_id();
+    assert_eq!(record.act_id, act_id);
+    assert_eq!(record.payload_witness, sealed.act.content_commitment);
+    assert_eq!(
+        record.payload_witness,
+        proposal::content_commitment(
+            &act_id,
+            &sealed.act.pre_commitment,
+            &sealed.content_salt,
+            &pre.content_pre_digest()
+        )
+        .to_vec()
+    );
+    assert_ne!(
+        record.payload_witness,
+        common::l1::handshake::content_commitment(
+            &act_id,
+            &sealed.act.pre_commitment,
+            &sealed.content_salt,
+            &pre.proposal.payload
+        )
+        .to_vec(),
+        "the witness is not formed over the payload bytes"
+    );
+}
+
+/// The published record names exactly its act, author, family, place in
+/// the order of record, witness and legs — the pattern below is
+/// exhaustive, so a payload mark on the type fails to compile — and the
+/// read-back package equals the published one. The host never sees a
+/// payload, so it publishes nothing about one beyond the witness.
+///
+/// A published record carries no payload mark, as published and as read back.
+/// ´claim:standin:a-published-record-carries-no-payload-mark´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_published_record_carries_no_payload_mark(pool: PgPool) {
+    let host = standin(pool);
+    let alice = funded_actor(&host, 10 * THETA).await;
+    let bob = funded_actor(&host, 10 * THETA).await;
+    submit(&host, &alice, registration(&alice)).await;
+    submit(&host, &bob, opinion(&bob, 0, &alice.address(), vec![])).await;
+    let package = host.close_epoch().await.expect("closes");
+    assert_eq!(package.records.len(), 2);
+    for record in &package.records {
+        let PublishedRecord {
+            act_id,
+            author,
+            family,
+            epoch,
+            act_time,
+            position,
+            payload_witness,
+            legs,
+        } = record;
+        assert_eq!(&act_id.author, author);
+        assert_eq!(act_id.family, *family);
+        assert_eq!(*epoch, 1);
+        assert!(*act_time >= 1 && *position >= 1 && !legs.is_empty());
+        assert_eq!(payload_witness.len(), 32);
+        assert!(!format!("{record:?}").contains("payload_marked"));
+    }
+    assert_eq!(host.epochs_since(0).await.expect("epochs"), vec![package]);
 }
 
 /// Every close charges the wall in force and publishes the next: θ is the
@@ -492,8 +613,9 @@ async fn close_loop_publishes_on_the_interval(pool: PgPool) {
 
 /// Three distinct formation failures — a Registration targeting someone
 /// else's Profile, a fixed-parameter family given non-fixed (p_d, p_i),
-/// and a payload over M_payload — all reject at seal. None produces a
-/// Layer-1 object, so a subsequent close publishes an empty epoch.
+/// and more declared dependencies than the dependency bound — all reject
+/// at seal. None produces a Layer-1 object, so a subsequent close
+/// publishes an empty epoch.
 ///
 /// A proposal that fails formation rejects at seal and leaves no Layer 1 object behind.
 /// ´claim:seal:formation-failures-leave-no-record-behind´
@@ -504,32 +626,52 @@ async fn seal_rejects_formation_failures(pool: PgPool) {
 
     let mut bad = registration(&actor);
     bad.body.target = NodeId::Prof("someone-else".into());
-    let err = host.seal(actor.pre_sign(bad)).await.expect_err("rejected");
+    let err = seal_of(&host, &actor, bad).await.expect_err("rejected");
     assert!(matches!(err, StandInError::Formation(_)));
 
     let mut bad = registration(&actor);
     bad.body.p_d = 0.5;
     assert!(matches!(
-        host.seal(actor.pre_sign(bad)).await,
+        seal_of(&host, &actor, bad).await,
         Err(StandInError::Formation(_))
     ));
 
-    let mut bad = registration(&actor);
-    bad.payload = vec![0u8; 2048];
+    let deps = (0..65)
+        .map(|seq| ActId::new("elsewhere", seq, Family::Opinion).expect("ok"))
+        .collect();
     assert!(matches!(
-        host.seal(actor.pre_sign(bad)).await,
+        seal_of(&host, &actor, opinion(&actor, 1, "bob", deps)).await,
         Err(StandInError::Formation(_))
     ));
 
     assert!(host.close_epoch().await.expect("ok").records.is_empty());
 }
 
-/// Three authentication failures reject at seal: an author address that
-/// does not bind to the signing key, a proposal body tampered after
-/// pre-signing, and a payload tampered after pre-signing (which
-/// mismatches the pre-digest).
+/// M_payload is a carriage bound, not an act check (layer1-interface.md
+/// §8.2, "Verified act"), and the host never holds the pair it bounds: a
+/// proposal whose payload is over the configured bound seals and lands.
 ///
-/// A proposal whose signature does not bind its author, body, and payload rejects at seal.
+/// A payload over the carriage bound is not the host's to refuse: the act seals and lands.
+/// ´claim:seal:the-payload-bound-is-not-an-act-check´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_payload_over_the_carriage_bound_seals_and_lands(pool: PgPool) {
+    let host = standin(pool);
+    let actor = funded_actor(&host, 3 * THETA).await;
+    let mut long = registration(&actor);
+    long.payload = vec![0u8; 2 * host.config().max_payload_bytes];
+    let act_id = submit(&host, &actor, long).await;
+    let package = host.close_epoch().await.expect("closes");
+    assert_eq!(package.records.len(), 1);
+    assert_eq!(package.records[0].act_id, act_id);
+}
+
+/// Four authentication failures reject at seal: an author address that
+/// does not bind to the signing key, a body changed after pre-signing, a
+/// content pre-digest the author did not sign, and a dependency nonce the
+/// dependency pre-digest was not formed under. Each changes what the
+/// pre-commitment recomputes from, and none needs the payload to detect.
+///
+/// A submission whose pre-signature does not bind its author, body and both pre-digests rejects at seal.
 /// ´claim:seal:authentication-failures-reject-at-seal´
 #[sqlx::test(migrations = "../../migrations")]
 async fn seal_rejects_authentication_failures(pool: PgPool) {
@@ -537,24 +679,31 @@ async fn seal_rejects_authentication_failures(pool: PgPool) {
     let actor = funded_actor(&host, 3 * THETA).await;
     let mallory = ActorKey::generate();
 
-    let mut pre = actor.pre_sign(registration(&actor));
-    pre.author_pubkey = mallory.public_key_bytes();
+    let mut submission = PreSigned::sign(&actor, registration(&actor)).submission();
+    submission.author_pubkey = mallory.public_key_bytes();
     assert!(matches!(
-        host.seal(pre).await,
+        host.seal(submission).await,
         Err(StandInError::Authentication(_))
     ));
 
-    let mut pre = actor.pre_sign(opinion(&actor, 1, "bob", vec![]));
-    pre.proposal.body.p_d = -1.0;
+    let mut submission = PreSigned::sign(&actor, opinion(&actor, 1, "bob", vec![])).submission();
+    submission.body.p_d = -1.0;
     assert!(matches!(
-        host.seal(pre).await,
+        host.seal(submission).await,
         Err(StandInError::Authentication(_))
     ));
 
-    let mut pre = actor.pre_sign(opinion(&actor, 2, "bob", vec![]));
-    pre.proposal.payload = b"swapped".to_vec();
+    let mut submission = PreSigned::sign(&actor, opinion(&actor, 2, "bob", vec![])).submission();
+    submission.content_pre_digest[0] ^= 1;
     assert!(matches!(
-        host.seal(pre).await,
+        host.seal(submission).await,
+        Err(StandInError::Authentication(_))
+    ));
+
+    let mut submission = PreSigned::sign(&actor, opinion(&actor, 3, "bob", vec![])).submission();
+    submission.dependency_nonce[0] ^= 1;
+    assert!(matches!(
+        host.seal(submission).await,
         Err(StandInError::Authentication(_))
     ));
 }
@@ -570,171 +719,124 @@ async fn seal_rejects_identifier_reuse_and_key_change(pool: PgPool) {
     let host = standin(pool);
     let actor = funded_actor(&host, 10 * THETA).await;
 
-    let pre = actor.pre_sign(opinion(&actor, 1, "bob", vec![]));
-    host.seal(pre).await.expect("first seal ok");
+    seal_of(&host, &actor, opinion(&actor, 1, "bob", vec![]))
+        .await
+        .expect("first seal ok");
 
-    let pre = actor.pre_sign(opinion(&actor, 1, "carol", vec![]));
     assert!(matches!(
-        host.seal(pre).await,
+        seal_of(&host, &actor, opinion(&actor, 1, "carol", vec![])).await,
         Err(StandInError::Conflict(_))
     ));
 
     let mut prop = registration(&actor);
     prop.body.seq = 1;
     assert!(matches!(
-        host.seal(actor.pre_sign(prop)).await,
+        seal_of(&host, &actor, prop).await,
         Err(StandInError::Conflict(_))
     ));
 }
 
-/// The actor's pre-signature over a proposal under a nonce the test
-/// chooses, where `ActorKey::pre_sign` would draw a fresh one.
-fn pre_sign_under(
-    actor: &ActorKey,
-    proposal: Proposal,
-    nonce: Vec<u8>,
-) -> common::l1::PreSignedProposal {
-    let key = ed25519_dalek::SigningKey::from_bytes(&actor.seed());
-    let pre_signature = common::l1::crypto::sign_digest(
-        &key,
-        &common::l1::handshake::pre_commitment(&proposal, &nonce),
-    );
-    common::l1::PreSignedProposal {
-        proposal,
-        author_pubkey: actor.public_key_bytes(),
-        nonce,
-        pre_signature,
-    }
-}
-
-/// A nonce shorter or longer than the published entropy floor is refused
-/// at seal as a formation fault, and leaves nothing behind: the same act
-/// seals afterwards under a nonce of the right length.
+/// The host applies no nonce policy (layer1-interface.md §8.2: the
+/// content nonce's freshness and non-reuse are carriage obligations, and
+/// nothing is stated for the dependency nonce). One author's two acts
+/// under the same dependency nonce both seal, approve and land in one
+/// epoch — the content nonces differ, as the device draws them, but the
+/// host never sees those.
 ///
-/// A proposal nonce whose length is not the entropy floor is refused at seal.
-/// ´claim:seal:a-nonce-off-the-entropy-floor-is-refused´
+/// One author's two acts under one dependency nonce both seal and land: the host refuses no nonce reuse.
+/// ´claim:seal:a-reused-dependency-nonce-is-not-refused´
 #[sqlx::test(migrations = "../../migrations")]
-async fn a_nonce_off_the_entropy_floor_is_refused(pool: PgPool) {
+async fn one_dependency_nonce_twice_by_one_author_seals_and_lands_both(pool: PgPool) {
     let host = standin(pool);
-    let actor = funded_actor(&host, 3 * THETA).await;
-    let floor = common::l1::crypto::SALT_LEN;
-    for length in [0, 16, floor - 1, floor + 1] {
-        let refused = host
-            .seal(pre_sign_under(
-                &actor,
-                registration(&actor),
-                vec![7; length],
-            ))
-            .await;
-        assert!(
-            matches!(refused, Err(StandInError::Formation(_))),
-            "a {length}-byte nonce: {refused:?}"
-        );
-    }
-    host.seal(pre_sign_under(&actor, registration(&actor), vec![7; floor]))
-        .await
-        .expect("the same act seals under a nonce of the floor's length");
-}
-
-/// The author's second act under the first act's nonce is refused as a
-/// conflict — while the first is in custody, and again after it was
-/// accepted and its nonce removed — and the refused act leaves nothing
-/// behind. Another author may use the same nonce bytes.
-///
-/// An author's nonce is fresh across their acts, before and after the first act's acceptance.
-/// ´claim:seal:an-authors-nonce-is-never-reused´
-#[sqlx::test(migrations = "../../migrations")]
-async fn an_authors_nonce_is_never_reused(pool: PgPool) {
-    let host = standin(pool.clone());
     let alice = funded_actor(&host, 10 * THETA).await;
-    let bob = funded_actor(&host, 10 * THETA).await;
-    let nonce = vec![42u8; common::l1::crypto::SALT_LEN];
-    let host_key = host.host_public_key().await.expect("host key");
-
-    let first = pre_sign_under(&alice, registration(&alice), nonce.clone());
-    let sealed = host.seal(first.clone()).await.expect("the first act seals");
-    let in_custody = host
-        .seal(pre_sign_under(
-            &alice,
-            opinion(&alice, 1, "carol", vec![]),
-            nonce.clone(),
-        ))
-        .await;
-    assert!(
-        matches!(in_custody, Err(StandInError::Conflict(ref m)) if m.contains("nonce")),
-        "reused while the first is in custody: {in_custody:?}"
+    let shared = run(0x42, 32);
+    let first =
+        PreSigned::sign_with_nonces(&alice, registration(&alice), run(0x01, 32), shared.clone());
+    let second = PreSigned::sign_with_nonces(
+        &alice,
+        opinion(&alice, 1, "carol", vec![first.act_id()]),
+        run(0x81, 32),
+        shared,
     );
-
-    host.approve(alice.approve(&first, &sealed, &host_key).expect("approves"))
-        .await
-        .expect("approval accepted");
+    land(&host, &alice, &first).await;
+    land(&host, &alice, &second).await;
     let package = host.close_epoch().await.expect("closes");
-    assert_eq!(package.records.len(), 1);
-    let (nonce_held, digest_kept): (bool, bool) = sqlx::query_as(
-        "SELECT nonce IS NOT NULL, nonce_digest IS NOT NULL FROM l1_acts WHERE act_id = $1",
-    )
-    .bind(first.proposal.body.act_id().to_string())
-    .fetch_one(&pool)
-    .await
-    .expect("the accepted row");
-    assert_eq!(
-        (nonce_held, digest_kept),
-        (false, true),
-        "acceptance removes the nonce and keeps its digest"
-    );
-
-    let after_acceptance = host
-        .seal(pre_sign_under(
-            &alice,
-            opinion(&alice, 2, "carol", vec![]),
-            nonce.clone(),
-        ))
-        .await;
-    assert!(
-        matches!(after_acceptance, Err(StandInError::Conflict(ref m)) if m.contains("nonce")),
-        "reused after the first was accepted: {after_acceptance:?}"
-    );
-    let refused_rows: i64 =
-        sqlx::query_scalar("SELECT COUNT(*) FROM l1_acts WHERE author = $1 AND seq IN (1, 2)")
-            .bind(alice.address())
-            .fetch_one(&pool)
-            .await
-            .expect("count");
-    assert_eq!(refused_rows, 0, "a refused seal stores nothing");
-
-    host.seal(pre_sign_under(&bob, registration(&bob), nonce.clone()))
-        .await
-        .expect("another author may use the same nonce bytes");
-    host.seal(alice.pre_sign(opinion(&alice, 1, "carol", vec![])))
-        .await
-        .expect("alice's act seals under a fresh nonce");
+    let landed: Vec<ActId> = package.records.iter().map(|r| r.act_id.clone()).collect();
+    assert_eq!(landed, vec![first.act_id(), second.act_id()]);
 }
 
-/// The migration's SQL digest — what it backfilled the acts still in
-/// custody with — is the host's digest, byte for byte, so a backfilled
-/// nonce is caught as a reuse like any other.
+/// Nor does the host hold the dependency nonce to a length: a nonce of
+/// any length — empty included — is whatever bytes the dependency
+/// pre-digest recomputes from, and the act seals and lands under it.
 ///
-/// The migration's nonce digest is the host's, byte for byte.
-/// ´claim:seal:the-backfilled-nonce-digest-is-the-hosts´
+/// A dependency nonce of any length seals: the host applies no length rule to it.
+/// ´claim:seal:the-dependency-nonce-has-no-length-rule´
 #[sqlx::test(migrations = "../../migrations")]
-async fn the_backfilled_nonce_digest_is_the_hosts(pool: PgPool) {
-    for (author, nonce) in [
-        ("alice", vec![0u8; 32]),
-        ("3f9a0c", vec![0xFF; 32]),
-        ("é-non-ascii", (0..32).collect::<Vec<u8>>()),
-    ] {
-        let sql: Vec<u8> = sqlx::query_scalar("SELECT l1_nonce_digest($1, $2)")
-            .bind(author)
-            .bind(&nonce)
-            .fetch_one(&pool)
-            .await
-            .expect("the SQL digest");
-        assert_eq!(
-            sql,
-            common::l1::crypto::nonce_digest(author, &nonce).to_vec(),
-            "{author}"
+async fn a_dependency_nonce_of_any_length_seals(pool: PgPool) {
+    let host = standin(pool);
+    let alice = funded_actor(&host, 10 * THETA).await;
+    let floor = common::l1::crypto::SALT_LEN;
+    for (seq, length) in [0, 1, floor - 1, floor + 1].into_iter().enumerate() {
+        let pre = PreSigned::sign_with_nonces(
+            &alice,
+            opinion(&alice, seq as u64, "bob", vec![]),
+            run(0x01, 32),
+            run(0x60, length),
         );
+        land(&host, &alice, &pre).await;
     }
+    assert_eq!(host.close_epoch().await.expect("closes").records.len(), 4);
+}
+
+/// A submission whose pre-commitment was formed the one-nonce way — one
+/// nonce under both pre-digests, under the formulas that came before the
+/// two-nonce handshake — is refused at seal as an authentication failure
+/// even with its own pre-signature valid over it, and stores nothing: the
+/// same act seals afterwards under two nonces.
+///
+/// A one-nonce pre-commitment never verifies at seal, and the refusal leaves no row.
+/// ´claim:seal:a-one-nonce-pre-commitment-is-refused´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_one_nonce_pre_commitment_is_refused_and_leaves_no_row(pool: PgPool) {
+    use common::l1::crypto::{self, tags};
+    let host = standin(pool.clone());
+    let actor = funded_actor(&host, 3 * THETA).await;
+    let old = actor.pre_sign(registration(&actor));
+    let act_id = old.proposal.body.act_id();
+    let old_content_pre_digest = crypto::pre_digest(
+        tags::PRE_DIGEST_CONTENT,
+        act_id.to_string().as_bytes(),
+        &old.nonce,
+        &old.proposal.payload,
+    );
+    let one_nonce = Submission::new(
+        old.proposal.body.clone(),
+        old.proposal.deps.clone(),
+        old.nonce.clone(),
+        old_content_pre_digest,
+        old.pre_commitment(),
+        old.pre_signature.clone(),
+        old.author_pubkey.clone(),
+    );
+    assert!(crypto::verify_digest(
+        &crypto::verifying_key_from_bytes(&old.author_pubkey).expect("key"),
+        &old.pre_commitment(),
+        &old.pre_signature
+    ));
+    let refused = host.seal(one_nonce).await;
+    assert!(
+        matches!(refused, Err(StandInError::Authentication(_))),
+        "{refused:?}"
+    );
+    let rows: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM l1_acts WHERE act_id = $1")
+        .bind(act_id.to_string())
+        .fetch_one(&pool)
+        .await
+        .expect("count");
+    assert_eq!(rows, 0, "a refused seal stores nothing");
+    seal_of(&host, &actor, registration(&actor))
+        .await
+        .expect("the same act seals under two nonces");
 }
 
 /// An unknown act rejects with UnknownAct; a witness signed by the
@@ -750,8 +852,8 @@ async fn approve_verifies_the_witness(pool: PgPool) {
     let actor = funded_actor(&host, 3 * THETA).await;
     let mallory = ActorKey::generate();
 
-    let pre = actor.pre_sign(registration(&actor));
-    let sealed = host.seal(pre.clone()).await.expect("seals");
+    let pre = PreSigned::sign(&actor, registration(&actor));
+    let sealed = host.seal(pre.submission()).await.expect("seals");
     let host_key = host.host_public_key().await.expect("key");
 
     let bogus = ApprovalWitness {
@@ -763,13 +865,10 @@ async fn approve_verifies_the_witness(pool: PgPool) {
         Err(StandInError::UnknownAct(_))
     ));
 
-    let witness = actor.approve(&pre, &sealed, &host_key).expect("client ok");
+    let witness = pre.approve(&actor, &sealed, &host_key).expect("client ok");
     let forged = ApprovalWitness {
         act_id: witness.act_id.clone(),
-        approval_signature: {
-            let pre2 = mallory.pre_sign(registration(&mallory));
-            pre2.pre_signature
-        },
+        approval_signature: PreSigned::sign(&mallory, registration(&mallory)).pre_signature,
     };
     assert!(matches!(
         host.approve(forged).await,
@@ -1072,8 +1171,7 @@ async fn bid_is_fresh_mint_only_while_ordinary_send_stays_legal(pool: PgPool) {
     let item = NodeId::Mint(ActId::new("lister", 0, Family::Owner).expect("ok"));
     let foreign_offer = NodeId::Mint(ActId::new("other", 1, Family::Bid).expect("ok"));
     assert!(matches!(
-        host.seal(actor.pre_sign(hyper(0, Family::Bid, &item, &foreign_offer)))
-            .await,
+        seal_of(&host, &actor, hyper(0, Family::Bid, &item, &foreign_offer)).await,
         Err(StandInError::Formation(_))
     ));
 

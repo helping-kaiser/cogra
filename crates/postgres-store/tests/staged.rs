@@ -5,9 +5,10 @@
 use common::l1::Family;
 use common::l1::census::LegRole;
 use common::l1::handshake::{
-    EpochPackage, Proposal, PublishedLeg, PublishedRecord, StructuralBody, VerifiedAct,
+    EpochPackage, Proposal, PublishedLeg, PublishedRecord, StructuralBody,
 };
 use common::l1::identifier::{ActId, NodeId};
+use common::l1::proposal::{CONTENT_EDITION, DEPENDENCY_EDITION, SealedAct, VerifiedAct};
 use postgres_store::staged::{self, PreSignedParts, StagedError, StagedState};
 use postgres_store::{genesis, mirror};
 use sqlx::PgPool;
@@ -46,26 +47,34 @@ fn proposal(author: &str, seq: u64) -> Proposal {
 }
 
 fn pre_parts() -> PreSignedParts {
+    pre_parts_with(vec![2; 32])
+}
+
+fn pre_parts_with(content_nonce: Vec<u8>) -> PreSignedParts {
     PreSignedParts {
         author_pubkey: vec![1; 32],
-        nonce: vec![2; 32],
+        content_nonce,
+        dependency_nonce: vec![9; 32],
         pre_signature: vec![3; 64],
     }
 }
 
-fn verified_act(p: &Proposal) -> VerifiedAct {
-    VerifiedAct {
-        proposal: p.clone(),
-        author_pubkey: vec![1; 32],
-        nonce: vec![2; 32],
-        pre_signature: vec![3; 64],
-        pre_commitment: common::l1::handshake::pre_commitment(p, &[2; 32]).to_vec(),
+/// The sealed act the store rebuilds for `p` under [`pre_parts`]: P is
+/// formed from the proposal and both nonces, the editions are the
+/// handshake's.
+fn sealed_act(p: &Proposal) -> SealedAct {
+    SealedAct {
+        act: VerifiedAct {
+            body: p.body.clone(),
+            pre_commitment: pre_parts().pre_signed(p).pre_commitment().to_vec(),
+            pre_signature: vec![3; 64],
+            content_commitment: vec![6; 32],
+            dependency_commitment: vec![7; 32],
+            content_edition: CONTENT_EDITION,
+            dependency_edition: DEPENDENCY_EDITION,
+        },
         content_salt: vec![4; 32],
-        deps_salt: vec![5; 32],
-        content_commitment: vec![6; 32],
-        deps_commitment: vec![7; 32],
-        content_edition: common::l1::handshake::EDITION,
-        deps_edition: common::l1::handshake::EDITION,
+        dependency_salt: vec![5; 32],
         host_seal: vec![8; 64],
     }
 }
@@ -80,7 +89,6 @@ fn published(author: &str, seq: u64, family: Family, epoch: i64, position: i64) 
         epoch,
         act_time: position + 1,
         position,
-        payload_marked: false,
         payload_witness: vec![0xAB; 32],
         legs: vec![PublishedLeg {
             role: LegRole::Binary,
@@ -215,8 +223,8 @@ async fn insert_and_load_round_trip_the_proposal(pool: PgPool) {
     assert_eq!(w.prepared_epoch, 4);
     assert!(w.pre_signed.is_none());
     assert!(w.sealed.is_none());
-    assert!(w.pre_signed_proposal().is_none());
-    assert!(w.verified_act().is_none());
+    assert!(w.submission().is_none());
+    assert!(w.sealed_act().is_none());
 }
 
 /// Loading an id the store never staged is not found, and the diagnostic names the id asked for.
@@ -270,15 +278,21 @@ async fn the_handshake_lifecycle_advances_through_its_states(pool: PgPool) {
         .await
         .expect("pre-sign retry from sealing");
     let w = staged::load(&pool, id).await.expect("loads");
-    let pre = w.pre_signed_proposal().expect("pre-signed");
-    assert_eq!(pre.proposal, p);
-    assert_eq!(pre.nonce, vec![2; 32]);
+    assert_eq!(w.pre_signed, Some(pre_parts()));
+    let submission = w.submission().expect("pre-signed");
+    assert_eq!(submission.body, p.body);
+    assert_eq!(submission.dependency_nonce, vec![9; 32]);
+    assert_eq!(
+        submission.content_pre_digest,
+        common::l1::proposal::content_pre_digest(&p.body.act_id(), &[2; 32], &p.payload),
+        "the content pre-digest is formed from the staged payload and the content nonce"
+    );
 
-    let act = verified_act(&p);
+    let act = sealed_act(&p);
     staged::record_sealed(&pool, id, &act).await.expect("seal");
     let w = staged::load(&pool, id).await.expect("loads");
     assert_eq!(w.state, StagedState::AwaitingApproval);
-    assert_eq!(w.verified_act().expect("act"), act);
+    assert_eq!(w.sealed_act().expect("act"), act);
 
     staged::record_relaying(&pool, id).await.expect("relaying");
     staged::record_relaying(&pool, id)
@@ -304,7 +318,7 @@ async fn out_of_order_transitions_are_refused_with_the_actual_state(pool: PgPool
     let id = stage(&pool, actor_id, &p, 0).await;
 
     assert!(matches!(
-        staged::record_sealed(&pool, id, &verified_act(&p)).await,
+        staged::record_sealed(&pool, id, &sealed_act(&p)).await,
         Err(StagedError::WrongState { actual, .. }) if actual == "awaiting_pre_sign"
     ));
     assert!(matches!(
@@ -594,4 +608,282 @@ async fn superseding_expires_only_unsigned_chained_writes(pool: PgPool) {
     );
     assert_eq!(state(signed).await, StagedState::Sealing);
     assert!(pending(pool.clone(), actor_id).await);
+}
+
+/// A content nonce is its author's once (layer1-interface.md §8.2,
+/// "Entropy custody"): a second act by the same author under the same
+/// content nonce is refused at the pre-signature with nothing recorded —
+/// the write stays unsigned — while a retry of the first act's own leg,
+/// and another author's act under the same bytes, are not reuses. The
+/// reservation is a digest beside the act, not the nonce, so it outlives
+/// the reap that takes the nonce itself: after the first act's payload is
+/// reaped, the nonce is still refused.
+///
+/// A content nonce is refused for a second act by its author, before anything is recorded and after the first act's payload is reaped.
+/// ´claim:staged:a-content-nonce-is-its-authors-once´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_content_nonce_is_refused_for_a_second_act_by_its_author(pool: PgPool) {
+    let alice = actor(&pool, "alice", "alice").await;
+    let carol = actor(&pool, "carol", "carol").await;
+    let first = stage(&pool, alice, &proposal("alice", 0), 0).await;
+    let second = stage(&pool, alice, &proposal("alice", 1), 0).await;
+    let theirs = stage(&pool, carol, &proposal("carol", 0), 0).await;
+
+    staged::record_pre_signed(&pool, first, &pre_parts())
+        .await
+        .expect("first use");
+    staged::record_pre_signed(&pool, first, &pre_parts())
+        .await
+        .expect("a retry of the same act's leg is no reuse");
+    assert!(matches!(
+        staged::record_pre_signed(&pool, second, &pre_parts()).await,
+        Err(StagedError::ContentNonceReused(id)) if id == second
+    ));
+    let w = staged::load(&pool, second).await.expect("loads");
+    assert_eq!(
+        w.state,
+        StagedState::AwaitingPreSign,
+        "nothing was recorded"
+    );
+    assert!(w.pre_signed.is_none());
+    staged::record_pre_signed(&pool, theirs, &pre_parts())
+        .await
+        .expect("another author's act under the same bytes");
+
+    let mut conn = pool.acquire().await.expect("conn");
+    assert_eq!(
+        staged::reap_payload(&mut conn, "act:alice:0:opinion")
+            .await
+            .expect("reaps"),
+        1
+    );
+    let held: Option<Vec<u8>> =
+        sqlx::query_scalar("SELECT content_nonce FROM staged_writes WHERE id = $1")
+            .bind(first)
+            .fetch_one(&pool)
+            .await
+            .expect("reads");
+    assert_eq!(held, None, "the reap took the nonce itself");
+    let third = stage(&pool, alice, &proposal("alice", 2), 0).await;
+    assert!(
+        matches!(
+            staged::record_pre_signed(&pool, third, &pre_parts()).await,
+            Err(StagedError::ContentNonceReused(_))
+        ),
+        "the reservation outlives the reap"
+    );
+    staged::record_pre_signed(&pool, second, &pre_parts_with(vec![7; 32]))
+        .await
+        .expect("a fresh content nonce signs");
+}
+
+/// A write in `sealing` takes only the leg it already recorded, byte for
+/// byte. A second leg with other nonces and another signature (a
+/// concurrent submit of a different blob) is refused, and the row still
+/// holds the first leg. The second leg's content nonce is not reserved,
+/// so it stays free for another act.
+///
+/// A write being sealed takes only a byte-identical retry of its recorded pre-commitment leg.
+/// ´claim:staged:a-sealing-write-takes-only-its-recorded-leg´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_sealing_write_refuses_a_different_pre_commitment_leg(pool: PgPool) {
+    let alice = actor(&pool, "alice", "alice").await;
+    let id = stage(&pool, alice, &proposal("alice", 0), 0).await;
+    let first = pre_parts();
+    let other = PreSignedParts {
+        content_nonce: vec![21; 32],
+        dependency_nonce: vec![22; 32],
+        pre_signature: vec![23; 64],
+        ..pre_parts()
+    };
+    staged::record_pre_signed(&pool, id, &first)
+        .await
+        .expect("the first leg");
+    assert!(
+        matches!(
+            staged::record_pre_signed(&pool, id, &other).await,
+            Err(StagedError::PreSignMismatch(refused)) if refused == id
+        ),
+        "a different leg is refused while sealing"
+    );
+    let w = staged::load(&pool, id).await.expect("loads");
+    assert_eq!(w.state, StagedState::Sealing);
+    assert_eq!(w.pre_signed, Some(first.clone()), "the first leg stands");
+    staged::record_pre_signed(&pool, id, &first)
+        .await
+        .expect("a byte-identical retry still runs");
+    let later = stage(&pool, alice, &proposal("alice", 1), 0).await;
+    staged::record_pre_signed(&pool, later, &other)
+        .await
+        .expect("the refused leg's content nonce was never reserved");
+}
+
+/// A write a redaction reaped between the relay's load and the recording
+/// of its leg is refused as reaped, and nothing is recorded. Without the
+/// check, the leg would put a content nonce beside a reaped payload, a
+/// row the schema refuses, and the caller would see a storage fault.
+///
+/// A write reaped after it was loaded is refused as reaped when its leg is recorded.
+/// ´claim:staged:a-reaped-write-takes-no-leg´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_write_reaped_after_its_load_takes_no_pre_commitment_leg(pool: PgPool) {
+    let alice = actor(&pool, "alice", "alice").await;
+    let id = stage(&pool, alice, &proposal("alice", 0), 0).await;
+    let loaded = staged::load(&pool, id).await.expect("the relay loads it");
+    assert_eq!(loaded.state, StagedState::AwaitingPreSign);
+    let mut conn = pool.acquire().await.expect("conn");
+    assert_eq!(
+        staged::reap_payload(&mut conn, "act:alice:0:opinion")
+            .await
+            .expect("a redaction reaps it"),
+        1
+    );
+    let got = staged::record_pre_signed(&pool, id, &pre_parts()).await;
+    assert!(
+        matches!(got, Err(StagedError::Reaped(refused)) if refused == id),
+        "refused as reaped, got {got:?}"
+    );
+    let state: String = sqlx::query_scalar("SELECT state FROM staged_writes WHERE id = $1")
+        .bind(id)
+        .fetch_one(&pool)
+        .await
+        .expect("reads");
+    assert_eq!(state, "awaiting_pre_sign", "nothing was recorded");
+}
+
+/// The payload mark is read off CoGra's carriage when the record arrives
+/// (data-model.md "Act payload carriage"): a record is marked exactly when
+/// its act has a carriage row, full or reduced. A sealed staged write's
+/// non-empty pair is promoted into carriage by the ingestion itself, so
+/// its record is marked from its first read; an empty payload promotes
+/// nothing and reads unmarked, as does a record CoGra carries nothing for.
+/// A rebuild from the published sequence over the carriage that stands
+/// reads every mark back the same, and a carriage row written after the
+/// record arrived marks it then.
+///
+/// A record is payload-marked exactly when its act has a carriage row, from its first read and across a rebuild.
+/// ´claim:staged:the-payload-mark-follows-carriage´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_payload_mark_follows_carriage(pool: PgPool) {
+    let alice = actor(&pool, "alice", "alice").await;
+    let full = proposal("alice", 0);
+    let empty = Proposal {
+        payload: vec![],
+        ..proposal("alice", 1)
+    };
+    for (p, nonce) in [(&full, vec![2; 32]), (&empty, vec![12; 32])] {
+        let id = stage(&pool, alice, p, 0).await;
+        let pre = pre_parts_with(nonce);
+        staged::record_pre_signed(&pool, id, &pre)
+            .await
+            .expect("pre-sign");
+        let mut sealed = sealed_act(p);
+        sealed.act.pre_commitment = pre.pre_signed(p).pre_commitment().to_vec();
+        staged::record_sealed(&pool, id, &sealed)
+            .await
+            .expect("seal");
+    }
+    sqlx::query(
+        "INSERT INTO act_payloads (act_id, payload_state, reduced_at)
+         VALUES ('act:alice:2:opinion', 'reduced', NOW())",
+    )
+    .execute(&pool)
+    .await
+    .expect("a reduced row");
+    let records = (0..4)
+        .map(|seq| published("alice", seq, Family::Opinion, 1, seq as i64 + 1))
+        .collect::<Vec<_>>();
+    let package = EpochPackage {
+        epoch: 1,
+        attested_at: chrono::Utc::now(),
+        records,
+        closure: Default::default(),
+    };
+    mirror::ingest_epoch(&pool, &package)
+        .await
+        .expect("ingests");
+    let marks = || async {
+        sqlx::query_as::<_, (String, bool)>(
+            "SELECT record_id, payload_marked FROM mirror_records ORDER BY position",
+        )
+        .fetch_all(&pool)
+        .await
+        .expect("marks")
+    };
+    let expected = vec![
+        ("act:alice:0:opinion".to_string(), true),
+        ("act:alice:1:opinion".to_string(), false),
+        ("act:alice:2:opinion".to_string(), true),
+        ("act:alice:3:opinion".to_string(), false),
+    ];
+    assert_eq!(marks().await, expected);
+    let promoted: (Vec<u8>, Vec<u8>, Vec<u8>) = sqlx::query_as(
+        "SELECT payload, content_nonce, content_salt FROM act_payloads
+         WHERE act_id = 'act:alice:0:opinion'",
+    )
+    .fetch_one(&pool)
+    .await
+    .expect("promoted at ingestion");
+    assert_eq!(promoted, (full.payload.clone(), vec![2; 32], vec![4; 32]));
+
+    mirror::reset(&pool).await.expect("reset");
+    mirror::ingest_epoch(&pool, &package)
+        .await
+        .expect("re-ingests");
+    assert_eq!(marks().await, expected, "a rebuild reads the same marks");
+
+    let mut tx = pool.begin().await.expect("tx");
+    postgres_store::content::insert_reduced_act_payload(&mut tx, "act:alice:3:opinion", None)
+        .await
+        .expect("late carriage");
+    tx.commit().await.expect("commit");
+    assert!(
+        marks().await[3].1,
+        "a carriage row written after the record arrived marks it"
+    );
+}
+
+/// The reap takes the payload, its content salt and its content nonce, and
+/// leaves the dependency nonce with the rest of the pre-commitment leg:
+/// the host holds it beside the dependency list, and it opens no content
+/// (data-model.md "Staged writes"). The table refuses a reaped row that
+/// still holds the content nonce.
+///
+/// The redaction reap takes the content nonce with the payload and leaves the dependency nonce.
+/// ´claim:staged:the-reap-takes-the-content-nonce-and-leaves-the-dependency-nonce´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_reap_takes_the_content_nonce_and_leaves_the_dependency_nonce(pool: PgPool) {
+    let alice = actor(&pool, "alice", "alice").await;
+    let p = proposal("alice", 0);
+    let id = stage(&pool, alice, &p, 0).await;
+    staged::record_pre_signed(&pool, id, &pre_parts())
+        .await
+        .expect("pre-sign");
+    staged::record_sealed(&pool, id, &sealed_act(&p))
+        .await
+        .expect("seal");
+    let mut conn = pool.acquire().await.expect("conn");
+    staged::reap_payload(&mut conn, "act:alice:0:opinion")
+        .await
+        .expect("reaps");
+    type Bytes = Option<Vec<u8>>;
+    let (payload, salt, content_nonce, dependency_nonce): (Bytes, Bytes, Bytes, Bytes) =
+        sqlx::query_as(
+            "SELECT payload, content_salt, content_nonce, dependency_nonce
+         FROM staged_writes WHERE id = $1",
+        )
+        .bind(id)
+        .fetch_one(&pool)
+        .await
+        .expect("reads");
+    assert_eq!((payload, salt, content_nonce), (None, None, None));
+    assert_eq!(dependency_nonce, Some(vec![9; 32]));
+    assert!(
+        sqlx::query("UPDATE staged_writes SET content_nonce = '\\x02' WHERE id = $1")
+            .bind(id)
+            .execute(&pool)
+            .await
+            .is_err(),
+        "a reaped row cannot hold the content nonce"
+    );
 }

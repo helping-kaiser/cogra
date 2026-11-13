@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO mirror_records\n             (record_id, family, author, epoch, act_time, position,\n              payload_marked, payload_witness)\n         SELECT r.record_id, r.family, r.author, r.epoch, r.act_time, r.position,\n                EXISTS (SELECT 1 FROM act_payloads c WHERE c.act_id = r.record_id),\n                r.payload_witness\n         FROM unnest($1::text[], $2::text[], $3::text[], $4::bigint[],\n                     $5::bigint[], $6::bigint[], $7::bytea[])\n              AS r(record_id, family, author, epoch, act_time, position, payload_witness)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "Int8Array",
+        "Int8Array",
+        "Int8Array",
+        "ByteaArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d572d52eebbd428d3665befbf91010acdc771209f681b1e711c4535b5b5f6b6d"
+}

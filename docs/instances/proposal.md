@@ -163,7 +163,7 @@ nothing on it is authoritative
 
 Postgres holds what CoGra **carries**, not a second substance:
 the anchor payload's bytes — proposal text and terms — live in
-CoGra's stores under the carriage model (payload + salt,
+CoGra's stores under the carriage model (payload + content nonce + salt,
 [substrate.md §7](../primitive/substrate.md#7-payload-carriage)),
 and where a proposed value concerns display content (a chat
 description, a profile field), the value is Postgres-side data

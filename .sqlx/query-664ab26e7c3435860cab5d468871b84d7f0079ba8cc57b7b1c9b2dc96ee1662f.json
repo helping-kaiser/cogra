@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE genesis_handshake_nonces SET content_nonce = NULL WHERE act_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "664ab26e7c3435860cab5d468871b84d7f0079ba8cc57b7b1c9b2dc96ee1662f"
+}

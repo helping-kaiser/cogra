@@ -22,8 +22,10 @@ use api::l1::{L1Boundary, StandInBoundary};
 use api::profile::ProfileUpdateDraft;
 use common::l1::Family;
 use common::l1::client::ActorKey;
-use common::l1::handshake::content_commitment;
 use common::l1::identifier::ActId;
+use common::l1::proposal::{
+    PreSigned, content_commitment, content_pre_digest, dependency_pre_digest, pre_commitment,
+};
 use l1_standin::{StandIn, StandInConfig};
 use postgres_store::content as content_store;
 use postgres_store::genesis;
@@ -230,22 +232,22 @@ async fn address_of(pool: &PgPool, handle: &str) -> String {
         .expect("keyed")
 }
 
-/// Keeps a copy of every act's handshake custody — payload, content salt,
+/// Keeps a copy of every act's handshake custody — the content salt the
+/// host holds until acceptance; it never holds the payload or the content
 /// nonce — as acceptance drops it, so a rewind can put an act back in the
 /// state it held before the close. Installed before the first run; the
 /// table and trigger are test scaffolding in the test's own database.
 async fn keep_custody(pool: &PgPool) {
     for statement in [
-        "CREATE TABLE test_custody (
-             act_id TEXT PRIMARY KEY, payload BYTEA, content_salt BYTEA, nonce BYTEA)",
+        "CREATE TABLE test_custody (act_id TEXT PRIMARY KEY, content_salt BYTEA)",
         "CREATE FUNCTION test_keep_custody() RETURNS trigger AS $$
          BEGIN
-             INSERT INTO test_custody VALUES (OLD.act_id, OLD.payload, OLD.content_salt, OLD.nonce)
+             INSERT INTO test_custody VALUES (OLD.act_id, OLD.content_salt)
              ON CONFLICT (act_id) DO NOTHING;
              RETURN NEW;
          END $$ LANGUAGE plpgsql",
         "CREATE TRIGGER test_keep_custody BEFORE UPDATE OF status ON l1_acts
-         FOR EACH ROW WHEN (NEW.status = 'accepted' AND OLD.payload IS NOT NULL)
+         FOR EACH ROW WHEN (NEW.status = 'accepted' AND OLD.content_salt IS NOT NULL)
          EXECUTE FUNCTION test_keep_custody()",
     ] {
         sqlx::query(statement)
@@ -274,7 +276,7 @@ async fn rewind_to_partial_genesis(pool: &PgPool, keep: &[String]) {
         .expect("wipe");
     sqlx::query(
         "UPDATE l1_acts SET status = 'approved', epoch = NULL, act_time = NULL, position = NULL,
-                payload = c.payload, content_salt = c.content_salt, nonce = c.nonce
+                content_salt = c.content_salt
            FROM test_custody c WHERE c.act_id = l1_acts.act_id",
     )
     .execute(pool)
@@ -405,6 +407,84 @@ async fn a_sealed_unapproved_act_is_recovered(pool: PgPool) {
     );
 }
 
+/// The crash window the host cannot cover: The Charter was sealed, and the
+/// run died before its carriage was written or its approval relayed. The
+/// host never held the payload or the content nonce, so the re-run
+/// recovers the approval from the custodied key and the nonces the
+/// bootstrap kept before the seal ([`PreSigned::recover`]), writes the
+/// carriage, and the Charter lands with a carriage that opens its witness
+/// — the nonce moved out of the handshake custody once carried.
+///
+/// A seal whose carriage was never written is recovered from the nonces kept before the seal, and lands carried.
+/// ´claim:bootstrap:a-seal-without-its-carriage-is-recovered´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_sealed_act_whose_carriage_was_never_written_is_recovered(pool: PgPool) {
+    let host = standin(&pool);
+    keep_custody(&pool).await;
+    run(&host, &pool, input()).await.expect("first run");
+    let operator = address_of(&pool, "operator").await;
+    let publisher = address_of(&pool, genesis::PUBLISHER_HANDLE).await;
+    let charter = format!("act:{publisher}:1:publish");
+    let mut keep = registrations(&pool).await;
+    keep.extend([
+        format!("act:{operator}:1:opinion"),
+        format!("act:{operator}:2:opinion"),
+        charter.clone(),
+    ]);
+    rewind_to_partial_genesis(&pool, &keep).await;
+    for statement in [
+        "UPDATE l1_acts SET status = 'sealed', approval_signature = NULL, approved_at = NULL
+         WHERE act_id = $1",
+        "UPDATE genesis_handshake_nonces g SET content_nonce = c.content_nonce
+         FROM act_payloads c WHERE c.act_id = g.act_id AND g.act_id = $1",
+        "DELETE FROM act_payloads WHERE act_id = $1",
+    ] {
+        sqlx::query(statement)
+            .bind(&charter)
+            .execute(&pool)
+            .await
+            .expect("rewinds to the crash");
+    }
+
+    let outcome = run(&host, &pool, input()).await.expect("repairs");
+    assert_eq!(outcome, BootstrapOutcome::Repaired);
+    assert_eq!(
+        mirror::record_ids_in_epoch(&pool, 1)
+            .await
+            .expect("ids")
+            .len(),
+        8
+    );
+    let id = ActId::parse(&charter).expect("act id");
+    let stored = host.sealed_act(&id).await.expect("reads").expect("stored");
+    let carriage = content_store::act_payload(&pool, &charter)
+        .await
+        .expect("reads")
+        .expect("the resume wrote the carriage");
+    assert_eq!(
+        content_commitment(
+            &id,
+            &stored.pre_commitment,
+            carriage.content_salt.as_deref().expect("salt"),
+            &content_pre_digest(
+                &id,
+                carriage.content_nonce.as_deref().expect("nonce"),
+                carriage.payload.as_deref().expect("payload"),
+            ),
+        )
+        .to_vec(),
+        stored.content_commitment
+    );
+    assert_eq!(
+        genesis::handshake_nonces(&pool, &charter)
+            .await
+            .expect("reads")
+            .expect("kept")
+            .content_nonce,
+        None
+    );
+}
+
 /// The same identifier holding different content is refused as
 /// divergence rather than replayed. The divergence is driven through the
 /// substrate here because that is what this claim covers; a re-run with
@@ -479,10 +559,14 @@ async fn an_occupied_author_sequence_is_refused(pool: PgPool) {
     assert!(matches!(err, BootstrapError::Diverged(_)), "got {err:?}");
 }
 
-/// Every genesis act lands witness-only on the substrate, and each one
-/// with a payload — the Charter and the role Tag — has its carriage beside
-/// it in `act_payloads`, opening the witness the host kept. A full-empty
-/// payload has no carriage row.
+/// Every genesis act lands under the two-nonce handshake and witness-only
+/// on the substrate, and each one with a payload — the Charter and the
+/// role Tag — has its whole content pair beside it in `act_payloads`: the
+/// pair's content pre-digest and the salt open the witness the host kept,
+/// and the pair's nonce is no longer in the bootstrap's handshake custody.
+/// A full-empty payload has no carriage row; its pre-commitment, which
+/// the host keeps, recomputes from the empty payload and the nonces the
+/// bootstrap kept, and its record reads unmarked.
 ///
 /// Every genesis act lands witness-only on the substrate, with carriage beside each payload that opens its witness.
 /// ´claim:bootstrap:genesis-carriage-opens-the-witness-the-host-kept´
@@ -502,20 +586,56 @@ async fn every_genesis_act_lands_witness_only_with_its_carriage_beside_it(pool: 
             .expect("stored");
         assert!(stored.sealed.is_none(), "{id} kept its handshake custody");
         let carriage = content_store::act_payload(&pool, &id).await.expect("reads");
-        if stored.payload_len == 0 {
-            assert!(
-                carriage.is_none(),
-                "{id} has an empty payload and a carriage row"
+        let kept = genesis::handshake_nonces(&pool, &id)
+            .await
+            .expect("reads")
+            .expect("the bootstrap kept the act's nonces");
+        assert_eq!(kept.dependency_nonce, stored.dependency_nonce);
+        let marked = mirror::record_full(&pool, &id)
+            .await
+            .expect("reads")
+            .expect("landed")
+            .payload_marked;
+        let Some(carriage) = carriage else {
+            let empty = content_pre_digest(
+                &act_id,
+                &kept
+                    .content_nonce
+                    .expect("an empty payload's nonce stays kept"),
+                &[],
             );
+            assert_eq!(
+                pre_commitment(
+                    &stored.body,
+                    &empty,
+                    &dependency_pre_digest(&act_id, &stored.dependency_nonce, &stored.deps)
+                )
+                .to_vec(),
+                stored.pre_commitment,
+                "{id} has no carriage, so its payload is the empty one"
+            );
+            assert!(!marked, "{id}: an empty payload reads unmarked");
             continue;
-        }
+        };
         carried += 1;
-        let carriage = carriage.unwrap_or_else(|| panic!("{id} has no carriage"));
-        let payload = carriage.payload.expect("full carriage holds its payload");
-        let salt = carriage.content_salt.expect("full carriage holds its salt");
-        assert_eq!(payload.len() as u64, stored.payload_len);
+        assert!(marked, "{id}: a carried payload reads marked");
         assert_eq!(
-            content_commitment(&act_id, &stored.pre_commitment, &salt, &payload).to_vec(),
+            kept.content_nonce, None,
+            "{id}: the nonce moved into carriage"
+        );
+        let payload = carriage.payload.expect("full carriage holds its payload");
+        let nonce = carriage
+            .content_nonce
+            .expect("full carriage holds its nonce");
+        let salt = carriage.content_salt.expect("full carriage holds its salt");
+        assert_eq!(
+            content_commitment(
+                &act_id,
+                &stored.pre_commitment,
+                &salt,
+                &content_pre_digest(&act_id, &nonce, &payload)
+            )
+            .to_vec(),
             stored.content_commitment,
             "the carriage of {id} opens its witness"
         );
@@ -568,7 +688,7 @@ async fn registrations(pool: &PgPool) -> Vec<String> {
 }
 
 /// A repair resuming over genesis acts the substrate already accepted —
-/// their payload, salt and nonce gone, their carriage beside them — is not
+/// their salt gone, their carriage and kept nonces beside them — is not
 /// mistaken for divergence: it finishes the sequence.
 ///
 /// A repair over accepted, witness-only genesis acts finishes the sequence rather than refusing it as divergence.
@@ -589,7 +709,7 @@ async fn a_genesis_repair_over_an_accepted_act_is_not_refused_as_diverged(pool: 
             .expect("gate")
     );
     let witness_only: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM l1_acts WHERE status = 'accepted' AND payload IS NULL",
+        "SELECT COUNT(*) FROM l1_acts WHERE status = 'accepted' AND content_salt IS NULL",
     )
     .fetch_one(&pool)
     .await
@@ -597,14 +717,16 @@ async fn a_genesis_repair_over_an_accepted_act_is_not_refused_as_diverged(pool: 
     assert_eq!(witness_only, 8);
 }
 
-/// An accepted act holding no payload is still compared: a stored body,
-/// payload length or carriage that disagrees with the genesis input is
-/// refused, the carriage case as unrepairable because it is the carriage
-/// that is wrong. (The kept acts are Registrations, whose empty payloads
+/// An accepted act is still compared: a stored body, pre-commitment or
+/// carriage that disagrees with the genesis input is refused, the
+/// carriage case as unrepairable because it is the carriage that is wrong.
+/// The pre-commitment is the host's binding of the payload — recomputed
+/// from the input and the kept nonces, it stands in for the payload the
+/// host never held. (The kept acts are Registrations, whose empty payloads
 /// carry no row, so the carriage case plants one that does not open the
 /// witness.)
 ///
-/// A repair over an accepted act still refuses a body, payload length or carriage that disagrees with the genesis input.
+/// A repair over an accepted act still refuses a body, pre-commitment or carriage that disagrees with the genesis input.
 /// ´claim:bootstrap:a-witness-only-act-is-still-compared´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_genesis_repair_with_changed_input_over_an_accepted_act_is_still_refused(pool: PgPool) {
@@ -627,21 +749,30 @@ async fn a_genesis_repair_with_changed_input_over_an_accepted_act_is_still_refus
         .await
         .expect("restore the body");
 
-    sqlx::query("UPDATE l1_acts SET payload_len = 3 WHERE act_id = $1")
+    let original: Vec<u8> =
+        sqlx::query_scalar("SELECT pre_commitment FROM l1_acts WHERE act_id = $1")
+            .bind(&operator_reg)
+            .fetch_one(&pool)
+            .await
+            .expect("reads");
+    sqlx::query("UPDATE l1_acts SET pre_commitment = $2 WHERE act_id = $1")
         .bind(&operator_reg)
+        .bind(vec![0x0f_u8; 32])
         .execute(&pool)
         .await
-        .expect("tamper the length");
+        .expect("tamper the pre-commitment");
     let err = run(&host, &pool, input()).await.expect_err("diverged");
     assert!(matches!(err, BootstrapError::Diverged(_)), "got {err:?}");
-    sqlx::query("UPDATE l1_acts SET payload_len = 0 WHERE act_id = $1")
+    sqlx::query("UPDATE l1_acts SET pre_commitment = $2 WHERE act_id = $1")
         .bind(&operator_reg)
+        .bind(&original)
         .execute(&pool)
         .await
-        .expect("restore the length");
+        .expect("restore the pre-commitment");
 
     sqlx::query(
-        "INSERT INTO act_payloads (act_id, payload, content_salt) VALUES ($1, '', '\\x00')",
+        "INSERT INTO act_payloads (act_id, payload, content_nonce, content_salt)
+         VALUES ($1, '\\x01', '\\x02', '\\x00')",
     )
     .bind(&operator_reg)
     .execute(&pool)
@@ -691,21 +822,13 @@ async fn relay_operator_profile_update(host: &StandIn, pool: &PgPool) -> (Uuid, 
     .expect("prepares update");
 
     let write = staged::load(pool, prepared.id).await.expect("loads");
-    let pre = key.pre_sign(write.proposal);
-    let sealed = api::relay::submit_pre_signed(
-        &boundary,
-        pool,
-        prepared.id,
-        PreSignedParts {
-            author_pubkey: pre.author_pubkey.clone(),
-            nonce: pre.nonce.clone(),
-            pre_signature: pre.pre_signature.clone(),
-        },
-    )
-    .await
-    .expect("seals");
+    let pre = PreSigned::sign(&key, write.proposal);
+    let sealed =
+        api::relay::submit_pre_signed(&boundary, pool, prepared.id, PreSignedParts::from(&pre))
+            .await
+            .expect("seals");
     let host_key = boundary.host_public_key().await.expect("host key");
-    let witness = key.approve(&pre, &sealed, &host_key).expect("approves");
+    let witness = pre.approve(&key, &sealed, &host_key).expect("approves");
     api::relay::submit_approval(&boundary, pool, prepared.id, witness.approval_signature)
         .await
         .expect("relays");

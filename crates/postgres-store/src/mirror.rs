@@ -28,6 +28,14 @@ pub enum MirrorError {
     Storage(#[from] sqlx::Error),
 }
 
+impl From<crate::content::ContentError> for MirrorError {
+    fn from(e: crate::content::ContentError) -> Self {
+        match e {
+            crate::content::ContentError::Storage(e) => Self::Storage(e),
+        }
+    }
+}
+
 /// The last fully-ingested epoch; 0, the empty boundary, when nothing has
 /// been ingested — epochs number from 1.
 pub async fn last_ingested_epoch(pool: &PgPool) -> Result<i64, MirrorError> {
@@ -72,7 +80,6 @@ struct PackageRows {
     epoch: Vec<i64>,
     act_time: Vec<i64>,
     position: Vec<i64>,
-    payload_marked: Vec<bool>,
     payload_witness: Vec<Vec<u8>>,
     leg_record_id: Vec<String>,
     leg_role: Vec<String>,
@@ -105,7 +112,6 @@ impl PackageRows {
             rows.epoch.push(record.epoch);
             rows.act_time.push(record.act_time);
             rows.position.push(record.position);
-            rows.payload_marked.push(record.payload_marked);
             rows.payload_witness.push(record.payload_witness.clone());
             for leg in &record.legs {
                 let spec = record
@@ -150,6 +156,15 @@ impl PackageRows {
     }
 }
 
+/// The payload mark is CoGra's, read off its own carriage: the published
+/// record carries none, and a host that never holds the content pair
+/// cannot tell an empty payload from a full one (layer1-interface.md §8.2,
+/// "Verified act"; §8.4, "Payload state"). A record is marked exactly when
+/// its act has a carriage row, full or reduced — a full-empty payload has
+/// none. The staged carriage of the epoch's acts is promoted first, on
+/// this transaction, so the mark every fold and notification reads is set
+/// before the record is visible; on a rebuild the carriage already stands
+/// and the same marks come back (`content::promote_staged_carriage`).
 pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), MirrorError> {
     package.check_order_of_record()?;
     let mut tx = pool.begin().await?;
@@ -165,19 +180,23 @@ pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), M
         });
     }
     let rows = PackageRows::build(package);
+    crate::content::promote_staged_carriage(&mut tx, &rows.record_id).await?;
     sqlx::query!(
         "INSERT INTO mirror_records
              (record_id, family, author, epoch, act_time, position,
               payload_marked, payload_witness)
-         SELECT * FROM unnest($1::text[], $2::text[], $3::text[], $4::bigint[],
-                              $5::bigint[], $6::bigint[], $7::boolean[], $8::bytea[])",
+         SELECT r.record_id, r.family, r.author, r.epoch, r.act_time, r.position,
+                EXISTS (SELECT 1 FROM act_payloads c WHERE c.act_id = r.record_id),
+                r.payload_witness
+         FROM unnest($1::text[], $2::text[], $3::text[], $4::bigint[],
+                     $5::bigint[], $6::bigint[], $7::bytea[])
+              AS r(record_id, family, author, epoch, act_time, position, payload_witness)",
         &rows.record_id,
         &rows.family,
         &rows.author,
         &rows.epoch,
         &rows.act_time,
         &rows.position,
-        &rows.payload_marked,
         &rows.payload_witness,
     )
     .execute(&mut *tx)
