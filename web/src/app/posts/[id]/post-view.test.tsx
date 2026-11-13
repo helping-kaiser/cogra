@@ -2292,7 +2292,8 @@ describe("PostView", () => {
     const add = await screen.findByTestId("comment-add");
     const reply = await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.reply", "c1"));
     for (const door of [add, reply]) {
-      expect(door.className).toContain("opacity-[var(--state-disabled)]");
+      // The token itself, not `disabled:`'s variant of it, which every Button carries.
+      expect(door.classList.contains("opacity-[var(--state-disabled)]")).toBe(true);
       expect(door).not.toBeDisabled();
     }
   });
@@ -2308,7 +2309,7 @@ describe("PostView", () => {
     await openComments();
     const add = await screen.findByTestId("comment-add");
     const reply = await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.reply", "c1"));
-    for (const door of [add, reply]) expect(door.className).not.toContain("opacity-[var(--state-disabled)]");
+    for (const door of [add, reply]) expect(door.classList.contains("opacity-[var(--state-disabled)]")).toBe(false);
   });
 
   // ApplicantFeed.md:45-53's face on the post's own detail (the shared
