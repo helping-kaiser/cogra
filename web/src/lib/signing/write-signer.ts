@@ -264,7 +264,7 @@ export function createWriteSigner(deps: {
       case "AWAITING_PRE_SIGN": {
         if (pre !== null) {
           // The submit response was lost: re-send THIS device's material
-          // — the stored nonce, never a fresh one.
+          // — both stored nonces, never fresh ones.
           return submitAndApprove(key, id, pre);
         }
         let fresh: PreSignedProposal;
