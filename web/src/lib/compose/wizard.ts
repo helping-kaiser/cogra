@@ -632,10 +632,10 @@ export type WizardAction =
   | { type: "reorder"; from: number; to: number }
   | { type: "focus"; index: number }
   /**
-   * `frameWidth` is the crop viewport's width at the tap, which is what lets
-   * each picture keep the size it stood at (`reshape`); null where none is known.
+   * `stageWidth` is the crop stage's width at the tap, which the new frame's
+   * bounds are measured against (`reshape`); null where none is known.
    */
-  | { type: "shape"; shape: PostShape; frameWidth?: number | null }
+  | { type: "shape"; shape: PostShape; stageWidth?: number | null }
   | { type: "crop"; id: string; crop: Crop }
   | { type: "altText"; id: string; altText: string }
   | { type: "upload"; id: string; upload: AssetUpload }
@@ -790,19 +790,18 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       // re-framing happens against the ORIGINAL picture, never against the last
       // crop. The measured area is the previous shape's rectangle, so keeping
       // it would bake the old shape into the upload; dropping it makes the
-      // cropper measure a fresh one from the media. Each picture keeps the
-      // size and the place it stood at, and only the shape changes around it
+      // cropper measure a fresh one from the media. Each picture keeps its
+      // scale and its place, and only the frame changes around it
       // (`reshape`), so a reader who framed three pictures and then tried
       // another shape keeps what they had chosen for each one.
       if (action.shape === state.shape) return state;
-      const from = POST_SHAPES[state.shape].ratio;
       const to = POST_SHAPES[action.shape].ratio;
       return {
         ...state,
         shape: action.shape,
         assets: state.assets.map((asset) => ({
           ...asset,
-          crop: reshape(asset.crop, from, to, action.frameWidth ?? null),
+          crop: reshape(asset.crop, to, action.stageWidth ?? null),
         })),
       };
     }

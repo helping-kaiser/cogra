@@ -79,6 +79,8 @@ export function ProfileMediaField({
           shape={kind}
           crop={choice.crop}
           onChange={(crop) => onChoice({ ...choice, crop })}
+          // AvatarCrop.md:25: the zoom slider stands under the crop on both platforms.
+          zoomSlider
           testId={`${testIdPrefix}-${kind}-crop`}
         />
       ) : (
