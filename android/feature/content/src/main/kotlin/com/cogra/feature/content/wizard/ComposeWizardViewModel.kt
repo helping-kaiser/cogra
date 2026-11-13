@@ -787,8 +787,21 @@ class ComposeWizardViewModel @Inject constructor(
      * later stages' previews read the same map to draw what the author
      * framed (jakob 2026-09-01).
      */
-    fun onCropsCommitted(crops: Map<String, CropSpec>) = _state.update { state ->
-        if (state.crops == crops) state else state.copy(crops = crops)
+    fun onCropsCommitted(crops: Map<String, CropSpec>) {
+        val current = _state.value
+        if (current.crops == crops) return
+        // A NEW FRAMING MAKES A SENT PICTURE THE WRONG PICTURE: a pick framed
+        // again after its upload started or finished — back from the details
+        // stage, or re-shaped by a chip — is sent again when the crop is left,
+        // or the post would publish the framing the author moved away from
+        // (the avatar flow's rule, AvatarFlowViewModel.onCropCommitted).
+        val reframed = current.picked
+            .filter { it.upload !is AssetUpload.Idle && current.crops[it.uri] != crops[it.uri] }
+            .map { it.uri }
+        reframed.forEach { uploads.remove(it)?.cancel() }
+        _state.update { state ->
+            reframed.fold(state.copy(crops = crops)) { next, uri -> next.withUpload(uri, AssetUpload.Idle) }
+        }
     }
 
     private fun cropSpecsFor(state: ComposeWizardState): Map<String, CropSpec> {
