@@ -42,10 +42,11 @@ pub enum RelayError {
     /// re-prepares under a fresh sequence value.
     #[error("staged write {0} lost its seal; re-prepare")]
     Wedged(Uuid),
-    /// A resubmission whose pre-commitment differs from the sealed one —
-    /// returning the stored act would tell a re-signing client its new
-    /// bytes were sealed. Refused; only a byte-identical replay is
-    /// answered idempotently.
+    /// A resubmission whose pre-commitment differs from the one recorded
+    /// or sealed. Returning the stored act would tell a re-signing client
+    /// that its new bytes were sealed, and recording them over a leg in
+    /// `sealing` would pair one leg's nonces with the other's salts.
+    /// Refused; only a byte-identical replay is answered idempotently.
     #[error("staged write {0}: resubmitted pre-commitment differs from the sealed one")]
     ReplayMismatch(Uuid),
     /// The pre-commitment was recorded but its display rows could not be
@@ -216,6 +217,7 @@ pub async fn submit_pre_signed<B: L1Boundary>(
                 "the content nonce was already used for another act".into(),
             ));
         }
+        Err(staged::StagedError::PreSignMismatch(_)) => return Err(RelayError::ReplayMismatch(id)),
         Err(e) => return Err(e.into()),
     };
     if let Err(e) = crate::content::stage_pending(pool, &write, pre_signed_at).await {

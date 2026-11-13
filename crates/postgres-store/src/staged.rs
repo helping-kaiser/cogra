@@ -42,6 +42,11 @@ pub enum StagedError {
     /// "Entropy custody"). Nothing was recorded.
     #[error("staged write {0}: the content nonce was already used for another act")]
     ContentNonceReused(Uuid),
+    /// A pre-commitment leg offered for a write in `sealing` that differs
+    /// from the leg already recorded. Only a byte-identical retry runs
+    /// again. Nothing was recorded.
+    #[error("staged write {0}: the pre-commitment differs from the one being sealed")]
+    PreSignMismatch(Uuid),
     #[error(transparent)]
     Storage(#[from] sqlx::Error),
 }
@@ -646,7 +651,10 @@ async fn transition(
 /// `sealing`, returning the authoring instant the content dates from.
 /// Accepts a retry from `sealing` (a relay that died between recording
 /// and sealing) — `pre_signed_at` is set only the first time, so a retry
-/// gets back the same instant rather than moving it.
+/// gets back the same instant rather than moving it. The retry must
+/// carry the recorded leg byte for byte; a different one is refused as
+/// [`StagedError::PreSignMismatch`]. A write a redaction reaped is
+/// refused as [`StagedError::Reaped`].
 ///
 /// The content nonce's non-reuse is checked in the same transaction, a
 /// carriage obligation (layer1-interface.md §8.2, "Entropy custody"): its
@@ -663,7 +671,9 @@ pub async fn record_pre_signed(
 ) -> Result<chrono::DateTime<chrono::Utc>, StagedError> {
     let mut tx = pool.begin().await?;
     let Some(row) = sqlx::query!(
-        "SELECT author, act_id FROM staged_writes
+        "SELECT author, act_id, state, payload IS NULL AS \"reaped!\",
+                author_pubkey, content_nonce, dependency_nonce, pre_signature
+         FROM staged_writes
          WHERE id = $1 AND state IN ('awaiting_pre_sign', 'sealing')
          FOR UPDATE",
         id,
@@ -674,6 +684,31 @@ pub async fn record_pre_signed(
         drop(tx);
         return Err(missed_transition(pool, id, "awaiting_pre_sign or sealing").await);
     };
+    // The caller loaded the write before this lock; a redaction may have
+    // reaped it since. A reaped write can no longer be signed.
+    if row.reaped {
+        return Err(StagedError::Reaped(id));
+    }
+    // A write in `sealing` may already be at the host under the recorded
+    // leg. Only a byte-identical retry may run again; a different leg
+    // would put its nonces beside the other leg's salts.
+    if row.state == StagedState::Sealing.as_str() {
+        let recorded = (
+            row.author_pubkey.as_deref(),
+            row.content_nonce.as_deref(),
+            row.dependency_nonce.as_deref(),
+            row.pre_signature.as_deref(),
+        );
+        let offered = (
+            Some(pre.author_pubkey.as_slice()),
+            Some(pre.content_nonce.as_slice()),
+            Some(pre.dependency_nonce.as_slice()),
+            Some(pre.pre_signature.as_slice()),
+        );
+        if recorded != offered {
+            return Err(StagedError::PreSignMismatch(id));
+        }
+    }
     let digest = crypto::nonce_digest(&row.author, &pre.content_nonce);
     if !reserve_content_nonce(&mut tx, &digest, &row.act_id).await? {
         return Err(StagedError::ContentNonceReused(id));

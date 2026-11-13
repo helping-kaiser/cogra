@@ -677,6 +677,80 @@ async fn a_content_nonce_is_refused_for_a_second_act_by_its_author(pool: PgPool)
         .expect("a fresh content nonce signs");
 }
 
+/// A write in `sealing` takes only the leg it already recorded, byte for
+/// byte. A second leg with other nonces and another signature (a
+/// concurrent submit of a different blob) is refused, and the row still
+/// holds the first leg. The second leg's content nonce is not reserved,
+/// so it stays free for another act.
+///
+/// A write being sealed takes only a byte-identical retry of its recorded pre-commitment leg.
+/// ´claim:staged:a-sealing-write-takes-only-its-recorded-leg´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_sealing_write_refuses_a_different_pre_commitment_leg(pool: PgPool) {
+    let alice = actor(&pool, "alice", "alice").await;
+    let id = stage(&pool, alice, &proposal("alice", 0), 0).await;
+    let first = pre_parts();
+    let other = PreSignedParts {
+        content_nonce: vec![21; 32],
+        dependency_nonce: vec![22; 32],
+        pre_signature: vec![23; 64],
+        ..pre_parts()
+    };
+    staged::record_pre_signed(&pool, id, &first)
+        .await
+        .expect("the first leg");
+    assert!(
+        matches!(
+            staged::record_pre_signed(&pool, id, &other).await,
+            Err(StagedError::PreSignMismatch(refused)) if refused == id
+        ),
+        "a different leg is refused while sealing"
+    );
+    let w = staged::load(&pool, id).await.expect("loads");
+    assert_eq!(w.state, StagedState::Sealing);
+    assert_eq!(w.pre_signed, Some(first.clone()), "the first leg stands");
+    staged::record_pre_signed(&pool, id, &first)
+        .await
+        .expect("a byte-identical retry still runs");
+    let later = stage(&pool, alice, &proposal("alice", 1), 0).await;
+    staged::record_pre_signed(&pool, later, &other)
+        .await
+        .expect("the refused leg's content nonce was never reserved");
+}
+
+/// A write a redaction reaped between the relay's load and the recording
+/// of its leg is refused as reaped, and nothing is recorded. Without the
+/// check, the leg would put a content nonce beside a reaped payload, a
+/// row the schema refuses, and the caller would see a storage fault.
+///
+/// A write reaped after it was loaded is refused as reaped when its leg is recorded.
+/// ´claim:staged:a-reaped-write-takes-no-leg´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_write_reaped_after_its_load_takes_no_pre_commitment_leg(pool: PgPool) {
+    let alice = actor(&pool, "alice", "alice").await;
+    let id = stage(&pool, alice, &proposal("alice", 0), 0).await;
+    let loaded = staged::load(&pool, id).await.expect("the relay loads it");
+    assert_eq!(loaded.state, StagedState::AwaitingPreSign);
+    let mut conn = pool.acquire().await.expect("conn");
+    assert_eq!(
+        staged::reap_payload(&mut conn, "act:alice:0:opinion")
+            .await
+            .expect("a redaction reaps it"),
+        1
+    );
+    let got = staged::record_pre_signed(&pool, id, &pre_parts()).await;
+    assert!(
+        matches!(got, Err(StagedError::Reaped(refused)) if refused == id),
+        "refused as reaped, got {got:?}"
+    );
+    let state: String = sqlx::query_scalar("SELECT state FROM staged_writes WHERE id = $1")
+        .bind(id)
+        .fetch_one(&pool)
+        .await
+        .expect("reads");
+    assert_eq!(state, "awaiting_pre_sign", "nothing was recorded");
+}
+
 /// The payload mark is read off CoGra's carriage when the record arrives
 /// (data-model.md "Act payload carriage"): a record is marked exactly when
 /// its act has a carriage row, full or reduced. A sealed staged write's
