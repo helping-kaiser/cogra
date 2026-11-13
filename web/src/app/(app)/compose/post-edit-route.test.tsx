@@ -683,7 +683,13 @@ describe("PostEditRoute — one batch (EditCompose, EditActs)", () => {
     expect(within(sheet).getByTestId("post-edit-acts-row-citationsWithdrawn")).toHaveTextContent(
       "2",
     );
-    expect(within(sheet).getByText("They land together, or none does.")).toBeInTheDocument();
+    // EditActs.md (round 46): no land-together line; the title's ? opens How
+    // signing works over the sheet, and nothing is signed by it.
+    expect(within(sheet).queryByText("They land together, or none does.")).toBeNull();
+    fireEvent.click(within(sheet).getByRole("button", { name: "How signing works" }));
+    const help = await screen.findByTestId("post-edit-help");
+    expect(help).toHaveTextContent("They sign together: all of them land, or none does.");
+    expect(sheet).toHaveAttribute("open");
   });
 
   it("stages the edit record, the tag acts and a withdrawal in one signing pass", async () => {

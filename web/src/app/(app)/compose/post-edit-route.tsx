@@ -709,7 +709,13 @@ export function PostEditRoute({
         }}
         testId="post-edit-discard-confirm"
       />
-      <ActsSheet open={sheet === "acts"} rows={rows} onClose={() => setSheet(null)} testId="post-edit-acts" />
+      <ActsSheet
+        open={sheet === "acts"}
+        rows={rows}
+        onClose={() => setSheet(null)}
+        onHelp={() => setHelp(HELP_TOPICS.howSigningWorks)}
+        testId="post-edit-acts"
+      />
       {/* EditPad: mounted per opening, so it opens at the edit's own pick and
           Cancel has nothing to put back. Set stages the pick; nothing signs
           before Sign the edit, and a Set at 0.00 asks nothing (EditPad.md). */}
