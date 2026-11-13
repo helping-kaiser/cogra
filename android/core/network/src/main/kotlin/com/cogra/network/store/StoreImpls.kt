@@ -47,7 +47,8 @@ private data class StoredHandshake(
 /**
  * The field only a one-nonce handshake record carries. Such a record is
  * whole and readable — nothing was lost — but nothing this device signs
- * can approve under it, so it reads as absent without marking storage.
+ * can approve under it, so it is deleted where it is met, without marking
+ * storage.
  */
 private const val ONE_NONCE_FIELD = "nonce"
 
@@ -172,12 +173,14 @@ class IdentityStoreImpl @Inject constructor(
         return scoped(account, HS_PREFIX)
     }
 
-    override suspend fun handshake(stagedWriteId: String): PreSignedProposal? =
-        handshakePrefix()?.let { prefix -> store.get(prefix + stagedWriteId) }?.let { bytes ->
+    override suspend fun handshake(stagedWriteId: String): PreSignedProposal? {
+        val name = handshakePrefix()?.let { it + stagedWriteId } ?: return null
+        return store.get(name)?.let { bytes ->
             // Garbage material reads as absent — marked, never fatal; the
             // signer treats a missing handshake as its own degraded case.
-            // A one-nonce record reads as absent too, unmarked: it is the
-            // earlier handshake's whole record, not lost storage.
+            // A one-nonce record reads as absent too, unmarked, and is
+            // deleted: it is the earlier handshake's whole record, not lost
+            // storage, and nothing this build signs can complete it.
             val text = bytes.decodeToString()
             try {
                 val stored = json.decodeFromString<StoredHandshake>(text)
@@ -189,7 +192,7 @@ class IdentityStoreImpl @Inject constructor(
                     preSignature = unb64(stored.preSignature),
                 )
             } catch (_: SerializationException) {
-                if (!isOneNonceRecord(text)) store.markStorageLost()
+                if (isOneNonceRecord(text)) store.remove(name) else store.markStorageLost()
                 null
             } catch (_: WireException) {
                 store.markStorageLost()
@@ -199,6 +202,7 @@ class IdentityStoreImpl @Inject constructor(
                 null
             }
         }
+    }
 
     override suspend fun saveHandshake(stagedWriteId: String, pre: PreSignedProposal) {
         val prefix = handshakePrefix() ?: return
@@ -221,7 +225,22 @@ class IdentityStoreImpl @Inject constructor(
 
     override suspend fun handshakeIds(): Set<String> {
         val prefix = handshakePrefix() ?: return emptySet()
+        dropOneNonceRecords(prefix)
         return store.names(prefix).map { it.removePrefix(prefix) }.toSet()
+    }
+
+    /**
+     * Deletes every one-nonce record under [prefix], in one transaction, so
+     * none is counted, resumed or kept at rest. An unopenable value is left
+     * in place and unmarked here, as the listing always left it; its loss
+     * is marked where it is read.
+     */
+    private suspend fun dropOneNonceRecords(prefix: String) {
+        store.edit {
+            for (name in names(prefix)) {
+                if (get(name)?.let { isOneNonceRecord(it.decodeToString()) } == true) remove(name)
+            }
+        }
     }
 
     // No adoption: carried expectations arrived after multi-account custody,

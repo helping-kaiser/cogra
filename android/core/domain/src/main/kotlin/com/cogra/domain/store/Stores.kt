@@ -93,7 +93,7 @@ interface IdentityStore {
     /**
      * The pre-signed material of one staged write, keyed by its id, or
      * null when this device holds none it can approve under — material of
-     * an earlier handshake shape reads as none.
+     * an earlier handshake shape reads as none and is deleted.
      */
     suspend fun handshake(stagedWriteId: String): PreSignedProposal?
 
@@ -101,7 +101,10 @@ interface IdentityStore {
 
     suspend fun clearHandshake(stagedWriteId: String)
 
-    /** Every staged-write id with persisted material — the resume set. */
+    /**
+     * Every staged-write id with persisted material — the resume set.
+     * Material of an earlier handshake shape is deleted, never listed.
+     */
     suspend fun handshakeIds(): Set<String>
 
     /**

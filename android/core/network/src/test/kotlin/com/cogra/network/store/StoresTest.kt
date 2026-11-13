@@ -695,27 +695,73 @@ class StoresTest {
         assertThat(StorageHealthImpl(dataStore).storageLost.first()).isTrue()
     }
 
+    /** A record as the one-nonce handshake wrote it: whole, readable, and one `nonce`. */
+    private fun oneNonceRecord(actor: ActorKey): ByteArray {
+        val b64 = java.util.Base64.getEncoder()
+        val oneNonce = """{"proposal":"${b64.encodeToString(proposalOf(actor))}",""" +
+            """"authorPubkey":"${b64.encodeToString(actor.publicKeyBytes())}",""" +
+            """"nonce":"${b64.encodeToString(ByteArray(32) { 1 })}",""" +
+            """"preSignature":"${b64.encodeToString(ByteArray(64) { 2 })}"}"""
+        return oneNonce.encodeToByteArray()
+    }
+
     /**
      * A record the one-nonce handshake wrote — whole and readable, but
      * nothing the device signs now can approve under it. It reads as
-     * absent, so the signer takes its no-material path, and it is no loss
-     * of storage to report.
+     * absent, so the signer takes its no-material path; it is deleted, so
+     * it is not kept at rest; and it is no loss of storage to report.
      */
     @Test
-    fun aOneNonceHandshakeRecordReadsAsAbsentWithoutMarkingTheLoss() = runTest {
+    fun aOneNonceHandshakeRecordReadsAsAbsentIsDeletedAndMarksNoLoss() = runTest {
+        val file = File(tmp.newFolder(), "test.preferences_pb")
+        val dataStore = PreferenceDataStoreFactory.create(scope = scope) { file }
+        val encrypted = EncryptedStore(dataStore, FakeCipher())
+        val stores = Stores(encrypted)
+        stores.signIn("u1")
+        encrypted.put("acct:u1:handshake:w1", oneNonceRecord(ActorKey.generate()))
+        assertThat(stores.identity.handshake("w1")).isNull()
+        assertThat(encrypted.get("acct:u1:handshake:w1")).isNull()
+        assertThat(stores.identity.handshakeIds()).isEmpty()
+        assertThat(StorageHealthImpl(dataStore).storageLost.first()).isFalse()
+    }
+
+    // Listed before anything reads it, the record is still never counted:
+    // the home card's count and the resume set both come from this list.
+    @Test
+    fun aOneNonceHandshakeRecordIsNeverListedAndTheListingDeletesIt() = runTest {
         val file = File(tmp.newFolder(), "test.preferences_pb")
         val dataStore = PreferenceDataStoreFactory.create(scope = scope) { file }
         val encrypted = EncryptedStore(dataStore, FakeCipher())
         val stores = Stores(encrypted)
         stores.signIn("u1")
         val actor = ActorKey.generate()
-        val b64 = java.util.Base64.getEncoder()
-        val oneNonce = """{"proposal":"${b64.encodeToString(proposalOf(actor))}",""" +
-            """"authorPubkey":"${b64.encodeToString(actor.publicKeyBytes())}",""" +
-            """"nonce":"${b64.encodeToString(ByteArray(32) { 1 })}",""" +
-            """"preSignature":"${b64.encodeToString(ByteArray(64) { 2 })}"}"""
-        encrypted.put("acct:u1:handshake:w1", oneNonce.encodeToByteArray())
-        assertThat(stores.identity.handshake("w1")).isNull()
+        encrypted.put("acct:u1:handshake:old", oneNonceRecord(actor))
+        stores.identity.saveHandshake("current", actor.preSign(decodeProposal(proposalOf(actor))))
+        assertThat(stores.identity.handshakeIds()).containsExactly("current")
+        assertThat(encrypted.get("acct:u1:handshake:old")).isNull()
+        assertThat(stores.identity.handshake("current")).isNotNull()
+        assertThat(StorageHealthImpl(dataStore).storageLost.first()).isFalse()
+    }
+
+    // The wedge this closes: a resume over a store holding only such a
+    // record has nothing to continue, so it ends with no result at all —
+    // never a Failed one for a record no build can complete.
+    @Test
+    fun aResumeOverOnlyAOneNonceRecordHasNothingPending() = runTest {
+        val file = File(tmp.newFolder(), "test.preferences_pb")
+        val dataStore = PreferenceDataStoreFactory.create(scope = scope) { file }
+        val encrypted = EncryptedStore(dataStore, FakeCipher())
+        val stores = Stores(encrypted)
+        stores.signIn("u1")
+        val actor = ActorKey.generate()
+        stores.identity.saveActorSeed(actor.seed())
+        encrypted.put("acct:u1:handshake:w1", oneNonceRecord(actor))
+        val signer = com.cogra.domain.signing.WriteSigner(
+            com.cogra.domain.testing.ThrowingWriteRepository(),
+            stores.identity,
+        )
+        assertThat(signer.resume()).isEmpty()
+        assertThat(stores.identity.handshakeIds()).isEmpty()
         assertThat(StorageHealthImpl(dataStore).storageLost.first()).isFalse()
     }
 
