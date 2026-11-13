@@ -3,14 +3,17 @@
 // hosts' (HistoryCommentMenu(Own), SavedCommentMenu, ProfileCommentsMenu(Own)).
 // Another's comment ends its menu with Report; the reader's own carries Edit
 // between Cite and Remove, the one door to its edit; the edit opened off the
-// thread returns to its host and re-reads it. Fakes only: no report, edit or
-// save leaves the JVM.
+// thread returns to its host, the one card settling in place, the list untouched.
+// Fakes only: no report, edit or save leaves the JVM.
 
 package com.cogra.feature.content
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -19,6 +22,7 @@ import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.LocalSnackbarHostState
 import com.cogra.domain.ActorRef
 import com.cogra.domain.CommentView
+import com.cogra.domain.Landing
 import com.cogra.domain.ModerationState
 import com.cogra.domain.ProfileComment
 import com.cogra.domain.history.HistoryCard
@@ -203,8 +207,18 @@ class CommentMenusTest {
     private val host = SnackbarHostState()
     private var refreshed = 0
     private var consumed = 0
+    private val rereads = mutableListOf<String>()
 
-    private fun renderHistory(comment: CommentView, commentsReturn: CommentsReturn = CommentsReturn()) {
+    /** What the edit destination hands back; a test flips it to `landed` to stage the return. */
+    private var returned by mutableStateOf(CommentsReturn())
+
+    /** The one-comment re-read: the edited comment, now pending — what the read serves right after a signing. */
+    private val reread: suspend (String) -> CommentView? = { id ->
+        rereads += id
+        mine.copy(landing = Landing.Pending)
+    }
+
+    private fun renderHistory(comment: CommentView) {
         compose.setContent {
             CompositionLocalProvider(LocalSnackbarHostState provides host) {
                 HistoryScreen(
@@ -218,8 +232,12 @@ class CommentMenusTest {
                     doors = HistoryDoors(cards = noDoors, onComposeWithTag = {}),
                     hooks = hooks,
                     reportSheet = recordReport,
-                    commentsReturn = commentsReturn,
-                    onCommentsReturnConsumed = { consumed++ },
+                    commentsReturn = returned,
+                    onCommentsReturnConsumed = {
+                        consumed++
+                        returned = CommentsReturn()
+                    },
+                    rereadComment = reread,
                 )
             }
         }
@@ -269,13 +287,43 @@ class CommentMenusTest {
         compose.onNodeWithTag("history.menuSheet").assertDoesNotExist()
     }
 
-    /** HistoryCommentMenuOwn.md:17 — an edit signed off the thread returns to History and re-reads it. */
+    /**
+     * HistoryCommentMenuOwn.md:17, CommentEdit.md:89 — signed off the thread,
+     * History comes back as it was left: the list is NOT read again, the one
+     * edited comment is, and its card settles in place wearing Still settling;
+     * the thread never opens.
+     */
     @Test
-    fun anEditSignedOffTheThreadReturnsToHistoryAndReReads() {
-        renderHistory(mine, CommentsReturn(landed = true))
-        assertThat(refreshed).isEqualTo(1)
+    fun anEditSignedOffTheThreadSettlesItsCardInPlaceWithoutReloadingHistory() {
+        renderHistory(mine)
+        compose.onNodeWithTag("history_comment_mine_pending", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("history.commentCard.menu").performClick()
+        compose.onNodeWithTag("history.menuSheet.edit").performClick()
+        compose.waitForIdle()
+        returned = CommentsReturn(landed = true)
+        compose.waitForIdle()
+        assertThat(refreshed).isEqualTo(0)
+        assertThat(rereads).containsExactly("mine")
         assertThat(consumed).isEqualTo(1)
+        compose.onNodeWithTag("history.commentCard:mine").assertExists()
+        compose.onNodeWithTag("history_comment_mine_pending", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag("postDetail.threadSheet").assertDoesNotExist()
+    }
+
+    /**
+     * A signed result no edit of this host's opened and no thread takes is
+     * consumed all the same, so the next thread raised here cannot announce
+     * it; nothing is re-read and the list is not reloaded.
+     */
+    @Test
+    fun aReturnNoEditOpenedIsConsumedAndReadsNothing() {
+        renderHistory(mine)
+        returned = CommentsReturn(landed = true)
+        compose.waitForIdle()
+        assertThat(consumed).isEqualTo(1)
+        assertThat(rereads).isEmpty()
+        assertThat(refreshed).isEqualTo(0)
+        compose.onNodeWithTag("history_comment_mine_pending", useUnmergedTree = true).assertDoesNotExist()
     }
 
     /** SavedCommentMenu.md:3, :5 — `saved.menuSheet`: Unsave first, Report at the tail. */
@@ -316,11 +364,11 @@ class CommentMenusTest {
 
     /**
      * ProfileCommentsMenuOwn.md:5, :7, :17 — the own comment's menu on the own
-     * profile is `profile.menuSheet` with Edit; an edit signed off the thread
-     * re-reads the profile.
+     * profile is `profile.menuSheet` with Edit; signed, the profile comes back
+     * as it was left and the card settles in place wearing Still settling.
      */
     @Test
-    fun theOwnProfilesCommentMenuEditsAndTheReturnReReads() {
+    fun theOwnProfilesCommentMenuEditsAndTheCardSettlesInPlace() {
         var profileEdits = 0
         compose.setContent {
             HostedCardsScope(
@@ -333,14 +381,17 @@ class CommentMenusTest {
                     onReply = {},
                     onEditComment = { _, _ -> profileEdits++ },
                     onSignInOrJoin = {},
-                    commentsReturn = CommentsReturn(landed = true),
-                    onCommentsReturnConsumed = { consumed++ },
+                    commentsReturn = returned,
+                    onCommentsReturnConsumed = {
+                        consumed++
+                        returned = CommentsReturn()
+                    },
                 ),
                 hooks = hooks.copy(onEditComment = { _, _ -> profileEdits++ }),
                 revealed = emptyMap(),
                 tag = "profile",
                 notify = {},
-                onRefresh = { refreshed++ },
+                rereadComment = reread,
             ) { hosted ->
                 Column {
                     hosted.comment(
@@ -353,12 +404,15 @@ class CommentMenusTest {
             }
         }
         compose.waitForIdle()
-        assertThat(refreshed).isEqualTo(1)
-        assertThat(consumed).isEqualTo(1)
         compose.onNodeWithTag("profile.comments.commentCard.menu").performClick()
         compose.onNodeWithTag("profile.menuSheet").assertExists()
         compose.onNodeWithTag("profile.menuSheet.edit").performClick()
         compose.waitForIdle()
         assertThat(profileEdits).isEqualTo(1)
+        returned = CommentsReturn(landed = true)
+        compose.waitForIdle()
+        assertThat(rereads).containsExactly("mine")
+        assertThat(consumed).isEqualTo(1)
+        compose.onNodeWithTag("profile_comment_mine_pending", useUnmergedTree = true).assertExists()
     }
 }

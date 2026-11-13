@@ -9,9 +9,13 @@ package com.cogra.feature.content
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import com.cogra.core.designsystem.DataNode
@@ -68,6 +72,8 @@ internal data class CardActions(
     val reveals: Map<String, SensitiveMark>,
     val onOpenComments: (String) -> Unit,
     val onReport: (ReportAsk) -> Unit,
+    /** The host's off-thread edit return: which edit it opened, and the comments it re-read since. */
+    val editReturn: EditReturn? = null,
 ) {
     val viewerId: String? get() = hooks.viewerId
     val onShare: (String) -> Unit get() = hooks.onShare
@@ -141,7 +147,8 @@ internal fun ListCommentCard(
     val doors = actions.doors
     // THE CARD AS THIS DEVICE KNOWS IT NOW: removed here or anywhere since the
     // page was read, it stands as its mark in place (RM-G9).
-    val comment = listed.marked(rememberRemovedMarks())
+    // …and an edit signed off the thread since, standing in its place ([EditReturn]).
+    val comment = (actions.editReturn?.shown(listed) ?: listed).marked(rememberRemovedMarks())
     var licenseOpen by remember(comment.id) { mutableStateOf(false) }
     var removeOpen by remember(comment.id) { mutableStateOf(false) }
     val own = actions.viewerId != null && comment.author?.id == actions.viewerId
@@ -151,7 +158,10 @@ internal fun ListCommentCard(
             own = own,
             // THE EDIT OPENED OFF THE THREAD RETURNS TO THIS HOST (CommentEdit.md:89):
             // its caption names what the comment answers, as the head row does.
-            onEdit = { actions.onEditComment(comment.id, target?.let { headRowOf(it).label }.orEmpty()) },
+            onEdit = {
+                actions.editReturn?.opening(comment.id)
+                actions.onEditComment(comment.id, target?.let { headRowOf(it).label }.orEmpty())
+            },
             onRemove = { removeOpen = true },
             onReport = { actions.onReport(ReportAsk(comment.id, ReportKind.Comment)) },
             placement = menu,
@@ -201,26 +211,58 @@ internal fun ListCommentCard(
 
 /**
  * AN EDIT OPENED OFF THE THREAD RETURNS TO ITS HOST (CommentEdit.md:89,
- * HistoryCommentMenuOwn.md:17, ProfileCommentsMenuOwn.md:17): signed, the host
- * comes back as it was left and re-reads, so the edited card settles in place
- * wearing Still settling — and the thread never opens. A return while a thread
- * stands over the host is the thread's own (it re-reads and says so), so the
- * host leaves it alone.
+ * HistoryCommentMenuOwn.md:17, Saved.md:135, ProfileCommentsMenuOwn.md:17):
+ * signed, "that host comes back as it was left AND the edited comment's card
+ * settles in place there wearing Still settling" — so the host does NOT read
+ * its list again (History.md:117: the order stands until the next open or
+ * pull). It re-reads the ONE comment it opened the edit for and stands the
+ * fresh read in that card's place; the list, its order and its scroll hold.
+ * web's twin is the card's `fetchComment` re-read (`comment-feed-card.tsx`).
+ *
+ * The edit is its own destination, so the host's composition leaves while it
+ * runs: which comment was opened rides saved state, and the re-read lands
+ * once the host is back.
+ */
+@Stable
+internal class EditReturn(
+    private val opened: MutableState<String?>,
+    /** The comments re-read since an edit off the thread was signed, by id. */
+    val settled: Map<String, CommentView>,
+) {
+    /** The own menu's Edit was tapped on [commentId]'s card. */
+    fun opening(commentId: String) {
+        opened.value = commentId
+    }
+
+    /** The card as the host shows it: the fresh read once its edit was signed, else as listed. */
+    fun shown(listed: CommentView): CommentView = settled[listed.id] ?: listed
+}
+
+/**
+ * The host's half of [EditReturn]. A return the host does not handle — a
+ * signed reply or edit while no edit of its own was opened, with no thread
+ * standing over it to take it — is consumed all the same, so it cannot fire
+ * the thread's signed line the next time a thread opens here.
  */
 @Composable
-internal fun EditReturnsToHost(
+internal fun rememberEditReturn(
     commentsReturn: CommentsReturn,
     threadOpen: Boolean,
-    onRefresh: () -> Unit,
+    reread: suspend (String) -> CommentView?,
     onConsumed: () -> Unit,
-) {
+): EditReturn {
+    val opened = rememberSaveable { mutableStateOf<String?>(null) }
+    val settled = remember { mutableStateMapOf<String, CommentView>() }
     LaunchedEffect(commentsReturn.landed, threadOpen) {
-        if (commentsReturn.landed && !threadOpen) {
-            onRefresh()
-            onConsumed()
-        }
+        if (!commentsReturn.landed || threadOpen) return@LaunchedEffect
+        val id = opened.value
+        opened.value = null
+        onConsumed()
+        if (id != null) reread(id)?.let { settled[id] = it }
     }
+    return remember(opened, settled) { EditReturn(opened, settled) }
 }
+
 
 /** THE NEXT PAGE ARRIVES BECAUSE THE READER KEPT GOING (readme §13): asked a few cards short of the end. */
 @Composable

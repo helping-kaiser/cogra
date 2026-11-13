@@ -102,6 +102,7 @@ import com.cogra.core.designsystem.v2.media.ScrollStageHost
 import com.cogra.core.designsystem.v2.media.ScrollStageRow
 import com.cogra.core.designsystem.v2.media.SurfaceCover
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.domain.CommentView
 import com.cogra.domain.PostView
 import com.cogra.domain.content.isRevealed
 import com.cogra.domain.feed.FeedKind
@@ -194,6 +195,7 @@ fun HistoryRoute(
             },
             commentsReturn = commentsReturn,
             onCommentsReturnConsumed = onCommentsReturnConsumed,
+            rereadComment = rememberCommentReread(),
             tagCards = TagCardHooks(
                 onShare = { name -> context.sharePost(viewModel.topicShareUrl(name)) },
                 stance = topicStanceControl,
@@ -379,6 +381,8 @@ fun HistoryScreen(
     /** What came back from a comment edit or reply signed off this page — see [CommentsReturn]. */
     commentsReturn: CommentsReturn = CommentsReturn(),
     onCommentsReturnConsumed: () -> Unit = {},
+    /** One comment read afresh, for the card an edit signed off the thread settles ([EditReturn]). */
+    rereadComment: suspend (String) -> CommentView? = { null },
 ) {
     val snackbar = LocalSnackbarHostState.current
     // THE CARDS' MENUS SAVE THROUGH THE ONE OVERLAY AND HIDE THROUGH THE ONE
@@ -390,11 +394,11 @@ fun HistoryScreen(
     val layers = remember { CoveringLayers() }
     var commentsFor by rememberSaveable { mutableStateOf<String?>(null) }
     var reportFor by remember { mutableStateOf<ReportAsk?>(null) }
-    EditReturnsToHost(commentsReturn, threadOpen = commentsFor != null, callbacks.onRefresh, onCommentsReturnConsumed)
+    val editReturn = rememberEditReturn(commentsReturn, commentsFor != null, rereadComment, onCommentsReturnConsumed)
     var sheetOpen by rememberSaveable { mutableStateOf(false) }
     val notify = rememberHistoryNotify(snackbar)
     LoadNextAtTheTail(listState, state.hasNextPage, state.moreFailed, view.rows.size, callbacks.onLoadMore)
-    val actions = CardActions(hooks, doors.cards, state.reveals, { commentsFor = it }, { reportFor = it })
+    val actions = CardActions(hooks, doors.cards, state.reveals, { commentsFor = it }, { reportFor = it }, editReturn)
     val tagActions = TagCardActions(
         onOpen = doors.cards.onOpenTopic,
         onCompose = doors.onComposeWithTag,

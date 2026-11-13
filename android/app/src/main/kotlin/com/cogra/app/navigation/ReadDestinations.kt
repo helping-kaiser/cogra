@@ -412,8 +412,8 @@ private fun ShellScope.profileCardsHost(entry: NavBackStackEntry, postFrom: Stri
         onCommentsReturnConsumed = thread.onConsumed,
         onCommentsDepart = thread.onDepart,
     )
-    return { notify, refresh, content ->
-        CardListHost(doors = doors, routes = routes, tag = "profile", notify = notify, onRefresh = refresh) { hosted ->
+    return { notify, content ->
+        CardListHost(doors = doors, routes = routes, tag = "profile", notify = notify) { hosted ->
             content(ProfileCards(post = hosted.post, comment = hosted.comment, covered = hosted.covered))
         }
     }

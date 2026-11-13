@@ -28,6 +28,7 @@ import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.v2.media.CoveringLayers
 import com.cogra.core.designsystem.v2.media.LocalCoveringLayers
 import com.cogra.core.designsystem.v2.media.SurfaceCover
+import com.cogra.domain.CommentView
 import com.cogra.domain.PostView
 import com.cogra.domain.ProfileComment
 import com.cogra.domain.content.SensitiveMark
@@ -110,8 +111,6 @@ fun CardListHost(
     routes: HostedCardRoutes,
     tag: String,
     notify: (String) -> Unit,
-    /** The host page's own re-read: an edit signed off a card returns to the page and re-reads it. */
-    onRefresh: () -> Unit = {},
     viewModel: HostedCardsViewModel = hiltViewModel(),
     content: @Composable (HostedCards) -> Unit,
 ) {
@@ -128,7 +127,7 @@ fun CardListHost(
         stanceControl = nodeStanceControl,
     )
     ProvideRemoval {
-        HostedCardsScope(doors, routes, hooks, revealed, tag, notify, onRefresh, content)
+        HostedCardsScope(doors, routes, hooks, revealed, tag, notify, rememberCommentReread(), content)
     }
 }
 
@@ -141,7 +140,8 @@ internal fun HostedCardsScope(
     revealed: Map<String, SensitiveMark>,
     tag: String,
     notify: (String) -> Unit,
-    onRefresh: () -> Unit = {},
+    /** One comment read afresh, for the card an edit signed off the thread settles ([EditReturn]). */
+    rereadComment: suspend (String) -> CommentView? = { null },
     content: @Composable (HostedCards) -> Unit,
 ) {
     val layers = remember { CoveringLayers() }
@@ -150,10 +150,10 @@ internal fun HostedCardsScope(
     var commentsFor by rememberSaveable { mutableStateOf<String?>(null) }
     var commentsPost by remember { mutableStateOf<PostView?>(null) }
     var reportFor by remember { mutableStateOf<ReportAsk?>(null) }
-    EditReturnsToHost(
+    val editReturn = rememberEditReturn(
         commentsReturn = routes.commentsReturn,
         threadOpen = commentsFor != null,
-        onRefresh = onRefresh,
+        reread = rereadComment,
         onConsumed = routes.onCommentsReturnConsumed,
     )
     val actions = CardActions(
@@ -162,6 +162,7 @@ internal fun HostedCardsScope(
         reveals = revealed,
         onOpenComments = { commentsFor = it },
         onReport = { reportFor = it },
+        editReturn = editReturn,
     )
     val cards = HostedCards(
         post = { post, node ->

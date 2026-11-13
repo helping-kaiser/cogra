@@ -91,6 +91,7 @@ import com.cogra.core.designsystem.v2.media.ScrollStageHost
 import com.cogra.core.designsystem.v2.media.ScrollStageRow
 import com.cogra.core.designsystem.v2.media.SurfaceCover
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.domain.CommentView
 import com.cogra.domain.PostView
 import com.cogra.domain.content.isRevealed
 import com.cogra.domain.hidden.HiddenSet
@@ -217,6 +218,7 @@ fun SavedRoute(
             reportSheet = reportDoor(null, SAVED_REPORT_SHEET),
             commentsReturn = commentsReturn,
             onCommentsReturnConsumed = onCommentsReturnConsumed,
+            rereadComment = rememberCommentReread(),
         )
     }
 }
@@ -276,6 +278,8 @@ fun SavedScreen(
     /** What came back from a comment edit or reply signed off this page — see [CommentsReturn]. */
     commentsReturn: CommentsReturn = CommentsReturn(),
     onCommentsReturnConsumed: () -> Unit = {},
+    /** One comment read afresh, for the card an edit signed off the thread settles ([EditReturn]). */
+    rereadComment: suspend (String) -> CommentView? = { null },
 ) {
     val overlay = writes.overlayState()
     val snackbar = LocalSnackbarHostState.current
@@ -287,10 +291,10 @@ fun SavedScreen(
     val layers = remember { CoveringLayers() }
     var commentsFor by rememberSaveable { mutableStateOf<String?>(null) }
     var reportFor by remember { mutableStateOf<ReportAsk?>(null) }
-    EditReturnsToHost(commentsReturn, threadOpen = commentsFor != null, onRefresh, onCommentsReturnConsumed)
+    val editReturn = rememberEditReturn(commentsReturn, commentsFor != null, rereadComment, onCommentsReturnConsumed)
     val notify = rememberSavedNotify(snackbar)
     LoadNextAtTheTail(listState, state.hasNextPage, state.moreFailed, view.shown.size, onLoadMore)
-    val actions = CardActions(hooks, doors, state.reveals, { commentsFor = it }, { reportFor = it })
+    val actions = CardActions(hooks, doors, state.reveals, { commentsFor = it }, { reportFor = it }, editReturn)
     CompositionLocalProvider(LocalCoveringLayers provides layers, LocalSavedHost provides savedHost) {
         SavedScaffold(
             state = state,
