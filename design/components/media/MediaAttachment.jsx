@@ -86,9 +86,13 @@ import { VideoTransport } from "./VideoControls.jsx";
      transport for the one surface that has no fullscreen to offer — the
      composer's cover preview, where the clip is not published yet and there is
      no viewer to open.
-   · THE COVER IS THE CLIP'S FACE WHEREVER THE CLIP ISN'T RUNNING (`resting`):
-     first paint before autoplay, and every context where autoplay is suppressed
-     — reduced motion, data saver. It never returns once playback has started.
+   · THE COVER IS THE CLIP'S FACE WHEREVER THE CLIP ISN'T RUNNING ON A CARD
+     (`resting`): first paint before autoplay, and every context where autoplay
+     is suppressed — reduced motion, data saver. It never returns once playback
+     has started. THE STREAM AND THE VIEWER NEVER SHOW IT (jakob 2026-11-13, N7
+     and V1): there the clip stands at its own shape, playing or paused on its
+     own frame, and a cover stands — whole, at its own 4:5 — only where the clip
+     itself cannot load.
    · A CLIP NEED NOT HAVE ONE (jakob 2026-09-10). A vertical clip's default is
      NO cover, so `poster` is then the clip's FIRST FRAME, cropped exactly as
      the clip is — the same 4:5 centre-crop the frame takes, because a face

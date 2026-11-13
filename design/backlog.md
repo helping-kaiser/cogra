@@ -6172,3 +6172,27 @@ profile and in History; removed posts in History, Saved, the profile and the tag
 page; the Saved profile card (`FeedProfileMenu.md:7`); the deleted account's
 feed card (`FEED_DELETED_PROFILE_MENU`). Each is one board drawn exactly as its
 law states the rows; held while jakob decides whether post menus gain rows (M1).
+
+M1 is ruled (round 49): every post menu carries `Cited by` and `Opinions on
+this` before `License terms`, so each of these boards now has its rows
+settled; drawing them stays open.
+
+### 230 · A clip that cannot load has no drawn state · *design* · **filed 2026-11-13**
+
+Round 49 (jakob 2026-11-13, N7 and V1). The stream and the viewer never show
+a clip's cover; only a clip that cannot load may show its cover there, whole
+at its own 4:5, centred on the black, nothing cropped (`Reel.md`,
+`ViewerVideo.md`, `MediaViewer`'s prose). The tree draws no state for a clip
+that did not load — `Reel`'s `fault` is the next clips' load, the clip on
+screen still playing — so the sentence is law only. Drawing it needs the
+failure's own words and controls (a line? a Retry?), which no ruling gives.
+
+### 231 · The stream's ⋮: what Hide and Remove leave on the stream · *design* · **filed 2026-11-13**
+
+Round 49 (M2). `ReelMenu` draws the clip's post menu over the stream, but each
+host rules its own aftermath and the stream has none: what the stream shows
+after `Hide @mira` (her clips leave the stream? the clip on screen stays until
+a swipe?), after your own clip's `Remove` lands (the next clip takes the
+screen? a removal mark?), and whether the clip pauses while the sheet is up
+(the pad pauses it, the comments sheet stops it). The graph carries the two as
+gaps (`ReelMenu` 3 and 11).

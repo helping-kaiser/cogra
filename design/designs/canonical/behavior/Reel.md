@@ -60,9 +60,13 @@ WHEN swipe up on reel.stage GIVEN the next clips have not loaded and their load 
 
 WHEN tap reel.caption.notice.retry -> the next clips are asked for again AND reel.caption.notice goes once they come
 
-WHEN the stream opens GIVEN the device suppresses autoplay -> the tapped clip stands paused on its cover AND reel.playDisc, the card's own, stands in reel.soundDisc's corner AND NEVER the clip starts on its own
+WHEN the stream opens GIVEN the device suppresses autoplay -> the tapped clip stands paused on its own frame AND reel.playDisc, the card's own, stands in reel.soundDisc's corner AND NEVER the clip starts on its own AND NEVER its cover stands in its place
 
-WHEN swipe to another clip GIVEN the device suppresses autoplay -> that clip stands paused on its cover with reel.playDisc AND NEVER it starts on its own
+WHEN swipe to another clip GIVEN the device suppresses autoplay -> that clip stands paused on its own frame with reel.playDisc AND NEVER it starts on its own AND NEVER its cover stands in its place
+
+ALWAYS the stream never shows a clip's cover, its clip playing or paused on its own frame at its own shape
+
+ALWAYS the clip's cover stands in the stream, whole at its own 4:5, centred on the stream's black, nothing cropped, GIVEN the clip itself cannot load and its cover has
 
 WHEN tap reel.playDisc -> the clip plays AND reel.soundDisc takes the disc's corner
 

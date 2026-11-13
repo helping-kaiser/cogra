@@ -2716,10 +2716,13 @@ item 33, jakob's rulings the same day).
 - **A clip keeps its own shape, clamped to tall.** A clip's ratio is
   not a crop an author chose, so the crop vocabulary does not govern
   it: **16:9 and 1:1 display true, and anything taller than 4:5
-  centre-crops to 4:5** in a card. The cover shares the clip's ratio
-  and crops identically — it is the same clip's face, and a face that
-  disagreed with it would be a lie. **Letterboxing exists nowhere in
-  the product**: a clip fills the frame it is given, and the full 9:16
+  centre-crops to 4:5** in a card. The cover of a clip taller than 4:5
+  stands at 4:5, the tile's own shape — the card's face (jakob
+  2026-11-13, N7). **The stream and the viewer never show a cover**: a
+  clip there plays at its own shape, or stands paused on its own frame,
+  and only a clip that cannot load may show its cover, whole at its 4:5,
+  centred, nothing cropped (N7, V1). **Letterboxing exists nowhere else
+  in the product**: a clip fills the frame it is given, and the full 9:16
   frame lives on the stream and in the viewer. The
   post-fits-the-screen cap still bounds the tile as it bounds every
   tile, and under it the tile is **filled, never fitted**. **Square is

@@ -24,7 +24,7 @@ WHEN tap reel.stage.veil GIVEN the device allows autoplay -> the clip and reel.c
 
 WHEN tap reel.caption.show GIVEN the device allows autoplay -> the clip and reel.caption unveil together AND the clip joins the stage's rotation AND it plays
 
-WHEN tap reel.stage.veil or reel.caption.show GIVEN the device suppresses autoplay -> the clip and reel.caption unveil together AND the clip stands paused on its cover with reel.playDisc, the card's own, in reel.soundDisc's corner AND NEVER it starts on its own
+WHEN tap reel.stage.veil or reel.caption.show GIVEN the device suppresses autoplay -> the clip and reel.caption unveil together AND the clip stands paused on its own frame, never its cover, with reel.playDisc, the card's own, in reel.soundDisc's corner AND NEVER it starts on its own
 
 WHEN swipe up on reel.stage -> the next clip in the same list takes the screen AND this one stays veiled
 
