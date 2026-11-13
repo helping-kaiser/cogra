@@ -216,22 +216,29 @@ the exact host-sealed verified act
    proposal against the gesture its user ordered: it rebuilds what
    every act's body must be from the choices the user made, and
    refuses the whole gesture on any difference. Only then does it
-   recompute the pre-digests from the bytes it holds and sign the
-   proposal pre-commitment; the key never leaves it. The user never
-   signs blind bytes.
-3. **Relay and seal.** The backend submits the pre-signed
-   proposal to L1, whose host verifies it, adds the projection
-   salts, and returns the sealed **verified act**.
+   draw two independent nonces — a content nonce and a dependency
+   nonce — form the pre-digests from the bytes it holds, and sign
+   the proposal pre-commitment; the key never leaves it. The user
+   never signs blind bytes.
+3. **Relay and seal.** The backend carries the content pair — the
+   payload and its content nonce (§7) — so it runs the carriage
+   checks on it and submits the pre-signed proposal to L1 without
+   it: the host receives the content pre-digest, the dependency
+   list and the dependency nonce, verifies the pre-commitment, adds
+   the projection salts, and returns the sealed **verified act**.
 4. **Approve.** The client verifies the host seal and the exact
-   returned body and pre-commitment, checks the editions and both
-   commitment openings, and signs the **approval witness** over
-   the verified act and its seal — only then is the act orderable. The
+   returned body and pre-commitment, checks the editions, the
+   content commitment against the content pre-digest it recomputes
+   from its own payload and content nonce, and the dependency
+   commitment against the dependency list, and signs the **approval
+   witness** over the verified act and its seal — only then is the
+   act orderable. The
    backend relays the approval and drives retries across epoch
    boundaries; relaying confers nothing: both signatures cover
    the act, so the backend can neither alter it nor author one
    unasked.
 5. **Confirm.** The mirror converges on the accepted act and
-   the staged payload is promoted to permanent carriage (§7). A
+   the staged content pair is promoted to permanent carriage (§7). A
    prepared act that never lands is discarded, staged payload
    included, after a bounded number of epochs.
 
@@ -302,6 +309,16 @@ CoGra is the carriage service for its users' content. The model is
 **witness-anchored carriage**
 ([layer1-interface.md §8.4](layer1-interface.md#84-the-act-record-and-payload-carriage)):
 
+- **CoGra carries the content pair; Layer 1 keeps the witness.**
+  CoGra runs centralized append with decentralized carriage. The
+  content pair — the payload and its content nonce — never reaches
+  the host: it forms the content commitment over the content
+  pre-digest the backend sends
+  ([layer1-interface.md §8.2](layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake)).
+  The backend runs the pair's carriage checks before anything
+  reaches the host and holds the pair, with the host-drawn salt,
+  beside the witness
+  ([data-model.md "Act payload carriage"](../implementation/data-model.md#act-payload-carriage)).
 - **The container is the Peer Content Envelope** — a
   deterministic-CBOR manifest holding CoGra's structured fields
   (title, body text, …) and **digests** of media and large bodies.
@@ -327,8 +344,9 @@ CoGra is the carriage service for its users' content. The model is
   act (``prop:graph:removable-projection-invariance``); it is only
   invisible where conformance is enforced.
 - **Removal is the deletion story.** Payload state moves one way,
-  full → reduced: removing payload and salt erases content — never
-  rewrites it — while the structural record stays. The visible mark
+  full → reduced: removing the payload, its content nonce and salt
+  erases content — never rewrites it — while the structural record
+  stays. The visible mark
   for "never erase silently" is exactly this pair: the immutable
   structural record plus the monotone reduced-only payload state.
   Policy and flows: [layers.md](layers.md),
@@ -475,7 +493,7 @@ Discipline for update records:
   empty, not absent.
 - **History is public.** Superseded payloads remain published;
   removal (§7) is the only erasure and sweeps per record — full
-  deletion removes payload and salt across the whole revision
+  deletion removes payload, content nonce and salt across the whole revision
   chain while every structural record stays.
 
 What updates is what has a **cover** — a surface that renders the
