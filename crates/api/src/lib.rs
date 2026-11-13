@@ -485,7 +485,7 @@ fn unauthenticated_upload() -> axum::response::Response {
 /// one request only below [`media::RESUMABLE_THRESHOLD_BYTES`]; the
 /// envelope is the `operations` and `map` fields at their ceiling and the
 /// rest at [`multipart::MULTIPART_ENVELOPE_BYTES`]. At the defaults this
-/// is 10 MiB + 704 KiB.
+/// is 10 MiB + 832 KiB.
 fn anonymous_upload_absorb_bytes(media: &MediaConfig) -> usize {
     media
         .max_upload_bytes
