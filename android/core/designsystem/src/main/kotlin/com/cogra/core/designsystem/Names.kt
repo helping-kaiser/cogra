@@ -214,7 +214,10 @@ fun NameInLine(
  * [names] — is one unit that never stands on two lines: whole on the next line
  * when it does not fit the rest of this one, end-cut with "…" past a full line,
  * its trailing punctuation kept beside it. Text naming nobody is a plain Text.
- * The node speaks [text] as written.
+ * The node speaks [text] as written: its `Text` semantics is the original
+ * string, so `hasText` matches it whole or by substring, and nothing that
+ * reads the node ever sees a joiner or a cut. It offers no text-layout action,
+ * because the drawn string's offsets are not the spoken string's.
  */
 @Composable
 fun NameInText(
