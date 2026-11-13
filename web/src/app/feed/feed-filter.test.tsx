@@ -446,6 +446,36 @@ describe("the feed filter", () => {
         "what you've already seen waits below the Already seen line unless you ask for it back",
       );
     });
+
+    // Seam 314 / copy-voice *The filter*: the explainer and the veil pointer
+    // moved whole from the sections into the "?".
+    it("holds the Ranked / Newest explainer and the veil pointer in its \"?\"", async () => {
+      server.use(...rankedFeed([post("p1")], reads()));
+      renderFeed();
+      await openSheet();
+      fireEvent.click(within(sheet()).getByRole("button", { name: "How the filter works" }));
+      const help = await screen.findByTestId("feed-filter-help-dialog");
+      expect(help).toHaveTextContent(
+        "Ranked puts what's closest to you first — your view, no one else's. Newest ignores it and lists by time.",
+      );
+      expect(help).toHaveTextContent("How sensitive content is veiled is set in Settings.");
+    });
+
+    it("explains nothing in its sections: one hint, the forms', and only while no posts or comments are in", async () => {
+      server.use(...rankedFeed([post("p1")], reads()));
+      renderFeed();
+      await openSheet();
+      for (const section of ["kinds", "order", "also", "people", "people.everyone"]) {
+        expect(within(sheet()).queryByTestId(byNode(`feed.filterSheet.${section}.hint`))).toBeNull();
+      }
+      expect(within(sheet()).queryByTestId(byNode("feed.filterSheet.forms.hint"))).toBeNull();
+      expect(sheet()).not.toHaveTextContent("Combine");
+      expect(sheet()).not.toHaveTextContent("veiled");
+      fireEvent.click(chip("kinds.postsChip"));
+      expect(within(sheet()).getByTestId(byNode("feed.filterSheet.forms.hint"))).toHaveTextContent(
+        "Applies once posts or comments are in.",
+      );
+    });
   });
 
   describe("Done (FeedSheet.md:81-87)", () => {
@@ -746,10 +776,12 @@ describe("the feed filter", () => {
       await screen.findByTestId(byNode("feed.borrowedViewBand"));
       await openSheet();
       expect(within(sheet()).getByRole("radio", { name: /^@mira's people/ })).toBeInTheDocument();
-      expect(sheet()).toHaveTextContent("The whole feed, as far as @mira's eyes reach.");
-      expect(sheet()).toHaveTextContent(
-        "Ranked puts what's closest to @mira first — the view you're browsing from. Newest ignores it and lists by time.",
-      );
+      expect(sheet()).toHaveTextContent("Only the people @mira holds an opinion of.");
+      // The sheet explains nothing in its sections (seam 314): no Everyone
+      // line, no order hint — the "?" carries Ranked / Newest, in the
+      // reader's own first person.
+      expect(sheet()).not.toHaveTextContent("as far as");
+      expect(sheet()).not.toHaveTextContent("Ranked puts");
       expect(within(sheet()).getByRole("checkbox", { name: "Show what you've already seen" })).toBeInTheDocument();
       fireEvent.click(within(sheet()).getByRole("radio", { name: /^@mira's people/ }));
       expect(within(sheet()).getByRole("radiogroup", { name: "Which of @mira's people" })).toBeInTheDocument();

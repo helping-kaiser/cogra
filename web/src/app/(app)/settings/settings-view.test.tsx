@@ -1323,7 +1323,8 @@ describe("What your feed shows (SettingsReading.md)", () => {
     expect(within(dialog).getByTestId("settings.feedSheet.title")).toHaveTextContent("What your feed shows");
     expect(within(dialog).getByRole("heading", { name: "What your feed shows" })).toHaveFocus();
     expect(within(dialog).getByTestId("settings.feedSheet.title.help")).toHaveAccessibleName("How the filter works");
-    expect(within(dialog).getByTestId("settings.feedSheet.note")).toHaveTextContent("Every feed starts from this.");
+    // Nothing stands under the title (SettingsReading.jsx; seam 314).
+    expect(within(dialog).queryByTestId("settings.feedSheet.note")).toBeNull();
     // The feed's sections; a default never holds a topic.
     for (const section of ["kinds", "forms", "order", "also", "people"]) {
       expect(within(dialog).getByTestId(`settings.feedSheet.${section}`)).toBeInTheDocument();
