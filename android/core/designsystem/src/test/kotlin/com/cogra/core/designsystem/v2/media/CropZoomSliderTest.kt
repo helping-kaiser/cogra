@@ -14,7 +14,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 
 /**
  * The bar under the crop (jakob 2026-11-11: "the bar below the image does
@@ -23,7 +22,6 @@ import org.robolectric.annotation.Config
  * 8 px track, in a 48 px tall input.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(shadows = [ShadowBitmapLoadingWorkerJob::class], instrumentedPackages = ["com.canhub.cropper"])
 class CropZoomSliderTest {
 
     @get:Rule

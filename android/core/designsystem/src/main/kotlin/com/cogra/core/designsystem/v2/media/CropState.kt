@@ -1,6 +1,5 @@
 package com.cogra.core.designsystem.v2.media
 
-import android.graphics.Rect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -8,19 +7,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import com.canhub.cropper.CropImageView
-import com.cogra.core.designsystem.v2.token.MediaShape
 import kotlin.math.abs
-import kotlin.math.roundToInt
 
 /**
- * The window one picture is framed to, as fractions of the picture.
+ * The window one picture is framed to, as fractions of the UPRIGHT picture —
+ * the picture as the reader sees it, its EXIF orientation applied.
  *
- * Fractions rather than pixels because the view that produced them and
- * the bitmap the crop is finally applied to are different sizes — and
- * because a fraction survives rotation, process death, and the trip out
- * of the design system without either side learning the other's
- * dimensions.
+ * Fractions rather than pixels because the stage that produced them and the
+ * bitmap the crop is finally applied to are different sizes, and because a
+ * fraction survives rotation, process death, and the trip out of the design
+ * system without either side learning the other's dimensions. The upload
+ * (`AndroidMediaProcessor`) and every later preview ([CropTransformation])
+ * apply it to the upright picture, which is what the stage draws.
  *
  * The rectangle is always inside the unit square and never inverted.
  */
@@ -34,7 +32,7 @@ data class CropFraming(
     val height: Float get() = bottom - top
 
     companion object {
-        /** The whole picture — what an untouched framing means. */
+        /** The whole picture — what an untouched, never-measured framing means. */
         val Whole = CropFraming(0f, 0f, 1f, 1f)
 
         /** Clamps a candidate into the unit square, keeping it non-empty. */
@@ -51,429 +49,207 @@ data class CropFraming(
     }
 }
 
+/** The four discrete directions the non-drag route offers. */
+enum class NudgeDirection(val x: Int, val y: Int) {
+    Left(-1, 0),
+    Right(1, 0),
+    Up(0, -1),
+    Down(0, 1),
+}
+
 /**
- * The framing of one picture, and the handle the screen drives it by.
+ * One picture's framing under a FIXED frame (the one crop model, seam 301):
+ * the frame stands still at its shape and the picture is moved and zoomed
+ * under it ([CropGeometry]).
  *
- * The one-finger geometry belongs to the cropper library: [CropImageView]
- * owns the window, the drag, the corner handles and the ratio, and this
- * class is the Compose-side mirror of what it currently holds plus the
- * commands the invisible accessibility route, the slider and the pinch
- * need. The pinch is ours because the library's cannot hold a ratio
- * ([pinchBy]).
+ * **What it holds.** The placement — zoom and the picture's offset from the
+ * stage's centre — once the author has moved anything, with the offset kept
+ * as a share of the stage's width so a rotation or a wider screen keeps the
+ * picture where it was. Before that, the window it was opened with
+ * ([framing] reports it back verbatim, so re-entering a crop never reads as a
+ * change), or nothing: the picture at rest, centred at the frame's fill.
  *
- * [framing] is `rememberSaveable`, so a half-framed crop survives
- * rotation and process death; the view is re-attached to it on the way
- * back.
+ * **What it reports.** [framing], the window the frame shows as fractions of
+ * the upright picture: the crop's output, and what a return to the crop
+ * starts from. The geometry needs the picture's upright ratio
+ * ([sourceRatio]); until it is known nothing can be framed, and the framing
+ * is the one it was given.
+ *
+ * Every write happens in an event — a gesture, the slider, a key, an action,
+ * a shape chip, a layout pass — never in composition.
  */
 @Stable
-class CropState internal constructor(initial: CropFraming) {
+class CropState internal constructor(
+    initial: CropFraming?,
+    sourceRatio: Float?,
+    kind: CropKind,
+    frameRatio: Float,
+    edited: CropPlacement? = null,
+) {
 
-    var framing: CropFraming by mutableStateOf(initial)
+    /** Which crop this is: its stage and its frame's construction. */
+    var kind: CropKind by mutableStateOf(kind)
         private set
 
-    /**
-     * The live view, while one is attached.
-     *
-     * Held rather than mirrored because the accessibility actions have to
-     * move the *real* window synchronously — an action that only updated
-     * a copy would announce a change the reader cannot see.
-     */
-    internal var view: CropImageView? = null
+    /** The frame's shape, width ÷ height: the post's chosen shape, or a locked crop's. */
+    var frameRatio: Float by mutableStateOf(frameRatio)
+        private set
 
-    /**
-     * The window's shape the attached view has already been pointed at.
-     *
-     * Snapshot state because [zoom] reads it first: a plain field read
-     * while it was still null left the slider's composition depending on
-     * nothing at all, so it never recomposed and stood at 1× however far
-     * a pinch or a drag had zoomed.
-     */
-    private var framedAspect: CropAspect? by mutableStateOf(null)
+    /** The upright picture's width ÷ height, once known. */
+    var sourceRatio: Float? by mutableStateOf(sourceRatio?.takeIf { it.isFinite() && it > 0f })
+        private set
 
-    /**
-     * A framing that outlived its view and is waiting for the picture to
-     * come back — a rotation, a process death mid-crop, or a return to
-     * the crop stage from further along the wizard.
-     *
-     * It cannot be applied at attach time: the window is expressed
-     * against the picture, and the view knows nothing about the picture
-     * until the decode finishes.
-     */
-    private var pendingRestore: CropFraming? = null
+    /** The window this framing was opened with, until the author moves the picture. */
+    private var given: CropFraming? by mutableStateOf(initial?.takeUnless { it == CropFraming.Whole })
 
-    /**
-     * Whether this picture's opening window has been placed yet.
-     *
-     * The library opens on its own inset default, which leaves the
-     * author framing inside a window smaller than the stage they were
-     * given ("the area for cropping was to small", jakob 2026-09-01).
-     * The opening window is placed explicitly instead — the largest one
-     * the shape allows — so the full-bleed viewport is filled.
-     */
-    private var seeded = false
+    /** The author's placement, the offset as shares of the stage's width; null until moved. */
+    private var edited: CropPlacement? by mutableStateOf(edited)
 
-    /**
-     * Reported by the view whenever the reader moves the window.
-     *
-     * A window is this picture's to record only once this picture's own
-     * window has been placed. One view serves the whole filmstrip:
-     * asking it for the next picture blanks it outright, and it comes
-     * back holding the library's own default window — so a window
-     * reported before this framing's has been placed describes a
-     * picture, or a default, that is not this framing's (jakob
-     * 2026-09-01: "the preview of image 1 visibly changes every time i
-     * move image 2 crop").
-     *
-     * **And it is this picture's only if it is the right shape.** The
-     * view is held to a fixed aspect ratio, so every window the author
-     * can actually make comes back at the framed shape; one that does
-     * not is the view describing an overlay it has no settled layout
-     * for yet, not a framing anybody chose. Taking those was how a
-     * window covering the whole picture became the recorded framing —
-     * which uploaded the untouched original — and how a stage reopened
-     * on a window nobody had dragged there.
-     *
-     * [pictureRatio] is needed because the window travels as fractions:
-     * half the width of a tall picture is not the same shape as half the
-     * width of a wide one.
-     */
-    internal fun onWindowChanged(next: CropFraming, pictureRatio: Float) {
-        this.pictureRatio = pictureRatio
-        if (!seeded || pinching) return
-        if (!next.matches(framedAspect, pictureRatio)) return
-        framing = next
+    /** The stage on screen, in pixels, and the gutter the cover's and the circle's frames stand between. */
+    private var stage: StageMeasure? by mutableStateOf(null)
+
+    /** Whether the stage has been laid out, so the geometry is in its pixels. */
+    internal val isMeasured: Boolean get() = stage != null
+
+    /** The geometry the picture is framed in: the real stage, or the board's 390 before layout. */
+    internal fun geometry(): CropLayout? {
+        val ratio = sourceRatio ?: return null
+        val measured = stage ?: StageMeasure(CropGeometry.BOARD_WIDTH, CropGeometry.BOARD_GUTTER)
+        val stageSize = CropGeometry.stageOf(kind, measured.width)
+        val picture = CropGeometry.fittedPicture(ratio, stageSize)
+        val frame = CropGeometry.frameOf(kind, frameRatio, measured.width, measured.gutter)
+        val bounds = CropGeometry.zoomBounds(kind, picture, frameRatio, measured.width, measured.gutter)
+        return CropLayout(stageSize, picture, frame, bounds)
+    }
+
+    /** Where the picture stands now, in the geometry's units, held to the frame. */
+    internal fun placement(layout: CropLayout): CropPlacement {
+        val width = layout.stage.width
+        val raw = edited?.let { CropPlacement(it.zoom, it.x * width, it.y * width) }
+            ?: given?.let { CropGeometry.placementOf(it, layout.picture, layout.frame.size) }
+            ?: CropGeometry.rest(layout.bounds)
+        return CropGeometry.hold(raw, layout.picture, layout.frame.size, layout.bounds)
     }
 
     /**
-     * Arms this picture's framing for the decode that is about to run.
-     *
-     * Called when this state becomes the one the view is showing — the
-     * stage opening, or the filmstrip moving here. The window cannot be
-     * placed now: it is expressed against the picture, and the view
-     * knows nothing about the picture's dimensions until the decode
-     * finishes.
+     * What the frame shows, as fractions of the upright picture — the crop's
+     * output. A window opened and not moved comes back exactly as it was
+     * given, so a return to the crop never re-uploads a picture nobody touched.
      */
-    internal fun beginAttach() {
-        pendingRestore = framing.takeIf { it != CropFraming.Whole }
-        reshapeFrom = null
-        seeded = false
-    }
-
-    /**
-     * Whether [window] is a framing of this picture's shape.
-     *
-     * Null aspect means nothing has pointed the view at a shape yet, and
-     * there is therefore nothing a window could be measured against.
-     */
-    private fun CropFraming.matches(aspect: CropAspect?, pictureRatio: Float): Boolean =
-        aspect != null && CropWindowMath.isAtRatio(this, pictureRatio, aspect.ratio)
-
-    /**
-     * Places the window this picture wants, now that it is decoded —
-     * either a framing carried in from a previous life, or this
-     * picture's opening window. Returns true when it placed one.
-     *
-     * This runs from the library's **decode-complete** callback, because
-     * that is the only moment it can. `setImageUriAsync` clears any
-     * window seeded before it, the picture's dimensions are unknown
-     * until the bitmap lands ([CropImageView.wholeImageRect] is null
-     * until then), and the library reports no window of its own once the
-     * decode finishes: its `handleCropWindowChanged` reaches an
-     * `OnSetCropWindowChangeListener` only for a settled *change*, and
-     * nothing on the decode path makes one.
-     *
-     * `cropRect`'s setter is the documented way to place a window
-     * against the source bitmap: it seeds the overlay's initial rect,
-     * which the overlay applies as soon as it knows its own bounds.
-     */
-    internal fun applyPendingWindow(view: CropImageView): Boolean {
-        val whole = view.wholeImageRect ?: return false
-        if (whole.width() <= 0 || whole.height() <= 0) return false
-
-        val restore = pendingRestore
-        // A carried-in framing is put back only if it is still a framing
-        // of this shape. One that is not was never the author's — it is
-        // a window recorded from a view that had no layout to report
-        // against — and putting it back is how the stage reopened zoomed
-        // into a corner nobody had chosen. The opening window is the
-        // honest answer there.
-        val ratio = whole.width().toFloat() / whole.height().toFloat()
-        pictureRatio = ratio
-        holdCeiling(view, whole)
-        val next = restore?.let { carriedAcrossShapes(it, ratio) }
-        reshapeFrom = null
-        if (next != null) {
-            pendingRestore = null
-            seeded = true
-            framing = next
-            view.cropRect = CropWindowMath.rectOf(next, whole)
-            return true
+    val framing: CropFraming
+        get() {
+            val layout = geometry() ?: return given ?: CropFraming.Whole
+            val shown = CropGeometry.windowOf(placement(layout), layout.picture, layout.frame.size)
+            val opened = given
+            return if (edited == null && opened != null && shown.sameAs(opened)) opened else shown
         }
-        if (restore != null && restore.matches(framedAspect, ratio)) {
-            pendingRestore = null
-            seeded = true
-            view.cropRect = CropWindowMath.rectOf(restore, whole)
-            return true
+
+    /** The zoom as a share of the fill: the slider's value, 1 at the floor. */
+    val zoomShare: Float
+        get() {
+            val layout = geometry() ?: return CropGeometry.MIN_ZOOM
+            return placement(layout).zoom / layout.bounds.floor
         }
-        pendingRestore = null
-        return openWindow(view, whole)
+
+    /** The slider's top: the ceiling as a share of the fill (4 on the tallest frame, more on a shorter one). */
+    val zoomShareMax: Float
+        get() {
+            val layout = geometry() ?: return CropGeometry.MAX_ZOOM
+            return layout.bounds.ceiling / layout.bounds.floor
+        }
+
+    /** The picture's upright ratio, learned from the picker's header or from the decoded picture. */
+    fun learnSource(ratio: Float) {
+        if (sourceRatio == null && ratio.isFinite() && ratio > 0f) sourceRatio = ratio
+    }
+
+    /** The stage was laid out [widthPx] wide, the column's gutter [gutterPx]. */
+    internal fun onStage(widthPx: Float, gutterPx: Float) {
+        if (widthPx <= 0f) return
+        val next = StageMeasure(widthPx, gutterPx)
+        if (stage != next) stage = next
     }
 
     /**
-     * The largest window the shape allows — what a picture with no
-     * framing of its own opens on.
-     *
-     * The library's own default opens inset inside the stage, which
-     * leaves the author framing inside a window smaller than the one
-     * they were given ("the area for cropping was to small", jakob
-     * 2026-09-01).
+     * A shape chip: the frame changes to [ratio] around the picture, which
+     * keeps its scale and position, rising only to the new fill and shifting
+     * only as far as the new frame needs (ComposeCrop.md:19-23). Every picture
+     * of the post takes it — not only the one on the stage — so none is left
+     * framed at a shape the post no longer has.
      */
-    private fun openWindow(view: CropImageView, whole: Rect): Boolean {
-        if (seeded) return false
-        pictureRatio = whole.width().toFloat() / whole.height().toFloat()
-        holdCeiling(view, whole)
-        val aspect = framedAspect ?: return false
-        seeded = true
-        val opening = CropWindowMath.largestWindow(
-            targetRatio = aspect.ratio,
-            pictureRatio = whole.width().toFloat() / whole.height().toFloat(),
-        )
-        framing = opening
-        view.cropRect = CropWindowMath.rectOf(opening, whole)
-        return true
-    }
-
-    /**
-     * Drops whatever window the view holds and opens the picture again
-     * at the current shape.
-     *
-     * The seed is cleared first: `resetCropRect` re-initialises the
-     * overlay *from the window last seeded into it*, so resetting
-     * without clearing lands straight back on the framing being dropped.
-     */
-    private fun reopen(view: CropImageView) {
-        view.cropRect = null
-        view.resetCropRect()
-        val whole = view.wholeImageRect ?: return
-        openWindow(view, whole)
-    }
-
-    /**
-     * Points the window at a shape, and on a real switch **changes only
-     * the window** (ComposeCrop.md: "each picture keeps its scale and its
-     * position AND the shape's frame changes around it AND NEVER the picture
-     * shrinks to fit the new frame"; jakob's hand test 2026-11-11).
-     *
-     * The picture stays where it is on the stage; the new shape's window
-     * keeps the old one's centre and its zoom — the slider does not move —
-     * and is slid back inside the picture only as far as its new shape
-     * forces ([reshaped]). Every part of the picture stays reachable from
-     * there, which is what the earlier reset was protecting.
-     */
-    internal fun frameTo(view: CropImageView, aspect: CropAspect) {
-        val previous = framedAspect
-        if (previous == aspect) return
-        // Taken before the library hears of the new shape: its own re-layout
-        // reports a window of that shape, which would otherwise be recorded
-        // over the framing being carried.
-        val kept = framing
-        framedAspect = aspect
-        view.setAspectRatio(aspect.x, aspect.y)
-        // Only a real switch re-frames. The first application is just
-        // this view learning the shape it was always going to have, and
-        // resetting there would throw away a framing that survived a
-        // rotation — the one thing the saveable state exists to keep.
-        if (previous == null) return
-        framing = kept
-        val whole = view.wholeImageRect?.takeIf { it.width() > 0 && it.height() > 0 }
-        if (!seeded || whole == null) {
-            // The view is between pictures: the framing is carried to the
-            // decode, which re-shapes it against the right bitmap.
-            reshapeFrom = previous
+    fun reshape(ratio: Float) {
+        if (ratio == frameRatio) return
+        val before = geometry()
+        if (before == null) {
+            frameRatio = ratio
             return
         }
-        val ratio = whole.width().toFloat() / whole.height().toFloat()
-        holdCeiling(view, whole)
-        moveTo(CropWindowMath.reshaped(kept, previous.ratio, aspect.ratio, ratio))
+        val kept = placement(before)
+        frameRatio = ratio
+        val after = geometry() ?: return
+        commit(CropGeometry.hold(kept, after.picture, after.frame.size, after.bounds), after)
+    }
+
+    /** One step of a gesture, in the stage's pixels ([CropGeometry.transformed]). */
+    internal fun transform(centroidX: Float, centroidY: Float, panX: Float, panY: Float, zoomBy: Float) {
+        val layout = geometry() ?: return
+        val next = CropGeometry.transformed(
+            placement(layout),
+            centroidX,
+            centroidY,
+            panX,
+            panY,
+            zoomBy,
+            layout.stage,
+            layout.picture,
+            layout.frame.size,
+            layout.bounds,
+        )
+        commit(next, layout)
+    }
+
+    /** The slider's move: the zoom at [share] of the fill, about the frame's centre. */
+    fun zoomTo(share: Float) {
+        val layout = geometry() ?: return
+        commit(
+            CropGeometry.zoomedTo(share * layout.bounds.floor, placement(layout), layout.picture, layout.frame.size, layout.bounds),
+            layout,
+        )
     }
 
     /**
-     * The shape a carried framing was made at, when the post's shape moved
-     * on while its picture was off the stage ([frameTo]).
+     * The arrow keys' move (ComposeCrop.md): the picture moves [dx]/[dy]
+     * shares of its own size — 1 % a press, 10 % with Shift — and stops where
+     * its edge meets the frame's.
      */
-    private var reshapeFrom: CropAspect? = null
-
-    /**
-     * A framing carried in from before a shape switch, re-shaped to the
-     * current shape ([CropWindowMath.reshaped]) — or null when there was no
-     * switch, or the framing was never one of the shape it is said to be.
-     */
-    private fun carriedAcrossShapes(restore: CropFraming, pictureRatio: Float): CropFraming? {
-        val from = reshapeFrom ?: return null
-        val to = framedAspect ?: return null
-        if (!restore.matches(from, pictureRatio)) return null
-        return CropWindowMath.reshaped(restore, from.ratio, to.ratio, pictureRatio)
+    fun panBy(dx: Float, dy: Float) {
+        val layout = geometry() ?: return
+        commit(CropGeometry.pannedBy(dx, dy, placement(layout), layout.picture, layout.frame.size), layout)
     }
 
     /**
-     * Puts the window back to the opening window at the current shape —
-     * TalkBack's `Reset framing`, re-framed against the **original**.
+     * TalkBack's nudge (design/readme.md §10): the FRAMING moves toward
+     * [direction] — `Nudge left` shows more of the picture's left — so the
+     * picture moves the other way, one tenth of itself.
      */
-    fun reset() {
-        framing = CropFraming.Whole
-        pendingRestore = null
-        seeded = false
-        view?.let { reopen(it) }
-    }
+    fun nudge(direction: NudgeDirection) = panBy(-direction.x * NUDGE_STEP, -direction.y * NUDGE_STEP)
 
-    /** The non-gesture equivalent design/readme.md §10 requires of a drag. */
-    fun nudge(direction: NudgeDirection) = moveTo(CropWindowMath.nudged(framing, direction))
-
-    /** The non-gesture equivalent of a pinch, held under the ceiling. */
-    fun stepZoom(inward: Boolean) = moveTo(ceiled(CropWindowMath.zoomed(framing, inward)))
+    /** TalkBack's zoom step: a tenth of the fill in or out, about the frame's centre. */
+    fun stepZoom(inward: Boolean) = zoomTo(zoomShare + if (inward) ZOOM_STEP else -ZOOM_STEP)
 
     /** True when zooming further in that direction would change anything. */
-    fun canZoom(inward: Boolean): Boolean = ceiled(CropWindowMath.zoomed(framing, inward)) != framing
+    fun canZoom(inward: Boolean): Boolean =
+        if (inward) zoomShare < zoomShareMax - EPSILON else zoomShare > CropGeometry.MIN_ZOOM + EPSILON
 
-    /**
-     * The picture's own shape (width ÷ height), once a decode has told us —
-     * what the zoom is measured against. Null until then.
-     */
-    var pictureRatio: Float? by mutableStateOf(null)
-        private set
-
-    /** The largest window the shape allows on this picture — the zoom's 1×. */
-    private fun fill(): CropFraming? {
-        val aspect = framedAspect ?: return null
-        val ratio = pictureRatio ?: return null
-        return CropWindowMath.largestWindow(aspect.ratio, ratio)
+    /** TalkBack's `Reset framing`: the picture at rest, centred at the fill. */
+    fun reset() {
+        given = null
+        edited = null
     }
 
-    /**
-     * How far in the framing stands, from the fill (1×) to the ceiling
-     * (`CROP_ZOOM_MAX`, about 4× — `CropViewport.jsx`): the zoom slider's
-     * value (`CropZoom`). A pinch moves the window and so moves this.
-     */
-    val zoom: Float
-        get() {
-            val fill = fill() ?: return CROP_ZOOM_MIN
-            if (framing.width <= 0f) return CROP_ZOOM_MIN
-            return (fill.width / framing.width).coerceIn(CROP_ZOOM_MIN, CROP_ZOOM_MAX)
-        }
-
-    /**
-     * The slider's move: the window at [scale] of the fill, about its own
-     * centre, slid back inside the picture — never below the fill, never
-     * past the ceiling (ComposeCrop.md).
-     */
-    fun zoomTo(scale: Float) {
-        val fill = fill() ?: return
-        moveTo(windowAt(fill, scale.coerceIn(CROP_ZOOM_MIN, CROP_ZOOM_MAX), framing))
-    }
-
-    /**
-     * The arrow keys' move (ComposeCrop.md): the window slides [dx]/[dy] —
-     * fractions of the picture, 1 % a press and 10 % with Shift — and stops
-     * where its edge meets the picture's.
-     */
-    fun panBy(dx: Float, dy: Float) = moveTo(
-        CropWindowMath.slidInside(
-            CropFraming(framing.left + dx, framing.top + dy, framing.right + dx, framing.bottom + dy),
-        ),
-    )
-
-    /**
-     * One step of a two-finger gesture, in the viewport's pixels
-     * ([CropWindowMath.pinched]): the window scales about [centroidX]/
-     * [centroidY] by [zoom] and travels by [panX]/[panY]. The picture is
-     * laid out whole and never zoomed ([CropWindowMath.fitted]), so the
-     * fingers' pixels map onto it by one fixed scale for the whole gesture.
-     */
-    @Suppress("LongParameterList")
-    internal fun pinchBy(centroidX: Float, centroidY: Float, panX: Float, panY: Float, zoom: Float) {
-        val view = view ?: return
-        val fill = fill() ?: return
-        val whole = view.wholeImageRect ?: return
-        if (whole.width() <= 0 || whole.height() <= 0) return
-        val picture = CropWindowMath.fitted(
-            stageWidth = view.width.toFloat(),
-            stageHeight = view.height.toFloat(),
-            pictureRatio = whole.width().toFloat() / whole.height().toFloat(),
-        )
-        val next = CropWindowMath.pinched(framing, fill, picture, centroidX, centroidY, panX, panY, zoom)
-        if (next != framing) moveTo(next)
-    }
-
-    /**
-     * A second finger has landed: from here until every finger is up the
-     * window is the pinch's alone.
-     *
-     * The framing is taken from the window the view is **drawing** — a
-     * second finger can land mid-drag, while the library is still moving
-     * the window and has not yet reported where it is, and starting from
-     * the last reported framing would snap the window back to it. Reports
-     * the view makes while the pinch runs are its own echoes of the
-     * windows the pinch placed, so they are not recorded over it.
-     */
-    internal fun pinchStart() {
-        pinching = true
-        val view = view ?: return
-        val whole = view.wholeImageRect ?: return
-        val rect = view.cropRect ?: return
-        val shown = CropWindowMath.framingOf(rect, whole)
-        if (shown.matches(framedAspect, whole.width().toFloat() / whole.height().toFloat())) framing = shown
-    }
-
-    /** Every finger is up: the view's reports are the author's again. */
-    internal fun pinchEnd() {
-        pinching = false
-    }
-
-    private var pinching = false
-
-    /** The window at [scale] of [fill], about [around]'s centre, slid inside the picture. */
-    private fun windowAt(fill: CropFraming, scale: Float, around: CropFraming): CropFraming {
-        val width = fill.width / scale
-        val height = fill.height / scale
-        val cx = (around.left + around.right) / 2f
-        val cy = (around.top + around.bottom) / 2f
-        return CropWindowMath.slidInside(
-            CropFraming(cx - width / 2f, cy - height / 2f, cx + width / 2f, cy + height / 2f),
-        )
-    }
-
-    /** A window no smaller than the ceiling allows. */
-    private fun ceiled(next: CropFraming): CropFraming {
-        val fill = fill() ?: return next
-        if (next.width <= 0f || fill.width / next.width <= CROP_ZOOM_MAX) return next
-        return windowAt(fill, CROP_ZOOM_MAX, next)
-    }
-
-    /**
-     * Tells the library the ceiling, in the source's own pixels: its drag
-     * handles and its pinch stop at a quarter of the fill
-     * (`setMinCropResultSize`), so no gesture reaches past about 4×.
-     */
-    private fun holdCeiling(view: CropImageView, whole: Rect) {
-        val fill = fill() ?: return
-        view.setMinCropResultSize(
-            (whole.width() * fill.width / CROP_ZOOM_MAX).toInt().coerceAtLeast(1),
-            (whole.height() * fill.height / CROP_ZOOM_MAX).toInt().coerceAtLeast(1),
-        )
-    }
-
-    /**
-     * Puts a computed window on the screen.
-     *
-     * The state is updated whether or not a view is attached, so the
-     * arithmetic is testable on its own and a detached action is still
-     * recorded rather than silently lost.
-     */
-    private fun moveTo(next: CropFraming) {
-        framing = next
-        val view = view ?: return
-        val whole = view.wholeImageRect ?: return
-        view.cropRect = CropWindowMath.rectOf(next, whole)
+    private fun commit(next: CropPlacement, layout: CropLayout) {
+        val width = layout.stage.width
+        edited = CropPlacement(next.zoom, next.x / width, next.y / width)
     }
 
     /**
@@ -481,22 +257,18 @@ class CropState internal constructor(initial: CropFraming) {
      *
      * With no visible controls this is the only way a screen-reader user
      * learns whether a nudge did anything, so it names how much of the
-     * picture is kept and where the window sits rather than only
-     * announcing that a crop exists.
+     * picture is kept and where the frame sits on it.
      */
     fun framingDescription(): String {
-        val kept = (framing.width * framing.height * PERCENT).toInt().coerceIn(0, PERCENT.toInt())
-        val across = edgeWord(framing.left, framing.right, "left", "right")
-        val down = edgeWord(framing.top, framing.bottom, "top", "bottom")
+        val shown = framing
+        val kept = (shown.width * shown.height * PERCENT).toInt().coerceIn(0, PERCENT.toInt())
+        val across = edgeWord(shown.left, shown.right, "left", "right")
+        val down = edgeWord(shown.top, shown.bottom, "top", "bottom")
         val where = listOfNotNull(across, down).ifEmpty { listOf("centred") }
         return "Keeping $kept% of the picture, ${where.joinToString(" and ")}"
     }
 
-    /**
-     * Which edge the window is against, or null when it is centred on
-     * that axis. A percentage of a picture nobody can see is not
-     * information; "at the left" is.
-     */
+    /** Which edge the frame is against, or null when it is centred on that axis. */
     private fun edgeWord(low: Float, high: Float, lowWord: String, highWord: String): String? {
         val slack = 1f - (high - low)
         if (slack <= EDGE_SLACK) return null
@@ -507,6 +279,23 @@ class CropState internal constructor(initial: CropFraming) {
         }
     }
 
+    internal fun saved(): List<Float?> {
+        val opened = given
+        val moved = edited
+        return listOf(
+            kind.ordinal.toFloat(),
+            frameRatio,
+            sourceRatio,
+            opened?.left,
+            opened?.top,
+            opened?.right,
+            opened?.bottom,
+            moved?.zoom,
+            moved?.x,
+            moved?.y,
+        )
+    }
+
     internal companion object {
         private const val PERCENT = 100f
 
@@ -515,330 +304,85 @@ class CropState internal constructor(initial: CropFraming) {
 
         /** How near an edge counts as being at it, as a share of the slack. */
         private const val EDGE_FRACTION = 0.9f
+
+        /** One nudge, as a share of the picture's own size: the Shift arrow's step. */
+        const val NUDGE_STEP = 0.1f
+
+        /** One zoom action, as a share of the fill (the web twin's `ZOOM_STEP`). */
+        const val ZOOM_STEP = 0.1f
+
+        /** How far a recomputed window may sit from the one given and still be it. */
+        private const val SAME_WINDOW = 1e-4f
+
+        private const val EPSILON = 1e-4f
+
+        private fun CropFraming.sameAs(other: CropFraming): Boolean =
+            abs(left - other.left) <= SAME_WINDOW &&
+                abs(top - other.top) <= SAME_WINDOW &&
+                abs(right - other.right) <= SAME_WINDOW &&
+                abs(bottom - other.bottom) <= SAME_WINDOW
+
+        /** [saved]'s list read back; a slot that is missing reads as nothing having been framed. */
+        @Suppress("MagicNumber")
+        fun restored(values: List<Float?>): CropState {
+            fun at(index: Int): Float? = values.getOrNull(index)
+            val left = at(3)
+            val top = at(4)
+            val right = at(5)
+            val bottom = at(6)
+            val window = if (left != null && top != null && right != null && bottom != null) {
+                CropFraming(left, top, right, bottom)
+            } else {
+                null
+            }
+            val zoom = at(7)
+            val x = at(8)
+            val y = at(9)
+            val moved = if (zoom != null && x != null && y != null) CropPlacement(zoom, x, y) else null
+            return CropState(
+                initial = window,
+                sourceRatio = at(2),
+                kind = CropKind.entries.getOrElse(at(0)?.toInt() ?: 0) { CropKind.Post },
+                frameRatio = at(1) ?: CropGeometry.TALL_RATIO,
+                edited = moved,
+            )
+        }
     }
 }
 
-/**
- * The window's shape as the pair of whole numbers the library takes
- * (`CropImageView.setAspectRatio`): width [x] to height [y].
- *
- * A post's three shapes are written out ([cropAspect]); a locked crop takes
- * any other shape its result will be seen at — a clip's own ratio for its
- * cover (`CoverCrop`; CropViewport.prompt.md) — through [of].
- */
-data class CropAspect(val x: Int, val y: Int) {
-    init {
-        require(x > 0 && y > 0) { "a crop window has a positive width and height" }
-    }
+/** The stage as laid out on screen, in pixels. */
+internal data class StageMeasure(val width: Float, val gutter: Float)
 
-    /** Width over height. */
-    val ratio: Float get() = x.toFloat() / y.toFloat()
+/** Everything a framing is measured in: the stage, the picture laid at 1×, the frame, the zoom's bounds. */
+internal data class CropLayout(
+    val stage: CropSize,
+    val picture: CropSize,
+    val frame: CropFrame,
+    val bounds: ZoomBounds,
+)
 
-    companion object {
-        /**
-         * A whole-number pair for [ratio], to a ten-thousandth — finer than any
-         * clip's own shape needs. A ratio nothing could measure reserves the
-         * square, the neutral reservation a shape unknown takes everywhere.
-         */
-        fun of(ratio: Float): CropAspect {
-            if (!ratio.isFinite() || ratio <= 0f) return CropAspect(1, 1)
-            val x = (ratio * RATIO_DENOMINATOR).roundToInt().coerceAtLeast(1)
-            val divisor = gcd(x, RATIO_DENOMINATOR)
-            return CropAspect(x / divisor, RATIO_DENOMINATOR / divisor)
-        }
-
-        private const val RATIO_DENOMINATOR = 10_000
-
-        private tailrec fun gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
-    }
-}
-
-/**
- * A post shape's window. Written out rather than derived from the float
- * ratio because 1.91:1 has no small integer pair, and rounding a float would
- * silently frame the wide shape at something that is not the wide shape.
- */
-val MediaShape.cropAspect: CropAspect
-    get() = when (this) {
-        MediaShape.Tall -> CropAspect(4, 5)
-        MediaShape.Square -> CropAspect(1, 1)
-        MediaShape.Wide -> CropAspect(191, 100)
-    }
-
-/** The zoom slider's floor: the fill, where the picture just covers the window (`CropViewport.jsx` `CROP_ZOOM_MIN`). */
-const val CROP_ZOOM_MIN = 1f
-
-/** The ceiling, "about 4×" (`CROP_ZOOM_MAX`; ComposeCrop.md). */
-const val CROP_ZOOM_MAX = 4f
-
-/** The four discrete directions the non-drag route offers. */
-enum class NudgeDirection(val x: Int, val y: Int) {
-    Left(-1, 0),
-    Right(1, 0),
-    Up(0, -1),
-    Down(0, 1),
-}
-
-/**
- * The window arithmetic the invisible route needs, as pure functions on
- * rectangles.
- *
- * Split out of [CropState] so every branch is a JVM test with no view
- * anywhere near it — the same split the stance pad's geometry already
- * uses. The cropper owns dragging and pinching; this owns only the
- * discrete equivalents, which the library has no notion of.
- */
-internal object CropWindowMath {
-
-    /** One discrete step, as a share of the window's own size. */
-    const val NUDGE_FRACTION = 0.08f
-
-    /** One discrete zoom step, as a share of the window's own size. */
-    const val ZOOM_FRACTION = 0.1f
-
-    /** A window may never shrink below this share of the picture's edge. */
-    const val MIN_WINDOW = 0.1f
-
-    /**
-     * How far a window's own shape may sit from the shape it frames
-     * before it is read as a report about something other than a
-     * framing.
-     *
-     * The window is carried as fractions and comes back through the
-     * view's integer rectangles, so an exact match is not on offer. Two
-     * percent is far below the distance between any two shapes the
-     * composer offers and far above that rounding.
-     */
-    const val RATIO_SLACK = 0.02f
-
-    /**
-     * Whether [window] frames a picture of [pictureRatio] at
-     * [targetRatio].
-     *
-     * The window is a fraction of the picture, so its shape in pixels is
-     * its own shape times the picture's — which is why this cannot be
-     * answered from the window alone.
-     */
-    fun isAtRatio(window: CropFraming, pictureRatio: Float, targetRatio: Float): Boolean {
-        if (window.width <= 0f || window.height <= 0f) return false
-        if (!pictureRatio.isFinite() || pictureRatio <= 0f) return false
-        if (!targetRatio.isFinite() || targetRatio <= 0f) return false
-        val ratio = window.width / window.height * pictureRatio
-        return abs(ratio - targetRatio) <= RATIO_SLACK * targetRatio
-    }
-
-    /**
-     * Slides the window without changing its size, stopping at the
-     * picture's edge — the window is never let off the picture.
-     */
-    fun nudged(window: CropFraming, direction: NudgeDirection): CropFraming = slidInside(
-        window.offsetBy(
-            window.width * NUDGE_FRACTION * direction.x,
-            window.height * NUDGE_FRACTION * direction.y,
-        ),
-    )
-
-    /**
-     * Slides a window back inside the picture without resizing it.
-     *
-     * Sliding rather than clipping is what keeps the discrete route from
-     * quietly changing the shape the whole post was set to — a clipped
-     * window would come back a different ratio.
-     */
-    fun slidInside(window: CropFraming): CropFraming {
-        val dx = when {
-            window.left < 0f -> -window.left
-            window.right > 1f -> 1f - window.right
-            else -> 0f
-        }
-        val dy = when {
-            window.top < 0f -> -window.top
-            window.bottom > 1f -> 1f - window.bottom
-            else -> 0f
-        }
-        return window.offsetBy(dx, dy)
-    }
-
-    /**
-     * Grows or shrinks the window about its own centre, keeping its
-     * aspect ratio — so a discrete zoom cannot silently change the shape
-     * the whole post was set to.
-     */
-    fun zoomed(window: CropFraming, inward: Boolean): CropFraming {
-        if (window.width <= 0f || window.height <= 0f) return window
-        val wanted = if (inward) 1f - ZOOM_FRACTION else 1f + ZOOM_FRACTION
-
-        // **One factor for both axes** — that is what keeps the ratio the
-        // whole post was set to. Growing stops where the window would
-        // outgrow the picture on either axis; shrinking stops at the
-        // smallest window still worth framing.
-        val biggest = minOf(1f / window.width, 1f / window.height)
-        val smallest = maxOf(MIN_WINDOW / window.width, MIN_WINDOW / window.height)
-        val factor = wanted.coerceAtMost(biggest).coerceAtLeast(minOf(smallest, biggest))
-
-        val width = window.width * factor
-        val height = window.height * factor
-        val centreX = (window.left + window.right) / 2f
-        val centreY = (window.top + window.bottom) / 2f
-        return slidInside(
-            CropFraming(
-                left = centreX - width / 2f,
-                top = centreY - height / 2f,
-                right = centreX + width / 2f,
-                bottom = centreY + height / 2f,
-            ),
-        )
-    }
-
-    /**
-     * The largest window of [targetRatio] that fits a picture of
-     * [pictureRatio], centred — the window a picture opens on.
-     *
-     * Both ratios are width ÷ height. One axis always ends up whole:
-     * a window wider than the picture is as wide as the picture and
-     * short of its height, and the other way round. That is what makes
-     * this the largest window rather than merely a valid one — and
-     * placing it explicitly is what keeps the author's stage full,
-     * where the library's own default opens inset inside it.
-     */
-    fun largestWindow(targetRatio: Float, pictureRatio: Float): CropFraming {
-        if (targetRatio <= 0f || pictureRatio <= 0f) return CropFraming.Whole
-        return if (targetRatio >= pictureRatio) {
-            // As wide as the picture; the height is what gives.
-            val height = (pictureRatio / targetRatio).coerceIn(0f, 1f)
-            val top = (1f - height) / 2f
-            CropFraming(0f, top, 1f, top + height)
-        } else {
-            val width = (targetRatio / pictureRatio).coerceIn(0f, 1f)
-            val left = (1f - width) / 2f
-            CropFraming(left, 0f, left + width, 1f)
-        }
-    }
-
-    /**
-     * One step of a two-finger gesture: the window follows the fingers.
-     *
-     * The one-finger drag moves the window where the finger goes, so two
-     * fingers do the same — the window scales about the fingers' centroid
-     * by the step's [zoom] (fingers spreading grow it, closing shrink it)
-     * and travels with the centroid's [panX]/[panY]. [picture] is where
-     * the viewport draws the picture, which is what turns the fingers'
-     * pixels into fractions of it.
-     *
-     * **The size comes from the fill, never from the fingers.** The new
-     * window is [fill] over a scale held between the fill and the ceiling,
-     * so its shape is the fill's — the post's shape — exactly, however the
-     * two fingers sit relative to each other. Taking the fingers' own
-     * horizontal and vertical spread as the window's width and height is
-     * the cropper's multi-touch path, and what made jakob's sliver
-     * (2026-11-11).
-     */
-    @Suppress("LongParameterList")
-    fun pinched(
-        window: CropFraming,
-        fill: CropFraming,
-        picture: ScreenWindow,
-        centroidX: Float,
-        centroidY: Float,
-        panX: Float,
-        panY: Float,
-        zoom: Float,
-    ): CropFraming {
-        if (window.width <= 0f || window.height <= 0f || fill.width <= 0f) return window
-        if (picture.width <= 0f || picture.height <= 0f) return window
-        val step = if (zoom.isFinite() && zoom > 0f) zoom else 1f
-        val perPixelX = 1f / picture.width
-        val perPixelY = 1f / picture.height
-
-        val scale = (fill.width / window.width / step).coerceIn(CROP_ZOOM_MIN, CROP_ZOOM_MAX)
-        val width = fill.width / scale
-        val height = fill.height / scale
-        val factor = width / window.width
-
-        val cx = (centroidX - picture.left) * perPixelX
-        val cy = (centroidY - picture.top) * perPixelY
-        val left = cx - (cx - window.left) * factor + panX * perPixelX
-        val top = cy - (cy - window.top) * factor + panY * perPixelY
-        return slidInside(CropFraming(left, top, left + width, top + height))
-    }
-
-    /**
-     * Where a stage of [stageWidth] × [stageHeight] draws a picture of
-     * [pictureRatio] (width ÷ height) laid out whole and centred — the
-     * cropper's `FIT_CENTER` at zoom 1.
-     */
-    fun fitted(stageWidth: Float, stageHeight: Float, pictureRatio: Float): ScreenWindow {
-        if (stageWidth <= 0f || stageHeight <= 0f || pictureRatio <= 0f) return ScreenWindow(0f, 0f, 0f, 0f)
-        val width = minOf(stageWidth, stageHeight * pictureRatio)
-        val height = width / pictureRatio
-        return ScreenWindow((stageWidth - width) / 2f, (stageHeight - height) / 2f, width, height)
-    }
-
-    /**
-     * A window of shape [from] carried over to shape [to] on a picture of
-     * [pictureRatio] (all width ÷ height): the same centre and the same
-     * zoom — measured against each shape's own fill — slid back inside the
-     * picture only as far as the new shape needs. Only the frame changes
-     * (jakob 2026-11-11).
-     */
-    fun reshaped(window: CropFraming, from: Float, to: Float, pictureRatio: Float): CropFraming {
-        val before = largestWindow(from, pictureRatio)
-        val after = largestWindow(to, pictureRatio)
-        if (window.width <= 0f || before.width <= 0f) return after
-        val zoom = (before.width / window.width).coerceIn(CROP_ZOOM_MIN, CROP_ZOOM_MAX)
-        val width = after.width / zoom
-        val height = after.height / zoom
-        val cx = (window.left + window.right) / 2f
-        val cy = (window.top + window.bottom) / 2f
-        return slidInside(CropFraming(cx - width / 2f, cy - height / 2f, cx + width / 2f, cy + height / 2f))
-    }
-
-    /** The window as fractions of the picture it was cut from. */
-    fun framingOf(rect: Rect, whole: Rect): CropFraming {
-        if (whole.width() <= 0 || whole.height() <= 0) return CropFraming.Whole
-        return CropFraming.of(
-            left = (rect.left - whole.left).toFloat() / whole.width(),
-            top = (rect.top - whole.top).toFloat() / whole.height(),
-            right = (rect.right - whole.left).toFloat() / whole.width(),
-            bottom = (rect.bottom - whole.top).toFloat() / whole.height(),
-        )
-    }
-
-    /** The window back in the picture's own pixels, for the view. */
-    fun rectOf(window: CropFraming, whole: Rect): Rect = Rect(
-        whole.left + (window.left * whole.width()).toInt(),
-        whole.top + (window.top * whole.height()).toInt(),
-        whole.left + (window.right * whole.width()).toInt(),
-        whole.top + (window.bottom * whole.height()).toInt(),
-    )
-}
-
-/**
- * The window as the viewport draws it, in the viewport's own pixels — the
- * bridge between where the fingers are and where the window is in the
- * picture. Plain floats so the gesture arithmetic runs on the JVM.
- */
-internal data class ScreenWindow(val left: Float, val top: Float, val width: Float, val height: Float)
-
-private fun CropFraming.offsetBy(dx: Float, dy: Float): CropFraming =
-    CropFraming(left + dx, top + dy, right + dx, bottom + dy)
-
-private val CropStateSaver: Saver<CropState, List<Float>> = Saver(
-    save = { listOf(it.framing.left, it.framing.top, it.framing.right, it.framing.bottom) },
-    restore = { CropState(CropFraming(it[0], it[1], it[2], it[3])) },
+private val CropStateSaver: Saver<CropState, List<Float?>> = Saver(
+    save = { it.saved() },
+    restore = { CropState.restored(it) },
 )
 
 /**
- * Survives rotation and process death, so a half-framed crop is not lost.
+ * A framing that survives rotation and process death.
  *
- * [initial] is the framing this picture was last left at, where the
- * screen kept one. A stage the author walks back into — from further
- * along the wizard, or forwards into again from an earlier stage — is
- * re-entered on a *new* composition, so the saveable state alone cannot
- * carry the framing across it; the screen hands the remembered framing
- * back in here and the author sees the crop they made rather than a
- * reset one (jakob 2026-09-01).
+ * [initial] is the window this picture was last left at, where the host kept
+ * one: a crop the author walks back into is a NEW composition, so the
+ * saveable state alone cannot carry the framing across it; the host hands the
+ * remembered window back in and the author finds the crop they made
+ * (jakob 2026-09-01). [sourceRatio] is the upright picture's width ÷ height
+ * where the host already knows it (the picker reads it from the header, EXIF
+ * applied); [kind] and [frameRatio] say which frame the picture stands under.
  */
 @Composable
-fun rememberCropState(initial: CropFraming = CropFraming.Whole): CropState =
-    rememberSaveable(saver = CropStateSaver) { CropState(initial) }
+fun rememberCropState(
+    initial: CropFraming = CropFraming.Whole,
+    sourceRatio: Float? = null,
+    kind: CropKind = CropKind.Post,
+    frameRatio: Float = CropGeometry.TALL_RATIO,
+): CropState = rememberSaveable(saver = CropStateSaver) {
+    CropState(initial, sourceRatio, kind, frameRatio)
+}

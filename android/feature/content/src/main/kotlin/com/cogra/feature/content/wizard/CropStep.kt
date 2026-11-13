@@ -100,9 +100,16 @@ internal fun ColumnScope.CropFrames(
     // crop reset (jakob 2026-09-01).
     val framings: Map<String, CropState> = picked.associate { asset ->
         asset.uri to key(asset.uri) {
-            rememberCropState(initial = crops[asset.uri].toFraming())
+            rememberCropState(
+                initial = crops[asset.uri].toFraming(),
+                sourceRatio = asset.sourceRatio,
+                frameRatio = mediaShape.ratio,
+            )
         }
     }
+    // The picker reads each pick's upright ratio from its header; one that
+    // arrives after the stage opened reaches the framing here.
+    SideEffect { picked.forEach { asset -> asset.sourceRatio?.let { framings[asset.uri]?.learnSource(it) } } }
 
     // Reported after every composition rather than only on `Next`: a
     // process death between the last nudge and the next tap would
@@ -116,7 +123,15 @@ internal fun ColumnScope.CropFrames(
     if (!locked) {
         CropShapeChips(
             selected = mediaShape,
-            onSelect = { onShapeChange(it.toDraftShape()) },
+            onSelect = { next ->
+                // EVERY picture takes the new shape, the ones off the stage
+                // too, each keeping its scale and position and rising only to
+                // the new fill (ComposeCrop.md:17-23) — the web twin's rule
+                // (web/src/lib/compose/wizard.ts:796-806). A picture left at
+                // the old shape would upload and preview a different section.
+                framings.values.forEach { it.reshape(next.ratio) }
+                onShapeChange(next.toDraftShape())
+            },
             modifier = if (node == null) Modifier.testTag("${testTagPrefix}_crop_shapes") else Modifier,
             node = node?.div("shapes"),
         )
@@ -124,9 +139,9 @@ internal fun ColumnScope.CropFrames(
 
     val framed = picked.getOrNull(framingIndex) ?: return
     MediaCrop(
-        // The ratio is carried for the alt text's sake and for whatever
-        // the frame reserves before the decode; the cropper reads the
-        // picture's real shape itself, so nothing here has to guess it.
+        // The ratio is the upright picture's, as the picker read it from the
+        // header (EXIF applied): the frame's geometry and the upload's cut
+        // are measured against the same shape.
         item = MediaItem(framed.uri, framed.sourceRatio ?: 0f, framed.altText.ifBlank { null }),
         shape = mediaShape,
         state = framings.getValue(framed.uri),
@@ -137,14 +152,8 @@ internal fun ColumnScope.CropFrames(
     // No description field here: **never from the crop step** — a geometry
     // step is no place for a keyboard
     // (`design/components/compose/DescribeSheet.prompt.md`). Descriptions
-    // are authored on the details stage, in `DescribeSheet`.
-    //
-    // CW-11's own note ("One shape for the whole post. Drag to move, pinch
-    // to zoom.") is NOT missing here — `MediaCrop` above already draws it,
-    // defaulting its own `caption` parameter to this exact string
-    // (core/designsystem/.../media/MediaCrop.kt:62,79-83). The audit's "no
-    // such note anywhere in the file" was true of CropStep.kt's own text,
-    // not of what the stage renders; a second `Text` here only doubled it.
+    // are authored on the details stage, in `DescribeSheet`. The line under
+    // the zoom, `One shape for the whole post.`, is `MediaCrop`'s own caption.
 
     if (picked.size > 1) {
         // The framed tile's ring stands OUTSIDE it (`outline 2px`, offset 1),
