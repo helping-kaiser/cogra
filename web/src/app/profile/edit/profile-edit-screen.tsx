@@ -23,8 +23,13 @@
 // the heading taking focus as it opens so no keyboard rises. Its picture row's
 // `Change picture` opens the picker and then the picture's own crop screen
 // (`AvatarCrop`), whose Next brings the framed picture back here, to be
-// signed with the fields. Save still signs directly here; the change's own
-// seal (ProfileEditSeal) is the next lane's.
+// signed with the fields under one seal.
+//
+// SAVE OPENS THE SEAL AND SIGNS NOTHING (ProfileEdit.md:15). Save uploads a
+// picked picture and PREPARES the change — staging, never signing — so a
+// refusal of the picture or of a field still says itself on the edit, where
+// it always did (seam 325, G-A4); the seal (`ProfileEditSeal`) then holds
+// the prepared change and its commit signs it.
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -59,20 +64,58 @@ import { HeaderBar } from "@/lib/ui2/header-bar";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { TextField } from "@/lib/ui2/text-field";
 import { CENTERED, type Crop } from "@/lib/ui2/media/crop";
+import { carrySnackbar } from "@/lib/ui/carried-snackbar";
+import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
+import { identityStore, type IdentityStore } from "@/lib/identity/store";
+import { sealFaultOf } from "@/lib/compose/seal-fault";
+import type { StagedWriteView } from "@/lib/api/writes-api";
+import type { Expectation } from "@/lib/signing/intent";
+import type { WriteResult } from "@/lib/signing/write-signer";
+import { PROFILE_SIGNED, type ProfileChangeOutcome } from "@/lib/profile/profile-change";
 import { AvatarCrop } from "./avatar-crop";
+import { changeSummary, type ProfileFields } from "./change-summary";
+import { ProfileEditSeal } from "./profile-edit-seal";
 import {
+  PictureDisc,
   PROFILE_RATIOS,
   ProfileMediaField,
   UNCHANGED,
   type ProfileMediaChoice,
 } from "./profile-media-field";
 
-export default function ProfileEditPage() {
+/** The prepared change the seal holds and signs. */
+type Sealing = {
+  readonly writes: readonly StagedWriteView[];
+  readonly expected: Expectation;
+  readonly summary: string;
+};
+
+/**
+ * What one signing came to, for the seal's states: every write taken is the
+ * change taken; a refusal reads by the failure pack (`sealFaultOf`: the write
+ * rule, else a bug); a device's own refusal of the bytes is a bug; no answer
+ * — a transport failure, a seal still out — is the fault line.
+ */
+function outcomeOf(results: readonly WriteResult[]): ProfileChangeOutcome {
+  if (results.every((result) => result.kind === "done" || result.kind === "carried")) return { kind: "taken" };
+  const refused = results.flatMap((result) => (result.kind === "refused" ? result.errors : []));
+  if (refused.length > 0) {
+    return { kind: sealFaultOf(refused, []).kind === "writeRule" ? "writeRule" : "bug" };
+  }
+  if (results.some((result) => result.kind === "rejectedByDevice")) return { kind: "bug" };
+  return { kind: "offline" };
+}
+
+export function ProfileEditScreen({ store = identityStore }: { store?: IdentityStore }) {
   const phase = useAuthPhase();
   const router = useRouter();
   const client = useApolloClient();
   const guard = useAuthGuard();
   const signer = useWriteSigner();
+  const keyOnDevice = useKeyOnDevice(store);
+  // The fields as the profile carried them, to say what the change holds.
+  const [before, setBefore] = useState<ProfileFields>({ displayName: "", bio: "", websiteUrl: "" });
+  const [sealing, setSealing] = useState<Sealing | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [transportFailed, setTransportFailed] = useState(false);
@@ -81,7 +124,6 @@ export default function ProfileEditPage() {
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [refusedMessage, setRefusedMessage] = useState<string | null>(null);
-  const [signIncomplete, setSignIncomplete] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatar, setAvatar] = useState<ProfileMediaChoice>(UNCHANGED);
   // The account's own id: the node a profile payload binds to.
@@ -115,6 +157,11 @@ export default function ProfileEditPage() {
           setDisplayName(outcome.value.displayName.value ?? "");
           setBio(outcome.value.bio.value ?? "");
           setWebsiteUrl(outcome.value.websiteUrl.value ?? "");
+          setBefore({
+            displayName: outcome.value.displayName.value ?? "",
+            bio: outcome.value.bio.value ?? "",
+            websiteUrl: outcome.value.websiteUrl.value ?? "",
+          });
           setAvatarUrl(outcome.value.avatar?.url ?? null);
         } else {
           setTransportFailed(true);
@@ -192,7 +239,6 @@ export default function ProfileEditPage() {
     if (submitting) return;
     setSubmitting(true);
     setRefusedMessage(null);
-    setSignIncomplete(false);
     setTransportFailed(false);
 
     // The pictures go up BEFORE the record is prepared: an update naming an
@@ -229,13 +275,13 @@ export default function ProfileEditPage() {
     // without it there is nothing to bind the payload to, and the batch is
     // refused rather than signed.
     const profile = profileExpectation(profileNode ?? "", sent, uploaded[0].ledger);
-    const results = await signer.sign(prepared.value, expectation([profileUpdate(profile)]));
     setSubmitting(false);
-    if (results.every((result) => result.kind === "done")) {
-      router.push("/profile");
-    } else {
-      setSignIncomplete(true);
-    }
+    // The change's seal opens; nothing is signed before its own commit.
+    setSealing({
+      writes: prepared.value,
+      expected: expectation([profileUpdate(profile)]),
+      summary: changeSummary(before, { displayName, bio, websiteUrl }, avatar),
+    });
   };
 
   // The write side's own caps, mirrored so an over-length value never reaches
@@ -245,6 +291,26 @@ export default function ProfileEditPage() {
   const displayNameTooLong = displayNameProblem(displayName);
   const bioTooLong = bioProblem(bio);
   const websiteUrlTooLong = websiteUrlProblem(websiteUrl);
+
+  // THE CHANGE'S SEAL stands in the edit's place; the edit waits as it was
+  // left, one stage behind.
+  if (sealing !== null) {
+    return (
+      <ProfileEditSeal
+        avatar={<PictureDisc name={displayName} currentUrl={avatarUrl} choice={avatar} testId="profile-edit-seal-avatar" />}
+        change={sealing.summary}
+        hasKey={async () => keyOnDevice !== false && (await store.actorKey()) !== null}
+        sign={async () => outcomeOf(await signer.sign(sealing.writes, sealing.expected))}
+        onTaken={() => {
+          carrySnackbar(PROFILE_SIGNED);
+          router.push("/profile");
+        }}
+        onBack={() => setSealing(null)}
+        onLeave={() => router.push("/profile")}
+        onClosed={() => router.push("/profile")}
+      />
+    );
+  }
 
   // THE PICTURE'S OWN CROP SCREEN stands in the edit's place while it is up;
   // the edit's fields wait in this component's state, untouched.
@@ -337,11 +403,6 @@ export default function ProfileEditPage() {
             {refusedMessage !== null && (
               <p role="alert" data-testid="profile-edit-refused" className="m-0 text-body-small text-error">
                 {refusedMessage}
-              </p>
-            )}
-            {signIncomplete && (
-              <p role="alert" data-testid="profile-edit-signing-failed" className="m-0 text-body-small text-error">
-                Signing didn&apos;t complete. Try again.
               </p>
             )}
             {transportFailed && displayName !== "" && <TransportError testId="profile-edit-submit-transport" />}
