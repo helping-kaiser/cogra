@@ -326,19 +326,10 @@ class CropState internal constructor(
         @Suppress("MagicNumber")
         fun restored(values: List<Float?>): CropState {
             fun at(index: Int): Float? = values.getOrNull(index)
-            val left = at(3)
-            val top = at(4)
-            val right = at(5)
-            val bottom = at(6)
-            val window = if (left != null && top != null && right != null && bottom != null) {
-                CropFraming(left, top, right, bottom)
-            } else {
-                null
-            }
-            val zoom = at(7)
-            val x = at(8)
-            val y = at(9)
-            val moved = if (zoom != null && x != null && y != null) CropPlacement(zoom, x, y) else null
+            val window = (3..6).mapNotNull(::at).takeIf { it.size == 4 }
+                ?.let { (left, top, right, bottom) -> CropFraming(left, top, right, bottom) }
+            val moved = (7..9).mapNotNull(::at).takeIf { it.size == 3 }
+                ?.let { (zoom, x, y) -> CropPlacement(zoom, x, y) }
             return CropState(
                 initial = window,
                 sourceRatio = at(2),

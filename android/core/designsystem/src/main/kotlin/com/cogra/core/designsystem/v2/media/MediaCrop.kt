@@ -42,6 +42,7 @@ import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.AwaitPointerEventScope
 import androidx.compose.ui.input.pointer.PointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
@@ -244,32 +245,54 @@ private fun CropViewport(item: MediaItem, state: CropState, bleed: Dp, testTag: 
  */
 private fun Modifier.cropGestures(state: CropState, minimumSpan: Float): Modifier =
     pointerInput(state, minimumSpan) {
-        awaitEachGesture {
-            awaitFirstDown(requireUnconsumed = false)
-            var pastSlop = false
-            var slopZoom = 1f
-            var slopPan = Offset.Zero
-            do {
-                val event = awaitPointerEvent()
-                if (event.changes.any { it.isConsumed }) break
-                val zoom = event.spanZoom(minimumSpan)
-                val pan = event.calculatePan()
-                if (!pastSlop) {
-                    slopZoom *= zoom
-                    slopPan += pan
-                    val zoomMotion = abs(1f - slopZoom) * event.calculateCentroidSize(useCurrent = false)
-                    pastSlop = zoomMotion > viewConfiguration.touchSlop || slopPan.getDistance() > viewConfiguration.touchSlop
-                }
-                if (pastSlop) {
-                    val previous = event.calculateCentroid(useCurrent = false)
-                    if (previous.isSpecified && (zoom != 1f || pan != Offset.Zero)) {
-                        state.transform(previous.x + pan.x, previous.y + pan.y, pan.x, pan.y, zoom)
-                    }
-                    event.changes.forEach { if (it.positionChanged()) it.consume() }
-                }
-            } while (event.changes.any { it.pressed })
-        }
+        awaitEachGesture { trackTransform(state, minimumSpan) }
     }
+
+/** One gesture, from the first finger down to the last finger up. */
+private suspend fun AwaitPointerEventScope.trackTransform(state: CropState, minimumSpan: Float) {
+    awaitFirstDown(requireUnconsumed = false)
+    val slop = TouchSlop(viewConfiguration.touchSlop)
+    do {
+        val event = awaitPointerEvent()
+        if (event.changes.any { it.isConsumed }) break
+        val zoom = event.spanZoom(minimumSpan)
+        val pan = event.calculatePan()
+        if (slop.passedBy(event, zoom, pan)) state.step(event, zoom, pan)
+    } while (event.changes.any { it.pressed })
+}
+
+/**
+ * The detector's touch slop: the zoom and the pan add up until either has
+ * moved the fingers further than the slop, and from then on every step counts.
+ */
+private class TouchSlop(private val slop: Float) {
+    private var zoom = 1f
+    private var pan = Offset.Zero
+    private var passed = false
+
+    fun passedBy(event: PointerEvent, stepZoom: Float, stepPan: Offset): Boolean {
+        if (!passed) {
+            zoom *= stepZoom
+            pan += stepPan
+            val zoomMotion = abs(1f - zoom) * event.calculateCentroidSize(useCurrent = false)
+            passed = zoomMotion > slop || pan.getDistance() > slop
+        }
+        return passed
+    }
+}
+
+/**
+ * One counted step: the point under the fingers' previous centroid goes to
+ * their current one ([CropState.transform]), and the moved changes are
+ * consumed so no parent scrolls with them.
+ */
+private fun CropState.step(event: PointerEvent, zoom: Float, pan: Offset) {
+    val previous = event.calculateCentroid(useCurrent = false)
+    if (previous.isSpecified && (zoom != 1f || pan != Offset.Zero)) {
+        transform(previous.x + pan.x, previous.y + pan.y, pan.x, pan.y, zoom)
+    }
+    event.changes.forEach { if (it.positionChanged()) it.consume() }
+}
 
 /**
  * `calculateZoom`'s ratio — the fingers' spread now over their spread before
@@ -380,7 +403,7 @@ private fun BoxScope.CropFrameLayer(state: CropState, gutter: Float) {
 
 private fun DrawScope.drawThirds(frame: Rect) {
     val rule = 1.dp.toPx()
-    for (share in listOf(1f / 3f, 2f / 3f)) {
+    for (share in listOf(THIRD, 2f * THIRD)) {
         val x = frame.left + frame.width * share
         val y = frame.top + frame.height * share
         drawLine(MediaOverlay.CropRule, Offset(x, frame.top), Offset(x, frame.bottom), rule)
@@ -431,6 +454,9 @@ const val CROP_ZOOM_NAME = "Zoom"
 /** ComposeCrop.md: an arrow moves the picture 1 % of itself a press, 10 % with Shift. */
 private const val KEY_STEP = 0.01f
 private const val KEY_STEP_SHIFTED = 0.1f
+
+/** The rule of thirds' first line, as a share of the frame. */
+private const val THIRD = 1f / 3f
 
 /** The longest edge the stage decodes a picture to. */
 private const val DECODE_EDGE_PX = 3072

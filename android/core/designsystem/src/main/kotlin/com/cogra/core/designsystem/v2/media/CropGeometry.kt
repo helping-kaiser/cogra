@@ -76,9 +76,12 @@ object CropGeometry {
      * every shape (ComposeCrop.md:7, CoverCrop.md:11, AvatarCrop.md:7).
      */
     fun boardStage(kind: CropKind): CropSize = when (kind) {
-        CropKind.Post, CropKind.Cover -> CropSize(BOARD_WIDTH, 488f)
+        CropKind.Post, CropKind.Cover -> CropSize(BOARD_WIDTH, BOARD_POST_HEIGHT)
         CropKind.Avatar -> CropSize(BOARD_WIDTH, BOARD_WIDTH)
     }
+
+    /** The post crop's and the cover crop's stage height at the artboard: the column's width at 4:5, rounded. */
+    private const val BOARD_POST_HEIGHT = 488f
 
     /** The stage's width over its height. */
     fun stageRatio(kind: CropKind): Float = boardStage(kind).let { it.width / it.height }
@@ -194,12 +197,13 @@ object CropGeometry {
      */
     fun placementOf(window: CropFraming, picture: CropSize, frame: CropSize): CropPlacement {
         val zoom = max(frame.width / (window.width * picture.width), frame.height / (window.height * picture.height))
-        val centreX = (window.left + window.right) / 2f
-        val centreY = (window.top + window.bottom) / 2f
+        // The window's centre stands at the frame's, which is the stage's.
+        val laidWidth = picture.width * zoom
+        val laidHeight = picture.height * zoom
         return CropPlacement(
             zoom = zoom,
-            x = picture.width * zoom * (0.5f - centreX),
-            y = picture.height * zoom * (0.5f - centreY),
+            x = laidWidth / 2f - (window.left + window.right) / 2f * laidWidth,
+            y = laidHeight / 2f - (window.top + window.bottom) / 2f * laidHeight,
         )
     }
 
