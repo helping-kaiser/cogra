@@ -95,7 +95,8 @@ export function Screen() {
           </div>
         </div>
       </div>
-      <div style={{ display: "{{wrapsShown}}", flex: 1, ...COLUMN }}>
+      {/* Ten between the samples here, not twelve: with the vouch card the column measured 848 against the 844 frame (round 48). */}
+      <div style={{ display: "{{wrapsShown}}", flex: 1, ...COLUMN, gap: 10 }}>
         <BorrowedViewBand handle={LONG_HANDLE} displayName={LONG_NAMES.spaced} />
         <TaskCard title={`All set — waiting on ${H}`} body="Their approval brings you in." />
         <DialogSurface
