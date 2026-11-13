@@ -186,6 +186,14 @@ it("malformed input is refused, not misread", () => {
   ).toThrow(new WireError("malformed pre-commitment"));
   const blob = encodePreCommitment(new Uint8Array(32).fill(1), new Uint8Array(32).fill(2), new Uint8Array(64));
   expect(() => decodePreCommitment(concat(blob, Uint8Array.of(0)))).toThrow(WireError);
+});
+
+it("a version-2 sealed act with trailing bytes is refused", () => {
+  const sealed = encodeVerifiedAct(sealedActOf(fullProposal()));
+  expect(() => decodeVerifiedAct(sealed)).not.toThrow();
+  expect(() => decodeVerifiedAct(concat(sealed, Uint8Array.of(0)))).toThrow(
+    new WireError("malformed verified act: 1 bytes of trailing input"),
+  );
   expect(() => decodePreCommitment(new Uint8Array(0))).toThrow(
     new WireError("malformed pre-commitment: unexpected end of input at byte 0"),
   );
