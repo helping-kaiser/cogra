@@ -1081,7 +1081,10 @@ impl PreparedWrite {
     /// carries everything the author asserts — endpoints, parameters,
     /// dependency list, payload bytes. The device checks it against the
     /// gesture its user ordered and recomputes every signing base from
-    /// it: the user never signs blind bytes.
+    /// it: the user never signs blind bytes. Deterministic CBOR
+    /// `[1, body, payload, deps]`: the structural body's canonical bytes,
+    /// the payload bytes, and the dependency list as act identifiers.
+    /// Its envelope version is its own and is 1.
     async fn canonical_proposal(&self) -> String {
         B64.encode(wire::encode_proposal(&self.proposal))
     }
@@ -1132,7 +1135,9 @@ impl StagedWriteType {
     }
 
     /// The canonical proposal the handshake covers (base64) — the same
-    /// bytes prepare returned, re-readable after a lost response.
+    /// bytes prepare returned, re-readable after a lost response:
+    /// deterministic CBOR `[1, body, payload, deps]`. Its envelope
+    /// version is its own and is 1.
     async fn canonical_proposal(&self) -> String {
         B64.encode(wire::encode_proposal(&self.0.proposal))
     }

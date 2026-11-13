@@ -3602,7 +3602,10 @@ type PreparedWrite {
   "The canonical proposal, serialized for pre-signing (base64).
    Covers everything the author asserts — endpoints, parameters,
    payload bytes, dependency list — so the relay can neither
-   alter it nor author one unasked."
+   alter it nor author one unasked. Deterministic CBOR
+   `[1, body, payload, deps]`: the structural body's canonical
+   bytes, the payload bytes, and the dependency list as act
+   identifiers. Its envelope version is its own and is 1."
   canonicalProposal: String!
   "Epoch budget: a staged write that never completes the handshake
    and lands is garbage-collected — staged payload included — after
@@ -3672,7 +3675,8 @@ type StagedWrite {
    returned, re-readable after a lost response. A device that
    never saw the prepare (a backend-staged Registration discovered
    on the poll, a crashed client resuming) decodes and pre-signs
-   from here."
+   from here. Deterministic CBOR `[1, body, payload, deps]`; its
+   envelope version is its own and is 1."
   canonicalProposal: String!
   "The host-sealed verified act once AWAITING_APPROVAL (base64):
    deterministic CBOR `[2, body, preCommitment, preSignature,
