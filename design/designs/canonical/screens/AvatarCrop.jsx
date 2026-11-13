@@ -15,15 +15,17 @@
    platforms; the focused stage moves the picture with the arrow keys
    (`CropViewport`), 1 % a press, 10 % with Shift (jakob 2026-10-05). No line
    says how to move it (round 44, the removable-text pass). */
+/* REGISTERED under the `avatarCrop` prefix (round 48, seam 323-11 and 323-6), `CoverCrop`'s names: `header`, `viewport`, `zoom` and `next`. Names only: not a pixel moves. */
+export const NODE = "avatarCrop";
 export function Screen() {
   return (
     <>
-      <WizardHeader title="Your picture" leaveLabel="Leave" />
+      <WizardHeader title="Your picture" leaveLabel="Leave" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 16px", overflow: "hidden" }}>
-        <CropViewport src="comment-camera.jpg" shape="circle" scale={1.2} origin="50% 35%" />
-        <CropZoom scale={1.2} />
+        <CropViewport src="comment-camera.jpg" shape="circle" scale={1.2} origin="50% 35%" node="viewport" />
+        <CropZoom scale={1.2} node="zoom" />
         <div style={{ flex: 1 }} />
-        <Button style={{ width: "100%" }}>Next</Button>
+        <Button style={{ width: "100%" }} node="next">Next</Button>
       </div>
     </>
   );

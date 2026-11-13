@@ -7,13 +7,15 @@
    the act is done: past 200ms it reads `Signing the change…` over Back,
    which reads `Close` from the press itself; it, the arrow and the X close
    the seal and the change goes on. Its wait and its answer belong where it lands, the profile, by `SigningAfterClose`'s edit form — the profile's own head standing as it was with the row line under it; that placement is not drawn yet (backlog 165). */
+/* REGISTERED under the `avatarSeal` prefix (round 48, seam 323-11 and 323-6), `keptPicksSeal`'s names: `header`, the card `acts` (`ActsCard`'s `actRow` keyed by place, and `total`), the `note`, and the `foot` — its two copies keyed by the `state` chip's value. Names only: not a pixel moves. */
+export const NODE = "avatarSeal";
 export const PROPS = { state: { editor: "enum", options: ["rest", "signing"], default: "rest" } };
 export const VALS = `restFootShown: this.props.state === "signing" ? "none" : "flex", signFootShown: this.props.state === "signing" ? "flex" : "none"`;
 
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" leaveLabel="Leave" help="Changing your picture" />
+      <WizardHeader title="What you sign" leaveLabel="Leave" help="Changing your picture" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <MonogramAvatar name="Sol Ferreira" size={64} src="comment-camera.jpg" />
@@ -24,17 +26,17 @@ export function Screen() {
           </span>
         </div>
 
-        <ActsCard rows={[{ label: "Picture", value: "A new profile picture", count: "1", countNoun: "picture" }]} total="1 thing, signed" />
+        <ActsCard node="acts" rows={[{ label: "Picture", value: "A new profile picture", count: "1", countNoun: "picture" }]} total="1 thing, signed" />
 
-        <QuietNote>Every change to your profile is signed in your name and stays in your public record.</QuietNote>
+        <QuietNote node="note">Every change to your profile is signed in your name and stays in your public record.</QuietNote>
 
         <div style={{ flex: 1 }} />
 
-        <div style={{ display: "{{restFootShown}}", flexDirection: "column" }}>
-          <SealFooter signLabel="Sign the change" busyLabel="Signing the change…" />
+        <div style={{ display: "{{restFootShown}}", flexDirection: "column" }} data-node-chip="state" data-node-key="rest">
+          <SealFooter signLabel="Sign the change" busyLabel="Signing the change…" node="foot" />
         </div>
-        <div style={{ display: "{{signFootShown}}", flexDirection: "column" }}>
-          <SealFooter signLabel="Sign the change" busy busyLabel="Signing the change…" />
+        <div style={{ display: "{{signFootShown}}", flexDirection: "column" }} data-node-chip="state" data-node-key="signing">
+          <SealFooter signLabel="Sign the change" busy busyLabel="Signing the change…" node="foot" />
         </div>
       </div>
     </>
