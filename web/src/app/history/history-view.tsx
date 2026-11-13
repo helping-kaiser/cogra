@@ -87,7 +87,7 @@ import { SearchBar } from "@/lib/ui2/search-bar";
 import { SectionLabel } from "@/lib/ui2/section-label";
 
 /** HistoryEmpty.md:3, verbatim. */
-export const HISTORY_EMPTY = "Nothing here yet. Everything you see shows up here on its own, newest first.";
+export const HISTORY_EMPTY = "Nothing here yet.";
 
 /** HistoryNone.md:3, verbatim — a query nothing seen carries. */
 export const HISTORY_NONE_SEARCH =

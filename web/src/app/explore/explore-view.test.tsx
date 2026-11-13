@@ -759,7 +759,7 @@ describe("nothing found, and comments without a scope", () => {
     renderExplore();
     type("@nobody brackish");
     expect(await screen.findByTestId(byNode("explore.empty.title"))).toHaveTextContent(
-      "Nothing carries that name. Search reads names and titles, never bodies — fewer words reach further.",
+      /^Nothing carries that name\.$/,
     );
     type("salt");
     await waitFor(() => expect(rowNames()).toEqual(["Salt maps"]));

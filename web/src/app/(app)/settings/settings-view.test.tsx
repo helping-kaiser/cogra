@@ -1163,7 +1163,7 @@ describe("hidden accounts (SettingsHidden.md; hidden-actors packet §5.4, §6)",
     fireEvent.click(unhideOf("juno"));
     expect(screen.getAllByTestId("settings.hiddenSheet.list.account")).toHaveLength(1);
     expect(await screen.findByTestId("settings-snackbar")).toHaveTextContent(
-      "@juno is unhidden — their posts can reach your feed again.",
+      "@juno is unhidden.",
     );
     await waitFor(() => expect(log.unhides).toEqual(["j"]));
     fireEvent.click(screen.getByRole("button", { name: "Undo" }));
@@ -1217,7 +1217,7 @@ describe("hidden accounts (SettingsHidden.md; hidden-actors packet §5.4, §6)",
     expect(row).not.toHaveTextContent("@gone");
     fireEvent.click(byNode("settings.hiddenSheet.list.redactedAccount.trailing.unhide", "gone-1"));
     expect(await screen.findByTestId("settings-snackbar")).toHaveTextContent(
-      "This account is unhidden — its posts can reach your feed again.",
+      "This account is unhidden.",
     );
   });
 });

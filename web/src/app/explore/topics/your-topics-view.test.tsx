@@ -13,7 +13,7 @@ import { byNode } from "@/test/data-node";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 
-import { NO_TOPICS_YET, YourTopicsView } from "./your-topics-view";
+import { YourTopicsView } from "./your-topics-view";
 
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
@@ -198,8 +198,8 @@ describe("Your topics", () => {
   it("your_topics_empty_says_the_copy_voice_line_and_no_follow", async () => {
     serve([]);
     const { container } = render();
-    expect(await screen.findByTestId("yourTopics.empty")).toHaveTextContent(NO_TOPICS_YET);
-    expect(screen.getByTestId("yourTopics.empty.title")).toHaveTextContent(NO_TOPICS_YET);
+    expect(await screen.findByTestId("yourTopics.empty")).toHaveTextContent(/^No tags yet$/);
+    expect(screen.getByTestId("yourTopics.empty.title")).toHaveTextContent(/^No tags yet$/);
     expect(container.textContent).not.toMatch(/follow/i);
   });
 

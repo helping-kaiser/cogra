@@ -1,11 +1,14 @@
 import { InMemoryCache } from "@apollo/client";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
+import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { resetSeenQueueForTests } from "@/lib/history/seen-queue";
 import { forgetAllProfileViews } from "@/lib/profile/profile-memory";
+import { readerState } from "@/lib/session/reader-state";
 import { createTokenStore } from "@/lib/session/token-store";
+import { AccountPreferencesSync } from "@/lib/settings/account-preferences-sync";
 import { createStubStanceData } from "@/lib/stance/stub-stance-data";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
@@ -775,7 +778,7 @@ describe("ProfileScreen", () => {
       fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
       fireEvent.click(screen.getByTestId("profile.menuSheet.hide"));
       expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent(
-        "@ada is hidden — their posts stay out of your feed.",
+        "@ada is hidden.",
       );
       // ProfileMenu.md:23 — the reader stays on the profile.
       expect(screen.getByTestId("profile.identity.actionRow.menu")).toBeInTheDocument();
@@ -795,7 +798,7 @@ describe("ProfileScreen", () => {
       fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
       fireEvent.click(screen.getByTestId("profile.menuSheet.hide"));
       expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent(
-        "This account is hidden — its posts stay out of your feed.",
+        "This account is hidden.",
       );
     });
 
@@ -840,7 +843,7 @@ describe("ProfileScreen", () => {
       fireEvent.click(screen.getByTestId("profile.menuSheet.hide"));
       expect(screen.queryByRole("alertdialog")).toBeNull();
       expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent(
-        "@ada is unhidden — their posts can reach your feed again.",
+        "@ada is unhidden.",
       );
       expect(screen.getByTestId("profile.snackbar.action")).toHaveTextContent("Undo");
       expect(screen.getByTestId("profile.identity.actionRow.menu")).toBeInTheDocument();
@@ -1009,7 +1012,7 @@ describe("ProfileScreen", () => {
       ),
       recordsHandler([]),
     );
-    renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
+    renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore(), reader: "APPLICANT" });
     const invites = await screen.findByTestId(byNode("profile.identity.actionRow.invites"));
     // Visible but locked (auth.md "Application"; ProfileApplicant.md:15): a
     // button at the disabled opacity, not a link, answering in the snackbar.
@@ -1021,7 +1024,84 @@ describe("ProfileScreen", () => {
     );
     // The applicant's empty chronicle says what fills it, and when.
     expect(screen.getByTestId(byNode("profile.chronicle.empty.title"))).toHaveTextContent(
-      "Nothing here yet. Your posts and opinions show up here once you're in.",
+      /^Nothing here yet\.$/,
+    );
+  });
+
+  // ONE SOURCE FOR THE APPLICANT (`reader-state.ts`): the profile's locks read
+  // the session's reader state, never a verdict of their own.
+  it("the_applicant_locks_read_the_shared_reader_state", async () => {
+    server.use(
+      meHandler("MEMBER"),
+      gqlLink.query("MyProfile", () =>
+        HttpResponse.json({ data: { me: profile("u1", "ada") } }),
+      ),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore(), reader: "APPLICANT" });
+    // The page's own read says member; the shared state says applicant, and the
+    // lock follows the shared state. The Invites lock is what still tells the
+    // applicant apart here: the empty chronicle reads the same for both
+    // (round 42 cut its applicant tail).
+    await waitFor(() => expect(screen.getByTestId(byNode("profile.chronicle.empty.title"))).toBeInTheDocument());
+    const invites = screen.getByTestId(byNode("profile.identity.actionRow.invites"));
+    expect(invites).not.toHaveAttribute("href");
+    expect(invites.className).toContain("opacity-[var(--state-disabled)]");
+    fireEvent.click(invites);
+    expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent("You can invite once you're in.");
+  });
+
+  // AN APPLICANT LET IN MID-SESSION: the profile's own fresh `me` read says
+  // member, and the locks lift with no reload.
+  it("the_profiles_fresh_me_read_saying_member_lifts_its_locks", async () => {
+    const served = { accountState: "APPLICANT" as "APPLICANT" | "MEMBER" };
+    server.use(
+      gqlLink.query("Me", () =>
+        HttpResponse.json({
+          data: {
+            me: {
+              __typename: "User",
+              id: "u1",
+              handle: "ada",
+              displayName: { __typename: "ModeratedText", value: null },
+              actorPubkey: null,
+              accountState: served.accountState,
+              hasReciprocated: true,
+              vouchBackDismissed: false,
+              invitedBy: null,
+              preferences: { __typename: "UserPreferences", contentFilteringSeverityLevel: null },
+            },
+          },
+        }),
+      ),
+      gqlLink.query("MyProfile", () =>
+        HttpResponse.json({ data: { me: profile("u1", "ada") } }),
+      ),
+      recordsHandler([]),
+    );
+    function Later() {
+      const [shown, show] = useState(false);
+      return (
+        <>
+          <button type="button" data-testid="later-open" onClick={() => show(true)} />
+          {shown && <ProfileScreen handle={null} />}
+        </>
+      );
+    }
+    renderWithProviders(
+      <>
+        <AccountPreferencesSync />
+        <Later />
+      </>,
+      { store: signedInStore() },
+    );
+    await waitFor(() => expect(readerState().accountState).toBe("APPLICANT"));
+    served.accountState = "MEMBER";
+    fireEvent.click(screen.getByTestId("later-open"));
+    await waitFor(() => expect(readerState().accountState).toBe("MEMBER"));
+    // The locked button gives way to the link (re-read: the element changes).
+    await waitFor(() =>
+      expect(screen.getByTestId(byNode("profile.identity.actionRow.invites"))).toHaveAttribute("href", "/invites"),
     );
   });
 
