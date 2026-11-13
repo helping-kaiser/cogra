@@ -712,9 +712,7 @@ describe("PostView", () => {
     expect(screen.getByTestId("postDetail.reportSheet.title")).toHaveTextContent(
       "Report this post?",
     );
-    expect(screen.getByTestId("postDetail.reportSheet.body")).toHaveTextContent(
-      "It goes to the people who run CoGra for a look.",
-    );
+    expect(screen.queryByTestId("postDetail.reportSheet.body")).toBeNull();
     expect(targets).toEqual([]);
 
     fireEvent.click(screen.getByTestId("postDetail.reportSheet.report"));
@@ -825,7 +823,7 @@ describe("PostView", () => {
     fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
     fireEvent.click(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.citedBy"));
     expect(await screen.findByTestId("cited-by-sheet-empty")).toHaveTextContent(
-      "Nothing cites this yet — yours would be the first.",
+      /^Nothing cites this yet$/,
     );
     expect(screen.getByTestId("cited-by-sheet").className).toContain(
       "bg-surface-container-highest",
@@ -843,7 +841,7 @@ describe("PostView", () => {
     fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
     fireEvent.click(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.opinions"));
     expect(await screen.findByTestId("opinions-sheet-empty")).toHaveTextContent(
-      "No opinions yet — yours would be the first.",
+      /^No opinions yet$/,
     );
     expect(screen.getByRole("dialog", { name: "Opinions on this comment" })).toBeInTheDocument();
     expect(screen.getByTestId("opinions-sheet").className).toContain("bg-surface-container-highest");
@@ -877,7 +875,7 @@ describe("PostView", () => {
     });
     fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
     fireEvent.click(screen.getByTestId("postDetail.menuSheet.hide"));
-    expect(await screen.findByText(/is hidden — their posts stay out of your feed\.$/)).toBeInTheDocument();
+    expect(await screen.findByText(/is hidden\.$/)).toBeInTheDocument();
     expect(screen.getByTestId(byNode("postDetail.card.body"))).toBeInTheDocument();
     await waitFor(() => expect(log.hides).toEqual([{ actor: "someone-else", at: null }]));
   });
@@ -902,7 +900,7 @@ describe("PostView", () => {
     await waitFor(() => expect(screen.getByTestId("postDetail.menuSheet.hide")).toHaveTextContent(/^Unhide @/));
     fireEvent.click(screen.getByTestId("postDetail.menuSheet.hide"));
     expect(screen.queryByRole("alertdialog")).toBeNull();
-    expect(await screen.findByText(/is unhidden — their posts can reach your feed again\.$/)).toBeInTheDocument();
+    expect(await screen.findByText(/is unhidden\.$/)).toBeInTheDocument();
     expect(screen.getByTestId(byNode("postDetail.card.body"))).toBeInTheDocument();
     await waitFor(() => expect(log.unhides).toEqual(["someone-else"]));
   });
@@ -1172,9 +1170,8 @@ describe("PostView", () => {
       expect(screen.getByTestId(byNode("postDetail.card.removalMark.line"))).toHaveTextContent(
         "Removed by its author",
       );
-      expect(screen.getByTestId(byNode("postDetail.card.removalMark.detail"))).toHaveTextContent(
-        "The words and pictures are gone. The post's place in the thread, and every response, remain.",
-      );
+      // The line and its date, no detail sentence (seam 314).
+      expect(screen.queryByTestId(byNode("postDetail.card.removalMark.detail"))).toBeNull();
       expect(screen.getByTestId(byNode("postDetail.card.removalMark.when"))).toHaveTextContent("now");
       // Removed.md:9 — never the platform's words.
       expect(mark).not.toHaveTextContent("Removed under the platform's rules");
@@ -1525,7 +1522,7 @@ describe("PostView", () => {
       await waitFor(() => expect(screen.queryByTestId("postDetail.dialog")).not.toBeInTheDocument());
       expect(removals).toEqual(["rec-c1"]);
       expect(mark).toHaveTextContent("Removed by its author");
-      expect(mark).toHaveTextContent("The comment's place in the thread, and every response, remain.");
+      expect(mark).not.toHaveTextContent("The comment's place in the thread");
       expect(mark).toHaveTextContent("now");
       const card = screen.getByTestId("post-comment-c1");
       expect(card).not.toHaveTextContent("Mine");
@@ -1584,17 +1581,30 @@ describe("PostView", () => {
     expect(await screen.findByTestId("post-not-found")).toBeInTheDocument();
   });
 
-  it("reads without a session and swaps the comment box for the sign-in entry", async () => {
+  // ReplyEntry.md:23, :31; GuestGate.md:3 — the foot stands for a guest too, and
+  // Add a comment or a comment's Reply raises the ask over the sheet AND NEVER
+  // the composer opens AND NEVER the reader is bounced to another screen.
+  it.each(["add", "reply"] as const)("a_guests_%s_raises_the_join_ask_over_the_sheet", async (door) => {
     server.use(
       ...thread("u1", [{ id: "c1", body: "First!" }]),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
-    await openComments();
-    expect(await screen.findByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
+    const sheet = await openComments();
     expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("First!");
-    expect(screen.queryByTestId("comment-draft")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("comment-submit")).not.toBeInTheDocument();
-    expect(screen.getByTestId("comment-signin")).toHaveAttribute("href", "/login");
+    expect(screen.queryByTestId("comment-signin")).not.toBeInTheDocument();
+    const pushedBefore = routerPush.mock.calls.length;
+    fireEvent.click(
+      door === "add"
+        ? screen.getByTestId("comment-add")
+        : screen.getByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.reply", "c1")),
+    );
+    const ask = await screen.findByTestId("join-prompt");
+    expect(ask).toHaveTextContent("Join the conversation");
+    expect(ask).toHaveTextContent("Posting and profiles need an account.");
+    expect(screen.queryByTestId("reply-wizard")).not.toBeInTheDocument();
+    // The read beneath the ask stays exactly where it was.
+    expect(sheet).toBeVisible();
+    expect(routerPush.mock.calls.length).toBe(pushedBefore);
   });
 
   it("keeps the thread readable and faults at the load-more slot when a comments page fails", async () => {
@@ -2221,9 +2231,9 @@ describe("PostView", () => {
     // The thread is the sheet's own read, made when it is raised — so the
     // comments arrive a moment after the drawer does.
     expect(sheet).toContainElement(await screen.findByTestId("post-comment-c1"));
-    // The foot rides the sheet whichever way the write affordance swapped —
-    // this reader has no session, so it is the join entry.
-    expect(sheet).toContainElement(screen.getByTestId("comment-signin"));
+    // The foot rides the sheet for every reader (ReplyEntry.md:31) — this one
+    // has no session, and it is still Add a comment.
+    expect(sheet).toContainElement(screen.getByTestId("comment-add"));
   });
 
   // A drawer the reader opened is a drawer the reader can drop, and the post
@@ -2277,6 +2287,39 @@ describe("PostView", () => {
     );
     expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent("You can comment once you're in.");
     expect(screen.queryByTestId("reply-wizard")).not.toBeInTheDocument();
+  });
+
+  // ReplyEntry.md:27, :29 — GIVEN the reader is an applicant, Add a comment and
+  // every comment's Reply stand at the disabled opacity, and stay tappable.
+  it("an_applicants_add_and_reply_stand_at_the_disabled_opacity", async () => {
+    server.use(...thread("u1", [{ id: "c1", body: "First!" }]));
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("u2"),
+      writeSigner: fakeWriteSigner(),
+      reader: "APPLICANT",
+    });
+    await openComments();
+    const add = await screen.findByTestId("comment-add");
+    const reply = await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.reply", "c1"));
+    for (const door of [add, reply]) {
+      // The token itself, not `disabled:`'s variant of it, which every Button carries.
+      expect(door.classList.contains("opacity-[var(--state-disabled)]")).toBe(true);
+      expect(door).not.toBeDisabled();
+    }
+  });
+
+  // ...and a member's stand at full strength.
+  it("a_members_add_and_reply_stand_at_full_strength", async () => {
+    server.use(...thread("u1", [{ id: "c1", body: "First!" }]));
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("u2"),
+      writeSigner: fakeWriteSigner(),
+      reader: "MEMBER",
+    });
+    await openComments();
+    const add = await screen.findByTestId("comment-add");
+    const reply = await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.reply", "c1"));
+    for (const door of [add, reply]) expect(door.classList.contains("opacity-[var(--state-disabled)]")).toBe(false);
   });
 
   // ApplicantFeed.md:45-53's face on the post's own detail (the shared
@@ -3876,7 +3919,7 @@ describe("PostView — opened from the feed", () => {
 
   // ---- FC-7b · THE DETAIL HOLDS WHAT WAS OPENED (PostDetail.md:5-13) ---------
 
-  const LINE = "Edited since you opened it — tap for the newest version.";
+  const LINE = /^Edited since you opened it$/;
   const line = () => screen.queryByTestId(byNode("postDetail.newerVersion"));
 
   /** The reader's own pull, from the top (the "pulling down at the top" suite's gesture). */

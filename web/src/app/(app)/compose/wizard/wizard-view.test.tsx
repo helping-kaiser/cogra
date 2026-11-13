@@ -12,6 +12,7 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
 import { echoedMedia } from "@/test/media-echo";
 import { fakeWriteSigner } from "@/test/registration";
+import { settleFetches } from "@/test/fetch";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { DEFAULT_P_DIRECTED, emptyWizard, type WizardState } from "@/lib/compose/wizard";
@@ -330,10 +331,9 @@ describe("the compose wizard", () => {
     expect(screen.getByTestId("wizard-unreachable")).toHaveAttribute("open");
   });
 
-  // CW-26: WizardHeader.jsx's stageLabel slot draws at --text-label-small's
-  // size and leading, at the ground's weight (the master sets none), and the
-  // seal's one "?" stands after it, named "How signing works".
-  it("labels the seal stage at the label-small size, then the seal's one help", async () => {
+  // Seam 314 (round 42): the seal carries no stage label; its header holds
+  // the screen's one "?", named "How signing works", alone.
+  it("gives the seal no stage label, only its one help", async () => {
     render();
     fireEvent.click(await screen.findByTestId("wizard-to-words"));
     fireEvent.change(screen.getByTestId("wizard-words"), {
@@ -343,12 +343,9 @@ describe("the compose wizard", () => {
     await screen.findByTestId(byNode("composeDetails.title.input"));
     fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
 
-    const stage = await screen.findByText("Last step");
-    // label-small whole (`WizardHeader.jsx` stage, round 28).
-    expect(stage.className.split(" ")).toContain("text-label-small");
-    expect(stage.className).not.toContain("text-[length:");
-    const help = screen.getByRole("button", { name: "How signing works" });
-    expect(stage.compareDocumentPosition(help) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "How signing works" })).toBeInTheDocument();
+    expect(screen.queryByTestId("header-stage")).toBeNull();
+    expect(screen.queryByText("Last step")).toBeNull();
   });
 
   // The hand test found framing dead on everything past the first picture, so
@@ -399,18 +396,20 @@ describe("the compose wizard", () => {
     fireEvent.keyDown(screen.getByTestId("composeCrop.viewport"), { key: "+" });
     fireEvent.click(screen.getByTestId("composeCrop.shapes.wideChip"));
 
+    // The stage keeps its size under every shape (ComposeCrop.md:7); the
+    // frame inside it changes, and the zoom stays.
     const frame = screen.getByTestId("composeCrop.viewport");
-    expect(frame.style.aspectRatio).toBe("1.91 / 1");
+    expect(frame.style.aspectRatio).toBe("390 / 488");
     expect(zoomOf()).toBeCloseTo(1.1, 6);
     // The picture the cropper works from is the picked original, never a
     // rectangle a previous shape left behind.
     expect(frame.querySelector("img")!.getAttribute("src")).toBe("blob:preview");
   });
 
-  // ComposeCrop.md: the zoom slider under the cut, the cut named for what it
-  // does (crop-frame.test.tsx, where the cut can be measured), and the
-  // QuietNote's how-to line for the device in hand.
-  it("draws the crop's zoom slider and its how-to line", async () => {
+  // ComposeCrop.md:45,53: the zoom slider under the crop, and the line under
+  // it saying what the crop decides — nothing about how to move the picture,
+  // on any device (round 44, the removable-text pass).
+  it("draws the crop's zoom slider and its one line", async () => {
     render();
     await pick(["one.jpg", "two.jpg"]);
     fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
@@ -418,28 +417,7 @@ describe("the compose wizard", () => {
     expect(screen.getByRole("slider", { name: "Zoom" })).toBeInTheDocument();
     const note = screen.getByTestId("composeCrop.howTo");
     expect(note.className).toContain("text-label-small");
-    // The phone's sentence where a touch can pinch.
-    expect(note).toHaveTextContent("One shape for the whole post. Drag to move, pinch to zoom.");
-  });
-
-  it("names the desktop's ways to move and zoom where no touch can pinch", async () => {
-    const original = window.matchMedia;
-    window.matchMedia = ((query: string) => ({
-      matches: false,
-      media: query,
-      addEventListener: () => {},
-      removeEventListener: () => {},
-    })) as unknown as typeof window.matchMedia;
-    try {
-      render();
-      await pick(["one.jpg"]);
-      fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
-      expect(screen.getByTestId("composeCrop.howTo")).toHaveTextContent(
-        "One shape for the whole post. Drag or use the arrow keys to move, the slider to zoom.",
-      );
-    } finally {
-      window.matchMedia = original;
-    }
+    expect(note.textContent).toBe("One shape for the whole post.");
   });
 
   // ComposeWords.md: an empty body holds Next inert, and nothing else is said
@@ -705,7 +683,9 @@ describe("the compose wizard", () => {
   // CW-43 (jakob 2026-08-31, design-session-answers q26, readme §13): the
   // ruled short form ends on its own dash — the pick screen right below is
   // already the rest of the sentence.
-  it("names the fresh-start route in the ruled short form", async () => {
+  // Seam 314 (round 42): the offer names no fresh-start route — the pick step
+  // under it already is one.
+  it("offers the draft without an Or start fresh line", async () => {
     const held: WizardState = {
       ...emptyWizard(),
       mode: "words",
@@ -714,11 +694,9 @@ describe("the compose wizard", () => {
     };
     render(fakeDrafts(held));
 
-    // Exact text, not a substring match: the old full sentence also started
-    // with these same words, which is exactly the regression this pins.
-    expect((await screen.findByTestId("wizard-draft-fresh")).textContent).toBe(
-      "Or start fresh —",
-    );
+    expect(await screen.findByTestId("wizard-draft-card")).toHaveTextContent("Salt maps");
+    expect(screen.queryByTestId("wizard-draft-fresh")).toBeNull();
+    expect(screen.queryByText(/Or start fresh/)).toBeNull();
   });
 
   // -- The Reference affordance (D20) --
@@ -758,8 +736,11 @@ describe("the compose wizard", () => {
     fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "words" } });
     fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
 
-    expect(await screen.findByTestId(byNode("composeDetails.references.stagedReference", "1"))).toHaveTextContent(
-      "@carol: On folding",
+    // The row stands at once; its label is resolved by the lookup's answer.
+    await waitFor(() =>
+      expect(screen.getByTestId(byNode("composeDetails.references.stagedReference", "1"))).toHaveTextContent(
+        "@carol: On folding",
+      ),
     );
   });
 
@@ -1126,7 +1107,7 @@ describe("the compose wizard", () => {
       fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
       await screen.findByTestId(byNode("composeDetails.title.input"));
       fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
-      await screen.findByText("Last step");
+      await screen.findByRole("button", { name: "How signing works" });
     }
 
     it("steps back one stage per press, and leaves the pick to the browser", async () => {
@@ -1136,7 +1117,7 @@ describe("the compose wizard", () => {
 
       window.history.back();
       expect(await screen.findByTestId(byNode("composeDetails.title.input"))).toBeInTheDocument();
-      expect(screen.queryByText("Last step")).toBeNull();
+      expect(screen.queryByRole("button", { name: "How signing works" })).toBeNull();
 
       window.history.back();
       expect(await screen.findByTestId("wizard-words")).toBeInTheDocument();
@@ -1180,7 +1161,7 @@ describe("the compose wizard", () => {
       await screen.findByTestId(byNode("composeDetails.title.input"));
 
       window.history.forward();
-      expect(await screen.findByText("Last step")).toBeInTheDocument();
+      expect(await screen.findByRole("button", { name: "How signing works" })).toBeInTheDocument();
       expect(stageDepth()).toBe(2);
     });
 
@@ -1245,11 +1226,11 @@ describe("the license a new post starts from", () => {
     fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
     await screen.findByTestId(byNode("composeDetails.title.input"));
     fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
-    await screen.findByText("Last step");
+    await screen.findByRole("button", { name: "How signing works" });
     // The seal's License row reads the seeded pair, never public domain.
     const licenseRow = screen.getByTestId("wizard-open-license").parentElement!;
     await waitFor(() => expect(licenseRow).toHaveTextContent("Credit always"));
-    expect(licenseRow).toHaveTextContent("every use credits you");
+    expect(licenseRow).toHaveTextContent("Credit always · Not logged");
     expect(licenseRow).not.toHaveTextContent("Public domain");
   });
 
@@ -1722,13 +1703,13 @@ describe("the already-published marker", () => {
   });
 
   it("draws nothing when no published post carries it", async () => {
-    placement(null);
+    const asked = placement(null);
     render(fakeDrafts(landed()));
     fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
     await screen.findByTestId(byNode("composeDetails.title.input"));
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    });
+    // Read once the placement's own read has answered and been delivered.
+    await waitFor(() => expect(asked).toHaveLength(1));
+    await act(() => settleFetches());
     expect(screen.queryByTestId("composeDetails.published")).toBeNull();
   });
 });
@@ -1763,10 +1744,13 @@ describe("the pick step's round-22 laws", () => {
     expect(removes).toEqual(["Remove picture 1", "Remove picture 2"]);
   });
 
-  it("keeps the caption while three tiles leave it room, and drops it past that", async () => {
+  // Seam 314 (round 42; ComposePick.jsx draws `PickTray` with no caption): a
+  // picture tray carries no caption at any count — the Cover badge says it.
+  it("draws a picture tray without a caption, and clips its row past four tiles", async () => {
     render();
     await pick(["a.jpg", "b.jpg", "c.jpg"]);
-    expect(screen.getByTestId("wizard-tray-caption")).toHaveTextContent("The first one is the cover.");
+    expect(screen.queryByTestId("wizard-tray-caption")).toBeNull();
+    expect(screen.queryByText("The first one is the cover.")).toBeNull();
     await pick(["d.jpg"]);
     expect(screen.queryByTestId("wizard-tray-caption")).toBeNull();
     // Clipped at the band's edge, never a scroll box.

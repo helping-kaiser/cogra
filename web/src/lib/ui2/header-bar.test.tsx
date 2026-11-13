@@ -40,7 +40,7 @@ describe("HeaderBar", () => {
       <HeaderBar
         title="Crop"
         onBack={() => {}}
-        action={<span data-testid="stage-label">Last step</span>}
+        action={<span data-testid="stage-label">Video only</span>}
       />,
     );
     expect(screen.getByTestId("stage-label")).toBeInTheDocument();

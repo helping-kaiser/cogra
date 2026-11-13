@@ -5,7 +5,7 @@
 // canonical/screens/_shared.jsx).
 //
 // THE ANATOMY IS THE MASTERS': the quiet note naming the post, the acts card
-// (`ActsCard`: one row per act kind, the total, the all-or-nothing line), the
+// (`ActsCard`: one row per act kind, the total, the slow line), the
 // three fact rows (`FactRow`'s seal emphasis: License, Your backing,
 // Sensitive), and the foot (`SealFooter`: the commit, and Back under it).
 //
@@ -43,7 +43,7 @@ import { HelpDot } from "@/lib/ui2/help-dot";
 import { ReadoutChip } from "@/lib/ui2/chip";
 import { QuietNote } from "@/lib/ui2/quiet-note";
 import { NoticeLine, NoticePanel } from "@/lib/ui2/notice-panel";
-import { ActsCard, actsTotal, ALL_OR_NOTHING, SLOW_SIGNING_LINE, type ActsRow } from "@/lib/ui2/compose/acts-card";
+import { ActsCard, actsTotal, SLOW_SIGNING_LINE, type ActsRow } from "@/lib/ui2/compose/acts-card";
 import { CitedSheet } from "@/lib/ui2/compose/cited-sheet";
 import { TagsSheet } from "@/lib/ui2/compose/tags-sheet";
 import { ParkedPad } from "@/lib/ui2/compose/parked-pad";
@@ -57,7 +57,7 @@ import { TransportError } from "@/lib/ui/transport-error";
 import { bundleReadout, EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
-import { licenseReading, type License } from "@/lib/license";
+import { licenseName, type License } from "@/lib/license";
 import type { ReferenceDraft } from "@/lib/references/draft";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { WizardState } from "@/lib/compose/wizard";
@@ -289,7 +289,7 @@ export function SealStep({
     });
   }
 
-  const note = slow ? SLOW_SIGNING_LINE : acts > 1 ? ALL_OR_NOTHING : null;
+  const note = slow ? SLOW_SIGNING_LINE : null;
 
   return (
     <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 pb-6 pt-2">
@@ -302,7 +302,7 @@ export function SealStep({
       <div className="flex flex-col">
         <FactRow
           label="License"
-          value={licenseReading(state.license)}
+          value={licenseName(state.license)}
           action="Change"
           testId="wizard-open-license"
           onAction={guard(() => onSheet("license"))}
@@ -600,10 +600,9 @@ function LicenseSheet({
       maxHeight={SHEET_RAISED}
     >
       <div className="flex flex-col gap-2">
-        <QuietNote>Terms for anyone who reuses this.</QuietNote>
         <LicenseRows value={staged} onChange={setStaged} testIdPrefix="wizard" flat />
         <div className="flex items-center gap-2 border-0 border-t border-solid border-outline-variant pt-2.5">
-          <span className="flex-1 text-body-small text-on-surface-variant">{licenseReading(staged)}</span>
+          <span className="flex-1 text-body-small text-on-surface-variant">{licenseName(staged)}</span>
           <PillButton testId="wizard-license-done" onClick={() => onDone(staged)}>
             Done
           </PillButton>

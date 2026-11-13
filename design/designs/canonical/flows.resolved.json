@@ -1933,6 +1933,7 @@
       "startsOn": [
         "CommentMenu",
         "CommentMenuOwn",
+        "CommentRemovedMenu",
         "FeedPostMenu",
         "FeedPostMenuOwn",
         "FeedRemovedMenu",
@@ -1943,6 +1944,7 @@
         "HistoryPostMenuOwn",
         "ProfileCommentsMenu",
         "ProfileCommentsMenuOwn",
+        "ProfileCommentsRemovedMenu",
         "ProfilePostsMenu",
         "ProfilePostsMenuOwn",
         "ReaderPostMenu",
@@ -1953,7 +1955,7 @@
         "TagPageMenu"
       ],
       "steps": [
-        "start · «Cite in a new post» — to ComposePick on 20 boards → ComposePick",
+        "start · «Cite in a new post» — to ComposePick on 22 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -1964,6 +1966,7 @@
         "ComposeCited",
         "CommentMenu",
         "CommentMenuOwn",
+        "CommentRemovedMenu",
         "FeedPostMenu",
         "FeedPostMenuOwn",
         "FeedRemovedMenu",
@@ -1974,6 +1977,7 @@
         "HistoryPostMenuOwn",
         "ProfileCommentsMenu",
         "ProfileCommentsMenuOwn",
+        "ProfileCommentsRemovedMenu",
         "ProfilePostsMenu",
         "ProfilePostsMenuOwn",
         "ReaderPostMenu",
@@ -4690,6 +4694,12 @@
         "remove-your-comment"
       ]
     },
+    "CommentRemovedMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
     "ComposeBodyDiscard": {
       "flows": [
         "swap-the-pictures-for-words"
@@ -6283,6 +6293,12 @@
         "publish-words",
         "see-who-someone-stands-with",
         "see-who-stands-with-someone"
+      ],
+      "endpoint": []
+    },
+    "ProfileCommentsRemovedMenu": {
+      "flows": [
+        "cite-a-post"
       ],
       "endpoint": []
     },

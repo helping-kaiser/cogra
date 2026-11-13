@@ -1,8 +1,8 @@
 /* Removed by its author — the record's skeleton holds the thread's place.
 
    YOUR OWN REMOVED POST KEEPS ITS MENU (jakob 2026-11-12, question 18): the
-   header's ⋮ holds `OWN_REMOVED_POST_MENU` — Save, Cite in a new post, Mark
-   as sensitive, License terms —
+   header's ⋮ holds `OWN_REMOVED_POST_MENU` — Save, Cite in a new post, License
+   terms —
    because the record can still be kept and cited, a follow-up post
    explaining the removal among the reasons. Another's removed post is
    `RemovedOther`.

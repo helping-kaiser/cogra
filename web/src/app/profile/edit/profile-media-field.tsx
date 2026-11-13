@@ -1,7 +1,9 @@
 "use client";
 
-// The avatar picker (D13) — the post picker's parts at a fixed shape. The
-// profile carries one image, so this is the only one.
+// The profile edit's picture row (D13; ProfileEdit.jsx): the profile's one
+// picture at 64px and the outline `Change picture`, which opens the device's
+// picker and then the picture's own crop screen (`AvatarCrop`) — no crop is
+// drawn inline (seam 324, 323-11).
 //
 // THE THREE VALUES ARE THE WHOLE POINT of this component. A profile update is
 // three-valued where a content edit is two-valued: omitted leaves the picture
@@ -11,16 +13,20 @@
 // reports a value it was not given, and the three states are named rather than
 // inferred from an empty string.
 //
-// The monogram is not a gap: it is the designed placeholder and stays the
-// permanent fallback for an actor with no avatar, so "Remove" is a real, calm
-// choice rather than an incomplete state.
+// REMOVE AND UNDO ARE NOT DRAWN, AND STAY (seam 325, G-A1: kept as today, open
+// at design). The board's row holds the picture and `Change picture` only;
+// clearing a picture is a capability the API offers and the web always had, so
+// it is not cut here. It stands where it disturbs the board least: one quiet
+// text button AFTER `Change picture` in the same row — `Remove` while the
+// profile carries a picture, `Keep it` once removed, `Undo` for a fresh pick —
+// and the removal's one line under the row.
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-import { Button } from "@/lib/ui/button";
+import { PillButton } from "@/lib/ui2/pill-button";
 import { MonogramAvatar } from "@/lib/ui2/monogram-avatar";
-import { CropFrame } from "@/lib/ui2/media/crop-frame";
-import { CENTERED, type Crop } from "@/lib/ui2/media/crop";
+import { cropPreviewStyle } from "@/lib/ui2/media/crop-preview";
+import type { Crop } from "@/lib/ui2/media/crop";
 import { AVATAR_RATIO } from "@/lib/ui2/media/aspect";
 
 /** What the field is holding, before any of it has been uploaded. */
@@ -33,116 +39,136 @@ export const UNCHANGED: ProfileMediaChoice = { kind: "unchanged" };
 
 export const PROFILE_RATIOS = { avatar: AVATAR_RATIO } as const;
 
+/** The row's disc (ProfileEdit.jsx `MonogramAvatar size={64}`). */
+const DISC = 64;
+
 export function ProfileMediaField({
-  kind,
   name,
   currentUrl,
   choice,
   onChoice,
+  onPick,
   testIdPrefix,
 }: {
-  /** The profile's one image. Named so the test ids read as they mean. */
-  kind: "avatar";
   /** For the monogram the avatar falls back to. */
   name: string;
   /** What the profile carries today, or null where it carries nothing. */
   currentUrl: string | null;
   choice: ProfileMediaChoice;
   onChoice: (next: ProfileMediaChoice) => void;
+  /** A picture the picker handed back, for its crop screen. */
+  onPick: (file: File) => void;
   testIdPrefix: string;
 }) {
   const input = useRef<HTMLInputElement | null>(null);
 
-  // One object URL per PICKED FILE, not per choice: the crop is edited in
-  // place, so keying this on the whole choice would mint a URL on every frame
-  // of a drag. The URL is derived rather than stored in state — an effect that
-  // set it would render once with the old picture still showing.
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-4">
+        <PictureDisc name={name} currentUrl={currentUrl} choice={choice} testId={`${testIdPrefix}-avatar-preview`} />
+        <PillButton
+          testId={`${testIdPrefix}-avatar-choose`}
+          variant="outlined"
+          size="sm"
+          onClick={() => input.current?.click()}
+        >
+          Change picture
+        </PillButton>
+        {choice.kind === "picked" ? (
+          <PillButton testId={`${testIdPrefix}-avatar-undo`} variant="text" size="sm" onClick={() => onChoice(UNCHANGED)}>
+            Undo
+          </PillButton>
+        ) : (
+          (currentUrl !== null || choice.kind === "cleared") && (
+            // A fresh pick is undone rather than cleared: clearing would ALSO
+            // throw away the picture the profile already carries.
+            <PillButton
+              testId={`${testIdPrefix}-avatar-remove`}
+              variant="text"
+              size="sm"
+              onClick={() => onChoice(choice.kind === "cleared" ? UNCHANGED : { kind: "cleared" })}
+            >
+              {choice.kind === "cleared" ? "Keep it" : "Remove"}
+            </PillButton>
+          )
+        )}
+      </div>
+
+      <input
+        ref={input}
+        type="file"
+        accept="image/*"
+        data-testid={`${testIdPrefix}-avatar-input`}
+        onChange={(event) => {
+          const picked = event.target.files?.[0];
+          if (picked) onPick(picked);
+          event.target.value = "";
+        }}
+        className="sr-only"
+      />
+
+      {choice.kind === "cleared" && (
+        <p className="m-0 text-label-small text-on-surface-variant">Saving replaces it with your monogram.</p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The picture as the edit holds it, at the row's 64px: a fresh pick in its
+ * framing, the monogram once removed, else what the profile carries — the
+ * edit's row and the seal's head row draw the same disc.
+ */
+export function PictureDisc({
+  name,
+  currentUrl,
+  choice,
+  testId,
+}: {
+  name: string;
+  currentUrl: string | null;
+  choice: ProfileMediaChoice;
+  testId: string;
+}) {
+  // One object URL per PICKED FILE. Derived rather than stored in state — an
+  // effect that set it would render once with the old picture still showing.
   const file = choice.kind === "picked" ? choice.file : null;
   const preview = useMemo(() => (file === null ? null : URL.createObjectURL(file)), [file]);
   useEffect(() => {
     if (preview === null) return;
     return () => URL.revokeObjectURL(preview);
   }, [preview]);
-
-  const label = "Avatar";
-  const showing = choice.kind === "cleared" ? null : (preview ?? currentUrl);
-
+  if (choice.kind === "picked" && preview !== null) {
+    return <FramedDisc src={preview} crop={choice.crop} testId={testId} />;
+  }
   return (
-    <div className="flex flex-col gap-2">
-      <span className="text-label-large">{label}</span>
+    <MonogramAvatar name={name} src={choice.kind === "cleared" ? null : currentUrl} size={DISC} testId={testId} />
+  );
+}
 
-      {choice.kind === "picked" && preview !== null ? (
-        // Framing happens in place: a sheet over a form the reader is already
-        // filling in would hide the rest of their edits behind a scrim.
-        <CropFrame
-          src={preview}
-          shape={kind}
-          crop={choice.crop}
-          onChange={(crop) => onChoice({ ...choice, crop })}
-          testId={`${testIdPrefix}-${kind}-crop`}
-        />
-      ) : (
-        <MonogramAvatar
-          name={name}
-          src={showing}
-          size={96}
-          testId={`${testIdPrefix}-avatar-preview`}
+/**
+ * A fresh pick in the row's disc, showing the framing the crop gave it rather
+ * than the whole picture (`crop-preview.ts`) — the bytes are cut only at Save.
+ */
+function FramedDisc({ src, crop, testId }: { src: string; crop: Crop; testId: string }) {
+  const [failed, setFailed] = useState(false);
+  const placed = cropPreviewStyle(crop, { width: DISC, height: DISC });
+  return (
+    <span
+      data-testid={testId}
+      style={{ width: DISC, height: DISC }}
+      className="relative flex flex-none overflow-hidden rounded-full bg-secondary-container"
+    >
+      {!failed && (
+        // eslint-disable-next-line @next/next/no-img-element -- a device-local object URL, never served media
+        <img
+          src={src}
+          alt=""
+          onError={() => setFailed(true)}
+          style={placed ?? undefined}
+          className={placed === null ? "size-full object-cover" : undefined}
         />
       )}
-
-      <input
-        ref={input}
-        type="file"
-        accept="image/*"
-        data-testid={`${testIdPrefix}-${kind}-input`}
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          if (file) onChoice({ kind: "picked", file, crop: CENTERED });
-          event.target.value = "";
-        }}
-        className="sr-only"
-      />
-
-      <div className="flex gap-2">
-        <Button
-          testId={`${testIdPrefix}-${kind}-choose`}
-          variant="outline"
-          size="sm"
-          onClick={() => input.current?.click()}
-        >
-          {showing === null ? "Choose" : "Replace"}
-        </Button>
-        {/* Only offered where there is something to remove — and a fresh pick
-            is undone rather than cleared, because clearing would ALSO throw away
-            the picture the profile already carries. */}
-        {choice.kind === "picked" ? (
-          <Button
-            testId={`${testIdPrefix}-${kind}-undo`}
-            variant="text"
-            size="sm"
-            onClick={() => onChoice(UNCHANGED)}
-          >
-            Undo
-          </Button>
-        ) : (
-          (currentUrl !== null || choice.kind === "cleared") && (
-            <Button
-              testId={`${testIdPrefix}-${kind}-remove`}
-              variant="text"
-              size="sm"
-              onClick={() => onChoice(choice.kind === "cleared" ? UNCHANGED : { kind: "cleared" })}
-            >
-              {choice.kind === "cleared" ? "Keep it" : "Remove"}
-            </Button>
-          )
-        )}
-      </div>
-
-      {choice.kind === "cleared" && (
-        <p className="m-0 text-label-small text-on-surface-variant">
-          Saving replaces it with your monogram.
-        </p>
-      )}
-    </div>
+    </span>
   );
 }
