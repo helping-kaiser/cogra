@@ -95,6 +95,22 @@ class HandshakeTest {
             .isEqualTo("host returned a different act than was pre-signed")
     }
 
+    // A body the host re-renders with -0.0 where the device signed 0.0:
+    // whatever float equality says, the signed bytes differ, and the seal
+    // and approval would cover the host's bytes.
+    @Test
+    fun approveRejectsABodyThatDiffersOnlyInTheSignOfZero() {
+        val p = proposal(actor.address())
+        val zero = Proposal(p.body.copy(pI = 0.0), p.payload, p.deps)
+        val signed = actor.preSign(zero)
+        val negativeZero = zero.body.copy(pI = -0.0)
+        assertThat(negativeZero.canonicalBytes()).isNotEqualTo(zero.body.canonicalBytes())
+        val e = assertThrows(HandshakeException::class.java) {
+            actor.approve(signed, seal(signed, host, body = negativeZero), host.publicKeyBytes())
+        }
+        assertThat(e).hasMessageThat().isEqualTo("host returned a different act than was pre-signed")
+    }
+
     @Test
     fun approveRejectsAnotherPreSignature() {
         val other = actor.preSign(proposal(actor.address()))
