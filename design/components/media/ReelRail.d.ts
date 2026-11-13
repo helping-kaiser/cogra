@@ -2,11 +2,12 @@
  * The stream's rail: the post card's action row turned on its side and laid
  * over the clip (readme §13, the reel round).
  *
- * The order is ruled — author · opinion · comments · share · score. People lead;
- * then the acts in the card's own order; the score last, because it is the door
- * out of the stream and a thumb reaching for the opinion must not pass over the
- * exit. Topics, the reference count and the reader's overflow are absent by
- * rule: they belong to the detail view the score opens.
+ * The order is ruled — author · opinion · comments · share · ⋮ · score. People
+ * lead; then the acts in the card's own order; the ⋮, the post's menu, after
+ * them; the score last, because it is the door out of the stream and a thumb
+ * reaching for the opinion must not pass over the exit. Topics and the
+ * reference count are absent by rule: they belong to the detail view the score
+ * opens.
  *
  * Every glyph is white at 28px with a soft shadow — a token colour on
  * photography is invisible, and a plate behind each of five controls is a wall
@@ -42,8 +43,10 @@ export interface ReelRailProps {
   onOpenProfile?: () => void;
   onOpenComments?: () => void;
   onShare?: () => void;
+  /** The ⋮, `More on this post`: raises the post's menu over the stream — the reader's post menu, or the own one on the reader's own clip. */
+  onOpenMenu?: () => void;
   onOpenScore?: () => void;
-  /** The data-node name its placer gives the rail (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `author`, `stance`, `comments`, `share`, `score`. */
+  /** The data-node name its placer gives the rail (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `author`, `stance`, `comments`, `share`, `menu`, `score`. */
   node?: string;
 }
 

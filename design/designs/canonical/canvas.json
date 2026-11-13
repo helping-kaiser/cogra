@@ -1775,6 +1775,15 @@
       "page": "media"
     },
     {
+      "file": "ReelMenu.dc.html",
+      "title": "Reel · the post menu",
+      "x": 1440,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
       "file": "PostDetailVideoSensitive.dc.html",
       "title": "Post · a video, sensitive and unrevealed",
       "x": 1920,
@@ -1914,7 +1923,7 @@
       "x": -9410,
       "y": 0,
       "w": 8990,
-      "h": 5623,
+      "h": 5743,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },

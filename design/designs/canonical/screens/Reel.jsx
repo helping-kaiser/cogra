@@ -36,7 +36,9 @@
 
    THE CHROME: the way back top-left and the sound disc top-right, both on the
    media disc's surface because they sit on photography; the rail down the right,
-   white and shadowed so it survives a bright frame; the caption above the bar.
+   white and shadowed so it survives a bright frame, its ⋮ raising the post's
+   own menu over the stream (jakob 2026-11-13, M2; `ReelMenu` draws it open);
+   the caption above the bar.
    No pause: a clip in a stream plays, and stopping it is what the detail view is
    for. The one play is the card's own: where the device suppresses autoplay the
    clip stands paused on its cover and the play disc takes the sound disc's

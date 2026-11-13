@@ -1474,6 +1474,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 16, find: 'aria-label="Play this video"', tag: "button" },
     { n: 17, find: ">Retry</button>", tag: "button" },
     { n: 18, find: 'aria-label="Retry loading more"', tag: "button" },
+    // The rail's ⋮ (round 49, M2): the post's menu over the stream.
+    { n: 19, find: 'aria-label="More on this post"', tag: "button" },
   ],
   ReelSensitive: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "button" },
@@ -1487,6 +1489,22 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: ">Show</button>", tag: "button" },
     { n: 9, find: 'aria-label="Sensitive — tap to view.', tag: "button" },
     ...nav(10),
+    { n: 15, find: 'aria-label="More on this post"', tag: "button" },
+  ],
+  // The stream's ⋮ open (round 49, M2): scanExempt like every menu board, the
+  // `whose` chip's two copies of the sheet sharing one number per row.
+  ReelMenu: [
+    { n: 1, find: ">Save</button>", tag: "button", all: true },
+    { n: 2, find: ">Cite in a new post</button>", tag: "button", all: true },
+    { n: 3, find: ">Hide @mira</button>", tag: "button" },
+    { n: 4, find: ">Cited by</button>", tag: "button", all: true },
+    { n: 5, find: ">Opinions on this</button>", tag: "button", all: true },
+    { n: 6, find: ">License terms</button>", tag: "button", all: true },
+    { n: 7, find: ">Report</button>", tag: "button" },
+    { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 9, find: ">Edit</button>", tag: "button" },
+    { n: 10, find: ">Mark as sensitive</button>", tag: "button" },
+    { n: 11, find: ">Remove</button>", tag: "button" },
   ],
   // The `pick` chip (round 27) draws the post three times, one shown: every
   // control on the card stamps each copy (`all`), one number per control.

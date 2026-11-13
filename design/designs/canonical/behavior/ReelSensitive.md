@@ -40,6 +40,8 @@ WHEN tap reel.rail.stance.anchor -> the same pad opens over the veiled clip
 
 WHEN tap reel.rail.comments -> the same comments sheet opens over the clip
 
+WHEN tap reel.rail.menu -> reel.menuSheet rises over the veiled clip with the post's menu, the card's own rows AND NEVER the clip unveils
+
 WHEN press reel.backDisc GIVEN the stream was opened from the feed it narrowed -> the stream closes on the feed it narrowed
 
 WHEN press reel.backDisc GIVEN the stream was opened from anywhere else -> the stream closes onto where it was opened, the state the reader left exactly
