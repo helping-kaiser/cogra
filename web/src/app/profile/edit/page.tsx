@@ -17,7 +17,16 @@
 // is elsewhere (`lib/profile/caps.ts`, pinned to `client-constants.json`), so
 // a reader never types past a boundary the server was always going to refuse.
 
-import { useEffect, useState } from "react";
+//
+// THE EDIT IS A WIZARD STAGE (ProfileEdit.jsx, ProfileEdit.md): its top
+// pinned while the fields scroll, `Save` pinned in the foot, no bottom bar,
+// the heading taking focus as it opens so no keyboard rises. Its picture row's
+// `Change picture` opens the picker and then the picture's own crop screen
+// (`AvatarCrop`), whose Next brings the framed picture back here, to be
+// signed with the fields. Save still signs directly here; the change's own
+// seal (ProfileEditSeal) is the next lane's.
+
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
@@ -45,10 +54,12 @@ import { useAuthGuard } from "@/lib/session/runtime";
 import { useAuthPhase } from "@/lib/session/provider";
 import { expectation, profileUpdate } from "@/lib/signing/intent";
 import { useWriteSigner } from "@/lib/signing/provider";
-import { Button } from "@/lib/ui/button";
-import { PageHeader } from "@/lib/ui/page-header";
 import { TransportError } from "@/lib/ui/transport-error";
+import { HeaderBar } from "@/lib/ui2/header-bar";
+import { PillButton } from "@/lib/ui2/pill-button";
 import { TextField } from "@/lib/ui2/text-field";
+import { CENTERED, type Crop } from "@/lib/ui2/media/crop";
+import { AvatarCrop } from "./avatar-crop";
 import {
   PROFILE_RATIOS,
   ProfileMediaField,
@@ -75,6 +86,17 @@ export default function ProfileEditPage() {
   const [avatar, setAvatar] = useState<ProfileMediaChoice>(UNCHANGED);
   // The account's own id: the node a profile payload binds to.
   const [profileNode, setProfileNode] = useState<string | null>(null);
+  // A picture on its crop screen, before Next hands it back to the row.
+  const [cropping, setCropping] = useState<{ file: File; crop: Crop } | null>(null);
+  const croppingFile = cropping?.file ?? null;
+  const croppingSrc = useMemo(
+    () => (croppingFile === null ? null : URL.createObjectURL(croppingFile)),
+    [croppingFile],
+  );
+  useEffect(() => {
+    if (croppingSrc === null) return;
+    return () => URL.revokeObjectURL(croppingSrc);
+  }, [croppingSrc]);
 
   useEffect(() => {
     if (phase === "signedOut") router.replace("/login");
@@ -224,71 +246,110 @@ export default function ProfileEditPage() {
   const bioTooLong = bioProblem(bio);
   const websiteUrlTooLong = websiteUrlProblem(websiteUrl);
 
-  return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
-      <PageHeader
-        inGutter
-        title="Edit profile"
-        backHref="/profile"
-        backLabel="Back to profile"
-        backTestId="profile-edit-back"
+  // THE PICTURE'S OWN CROP SCREEN stands in the edit's place while it is up;
+  // the edit's fields wait in this component's state, untouched.
+  if (cropping !== null && croppingSrc !== null) {
+    return (
+      <AvatarCrop
+        src={croppingSrc}
+        crop={cropping.crop}
+        onCrop={(crop) => setCropping({ ...cropping, crop })}
+        onNext={() => {
+          // AvatarCrop.md:19: the edit comes back holding the new picture, and
+          // NEVER the picture's own seal opens.
+          setAvatar({ kind: "picked", file: cropping.file, crop: cropping.crop });
+          setCropping(null);
+        }}
+        onBack={() => setCropping(null)}
+        onLeave={() => router.push("/profile")}
       />
-      {loading && <p data-testid="profile-edit-loading">Loading…</p>}
+    );
+  }
+
+  return (
+    <main
+      data-testid="profile-edit"
+      className="mx-auto flex h-dvh w-full max-w-2xl flex-col bg-surface text-on-surface"
+    >
+      <HeaderBar
+        title="Edit profile"
+        backLabel="Back"
+        onBack={() => router.push("/profile")}
+        testId="profile-edit-header"
+        focusTitle
+      />
+      {loading && (
+        <p data-testid="profile-edit-loading" className="m-0 px-6 pt-2">
+          Loading…
+        </p>
+      )}
       {!loading && transportFailed && displayName === "" && (
-        <TransportError testId="profile-edit-transport-error" />
+        <div className="px-6 pt-2">
+          <TransportError testId="profile-edit-transport-error" />
+        </div>
       )}
       {!loading && (
-        <form className="flex flex-col gap-4" onSubmit={(event) => void onSubmit(event)}>
-          <ProfileMediaField
-            kind="avatar"
-            name={displayName}
-            currentUrl={avatarUrl}
-            choice={avatar}
-            onChoice={setAvatar}
-            testIdPrefix="profile-edit"
-          />
-          <TextField
-            label="Display name"
-            value={displayName}
-            onChange={setDisplayName}
-            testId="profile-edit-display-name"
-            cap={DISPLAY_NAME_MAX_CHARS}
-            error={displayNameTooLong ?? undefined}
-          />
-          <TextField
-            label="Bio"
-            value={bio}
-            onChange={setBio}
-            multiline
-            rows={4}
-            testId="profile-edit-bio"
-            cap={BIO_MAX_CHARS}
-            error={bioTooLong ?? undefined}
-          />
-          <TextField
-            label="Website"
-            value={websiteUrl}
-            onChange={setWebsiteUrl}
-            testId="profile-edit-website"
-            cap={WEBSITE_URL_MAX_CHARS}
-            error={websiteUrlTooLong ?? undefined}
-          />
-          {refusedMessage !== null && (
-            <p role="alert" data-testid="profile-edit-refused" className="text-body-small text-error">
-              {refusedMessage}
-            </p>
-          )}
-          {signIncomplete && (
-            <p role="alert" data-testid="profile-edit-signing-failed" className="text-body-small text-error">
-              Signing didn&apos;t complete. Try again.
-            </p>
-          )}
-          {transportFailed && displayName !== "" && (
-            <TransportError testId="profile-edit-submit-transport" />
-          )}
-          <Button
+        <form
+          className="flex min-h-0 flex-1 flex-col gap-4 px-6 pb-6 pt-2"
+          onSubmit={(event) => void onSubmit(event)}
+        >
+          {/* The fields scroll under the pinned top; Save stays in the foot. */}
+          <div className="-mx-6 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6">
+            <ProfileMediaField
+              name={displayName}
+              currentUrl={avatarUrl}
+              choice={avatar}
+              onChoice={setAvatar}
+              onPick={(file) => setCropping({ file, crop: CENTERED })}
+              testIdPrefix="profile-edit"
+            />
+            <TextField
+              label="Display name"
+              optional
+              value={displayName}
+              onChange={setDisplayName}
+              testId="profile-edit-display-name"
+              cap={DISPLAY_NAME_MAX_CHARS}
+              error={displayNameTooLong ?? undefined}
+            />
+            <TextField
+              label="Bio"
+              optional
+              value={bio}
+              onChange={setBio}
+              multiline
+              rows={3}
+              testId="profile-edit-bio"
+              cap={BIO_MAX_CHARS}
+              error={bioTooLong ?? undefined}
+            />
+            <TextField
+              label="Website"
+              optional
+              value={websiteUrl}
+              onChange={setWebsiteUrl}
+              testId="profile-edit-website"
+              cap={WEBSITE_URL_MAX_CHARS}
+              error={websiteUrlTooLong ?? undefined}
+            />
+            {/* An upload refused or too big before signing keeps today's line
+                on the edit (seam 325, G-A4: no board draws where it stands). */}
+            {refusedMessage !== null && (
+              <p role="alert" data-testid="profile-edit-refused" className="m-0 text-body-small text-error">
+                {refusedMessage}
+              </p>
+            )}
+            {signIncomplete && (
+              <p role="alert" data-testid="profile-edit-signing-failed" className="m-0 text-body-small text-error">
+                Signing didn&apos;t complete. Try again.
+              </p>
+            )}
+            {transportFailed && displayName !== "" && <TransportError testId="profile-edit-submit-transport" />}
+          </div>
+          <PillButton
             testId="profile-edit-save"
             type="submit"
+            full
             disabled={
               submitting ||
               displayNameTooLong !== null ||
@@ -297,7 +358,7 @@ export default function ProfileEditPage() {
             }
           >
             Save
-          </Button>
+          </PillButton>
         </form>
       )}
     </main>

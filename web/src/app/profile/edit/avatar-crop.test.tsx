@@ -19,8 +19,12 @@ describe("AvatarCrop", () => {
     expect(screen.getByTestId("avatar-crop-frame").style.aspectRatio).toBe("390 / 390");
     expect(screen.getByRole("slider", { name: "Zoom" })).toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "The post's shape" })).not.toBeInTheDocument();
-    // No line says how to move the picture (round 44).
-    expect(screen.getByTestId("avatar-crop")).not.toHaveTextContent(/drag|pinch/i);
+    // No VISIBLE line says how to move the picture (round 44); the stage's
+    // visually hidden key description stays (seam 323, G3, kept as today).
+    const lines = [...screen.getByTestId("avatar-crop").querySelectorAll("p")].filter(
+      (p) => !p.classList.contains("sr-only"),
+    );
+    expect(lines).toEqual([]);
     const column = screen.getByTestId("avatar-crop-next").parentElement!;
     expect(column.lastElementChild).toBe(screen.getByTestId("avatar-crop-next"));
   });
