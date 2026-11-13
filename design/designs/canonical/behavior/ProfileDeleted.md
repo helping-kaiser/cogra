@@ -61,5 +61,3 @@ WHEN tap profile.bottomBar.profileSlot -> the reader's own profile opens
 WHEN tap the back arrow -> the reader returns to where they came from, in the state they left it AND the arrow's label names that origin
 
 ALWAYS the back arrow reads Back to feed and leads to the feed GIVEN the page was entered with no history behind it
-
-ALWAYS profile.identity.name reads Deleted account and never wraps
