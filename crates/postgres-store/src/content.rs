@@ -705,13 +705,14 @@ pub async fn promote_staged_carriage(
 /// Stores an act's content pair and salt — permanent carriage, promoted
 /// from the staged row at confirm (layers.md §5). Idempotent on the act
 /// id: a re-promotion (mirror rebuild) keeps the first row. Marks the
-/// record (see [`mark_carried`]).
+/// record (see [`mark_carried`]). Returns whether this call inserted the
+/// row, as opposed to finding one already there.
 pub async fn insert_act_payload(
     tx: &mut Transaction<'_, Postgres>,
     act_id: &str,
     pair: CarriedPair<'_>,
-) -> Result<(), ContentError> {
-    sqlx::query!(
+) -> Result<bool, ContentError> {
+    let inserted = sqlx::query!(
         "INSERT INTO act_payloads (act_id, payload, content_nonce, content_salt)
          VALUES ($1, $2, $3, $4)
          ON CONFLICT (act_id) DO NOTHING",
@@ -721,8 +722,11 @@ pub async fn insert_act_payload(
         pair.content_salt,
     )
     .execute(&mut **tx)
-    .await?;
-    mark_carried(tx, act_id).await
+    .await?
+    .rows_affected()
+        == 1;
+    mark_carried(tx, act_id).await?;
+    Ok(inserted)
 }
 
 /// Stores a genesis act's carriage, replacing a full row already held
