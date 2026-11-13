@@ -6108,7 +6108,7 @@ at 10px; the 40-character two-lines sample needs 13px for one line.
 
 Closed as ruled by jakob 2026-11-13 ("i prefer the shrunk 2 line version over the 3 liner"): a head name that would take more than two lines at 22px takes the largest whole-pixel size that holds two, its line-height round(size × 28 / 22), several words or one word alike (`ProfileHeader`'s `nameFitSize`). The smallest size is backlog 215.
 
-### 215 · The smallest size of the head's name · *design* · **filed 2026-11-13**
+### 215 · The smallest size of the head's name · *design* · **filed 2026-11-13** · **closed 2026-11-13**
 
 Round 47. The two-line rule shrinks the head's name to the largest whole
 pixel that holds two lines, and no floor is ruled, so the widest legal name —
@@ -6116,3 +6116,5 @@ pixel that holds two lines, and no floor is ruled, so the widest legal name —
 widest); 50 × `m` and 50 `W` in words take 12px, the 50-character sample
 19px. For jakob, now that he has seen the widest: (a) no floor, as drawn;
 (b) a floor (a size he names), the name past it taking a third line.
+
+Closed as ruled by jakob 2026-11-13 ("F1 as drawn so two lines is the hard cap and it shrinks until it fits"): (a), no floor — the head's name shrinks until it holds two lines, the widest legal name at 10px on 13px.

@@ -26,7 +26,7 @@
    lines at 22px; `fifty` the 50-character name in four words, 19px on 24px;
    `one-word` a 50-character unbroken name, broken inside the word, 20px on
    25px; `widest` 50 × W without a space, 10px on 13px — the widest legal
-   name. A smallest size is not ruled (backlog 215).
+   name. Two lines are the hard cap: the size has no floor (jakob 2026-11-13).
    REGISTERED under the `profile` prefix (design ⇄ impl seam 059/061): another
    person's page is the same surface as your own, named by the same body
    names. */

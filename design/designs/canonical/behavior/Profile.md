@@ -84,4 +84,4 @@ ALWAYS the line under the head reads That didn't sign. in the failure voice foll
 
 ALWAYS profile.identity.name is shown whole on at most two lines, the named exception to the long-names rule, the head alone: at 22px on 28px it wraps at its spaces and a word wider than its line breaks inside the word, the one place a name may, and it is never cut GIVEN the display name is longer than its line
 
-ALWAYS profile.identity.name takes the largest whole-pixel size, from 22 down in steps of 1, at which it holds two lines, its line-height round(size × 28 / 22) px, and the handle line and the rest of the head keep their sizes GIVEN at 22px it would take more than two lines, several words or one long word alike; a smallest size is not ruled
+ALWAYS profile.identity.name takes the largest whole-pixel size, from 22 down in steps of 1, at which it holds two lines, its line-height round(size × 28 / 22) px, and the handle line and the rest of the head keep their sizes GIVEN at 22px it would take more than two lines, several words or one long word alike, with no smallest size: two lines are the hard cap

@@ -299,8 +299,8 @@ export function ProfileHeader({
               in steps of 1, at which it holds two lines, its line-height
               round(size × 28 / 22) px, half up (`nameFitSize`). Nothing is ever
               cut; only the name's own size changes, the handle line and the
-              rest of the head keep theirs. A smallest size is not ruled
-              (backlog 215). `ProfileOther`'s `name` setting draws it. */}
+              rest of the head keep theirs. Two lines are the hard cap and the size has no
+              floor: the name shrinks until it holds them (jakob 2026-11-13). `ProfileOther`'s `name` setting draws it. */}
           {showHandle && !redacted && (
             <span style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} data-node={node && "handle"}>
               @{handle}

@@ -8015,8 +8015,8 @@ jakob's rulings closing the day's rounds, executed in one lane.
   word wider than the line breaks INSIDE the word (the one place in the tree
   a name may), and a name that would take more than two lines at 22px is
   shrunk to the largest whole pixel that holds two, its line-height
-  round(size × 28 / 22) px (`ProfileHeader`'s `nameFitSize`). Never cut; a
-  smallest size is not ruled (backlog 215).
+  round(size × 28 / 22) px (`ProfileHeader`'s `nameFitSize`). Never cut, and two
+  lines are the hard cap: the size has no floor.
   1. *Person rows* — the actor chip: the row never wraps, the name
      ellipsizes first, the handle stays whole until it alone cannot fit
      (`ActorChip`; `ContentRow`'s bare-handle aside reads the same law).
@@ -11880,8 +11880,8 @@ vouch-back pad and Wallet; lane B's crop, composer side, feed and profile).
   and the rest of the head keep their sizes. Every board drawing
   `ProfileHeader` takes it. Measured at the head's 262px: the 50-character
   sample 19px, a 50-character unbroken name 20px, 50 × `W` 10px, 50 × `m`
-  12px, 50 × `i` 22px (no shrink). A smallest size is not ruled (backlog
-  215); `ProfileOther`'s `name` setting draws sample, two-lines, fifty,
+  12px, 50 × `i` 22px (no shrink). Two lines are the hard cap,
+  the size with no floor (backlog 215, ruled); `ProfileOther`'s `name` setting draws sample, two-lines, fifty,
   one-word and widest.
 
 ---
