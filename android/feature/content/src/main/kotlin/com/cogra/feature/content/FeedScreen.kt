@@ -225,28 +225,28 @@ fun FeedRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val returns = HostReturn(commentsReturn, onCommentsReturnConsumed, rememberCommentReread())
     FeedRouteEffects(viewModel, refreshSignal, onRefreshSignalConsumed)
     // THE FEED'S REMOVAL, for every own card's ⋮ and the thread a count raises:
     // a card removed here stands as its mark in place (RM-G9).
     ProvideRemoval {
         FeedScreen(
+            // THE FEED'S THREAD IS THE ONE EVERY LIST RAISES ([ListThread]); a person
+            // tapped in it opens through the sheet's own door.
             commentsSheet = { postId, onDismiss ->
-                val post = state.posts.firstOrNull { it.id == postId }
-                CommentsSheetRoute(
+                ListThread(
                     postId = postId,
+                    post = state.posts.firstOrNull { it.id == postId },
                     viewerId = viewerId,
                     signedIn = signedIn,
                     onDismiss = onDismiss,
-                    onReply = { request -> (request.comment?.asReplyTarget() ?: post?.asReplyTarget())?.let(onReply) },
-                    onEditComment = { commentId -> onEditComment(commentId, post?.title?.value.orEmpty()) },
-                    onOpenActor = onOpenCommentActor ?: onOpenActor,
-                    onOpenTopic = onOpenTopic,
-                    onReference = onCitePost,
+                    doors = CardDoors(onOpenPost, { _, _, _ -> }, onOpenCommentActor ?: onOpenActor, onOpenTopic),
+                    onCitePost = onCitePost,
+                    onReply = onReply,
+                    onEditComment = onEditComment,
                     onSignInOrJoin = onSignInOrJoin,
-                    onDepart = onCommentsDepart,
-                    commentsReturn = commentsReturn,
-                    onReturnConsumed = onCommentsReturnConsumed,
-                    stanceControl = threadStanceControl,
+                    returns = returns,
+                    onCommentsDepart = onCommentsDepart,
                 )
             },
             reportSheet = reportDoor(onRequireAccount, FEED_REPORT_SHEET, FEED / "reportSheet"),
@@ -275,6 +275,8 @@ fun FeedRoute(
             viewerId = viewerId,
             onEditPost = onEditPost,
             onCitePost = onCitePost,
+            onEditComment = onEditComment,
+            returns = returns,
             stanceControl = nodeStanceControl,
             saved = rememberSavedWrites(),
             onRequireAccount = onRequireAccount,
@@ -330,10 +332,6 @@ private fun kindHooks(
     onShareTopic = { name -> share(viewModel.shares.topic(name)) },
     topicStance = feedTopicStanceControl,
 )
-
-/** The thread's stance control over the feed: the live control on the node. */
-private val threadStanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit =
-    { target, tag, node -> StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node) }
 
 /**
  * The band's filter and its sheet, hoisted ([FeedViewModel]): Done's commit,
@@ -469,6 +467,8 @@ fun FeedScreen(
     viewerId: String? = null,
     onEditPost: (String) -> Unit = {},
     onCitePost: (String) -> Unit = {},
+    /** The own comment card's Edit row: the comment's edit over the feed. */
+    onEditComment: (commentId: String, parentTitle: String) -> Unit = { _, _ -> },
     /** A reader chose to look at one veiled body, as it stands. */
     onReveal: (String, SensitiveMark) -> Unit = { _, _ -> },
     /**
@@ -491,6 +491,8 @@ fun FeedScreen(
      * through a view model this screen keeps out of its own signature.
      */
     reportSheet: ReportSheetSlot = { _, _, _ -> },
+    /** What came back from a comment edit or reply signed off the feed, and the one-comment re-read ([EditReturn]). */
+    returns: HostReturn = HostReturn(),
     /**
      * The app's one Saved overlay (`SavedWrites`), which the cards' menus
      * save through; null stands their Save rows inert.
@@ -521,7 +523,7 @@ fun FeedScreen(
     // Which post's report confirm is up. Remembered, not saved: a reader who
     // comes back to the feed finds it as they left it, never a sheet still
     // standing over it (Feed.md:97).
-    var reportFor by remember { mutableStateOf<String?>(null) }
+    var reportFor by remember { mutableStateOf<ReportAsk?>(null) }
     // THE FEED'S SNACKBAR (`feed.snackbar`) is the shell's host, which the
     // feed hands its own node. The scope is the screen's, so a confirmation
     // outlives the sheet that raised it.
@@ -535,6 +537,9 @@ fun FeedScreen(
     // so the feed is left and re-entered rather than covered — and the
     // thread has to be standing again when the reader comes back.
     var commentsFor by rememberSaveable { mutableStateOf<String?>(null) }
+    // AN OWN COMMENT CARD'S EDIT RETURNS TO THE FEED, the card settling in place,
+    // as on every host ([EditReturn]); a return no thread takes is consumed here.
+    val editReturn = rememberEditReturn(returns, threadOpen = commentsFor != null)
     // THE NEXT PAGE ARRIVES BECAUSE THE READER KEPT GOING — no Show more,
     // no page numbers, nothing drawn at rest (design readme §13, the same
     // rule web's `infinite-list.ts` cites). `listState` is the Compose
@@ -594,6 +599,7 @@ fun FeedScreen(
             shareUrls = kinds.shareUrls,
             onEditPost = onEditPost,
             onCitePost = onCitePost,
+            onEditComment = onEditComment,
             onReveal = onReveal,
             stanceControl = stanceControl,
         ),
@@ -601,6 +607,7 @@ fun FeedScreen(
         reveals = state.reveals,
         onOpenComments = { commentsFor = it },
         onReport = { reportFor = it },
+        editReturn = editReturn,
     )
     val tagActions = TagCardActions(
         onOpen = onOpenTopic,
@@ -794,7 +801,7 @@ fun FeedScreen(
                                                 viewerId = viewerId,
                                                 onEdit = onEditPost,
                                                 onCite = onCitePost,
-                                                onReport = { reportFor = post.id },
+                                                onReport = { reportFor = ReportAsk(post.id, ReportKind.Post) },
                                                 revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
                                                 onReveal = { onReveal(post.id, post.sensitiveMark()) },
                                                 stanceControl = stanceControl,
@@ -848,8 +855,8 @@ fun FeedScreen(
         commentsFor?.let { postId ->
             commentsSheet(postId) { commentsFor = null }
         }
-        reportFor?.let { postId ->
-            reportSheet(postId, { reportFor = null }, notify)
+        reportFor?.let { ask ->
+            reportSheet(ask, { reportFor = null }, notify)
         }
         FeedFilterLayer(sheet, state, filter, purpose, readingOf)
     }
@@ -1048,6 +1055,7 @@ private fun KindCard(
             node = FEED / "commentCard",
             testTagPrefix = "feed_comment_${card.comment.id}",
             actions = actions,
+            menu = FEED_COMMENT_MENU,
         )
         is FeedCard.Person -> ProfileFeedCard(
             profile = card.profile,
@@ -1312,6 +1320,23 @@ internal val POST_MENU_ROWS = setOf(
     PostMenuRow.Edit,
     PostMenuRow.MarkSensitive,
     PostMenuRow.Remove,
+)
+
+/**
+ * The feed's comment card menu: `feed.menuSheet`, its registered rows. `Cited
+ * by` and `Opinions on this` are not registered under the feed (seam 320-14),
+ * so they keep their per-comment tags.
+ */
+internal val FEED_COMMENT_MENU = CommentMenuPlacement(
+    sheet = FEED / "menuSheet",
+    rows = setOf(
+        CommentMenuRow.Save,
+        CommentMenuRow.Cite,
+        CommentMenuRow.Edit,
+        CommentMenuRow.Remove,
+        CommentMenuRow.License,
+        CommentMenuRow.Report,
+    ),
 )
 
 internal val FEED_PLACEMENT = CardPlacement(
