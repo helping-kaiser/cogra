@@ -1278,7 +1278,8 @@ describe("PostEditRoute — a clip's cover (EditComposeVideo)", () => {
     draw();
     await pickInto("post-edit-cover-input", [picture("face.jpg")]);
     const crop = await screen.findByTestId("post-edit-cover-crop");
-    expect(within(crop).getByText("The cover takes the video's shape.")).toBeInTheDocument();
+    expect(within(crop).getByTestId("coverCrop.viewport")).toBeInTheDocument();
+    expect(crop).not.toHaveTextContent("The cover takes the video's shape.");
     expect(within(crop).queryByRole("group", { name: "The post's shape" })).not.toBeInTheDocument();
     expect(within(crop).getByRole("heading", { name: "The cover" })).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("coverCrop.next"));

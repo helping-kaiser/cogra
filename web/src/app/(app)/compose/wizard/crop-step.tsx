@@ -19,7 +19,6 @@ import { useRef } from "react";
 
 import { Chip } from "@/lib/ui2/chip";
 import { QuietNote } from "@/lib/ui2/quiet-note";
-import { useCanPinch } from "@/lib/ui2/media/touch";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
 import { CropFrame } from "@/lib/ui2/media/crop-frame";
@@ -52,8 +51,8 @@ export function CropStep({
    */
   locked?: boolean;
   focused: number;
-  /** `frameWidth` is the viewport's width at the tap (`reshape`), null before layout. */
-  onShape: (next: PostShape, frameWidth: number | null) => void;
+  /** `stageWidth` is the crop stage's width at the tap (`reshape`), null before layout. */
+  onShape: (next: PostShape, stageWidth: number | null) => void;
   onFocus: (index: number) => void;
   onCrop: (id: string, crop: Crop) => void;
   onNext: () => void;
@@ -61,9 +60,8 @@ export function CropStep({
   /** The registered ComposeCrop screen (`composeCrop`), naming its shapes, viewport, zoom, how-to, pictures and Next. */
   node?: DataNode;
 }) {
-  const canPinch = useCanPinch();
-  // THE SHAPE CHANGES AROUND THE PICTURE (`reshape`): what keeps each picture
-  // at the size it stood at is the width it was laid at, read at the tap.
+  // THE FRAME CHANGES AROUND THE PICTURE (`reshape`): the new frame's bounds
+  // are measured against the stage's width, read at the tap.
   const viewport = useRef<HTMLDivElement>(null);
   const asset = assets[focused];
   if (asset === undefined) return null;
@@ -105,13 +103,11 @@ export function CropStep({
         node={node}
       />
 
-      {/* The QuietNote under the zoom (ComposeCrop.jsx), its second sentence
-          naming the gestures this device has (ComposeCrop.md; copy-voice,
-          *The crops' how-to line*). */}
+      {/* The QuietNote under the zoom says what the crop decides and nothing
+          about how to move the picture (ComposeCrop.md:53; round 44, the
+          removable-text pass). */}
       <QuietNote testId={`${testIdPrefix}-crop-note`} node={part(node, "howTo")}>
-        {canPinch
-          ? "One shape for the whole post. Drag to move, pinch to zoom."
-          : "One shape for the whole post. Drag or use the arrow keys to move, the slider to zoom."}
+        One shape for the whole post.
       </QuietNote>
 
       {assets.length > 1 && (
