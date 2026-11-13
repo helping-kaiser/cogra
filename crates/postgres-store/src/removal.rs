@@ -173,12 +173,11 @@ async fn current_version(
         ContentNode::Post(id) => {
             sqlx::query_as!(
                 VersionRow,
-                r#"SELECT version_id, created_at, landed_epoch, act_time, position,
+                r#"SELECT version_id, created_at, landed_epoch, position,
                           redaction_reason IS NOT NULL AS "redacted!"
                    FROM post_versions WHERE post_id = $1
                    ORDER BY pending DESC,
                             landed_epoch DESC NULLS LAST,
-                            act_time DESC NULLS LAST,
                             position DESC NULLS LAST,
                             created_at DESC, version_id DESC
                    LIMIT 1"#,
@@ -190,12 +189,11 @@ async fn current_version(
         ContentNode::Comment(id) => {
             sqlx::query_as!(
                 VersionRow,
-                r#"SELECT version_id, created_at, landed_epoch, act_time, position,
+                r#"SELECT version_id, created_at, landed_epoch, position,
                           redaction_reason IS NOT NULL AS "redacted!"
                    FROM comment_versions WHERE comment_id = $1
                    ORDER BY pending DESC,
                             landed_epoch DESC NULLS LAST,
-                            act_time DESC NULLS LAST,
                             position DESC NULLS LAST,
                             created_at DESC, version_id DESC
                    LIMIT 1"#,
@@ -212,17 +210,15 @@ struct VersionRow {
     version_id: i64,
     created_at: Timestamp,
     landed_epoch: Option<i64>,
-    act_time: Option<i64>,
     position: Option<i64>,
     redacted: bool,
 }
 
 impl VersionRow {
     fn into_current(self) -> CurrentVersion {
-        let order = match (self.landed_epoch, self.act_time, self.position) {
-            (Some(landed_epoch), Some(act_time), Some(position)) => Some(LandingOrder {
+        let order = match (self.landed_epoch, self.position) {
+            (Some(landed_epoch), Some(position)) => Some(LandingOrder {
                 landed_epoch,
-                act_time,
                 position,
             }),
             _ => None,
@@ -254,7 +250,7 @@ pub async fn tombstone_act(
     if act.is_empty() {
         return Ok(Tombstoned::default());
     }
-    let (epoch, act_time, position) = coordinates(act.order);
+    let (epoch, position) = coordinates(act.order);
     let blanked = match node {
         ContentNode::Post(id) => sqlx::query!(
             "UPDATE post_versions
@@ -262,12 +258,11 @@ pub async fn tombstone_act(
                  sensitive = FALSE, sensitive_reason = NULL,
                  redaction_reason = $2
              WHERE post_id = $1 AND redaction_reason IS NULL
-               AND ((landed_epoch = $3 AND act_time = $4 AND position = $5)
-                    OR created_at = $6)",
+               AND ((landed_epoch = $3 AND position = $4)
+                    OR created_at = $5)",
             id,
             reason,
             epoch,
-            act_time,
             position,
             act.instant,
         )
@@ -279,12 +274,11 @@ pub async fn tombstone_act(
              SET content = '', sensitive = FALSE, sensitive_reason = NULL,
                  redaction_reason = $2
              WHERE comment_id = $1 AND redaction_reason IS NULL
-               AND ((landed_epoch = $3 AND act_time = $4 AND position = $5)
-                    OR created_at = $6)",
+               AND ((landed_epoch = $3 AND position = $4)
+                    OR created_at = $5)",
             id,
             reason,
             epoch,
-            act_time,
             position,
             act.instant,
         )
@@ -299,36 +293,35 @@ pub async fn tombstone_act(
     Ok(Tombstoned { blanked, appended })
 }
 
-fn coordinates(order: Option<LandingOrder>) -> (Option<i64>, Option<i64>, Option<i64>) {
+fn coordinates(order: Option<LandingOrder>) -> (Option<i64>, Option<i64>) {
     match order {
-        Some(o) => (Some(o.landed_epoch), Some(o.act_time), Some(o.position)),
-        None => (None, None, None),
+        Some(o) => (Some(o.landed_epoch), Some(o.position)),
+        None => (None, None),
     }
 }
 
 /// The head tombstone: content emptied, never pending, the head's landing
-/// coordinates, and `NOW()` — the removing transaction's own instant, the
-/// same one its carriage reduction stamps.
+/// coordinates copied off the head row, and `NOW()`, the removing
+/// transaction's own instant, the same one its carriage reduction stamps.
 async fn append_tombstone(
     conn: &mut PgConnection,
     node: ContentNode,
     head: &CurrentVersion,
     reason: &str,
 ) -> Result<(), sqlx::Error> {
-    let (epoch, act_time, position) = coordinates(head.order);
     match node {
         ContentNode::Post(id) => {
             sqlx::query!(
                 "INSERT INTO post_versions
                      (post_id, title, description, content, redaction_reason,
-                      pending, landed_epoch, act_time, position,
+                      pending, landed_epoch, position,
                       sensitive, sensitive_reason, created_at)
-                 VALUES ($1, NULL, NULL, '', $2, FALSE, $3, $4, $5, FALSE, NULL, NOW())",
+                 SELECT $1, NULL, NULL, '', $2, FALSE,
+                        landed_epoch, position, FALSE, NULL, NOW()
+                 FROM post_versions WHERE version_id = $3",
                 id,
                 reason,
-                epoch,
-                act_time,
-                position,
+                head.version_id,
             )
             .execute(&mut *conn)
             .await?;
@@ -337,14 +330,14 @@ async fn append_tombstone(
             sqlx::query!(
                 "INSERT INTO comment_versions
                      (comment_id, content, redaction_reason,
-                      pending, landed_epoch, act_time, position,
+                      pending, landed_epoch, position,
                       sensitive, sensitive_reason, created_at)
-                 VALUES ($1, '', $2, FALSE, $3, $4, $5, FALSE, NULL, NOW())",
+                 SELECT $1, '', $2, FALSE,
+                        landed_epoch, position, FALSE, NULL, NOW()
+                 FROM comment_versions WHERE version_id = $3",
                 id,
                 reason,
-                epoch,
-                act_time,
-                position,
+                head.version_id,
             )
             .execute(&mut *conn)
             .await?;
@@ -383,7 +376,6 @@ pub async fn post_removals(
                    WHERE post_id = t.post_id AND version_id <> t.version_id
                    ORDER BY pending DESC,
                             landed_epoch DESC NULLS LAST,
-                            act_time DESC NULLS LAST,
                             position DESC NULLS LAST,
                             created_at DESC, version_id DESC
                    LIMIT 1) AS updated_at
@@ -423,7 +415,6 @@ pub async fn comment_removals(
                    WHERE comment_id = t.comment_id AND version_id <> t.version_id
                    ORDER BY pending DESC,
                             landed_epoch DESC NULLS LAST,
-                            act_time DESC NULLS LAST,
                             position DESC NULLS LAST,
                             created_at DESC, version_id DESC
                    LIMIT 1) AS updated_at

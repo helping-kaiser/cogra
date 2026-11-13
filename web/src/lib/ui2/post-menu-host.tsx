@@ -20,12 +20,13 @@ import { useApolloClient } from "@apollo/client/react";
 import type { PostView } from "@/lib/api/content-api";
 import { withRemoval } from "@/lib/api/removal-api";
 import { sendReport } from "@/lib/api/report-api";
-import { hideAct, hiddenPersonOf } from "@/lib/hidden/hide-row";
+import { hideRow, hiddenPersonOf } from "@/lib/hidden/hide-row";
 import { useHiddenSet } from "@/lib/hidden/provider";
 import type { License } from "@/lib/license";
 import { useSavedWrites } from "@/lib/saved/provider";
 import { saveRow, type Notify } from "@/lib/saved/save-row";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
+import { POST_LOCKED, useReaderIsApplicant } from "@/lib/session/reader-state";
 import { useAuthGuard } from "@/lib/session/runtime";
 import type { DataNode } from "@/lib/ui/data-node";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
@@ -93,6 +94,7 @@ export function PostMenuHost({
   const guard = useAuthGuard();
   const phase = useAuthPhase();
   const viewerId = useActiveAccountId();
+  const applicant = useReaderIsApplicant();
   const writes = useSavedWrites();
   const hidden = useHiddenSet();
   // THE NARROW-SHARE FOLD (design/readme.md, jakob 2026-09-17, sharpened
@@ -154,16 +156,20 @@ export function PostMenuHost({
           }),
           // HIDING NAMES ITS PERSON AND ASKS NOTHING (FeedHidden.md:3): the
           // host's rows take the person out, and its snackbar offers Undo.
+          // While the author is hidden the row reads Unhide and unhides
+          // (ReaderPostMenu.md:19-21; round 41).
           hide:
             post.author == null
               ? undefined
-              : hideAct({
+              : hideRow({
                   set: hidden,
                   person: hiddenPersonOf(post.author),
                   origin: post.id,
                   notify,
                   onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
                 }),
+          onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
+          onApplicant: applicant ? () => notify(POST_LOCKED) : null,
           testIdPrefix: testId,
           rowNode: nodes.row,
         });
@@ -187,14 +193,19 @@ export function PostMenuHost({
 
   return (
     <>
-      <MenuSheet
-        open={open}
-        onClose={onClose}
-        items={items}
-        ariaLabel="Post actions"
-        testId={`${testId}-sheet`}
-        node={nodes.sheet}
-      />
+      {/* MOUNTED FROM THE FIRST ⋮ ON: a host whose page carries a menu of its
+          own under the same registered node (the profile's `profile.menuSheet`)
+          holds one such sheet until a card's menu is asked for. */}
+      {post !== null && (
+        <MenuSheet
+          open={open}
+          onClose={onClose}
+          items={items}
+          ariaLabel="Post actions"
+          testId={`${testId}-sheet`}
+          node={nodes.sheet}
+        />
+      )}
       {licenseShown !== null && (
         <LicenseSheet
           open={licenseOpen}

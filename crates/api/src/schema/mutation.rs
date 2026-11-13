@@ -1010,11 +1010,12 @@ impl PrepareReferenceInput {
     }
 }
 
-/// Withdrawing one citation. Records are never deleted, and Reference
-/// withdrawal is per-leg net stance — not the Tag rule beside it, which
-/// is newest-wins at `(0,0)` only because a tag's confidence cannot
-/// be netted. Both citation parameters are signed, so a withdrawal is the
-/// severance shape: counter-records until the bundle reaches `(0, 0)`.
+/// Withdrawing one citation. Records are never deleted, and a Reference
+/// is withdrawn by its author through netting — not the Tag rule beside
+/// it, which is newest-wins at `(0,0)` only because a tag's confidence
+/// cannot be netted. Both citation parameters are signed, so a withdrawal
+/// is the severance shape: counter-records until the bundle reaches
+/// `(0, 0)`.
 ///
 /// A count read earlier can differ from the batch prepared here — the
 /// bundle may have moved in between (another device's act staging or

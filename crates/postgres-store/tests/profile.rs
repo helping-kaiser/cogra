@@ -8,10 +8,11 @@ use postgres_store::{auth, genesis, profile};
 use sqlx::PgPool;
 use uuid::Uuid;
 
+/// A landing at the key of record `(epoch, position)` (layer1-interface.md
+/// §8.3).
 fn order(epoch: i64, position: i64) -> LandingOrder {
     LandingOrder {
         landed_epoch: epoch,
-        act_time: position + 1,
         position,
     }
 }

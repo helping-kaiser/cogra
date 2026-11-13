@@ -4,9 +4,9 @@
 //! (author, citing artifact, target) bundle, same-author sum-then-clip, a
 //! bundle netting to `(0,0)` dropped from the view.
 //!
-//! This is the census's own withdrawal rule — "withdrawal is per-leg net
-//! stance" (layer1-interface.md §9.6) — and deliberately **not** the Tag
-//! rule beside it. Tag withdrawal is newest-wins at `(0,0)` precisely
+//! This is the Reference's own withdrawal rule — its author withdraws it
+//! through netting (edges.md §3) — and deliberately **not** the Tag rule
+//! beside it. Tag withdrawal is newest-wins at `(0,0)` precisely
 //! because confidence is census-bounded to `c ∈ [0, 1]`, so no
 //! counter-record could net an accumulated bundle back down (hashtag.md
 //! §4). Both Reference parameters span `[−1, 1]`, so netting *is*
@@ -310,7 +310,7 @@ pub async fn withdrawal_records(
            WHERE NOT br.payload_marked
              AND NOT b.census_unknown
            ORDER BY br.author, b.source, b.target,
-                    br.epoch, br.act_time, br.position"#,
+                    br.epoch, br.position"#,
         record_ids,
     )
     .fetch_all(pool)

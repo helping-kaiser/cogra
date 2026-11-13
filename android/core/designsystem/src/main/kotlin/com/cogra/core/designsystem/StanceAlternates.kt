@@ -280,7 +280,8 @@ private fun AlternatesActions(
     if (failed) {
         Text(
             text = stringResource(R.string.stance_pad_failed),
-            style = MaterialTheme.typography.bodySmall,
+            // The master's `TransportError` (StanceAlternates.jsx:425): body-medium.
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.error,
             modifier = Modifier
                 .padding(top = Space.x4)

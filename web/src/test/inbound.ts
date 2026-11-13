@@ -14,7 +14,7 @@ let sequence = 0;
 /** The causal key a fixture record lands at: each one later than the last. */
 function nextKey() {
   sequence += 1;
-  return { landingEpoch: 1, actTime: sequence, position: 0 };
+  return { landingEpoch: 1, position: sequence };
 }
 
 /** One Opinion record toward the node, by `handle` (null: no account fronts the address). */

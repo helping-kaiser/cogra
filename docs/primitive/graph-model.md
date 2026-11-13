@@ -43,9 +43,11 @@ CoGra's own stores. The node and edge catalogs live in
 Records carry **causal time, not wall-clock time**. Each accepted
 **act** is a Lamport event over its endpoints, asserted parents,
 and declared dependencies, and the host publishes one
-authoritative order `𝒬_k` that totalizes concurrent acts — every
-record inherits its act's logical time, and `≺` means precedence
-in that published order
+authoritative order `𝒬_k` that totalizes concurrent acts. The key
+of record `(k, pos)` — epoch, then position — orders; every record
+inherits its act's logical time, which is derived from that order
+and never decides precedence, and `≺` means precedence by the key
+of record
 (``def:graph:authoritative-act-order``). Two participants holding
 the same published order derive the same result; agreement on the
 order, not merely the record set, is what replay consumes — there

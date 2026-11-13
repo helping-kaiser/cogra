@@ -14,6 +14,12 @@ export const CREATE_INVITE = "Create invite";
 export const CREATING_INVITE = "Creating invite…";
 export const APPLICATIONS_LABEL = "Applications";
 export const LIVE_LINKS_LABEL = "Live links";
+/** The section of the people the reader vouched in (copy-voice; Invites.md:7). */
+export const PEOPLE_LABEL = "People you let in";
+/** The list's door: the pickers' `Show all`, under the third row (Invites.md:15). */
+export const SHOW_ALL = "Show all";
+/** How many people stand before the door (Invites.md:15, :17). */
+export const PEOPLE_SHOWN = 3;
 /** Invites' empty halves (copy-voice; Invites.md:11, :13): a half with nothing in it still stands. */
 export const NO_APPLICATIONS_WAITING = "No applications waiting.";
 export const NO_LIVE_LINKS = "No live links.";

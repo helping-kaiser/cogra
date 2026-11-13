@@ -33,8 +33,8 @@ export type TagPreview = {
  * rather than the generic charset one.
  */
 function reasonFor(canonical: string): string | null {
-  if (canonical === "") return "Type a topic name.";
-  if (/\s/.test(canonical)) return "Spaces aren't allowed in a topic name.";
+  if (canonical === "") return "Type a tag name.";
+  if (/\s/.test(canonical)) return "Spaces aren't allowed in a tag name.";
   if (!TAG_CHARSET.test(canonical)) return "Only ASCII letters, digits, and . _ - are allowed.";
   if (canonical.length > TAG_NAME_MAX) return `Too long — at most ${TAG_NAME_MAX} characters.`;
   return null;

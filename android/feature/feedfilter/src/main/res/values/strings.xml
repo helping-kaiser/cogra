@@ -37,10 +37,10 @@
     <string name="feedfilter_your_people_hint_borrowed">Only the people @%1$s holds an opinion of — the same rank, narrowed to them.</string>
     <string name="feedfilter_sign_name">Which of your people</string>
     <string name="feedfilter_sign_name_borrowed">Which of @%1$s\'s people</string>
-    <string name="feedfilter_topic">One topic</string>
-    <string name="feedfilter_topic_hint">Topics you hold and are for. A topic you hold against stays a record — it just never narrows a feed.</string>
-    <string name="feedfilter_topic_hint_borrowed">Topics @%1$s holds and is for. A topic @%1$s holds against stays a record — it just never narrows a feed.</string>
-    <string name="feedfilter_all_topics">All your topics</string>
+    <string name="feedfilter_topic">One tag</string>
+    <string name="feedfilter_topic_hint">Tags you hold and are for. A tag you hold against stays a record — it just never narrows a feed.</string>
+    <string name="feedfilter_topic_hint_borrowed">Tags @%1$s holds and is for. A tag @%1$s holds against stays a record — it just never narrows a feed.</string>
+    <string name="feedfilter_all_topics">All your tags</string>
     <string name="feedfilter_reset">Reset</string>
     <string name="feedfilter_done">Done</string>
 </resources>

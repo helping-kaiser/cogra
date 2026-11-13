@@ -75,6 +75,8 @@ fun CograPasswordField(
         hint = hint,
         node = node,
         testTag = testTag,
+        // `PasswordField.jsx` sets its line straight into the field's column.
+        supportSpans = true,
         keyboardOptions = KeyboardOptions(
             capitalization = KeyboardCapitalization.None,
             autoCorrectEnabled = false,

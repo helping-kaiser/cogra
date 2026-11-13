@@ -18,19 +18,46 @@
     <string name="restore_wrong_code">The code doesn\'t open your backup. Check it character by character.</string>
     <string name="restore_no_backup">This account has no key backup. Without one, the actor can\'t be restored.</string>
 
+    <!-- Reset (Reset.dc.html, Reset.md). copy-voice: "The reset", RATE_LIMITED. -->
     <string name="reset_title">Reset your password</string>
-    <string name="reset_request">Email me a reset token</string>
-    <string name="reset_requested">If that address has an account, a reset token is on its way.</string>
-    <string name="reset_token">Reset token</string>
-    <string name="reset_new_password">New password</string>
-    <string name="reset_password_rules">At least 12 characters.</string>
-    <string name="reset_confirm">Set new password</string>
-    <string name="reset_token_invalid">The reset token is invalid or expired.</string>
+    <string name="reset_body">Enter the email you signed up with and we send a reset link. Resetting the password signs out every device.</string>
+    <string name="reset_request">Send reset link</string>
+    <string name="reset_in_flight">Sending reset link…</string>
+    <string name="reset_waiting">Waiting for your email</string>
+    <string name="reset_requested">If that email has an account, a reset link is on its way. The link works once and expires after 15 minutes.</string>
+    <string name="reset_note">This restores your sign-in only. Your key stays wherever it is — restoring the key is its own step, with your recovery code.</string>
+    <string name="reset_no_answer">That didn\'t send. Try again.</string>
+    <string name="reset_rate_limited">Too many tries. Wait a little, then try again.</string>
+    <string name="reset_not_through">That didn\'t go through. Try again.</string>
+
+    <!-- ResetExpired (ResetExpired.dc.html, ResetExpired.md). copy-voice: "A spent or expired reset link". -->
+    <string name="reset_expired_title">This link doesn\'t work anymore</string>
+    <string name="reset_expired_body">It may have expired or already been used. A reset link works once and expires after 15 minutes — ask for a fresh one.</string>
+    <string name="reset_expired_again">Reset your password</string>
+    <string name="reset_expired_sign_in">Sign in</string>
+
+
+    <!-- ResetNew (ResetNew.dc.html, ResetNew.md). copy-voice: "Reset your password", the refusals. -->
+    <string name="reset_new_title">Set a new password</string>
+    <string name="reset_new_body">Setting a new password signs out every device. You sign in again with the new one.</string>
+    <string name="reset_new_password_label">New password</string>
+    <string name="reset_new_hint">At least 12 characters.</string>
+    <string name="reset_new_confirm">Repeat password</string>
+    <string name="reset_new_commit">Set the new password</string>
+    <string name="reset_new_in_flight">Setting the new password…</string>
+    <string name="reset_new_waiting">Waiting for a new password</string>
+    <string name="reset_new_note">This restores your sign-in only. Your key stays wherever it is — restoring the key is its own step, with your recovery code.</string>
+    <string name="reset_new_short">A password is at least 12 characters.</string>
+    <string name="reset_new_long">A password is at most 128 characters.</string>
+    <string name="reset_new_differ">The two passwords don\'t match.</string>
+    <string name="reset_new_breached">That password has turned up in a data breach — pick another one.</string>
+    <string name="reset_new_no_answer">That didn\'t send. Try again.</string>
+    <string name="reset_new_rate_limited">Too many tries. Wait a little, then try again.</string>
+    <string name="reset_new_not_through">That didn\'t go through. Try again.</string>
 
     <string name="error_generic">Something went wrong. Try again.</string>
     <string name="error_transport">Can\'t reach the server. Check your connection and try again.</string>
     <!-- SignIn.md:71: no answer reached the device; Sign in is the retry. -->
     <string name="login_no_answer">That didn\'t send. Try again.</string>
     <string name="error_rate_limited">Too many attempts — wait a moment and try again.</string>
-    <string name="error_weak_password">Passwords need at least 12 characters and can\'t be a known breached password.</string>
 </resources>

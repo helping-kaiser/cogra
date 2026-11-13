@@ -6,6 +6,7 @@ import com.cogra.domain.AccountState
 import com.cogra.domain.ActorRef
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
+import com.cogra.domain.ReaderStanding
 import com.cogra.domain.UserProfile
 import com.cogra.domain.di.WebOrigin
 import com.cogra.domain.invites.InvitesRepository
@@ -133,6 +134,12 @@ class HomeViewModel @Inject constructor(
     @WebOrigin private val webOrigin: String,
     /** A vouch-back kept for the key, which `Got it` drops as Cancel drops one (VouchBack.md:52). */
     private val keptPicks: KeptPickStore,
+    /**
+     * The app's one answer to "is this reader an applicant", which every
+     * posting door reads: each re-read here records it, so the landing's
+     * re-read unlocks those doors the moment it answers.
+     */
+    private val standing: ReaderStanding,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeUiState())
@@ -190,6 +197,7 @@ class HomeViewModel @Inject constructor(
             when (val outcome = account.me()) {
                 is Outcome.Success -> {
                     val profile = outcome.value
+                    standing.record(profile?.accountState)
                     val applicant = profile?.accountState == AccountState.APPLICANT
                     // The poll/sign loop is onboarding-only: started (or
                     // poked) for an applicant, never for a member.

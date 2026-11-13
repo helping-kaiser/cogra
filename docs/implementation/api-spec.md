@@ -212,8 +212,8 @@ clamping); a connection read with neither argument serves 20. The
 caps are part of the query-budget posture below.
 
 **Mirror-ordered reads use keyset cursors.** A cursor over a
-record-backed connection encodes the landing-order key
-`(epoch, act time, position)`; pages walk forward with
+record-backed connection encodes the key of record
+`(epoch, position)`; pages walk forward with
 `first`/`after` or backward with `last`/`before` (one direction
 per request), and results always come back in the connection's
 declared order. The chronicle, the post listing, and a thread's
@@ -224,7 +224,7 @@ cursors. A node's landing position is its genesis, so editing a
 comment never moves it within its thread.
 
 **Pending entries come first, in their own cursor namespace.** A
-pending write has no causal key yet, so it sorts under a sentinel
+pending write has no key of record yet, so it sorts under a sentinel
 epoch above every real one and orders among pending entries by
 `(authoring instant, node id)` — the instant alone is not unique,
 because nothing serializes two authors' signatures apart. Under
@@ -657,7 +657,7 @@ enum LandingState { PENDING LANDED }
  same integer as the genesis Record's landingEpoch, surfaced on the
  node so a client renders the marker without traversing to a record.
  It is null exactly while `state` is PENDING: a pending write has no
- causal key yet. An unlanded edit leaves its node PENDING, because
+ key of record yet. An unlanded edit leaves its node PENDING, because
  the text on screen is the pending version."
 type Landing {
   state: LandingState!
@@ -770,7 +770,9 @@ type Record {
    does — the chronicle's and the trace's `#saltmaps` aside. Null
    when the record's far end is no Type."
   topic: Hashtag
-  "Authoritative act time — the causal key's first component."
+  "Act time 𝕋^act: the recomputable summary of the order the record
+   carries. It decides no precedence — the key of record
+   (landingEpoch, position) orders."
   actTime: Int!
   "Position within the epoch's authoritative order."
   position: Int!
@@ -1294,7 +1296,7 @@ type User implements Node & Actor {
    Opinion (auth.md \"Approval and landing\"). A vouch on an account
    that has not landed, and a later vouch-Opinion on one that has, is
    not one. Newest vouch first, keyset on the vouch record's
-   landing-order key; `vouchedAt` is that record's `landedAt`. The
+   key of record; `vouchedAt` is that record's `landedAt`. The
    admission stands whatever followed it: a stance walked back since,
    or the account deleted since, which reads as every deleted account
    reads. An invalid cursor is BAD_INPUT. Field-level: viewer-only."
@@ -2676,8 +2678,8 @@ type Query {
    payload-marked state, genesis (as on outgoingRecords), and/or a
    landing-epoch window
    (data-model.md \"The record mirror\"). Served newest-first in
-   landing order — the authoritative causal key (epoch, act time,
-   position) — with keyset cursors; target matches the binary/actor
+   landing order — the key of record (epoch, position) — with keyset
+   cursors; target matches the binary/actor
    leg's far end. A UUID that resolves to no known node matches
    nothing. The raw material behind every fold this schema serves —
    any consumer can replay any fold from here."
@@ -2944,8 +2946,8 @@ generic: one per viewer and epoch, never shaped by a filter.
 
 The slice contract is **raw L1 edge records plus their order
 coordinates**: the χ-bounded node set and the accepted records
-among those nodes, each with its landing epoch, its authoritative
-causal key, and its host-cached edge-projection maturity `τ_e` —
+among those nodes, each with its key of record (landing epoch,
+position) and its host-cached edge-projection maturity `τ_e` —
 a non-normative L1 by-product a distrusting consumer recomputes
 from the published ordered history, which no bounded slice
 carries. The ranker folds same-author bundles, derives `w̃`,
@@ -3005,11 +3007,11 @@ type SliceNode {
   genesis: CausalKey
 }
 
-"A record's place in the authoritative order: its landing epoch and
- causal key (𝕋^act, pos)."
+"A record's place in the authoritative order: the key of record
+ (epoch, position), compared lexicographically — the landing epoch
+ first, then the position in that epoch's published order."
 type CausalKey {
   landingEpoch: Int!
-  actTime: Int!
   position: Int!
 }
 
@@ -5333,7 +5335,7 @@ approval stages it, the device signs with `submitProposals` /
 `approveActs` like any other write. Landing flips the account to
 `member` once its own Registration and the first vouch-Opinion on
 any of its paths have both confirmed in the mirror — the first to
-land, by causal key, completes the ceremony and closes the other
+land, by the key of record, completes the ceremony and closes the other
 paths; a vouch that never lands lapses and its path waits again.
 Nothing moves, nothing is claimed. Reciprocation — the joiner's own
 Opinion toward the Profile of the member who vouched them in,

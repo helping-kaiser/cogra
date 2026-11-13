@@ -665,7 +665,6 @@ export function ProfileScreen({
                     kind={deleted ? "deleted" : "other"}
                     profile={profile}
                     signedIn={phase === "signedIn"}
-                    applicant={applicant}
                     notify={notify}
                   />
                 </>

@@ -217,10 +217,15 @@ class OnboardingViewModelsTest {
 
     private fun joinViewModel(): JoinViewModel = JoinViewModel(Register(onboarding, tokens), draft)
 
-    private fun JoinViewModel.fill(handle: String = "Joiner", password: String = "a strong password") {
+    private fun JoinViewModel.fill(
+        handle: String = "Joiner",
+        password: String = "a strong password",
+        confirm: String = password,
+    ) {
         onHandleChange(handle)
         onEmailChange("joiner@example.com")
         onPasswordChange(password)
+        onConfirmChange(confirm)
     }
 
     private fun refuse(code: ErrorCode, field: String? = null) {
@@ -243,14 +248,16 @@ class OnboardingViewModelsTest {
     }
 
     @Test
-    fun createAccountWaitsUntilAllThreeFieldsHoldACharacter() {
-        // Join.md:89-91.
+    fun createAccountWaitsUntilAllFourFieldsHoldACharacter() {
+        // Join.md:99-101 — Repeat password is the fourth.
         val vm = joinViewModel()
         assertThat(vm.state.value.waiting).isTrue()
         vm.onHandleChange("a")
         vm.onEmailChange("b")
         assertThat(vm.state.value.waiting).isTrue()
         vm.onPasswordChange("c")
+        assertThat(vm.state.value.waiting).isTrue()
+        vm.onConfirmChange("c")
         assertThat(vm.state.value.waiting).isFalse()
     }
 
@@ -344,21 +351,65 @@ class OnboardingViewModelsTest {
     }
 
     @Test
-    fun aTakenHandleAndAShortPasswordStandTogetherAndTheEmailNeverChanges() = runTest(dispatcher) {
-        // JoinErrors.md:3 — the board's two errors at once.
+    fun aTakenHandleAShortPasswordAndAMismatchStandTogetherAndTheEmailNeverChanges() = runTest(dispatcher) {
+        // JoinErrors.md:3,5 — the board's three errors at once, each field checked on its own.
         refuse(ErrorCode.HANDLE_TAKEN, "handle")
         val vm = joinViewModel()
         vm.fill(handle = "noor")
         vm.onSubmit(link)
         dispatcher.scheduler.advanceUntilIdle()
         vm.onPasswordChange("fieldday")
+        vm.onConfirmChange("fielday")
         vm.onSubmit(link)
         dispatcher.scheduler.advanceUntilIdle()
         val state = vm.state.value
         assertThat(state.handleLine).isEqualTo(JoinLine.HANDLE_TAKEN)
         assertThat(state.passwordLine).isEqualTo(JoinLine.PASSWORD_SHORT)
+        assertThat(state.confirmLine).isEqualTo(JoinLine.PASSWORDS_DIFFER)
         assertThat(state.emailLine).isNull()
         assertThat(state.email).isEqualTo("joiner@example.com")
+        assertThat(onboarding.registrations).isEqualTo(1)
+    }
+
+    @Test
+    fun aMismatchIsSaidOnThePressAndNothingGoesOut() = runTest(dispatcher) {
+        // Join.md:71 — the line on Repeat password, the field in its error state, no registration.
+        val vm = joinViewModel()
+        vm.fill(confirm = "a strong passwort")
+        assertThat(vm.state.value.confirmLine).isNull()
+        vm.onSubmit(link)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.confirmLine).isEqualTo(JoinLine.PASSWORDS_DIFFER)
+        assertThat(vm.state.value.passwordLine).isNull()
+        assertThat(onboarding.registrations).isEqualTo(0)
+    }
+
+    @Test
+    fun theMismatchLineReChecksAsEitherPasswordChangesAndGoesOnceTheyMatch() = runTest(dispatcher) {
+        // Join.md:73, JoinErrors.md:15.
+        val vm = joinViewModel()
+        vm.fill(confirm = "a strong passwort")
+        vm.onSubmit(link)
+        vm.onConfirmChange("a strong passwor")
+        assertThat(vm.state.value.confirmLine).isEqualTo(JoinLine.PASSWORDS_DIFFER)
+        vm.onConfirmChange("a strong password")
+        assertThat(vm.state.value.confirmLine).isNull()
+        // Typed apart again after the line went: never marked before the next press.
+        vm.onPasswordChange("a stronger password")
+        assertThat(vm.state.value.confirmLine).isNull()
+        vm.onSubmit(link)
+        assertThat(vm.state.value.confirmLine).isEqualTo(JoinLine.PASSWORDS_DIFFER)
+        // Changing Password to meet Repeat password takes the line away too.
+        vm.onPasswordChange("a strong password")
+        assertThat(vm.state.value.confirmLine).isNull()
+    }
+
+    @Test
+    fun typingApartNeverMarksRepeatPasswordBeforeThePress() {
+        // Join.md:45.
+        val vm = joinViewModel()
+        vm.fill(confirm = "something else entirely")
+        assertThat(vm.state.value.confirmLine).isNull()
     }
 
     @Test
@@ -420,11 +471,13 @@ class OnboardingViewModelsTest {
         first.fill()
         first.onLeave()
         assertThat(first.state.value.password).isEmpty()
+        assertThat(first.state.value.confirm).isEmpty()
         val again = joinViewModel()
         assertThat(again.state.value.handle).isEqualTo("joiner")
         assertThat(again.state.value.email).isEqualTo("joiner@example.com")
         assertThat(again.state.value.password).isEmpty()
-        // Join.md:27 — a cold launch builds a fresh draft: nothing is held.
+        assertThat(again.state.value.confirm).isEmpty()
+        // Join.md:31 — a cold launch builds a fresh draft: nothing is held.
         assertThat(JoinViewModel(Register(onboarding, tokens), JoinDraft()).state.value.handle).isEmpty()
     }
 

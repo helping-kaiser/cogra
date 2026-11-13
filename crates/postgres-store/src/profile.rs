@@ -52,7 +52,6 @@ pub async fn current_profile(
          WHERE actor_id = $1
          ORDER BY pending DESC,
                   landed_epoch DESC NULLS LAST,
-                  act_time DESC NULLS LAST,
                   position DESC NULLS LAST,
                   created_at DESC, version_id DESC
          LIMIT 1",
@@ -77,7 +76,6 @@ pub async fn landed_profile(
          FROM actor_profile_versions
          WHERE actor_id = $1 AND NOT pending
          ORDER BY landed_epoch DESC NULLS LAST,
-                  act_time DESC NULLS LAST,
                   position DESC NULLS LAST,
                   created_at DESC, version_id DESC
          LIMIT 1",
@@ -104,25 +102,24 @@ pub async fn insert_profile_version(
     bio: Option<&str>,
     avatar_id: Option<Uuid>,
     website_url: Option<&str>,
-    order: Option<LandingOrder>,
+    landing: Option<LandingOrder>,
     created_at: Timestamp,
 ) -> Result<bool, sqlx::Error> {
     Ok(sqlx::query!(
         "INSERT INTO actor_profile_versions
              (actor_id, display_name, bio, avatar_id, website_url, pending,
-              created_at, landed_epoch, act_time, position)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+              created_at, landed_epoch, position)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
          ON CONFLICT (actor_id, created_at) WHERE pending DO NOTHING",
         actor_id,
         display_name,
         bio,
         avatar_id,
         website_url,
-        order.is_none(),
+        landing.is_none(),
         created_at,
-        order.map(|o| o.landed_epoch),
-        order.map(|o| o.act_time),
-        order.map(|o| o.position),
+        landing.map(|l| l.landed_epoch),
+        landing.map(|l| l.position),
     )
     .execute(&mut **tx)
     .await?
@@ -139,18 +136,16 @@ pub async fn land_profile_version(
     tx: &mut Transaction<'_, Postgres>,
     actor_id: Uuid,
     created_at: Timestamp,
-    order: LandingOrder,
+    landing: LandingOrder,
 ) -> Result<bool, sqlx::Error> {
     Ok(sqlx::query!(
         "UPDATE actor_profile_versions
-            SET pending = FALSE, landed_epoch = $3, act_time = $4,
-                position = $5
+            SET pending = FALSE, landed_epoch = $3, position = $4
          WHERE actor_id = $1 AND created_at = $2 AND pending",
         actor_id,
         created_at,
-        order.landed_epoch,
-        order.act_time,
-        order.position,
+        landing.landed_epoch,
+        landing.position,
     )
     .execute(&mut **tx)
     .await?

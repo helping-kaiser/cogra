@@ -199,7 +199,7 @@ Implements the host side of the
 [layer1-interface.md](../primitive/layer1-interface.md) contract —
 formation checks against the edge census, the admission handshake
 (verify, salt, seal; approval witness), the authoritative order and
-causal keys, edge-projection maturity, the θ-debit ledger, and
+its keys of record, edge-projection maturity, the θ-debit ledger, and
 epoch publication — with the two documented simplifications (money
 as numbers, standing stubbed). The stand-in mirrors the substrate
 contract as the L1 side defines it — where a bilaterally agreed
@@ -334,7 +334,7 @@ signature onward a staged write's display rows are readable by
 everyone, carrying a pending mark until confirm
 ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission));
 the read paths order them ahead of the newest landed record,
-since a pending write has no causal key yet.
+since a pending write has no key of record yet.
 
 ### Atomicity
 
@@ -371,8 +371,8 @@ Who funds the debits is economics
 
 Per epoch, the backend ingests the accepted ordered act sequence
 `𝒬_k` through the L1 boundary and appends it to the mirror
-tables — each record with its authoritative causal key (act time,
-position), each epoch with its attested boundary timestamp —
+tables — each record with its key of record (epoch, position) and
+the act time it carries, each epoch with its attested boundary timestamp —
 advancing a stored epoch cursor. The contract is
 exactly the mirror's truth relationship: it may lag L1; it must
 never diverge; it is fully rebuildable from the published

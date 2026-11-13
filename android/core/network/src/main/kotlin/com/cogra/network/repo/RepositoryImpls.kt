@@ -73,6 +73,7 @@ import com.cogra.network.graphql.KeyBackupQuery
 import com.cogra.network.graphql.LogInMutation
 import com.cogra.network.graphql.MeQuery
 import com.cogra.network.graphql.MyProfileQuery
+import com.cogra.network.graphql.PasswordResetLinkCheckQuery
 import com.cogra.network.graphql.PostBackingQuery
 import com.cogra.network.graphql.PostCommentsQuery
 import com.cogra.network.graphql.PostDetailQuery
@@ -432,6 +433,12 @@ class AccountRepositoryImpl @Inject constructor(private val client: ApolloClient
     override suspend fun requestPasswordReset(email: String): Outcome<Unit> = client.mutation(
         RequestPasswordResetMutation(RequestPasswordResetInput(email)),
     ).payloadOutcome({ emptyList() }) { if (it.requestPasswordReset.ok) Unit else null }
+
+    // Anonymous by design and never guarded: whoever holds the mailed link
+    // asks, signed in or not, and the answer names no account (api-spec.md
+    // `passwordResetLinkCheck`).
+    override suspend fun passwordResetLinkCheck(token: String): Outcome<Boolean> =
+        client.query(PasswordResetLinkCheckQuery(token)).fetch().map { it.passwordResetLinkCheck }
 
     override suspend fun confirmPasswordReset(resetToken: String, newPassword: String): Outcome<Unit> =
         client.mutation(

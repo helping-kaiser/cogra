@@ -81,6 +81,7 @@ import { StageHost } from "@/lib/ui2/media/stage-host";
 import { historyOrigin } from "@/lib/reel/origins";
 import { openStream } from "@/lib/reel/stream-session";
 import { streamHref } from "@/lib/reel/stream-origin";
+import { menuSheetNodes } from "@/lib/ui2/overflow-menu";
 import { PostMenuHost } from "@/lib/ui2/post-menu-host";
 import { SearchBar } from "@/lib/ui2/search-bar";
 import { SectionLabel } from "@/lib/ui2/section-label";
@@ -657,6 +658,8 @@ export function HistoryScreen({
         post={menuPost}
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
+        // HistoryPostMenu(Own): `history.menuSheet` and its rows.
+        nodes={menuSheetNodes("history")}
         testId="history-menu"
         notify={notify}
         // A REMOVED THING KEEPS ITS PLACE IN HISTORY, WEARING ITS MARK

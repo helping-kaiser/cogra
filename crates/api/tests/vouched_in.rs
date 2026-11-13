@@ -1,7 +1,7 @@
 //! The people a member let in, over the wire (api-spec.md `User.vouchedIn`;
 //! auth.md "Approval and landing"): every account whose admitting vouch —
 //! the one its `invitedBy` names — is the viewer's, newest vouch first, on
-//! the vouch record's landing-order keyset, with the record's landing
+//! the vouch record's key-of-record keyset, with the record's landing
 //! instant beside it. A vouch on an account that never landed, and a later
 //! vouch-Opinion on one that did, lists nothing; a walk-back and a deletion
 //! since leave the admission standing; the list is the viewer's own.

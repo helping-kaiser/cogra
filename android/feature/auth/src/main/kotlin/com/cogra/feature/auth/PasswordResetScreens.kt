@@ -1,60 +1,86 @@
-// The password-reset pair (auth.md "Password reset"); the token is
-// pasted in-app per the dev-mailer posture (auth.md "Link URLs").
+// Reset (design/designs/canonical/Reset.dc.html, behavior/Reset.md;
+// copy-voice "The reset"): the reset's request step (auth.md "Password
+// reset" step 1). The new password is set where the mailed link lands,
+// ResetNew (ResetNewScreen.kt); a spent link lands on ResetExpired.
 
 package com.cogra.feature.auth
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
-import com.cogra.core.designsystem.PasswordTextField
+import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.dataNode
+import com.cogra.core.designsystem.dataNodeSurface
+import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.atom.PageHeader
+import com.cogra.core.designsystem.v2.atom.QuietNote
+import com.cogra.core.designsystem.v2.atom.WaitingCommit
 import com.cogra.domain.ErrorCode
-import com.cogra.domain.MIN_PASSWORD_LENGTH
 import com.cogra.domain.Outcome
 import com.cogra.domain.has
 import com.cogra.domain.repo.AccountRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+/** Reset's registered prefix (`nodes.json` `Reset` → `reset`). */
+private val RESET = DataNode("reset")
+
+/** The status line's tag: the board draws the rest state only, so no node is registered for it. */
+const val RESET_STATUS_TAG = "reset_requested"
 
 data class ResetUiState(
     val email: String = "",
-    val token: String = "",
-    val newPassword: String = "",
-    val inProgress: Boolean = false,
-    /** The silent verb reported success — tell the user to check mail. */
+    val inFlight: Boolean = false,
+    /** A press was answered: the status line stands (Reset.md:11, :31). */
     val requested: Boolean = false,
-    val confirmed: Boolean = false,
-    val error: ErrorCode? = null,
-    val transportFailed: Boolean = false,
-)
+    /** The form's own fault above the commit; the field keeps what was typed (:19). */
+    @StringRes val fault: Int? = null,
+) {
+    /** Reset.md:35 — Send reset link waits while Email is empty. */
+    val waiting: Boolean get() = email.isEmpty()
+}
 
+/**
+ * THE ANSWER IS THE SAME EITHER WAY (Reset.md:11-13): the request verb is
+ * silent by design, so every answer it gives reads as the status line, and
+ * nothing on the screen says whether the address has an account. The only
+ * visible refusal is the per-IP window's RATE_LIMITED, which sent nothing
+ * and names no account (`requestPasswordReset`'s contract).
+ */
 @HiltViewModel
 class PasswordResetViewModel @Inject constructor(
     private val account: AccountRepository,
@@ -63,46 +89,23 @@ class PasswordResetViewModel @Inject constructor(
     private val _state = MutableStateFlow(ResetUiState())
     val state = _state.asStateFlow()
 
-    fun onEmailChange(v: String) = _state.update { it.copy(email = v, error = null) }
-
-    fun onTokenChange(v: String) = _state.update { it.copy(token = v, error = null) }
-
-    fun onNewPasswordChange(v: String) = _state.update { it.copy(newPassword = v, error = null) }
+    fun onEmailChange(v: String) = _state.update { it.copy(email = v) }
 
     fun onRequest() {
-        val email = _state.value.email.trim()
-        if (email.isBlank() || _state.value.inProgress) return
-        _state.update { it.copy(inProgress = true, transportFailed = false) }
-        viewModelScope.launch {
-            when (val outcome = account.requestPasswordReset(email)) {
-                is Outcome.Success -> _state.update { it.copy(inProgress = false, requested = true) }
-                // The silent verb still reads as "check your mail" on a
-                // refusal (no account enumeration) — except a rate
-                // limit, which sent nothing and reveals nothing about
-                // the account, so it shows its own message.
-                is Outcome.Refused -> _state.update {
-                    if (outcome.has(ErrorCode.RATE_LIMITED)) {
-                        it.copy(inProgress = false, error = ErrorCode.RATE_LIMITED)
-                    } else {
-                        it.copy(inProgress = false, requested = true)
-                    }
-                }
-                is Outcome.Failed -> _state.update { it.copy(inProgress = false, transportFailed = true) }
-            }
-        }
-    }
-
-    fun onConfirm() {
         val current = _state.value
-        if (current.token.isBlank() || current.newPassword.isEmpty() || current.inProgress) return
-        _state.update { it.copy(inProgress = true, error = null, transportFailed = false) }
+        if (current.waiting || current.inFlight) return
+        _state.update { it.copy(inFlight = true, fault = null) }
         viewModelScope.launch {
-            when (val outcome = account.confirmPasswordReset(current.token.trim(), current.newPassword)) {
-                is Outcome.Success -> _state.update { it.copy(inProgress = false, confirmed = true) }
-                is Outcome.Refused -> _state.update {
-                    it.copy(inProgress = false, error = outcome.errors.first().code)
+            val outcome = account.requestPasswordReset(current.email.trim())
+            _state.update {
+                val settled = it.copy(inFlight = false)
+                when {
+                    outcome is Outcome.Success -> settled.copy(requested = true)
+                    outcome is Outcome.Failed -> settled.copy(fault = R.string.reset_no_answer)
+                    outcome is Outcome.Refused && outcome.has(ErrorCode.RATE_LIMITED) ->
+                        settled.copy(fault = R.string.reset_rate_limited)
+                    else -> settled.copy(fault = R.string.reset_not_through)
                 }
-                is Outcome.Failed -> _state.update { it.copy(inProgress = false, transportFailed = true) }
             }
         }
     }
@@ -110,128 +113,102 @@ class PasswordResetViewModel @Inject constructor(
 
 @Composable
 fun PasswordResetRoute(
-    onDone: () -> Unit,
+    /** The header's back arrow: SignIn opens (Reset.md:3). */
     onBack: () -> Unit,
     viewModel: PasswordResetViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    androidx.compose.runtime.LaunchedEffect(state.confirmed) {
-        if (state.confirmed) onDone()
-    }
     PasswordResetScreen(
         state = state,
         onEmailChange = viewModel::onEmailChange,
-        onTokenChange = viewModel::onTokenChange,
-        onNewPasswordChange = viewModel::onNewPasswordChange,
         onRequest = viewModel::onRequest,
-        onConfirm = viewModel::onConfirm,
         onBack = onBack,
     )
 }
 
+/** The header with its back arrow, the email, the commit, the status line once answered, the quiet note. */
 @Composable
 fun PasswordResetScreen(
     state: ResetUiState,
     onEmailChange: (String) -> Unit,
-    onTokenChange: (String) -> Unit,
-    onNewPasswordChange: (String) -> Unit,
     onRequest: () -> Unit,
-    onConfirm: () -> Unit,
     onBack: () -> Unit = {},
 ) {
-    Scaffold(topBar = { PageHeader(onBack = onBack, testTag = "reset_header") }) { padding ->
+    Scaffold(
+        modifier = Modifier.dataNodeSurface(),
+        topBar = { PageHeader(onBack = onBack, node = RESET / "header") },
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 32.dp),
         ) {
             Text(
                 text = stringResource(R.string.reset_title),
                 style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.semantics { heading() },
+                // The board's `<h1>` is a block: its node spans the column.
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { heading() }
+                    .dataNode(RESET / "title"),
             )
-            OutlinedTextField(
+            Text(
+                text = stringResource(R.string.reset_body),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+                    .dataNode(RESET / "body"),
+            )
+            Spacer(Modifier.height(32.dp))
+            CograTextField(
                 value = state.email,
                 onValueChange = onEmailChange,
-                label = { Text(stringResource(R.string.login_email)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("reset_email"),
+                label = stringResource(R.string.login_email),
+                // The `email` kind with the board's `enterKeyHint="go"`.
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.None,
+                    autoCorrectEnabled = false,
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Go,
+                ),
+                keyboardActions = KeyboardActions(onGo = { if (!state.waiting) onRequest() }),
+                contentType = ContentType.EmailAddress,
+                node = RESET / "email",
             )
-            Button(
-                onClick = onRequest,
-                enabled = state.email.isNotBlank() && !state.inProgress,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("reset_request"),
-            ) {
-                Text(stringResource(R.string.reset_request))
-            }
+            Spacer(Modifier.height(24.dp))
+            WaitingCommit(
+                label = stringResource(R.string.reset_request),
+                reason = stringResource(R.string.reset_waiting),
+                waiting = state.waiting,
+                onCommit = onRequest,
+                inFlight = state.inFlight,
+                inFlightLabel = stringResource(R.string.reset_in_flight),
+                fault = state.fault?.let { stringResource(it) },
+                faultTestTag = "reset.fault",
+                node = RESET / "commit",
+            )
             if (state.requested) {
                 Text(
                     text = stringResource(R.string.reset_requested),
-                    modifier = Modifier.testTag("reset_requested"),
-                )
-            }
-            OutlinedTextField(
-                value = state.token,
-                onValueChange = onTokenChange,
-                label = { Text(stringResource(R.string.reset_token)) },
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("reset_token"),
-            )
-            PasswordTextField(
-                value = state.newPassword,
-                onValueChange = onNewPasswordChange,
-                label = stringResource(R.string.reset_new_password),
-                testTag = "reset_password",
-                supportingText = stringResource(R.string.reset_password_rules),
-                modifier = Modifier.fillMaxWidth(),
-            )
-            state.error?.let {
-                Text(
-                    text = stringResource(it.resetMessage()),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.testTag("reset_error"),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                        .semantics { liveRegion = LiveRegionMode.Polite }
+                        .testTag(RESET_STATUS_TAG),
                 )
             }
-            if (state.transportFailed) {
-                Text(
-                    text = stringResource(R.string.error_transport),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.testTag("reset_transport_error"),
-                )
-            }
-            Button(
-                onClick = onConfirm,
-                // The floor the server states (auth.md "Password
-                // requirements"), not merely "not empty" — the reset form
-                // answers to the same rule the join form does.
-                enabled = state.token.isNotBlank() &&
-                    state.newPassword.length >= MIN_PASSWORD_LENGTH &&
-                    !state.inProgress,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("reset_confirm"),
-            ) {
-                Text(stringResource(R.string.reset_confirm))
-            }
+            Spacer(Modifier.height(24.dp))
+            QuietNote(
+                text = stringResource(R.string.reset_note),
+                modifier = Modifier.dataNode(RESET / "note"),
+            )
         }
     }
-}
-
-private fun ErrorCode.resetMessage(): Int = when (this) {
-    ErrorCode.RESET_TOKEN_INVALID -> R.string.reset_token_invalid
-    ErrorCode.WEAK_PASSWORD -> R.string.error_weak_password
-    ErrorCode.RATE_LIMITED -> R.string.error_rate_limited
-    else -> R.string.error_generic
 }

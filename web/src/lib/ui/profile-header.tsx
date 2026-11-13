@@ -235,10 +235,12 @@ export function ProfileHeader({
           >
             {name}
           </h1>
+          {/* The handle line is a ONE-LINE PLACE (ProfileHeader.jsx, round 40):
+              it never wraps, and a handle too long for it is cut with "…". */}
           {showHandle && !redacted && (
             <span
               {...testAttributes(part(node, "handle"), "profile-handle")}
-              className="text-body-small text-on-surface-variant"
+              className="truncate text-body-small text-on-surface-variant"
             >
               @{handle}
             </span>
