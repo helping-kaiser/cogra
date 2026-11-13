@@ -60,7 +60,7 @@ class SavedHost(
 
     /**
      * THE HIDE ROW FOR [person], MADE FROM [origin] — a toggle: `Hide @ada`,
-     * or `Unhide @ada` while they are hidden (ReaderPostMenu.md:19), the act
+     * or `Unhide @ada` while they are hidden (ReaderPostMenu.md:21), the act
      * following the words. A guest's tap raises the join prompt whatever it
      * reads (GuestGate.md:5). Null with no hidden set, so the row stands inert.
      */

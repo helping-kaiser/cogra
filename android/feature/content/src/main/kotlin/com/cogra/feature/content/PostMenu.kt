@@ -110,7 +110,7 @@ internal fun postMenuRows(
             add(MenuRow(sensitive, tag(PostMenuRow.MarkSensitive, "sensitive"), onEdit))
             add(MenuRow(remove, tag(PostMenuRow.Remove, "remove"), onRemove))
         } else {
-            // THE ROW KEEPS ITS ONE NAME WHATEVER IT READS (ReaderPostMenu.md:19):
+            // THE ROW KEEPS ITS ONE NAME WHATEVER IT READS (ReaderPostMenu.md:21):
             // `Hide @ada` and `Unhide @ada` are one node.
             add(MenuRow(hideRow?.label ?: hide, tag(PostMenuRow.Hide, "hide"), hideRow?.onSelect ?: {}))
         }

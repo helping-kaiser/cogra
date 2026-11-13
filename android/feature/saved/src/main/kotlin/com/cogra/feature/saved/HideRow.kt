@@ -8,11 +8,11 @@
 //
 // - the row reads `Hide @ada`, or `Hide this account` for a deleted account;
 // - THE ROW IS A TOGGLE (round 41, seam 305): while the person is hidden it
-//   reads `Unhide @ada` and keeps its one name (ReaderPostMenu.md:19,
+//   reads `Unhide @ada` and keeps its one name (ReaderPostMenu.md:21,
 //   HistoryPostMenu.md:17, SavedPostMenu.md:19); the tap unhides at once — no
 //   confirm — and the snackbar's Undo hides them again at the moment they were
 //   first hidden, so their Hidden accounts row keeps its place
-//   (ReaderPostMenu.md:21, HistoryPostMenu.md:19). A deleted account's row
+//   (ReaderPostMenu.md:23, HistoryPostMenu.md:19). A deleted account's row
 //   stays `Hide this account`: `Unhide this account` is not drawn yet;
 // - a guest is asked to join, and nothing is sent (GuestGate.md:5);
 // - otherwise the person joins the hidden set at the tap — no confirm, ever —
