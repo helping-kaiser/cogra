@@ -8035,7 +8035,13 @@ jakob's rulings closing the day's rounds, executed in one lane.
      same one unit. `overflow-wrap: anywhere` stays only for other unbroken
      tokens — an email in a settings status, a pasted URL. `DialogSurface`,
      `Snackbar`, `TaskCard`, `BorrowedViewBand`, `QuotedRow`'s title,
-     `SettingsRow`'s status, the pads' and the intro's lines carry it.
+     `SettingsRow`'s status, the pads' and the intro's lines carry it, and
+     `VouchBack`'s card (round 48). A screen reader hears the unit as ONE
+     string, the name and its punctuation with no space between: where a
+     client draws the unit in parts, the parts are hidden from assistive
+     tech and the whole string is spoken once in their place (round 48).
+     The one-line law's lines also carry `StanceRow`'s name and handle,
+     `ReelCaption`'s handle and the person card's lead (round 48).
 - **The comment card's ⋮ is the comment's menu** (`CommentMenu`, or
   `CommentMenuOwn` on your own), never the post card's.
 - **The score hangs on the thing it scores.** At the top of the trace
