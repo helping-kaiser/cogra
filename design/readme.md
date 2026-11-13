@@ -11020,7 +11020,7 @@ Q14), the ruled part.
   clips tagged with that tag in the page's order; a clip wider than tall
   opens the post. Law and edges only.
 - **A tag that never landed** reads `This tag didn't land.` with `Remove
-  it` on the Tags row, no reason given — the `state` chip's `tagRefused`
+  it` on the Tags row, no reason given — the `state` chip's `tag-refused`
   on `ComposeSeal` and `ReplySeal`, the unlanded citation's row.
 - **The reply's one citation** keeps `Reference` and its ×, and reads its
   name over its pair.

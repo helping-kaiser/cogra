@@ -1653,7 +1653,7 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   - **A staged tag that never landed** — on the Tags row, under its
     chips: `This tag didn't land.` with `Remove it`, no reason given (jakob
     2026-11-11, *blessed*). **Drawn** on `ComposeSeal`'s and `ReplySeal`'s
-    `state` chip, `tagRefused`.
+    `state` chip, `tag-refused`.
   - **Any other refusal** — a bug the picking stage should have
     blocked. A notice in the commit's place, never the failure voice:
     `This shouldn't have happened` over `That's a fault on our side,

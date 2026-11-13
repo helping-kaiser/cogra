@@ -1868,11 +1868,12 @@ const SEAL_SLOW_LINE = "Still signing — the network is slow right now.";
 
 /* `chipped` is `ComposeSeal`'s own drawing of its `state` chip (round 30):
    the acts card at rest and the card whose one staged tag never landed —
-   `state` `tagRefused` stages that tag alone, as the reply seal's `refused`
+   `state` `tag-refused` stages that tag alone, as the reply seal's `refused`
    stages its one citation — each behind its hole (`ComposeSeal`'s VALS). */
-function composeSealCard({ cited, tags, state }) {
+function composeSealCard({ cited, tags, state, node }) {
   return (
     <ActsCard
+      node={node}
       rows={[
         { label: "Post", value: "Salt maps of the coast road", count: "1", countNoun: "post" },
         sealTagsRow(tags, state === "tagRefused" ? { message: SEAL_UNLANDED_TAG, onRemove: () => {} } : undefined),
@@ -1894,23 +1895,31 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state, chipped = false }
      A chipped board draws the signing moment as its `state` chip's
      `signing`, the label swapped past 200ms. */
   const signing = state === "signing" || state === "slow";
+  /* Named only where `ComposeSeal` draws it (`chipped`, registered under
+     `composeSeal`, backlog 220): the overlay boards that stand on this body
+     register none of it. Each chip value draws its own copy of the card and
+     of the foot, one shown at a time, so the registry keys each copy by that
+     one value (`node-paths.mjs`). */
+  const n = (segment) => (chipped ? segment : undefined);
+  const stateCopy = (value) => ({ "data-node-chip": "state", "data-node-key": value });
   return (
     <>
-      <WizardHeader title="What you sign" help="How signing works" closing={signing} />
+      <WizardHeader title="What you sign" help="How signing works" closing={signing} node={n("header")} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
+        <QuietNote node={n("summary")}>Salt maps of the coast road — 2 pictures.</QuietNote>
 
         {chipped ? (
           <>
-            <div style={{ display: "{{restCardShown}}", flexDirection: "column" }}>{composeSealCard({ cited, tags, state })}</div>
-            <div style={{ display: "{{tagRefusedShown}}", flexDirection: "column" }}>{composeSealCard({ cited, tags: [tags[0]], state: "tagRefused" })}</div>
+            <div style={{ display: "{{restShown}}", flexDirection: "column" }} {...stateCopy("rest")}>{composeSealCard({ cited, tags, state, node: "acts" })}</div>
+            <div style={{ display: "{{tagRefusedShown}}", flexDirection: "column" }} {...stateCopy("tag-refused")}>{composeSealCard({ cited, tags: [tags[0]], state: "tagRefused", node: "acts" })}</div>
+            <div style={{ display: "{{signingShown}}", flexDirection: "column" }} {...stateCopy("signing")}>{composeSealCard({ cited, tags, state, node: "acts" })}</div>
           </>
         ) : (
           composeSealCard({ cited, tags, state })
         )}
 
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow label="License" value={LICENSE_SUMMARY()} action="Change" />
+        <div style={{ display: "flex", flexDirection: "column" }} data-node={n("facts")}>
+          <FactRow label="License" value={LICENSE_SUMMARY()} action="Change" node={n("license")} />
           {/* One number: the post's own record is a Publish, whose one free
               parameter is the author's attachment — their backing; the second
               is pinned by the census (jakob 2026-10-16, PR-101). It starts at
@@ -1918,10 +1927,11 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state, chipped = false }
               the one the post's face takes once it is out. */}
           <FactRow
             label="Your backing"
-            value={<AttachmentReadout pDirected={0.1} />}
+            value={<AttachmentReadout pDirected={0.1} node={n("value")} />}
             action="Adjust"
+            node={n("backing")}
           />
-          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
+          <FactRow label="Sensitive" value="Not marked" action="Mark" last node={n("sensitive")} />
         </div>
 
         <div style={{ flex: 1 }} />
@@ -1955,11 +1965,14 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state, chipped = false }
           </>
         ) : chipped ? (
           <>
-            <div style={{ display: "{{restFootShown}}", flexDirection: "column" }}>
-              <SealFooter signLabel="Sign and publish" busyLabel="Signing and publishing…" />
+            <div style={{ display: "{{restShown}}", flexDirection: "column" }} {...stateCopy("rest")}>
+              <SealFooter signLabel="Sign and publish" busyLabel="Signing and publishing…" node="footer" />
             </div>
-            <div style={{ display: "{{signFootShown}}", flexDirection: "column" }}>
-              <SealFooter signLabel="Sign and publish" busy busyLabel="Signing and publishing…" />
+            <div style={{ display: "{{tagRefusedShown}}", flexDirection: "column" }} {...stateCopy("tag-refused")}>
+              <SealFooter signLabel="Sign and publish" busyLabel="Signing and publishing…" node="footer" />
+            </div>
+            <div style={{ display: "{{signingShown}}", flexDirection: "column" }} {...stateCopy("signing")}>
+              <SealFooter signLabel="Sign and publish" busy busyLabel="Signing and publishing…" node="footer" />
             </div>
           </>
         ) : (
@@ -2121,10 +2134,11 @@ const replyCitedRow = (fault) => ({
    (`ReplySeal`'s VALS). */
 const REPLY_TAG_SETS = { none: [], two: SEAL_TAGS, seven: SEAL_TAGS_MANY };
 
-function replySealCard({ named, cited, tags, refused, tagRefused = false }) {
+function replySealCard({ named, cited, tags, refused, tagRefused = false, node }) {
   const acts = 1 + tags.length + cited;
   return (
     <ActsCard
+      node={node}
       rows={[
         { label: "Comment", value: named.act, count: "1", countNoun: "comment" },
         ...(tags.length ? [sealTagsRow(tags, tagRefused ? { message: SEAL_UNLANDED_TAG, onRemove: () => {} } : undefined)] : []),
@@ -2158,48 +2172,70 @@ function ReplySealBody({ cited = 0, tags = [], state, target = "post", keyAbsent
      wait and the answer stand on the parent it answers (`SigningAfterClose`). A
      board drawing that moment passes `chipped` (its `state` chip's
      `signing`) or `signChip` (a `state` chip of its own). */
+  /* Named only where `ReplySeal` draws it (`chipped`, registered under
+     `replySeal`, backlog 220). The card is drawn once per `state` value and,
+     inside each, once per `tags` value: a chip's copy inside another chip's
+     copy needs a named node between them, so the state copy holds `card`, a
+     box-less wrapper (`display: contents`), and the tags copies stand in it,
+     each card `acts`. A tag that never landed (`tag-refused`) stages its one
+     tag whatever `tags` reads, so that copy holds the card alone. The foot is
+     drawn once per `state` value. */
+  const n = (segment) => (chipped ? segment : undefined);
+  const copy = (chip, value) => ({ "data-node-chip": chip, "data-node-key": value });
+  const REPLY_STATES = [
+    ["rest", "stRest"],
+    ["refused", "stRefused"],
+    ["bug", "stBug"],
+    ["tag-refused", "stTagRefused"],
+    ["signing", "stSigning"],
+  ];
+  const TAG_HOLES = { none: "tagsNone", two: "tagsTwo", seven: "tagsSeven" };
   return (
     <>
       <WizardHeader
         title="What you sign"
         leaveLabel="Leave — the reply is discarded"
-       
+
         help="How signing works"
+        node={n("header")}
       />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <QuietNote>{named.note} — 89 characters.</QuietNote>
+        <QuietNote node={n("summary")}>{named.note} — 89 characters.</QuietNote>
 
         {/* The all-or-nothing subline appears the moment a signature carries
             more than one thing (`ActsCard`'s rule), so the bare comment —
             one act signed — draws neither it nor the plural total. */}
         {chipped
-          ? Object.entries(REPLY_TAG_SETS).flatMap(([set, staged]) =>
-              [0, 1].map((one) => (
-                <div key={`${set}${one}`} style={{ display: `{{${set}${one}Shown}}`, flexDirection: "column" }}>
-                  {replySealCard({ named, cited: one, tags: staged, refused: one === 1 })}
+          ? REPLY_STATES.map(([value, hole]) => (
+              <div key={value} style={{ display: `{{${hole}}}`, flexDirection: "column" }} {...copy("state", value)}>
+                <div style={{ display: "contents" }} data-node="card">
+                  {value === "tag-refused"
+                    ? replySealCard({ named, cited: 0, tags: [SEAL_TAGS[0]], tagRefused: true, node: "acts" })
+                    : Object.entries(REPLY_TAG_SETS).map(([set, staged]) => (
+                        <div key={set} style={{ display: `{{${TAG_HOLES[set]}}}`, flexDirection: "column" }} {...copy("tags", set)}>
+                          {replySealCard({ named, cited: value === "refused" ? 1 : 0, tags: staged, refused: value === "refused", node: "acts" })}
+                        </div>
+                      ))}
                 </div>
-              )),
-            ).concat(
-              <div key="tagRefused" style={{ display: "{{tagRefusedShown}}", flexDirection: "column" }}>
-                {replySealCard({ named, cited: 0, tags: [SEAL_TAGS[0]], tagRefused: true })}
-              </div>,
-            )
+              </div>
+            ))
           : replySealCard({ named, cited, tags, refused: state === "refused", tagRefused: state === "tagRefused" })}
 
-        <div style={{ display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", flexDirection: "column" }} data-node={n("facts")}>
           <FactRow
             label="Toward what you answer"
-            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
+            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} node={n("value")} />}
             action="Adjust"
+            node={n("toward")}
           />
-          <FactRow label="License" value={LICENSE_SUMMARY()} action="Change" />
-          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
+          <FactRow label="License" value={LICENSE_SUMMARY()} action="Change" node={n("license")} />
+          <FactRow label="Sensitive" value="Not marked" action="Mark" last node={n("sensitive")} />
         </div>
 
         {/* The opinion the reply carries is a fact about replying, not about
             this row — so it stands under the ruled block rather than inside
             it, where `FactRow` has no slot for it. */}
-        <QuietNote>Replying also signs an opinion on what it answers.</QuietNote>
+        <QuietNote node={n("note")}>Replying also signs an opinion on what it answers.</QuietNote>
 
         <div style={{ flex: 1 }} />
 
@@ -2210,15 +2246,17 @@ function ReplySealBody({ cited = 0, tags = [], state, target = "post", keyAbsent
           </>
         ) : chipped ? (
           <>
-            <div style={{ display: "{{signShown}}", flexDirection: "column" }}>
-              <SealFooter signLabel="Sign comment" busyLabel="Signing comment…" />
-            </div>
-            <div style={{ display: "{{signingShown}}", flexDirection: "column" }}>
-              <SealFooter signLabel="Sign comment" busy busyLabel="Signing comment…" />
-            </div>
-            <div style={{ display: "{{bugShown}}", flexDirection: "column", gap: 12 }}>
-              <ReplySealBugFoot />
-            </div>
+            {REPLY_STATES.map(([value, hole]) =>
+              value === "bug" ? (
+                <div key={value} style={{ display: `{{${hole}}}`, flexDirection: "column", gap: 12 }} {...copy("state", value)}>
+                  <ReplySealBugFoot />
+                </div>
+              ) : (
+                <div key={value} style={{ display: `{{${hole}}}`, flexDirection: "column" }} {...copy("state", value)}>
+                  <SealFooter signLabel="Sign comment" busy={value === "signing"} busyLabel="Signing comment…" node="footer" />
+                </div>
+              ),
+            )}
           </>
         ) : state === "bug" ? (
           <ReplySealBugFoot />

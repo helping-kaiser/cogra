@@ -1068,11 +1068,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Change</button>", tag: "button" },
     { n: 5, find: ">Adjust</button>", tag: "button" },
     { n: 6, find: ">Mark</button>", tag: "button" },
-    { n: 7, find: ">Sign and publish</button>", tag: "button" },
-    { n: 8, find: ">Back</button>", tag: "button" },
+    // The foot is drawn once per `state` value (round 49, backlog 220): rest's
+    // and tag-refused's copies carry the same two numbers.
+    { n: 7, find: ">Sign and publish</button>", tag: "button", all: true },
+    { n: 8, find: ">Back</button>", tag: "button", all: true },
     { n: 7, find: ">Signing and publishing…</button>", tag: "button" },
     { n: 8, find: ">Close</button>", tag: "button" },
-    // The `state` chip's `tagRefused` (round 30): the unlanded tag's line.
+    // The `state` chip's `tag-refused` (round 30): the unlanded tag's line.
     { n: 9, find: ">Remove it</button>", tag: "button" },
   ],
   // The seal at more than one staged citation (item 70): `ComposeSeal`'s own
@@ -1741,12 +1743,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
     { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
     { n: 5, find: ">Message</button>", tag: "button" },
-    { n: 6, find: 'aria-label="Posts"', tag: "button" },
-    { n: 6, find: 'aria-label="Comments"', tag: "button" },
-    { n: 6, find: 'aria-label="Everything"', tag: "button" },
+    { n: 6, find: 'aria-label="Posts"', tag: "button", all: true },
+    { n: 6, find: 'aria-label="Comments"', tag: "button", all: true },
+    { n: 6, find: 'aria-label="Everything"', tag: "button", all: true },
+    { n: 7, find: "The long way home — the light does something", tag: "button" },
+    { n: 7, find: "The glovebox camera earns its keep", tag: "button" },
+    { n: 7, find: "Took the coast road instead of the tunnel", tag: "button" },
     ...nav(8),
     { n: 13, find: ">Undo</button>", tag: "button" },
-    // The landing's post card (round 49); 7, the chronicle's row, is not drawn.
+    // The landing's post card (round 49), the board's `tab` chip at `posts`.
     ...otherLandingCard(15),
   ],
   ProfileOtherHeld: [
@@ -2622,8 +2627,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Adjust</button>", tag: "button" },
     { n: 7, find: ">Change</button>", tag: "button" },
     { n: 8, find: ">Mark</button>", tag: "button" },
-    { n: 9, find: ">Sign comment</button>", tag: "button" },
-    { n: 10, find: ">Back</button>", tag: "button" },
+    // The foot is drawn once per `state` value (round 49, backlog 220): rest's,
+    // refused's and tag-refused's copies carry the same two numbers.
+    { n: 9, find: ">Sign comment</button>", tag: "button", all: true },
+    { n: 10, find: ">Back</button>", tag: "button", all: true },
     { n: 9, find: ">Signing comment…</button>", tag: "button" },
     { n: 10, find: ">Close</button>", tag: "button" },
     { n: 11, find: 'aria-label="Manage the 7 tags"', tag: "button", all: true },
