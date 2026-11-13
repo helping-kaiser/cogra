@@ -316,7 +316,9 @@ class ApprovalPad(
     }
 
     private suspend fun finish(application: ApplicationInfo, pick: StancePair, results: List<WriteResult>): Ended {
-        if (results.all { it is WriteResult.Done }) {
+        // An empty pass signed nothing (a resume over cleared material):
+        // it falls through to Failed, the kept vouch stays.
+        if (WriteResult.allDone(results)) {
             signals.announceSigned()
             // A kept vouch signed through this pad is kept no longer (ApprovePad.md:41).
             kept.drop(listOf(approvalTarget(application.id)), KeptFamily.APPROVAL)

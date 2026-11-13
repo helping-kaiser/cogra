@@ -223,6 +223,15 @@ class WriteSignerTest {
         assertThat(identity.handshakes).isEmpty()
     }
 
+    // Every caller asks this of a pass; an empty one signed nothing.
+    @Test
+    fun aSigningPassThatSignedNothingIsNotAllDone() {
+        val done = WriteResult.Done("w1", WriteState.RELAYING)
+        assertThat(WriteResult.allDone(emptyList())).isFalse()
+        assertThat(WriteResult.allDone(listOf(done))).isTrue()
+        assertThat(WriteResult.allDone(listOf(done, WriteResult.AwaitingSeal("w2")))).isFalse()
+    }
+
     // What leaves the device is the two-nonce blob of exactly the material
     // it keeps for the approve step — never a nonce it does not hold.
     @Test

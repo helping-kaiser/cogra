@@ -431,7 +431,7 @@ class CommentEditViewModel @Inject constructor(
             } catch (_: NoActorKeyException) {
                 return@launch end { it.copy(keyAbsent = true) }
             }
-            if (results.all { it is WriteResult.Done }) {
+            if (WriteResult.allDone(results)) {
                 end { it.copy(saved = true) }
             } else {
                 end { it.copy(signingFailed = true) }

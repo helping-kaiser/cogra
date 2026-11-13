@@ -204,7 +204,7 @@ class AvatarFlowViewModel @Inject constructor(
             val ledger = known?.let { mapOf(mediaId to it) }.orEmpty()
             val expected = profileExpectation(profile.id, sent, ledger)
             val results = signer.sign(prepared, Expectation(listOf(profileUpdate(expected))))
-            if (results.all { it is WriteResult.Done }) {
+            if (WriteResult.allDone(results)) {
                 _state.update { it.copy(submitting = false, saved = true) }
             } else {
                 _state.update { it.copy(submitting = false, signingFailed = true) }

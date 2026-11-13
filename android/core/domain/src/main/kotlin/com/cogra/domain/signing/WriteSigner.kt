@@ -55,6 +55,16 @@ sealed interface WriteResult {
 
     /** Transport failed mid-handshake; material is kept and `resume` retries. */
     data class Failed(override val stagedWriteId: String, val cause: Exception) : WriteResult
+
+    companion object {
+        /**
+         * Whether a signing pass signed: every write Done, and at least one
+         * write. An empty pass signed nothing — a resume over cleared
+         * material returns none — so it is never a success.
+         */
+        fun allDone(results: List<WriteResult>): Boolean =
+            results.isNotEmpty() && results.all { it is WriteResult.Done }
+    }
 }
 
 /** Thrown when signing is requested with no actor key on the device. */

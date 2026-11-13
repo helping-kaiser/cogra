@@ -713,7 +713,7 @@ class ReplyWizardViewModel @Inject constructor(
                 return@launch
             }
 
-            if (results.all { it is WriteResult.Done }) {
+            if (WriteResult.allDone(results)) {
                 _state.update {
                     it.copy(submitting = false, outcome = ReplyOutcome.Signed(prepared.node))
                 }
