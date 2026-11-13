@@ -7,7 +7,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -43,8 +42,6 @@ class StatusBannersTest {
         compose.setContent {
             StatusBanners(
                 state = state,
-                onTokenChange = {},
-                onVerify = {},
                 onResendEmailChange = {},
                 onResend = {},
                 onResumePending = {},
@@ -221,34 +218,16 @@ class StatusBannersTest {
         compose.onNodeWithTag("home_resume").assertExists()
     }
 
+    // ApplicantFeed.md:11 — the verify card stands while the email is not
+    // verified, under the board's title, and takes NO pasted token: the
+    // mail's link is opened on the web (round-3 answer 7).
     @Test
-    fun anApplicantAwaitingVerificationGetsTheTokenCard() {
+    fun anApplicantAwaitingVerificationGetsTheVerifyCardWithNoTokenField() {
         render(applicant(awaiting(emailVerified = false)))
-        compose.onNodeWithTag("verify_token").assertExists()
-        compose.onNodeWithTag("verify_submit").assertIsNotEnabled()
-    }
-
-    @Test
-    fun aRateLimitedVerifyShowsTheDeliberateRefusalCopy() {
-        // Never the connectivity copy: the server refused on purpose.
-        val context: Context = ApplicationProvider.getApplicationContext()
-        render(
-            applicant(awaiting(emailVerified = false))
-                .copy(verifyError = ErrorCode.RATE_LIMITED),
-        )
-        compose.onNodeWithTag("verify_error")
-            .assertTextEquals(context.getString(R.string.error_rate_limited))
-    }
-
-    @Test
-    fun anUnknownVerifyRefusalFallsBackToTheTokenCopy() {
-        val context: Context = ApplicationProvider.getApplicationContext()
-        render(
-            applicant(awaiting(emailVerified = false))
-                .copy(verifyError = ErrorCode.INTERNAL),
-        )
-        compose.onNodeWithTag("verify_error")
-            .assertTextEquals(context.getString(R.string.home_verify_failed))
+        compose.onNodeWithTag("home_verify").assertTextEquals("Verify your email")
+        compose.onNodeWithTag("verify_resend").assertExists()
+        compose.onNodeWithTag("verify_token").assertDoesNotExist()
+        compose.onNodeWithTag("verify_submit").assertDoesNotExist()
     }
 
     @Test
@@ -279,7 +258,7 @@ class StatusBannersTest {
         // The two proofs are independent (auth.md "Application"): both
         // cards can show at once.
         render(applicant(awaiting(emailVerified = false, keyAttached = false, keyOnDevice = false)))
-        compose.onNodeWithTag("verify_token").assertExists()
+        compose.onNodeWithTag("home_verify").assertExists()
         compose.onNodeWithTag("home_create_key").assertExists()
     }
 
