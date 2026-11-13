@@ -6,6 +6,7 @@
 
 import type { MeUser } from "@/lib/api/auth-api";
 import type { PadVariant } from "@/lib/ui/stance-control";
+import { PRESS_AND_HOLD, SWAP_THE_INPUT, type PadHelpLine } from "@/lib/ui/stance-pad-help";
 
 /** The pad's title, and its `?`'s name (VouchBackPad.md:9). */
 export const VOUCH_BACK_TITLE = "Your vouch back";
@@ -14,10 +15,17 @@ export const VOUCH_BACK_TITLE = "Your vouch back";
 export const VOUCH_BACK_NOTE =
   "Your vouch back. The pad is how you shape what reaches you — for or against, and how much.";
 
-/** The help that replaces the pad's body in place (VouchBackPad.md:21). */
-export const VOUCH_BACK_HELP: readonly string[] = [
+/**
+ * The help that replaces the pad's body in place (VouchBackPad.md:21;
+ * copy-voice *Your vouch back*; _shared.jsx `YOUR_VOUCH_BACK_HELP`): its two
+ * paragraphs, then the first-ever pad's coaching, moved in whole (jakob
+ * 2026-11-12) — the press-and-hold shortcut and the input swap.
+ */
+export const VOUCH_BACK_HELP: readonly PadHelpLine[] = [
   "Vouching back signs your opinion of the person who vouched you in, and your feed grows from it.",
   "The pad is how you shape what reaches you — for or against, and how much. Nothing is signed until Set.",
+  PRESS_AND_HOLD,
+  SWAP_THE_INPUT,
 ];
 
 /**
@@ -30,7 +38,7 @@ export const vouchCardTitle = (handle: string) => `@${handle} vouched you in`;
 
 /** The card's body; it claims no order between opinions (VouchBack.md:7, :11). */
 export const vouchCardBody = (handle: string) =>
-  `Vouch back to open the way from your side — your opinion toward @${handle}, and your feed grows from it. Vouching opens the opinion control, set to a gentle default.`;
+  `Vouch back to open the way from your side — your opinion toward @${handle}, and your feed grows from it.`;
 
 export const GOT_IT = "Got it";
 /**
