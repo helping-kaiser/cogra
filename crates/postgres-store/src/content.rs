@@ -674,6 +674,14 @@ async fn mark_carried(conn: &mut sqlx::PgConnection, act_id: &str) -> Result<(),
 /// full row it finds. Without the lock, a plain read of a payload being
 /// reaped would land a full row under a redaction that reports it
 /// reduced.
+///
+/// The lock cannot deadlock with a redaction. `ON CONFLICT DO NOTHING`
+/// does wait on a conflicting insert that has not committed yet, but
+/// every flow takes the staged row before it can wait on a carriage row.
+/// This statement locks the staged row in the same statement that
+/// inserts the carriage row, and the redaction locks it before it
+/// writes carriage. So neither ever waits on the other while holding
+/// what the other needs.
 pub async fn promote_staged_carriage(
     tx: &mut Transaction<'_, Postgres>,
     act_ids: &[String],

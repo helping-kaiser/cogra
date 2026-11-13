@@ -595,14 +595,59 @@ async fn a_write_promoting_after_its_payload_was_reaped_lands_reduced_rather_tha
     );
 }
 
+/// The server process behind a transaction, as `pg_stat_activity` names it.
+async fn backend_pid(tx: &mut sqlx::Transaction<'_, sqlx::Postgres>) -> i32 {
+    sqlx::query_scalar("SELECT pg_backend_pid()")
+        .fetch_one(&mut **tx)
+        .await
+        .expect("its backend")
+}
+
+/// Waits until another backend is waiting on a lock held by the backend
+/// `holder`, read from PostgreSQL's own view (`pg_blocking_pids`). A
+/// race test that only sleeps can fall into the serial order on a slow
+/// runner and pass whatever the code does; this fails the test instead
+/// when the expected wait never happens.
+async fn wait_until_blocked_by(pool: &PgPool, holder: i32) {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+    loop {
+        let waiting: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM pg_stat_activity
+             WHERE wait_event_type = 'Lock' AND $1 = ANY(pg_blocking_pids(pid))",
+        )
+        .bind(holder)
+        .fetch_one(pool)
+        .await
+        .expect("reads pg_stat_activity");
+        if waiting > 0 {
+            return;
+        }
+        assert!(
+            std::time::Instant::now() < deadline,
+            "no backend ever waited on backend {holder}; the race ran serially"
+        );
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+    }
+}
+
 /// A redaction racing the ingestion that promotes the same act's staged
-/// carriage ends reduced in both orders. In the first, the ingestion
-/// promotes first and has not committed yet: its full row is invisible to
-/// the redaction, whose own reduced-row insert would otherwise wait on it
-/// and then do nothing. In the second, the redaction runs first and has
-/// not committed yet. Either way, once both commit, carriage and staged
-/// row hold no payload, content nonce or salt, and the record lands
-/// marked.
+/// carriage ends reduced in both orders.
+///
+/// In the first order, the ingestion promotes first and has not committed
+/// yet. Its full row is invisible to the redaction, whose own reduced-row
+/// insert would otherwise wait on it and then do nothing. The test
+/// asserts the redaction is really blocked on the ingestion before it
+/// commits; this order is the regression guard (it ends `full` without
+/// the staged row's share lock).
+///
+/// In the second order, the redaction runs first and has not committed
+/// yet, and the test asserts the promotion is blocked on it. This order
+/// passes without the share lock too: the plain read then waits on the
+/// redaction's uncommitted reduced row and does nothing. It checks only
+/// that the lock does not break this order.
+///
+/// Either way, once both commit, carriage and staged row hold no
+/// payload, content nonce or salt, and the record lands marked.
 ///
 /// A redaction racing the ingestion of the same act leaves its carriage reduced, in either order.
 /// ´claim:redaction:a-redaction-racing-ingestion-ends-reduced´
@@ -631,19 +676,20 @@ async fn a_redaction_racing_the_ingestion_of_its_act_ends_reduced_in_either_orde
             .await
         }
     };
-    let settle = || tokio::time::sleep(std::time::Duration::from_millis(500));
-
     let mut ingesting = rig.pool.begin().await.expect("the ingestion begins first");
+    let ingestion_pid = backend_pid(&mut ingesting).await;
     content_store::promote_staged_carriage(&mut ingesting, std::slice::from_ref(&first))
         .await
         .expect("promotes");
     let racing = tokio::spawn(redaction_of(first.clone()));
-    settle().await;
+    wait_until_blocked_by(&rig.pool, ingestion_pid).await;
+    assert!(!racing.is_finished(), "the redaction waits on the ingestion");
     ingesting.commit().await.expect("commits");
     let done = racing.await.expect("joins").expect("redacts");
     assert!(done.reduced && done.staged_reaped);
 
     let mut redacting = rig.pool.begin().await.expect("the redaction begins first");
+    let redaction_pid = backend_pid(&mut redacting).await;
     let by = actor.to_string();
     let reduced = redaction::reduce_in(
         &mut redacting,
@@ -671,7 +717,8 @@ async fn a_redaction_racing_the_ingestion_of_its_act_ends_reduced_in_either_orde
             tx.commit().await
         })
     };
-    settle().await;
+    wait_until_blocked_by(&rig.pool, redaction_pid).await;
+    assert!(!promoting.is_finished(), "the promotion waits on the redaction");
     redacting.commit().await.expect("commits");
     promoting.await.expect("joins").expect("promotes");
 
