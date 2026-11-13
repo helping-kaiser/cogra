@@ -134,4 +134,34 @@ describe("TagFeedCard's Tag a new post with it", () => {
     mount(null);
     expect(screen.queryByTestId("carried-snackbar")).toBeNull();
   });
+
+  // FeedTagShapes.md:29, GuestGate.md:3 — a guest's tap on the compose glyph
+  // opens the ask over the feed AND NEVER the reader is bounced to another
+  // screen (no /compose, so no /login after it).
+  it("a_guests_compose_glyph_opens_the_guest_gate_over_the_feed", () => {
+    mount(null);
+    const ask = screen.getByTestId("join-prompt");
+    expect(ask).toHaveTextContent("Join the conversation");
+    expect(ask).toHaveTextContent("Posting and profiles need an account.");
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  // Keep browsing closes the ask and the read stands where it was (GuestGate.md).
+  it("keep_browsing_closes_the_guest_gate_and_stays", () => {
+    mount(null);
+    fireEvent.click(screen.getByTestId("join-prompt-dismiss"));
+    expect(screen.queryByTestId("join-prompt")).toBeNull();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  // FeedTagShapes.md:29's other half — the card's face, the shared control.
+  it("a_guests_tap_on_the_tag_cards_face_opens_the_guest_gate", () => {
+    renderWithProviders(
+      <TagFeedCard topic={TOPIC} from="feed" testId="tag" node={{ path: "feed.tagCard", key: "t1" }} onLinkCopied={() => {}} />,
+      { reader: null },
+    );
+    fireEvent.click(screen.getByTestId("feed.tagCard.actionRow.stance.anchor"));
+    expect(screen.getByTestId("join-prompt")).toHaveTextContent("Join the conversation");
+    expect(push).not.toHaveBeenCalled();
+  });
 });
