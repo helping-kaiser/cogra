@@ -109,6 +109,7 @@ const LIMIT = 1;
 const LIMIT_EPSILON = 1e-9;
 
 const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
+
 /** `two` — the boards' own counts are words (`two opinions`, `two steps`). */
 export function countWord(n: number): string {
   return NUMBER_WORDS[n] ?? String(n);
