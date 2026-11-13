@@ -83,6 +83,7 @@ import com.cogra.feature.content.R
 import com.cogra.feature.saved.LocalSavedHost
 import com.cogra.feature.saved.rememberSavedHost
 import com.cogra.feature.saved.rememberSavedWrites
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -153,15 +154,7 @@ fun CommentsSheetRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(postId) { viewModel.start(postId) }
     LaunchedEffect(postId, landOn) { landOn?.let(viewModel.landing::landOn) }
-    LaunchedEffect(postId, landOn, aimReply) {
-        val at = landOn ?: return@LaunchedEffect
-        if (!aimReply) return@LaunchedEffect
-        // An applicant's aimed landing opens no composer: the thread stands at
-        // the comment, its doors answering in place (ReplyEntry.md:25).
-        val landedState = viewModel.state.first { it.standing(at) != null }
-        if (landedState.commentLocked) return@LaunchedEffect
-        onReply(ReplyTargetRequest(postId, landedState.standing(at)))
-    }
+    AimedReply(postId, landOn, aimReply, viewModel.state, onReply)
     // In an effect, not the composition body: a recomposition that never
     // commits would otherwise fire the refetch anyway. The landing is
     // not consumed here — the place is the other half of the same
@@ -240,6 +233,29 @@ fun CommentsSheetRoute(
  * thread is what has them.
  */
 data class ReplyTargetRequest(val postId: String, val comment: CommentView?)
+
+/**
+ * A LANDING AIMED AT A COMMENT OPENS THE COMPOSER AT IT once the comment
+ * stands (FeedKinds.md, Saved.md) — the comment card's glyph and its Reply.
+ * An applicant's aimed landing opens no composer: the thread stands at the
+ * comment, its doors answering in place (ReplyEntry.md:25).
+ */
+@Composable
+internal fun AimedReply(
+    postId: String,
+    landOn: String?,
+    aimReply: Boolean,
+    state: Flow<CommentsUiState>,
+    onReply: (ReplyTargetRequest) -> Unit,
+) {
+    LaunchedEffect(postId, landOn, aimReply) {
+        val at = landOn ?: return@LaunchedEffect
+        if (!aimReply) return@LaunchedEffect
+        val landedState = state.first { it.standing(at) != null }
+        if (landedState.commentLocked) return@LaunchedEffect
+        onReply(ReplyTargetRequest(postId, landedState.standing(at)))
+    }
+}
 
 /** [id]'s comment where the thread holds it — a top-level comment or an unfolded reply. */
 internal fun CommentsUiState.standing(id: String): CommentView? =

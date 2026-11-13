@@ -1,5 +1,6 @@
 package com.cogra.feature.content
 
+import com.cogra.domain.AccountState
 import com.cogra.domain.CommentPage
 import com.cogra.domain.CommentView
 import com.cogra.domain.Outcome
@@ -108,6 +109,42 @@ class CommentsViewModelTest {
         // Not the page's size: the count the reader tapped to get here.
         assertThat(state.total).isEqualTo(3)
         assertThat(state.loading).isFalse()
+    }
+
+    /**
+     * AN APPLICANT'S THREAD STAYS LOCKED ONCE IT IS BOUND (ReplyEntry.md:25-29,
+     * hand test A18-3): the standing is read when the holder is made — on the
+     * device, before the sheet's `start` runs — and binding the thread to a
+     * post must not wipe it, or `Add a comment` opens the composer.
+     */
+    @Test
+    fun anApplicantsThreadStaysLockedOnceBoundToAPost() = runTest(dispatcher) {
+        standing.record(AccountState.APPLICANT)
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.commentLocked).isTrue()
+
+        // The same holder rebound to another post's count, as over the feed.
+        vm.start("post-2")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.commentLocked).isTrue()
+    }
+
+    /** A live landing still lifts the lock on a thread already bound. */
+    @Test
+    fun aLandingLiftsTheLockOnABoundThread() = runTest(dispatcher) {
+        standing.record(AccountState.APPLICANT)
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        standing.record(AccountState.MEMBER)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.commentLocked).isFalse()
     }
 
     @Test
