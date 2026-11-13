@@ -8009,7 +8009,14 @@ jakob's rulings closing the day's rounds, executed in one lane.
   a handle that still does not fit ellipsizes, `ActorChip`'s law.
 - **A long name or handle takes one of three cases** (jakob 2026-11-11,
   round 40; limits: handle 3–30 characters, display name at most 50;
-  drawn on `NamesLong`).
+  drawn on `NamesLong`). THE NAMED EXCEPTION, the profile's head (seam 318;
+  ruled by jakob 2026-11-13, backlogs 213 and 214): there the display name
+  is always shown whole on AT MOST TWO LINES — it wraps at its spaces, a
+  word wider than the line breaks INSIDE the word (the one place in the tree
+  a name may), and a name that would take more than two lines at 22px is
+  shrunk to the largest whole pixel that holds two, its line-height
+  round(size × 28 / 22) px (`ProfileHeader`'s `nameFitSize`). Never cut, and two
+  lines are the hard cap: the size has no floor.
   1. *Person rows* — the actor chip: the row never wraps, the name
      ellipsizes first, the handle stays whole until it alone cannot fit
      (`ActorChip`; `ContentRow`'s bare-handle aside reads the same law).
@@ -11790,8 +11797,8 @@ vouch-back pad and Wallet; lane B's crop, composer side, feed and profile).
 - **The cover's frame always has the clip's dimensions** (review, 1;
   backlog 200): tall clip a tall cover, square a square, wide a wide —
   the shape the clip stands at in a card — and the crop exports only that
-  shape. The cover crop takes the post crop's 390 × 488 stage (the
-  orchestrator's reading); `CoverCrop`'s `clip` chip measures wide 342 ×
+  shape, a tall clip's at 4:5 (confirmed by jakob 2026-11-13). The cover
+  crop takes the post crop's 390 × 488 stage; `CoverCrop`'s `clip` chip measures wide 342 ×
   192 at 148, tall 342 × 427.5 at 30.25, square 342 × 342 at 73.
   `CropViewport` takes a `stageHeight`.
 - **A picked clip and a new cover upload under one gate** (2; backlog
@@ -11814,8 +11821,8 @@ vouch-back pad and Wallet; lane B's crop, composer side, feed and profile).
   backlog 206). Another's: the reader's post menu — Save, Cite in a new
   post, Hide @author, License terms, Report — on the card and in the
   detail's header (`RemovedOther`, new). Your own: your post's menu less
-  Edit and Remove — Save, Cite in a new post, Mark as sensitive, License
-  terms — on the card (`FeedRemoved`; `FeedRemovedMenuOwn`, new) and in
+  Edit, Mark as sensitive and Remove — Save, Cite in a new post, License
+  terms (jakob 2026-11-13) — on the card (`FeedRemoved`; `FeedRemovedMenuOwn`, new) and in
   the detail's header (`Removed`). License terms stays because the terms
   still bind every use already made. `FeedRemovedMenu`'s card carries its
   removal date.
@@ -11840,6 +11847,43 @@ vouch-back pad and Wallet; lane B's crop, composer side, feed and profile).
   by ruling (`settings.sensitive.footnote`, `changeHandle.body`,
   `wallet.comingSoonCard.line`) plus ChangeEmail's `changeEmail.body` entry. Against main: 63 distinct gone, 92 added, none of rounds 42–46's
   ruled removals back.
+- **Act 3, jakob's review of round 46** (2026-11-13, points A–F and one
+  defect). `ActsCard` draws its total row only when it has something to
+  say: the edit sheets' card ended in 60px of nothing under its last act,
+  and now ends 4px under it; the seals, which pass a total, are unchanged.
+  The Giving an opinion "?" paragraph is blessed (A). Your own removed
+  post's menu loses Mark as sensitive — Save, Cite in a new post, License
+  terms (B). A removed comment's menu follows the post's (C): another's
+  raises the reader's comment menu whole, your own your comment menu less
+  Edit and Remove (`ProfileCommentsRemovedMenu`, `CommentRemovedMenu`,
+  new). `How signing works` takes a sentence at the end of the cost paragraph, `An edit is signed too — the new version
+  is a new record in your name, and it costs like any signing.` (D). The
+  tall cover's 4:5 and a reader's removed-post License row are confirmed
+  (E). The profile head's display name wraps at its spaces, never inside a
+  word, an over-long word end-cut — the named exception to the long-names
+  rule, shown to jakob and awaiting his word (F; `ProfileOther`'s `name`
+  setting; backlog 213). Registry: 194 → 196 screens, 7387 → 7501 board
+  paths, 2029 distinct unchanged; one board entry leaves with the ruled
+  row (`feed.menuSheet.markSensitive` on `FeedRemovedMenuOwn`).
+### Round 47, after jakob's review of round 46 — 2026-11-13
+
+- **An acts card with no total row ends on its last act, unlined**: a line
+  separates, and nothing follows it there (`ActsCard`; `Edit · the
+  actions`, `Edit comment · the acts`). Every card with a total is unchanged.
+- **The profile head's name is always shown whole, on at most two lines**
+  (seam 318; backlogs 213 and 214, ruled: "i prefer the shrunk 2 line
+  version over the 3 liner"): at 22px on 28px it wraps at its spaces and a
+  word wider than the line breaks INSIDE the word — the one place in the
+  tree a name may; a name that would take more than two lines is shrunk to
+  the largest whole pixel that holds two, its line-height round(size × 28 /
+  22) px, several words or one word alike. Nothing is cut; the handle line
+  and the rest of the head keep their sizes. Every board drawing
+  `ProfileHeader` takes it. Measured at the head's 262px: the 50-character
+  sample 19px, a 50-character unbroken name 20px, 50 × `W` 10px, 50 × `m`
+  12px, 50 × `i` 22px (no shrink). Two lines are the hard cap,
+  the size with no floor (backlog 215, ruled); `ProfileOther`'s `name` setting draws sample, two-lines, fifty,
+  one-word and widest.
+
 ---
 
 ## 14. The canvases

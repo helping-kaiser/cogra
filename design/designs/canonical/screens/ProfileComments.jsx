@@ -30,7 +30,9 @@
    drawn as the thread draws a removed comment (`CommentRemoved`,
    `CommentsThreadSheet`'s `redacted`) — `RedactedContent` in the words'
    place over the thread's own note, the author, the age, the reply and the
-   pointer to what it answered kept, no menu's license. Its mark registers as `removalMark` under the card
+   pointer to what it answered kept, and its menu: the reader's comment menu
+   whole, as a removed post keeps the reader's (jakob 2026-11-13, point C;
+   `ProfileCommentsRemovedMenu` draws it open). Its mark registers as `removalMark` under the card
    (round 28's promise, seam 259), the card keyed by its id in both copies.
    The mark carries its removal's date under it (jakob 2026-11-12, the
    re-ask's seventeenth: "knowing when something was removed is good info"),
@@ -111,6 +113,7 @@ export function Screen() {
               author={ADA}
               timestamp="4d"
               redacted={{ reason: "author", when: "2h" }}
+              menuItems={COMMENT_CARD_MENU}
               onReply={() => {}}
               target="“Salt maps of the coast road” — @sol"
               onOpenTarget={() => {}}

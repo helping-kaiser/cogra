@@ -1,8 +1,8 @@
 /* THE FEED, YOUR REMOVED POST'S MENU OPEN (jakob 2026-11-12, question 18 (2):
    "i can still cite this (maybe in a folloup post to explain why i deleted
    it)"). @sol's card stands as its mark, `FeedRemoved`'s, and its ⋮ raises
-   `OWN_REMOVED_POST_MENU`: Save, Cite in a new post, Mark as sensitive,
-   License terms — your own post's menu less Edit and Remove; the license
+   `OWN_REMOVED_POST_MENU`: Save, Cite in a new post, License terms — your
+   own post's menu less Edit, Mark as sensitive and Remove (jakob 2026-11-13); the license
    stays because the terms still bind every use already made (jakob
    2026-11-12). The detail's header (`Removed`) carries the same rows.
 

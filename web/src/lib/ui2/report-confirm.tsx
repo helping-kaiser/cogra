@@ -2,7 +2,7 @@
 
 // REPORT, CONFIRMED BEFORE IT GOES (design/designs/canonical/screens/
 // ReportConfirm.jsx; ruling 75). What a menu's tail row opens: one sheet naming
-// the thing, one body line saying what happens, and the pair Report / Cancel.
+// the thing, and the pair Report / Cancel under it.
 //
 // A SHEET, NOT A THINK-TWICE DIALOG. Reporting destroys nothing, so it takes the
 // sheet's grammar: the menu closes and this rises in its place, the scrim, the
@@ -13,12 +13,10 @@
 // IT NEVER CONNECTS TO REPORT-A-PROBLEM: reporting content must not read as
 // reporting the app, so nothing here names or opens it.
 
-import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { part, type DataNode } from "@/lib/ui/data-node";
 import { BottomSheet } from "./bottom-sheet";
 import { PillButton } from "./pill-button";
 
-/** The body line, verbatim from the board. */
-export const REPORT_BODY = "It goes to the people who run CoGra for a look.";
 
 export function ReportConfirm({
   open,
@@ -50,12 +48,8 @@ export function ReportConfirm({
 }) {
   return (
     <BottomSheet open={open} onClose={onClose} title={title} testId={testId} node={node} stacked={stacked}>
-      <p
-        className="m-0 pb-2 text-body-medium text-on-surface-variant"
-        {...testAttributes(part(node, "body"), `${testId}-text`)}
-      >
-        {REPORT_BODY}
-      </p>
+      {/* The title, then the answers (_shared.jsx `ReportPostSheet`; seam 314:
+          the sheet says nothing more about where a report goes). */}
       <div className="flex justify-end gap-2 pt-2">
         <PillButton
           testId={`${testId}-cancel`}

@@ -17,3 +17,5 @@ WHEN tap the sheet's ? -> How signing works opens over the sheet AND NEVER anyth
 WHEN press Done -> the sheet closes to the edit
 
 WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes to the edit
+
+ALWAYS the acts card's last row carries no divider under it, a line separating and nothing following it in the card, and the card ends on that row

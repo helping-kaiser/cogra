@@ -43,6 +43,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
@@ -296,10 +297,14 @@ private fun AvatarAndName(
                         .dataNode(node / "name"),
                 )
                 if (showHandle && !deleted) {
+                    // A ONE-LINE PLACE (NamesLong.md; `ProfileHeader.jsx`
+                    // `nowrap` + ellipsis): the handle line never wraps.
                     Text(
                         text = "@${profile.handle}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.fillMaxWidth().dataNode(node / "handle"),
                     )
                 }

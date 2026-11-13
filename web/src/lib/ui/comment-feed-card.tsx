@@ -59,7 +59,6 @@ import { OpinionsSheet } from "@/lib/ui2/opinions-sheet";
 import { REPORT_COMMENT_TITLE, commentMenuItems } from "@/lib/ui2/comment-menu";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
 import {
-  REMOVED_COMMENT_NOTE,
   RemovedPlaceholder,
   type RemovalReason,
 } from "@/lib/ui2/media/removed-placeholder";
@@ -595,12 +594,11 @@ export function CommentFeedCard({
         </div>
       </div>
       {redacted ? (
-        // The comment-scale mark (`REMOVED_COMMENT_NOTE`), dated by the
-        // removal's own moment, as in the thread.
+        // The comment's mark: its line, dated by the removal's own moment, as
+        // in the thread (no detail sentence, seam 314).
         <RemovedPlaceholder
           reason={removalReason(comment)}
           when={removalWhen(comment)}
-          note={removalReason(comment) === "author" ? REMOVED_COMMENT_NOTE : undefined}
           testId={`${testId}-removed`}
           // The mark's registered name where its placer gives one
           // (`CommentCard`'s `removalMark`, the thread sheet's).

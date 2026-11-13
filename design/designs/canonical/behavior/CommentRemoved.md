@@ -6,7 +6,7 @@ ALWAYS postDetail.threadSheet.commentCard.removalMark.line reads Removed by its 
 
 ALWAYS postDetail.threadSheet.commentCard.removalMark.line reads Removed by its author GIVEN the comment went with its author's account deletion, its content sweep chosen
 
-ALWAYS a removed comment carries no postDetail.threadSheet.commentCard.menu
+ALWAYS a removed comment keeps postDetail.threadSheet.commentCard.menu: the reader's own reads Save or Unsave, then Cite in a new post, then postDetail.menuSheet.citedBy, then Opinions on this, then License terms, its own comment menu less Edit and Remove, and another's the reader's comment menu whole
 
 ALWAYS a removed comment keeps postDetail.threadSheet.commentCard.authorChip, postDetail.threadSheet.commentCard.actionRow.stance and postDetail.threadSheet.commentCard.actionRow.reply
 
