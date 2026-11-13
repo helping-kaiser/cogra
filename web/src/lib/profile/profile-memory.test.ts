@@ -28,7 +28,6 @@ function leave(
     figures: null,
     viewer: null,
     own: false,
-    applicant: false,
     list: { tab: "posts", posts: [reelPost("p1")] },
     endCursor: "c1",
     hasNextPage: true,

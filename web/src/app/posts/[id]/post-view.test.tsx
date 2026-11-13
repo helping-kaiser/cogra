@@ -825,7 +825,7 @@ describe("PostView", () => {
     fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
     fireEvent.click(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.citedBy"));
     expect(await screen.findByTestId("cited-by-sheet-empty")).toHaveTextContent(
-      "Nothing cites this yet — yours would be the first.",
+      /^Nothing cites this yet$/,
     );
     expect(screen.getByTestId("cited-by-sheet").className).toContain(
       "bg-surface-container-highest",
@@ -843,7 +843,7 @@ describe("PostView", () => {
     fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
     fireEvent.click(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.opinions"));
     expect(await screen.findByTestId("opinions-sheet-empty")).toHaveTextContent(
-      "No opinions yet — yours would be the first.",
+      /^No opinions yet$/,
     );
     expect(screen.getByRole("dialog", { name: "Opinions on this comment" })).toBeInTheDocument();
     expect(screen.getByTestId("opinions-sheet").className).toContain("bg-surface-container-highest");
@@ -877,7 +877,7 @@ describe("PostView", () => {
     });
     fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
     fireEvent.click(screen.getByTestId("postDetail.menuSheet.hide"));
-    expect(await screen.findByText(/is hidden — their posts stay out of your feed\.$/)).toBeInTheDocument();
+    expect(await screen.findByText(/is hidden\.$/)).toBeInTheDocument();
     expect(screen.getByTestId(byNode("postDetail.card.body"))).toBeInTheDocument();
     await waitFor(() => expect(log.hides).toEqual([{ actor: "someone-else", at: null }]));
   });
@@ -902,7 +902,7 @@ describe("PostView", () => {
     await waitFor(() => expect(screen.getByTestId("postDetail.menuSheet.hide")).toHaveTextContent(/^Unhide @/));
     fireEvent.click(screen.getByTestId("postDetail.menuSheet.hide"));
     expect(screen.queryByRole("alertdialog")).toBeNull();
-    expect(await screen.findByText(/is unhidden — their posts can reach your feed again\.$/)).toBeInTheDocument();
+    expect(await screen.findByText(/is unhidden\.$/)).toBeInTheDocument();
     expect(screen.getByTestId(byNode("postDetail.card.body"))).toBeInTheDocument();
     await waitFor(() => expect(log.unhides).toEqual(["someone-else"]));
   });
@@ -2277,6 +2277,39 @@ describe("PostView", () => {
     );
     expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent("You can comment once you're in.");
     expect(screen.queryByTestId("reply-wizard")).not.toBeInTheDocument();
+  });
+
+  // ReplyEntry.md:27, :29 — GIVEN the reader is an applicant, Add a comment and
+  // every comment's Reply stand at the disabled opacity, and stay tappable.
+  it("an_applicants_add_and_reply_stand_at_the_disabled_opacity", async () => {
+    server.use(...thread("u1", [{ id: "c1", body: "First!" }]));
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("u2"),
+      writeSigner: fakeWriteSigner(),
+      reader: "APPLICANT",
+    });
+    await openComments();
+    const add = await screen.findByTestId("comment-add");
+    const reply = await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.reply", "c1"));
+    for (const door of [add, reply]) {
+      // The token itself, not `disabled:`'s variant of it, which every Button carries.
+      expect(door.classList.contains("opacity-[var(--state-disabled)]")).toBe(true);
+      expect(door).not.toBeDisabled();
+    }
+  });
+
+  // ...and a member's stand at full strength.
+  it("a_members_add_and_reply_stand_at_full_strength", async () => {
+    server.use(...thread("u1", [{ id: "c1", body: "First!" }]));
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("u2"),
+      writeSigner: fakeWriteSigner(),
+      reader: "MEMBER",
+    });
+    await openComments();
+    const add = await screen.findByTestId("comment-add");
+    const reply = await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.reply", "c1"));
+    for (const door of [add, reply]) expect(door.classList.contains("opacity-[var(--state-disabled)]")).toBe(false);
   });
 
   // ApplicantFeed.md:45-53's face on the post's own detail (the shared
@@ -3876,7 +3909,7 @@ describe("PostView — opened from the feed", () => {
 
   // ---- FC-7b · THE DETAIL HOLDS WHAT WAS OPENED (PostDetail.md:5-13) ---------
 
-  const LINE = "Edited since you opened it — tap for the newest version.";
+  const LINE = /^Edited since you opened it$/;
   const line = () => screen.queryByTestId(byNode("postDetail.newerVersion"));
 
   /** The reader's own pull, from the top (the "pulling down at the top" suite's gesture). */

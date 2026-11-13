@@ -42,6 +42,7 @@ function draw(overrides: Partial<Parameters<typeof CommentEditView>[0]> = {}) {
     onSensitiveReason: vi.fn(),
     onSensitiveOpen: vi.fn(),
     onSensitiveHelp: vi.fn(),
+    onSigningHelp: vi.fn(),
     onPick: vi.fn(),
     onRetryUploads: vi.fn(),
     onRemoveFailed: vi.fn(),
@@ -247,7 +248,17 @@ describe("CommentEdit", () => {
       expect(screen.getByTestId("comment-edit-acts-sheet-row-citationsWithdrawn")).toHaveTextContent(
         "2",
       );
-      expect(sheet).toHaveTextContent("They land together, or none does.");
+      expect(sheet).not.toHaveTextContent("They land together, or none does.");
+    });
+
+    // CommentEditActs.md (round 46): the title carries the ? that opens How
+    // signing works over the sheet.
+    it("carries the ? on the sheet's title, opening How signing works", () => {
+      const props = draw({ acts: [EDIT, WITHDRAWN], actsOpen: true });
+      fireEvent.click(screen.getByTestId("comment-edit-acts-sheet-help"));
+      expect(screen.getByTestId("comment-edit-acts-sheet-help")).toHaveAccessibleName("How signing works");
+      expect(props.onSigningHelp).toHaveBeenCalledOnce();
+      expect(props.onActs).not.toHaveBeenCalled();
     });
 
     it("reads a withdrawn tag back under its block, with Undo", () => {
@@ -465,7 +476,8 @@ describe("CommentEditVideo", () => {
       cropping: { src: "blob:face", crop: face.crop, onCrop: vi.fn(), onNext, onBack },
     });
     expect(screen.getByRole("heading", { name: "The cover" })).toBeInTheDocument();
-    expect(screen.getByTestId("comment-edit-cover-crop")).toHaveTextContent("The cover takes the video's shape.");
+    expect(screen.getByTestId("coverCrop.viewport")).toBeInTheDocument();
+    expect(screen.getByTestId("comment-edit-cover-crop")).not.toHaveTextContent("The cover takes the video's shape.");
     expect(screen.queryByRole("group", { name: "The post's shape" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId("coverCrop.next"));
     expect(onNext).toHaveBeenCalled();
