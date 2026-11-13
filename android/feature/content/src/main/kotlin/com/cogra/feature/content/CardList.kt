@@ -263,7 +263,6 @@ internal fun rememberEditReturn(
     return remember(opened, settled) { EditReturn(opened, settled) }
 }
 
-
 /** THE NEXT PAGE ARRIVES BECAUSE THE READER KEPT GOING (readme §13): asked a few cards short of the end. */
 @Composable
 internal fun LoadNextAtTheTail(
