@@ -251,6 +251,35 @@ describe("identity store", () => {
     expect(await rawHandshake((s) => s.getAllKeys())).toEqual([`${ACCOUNT_A}/staged-new`]);
   });
 
+  /**
+   * Shapes a later build might write without a database version bump — not
+   * this build's to judge. Each must survive this build's reads and listings.
+   */
+  const FUTURE_SHAPES: Record<string, () => unknown> = {
+    "the current fields plus one": () => ({ ...currentShapeRecord(), carriage: new Uint8Array(8) }),
+    "a renamed nonce field": () => {
+      const { contentNonce, ...rest } = currentShapeRecord();
+      return { ...rest, payloadNonce: contentNonce };
+    },
+    "a stored undefined": () => undefined,
+  };
+
+  for (const [shape, make] of Object.entries(FUTURE_SHAPES)) {
+    it(`leaves a record of an unknown shape alone: ${shape}`, async () => {
+      await store.saveHandshake("staged-new", await preSignedByAFreshKey());
+      const stored = make();
+      const key = `${ACCOUNT_A}/staged-future`;
+      await rawHandshake((s) => s.put(stored, key));
+
+      // Reads as absent and is not listed …
+      expect(await store.handshake("staged-future")).toBeNull();
+      expect(await store.handshakeIds()).toEqual(["staged-new"]);
+      // … and survives both, byte for byte.
+      expect(await rawHandshake((s) => s.getAllKeys())).toEqual([`${ACCOUNT_A}/staged-future`, `${ACCOUNT_A}/staged-new`]);
+      expect(await rawHandshake((s) => s.get(key))).toEqual(stored);
+    });
+  }
+
   it("upgrades a v1 database in place", async () => {
     await new Promise<void>((resolve, reject) => {
       const req = indexedDB.open("cogra.identity", 1);

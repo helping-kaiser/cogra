@@ -42,23 +42,40 @@ type HandshakeRecord = {
   preSignature: Uint8Array;
 };
 
+const CURRENT_FIELDS = ["proposal", "authorPubkey", "contentNonce", "dependencyNonce", "preSignature"] as const;
+
 /**
- * Whether a stored value is material of the current handshake. A record of
- * any other shape — one written before both nonces were kept — cannot be
- * approved under this handshake: it reads as absent, so the signer takes
- * the path it takes for material it never held, and the store deletes it
- * where it meets it.
+ * The record this client wrote before it kept both nonces — exactly
+ * `{proposal, authorPubkey, nonce, preSignature}` (the type at 18b2d577d).
  */
-function isHandshakeRecord(value: unknown): value is HandshakeRecord {
+const ONE_NONCE_FIELDS = ["proposal", "authorPubkey", "nonce", "preSignature"] as const;
+
+/** Whether `value` is an object whose own fields are exactly `fields`, every one a byte string. */
+function hasExactlyByteFields(value: unknown, fields: readonly string[]): boolean {
   if (typeof value !== "object" || value === null) return false;
+  const keys = Object.keys(value);
+  if (keys.length !== fields.length) return false;
   const r = value as Record<string, unknown>;
-  return (
-    r.proposal instanceof Uint8Array &&
-    r.authorPubkey instanceof Uint8Array &&
-    r.contentNonce instanceof Uint8Array &&
-    r.dependencyNonce instanceof Uint8Array &&
-    r.preSignature instanceof Uint8Array
-  );
+  return fields.every((f) => r[f] instanceof Uint8Array);
+}
+
+/**
+ * What a stored handshake value is, to this build:
+ *
+ * - `current`: material of this handshake, exactly this build's shape.
+ * - `oneNonce`: the RECOGNISED earlier shape. It can never be approved under
+ *   this handshake, and no later build will complete it either, so the store
+ *   deletes it where it meets it — on a read and on a listing.
+ * - `unknown`: anything else (a shape a later build writes, a stored
+ *   `undefined`). It is not this build's to judge: it reads as absent and is
+ *   not listed — this build can neither complete nor clear it, so counting it
+ *   would wedge the resume card — and it is NEVER deleted, so a later build's
+ *   live material survives a tab still running this one.
+ */
+function classifyHandshake(value: unknown): "current" | "oneNonce" | "unknown" {
+  if (hasExactlyByteFields(value, CURRENT_FIELDS)) return "current";
+  if (hasExactlyByteFields(value, ONE_NONCE_FIELDS)) return "oneNonce";
+  return "unknown";
 }
 
 type UxRecord = {
@@ -387,13 +404,12 @@ export function createIdentityStore(deps: {
   }
 
   /**
-   * The account's handshake ids, deleting on sight every record not of the
-   * current shape — in the same transaction as the listing.
-   *
-   * Such a record can never be completed by this client: it is never
-   * approved, never resumed, and so never cleared by any path that finishes
-   * a write. Listing it would count it forever (the Home resume card) while
-   * it kept a content nonce and a pre-signature at rest for nothing.
+   * The account's handshake ids: only records of the current shape are
+   * listed. A one-nonce record is deleted on sight, in the same transaction
+   * as the listing — it can never be completed, so listing it would count it
+   * forever (the Home resume card) while it kept a nonce and a pre-signature
+   * at rest for nothing. A record of an unknown shape is neither listed nor
+   * deleted (see {@link classifyHandshake}).
    */
   async function handshakeIdsOf(account: string): Promise<string[]> {
     const prefix = account + KEY_SEPARATOR;
@@ -409,8 +425,9 @@ export function createIdentityStore(deps: {
     // still run inside it.
     values.onsuccess = () => {
       keys.result.forEach((key, i) => {
-        if (isHandshakeRecord(values.result[i])) ids.push(String(key).slice(prefix.length));
-        else objectStore.delete(key);
+        const kind = classifyHandshake(values.result[i]);
+        if (kind === "current") ids.push(String(key).slice(prefix.length));
+        else if (kind === "oneNonce") objectStore.delete(key);
       });
     };
     await landed;
@@ -418,9 +435,10 @@ export function createIdentityStore(deps: {
   }
 
   /**
-   * One handshake record, or null — a record not of the current shape is
-   * deleted in the same transaction and reads as absent (see
-   * {@link handshakeIdsOf}).
+   * One handshake record, or null. Every stored value is judged by the rule
+   * the listing uses ({@link classifyHandshake}): anything but the current
+   * shape reads as absent, and only a one-nonce record is deleted, in the
+   * same transaction.
    */
   async function takeHandshake(key: string): Promise<HandshakeRecord | null> {
     const tx = (await db()).transaction(HANDSHAKE, "readwrite");
@@ -430,9 +448,9 @@ export function createIdentityStore(deps: {
     const found: { record: HandshakeRecord | null } = { record: null };
     request.onsuccess = () => {
       const value: unknown = request.result;
-      if (value === undefined) return;
-      if (isHandshakeRecord(value)) found.record = value;
-      else objectStore.delete(key);
+      const kind = classifyHandshake(value);
+      if (kind === "current") found.record = value as HandshakeRecord;
+      else if (kind === "oneNonce") objectStore.delete(key);
     };
     await landed;
     return found.record;
