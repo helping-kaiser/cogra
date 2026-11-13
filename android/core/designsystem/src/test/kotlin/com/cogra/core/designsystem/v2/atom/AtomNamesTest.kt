@@ -94,7 +94,9 @@ class AtomNamesTest {
     fun aSnackbarKeepsTheHandleOneUnit() {
         val message = "$handle is hidden — their posts stay out of your feed."
         compose.setContent {
-            Cogra2PreviewTheme { CograSnackbar(StaticSnackbar(NodeSnackbarVisuals(message, DataNode("feed.snackbar")))) }
+            Cogra2PreviewTheme {
+                CograSnackbar(StaticSnackbar(NodeSnackbarVisuals(message, DataNode("feed.snackbar"))))
+            }
         }
         compose.onNodeWithTag("feed.snackbar.message").assertTextEquals(message).assert(unitsAre(handle))
     }
@@ -104,7 +106,10 @@ class AtomNamesTest {
     fun theBorrowedViewBandKeepsTheHandleOneUnit() {
         compose.setContent {
             Cogra2PreviewTheme {
-                BorrowedViewBand(handle = handle.drop(1), line = "Browsing from $handle's view — join to build your own.")
+                BorrowedViewBand(
+                    handle = handle.drop(1),
+                    line = "Browsing from $handle's view — join to build your own.",
+                )
             }
         }
         compose.onNodeWithTag("borrowed_view_line").assert(unitsAre("$handle's"))
