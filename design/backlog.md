@@ -6074,3 +6074,36 @@ Remove, so `Mark as sensitive` stands on a removed post's menu; the row opens
 the edit, and a removed post has no words or pictures left to veil. For
 jakob: (a) keep it, the mark being the record's [as built]; (b) it leaves the
 removed post's menu with Edit and Remove.
+
+### 220 · The seals and the edit sheets have no registry rows · *system* · **filed 2026-11-13**
+
+Round 48 (seam 323-6). `ComposeSeal`, `ReplySeal`, `EditActs` and
+`CommentEditActs` export no `NODE`, so the clients' harness has no verdict
+on them. Why: no round asked for them — the seals' sheet boards stayed
+unregistered by habit (round 35's gate line) — and their bodies
+(`ComposeSealBody`, `ReplySealBody`, the acts sheet) pass no node names
+down; the acts card itself, `ActsCard`, names no rows, and round 47 (PR
+#454) is changing `ActsCard`, so naming its parts waits for that merge. Then:
+the seal prefixes (`composeSeal`, `replySeal`, or under `composeDetails` /
+`postEdit` / `commentEdit` for the edit sheets) and `ActsCard`'s row names.
+
+### 221 · `PadKeyAbsent`'s pad is hand-built, so it cannot register yet · *system* · **filed 2026-11-13**
+
+Round 48 (seam 320-16). `PadFailed`, `PadWriteRule` and `TagPageHeldPad`
+register (round 48); `PadKeyAbsent` draws its pad by hand beside the card,
+not through `StanceControl`, so its parts have no anatomy to take names
+from — a name minted on the hand-built copy would drift from the master.
+The fix is a key-absent state on `StanceControl` (the board then renders it
+as `PadStanding` does) — a drawing change, so it waits for a round that may
+redraw.
+
+### 222 · The feed's comment-card menu and your own comment's menu on Saved are undrawn · *design* · **filed 2026-11-13**
+
+Round 48 (seam 320-14). The clients draw `feed.menuSheet.citedBy` /
+`.opinions` (a comment card's ⋮ on the feed) and `saved.menuSheet.edit` /
+`.remove` (your own comment's ⋮ on Saved), but no board draws either menu
+open — `HistoryCommentMenu` and `SavedCommentMenu` draw their hosts' — so
+there is nothing to register. Each is one board when drawn, by round 36's
+rule (one menu board per place a card's menu is raised): `FeedCommentMenu`
+and `SavedCommentMenuOwn`. Held while the menus audit (jakob 2026-11-13,
+round 47's review) runs, since it may reorder the rows.

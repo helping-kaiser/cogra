@@ -11846,6 +11846,58 @@ vouch-back pad and Wallet; lane B's crop, composer side, feed and profile).
   by ruling (`settings.sensitive.footnote`, `changeHandle.body`,
   `wallet.comingSoonCard.line`) plus ChangeEmail's `changeEmail.body` entry. Against main: 63 distinct gone, 92 added, none of rounds 42–46's
   ruled removals back.
+
+### Round 48, the implementers' gaps — 2026-11-13
+
+Seam 320's and 323's gaps that jakob ruled ("as rec" on four, 2026-11-13)
+or that needed no ruling, built in one lane on main beside round 47.
+
+- **Every door into the composer answers an applicant alike** (2a): a
+  post's and a comment's `Cite in a new post`, a person card's `Mention in
+  a new post`, a tag card's compose glyph, `Open the draft` and the
+  composer's own address answer `You can post once you're in.` and open
+  nothing, the address landing where app-open lands. They look as they do
+  for a member — a menu row or a card's glyph has no locked treatment — so
+  copy-voice's *The applicant-foot family* now names them as the exception
+  to its locked-look sentence, and `staged-surfaces.md`'s posting row says
+  the same (it had put the menus' rows in the locked look, against round
+  16's record). The line rides the surface's own snackbar, else the
+  shell's. Named in the sidecars of the menus (on any host), the tag
+  cards, the expired-draft notice and the composer.
+- **An applicant's reply glyph is locked on the feed and History** (3b):
+  dimmed, still tappable, answering on the card `You can comment once
+  you're in.` — the thread's and the profile's rule on every host.
+  `GlyphAction` takes `opacity`; `CommentCard` passes `replyOpacity` to
+  the glyph; `FeedKinds` and `History` draw it (`reader` chip).
+- **The reset link is checked before its form stands** (4b, 5b):
+  `ResetNew`'s `link` chip — `checking`, `Loading…` after 200ms;
+  `fault`, `Can't reach the server — this page can't load right now.`
+  over an outlined `Retry`, `DeleteAccountConfirmed`'s landing shape with
+  the read's word (*worded by the lane, to be blessed*); `limited`, the
+  reset's own `RATE_LIMITED` line, `Too many tries. Wait a little, then
+  try again.`, over the same control.
+- **Reset's answered state is drawn** (320-7): the `request` chip's
+  `sent`, `reset.status` under the commit, the line the tree held.
+- **Registered what was drawn**: the thread's foot
+  (`postDetail.threadSheet.foot.addComment`), `PadFailed` and
+  `PadWriteRule` under `feed`, `TagPageHeldPad` under `tagPage`. Not
+  registered: `PadKeyAbsent` (a hand-built pad, backlog 221); the seals
+  and the edit sheets (no body passes names, and `ActsCard` waits for
+  round 47, backlog 220); the feed's comment menu and your own comment's
+  menu on Saved, which no board draws (backlog 222).
+- **Long names** (320-12, the law applied): `StanceRow`'s lines,
+  `ReelCaption`'s handle and the person card's handle line clip at their
+  end; `VouchBack`'s card passes its title and body through `nameInText`.
+  `NamesLong` draws each at the longest sample.
+- **A name unit is spoken as one string** (320-13): the drawn unit is
+  hidden from assistive tech and its name and punctuation spoken once
+  from a visually hidden twin; the law says it for clients.
+- **Stale text**: `KeptPicksReview.md`'s kind list reads `Tag`; four
+  composer-caption comments read `Tags`; `CropViewport`'s comment places
+  the cover frame on the 390 × 488 stage.
+- **The gate**: 194 → 197 screens (`PadFailed`, `PadWriteRule`,
+  `TagPageHeldPad`), 7387 → 7565 board paths, 2029 → 2072 distinct — 43
+  added, none gone. Backlog 220–222 filed.
 ---
 
 ## 14. The canvases
