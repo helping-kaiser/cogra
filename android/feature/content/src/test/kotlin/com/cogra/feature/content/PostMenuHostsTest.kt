@@ -11,7 +11,11 @@ package com.cogra.feature.content
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -378,6 +382,34 @@ class PostMenuHostsTest {
         compose.onNodeWithTag("postDetail.menuSheet.hide").assertTextEquals("Hide @ada").performClick()
         compose.waitForIdle()
         assertThat(hiddenRepository.hides).containsExactly(ada.id to null)
+    }
+
+    /**
+     * ProfileDeletedMenu.md:9, :11 (seam 315: `Unhide this account` blessed) —
+     * the shared hide row of a hidden deleted account reads `Unhide this
+     * account`, names no handle, and its tap unhides with the nameless snackbar.
+     */
+    @Test
+    fun aHiddenDeletedAccountsRowReadsUnhideThisAccount() {
+        val deleted = HiddenPerson("del-id", handle = null, displayName = null, avatarUrl = null, redacted = true)
+        hiddenRepository.served = Outcome.Success(listOf(HiddenEntry(deleted, adaHiddenAt)))
+        val store = HiddenSet(hiddenRepository, tokens, CoroutineScope(Dispatchers.Unconfined)).also {
+            runBlocking { it.refetch() }
+        }
+        val writes = writes()
+        compose.setContent {
+            val saved = rememberSavedHost(writes, host, null, null, store)
+            val row = saved?.hideRow(deleted, "del-id", "hide_row")
+            TextButton(
+                onClick = { row?.onSelect?.invoke() },
+                modifier = Modifier.testTag("hide_row"),
+            ) { Text(row?.label.orEmpty()) }
+        }
+        compose.onNodeWithText("Unhide this account").assertExists()
+        compose.onNodeWithTag("hide_row").performClick()
+        compose.waitForIdle()
+        assertThat(hiddenRepository.unhides).containsExactly("del-id")
+        assertThat(snackbarMessage()).isEqualTo("This account is unhidden — its posts can reach your feed again.")
     }
 
     /** GuestGate.md:5 — a guest's tap on the hide row raises the join prompt and sends nothing. */

@@ -13,13 +13,13 @@
 //   confirm — and the snackbar's Undo hides them again at the moment they were
 //   first hidden, so their Hidden accounts row keeps its place
 //   (ReaderPostMenu.md:23, HistoryPostMenu.md:19). A deleted account's row
-//   stays `Hide this account`: `Unhide this account` is not drawn yet;
+//   toggles the same way, reading `Unhide this account` and naming no handle
+//   (seam 315; ProfileDeletedMenu.md:9-11);
 // - a guest is asked to join, and nothing is sent (GuestGate.md:5);
 // - otherwise the person joins the hidden set at the tap — no confirm, ever —
 //   and the host's snackbar names them with `Undo`, which takes the hide back;
 // - a hide of someone already hidden sends nothing and its Undo sends nothing:
-//   Undo restores what was, and what was is hidden (packet §15 F1) — the path
-//   a deleted account's row still takes;
+//   Undo restores what was, and what was is hidden (packet §15 F1);
 // - a failure reverts, and the row the gesture was made from says so — never
 //   the snackbar, which [ClearHideSnackbarOnRevert] takes down.
 
@@ -77,6 +77,7 @@ data class HiddenWords(
     private val hideNamed: String,
     private val hideNameless: String,
     private val unhideNamed: String,
+    private val unhideNameless: String,
     private val hiddenNamed: String,
     private val hiddenNameless: String,
     private val unhiddenNamed: String,
@@ -86,8 +87,9 @@ data class HiddenWords(
     /** `Hide @ada`, or `Hide this account` (`ActorChip.jsx:67`). */
     fun row(person: HiddenPerson): String = if (person.nameless) hideNameless else hideNamed.format("@${person.handle}")
 
-    /** `Unhide @ada` — the hide row while the person is hidden. */
-    fun unhideRow(person: HiddenPerson): String = unhideNamed.format("@${person.handle}")
+    /** `Unhide @ada`, or `Unhide this account` — the hide row while the person is hidden (`ActorChip.jsx` `UNHIDE_ACTOR_LABEL`). */
+    fun unhideRow(person: HiddenPerson): String =
+        if (person.nameless) unhideNameless else unhideNamed.format("@${person.handle}")
 
     fun hidden(person: HiddenPerson): String =
         if (person.nameless) hiddenNameless else hiddenNamed.format("@${person.handle}")
@@ -101,6 +103,7 @@ fun rememberHiddenWords(): HiddenWords = HiddenWords(
     hideNamed = stringResource(R.string.hidden_menu_hide),
     hideNameless = stringResource(R.string.hidden_menu_hide_account),
     unhideNamed = stringResource(R.string.hidden_menu_unhide),
+    unhideNameless = stringResource(R.string.hidden_menu_unhide_account),
     hiddenNamed = stringResource(R.string.hidden_snackbar_hidden),
     hiddenNameless = stringResource(R.string.hidden_snackbar_hidden_account),
     unhiddenNamed = stringResource(R.string.hidden_snackbar_unhidden),
