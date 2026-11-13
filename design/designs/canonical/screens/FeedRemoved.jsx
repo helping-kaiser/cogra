@@ -14,8 +14,8 @@
    and Comments tabs, and a comment card of their own in the feed.
 
    YOUR REMOVED POST KEEPS ITS MENU (jakob 2026-11-12, question 18): the ⋮
-   holds `OWN_REMOVED_POST_MENU` — Save, Cite in a new post, Mark as
-   sensitive, License terms: your own post's menu less Edit and Remove
+   holds `OWN_REMOVED_POST_MENU` — Save, Cite in a new post, License
+   terms: your own post's menu less Edit, Mark as sensitive and Remove
    (`FeedRemovedMenuOwn` draws it open). With it
    survive the author, the score, the opinion a reader can still give, the
    comment count and the share.
