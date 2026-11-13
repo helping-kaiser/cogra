@@ -30,6 +30,10 @@ WHEN the signing does not go through GIVEN no answer reached the seal -> the fau
 
 WHEN the signing is refused by the write rule -> the notice You can't sign right now takes the place of Sign the change, over Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent. AND Not now stands under the notice AND NEVER Retry appears AND NEVER the notice takes the error colour AND NEVER the notice promises a kept draft
 
+ALWAYS the write-rule notice carries its own ? beside the header's ?, as every seal's notice does
+
+WHEN tap the write-rule notice's ? -> the dialog Why signing waits opens, its second paragraph the pad's reading for a seal that keeps no draft, Nothing was signed or spent. Try again in a little while.
+
 WHEN tap the write-rule notice's Not now -> the seal comes back as it stood before the press AND nothing is signed or spent
 
 WHEN the signing is refused for any other reason, a bug -> the notice This shouldn't have happened takes the place of Sign the change with Try again, Report a problem and Not now, as SealFaultBug draws it AND nothing is signed or spent

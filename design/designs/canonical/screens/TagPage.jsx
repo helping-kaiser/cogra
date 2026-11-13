@@ -92,11 +92,21 @@
    this tag can't load right now.`, over an outlined `Retry` leading the
    column (copy-voice, *No answer at all*). The noun is the page's own, as
    `this profile` is the profile's; the picker's `tags can't load right now.`
-   names a list of tags, not this page. Blessed (jakob 2026-11-13, N10). */
+   names a list of tags, not this page. Blessed (jakob 2026-11-13, N10).
+
+   A NAME THAT CANNOT BE A TAG (jakob 2026-11-13, N4; the `load` chip's
+   `notFound`): a link or a typed address whose name breaks the naming gate
+   — a space, a character no name may carry, past 128 — names no Type at
+   all, so the answer is the not-found family's, `ProfileNotFound`'s shape:
+   the header keeping the name asked for, since it is the only thing known
+   about what was asked, `This tag doesn't exist.` as an `EmptyState` in the
+   page's place, no Retry and no stance row — nothing about asking again
+   makes a tag exist. A LEGAL name nobody has used is not this: it is a tag
+   nothing carries yet (`TagPageEmpty`). */
 
 export const FRAME = { width: 390, height: 1344 };
-export const PROPS = { load: { editor: "enum", options: ["loaded", "failed"], default: "loaded" } };
-export const VALS = `loadedShown: this.props.load === "failed" ? "none" : "contents", failedShown: this.props.load === "failed" ? "contents" : "none"`;
+export const PROPS = { load: { editor: "enum", options: ["loaded", "failed", "notFound"], default: "loaded" } };
+export const VALS = `loadedShown: this.props.load === "loaded" ? "contents" : "none", failedShown: this.props.load === "failed" ? "contents" : "none", notFoundShown: this.props.load === "notFound" ? "contents" : "none"`;
 
 export function Screen() {
   return (
@@ -111,6 +121,12 @@ export function Screen() {
           <Button variant="outline" size="sm" selfStart>
             Retry
           </Button>
+        </div>
+      </div>
+      <div style={{ display: "{{notFoundShown}}" }}>
+        <PageHeader title="#salt maps" backHref="#" backLabel="Back to Explore" />
+        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 24px" }}>
+          <EmptyState title="This tag doesn't exist." />
         </div>
       </div>
     </>

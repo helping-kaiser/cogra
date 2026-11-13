@@ -39,6 +39,14 @@ const guestBand = [
 ];
 const secondComments = (n) => ({ n, find: 'aria-label="1 comment"', tag: "button" });
 
+// The two readings every post menu carries (round 49, M1): arrived after the
+// rows were numbered, so they take the next free numbers on each board — the
+// badge is an identity, not a position.
+const postReadingMarks = (n) => [
+  { n, find: ">Cited by</button>", tag: "button" },
+  { n: n + 1, find: ">Opinions on this</button>", tag: "button" },
+];
+
 // The card menus on their hosts (round 36): `FeedPostMenu`'s, `FeedPostMenuOwn`'s,
 // `CommentMenu`'s and `CommentMenuOwn`'s numbers, the first row's words and the
 // Hide row's handle per board.
@@ -49,6 +57,7 @@ const readerMenuMarks = (save, hide) => [
   { n: 4, find: ">License terms</button>", tag: "button" },
   { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
   { n: 6, find: ">Report</button>", tag: "button" },
+  ...postReadingMarks(7),
 ];
 const ownPostMenuMarks = [
   { n: 1, find: ">Save</button>", tag: "button" },
@@ -58,6 +67,7 @@ const ownPostMenuMarks = [
   { n: 5, find: ">License terms</button>", tag: "button" },
   { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
   { n: 7, find: ">Cite in a new post</button>", tag: "button" },
+  ...postReadingMarks(8),
 ];
 const commentMenuMarks = (save) => [
   { n: 1, find: save, tag: "button" },
@@ -659,6 +669,7 @@ Object.assign(FLOW_MARKERS, {
     // number rather than the second one it reads at — the settings page's
     // rule, for its reason: the badge is an identity, not a position.
     { n: 7, find: ">Cite in a new post</button>", tag: "button" },
+    ...postReadingMarks(8),
   ],
   // The menus round: four sheet boards, one per surface a ⋮ opens on. Each is
   // scanExempt, so only the sheet's own rows and its scrim carry numbers, and
@@ -672,17 +683,19 @@ Object.assign(FLOW_MARKERS, {
     // Report arrived at the sheet tail (ruling 75) and takes the next free
     // number — the badge is an identity, not a position.
     { n: 6, find: ">Report</button>", tag: "button" },
+    ...postReadingMarks(7),
   ],
   // The same sheet on a phone too narrow for four actions: share has moved in
   // from the action row and leads, so every number below it shifts by one.
   ReaderPostMenuNarrow: [
-    { n: 1, find: ">Share</button>", tag: "button" },
+    { n: 1, find: ">Share this post</button>", tag: "button" },
     { n: 2, find: ">Save</button>", tag: "button" },
     { n: 3, find: ">Cite in a new post</button>", tag: "button" },
     { n: 4, find: ">Hide @ada</button>", tag: "button" },
     { n: 5, find: ">License terms</button>", tag: "button" },
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 7, find: ">Report</button>", tag: "button" },
+    ...postReadingMarks(8),
   ],
   // The feed's own menu state (ruling 84): the same sheet on its second host,
   // scanExempt like the detail's, numbered as ReaderPostMenu numbers it.
@@ -693,6 +706,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">License terms</button>", tag: "button" },
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 6, find: ">Report</button>", tag: "button" },
+    ...postReadingMarks(7),
   ],
   // The own menu off the detail (seam 248, RM-G9): `RemoveMenu`'s sheet on the
   // feed, scanExempt like it, numbered as it numbers its rows; the confirm on
@@ -706,12 +720,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">License terms</button>", tag: "button" },
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 7, find: ">Cite in a new post</button>", tag: "button" },
+    ...postReadingMarks(8),
   ],
   // The host-card menus (round 36, backlog 149): each host's sheet numbered as
   // the feed's or the detail's numbers the same sheet — the badge is an
   // identity, not a position — scanExempt like every menu board.
-  // Round 41 (M1): the `author` chip's hidden copy of the hide row.
-  HistoryPostMenu: [...readerMenuMarks(">Save</button>", ">Hide @ada</button>"), { n: 7, find: ">Unhide @ada</button>", tag: "button" }],
+  // Round 41 (M1): the `author` chip's hidden copy of the hide row, at 9 since
+  // round 49 gave 7 and 8 to the two readings every reader menu numbers so.
+  HistoryPostMenu: [...readerMenuMarks(">Save</button>", ">Hide @ada</button>"), { n: 9, find: ">Unhide @ada</button>", tag: "button" }],
   // A hidden person's profile card in History (round 41, M1): `FeedProfileMenu`'s
   // numbers, the hide row reading Unhide.
   HistoryProfileMenu: [
@@ -756,6 +772,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 5, find: ">Report</button>", tag: "button" },
     { n: 6, find: ">License terms</button>", tag: "button" },
+    ...postReadingMarks(7),
   ],
   // Your own removed post's menu open (round 46, question 18).
   FeedRemovedMenuOwn: [
@@ -763,6 +780,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Cite in a new post</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 5, find: ">License terms</button>", tag: "button" },
+    ...postReadingMarks(6),
   ],
   FeedRemoveConfirm: [
     { n: 1, find: ">Remove</button>", tag: "button" },
@@ -1050,11 +1068,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Change</button>", tag: "button" },
     { n: 5, find: ">Adjust</button>", tag: "button" },
     { n: 6, find: ">Mark</button>", tag: "button" },
-    { n: 7, find: ">Sign and publish</button>", tag: "button" },
-    { n: 8, find: ">Back</button>", tag: "button" },
+    // The foot is drawn once per `state` value (round 49, backlog 220): rest's
+    // and tag-refused's copies carry the same two numbers.
+    { n: 7, find: ">Sign and publish</button>", tag: "button", all: true },
+    { n: 8, find: ">Back</button>", tag: "button", all: true },
     { n: 7, find: ">Signing and publishing…</button>", tag: "button" },
     { n: 8, find: ">Close</button>", tag: "button" },
-    // The `state` chip's `tagRefused` (round 30): the unlanded tag's line.
+    // The `state` chip's `tag-refused` (round 30): the unlanded tag's line.
     { n: 9, find: ">Remove it</button>", tag: "button" },
   ],
   // The seal at more than one staged citation (item 70): `ComposeSeal`'s own
@@ -1456,6 +1476,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 16, find: 'aria-label="Play this video"', tag: "button" },
     { n: 17, find: ">Retry</button>", tag: "button" },
     { n: 18, find: 'aria-label="Retry loading more"', tag: "button" },
+    // The rail's ⋮ (round 49, M2): the post's menu over the stream.
+    { n: 19, find: 'aria-label="More on this post"', tag: "button" },
   ],
   ReelSensitive: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "button" },
@@ -1469,6 +1491,22 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: ">Show</button>", tag: "button" },
     { n: 9, find: 'aria-label="Sensitive — tap to view.', tag: "button" },
     ...nav(10),
+    { n: 15, find: 'aria-label="More on this post"', tag: "button" },
+  ],
+  // The stream's ⋮ open (round 49, M2): scanExempt like every menu board, the
+  // `whose` chip's two copies of the sheet sharing one number per row.
+  ReelMenu: [
+    { n: 1, find: ">Save</button>", tag: "button", all: true },
+    { n: 2, find: ">Cite in a new post</button>", tag: "button", all: true },
+    { n: 3, find: ">Hide @mira</button>", tag: "button" },
+    { n: 4, find: ">Cited by</button>", tag: "button", all: true },
+    { n: 5, find: ">Opinions on this</button>", tag: "button", all: true },
+    { n: 6, find: ">License terms</button>", tag: "button", all: true },
+    { n: 7, find: ">Report</button>", tag: "button" },
+    { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 9, find: ">Edit</button>", tag: "button" },
+    { n: 10, find: ">Mark as sensitive</button>", tag: "button" },
+    { n: 11, find: ">Remove</button>", tag: "button" },
   ],
   // The `pick` chip (round 27) draws the post three times, one shown: every
   // control on the card stamps each copy (`all`), one number per control.
@@ -1582,9 +1620,26 @@ const ownProfile = () => [
   // is no longer the last thing before the closing tag: the find stops at the
   // word, which matches the applicant's dotless button just as well.
   { n: 7, find: ">Invites<", tag: "button" },
-  { n: 8, find: 'aria-label="Posts"', tag: "button" },
-  { n: 8, find: 'aria-label="Comments"', tag: "button" },
-  { n: 8, find: 'aria-label="Everything"', tag: "button" },
+  // `all`: a landing board's `tab` chip draws the row twice (round 49).
+  { n: 8, find: 'aria-label="Posts"', tag: "button", all: true },
+  { n: 8, find: 'aria-label="Comments"', tag: "button", all: true },
+  { n: 8, find: 'aria-label="Everything"', tag: "button", all: true },
+];
+// The landing's post card (round 49, the profile lands on Posts): the card
+// controls `ProfilePosts` / `ProfilePostsOwn` number, at each board's next
+// free numbers.
+const otherLandingCard = (base) => [
+  { n: base, find: '<a href="/u/', tag: "a", all: true },
+  { n: base + 1, find: 'aria-label="More on this post"', tag: "button", all: true },
+  { n: base + 2, find: "aspect-ratio:1.91 / 1", tag: "div" },
+  { n: base + 3, find: ">More</button>", tag: "button", all: true },
+  { n: base + 4, find: '<a href="/t/', tag: "a", all: true },
+  { n: base + 5, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
+  { n: base + 5, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
+  { n: base + 6, find: ">Feed score</span>", tag: "button", all: true },
+  { n: base + 7, find: ">· 1 reference<", tag: "button" },
+  { n: base + 8, find: 'aria-label="3 comments"', tag: "button" },
+  { n: base + 9, find: 'aria-label="Share this post"', tag: "button", all: true },
 ];
 Object.assign(FLOW_MARKERS, {
   // The own profile's Posts and Comments views (round 41, M2): `Profile`'s
@@ -1630,6 +1685,16 @@ Object.assign(FLOW_MARKERS, {
     // The `change` chip's failed line under the head (round 41, S3): the next
     // free number after the bell's 15.
     { n: 16, find: ">Retry</button>", tag: "button" },
+    // The landing's own post card (round 49): `ProfilePostsOwn`'s card controls.
+    { n: 18, find: '<a href="/u/', tag: "a", all: true },
+    { n: 19, find: 'aria-label="More on this post"', tag: "button", all: true },
+    { n: 20, find: ">More</button>", tag: "button", all: true },
+    { n: 21, find: '<a href="/t/', tag: "a", all: true },
+    { n: 22, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
+    { n: 22, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
+    { n: 23, find: ">Feed score</span>", tag: "button", all: true },
+    { n: 24, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 25, find: 'aria-label="Share this post"', tag: "button", all: true },
   ],
   // The failed next page is this board's whole subject; the profile beneath it
   // is `Profile`'s and is wired there (the pattern-exemplar exemption).
@@ -1660,13 +1725,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
     { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
     { n: 5, find: ">Message</button>", tag: "button" },
-    { n: 6, find: 'aria-label="Posts"', tag: "button" },
-    { n: 6, find: 'aria-label="Comments"', tag: "button" },
-    { n: 6, find: 'aria-label="Everything"', tag: "button" },
+    { n: 6, find: 'aria-label="Posts"', tag: "button", all: true },
+    { n: 6, find: 'aria-label="Comments"', tag: "button", all: true },
+    { n: 6, find: 'aria-label="Everything"', tag: "button", all: true },
     { n: 7, find: "The long way home — the light does something", tag: "button" },
     { n: 7, find: "The glovebox camera earns its keep", tag: "button" },
-    { n: 7, find: "Took the coast road instead of the tunnel", tag: "button" },
+    // The whole line, end and all: the landing's card description opens the same way (round 49).
+    { n: 7, find: "Took the coast road instead of the tunnel. Four hours longer, worth every minute.</span", tag: "button" },
     ...nav(8),
+    ...otherLandingCard(14),
   ],
   // The page a moment after Hide @ada (ruling 65): `ProfileOther`'s numbers,
   // to the number, and the snackbar's Undo as the next free one.
@@ -1678,14 +1745,17 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
     { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
     { n: 5, find: ">Message</button>", tag: "button" },
-    { n: 6, find: 'aria-label="Posts"', tag: "button" },
-    { n: 6, find: 'aria-label="Comments"', tag: "button" },
-    { n: 6, find: 'aria-label="Everything"', tag: "button" },
+    { n: 6, find: 'aria-label="Posts"', tag: "button", all: true },
+    { n: 6, find: 'aria-label="Comments"', tag: "button", all: true },
+    { n: 6, find: 'aria-label="Everything"', tag: "button", all: true },
     { n: 7, find: "The long way home — the light does something", tag: "button" },
     { n: 7, find: "The glovebox camera earns its keep", tag: "button" },
-    { n: 7, find: "Took the coast road instead of the tunnel", tag: "button" },
+    // The whole line, end and all: the landing's card description opens the same way (round 49).
+    { n: 7, find: "Took the coast road instead of the tunnel. Four hours longer, worth every minute.</span", tag: "button" },
     ...nav(8),
     { n: 13, find: ">Undo</button>", tag: "button" },
+    // The landing's post card (round 49), the board's `tab` chip at `posts`.
+    ...otherLandingCard(15),
   ],
   ProfileOtherHeld: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
@@ -1698,10 +1768,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: 'aria-label="Posts"', tag: "button" },
     { n: 6, find: 'aria-label="Comments"', tag: "button" },
     { n: 6, find: 'aria-label="Everything"', tag: "button" },
-    { n: 7, find: "The long way home — the light does something", tag: "button" },
-    { n: 7, find: "The glovebox camera earns its keep", tag: "button" },
-    { n: 7, find: "Took the coast road instead of the tunnel", tag: "button" },
     ...nav(8),
+    // The landing's post card (round 49); 7, the chronicle's row, is not drawn.
+    ...otherLandingCard(14),
   ],
   ProfileStances: [
     // The words are the `whose` chip's holes, and the tab row is drawn once
@@ -2561,8 +2630,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Adjust</button>", tag: "button" },
     { n: 7, find: ">Change</button>", tag: "button" },
     { n: 8, find: ">Mark</button>", tag: "button" },
-    { n: 9, find: ">Sign comment</button>", tag: "button" },
-    { n: 10, find: ">Back</button>", tag: "button" },
+    // The foot is drawn once per `state` value (round 49, backlog 220): rest's,
+    // refused's and tag-refused's copies carry the same two numbers.
+    { n: 9, find: ">Sign comment</button>", tag: "button", all: true },
+    { n: 10, find: ">Back</button>", tag: "button", all: true },
     { n: 9, find: ">Signing comment…</button>", tag: "button" },
     { n: 10, find: ">Close</button>", tag: "button" },
     { n: 11, find: 'aria-label="Manage the 7 tags"', tag: "button", all: true },

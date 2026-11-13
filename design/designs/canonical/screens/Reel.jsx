@@ -36,11 +36,22 @@
 
    THE CHROME: the way back top-left and the sound disc top-right, both on the
    media disc's surface because they sit on photography; the rail down the right,
-   white and shadowed so it survives a bright frame; the caption above the bar.
+   white and shadowed so it survives a bright frame, its ⋮ raising the post's
+   own menu over the stream (jakob 2026-11-13, M2; `ReelMenu` draws it open);
+   the caption above the bar.
    No pause: a clip in a stream plays, and stopping it is what the detail view is
    for. The one play is the card's own: where the device suppresses autoplay the
-   clip stands paused on its cover and the play disc takes the sound disc's
+   clip stands paused on its own frame and the play disc takes the sound disc's
    corner until the tap starts it (RL-G3).
+
+   THE STREAM NEVER SHOWS A COVER (jakob 2026-11-13, N7: "in the reel scroller
+   covers should not be shown at all"). A cover is the card's face, a tall
+   clip's at the tile's 4:5; here the clip plays at its own 9:16, or stands
+   paused on its own frame, and the shape never jumps at play. Only a clip
+   that cannot load at all may show its cover in the stream — whole, at its
+   own 4:5, centred on the stream's black, nothing cropped. The tree draws no
+   state for a clip that did not load, so that sentence is law only
+   (backlog 230).
 
    THE `state` CHIP draws the stream's other faces, each one change from
    `playing`: `suppressed` (the play disc); `settling` (the rail's score door a

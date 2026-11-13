@@ -1,7 +1,8 @@
 /* YOUR OWN PROFILE'S POSTS VIEW, YOUR POST'S MENU OPEN (round 36; jakob
    2026-11-11, H7). The own profile's Posts tab is one of the own menu's hosts
    (FeedPostMenuOwn.md): @sol's salt maps on @sol's own page, its ⋮ raising the
-   own post menu — Save, Cite, Edit, Mark as sensitive, Remove, License terms,
+   own post menu — Save, Cite, Edit, Mark as sensitive, Remove, Cited by,
+   Opinions on this, License terms,
    and no Hide and no Report. The page beneath is the reader's own profile,
    `ProfileOwnBody`'s header, with the Posts tab lit.
 

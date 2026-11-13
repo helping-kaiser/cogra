@@ -11,8 +11,9 @@
 
 What holds:
 
-- **The order is ruled**: author · opinion · comments · share · score. People lead — the author is the one item that is not an act — then the acts in the card's own order, and the **score last**, because it is the door out of the stream and a thumb reaching for the opinion must never pass over the exit.
-- **What is deliberately absent**: topics, the reference count, the reader's ⋮. They belong to the detail view the score opens; a rail that carried everything would be a card drawn sideways.
+- **The order is ruled**: author · opinion · comments · share · ⋮ · score. People lead — the author is the one item that is not an act — then the acts in the card's own order, then the ⋮, and the **score last**, because it is the door out of the stream and a thumb reaching for the opinion must never pass over the exit.
+- **The ⋮ is the post's menu** (jakob 2026-11-13, M2), named `More on this post` as the card's is: the reader's post menu, or the own one on the reader's own clip, rising over the stream (`ReelMenu`). It is not an exit, so it stands above the score.
+- **What is deliberately absent**: topics and the reference count. They belong to the detail view the score opens; a rail that carried everything would be a card drawn sideways.
 - **It reads over any frame.** White glyphs at 28px with a soft shadow, counts beneath. Nothing takes a token colour — on photography "quiet" and "invisible" are the same thing — and nothing takes a plate, because five plates down a frame is a wall of chrome.
 - **The opinion control is the real one** (`StanceControl overMedia`), not a picture of one: the same tap, the same press-and-hold, the same pad over the paused clip, the same seal. Its unset state is a line face at the rail's weight; an opinion already given shows its own face.
 - **`bottom` clears whatever the surface puts below it** — the bottom bar and the caption on the stream.

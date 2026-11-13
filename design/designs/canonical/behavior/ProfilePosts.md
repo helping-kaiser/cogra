@@ -2,6 +2,8 @@
 
 ALWAYS the posts view lists the person's posts as post cards, never as chronicle entries
 
+ALWAYS the posts view is where another's profile lands, from any door, its states — empty, settling, loading, failed — the landing's own
+
 ALWAYS the posts view lists a post the person signed that is still settling among the landed ones, its card wearing Still settling and carrying no score, its score slot bare, as the feed's card does
 
 ALWAYS profile.posts.empty below profile.tabRow reads Nothing here yet., the line alone, GIVEN the person has published no post

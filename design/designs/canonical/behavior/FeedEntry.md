@@ -12,7 +12,7 @@ ALWAYS a path's trace shows the people along it and the reached thing's own mark
 
 ALWAYS every path stands drawn, strongest first, one continuous list that pages in place as the reader keeps going, never capped and never folded behind a row
 
-ALWAYS the paths add up to the trace's score, the figure its own fetch found
+ALWAYS the paths add up to the trace's score to the cent, the figure its own fetch found, a tiny path printing its own exact figure by the tiny rule
 
 ALWAYS the trace carries no chart, no bar, no meter, no percentage and no trend arrow
 

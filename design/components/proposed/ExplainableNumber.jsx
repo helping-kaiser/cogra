@@ -58,6 +58,9 @@ const SR_ONLY = {
      six decimals, rounded half away from zero; a magnitude that then reads
      `0.000000` reads `0.000001`. The trace's own sign rule stands: a positive
      takes `+` there (`+0.0031`), a negative its `−` (`−0.00042`, `−0.000001`).
+     A tiny path prints its exact figure by this rule among paths that print
+     two decimals, and the paths add up to the score to the cent (jakob
+     2026-11-13, N6).
    · THE MINUS IS U+2212 everywhere (readme §3), never a hyphen.
    · SPOKEN, a screen reader reads the printed figure, never the computed
      one: `Feed score`, then exactly what the slot prints.

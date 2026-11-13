@@ -2,7 +2,7 @@
 
 WHEN tap a post card's ⋮ in Saved GIVEN the post is someone else's -> saved.menuSheet rises over Saved AND Saved stands unchanged beneath its wash
 
-ALWAYS saved.menuSheet reads Unsave, then Cite in a new post, then Hide with the author's handle, then License terms, then saved.menuSheet.report at the sheet tail, the reader's post menu's own rows with the post kept
+ALWAYS saved.menuSheet reads Unsave, then Cite in a new post, then Hide with the author's handle, then saved.menuSheet.citedBy, then Opinions on this, then License terms, then saved.menuSheet.report at the sheet tail, the reader's post menu's own rows with the post kept
 
 ALWAYS saved.menuSheet carries no row of Saved's own, Unsave being how a thing leaves Saved
 

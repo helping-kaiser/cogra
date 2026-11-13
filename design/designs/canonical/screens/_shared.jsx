@@ -258,15 +258,41 @@ const CARD_MENU = [SAVE_ROW, CITE_ROW];
    a reader has nothing to report themselves for. `tail` tells a card's own ⋮
    the same: the card appends the license, and the row stays after it. */
 const REPORT_ROW = { label: "Report", onSelect: () => {}, node: "report", tail: true };
+/* THE TWO READINGS — WHO HOLDS AN OPINION ON THIS, AND WHAT CITES IT (backlog
+   item 55; the topic round, 2026-09-14; jakob 2026-11-13, M1: "they belong on
+   a details screen and in the menu"). Every content menu carries both rows,
+   a post's and a comment's, live or removed, your own or another's. A post
+   has two doors to each list: the count line on its detail and the row in
+   its menu. A comment, which has no detail surface of its own, has the row.
+
+   A ROW STANDS WHATEVER THE COUNT IS, which is the difference between a menu
+   row and a count line: the line drops away at zero because a tap that can
+   only open an empty list is a tap spent on nothing, while a menu row that
+   came and went with a number would make the menu a different menu every
+   time. So the row is the door to an empty list — the post's sheets'
+   `list: empty` and the comment's `CommentOpinionsEmpty` /
+   `CommentCitedByEmpty` — and on a removed post, whose detail carries no
+   count lines, the row is the one door.
+
+   THEY SIT AFTER THE ACTS AND BEFORE THE LICENSE. A menu leads with the acts
+   it was opened for and closes on the license (`CARD_MENU`'s order); reading
+   who holds an opinion, or what points at a thing, is not an act, so the two
+   fall between. Inbound before opinions, because it is a fact about the
+   artifact and the other is a fact about people. */
+const CITED_BY_ROW = { label: "Cited by", onSelect: () => {}, node: "citedBy" };
+const OPINIONS_ROW = { label: "Opinions on this", onSelect: () => {}, node: "opinions" };
 /* A POST CARD'S OWN ⋮ IS THE MENU THE BOARDS DRAW (round 36): the reader's
    post menu (`READER_POST_MENU`) less the license the card appends — Save,
-   Cite, Hide with the author's handle, then Report after the license — so a
-   card and the sheet its ⋮ raises cannot disagree. A board drawing a card of
-   the reader's own hands it the own rows instead (`FeedPostMenuOwn`). */
+   Cite, Hide with the author's handle, Cited by, Opinions on this, then
+   Report after the license — so a card and the sheet its ⋮ raises cannot
+   disagree. A board drawing a card of the reader's own hands it the own rows
+   instead (`FeedPostMenuOwn`). */
 const readerCardMenu = (handle) => [
   SAVE_ROW,
   CITE_ROW,
   { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {}, node: "hide" },
+  CITED_BY_ROW,
+  OPINIONS_ROW,
   REPORT_ROW,
 ];
 
@@ -694,7 +720,9 @@ function DetailHeader({ items, node }) {
    reaches for on their own work. It takes the first row on every menu that
    has it, post, comment and profile alike: the thumb learns one position, and
    the one menu that also holds Remove is the last place to move the rows
-   around. The license closes this menu as it closes the others. */
+   around — save where a control moved off the card into the menu: that row
+   takes the first place (`ReaderPostMenuNarrow`'s `Share this post`; jakob
+   2026-11-13, M3). The license closes this menu as it closes the others. */
 const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {}, node: "license" };
 /* CITING RIDES THIS MENU TOO (backlog item 100, ruled the batch-rulings
    round). `CARD_MENU`'s own note says citing acts on the thing itself,
@@ -718,6 +746,8 @@ const OWN_POST_MENU = [
   EDIT_ROW,
   { label: "Mark as sensitive", onSelect: () => {}, node: "markSensitive" },
   REMOVE_ROW,
+  CITED_BY_ROW,
+  OPINIONS_ROW,
   LICENSE_ROW,
 ];
 /* YOUR OWN REMOVED POST KEEPS A MENU (jakob 2026-11-12, question 18: "i can
@@ -725,52 +755,23 @@ const OWN_POST_MENU = [
    and on License terms: "even if the media is now removed someone might have
    used my content already under its license regulations"; and 2026-11-13,
    point B: Mark as sensitive "goes"): `OWN_POST_MENU` less Edit, Mark as
-   sensitive and Remove — Save, Cite in a new post, License terms, in the own
-   menu's order. The detail's header carries it whole; a card's ⋮ is handed
+   sensitive and Remove — Save, Cite in a new post, Cited by, Opinions on
+   this, License terms, in the own menu's order. The detail's header carries it whole; a card's ⋮ is handed
    it less the license, which `PostCard` appends. */
 const OWN_REMOVED_POST_MENU = OWN_POST_MENU.filter((row) => row !== EDIT_ROW && row !== REMOVE_ROW && row.node !== "markSensitive");
 const OWN_REMOVED_CARD_MENU = OWN_REMOVED_POST_MENU.filter((row) => row !== LICENSE_ROW);
 /* The reader's post menu for a post by `handle`, so a host whose drawn card
    is someone else's than @ada's names its author in the Hide row
    (`TagPageMenu`'s @tobias). */
-const readerPostMenu = (handle) => [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {}, node: "hide" }, LICENSE_ROW, REPORT_ROW];
+const readerPostMenu = (handle) => [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {}, node: "hide" }, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW, REPORT_ROW];
 const READER_POST_MENU = readerPostMenu("ada");
 /* SAVED'S MENUS READ `Unsave` FIRST (Saved.md: every card there is kept), the
    row keeping its one name, `save`, whatever its label reads. */
 const UNSAVE_ROW = { ...SAVE_ROW, label: "Unsave" };
 const keptMenu = (rows) => rows.map((row) => (row === SAVE_ROW ? UNSAVE_ROW : row));
-/* THE COMMENT'S MENU IS WHERE ITS OPINIONS LIVE (backlog item 55; jakob ruled
-   both doors, and this is the comment's). A post's door is a count row on its
-   detail surface; a comment has no detail surface of its own — it lives inside a
-   sheet — so its door is the ⋮ that every other act on it already uses.
-
-   IT STANDS WHATEVER THE COUNT IS, which is the difference between a menu row
-   and a count line: the line drops away at zero because a tap that can only open
-   an empty list is a tap spent on nothing, while a menu row that came and went
-   with a number would make the menu a different menu every time. That is also
-   why the empty sheet is reachable only from here.
-
-   IT SITS AFTER THE ACTS AND BEFORE THE LICENSE. A menu leads with the acts it
-   was opened for and closes on the license (`CARD_MENU`'s order); reading who
-   holds an opinion is not an act, so it falls between them. */
-const OPINIONS_ROW = { label: "Opinions on this", onSelect: () => {}, node: "opinions" };
-/* ── WHAT CITES THIS (the topic round, 2026-09-14) ─────────────────────────
-   The inbound mirror of the opinions round (backlog item 55), and the same two
-   doors: a count line on the post's detail, and the comment's ⋮ — because a
-   comment has no detail surface of its own, and its ⋮ is where every other act
-   on it already lives.
-
-   THE ROW STANDS AT ANY COUNT, the menus round's rule: a count LINE drops away
-   at zero because a tap that can only open an empty list is a tap spent on
-   nothing, while a menu row that came and went with a number would make the
-   menu a different menu every time. So the empty sheet is reachable only here.
-
-   IT SITS BESIDE THE OPINIONS ROW, between the acts and the license, for that
-   row's reason: reading who has pointed at this is not an act. Inbound before
-   opinions, because it is a fact about the artifact and the other is a fact
-   about people. */
-const CITED_BY_ROW = { label: "Cited by", onSelect: () => {}, node: "citedBy" };
-
+/* THE COMMENT'S MENU carries the two readings (`CITED_BY_ROW`,
+   `OPINIONS_ROW`) as every content menu does; a comment has no detail
+   surface, so the rows are its one door to each list. */
 const COMMENT_MENU = [...CARD_MENU, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW, REPORT_ROW];
 /* YOUR OWN COMMENT'S MENU (the comment-removal round, 2026-10-01; round 41):
    the reader's menu with `Edit` and `Remove` joined among the acts — after
@@ -1226,7 +1227,52 @@ function ThreadDetail({ menuItems = READER_POST_MENU }) {
    closed on while it signs shows its wait and its failure (round 41, S3;
    `SigningAfterClose`'s edit form, the head standing as it was until the
    change is taken). Given none, nothing stands there. */
-function ProfileOwnBody({ tail = null, headLine = null }) {
+/* A PROFILE LANDS ON ITS POSTS TAB (jakob 2026-11-13, the android hand test:
+   "i'd rather have it land on posts as the default (learned behavior from
+   other socials)"), every profile, your own and another's. `ProfileTabs`
+   draws the tab row and what stands under it: `posts` (the landing),
+   `everything` (the chronicle, reached by its tab), or `chip` — both, the
+   board's `tab` chip choosing (`TAB_CHIP` / `TAB_VALS`): the row drawn once
+   per value, keyed by it, and the two lists behind holes, so each keeps its
+   own names and keys. */
+const TAB_CHIP = { tab: { editor: "enum", options: ["posts", "everything"], default: "posts" } };
+const TAB_VALS = `tabPostsShown: this.props.tab === "everything" ? "none" : "flex", tabEverythingShown: this.props.tab === "everything" ? "flex" : "none"`;
+function ProfileTabs({ tab = "posts", posts, chronicle }) {
+  const postsList = (
+    <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "8px 0 0 0" }} data-node="posts">
+      {posts}
+    </div>
+  );
+  if (tab === "posts") {
+    return (
+      <>
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="posts" tabs={CHRONICLE_TABS} node="tabRow" />
+        {postsList}
+      </>
+    );
+  }
+  if (tab === "everything") {
+    return (
+      <>
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
+        {chronicle}
+      </>
+    );
+  }
+  return (
+    <>
+      <div style={{ display: "{{tabPostsShown}}", flexDirection: "column" }} data-node-chip="tab" data-node-key="posts">
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="posts" tabs={CHRONICLE_TABS} node="tabRow" />
+      </div>
+      <div style={{ display: "{{tabEverythingShown}}", flexDirection: "column" }} data-node-chip="tab" data-node-key="everything">
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
+      </div>
+      <div style={{ display: "{{tabPostsShown}}", flex: 1, minHeight: 0, flexDirection: "column" }}>{postsList}</div>
+      <div style={{ display: "{{tabEverythingShown}}", flex: 1, minHeight: 0, flexDirection: "column" }}>{chronicle}</div>
+    </>
+  );
+}
+function ProfileOwnBody({ tail = null, headLine = null, tab = "posts" }) {
   return (
     <>
       <ProfileBand node="band" />
@@ -1256,15 +1302,20 @@ function ProfileOwnBody({ tail = null, headLine = null }) {
           />
         </div>
         {headLine}
-        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
-        <ChronicleList node="chronicle">
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="3d" second="Salt maps of the coast road — rubbings from three weekends at low tide." onOpen={() => {}} node="act" nodeKey="1" />
-          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="4d" second="The third headland light is real — I have a print from 2019 that almost catches it." onOpen={() => {}} node="act" nodeKey="2" />
-          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.4, pInterest: 0.5 }} title="Gave an opinion" titleAside="on @mira" trailing="5d" inert node="act" nodeKey="3" />
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="7d" second="Three weekends of walking the same stretch at low tide." onOpen={() => {}} node="act" nodeKey="4" />
-          <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated your profile" trailing="14d" inert node="act" nodeKey="5" />
-          {tail}
-        </ChronicleList>
+        <ProfileTabs
+          tab={tab}
+          posts={<PostCard {...SOL_POST} menuItems={OWN_POST_MENU.filter((row) => row !== LICENSE_ROW)} bundle={mkBundle(0.1, 1)} node="card" />}
+          chronicle={
+            <ChronicleList node="chronicle">
+              <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="3d" second="Salt maps of the coast road — rubbings from three weekends at low tide." onOpen={() => {}} node="act" nodeKey="1" />
+              <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="4d" second="The third headland light is real — I have a print from 2019 that almost catches it." onOpen={() => {}} node="act" nodeKey="2" />
+              <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.4, pInterest: 0.5 }} title="Gave an opinion" titleAside="on @mira" trailing="5d" inert node="act" nodeKey="3" />
+              <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="7d" second="Three weekends of walking the same stretch at low tide." onOpen={() => {}} node="act" nodeKey="4" />
+              <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated your profile" trailing="14d" inert node="act" nodeKey="5" />
+              {tail}
+            </ChronicleList>
+          }
+        />
       </div>
       <BottomNav active="profile" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
@@ -1285,7 +1336,7 @@ function ProfileOwnBody({ tail = null, headLine = null }) {
 
    Named as `ProfileOwnBody` names its page, under the same `profile` prefix:
    `ProfileOther` and `ProfileMenu` register it. */
-function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "Ada Okonkwo", nameSize, nameLineHeight } = {}) {
+function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "Ada Okonkwo", nameSize, nameLineHeight, tab = "posts" } = {}) {
   return (
     <>
       <PageHeader title="@ada" backHref="#" backLabel={backLabel} node="header" />
@@ -1310,14 +1361,19 @@ function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "A
             showHandle={false}
           />
         </div>
-        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
-        <ChronicleList node="chronicle">
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="2h" second="The long way home — the light does something at the third headland." onOpen={() => {}} node="act" nodeKey="1" />
-          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="1d" second="The glovebox camera earns its keep — this is the print from 2019." onOpen={() => {}} node="act" nodeKey="2" />
-          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @tobias" trailing="2d" inert node="act" nodeKey="3" />
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="5d" second="Took the coast road instead of the tunnel. Four hours longer, worth every minute." onOpen={() => {}} node="act" nodeKey="4" />
-          <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated their profile" trailing="7d" inert node="act" nodeKey="5" />
-        </ChronicleList>
+        <ProfileTabs
+          tab={tab}
+          posts={<PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />}
+          chronicle={
+            <ChronicleList node="chronicle">
+              <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="2h" second="The long way home — the light does something at the third headland." onOpen={() => {}} node="act" nodeKey="1" />
+              <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="1d" second="The glovebox camera earns its keep — this is the print from 2019." onOpen={() => {}} node="act" nodeKey="2" />
+              <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @tobias" trailing="2d" inert node="act" nodeKey="3" />
+              <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="5d" second="Took the coast road instead of the tunnel. Four hours longer, worth every minute." onOpen={() => {}} node="act" nodeKey="4" />
+              <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated their profile" trailing="7d" inert node="act" nodeKey="5" />
+            </ChronicleList>
+          }
+        />
       </div>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
@@ -1812,11 +1868,12 @@ const SEAL_SLOW_LINE = "Still signing — the network is slow right now.";
 
 /* `chipped` is `ComposeSeal`'s own drawing of its `state` chip (round 30):
    the acts card at rest and the card whose one staged tag never landed —
-   `state` `tagRefused` stages that tag alone, as the reply seal's `refused`
+   `state` `tag-refused` stages that tag alone, as the reply seal's `refused`
    stages its one citation — each behind its hole (`ComposeSeal`'s VALS). */
-function composeSealCard({ cited, tags, state }) {
+function composeSealCard({ cited, tags, state, node }) {
   return (
     <ActsCard
+      node={node}
       rows={[
         { label: "Post", value: "Salt maps of the coast road", count: "1", countNoun: "post" },
         sealTagsRow(tags, state === "tagRefused" ? { message: SEAL_UNLANDED_TAG, onRemove: () => {} } : undefined),
@@ -1838,23 +1895,31 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state, chipped = false }
      A chipped board draws the signing moment as its `state` chip's
      `signing`, the label swapped past 200ms. */
   const signing = state === "signing" || state === "slow";
+  /* Named only where `ComposeSeal` draws it (`chipped`, registered under
+     `composeSeal`, backlog 220): the overlay boards that stand on this body
+     register none of it. Each chip value draws its own copy of the card and
+     of the foot, one shown at a time, so the registry keys each copy by that
+     one value (`node-paths.mjs`). */
+  const n = (segment) => (chipped ? segment : undefined);
+  const stateCopy = (value) => ({ "data-node-chip": "state", "data-node-key": value });
   return (
     <>
-      <WizardHeader title="What you sign" help="How signing works" closing={signing} />
+      <WizardHeader title="What you sign" help="How signing works" closing={signing} node={n("header")} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
+        <QuietNote node={n("summary")}>Salt maps of the coast road — 2 pictures.</QuietNote>
 
         {chipped ? (
           <>
-            <div style={{ display: "{{restCardShown}}", flexDirection: "column" }}>{composeSealCard({ cited, tags, state })}</div>
-            <div style={{ display: "{{tagRefusedShown}}", flexDirection: "column" }}>{composeSealCard({ cited, tags: [tags[0]], state: "tagRefused" })}</div>
+            <div style={{ display: "{{restShown}}", flexDirection: "column" }} {...stateCopy("rest")}>{composeSealCard({ cited, tags, state, node: "acts" })}</div>
+            <div style={{ display: "{{tagRefusedShown}}", flexDirection: "column" }} {...stateCopy("tag-refused")}>{composeSealCard({ cited, tags: [tags[0]], state: "tagRefused", node: "acts" })}</div>
+            <div style={{ display: "{{signingShown}}", flexDirection: "column" }} {...stateCopy("signing")}>{composeSealCard({ cited, tags, state, node: "acts" })}</div>
           </>
         ) : (
           composeSealCard({ cited, tags, state })
         )}
 
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow label="License" value={LICENSE_SUMMARY()} action="Change" />
+        <div style={{ display: "flex", flexDirection: "column" }} data-node={n("facts")}>
+          <FactRow label="License" value={LICENSE_SUMMARY()} action="Change" node={n("license")} />
           {/* One number: the post's own record is a Publish, whose one free
               parameter is the author's attachment — their backing; the second
               is pinned by the census (jakob 2026-10-16, PR-101). It starts at
@@ -1862,10 +1927,11 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state, chipped = false }
               the one the post's face takes once it is out. */}
           <FactRow
             label="Your backing"
-            value={<AttachmentReadout pDirected={0.1} />}
+            value={<AttachmentReadout pDirected={0.1} node={n("value")} />}
             action="Adjust"
+            node={n("backing")}
           />
-          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
+          <FactRow label="Sensitive" value="Not marked" action="Mark" last node={n("sensitive")} />
         </div>
 
         <div style={{ flex: 1 }} />
@@ -1899,11 +1965,14 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state, chipped = false }
           </>
         ) : chipped ? (
           <>
-            <div style={{ display: "{{restFootShown}}", flexDirection: "column" }}>
-              <SealFooter signLabel="Sign and publish" busyLabel="Signing and publishing…" />
+            <div style={{ display: "{{restShown}}", flexDirection: "column" }} {...stateCopy("rest")}>
+              <SealFooter signLabel="Sign and publish" busyLabel="Signing and publishing…" node="footer" />
             </div>
-            <div style={{ display: "{{signFootShown}}", flexDirection: "column" }}>
-              <SealFooter signLabel="Sign and publish" busy busyLabel="Signing and publishing…" />
+            <div style={{ display: "{{tagRefusedShown}}", flexDirection: "column" }} {...stateCopy("tag-refused")}>
+              <SealFooter signLabel="Sign and publish" busyLabel="Signing and publishing…" node="footer" />
+            </div>
+            <div style={{ display: "{{signingShown}}", flexDirection: "column" }} {...stateCopy("signing")}>
+              <SealFooter signLabel="Sign and publish" busy busyLabel="Signing and publishing…" node="footer" />
             </div>
           </>
         ) : (
@@ -2065,10 +2134,11 @@ const replyCitedRow = (fault) => ({
    (`ReplySeal`'s VALS). */
 const REPLY_TAG_SETS = { none: [], two: SEAL_TAGS, seven: SEAL_TAGS_MANY };
 
-function replySealCard({ named, cited, tags, refused, tagRefused = false }) {
+function replySealCard({ named, cited, tags, refused, tagRefused = false, node }) {
   const acts = 1 + tags.length + cited;
   return (
     <ActsCard
+      node={node}
       rows={[
         { label: "Comment", value: named.act, count: "1", countNoun: "comment" },
         ...(tags.length ? [sealTagsRow(tags, tagRefused ? { message: SEAL_UNLANDED_TAG, onRemove: () => {} } : undefined)] : []),
@@ -2102,48 +2172,70 @@ function ReplySealBody({ cited = 0, tags = [], state, target = "post", keyAbsent
      wait and the answer stand on the parent it answers (`SigningAfterClose`). A
      board drawing that moment passes `chipped` (its `state` chip's
      `signing`) or `signChip` (a `state` chip of its own). */
+  /* Named only where `ReplySeal` draws it (`chipped`, registered under
+     `replySeal`, backlog 220). The card is drawn once per `state` value and,
+     inside each, once per `tags` value: a chip's copy inside another chip's
+     copy needs a named node between them, so the state copy holds `card`, a
+     box-less wrapper (`display: contents`), and the tags copies stand in it,
+     each card `acts`. A tag that never landed (`tag-refused`) stages its one
+     tag whatever `tags` reads, so that copy holds the card alone. The foot is
+     drawn once per `state` value. */
+  const n = (segment) => (chipped ? segment : undefined);
+  const copy = (chip, value) => ({ "data-node-chip": chip, "data-node-key": value });
+  const REPLY_STATES = [
+    ["rest", "stRest"],
+    ["refused", "stRefused"],
+    ["bug", "stBug"],
+    ["tag-refused", "stTagRefused"],
+    ["signing", "stSigning"],
+  ];
+  const TAG_HOLES = { none: "tagsNone", two: "tagsTwo", seven: "tagsSeven" };
   return (
     <>
       <WizardHeader
         title="What you sign"
         leaveLabel="Leave — the reply is discarded"
-       
+
         help="How signing works"
+        node={n("header")}
       />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <QuietNote>{named.note} — 89 characters.</QuietNote>
+        <QuietNote node={n("summary")}>{named.note} — 89 characters.</QuietNote>
 
         {/* The all-or-nothing subline appears the moment a signature carries
             more than one thing (`ActsCard`'s rule), so the bare comment —
             one act signed — draws neither it nor the plural total. */}
         {chipped
-          ? Object.entries(REPLY_TAG_SETS).flatMap(([set, staged]) =>
-              [0, 1].map((one) => (
-                <div key={`${set}${one}`} style={{ display: `{{${set}${one}Shown}}`, flexDirection: "column" }}>
-                  {replySealCard({ named, cited: one, tags: staged, refused: one === 1 })}
+          ? REPLY_STATES.map(([value, hole]) => (
+              <div key={value} style={{ display: `{{${hole}}}`, flexDirection: "column" }} {...copy("state", value)}>
+                <div style={{ display: "contents" }} data-node="card">
+                  {value === "tag-refused"
+                    ? replySealCard({ named, cited: 0, tags: [SEAL_TAGS[0]], tagRefused: true, node: "acts" })
+                    : Object.entries(REPLY_TAG_SETS).map(([set, staged]) => (
+                        <div key={set} style={{ display: `{{${TAG_HOLES[set]}}}`, flexDirection: "column" }} {...copy("tags", set)}>
+                          {replySealCard({ named, cited: value === "refused" ? 1 : 0, tags: staged, refused: value === "refused", node: "acts" })}
+                        </div>
+                      ))}
                 </div>
-              )),
-            ).concat(
-              <div key="tagRefused" style={{ display: "{{tagRefusedShown}}", flexDirection: "column" }}>
-                {replySealCard({ named, cited: 0, tags: [SEAL_TAGS[0]], tagRefused: true })}
-              </div>,
-            )
+              </div>
+            ))
           : replySealCard({ named, cited, tags, refused: state === "refused", tagRefused: state === "tagRefused" })}
 
-        <div style={{ display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", flexDirection: "column" }} data-node={n("facts")}>
           <FactRow
             label="Toward what you answer"
-            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
+            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} node={n("value")} />}
             action="Adjust"
+            node={n("toward")}
           />
-          <FactRow label="License" value={LICENSE_SUMMARY()} action="Change" />
-          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
+          <FactRow label="License" value={LICENSE_SUMMARY()} action="Change" node={n("license")} />
+          <FactRow label="Sensitive" value="Not marked" action="Mark" last node={n("sensitive")} />
         </div>
 
         {/* The opinion the reply carries is a fact about replying, not about
             this row — so it stands under the ruled block rather than inside
             it, where `FactRow` has no slot for it. */}
-        <QuietNote>Replying also signs an opinion on what it answers.</QuietNote>
+        <QuietNote node={n("note")}>Replying also signs an opinion on what it answers.</QuietNote>
 
         <div style={{ flex: 1 }} />
 
@@ -2154,15 +2246,17 @@ function ReplySealBody({ cited = 0, tags = [], state, target = "post", keyAbsent
           </>
         ) : chipped ? (
           <>
-            <div style={{ display: "{{signShown}}", flexDirection: "column" }}>
-              <SealFooter signLabel="Sign comment" busyLabel="Signing comment…" />
-            </div>
-            <div style={{ display: "{{signingShown}}", flexDirection: "column" }}>
-              <SealFooter signLabel="Sign comment" busy busyLabel="Signing comment…" />
-            </div>
-            <div style={{ display: "{{bugShown}}", flexDirection: "column", gap: 12 }}>
-              <ReplySealBugFoot />
-            </div>
+            {REPLY_STATES.map(([value, hole]) =>
+              value === "bug" ? (
+                <div key={value} style={{ display: `{{${hole}}}`, flexDirection: "column", gap: 12 }} {...copy("state", value)}>
+                  <ReplySealBugFoot />
+                </div>
+              ) : (
+                <div key={value} style={{ display: `{{${hole}}}`, flexDirection: "column" }} {...copy("state", value)}>
+                  <SealFooter signLabel="Sign comment" busy={value === "signing"} busyLabel="Signing comment…" node="footer" />
+                </div>
+              ),
+            )}
           </>
         ) : state === "bug" ? (
           <ReplySealBugFoot />
@@ -2722,6 +2816,8 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
       <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
+          {/* The line names the POST, a reply's as a top-level comment's, on
+              every host (jakob 2026-11-13, N5). */}
           <QuietNote node="target">Your comment on "The long way home".</QuietNote>
 
           <TextField label="Words" rows={3} cap={2000} value="The glovebox camera earns its keep — this is the print from 2019 that almost catches it." node="words" />

@@ -236,6 +236,10 @@
         "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
+        "Profile",
+        "ProfileOther",
+        "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts",
         "ProfilePostsOwn",
         "Reel",
@@ -251,7 +255,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 37 boards → ReplyEntry",
+        "start · «comment count» on 41 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
@@ -285,6 +289,10 @@
         "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
+        "Profile",
+        "ProfileOther",
+        "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts",
         "ProfilePostsOwn",
         "Reel",
@@ -572,6 +580,10 @@
         "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
+        "Profile",
+        "ProfileOther",
+        "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts",
         "ProfilePostsOwn",
         "Reel",
@@ -584,7 +596,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «stance face» — to VouchBackPad on 29 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 33 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -608,6 +620,10 @@
         "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
+        "Profile",
+        "ProfileOther",
+        "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts",
         "ProfilePostsOwn",
         "Reel",
@@ -1717,11 +1733,14 @@
         "FeedWordsSensitive",
         "KeyElsewhere",
         "Main",
+        "ProfileOther",
+        "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts",
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — pictures — the post opens on 22 boards → PostDetail",
+        "start · «post media» — pictures — the post opens on 25 boards → PostDetail",
         "end · arrival at PostDetail"
       ],
       "boards": [
@@ -1746,6 +1765,9 @@
         "FeedWordsSensitive",
         "KeyElsewhere",
         "Main",
+        "ProfileOther",
+        "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts",
         "VouchBack"
       ]
@@ -1776,12 +1798,15 @@
         "History",
         "KeyElsewhere",
         "Main",
+        "ProfileOther",
+        "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts",
         "Saved",
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — a portrait or square clip — the stream opens on 24 boards → Reel",
+        "start · «post media» — a portrait or square clip — the stream opens on 27 boards → Reel",
         "end · arrival at Reel"
       ],
       "boards": [
@@ -1807,6 +1832,9 @@
         "History",
         "KeyElsewhere",
         "Main",
+        "ProfileOther",
+        "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts",
         "Saved",
         "VouchBack"
@@ -1863,12 +1891,15 @@
         "HistoryHidden",
         "KeyElsewhere",
         "Main",
+        "ProfileOther",
+        "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts",
         "Saved",
         "VouchBack"
       ],
       "steps": [
-        "start · «reference count» on 23 boards → RefsSheet",
+        "start · «reference count» on 26 boards → RefsSheet",
         "end · RefsSheet · 3 «post reference rows» → PostDetail — the cited post opens"
       ],
       "boards": [
@@ -1894,6 +1925,9 @@
         "HistoryHidden",
         "KeyElsewhere",
         "Main",
+        "ProfileOther",
+        "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts",
         "Saved",
         "VouchBack"
@@ -1951,6 +1985,7 @@
         "ProfilePostsMenuOwn",
         "ReaderPostMenu",
         "ReaderPostMenuNarrow",
+        "ReelMenu",
         "RemoveMenu",
         "SavedCommentMenu",
         "SavedCommentMenuOwn",
@@ -1958,7 +1993,7 @@
         "TagPageMenu"
       ],
       "steps": [
-        "start · «Cite in a new post» — to ComposePick on 25 boards → ComposePick",
+        "start · «Cite in a new post» — to ComposePick on 26 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -1987,6 +2022,7 @@
         "ProfilePostsMenuOwn",
         "ReaderPostMenu",
         "ReaderPostMenuNarrow",
+        "ReelMenu",
         "RemoveMenu",
         "SavedCommentMenu",
         "SavedCommentMenuOwn",
@@ -2068,6 +2104,10 @@
         "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
+        "Profile",
+        "ProfileOther",
+        "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts",
         "ProfilePostsOwn",
         "Removed",
@@ -2081,7 +2121,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «Feed score» — to FeedEntry on 42 boards → FeedEntry",
+        "start · «Feed score» — to FeedEntry on 46 boards → FeedEntry",
         "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
         "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
         "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",
@@ -2123,6 +2163,10 @@
         "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
+        "Profile",
+        "ProfileOther",
+        "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts",
         "ProfilePostsOwn",
         "Removed",
@@ -3839,7 +3883,7 @@
       "status": "resolved",
       "steps": [
         "start · ReaderPostMenuNarrow",
-        "end · ReaderPostMenuNarrow · 1 «Share» → os — the platform's own share sheet — the row the action row could not hold, doing exactly what the glyph does on a wider phone"
+        "end · ReaderPostMenuNarrow · 1 «Share this post» → os — the platform's own share sheet — the row the action row could not hold, doing exactly what the glyph does on a wider phone"
       ],
       "boards": [
         "ReaderPostMenuNarrow"
@@ -6244,10 +6288,13 @@
         "publish-a-video",
         "publish-words",
         "read-your-history",
+        "reply-to-a-post",
         "see-who-someone-stands-with",
         "see-who-stands-with-someone",
         "send-someone-an-invite",
         "send-your-first-invite",
+        "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
         "vouch-an-applicant-in"
       ],
       "endpoint": [
@@ -6388,20 +6435,26 @@
     "ProfileOther": {
       "flows": [
         "find-the-thread-a-comment-answers",
+        "follow-a-citation",
         "hide-someone-from-their-profile",
         "meet-a-profile-the-server-didnt-answer",
         "meet-an-ask-link-that-cant-be-taken-up",
         "message-someone",
+        "open-a-posts-pictures",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "read-someones-posts",
+        "reply-to-a-post",
         "search-and-open-a-person",
         "see-who-someone-stands-with",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person",
-        "visit-an-author"
+        "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
+        "visit-an-author",
+        "watch-the-stream"
       ],
       "endpoint": [
         "find-the-thread-a-comment-answers",
@@ -6416,14 +6469,20 @@
     },
     "ProfileOtherHeld": {
       "flows": [
+        "follow-a-citation",
+        "open-a-posts-pictures",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "reply-to-a-post",
         "revise-a-standing-opinion",
         "see-who-someone-stands-with",
         "see-who-stands-with-someone",
-        "walk-back-an-opinion"
+        "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
+        "walk-back-an-opinion",
+        "watch-the-stream"
       ],
       "endpoint": [
         "revise-a-standing-opinion",
@@ -6432,14 +6491,20 @@
     },
     "ProfileOtherHidden": {
       "flows": [
+        "follow-a-citation",
         "hide-someone-from-their-profile",
+        "open-a-posts-pictures",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "reply-to-a-post",
         "see-who-someone-stands-with",
         "see-who-stands-with-someone",
-        "take-a-stance-on-a-person"
+        "take-a-stance-on-a-person",
+        "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
+        "watch-the-stream"
       ],
       "endpoint": []
     },
@@ -6616,6 +6681,12 @@
         "reveal-a-sensitive-clip-in-the-stream",
         "watch-the-stream"
       ]
+    },
+    "ReelMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
     },
     "ReelSensitive": {
       "flows": [
@@ -7612,6 +7683,8 @@
     "Join/10: the Privacy Policy page — the notice's door stands at the form's foot (ruling 76); the page it opens is design still owed",
     "Join/9: the Terms page — the door stands in the accept sentence (ruling 76); the page it opens is design still owed",
     "JoinErrors/8: the Terms page — the door stands in the accept sentence (ruling 76); the page it opens is design still owed",
-    "JoinErrors/9: the Privacy Policy page — the notice's door stands at the form's foot (ruling 76); the page it opens is design still owed"
+    "JoinErrors/9: the Privacy Policy page — the notice's door stands at the form's foot (ruling 76); the page it opens is design still owed",
+    "ReelMenu/11: what the stream shows once your own clip is removed — not ruled for the stream (round 49 question)",
+    "ReelMenu/3: what hiding the clip's author leaves on the stream — the host's aftermath is not ruled for the stream (round 49 question)"
   ]
 }

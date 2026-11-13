@@ -2,6 +2,8 @@
 
 ALWAYS a deleted account's profile keeps the other-profile page's whole structure: the header, the real counts, the tabs and the chronicle of what the account did
 
+ALWAYS a deleted account's profile stands with profile.tabRow.everythingTab lit, the chronicle below it, where every other profile lands with profile.tabRow.postsTab lit (round 49: kept until jakob rules what that tab shows for a deleted account)
+
 ALWAYS the avatar is the reserved disc, with no monogram and no glyph
 
 ALWAYS the name slot reads Deleted account in the system's quiet voice

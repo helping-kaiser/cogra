@@ -18,6 +18,13 @@ import { useGlobalMute, PagerDots } from "./MediaAttachment.jsx";
    · The frame is never cut here. `contain`, centred, as large as the surface
      allows — a viewer that crops is not a viewer. This is the surface the feed
      card's 4:5 clamp exists against: whatever a card crops, the viewer restores.
+   · A CLIP NEVER SHOWS ITS COVER HERE (jakob 2026-11-13, V1: the viewer follows
+     the reel). Opened on a clip, the viewer shows the clip itself at the
+     clip's own shape — playing, or paused on its own frame where the device
+     suppresses autoplay — so the shape never jumps at play: the `poster` it is
+     handed is the clip's own frame, never the 4:5 cover a card wears. Only a
+     clip that cannot load may show its cover here, whole, at the cover's own
+     4:5, centred on the black, nothing cropped. A picture is untouched.
    · THE STAGE IS POSITIONED, NEVER FLEX-SIZED. The media fills an absolutely
      inset box and is fitted inside it, so containment never depends on the
      frame's own proportions. Sizing it with `flex: 1` and a percentage

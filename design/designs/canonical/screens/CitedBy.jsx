@@ -9,12 +9,11 @@
    are other people's acts, by other authors, in a different order, and merging
    the two would leave neither number checkable.
 
-   THE DOORS ARE THE OPINIONS ROUND'S TWO, for its reasons: a count line on the
-   post's detail (`Cited by 4`), absent at zero, and the comment's ⋮ row, which
-   stands whatever the count is because a comment has no detail surface of its
-   own. The empty state is reachable by design only from the second (a post's
-   sheet meets it only past a stale count — the `list` chip below), which is why it has
-   a board of its own and this one does not need to draw it.
+   A POST HAS TWO DOORS TO IT, the opinions sheet's two (jakob 2026-11-13,
+   M1): the count line on its detail (`Cited by 4`), absent at zero and on a
+   removed post, and the `Cited by` row of its ⋮ menu on every card and host,
+   which stands whatever the count is. A comment has the row alone. So the
+   row is how a reader meets this sheet empty — the `list` chip below.
 
    NEWEST FIRST, AND THAT IS A DEPARTURE. The opinions sheet is strongest-first,
    mirroring `ProfileStances`, and this sheet deliberately does not mirror it
@@ -41,9 +40,10 @@
    citing things can share a name.
 
    THE `list` CHIP DRAWS THE SHEET EMPTY AT POST SCALE (seam 248): reached
-   only when the count it was opened from had gone stale, it says so in the
-   comment sheet's words (`CommentCitedByEmpty`), `Nothing cites this yet`,
-   the line alone, as `empty`. */
+   from the menu's `Cited by` on a post nothing cites, or past a count line
+   gone stale, it says so in the comment sheet's words
+   (`CommentCitedByEmpty`), `Nothing cites this yet`, the line alone, as
+   `empty`. */
 export const NODE = "postDetail";
 export const PROPS = { list: { editor: "enum", options: ["rows", "empty"], default: "rows" } };
 export const VALS = `rowsShown: this.props.list === "empty" ? "none" : "flex", emptyShown: this.props.list === "empty" ? "block" : "none"`;

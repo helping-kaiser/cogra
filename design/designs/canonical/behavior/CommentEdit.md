@@ -4,6 +4,10 @@ ALWAYS the comment edit is one screen and one batch: words, pictures or one vide
 
 ALWAYS the comment edit's license row is locked
 
+ALWAYS commentEdit.target names the post the comment stands on, Your comment on, then the post's title in quotes, then a full stop, as Your comment on "The long way home"., whether the comment answers the post or another comment, on every host the edit opens from — the thread, History, Saved and the profile's Comments tab
+
+ALWAYS commentEdit.target names the post by its stand-in GIVEN the post has no title — a words post by its first line, a media post as Pictures by @ada or A video by @ada
+
 ALWAYS the comment edit holds at most four pictures, uncropped
 
 ALWAYS the footer reads the live count of the batch, You're signing N things

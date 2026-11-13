@@ -6125,7 +6125,7 @@ widest); 50 × `m` and 50 `W` in words take 12px, the 50-character sample
 
 Closed as ruled by jakob 2026-11-13 ("F1 as drawn so two lines is the hard cap and it shrinks until it fits"): (a), no floor — the head's name shrinks until it holds two lines, the widest legal name at 10px on 13px.
 
-### 220 · The seals and the edit sheets have no registry rows · *system* · **filed 2026-11-13**
+### 220 · The seals and the edit sheets have no registry rows · *system* · **filed 2026-11-13** · **closed 2026-11-13**
 
 Round 48 (seam 323-6). `ComposeSeal`, `ReplySeal`, `EditActs` and
 `CommentEditActs` export no `NODE`, so the clients' harness has no verdict
@@ -6148,6 +6148,25 @@ for two values of `state` (`rest` and `signing`), and `ReplySeal`'s seven copies
 are drawn per pair of `tags` × `state`, while a chip-drawn copy is keyed by one
 value of one chip (`node-paths.mjs`). Registering them first redraws the copies
 one per value — pixel-identical, but a restructuring of both boards' bodies.
+
+Round 49 tried `ComposeSeal` (one card and one foot per `state` value, names
+after `postEdit`'s: `header`, `summary`, `acts`, `facts.{license,backing,
+sensitive}`, `footer`). The render stops at the join: the copy keyed by the
+value `tagRefused` breaks the key rule — a key is lowercase letters, digits,
+`-` and `_` — and `ReplySeal` has the same value. `ReplySeal`'s cards also
+vary on `tags` × `state`, and a chip copy inside another chip's copy needs a
+named node between them. The choice that unblocks both: rename the chip value
+(`tag-refused`, the boards' settings changing name), or let the key rule take
+camelCase chip values; and for `ReplySeal`, a named wrapper between its two
+chips' copies (a new path segment). The attempt is kept as a patch in round
+49's scratch folder.
+
+Closed by round 49, act 2 (the orchestrator's call: the rename and the
+wrapper): `tagRefused` reads `tag-refused` on both boards; `ComposeSeal`
+registers as `composeSeal`, `ReplySeal` as `replySeal` with its box-less
+`card` wrapper between the `state` and `tags` copies — each pixel-identical
+to its earlier drawing at every chip combination (3 and 15, headless
+Chromium).
 
 ### 221 · `PadKeyAbsent`'s pad is hand-built, so it cannot register yet · *system* · **filed 2026-11-13**
 
@@ -6185,3 +6204,27 @@ profile and in History; removed posts in History, Saved, the profile and the tag
 page; the Saved profile card (`FeedProfileMenu.md:7`); the deleted account's
 feed card (`FEED_DELETED_PROFILE_MENU`). Each is one board drawn exactly as its
 law states the rows; held while jakob decides whether post menus gain rows (M1).
+
+M1 is ruled (round 49): every post menu carries `Cited by` and `Opinions on
+this` before `License terms`, so each of these boards now has its rows
+settled; drawing them stays open.
+
+### 230 · A clip that cannot load has no drawn state · *design* · **filed 2026-11-13**
+
+Round 49 (jakob 2026-11-13, N7 and V1). The stream and the viewer never show
+a clip's cover; only a clip that cannot load may show its cover there, whole
+at its own 4:5, centred on the black, nothing cropped (`Reel.md`,
+`ViewerVideo.md`, `MediaViewer`'s prose). The tree draws no state for a clip
+that did not load — `Reel`'s `fault` is the next clips' load, the clip on
+screen still playing — so the sentence is law only. Drawing it needs the
+failure's own words and controls (a line? a Retry?), which no ruling gives.
+
+### 231 · The stream's ⋮: what Hide and Remove leave on the stream · *design* · **filed 2026-11-13**
+
+Round 49 (M2). `ReelMenu` draws the clip's post menu over the stream, but each
+host rules its own aftermath and the stream has none: what the stream shows
+after `Hide @mira` (her clips leave the stream? the clip on screen stays until
+a swipe?), after your own clip's `Remove` lands (the next clip takes the
+screen? a removal mark?), and whether the clip pauses while the sheet is up
+(the pad pauses it, the comments sheet stops it). The graph carries the two as
+gaps (`ReelMenu` 3 and 11).
