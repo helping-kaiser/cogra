@@ -14,8 +14,8 @@ use common::envelope::CograContent;
 use common::l1::census::Family;
 use common::l1::client::ActorKey;
 use common::l1::encoding::Encoder;
-use common::l1::handshake::{Proposal, content_commitment, pre_commitment};
 use common::l1::identifier::{ActId, NodeId};
+use common::l1::proposal::{PreSigned, content_commitment, content_pre_digest};
 use l1_standin::{StandIn, StandInConfig};
 use postgres_store::staged::{self, PreSignedParts};
 use postgres_store::{content as content_store, genesis, media as media_store, mirror, retention};
@@ -33,14 +33,16 @@ struct Rig {
     areas: MediaAreas,
 }
 
-/// Every place a payload, its content salt or its nonce can sit, for one
-/// act: carriage, the staged row, the stand-in's row. `true` means the
-/// value is there.
+/// Every place a payload, its content nonce or its content salt can sit,
+/// for one act: carriage (payload, content nonce, salt, state), the staged
+/// row (payload, salt, content nonce), the stand-in's row (the salt it
+/// drew — it never receives the payload or the content nonce). `true`
+/// means the value is there.
 #[derive(Debug, PartialEq, Eq)]
 struct Copies {
-    carriage: Option<(bool, bool, String)>,
+    carriage: Option<(bool, bool, bool, String)>,
     staged: Option<(bool, bool, bool)>,
-    l1: Option<(bool, bool, bool)>,
+    l1: Option<bool>,
 }
 
 impl Rig {
@@ -78,17 +80,17 @@ impl Rig {
 
     async fn sign_and_relay(&self, id: Uuid, key: &ActorKey) {
         let write = staged::load(&self.pool, id).await.expect("loads");
-        let pre = key.pre_sign(write.proposal);
-        let parts = PreSignedParts {
-            author_pubkey: pre.author_pubkey.clone(),
-            nonce: pre.nonce.clone(),
-            pre_signature: pre.pre_signature.clone(),
-        };
-        let sealed = api::relay::submit_pre_signed(&self.boundary, &self.pool, id, parts)
-            .await
-            .expect("seals");
+        let pre = PreSigned::sign(key, write.proposal);
+        let sealed = api::relay::submit_pre_signed(
+            &self.boundary,
+            &self.pool,
+            id,
+            PreSignedParts::from(&pre),
+        )
+        .await
+        .expect("seals");
         let host_key = self.boundary.host_public_key().await.expect("host key");
-        let witness = key.approve(&pre, &sealed, &host_key).expect("approves");
+        let witness = pre.approve(key, &sealed, &host_key).expect("approves");
         api::relay::submit_approval(&self.boundary, &self.pool, id, witness.approval_signature)
             .await
             .expect("relays");
@@ -200,8 +202,9 @@ impl Rig {
     }
 
     async fn copies(&self, act_id: &str) -> Copies {
-        let carriage: Option<(bool, bool, String)> = sqlx::query_as(
-            "SELECT payload IS NOT NULL, content_salt IS NOT NULL, payload_state
+        let carriage: Option<(bool, bool, bool, String)> = sqlx::query_as(
+            "SELECT payload IS NOT NULL, content_nonce IS NOT NULL, content_salt IS NOT NULL,
+                    payload_state
              FROM act_payloads WHERE act_id = $1",
         )
         .bind(act_id)
@@ -209,21 +212,19 @@ impl Rig {
         .await
         .expect("carriage");
         let staged: Option<(bool, bool, bool)> = sqlx::query_as(
-            "SELECT payload IS NOT NULL, content_salt IS NOT NULL, nonce IS NOT NULL
+            "SELECT payload IS NOT NULL, content_salt IS NOT NULL, content_nonce IS NOT NULL
              FROM staged_writes WHERE act_id = $1",
         )
         .bind(act_id)
         .fetch_optional(&self.pool)
         .await
         .expect("staged");
-        let l1: Option<(bool, bool, bool)> = sqlx::query_as(
-            "SELECT payload IS NOT NULL, content_salt IS NOT NULL, nonce IS NOT NULL
-             FROM l1_acts WHERE act_id = $1",
-        )
-        .bind(act_id)
-        .fetch_optional(&self.pool)
-        .await
-        .expect("l1");
+        let l1: Option<bool> =
+            sqlx::query_scalar("SELECT content_salt IS NOT NULL FROM l1_acts WHERE act_id = $1")
+                .bind(act_id)
+                .fetch_optional(&self.pool)
+                .await
+                .expect("l1");
         Copies {
             carriage,
             staged,
@@ -249,12 +250,14 @@ fn unhex(v: &serde_json::Value) -> Vec<u8> {
     hex::decode(v.as_str().expect("a hex string")).expect("hex")
 }
 
-/// After a redaction, carriage holds NULL in `reduced`, and neither the
-/// staged row nor the stand-in's row holds the payload, its salt or its
-/// nonce. NULL is checked as NULL: an emptied row would read as a payload
-/// of zero bytes, which is a different, honest act.
+/// After a redaction, carriage holds NULL in `reduced` — payload, content
+/// nonce and salt gone in one statement (layer1-interface.md §8.4,
+/// "Custody across phases") — the staged row holds none of the three, and
+/// the stand-in, which never received the pair, holds no salt either. NULL
+/// is checked as NULL: an emptied row would read as a payload of zero
+/// bytes, which is a different, honest act.
 ///
-/// After a redaction no copy of the payload, its content salt or its nonce remains anywhere CoGra holds one.
+/// After a redaction no copy of the payload, its content nonce or its content salt remains anywhere CoGra holds one.
 /// ´claim:redaction:no-copy-of-a-reduced-payload-remains´
 #[sqlx::test(migrations = "../../migrations")]
 async fn after_redaction_no_copy_of_a_reduced_payload_remains_anywhere(pool: PgPool) {
@@ -264,9 +267,9 @@ async fn after_redaction_no_copy_of_a_reduced_payload_remains_anywhere(pool: PgP
     assert_eq!(
         rig.copies(&act_id).await,
         Copies {
-            carriage: Some((true, true, "full".into())),
+            carriage: Some((true, true, true, "full".into())),
             staged: Some((true, true, true)),
-            l1: Some((false, false, false)),
+            l1: Some(false),
         },
         "before: carriage full, the landed staged row still holding all three"
     );
@@ -276,9 +279,9 @@ async fn after_redaction_no_copy_of_a_reduced_payload_remains_anywhere(pool: PgP
     assert_eq!(
         rig.copies(&act_id).await,
         Copies {
-            carriage: Some((false, false, "reduced".into())),
+            carriage: Some((false, false, false, "reduced".into())),
             staged: Some((false, false, false)),
-            l1: Some((false, false, false)),
+            l1: Some(false),
         }
     );
     let empty: i64 = sqlx::query_scalar(
@@ -297,13 +300,15 @@ async fn after_redaction_no_copy_of_a_reduced_payload_remains_anywhere(pool: PgP
 }
 
 /// The unit alone, with the permanent structural record, reproduces the
-/// record's witness: its salt and envelope open the content commitment,
-/// and its nonce reproduces the pre-commitment both commitments bind.
-/// That is what keeping the salt in the archive buys — without it the
-/// proof that the archive holds exactly what was removed ends at the
-/// redaction.
+/// record's witness: its content nonce and envelope reproduce the content
+/// pre-digest, and with its salt that opens the content commitment over
+/// the record's pre-commitment (layer1-interface.md §8.2, "Verified act");
+/// the pre-digest, with the dependency opening, reproduces that
+/// pre-commitment too. That is what keeping the salt and the content nonce
+/// in the archive buys — without them the proof that the archive holds
+/// exactly what was removed ends at the redaction.
 ///
-/// An archived unit reproduces its record's witness from its own salt, envelope and nonce.
+/// An archived unit reproduces its record's witness from its own envelope, content nonce and salt.
 /// ´claim:redaction:an-archived-unit-reproduces-its-witness´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_archived_unit_reproduces_its_records_witness(pool: PgPool) {
@@ -322,9 +327,10 @@ async fn an_archived_unit_reproduces_its_records_witness(pool: PgPool) {
     assert_eq!(unit.redacted_by, actor.to_string());
     assert_eq!(unit.legal_hold_until, None);
     let data = &unit.original_data;
+    assert_eq!(data["unit"], redaction::UNIT_FORMAT);
     let envelope = unhex(&data["envelope"]);
     let salt = unhex(&data["content_salt"]);
-    let nonce = unhex(&data["nonce"]);
+    let nonce = unhex(&data["content_nonce"]);
     assert_eq!(
         CograContent::decode_payload(&envelope)
             .expect("the envelope")
@@ -344,21 +350,37 @@ async fn an_archived_unit_reproduces_its_records_witness(pool: PgPool) {
         .await
         .expect("reads")
         .expect("landed");
-    let proposal = Proposal {
-        body: stored.body.clone(),
-        payload: envelope.clone(),
-        deps: stored.deps.clone(),
-    };
+    let pre_digest = content_pre_digest(&id, &nonce, &envelope);
     assert_eq!(
-        pre_commitment(&proposal, &nonce).to_vec(),
+        common::l1::proposal::pre_commitment(
+            &stored.body,
+            &pre_digest,
+            &common::l1::proposal::dependency_pre_digest(
+                &id,
+                &stored.dependency_nonce,
+                &stored.deps
+            ),
+        )
+        .to_vec(),
         stored.pre_commitment,
-        "the archived nonce reproduces the pre-commitment"
+        "the archived content nonce reproduces the pre-commitment"
     );
-    let opened = content_commitment(&id, &stored.pre_commitment, &salt, &envelope);
+    let opened = content_commitment(&id, &stored.pre_commitment, &salt, &pre_digest);
     assert_eq!(
         opened.to_vec(),
         record.payload_witness,
-        "salt + envelope open the witness"
+        "salt + the content pre-digest open the witness"
+    );
+    assert_ne!(
+        content_commitment(
+            &id,
+            &stored.pre_commitment,
+            &salt,
+            &content_pre_digest(&id, &[0; 32], &envelope)
+        )
+        .to_vec(),
+        record.payload_witness,
+        "without the archived nonce the envelope opens nothing"
     );
     assert_eq!(unhex(&data["witness"]), record.payload_witness);
 }
@@ -458,7 +480,7 @@ async fn the_archive_unit_and_the_reduction_commit_together_or_not_at_all(pool: 
     );
     assert_eq!(
         rig.copies(&act_id).await.carriage,
-        Some((true, true, "full".into())),
+        Some((true, true, true, "full".into())),
         "no reduction without the unit"
     );
 
@@ -512,10 +534,11 @@ async fn the_reap_is_idempotent_on_accepted_acts(pool: PgPool) {
 
 /// A write redacted after its approval but before its record landed: the
 /// unit is archived from the staged copy (sealed, so it has a witness),
-/// the staged copy and the stand-in's custody are dropped — the stand-in
-/// recording the drop on a row that never reached acceptance — and when
-/// the record lands after all, it lands reduced instead of failing on a
-/// payload that is no longer there.
+/// the staged copy and the stand-in's salt are dropped — the stand-in
+/// recording the drop on a row that never reached acceptance — and the
+/// act's carriage is recorded reduced at once, so when the record lands
+/// after all it lands reduced and payload-marked from its first read,
+/// instead of failing on a payload that is no longer there.
 ///
 /// A record landing over a reaped write lands reduced, and the stand-in drops a never-accepted act's custody on the way.
 /// ´claim:redaction:a-reaped-write-lands-reduced´
@@ -527,14 +550,20 @@ async fn a_write_promoting_after_its_payload_was_reaped_lands_reduced_rather_tha
     let (actor, key) = rig.funded_actor("ada").await;
     let (staged_id, act_id) = rig.prepare_post(actor, "In flight.", &[]).await;
     rig.sign_and_relay(staged_id, &key).await;
-    assert_eq!(rig.copies(&act_id).await.l1, Some((true, true, true)));
+    assert_eq!(rig.copies(&act_id).await.l1, Some(true));
+    assert_eq!(rig.copies(&act_id).await.carriage, None);
 
     let done = rig.redact(actor, &act_id).await;
     assert!(
         done.archived.is_some(),
         "a sealed copy has a witness to archive against"
     );
-    assert!(!done.reduced, "no carriage before the landing");
+    assert!(done.reduced, "the carriage is recorded reduced");
+    assert_eq!(
+        rig.copies(&act_id).await.carriage,
+        Some((false, false, false, "reduced".into())),
+        "before the landing, the carriage row already marks the act"
+    );
     assert!(done.staged_reaped);
     let (status, dropped): (String, bool) = sqlx::query_as(
         "SELECT status, carriage_dropped_at IS NOT NULL FROM l1_acts WHERE act_id = $1",
@@ -544,7 +573,7 @@ async fn a_write_promoting_after_its_payload_was_reaped_lands_reduced_rather_tha
     .await
     .expect("l1 row");
     assert_eq!((status.as_str(), dropped), ("approved", true));
-    assert_eq!(rig.copies(&act_id).await.l1, Some((false, false, false)));
+    assert_eq!(rig.copies(&act_id).await.l1, Some(false));
     assert!(matches!(
         staged::load(&rig.pool, staged_id).await,
         Err(staged::StagedError::Reaped(_))
@@ -553,14 +582,175 @@ async fn a_write_promoting_after_its_payload_was_reaped_lands_reduced_rather_tha
     rig.close_and_ingest().await;
     assert_eq!(
         rig.copies(&act_id).await.carriage,
-        Some((false, false, "reduced".into())),
+        Some((false, false, false, "reduced".into())),
         "the late landing lands reduced"
     );
     let record = mirror::record_full(&rig.pool, &act_id)
         .await
         .expect("reads")
         .expect("landed");
-    assert!(record.payload_marked, "the record still commits a payload");
+    assert!(
+        record.payload_marked,
+        "the reduced carriage row marks the record"
+    );
+}
+
+/// The server process behind a transaction, as `pg_stat_activity` names it.
+async fn backend_pid(tx: &mut sqlx::Transaction<'_, sqlx::Postgres>) -> i32 {
+    sqlx::query_scalar("SELECT pg_backend_pid()")
+        .fetch_one(&mut **tx)
+        .await
+        .expect("its backend")
+}
+
+/// Waits until another backend is waiting on a lock held by the backend
+/// `holder`, read from PostgreSQL's own view (`pg_blocking_pids`). A
+/// race test that only sleeps can fall into the serial order on a slow
+/// runner and pass whatever the code does; this fails the test instead
+/// when the expected wait never happens.
+async fn wait_until_blocked_by(pool: &PgPool, holder: i32) {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+    loop {
+        let waiting: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM pg_stat_activity
+             WHERE wait_event_type = 'Lock' AND $1 = ANY(pg_blocking_pids(pid))",
+        )
+        .bind(holder)
+        .fetch_one(pool)
+        .await
+        .expect("reads pg_stat_activity");
+        if waiting > 0 {
+            return;
+        }
+        assert!(
+            std::time::Instant::now() < deadline,
+            "no backend ever waited on backend {holder}; the race ran serially"
+        );
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+    }
+}
+
+/// A redaction racing the ingestion that promotes the same act's staged
+/// carriage ends reduced in both orders.
+///
+/// In the first order, the ingestion promotes first and has not committed
+/// yet. Its full row is invisible to the redaction, whose own reduced-row
+/// insert would otherwise wait on it and then do nothing. The test
+/// asserts the redaction is really blocked on the ingestion before it
+/// commits; this order is the regression guard (it ends `full` without
+/// the staged row's share lock).
+///
+/// In the second order, the redaction runs first and has not committed
+/// yet, and the test asserts the promotion is blocked on it. This order
+/// passes without the share lock too: the plain read then waits on the
+/// redaction's uncommitted reduced row and does nothing. It checks only
+/// that the lock does not break this order.
+///
+/// Either way, once both commit, carriage and staged row hold no
+/// payload, content nonce or salt, and the record lands marked.
+///
+/// A redaction racing the ingestion of the same act leaves its carriage reduced, in either order.
+/// ´claim:redaction:a-redaction-racing-ingestion-ends-reduced´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_redaction_racing_the_ingestion_of_its_act_ends_reduced_in_either_order(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.funded_actor("ada").await;
+    let (first_id, first) = rig.prepare_post(actor, "Promoted first.", &[]).await;
+    rig.sign_and_relay(first_id, &key).await;
+    let (second_id, second) = rig.prepare_post(actor, "Redacted first.", &[]).await;
+    rig.sign_and_relay(second_id, &key).await;
+    rig.standin.close_epoch().await.expect("closes");
+    let redaction_of = |act_id: String| {
+        let pool = rig.pool.clone();
+        let by = actor.to_string();
+        async move {
+            redaction::redact_act(
+                &pool,
+                &Redaction {
+                    actor_id: actor,
+                    act_id: &act_id,
+                    reason: REASON,
+                    redacted_by: &by,
+                },
+            )
+            .await
+        }
+    };
+    let mut ingesting = rig.pool.begin().await.expect("the ingestion begins first");
+    let ingestion_pid = backend_pid(&mut ingesting).await;
+    content_store::promote_staged_carriage(&mut ingesting, std::slice::from_ref(&first))
+        .await
+        .expect("promotes");
+    let racing = tokio::spawn(redaction_of(first.clone()));
+    wait_until_blocked_by(&rig.pool, ingestion_pid).await;
+    assert!(
+        !racing.is_finished(),
+        "the redaction waits on the ingestion"
+    );
+    ingesting.commit().await.expect("commits");
+    let done = racing.await.expect("joins").expect("redacts");
+    assert!(done.reduced && done.staged_reaped);
+
+    let mut redacting = rig.pool.begin().await.expect("the redaction begins first");
+    let redaction_pid = backend_pid(&mut redacting).await;
+    let by = actor.to_string();
+    let reduced = redaction::reduce_in(
+        &mut redacting,
+        &Redaction {
+            actor_id: actor,
+            act_id: &second,
+            reason: REASON,
+            redacted_by: &by,
+        },
+    )
+    .await
+    .expect("reduces")
+    .hold_in(&mut redacting)
+    .await
+    .expect("holds");
+    assert!(reduced.reduced && reduced.staged_reaped);
+    let pool = rig.pool.clone();
+    let promoting = {
+        let second = second.clone();
+        tokio::spawn(async move {
+            let mut tx = pool.begin().await?;
+            content_store::promote_staged_carriage(&mut tx, std::slice::from_ref(&second))
+                .await
+                .map_err(|e| sqlx::Error::Protocol(e.to_string()))?;
+            tx.commit().await
+        })
+    };
+    wait_until_blocked_by(&rig.pool, redaction_pid).await;
+    assert!(
+        !promoting.is_finished(),
+        "the promotion waits on the redaction"
+    );
+    redacting.commit().await.expect("commits");
+    promoting.await.expect("joins").expect("promotes");
+
+    let outcome = api::ingest::ingest_pending(&rig.boundary, &rig.pool, GC)
+        .await
+        .expect("ingests");
+    assert!(outcome.promotion_failures.is_empty());
+    for act_id in [&first, &second] {
+        assert_eq!(
+            rig.copies(act_id).await,
+            Copies {
+                carriage: Some((false, false, false, "reduced".into())),
+                staged: Some((false, false, false)),
+                l1: Some(false),
+            },
+            "{act_id}: no copy of the payload survives the race"
+        );
+        let record = mirror::record_full(&rig.pool, act_id)
+            .await
+            .expect("reads")
+            .expect("landed");
+        assert!(
+            record.payload_marked,
+            "{act_id}: the reduced row marks the record"
+        );
+    }
 }
 
 fn handle_payload(handle: &str) -> Vec<u8> {
@@ -599,6 +789,108 @@ async fn land_admission_shaped_registration(rig: &Rig, actor: Uuid, key: &ActorK
     rig.sign_and_relay(prepared.id, key).await;
     rig.close_and_ingest().await;
     prepared.proposal.body.act_id().to_string()
+}
+
+/// An act with an empty payload, redacted after its approval and before
+/// its record lands, still lands as an act that carried no bytes. It has
+/// no carriage row and reads unmarked, so the redaction does not turn an
+/// empty payload into a reduced one.
+///
+/// A redacted act whose payload was empty lands with no carriage row and reads unmarked.
+/// ´claim:redaction:an-empty-payload-never-lands-reduced´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_redacted_empty_payload_act_lands_with_no_carriage_and_unmarked(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.funded_actor("ada").await;
+    let prepared = api::prepare::prepare(
+        &rig.boundary,
+        &rig.pool,
+        GC,
+        actor,
+        Gesture {
+            author: key.address(),
+            family: Family::Registration,
+            middle: None,
+            target: Target::Node(NodeId::Prof(key.address())),
+            p_d: 1.0,
+            p_i: 1.0,
+            settlement_ref: None,
+            license: None,
+            asserted_parents: vec![],
+            deps: vec![],
+            payload: vec![],
+            node: None,
+        },
+    )
+    .await
+    .expect("prepares an empty-payload Registration");
+    let act_id = prepared.proposal.body.act_id().to_string();
+    rig.sign_and_relay(prepared.id, &key).await;
+
+    let done = rig.redact(actor, &act_id).await;
+    assert!(done.archived.is_none(), "no bytes, nothing to archive");
+    assert!(!done.reduced, "no carriage to reduce");
+    rig.close_and_ingest().await;
+
+    assert_eq!(
+        rig.copies(&act_id).await.carriage,
+        None,
+        "an empty payload has no carriage row"
+    );
+    let record = mirror::record_full(&rig.pool, &act_id)
+        .await
+        .expect("reads")
+        .expect("landed");
+    assert!(
+        !record.payload_marked,
+        "an act that carried no bytes reads unmarked"
+    );
+}
+
+/// A post reaped after its leg was recorded and before its pending rows
+/// are staged mints no display row. The relay loaded the bytes before the
+/// leg, and the redaction commits between the leg and the staging. Staging
+/// re-checks the staged row under its lock and refuses the reaped write.
+///
+/// A post reaped between its recorded leg and its staging mints no pending display row.
+/// ´claim:redaction:a-reaped-post-stages-no-pending-row´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_post_reaped_before_its_staging_mints_no_pending_row(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.funded_actor("ada").await;
+    let (staged_id, act_id) = rig.prepare_post(actor, "Never shown.", &[]).await;
+    let write = staged::load(&rig.pool, staged_id)
+        .await
+        .expect("the relay loads the write");
+    let node = write.node_id.expect("a mint names its node");
+    let pre = PreSigned::sign(&key, write.proposal.clone());
+    let at = staged::record_pre_signed(&rig.pool, staged_id, &PreSignedParts::from(&pre))
+        .await
+        .expect("the leg is recorded");
+    let done = redaction::redact_act(
+        &rig.pool,
+        &Redaction {
+            actor_id: actor,
+            act_id: &act_id,
+            reason: REASON,
+            redacted_by: &actor.to_string(),
+        },
+    )
+    .await
+    .expect("the redaction commits between the leg and the staging");
+    assert!(done.staged_reaped);
+
+    let staged = content::stage_pending(&rig.pool, &write, at).await;
+    let minted: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM posts WHERE id = $1")
+        .bind(node)
+        .fetch_one(&rig.pool)
+        .await
+        .expect("counts");
+    assert_eq!(minted, 0, "no post row was minted from the removed bytes");
+    assert!(
+        matches!(staged, Err(content::ContentError::Reaped)),
+        "staging refuses the reaped write, got {staged:?}"
+    );
 }
 
 /// The admission Registration's handle reaches carriage at its landing
@@ -646,9 +938,9 @@ async fn a_handle_left_only_on_its_staged_row_is_promoted_before_the_reap(pool: 
     assert_eq!(
         rig.copies(&act_id).await,
         Copies {
-            carriage: Some((false, false, "reduced".into())),
+            carriage: Some((false, false, false, "reduced".into())),
             staged: Some((false, false, false)),
-            l1: Some((false, false, false)),
+            l1: Some(false),
         }
     );
 }
@@ -774,13 +1066,21 @@ async fn a_reduced_row_stays_reduced_through_a_mirror_rebuild(pool: PgPool) {
     rig.redact(actor, &act_id).await;
 
     let mut tx = rig.pool.begin().await.expect("tx");
-    content_store::insert_act_payload(&mut tx, &act_id, b"the old bytes", b"the old salt")
-        .await
-        .expect("promotes");
+    content_store::insert_act_payload(
+        &mut tx,
+        &act_id,
+        content_store::CarriedPair {
+            payload: b"the old bytes",
+            content_nonce: b"the old nonce",
+            content_salt: b"the old salt",
+        },
+    )
+    .await
+    .expect("promotes");
     tx.commit().await.expect("commits");
     assert_eq!(
         rig.copies(&act_id).await.carriage,
-        Some((false, false, "reduced".into()))
+        Some((false, false, false, "reduced".into()))
     );
 }
 
@@ -842,12 +1142,12 @@ async fn a_redaction_interrupted_before_the_substrate_drop_completes_on_retry(po
     .expect("the Postgres half");
     assert_eq!(
         rig.copies(&act_id).await.l1,
-        Some((true, true, true)),
+        Some(true),
         "the crash left the substrate's residue"
     );
 
     let retry = rig.redact(actor, &act_id).await;
     assert_eq!(retry, redaction::Redacted::default());
-    assert_eq!(rig.copies(&act_id).await.l1, Some((false, false, false)));
+    assert_eq!(rig.copies(&act_id).await.l1, Some(false));
     assert_eq!(rig.units(&act_id).await.len(), 1);
 }

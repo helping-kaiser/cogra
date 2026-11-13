@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT author, act_id, state, payload IS NULL AS \"reaped!\",\n                author_pubkey, content_nonce, dependency_nonce, pre_signature\n         FROM staged_writes\n         WHERE id = $1 AND state IN ('awaiting_pre_sign', 'sealing')\n         FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "author",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "act_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "state",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "reaped!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "author_pubkey",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 5,
+        "name": "content_nonce",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 6,
+        "name": "dependency_nonce",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 7,
+        "name": "pre_signature",
+        "type_info": "Bytea"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "54c750cb93715233cbf4a9007f6740cfa42e676f0c4ae59bcf79a51a05e515ef"
+}

@@ -40,8 +40,8 @@ struct Rig {
 /// signed proposal, and the act the host sealed over it.
 struct Signed {
     id: String,
-    pre: common::l1::handshake::PreSignedProposal,
-    act: common::l1::handshake::VerifiedAct,
+    pre: common::l1::proposal::PreSigned,
+    act: common::l1::proposal::SealedAct,
 }
 
 impl Rig {
@@ -169,7 +169,7 @@ impl Rig {
                     .expect("b64"),
             )
             .expect("decodes");
-            let pre = key.pre_sign(proposal);
+            let pre = common::l1::proposal::PreSigned::sign(key, proposal);
             let sealed = self
                 .gql(
                     Some(token),
@@ -180,11 +180,11 @@ impl Rig {
                      }",
                     json!({ "input": { "proposals": [{
                         "stagedWriteId": id,
-                        "signature": B64.encode(wire::encode_pre_commitment_of(&pre)),
+                        "signature": B64.encode(pre.pre_commitment_blob().encode()),
                     }]}}),
                 )
                 .await;
-            let act = wire::decode_verified_act(
+            let act = common::l1::proposal::SealedAct::decode(
                 &B64.decode(
                     sealed["submitProposals"]["stagedWrites"][0]["verifiedAct"]
                         .as_str()
@@ -229,8 +229,9 @@ impl Rig {
     async fn approve(&self, token: &str, key: &ActorKey, signed: &[Signed]) {
         let host_key = self.standin.host_public_key().await.expect("host key");
         for write in signed {
-            let witness = key
-                .approve(&write.pre, &write.act, &host_key)
+            let witness = write
+                .pre
+                .approve(key, &write.act, &host_key)
                 .expect("approves");
             let approved = self
                 .gql(
@@ -666,15 +667,10 @@ async fn a_refused_seal_leaves_no_readable_pending_content(pool: PgPool) {
             .expect("b64"),
     )
     .expect("decodes");
-    let pre = key.pre_sign(proposal);
-    let mut forged = pre.pre_signature.clone();
-    forged[0] ^= 0xff;
+    let mut forged = common::l1::proposal::PreSigned::sign(&key, proposal).pre_commitment_blob();
+    forged.pre_signature[0] ^= 0xff;
     let refused = rig
-        .submit_pre_commitment(
-            &token,
-            staged_id,
-            &wire::encode_pre_commitment(&pre.nonce, &forged),
-        )
+        .submit_pre_commitment(&token, staged_id, &forged.encode())
         .await;
     assert_eq!(
         refused["submitProposals"]["userErrors"][0]["code"], "SIGNATURE_INVALID",
@@ -709,6 +705,140 @@ async fn a_refused_seal_leaves_no_readable_pending_content(pool: PgPool) {
     let retried = rig.listed(None, "first: 10").await;
     assert_eq!(retried.len(), 1, "the retry re-stages the content");
     assert_eq!(retried[0]["node"]["id"], post_id);
+}
+
+impl Rig {
+    /// Asserts a refused `submitProposals` entry left nothing behind: the
+    /// write still awaits its pre-signature, no content was staged on
+    /// screen, and the stand-in holds no row for the act.
+    async fn assert_refused_before_the_host(&self, token: &str, staged_id: &str, post_id: &str) {
+        let staged = self
+            .gql(
+                Some(token),
+                r#"query($id: UUID!) { stagedWrite(id: $id) { state } }"#,
+                json!({ "id": staged_id }),
+            )
+            .await;
+        assert_eq!(staged["stagedWrite"]["state"], "AWAITING_PRE_SIGN");
+        let post = self
+            .gql(
+                None,
+                r#"query($id: UUID!) { post(id: $id) { id } }"#,
+                json!({ "id": post_id }),
+            )
+            .await;
+        assert!(post["post"].is_null(), "nothing was staged: {post}");
+        let host_rows: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM l1_acts a JOIN staged_writes s ON s.act_id = a.act_id
+             WHERE s.id = $1::uuid",
+        )
+        .bind(staged_id)
+        .fetch_one(&self.pool)
+        .await
+        .expect("counts");
+        assert_eq!(host_rows, 0, "nothing reached the host");
+    }
+}
+
+/// A one-nonce pre-commitment blob — version 1, as a client that predates
+/// the two-nonce handshake sends it — is refused as BAD_INPUT, the same
+/// terminal refusal as any blob that does not decode: the API reads both
+/// nonces from the blob, and a version-1 frame has one. Nothing is
+/// recorded or relayed; the same write signed with a version-2 blob seals.
+///
+/// A version-1 pre-commitment blob is refused as bad input before anything reaches the host.
+/// ´claim:pending:a-one-nonce-blob-is-refused-as-bad-input´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_one_nonce_blob_is_refused_as_bad_input(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let prepared = rig.prepare_post(&token, "Old client", "body").await;
+    let post_id = prepared["preparePost"]["node"].as_str().expect("node");
+    let write = &prepared["preparePost"]["writes"][0];
+    let staged_id = write["id"].as_str().expect("id");
+    let proposal = wire::decode_proposal(
+        &B64.decode(write["canonicalProposal"].as_str().expect("proposal"))
+            .expect("b64"),
+    )
+    .expect("decodes");
+    let pre = common::l1::proposal::PreSigned::sign(&key, proposal);
+
+    let mut one_nonce = common::l1::encoding::Encoder::new();
+    one_nonce
+        .array(3)
+        .uint(1)
+        .bytes(&pre.content_nonce)
+        .bytes(&pre.pre_signature);
+    let refused = rig
+        .submit_pre_commitment(&token, staged_id, &one_nonce.finish())
+        .await;
+    let error = &refused["submitProposals"]["userErrors"][0];
+    assert_eq!(error["code"], "BAD_INPUT", "{refused}");
+    assert_eq!(error["message"], "not a pre-commitment blob");
+    rig.assert_refused_before_the_host(&token, staged_id, post_id)
+        .await;
+
+    let sealed = rig
+        .submit_pre_commitment(&token, staged_id, &pre.pre_commitment_blob().encode())
+        .await;
+    assert_eq!(
+        sealed["submitProposals"]["userErrors"],
+        json!([]),
+        "the version-2 blob seals: {sealed}"
+    );
+}
+
+/// A content nonce reused across two of one author's writes is refused as
+/// BAD_INPUT over the wire, before anything reaches the host — the API
+/// carries the pair and checks it (layer1-interface.md §8.2, "Entropy
+/// custody") — and the device's re-signature under fresh nonces seals.
+///
+/// A reused content nonce is refused as bad input over the wire, and the write re-signed under fresh nonces seals.
+/// ´claim:pending:a-reused-content-nonce-is-refused-as-bad-input´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_reused_content_nonce_is_refused_as_bad_input(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let first = rig.prepare_post(&token, "First", "body").await;
+    let used = rig
+        .pre_sign(&token, &key, &first["preparePost"]["writes"])
+        .await;
+    let second = rig.prepare_post(&token, "Second", "body").await;
+    let post_id = second["preparePost"]["node"].as_str().expect("node");
+    let write = &second["preparePost"]["writes"][0];
+    let staged_id = write["id"].as_str().expect("id");
+    let proposal = wire::decode_proposal(
+        &B64.decode(write["canonicalProposal"].as_str().expect("proposal"))
+            .expect("b64"),
+    )
+    .expect("decodes");
+    let reused = common::l1::proposal::PreSigned::sign_with_nonces(
+        &key,
+        proposal.clone(),
+        used[0].pre.content_nonce.clone(),
+        vec![0x5a; 32],
+    );
+    let refused = rig
+        .submit_pre_commitment(&token, staged_id, &reused.pre_commitment_blob().encode())
+        .await;
+    assert_eq!(
+        refused["submitProposals"]["userErrors"][0]["code"], "BAD_INPUT",
+        "{refused}"
+    );
+    rig.assert_refused_before_the_host(&token, staged_id, post_id)
+        .await;
+
+    let fresh = common::l1::proposal::PreSigned::sign(&key, proposal);
+    let sealed = rig
+        .submit_pre_commitment(&token, staged_id, &fresh.pre_commitment_blob().encode())
+        .await;
+    assert_eq!(
+        sealed["submitProposals"]["userErrors"],
+        json!([]),
+        "{sealed}"
+    );
 }
 
 /// A comment prepared against a pending post whose parent then expires:
@@ -756,13 +886,9 @@ async fn a_staging_failure_hands_the_write_back_instead_of_wedging_it(pool: PgPo
             .expect("b64"),
     )
     .expect("decodes");
-    let pre = commenter_key.pre_sign(proposal);
+    let pre = common::l1::proposal::PreSigned::sign(&commenter_key, proposal);
     let refused = rig
-        .submit_pre_commitment(
-            &commenter,
-            &staged_id,
-            &wire::encode_pre_commitment(&pre.nonce, &pre.pre_signature),
-        )
+        .submit_pre_commitment(&commenter, &staged_id, &pre.pre_commitment_blob().encode())
         .await;
     assert!(
         !refused["submitProposals"]["userErrors"]
@@ -1597,8 +1723,9 @@ async fn a_tag_on_content_that_never_lands_expires_with_it(pool: PgPool) {
     );
 
     let host_key = rig.standin.host_public_key().await.expect("host key");
-    let witness = reader_key
-        .approve(&signed[0].pre, &signed[0].act, &host_key)
+    let witness = signed[0]
+        .pre
+        .approve(&reader_key, &signed[0].act, &host_key)
         .expect("approves");
     let late = rig
         .gql(

@@ -7,6 +7,7 @@ use common::l1::Family;
 use common::l1::client::ActorKey;
 use common::l1::handshake::{Proposal, StructuralBody};
 use common::l1::identifier::NodeId;
+use common::l1::proposal::PreSigned;
 use l1_standin::{StandIn, StandInConfig};
 use postgres_store::mirror;
 use sqlx::PgPool;
@@ -50,10 +51,10 @@ async fn a_record_crosses_the_seam_into_the_mirror(pool: PgPool) {
 
     let proposal = registration(&actor);
     let act_id = proposal.body.act_id();
-    let pre = actor.pre_sign(proposal);
-    let sealed = boundary.seal(pre.clone()).await.expect("seals");
+    let pre = PreSigned::sign(&actor, proposal);
+    let sealed = boundary.seal(pre.submission()).await.expect("seals");
     let host_key = boundary.host_public_key().await.expect("host key");
-    let witness = actor.approve(&pre, &sealed, &host_key).expect("approves");
+    let witness = pre.approve(&actor, &sealed, &host_key).expect("approves");
     boundary.approve(witness).await.expect("approved");
 
     let outcome = api::ingest::ingest_pending(&boundary, &pool, 8)
@@ -108,10 +109,10 @@ async fn epoch_instants_cross_the_seam_and_missing_ones_are_filled(pool: PgPool)
             .credit_burn(&actor.address(), 10_000_000)
             .await
             .expect("burn");
-        let pre = actor.pre_sign(registration(&actor));
-        let sealed = boundary.seal(pre.clone()).await.expect("seals");
+        let pre = PreSigned::sign(&actor, registration(&actor));
+        let sealed = boundary.seal(pre.submission()).await.expect("seals");
         let host_key = boundary.host_public_key().await.expect("host key");
-        let witness = actor.approve(&pre, &sealed, &host_key).expect("approves");
+        let witness = pre.approve(&actor, &sealed, &host_key).expect("approves");
         boundary.approve(witness).await.expect("approved");
         standin.close_epoch().await.expect("closes");
     }
@@ -214,10 +215,10 @@ async fn an_empty_epoch_crosses_the_seam(pool: PgPool) {
         .expect("burn");
     let proposal = registration(&actor);
     let act_id = proposal.body.act_id();
-    let pre = actor.pre_sign(proposal);
-    let sealed = boundary.seal(pre.clone()).await.expect("seals");
+    let pre = PreSigned::sign(&actor, proposal);
+    let sealed = boundary.seal(pre.submission()).await.expect("seals");
     let host_key = boundary.host_public_key().await.expect("host key");
-    let witness = actor.approve(&pre, &sealed, &host_key).expect("approves");
+    let witness = pre.approve(&actor, &sealed, &host_key).expect("approves");
     boundary.approve(witness).await.expect("approved");
     standin.close_epoch().await.expect("closes");
     let outcome = api::ingest::ingest_pending(&boundary, &pool, 8)

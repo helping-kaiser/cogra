@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO act_payloads (act_id, payload, content_nonce, content_salt)\n         VALUES ($1, $2, $3, $4)\n         ON CONFLICT (act_id) DO UPDATE\n         SET payload = EXCLUDED.payload, content_nonce = EXCLUDED.content_nonce,\n             content_salt = EXCLUDED.content_salt\n         WHERE act_payloads.payload_state = 'full'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bytea",
+        "Bytea",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "094f0bffdc54bc8c719df2126d8ca32c6659bb36a2b14b308c0f2f1823d4588e"
+}

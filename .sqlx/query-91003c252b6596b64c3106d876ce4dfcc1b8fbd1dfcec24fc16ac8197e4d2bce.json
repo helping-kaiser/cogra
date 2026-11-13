@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE staged_writes\n                 SET state = 'awaiting_pre_sign',\n                     deps = ARRAY(\n                         SELECT DISTINCT d COLLATE \"C\" AS d\n                         FROM unnest(deps || ARRAY[$2, $3]::TEXT[]) AS u(d)\n                         ORDER BY d\n                     ),\n                     prepared_epoch = (SELECT last_epoch FROM mirror_epoch_cursor),\n                     updated_at = NOW()\n                 WHERE actor_id = $1 AND state = 'carried'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "91003c252b6596b64c3106d876ce4dfcc1b8fbd1dfcec24fc16ac8197e4d2bce"
+}

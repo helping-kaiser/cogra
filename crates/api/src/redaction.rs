@@ -93,11 +93,15 @@ pub struct Redacted {
     /// archive: the act was already redacted, or carried no bytes.
     pub archived: Option<Uuid>,
     /// The carriage row was missing and the landed staged row still held
-    /// the payload, so it was promoted before anything was reaped.
+    /// the payload, so this call promoted it before anything was reaped.
+    /// A row an ingestion committed after this transaction's first read
+    /// is found, not promoted, and does not count.
     pub promoted_first: bool,
-    /// This call moved the carriage row to `reduced`.
+    /// This call left the carriage `reduced`: it moved a full row there,
+    /// or recorded the reduced row of an act carried only in its sealed
+    /// staged copy.
     pub reduced: bool,
-    /// This call reaped the staged row's payload, salt and nonce.
+    /// This call reaped the staged row's payload, salt and content nonce.
     pub staged_reaped: bool,
     /// The assets whose last live placement this redaction removed.
     pub held_media: Vec<Uuid>,
@@ -195,7 +199,7 @@ impl Reduced {
 ///    copy of its payload — the admission Registration's handle, before
 ///    promotion carried it — gets its carriage row from that copy before
 ///    anything is reaped, or the reap would erase it with no archive.
-/// 2. **Archive** the unit: envelope, content salt, proposal nonce, the
+/// 2. **Archive** the unit: envelope, content nonce, content salt, the
 ///    witness, and the media the envelope names (data-model.md "The
 ///    retention archive") — from the carriage while it is full. An act
 ///    that has not landed is archived from its staged copy once sealed,
@@ -203,9 +207,14 @@ impl Reduced {
 ///    never reached Layer 1 and can never land, so it is not archived.
 ///    An act already reduced, or one that never carried bytes, archives
 ///    nothing.
-/// 3. **Reduce** the carriage row: payload and salt to NULL, state
-///    `reduced`.
-/// 4. **Reap** the staged row: payload, content salt and nonce to NULL.
+/// 3. **Reduce** the carriage row: payload, content nonce and salt to
+///    NULL, state `reduced`. An act carried so far only in its sealed
+///    staged copy gets its carriage row recorded `reduced` here: the row
+///    is the record's payload mark, and a record landing later must read
+///    marked from its first read, as one landing first and reduced after.
+/// 4. **Reap** the staged row: payload, content salt and content nonce to
+///    NULL. A full-empty payload is left as it is (see
+///    [`staged::reap_payload`]).
 ///
 /// Every read runs on that transaction's connection: an engine holding
 /// one pooled connection for the transaction never waits on a second one
@@ -225,15 +234,25 @@ pub async fn reduce_in(
     }
 
     let mut done = Redacted::default();
+    let carried_before = carriage.is_some();
     let carriage = match (carriage, &copy) {
         (Some(c), _) => Some(c),
         (None, Some(copy)) if copy.state == staged::StagedState::Landed.as_str() => {
-            match (&copy.payload, &copy.content_salt) {
-                (Some(payload), Some(salt)) if !payload.is_empty() => {
-                    content_store::insert_act_payload(tx, r.act_id, payload, salt).await?;
-                    done.promoted_first = true;
+            match (&copy.payload, &copy.content_nonce, &copy.content_salt) {
+                (Some(payload), Some(nonce), Some(salt)) if !payload.is_empty() => {
+                    done.promoted_first = content_store::insert_act_payload(
+                        tx,
+                        r.act_id,
+                        content_store::CarriedPair {
+                            payload,
+                            content_nonce: nonce,
+                            content_salt: salt,
+                        },
+                    )
+                    .await?;
                     Some(content_store::ActPayload {
                         payload: Some(payload.clone()),
+                        content_nonce: Some(nonce.clone()),
                         content_salt: Some(salt.clone()),
                         reduced: false,
                         reduced_at: None,
@@ -246,12 +265,20 @@ pub async fn reduce_in(
     };
 
     let source = match &carriage {
-        Some(c) => c.payload.clone().map(|p| (p, c.content_salt.clone())),
-        None => copy
-            .as_ref()
-            .and_then(|s| s.payload.clone().map(|p| (p, s.content_salt.clone()))),
+        Some(c) => c.payload.clone().map(|p| Source {
+            envelope: p,
+            content_nonce: c.content_nonce.clone(),
+            content_salt: c.content_salt.clone(),
+        }),
+        None => copy.as_ref().and_then(|s| {
+            s.payload.clone().map(|p| Source {
+                envelope: p,
+                content_nonce: s.content_nonce.clone(),
+                content_salt: s.content_salt.clone(),
+            })
+        }),
     };
-    let witness = match source.as_ref().filter(|(p, _)| !p.is_empty()) {
+    let witness = match source.as_ref().filter(|s| !s.envelope.is_empty()) {
         None => None,
         Some(_) => match mirror::payload_witness(tx, r.act_id).await? {
             Some(witness) => Some(witness),
@@ -259,15 +286,16 @@ pub async fn reduce_in(
         },
     };
     let mut media_ids = Vec::new();
-    if let (Some((envelope, content_salt)), Some(witness)) = (source, witness) {
-        let media = unit_media(tx, r.actor_id, &envelope).await?;
+    let carries_bytes = source.as_ref().is_some_and(|s| !s.envelope.is_empty());
+    if let (Some(source), Some(witness)) = (source, witness) {
+        let media = unit_media(tx, r.actor_id, &source.envelope).await?;
         media_ids = media.iter().map(|m| m.media_id).collect();
         let data = json!({
-            "unit": 1,
+            "unit": UNIT_FORMAT,
             "act_id": r.act_id,
-            "envelope": hex::encode(&envelope),
-            "content_salt": content_salt.as_deref().map(hex::encode),
-            "nonce": copy.as_ref().and_then(|s| s.nonce.as_deref()).map(hex::encode),
+            "envelope": hex::encode(&source.envelope),
+            "content_nonce": source.content_nonce.as_deref().map(hex::encode),
+            "content_salt": source.content_salt.as_deref().map(hex::encode),
             "witness": hex::encode(&witness),
             "media": media.iter().map(UnitMedia::to_json).collect::<Vec<_>>(),
         });
@@ -286,11 +314,33 @@ pub async fn reduce_in(
     }
 
     done.reduced = content_store::reduce_act_payload(tx, r.act_id).await?;
+    let sealed_copy = copy
+        .as_ref()
+        .is_some_and(|s| s.content_commitment.is_some());
+    if !carried_before && !done.promoted_first && carries_bytes && sealed_copy {
+        content_store::insert_reduced_act_payload(tx, r.act_id, None).await?;
+        done.reduced = true;
+    }
     done.staged_reaped = staged::reap_payload(tx, r.act_id).await? > 0;
     Ok(Reduced {
         done,
         media: media_ids,
     })
+}
+
+/// The archive unit's format version (data-model.md "The retention
+/// archive"). Unit 2 holds the content pair — envelope and content nonce —
+/// and the content salt: the nonce and envelope reproduce the content
+/// pre-digest, and the salt with it opens the witness over the act
+/// identifier and the record's pre-commitment.
+pub const UNIT_FORMAT: u64 = 2;
+
+/// What a unit is archived from: the carriage while it is full, else the
+/// staged copy.
+struct Source {
+    envelope: Vec<u8>,
+    content_nonce: Option<Vec<u8>>,
+    content_salt: Option<Vec<u8>>,
 }
 
 /// One asset an archived envelope names: both digests the record

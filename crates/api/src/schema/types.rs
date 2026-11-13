@@ -896,7 +896,9 @@ impl Record {
         self.0.position
     }
 
-    /// Whether the act committed a non-empty payload.
+    /// Whether the act carried a non-empty payload: CoGra carries it, full
+    /// or reduced. An empty payload, or one CoGra does not carry, reads
+    /// false.
     async fn payload_marked(&self) -> bool {
         self.0.payload_marked
     }
@@ -1079,7 +1081,11 @@ impl PreparedWrite {
     /// carries everything the author asserts — endpoints, parameters,
     /// dependency list, payload bytes. The device checks it against the
     /// gesture its user ordered and recomputes every signing base from
-    /// it: the user never signs blind bytes.
+    /// it: the user never signs blind bytes. Deterministic CBOR
+    /// `[1, body, payload, deps]`: the structural body's canonical bytes,
+    /// the payload bytes, and the dependency list as act identifiers,
+    /// strictly ascending bytewise by their text form. Its envelope
+    /// version is its own and is 1.
     async fn canonical_proposal(&self) -> String {
         B64.encode(wire::encode_proposal(&self.proposal))
     }
@@ -1130,18 +1136,20 @@ impl StagedWriteType {
     }
 
     /// The canonical proposal the handshake covers (base64) — the same
-    /// bytes prepare returned, re-readable after a lost response.
+    /// bytes prepare returned, re-readable after a lost response:
+    /// deterministic CBOR `[1, body, payload, deps]`. Its envelope
+    /// version is its own and is 1.
     async fn canonical_proposal(&self) -> String {
         B64.encode(wire::encode_proposal(&self.0.proposal))
     }
 
     /// The host-sealed verified act once the seal has returned (base64):
-    /// every host-added field the device verifies before approving. Null
-    /// in earlier states.
+    /// every host-added field the device verifies before approving, with
+    /// both salts. It carries neither the payload nor a nonce — the device
+    /// checks the commitments against what it holds itself. Null in
+    /// earlier states.
     async fn verified_act(&self) -> Option<String> {
-        self.0
-            .verified_act()
-            .map(|act| B64.encode(wire::encode_verified_act(&act)))
+        self.0.sealed_act().map(|act| B64.encode(act.encode()))
     }
 
     /// The accepted record once LANDED; null before.

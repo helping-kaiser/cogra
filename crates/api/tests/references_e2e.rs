@@ -12,7 +12,7 @@ use axum::http::Request;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use common::l1::client::ActorKey;
-use common::l1::handshake::Proposal;
+use common::l1::handshake::{Proposal, canonical_dep_list};
 use common::l1::identifier::ActId;
 use common::l1::wire;
 use http_body_util::BodyExt;
@@ -40,8 +40,8 @@ struct Citer {
 
 struct SignedWrite {
     id: String,
-    pre: common::l1::handshake::PreSignedProposal,
-    act: common::l1::handshake::VerifiedAct,
+    pre: common::l1::proposal::PreSigned,
+    act: common::l1::proposal::SealedAct,
 }
 
 impl Citer {
@@ -169,7 +169,7 @@ impl Citer {
                     .expect("b64"),
             )
             .expect("decodes");
-            let pre = key.pre_sign(proposal);
+            let pre = common::l1::proposal::PreSigned::sign(key, proposal);
             let sealed = self
                 .gql(
                     Some(token),
@@ -180,11 +180,11 @@ impl Citer {
                      }",
                     json!({ "input": { "proposals": [{
                         "stagedWriteId": id,
-                        "signature": B64.encode(wire::encode_pre_commitment_of(&pre)),
+                        "signature": B64.encode(pre.pre_commitment_blob().encode()),
                     }]}}),
                 )
                 .await;
-            let act = wire::decode_verified_act(
+            let act = common::l1::proposal::SealedAct::decode(
                 &B64.decode(
                     sealed["submitProposals"]["stagedWrites"][0]["verifiedAct"]
                         .as_str()
@@ -201,8 +201,9 @@ impl Citer {
     async fn approve(&self, token: &str, key: &ActorKey, signed: &[SignedWrite]) {
         let host_key = self.standin.host_public_key().await.expect("host key");
         for write in signed {
-            let witness = key
-                .approve(&write.pre, &write.act, &host_key)
+            let witness = write
+                .pre
+                .approve(key, &write.act, &host_key)
                 .expect("approves");
             let approved = self
                 .gql(
@@ -1667,7 +1668,7 @@ async fn citing_another_authors_pending_post_declares_its_mint_as_a_dependency(p
     let own_mint = batch[0].body.act_id();
     assert_eq!(
         batch[1].deps,
-        vec![own_mint, bobs_mint],
+        canonical_dep_list([own_mint, bobs_mint]),
         "the citation waits for the artifact it cites from and for its target"
     );
 }
@@ -1837,7 +1838,10 @@ async fn a_withdrawal_toward_a_pending_target_declares_its_mint(pool: PgPool) {
     let counters = proposals(&withdrawal["prepareReferenceWithdrawal"]["writes"]);
     assert!(!counters.is_empty());
     for counter in counters {
-        assert_eq!(counter.deps, vec![citation_act.clone(), mint.clone()]);
+        assert_eq!(
+            counter.deps,
+            canonical_dep_list([citation_act.clone(), mint.clone()])
+        );
     }
 }
 
@@ -1909,9 +1913,55 @@ async fn a_withdrawal_declares_the_in_flight_citations_it_nets(pool: PgPool) {
     assert_eq!(counters.len(), 1, "⌈0.6⌉ counter-records");
     assert_eq!(
         counters[0].deps,
-        vec![first, second],
-        "both in-flight citations, in staging order, and nothing landed"
+        canonical_dep_list([second, first]),
+        "both in-flight citations, in canonical order, and nothing landed"
     );
+}
+
+/// A gesture awaiting two in-flight acts carries them as one canonical
+/// list through the device's pre-signature and the host's act checks, and
+/// lands behind both once they are approved: the withdrawal counter
+/// netting two in-flight citations is the case that builds such a list.
+///
+/// A gesture declaring two in-flight acts seals with a canonical list and lands behind both.
+/// ´claim:references:a-gesture-awaiting-two-acts-lands-behind-both´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_gesture_awaiting_two_in_flight_acts_lands_behind_both(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (_, key) = rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+    let carrier = rig.plain_post(&token, &key, "carrier").await;
+    let cited = rig.plain_post(&token, &key, "cited").await;
+    let weak = json!({ "relevance": 0.2, "support": 0.2 });
+    let mut in_flight = Vec::new();
+    for _ in 0..2 {
+        let prepared = rig.cite_from(&token, &carrier, &cited, weak.clone()).await;
+        let writes = &prepared["prepareReference"]["writes"];
+        in_flight.extend(rig.pre_sign(&token, &key, writes).await);
+    }
+    let netted: Vec<ActId> = in_flight.iter().map(|w| w.pre.act_id()).collect();
+
+    let withdrawal = rig
+        .gql(
+            Some(&token),
+            WITHDRAW_REFERENCE,
+            json!({ "input": { "artifact": carrier, "target": cited }}),
+        )
+        .await;
+    let writes = &withdrawal["prepareReferenceWithdrawal"]["writes"];
+    let counters = proposals(writes);
+    assert_eq!(counters.len(), 1, "⌈0.4⌉ counter-records");
+    assert_eq!(counters[0].deps, canonical_dep_list(netted));
+    let counter = writes[0]["id"].as_str().expect("id").to_string();
+    let signed = rig.pre_sign(&token, &key, writes).await;
+    rig.approve(&token, &key, &signed).await;
+    rig.approve(&token, &key, &in_flight).await;
+    rig.close_and_ingest().await;
+
+    for write in &in_flight {
+        assert_eq!(rig.staged_state(&token, &write.id).await, json!("LANDED"));
+    }
+    assert_eq!(rig.staged_state(&token, &counter).await, json!("LANDED"));
 }
 
 /// The behavior the declaration buys. The bundle stands at one landed

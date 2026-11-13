@@ -147,7 +147,7 @@ impl Rig {
                     .expect("b64"),
             )
             .expect("decodes");
-            let pre = key.pre_sign(proposal);
+            let pre = common::l1::proposal::PreSigned::sign(key, proposal);
             let sealed = self
                 .gql(
                     Some(token),
@@ -158,17 +158,17 @@ impl Rig {
                      }",
                     json!({ "input": { "proposals": [{
                         "stagedWriteId": id,
-                        "signature": B64.encode(wire::encode_pre_commitment_of(&pre)),
+                        "signature": B64.encode(pre.pre_commitment_blob().encode()),
                     }]}}),
                 )
                 .await;
             let staged = &sealed["submitProposals"]["stagedWrites"][0];
-            let act = wire::decode_verified_act(
+            let act = common::l1::proposal::SealedAct::decode(
                 &B64.decode(staged["verifiedAct"].as_str().expect("sealed"))
                     .expect("b64"),
             )
             .expect("decodes");
-            let witness = key.approve(&pre, &act, &host_key).expect("approves");
+            let witness = pre.approve(key, &act, &host_key).expect("approves");
             let approved = self
                 .gql(
                     Some(token),

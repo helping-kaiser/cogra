@@ -3,8 +3,10 @@
 //! Epoch close and publication (layer1-interface.md §11.6, §8.3, §11.7).
 //!
 //! Selection among valid ordered sequences is host discretion (§11.6):
-//! this host takes approved acts in approval order, defers any act whose
-//! declared dependencies or asserted parents are not yet in history,
+//! this host takes approved acts in approval order, leaves out any act
+//! whose stored dependency list no longer opens its dependency commitment
+//! (§8.2, "Approval witness"), defers any act whose declared dependencies
+//! or asserted parents are not yet in history,
 //! defers any act whose author cannot pay θ (W1 — the author stays free
 //! to burn and land later), and caps the epoch at the act budget. The
 //! W2a/W2b evaluation points are here so the real substrate's verdicts
@@ -80,6 +82,7 @@ use common::l1::handshake::{
     MarkerPolicy, PublishedLeg, PublishedRecord, Ratio, WallStep,
 };
 use common::l1::identifier::NodeId;
+use common::l1::proposal::dependency_commitment;
 use sqlx::PgConnection;
 
 use crate::seal::{projection_legs, stored_body};
@@ -87,14 +90,13 @@ use crate::wall::DECLARATION;
 use crate::{StandIn, StandInError};
 
 /// One approved act as the selection sees it: the parsed body plus the
-/// three columns publication carries. Where the row came from is the
-/// caller's business.
+/// columns publication carries. Where the row came from is the caller's
+/// business.
 #[derive(Debug, Clone)]
 pub(crate) struct Candidate {
     pub act_id: String,
     pub author: String,
     pub body: common::l1::StructuralBody,
-    pub payload_len: usize,
     pub payload_witness: Vec<u8>,
     /// Declared dependencies and causal parents together — every act this
     /// one must follow.
@@ -330,7 +332,6 @@ pub(crate) fn select_and_order(
             epoch,
             act_time: *act_time,
             position,
-            payload_marked: candidate.payload_len > 0,
             payload_witness: candidate.payload_witness.clone(),
             legs: published_legs,
         });
@@ -396,7 +397,10 @@ fn linearizes(
 /// Closes the current epoch: loads the approved acts and the ledger state,
 /// runs [`select_and_order`], and persists what it returns (§11.6, §8.3,
 /// §11.7). The lock taken first serializes concurrent closes on the epoch
-/// table.
+/// table. An approved act whose dependency opening does not match
+/// ([`dependency_opening_matches`]) never reaches the selection: it stays
+/// approved, unordered, exactly as a deferred act does, and an act that
+/// depends on it defers with it.
 ///
 /// Persisted with the accepted acts' causal keys and legs: the θ-debit and
 /// count increment, consummated at the writing epoch's price and never
@@ -425,7 +429,7 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, Stand
     let rows = sqlx::query!(
         "SELECT act_id, author, seq, family, middle, target, p_d, p_i,
                 settlement_ref, license, asserted_parents, deps,
-                payload_len, content_commitment
+                pre_commitment, deps_salt, deps_commitment, content_commitment
          FROM l1_acts WHERE status = 'approved'
          ORDER BY approved_at, act_id",
     )
@@ -434,16 +438,27 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, Stand
 
     let mut candidates = Vec::with_capacity(rows.len());
     for row in &rows {
+        let body = stored_body!(row).to_body()?;
+        if !dependency_opening_matches(
+            &body.act_id(),
+            &row.pre_commitment,
+            &row.deps_salt,
+            &row.deps,
+            &row.deps_commitment,
+        ) {
+            tracing::warn!(
+                act_id = %row.act_id,
+                "dependency opening does not match its commitment; not ordered in this close"
+            );
+            continue;
+        }
         let parents = causal_parents(&row.asserted_parents, row.settlement_ref.as_ref());
         let mut prerequisites = row.deps.clone();
         prerequisites.extend(parents.iter().cloned());
         candidates.push(Candidate {
             act_id: row.act_id.clone(),
             author: row.author.clone(),
-            body: stored_body!(row).to_body()?,
-            payload_len: usize::try_from(row.payload_len).map_err(|_| {
-                StandInError::Formation(format!("stored act {} has a negative length", row.act_id))
-            })?,
+            body,
             payload_witness: row.content_commitment.clone(),
             prerequisites,
             parents,
@@ -478,6 +493,29 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, Stand
     tx.commit().await?;
 
     Ok(package)
+}
+
+/// Whether a stored act's dependency opening — the act identifier, the
+/// pre-commitment, the dependency salt and the list — still recomputes the
+/// dependency commitment it was sealed and approved under
+/// (layer1-interface.md §8.2, "Approval witness": the host rejects from
+/// candidate ordering an act whose dependency opening no longer matches).
+/// A list that no longer parses opens nothing, so it does not match.
+pub(crate) fn dependency_opening_matches(
+    act_id: &common::l1::ActId,
+    pre_commitment: &[u8],
+    salt: &[u8],
+    deps: &[String],
+    commitment: &[u8],
+) -> bool {
+    let Ok(deps) = deps
+        .iter()
+        .map(|d| common::l1::ActId::parse(d))
+        .collect::<Result<Vec<_>, _>>()
+    else {
+        return false;
+    };
+    dependency_commitment(act_id, pre_commitment, salt, &deps).as_slice() == commitment
 }
 
 /// The ledger state a selection reads, loaded under the close's lock: every
@@ -640,14 +678,12 @@ fn publishable(package: &EpochPackage) -> Result<(), StandInError> {
 /// loop is tens of thousands of round trips inside it. Returns the epoch
 /// row's close instant — the boundary timestamp the package attests.
 ///
-/// Acceptance ends the host's handshake custody: the payload, its content
-/// salt and the proposal nonce are nulled together in the statement that
-/// accepts, and the row keeps its length and both commitments. The nonce
-/// goes with them because the public pre-commitment is formed over it and
-/// the payload, so a kept nonce would let anyone confirm a guessed
-/// payload. The nonce's digest stays, so its non-reuse is still checked
-/// at the author's later seals, and the dependency salt stays — the
-/// ordering fraud proof opens it (data-model.md "Act payload carriage").
+/// Acceptance drops the content salt in the statement that accepts: it is
+/// opening material of the content commitment, which the carriage layer
+/// holds (layer1-interface.md §8.4, "Custody across phases"), and the row
+/// keeps both commitments. The dependency opening — list, nonce and salt —
+/// stays: the ordering fraud proof opens the dependency commitment from
+/// it (§8.2, "Ordering fraud proof").
 async fn persist(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     epoch: i64,
@@ -684,7 +720,7 @@ async fn persist(
     sqlx::query!(
         "UPDATE l1_acts SET status = 'accepted', epoch = $1,
                 act_time = published.act_time, position = published.position,
-                payload = NULL, content_salt = NULL, nonce = NULL
+                content_salt = NULL
            FROM UNNEST($2::TEXT[], $3::BIGINT[], $4::BIGINT[])
                 AS published(act_id, act_time, position)
           WHERE l1_acts.act_id = published.act_id",
@@ -904,7 +940,7 @@ async fn load_epoch(
 ) -> Result<EpochPackage, StandInError> {
     let rows = sqlx::query!(
         r#"SELECT act_id, author, family, act_time AS "act_time!",
-                  position AS "position!", payload_len, content_commitment,
+                  position AS "position!", content_commitment,
                   asserted_parents, settlement_ref
            FROM l1_acts WHERE epoch = $1 AND status = 'accepted'
            ORDER BY position"#,
@@ -974,7 +1010,6 @@ async fn load_epoch(
             epoch,
             act_time: row.act_time,
             position: row.position,
-            payload_marked: row.payload_len > 0,
             payload_witness: row.content_commitment,
         });
     }
@@ -1015,7 +1050,6 @@ mod tests {
             act_id: body.act_id().to_string(),
             author: author.to_string(),
             body,
-            payload_len: 0,
             payload_witness: vec![],
             prerequisites: prerequisites.iter().map(|p| p.to_string()).collect(),
             parents: vec![],
@@ -1276,7 +1310,6 @@ mod tests {
             act_id: body.act_id().to_string(),
             author: "alice".to_string(),
             body,
-            payload_len: 0,
             payload_witness: vec![],
             prerequisites: vec![],
             parents: vec![],
@@ -1391,6 +1424,36 @@ mod tests {
         ));
     }
 
+    /// The opening matches exactly the list it was committed over: a
+    /// reordered, shortened or unparseable list opens nothing.
+    ///
+    /// A dependency opening matches only the exact list its commitment was formed over.
+    /// ´claim:close:a-dependency-opening-matches-only-its-own-list´
+    #[test]
+    fn a_dependency_opening_matches_only_its_own_list() {
+        let act = ActId::new("alice", 4, Family::Opinion).expect("valid");
+        let (pre, salt) = ([7u8; 32], [9u8; 32]);
+        let list = vec![id("bob", 10), id("bob", 9)];
+        let parsed: Vec<ActId> = list
+            .iter()
+            .map(|d| ActId::parse(d).expect("valid"))
+            .collect();
+        let commitment = dependency_commitment(&act, &pre, &salt, &parsed);
+        let opens =
+            |deps: &[String]| dependency_opening_matches(&act, &pre, &salt, deps, &commitment);
+        assert!(opens(&list));
+        assert!(!opens(&[list[1].clone(), list[0].clone()]));
+        assert!(!opens(&list[..1]));
+        assert!(!opens(&["not an act".to_string(), list[1].clone()]));
+        assert!(!dependency_opening_matches(
+            &act,
+            &pre,
+            &[0u8; 32],
+            &list,
+            &commitment
+        ));
+    }
+
     /// One generated candidate: author, target node, whether it is a hyper
     /// act through a middle node, and which earlier candidates or history
     /// acts it must follow.
@@ -1479,7 +1542,6 @@ mod tests {
                     act_id: ids[seq].clone(),
                     author: AUTHORS[s.author].to_string(),
                     body,
-                    payload_len: 0,
                     payload_witness: vec![],
                     prerequisites,
                     parents: vec![],

@@ -2315,8 +2315,16 @@ type Mutation {
 	seal returns synchronously the payload's staged writes are
 	already AWAITING_APPROVAL, verified act included. Verification
 	failures surface as SIGNATURE_INVALID userErrors per proposal.
-	Resubmitting a sealed proposal is idempotent only for the exact
-	signature that was sealed; differing bytes refuse as BAD_INPUT.
+	Resubmitting a proposal already submitted is idempotent only for
+	the exact signature first submitted; differing bytes refuse as
+	BAD_INPUT.
+	
+	The API carries the content pair, so it checks the pair before
+	relaying anything: a content nonce or dependency nonce of the wrong
+	length, a content nonce equal to the dependency nonce or already
+	used for another of the author's acts, or a payload past M_payload
+	refuses the write as BAD_INPUT. Nothing is sent to L1 and the
+	pre-commitment is not recorded.
 	
 	A carried write the landing released signs only once every asset
 	it names is published to the live store; the submit runs that
@@ -3156,7 +3164,11 @@ type PreparedWrite {
 	carries everything the author asserts — endpoints, parameters,
 	dependency list, payload bytes. The device checks it against the
 	gesture its user ordered and recomputes every signing base from
-	it: the user never signs blind bytes.
+	it: the user never signs blind bytes. Deterministic CBOR
+	`[1, body, payload, deps]`: the structural body's canonical bytes,
+	the payload bytes, and the dependency list as act identifiers,
+	strictly ascending bytewise by their text form. Its envelope
+	version is its own and is 1.
 	"""
 	canonicalProposal: String!
 	"""
@@ -3180,9 +3192,10 @@ type PreparedWrite {
 input ProposalSignatureInput {
 	stagedWriteId: UUID!
 	"""
-	The pre-commitment blob (base64): the device's private nonce and
-	pre-commitment signature — produced with the actor's device-held
-	key; opaque to this API.
+	The pre-commitment blob (base64): the device's content nonce, its
+	dependency nonce and the pre-commitment signature, produced with the
+	actor's device-held key. The API carries the content nonce beside
+	the payload and never sends it to Layer 1.
 	"""
 	signature: String!
 }
@@ -3676,7 +3689,9 @@ type Record {
 	"""
 	position: Int!
 	"""
-	Whether the act committed a non-empty payload.
+	Whether the act carried a non-empty payload: CoGra carries it, full
+	or reduced. An empty payload, or one CoGra does not carry, reads
+	false.
 	"""
 	payloadMarked: Boolean!
 	"""
@@ -4537,13 +4552,17 @@ type StagedWrite {
 	family: RecordFamily!
 	"""
 	The canonical proposal the handshake covers (base64) — the same
-	bytes prepare returned, re-readable after a lost response.
+	bytes prepare returned, re-readable after a lost response:
+	deterministic CBOR `[1, body, payload, deps]`. Its envelope
+	version is its own and is 1.
 	"""
 	canonicalProposal: String!
 	"""
 	The host-sealed verified act once the seal has returned (base64):
-	every host-added field the device verifies before approving. Null
-	in earlier states.
+	every host-added field the device verifies before approving, with
+	both salts. It carries neither the payload nor a nonce — the device
+	checks the commitments against what it holds itself. Null in
+	earlier states.
 	"""
 	verifiedAct: String
 	"""

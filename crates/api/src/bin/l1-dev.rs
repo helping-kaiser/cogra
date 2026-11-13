@@ -24,6 +24,7 @@ use common::l1::Family;
 use common::l1::client::ActorKey;
 use common::l1::handshake::{FIRST_EPOCH, Proposal, StructuralBody};
 use common::l1::identifier::NodeId;
+use common::l1::proposal::PreSigned;
 use l1_standin::StandIn;
 use postgres_store::mirror;
 
@@ -61,6 +62,11 @@ struct SubmitArgs {
 /// tool counts upward from 0 until seal accepts. Good enough for a hand
 /// tool.
 ///
+/// The tool talks to the stand-in directly, past the API that carries
+/// content pairs, so a payload it submits is committed through its content
+/// pre-digest and carried nowhere: its record reads unmarked
+/// (data-model.md "Act payload carriage").
+///
 /// Only an occupied author sequence is worth probing past. `Conflict`
 /// carries a free-text cause, so discarding it would spend sixty-five
 /// thousand signed round trips on a conflict that was never about the
@@ -87,11 +93,11 @@ async fn submit(standin: &StandIn, actor: &ActorKey, args: SubmitArgs) -> anyhow
             deps: vec![],
         };
         let act_id = proposal.body.act_id();
-        let pre = actor.pre_sign(proposal);
-        match standin.seal(pre.clone()).await {
+        let pre = PreSigned::sign(actor, proposal);
+        match standin.seal(pre.submission()).await {
             Ok(sealed) => {
-                let witness = actor
-                    .approve(&pre, &sealed, &host_key)
+                let witness = pre
+                    .approve(actor, &sealed, &host_key)
                     .map_err(|e| anyhow::anyhow!("client-side approval failed: {e}"))?;
                 standin.approve(witness).await?;
                 println!("approved: {act_id}");

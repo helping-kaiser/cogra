@@ -16,6 +16,7 @@
 
 use std::collections::HashMap;
 
+use common::l1::handshake::canonical_dep_list;
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::content::{Comment, Post};
 use postgres_store::{PgPool, auth as store, content as content_store, hashtag as hashtag_store};
@@ -137,20 +138,18 @@ impl ResolvedNode {
 
 /// The dependency list a gesture declares: the acts the site already
 /// orders it behind, plus each named node's minting act while that is in
-/// flight (a [`ResolvedNode::awaits`]). Duplicates collapse, because a
-/// dependency named twice orders nothing further and still spends the
-/// substrate's per-act dependency budget.
+/// flight (a [`ResolvedNode::awaits`]), as the canonical list the host
+/// accepts: in [`common::l1::handshake::dependency_order`], with duplicates
+/// collapsed.
 pub fn deps_awaiting<'a>(
     site: &[ActId],
     awaits: impl IntoIterator<Item = &'a Option<ActId>>,
 ) -> Vec<ActId> {
-    let mut deps = site.to_vec();
-    for act in awaits.into_iter().flatten() {
-        if !deps.contains(act) {
-            deps.push(act.clone());
-        }
-    }
-    deps
+    canonical_dep_list(
+        site.iter()
+            .cloned()
+            .chain(awaits.into_iter().flatten().cloned()),
+    )
 }
 
 /// The content row an L2 id names, or `None` when it names no content.
@@ -281,5 +280,23 @@ mod tests {
             vec![own],
             "a profile awaits nothing; a repeat orders nothing further"
         );
+    }
+
+    /// Whatever order the site and the awaited mints arrive in, and however often one repeats, the list comes out canonical.
+    /// ´claim:nodes:a-gesture-dependency-list-is-canonical´
+    #[test]
+    fn the_dependency_list_comes_out_canonical() {
+        let (nine, ten, carol) = (act("bob", 9), act("bob", 10), act("carol", 0));
+        let deps = deps_awaiting(
+            &[carol.clone(), nine.clone()],
+            [
+                &Some(ten.clone()),
+                &Some(carol.clone()),
+                &None,
+                &Some(nine.clone()),
+            ],
+        );
+        assert_eq!(deps, vec![ten, nine, carol]);
+        assert!(common::l1::handshake::is_canonical_dep_list(&deps));
     }
 }

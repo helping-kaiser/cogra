@@ -43,7 +43,7 @@ entry's existence and destruction are both private.
 
 One Postgres table, one row per redacted entity. A graph-side
 redaction writes one row per redacted **act**, holding it as one
-unit: its envelope, the private value and proposal nonce its
+unit: its envelope, the content nonce and content salt its
 witness was formed over, and a reference list of the media the
 envelope names — held together and hard-deleted together. A
 Postgres-side redaction writes the prior row contents.
@@ -68,8 +68,8 @@ Postgres-side redaction writes the prior row contents.
 
 An archived payload stays **verifiable against the public
 record**: the redacted record's structural part and witness are
-permanent on the shared graph, and the archived payload and
-private value reproduce that commitment — so an archive row can
+permanent on the shared graph, and the archived payload, content
+nonce and content salt reproduce that commitment — so an archive row can
 be proven to hold exactly the content that was removed, and
 nothing can be substituted into it after the fact. The unit is
 written in the same transaction that removes the payload from

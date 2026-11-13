@@ -1389,7 +1389,10 @@ pub enum Landing {
 /// the winning vouch and its path landed, flips the account to member, and
 /// releases the acts carried with the application as one batch (seam 099
 /// ruling 73): each gains the dependencies `[admission Registration,
-/// winning vouch]` and moves to `awaiting_pre_sign` for the device to sign
+/// winning vouch]`, its list kept in the canonical order the host accepts
+/// (bytewise over the identifiers' text, duplicates collapsed —
+/// `common::l1::handshake::dependency_order`, which `COLLATE "C"` is), and
+/// moves to `awaiting_pre_sign` for the device to sign
 /// without a prompt, its GC window starting now. Nothing outside this
 /// transaction can ever release them, so the batch is released exactly
 /// once, by the landing that completes the ceremony. The same
@@ -1464,7 +1467,11 @@ pub async fn evaluate_landing(
             let released = sqlx::query!(
                 "UPDATE staged_writes
                  SET state = 'awaiting_pre_sign',
-                     deps = deps || ARRAY[$2, $3]::TEXT[],
+                     deps = ARRAY(
+                         SELECT DISTINCT d COLLATE \"C\" AS d
+                         FROM unnest(deps || ARRAY[$2, $3]::TEXT[]) AS u(d)
+                         ORDER BY d
+                     ),
                      prepared_epoch = (SELECT last_epoch FROM mirror_epoch_cursor),
                      updated_at = NOW()
                  WHERE actor_id = $1 AND state = 'carried'",
