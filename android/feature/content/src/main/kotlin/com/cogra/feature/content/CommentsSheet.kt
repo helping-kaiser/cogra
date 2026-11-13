@@ -318,7 +318,7 @@ fun CommentsSheet(
     // (CommentMenuOwn.md:11): the menu closes and the dialog comes up over the
     // thread, which stays where the reader opened the menu.
     var removeFor by remember { mutableStateOf<CommentView?>(null) }
-    // WHICH COMMENT'S REPORT CONFIRM IS UP (CommentMenu.md:31): stacked over
+    // WHICH COMMENT'S REPORT CONFIRM IS UP (CommentMenu.md:29): stacked over
     // the thread, its aftermath on the thread's own snackbar.
     var reportFor by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
@@ -728,7 +728,7 @@ internal fun commentMenuRows(
         add(MenuRow(stringResource(R.string.content_menu_remove), tag(CommentMenuRow.Remove, "remove"), onRemove))
     }
     // The two readings stand whatever their counts and open for a guest
-    // (CommentMenu.md:27, :33); their sheets are not built on this client yet.
+    // (CommentMenu.md:25, :33); their sheets are not built on this client yet.
     add(MenuRow(stringResource(R.string.content_menu_cited_by), tag(CommentMenuRow.CitedBy, "cited_by")) {})
     add(MenuRow(stringResource(R.string.content_menu_opinions), tag(CommentMenuRow.Opinions, "opinions")) {})
     add(MenuRow(stringResource(R.string.content_menu_license), tag(CommentMenuRow.License, "license"), onLicense))
