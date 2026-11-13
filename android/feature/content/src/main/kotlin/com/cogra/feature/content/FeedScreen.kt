@@ -98,6 +98,7 @@ import com.cogra.core.designsystem.v2.media.ScrollStageRow
 import com.cogra.core.designsystem.v2.media.SurfaceCover
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.domain.CommentView
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
@@ -276,6 +277,9 @@ fun FeedRoute(
             onEditPost = onEditPost,
             onCitePost = onCitePost,
             onEditComment = onEditComment,
+            commentsReturn = commentsReturn,
+            onCommentsReturnConsumed = onCommentsReturnConsumed,
+            rereadComment = rememberCommentReread(),
             stanceControl = nodeStanceControl,
             saved = rememberSavedWrites(),
             onRequireAccount = onRequireAccount,
@@ -494,6 +498,11 @@ fun FeedScreen(
      * through a view model this screen keeps out of its own signature.
      */
     reportSheet: ReportSheetSlot = { _, _, _ -> },
+    /** What came back from a comment edit or reply signed off the feed — see [CommentsReturn]. */
+    commentsReturn: CommentsReturn = CommentsReturn(),
+    onCommentsReturnConsumed: () -> Unit = {},
+    /** One comment read afresh, for the card an edit signed off the thread settles ([EditReturn]). */
+    rereadComment: suspend (String) -> CommentView? = { null },
     /**
      * The app's one Saved overlay (`SavedWrites`), which the cards' menus
      * save through; null stands their Save rows inert.
@@ -538,6 +547,9 @@ fun FeedScreen(
     // so the feed is left and re-entered rather than covered — and the
     // thread has to be standing again when the reader comes back.
     var commentsFor by rememberSaveable { mutableStateOf<String?>(null) }
+    // AN OWN COMMENT CARD'S EDIT RETURNS TO THE FEED, the card settling in place,
+    // as on every host ([EditReturn]); a return no thread takes is consumed here.
+    val editReturn = rememberEditReturn(commentsReturn, commentsFor != null, rereadComment, onCommentsReturnConsumed)
     // THE NEXT PAGE ARRIVES BECAUSE THE READER KEPT GOING — no Show more,
     // no page numbers, nothing drawn at rest (design readme §13, the same
     // rule web's `infinite-list.ts` cites). `listState` is the Compose
@@ -605,6 +617,7 @@ fun FeedScreen(
         reveals = state.reveals,
         onOpenComments = { commentsFor = it },
         onReport = { reportFor = it },
+        editReturn = editReturn,
     )
     val tagActions = TagCardActions(
         onOpen = onOpenTopic,
