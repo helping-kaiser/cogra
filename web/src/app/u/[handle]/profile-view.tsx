@@ -87,6 +87,8 @@ import { opensVouchBackOn, VOUCHED_IN_PATH, vouchBackVariant } from "@/lib/vouch
 import { useComfortLine } from "@/lib/saved/comfort-line";
 import { useHostSnack } from "@/lib/saved/save-row";
 import { RowLine } from "@/lib/ui/row-line";
+import { useProfileChange, useProfileChangesLanded } from "@/lib/profile/profile-change";
+import { useSlowAnswer } from "@/lib/ui2/waiting-commit";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { backFor, personOrigin } from "@/lib/ui/back-origin";
 import { opinionsHref } from "@/lib/profile/opinions-route";
@@ -352,6 +354,17 @@ export function ProfileScreen({
     refresh(filter);
   }, [refresh, filter, releasePin]);
   usePullToRefresh({ host, onPull });
+
+  // A profile change taken after its seal closed: the head reads the profile
+  // again and shows the change (Profile.jsx's `change` chip: "Taken, the line
+  // goes, the head shows the change").
+  const landed = useProfileChangesLanded();
+  const landedSeen = useRef(landed);
+  useEffect(() => {
+    if (landed === landedSeen.current || handle !== null) return;
+    landedSeen.current = landed;
+    return refresh("keep");
+  }, [landed, handle, refresh]);
 
   const onFilter = (next: ChronicleFilter) => {
     if (next === filter || profile === null) return;
@@ -674,6 +687,7 @@ export function ProfileScreen({
             {/* THE ROW LINE IN THE ACTIONS ROW (design digest item 46): a save or
                 unsave of this person that did not go through. */}
             {comfort !== null && <RowLine state={comfort} testId="profile-row-line" />}
+            {own && <ProfileChangeLine />}
           </div>
           <TabBar
             tabs={CHRONICLE_TABS}
@@ -886,5 +900,28 @@ function ChronicleAct({
       node={node}
       testId={`chronicle-row-${row.id}`}
     />
+  );
+}
+
+/**
+ * The line under one's own head for a profile change whose seal was closed
+ * while it signed (ProfileEditSeal.md; Profile.jsx's `change` chip; backlog
+ * 165 closed by (a)): `Signing…` in the pending marker's quiet register once
+ * 200ms pass without an answer, then — if it did not sign — `That didn't
+ * sign.` in the failure voice with `Retry`, which asks the same change to
+ * sign again. Never the snackbar for the failure; nothing stands here
+ * otherwise. The board's head line pads 8 / 16 / 12.
+ */
+export function ProfileChangeLine() {
+  const change = useProfileChange();
+  const waited = useSlowAnswer(change?.kind === "signing");
+  if (change === null || (change.kind === "signing" && !waited)) return null;
+  return (
+    <div className="pb-3 pt-2">
+      <RowLine
+        state={change.kind === "signing" ? { kind: "signing" } : { kind: "didntSign", onRetry: change.retry }}
+        testId="profile-change-line"
+      />
+    </div>
   );
 }

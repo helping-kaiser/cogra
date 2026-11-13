@@ -8,7 +8,7 @@
 // be two implementations of one gesture. Their way IN is the stage's own:
 // `+ Add a tag` and `+ Cite something` open the two pickers (TagPicker,
 // ReferencePicker) the wizard draws in the stage's place. Here they set a
-// staged pair in its sheet (`pairs="sheet"`: TagPadCompose, RefPair), and the
+// staged pair in its sheet (TagPadCompose, RefPair), and the
 // wizard's state moves only when that sheet's Done hands the pair out.
 //
 // THE UPLOAD STATE IS BOARDED (ComposeUploading, 2026-08-31): rings on the
@@ -30,7 +30,6 @@ import { instance, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
 import { publishedMarkerText } from "@/lib/compose/published-match";
-import { TAG_BATCH_CAP } from "@/lib/topics/normalize";
 import { REFERENCE_BATCH_CAP } from "@/lib/references/normalize";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
@@ -186,10 +185,8 @@ export function DetailsStep({
         tags={tags}
         onChange={onTags}
         fieldErrors={tagErrors}
-        cap={TAG_BATCH_CAP}
         testIdPrefix="wizard"
         node={{ path: "composeDetails.tags" }}
-        pairs="sheet"
         onOpenPicker={onOpenTagPicker}
       />
       <ReferenceEntryField
@@ -204,18 +201,6 @@ export function DetailsStep({
       />
 
       <div className="flex-1" />
-      {/* Why the seal may wait, said before the reader reaches it rather than
-          as a refusal when they get there — and only while something is still
-          going up: `ComposeUploading` draws it, the stage at rest
-          (`ComposeDetails`) does not. */}
-      {mode === "media" && assets.some((asset) => thumbState(asset).progress !== undefined) && (
-        <p
-          data-testid="wizard-upload-aside"
-          className="m-0 text-center text-label-small text-on-surface-variant"
-        >
-          Pictures upload while you write — signing waits for them.
-        </p>
-      )}
       <PillButton
         testId="wizard-next"
         node={{ path: "composeDetails.next" }}
@@ -260,9 +245,6 @@ function CoverField({ onOpen }: { onOpen: () => void }) {
       <InlineAction size="sm" testId="wizard-cover-door" onClick={onOpen}>
         Add a cover
       </InlineAction>
-      <p className="m-0 text-label-small text-on-surface-variant">
-        It plays the moment it is on screen, so it starts on its own first frame.
-      </p>
     </div>
   );
 }

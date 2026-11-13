@@ -712,9 +712,7 @@ describe("PostView", () => {
     expect(screen.getByTestId("postDetail.reportSheet.title")).toHaveTextContent(
       "Report this post?",
     );
-    expect(screen.getByTestId("postDetail.reportSheet.body")).toHaveTextContent(
-      "It goes to the people who run CoGra for a look.",
-    );
+    expect(screen.queryByTestId("postDetail.reportSheet.body")).toBeNull();
     expect(targets).toEqual([]);
 
     fireEvent.click(screen.getByTestId("postDetail.reportSheet.report"));
@@ -1172,9 +1170,8 @@ describe("PostView", () => {
       expect(screen.getByTestId(byNode("postDetail.card.removalMark.line"))).toHaveTextContent(
         "Removed by its author",
       );
-      expect(screen.getByTestId(byNode("postDetail.card.removalMark.detail"))).toHaveTextContent(
-        "The words and pictures are gone. The post's place in the thread, and every response, remain.",
-      );
+      // The line and its date, no detail sentence (seam 314).
+      expect(screen.queryByTestId(byNode("postDetail.card.removalMark.detail"))).toBeNull();
       expect(screen.getByTestId(byNode("postDetail.card.removalMark.when"))).toHaveTextContent("now");
       // Removed.md:9 — never the platform's words.
       expect(mark).not.toHaveTextContent("Removed under the platform's rules");
@@ -1525,7 +1522,7 @@ describe("PostView", () => {
       await waitFor(() => expect(screen.queryByTestId("postDetail.dialog")).not.toBeInTheDocument());
       expect(removals).toEqual(["rec-c1"]);
       expect(mark).toHaveTextContent("Removed by its author");
-      expect(mark).toHaveTextContent("The comment's place in the thread, and every response, remain.");
+      expect(mark).not.toHaveTextContent("The comment's place in the thread");
       expect(mark).toHaveTextContent("now");
       const card = screen.getByTestId("post-comment-c1");
       expect(card).not.toHaveTextContent("Mine");
@@ -2998,9 +2995,12 @@ describe("PostView", () => {
       await addTagThroughPicker("a-b");
       fireEvent.click(screen.getByTestId("commentEdit.sign"));
 
+      // A refused NAME reads as the picker's own line, never the server's
+      // text (jakob 2026-11-13; TagPickerRefused).
       expect(await screen.findByTestId("comment-edit-tag-error-0")).toHaveTextContent(
-        "Something in this wasn't accepted",
+        "A tag name is letters, digits, dot, dash and underscore.",
       );
+      expect(screen.getByTestId("comment-edit-tag-error-0")).not.toHaveTextContent(/topic name/);
       expect(signer.signStaged).not.toHaveBeenCalled();
       // The editor stays open on the work that was refused.
       expect(screen.getByTestId("commentEdit.words.input")).toBeInTheDocument();

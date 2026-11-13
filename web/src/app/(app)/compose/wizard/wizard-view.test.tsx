@@ -683,7 +683,9 @@ describe("the compose wizard", () => {
   // CW-43 (jakob 2026-08-31, design-session-answers q26, readme §13): the
   // ruled short form ends on its own dash — the pick screen right below is
   // already the rest of the sentence.
-  it("names the fresh-start route in the ruled short form", async () => {
+  // Seam 314 (round 42): the offer names no fresh-start route — the pick step
+  // under it already is one.
+  it("offers the draft without an Or start fresh line", async () => {
     const held: WizardState = {
       ...emptyWizard(),
       mode: "words",
@@ -692,11 +694,9 @@ describe("the compose wizard", () => {
     };
     render(fakeDrafts(held));
 
-    // Exact text, not a substring match: the old full sentence also started
-    // with these same words, which is exactly the regression this pins.
-    expect((await screen.findByTestId("wizard-draft-fresh")).textContent).toBe(
-      "Or start fresh —",
-    );
+    expect(await screen.findByTestId("wizard-draft-card")).toHaveTextContent("Salt maps");
+    expect(screen.queryByTestId("wizard-draft-fresh")).toBeNull();
+    expect(screen.queryByText(/Or start fresh/)).toBeNull();
   });
 
   // -- The Reference affordance (D20) --
@@ -1744,10 +1744,13 @@ describe("the pick step's round-22 laws", () => {
     expect(removes).toEqual(["Remove picture 1", "Remove picture 2"]);
   });
 
-  it("keeps the caption while three tiles leave it room, and drops it past that", async () => {
+  // Seam 314 (round 42; ComposePick.jsx draws `PickTray` with no caption): a
+  // picture tray carries no caption at any count — the Cover badge says it.
+  it("draws a picture tray without a caption, and clips its row past four tiles", async () => {
     render();
     await pick(["a.jpg", "b.jpg", "c.jpg"]);
-    expect(screen.getByTestId("wizard-tray-caption")).toHaveTextContent("The first one is the cover.");
+    expect(screen.queryByTestId("wizard-tray-caption")).toBeNull();
+    expect(screen.queryByText("The first one is the cover.")).toBeNull();
     await pick(["d.jpg"]);
     expect(screen.queryByTestId("wizard-tray-caption")).toBeNull();
     // Clipped at the band's edge, never a scroll box.

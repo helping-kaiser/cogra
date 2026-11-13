@@ -16,12 +16,26 @@
    one rule every page a profile's card opens follows (`Back to your profile`
    from a card on the reader's own).
 
+   THE `name` CHIP DRAWS THE HEAD'S NAME BY ITS TWO-LINE RULE (seam 318; jakob
+   2026-11-13: "i prefer the shrunk 2 line version over the 3 liner"): the
+   name is always shown whole on at most two lines, shrunk to the largest
+   whole pixel that holds two where it would take more, its leading
+   round(size × 28 / 22) (`ProfileHeader`'s `nameFitSize`). Each value carries
+   the size the rule gives its sample, measured at the head's 262px:
+   `sample` @ada's name, one line at 22px; `two-lines` 40 characters, two
+   lines at 22px; `fifty` the 50-character name in four words, 19px on 24px;
+   `one-word` a 50-character unbroken name, broken inside the word, 20px on
+   25px; `widest` 50 × W without a space, 10px on 13px — the widest legal
+   name. Two lines are the hard cap: the size has no floor (jakob 2026-11-13).
    REGISTERED under the `profile` prefix (design ⇄ impl seam 059/061): another
    person's page is the same surface as your own, named by the same body
    names. */
 export const NODE = "profile";
-export const PROPS = { from: { editor: "enum", options: ["feed", "profile"], default: "feed" } };
-export const VALS = `backLabel: this.props.from === "profile" ? "Back to the profile" : "Back to feed"`;
+export const PROPS = {
+  from: { editor: "enum", options: ["feed", "profile"], default: "feed" },
+  name: { editor: "enum", options: ["sample", "two-lines", "fifty", "one-word", "widest"], default: "sample" },
+};
+export const VALS = `backLabel: this.props.from === "profile" ? "Back to the profile" : "Back to feed", displayName: this.props.name === "two-lines" ? "Maximiliana Wilhelmina Featherstonehaugh" : this.props.name === "fifty" ? "Maximiliana Wilhelmina Featherstonehaugh Okonkwoli" : this.props.name === "one-word" ? "MaximilianaWilhelminaFeatherstonehaughOkonkwoLiang" : this.props.name === "widest" ? "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW" : "Ada Okonkwo", nameSize: this.props.name === "fifty" ? "19px" : this.props.name === "one-word" ? "20px" : this.props.name === "widest" ? "10px" : "var(--text-title-large)", nameLineHeight: this.props.name === "fifty" ? "24px" : this.props.name === "one-word" ? "25px" : this.props.name === "widest" ? "13px" : "var(--text-title-large--line-height)"`;
 export function Screen() {
-  return <ProfileOtherBody backLabel="{{backLabel}}" />;
+  return <ProfileOtherBody backLabel="{{backLabel}}" displayName="{{displayName}}" nameSize="{{nameSize}}" nameLineHeight="{{nameLineHeight}}" />;
 }
