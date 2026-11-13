@@ -60,7 +60,7 @@ export function tierOf(tiers: readonly LicenseTier[], value: number): LicenseTie
 /**
  * THE READER'S READINGS, not the author's (`LicenseChooser.jsx:36-49`;
  * copy-voice.md "The license block"). The chooser's hints address the author
- * declaring the terms — "Every use credits you" — which on a read surface told
+ * declaring the terms — "Commercial uses credit you" — which on a read surface told
  * a reuser they were owed the credit they in fact owe. So the read side has its
  * own table, in the reuser's voice, one line per axis.
  *
