@@ -720,7 +720,9 @@ function DetailHeader({ items, node }) {
    reaches for on their own work. It takes the first row on every menu that
    has it, post, comment and profile alike: the thumb learns one position, and
    the one menu that also holds Remove is the last place to move the rows
-   around. The license closes this menu as it closes the others. */
+   around — save where a control moved off the card into the menu: that row
+   takes the first place (`ReaderPostMenuNarrow`'s `Share this post`; jakob
+   2026-11-13, M3). The license closes this menu as it closes the others. */
 const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {}, node: "license" };
 /* CITING RIDES THIS MENU TOO (backlog item 100, ruled the batch-rulings
    round). `CARD_MENU`'s own note says citing acts on the thing itself,

@@ -1287,7 +1287,10 @@ spelling — one `License terms` everywhere, never the British spelling:
 - `Save` while a thing is not kept, `Unsave` while it is — one word
   either way (jakob 2026-09-11). It is the FIRST row of every menu that
   has it, a post's, a comment's, a person's and your own post's alike,
-  so the thumb learns one position. A control says what the next tap
+  so the thumb learns one position — except where a control moved off
+  the card into the menu: that row takes the first place, and Save comes
+  second (`ReaderPostMenuNarrow`'s `Share this post`; jakob 2026-11-13,
+  M3). A control says what the next tap
   will do (§3), which is why the kept state is a verb and never the
   word *Saved* sitting there as a status — and nothing outside the menu
   shows it, so this row is the only place a reader learns whether a
