@@ -2995,9 +2995,12 @@ describe("PostView", () => {
       await addTagThroughPicker("a-b");
       fireEvent.click(screen.getByTestId("commentEdit.sign"));
 
+      // A refused NAME reads as the picker's own line, never the server's
+      // text (jakob 2026-11-13; TagPickerRefused).
       expect(await screen.findByTestId("comment-edit-tag-error-0")).toHaveTextContent(
-        "Something in this wasn't accepted",
+        "A tag name is letters, digits, dot, dash and underscore.",
       );
+      expect(screen.getByTestId("comment-edit-tag-error-0")).not.toHaveTextContent(/topic name/);
       expect(signer.signStaged).not.toHaveBeenCalled();
       // The editor stays open on the work that was refused.
       expect(screen.getByTestId("commentEdit.words.input")).toBeInTheDocument();

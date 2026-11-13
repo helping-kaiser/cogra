@@ -6,6 +6,7 @@ package com.cogra.app.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -24,6 +25,7 @@ import com.cogra.feature.profile.INVITES_ORIGIN
 import com.cogra.feature.profile.ProfileEditRoute
 import com.cogra.feature.profile.avatar.AvatarFlowRoute
 import com.cogra.feature.stance.kept.KeptPicksRoute
+import com.cogra.feature.content.R as ContentR
 
 /** The task flows: what a tab's stack holds that owns the whole screen. */
 internal fun NavGraphBuilder.taskFlows(shell: ShellScope) {
@@ -177,6 +179,17 @@ private fun ShellScope.ComposeDestination(entry: NavBackStackEntry) {
 @Composable
 private fun ShellScope.ReplyDestination(entry: NavBackStackEntry) {
     val route = entry.toRoute<ReplyWizard>()
+    // THE COMPOSER NEVER OPENS FOR AN APPLICANT (ReplyEntry.md:25): the thread's
+    // doors answer in place, and an entry that reached the stack past them
+    // leaves it, saying the line once — the post wizard's own guard above.
+    if (applicant) {
+        val line = stringResource(ContentR.string.content_comment_locked)
+        LaunchedEffect(entry.id) {
+            if (navController.currentBackStackEntry?.id == entry.id) navController.popBackStack()
+            announce(line)
+        }
+        return
+    }
     ReplyWizardRoute(
         target = ReplyTarget(
             id = route.targetId,
