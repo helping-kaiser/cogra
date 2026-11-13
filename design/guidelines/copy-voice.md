@@ -1467,7 +1467,10 @@ the review fixes' lines, jakob 2026-10-01), all of them (the last flags cleared 
   25: `ProfileUnreachable`, `Notifications`, the two pickers, search);
   the deletion mail's landing, whose act is a confirm, says `Can't reach
   the server — the deletion can't be confirmed right now.` over its `Try
-  again` (`DeleteAccountConfirmed`). A
+  again` (`DeleteAccountConfirmed`); the reset link's landing, whose
+  check signs nothing, says `Can't reach the server — this page can't
+  load right now.` over `Retry` (`ResetNew`'s `link` chip; *worded by the
+  round-48 lane, to be blessed*). A
   fault line never says "try again" beside a control that does it, so the
   long line, `Can't reach the server. Check your connection and try
   again.`, is `TransportError`'s fallback for a surface that names no
@@ -1497,7 +1500,7 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
 - `RATE_LIMITED` — in place, in SignInError's slot. Sign-in's login
   backoff says the drawn line, `Too many tries in a row. Wait a moment,
   then try again.` (`SignInLimited`); every other visible one — the
-  registration, the reset, the token confirms, and the email change's
+  registration, the reset and its link's check, the token confirms, and the email change's
   request and resend once the account's mail budget is spent (jakob
   2026-10-06) — says `Too many tries. Wait a little, then try again.`
   (jakob 2026-10-05). The submit stays.
