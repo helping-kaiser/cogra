@@ -1099,9 +1099,6 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
         .expect("reads record")
         .expect("record");
     assert!(record.payload_marked);
-    // The mark is read off carriage, so it alone proves only that a row
-    // exists. The row is the act's own carriage when it opens the
-    // record's published witness.
     let id = body.act_id();
     let (nonce, salt) = sqlx::query_as::<_, (Vec<u8>, Vec<u8>)>(
         "SELECT content_nonce, content_salt FROM act_payloads WHERE act_id = $1",
@@ -1121,7 +1118,7 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
         common::l1::proposal::content_commitment(&id, &stored.pre_commitment, &salt, &pre_digest)
             .to_vec(),
         record.payload_witness,
-        "the carriage opens the record's witness"
+        "the mark alone proves only that a carriage row exists; this one opens the record's witness"
     );
     assert_eq!(record.target().expect("leg").target, own_mint);
 }

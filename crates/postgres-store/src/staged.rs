@@ -652,9 +652,12 @@ async fn transition(
 /// Accepts a retry from `sealing` (a relay that died between recording
 /// and sealing) — `pre_signed_at` is set only the first time, so a retry
 /// gets back the same instant rather than moving it. The retry must
-/// carry the recorded leg byte for byte; a different one is refused as
-/// [`StagedError::PreSignMismatch`]. A write a redaction reaped is
-/// refused as [`StagedError::Reaped`].
+/// carry the recorded leg byte for byte, because a write in `sealing`
+/// may already be at the host under that leg: a different one would put
+/// its nonces beside the other leg's salts, and is refused as
+/// [`StagedError::PreSignMismatch`]. The caller loaded the write before
+/// this transaction's lock, so a redaction may have reaped it since; a
+/// reaped write is refused as [`StagedError::Reaped`].
 ///
 /// The content nonce's non-reuse is checked in the same transaction, a
 /// carriage obligation (layer1-interface.md §8.2, "Entropy custody"): its
@@ -684,14 +687,9 @@ pub async fn record_pre_signed(
         drop(tx);
         return Err(missed_transition(pool, id, "awaiting_pre_sign or sealing").await);
     };
-    // The caller loaded the write before this lock; a redaction may have
-    // reaped it since. A reaped write can no longer be signed.
     if row.reaped {
         return Err(StagedError::Reaped(id));
     }
-    // A write in `sealing` may already be at the host under the recorded
-    // leg. Only a byte-identical retry may run again; a different leg
-    // would put its nonces beside the other leg's salts.
     if row.state == StagedState::Sealing.as_str() {
         let recorded = (
             row.author_pubkey.as_deref(),

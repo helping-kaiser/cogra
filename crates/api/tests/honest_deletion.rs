@@ -633,8 +633,7 @@ async fn a_redaction_racing_the_ingestion_of_its_act_ends_reduced_in_either_orde
     };
     let settle = || tokio::time::sleep(std::time::Duration::from_millis(500));
 
-    // The ingestion promotes first, the redaction starts before it commits.
-    let mut ingesting = rig.pool.begin().await.expect("begins");
+    let mut ingesting = rig.pool.begin().await.expect("the ingestion begins first");
     content_store::promote_staged_carriage(&mut ingesting, std::slice::from_ref(&first))
         .await
         .expect("promotes");
@@ -644,8 +643,7 @@ async fn a_redaction_racing_the_ingestion_of_its_act_ends_reduced_in_either_orde
     let done = racing.await.expect("joins").expect("redacts");
     assert!(done.reduced && done.staged_reaped);
 
-    // The redaction runs first, the promotion starts before it commits.
-    let mut redacting = rig.pool.begin().await.expect("begins");
+    let mut redacting = rig.pool.begin().await.expect("the redaction begins first");
     let by = actor.to_string();
     let reduced = redaction::reduce_in(
         &mut redacting,
@@ -695,7 +693,10 @@ async fn a_redaction_racing_the_ingestion_of_its_act_ends_reduced_in_either_orde
             .await
             .expect("reads")
             .expect("landed");
-        assert!(record.payload_marked, "{act_id}: the reduced row marks the record");
+        assert!(
+            record.payload_marked,
+            "{act_id}: the reduced row marks the record"
+        );
     }
 }
 
@@ -787,7 +788,10 @@ async fn a_redacted_empty_payload_act_lands_with_no_carriage_and_unmarked(pool: 
         .await
         .expect("reads")
         .expect("landed");
-    assert!(!record.payload_marked, "an act that carried no bytes reads unmarked");
+    assert!(
+        !record.payload_marked,
+        "an act that carried no bytes reads unmarked"
+    );
 }
 
 /// The admission Registration's handle reaches carriage at its landing
