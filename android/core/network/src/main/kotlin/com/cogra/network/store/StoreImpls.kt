@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import kotlinx.coroutines.flow.map
 
 @Serializable
@@ -38,9 +39,25 @@ private data class StoredTokens(
 private data class StoredHandshake(
     val proposal: String,
     val authorPubkey: String,
-    val nonce: String,
+    val contentNonce: String,
+    val dependencyNonce: String,
     val preSignature: String,
 )
+
+/**
+ * The field only a one-nonce handshake record carries. Such a record is
+ * whole and readable — nothing was lost — but nothing this device signs
+ * can approve under it, so it reads as absent without marking storage.
+ */
+private const val ONE_NONCE_FIELD = "nonce"
+
+private fun isOneNonceRecord(text: String): Boolean = try {
+    json.parseToJsonElement(text).jsonObject.let { it.containsKey(ONE_NONCE_FIELD) && "contentNonce" !in it }
+} catch (_: SerializationException) {
+    false
+} catch (_: IllegalArgumentException) {
+    false
+}
 
 private val json = Json
 
@@ -159,16 +176,20 @@ class IdentityStoreImpl @Inject constructor(
         handshakePrefix()?.let { prefix -> store.get(prefix + stagedWriteId) }?.let { bytes ->
             // Garbage material reads as absent — marked, never fatal; the
             // signer treats a missing handshake as its own degraded case.
+            // A one-nonce record reads as absent too, unmarked: it is the
+            // earlier handshake's whole record, not lost storage.
+            val text = bytes.decodeToString()
             try {
-                val stored = json.decodeFromString<StoredHandshake>(bytes.decodeToString())
+                val stored = json.decodeFromString<StoredHandshake>(text)
                 PreSignedProposal(
                     proposal = decodeProposal(unb64(stored.proposal)),
                     authorPubkey = unb64(stored.authorPubkey),
-                    nonce = unb64(stored.nonce),
+                    contentNonce = unb64(stored.contentNonce),
+                    dependencyNonce = unb64(stored.dependencyNonce),
                     preSignature = unb64(stored.preSignature),
                 )
             } catch (_: SerializationException) {
-                store.markStorageLost()
+                if (!isOneNonceRecord(text)) store.markStorageLost()
                 null
             } catch (_: WireException) {
                 store.markStorageLost()
@@ -184,7 +205,8 @@ class IdentityStoreImpl @Inject constructor(
         val stored = StoredHandshake(
             proposal = b64(encodeProposal(pre.proposal)),
             authorPubkey = b64(pre.authorPubkey),
-            nonce = b64(pre.nonce),
+            contentNonce = b64(pre.contentNonce),
+            dependencyNonce = b64(pre.dependencyNonce),
             preSignature = b64(pre.preSignature),
         )
         store.put(

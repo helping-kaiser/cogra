@@ -515,9 +515,13 @@ class StoresTest {
 
         val restored = checkNotNull(identity.handshake("w1"))
         assertThat(restored.proposal).isEqualTo(pre.proposal)
-        assertThat(restored.nonce).isEqualTo(pre.nonce)
+        assertThat(restored.contentNonce).isEqualTo(pre.contentNonce)
+        assertThat(restored.dependencyNonce).isEqualTo(pre.dependencyNonce)
         assertThat(restored.preSignature).isEqualTo(pre.preSignature)
         assertThat(restored.authorPubkey).isEqualTo(pre.authorPubkey)
+        // The whole record, so a store that swapped the two same-length
+        // nonces fails here too.
+        assertThat(restored).isEqualTo(pre)
 
         identity.clearHandshake("w1")
         assertThat(identity.handshakeIds()).containsExactly("w2")
@@ -689,6 +693,30 @@ class StoresTest {
         encrypted.put("acct:u1:handshake:w1", "not json".encodeToByteArray())
         assertThat(stores.identity.handshake("w1")).isNull()
         assertThat(StorageHealthImpl(dataStore).storageLost.first()).isTrue()
+    }
+
+    /**
+     * A record the one-nonce handshake wrote — whole and readable, but
+     * nothing the device signs now can approve under it. It reads as
+     * absent, so the signer takes its no-material path, and it is no loss
+     * of storage to report.
+     */
+    @Test
+    fun aOneNonceHandshakeRecordReadsAsAbsentWithoutMarkingTheLoss() = runTest {
+        val file = File(tmp.newFolder(), "test.preferences_pb")
+        val dataStore = PreferenceDataStoreFactory.create(scope = scope) { file }
+        val encrypted = EncryptedStore(dataStore, FakeCipher())
+        val stores = Stores(encrypted)
+        stores.signIn("u1")
+        val actor = ActorKey.generate()
+        val b64 = java.util.Base64.getEncoder()
+        val oneNonce = """{"proposal":"${b64.encodeToString(proposalOf(actor))}",""" +
+            """"authorPubkey":"${b64.encodeToString(actor.publicKeyBytes())}",""" +
+            """"nonce":"${b64.encodeToString(ByteArray(32) { 1 })}",""" +
+            """"preSignature":"${b64.encodeToString(ByteArray(64) { 2 })}"}"""
+        encrypted.put("acct:u1:handshake:w1", oneNonce.encodeToByteArray())
+        assertThat(stores.identity.handshake("w1")).isNull()
+        assertThat(StorageHealthImpl(dataStore).storageLost.first()).isFalse()
     }
 
     @Test

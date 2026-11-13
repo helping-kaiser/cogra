@@ -65,9 +65,9 @@ interface TokenStore {
  * survive process death: the actor seed (exportable — it goes into the
  * backup blob), the sealed backup blob awaiting a retried upload, and
  * the per-write handshake material the approve step verifies against
- * (the private nonce and pre-signature exist only on the device —
- * trusting the server's echo would weaken "the device verifies what it
- * signs").
+ * (the content nonce, the dependency nonce and the pre-signature exist
+ * only on the device — the sealed act carries no nonce, so "the device
+ * verifies what it signs" rests on this copy).
  *
  * Every value is bound to the account it belongs to, never to a
  * device-global slot (auth.md "Multi-account device custody"). The
@@ -90,7 +90,11 @@ interface IdentityStore {
 
     suspend fun clearPendingBackupBlob()
 
-    /** The pre-signed material of one staged write, keyed by its id. */
+    /**
+     * The pre-signed material of one staged write, keyed by its id, or
+     * null when this device holds none it can approve under — material of
+     * an earlier handshake shape reads as none.
+     */
     suspend fun handshake(stagedWriteId: String): PreSignedProposal?
 
     suspend fun saveHandshake(stagedWriteId: String, pre: PreSignedProposal)

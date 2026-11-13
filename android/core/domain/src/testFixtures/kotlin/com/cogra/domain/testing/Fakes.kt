@@ -1,28 +1,33 @@
 // Shared test doubles: in-memory stores, throwing repository bases to
 // override per test, and a minimal in-test host sealer that mirrors
-// what the backend's relay does — verify nothing, salt, commit, seal —
-// so orchestration tests exercise the real crypto chain end to end.
+// what the backend's relay does — check the pre-signature, salt, commit,
+// seal — so orchestration tests exercise the real crypto chain end to end.
 
 package com.cogra.domain.testing
 
 import com.cogra.crypto.ActId
 import com.cogra.crypto.ActorKey
-import com.cogra.crypto.EDITION
+import com.cogra.crypto.CONTENT_EDITION
+import com.cogra.crypto.DEPENDENCY_EDITION
 import com.cogra.crypto.Family
 import com.cogra.crypto.NodeId
 import com.cogra.crypto.PreSignedProposal
 import com.cogra.crypto.Proposal
 import com.cogra.crypto.SALT_LEN
+import com.cogra.crypto.SealedAct
 import com.cogra.crypto.StructuralBody
 import com.cogra.crypto.Tags
 import com.cogra.crypto.VerifiedAct
 import com.cogra.crypto.contentCommitment
+import com.cogra.crypto.contentPreDigest
 import com.cogra.crypto.decodePreCommitment
 import com.cogra.crypto.decodeProposal
-import com.cogra.crypto.depsCommitment
+import com.cogra.crypto.dependencyCommitment
+import com.cogra.crypto.dependencyPreDigest
 import com.cogra.crypto.encodeProposal
-import com.cogra.crypto.encodeVerifiedAct
+import com.cogra.crypto.encodeSealedAct
 import com.cogra.crypto.preCommitment
+import com.cogra.crypto.verifyDigest
 import com.cogra.domain.ActorRef
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AttachmentClaim
@@ -434,46 +439,37 @@ class FakeStorageHealth : StorageHealth {
     }
 }
 
-/** The backend's relay side, minimally: salt, commit, seal. */
+/**
+ * The backend's relay side, minimally: the API's carriage checks and
+ * content pre-digest (it holds the payload and the content nonce), then
+ * the host's authentication check, salts, commitments and seal.
+ */
 class TestHost {
     val key: ActorKey = ActorKey.generate()
 
     fun seal(canonicalProposal: ByteArray, preCommitmentBlob: ByteArray, authorPubkey: ByteArray): ByteArray {
         val proposal = decodeProposal(canonicalProposal)
-        val pre = decodePreCommitment(preCommitmentBlob)
-        val contentSalt = ByteArray(SALT_LEN) { 3 }
-        val depsSalt = ByteArray(SALT_LEN) { 4 }
+        val blob = decodePreCommitment(preCommitmentBlob)
+        require(blob.contentNonce.size == SALT_LEN && blob.dependencyNonce.size == SALT_LEN) { "nonce length" }
+        require(!blob.contentNonce.contentEquals(blob.dependencyNonce)) { "the content nonce repeats" }
         val actId = proposal.body.actId()
-        val formed = preCommitment(proposal, pre.nonce)
-        val unsealed = VerifiedAct(
-            proposal = proposal,
-            authorPubkey = authorPubkey,
-            nonce = pre.nonce,
-            preSignature = pre.preSignature,
+        val hC = contentPreDigest(actId, blob.contentNonce, proposal.payload)
+        val formed = preCommitment(proposal.body, hC, dependencyPreDigest(actId, blob.dependencyNonce, proposal.deps))
+        require(verifyDigest(authorPubkey, formed, blob.preSignature)) { "the pre-signature does not verify" }
+        val contentSalt = ByteArray(SALT_LEN) { 3 }
+        val dependencySalt = ByteArray(SALT_LEN) { 4 }
+        val act = VerifiedAct(
+            body = proposal.body,
             preCommitment = formed,
-            contentSalt = contentSalt,
-            depsSalt = depsSalt,
-            contentCommitment = contentCommitment(actId, formed, contentSalt, proposal.payload),
-            depsCommitment = depsCommitment(actId, formed, depsSalt, proposal.deps),
-            contentEdition = EDITION,
-            depsEdition = EDITION,
-            hostSeal = ByteArray(0),
+            preSignature = blob.preSignature,
+            contentCommitment = contentCommitment(actId, formed, contentSalt, hC),
+            dependencyCommitment = dependencyCommitment(actId, formed, dependencySalt, proposal.deps),
+            contentEdition = CONTENT_EDITION,
+            dependencyEdition = DEPENDENCY_EDITION,
         )
-        val sealed = VerifiedAct(
-            proposal = unsealed.proposal,
-            authorPubkey = unsealed.authorPubkey,
-            nonce = unsealed.nonce,
-            preSignature = unsealed.preSignature,
-            preCommitment = unsealed.preCommitment,
-            contentSalt = unsealed.contentSalt,
-            depsSalt = unsealed.depsSalt,
-            contentCommitment = unsealed.contentCommitment,
-            depsCommitment = unsealed.depsCommitment,
-            contentEdition = unsealed.contentEdition,
-            depsEdition = unsealed.depsEdition,
-            hostSeal = key.signTagged(Tags.HOST_SEAL, unsealed.sealMsg()),
+        return encodeSealedAct(
+            SealedAct(act, contentSalt, dependencySalt, key.signTagged(Tags.HOST_SEAL, act.sealMsg())),
         )
-        return encodeVerifiedAct(sealed)
     }
 }
 

@@ -2,10 +2,11 @@
 // submit → (await seal) → verify → approve → observe (architecture.md "The
 // write path"). A batch is checked against the gesture its user ordered
 // before its first pre-signature (Intent.kt).
-// Handshake material persists in the IdentityStore between the two
-// signatures so the flow survives process death without ever trusting
-// the server's echo of the nonce; `resume` picks up every persisted
-// handshake wherever it stopped.
+// Handshake material — both nonces and the pre-signature — persists in
+// the IdentityStore between the two signatures so the flow survives
+// process death; the server never returns a nonce, so the approve step
+// recomputes from what this device holds. `resume` picks up every
+// persisted handshake wherever it stopped.
 
 package com.cogra.domain.signing
 
