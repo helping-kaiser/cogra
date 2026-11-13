@@ -33,6 +33,7 @@ import { resetMuteForTests } from "@/lib/ui2/media/mute";
 import { StageHost } from "@/lib/ui2/media/stage-host";
 import { VideoPlayer } from "@/lib/ui2/media/video-player";
 import { resetVideoStageForTests } from "@/lib/ui2/media/video-stage";
+import { declared } from "@/test/css";
 import { byNode } from "@/test/data-node";
 import { fakeClampLayout } from "@/test/fake-clamp-layout";
 import { intersectEach, setsPageVisibility, suppressesAutoplay, turnsTheScreen, whenObserved } from "@/test/media-env";
@@ -196,11 +197,15 @@ describe("the stream's chrome (Reel.md:5-19)", () => {
     expect(screen.queryByTestId("reel-clip-transport")).toBeNull();
   });
 
+  // The chrome's offsets are declared against the shell's custom properties,
+  // which no test document defines — so their COMPUTED value is `auto`, as in
+  // a browser without the stylesheet. What the surface owes is the
+  // declaration itself, so these read the element's own style.
   it("the seek line rides directly above the bottom bar (Reel.md:13)", () => {
     mountStream();
-    expect(screen.getByTestId(byNode("reel.seekLine"))).toHaveStyle({
-      bottom: "calc(var(--bottom-bar-height) + env(safe-area-inset-bottom, 0px) + 4px)",
-    });
+    expect(screen.getByTestId(byNode("reel.seekLine")).style.bottom).toBe(
+      declared("bottom", "calc(var(--bottom-bar-height) + env(safe-area-inset-bottom, 0px) + 4px)"),
+    );
   });
 
   it("the_seek_target_rises_48dp_from_the_track_and_the_ink_stays_3px (Reel.md:15)", () => {
@@ -208,7 +213,7 @@ describe("the stream's chrome (Reel.md:5-19)", () => {
     const slider = screen.getByRole("slider", { name: "Seek" });
     expect(slider).toHaveStyle({ height: "3px" });
     const target = screen.getByTestId("reel-clip-timeline-target");
-    expect(target).toHaveStyle({ height: "var(--touch-target-min)" });
+    expect(target.style.height).toBe(declared("height", "var(--touch-target-min)"));
     expect(target.className).toMatch(/bottom-0/);
     expect(screen.queryByTestId("reel-clip-timeline-knob")).toBeNull();
   });
@@ -222,9 +227,9 @@ describe("the stream's chrome (Reel.md:5-19)", () => {
     // to 52px; the caption stands at 66, so `More`'s own 48px target — its
     // 20px ink grown 14px either side — meets the seek line's at 52 and never
     // reaches under it.
-    expect(caption()).toHaveStyle({
-      bottom: "calc(var(--bottom-bar-height) + env(safe-area-inset-bottom, 0px) + 66px)",
-    });
+    expect(caption().style.bottom).toBe(
+      declared("bottom", "calc(var(--bottom-bar-height) + env(safe-area-inset-bottom, 0px) + 66px)"),
+    );
     const SEEK_TOP = 4 + 48;
     const MORE_INK = 20;
     const MORE_GROWTH = (48 - MORE_INK) / 2;
