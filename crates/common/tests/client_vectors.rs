@@ -572,7 +572,12 @@ fn proposal_handshake_vectors(
         .expect("the reference host seals the submission");
     let content_commitment = crypto::sha256_tagged(
         proposal::tags::COMMIT_CONTENT,
-        &[id.as_bytes(), &pre_commitment, &content_salt, &digest_content],
+        &[
+            id.as_bytes(),
+            &pre_commitment,
+            &content_salt,
+            &digest_content,
+        ],
     );
     let deps_commitment = crypto::sha256_tagged(
         proposal::tags::COMMIT_DEPS,
