@@ -67,7 +67,7 @@ import {
 } from "@/lib/compose/wizard";
 import { captureFrames, captureFrameZero, probeVideo } from "@/lib/ui2/media/video";
 import { newComposeId } from "@/lib/compose/ids";
-import { POST_SCALE, screenPick, type PickRefusal } from "@/lib/compose/pick";
+import { holdBytes, POST_SCALE, screenPick, type PickRefusal } from "@/lib/compose/pick";
 import {
   composeDraftStore,
   draftIsWorthKeeping,
@@ -1159,7 +1159,13 @@ export function ComposeWizard({
             const frame = frames[index];
             if (frame) chooseCover(frame, index);
           }}
-          onPickPicture={(file) => chooseCover(file, COVER_FROM_PICTURE)}
+          // The face joins as its own bytes, as a picked picture does
+          // (`holdBytes`): its upload, and every Retry of it, reads those.
+          // A handle that reads nothing even now goes on as it is, and its
+          // upload says so with Retry.
+          onPickPicture={(file) =>
+            void holdBytes(file).then((held) => chooseCover(held ?? file, COVER_FROM_PICTURE))
+          }
           onNext={() => dispatch({ type: "advance" })}
         />
       )}
