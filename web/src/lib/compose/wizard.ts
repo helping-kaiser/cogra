@@ -789,11 +789,12 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       // The shape is the post's, so changing it re-frames every picture — and
       // re-framing happens against the ORIGINAL picture, never against the last
       // crop. The measured area is the previous shape's rectangle, so keeping
-      // it would bake the old shape into the upload; dropping it makes the
-      // cropper measure a fresh one from the media. Each picture keeps its
-      // scale and its place, and only the frame changes around it
-      // (`reshape`), so a reader who framed three pictures and then tried
-      // another shape keeps what they had chosen for each one.
+      // it would bake the old shape into the upload; `reshape` measures the
+      // new frame's in its place — for EVERY picture, since only the one on
+      // the stage has a cropper to measure it again. Each picture keeps its
+      // scale and its place, and only the frame changes around it, so a
+      // reader who framed three pictures and then tried another shape keeps
+      // what they had chosen for each one, in the upload too.
       if (action.shape === state.shape) return state;
       const to = POST_SHAPES[action.shape].ratio;
       return {
