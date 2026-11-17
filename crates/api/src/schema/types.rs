@@ -1084,8 +1084,9 @@ impl PreparedWrite {
     /// it: the user never signs blind bytes. Deterministic CBOR
     /// `[1, body, payload, deps]`: the structural body's canonical bytes,
     /// the payload bytes, and the dependency list as act identifiers,
-    /// strictly ascending bytewise by their text form. Its envelope
-    /// version is its own and is 1.
+    /// strictly ascending in Layer 1's componentwise order: author by
+    /// bytes, then sequence as a number, then family by bytes. Its
+    /// envelope version is its own and is 1.
     async fn canonical_proposal(&self) -> String {
         B64.encode(wire::encode_proposal(&self.proposal))
     }
