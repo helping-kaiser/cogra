@@ -1310,11 +1310,6 @@ Object.assign(FLOW_MARKERS, {
     // The kept cover's and the picked-cover copy's (round 46).
     { n: 7, find: ">Change the cover</button>", tag: "button", all: true },
     { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
-    // The `tag` chip's refused second tag (round 50): the same two controls
-    // every tag chip carries, and the line's Remove it.
-    { n: 14, find: "aria-label=\"#saltmaps — set how it relates\"", tag: "button" },
-    { n: 8, find: 'aria-label="Remove #saltmaps"', tag: "button" },
-    { n: 19, find: ">Remove it</button>", tag: "button" },
     { n: 9, find: "+ Add a tag", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
     // Both `upload` copies count alike: a new face rides the Edit record (seam 248).
