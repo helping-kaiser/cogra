@@ -10,8 +10,9 @@
 // `Create invite` makes the link with the staged choices and the sheet turns to
 // its second stage, the fresh link; past 200ms it reads `Creating invite…`, and
 // a create that did not go through answers in the network fault's grammar with
-// the choices kept (:19-23) — a FORBIDDEN answer in the not-through line,
-// never the "can't reach the server" one (NetworkError.md:13).
+// the choices kept (:19-23). Seam 355: the words follow the answer (no answer
+// `That didn't send. Try again.`, an answered refusal its own line) and, a
+// small sheet, the commitment itself reads `Retry` under the line.
 //
 // THE FRESH LINK'S STAGE SERVES THE LINK AND NOTHING ELSE (InviteCreated.md):
 // `Your invite link`, the link whole in mono with its label and caption, its
@@ -33,11 +34,13 @@ import {
   CREATE_INVITE,
   CREATING_INVITE,
   DEFAULT_EXPIRY,
+  DIDNT_SEND,
   EXPIRES_AFTER,
   EXPIRY_CHOICES,
   LINK_COPIED,
   NEW_INVITE,
   ONLY_ONE_PERSON,
+  RETRY,
   SHARE_LINK,
   YOUR_INVITE_LINK,
   copyLink,
@@ -52,8 +55,7 @@ import { buttonClassName } from "@/lib/ui/button";
 import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { shareLink } from "@/lib/ui/share";
 import { TransportError } from "@/lib/ui/transport-error";
-import { NOT_THROUGH_LINE } from "@/lib/ui/error-messages";
-import { hasCode } from "@/lib/api/outcome";
+import { outcomeFaultLine } from "@/lib/ui/error-messages";
 import { AddressCard } from "@/lib/ui2/address-card";
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { SettingsGroup, SettingsRow } from "@/lib/ui2/settings-row";
@@ -91,7 +93,8 @@ export function InviteSheet({
   const [choosing, setChoosing] = useState(false);
   const [inFlight, setInFlight] = useState(false);
   const [slow, setSlow] = useState(false);
-  const [fault, setFault] = useState<"failed" | "notThrough" | null>(null);
+  // The create's fault line: an answered fault's own, else the no-answer line.
+  const [fault, setFault] = useState<{ readonly line: string } | null>(null);
   const [created, setCreated] = useState<InviteLinkView | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -126,7 +129,7 @@ export function InviteSheet({
       onCreated(outcome.value);
     } else {
       // The staged choices stay as they were (:23).
-      setFault(hasCode(outcome, "FORBIDDEN") ? "notThrough" : "failed");
+      setFault({ line: outcomeFaultLine(outcome) ?? DIDNT_SEND });
     }
   };
 
@@ -162,7 +165,7 @@ export function InviteSheet({
             {fault !== null && (
               <TransportError
                 testId="invites-sheet-failed"
-                message={fault === "notThrough" ? NOT_THROUGH_LINE : undefined}
+                message={fault.line}
               />
             )}
             <div className="flex justify-end">
@@ -174,7 +177,7 @@ export function InviteSheet({
                 aria-disabled={inFlight || undefined}
                 className={buttonClassName({ variant: "primary" })}
               >
-                {slow ? CREATING_INVITE : CREATE_INVITE}
+                {slow ? CREATING_INVITE : fault !== null ? RETRY : CREATE_INVITE}
               </button>
             </div>
           </div>

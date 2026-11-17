@@ -9,7 +9,6 @@ import {
   frameOf,
   holdOffset,
   holdZoom,
-  MAX_ZOOM,
   reshape,
   sourceOf,
   stageOf,
@@ -117,20 +116,20 @@ describe("the zoom's floor and ceiling", () => {
     expect(zoomBounds("post", PORTRAIT, ratio.square, W).floor).toBeCloseTo(390 / 366, 9);
   });
 
-  it("puts a post's ceiling at about 4× of its tallest frame, under every shape", () => {
+  it("puts a post's ceiling at 10× of its tallest frame, under every shape", () => {
     const tall = zoomBounds("post", LANDSCAPE, ratio.tall, W);
-    expect(tall.ceiling).toBeCloseTo(4 * tall.floor, 9);
+    expect(tall.ceiling).toBeCloseTo(10 * tall.floor, 9);
     for (const shape of [ratio.square, ratio.wide]) {
       expect(zoomBounds("post", LANDSCAPE, shape, W).ceiling).toBeCloseTo(tall.ceiling, 9);
     }
   });
 
-  it("puts a cover's and the circle's ceiling at 4× their own fill", () => {
+  it("puts a cover's and the circle's ceiling at 10× their own fill", () => {
     const cover = zoomBounds("cover", LANDSCAPE, 16 / 9, W);
-    expect(cover.ceiling).toBeCloseTo(MAX_ZOOM * cover.floor, 9);
+    expect(cover.ceiling).toBeCloseTo(10 * cover.floor, 9);
     const avatar = zoomBounds("avatar", fittedPicture({ width: 4000, height: 3000 }, stageOf("avatar", W)), 1, W);
     expect(avatar.floor).toBeCloseTo(342 / 292.5, 9);
-    expect(avatar.ceiling).toBeCloseTo(4 * avatar.floor, 9);
+    expect(avatar.ceiling).toBeCloseTo(10 * avatar.floor, 9);
   });
 
   it("holds a zoom inside the bounds, and a non-number at the floor", () => {

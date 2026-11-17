@@ -1,6 +1,6 @@
 // The feed's cards hosted on a profile's tabs (ProfilePosts.md, ProfileComments.md):
 // the post card unchanged but for its inert author chip, and the comment card in
-// its line shape — the `On …` pointer leading, the words whole and no door, the
+// its line shape — the `On …` pointer leading, the words whole and a door, the
 // thread's text Reply, the "View n replies" line under the card — every door
 // landing on the thread the comment lives in. web's twins are
 // `profile-posts.test.tsx` and `profile-comments.test.tsx`.
@@ -29,6 +29,9 @@ import com.cogra.domain.ProfileComment
 import com.cogra.domain.Removal
 import com.cogra.domain.RemovalAgent
 import com.cogra.domain.saved.CommentTarget
+import com.cogra.domain.testing.testMentionTarget
+import com.cogra.domain.testing.testReferenceClaim
+import com.cogra.domain.testing.testTopicClaim
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -100,7 +103,11 @@ class HostedCardsTest {
     private val cards = DataNode("profile") / "comments" / "commentCard"
     private val replies = DataNode("profile") / "comments" / "viewReplies"
 
-    private fun host(signedIn: Boolean = true, body: @Composable (HostedCards) -> Unit) {
+    private fun host(
+        signedIn: Boolean = true,
+        placement: HostedPlacement = HostedPlacement.Profile,
+        body: @Composable (HostedCards) -> Unit,
+    ) {
         compose.setContent {
             HostedCardsScope(
                 doors = doors,
@@ -115,8 +122,9 @@ class HostedCardsTest {
                 ),
                 hooks = CardHooks(viewerId = "u2"),
                 revealed = emptyMap(),
-                tag = "profile",
+                tag = if (placement == HostedPlacement.Profile) "profile" else "tagPage",
                 notify = {},
+                placement = placement,
             ) { hosted -> Column { body(hosted) } }
         }
     }
@@ -164,12 +172,11 @@ class HostedCardsTest {
         assertThat(opened).containsExactly("comment:p9/c1")
     }
 
-    // ProfileComments.md:21, :25 — Reply opens the thread aimed at the
-    // comment; the words are no door and the author chip is inert.
+    // ProfileComments.md:35, :39 — Reply opens the thread aimed at the
+    // comment; the author chip is inert.
     @Test
-    fun replyOpensTheThreadAimedAtTheCommentAndTheWordsAreNoDoor() {
+    fun replyOpensTheThreadAimedAtTheCommentAndTheAuthorChipIsInert() {
         host { it.comment(comment(), cards, replies, null) }
-        compose.onNodeWithText("The glovebox camera earns its keep.").performClick()
         compose.onNodeIn(
             "profile.comments.commentCard:c1",
             "profile.comments.commentCard.authorChip",
@@ -179,6 +186,16 @@ class HostedCardsTest {
         compose.onNodeIn("profile.comments.commentCard:c1", "profile.comments.commentCard.actionRow.reply")
             .performClick()
         assertThat(opened).containsExactly("comment:p9/c1+reply")
+    }
+
+    // ProfileComments.md:43, ProfileCommentsOwn.md:15 — the card tapped outside
+    // its pointer and its own controls opens the post's comment section
+    // scrolled to that comment (round 3 hand test, A8: it opened nothing).
+    @Test
+    fun theCardsWordsOpenTheThreadAtTheComment() {
+        host { it.comment(comment(), cards, replies, null) }
+        compose.onNodeWithText("The glovebox camera earns its keep.").performClick()
+        assertThat(opened).containsExactly("comment:p9/c1")
     }
 
     // ProfileComments.md:27 — the replies line under the card opens the thread
@@ -216,6 +233,28 @@ class HostedCardsTest {
         assertThat(shown("profile.comments.commentCard.actionRow.reply")).isFalse()
     }
 
+    // TopicsLine.jsx:202-212, graph.json FeedKinds 27 — a comment's count is
+    // a door: the tags-and-references sheet over the host, its rows leaving
+    // through the host's doors (RefsSheet.md:9-15).
+    @Test
+    fun aCommentsCountOpensItsTagsAndReferences() {
+        val listed = comment().let {
+            it.copy(
+                comment = it.comment.copy(
+                    topics = listOf(testTopicClaim("saltmaps")),
+                    references = listOf(testReferenceClaim(testMentionTarget("mira"))),
+                ),
+            )
+        }
+        host { it.comment(listed, cards, replies, null) }
+        compose.onNodeWithTag("profile_comment_c1_refs_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("profile_comment_c1_topics_counts", useUnmergedTree = true).performClick()
+        compose.onNodeWithTag("profile_comment_c1_refs_sheet").assertExists()
+        compose.onNodeWithTag("profile_comment_c1_refs_reference_l1-user-mira").performClick()
+        compose.onNodeWithTag("profile_comment_c1_refs_sheet").assertDoesNotExist()
+        assertThat(opened).containsExactly("actor:mira")
+    }
+
     // `CommentCard`'s line shape carries no score and no share.
     @Test
     fun theLineShapeCarriesNoScoreAndNoShare() {
@@ -237,5 +276,61 @@ class HostedCardsTest {
         assertThat(shown("profile.comments.commentCard.target")).isTrue()
         assertThat(shown("profile.comments.commentCard.menu")).isFalse()
         assertThat(shown("profile.comments.commentCard.actionRow.reply")).isTrue()
+    }
+
+    // -- A tag's page (TagPage.md, TagPageMenu.md) --
+
+    private val tagCard = DataNode("tagPage") / "card"
+    private val tagComment = DataNode("tagPage") / "commentCard"
+
+    // TagPage.md:15 — the feed's post card, wearing `tagPage.card` keyed by
+    // the post's id; the author is not the page here, so the chip is a door.
+    @Test
+    fun aTagPagesPostIsTheFeedsCardAndItsAuthorIsADoor() {
+        host(placement = HostedPlacement.TagPage) { it.post(post(), tagCard) }
+        assertThat(shown("tagPage.card:p1")).isTrue()
+        compose.onNodeIn("tagPage.card:p1", "tagPage.card.authorChip", useUnmergedTree = true).performClick()
+        assertThat(opened).containsExactly("actor:ada")
+        compose.onNodeWithText("Took the coast road.").performClick()
+        assertThat(opened).containsExactly("actor:ada", "post:p1").inOrder()
+    }
+
+    // TagPageMenu.md:3, :5 — a tagged post's ⋮ raises `tagPage.menuSheet`, the
+    // reader's rows under it, Report at the tail.
+    @Test
+    fun aTagPagesPostMenuRaisesTheTagPagesSheet() {
+        host(placement = HostedPlacement.TagPage) { it.post(post(), tagCard) }
+        compose.onNodeWithTag("tagPage.card.menu").performClick()
+        compose.onNodeWithTag("tagPage.menuSheet").assertExists()
+        val tops = listOf(
+            "tagPage.menuSheet.save",
+            "tagPage.menuSheet.cite",
+            "tagPage.menuSheet.hide",
+            "tagPage.menuSheet.license",
+            "tagPage.menuSheet.report",
+        ).map { compose.onNodeWithTag(it).fetchSemanticsNode().boundsInRoot.top }
+        assertThat(tops).isInStrictOrder()
+    }
+
+    // TagPage.md:15, :17 — a tagged comment stands as the comment card leading
+    // with the thread it answers, and offers no Reply and no view-replies line.
+    @Test
+    fun aTaggedCommentLeadsWithItsThreadAndOffersNoReplyAndNoRepliesLine() {
+        host(placement = HostedPlacement.TagPage) { it.comment(comment(replies = 2), tagComment, tagComment, null) }
+        compose.onNodeWithText("On “Salt maps of the coast road” — @sol").assertIsDisplayed()
+        assertThat(shown("tagPage.commentCard.actionRow.reply")).isFalse()
+        assertThat(shown("tagPage.commentCard:c1")).isTrue()
+        compose.onNodeWithText("View 2 replies").assertDoesNotExist()
+        compose.onNodeIn("tagPage.commentCard:c1", "tagPage.commentCard.target").performClick()
+        assertThat(opened).containsExactly("comment:p9/c1")
+    }
+
+    // A tagged comment's author is a door too: the page is the tag's, not theirs.
+    @Test
+    fun aTaggedCommentsAuthorIsADoor() {
+        host(placement = HostedPlacement.TagPage) { it.comment(comment(), tagComment, tagComment, null) }
+        compose.onNodeIn("tagPage.commentCard:c1", "tagPage.commentCard.authorChip", useUnmergedTree = true)
+            .performClick()
+        assertThat(opened).containsExactly("actor:ada")
     }
 }

@@ -285,7 +285,7 @@ describe("the picture's seal in its flow", () => {
     refused.signStaged = vi.fn(async (staged: { id: string }) => ({
       kind: "refused" as const,
       id: staged.id,
-      errors: [{ message: "no", code: "BAD_INPUT" as const, field: [] }],
+      errors: [{ message: "no", code: "BAD_INPUT" as const, field: ["avatar"] }],
     }));
     await toSeal(refused);
     fireEvent.click(screen.getByTestId("avatar-seal-sign"));
