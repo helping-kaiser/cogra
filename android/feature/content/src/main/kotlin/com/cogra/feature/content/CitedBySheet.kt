@@ -58,6 +58,8 @@ import com.cogra.domain.references.CitedByRepository
 import com.cogra.domain.references.CitingArtifact
 import com.cogra.domain.references.CitingKind
 import com.cogra.domain.references.CitingView
+import com.cogra.domain.stance.HeldOpinion
+import com.cogra.domain.stance.NodeOpinionsRepository
 import com.cogra.domain.valueOrNull
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -72,25 +74,33 @@ internal const val SHEET_RAISED_SHARE = 0.88f
 internal val CITED_BY_SHEET = POST_DETAIL / "citedBySheet"
 
 /**
- * The reads behind the two reading rows of every menu: what cites a node.
- * Provided by [InboundReadsViewModel] in the app; a test provides its own.
+ * The reads behind the two reading rows of every menu: what cites a node, and
+ * who holds an opinion on it. Provided by [InboundReadsViewModel] in the app; a
+ * test provides its own, and a read it does not script fails rather than
+ * answering for it.
  */
 @Stable
 class InboundReads(
-    val citedBy: suspend (nodeId: String) -> Outcome<List<CitingArtifact<CitingView>>>,
+    val citedBy: suspend (nodeId: String) -> Outcome<List<CitingArtifact<CitingView>>> = { unscripted() },
+    val opinionsOn: suspend (nodeId: String) -> Outcome<List<HeldOpinion>> = { unscripted() },
 )
+
+private fun unscripted(): Outcome<Nothing> = Outcome.Failed(UnsupportedOperationException("read not provided"))
 
 /** The surface's reads; null falls back to the destination's [InboundReadsViewModel]. */
 val LocalInboundReads = compositionLocalOf<InboundReads?> { null }
 
 /** The process's inbound reads, for a sheet a menu row raises. */
 @HiltViewModel
-class InboundReadsViewModel @Inject constructor(citing: CitedByRepository) : ViewModel() {
-    val reads = InboundReads(citedBy = citing::citedBy)
+class InboundReadsViewModel @Inject constructor(
+    citing: CitedByRepository,
+    opinions: NodeOpinionsRepository,
+) : ViewModel() {
+    val reads = InboundReads(citedBy = citing::citedBy, opinionsOn = opinions::opinionsOn)
 }
 
 @Composable
-private fun inboundReads(): InboundReads = LocalInboundReads.current ?: hiltViewModel<InboundReadsViewModel>().reads
+internal fun inboundReads(): InboundReads = LocalInboundReads.current ?: hiltViewModel<InboundReadsViewModel>().reads
 
 /** A sheet's height share of the window, held under the ceiling (`BottomSheet.jsx`'s `maxHeight`). */
 @Composable

@@ -153,6 +153,7 @@ internal fun ListCommentCard(
     var licenseOpen by remember(comment.id) { mutableStateOf(false) }
     var removeOpen by remember(comment.id) { mutableStateOf(false) }
     var citedByOpen by remember(comment.id) { mutableStateOf(false) }
+    var opinionsOpen by remember(comment.id) { mutableStateOf(false) }
     val own = actions.viewerId != null && comment.author?.id == actions.viewerId
     CommentFeedCard(
         comment = comment,
@@ -181,6 +182,7 @@ internal fun ListCommentCard(
         onCite = { actions.onCitePost(comment.id) },
         onLicense = { licenseOpen = true },
         onCitedBy = { citedByOpen = true },
+        onOpinions = { opinionsOpen = true },
         stanceControl = actions.stanceControl,
         shape = shape,
         authorHere = authorHere,
@@ -197,6 +199,17 @@ internal fun ListCommentCard(
             onDismiss = { citedByOpen = false },
             onOpenPost = doors.onOpenPost,
             testTag = "${testTagPrefix}_cited_by_sheet",
+        )
+    }
+    // THE COMMENT'S OPINIONS, over the host and unstacked (FeedCommentMenu.md:9,
+    // HistoryCommentMenu.md:9, SavedCommentMenu.md:11, ProfileCommentsMenu.md:9).
+    if (opinionsOpen) {
+        OpinionsSheet(
+            nodeId = comment.id,
+            on = OpinionsOn.Comment,
+            onDismiss = { opinionsOpen = false },
+            onOpenPerson = doors.onOpenActor,
+            testTag = "${testTagPrefix}_opinions_sheet",
         )
     }
     // The own comment's menu off its thread (RM-G9): the comment's confirm,

@@ -1316,6 +1316,7 @@ internal val POST_MENU_ROWS = setOf(
     PostMenuRow.Cite,
     PostMenuRow.Hide,
     PostMenuRow.CitedBy,
+    PostMenuRow.Opinions,
     PostMenuRow.License,
     PostMenuRow.Report,
     PostMenuRow.Edit,
@@ -1325,8 +1326,7 @@ internal val POST_MENU_ROWS = setOf(
 
 /**
  * The feed's comment card menu: `feed.menuSheet`, its registered rows
- * (FeedCommentMenu, FeedCommentMenuOwn). `Opinions on this` keeps its
- * per-comment tag until its sheet lands on this client.
+ * (FeedCommentMenu, FeedCommentMenuOwn).
  */
 internal val FEED_COMMENT_MENU = CommentMenuPlacement(
     sheet = FEED / "menuSheet",
@@ -1336,6 +1336,7 @@ internal val FEED_COMMENT_MENU = CommentMenuPlacement(
         CommentMenuRow.Edit,
         CommentMenuRow.Remove,
         CommentMenuRow.CitedBy,
+        CommentMenuRow.Opinions,
         CommentMenuRow.License,
         CommentMenuRow.Report,
     ),
@@ -1515,9 +1516,11 @@ private fun CardMenuHeader(
     var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
     var removeOpen by remember { mutableStateOf(false) }
     var citedByOpen by remember { mutableStateOf(false) }
+    var opinionsOpen by remember { mutableStateOf(false) }
     CoversSurface(open = licenseShown != null, kind = CoverKind.Suspend)
     CoversSurface(open = removeOpen, kind = CoverKind.Suspend)
     CoversSurface(open = citedByOpen, kind = CoverKind.Suspend)
+    CoversSurface(open = opinionsOpen, kind = CoverKind.Suspend)
     val menuSheet = placement.menuSheet
     val tag = "${placement.tag}_${post.id}"
     // A REMOVED POST HAS NO MENU LEFT (`Removed.jsx:5-6`): there is nothing
@@ -1552,6 +1555,7 @@ private fun CardMenuHeader(
                 onRemove = { removeOpen = true },
                 onLicense = { licenseShown = post.license },
                 onCitedBy = { citedByOpen = true },
+                onOpinions = { opinionsOpen = true },
                 onShare = shareRow,
                 // The rows sit under the trigger's own tag, which
                 // `ContentCardHeader` derives the same way.
@@ -1583,6 +1587,16 @@ private fun CardMenuHeader(
             onDismiss = { citedByOpen = false },
             onOpenPost = onOpenPost,
             testTag = "${tag}_cited_by_sheet",
+        )
+    }
+    // WHO HOLDS AN OPINION ON THE POST, over the host (PostOpinions.md:5).
+    if (opinionsOpen) {
+        OpinionsSheet(
+            nodeId = post.id,
+            on = OpinionsOn.Post,
+            onDismiss = { opinionsOpen = false },
+            onOpenPerson = onOpenActor,
+            testTag = "${tag}_opinions_sheet",
         )
     }
 }
