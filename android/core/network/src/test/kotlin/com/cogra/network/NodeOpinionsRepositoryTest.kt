@@ -69,7 +69,7 @@ class NodeOpinionsRepositoryTest {
     private fun page(edges: List<String>, next: String?) =
         """{"data":{"node":{"__typename":"Post","id":"p1","incomingRecords":{"__typename":"RecordConnection",
            "edges":[${edges.joinToString(",")}],
-           "pageInfo":{"__typename":"PageInfo","hasNextPage":${next != null},"endCursor":${quoted(next)}}}}}"""
+           "pageInfo":{"__typename":"PageInfo","hasNextPage":${next != null},"endCursor":${quoted(next)}}}}}}"""
 
     @Test
     fun theSetIsReadWholeAndFoldedToOneRowPerPersonStrongestFirst() = runTest {
@@ -93,7 +93,9 @@ class NodeOpinionsRepositoryTest {
             ),
         )
 
-        val rows = (repo().opinionsOn("p1") as Outcome.Success).value
+        val outcome = repo().opinionsOn("p1")
+        assertThat(outcome).isInstanceOf(Outcome.Success::class.java)
+        val rows = (outcome as Outcome.Success).value
 
         assertThat(rows.map { it.holderId }).containsExactly("a-ada", "a-del", "a-kel").inOrder()
         assertThat(rows[0].pair).isEqualTo(StancePair(0.7, 0.5))
