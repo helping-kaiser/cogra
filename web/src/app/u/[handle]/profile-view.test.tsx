@@ -991,6 +991,11 @@ describe("ProfileScreen", () => {
     renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
     const badge = await screen.findByTestId(byNode("profile.identity.changeBadge"));
     expect(badge).toHaveAccessibleName("Change your picture");
+    // On the avatar's corner, -2/-2 (ProfileHeader.jsx): inline, because
+    // `cg-state`'s unlayered `position: relative` beats an `absolute` utility.
+    expect(badge.style.position).toBe("absolute");
+    expect(badge.style.right).toBe("-2px");
+    expect(badge.style.bottom).toBe("-2px");
     // The avatar is a picture, never a door: the badge is the only one.
     expect(screen.getByTestId(byNode("profile.identity.avatar")).closest("button, a")).toBeNull();
     const input = screen.getByTestId("profile-change-badge-input") as HTMLInputElement;

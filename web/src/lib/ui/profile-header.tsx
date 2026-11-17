@@ -240,7 +240,12 @@ export function ProfileHeader({
               aria-label="Change your picture"
               onClick={onAvatarChange}
               {...testAttributes(part(node, "changeBadge"), "profile-change-badge")}
-              className="cg-state cg-focus cg-hit absolute -bottom-0.5 -right-0.5 grid size-7 cursor-pointer place-items-center rounded-full border-2 border-solid border-surface bg-secondary-container p-0 text-on-secondary-container"
+              // Placed inline, as the master places it: `cg-state` sets
+              // `position: relative` outside Tailwind's layers, so an
+              // `absolute` utility loses to it and the badge drops below
+              // the avatar (measured by the conformance harness).
+              style={{ position: "absolute", right: -2, bottom: -2 }}
+              className="cg-state cg-focus cg-hit grid size-7 cursor-pointer place-items-center rounded-full border-2 border-solid border-surface bg-secondary-container p-0 text-on-secondary-container"
             >
               <Icon name="photo_camera" size={16} />
             </button>
