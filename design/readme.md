@@ -12071,6 +12071,70 @@ built on round 48's final tree (merged in, fe728bfd7).
   `take-a-stance-on-a-post`, `open-a-posts-pictures`, `watch-the-stream`,
   `follow-a-citation`, `trace-a-score-to-its-records`). Backlog 230 and 231
   filed; 220 closed; 223 amended.
+
+### Round 50, Edit profile and the profile picture; the sheet's foot; a refused tag on the edits — 2026-11-17
+
+jakob's answers of 2026-11-17 to the collected points (his 8–15, then 10
+and 19 as recommended), built on round 49 (60d9c51c0).
+
+- **Removing the picture is drawn** (8). `ProfileEdit` takes a `state`
+  chip; its default, `rest`, is the edit as it opens. `picture` is a
+  reader whose picture stands: `Remove picture` beside `Change picture`,
+  in its size and outline, only while a picture stands. `removed` is it
+  pressed: the removal staged, the monogram back at once, Save signing
+  it with the rest under the one seal — the payload's clearing `[]`.
+  Edit profile only; the head's badge keeps its one door.
+  `ProfileEditSeal`'s `holds` chip reads it back: `The picture removed`,
+  the head in the monogram. The seal's head now shows the picture the
+  change leaves (a new picture's photo at `new`; it wore the monogram).
+- **The row's grammar** (332-2): `A new` and the changed parts in the
+  edit's order, joined by commas and a last `and`; a removed picture
+  alone `The picture removed`, after other parts `, the picture removed`.
+  The sample stands. Longer readings run past the one-line value
+  (backlog 242).
+- **A refused picture says so on the crop** (9). No pick stage of
+  CoGra's own exists, so `AvatarCrop`'s `picked` chip carries it, for
+  both openers: the circle empty in its place (the refused tile's
+  honesty), the zoom gone with the picture, the refusal under the circle
+  in the refused files' error voice, `Next` dimmed, the back arrow the
+  way out. The words: the picture cap's line, the moving GIF's line, and
+  a picture-only reading of the unreadable file's line. An upload that
+  fails after the crop takes its twins' words: on `AvatarSeal` the gate's
+  fault reading with `Retry` and the commit disabled (`state` chip,
+  `upload-failed`); on Edit profile `One picture didn't upload.` with
+  `Retry · Remove it` under the picture's row (`upload-failed`), Save
+  still answering — the seal gates, and `ProfileEditSeal` carries the
+  gate as law.
+- **`Changing your profile` has a body** (11), drafted in the picture's
+  voice: what is not obvious is that everything changed here signs
+  together, as one change.
+- **Nothing staged, nothing to sign** (12): Save stays visible and inert
+  under `Nothing to sign yet`, the post edit's guard — the staged change,
+  never the bytes. That is the edit's opening state, so it is the
+  board's default; a staged change (`changed`) lifts it.
+- **A write-rule refusal known at Save stays on the edit** (13):
+  `You can't sign right now.` in the row's quiet register on Save, its
+  "?" opening `Why signing waits`, Save dimmed (`refused`); nobody is
+  sent to the seal. How long it stands is open (backlog 240).
+- **After Close, every refusal reads `That didn't sign.` with `Retry`**
+  (14), the write rule and a bug included — law in `ProfileEditSeal`,
+  `AvatarSeal` and `SigningAfterClose`.
+- **Standing not known yet: the doors stand open** (15) — copy-voice, the
+  applicant-foot family's end; a standing that turns out too low drops
+  the doors at the epoch's close, and a refusal meanwhile reads as an
+  answered fault.
+- **The sheet's foot** (10): `BottomSheet` gains a `foot` slot, and the
+  master states the gap, 16px from the last content to the hairline
+  (§4, *Sheets*). The filters and the default license pass their rows
+  through it; the license goes 8 → 16, the feed filter's sections end on
+  their own 16.
+- **A tag refused at Sign on the edits** (19): `EditCompose` and
+  `CommentEdit` read `This tag didn't land.` with `Remove it` under the
+  chips, `Sign the edit` standing, the refused chip ringed in the error
+  ink beside another (`tag` chip, `refused`). The post edit gains the
+  comment edit's citation and bug rules. The seals draw one tag and are
+  unchanged.
+- **Backlog** 221, 223 and 230 read and left open; 240–242 filed.
 ---
 
 ## 14. The canvases
