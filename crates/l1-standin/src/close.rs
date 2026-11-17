@@ -5,7 +5,8 @@
 //! Selection among valid ordered sequences is host discretion (§11.6):
 //! this host takes approved acts in approval order, leaves out any act
 //! whose stored dependency list no longer opens its dependency commitment
-//! (§8.2, "Approval witness"), defers any act whose declared dependencies
+//! (the Layer 1 specification keeps such an act out of candidate ordering,
+//! `def:graph:approval-witness`), defers any act whose declared dependencies
 //! or asserted parents are not yet in history,
 //! defers any act whose author cannot pay θ (W1 — the author stays free
 //! to burn and land later), and caps the epoch at the act budget. The
@@ -497,10 +498,10 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, Stand
 
 /// Whether a stored act's dependency opening — the act identifier, the
 /// pre-commitment, the dependency salt and the list — still recomputes the
-/// dependency commitment it was sealed and approved under
-/// (layer1-interface.md §8.2, "Approval witness": the host rejects from
-/// candidate ordering an act whose dependency opening no longer matches).
-/// A list that no longer parses opens nothing, so it does not match.
+/// dependency commitment it was sealed and approved under. The Layer 1
+/// specification (`def:graph:approval-witness`) has the host keep an act
+/// whose opening no longer matches out of candidate ordering. A list that
+/// no longer parses opens nothing, so it does not match.
 pub(crate) fn dependency_opening_matches(
     act_id: &common::l1::ActId,
     pre_commitment: &[u8],

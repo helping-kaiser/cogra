@@ -96,10 +96,11 @@ pub fn canonical_deps(deps: &[ActId]) -> Vec<u8> {
     e.finish()
 }
 
-/// The order of a canonical dependency list: sorted by act identifier and
-/// duplicate-free (§8.2, "Act dependency projection"). The seam leaves
-/// the order to the deployment's identifier encoding, and this one orders
-/// bytewise over each identifier's canonical text form — the form
+/// The order of a canonical dependency list. The Layer 1 specification
+/// (`def:graph:act-dependency-projection`) has the list sorted by act
+/// identifier with no duplicates and fixes no order on identifiers, so
+/// the order is the deployment's: this one orders bytewise over each
+/// identifier's canonical text form — the form
 /// [`canonical_deps`] encodes — so anyone holding the encoded list checks
 /// it without parsing an identifier.
 pub fn dependency_order(a: &ActId, b: &ActId) -> std::cmp::Ordering {
