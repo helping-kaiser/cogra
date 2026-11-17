@@ -36,7 +36,7 @@ within a phase, order is flexible.
 | 7. At the L1 swap | 3 | **Q56, Q58, Q61** | What the seam exposes of the burn realization (its computational inputs and audit evidence); the write rule's second gate on the surface — whether a W2a stamp-wall refusal needs its own reading once real stamps exist (on the stand-in W2a cannot fire, so one `WRITE_RULE_FAILED` reads the solvency words); and who in CoGra is the deployment that publishes the marker policy, with which finality-breach response. Deferred to the swap. |
 | 8. When everyone can tag anything | 1 | **Q59** | Semi-passable Types — whether a path may cross a Type along tag edges whose author the viewer reaches, at viewer-to-tagger strength. The sinks invariant stands until open tagging makes a topic's crowd worth routing through; stored so the option is not lost. |
 | 9. When a second party writes to Layer 1 | 1 | **Q63** | The payload mark of an act CoGra does not carry — a CoGra actor writing through a third-party Layer 2. It reads unmarked until then. |
-| — Parked | 2 | **Q62, Q64** | An authenticated carriage receipt beside the seal — none is issued now; and whether ingestion checks that the carried pair opens the witness — it checks nothing until a second carrier exists. |
+| — Parked | 3 | **Q62, Q64, Q65** | An authenticated carriage receipt beside the seal — none is issued now; whether ingestion checks that the carried pair opens the witness — it checks nothing until a second carrier exists; and four races in the seal leg, accepted as known gaps. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -874,3 +874,56 @@ This is revisited once a second carrier exists.
 
 Q62 (an authenticated carriage receipt); Q63 (the payload mark of an
 act CoGra does not carry).
+
+## Q65 — Known gaps in the seal leg
+
+**Where it shows up:**
+[architecture.md "The write path"](implementation/architecture.md#the-write-path),
+[data-model.md "Staged writes"](implementation/data-model.md#staged-writes)
+**Status:** open (parked — known gaps, accepted; jakob, 2026-11-17)
+
+### Context
+
+The seal leg records the device's pre-commitment, stages the pending
+display rows, submits the proposal to the host and stores the sealed
+act, each in its own step; nothing holds the staged row across the
+call to the host (`relay::submit_pre_signed`). Four races follow.
+Each needs two operations on one write to meet within moments; none
+arises from normal use:
+
+1. **A redaction between the host's seal and storing it.** The
+   redaction reaps the staged payload while the host seals. Storing
+   the seal then fails, because a reaped row holds no content salt
+   (`staged_writes_reaped_conceals`), and a retry of the leg is
+   answered `NOT_FOUND`. The act is sealed at the host and never
+   approved, so it is never ordered; the write stays in `sealing`
+   until the staged-write GC expires it. Nothing is exposed: the
+   reaped row keeps no payload, content nonce or content salt.
+2. **The same signed proposal submitted twice at once** (two tabs, or
+   a resume beside the approval pad). Both submissions record the
+   same leg and both reach the host, which seals the first and
+   refuses the second as a conflict. The API then expires the write:
+   its pending content leaves the screen, the device is answered
+   `STAGED_WRITE_EXPIRED`, and the user redoes the write.
+3. **An account deletion racing a profile update.** The deletion
+   reads the account's Registration acts once, reduces them one by
+   one, and its close blanks every profile row still open. A profile
+   update that stages its pending row after the close is reached by
+   neither: the row stays visible until the GC expires the write.
+4. **A content removal racing an edit.** A content removal resolves
+   the display entity it removes before its transaction begins and
+   tombstones only an entity it found. A post or a revision staged
+   after that resolution has its staged payload reaped, but its
+   display row is not tombstoned: it stays readable as pending until
+   the GC expires the write, and stays as a landed version if its act
+   was approved before the reap.
+
+### The question
+
+Whether to close these windows, which means restructuring the seal
+step. They stay accepted gaps unless one turns out reachable in
+normal use, or its outcome turns out unrecoverable.
+
+### Related
+
+Q64 (the witness check at ingestion).
