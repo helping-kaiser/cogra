@@ -569,7 +569,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: "+ Add a tag", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
     { n: 11, find: "signing 5 things", tag: "button" },
-    { n: 12, find: ">Sign the edit</button>", tag: "button" },
+    // Every copy of the commit — at rest and the `recrop-failed` disabled one
+    // (round 53 act 2) — is the same act.
+    { n: 12, find: ">Sign the edit</button>", tag: "button", all: true },
     { n: 12, find: ">Signing the edit…</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
     { n: 15, find: "aria-label=\"Sunday at the tide market — @mira — set how it relates\"", tag: "button" },
