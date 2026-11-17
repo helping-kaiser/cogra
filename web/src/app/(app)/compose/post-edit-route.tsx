@@ -39,7 +39,7 @@ import { fetchKnownMedia } from "@/lib/api/media-api";
 import { editExpectation } from "@/lib/compose/intent";
 import { contentExpectation } from "@/lib/compose/payload-expectation";
 import { postEdit, type ExpectedWrite } from "@/lib/signing/intent";
-import { firstRefusalMessage, outcomeFaultLine, wholeActLine } from "@/lib/ui/error-messages";
+import { firstRefusalMessage, NO_ANSWER_LINE, outcomeFaultLine, wholeActLine } from "@/lib/ui/error-messages";
 import { sealFaultOfResults } from "@/lib/compose/seal-fault";
 import type { Outcome } from "@/lib/api/outcome";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
@@ -167,7 +167,10 @@ export function PostEditRoute({
   const [writeRuleRefused, setWriteRuleRefused] = useState(false);
   const [keyAbsent, setKeyAbsent] = useState(false);
   const [refusal, setRefusal] = useState<string | null>(null);
-  const [failed, setFailed] = useState(false);
+  // THE NETWORK ERROR'S FOOT (NetworkError.md:3, :13-19; CommentEdit.md:97,
+  // seam 352): the line that takes the commit's place, Retry under it — no
+  // answer at all, or an answered fault of the whole edit. Null at rest.
+  const [fault, setFault] = useState<string | null>(null);
   const [tagErrors, setTagErrors] = useState<Readonly<Record<number, string>>>({});
   const [referenceErrors, setReferenceErrors] = useState<Readonly<Record<number, string>>>({});
   const [sheet, setSheet] = useState<"acts" | "pictures" | "sensitive" | "backing" | null>(null);
@@ -291,8 +294,7 @@ export function PostEditRoute({
     // else is no answer at all (NetworkError.md:3).
     const unanswered = (outcome: Outcome<unknown>) => {
       const line = outcomeFaultLine(outcome);
-      if (line !== null) setRefusal(line);
-      else setFailed(true);
+      setFault(line ?? NO_ANSWER_LINE);
     };
 
     // The L1 ids of the post and of every cited node the edit touches,
@@ -429,7 +431,7 @@ export function PostEditRoute({
     }
     if (notThrough !== null) {
       end();
-      setRefusal(notThrough);
+      setFault(notThrough);
       return;
     }
     if (general !== null || Object.keys(perTag).length > 0 || Object.keys(perReference).length > 0) {
@@ -453,10 +455,9 @@ export function PostEditRoute({
       // The post opens with the edit settling.
       router.push(`/posts/${postId}`);
     } else {
-      // The server answered: its line, never the no-answer one.
-      const fault = sealFaultOfResults(results, []);
-      if (fault.kind === "notThrough") setRefusal(fault.line);
-      else setFailed(true);
+      // An answered fault says its own line, never the no-answer one.
+      const answered = sealFaultOfResults(results, []);
+      setFault(answered.kind === "notThrough" ? answered.line : NO_ANSWER_LINE);
     }
   };
 
@@ -500,7 +501,7 @@ export function PostEditRoute({
     if (signing || count === 0 || postEditProblem(state) !== null || failedUploads > 0) return;
     setCountChanged(false);
     setRefusal(null);
-    setFailed(false);
+    setFault(null);
     setTagErrors({});
     setReferenceErrors({});
     // THE KEY-ABSENT SEAL: nothing is staged or signed without the key.
@@ -674,7 +675,7 @@ export function PostEditRoute({
           writeRuleRefused={writeRuleRefused}
           keyAbsent={keyAbsent}
           refusal={refusal}
-          failed={failed}
+          fault={fault}
           refusals={refusals}
           onTitle={(title) => dispatch({ type: "title", title })}
           onDescription={(description) => dispatch({ type: "description", description })}

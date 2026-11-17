@@ -25,7 +25,7 @@ import { useApolloClient } from "@apollo/client/react";
 
 import type { CommentFieldsFragment } from "@/__generated__/graphql";
 import { fetchCommentSelfMark, prepareCommentEdit } from "@/lib/api/content-api";
-import { firstRefusalMessage, outcomeFaultLine, wholeActLine } from "@/lib/ui/error-messages";
+import { firstRefusalMessage, NO_ANSWER_LINE, outcomeFaultLine, wholeActLine } from "@/lib/ui/error-messages";
 import { sealFaultOfResults } from "@/lib/compose/seal-fault";
 import type { Outcome } from "@/lib/api/outcome";
 import type { StagedWriteView } from "@/lib/api/writes-api";
@@ -198,7 +198,9 @@ export function CommentEditor({
   const slow = useWaitedPast(signing, SLOW_NETWORK_MS);
   const [countChanged, setCountChanged] = useState(false);
   const [fault, setFault] = useState<SealFault | null>(null);
-  const [failed, setFailed] = useState(false);
+  // The network error's foot: its line in the commit's place, Retry under it
+  // (NetworkError.md:3, :13-19; CommentEdit.md:97). Null at rest.
+  const [failedLine, setFailedLine] = useState<string | null>(null);
   const [refusal, setRefusal] = useState<string | null>(null);
   const [tagErrors, setTagErrors] = useState<Readonly<Record<number, string>>>({});
   const [referenceErrors, setReferenceErrors] = useState<Readonly<Record<number, string>>>({});
@@ -372,8 +374,7 @@ export function CommentEditor({
     // else is no answer at all (NetworkError.md:3).
     const unanswered = (outcome: Outcome<unknown>) => {
       const line = outcomeFaultLine(outcome);
-      if (line !== null) setRefusal(line);
-      else setFailed(true);
+      setFailedLine(line ?? NO_ANSWER_LINE);
     };
     const writes: StagedWriteView[] = [];
     const perTag: Record<number, string> = {};
@@ -545,7 +546,7 @@ export function CommentEditor({
 
     if (notThrough !== null && nextFault?.kind !== "writeRule") {
       end();
-      setRefusal(notThrough);
+      setFailedLine(notThrough);
       return;
     }
     if (nextFault !== null) {
@@ -579,7 +580,7 @@ export function CommentEditor({
     // and never the no-answer line (NetworkError.md:13-19).
     const answered = sealFaultOfResults(results, []);
     if (answered.kind === "notThrough") {
-      setRefusal(answered.line);
+      setFailedLine(answered.line);
       return;
     }
     const refused = results.find((result) => result.kind === "refused");
@@ -591,7 +592,7 @@ export function CommentEditor({
     }
     // No answer reached the edit: the network error answers, and everything
     // the reader chose stays as it was.
-    setFailed(true);
+    setFailedLine(NO_ANSWER_LINE);
   };
 
   // The last upload landing releases a held press into `submit`, which takes
@@ -622,7 +623,7 @@ export function CommentEditor({
     }
     setCountChanged(false);
     setRefusal(null);
-    setFailed(false);
+    setFailedLine(null);
     setFault(null);
     setTagErrors({});
     setReferenceErrors({});
@@ -751,7 +752,7 @@ export function CommentEditor({
               }
         }
         refusal={refusal}
-        failed={failed}
+        failedLine={failedLine}
         onWords={(draft) => update(() => ({ draft }), true)}
         onSensitive={(sensitive) => update(() => ({ sensitive }), true)}
         onSensitiveReason={(sensitiveReason) => update(() => ({ sensitiveReason }), true)}

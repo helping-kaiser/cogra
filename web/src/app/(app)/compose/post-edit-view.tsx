@@ -41,7 +41,7 @@ import { useId, useRef, type ReactNode } from "react";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
 import { TransportError } from "@/lib/ui/transport-error";
-import { NO_ANSWER_LINE } from "@/lib/ui/error-messages";
+import { lineOffersRetry } from "@/lib/ui/error-messages";
 import { HeaderBar } from "@/lib/ui2/header-bar";
 import { HelpDot } from "@/lib/ui2/help-dot";
 import { FactRow } from "@/lib/ui2/fact-row";
@@ -131,7 +131,7 @@ export function PostEditView({
   writeRuleRefused,
   keyAbsent,
   refusal,
-  failed,
+  fault,
   refusals,
   onTitle,
   onDescription,
@@ -188,7 +188,12 @@ export function PostEditView({
   writeRuleRefused: boolean;
   keyAbsent: boolean;
   refusal: string | null;
-  failed: boolean;
+  /**
+   * The network error's foot (NetworkError.md:3, :13-19): its line takes the
+   * commit's place with an outlined Retry under it, standing where `Sign the
+   * edit` stood. Null at rest.
+   */
+  fault: string | null;
   /** Files the add control turned away, each standing on the media row until dismissed. */
   refusals: readonly PickRefusal[];
   onTitle: (title: string) => void;
@@ -489,7 +494,6 @@ export function PostEditView({
             {refusal}
           </p>
         )}
-        {failed && <TransportError testId="post-edit-failed" message={NO_ANSWER_LINE} />}
 
         {/* THE GATE (EditCompose.md, EditComposeVideo.md): while the bytes
             the edit took are going up, the seal's line stands over the foot,
@@ -533,6 +537,22 @@ export function PostEditView({
           // on what is true for an edit, `Not now` its way out and no Retry
           // (EditCompose.md).
           <EditWriteRuleNotice onHelp={onWriteRuleHelp} onNotNow={onWriteRuleNotNow} testIdPrefix="post-edit" />
+        ) : fault !== null ? (
+          <div className="flex flex-col gap-2">
+            <TransportError testId="post-edit-failed" message={fault} />
+            {lineOffersRetry(fault) && (
+              <PillButton
+                testId="post-edit-retry"
+                variant="outlined"
+                full
+                onClick={() => {
+                  if (!signing) onSign();
+                }}
+              >
+                Retry
+              </PillButton>
+            )}
+          </div>
         ) : (
           <PillButton
             testId="post-edit-sign"

@@ -372,8 +372,9 @@ describe("CommentEditor — + Add pictures and the gate (CommentEdit)", () => {
     const { signer } = draw(comment());
     fireEvent.change(await screen.findByTestId("commentEdit.words.input"), { target: { value: "New words." } });
     fireEvent.click(save());
-    expect(await screen.findByTestId("comment-edit-refused")).toHaveTextContent("That didn't go through. Try again.");
-    expect(screen.queryByTestId("comment-edit-failed")).toBeNull();
+    expect(await screen.findByTestId("comment-edit-failed")).toHaveTextContent("That didn't go through. Try again.");
+    expect(screen.queryByTestId("comment-edit-refused")).toBeNull();
+    expect(screen.getByTestId("comment-edit-retry")).toBeInTheDocument();
     expect(screen.queryByText(/You can't do that here|reach the server/)).toBeNull();
     expect(signer.signStaged).not.toHaveBeenCalled();
     expect(screen.getByTestId("commentEdit.words.input")).toHaveValue("New words.");
@@ -393,9 +394,9 @@ describe("CommentEditor — + Add pictures and the gate (CommentEdit)", () => {
     draw(comment(), signer);
     fireEvent.change(await screen.findByTestId("commentEdit.words.input"), { target: { value: "New words." } });
     fireEvent.click(save());
-    expect(await screen.findByTestId("comment-edit-refused")).toHaveTextContent("That didn't go through. Try again.");
+    expect(await screen.findByTestId("comment-edit-failed")).toHaveTextContent("That didn't go through. Try again.");
     expect(screen.queryByTestId("comment-edit-bug")).toBeNull();
-    expect(screen.queryByTestId("comment-edit-failed")).toBeNull();
+    expect(screen.getByTestId("comment-edit-retry")).toBeInTheDocument();
   });
 
   // NetworkError.md:13-19 — the rest of the answered whole-edit faults.
@@ -411,8 +412,8 @@ describe("CommentEditor — + Add pictures and the gate (CommentEdit)", () => {
     const { signer } = draw(comment());
     fireEvent.change(await screen.findByTestId("commentEdit.words.input"), { target: { value: "New words." } });
     fireEvent.click(save());
-    expect(await screen.findByTestId("comment-edit-refused")).toHaveTextContent(line);
-    expect(screen.queryByTestId("comment-edit-failed")).toBeNull();
+    expect(await screen.findByTestId("comment-edit-failed")).toHaveTextContent(line);
+    expect(screen.queryByTestId("comment-edit-retry") !== null).toBe(code !== "EMAIL_NOT_VERIFIED");
     expect(signer.signStaged).not.toHaveBeenCalled();
   });
 
@@ -447,9 +448,9 @@ describe("CommentEditor — + Add pictures and the gate (CommentEdit)", () => {
     draw(comment(), signer);
     fireEvent.change(await screen.findByTestId("commentEdit.words.input"), { target: { value: "New words." } });
     fireEvent.click(save());
-    expect(await screen.findByTestId("comment-edit-refused")).toHaveTextContent("That didn't go through. Try again.");
+    expect(await screen.findByTestId("comment-edit-failed")).toHaveTextContent("That didn't go through. Try again.");
     expect(screen.queryByTestId("comment-edit-bug")).toBeNull();
-    expect(screen.queryByTestId("comment-edit-failed")).toBeNull();
+    expect(screen.getByTestId("comment-edit-retry")).toBeInTheDocument();
   });
 
   // NetworkError.md:3 — a lost answer says the network error's own line.
@@ -464,6 +465,11 @@ describe("CommentEditor — + Add pictures and the gate (CommentEdit)", () => {
     const line = await screen.findByTestId("comment-edit-failed");
     expect(line).toHaveTextContent("That didn't send. Try again.");
     expect(line).not.toHaveTextContent(/reach the server/);
+    // In the commit's place, an outlined Retry under it where Sign the edit
+    // stood (CommentEdit.md:97, NetworkError.md:3; seam 352).
+    expect(screen.queryByTestId("comment-edit-save")).toBeNull();
+    expect(screen.getByTestId("comment-edit-retry").className).toContain("border-outline");
+    expect(screen.getByTestId("commentEdit.words.input")).toHaveValue("New words.");
   });
 });
 

@@ -896,13 +896,14 @@ describe("PostEditRoute — signing", () => {
     const signer = draw();
     fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
     fireEvent.click(sign());
-    const line = await screen.findByTestId("post-edit-refused");
+    const line = await screen.findByTestId("post-edit-failed");
     expect(line).toHaveTextContent("That didn't go through. Try again.");
     expect(screen.getByTestId("post-edit")).not.toHaveTextContent(/You can't do that here|reach the server/);
-    expect(screen.queryByTestId("post-edit-failed")).toBeNull();
+    expect(screen.queryByTestId("post-edit-refused")).toBeNull();
     expect(signer.signStaged).not.toHaveBeenCalled();
-    // The commit stays, the re-press.
-    expect(sign()).not.toBeDisabled();
+    // The network error's foot: the outlined Retry stands where Sign the edit stood.
+    expect(screen.getByTestId("post-edit-retry")).toHaveTextContent("Retry");
+    expect(screen.queryByTestId("post-edit-sign")).toBeNull();
   });
 
   it("reads a FORBIDDEN tag prepare on the whole edit, never under the chip", async () => {
@@ -924,7 +925,7 @@ describe("PostEditRoute — signing", () => {
     fireEvent.click(screen.getByTestId("tagPicker.done"));
     await screen.findByTestId("postEdit.header");
     fireEvent.click(sign());
-    expect(await screen.findByTestId("post-edit-refused")).toHaveTextContent("That didn't go through. Try again.");
+    expect(await screen.findByTestId("post-edit-failed")).toHaveTextContent("That didn't go through. Try again.");
     expect(screen.queryByTestId("post-edit-tag-error-0")).toBeNull();
     expect(signer.signStaged).not.toHaveBeenCalled();
   });
@@ -944,10 +945,11 @@ describe("PostEditRoute — signing", () => {
     const signer = draw();
     fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
     fireEvent.click(sign());
-    expect(await screen.findByTestId("post-edit-refused")).toHaveTextContent(line);
-    expect(screen.queryByTestId("post-edit-failed")).toBeNull();
+    expect(await screen.findByTestId("post-edit-failed")).toHaveTextContent(line);
+    expect(screen.queryByTestId("post-edit-refused")).toBeNull();
     expect(signer.signStaged).not.toHaveBeenCalled();
-    expect(sign()).not.toBeDisabled();
+    // NetworkError.md:19 draws no Retry for the unverified line (seam 350).
+    expect(screen.queryByTestId("post-edit-retry") !== null).toBe(code !== "EMAIL_NOT_VERIFIED");
   });
 
   it("reads a BAD_INPUT naming no field as That didn't go through.", async () => {
@@ -969,7 +971,7 @@ describe("PostEditRoute — signing", () => {
     draw();
     fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
     fireEvent.click(sign());
-    expect(await screen.findByTestId("post-edit-refused")).toHaveTextContent("That didn't go through. Try again.");
+    expect(await screen.findByTestId("post-edit-failed")).toHaveTextContent("That didn't go through. Try again.");
   });
 
   it.each([
@@ -991,8 +993,8 @@ describe("PostEditRoute — signing", () => {
     draw({ signer: fakeWriteSigner({ signStaged: vi.fn(() => Promise.resolve(result)) }) });
     fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
     fireEvent.click(sign());
-    expect(await screen.findByTestId("post-edit-refused")).toHaveTextContent("That didn't go through. Try again.");
-    expect(screen.queryByTestId("post-edit-failed")).toBeNull();
+    expect(await screen.findByTestId("post-edit-failed")).toHaveTextContent("That didn't go through. Try again.");
+    expect(screen.getByTestId("post-edit-retry")).toBeInTheDocument();
   });
 
   // NetworkError.md:3 — a lost answer is the network error's own line, never
@@ -1010,6 +1012,28 @@ describe("PostEditRoute — signing", () => {
     const line = await screen.findByTestId("post-edit-failed");
     expect(line).toHaveTextContent("That didn't send. Try again.");
     expect(line).not.toHaveTextContent(/reach the server/);
+    // The line takes the commit's place, an outlined Retry under it where Sign
+    // the edit stood (seam 352; CommentEdit.md:97, NetworkError.md:3).
+    expect(screen.queryByTestId("post-edit-sign")).toBeNull();
+    const retry = screen.getByTestId("post-edit-retry");
+    expect(retry).toHaveTextContent("Retry");
+    expect(retry.className).toContain("border-outline");
+  });
+
+  // NetworkError.md:23 — Retry asks the same signing again.
+  it("signs again from Retry and opens the post when it goes through", async () => {
+    serve(editablePost());
+    server.use(gqlLink.mutation("PreparePostEdit", () => HttpResponse.json({ data: editPrepared() })));
+    const signStaged = vi
+      .fn()
+      .mockResolvedValueOnce({ kind: "failed" as const, id: "w0", cause: new Error("offline") })
+      .mockResolvedValue({ kind: "done" as const, id: "w0", state: "RELAYING" as const });
+    draw({ signer: fakeWriteSigner({ signStaged }) });
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
+    fireEvent.click(sign());
+    fireEvent.click(await screen.findByTestId("post-edit-retry"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
+    expect(signStaged).toHaveBeenCalledTimes(2);
   });
 
   it("takes the commit's place with the write rule's notice and no Retry", async () => {
