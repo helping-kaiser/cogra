@@ -39,7 +39,9 @@ import { fetchKnownMedia } from "@/lib/api/media-api";
 import { editExpectation } from "@/lib/compose/intent";
 import { contentExpectation } from "@/lib/compose/payload-expectation";
 import { postEdit, type ExpectedWrite } from "@/lib/signing/intent";
-import { firstRefusalMessage, NOT_THROUGH_LINE } from "@/lib/ui/error-messages";
+import { firstRefusalMessage, outcomeFaultLine, wholeActLine } from "@/lib/ui/error-messages";
+import { sealFaultOfResults } from "@/lib/compose/seal-fault";
+import type { Outcome } from "@/lib/api/outcome";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthGuard } from "@/lib/session/runtime";
@@ -284,6 +286,14 @@ export function PostEditRoute({
     setBusy(true);
     setHeld(false);
     const end = () => setBusy(false);
+    // A step that did not answer with what the edit needed: an answered fault
+    // of the whole edit says its own line (NetworkError.md:13-19), anything
+    // else is no answer at all (NetworkError.md:3).
+    const unanswered = (outcome: Outcome<unknown>) => {
+      const line = outcomeFaultLine(outcome);
+      if (line !== null) setRefusal(line);
+      else setFailed(true);
+    };
 
     // The L1 ids of the post and of every cited node the edit touches,
     // read before anything is staged: the batch is checked against them,
@@ -304,7 +314,7 @@ export function PostEditRoute({
     );
     if (graphIds.kind !== "success") {
       end();
-      setFailed(true);
+      unanswered(graphIds);
       return;
     }
     const postGraphId = graphIdOf(graphIds.value, postId);
@@ -318,7 +328,7 @@ export function PostEditRoute({
       const known = await guard.run(() => fetchKnownMedia(client, keptMediaIds(state.gallery)));
       if (known.kind !== "success") {
         end();
-        setFailed(true);
+        unanswered(known);
         return;
       }
       const ledger = new Map([...known.value, ...addedLedger(state.gallery)]);
@@ -332,12 +342,12 @@ export function PostEditRoute({
     const perReference: Record<number, string> = {};
     let general: string | null = null;
     let writeRule = false;
-    // A FORBIDDEN answer refuses the whole edit, never one chip: the not-through
-    // line in the fault's slot (NetworkError.md:13).
-    let notThrough = false;
+    // An answered fault of the whole edit refuses it whole, never one chip: its
+    // line in the fault's slot (NetworkError.md:13-19).
+    let notThrough: string | null = null;
     const refused = (errors: Parameters<typeof firstRefusalMessage>[0]) => {
       if (errors.some((error) => error.code === "WRITE_RULE_FAILED")) writeRule = true;
-      if (errors.some((error) => error.code === "FORBIDDEN")) notThrough = true;
+      notThrough = notThrough ?? wholeActLine(errors);
       return firstRefusalMessage(errors, "The server refused this write.");
     };
 
@@ -345,7 +355,7 @@ export function PostEditRoute({
       const prepared = await guard.run(() => preparePostEdit(client, sent));
       if (prepared.kind === "failed") {
         end();
-        setFailed(true);
+        unanswered(prepared);
         return;
       }
       if (prepared.kind === "refused") general = refused(prepared.errors);
@@ -363,7 +373,7 @@ export function PostEditRoute({
       );
       if (prepared.kind === "failed") {
         end();
-        setFailed(true);
+        unanswered(prepared);
         return;
       }
       if (prepared.kind === "refused") {
@@ -394,7 +404,7 @@ export function PostEditRoute({
       );
       if (prepared.kind === "failed") {
         end();
-        setFailed(true);
+        unanswered(prepared);
         return;
       }
       if (prepared.kind === "refused") {
@@ -417,9 +427,9 @@ export function PostEditRoute({
       setWriteRuleRefused(true);
       return;
     }
-    if (notThrough) {
+    if (notThrough !== null) {
       end();
-      setRefusal(NOT_THROUGH_LINE);
+      setRefusal(notThrough);
       return;
     }
     if (general !== null || Object.keys(perTag).length > 0 || Object.keys(perReference).length > 0) {
@@ -442,11 +452,11 @@ export function PostEditRoute({
     if (results.every((result) => result.kind === "done")) {
       // The post opens with the edit settling.
       router.push(`/posts/${postId}`);
-    } else if (results.some((result) => result.kind === "refused" && result.errors.some((e) => e.code === "FORBIDDEN"))) {
-      // The server answered: never the "can't reach the server" line.
-      setRefusal(NOT_THROUGH_LINE);
     } else {
-      setFailed(true);
+      // The server answered: its line, never the no-answer one.
+      const fault = sealFaultOfResults(results, []);
+      if (fault.kind === "notThrough") setRefusal(fault.line);
+      else setFailed(true);
     }
   };
 

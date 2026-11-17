@@ -15,6 +15,13 @@ import type { Outcome, UserError } from "@/lib/api/outcome";
  */
 export const NOT_THROUGH_LINE = "That didn't go through. Try again.";
 
+/**
+ * No answer at all, on a seal, pad, dialog or form (NetworkError.md:3;
+ * copy-voice, *No answer at all*) — never TransportError's long fallback
+ * where a commit stands to be pressed again.
+ */
+export const NO_ANSWER_LINE = "That didn't send. Try again.";
+
 /** EMAIL_NOT_VERIFIED, in the same place (NetworkError.md:19; copy-voice, *Faults by code*). */
 export const UNVERIFIED_LINE = "Verify your email first — the link is in your inbox.";
 

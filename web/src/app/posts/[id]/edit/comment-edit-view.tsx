@@ -67,6 +67,7 @@ import type { Crop } from "@/lib/ui2/media/crop";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
 import { TransportError } from "@/lib/ui/transport-error";
+import { NO_ANSWER_LINE } from "@/lib/ui/error-messages";
 import { licenseName, type License } from "@/lib/license";
 import {
   editActCount,
@@ -734,7 +735,7 @@ export function CommentEditView({
                 {refusal}
               </p>
             )}
-            {failed && <TransportError testId="comment-edit-failed" />}
+            {failed && <TransportError testId="comment-edit-failed" message={NO_ANSWER_LINE} />}
 
             {/* THE GATE: while the bytes the edit took go up, the seal's line
                 over the foot — naming the cover where the edit set one; failed,

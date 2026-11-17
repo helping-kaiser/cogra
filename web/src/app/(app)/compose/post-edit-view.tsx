@@ -41,6 +41,7 @@ import { useId, useRef, type ReactNode } from "react";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
 import { TransportError } from "@/lib/ui/transport-error";
+import { NO_ANSWER_LINE } from "@/lib/ui/error-messages";
 import { HeaderBar } from "@/lib/ui2/header-bar";
 import { HelpDot } from "@/lib/ui2/help-dot";
 import { FactRow } from "@/lib/ui2/fact-row";
@@ -488,7 +489,7 @@ export function PostEditView({
             {refusal}
           </p>
         )}
-        {failed && <TransportError testId="post-edit-failed" />}
+        {failed && <TransportError testId="post-edit-failed" message={NO_ANSWER_LINE} />}
 
         {/* THE GATE (EditCompose.md, EditComposeVideo.md): while the bytes
             the edit took are going up, the seal's line stands over the foot,
