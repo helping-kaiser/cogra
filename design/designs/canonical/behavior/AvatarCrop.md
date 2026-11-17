@@ -20,6 +20,10 @@ WHEN press Next GIVEN the crop was opened from Change picture on the profile edi
 
 WHEN press the header back arrow -> the screen that asked for the picture comes back AND the picture goes unused AND NEVER a pick stage opens
 
+ALWAYS the header back arrow is named Back to the edit GIVEN the crop was entered from Change picture on the profile edit
+
+ALWAYS the header back arrow is named Back to your profile GIVEN the crop was entered from the avatar's change badge
+
 WHEN press the header X -> the flow is left AND nothing is signed
 
 ALWAYS the zoom slider stands under the crop on both platforms, its thumb at the crop's zoom between the fill and 10×

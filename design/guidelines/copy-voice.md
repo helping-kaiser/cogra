@@ -1016,7 +1016,14 @@ boards already speak, recorded so the registry is whole:
   2026-10-28, blessed (jakob 2026-11-10)*); the X says what leaving keeps: `Leave — your
   draft is kept` (the post), `Leave — the reply is discarded`, `Leave —
   the edit is discarded` (a comment edit and a post edit), and a bare `Leave` on the
-  profile's and the picture's seals and the picture's crop.
+  profile's and the picture's seals and the picture's crop. A crop opened
+  from an edit names its arrow by where it goes: `Back to the edit` — the
+  picture crop and the cover crop entered from a post edit or a comment
+  edit, the profile picture's crop entered from Edit profile — and `Back
+  to your profile` on the profile picture's crop entered from the
+  profile head's badge; a crop that is a stage of the new post's or the
+  reply's wizard keeps `Back a step` (jakob 2026-11-17, C8, as
+  recommended).
 - **The overflow doors and their sheets** — `More on this post` · `More
   on this comment` · `More on your profile` · `More about @ada` (another's
   profile and a person card; `More about this account` for a deleted
