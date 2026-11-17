@@ -2648,26 +2648,10 @@
           "1",
           "2"
         ],
-        "composeCrop.shapes": [
-          "tall",
-          "square",
-          "wide"
-        ],
-        "composeCrop.shapes.squareChip": [
-          "tall",
-          "square",
-          "wide"
-        ],
-        "composeCrop.shapes.tallChip": [
-          "tall",
-          "square",
-          "wide"
-        ],
-        "composeCrop.shapes.wideChip": [
-          "tall",
-          "square",
-          "wide"
-        ],
+        "composeCrop.shapes": [],
+        "composeCrop.shapes.squareChip": [],
+        "composeCrop.shapes.tallChip": [],
+        "composeCrop.shapes.wideChip": [],
         "composeCrop.viewport": [],
         "composeCrop.zoom": [],
         "composeCrop.zoom.input": []
