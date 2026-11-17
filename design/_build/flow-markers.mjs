@@ -549,6 +549,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: "{{addLabel}}", tag: "button" },
     { n: 7, find: ">Describe the pictures</button>", tag: "button" },
     { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
+    // The `tag` chip's refused second tag (round 50): the same two controls
+    // every tag chip carries, and the line's Remove it.
+    { n: 14, find: "aria-label=\"#saltmaps — set how it relates\"", tag: "button" },
+    { n: 8, find: 'aria-label="Remove #saltmaps"', tag: "button" },
+    { n: 19, find: ">Remove it</button>", tag: "button" },
     { n: 9, find: "+ Add a tag", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
     { n: 11, find: "signing 5 things", tag: "button" },
@@ -1305,6 +1310,11 @@ Object.assign(FLOW_MARKERS, {
     // The kept cover's and the picked-cover copy's (round 46).
     { n: 7, find: ">Change the cover</button>", tag: "button", all: true },
     { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
+    // The `tag` chip's refused second tag (round 50): the same two controls
+    // every tag chip carries, and the line's Remove it.
+    { n: 14, find: "aria-label=\"#saltmaps — set how it relates\"", tag: "button" },
+    { n: 8, find: 'aria-label="Remove #saltmaps"', tag: "button" },
+    { n: 19, find: ">Remove it</button>", tag: "button" },
     { n: 9, find: "+ Add a tag", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
     // Both `upload` copies count alike: a new face rides the Edit record (seam 248).
@@ -2729,6 +2739,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 18, find: 'aria-label="Undo withdrawing Tide tables and the third headland — @juno"', tag: "button" },
     // The opinion row's Adjust (jakob 2026-10-16, PR-101): the one-axis pad over the edit.
     { n: 21, find: ">Adjust</button>", tag: "button" },
+    // The `tag` chip's refused tag (round 50): its line's Remove it, after the
+    // failed upload's.
+    { n: 22, find: ">Remove it</button>", tag: "button", skip: 1 },
   ],
   /* The same edit with an empty batch — `EditCompose`'s markers, minus the one
      control that stops being one. The acts footer is a plain span at zero, so

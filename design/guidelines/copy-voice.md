@@ -1668,7 +1668,11 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   - **A staged tag that never landed** — on the Tags row, under its
     chips: `This tag didn't land.` with `Remove it`, no reason given (jakob
     2026-11-11, *blessed*). **Drawn** on `ComposeSeal`'s and `ReplySeal`'s
-    `state` chip, `tag-refused`.
+    `state` chip, `tag-refused`. The edits take the same words under
+    their tags, `Sign the edit` standing, and with more than one tag on
+    the row the refused chip wears the error ring (jakob 2026-11-17, his
+    19). **Drawn** on `EditCompose`'s and `CommentEdit`'s `tag` chip,
+    `refused`.
   - **Any other refusal** — a bug the picking stage should have
     blocked. A notice in the commit's place, never the failure voice:
     `This shouldn't have happened` over `That's a fault on our side,
