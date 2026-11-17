@@ -97,7 +97,7 @@ pub fn canonical_deps(deps: &[ActId]) -> Vec<u8> {
 }
 
 /// The order of a canonical dependency list. The Layer 1 specification
-/// (`def:graph:act-dependency-projection`) has the list sorted by act
+/// (its definition "Act Dependency Projection") has the list sorted by act
 /// identifier with no duplicates and fixes no order on identifiers, so
 /// the order is the deployment's: this one orders bytewise over each
 /// identifier's canonical text form — the form

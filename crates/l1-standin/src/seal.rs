@@ -55,8 +55,8 @@ fn formation(msg: impl Into<String>) -> StandInError {
 /// - **Dependency bounds**, checked against `MAX_DEPS`, and the list's own
 ///   form: no self-dependency, and strictly ascending under
 ///   [`common::l1::handshake::dependency_order`], so the list is sorted
-///   and has no duplicates, as the Layer 1 specification's dependency
-///   projection requires (`def:graph:act-dependency-projection`). The
+///   and has no duplicates, as the Layer 1 specification's definition
+///   "Act Dependency Projection" requires. The
 ///   payload bound
 ///   is a carriage check and the content nonce's format, length,
 ///   freshness and non-reuse are carriage obligations, none of them a
