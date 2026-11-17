@@ -6309,7 +6309,7 @@ under it; (b) it keeps 88% and the rule names the pinned-height sheet as its
 exception.
 
 Closed by round 50, act 3 (jakob 2026-11-17, C5 as recommended): the sheet sizes to its
-content up to 88% (FeedFilterSheet's it), its foot 16px under the last section.
+content up to 88% (FeedFilterSheet's `fit`), its foot 16px under the last section.
 
 ### 250 · A card's fault line when no answer came · *design* · **filed 2026-11-17** · **closed 2026-11-17**
 
@@ -6394,3 +6394,37 @@ rides only a fresh start, and `Continue` resumes the draft without it; (c) the d
 says, the kept draft waiting untouched behind it.
 
 Closed by round 51, act 3 (jakob 2026-11-17, option (a), "as rec"): from Cite, Mention or a tag card's compose glyph with a draft kept, the draft card leads as from New post; `Continue` resumes the draft and what the door brought joins it, `Discard` starts a fresh pick with it riding; with no draft kept the door opens fresh (`ComposeDraft`, `ComposeDraftDiscard`, `ComposeCited`, every door's sidecar and graph edge).
+
+### 260 · The reply composer: the clip and its cover do not fit side by side · *design* · **filed 2026-11-17** · **closed 2026-11-17**
+
+Round 52 (jakob 2026-11-17, decision 4: the cover beside the clip at the same
+height and its own shape). The reply composer's clip tile is the comment's
+square at 220 × 220 (`ReplyVideo`, `ReplyVideoFailed`); a comment's cover is
+square too, so two tiles need 220 + 8 + 220 = 448 against the 342 column.
+Options: (a) both tiles shrink to share the column, 167 × 167 each
+((342 − 8) ∕ 2); (b) the clip keeps its 220 and the cover stands beside it at
+what is left, 114 × 114, the same top, not the same height. Either way the
+frame row stays the chooser on this one-screen composer, and the cover tile
+shows its choice: what a tap on the tile does here (scroll to the row, or open
+the picker as on the edits) is part of the answer. Until then the host keeps
+the ringed inset (`MediaThumb`'s `coverSrc`, used nowhere else).
+
+Closed by round 52, act 3 (jakob 2026-11-17, (a), "but why would the cover tap not open the
+cover crop here aswell?", then "Yes, both"): both tiles 167 × 167; the cover's tile is a door
+— the picker, then the cover's crop locked to the comment's square — as on the edits; the
+frame row stays the chooser for frames, a frame never cropped (`ReplyVideo`'s `cover` chip,
+`ReplyVideoFailed`). The inset and `MediaThumb`'s `coverSrc` are gone.
+
+### 261 · The post crop opened from an edit: whether the shape row stands · *design* · **filed 2026-11-17** · **closed 2026-11-17**
+
+Round 52 (the C8 back names on the crops' boards). Pictures added to a
+published post's edit pass the crop locked to the post's one shape
+(`EditCompose.md`, `ComposeCrop.md`). Whether the shape row stands there —
+dimmed at the locked shape, or gone as on the cover and comment crops — is not
+written, so `ComposeCrop` draws no `opener` chip yet (its arrow's name, `Back to
+the edit`, is law). Options: (a) the row goes, the frame at the post's shape;
+(b) the row stands, the post's shape selected, the others inert.
+
+Closed by round 52, act 3 (jakob 2026-11-17, "Yes, both"): (a) — the shape row is hidden on
+the edit's crop, the stage at the post's shape, drag and zoom unchanged; `ComposeCrop`'s
+`opener` chip (`post` · `edit`) draws it and names the arrow and the X.

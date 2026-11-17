@@ -1645,7 +1645,16 @@ Instagram's model: one shape for the whole post — Tall 4:5, Square
 1:1, or Wide 1.91:1 — with drag-to-move and pinch-to-zoom framing
 per picture: the frame stands still at the shape and the picture moves
 and zooms under it, on a stage that keeps its 390 × 488 under every
-shape (round 44, one crop model on both clients); 4:5 as the tallest shape is what guarantees the feed
+shape (round 44, one crop model on both clients). **The stage fits the
+window** (jakob 2026-11-17), on every crop — the post's, the cover's, the
+profile picture's and the comment's — on both clients: it stands as large
+as the column allows and never taller than the window leaves once the
+header, the shape row, the zoom, the line, the strip and the pinned `Next`
+have their place; capped, it keeps its proportion and stands centred, the
+frame and the picture scaling with it, so nothing scrolls and nothing is
+cut off. Its floor is 240 high, and under that the page scrolls under the
+pinned `Next` (*Text scale*). `ComposeCropShort` draws a 672 × 720
+browser window. 4:5 as the tallest shape is what guarantees the feed
 card's height cap (below). Wizard screens carry no step numbers and
 no stage label (paths differ in length; the title names the stage,
 and `What you sign` names the end — jakob 2026-11-12).
@@ -1987,8 +1996,9 @@ media and comment editing.
   *Comment video and the media error states*.
 - **Upload starts after the crop.** The crop happens on the device
   and **only the cropped export is ever uploaded** — the original
-  frame can hold what the author never meant to share. Comment
-  pictures never crop, so they upload at pick. Progress rides the
+  frame can hold what the author never meant to share. A comment's
+  pictures pass the comment's square crop (`ReplyCrop`) and upload
+  from its Next, the same way. Progress rides the
   thumbnails as rings; a failed picture is marked on its tile with
   `Retry · Remove it` beside the row; **the seal gates** — "Uploading
   n of m — signing waits for the pictures" (`…for the video.` on a
@@ -2004,8 +2014,9 @@ media and comment editing.
 - **Comment media is words-first**: pictures sit below the words,
   inset at the card's medium rung (an attachment, not the body),
   **capped at comment scale** so a comment never turns into a post,
-  never cropped — a single picture at its own ratio, multiples in
-  the same pager on a fixed square frame. **Comment editing**
+  and **square**: every picture is the square its author framed in
+  the comment's crop, a single one too, multiples in the same pager
+  on the square frame. **Comment editing**
   mirrors the post's one-screen-one-batch (words, pictures, topics,
   citations; license locked), entered from `Edit` on an own
   comment; the Edited marker is the same one posts wear.
@@ -2035,7 +2046,7 @@ set of findings; jakob's rulings 2026-08-31):
   bytes only; a description is witnessed in the act's manifest
   and rides the prepare input per placement (`AttachmentInput`),
   cached on the version's junction row like gallery order. So
-  comment pictures upload at pick, descriptions land at sign,
+  pictures upload from the crop, descriptions land at sign,
   nothing gates on the other — the alt-text-vs-upload race the
   implementation session feared cannot exist. The describe entry
   is the same counter line everywhere a composer shows picked
@@ -2536,8 +2547,8 @@ file that is too big or in a format nothing here reads.
   video"**, one holding pictures reads **"+ Add pictures · n of 4"**
   (the video is out — the grammar is exclusive), and one holding a
   video carries **no add control at all**, the cover row standing
-  alone. There is still no pick stage and no crop, so the video
-  uploads at pick like a comment's pictures do.
+  alone. There is no pick stage and a clip takes no crop, so the
+  video uploads at pick.
 - **The cover is the post's, inlined.** `ComposeCover`'s row — the
   frame strip, the tile that takes a picture of your own, *A frame, or
   a picture of your own.* — sits under the video at comment scale
@@ -2743,11 +2754,9 @@ item 33, jakob's rulings the same day).
   post-fits-the-screen cap still bounds the tile as it bounds every
   tile, and under it the tile is **filled, never fitted**. **Square is
   the comment scale's shape**, and a comment's pictures and clips alike
-  fill it: an uncropped picture display-crops to its frame, centred,
-  because bars beside a picture spend a card's scarcest resource on
-  nothing and the whole frame is one tap away in the viewer. The crop
-  is display-only — a comment's picture still travels uncropped, and
-  what the author uploaded is what the record holds.
+  fill it: a picture IS the square its author framed in the comment's
+  crop (`ReplyCrop`), only that square is uploaded, and the viewer
+  shows that square whole.
 - **The control ladder** — a deliberate revision of the conform
   round's sound-only-on-every-reading-surface rule. A **feed card**
   carries the sound disc alone. A **detail view** carries play/pause
@@ -6325,24 +6334,27 @@ The same round's video half. The cover's mark had been built and drawn
 without ever being written down, which is how a treatment becomes a
 board's private habit; jakob ruled it as recommended.
 
-- **A cover rides the clip's own tile.** The chosen frame is inset in
-  the tile's **bottom-left corner** — a third of the tile's short side,
-  never under a **28px** floor, behind a hairline ring, carrying its own
-  framing rather than a miniature of the tile beneath it. **One
-  attachment is one tile**: a cover standing beside the clip would read
-  as a second thing the author picked, and they picked one thing. The
-  corner is the one the "Cover" badge already owns on a picture, so a
-  tray says *cover* in a single place whatever kind of body is in it.
-- **Each surface carries the cover its own way.** The **pick tray**
-  shows the inset, which is how a walk that can be walked backwards
-  tells the author what the step behind them settled. The **edit
-  stage** carries a *Cover* field section under *Video*, in both its
-  states: the door *Add a cover* where none is chosen, the face and
-  *Change the cover* where one is. The **compose details stage**
-  carries only the door, and only for a clip whose shape skipped the
-  frame picker; a clip that walked the cover step shows no cover
-  section at all — its face rides the tile's inset, and the step is
-  one Back away. A
+- **A cover stands beside the clip** (jakob 2026-11-17, round 52:
+  "the cover beeing full size and next to the video … this way we
+  also have a entrance gate for changing the cover"). Wherever a flow
+  shows the clip after a cover can exist, the cover is its own tile
+  (`CoverTile`) beside the clip's — at the clip tile's height and the
+  cover's own shape, wearing the *Cover* pill a post's first picture
+  wears — and the tile is the door that changes it, named *Change the
+  cover*. With no cover, the same place holds the dashed *Add a cover*
+  door, its words beside the tile where the tile is too small for them.
+- **Each surface opens its own way in.** The **pick tray** shows the
+  cover beside the clip once the cover step settled one, which is how a
+  walk that can be walked backwards tells the author what the step
+  behind them settled; its tile reopens the step. The **compose
+  details stage** always carries the tile: the chosen cover, its tap the
+  cover step again, or the dashed door for a clip that skipped the frame
+  picker or passed it without a pick. The **edits** carry it in the
+  *Video* field, the tile opening the picker and the cover's crop. The
+  **reply composer** shares its column between the two, 167 × 167 each
+  (jakob 2026-11-17), its tile opening the picker and the cover's crop
+  as on the edits, the frame row below the chooser for frames — a frame
+  is never cropped. A
   **reading surface** shows the cover as the card's still, and branches
   on nothing: whether that still was chosen or taken was settled while
   the post was written.
@@ -6735,15 +6747,14 @@ painted a frame.
   READING surfaces are handed — the chosen cover where one was
   chosen, the taken frame 1 where none was; the COMPOSE WIZARD's
   own tiles are a different rule and always wear the clip's first
-  frame, the chosen cover riding as the ringed inset only (the
-  video-cover round). **The rule holds at both scales** (jakob
+  frame, the chosen cover standing beside it as its own tile
+  (round 52). **The rule holds at both scales** (jakob
   2026-09-24, when the platforms' reply tiles diverged): the
   reply composer's clip tile is an authoring tile like the
-  tray's — frame 0 as its face, the chosen frame as the ringed
-  inset — because a divergence between the two composers would
-  be invisible until it confused, and the inline cover row
-  already shows the chosen frame at full prominence right below
-  it. No new boards; both rulings
+  tray's — frame 0 as its face — because a divergence between the
+  two composers would be invisible until it confused; its chosen
+  cover stands beside it as its own tile, 167 × 167 each (round 52,
+  act 3). No new boards; both rulings
   land as contracts to the implementation session.
 
 ### The compose last-picture ruling — 2026-09-23
@@ -12301,6 +12312,88 @@ the email line (impl 354, 351, "as rec"), built on rounds 48–50 (ecffb3ba9).
   kept the door opens fresh at the first stage. Leaving the draft card by
   its arrow or X keeps the draft as it was. Every door's sidecar and graph
   edge carries the kept-draft case (`ComposeDraft`). Backlog 256 closed.
+
+### Round 52, a comment's pictures cropped square, the crop fits the window, the cover beside the clip — 2026-11-17
+
+jakob's answers of 2026-11-17 to the hand test's eight decisions ("All as
+rec"), his 2, 3 and 4, built on rounds 48–50 merged (ecffb3ba9), round 51
+merged in (6f95dac35, then its acts 2 and 3, 55cd99081 and c126296b8).
+
+- **A comment's pictures are cropped square** (2; his W2: "ofcourse all
+  media should be square in comments but why is there no crop step for
+  images?"). This replaces his ruling of 2026-08-31 that a comment's
+  pictures never crop, and the display-only centre cut of 2026-09-03.
+  `ReplyCrop` ("Reply · the crop") stands after the platform's picker for
+  a reply and for a comment edit's `+ Add pictures`: the cover crop's
+  square — the 390 × 488 stage, the frame 342 × 342 at 73 — the zoom to
+  10×, and the post crop's strip when more than one was picked, each
+  picture its own framing; no shape chips, no line. The upload starts at
+  its `Next`, and only the squares leave the device; adding pictures later
+  crops the new ones only; its back arrow returns the composer or the
+  edit as it was, the picks unused, named `Back a step` from the reply and
+  `Back to the edit` from an edit (its `opener` chip). Refused files are
+  judged when the picker hands them back, before the crop, on the media
+  row as before. The trays draw squares; `CommentCard` stands every
+  comment picture square, one as much as four — the master drew a single
+  one at its own ratio, which no board drew, so no board's markup changed.
+  The viewer shows the square whole.
+- **The crop stage fits the window** (3; his W22). On every crop, both
+  clients, the stage stands as large as the column allows and never
+  taller than the window leaves once every other block has its place —
+  replacing "the stage scales with the column". Capped, it keeps its
+  proportion, centred, the frame and the picture scaling with it; its
+  floor is 240 high, under which the page scrolls under the pinned `Next`
+  (the technical floor, told to jakob). `ComposeCropShort` draws a 672 ×
+  720 browser window with three pictures: the stage 313.28 × 392, every
+  block inside the window; the body is `ComposeCropBody`, shared with
+  `ComposeCrop`, whose board renders as before.
+- **A clip's cover stands beside the clip** (4; his W22: "the cover beeing
+  full size and next to the video … this way we also have a entrance gate
+  for changing the cover"). This replaces "one attachment is one tile"
+  (2026-09-15 / 24) and the cover mark he parked as C7. `CoverTile`: at
+  the clip tile's height and the cover's own shape, wearing the `Cover`
+  pill, the tile the door named `Change the cover`; with no cover the
+  dashed `Add a cover` door in its place, its words beside it where the
+  tile is too small. Drawn on the pick tray (114 × 64 beside the clip's
+  114 × 64), the details stage (a cover tile always, its `cover` chip;
+  a tall clip's 76.8 × 96, dashed or chosen, beside the 54 × 96 clip), the post
+  edit (76.8 × 96) and the comment edit (56 × 56, words beside). The cover
+  step's strip takes a picture of the author's own in the dashed tile's
+  place, outlined (`CoverRow`'s `own`; the `cover` chips on `ComposeCover`
+  and `ComposeCoverNoFrames`); a tap on it re-picks, as the edits' door
+  does. A tall clip still skips the cover step. The reply composer's two
+  220 tiles do not fit the 342 column, so that host waits on jakob
+  (backlog 260) and keeps its inset; the edits' `cover` field paths gave
+  way to `video.cover` (removed: `postEdit.cover` and `commentEdit.cover`
+  with their `add`, `change`, `label`, `thumb`).
+- **Round 51's rules on these boards** (decisions 6 and 8): a picture the
+  server refuses at upload keeps `One picture didn't upload.` with
+  `Remove it` alone, a clip `That video didn't upload.` (`ReplyPictures`'
+  `upload` chip, `refused`; law on `ComposeUploading`, `ReplyVideoFailed`
+  and the edit-video boards; the seals' gate unruled); the edit-video
+  boards take the edit's fault in the commit's place, `fault` chip
+  `unsent` · `refused`, `postEdit.fault` / `commentEdit.fault` with an
+  outlined `Retry`, the count above, no `Back` — round 51's `editFault`,
+  one helper for all four edits; and a refused upload at their gate reads
+  the fact alone, as on `EditCompose` (round 51 act 2): `CommentEditVideo`'s
+  `clip` chip draws it at `refused`, `The video didn't upload.` on the gate
+  and `Sign the edit` disabled until `Remove it`; a refused cover keeps `One
+  picture didn't upload.`
+- **Adjacent**: `Reel.md` and `ViewerVideo.md` end their cover sentence
+  ("…and its cover has loaded"); `AvatarCrop` and `CoverCrop` take an
+  `opener` chip so the boards speak the C8 back names; the
+  reply-with-pictures flow walks through the crop. Backlog 260–261 filed.
+- **Act 3, jakob's answers on 260 and 261 (2026-11-17, "Yes, both")**: the
+  reply composer shares its column, the clip and its cover 167 × 167 each
+  (`ReplyVideo`, `ReplyVideoFailed`), and the cover's tile is a door there
+  too — the picker, then the cover's crop locked to the comment's square;
+  the frame row stays the chooser for frames, a frame never cropped
+  (`ReplyVideo`'s `cover` chip: `none` · `frame` · `own`). The inset is gone
+  from the product, and `MediaThumb`'s `coverSrc` with it. The post crop
+  entered from an edit hides its shape row, the stage at the post's shape
+  (`ComposeCrop`'s `opener` chip, `post` · `edit`, which also names the
+  arrow and the X); the row is hidden, never left out, so its unkeyed paths
+  stand. Backlog 260 and 261 closed.
 ---
 
 ## 14. The canvases

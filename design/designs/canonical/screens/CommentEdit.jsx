@@ -1,5 +1,6 @@
 /* Edit comment (media slice): the post's one-screen-one-batch, scaled to the
-   comment's anatomy — words, pictures (uncropped, four max, described via the
+   comment's anatomy — words, pictures (squares, four max, a new one framed
+   in the comment's crop `ReplyCrop` on its way in, described via the
    same counter line the reply composer wears), tags, citations, the license
    locked. Entered from Edit on an own comment. The acts footer is the
    affordance into the acts sheet (the CommentEditActs board — the EditActs

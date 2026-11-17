@@ -18,15 +18,23 @@ WHEN tap the picture tile -> the device's own picker opens AND on the web the br
 
 WHEN a picture of the author's own is picked for the cover -> it passes the crop locked to the clip's shape AND only the cropped export leaves the device
 
+WHEN a picture of the author's own comes back from the cover's crop -> it stands in the picture tile's place in the strip, outlined as chosen AND the frames dim around it AND the preview shows it
+
+WHEN tap the author's own picture in the strip -> the device's own picker opens again AND the picture it brings passes the cover's crop AND NEVER the picture is re-framed in place
+
+ALWAYS the preview shows the chosen cover at the clip's own shape GIVEN a cover is chosen and the preview is not playing
+
 WHEN tap the preview's play -> the preview runs AND the cover gives way to the transport
 
-WHEN press the header back arrow GIVEN a cover was chosen -> the pick step shows the clip wearing the chosen cover AND the choice is kept
+WHEN press the header back arrow GIVEN a cover was chosen -> the pick step shows the chosen cover beside the clip as its own tile AND the choice is kept
 
 WHEN the step is reached again GIVEN a cover was chosen -> the chosen cover stands chosen AND NEVER the step asks for it afresh
 
-WHEN press the header back arrow GIVEN the step was opened by the details stage's Add a cover -> the details stage comes back
+WHEN press the header back arrow GIVEN the step was opened by the details stage's cover tile -> the details stage comes back
 
-WHEN press Next GIVEN a cover is chosen -> the details stage opens AND NEVER an Add a cover door stands there
+WHEN press the header back arrow GIVEN the step was opened by the pick step's cover tile -> the pick step comes back
+
+WHEN press Next GIVEN a cover is chosen -> the details stage opens with the chosen cover beside the clip as its own tile, the door back to this step
 
 WHEN press Next GIVEN the author has picked no face -> the details stage opens with the clip coverless AND the clip's frame 0 is its face AND NEVER Next waits for a pick
 

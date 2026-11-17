@@ -1,9 +1,11 @@
 /* The reply composer with pictures attached (media slice): words first, the
-   uncropped tiles join them — whole frames in MediaThumb, one still
-   uploading (comment pictures upload at pick; there is no crop). Four is the
-   cap. Comments have no pick stage: "+ Add" opens the platform's own picker
+   pictures join them as the squares their author framed in the comment's
+   crop (`ReplyCrop`, round 52) — square tiles in MediaThumb, one still
+   uploading (the upload starts at the crop's Next). Four is the cap.
+   Comments have no pick stage: "+ Add" opens the platform's own picker
    (Android's photo-picker sheet here; the browser's file dialog on the
-   ReplyPicturesWeb board).
+   ReplyPicturesWeb board), and what it brings back passes the crop first —
+   the new pictures only; the ones in the tray keep their framing.
 
    A PICTURE THAT DIDN'T UPLOAD FAILS THE COMPOSE WAY (jakob 2026-10-05, the
    collected brief's P17 — the 136 round's ruling 2, mirrored onto the reply).
@@ -15,9 +17,14 @@
    audit K6.2) — and the line above it is the reason and the two ways on;
    "they upload while you write" goes with the upload it described. The
    `upload` chip draws it at `failed`; `uploading` is the drawing as it
-   stands, the second tile's ring running. */
-export const PROPS = { upload: { editor: "enum", options: ["uploading", "failed"], default: "uploading" } };
-export const VALS = `runningShown: this.props.upload === "failed" ? "none" : "flex", failedShown: this.props.upload === "failed" ? "flex" : "none", errorShown: this.props.upload === "failed" ? "block" : "none", noteShown: this.props.upload === "failed" ? "none" : "block", nextShown: this.props.upload === "failed" ? "none" : "block", nextFailedShown: this.props.upload === "failed" ? "block" : "none"`;
+   stands, the second tile's ring running.
+
+   A PICTURE THE SERVER REFUSES KEEPS THE WORDS AND LOSES RETRY (round 52,
+   jakob 2026-11-17, decision 8): the `upload` chip's `refused` draws the
+   same tile and line, `One picture didn't upload.`, with `Remove it` alone —
+   retrying cannot change an answer. */
+export const PROPS = { upload: { editor: "enum", options: ["uploading", "failed", "refused"], default: "uploading" } };
+export const VALS = `runningShown: this.props.upload === "uploading" ? "flex" : "none", failedShown: this.props.upload === "uploading" ? "none" : "flex", errorShown: this.props.upload === "failed" ? "block" : "none", refusedShown: this.props.upload === "refused" ? "block" : "none", noteShown: this.props.upload === "uploading" ? "block" : "none", nextShown: this.props.upload === "uploading" ? "block" : "none", nextFailedShown: this.props.upload === "uploading" ? "none" : "block"`;
 
 export function Screen() {
   return (
@@ -34,15 +41,18 @@ export function Screen() {
         <WordsBody rows={REPLY_WORDS_ROWS} cap={REPLY_WORDS_CAP} paragraphs={["The glovebox camera earns its keep — this is the print from 2019 that almost catches it."]} />
 
         <div style={{ display: "{{runningShown}}", gap: 8, alignItems: "flex-start" }}>
-          <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" width={70} height={88} fit="contain" onRemove={() => {}} />
-          <MediaThumb src="gallery-market.jpg" alt="" width={117} height={88} fit="contain" progress={0.65} />
+          <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={88} onRemove={() => {}} />
+          <MediaThumb src="gallery-market.jpg" alt="" size={88} progress={0.65} />
         </div>
         <div style={{ display: "{{failedShown}}", gap: 8, alignItems: "flex-start" }}>
-          <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" width={70} height={88} fit="contain" onRemove={() => {}} />
-          <MediaThumb src="gallery-market.jpg" alt="" width={117} height={88} fit="contain" failed />
+          <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={88} onRemove={() => {}} />
+          <MediaThumb src="gallery-market.jpg" alt="" size={88} failed />
         </div>
         <div style={{ display: "{{errorShown}}" }}>
           <UploadErrorLine onRetry={() => {}} onRemove={() => {}} />
+        </div>
+        <div style={{ display: "{{refusedShown}}" }}>
+          <UploadErrorLine onRemove={() => {}} />
         </div>
 
         <DescribeCounter described={0} total={2} onDescribe={() => {}} />

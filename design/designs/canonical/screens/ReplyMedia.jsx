@@ -1,7 +1,7 @@
 /* Comments carrying media, and the author's own comment (media slice,
    2026-08-31): square is the comment scale's shape (readme §13, the reel
-   round), so a single picture fills the square, display-cropped and centred —
-   the bytes still travel uncropped — multiples share the fixed square pager,
+   round), so a single picture is the square its author framed in the
+   comment's crop (`ReplyCrop`), multiples share the square pager,
    and the viewer's own
    comment wears — once edited — the Edited marker, its Edit a row in its ⋮. The sheet is the
    comments sheet of readme §13, unchanged.

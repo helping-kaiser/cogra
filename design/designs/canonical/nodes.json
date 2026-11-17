@@ -1522,11 +1522,11 @@
       "prefix": "commentEdit",
       "keys": {
         "commentEdit.acts": "the upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
-        "commentEdit.cover.change": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
-        "commentEdit.cover.thumb": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "commentEdit.fault": "the fault chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "commentEdit.gate": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "commentEdit.sign": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "commentEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "commentEdit.video.cover": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "commentEdit.video.describeRow": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "commentEdit.video.thumb": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "commentEdit.video.uploadError": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
@@ -1540,15 +1540,6 @@
           "none",
           "uploading"
         ],
-        "commentEdit.cover": [],
-        "commentEdit.cover.add": [],
-        "commentEdit.cover.change": [
-          "picked-cover"
-        ],
-        "commentEdit.cover.label": [],
-        "commentEdit.cover.thumb": [
-          "picked-cover"
-        ],
         "commentEdit.facts": [],
         "commentEdit.facts.license": [],
         "commentEdit.facts.license.label": [],
@@ -1558,11 +1549,20 @@
         "commentEdit.facts.sensitive.action": [],
         "commentEdit.facts.sensitive.label": [],
         "commentEdit.facts.sensitive.value": [],
+        "commentEdit.fault": [
+          "unsent",
+          "refused"
+        ],
+        "commentEdit.fault.retry": [
+          "unsent",
+          "refused"
+        ],
         "commentEdit.gate": [
           "picked",
           "picked-cover",
           "second",
-          "failed"
+          "failed",
+          "refused"
         ],
         "commentEdit.gate.line": [
           "picked",
@@ -1570,7 +1570,8 @@
           "second"
         ],
         "commentEdit.gate.message": [
-          "failed"
+          "failed",
+          "refused"
         ],
         "commentEdit.gate.retry": [
           "failed"
@@ -1587,7 +1588,8 @@
         "commentEdit.references.add": [],
         "commentEdit.references.label": [],
         "commentEdit.sign": [
-          "failed"
+          "failed",
+          "refused"
         ],
         "commentEdit.tags": [],
         "commentEdit.tags.add": [],
@@ -1602,28 +1604,39 @@
         "commentEdit.tags.withdrawn.undo": [],
         "commentEdit.target": [],
         "commentEdit.video": [],
+        "commentEdit.video.cover": [
+          "picked",
+          "picked-cover",
+          "failed",
+          "refused",
+          "second"
+        ],
         "commentEdit.video.describeRow": [
           "picked",
           "picked-cover",
           "failed",
+          "refused",
           "second"
         ],
         "commentEdit.video.describeRow.count": [
           "picked",
           "picked-cover",
           "failed",
+          "refused",
           "second"
         ],
         "commentEdit.video.describeRow.describe": [
           "picked",
           "picked-cover",
           "failed",
+          "refused",
           "second"
         ],
         "commentEdit.video.describeRow.reason": [
           "picked",
           "picked-cover",
           "failed",
+          "refused",
           "second"
         ],
         "commentEdit.video.label": [],
@@ -1631,6 +1644,7 @@
           "picked",
           "picked-cover",
           "failed",
+          "refused",
           "second"
         ],
         "commentEdit.video.thumb.remove": [
@@ -1639,13 +1653,16 @@
           "second"
         ],
         "commentEdit.video.uploadError": [
-          "failed"
+          "failed",
+          "refused"
         ],
         "commentEdit.video.uploadError.message": [
-          "failed"
+          "failed",
+          "refused"
         ],
         "commentEdit.video.uploadError.remove": [
-          "failed"
+          "failed",
+          "refused"
         ],
         "commentEdit.video.uploadError.retry": [
           "failed"
@@ -2713,6 +2730,33 @@
         "composeCrop.zoom.input": []
       }
     },
+    "ComposeCropShort": {
+      "prefix": "composeCrop",
+      "keys": {
+        "composeCrop.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)"
+      },
+      "nodes": {
+        "composeCrop.header": [],
+        "composeCrop.header.back": [],
+        "composeCrop.header.leave": [],
+        "composeCrop.header.title": [],
+        "composeCrop.howTo": [],
+        "composeCrop.next": [],
+        "composeCrop.pictures": [],
+        "composeCrop.pictures.thumb": [
+          "1",
+          "2",
+          "3"
+        ],
+        "composeCrop.shapes": [],
+        "composeCrop.shapes.squareChip": [],
+        "composeCrop.shapes.tallChip": [],
+        "composeCrop.shapes.wideChip": [],
+        "composeCrop.viewport": [],
+        "composeCrop.zoom": [],
+        "composeCrop.zoom.input": []
+      }
+    },
     "ComposeDetails": {
       "prefix": "composeDetails",
       "keys": {
@@ -3513,7 +3557,9 @@
       "prefix": "postEdit",
       "keys": {
         "postEdit.acts": "the upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
-        "postEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+        "postEdit.fault": "the fault chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "postEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postEdit.video.cover": "the upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "postEdit.acts": [
@@ -3524,11 +3570,6 @@
           "none",
           "uploading"
         ],
-        "postEdit.cover": [],
-        "postEdit.cover.add": [],
-        "postEdit.cover.change": [],
-        "postEdit.cover.label": [],
-        "postEdit.cover.thumb": [],
         "postEdit.description": [],
         "postEdit.description.corner": [],
         "postEdit.description.input": [],
@@ -3548,6 +3589,14 @@
         "postEdit.facts.sensitive.action": [],
         "postEdit.facts.sensitive.label": [],
         "postEdit.facts.sensitive.value": [],
+        "postEdit.fault": [
+          "unsent",
+          "refused"
+        ],
+        "postEdit.fault.retry": [
+          "unsent",
+          "refused"
+        ],
         "postEdit.gate": [],
         "postEdit.gate.line": [],
         "postEdit.header": [],
@@ -3575,6 +3624,10 @@
         "postEdit.title.input": [],
         "postEdit.title.label": [],
         "postEdit.video": [],
+        "postEdit.video.cover": [
+          "none",
+          "uploading"
+        ],
         "postEdit.video.describeRow": [],
         "postEdit.video.describeRow.count": [],
         "postEdit.video.describeRow.describe": [],
@@ -15316,6 +15369,27 @@
         "postDetail.header": [],
         "postDetail.header.back": [],
         "postDetail.header.menu": []
+      }
+    },
+    "ReplyCrop": {
+      "prefix": "replyCrop",
+      "keys": {
+        "replyCrop.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)"
+      },
+      "nodes": {
+        "replyCrop.header": [],
+        "replyCrop.header.back": [],
+        "replyCrop.header.leave": [],
+        "replyCrop.header.title": [],
+        "replyCrop.next": [],
+        "replyCrop.pictures": [],
+        "replyCrop.pictures.thumb": [
+          "1",
+          "2"
+        ],
+        "replyCrop.viewport": [],
+        "replyCrop.zoom": [],
+        "replyCrop.zoom.input": []
       }
     },
     "ReplyEntry": {

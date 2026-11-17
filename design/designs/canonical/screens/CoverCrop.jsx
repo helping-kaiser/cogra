@@ -36,21 +36,27 @@
    (`CropViewport`), 1 % a press, 10 % with Shift (jakob 2026-10-05).
 
    THE X SAYS WHAT LEAVING KEEPS, BY ENTRANCE (copy-voice, *The wizard's two
-   ends*). The board draws the post's entrance, `Leave — your draft is kept`;
-   entered from a reply's video it reads `Leave — the reply is discarded`, and
-   from a comment edit's or a post edit's `Leave — the edit is discarded` — the X of the flow
-   that opened the crop, asking first where that flow's X asks.
+   ends*), AND THE ARROW SAYS WHERE IT RETURNS (jakob 2026-11-17, C8). The
+   `opener` chip draws the three entrances: `post`, the new post's cover step
+   — `Back a step`, `Leave — your draft is kept`; `reply`, a reply's cover
+   row — `Back a step`, `Leave — the reply is discarded`; `edit`, a post
+   edit's or a comment edit's cover tile — `Back to the edit`, `Leave — the
+   edit is discarded`: the X of the flow that opened the crop, asking first
+   where that flow's X asks.
 
    REGISTERED under its own `coverCrop` prefix (seam 248): `header`, the
    `viewport`, the `zoom` slider and `next` — the step every flow that crops
    a cover shares. */
 export const NODE = "coverCrop";
-export const PROPS = { clip: { editor: "enum", options: ["wide", "tall", "square"], default: "wide" } };
-export const VALS = `frameHeight: this.props.clip === "tall" ? "427.5px" : this.props.clip === "square" ? "342px" : "192px"`;
+export const PROPS = {
+  clip: { editor: "enum", options: ["wide", "tall", "square"], default: "wide" },
+  opener: { editor: "enum", options: ["post", "reply", "edit"], default: "post" },
+};
+export const VALS = `frameHeight: this.props.clip === "tall" ? "427.5px" : this.props.clip === "square" ? "342px" : "192px", backLabel: this.props.opener === "edit" ? "Back to the edit" : "Back a step", leaveLabel: this.props.opener === "edit" ? "Leave — the edit is discarded" : this.props.opener === "reply" ? "Leave — the reply is discarded" : "Leave — your draft is kept"`;
 export function Screen() {
   return (
     <>
-      <WizardHeader title="The cover" leaveLabel="Leave — your draft is kept" node="header" />
+      <WizardHeader title="The cover" backLabel="{{backLabel}}" leaveLabel="{{leaveLabel}}" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 16px", overflow: "hidden" }}>
         <CropViewport src="gallery-market.jpg" shape="rect" stageHeight={488} height="{{frameHeight}}" scale={1.15} origin="50% 45%" node="viewport" />
         <CropZoom scale={1.15} node="zoom" />
