@@ -6436,7 +6436,7 @@ Replaced by round 53 (jakob 2026-11-17, option C, "yes C and all pictures"): the
 the new post's crop — the shape row live at the post's shape, every picture of the post in the
 strip, `Crop` on each picture in `EditPicked`; the `opener` chip keeps the names and the strip.
 
-### 262 · A re-framed picture whose upload fails: what `Remove it` takes out · *design* · **filed 2026-11-17**
+### 262 · A re-framed picture whose upload fails: what `Remove it` takes out · *design* · **filed 2026-11-17** · **closed 2026-11-17**
 
 Round 53 (jakob 2026-11-17, option C). A picture the post already carries uploads again when
 the crop re-framed it or changed the post's shape. Its upload can fail or be refused like an
@@ -6449,6 +6449,12 @@ it was — the same words, a different act; (c) a re-framed picture's line reads
 (new words, to be ruled). Until ruled the edits' failure sentences name the pictures the edit
 took, and the drawn fixture (both pictures added in the edit) is unaffected.
 
+Closed by round 53, act 2 (jakob 2026-11-17, (b), "as rec"): a re-framed picture whose upload
+fails offers `Retry · Undo`, a refused one `Undo` alone; `Undo` drops the re-crop and the
+published picture stands; a picture added in the edit keeps `Remove it`; the same on the
+comment's edit (`UploadErrorLine`'s `onUndo`; `EditCompose` and `CommentEdit` `upload` =
+`recrop-failed`).
+
 ### 263 · Where the crop opened from the edit's picture sheet returns · *design* · **filed 2026-11-17**
 
 Round 53. `Crop` on a picture in `EditPicked` opens `ComposeCrop`; the ruling says the edit
@@ -6458,7 +6464,7 @@ back with the picture sheet over it, as the crop was opened from there (`Compose
 `EditPicked.md`, graph `ComposeCrop` via 1 / 3, `EditPicked` via 9). Option (b): the sheet is
 left and the bare edit comes back. To be confirmed.
 
-### 264 · The comment edit's door to re-crop a picture it holds · *design* · **filed 2026-11-17**
+### 264 · The comment edit's door to re-crop a picture it holds · *design* · **filed 2026-11-17** · **closed 2026-11-17**
 
 Round 53, item 5 (jakob 2026-11-17, "Yes, same"): a comment's existing pictures can be
 re-cropped on its edit, through `ReplyCrop` (`opener` = `edit`). The law and the crop are
@@ -6471,3 +6477,8 @@ as `CoverTile` is on the edits (`Change the cover`), spoken by a new name such a
 twin, opening the crop on the first picture with the strip holding all — new words, such as
 `Crop the pictures`; (c) the post edit's pattern scaled down — `PickedRow` opening a
 `PickedSheet` with `Crop` per picture — a new sheet on this edit.
+
+Closed by round 53, act 2 (jakob 2026-11-17, (b), "as rec"): `Crop the pictures` stands directly
+above `Describe the pictures`, in its pattern and by its rule — the same words for one picture
+as for four, no door on a words comment — opening `ReplyCrop` with every picture of the
+comment, the first on the stage; the thumbnails keep their × alone (`commentEdit.pictures.crop`).
