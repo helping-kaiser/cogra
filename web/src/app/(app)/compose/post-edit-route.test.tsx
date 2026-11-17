@@ -4,6 +4,7 @@
 // board is registered yet (feed-card-rework §16), so these pin behavior by test
 // id; the structural diff waits on registration.
 
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { act, cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -926,6 +927,89 @@ describe("PostEditRoute — signing", () => {
     expect(await screen.findByTestId("post-edit-refused")).toHaveTextContent("That didn't go through. Try again.");
     expect(screen.queryByTestId("post-edit-tag-error-0")).toBeNull();
     expect(signer.signStaged).not.toHaveBeenCalled();
+  });
+
+  // NetworkError.md:13-19 — every answered fault of the whole edit says its
+  // own line in the fault's slot; none of them is the no-answer line.
+  it.each([
+    ["an INTERNAL", "INTERNAL", "That didn't go through. Try again."],
+    ["an EMAIL_NOT_VERIFIED", "EMAIL_NOT_VERIFIED", "Verify your email first — the link is in your inbox."],
+  ])("reads %s prepare as its own line, never a lost answer", async (_name, code, line) => {
+    serve(editablePost());
+    server.use(
+      gqlLink.mutation("PreparePostEdit", () =>
+        HttpResponse.json({ data: null, errors: [{ message: "no", extensions: { code } }] }),
+      ),
+    );
+    const signer = draw();
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
+    fireEvent.click(sign());
+    expect(await screen.findByTestId("post-edit-refused")).toHaveTextContent(line);
+    expect(screen.queryByTestId("post-edit-failed")).toBeNull();
+    expect(signer.signStaged).not.toHaveBeenCalled();
+    expect(sign()).not.toBeDisabled();
+  });
+
+  it("reads a BAD_INPUT naming no field as That didn't go through.", async () => {
+    serve(editablePost());
+    server.use(
+      gqlLink.mutation("PreparePostEdit", () =>
+        HttpResponse.json({
+          data: {
+            preparePostEdit: {
+              __typename: "PrepareContentPayload",
+              node: null,
+              writes: [],
+              userErrors: [{ __typename: "UserError", code: "BAD_INPUT", field: null, message: "no" }],
+            },
+          },
+        }),
+      ),
+    );
+    draw();
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
+    fireEvent.click(sign());
+    expect(await screen.findByTestId("post-edit-refused")).toHaveTextContent("That didn't go through. Try again.");
+  });
+
+  it.each([
+    [
+      "a SIGNATURE_INVALID",
+      { kind: "refused" as const, id: "w0", errors: [{ code: "SIGNATURE_INVALID" as const, message: "", field: null }] },
+    ],
+    [
+      "an INTERNAL on a signing leg",
+      {
+        kind: "failed" as const,
+        id: "w0",
+        cause: new CombinedGraphQLErrors({ errors: [{ message: "no", extensions: { code: "INTERNAL" } }] }),
+      },
+    ],
+  ])("reads %s as That didn't go through., never the no-answer line", async (_name, result) => {
+    serve(editablePost());
+    server.use(gqlLink.mutation("PreparePostEdit", () => HttpResponse.json({ data: editPrepared() })));
+    draw({ signer: fakeWriteSigner({ signStaged: vi.fn(() => Promise.resolve(result)) }) });
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
+    fireEvent.click(sign());
+    expect(await screen.findByTestId("post-edit-refused")).toHaveTextContent("That didn't go through. Try again.");
+    expect(screen.queryByTestId("post-edit-failed")).toBeNull();
+  });
+
+  // NetworkError.md:3 — a lost answer is the network error's own line, never
+  // TransportError's long "Can't reach the server…" fallback.
+  it("says That didn't send. Try again. when no answer reaches the edit", async () => {
+    serve(editablePost());
+    server.use(gqlLink.mutation("PreparePostEdit", () => HttpResponse.json({ data: editPrepared() })));
+    draw({
+      signer: fakeWriteSigner({
+        signStaged: vi.fn(() => Promise.resolve({ kind: "failed" as const, id: "w0", cause: new Error("offline") })),
+      }),
+    });
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
+    fireEvent.click(sign());
+    const line = await screen.findByTestId("post-edit-failed");
+    expect(line).toHaveTextContent("That didn't send. Try again.");
+    expect(line).not.toHaveTextContent(/reach the server/);
   });
 
   it("takes the commit's place with the write rule's notice and no Retry", async () => {

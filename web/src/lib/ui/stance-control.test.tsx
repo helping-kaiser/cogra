@@ -1,3 +1,4 @@
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { act, fireEvent, screen, within } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -1354,6 +1355,37 @@ describe("the pad as its masters draw it", () => {
     expect(retry).toHaveTextContent("Retry");
     expect(retry.className).toContain("border-outline");
     expect(screen.queryByTestId(`${PREFIX}-write-rule`)).toBeNull();
+  });
+
+  // NetworkError.md:13-19 — the rest of the answered whole-act faults on the
+  // pad, each in its own line above the commit row, Retry in Set's slot.
+  it.each([
+    ["INTERNAL", "That didn't go through. Try again."],
+    ["SIGNATURE_INVALID", "That didn't go through. Try again."],
+    ["EMAIL_NOT_VERIFIED", "Verify your email first — the link is in your inbox."],
+  ] as const)("keeps the pad at the pick with its line and an outlined Retry on a %s", async (code, line) => {
+    const data = mount();
+    await settle();
+    await openPad();
+    data.commit = createStubStanceData({ refuse: code }).commit;
+    await pressSet();
+    await settle();
+    const fault = screen.getByTestId(`${PREFIX}-pad-failed`);
+    expect(fault).toHaveTextContent(line);
+    expect(fault).not.toHaveTextContent(/didn't send|reach the server/);
+    expect(screen.getByTestId(`${PREFIX}-set`)).toHaveTextContent("Retry");
+  });
+
+  it("reads an INTERNAL the signing was answered with as not through, never the no-answer line", async () => {
+    const data = mount();
+    await settle();
+    await openPad();
+    const internal = new CombinedGraphQLErrors({ errors: [{ message: "no", extensions: { code: "INTERNAL" } }] });
+    data.commit = async () => ({ kind: "failed", cause: internal });
+    await pressSet();
+    await settle();
+    expect(screen.getByTestId(`${PREFIX}-pad-failed`)).toHaveTextContent("That didn't go through. Try again.");
+    expect(screen.getByTestId(`${PREFIX}-set`)).toHaveTextContent("Retry");
   });
 
   it("stands the write rule's notice where the landing and the commit row were", async () => {

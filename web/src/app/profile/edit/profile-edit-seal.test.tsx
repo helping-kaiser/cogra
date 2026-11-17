@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { useProfileChange, type ProfileChangeOutcome } from "@/lib/profile/profile-change";
+import { outcomeOf, useProfileChange, type ProfileChangeOutcome } from "@/lib/profile/profile-change";
 import {
   BUG_FACT,
   BUG_TITLE,
@@ -194,5 +194,33 @@ describe("the ways out before the press", () => {
     expect(handlers.onBack).toHaveBeenCalledTimes(2);
     fireEvent.click(screen.getByLabelText("Leave"));
     expect(handlers.onLeave).toHaveBeenCalledTimes(1);
+  });
+});
+
+// NetworkError.md:13-19 — an answered fault of the whole change takes the
+// no-answer foot in its own line, never the bug notice (W-PROFILESEAL-FORBIDDEN).
+describe("an answered fault on the change's seal", () => {
+  it.each([
+    ["FORBIDDEN", "That didn't go through. Try again."],
+    ["INTERNAL", "That didn't go through. Try again."],
+    ["SIGNATURE_INVALID", "That didn't go through. Try again."],
+    ["EMAIL_NOT_VERIFIED", "Verify your email first — the link is in your inbox."],
+  ] as const)("reads a %s signing as its line with Retry and Back", async (code, line) => {
+    const run = vi
+      .fn<() => Promise<ProfileChangeOutcome>>()
+      .mockResolvedValueOnce(outcomeOf([{ kind: "refused", id: "w0", errors: [{ code, message: "", field: null }] }]))
+      .mockResolvedValueOnce({ kind: "taken" });
+    const handlers = draw({ sign: run });
+    await press();
+    const fault = screen.getByTestId("profile-edit-seal-offline");
+    expect(fault).toHaveTextContent(line);
+    expect(fault).not.toHaveTextContent(OFFLINE_LINE);
+    expect(screen.queryByTestId("profile-edit-seal-bug")).not.toBeInTheDocument();
+    expect(screen.getByTestId("profile-edit-seal-acts")).toBeInTheDocument();
+    expect(screen.getByTestId("profile-edit-seal-back")).toHaveTextContent("Back");
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("profile-edit-seal-retry"));
+    });
+    expect(handlers.onTaken).toHaveBeenCalledTimes(1);
   });
 });

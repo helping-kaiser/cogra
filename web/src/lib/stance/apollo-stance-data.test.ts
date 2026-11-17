@@ -4,6 +4,7 @@
 // element by element in one pass.
 
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { HttpResponse } from "msw/http";
 import { describe, expect, it, vi } from "vitest";
 
@@ -445,6 +446,29 @@ describe("writing", () => {
     // The batch was checked whole and signed whole; the write still
     // awaiting its seal is resume()'s to finish.
     expect(sign.signed).toEqual(["w-1", "w-2", "w-3"]);
+  });
+
+  // NetworkError.md:13 — an INTERNAL a leg was answered with must reach the
+  // control as that answer, not as an anonymous failure it reads as no answer.
+  it("keeps a failed leg's cause, so an answered INTERNAL is not read as no answer", async () => {
+    server.use(
+      postStanceRead(),
+      gqlLink.mutation("PrepareSeverance", () =>
+        HttpResponse.json({
+          data: {
+            prepareSeverance: {
+              __typename: "PreparePayload",
+              writes: prepared(["w-1"]),
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+    );
+    const internal = new CombinedGraphQLErrors({ errors: [{ message: "no", extensions: { code: "INTERNAL" } }] });
+    const sign = signer((staged) => ({ kind: "failed", id: staged.id, cause: internal }));
+    const data = createApolloStanceData({ client: client(), guard, signer: sign });
+    expect(await data.sever(POST, SHOWN)).toEqual({ kind: "failed", cause: internal });
   });
 
   it("keeps a signing refusal's codes, so the write rule reads as a notice", async () => {

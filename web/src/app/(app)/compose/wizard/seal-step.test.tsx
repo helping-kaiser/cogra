@@ -635,7 +635,7 @@ describe("SealStep", () => {
 
     // NetworkError.md:13: a FORBIDDEN answer is not a lost connection.
     it("puts the not-through line, an outlined Retry and Back in the commit's place on a FORBIDDEN", () => {
-      const { onRetry } = renderStep({}, "none", true, 0.1, false, { fault: { kind: "notThrough" } });
+      const { onRetry } = renderStep({}, "none", true, 0.1, false, { fault: { kind: "notThrough", line: "That didn't go through. Try again." } });
       const line = screen.getByTestId("wizard-transport-error");
       expect(line).toHaveTextContent("That didn't go through. Try again.");
       expect(line).not.toHaveTextContent(/didn't send|reach the server/);
