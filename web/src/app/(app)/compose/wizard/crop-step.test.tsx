@@ -66,6 +66,12 @@ const asset = (id: string): PickedAsset => ({
 const PREVIEWS = { one: "blob:one", two: "blob:two" };
 
 let state: WizardState;
+/** Every framing the step wrote back, in order. */
+let writes: { id: string; crop: Crop }[];
+
+beforeEach(() => {
+  writes = [];
+});
 
 /** The wizard's own reducer around the crop step, as `wizard-view.tsx` wires it. */
 function Host() {
@@ -83,7 +89,10 @@ function Host() {
       focused={current.focused}
       onShape={(shape, stageWidth) => dispatch({ type: "shape", shape, stageWidth })}
       onFocus={(index) => dispatch({ type: "focus", index })}
-      onCrop={(id, crop) => dispatch({ type: "crop", id, crop })}
+      onCrop={(id, crop) => {
+        writes.push({ id, crop });
+        dispatch({ type: "crop", id, crop });
+      }}
       onNext={() => {}}
     />
   );
@@ -115,6 +124,30 @@ function edge(laid: number, window: number, zoom: number) {
   return Math.abs((laid * zoom) / 2 - window / 2);
 }
 
+/**
+ * A tap on picture `index` in the strip and the load of its picture. NOTHING is
+ * written to the picture left behind, and every framing written to the one
+ * that takes the stage keeps the zoom and place it was stored with — except,
+ * on its first sight, the rise of the untouched zoom to its `fill`.
+ */
+function focusOn(index: number, fill?: number) {
+  const leaving = state.assets[state.focused]!.id;
+  const taking = state.assets[index]!.id;
+  const stored = crop(taking);
+  const from = writes.length;
+  act(() => {
+    fireEvent.click(screen.getByTestId(`wizard-crop-pick-${index}`));
+  });
+  loaded();
+  const during = writes.slice(from);
+  expect(during.filter((write) => write.id === leaving), `writes to ${leaving}, left behind`).toEqual([]);
+  for (const write of during) {
+    expect([stored.zoom, fill], `${taking}'s zoom on the swap`).toContain(write.crop.zoom);
+    expect(write.crop.x, `${taking}'s x on the swap`).toBe(stored.x);
+    expect(write.crop.y, `${taking}'s y on the swap`).toBe(stored.y);
+  }
+}
+
 function expectFraming(id: string, zoom: number, x: number, y: number) {
   const held = crop(id);
   expect(held.zoom, `${id}'s zoom`).toBeCloseTo(zoom, 6);
@@ -141,11 +174,8 @@ describe("each picture keeps its own framing across focus changes", () => {
     expectFraming("one", oneZoom, 0, 0);
 
     // Focus picture 2: it rests at its own fill, picture 1 keeps its zoom.
-    act(() => {
-      fireEvent.click(screen.getByTestId("wizard-crop-pick-1"));
-    });
-    loaded();
     const twoTall = geometry("two", "tall");
+    focusOn(1, twoTall.floor);
     expectFraming("one", oneZoom, 0, 0);
     expectFraming("two", twoTall.floor, 0, 0);
     expect(Number(slider().value)).toBeCloseTo(1, 2);
@@ -186,19 +216,13 @@ describe("each picture keeps its own framing across focus changes", () => {
     expectFraming("one", oneZoom, 0, 0);
 
     // Back to picture 1: still zoomed in, still centred.
-    act(() => {
-      fireEvent.click(screen.getByTestId("wizard-crop-pick-0"));
-    });
-    loaded();
+    focusOn(0);
     expectFraming("one", oneZoom, 0, 0);
     expectFraming("two", twoZoom, twoX, twoY);
     expect(Number(slider().value)).toBeCloseTo(oneZoom / geometry("one", "square").floor, 2);
 
     // And back to picture 2: still all the way in, still at the top right.
-    act(() => {
-      fireEvent.click(screen.getByTestId("wizard-crop-pick-1"));
-    });
-    loaded();
+    focusOn(1);
     expectFraming("two", twoZoom, twoX, twoY);
     expectFraming("one", oneZoom, 0, 0);
     expect(Number(slider().value)).toBeCloseTo(twoZoom / twoSquare.floor, 2);
