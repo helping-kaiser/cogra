@@ -12,9 +12,19 @@ ALWAYS Display name, Bio and Website each read Optional
 
 WHEN tap Change picture -> the picture's crop opens AND its Next brings the picture back to this edit, to be signed with the fields under one seal
 
-ALWAYS Remove picture stands beside Change picture GIVEN a picture stands, and never otherwise
+ALWAYS Remove picture stands beside Change picture GIVEN a picture stands and no new picture is staged, and never otherwise
 
-WHEN tap Remove picture -> the removal is staged AND the monogram returns on the edit at once AND Remove picture goes AND NEVER anything is signed before the seal's own commit
+ALWAYS the picture's buttons stand side by side on one line beside the picture, never one above the other
+
+ALWAYS the two buttons read Change and Remove, or Change and Undo, GIVEN two stand, their spoken names Change picture, Remove picture and Undo removing the picture
+
+ALWAYS a lone button reads Change picture
+
+WHEN tap Remove picture -> the removal is staged AND the monogram returns on the edit at once AND Undo stands where Remove stood AND NEVER anything is signed before the seal's own commit
+
+WHEN tap Undo -> the removal is unstaged AND the picture returns as it stood AND Remove stands again
+
+WHEN tap Undo GIVEN nothing else is staged -> the edit is at rest again AND the line Nothing to sign yet stands on Save AND Save is inert
 
 ALWAYS a staged removal is signed with the fields under one seal, as the picture's clearing
 
@@ -43,6 +53,8 @@ WHEN tap Save GIVEN the write rule already refuses the signing -> the line You c
 WHEN tap the ? beside You can't sign right now. -> the dialog Why signing waits opens, its second paragraph the pad's reading for a surface that keeps no draft, Nothing was signed or spent. Try again in a little while.
 
 ALWAYS the write rule's line on the edit is announced politely, as a status
+
+ALWAYS the write rule's line stands, and Save stays dimmed with it, until the next staged change or the next opening of the edit
 
 WHEN a field is typed in -> it edits in place
 

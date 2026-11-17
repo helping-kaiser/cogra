@@ -1854,14 +1854,16 @@ Object.assign(FLOW_MARKERS, {
   ],
   ProfileEdit: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: ">Change picture</button>", tag: "button" },
+    { n: 2, find: 'aria-label="Change picture"', tag: "button" },
     { n: 3, find: 'data-field="Display name"', tag: "div" },
     { n: 4, find: 'data-field="Bio"', tag: "div" },
     { n: 5, find: 'data-field="Website"', tag: "div" },
     { n: 6, find: ">Save</button>", tag: "button" },
     // Round 50: the picture's removal, its failed upload's two ways out and
     // the write rule's "?" on Save (the `state` chip).
-    { n: 7, find: ">Remove picture</button>", tag: "button" },
+    { n: 7, find: 'aria-label="Remove picture"', tag: "button" },
+    // Act 3 (jakob 2026-11-17, C2): a staged removal's Undo, where Remove stood.
+    { n: 11, find: 'aria-label="Undo removing the picture"', tag: "button" },
     { n: 8, find: ">Retry</button>", tag: "button" },
     { n: 9, find: ">Remove it</button>", tag: "button" },
     { n: 10, find: 'aria-label="Why signing waits"', tag: "button" },

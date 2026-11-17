@@ -16,15 +16,21 @@
      `EditComposeUnchanged`'s guard, the staged change and never a byte
      comparison. Sol has no picture, so the row is the monogram and
      `Change picture` alone.
-   - `picture` is the same opening for a reader whose picture stands:
-     `Remove picture` stands beside `Change picture`, `Change picture`'s own
-     size and outline.
+   - `picture` is the same opening for a reader whose picture stands: the
+     two buttons stand side by side, never one above the other (jakob
+     2026-11-17). `Change picture` and `Remove picture` measure 133 + 8 + 135
+     against the 262 the row leaves beside the 64px picture, so wherever two
+     stand both take the short forms, `Change` · `Remove`, their spoken
+     names still `Change picture` / `Remove picture`; a lone button keeps
+     `Change picture`.
    - `changed` is the edit with a change staged: the line goes and Save
      answers.
    - `removed` is `Remove picture` pressed: the removal is staged, the
      monogram returns at once, and Save signs it with the rest under the one
-     seal. Nothing is signed before the seal.
-   - `upload-failed` is a new picture back from the crop whose upload failed:
+     seal. Nothing is signed before the seal. `Undo` stands where `Remove`
+     stood, in its style, and unstages the removal (jakob 2026-11-17, C2).
+   - `upload-failed` is a new picture back from the crop whose upload failed
+     (`Remove picture` hidden while a new picture is staged, C3):
      `One picture didn't upload.` with `Retry · Remove it` under the picture's
      row (`ComposeUploading`), and Save still answers — the seal is where
      signing waits for it (`ReplySealUploadFailed`).
@@ -34,7 +40,7 @@
      nobody is sent to the seal. */
 export const NODE = "profileEdit";
 export const PROPS = { state: { editor: "enum", options: ["rest", "picture", "changed", "removed", "upload-failed", "refused"], default: "rest" } };
-export const VALS = `monoShown: this.props.state === "picture" || this.props.state === "upload-failed" ? "none" : "flex", photoShown: this.props.state === "picture" || this.props.state === "upload-failed" ? "flex" : "none", removeShown: this.props.state === "picture" || this.props.state === "upload-failed" ? "inline-flex" : "none", uploadFailedShown: this.props.state === "upload-failed" ? "block" : "none", nothingShown: this.props.state === "rest" || this.props.state === "picture" ? "flex" : "none", refusedShown: this.props.state === "refused" ? "flex" : "none", saveOpacity: this.props.state === "rest" || this.props.state === "picture" || this.props.state === "refused" ? "var(--state-disabled)" : "1", saveCursor: this.props.state === "rest" || this.props.state === "picture" || this.props.state === "refused" ? "default" : "pointer"`;
+export const VALS = `monoShown: this.props.state === "picture" || this.props.state === "upload-failed" ? "none" : "flex", photoShown: this.props.state === "picture" || this.props.state === "upload-failed" ? "flex" : "none", removeShown: this.props.state === "picture" ? "inline-flex" : "none", undoShown: this.props.state === "removed" ? "inline-flex" : "none", changeLabel: this.props.state === "picture" || this.props.state === "removed" ? "Change" : "Change picture", uploadFailedShown: this.props.state === "upload-failed" ? "block" : "none", nothingShown: this.props.state === "rest" || this.props.state === "picture" ? "flex" : "none", refusedShown: this.props.state === "refused" ? "flex" : "none", saveOpacity: this.props.state === "rest" || this.props.state === "picture" || this.props.state === "refused" ? "var(--state-disabled)" : "1", saveCursor: this.props.state === "rest" || this.props.state === "picture" || this.props.state === "refused" ? "default" : "pointer"`;
 
 const QUIET_LINE = {
   margin: 0,
@@ -58,9 +64,10 @@ export function Screen() {
             <span style={{ display: "{{photoShown}}", flex: "none" }}>
               <MonogramAvatar name="Sol Ferreira" size={64} src="comment-camera.jpg" />
             </span>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              <Button variant="outline" size="sm" node="picture">Change picture</Button>
-              <Button variant="outline" size="sm" style={{ display: "{{removeShown}}" }} node="remove">Remove picture</Button>
+            <div style={{ display: "flex", flexWrap: "nowrap", gap: 8 }}>
+              <Button variant="outline" size="sm" ariaLabel="Change picture" node="picture">{"{{changeLabel}}"}</Button>
+              <Button variant="outline" size="sm" ariaLabel="Remove picture" style={{ display: "{{removeShown}}" }} node="remove">Remove</Button>
+              <Button variant="outline" size="sm" ariaLabel="Undo removing the picture" style={{ display: "{{undoShown}}" }} node="undo">Undo</Button>
             </div>
           </div>
           <div style={{ display: "{{uploadFailedShown}}" }}>
