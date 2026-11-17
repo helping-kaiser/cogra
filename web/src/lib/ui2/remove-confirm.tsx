@@ -16,10 +16,9 @@
 // reads `Removing…`, never a spinner (K4.2, `useSlowAnswer`). A removal that
 // does not go through keeps the dialog up with its pair, the fault line above
 // it — `That didn't send. Try again.`, SeveranceConfirm's placement — and
-// `Remove` reading `Retry`. An answered fault (FORBIDDEN, INTERNAL, a fieldless
-// BAD_INPUT) says `That didn't go through. Try again.` in the same slot
-// (NetworkError.md:13-17: an answer is never read as no answer). Any other
-// non-success is the no-answer state: the client
+// `Remove` reading `Retry`. A FORBIDDEN answer says `That didn't go through.
+// Try again.` in the same slot (NetworkError.md:13: an answer is never read
+// as no answer). Any other non-success is the no-answer state: the client
 // never sends a refusable removal of its own content, so a refusal and a lost
 // answer are told apart by nothing a reader could act on (the packet's
 // residual flag). The line is `DialogSurface`'s own `line` slot, and every
@@ -35,8 +34,9 @@ import { useApolloClient } from "@apollo/client/react";
 import { useEffect, useRef, useState } from "react";
 
 import { markAfterRemoval, removeContent, type Removal } from "@/lib/api/removal-api";
+import { hasCode } from "@/lib/api/outcome";
 import { useAuthGuard } from "@/lib/session/runtime";
-import { outcomeFaultLine } from "@/lib/ui/error-messages";
+import { NOT_THROUGH_LINE } from "@/lib/ui/error-messages";
 import { buttonClassName } from "@/lib/ui/button";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 
@@ -167,8 +167,7 @@ export function RemoveConfirm({
   const client = useApolloClient();
   const guard = useAuthGuard();
   const [busy, setBusy] = useState(false);
-  // The removal's fault line: an answered fault's own, else the no-answer line.
-  const [fault, setFault] = useState<string | null>(null);
+  const [fault, setFault] = useState<"failed" | "notThrough" | null>(null);
   // REFUSES A SECOND PRESS (RemoveConfirm.md:7): held in a ref as well as in
   // state, so two presses inside one frame — before `busy` has rendered —
   // still send one removal.
@@ -193,7 +192,7 @@ export function RemoveConfirm({
       inFlight.current = false;
       if (!mounted.current) return;
       setBusy(false);
-      setFault(outcomeFaultLine(outcome) ?? REMOVE_NOT_SENT);
+      setFault(hasCode(outcome, "FORBIDDEN") ? "notThrough" : "failed");
       return;
     }
     const removal = await markAfterRemoval(client, kind, nodeId, outcome.value);
@@ -209,7 +208,7 @@ export function RemoveConfirm({
       kind={kind}
       busy={busy}
       failed={fault !== null}
-      failedLine={fault ?? REMOVE_NOT_SENT}
+      failedLine={fault === "notThrough" ? NOT_THROUGH_LINE : REMOVE_NOT_SENT}
       onRemove={() => void remove()}
       onClose={onClose}
       node={node}

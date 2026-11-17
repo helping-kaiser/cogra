@@ -118,6 +118,14 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+/** The answered faults beyond #501's FORBIDDEN, and the line each says (NetworkError.md:13, :19). */
+const ANSWERED = [
+  ["INTERNAL", "That didn't go through. Try again."],
+  ["EMAIL_NOT_VERIFIED", "Verify your email first — the link is in your inbox."],
+] as const;
+const answering = (code: string) => () =>
+  HttpResponse.json({ data: null, errors: [{ message: "no", extensions: { code } }] });
+
 describe("Invites (behavior/Invites.md)", () => {
   it(":3-:23 New invite heads, Applications then Live links, groups by link and age, never by readiness", async () => {
     show();
@@ -660,6 +668,17 @@ describe("the create sheet (behavior/InviteNew.md, InviteExpiry.md, InviteCreate
     return screen.findByRole("dialog", { name: "New invite" });
   }
 
+  // NetworkError.md:13, :19 — the other answered faults on the create, each in its own line.
+  it.each(ANSWERED)("NetworkError.md a create answered %s reads its line, never the connection line", async (code, text) => {
+    show();
+    server.use(gqlLink.mutation("CreateInviteLink", answering(code)));
+    const sheet = await openSheet();
+    fireEvent.click(within(sheet).getByTestId("invites.createSheet.create"));
+    const line = await within(sheet).findByTestId("invites-sheet-failed");
+    expect(line).toHaveTextContent(text);
+    expect(line).not.toHaveTextContent(/reach the server/);
+  });
+
   it("InviteNew.md:3-:11 two choices and nothing else: single use on, 7 days, the footnote", async () => {
     show();
     const sheet = await openSheet();
@@ -1022,41 +1041,14 @@ describe("the closing dialogs (behavior/RejectConfirm.md, RejectAllConfirm.md)",
     expect(row("imke")).toBeInTheDocument();
   });
 
-  // NetworkError.md:13, :19 — the other answered faults, each in its own line,
-  // on the dialog, the revoke and the sheet.
-  const answered = [
-    ["INTERNAL", "That didn't go through. Try again."],
-    ["EMAIL_NOT_VERIFIED", "Verify your email first — the link is in your inbox."],
-  ] as const;
-  const answering = (code: string) => () =>
-    HttpResponse.json({ data: null, errors: [{ message: "no", extensions: { code } }] });
-
-  it.each(answered)("NetworkError.md a closing answered %s reads its line with Retry", async (code, text) => {
-    show();
-    server.use(gqlLink.mutation("RejectApplication", answering(code)));
-    await screen.findAllByTestId("invites.application");
-    fireEvent.click(within(row("imke")).getByTestId("invites.application.close"));
-    fireEvent.click(await screen.findByTestId("invites.dialog.close"));
-    expect(await screen.findByTestId("invites-dialog-failed")).toHaveTextContent(text);
-    expect(screen.getByTestId("invites.dialog.close")).toHaveTextContent("Retry");
-  });
-
-  it.each(answered)("NetworkError.md a revoke answered %s reads its line, never the connection line", async (code, text) => {
+  // NetworkError.md:13, :19 — the other answered faults on the revoke (a
+  // card, not a dialog: Invites.md:99, :111), each in its own line.
+  it.each(ANSWERED)("NetworkError.md a revoke answered %s reads its line, never the connection line", async (code, text) => {
     show();
     server.use(gqlLink.mutation("RevokeInviteLink", answering(code)));
     const cards = await screen.findAllByTestId("invites.link");
     fireEvent.click(within(cards[0]).getByTestId("invites.link.action"));
     const line = await screen.findByTestId("invites-revoke-failed");
-    expect(line).toHaveTextContent(text);
-    expect(line).not.toHaveTextContent(/reach the server/);
-  });
-
-  it.each(answered)("NetworkError.md a create answered %s reads its line, never the connection line", async (code, text) => {
-    show();
-    server.use(gqlLink.mutation("CreateInviteLink", answering(code)));
-    const sheet = await openSheet();
-    fireEvent.click(within(sheet).getByTestId("invites.createSheet.create"));
-    const line = await within(sheet).findByTestId("invites-sheet-failed");
     expect(line).toHaveTextContent(text);
     expect(line).not.toHaveTextContent(/reach the server/);
   });

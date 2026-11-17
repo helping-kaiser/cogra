@@ -379,7 +379,7 @@ describe("the kept picks' seal", () => {
   it("answers any other refusal with the bug notice: Try again in it, Report a problem and Not now under it", async () => {
     // KeptPicksSeal.md:33-35.
     await keepTheBoardsPicks();
-    mount({ refuse: "BAD_INPUT" });
+    mount({ refuse: "NOT_FOUND" });
     await openSeal();
     await act(async () => {
       fireEvent.click(screen.getByTestId("keptPicksSeal.foot.sign"));

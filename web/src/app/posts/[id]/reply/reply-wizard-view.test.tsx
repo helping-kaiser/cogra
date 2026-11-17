@@ -885,7 +885,7 @@ describe("the reply wizard", () => {
         signStaged: vi.fn(async () => ({
           kind: "refused" as const,
           id: "w1",
-          errors: [{ message: "no", code: "BAD_INPUT" as const, field: null }],
+          errors: [{ message: "no", code: "BAD_INPUT" as const, field: ["content"] }],
         })),
       });
       const onLeave = vi.fn();
