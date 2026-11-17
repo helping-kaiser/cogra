@@ -83,8 +83,33 @@ export const PROPS = {
   clip: { editor: "enum", options: ["kept", "picked", "picked-cover", "failed", "second"], default: "kept" },
   upload: { editor: "enum", options: ["none", "uploading"], default: "none" },
   signing: { editor: "enum", options: ["none", "signing"], default: "none" },
+  fault: { editor: "enum", options: ["none", "unsent", "refused"], default: "none" },
 };
-export const VALS = `keptShown: this.props.clip === "kept" ? "flex" : "none", pickedShown: this.props.clip === "picked" ? "flex" : "none", bothShown: this.props.clip === "picked-cover" ? "flex" : "none", failedShown: this.props.clip === "failed" ? "flex" : "none", secondShown: this.props.clip === "second" ? "flex" : "none", signRestShown: this.props.signing === "signing" || this.props.clip === "failed" ? "none" : "block", signBusyShown: this.props.signing === "signing" && this.props.clip !== "failed" ? "block" : "none", signFailedShown: this.props.clip === "failed" ? "block" : "none", gateShown: this.props.clip === "kept" && this.props.upload === "uploading" ? "flex" : "none", restShown: this.props.clip === "kept" && this.props.upload === "uploading" ? "none" : "flex"`;
+/* THE `fault` CHIP (round 52, jakob 2026-11-17, decision 6 — round 51's
+   rule, mirrored from `CommentEdit`): the signing failed while the edit
+   stood open — `unsent`, no answer, `That didn't send. Try again.`;
+   `refused`, an answered refusal, `That didn't go through. Try again.` — the
+   line in `Sign the edit`'s place with an outlined `Retry` under it, the
+   count kept above, no `Back` (the header is the edit's way back). It
+   overrides the foot's other states: a failed signing has no gate running
+   and no wait. */
+export const VALS = `keptShown: this.props.clip === "kept" ? "flex" : "none", pickedShown: this.props.clip === "picked" ? "flex" : "none", bothShown: this.props.clip === "picked-cover" ? "flex" : "none", failedShown: this.props.clip === "failed" ? "flex" : "none", secondShown: this.props.clip === "second" ? "flex" : "none", signRestShown: this.props.signing === "signing" || this.props.clip === "failed" || this.props.fault !== "none" ? "none" : "block", signBusyShown: this.props.signing === "signing" && this.props.clip !== "failed" && this.props.fault === "none" ? "block" : "none", signFailedShown: this.props.clip === "failed" && this.props.fault === "none" ? "block" : "none", gateShown: this.props.clip === "kept" && this.props.upload === "uploading" ? "flex" : "none", gateLineShown: this.props.clip === "kept" && this.props.upload === "uploading" && this.props.fault === "none" ? "flex" : "none", gatePickedShown: this.props.clip === "picked" && this.props.fault === "none" ? "flex" : "none", gateBothShown: this.props.clip === "picked-cover" && this.props.fault === "none" ? "flex" : "none", gateSecondShown: this.props.clip === "second" && this.props.fault === "none" ? "flex" : "none", gateFailedShown: this.props.clip === "failed" && this.props.fault === "none" ? "flex" : "none", restShown: this.props.clip === "kept" && this.props.upload === "uploading" ? "none" : "flex", faultUnsentShown: this.props.fault === "unsent" ? "flex" : "none", faultRefusedShown: this.props.fault === "refused" ? "flex" : "none"`;
+
+/* The edit's fault in the commit's place — round 51's `editFault`
+   (`EditCompose`, `CommentEdit`), drawn here until the two rounds meet. */
+const EDIT_VIDEO_FAULT_LINES = { unsent: "That didn't send. Try again.", refused: "That didn't go through. Try again." };
+function editVideoFault() {
+  return Object.entries(EDIT_VIDEO_FAULT_LINES).map(([answer, line]) => (
+    <div key={answer} style={{ display: `{{fault${answer === "unsent" ? "Unsent" : "Refused"}Shown}}`, flexDirection: "column" }} {...chipCopy("fault", answer)}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-node="fault">
+        <TransportError message={line} />
+        <Button variant="outline" style={{ width: "100%" }} node="retry">
+          Retry
+        </Button>
+      </div>
+    </div>
+  ));
+}
 
 export function Screen() {
   return (
@@ -169,19 +194,19 @@ export function Screen() {
           <div style={{ flex: 1 }} />
         </div>
 
-        <div style={{ display: "{{gateShown}}", flexDirection: "column" }}>
+        <div style={{ display: "{{gateLineShown}}", flexDirection: "column" }}>
           <UploadStatusLine done={0} total={1} media="cover" node="gate" />
         </div>
-        <div style={{ display: "{{pickedShown}}", flexDirection: "column" }} {...chipCopy("clip", "picked")}>
+        <div style={{ display: "{{gatePickedShown}}", flexDirection: "column" }} {...chipCopy("clip", "picked")}>
           <UploadStatusLine done={0} total={1} media="video" node="gate" />
         </div>
-        <div style={{ display: "{{bothShown}}", flexDirection: "column" }} {...chipCopy("clip", "picked-cover")}>
+        <div style={{ display: "{{gateBothShown}}", flexDirection: "column" }} {...chipCopy("clip", "picked-cover")}>
           <UploadStatusLine done={0} total={2} media="video" node="gate" />
         </div>
-        <div style={{ display: "{{secondShown}}", flexDirection: "column" }} {...chipCopy("clip", "second")}>
+        <div style={{ display: "{{gateSecondShown}}", flexDirection: "column" }} {...chipCopy("clip", "second")}>
           <UploadStatusLine done={0} total={1} media="video" node="gate" />
         </div>
-        <div style={{ display: "{{failedShown}}", flexDirection: "column" }} {...chipCopy("clip", "failed")}>
+        <div style={{ display: "{{gateFailedShown}}", flexDirection: "column" }} {...chipCopy("clip", "failed")}>
           <UploadStatusLine failed message="The video didn't upload." onRetry={() => {}} node="gate" />
         </div>
         <div style={{ display: "{{restShown}}", flexDirection: "column" }} {...chipCopy("upload", "none")}>
@@ -199,6 +224,7 @@ export function Screen() {
         <div style={{ display: "{{signFailedShown}}" }} {...chipCopy("clip", "failed")}>
           <Button style={{ width: "100%" }} disabled node="sign">Sign the edit</Button>
         </div>
+        {editVideoFault()}
       </div>
     </>
   );

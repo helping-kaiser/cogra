@@ -65,11 +65,35 @@
    named `Close` from the press — and its arrow close the edit while it goes
    on; the edited card carries the wait and the answer (`SigningAfterClose`). */
 export const NODE = "postEdit";
+/* THE `fault` CHIP (round 52, jakob 2026-11-17, decision 6 — round 51's
+   rule, mirrored from `EditCompose`): the signing failed while the edit stood
+   open — `unsent`, no answer, `That didn't send. Try again.`; `refused`, an
+   answered refusal, `That didn't go through. Try again.` — the line in `Sign
+   the edit`'s place with an outlined `Retry` under it, the count kept above,
+   no `Back` (the header is the edit's way back). It overrides the foot's
+   other states: a failed signing has no gate running and no wait. */
 export const PROPS = {
   upload: { editor: "enum", options: ["none", "uploading"], default: "none" },
   signing: { editor: "enum", options: ["none", "signing"], default: "none" },
+  fault: { editor: "enum", options: ["none", "unsent", "refused"], default: "none" },
 };
-export const VALS = `signRestShown: this.props.signing === "signing" ? "none" : "block", signBusyShown: this.props.signing === "signing" ? "block" : "none", doorShown: this.props.upload === "uploading" ? "none" : "flex", coverShown: this.props.upload === "uploading" ? "flex" : "none", gateShown: this.props.upload === "uploading" ? "flex" : "none", restShown: this.props.upload === "uploading" ? "none" : "flex"`;
+export const VALS = `signRestShown: this.props.signing === "signing" || this.props.fault !== "none" ? "none" : "block", signBusyShown: this.props.signing === "signing" && this.props.fault === "none" ? "block" : "none", doorShown: this.props.upload === "uploading" ? "none" : "flex", coverShown: this.props.upload === "uploading" ? "flex" : "none", gateShown: this.props.upload === "uploading" ? "flex" : "none", gateLineShown: this.props.upload === "uploading" && this.props.fault === "none" ? "flex" : "none", restShown: this.props.upload === "uploading" ? "none" : "flex", faultUnsentShown: this.props.fault === "unsent" ? "flex" : "none", faultRefusedShown: this.props.fault === "refused" ? "flex" : "none"`;
+
+/* The edit's fault in the commit's place — round 51's `editFault`
+   (`EditCompose`, `CommentEdit`), drawn here until the two rounds meet. */
+const EDIT_VIDEO_FAULT_LINES = { unsent: "That didn't send. Try again.", refused: "That didn't go through. Try again." };
+function editVideoFault() {
+  return Object.entries(EDIT_VIDEO_FAULT_LINES).map(([answer, line]) => (
+    <div key={answer} style={{ display: `{{fault${answer === "unsent" ? "Unsent" : "Refused"}Shown}}`, flexDirection: "column" }} {...chipCopy("fault", answer)}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-node="fault">
+        <TransportError message={line} />
+        <Button variant="outline" style={{ width: "100%" }} node="retry">
+          Retry
+        </Button>
+      </div>
+    </div>
+  ));
+}
 
 export function Screen() {
   return (
@@ -135,7 +159,7 @@ export function Screen() {
           <div style={{ flex: 1 }} />
         </div>
 
-        <div style={{ display: "{{gateShown}}", flexDirection: "column" }}>
+        <div style={{ display: "{{gateLineShown}}", flexDirection: "column" }}>
           <UploadStatusLine done={0} total={1} media="cover" node="gate" />
         </div>
         <div style={{ display: "{{restShown}}", flexDirection: "column" }} {...chipCopy("upload", "none")}>
@@ -150,6 +174,7 @@ export function Screen() {
         <div style={{ display: "{{signBusyShown}}" }}>
           <Button style={{ width: "100%" }} busy busyLabel="Signing the edit…">Sign the edit</Button>
         </div>
+        {editVideoFault()}
       </div>
     </>
   );

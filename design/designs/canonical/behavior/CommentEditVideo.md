@@ -89,3 +89,15 @@ WHEN press Not now on the write rule's notice -> the notice goes AND the comment
 WHEN press Sign the edit -> the header X is named Close from the press itself AND NEVER the dialog Discard the changes? opens while it signs
 
 WHEN press the header back arrow, the header X or the system's Back GIVEN Sign the edit was pressed and has not answered -> the edit closes AND the edit goes on, its wait and its answer on the edited card as SigningAfterClose draws them AND NEVER the edit is cancelled
+
+WHEN the server refuses the cover the edit set at its upload -> the line One picture didn't upload. stands under the clip and its cover with Remove it alone AND NEVER Retry stands under them, retrying being unable to change the answer
+
+WHEN the server refuses a clip picked in the edit at its upload -> the line That video didn't upload. stands under the clip with Remove it alone AND NEVER Retry stands under it, retrying being unable to change the answer
+
+WHEN the signing gets no answer GIVEN the edit stands open -> commentEdit.fault reads That didn't send. Try again. in commentEdit.sign's place AND commentEdit.fault.retry stands under it, outlined, AND commentEdit.acts stays above the line AND everything the reader chose stays as it was
+
+WHEN the signing is answered with a refusal GIVEN the edit stands open -> commentEdit.fault reads That didn't go through. Try again. in commentEdit.sign's place AND commentEdit.fault.retry stands under it, outlined, AND commentEdit.acts stays above the line AND everything the reader chose stays as it was
+
+WHEN press commentEdit.fault.retry -> the same signing is asked again AND past 200ms the commit's slot reads Signing the edit… AND the header's X is named Close
+
+ALWAYS the header's arrow and X are the edit's way back GIVEN commentEdit.fault stands, and no Back stands under the fault's Retry

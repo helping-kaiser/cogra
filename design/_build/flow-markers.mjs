@@ -582,9 +582,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'aria-label="Remove this picture"', tag: "button", all: true },
     { n: 6, find: ">Describe the pictures</button>", tag: "button" },
     { n: 7, find: "+ Add pictures · 2 of 4", tag: "button" },
-    // The failed picture's line (the `upload` chip, jakob 2026-10-05, P17).
+    // The failed picture's line (the `upload` chip, jakob 2026-10-05, P17),
+    // and the refused one's `Remove it` alone (round 52).
     { n: 8, find: ">Retry</button>", tag: "button" },
-    { n: 9, find: ">Remove it</button>", tag: "button" },
+    { n: 9, find: ">Remove it</button>", tag: "button", all: true },
   ],
   ReplyVideo: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
@@ -1353,6 +1354,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 16, find: ">Add a cover</span>", tag: "button", all: true },
     { n: 17, find: ">Retry</button>", tag: "button", all: true },
     { n: 18, find: ">Remove it</button>", tag: "button", all: true },
+    // The `fault` chip's two answers (round 52, round 51's rule): one Retry, one act.
+    { n: 19, find: 'data-node="commentEdit.fault.retry"', tag: "button", all: true },
   ],
   EditComposeVideo: [
     { n: 14, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },
@@ -1379,6 +1382,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 16, find: ">Adjust</button>", tag: "button" },
     // The References block (seam 248), the next free number.
     { n: 17, find: "+ Cite something", tag: "button" },
+    // The `fault` chip's two answers (round 52, round 51's rule): one Retry, one act.
+    { n: 18, find: 'data-node="postEdit.fault.retry"', tag: "button", all: true },
   ],
   ComposeUploading: [
     { n: 12, find: "aria-label=\"#tidemarket — set how it relates\"", tag: "button" },

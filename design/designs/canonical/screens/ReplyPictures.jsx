@@ -17,9 +17,14 @@
    audit K6.2) — and the line above it is the reason and the two ways on;
    "they upload while you write" goes with the upload it described. The
    `upload` chip draws it at `failed`; `uploading` is the drawing as it
-   stands, the second tile's ring running. */
-export const PROPS = { upload: { editor: "enum", options: ["uploading", "failed"], default: "uploading" } };
-export const VALS = `runningShown: this.props.upload === "failed" ? "none" : "flex", failedShown: this.props.upload === "failed" ? "flex" : "none", errorShown: this.props.upload === "failed" ? "block" : "none", noteShown: this.props.upload === "failed" ? "none" : "block", nextShown: this.props.upload === "failed" ? "none" : "block", nextFailedShown: this.props.upload === "failed" ? "block" : "none"`;
+   stands, the second tile's ring running.
+
+   A PICTURE THE SERVER REFUSES KEEPS THE WORDS AND LOSES RETRY (round 52,
+   jakob 2026-11-17, decision 8): the `upload` chip's `refused` draws the
+   same tile and line, `One picture didn't upload.`, with `Remove it` alone —
+   retrying cannot change an answer. */
+export const PROPS = { upload: { editor: "enum", options: ["uploading", "failed", "refused"], default: "uploading" } };
+export const VALS = `runningShown: this.props.upload === "uploading" ? "flex" : "none", failedShown: this.props.upload === "uploading" ? "none" : "flex", errorShown: this.props.upload === "failed" ? "block" : "none", refusedShown: this.props.upload === "refused" ? "block" : "none", noteShown: this.props.upload === "uploading" ? "block" : "none", nextShown: this.props.upload === "uploading" ? "block" : "none", nextFailedShown: this.props.upload === "uploading" ? "none" : "block"`;
 
 export function Screen() {
   return (
@@ -45,6 +50,9 @@ export function Screen() {
         </div>
         <div style={{ display: "{{errorShown}}" }}>
           <UploadErrorLine onRetry={() => {}} onRemove={() => {}} />
+        </div>
+        <div style={{ display: "{{refusedShown}}" }}>
+          <UploadErrorLine onRemove={() => {}} />
         </div>
 
         <DescribeCounter described={0} total={2} onDescribe={() => {}} />

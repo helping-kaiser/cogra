@@ -10,6 +10,8 @@ ALWAYS Next is disabled GIVEN the clip's upload failed
 
 WHEN tap Retry -> the upload starts again AND Next answers again
 
+WHEN the server refuses the clip at its upload -> the line That video didn't upload. stands under the clip with Remove it alone AND NEVER Retry stands, retrying being unable to change the answer
+
 WHEN tap Remove it -> the clip leaves AND the composer is words again AND Next answers again
 
 WHEN press Next GIVEN the clip's upload failed -> NEVER the seal opens

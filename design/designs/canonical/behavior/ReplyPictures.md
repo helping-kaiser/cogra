@@ -18,6 +18,8 @@ ALWAYS each picture still uploading wears its progress as a ring on its thumbnai
 
 WHEN a picture's upload fails -> its thumbnail is marked AND the line One picture didn't upload. stands under the pictures with Retry and Remove it AND the failed tile loses its own remove control AND Next is disabled AND the line Words first — pictures can join them, and they upload while you write. goes
 
+WHEN the server refuses a picture at its upload -> the line One picture didn't upload. stands under the row with Remove it alone AND NEVER Retry stands, retrying being unable to change the answer
+
 WHEN press Retry under the pictures -> the failed picture's upload tries again AND its ring returns AND the line goes AND Next answers again
 
 WHEN press Remove it under the pictures -> the failed picture leaves the tray AND the line goes AND Next answers again AND NEVER another picture leaves
