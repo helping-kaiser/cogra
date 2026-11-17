@@ -677,6 +677,7 @@ describe("the create sheet (behavior/InviteNew.md, InviteExpiry.md, InviteCreate
     const line = await within(sheet).findByTestId("invites-sheet-failed");
     expect(line).toHaveTextContent(text);
     expect(line).not.toHaveTextContent(/reach the server/);
+    expect(within(sheet).getByTestId("invites.createSheet.create")).toHaveTextContent("Retry");
   });
 
   it("InviteNew.md:3-:11 two choices and nothing else: single use on, 7 days, the footnote", async () => {
@@ -755,7 +756,10 @@ describe("the create sheet (behavior/InviteNew.md, InviteExpiry.md, InviteCreate
     const sheet = await openSheet();
     fireEvent.click(within(sheet).getByRole("switch"));
     fireEvent.click(within(sheet).getByTestId("invites.createSheet.create"));
-    expect(await within(sheet).findByTestId("invites-sheet-failed")).toHaveTextContent("Can't reach the server");
+    // Seam 355: no answer says the network error's words, and the sheet's
+    // commitment itself reads Retry under the line.
+    expect(await within(sheet).findByTestId("invites-sheet-failed")).toHaveTextContent("That didn't send. Try again.");
+    expect(within(sheet).getByTestId("invites.createSheet.create")).toHaveTextContent("Retry");
     expect(within(sheet).getByRole("switch")).toHaveAttribute("aria-checked", "false");
   });
 
