@@ -487,8 +487,8 @@ describe("the keyboard route", () => {
     const stage = screen.getByTestId("crop-frame");
     for (let i = 0; i < 40; i += 1) fireEvent.keyDown(stage, { key: "-" });
     expect(readout()).toBe("1.00 0 0");
-    for (let i = 0; i < 60; i += 1) fireEvent.keyDown(stage, { key: "+" });
-    expect(readout()).toBe("4.00 0 0");
+    for (let i = 0; i < 120; i += 1) fireEvent.keyDown(stage, { key: "+" });
+    expect(readout()).toBe("10.00 0 0");
   });
 
   it("recentres on Home at the fill, and drops the area so a fresh one is measured", () => {
