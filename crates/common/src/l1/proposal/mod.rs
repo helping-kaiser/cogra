@@ -52,8 +52,12 @@ pub mod domain_tags {
 /// other (§8.2, "Approval witness": correct editions).
 pub const CONTENT_EDITION: u64 = 2;
 
-/// The dependency edition a verified act is sealed under.
-pub const DEPENDENCY_EDITION: u64 = 1;
+/// The dependency edition a verified act is sealed under. An edition tag
+/// names the formation of its commitment: this one names the dependency
+/// commitment under [`domain_tags::COMMIT_DEPS`], over the pre-commitment
+/// formed from both pre-digests. A device refuses any other (§8.2,
+/// "Approval witness": correct editions).
+pub const DEPENDENCY_EDITION: u64 = 2;
 
 /// The content pre-digest h_c: the act identifier, the content nonce and
 /// the payload, under its own tag (§8.2, "Proposal pre-commitment").
