@@ -99,6 +99,14 @@ const VALUE = {
   whiteSpace: "nowrap",
 };
 
+/* A ROW WHOSE VALUE IS A SENTENCE WRAPS (round 50, jakob 2026-11-17, C4):
+   the profile seal's `Profile` row reads back every changed part, and a
+   reading cut off by an ellipsis would hide what is being signed. `wrap`
+   on that one row lets its value run to a second line, the row taking 8px
+   above and below so the two lines keep the row's air; every other row
+   keeps its one line. */
+const valueStyle = (row) => (row.wrap ? { ...VALUE, overflow: "visible", textOverflow: "clip", whiteSpace: "normal", padding: "8px 0" } : VALUE);
+
 /* The door's own box is the row's box: no border, no background, no padding,
    the page's ink — so the card reads as the card it always was and only the
    state layer, the focus ring and the 48px target arrive with `BUTTON_CLASS`. */
@@ -164,14 +172,14 @@ export function ActsCard({ rows = [], total, note, noteTone = "quiet", node }) {
         ) : row.onOpen ? (
           <button key={index} type="button" onClick={row.onOpen} aria-label={row.openLabel} className={BUTTON_CLASS} style={{ ...DOOR, ...unlined(index) }} {...named(index)}>
             <span style={LABEL} data-node={part("label")}>{row.label}</span>
-            <span style={VALUE} data-node={part("value")}>{row.value}</span>
+            <span style={valueStyle(row)} data-node={part("value")}>{row.value}</span>
             <Count count={row.count} noun={row.countNoun} node={part("count")} />
           </button>
         ) : row.fault ? (
           <div key={index} style={{ borderBottom: ROW.borderBottom, paddingBottom: "var(--space-2)", ...unlined(index) }} {...named(index)}>
             <div style={{ ...ROW, borderBottom: 0 }}>
               <span style={LABEL} data-node={part("label")}>{row.label}</span>
-              <span style={VALUE} data-node={part("value")}>{row.value}</span>
+              <span style={valueStyle(row)} data-node={part("value")}>{row.value}</span>
               <Count count={row.count} noun={row.countNoun} node={part("count")} />
             </div>
             <div style={{ paddingLeft: `calc(${LABEL.width} + var(--space-2))` }}>
@@ -181,7 +189,7 @@ export function ActsCard({ rows = [], total, note, noteTone = "quiet", node }) {
         ) : (
           <div key={index} style={{ ...ROW, ...unlined(index) }} {...named(index)}>
             <span style={LABEL} data-node={part("label")}>{row.label}</span>
-            <span style={VALUE} data-node={part("value")}>{row.value}</span>
+            <span style={valueStyle(row)} data-node={part("value")}>{row.value}</span>
             <Count count={row.count} noun={row.countNoun} node={part("count")} />
           </div>
         )

@@ -6251,7 +6251,7 @@ screen; after your own Remove the stream stays and the removal mark stands in
 the clip's place (`ReelMenu`'s `whose` = `own-removed`); the clip pauses under
 the sheet. The two gaps are outcomes now.
 
-### 240 · Edit profile: how long the write rule's line stands on Save · *design* · **filed 2026-11-17**
+### 240 · Edit profile: how long the write rule's line stands on Save · *design* · **filed 2026-11-17** · **closed 2026-11-17**
 
 Round 50 (jakob 2026-11-17, his 13). A write-rule refusal known at Save stands
 on the edit as `You can't sign right now.` with its "?", and Save dims — nobody
@@ -6263,7 +6263,11 @@ and each press asks again (the row's rule says asking again at once meets the
 same answer). The drawing (`ProfileEdit`'s `state` chip, `refused`) holds for
 all three.
 
-### 241 · A staged picture removal has no Undo on the edit · *design* · **filed 2026-11-17**
+Closed by round 50, act 3 (jakob 2026-11-17, C1 as recommended): the line stands,
+and Save stays dimmed with it, until the next staged change or the next opening
+of the edit (`ProfileEdit.md`).
+
+### 241 · A staged picture removal has no Undo on the edit · *design* · **filed 2026-11-17** · **closed 2026-11-17**
 
 Round 50 (jakob 2026-11-17, his 8). `Remove picture` stages the removal and the
 monogram returns at once; the way back today is leaving the edit (nothing is
@@ -6272,13 +6276,21 @@ with `Undo` (`EditCompose`); the profile edit has no such line. Options: (a) as
 drawn, no Undo — `Change picture` or leaving the edit undoes it; (b) the
 withdrawal's form under the picture's row, `Undo` beside it.
 
-### 242 · The profile seal's row truncates its longer readings · *system* · **filed 2026-11-17**
+Closed by round 50, act 3 (jakob 2026-11-17, C2 as recommended): `Undo` stands where
+`Remove` stood, in its style, and unstages the removal; with nothing else staged
+the edit is at rest again (`ProfileEdit`'s `state` chip, `removed`).
+
+### 242 · The profile seal's row truncates its longer readings · *system* · **filed 2026-11-17** · **closed 2026-11-17**
 
 Round 50 (the row grammar, item 5). `ActsCard`'s value is one line, ellipsized:
 `A new picture, display name, bio and website` and `A new display name, bio
 and website, the picture removed` run past the slot at 390 wide (the slot holds
 about 30 characters of body-medium beside the 76px label). The drawn readings
 fit. A two-line value, or a shorter grammar, is a drawing choice for jakob.
+
+Closed by round 50, act 3 (jakob 2026-11-17, C4 as recommended): the `Profile` row's
+value runs on to a second line — `ActsCard`'s row `wrap`, set on that row alone;
+`ProfileEditSeal`'s `holds` chip draws the longest reading at `all`.
 
 ### 243 · The reading settings' filter sheet stands 131px above its foot · *design* · **filed 2026-11-17**
 

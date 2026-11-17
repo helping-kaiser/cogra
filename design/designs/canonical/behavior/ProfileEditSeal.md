@@ -10,6 +10,8 @@ ALWAYS the Profile row ends , the picture removed after the other parts, as A ne
 
 ALWAYS the seal's head shows the picture the change leaves, the monogram GIVEN the picture is removed
 
+ALWAYS the Profile row's value runs on to a second line, never cut off, GIVEN it is longer than one line
+
 ALWAYS the acts card's total reads 1 thing, signed
 
 ALWAYS the acts card carries no all-or-nothing line

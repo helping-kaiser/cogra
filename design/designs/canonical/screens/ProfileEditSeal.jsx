@@ -17,12 +17,14 @@ export const NODE = "profileEditSeal";
    seal*): `A new` and the changed parts in the edit's order — picture,
    display name, bio, website — joined `, ` and ` and `; a removed picture
    reads `The picture removed` alone and `, the picture removed` after the
-   others. Only the value's words follow the chip; no path moves. */
+   others. `all` is the longest reading, every part changed, which runs to
+   the row's second line (jakob 2026-11-17, C4: the row wraps, never cut
+   off). Only the value's words follow the chip; no path moves. */
 export const PROPS = {
   state: { editor: "enum", options: ["rest", "signing"], default: "rest" },
-  holds: { editor: "enum", options: ["new", "removed"], default: "new" },
+  holds: { editor: "enum", options: ["new", "removed", "all"], default: "new" },
 };
-export const VALS = `restFootShown: this.props.state === "signing" ? "none" : "flex", signFootShown: this.props.state === "signing" ? "flex" : "none", newShown: this.props.holds === "removed" ? "none" : "inline", removedShown: this.props.holds === "removed" ? "inline" : "none", photoShown: this.props.holds === "removed" ? "none" : "flex", monoShown: this.props.holds === "removed" ? "flex" : "none"`;
+export const VALS = `restFootShown: this.props.state === "signing" ? "none" : "flex", signFootShown: this.props.state === "signing" ? "flex" : "none", newShown: this.props.holds === "new" ? "inline" : "none", removedShown: this.props.holds === "removed" ? "inline" : "none", allShown: this.props.holds === "all" ? "inline" : "none", photoShown: this.props.holds === "removed" ? "none" : "flex", monoShown: this.props.holds === "removed" ? "flex" : "none"`;
 
 export function Screen() {
   return (
@@ -43,7 +45,7 @@ export function Screen() {
           </span>
         </div>
 
-        <ActsCard node="acts" rows={[{ label: "Profile", value: <><span style={{ display: "{{newShown}}" }}>A new picture, bio and website</span><span style={{ display: "{{removedShown}}" }}>The picture removed</span></>, count: "1", countNoun: "profile change" }]} total="1 thing, signed" />
+        <ActsCard node="acts" rows={[{ label: "Profile", value: <><span style={{ display: "{{newShown}}" }}>A new picture, bio and website</span><span style={{ display: "{{removedShown}}" }}>The picture removed</span><span style={{ display: "{{allShown}}" }}>A new picture, display name, bio and website</span></>, count: "1", countNoun: "profile change", wrap: true }]} total="1 thing, signed" />
 
         <QuietNote node="note">Every change to your profile is signed in your name and stays in your public record.</QuietNote>
 
