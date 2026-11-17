@@ -224,8 +224,8 @@ describe("the fixed frame", () => {
   });
 });
 
-// THE ZOOM'S FLOOR IS THE FILL AND ITS CEILING ABOUT 4× (each sidecar's "NEVER
-// below the fill or past about 4×").
+// THE ZOOM'S FLOOR IS THE FILL AND ITS CEILING 10× (each sidecar's "NEVER
+// below the fill or past 10×").
 describe("the zoom's bounds", () => {
   // A 4000 × 3000 landscape lays 390 × 292.5 in the post's stage; Tall's
   // frame (390 × 487.5) needs 487.5 / 292.5 of it.
@@ -239,7 +239,7 @@ describe("the zoom's bounds", () => {
     expect(readout()).toBe(`${TALL_FILL.toFixed(2)} 0 0`);
     expect(given().zoom).toBeCloseTo(TALL_FILL, 9);
     expect(given().minZoom).toBeCloseTo(TALL_FILL, 9);
-    expect(given().maxZoom).toBeCloseTo(4 * TALL_FILL, 9);
+    expect(given().maxZoom).toBeCloseTo(10 * TALL_FILL, 9);
   });
 
   it("keeps a post's ceiling at its tallest frame's under every shape", () => {
@@ -248,21 +248,21 @@ describe("the zoom's bounds", () => {
     loads(4000, 3000);
     // Wide's fill is 1 (390 across); the ceiling stays Tall's.
     expect(given().minZoom).toBe(1);
-    expect(given().maxZoom).toBeCloseTo(4 * TALL_FILL, 9);
+    expect(given().maxZoom).toBeCloseTo(10 * TALL_FILL, 9);
   });
 
-  it("puts a cover's and the circle's ceiling at 4× their own fill", () => {
+  it("puts a cover's and the circle's ceiling at 10× their own fill", () => {
     withStage();
     const { unmount } = render(<Host shape={{ ratio: 16 / 9 }} />);
     loads(4000, 3000);
     // 342 × 192.375 under a 390 × 292.5 lay: the fill is 342 / 390.
     expect(given().minZoom).toBeCloseTo(342 / 390, 9);
-    expect(given().maxZoom).toBeCloseTo((4 * 342) / 390, 9);
+    expect(given().maxZoom).toBeCloseTo((10 * 342) / 390, 9);
     unmount();
     render(<Host shape="avatar" />);
     loads(4000, 3000);
     expect(given().minZoom).toBeCloseTo(342 / 292.5, 9);
-    expect(given().maxZoom).toBeCloseTo((4 * 342) / 292.5, 9);
+    expect(given().maxZoom).toBeCloseTo((10 * 342) / 292.5, 9);
   });
 
   it("holds a zoom the cropper reports outside the bounds", () => {
@@ -271,7 +271,7 @@ describe("the zoom's bounds", () => {
     render(<CropFrame src="blob:x" shape="tall" crop={{ ...CENTERED, zoom: 2 }} onChange={(c) => changes.push(c)} />);
     loads(4000, 3000);
     act(() => (given().onZoomChange as (z: number) => void)(99));
-    expect(changes.at(-1)!.zoom).toBeCloseTo(4 * TALL_FILL, 9);
+    expect(changes.at(-1)!.zoom).toBeCloseTo(10 * TALL_FILL, 9);
     act(() => (given().onZoomChange as (z: number) => void)(0.1));
     expect(changes.at(-1)!.zoom).toBeCloseTo(TALL_FILL, 9);
   });
@@ -409,7 +409,7 @@ describe("what the cropper reports back", () => {
 // slider zooms, and the zoom and recentre keys stay.
 describe("the keyboard route", () => {
   // An 800 × 1000 picture lays the post stage's full width at 4:5 — exactly
-  // Tall's frame: its fill is 1 and its ceiling 4. (A 400 stage here, so the
+  // Tall's frame: its fill is 1 and its ceiling 10. (A 400 stage here, so the
   // steps are whole pixels: it lays 400 × 500.)
   it("pans by 1 % of the picture an arrow, 10 % with Shift, held at the edge", () => {
     withStage(400);
@@ -435,7 +435,7 @@ describe("the keyboard route", () => {
     loads(4000, 3000);
     const slider = screen.getByRole("slider", { name: "Zoom" });
     expect(slider).toHaveAttribute("min", "1");
-    expect(Number(slider.getAttribute("max"))).toBeCloseTo(4, 9);
+    expect(Number(slider.getAttribute("max"))).toBeCloseTo(10, 9);
     expect(Number((slider as HTMLInputElement).value)).toBeCloseTo(2.5 / (487.5 / 292.5), 2);
   });
 
@@ -443,8 +443,8 @@ describe("the keyboard route", () => {
     withStage();
     render(<Host shape="wide" zoomSlider />);
     loads(4000, 3000);
-    // Wide's fill is 1, the ceiling 4 × Tall's 487.5 / 292.5 = 6.666….
-    expect(screen.getByRole("slider", { name: "Zoom" })).toHaveAttribute("max", "6.67");
+    // Wide's fill is 1, the ceiling 10 × Tall's 487.5 / 292.5 = 16.666….
+    expect(screen.getByRole("slider", { name: "Zoom" })).toHaveAttribute("max", "16.67");
   });
 
   it("zooms from the slider by shares of the fill", () => {
@@ -458,10 +458,10 @@ describe("the keyboard route", () => {
   // CROP_ZOOM_CSS: the drawn track, its filled part read from `--cg-range-at`.
   it("draws the house track and fills it to the thumb", () => {
     withStage();
-    render(<Host initial={{ ...CENTERED, zoom: 2.5 }} shape="square" zoomSlider />);
+    render(<Host initial={{ ...CENTERED, zoom: 5.5 }} shape="square" zoomSlider />);
     loads(800, 1000);
     // Square under an 800 × 1000 lay of 390 × 487.5: the fill is 1, the
-    // ceiling Tall's 4, so 2.5 stands half way.
+    // ceiling Tall's 10, so 5.5 stands half way.
     const slider = screen.getByRole("slider", { name: "Zoom" });
     expect(slider).toHaveClass("cg-range");
     expect(slider.className).not.toContain("accent-");
