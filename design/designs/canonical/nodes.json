@@ -2634,8 +2634,7 @@
     "ComposeCrop": {
       "prefix": "composeCrop",
       "keys": {
-        "composeCrop.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
-        "composeCrop.shapes": "the shape chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+        "composeCrop.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)"
       },
       "nodes": {
         "composeCrop.header": [],
