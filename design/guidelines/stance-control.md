@@ -357,7 +357,7 @@ still reading Cancel would mislead (jakob 2026-11-11) — while `Set` keeps
 its label until 200ms pass and then reads `Setting…`. Close, a press
 outside, Back and Esc close the pad.
 Closed, the act goes on: the signing's wait moves to the target's row —
-`Signing…` under the face in the pending marker's quiet register, the anchor refusing a
+the closed ring around the face as after a hold, `Signing…` spoken only (round 51 act 2), the anchor refusing a
 second hold, then the new face and the snackbar, or `That didn't sign.`
 with a `Retry` that asks the same pick again. A Set the reader regrets is
 walked back afterwards. `PadFailed`'s `moment` chip draws it. The

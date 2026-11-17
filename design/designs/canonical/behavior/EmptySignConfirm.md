@@ -48,6 +48,6 @@ WHEN press Set it anyway -> Keep it reads Close in the same place from the press
 
 WHEN the signing has not answered 200ms after Set it anyway -> Set it anyway reads Setting… beside Close, as the answer chip's setting draws it
 
-WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN Set it anyway is waiting on its signing -> the dialog and the pad beneath it close AND the act goes on, its wait carried by the line under the target's face, Signing… in the pending marker's quiet register, as PadFailed's closed moment draws it AND NEVER the face moves before the signing is taken
+WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN Set it anyway is waiting on its signing -> the dialog and the pad beneath it close AND the act goes on, its wait carried by the closed ring around the target's face, Signing… spoken from a visually hidden status and never drawn, as PadFailed's closed moment draws it AND NEVER a line stands under the face for the wait AND NEVER the face moves before the signing is taken
 
 WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN Set it anyway was pressed under 200ms ago -> the dialog and the pad beneath it close AND the act goes on AND NEVER the act is cancelled

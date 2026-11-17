@@ -66,6 +66,6 @@ WHEN the signing has not answered 200ms after a press of Sign the edit, held at 
 
 WHEN press Sign the edit -> the header X is named Close from the press itself AND NEVER the dialog Discard the changes? opens while it signs
 
-WHEN the signing gets no answer or is answered with a refusal GIVEN the edit stands open -> the line in its answer's words, That didn't send. Try again. or That didn't go through. Try again., takes Sign the edit's place AND an outlined Retry stands under it AND the acts footer stays above the line, as EditCompose's fault draws it
+WHEN the signing gets no answer or is answered with a refusal GIVEN the edit stands open -> the line in its answer's words, That didn't send. Try again. or That didn't go through. Try again., takes Sign the edit's place AND an outlined Retry stands under it AND the acts footer stays above the line, as EditCompose's fault draws it AND NEVER a Back stands under Retry, the header's arrow and X being the edit's way back
 
 WHEN press the header back arrow, the header X or the system's Back GIVEN Sign the edit was pressed and has not answered -> the edit closes AND the edit goes on, its wait and its answer on the edited card as SigningAfterClose draws them AND NEVER the edit is cancelled

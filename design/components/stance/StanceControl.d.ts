@@ -109,8 +109,8 @@ export interface StanceControlProps {
    * the ring that filled during the hold stays closed around the face, no
    * line stands under it so the card never grows, and `Signing…` is spoken
    * from a visually hidden status once 200ms pass. Pad closed, `"busy"` is a
-   * closed pad's wait: the anchor is inert, and the target's row carries
-   * `Signing…`; `"failed"` puts `SigningPending`'s row line with `Retry`
+   * closed pad's wait and draws the same (round 51 act 2: one vehicle); the anchor is inert.
+   * `"failed"` puts `SigningPending`'s row line with `Retry`
    * under the face, which has not moved — its `Retry` after a hold waits as
    * `"held"` again. Pad open, it
    * is Set's: `Setting…`, inert; then the fault line above the commit row and

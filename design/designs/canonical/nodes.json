@@ -914,29 +914,34 @@
           "rest",
           "signing",
           "uploading",
-          "upload-failed"
+          "upload-failed",
+          "upload-refused"
         ],
         "avatarSeal.foot.back": [
           "rest",
           "signing",
           "uploading",
-          "upload-failed"
+          "upload-failed",
+          "upload-refused"
         ],
         "avatarSeal.foot.sign": [
           "rest",
           "signing",
           "uploading",
-          "upload-failed"
+          "upload-failed",
+          "upload-refused"
         ],
         "avatarSeal.gate": [
           "uploading",
-          "upload-failed"
+          "upload-failed",
+          "upload-refused"
         ],
         "avatarSeal.gate.line": [
           "uploading"
         ],
         "avatarSeal.gate.message": [
-          "upload-failed"
+          "upload-failed",
+          "upload-refused"
         ],
         "avatarSeal.gate.retry": [
           "upload-failed"
@@ -3405,12 +3410,14 @@
         "postEdit.body.mediaRow": [
           "none",
           "uploading",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postEdit.body.mediaRow.caption": [
           "none",
           "uploading",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postEdit.body.mediaRow.thumb": [
           "none/1",
@@ -3418,7 +3425,9 @@
           "uploading/1",
           "uploading/2",
           "failed/1",
-          "failed/2"
+          "failed/2",
+          "refused/1",
+          "refused/2"
         ],
         "postEdit.body.rule": [],
         "postEdit.body.uploadError": [],
@@ -3454,13 +3463,15 @@
         ],
         "postEdit.gate": [
           "uploading",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postEdit.gate.line": [
           "uploading"
         ],
         "postEdit.gate.message": [
-          "failed"
+          "failed",
+          "refused"
         ],
         "postEdit.gate.retry": [
           "failed"
@@ -3505,7 +3516,8 @@
         "postEdit.sign": [
           "none",
           "slow",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postEdit.tags": [],
         "postEdit.tags.add": [],
@@ -12578,29 +12590,34 @@
           "rest",
           "signing",
           "uploading",
-          "upload-failed"
+          "upload-failed",
+          "upload-refused"
         ],
         "profileEditSeal.foot.back": [
           "rest",
           "signing",
           "uploading",
-          "upload-failed"
+          "upload-failed",
+          "upload-refused"
         ],
         "profileEditSeal.foot.sign": [
           "rest",
           "signing",
           "uploading",
-          "upload-failed"
+          "upload-failed",
+          "upload-refused"
         ],
         "profileEditSeal.gate": [
           "uploading",
-          "upload-failed"
+          "upload-failed",
+          "upload-refused"
         ],
         "profileEditSeal.gate.line": [
           "uploading"
         ],
         "profileEditSeal.gate.message": [
-          "upload-failed"
+          "upload-failed",
+          "upload-refused"
         ],
         "profileEditSeal.gate.retry": [
           "upload-failed"

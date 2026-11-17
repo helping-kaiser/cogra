@@ -80,6 +80,8 @@ WHEN an upload fails GIVEN Sign the edit was pressed while the uploads ran -> th
 
 ALWAYS Sign the edit is disabled GIVEN the gate line shows its fault reading
 
+WHEN the server refuses a picture the edit took at its upload -> the gate line reads One picture didn't upload. alone in the error ink AND NEVER Signing waits for it. stands beside it AND NEVER Retry stands on the gate AND Sign the edit is disabled until Remove it under the pictures takes the picture out
+
 WHEN press Retry GIVEN the held press dropped -> the gate runs again AND NEVER signing proceeds until Sign the edit is pressed again
 
 WHEN a picture the edit took fails to upload -> its thumbnail is marked AND the line One picture didn't upload. stands under the pictures with Retry and Remove it AND the gate line takes its fault reading

@@ -50,6 +50,6 @@ WHEN press Walk it back -> Keep it reads Close in the same place from the press 
 
 WHEN the signing has not answered 200ms after Walk it back -> Walk it back reads Walking it back… beside Close, as the answer chip's signing draws it
 
-WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN Walk it back is waiting on its signing -> the dialog and the pad beneath it close AND the whole walk-back goes on, its wait carried by the line under the target's face, Signing… in the pending marker's quiet register, as PadFailed's closed moment draws it AND NEVER the face moves before the signing is taken
+WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN Walk it back is waiting on its signing -> the dialog and the pad beneath it close AND the whole walk-back goes on, its wait carried by the closed ring around the target's face, Signing… spoken from a visually hidden status and never drawn, as PadFailed's closed moment draws it AND NEVER a line stands under the face for the wait AND NEVER the face moves before the signing is taken
 
 WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN Walk it back was pressed under 200ms ago -> the dialog and the pad beneath it close AND the walk-back goes on AND NEVER the walk-back is cancelled

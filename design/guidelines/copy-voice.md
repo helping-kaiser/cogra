@@ -722,8 +722,11 @@ Retry (`UploadErrorLine` with both ways out):
 cannot change the answer, and the line keeps the refused files' one way
 out. The row reads `One picture didn't upload.` with `Remove it` alone,
 never `Retry`. A clip takes the same rule in its own words, `That video
-didn't upload.` with `Remove it` alone. What a seal's gate line reads for
-a refused upload is open (backlog 251).
+didn't upload.` with `Remove it` alone. On a seal's gate the refusal is
+the fact alone — `One picture didn't upload.`, a clip's `The video didn't
+upload.` — with no `Signing waits for it.`, which would wait for ever, and
+no `Retry`; the sign button stays disabled and `Back` is the way out, to
+the stage that holds `Remove it` (jakob 2026-11-17, round 51 act 2).
 
 **The cover's own words** — the way to the crop a gallery picture goes
 through, from an edit:
@@ -1155,10 +1158,10 @@ a quick answer never flashes a word.
   that filled during the hold stays closed around the face until the
   signature is taken, no line stands under it and the card never grows,
   and a visually hidden status says `Signing…` once the answer is 200ms
-  late. **Drawn** on `RowSigning` (the closed ring). As a line, quiet
-  under the face in the pending marker's register, it carries a pad's or
-  a dialog's act after `Close` shut it (jakob 2026-11-11). **Drawn** on
-  `PadFailed`'s `closed`.
+  late. **Drawn** on `RowSigning` (the closed ring). A pad's or a
+  dialog's act after `Close` shut it (jakob 2026-11-11) waits the same
+  way, the closed ring and the spoken status, no line (jakob 2026-11-17,
+  round 51 act 2). **Drawn** on `PadFailed`'s `closed`.
 - `Close` — the way out of a signing surface once its commit is
   pressed (jakob 2026-11-11): the pad, the alternates, the walk-back,
   the empty sign, the handle change, every seal and edit, and the
@@ -1373,10 +1376,12 @@ The rows, word by word:
   their twins (*drafted 2026-10-09 — their wording jakob's at review*) —
   over no body line, the pair `Report` · `Cancel` and the snackbar
   `Reported.` (**blessed**). It never connects to Report-a-problem. A
-  report the server refuses — the day's reports spent, or the thing gone —
-  answers as no answer does, the sheet staying and the shared snackbar
-  `That didn't send. Try again.` (item 95's line, the interim for FC-G15;
-  *new 2026-10-12 as a placement — the line itself blessed*).
+  report that fails keeps the sheet up in the rule's dialog shape (jakob
+  2026-11-17, round 51 act 2): the line above the pair — `That didn't
+  send. Try again.` with no answer, `That didn't go through. Try again.`
+  for a refusal (the day's reports spent, or the thing gone) — and
+  `Report` reading `Retry`; never the snackbar (`ReportConfirm`'s
+  `answer`).
 - `Save` while a thing is not kept, `Unsave` while it is — one word
   either way (jakob 2026-09-11). It is the FIRST row of every menu that
   has it, a post's, a comment's, a person's and your own post's alike,
@@ -1560,7 +1565,12 @@ as rec"; impl 351). The WORDS follow the answer, the SHAPE follows the host.
   commitment itself reading `Retry` (`RemoveConfirm`'s `answer`); a card —
   the line last on the card with `Retry` at its end, the copy fault's form
   (`Invites`' copy fault and its `Revoke`): `That didn't go through.` with
-  `Retry`. What a card reads when no answer came is open (backlog 250).
+  `Retry`.
+- The card is the one host where both answers read alike: no answer and an
+  answered refusal both say `That didn't go through.` with `Retry` (jakob
+  2026-11-17, round 51 act 2). The card's copy fault already reads so, and
+  the line is the row line's short form — `Retry` stands at its end, so
+  the line never says "try again" twice.
 - What is not a fault keeps its own vehicle: the write rule's and the
   budget's notices, a refused staged act's row, a field's own line, a
   refused file's line with `Remove it` alone.

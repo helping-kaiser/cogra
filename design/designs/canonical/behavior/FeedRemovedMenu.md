@@ -12,7 +12,7 @@ WHEN tap feed.menuSheet.save -> the removed post is kept as any post is kept AND
 
 WHEN tap feed.menuSheet.cite -> the post wizard opens fresh at its first stage AND the removed post rides along unseen until the details stage
 
-WHEN tap feed.menuSheet.hide -> the sheet closes AND the author is hidden as from any post of theirs AND that person's rows leave the feed AND NEVER a confirm step appears
+WHEN tap feed.menuSheet.hide -> the sheet closes AND the author is hidden as from any post of theirs AND that person's rows leave the feed, their posts and their comment cards alike, AND NEVER a confirm step appears
 
 WHEN tap feed.menuSheet.report -> the menu closes AND feed.reportSheet rises over the feed, feed.reportSheet.title reading Report this post? AND NEVER anything is sent yet
 

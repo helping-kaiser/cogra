@@ -2,7 +2,7 @@
 
 ALWAYS a refused or failed act's words follow the answer and its shape follows the host
 
-ALWAYS no answer at all reads That didn't send. Try again., an answered refusal reads That didn't go through. Try again., and a signed act answered on a target's row reads That didn't sign.
+ALWAYS no answer at all reads That didn't send. Try again., an answered refusal reads That didn't go through. Try again., and a signed act answered on a target's row reads That didn't sign., save on a card, where both answers read alike
 
 ALWAYS a refusal the signer on the device makes itself, with no server answer at all, reads as an answered refusal, That didn't go through. Try again.
 
@@ -52,7 +52,7 @@ WHEN a dialog's or a small sheet's commitment gets no answer -> it stays up with
 
 WHEN a dialog's or a small sheet's commitment is answered with a refusal -> it stays up with its pair AND the line That didn't go through. Try again. stands in it AND the commitment reads Retry
 
-WHEN an act on a card is answered with a refusal -> the line That didn't go through. stands last on the card with Retry at its end AND the card stays
+WHEN an act on a card does not go through, whether no answer came or a refusal -> the line That didn't go through. stands last on the card with Retry at its end AND the card stays, the card's copy fault reading so already
 
 WHEN a form's submit gets no answer -> every field keeps what was typed AND the fault line stands on the form
 
