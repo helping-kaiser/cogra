@@ -7,6 +7,8 @@
 //! between CoGra and the substrate, in both directions. Bare section
 //! references below are that document's.
 
+use std::fmt;
+
 use super::census::{Family, LegRole};
 use super::crypto::{self, tags};
 use super::encoding::Encoder;
@@ -95,13 +97,25 @@ pub fn canonical_deps(deps: &[ActId]) -> Vec<u8> {
 }
 
 /// A proposal before signing: body plus the two removable projections.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct Proposal {
     pub body: StructuralBody,
     /// Payload bytes — canonical empty is the zero-length string (§8.4).
     pub payload: Vec<u8>,
     /// Declared dependencies (each naming a whole act).
     pub deps: Vec<ActId>,
+}
+
+/// The payload is what the content nonce conceals, so `Debug` shows its
+/// length and never its bytes.
+impl fmt::Debug for Proposal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Proposal")
+            .field("body", &self.body)
+            .field("payload", &format_args!("<{} bytes>", self.payload.len()))
+            .field("deps", &self.deps)
+            .finish()
+    }
 }
 
 /// The actor's signed pre-commitment over the canonical structural body
