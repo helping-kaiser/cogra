@@ -512,6 +512,34 @@ class InvitesViewModelTest {
         assertThat(kept.picks.value).isEmpty()
     }
 
+    // The approval landed but its signing was refused for good, so the
+    // material is spent: the retry resumes nothing. Nothing signed is no
+    // Signed — the pad stays at its fault and the kept vouch stays kept.
+    @Test
+    fun aRetryThatResumesNothingIsNoSigningAndTheKeptVouchStays() = runTest(dispatcher) {
+        kept.keep(StanceTarget.Node("rafa"), StancePair(0.4, 0.1), KeptFamily.APPROVAL, StanceKind.PERSON)
+        invites.queue += row("rafa", 1)
+        writes.expireOnSubmit = true
+        val vm = viewModel()
+        advanceUntilIdle()
+        vm.onOpenRow(vm.state.value.layout.rows.single())
+        advanceUntilIdle()
+        val pad = checkNotNull(vm.approvalPad())
+        pad.commit()
+        advanceUntilIdle()
+        assertThat(vm.padState.value?.failed).isTrue()
+        assertThat(identity.handshakes).isEmpty()
+
+        pad.commit()
+        advanceUntilIdle()
+
+        assertThat(invites.approved).hasSize(1)
+        assertThat(vm.padState.value?.failed).isTrue()
+        assertThat(vm.state.value.snack is InvitesSnack.Signed).isFalse()
+        assertThat(vm.state.value.approvingId).isEqualTo("rafa")
+        assertThat(kept.picks.value.single().target).isEqualTo(StanceTarget.Node("rafa"))
+    }
+
     @Test
     fun theCloseOfAKeptApprovalDropsTheKeptVouchAndSignsNothing() = runTest(dispatcher) {
         // Invites.md:103, RejectConfirm.md:7.

@@ -1,6 +1,8 @@
 # ComposeCited · `spec:design:behavior-compose-cited`
 
-WHEN the details stage opens GIVEN Cite in a new post or Mention in a new post began the draft -> the reference brought along stands staged in the References block AND nothing else is written
+WHEN the details stage opens GIVEN Cite in a new post or Mention in a new post opened the composer and no draft was continued -> the reference brought along stands staged in the References block AND nothing else is written
+
+WHEN the details stage opens GIVEN Cite in a new post or Mention in a new post opened the wizard and the kept draft was continued -> the reference brought along stands staged in the References block among the draft's own AND everything the draft held stands as it was left
 
 ALWAYS a cited post and a mentioned person stand in the References block as one row shape
 
@@ -18,6 +20,6 @@ WHEN typing passes the title's 100 characters -> the count reads N over in the e
 
 WHEN press Next GIVEN the title is empty -> NEVER Next refuses
 
-WHEN press the header back arrow -> the words stage comes back AND the reference still rides the draft
+WHEN press the header back arrow -> the words stage comes back AND the reference still rides the composer
 
 WHEN press the header X -> the whole flow is left for where the composer was opened from AND the draft is kept AND NEVER a dialog asks

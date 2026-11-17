@@ -7,6 +7,9 @@
 package com.cogra.feature.content
 
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -18,6 +21,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
 import com.cogra.domain.CommentView
 import com.cogra.domain.PostView
@@ -112,9 +117,9 @@ internal fun ListThread(
         onEditComment = { commentId -> onEditComment(commentId, post?.title?.value.orEmpty()) },
         onOpenActor = doors.onOpenActor,
         onOpenTopic = doors.onOpenTopic,
+        onOpenPost = doors.onOpenPost,
         onReference = onCitePost,
         onSignInOrJoin = onSignInOrJoin,
-        onOpenPost = doors.onOpenPost,
         onDepart = onCommentsDepart,
         commentsReturn = returns.value,
         onReturnConsumed = returns.onConsumed,
@@ -144,6 +149,8 @@ internal fun ListCommentCard(
     onReply: (() -> Unit)? = null,
     /** The sheet the card's ⋮ raises on this host and the rows its boards register; null keeps the rows' tags. */
     menu: CommentMenuPlacement? = null,
+    /** A row flag stands attached above the card ([cardShape]): the tag page's claim. */
+    attach: Boolean = false,
 ) {
     val doors = actions.doors
     // THE CARD AS THIS DEVICE KNOWS IT NOW: removed here or anywhere since the
@@ -177,6 +184,7 @@ internal fun ListCommentCard(
         },
         onShare = { threadPostId?.let { actions.onShare(actions.shareUrls.comment(it, comment.id)) } },
         onOpenActor = doors.onOpenActor,
+        onOpenPost = doors.onOpenPost,
         onOpenTopic = doors.onOpenTopic,
         onCite = { actions.onCitePost(comment.id) },
         onLicense = { licenseOpen = true },
@@ -184,6 +192,7 @@ internal fun ListCommentCard(
         stanceControl = actions.stanceControl,
         shape = shape,
         authorHere = authorHere,
+        attach = attach,
     )
     if (licenseOpen) {
         LicenseSheet(license = comment.license, onDismiss = { licenseOpen = false })
@@ -203,6 +212,16 @@ internal fun ListCommentCard(
         )
     }
 }
+
+/**
+ * A CARD WITH A ROW FLAG ATTACHED ABOVE IT squares its top-left corner, so
+ * flag and card fuse into one folder-tab silhouette (`attach` on `PostCard`
+ * and `CommentCard`, `TaggedRow.jsx`); every other card keeps the card's own
+ * medium corners.
+ */
+@Composable
+internal fun cardShape(attach: Boolean): Shape =
+    if (attach) MaterialTheme.shapes.medium.copy(topStart = CornerSize(0.dp)) else CardDefaults.shape
 
 /** A host's side of the comment return: what came back, how it is marked read, and the one-comment re-read. */
 data class HostReturn(

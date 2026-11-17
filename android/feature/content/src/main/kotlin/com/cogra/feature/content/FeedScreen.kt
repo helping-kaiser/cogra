@@ -1303,6 +1303,8 @@ internal data class CardPlacement(
     val dialog: DataNode? = null,
     /** The card stands on its author's own page, a profile's posts view: the chip is inert (ProfilePosts.md:25). */
     val authorHere: Boolean = false,
+    /** A row flag stands attached above the card — the tag page's claim — so its top-left corner squares. */
+    val attach: Boolean = false,
 )
 
 /**
@@ -1385,6 +1387,7 @@ internal fun PostCard(
     val card = placement.card
     val tag = "${placement.tag}_post_${post.id}"
     Card(
+        shape = cardShape(placement.attach),
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)

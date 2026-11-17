@@ -9,7 +9,7 @@
 //! the substrate except the reads the pre-check estimates from.
 
 use common::l1::census::Family;
-use common::l1::handshake::{Proposal, StructuralBody};
+use common::l1::handshake::{Proposal, StructuralBody, canonical_dep_list};
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::staged;
 use postgres_store::{PgPool, hashtag as hashtag_store, mirror};
@@ -102,9 +102,9 @@ pub(crate) struct Carrying<'a, B>(pub &'a B);
 impl<B: L1Boundary> L1Boundary for Carrying<'_, B> {
     async fn seal(
         &self,
-        pre: common::l1::PreSignedProposal,
-    ) -> Result<common::l1::VerifiedAct, BoundaryError> {
-        self.0.seal(pre).await
+        submission: common::l1::proposal::Submission,
+    ) -> Result<common::l1::proposal::SealedAct, BoundaryError> {
+        self.0.seal(submission).await
     }
 
     async fn approve(
@@ -293,7 +293,10 @@ fn affordable(balance: f64, theta: f64, acts: usize) -> bool {
 /// The endpoint check is the one exception to that order: it runs after
 /// the target resolves, since an own-mint target needs the allocated
 /// sequence value first — a value the counter yields from zero upward, so
-/// the clamp before the unsigned cast is a formality.
+/// the clamp before the unsigned cast is a formality. The self-dependency
+/// check waits on the same value; the dependency list then enters the
+/// proposal in canonical order (`common::l1::handshake::canonical_dep_list`),
+/// fixed here, before the device ever sees it to pre-sign.
 ///
 /// The two-gate write rule is an L2 estimate from the last published
 /// values (substrate.md §6). W1 — solvency — is real under the stand-in's
@@ -403,13 +406,14 @@ async fn prepare_under<B: L1Boundary>(
     let mut tx = pool.begin().await?;
     let seq = staged::allocate_seq(&mut tx, &gesture.author).await?;
     let seq = seq.max(0) as u64;
+    let act_id = ActId {
+        author: gesture.author.clone(),
+        seq,
+        family: gesture.family,
+    };
     let target = match gesture.target {
         Target::Node(node) => node,
-        Target::OwnMint => NodeId::Mint(ActId {
-            author: gesture.author.clone(),
-            seq,
-            family: gesture.family,
-        }),
+        Target::OwnMint => NodeId::Mint(act_id.clone()),
     };
     gesture
         .family
@@ -420,6 +424,11 @@ async fn prepare_under<B: L1Boundary>(
             &target,
         )
         .map_err(PrepareError::Formation)?;
+    if gesture.deps.contains(&act_id) {
+        return Err(PrepareError::Formation(format!(
+            "{act_id} names itself as a dependency"
+        )));
+    }
     if let NodeId::Name(name) = &target {
         hashtag_store::upsert(&mut tx, name).await?;
     }
@@ -437,7 +446,7 @@ async fn prepare_under<B: L1Boundary>(
             asserted_parents: gesture.asserted_parents,
         },
         payload: gesture.payload,
-        deps: gesture.deps,
+        deps: canonical_dep_list(gesture.deps),
     };
     let id = Uuid::new_v4();
     staged::insert(

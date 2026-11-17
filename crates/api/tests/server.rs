@@ -286,7 +286,12 @@ async fn the_widest_legitimate_request_fits_under_the_json_ceiling(pool: PgPool)
 
     use base64::Engine;
     let signature = base64::engine::general_purpose::STANDARD.encode(
-        common::l1::wire::encode_pre_commitment(&[0xff; common::l1::crypto::SALT_LEN], &[0xff; 64]),
+        common::l1::proposal::PreCommitmentBlob {
+            content_nonce: vec![0xff; common::l1::crypto::SALT_LEN],
+            dependency_nonce: vec![0xff; common::l1::crypto::SALT_LEN],
+            pre_signature: vec![0xff; 64],
+        }
+        .encode(),
     );
     let longest = api::ratelimit::SigningBudget::default().longest_batch();
     let proposals: Vec<serde_json::Value> = (0..longest)

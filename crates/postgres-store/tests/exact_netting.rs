@@ -29,7 +29,6 @@ async fn land(pool: &PgPool, epoch: i64, seq: u64, person: &str, (p_d, p_i): (f6
         epoch,
         act_time: epoch,
         position: 1,
-        payload_marked: false,
         payload_witness: vec![0; 32],
         legs: vec![PublishedLeg {
             role: LegRole::Binary,
@@ -44,7 +43,7 @@ async fn land(pool: &PgPool, epoch: i64, seq: u64, person: &str, (p_d, p_i): (f6
         pool,
         &EpochPackage {
             epoch,
-            attested_at: chrono::Utc::now(),
+            asserted_at: chrono::Utc::now(),
             records: vec![record],
             closure: Default::default(),
         },

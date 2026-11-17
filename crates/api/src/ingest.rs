@@ -133,7 +133,7 @@ pub async fn ingest_pending<B: L1Boundary>(
     Ok(outcome)
 }
 
-/// Fills the attested instant of every ingested epoch that lacks one —
+/// Fills the asserted instant of every ingested epoch that lacks one —
 /// the epochs a mirror took in before the epoch package carried the
 /// instant — from their published packages, read back through the seam.
 /// A complete mirror costs one count; the repair reads the sequence once.
@@ -150,7 +150,7 @@ async fn repair_instants<B: L1Boundary>(
         .await?
         .into_iter()
         .filter(|package| package.epoch <= cursor)
-        .map(|package| (package.epoch, package.attested_at))
+        .map(|package| (package.epoch, package.asserted_at))
         .collect();
     let repaired = mirror::record_instants(pool, &instants).await?;
     tracing::info!(

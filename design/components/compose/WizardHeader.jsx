@@ -11,7 +11,9 @@ import { Icon } from "../navigation/Icon.jsx";
      the board names it `Back` (seam 245, ask 13 D).
    · The X LEAVES the whole flow from any stage. Where a draft is kept — the
      post wizard, the profile picture — the leave keeps it and nothing asks,
-     because nothing is lost (the return surface is the draft prompt). The
+     because nothing is lost (the return surface is the draft prompt). A post
+     wizard holding nothing of the author's own keeps none and its X reads a
+     bare `Leave` (jakob 2026-11-17); the default below is the long form. The
      reply wizard, the comment edit and the post edit keep no draft, so
      leaving them discards: a non-empty composer asks first, through the discard
      confirm; an empty one leaves silently. `leaveLabel` says which of the

@@ -31,8 +31,8 @@
    inert and never dimmed, the pick, the field and the landing line as they
    were — and beside it `Close`. `closed` is that Close
    pressed: the pad closes and the act goes on, its wait carried by the
-   target's own row — `Signing…` under Ada's face in the pending marker's
-   quiet register, the face still the standing's and the anchor refusing a
+   target's own row — the closed ring around Ada's face, as after a hold,
+   `Signing…` spoken only (round 51 act 2), the face still the standing's and the anchor refusing a
    second hold. It ends as a hold ends (`RowSigning`): signed, the face moves
    and the snackbar confirms; not signed, the row says `That didn't sign.`
    with a Retry that asks the same pick again. A press outside the pad, Back

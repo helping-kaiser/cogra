@@ -421,8 +421,19 @@ export function CommentEditView({
             {/* The fields scroll under the pinned foot (CommentEditVideo's
                 docblock, the post edit's reading): with a clip, its cover row
                 and the gate drawn the form runs taller than the phone, and the
-                gate, the count and Sign stay where they stand at rest. */}
-            <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto">
+                gate, the count and Sign stay where they stand at rest.
+
+                THE SCROLLER HOLDS THE GUTTER, as the seal steps' do: it runs
+                out to the screen's edges (`-mx-6`) and pads its fields back in
+                (`px-6`), so nothing moves. A control at the line's end keeps
+                its 48px target (`.cg-hit`) and its focus ring inside the
+                scroller's own padding; at the content edge a short word's
+                target (`Mark`) would reach 8px past it, and the form would
+                scroll sideways. */}
+            <div
+              data-testid="comment-edit-fields"
+              className="-mx-6 flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto px-6"
+            >
               <QuietNote testId="comment-edit-lede" node={part(NODE, "target")}>
                 Your comment on &ldquo;{targetLabel}&rdquo;.
               </QuietNote>

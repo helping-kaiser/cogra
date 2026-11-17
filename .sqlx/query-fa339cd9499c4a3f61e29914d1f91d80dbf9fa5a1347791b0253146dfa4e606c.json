@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT payload, content_nonce, content_salt, payload_state, reduced_at\n         FROM act_payloads WHERE act_id = $1\n         FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "payload",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 1,
+        "name": "content_nonce",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 2,
+        "name": "content_salt",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 3,
+        "name": "payload_state",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "reduced_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "fa339cd9499c4a3f61e29914d1f91d80dbf9fa5a1347791b0253146dfa4e606c"
+}

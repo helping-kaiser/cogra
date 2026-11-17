@@ -117,11 +117,15 @@ fun CommentsSheetRoute(
     onEditComment: (commentId: String) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
+    /**
+     * A post opened from a sheet over the thread: a cited post from a comment's
+     * tags-and-references (RefsSheet.md:15), or what a citing artifact opens from
+     * its Cited by (CitedBy.md:15).
+     */
+    onOpenPost: (String) -> Unit,
     /** The Reference affordance (D20): compose a post citing this node. */
     onReference: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
-    /** A comment's Cited by row: the post a citing artifact opens (CitedBy.md:15). */
-    onOpenPost: (String) -> Unit,
     /**
      * Called as the sheet gives way to a composer, carrying the reader's
      * place — the surface below keeps it until they come back.
@@ -206,6 +210,7 @@ fun CommentsSheetRoute(
         onReveal = viewModel::onReveal,
         onOpenActor = onOpenActor,
         onOpenTopic = onOpenTopic,
+        onOpenPost = onOpenPost,
         onReference = onReference,
         onLicense = { licenseShown = it },
         onSignInOrJoin = onSignInOrJoin,
@@ -213,7 +218,6 @@ fun CommentsSheetRoute(
         saved = rememberSavedWrites(),
         onRequireAccount = onRequireAccount,
         onLanded = viewModel.landing::done,
-        onOpenPost = onOpenPost,
     )
     licenseShown?.let { license ->
         // `CommentLicense` registers under `postDetail`, over the thread.
@@ -297,6 +301,12 @@ fun CommentsSheet(
     onReveal: (String, SensitiveMark) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
+    /**
+     * A post opened from a sheet over the thread: a cited post from a comment's
+     * tags-and-references (RefsSheet.md:15), or a Cited by row's door — the citing
+     * post, or the post a citing comment answers (CitedBy.md:15).
+     */
+    onOpenPost: (String) -> Unit,
     onReference: (String) -> Unit,
     /** Raises the terms in the sheet the menu's License row opens. */
     onLicense: (LicenseChoice) -> Unit,
@@ -316,8 +326,6 @@ fun CommentsSheet(
     reportSheet: ReportSheetSlot = reportDoor(onRequireAccount, THREAD_REPORT_SHEET, POST_DETAIL / "reportSheet"),
     /** The list scrolled to a landing ([CommentsUiState.landingAt]). */
     onLanded: () -> Unit = {},
-    /** A Cited by row's door: the citing post, or the post a citing comment answers (CitedBy.md:15). */
-    onOpenPost: (String) -> Unit = {},
 ) {
     // The sheet's own host. A ModalBottomSheet is its own window, so a
     // host on the surface behind would render the confirmation for a
@@ -333,15 +341,10 @@ fun CommentsSheet(
     // closes and it comes up over the thread, which stays where the reader opened
     // the menu (CommentCitedByEmpty.md:3).
     var confirm by remember { mutableStateOf<ThreadConfirm?>(null) }
-    val depart: (() -> Unit) -> Unit = { go ->
-        onDepart(
-            CommentsScroll(
-                listState.firstVisibleItemIndex,
-                listState.firstVisibleItemScrollOffset,
-            ),
-        )
-        go()
-    }
+    // THE COMMENT WHOSE TAGS AND REFERENCES STAND OVER THE THREAD: its count
+    // is a door, as on every card (TopicsLine.jsx:202-212).
+    var refsFor by remember { mutableStateOf<CommentView?>(null) }
+    val depart = departing(listState, onDepart)
     // THE TALLEST CLASS, ASKED FOR BY NAME (`BottomSheet.jsx`'s `tallest`,
     // readme §13 "The sheets-and-video round" 2026-09-22): pinned AT the
     // ceiling rather than held under it, because a thread is the one
@@ -395,6 +398,7 @@ fun CommentsSheet(
                 // the composer's own doors already do.
                 onOpenActor = { handle -> depart { onOpenActor(handle) } },
                 onOpenTopic = { name -> depart { onOpenTopic(name) } },
+                onOpenReferences = { comment -> refsFor = comment },
                 onReference = { id -> depart { onReference(id) } },
                 onLicense = onLicense,
                 onRemoveComment = { comment -> confirm = ThreadConfirm.Remove(comment) },
@@ -412,6 +416,9 @@ fun CommentsSheet(
     // A reading's row leaves the surface, so it leaves the thread's place behind.
     val readings = threadReadings { post -> depart { onOpenPost(post) } }
     ThreadConfirms(confirm, reportSheet, snackbar, readings, onClose = { confirm = null })
+    refsFor?.let { comment ->
+        ThreadRefs(comment, depart, onOpenTopic, onOpenActor, onOpenPost) { refsFor = null }
+    }
 }
 
 /** The comment's reading sheets over the thread: the design registers no node for them (CommentCitedByEmpty). */
@@ -434,6 +441,40 @@ private fun AnnounceCommentSigned(signed: Boolean, snackbar: SnackbarHostState, 
             onShown()
         }
     }
+}
+
+/**
+ * The reader's place, handed up as a door leaves the surface: every door out of
+ * the thread leaves it behind (ReplyEntry.md: back returns at the offset it was left).
+ */
+private fun departing(listState: LazyListState, onDepart: (CommentsScroll) -> Unit): (() -> Unit) -> Unit = { go ->
+    onDepart(CommentsScroll(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset))
+    go()
+}
+
+/**
+ * A comment's tags and references, stacked over the thread; a row that leaves
+ * the surface leaves the thread's place behind, as every door out of it does.
+ */
+@Composable
+private fun ThreadRefs(
+    comment: CommentView,
+    depart: (() -> Unit) -> Unit,
+    onOpenTopic: (String) -> Unit,
+    onOpenActor: (String) -> Unit,
+    onOpenPost: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    RefsSheet(
+        topics = comment.topics,
+        references = comment.references,
+        onDismiss = onDismiss,
+        onOpenTopic = { name -> depart { onOpenTopic(name) } },
+        onOpenActor = { handle -> depart { onOpenActor(handle) } },
+        onOpenPost = { id -> depart { onOpenPost(id) } },
+        testTagPrefix = "comment_${comment.id}",
+        stacked = true,
+    )
 }
 
 /**
@@ -603,6 +644,7 @@ private fun CommentsList(
     onReveal: (String, SensitiveMark) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
+    onOpenReferences: (CommentView) -> Unit,
     onReference: (String) -> Unit,
     onLicense: (LicenseChoice) -> Unit,
     /** An own comment's Remove row: the think-twice dialog over the thread. */
@@ -659,6 +701,7 @@ private fun CommentsList(
                         onReveal = onReveal,
                         onOpenActor = onOpenActor,
                         onOpenTopic = onOpenTopic,
+                        onOpenReferences = onOpenReferences,
                         onReference = onReference,
                         onLicense = onLicense,
                         onRemoveComment = onRemoveComment,
@@ -857,6 +900,7 @@ private fun CommentThread(
     onReveal: (String, SensitiveMark) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
+    onOpenReferences: (CommentView) -> Unit,
     onReference: (String) -> Unit,
     /** Raises the terms in the sheet the menu's License row opens. */
     onLicense: (LicenseChoice) -> Unit,
@@ -885,6 +929,7 @@ private fun CommentThread(
             onReveal = onReveal,
             onOpenActor = onOpenActor,
             onOpenTopic = onOpenTopic,
+            onOpenReferences = onOpenReferences,
             onReference = onReference,
             onLicense = onLicense,
             onRemoveComment = onRemoveComment,
@@ -904,6 +949,7 @@ private fun CommentThread(
             onReveal = onReveal,
             onOpenActor = onOpenActor,
             onOpenTopic = onOpenTopic,
+            onOpenReferences = onOpenReferences,
             onReference = onReference,
             onLicense = onLicense,
             onRemoveComment = onRemoveComment,
@@ -929,6 +975,7 @@ private fun CommentCard(
     onReveal: (String, SensitiveMark) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
+    onOpenReferences: (CommentView) -> Unit,
     onReference: (String) -> Unit,
     onLicense: (LicenseChoice) -> Unit,
     onRemoveComment: (CommentView) -> Unit,
@@ -995,6 +1042,7 @@ private fun CommentCard(
                 node = card,
                 onReveal = onReveal,
                 onOpenTopic = onOpenTopic,
+                onOpenReferences = onOpenReferences,
             )
             CommentAffordances(
                 comment = comment,
@@ -1020,6 +1068,7 @@ private fun CommentCardBody(
     node: DataNode,
     onReveal: (String, SensitiveMark) -> Unit,
     onOpenTopic: (String) -> Unit,
+    onOpenReferences: (CommentView) -> Unit,
 ) {
     // A comment is text **plus** optional media (D16),
     // so its body is never the exclusive-or a post's
@@ -1064,6 +1113,9 @@ private fun CommentCardBody(
         topics = comment.topics,
         references = comment.references,
         onOpenTopic = onOpenTopic,
+        // THE COUNT IS A DOOR on every comment too (TopicsLine.jsx:202-212):
+        // the tags-and-references sheet, stacked over the thread.
+        onOpenReferences = { onOpenReferences(comment) },
         testTagPrefix = "comment_${comment.id}",
     )
 }
@@ -1137,6 +1189,7 @@ private fun CommentBranch(
     onReveal: (String, SensitiveMark) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
+    onOpenReferences: (CommentView) -> Unit,
     onReference: (String) -> Unit,
     onLicense: (LicenseChoice) -> Unit,
     onRemoveComment: (CommentView) -> Unit,
@@ -1160,6 +1213,7 @@ private fun CommentBranch(
             onReveal = onReveal,
             onOpenActor = onOpenActor,
             onOpenTopic = onOpenTopic,
+            onOpenReferences = onOpenReferences,
             onReference = onReference,
             onLicense = onLicense,
             onRemoveComment = onRemoveComment,
