@@ -214,9 +214,17 @@ describe("RemoveConfirm (RemoveConfirm.md)", () => {
   it.each([
     ["the answer is lost", "lost", "That didn't send. Try again."],
     ["the server refuses FORBIDDEN", "refused", "That didn't go through. Try again."],
+    // NetworkError.md:13 — an INTERNAL on the errors array is an answer too.
+    ["the server answers INTERNAL", "internal", "That didn't go through. Try again."],
   ] as const)("keeps the dialog up with the line and Retry when %s", async (_, how, line) => {
     server.use(
-      gqlLink.mutation("RemoveContent", () => (how === "lost" ? HttpResponse.error() : refusal())),
+      gqlLink.mutation("RemoveContent", () =>
+        how === "lost"
+          ? HttpResponse.error()
+          : how === "internal"
+            ? HttpResponse.json({ data: null, errors: [{ message: "no", extensions: { code: "INTERNAL" } }] })
+            : refusal(),
+      ),
     );
     const { onClose, onRemoved } = mount();
     fireEvent.click(removeButton());

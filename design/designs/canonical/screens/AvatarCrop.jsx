@@ -16,16 +16,56 @@
    (`CropViewport`), 1 % a press, 10 % with Shift (jakob 2026-10-05). No line
    says how to move it (round 44, the removable-text pass). */
 /* REGISTERED under the `avatarCrop` prefix (round 48, seam 323-11 and 323-6), `CoverCrop`'s names: `header`, `viewport`, `zoom` and `next`. Names only: not a pixel moves. */
+/* THE `picked` CHIP (round 50, jakob 2026-11-17, his 9: "should be right when
+   you pick it no? so if possible on the pick-stage else in the crop (and
+   submit of crop is disabled?)"). No pick stage of CoGra's own exists — the
+   device's picker is — so the crop carries the refusal, for both openers.
+   A refused file never joins (`ComposePickedErrors`), so nothing stands in
+   the circle to move or zoom: the frame stands empty in its place, the
+   empty tile's honesty (`RefusedFile`), and the zoom goes with the picture.
+   The refusal's line stands where the file was offered — under the circle,
+   in the zoom's place — in the refused files' error voice, never a dialog
+   or a snackbar (`ReplyMediaErrors`). `Next` stays and dims; the header's
+   back arrow is the way out, back to the screen that asked for the picture.
+   No `Remove it` and no `Retry`: there is no list to remove the file from,
+   and asking again cannot make it fit. */
 export const NODE = "avatarCrop";
+export const PROPS = { picked: { editor: "enum", options: ["fine", "too-big", "gif", "unreadable"], default: "fine" } };
+export const VALS = `cropShown: this.props.picked === "fine" ? "flex" : "none", emptyShown: this.props.picked === "fine" ? "none" : "block", tooBigShown: this.props.picked === "too-big" ? "block" : "none", gifShown: this.props.picked === "gif" ? "block" : "none", unreadableShown: this.props.picked === "unreadable" ? "block" : "none", nextOpacity: this.props.picked === "fine" ? "1" : "var(--state-disabled)", nextCursor: this.props.picked === "fine" ? "pointer" : "default"`;
+
+const REFUSAL = {
+  margin: 0,
+  fontSize: "var(--text-label-small)",
+  fontWeight: "var(--text-label-small--font-weight)",
+  lineHeight: "var(--text-label-small--line-height)",
+  letterSpacing: "var(--text-label-small--letter-spacing)",
+  color: "var(--error)",
+};
+const pickedCopy = (value) => ({ "data-node-chip": "picked", "data-node-key": value });
+
 export function Screen() {
   return (
     <>
       <WizardHeader title="Your picture" leaveLabel="Leave" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 16px", overflow: "hidden" }}>
-        <CropViewport src="comment-camera.jpg" shape="circle" scale={1.2} origin="50% 35%" node="viewport" />
-        <CropZoom scale={1.2} node="zoom" />
+        <div style={{ display: "{{cropShown}}", flexDirection: "column", gap: 12 }}>
+          <CropViewport src="comment-camera.jpg" shape="circle" scale={1.2} origin="50% 35%" node="viewport" />
+          <CropZoom scale={1.2} node="zoom" />
+        </div>
+        <div style={{ display: "{{emptyShown}}", flex: "none", width: 390, height: 390, margin: "0 -24px", position: "relative" }}>
+          <div aria-hidden="true" style={{ position: "absolute", left: 24, top: 24, width: 342, height: 342, borderRadius: "var(--radius-full)", background: "var(--surface-container-highest)" }} />
+        </div>
+        <div style={{ display: "{{tooBigShown}}" }} {...pickedCopy("too-big")}>
+          <p role="alert" style={REFUSAL} data-node="refusal">That picture is too big — a picture can be up to 10 MB.</p>
+        </div>
+        <div style={{ display: "{{gifShown}}" }} {...pickedCopy("gif")}>
+          <p role="alert" style={REFUSAL} data-node="refusal">That GIF moves, and CoGra can&apos;t take a moving GIF here. A still one is fine.</p>
+        </div>
+        <div style={{ display: "{{unreadableShown}}" }} {...pickedCopy("unreadable")}>
+          <p role="alert" style={REFUSAL} data-node="refusal">That file isn&apos;t a picture CoGra can read.</p>
+        </div>
         <div style={{ flex: 1 }} />
-        <Button style={{ width: "100%" }} node="next">Next</Button>
+        <Button style={{ width: "100%", opacity: "{{nextOpacity}}", cursor: "{{nextCursor}}" }} node="next">Next</Button>
       </div>
     </>
   );
