@@ -361,6 +361,7 @@ label.
 | `test:integration:a-still-settling-post-can-be-saved`                                                          | a_still_settling_post_can_be_saved                                                          |
 | `test:integration:a-stopping-worker-hands-its-job-back`                                                        | a_stopping_worker_hands_its_job_back                                                        |
 | `test:integration:a-store-fault-reaches-the-wire-as-internal`                                                  | a_store_fault_reaches_the_wire_as_internal                                                  |
+| `test:integration:a-stored-body-with-a-sign-flipped-zero-weight-is-refused`                                    | a_stored_body_with_a_sign_flipped_zero_weight_is_refused                                    |
 | `test:integration:a-strangers-citation-stays-off-the-carriers-row`                                             | a_strangers_citation_stays_off_the_carriers_row                                             |
 | `test:integration:a-strangers-tag-stays-off-the-chip-row`                                                      | a_strangers_tag_stays_off_the_chip_row                                                      |
 | `test:integration:a-successful-login-clears-the-consecutive-run`                                               | a_successful_login_clears_the_consecutive_run                                               |
