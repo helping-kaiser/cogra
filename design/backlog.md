@@ -6311,7 +6311,7 @@ exception.
 Closed by round 50, act 3 (jakob 2026-11-17, C5 as recommended): the sheet sizes to its
 content up to 88% (FeedFilterSheet's it), its foot 16px under the last section.
 
-### 250 · A card's fault line when no answer came · *design* · **filed 2026-11-17**
+### 250 · A card's fault line when no answer came · *design* · **filed 2026-11-17** · **closed 2026-11-17**
 
 Round 51 (the one rule for a refused or failed act, jakob 2026-11-17). On a
 card the line stands last with `Retry` at its end, and the card form drawn today
@@ -6321,6 +6321,8 @@ answer its own words, but none exist at card scale: (a) as drawn — `That didn'
 go through.` for every card failure, the copy fault's reading; (b) `That didn't
 send. Try again.` with `Retry` at its end — says "try again" twice, which the
 upload line's note rules out; (c) a short `That didn't send.` — new copy.
+
+Closed by round 51, act 2 (jakob 2026-11-17, B2 as recommended): (a) — a card reads `That didn't go through.` with `Retry` for every failure, no answer and refusal alike; the rule names the card as the one host where both answers read so (copy-voice, *One rule for a refused or failed act*; `NetworkError`, `Invites`).
 
 ### 251 · What a seal's gate line reads for a refused upload · *design* · **filed 2026-11-17**
 

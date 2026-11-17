@@ -1560,7 +1560,12 @@ as rec"; impl 351). The WORDS follow the answer, the SHAPE follows the host.
   commitment itself reading `Retry` (`RemoveConfirm`'s `answer`); a card —
   the line last on the card with `Retry` at its end, the copy fault's form
   (`Invites`' copy fault and its `Revoke`): `That didn't go through.` with
-  `Retry`. What a card reads when no answer came is open (backlog 250).
+  `Retry`.
+- The card is the one host where both answers read alike: no answer and an
+  answered refusal both say `That didn't go through.` with `Retry` (jakob
+  2026-11-17, round 51 act 2). The card's copy fault already reads so, and
+  the line is the row line's short form — `Retry` stands at its end, so
+  the line never says "try again" twice.
 - What is not a fault keeps its own vehicle: the write rule's and the
   budget's notices, a refused staged act's row, a field's own line, a
   refused file's line with `Remove it` alone.
