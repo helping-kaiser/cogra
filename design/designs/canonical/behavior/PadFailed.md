@@ -54,4 +54,4 @@ WHEN the alternates' signing has not answered 200ms after Sign it GIVEN the read
 
 WHEN tap Close in the alternates GIVEN Sign it is waiting on its signing -> the alternates close as Close closes the pad AND the act goes on, carried by the target's row
 
-WHEN the alternates' signing does not go through GIVEN the reader's input is sliders or typed values -> the dialog stays up at the pick AND the line That didn't send. Try again. stands above its action row AND an outlined Retry takes Sign it's slot AND Cancel and Walk it back keep their places
+WHEN the alternates' signing does not go through GIVEN the reader's input is sliders or typed values -> the dialog stays up at the pick AND the line That didn't send. Try again. stands above its row of actions AND an outlined Retry takes Sign it's slot AND Cancel and Walk it back keep their places

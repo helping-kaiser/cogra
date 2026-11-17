@@ -28,9 +28,9 @@ WHEN press the header X GIVEN the crop was entered from a reply's cover row -> D
 
 WHEN press the header X GIVEN the crop was entered from a comment edit's cover row -> DiscardConfirm opens, as the edit's own X raises it AND NEVER the edit is discarded before the dialog is answered
 
-ALWAYS the zoom slider stands under the crop on both platforms, its thumb at the crop's zoom between the fill and about 4×
+ALWAYS the zoom slider stands under the crop on both platforms, its thumb at the crop's zoom between the fill and 10×
 
-WHEN move the zoom slider -> the picture zooms in place AND NEVER below the fill or past about 4×
+WHEN move the zoom slider -> the picture zooms in place AND NEVER below the fill or past 10×
 
 WHEN press an arrow key GIVEN the crop has focus -> the picture moves 1 % that way AND NEVER past where its edge meets the crop's
 

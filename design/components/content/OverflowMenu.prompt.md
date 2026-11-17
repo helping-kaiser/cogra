@@ -1,4 +1,4 @@
-Use `OverflowMenu` for the interactions a reader does rarely — save something, cite it in a new post, hide its author, check a license. `PostCard` and `CommentCard` mount one automatically and append whatever you pass in `menuItems`.
+Use `OverflowMenu` for the interactions a reader does rarely — save something, cite it in a new post, hide its author, check a license — and, on a comment, read what cites it (`Cited by`) and who holds an opinion on it (`Opinions on this`). `PostCard` and `CommentCard` mount one automatically and append whatever you pass in `menuItems`.
 
 ```jsx
 <PostCard {...post} menuItems={[{ label: HIDE_ACTOR_LABEL(author.handle, author.redacted), onSelect: hide }]} />

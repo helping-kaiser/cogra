@@ -22,9 +22,9 @@ WHEN press the header back arrow -> the reader goes one stage back, to where the
 
 WHEN press the header X -> the flow is left AND nothing is signed
 
-ALWAYS the zoom slider stands under the crop on both platforms, its thumb at the crop's zoom between the fill and about 4×
+ALWAYS the zoom slider stands under the crop on both platforms, its thumb at the crop's zoom between the fill and 10×
 
-WHEN move the zoom slider -> the picture zooms in place AND NEVER below the fill or past about 4×
+WHEN move the zoom slider -> the picture zooms in place AND NEVER below the fill or past 10×
 
 WHEN press an arrow key GIVEN the crop has focus -> the picture moves 1 % that way AND NEVER past where its edge meets the crop's
 

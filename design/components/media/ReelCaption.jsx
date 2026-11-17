@@ -1,5 +1,6 @@
 import React from "react";
 import { SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
+import { nameInLine } from "../people/ActorChip.jsx";
 
 /* THE STREAM'S CAPTION (readme §13, the reel round) — the post's words along the
    bottom of the clip, in the card's own budget: the handle, the title, and the
@@ -66,7 +67,9 @@ export function ReelCaption({ handle, title, description, bottom = 86, onMore, s
     >
       {notice}
       {handle && (
-        <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", letterSpacing: "var(--text-label-large--letter-spacing)", fontWeight: "var(--text-label-large--font-weight)" }} data-node={node && "handle"}>@{handle}</span>
+        /* The handle is a caption's one-line place (the long-names law, case
+           2; round 48): it never wraps and clips at its end with "…". */
+        <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0, fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", letterSpacing: "var(--text-label-large--letter-spacing)", fontWeight: "var(--text-label-large--font-weight)" }} data-node={node && "handle"}>{nameInLine("@" + handle)}</span>
       )}
       {title && (
         <span

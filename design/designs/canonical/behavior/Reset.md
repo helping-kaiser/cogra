@@ -8,11 +8,11 @@ WHEN press Send reset link -> Send reset link refuses a second press until the r
 
 WHEN the request has not answered 200ms after the press -> Send reset link reads Sending reset link… AND NEVER a spinner appears
 
-WHEN the request answers -> the status line reads If that email has an account, a reset link is on its way. The link works once and expires after 15 minutes. AND NEVER the screen says whether that email has an account
+WHEN the request answers -> reset.status reads If that email has an account, a reset link is on its way. The link works once and expires after 15 minutes. AND NEVER the screen says whether that email has an account
 
 ALWAYS the request answers the same way whether or not the email has an account, and whether or not the account's own sending budget is spent
 
-ALWAYS the quiet note under the status line says the reset restores the sign-in only, never the key
+ALWAYS the quiet note under reset.status says the reset restores the sign-in only, never the key
 
 WHEN the reset mail's link is opened GIVEN the link is live -> ResetNew opens
 
@@ -22,7 +22,7 @@ WHEN no answer has come 5s after the press of Send reset link -> Send reset link
 
 ALWAYS the screen's ways out refuse a press, undimmed and unchanged in face, from 200ms after the press of Send reset link until its answer comes — an entry form keeps its exits held while it submits, the named exception to Close (jakob 2026-11-11)
 
-ALWAYS the status line stands only after a press of Send reset link, never at rest
+ALWAYS reset.status stands only after a press of Send reset link, never at rest
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 
