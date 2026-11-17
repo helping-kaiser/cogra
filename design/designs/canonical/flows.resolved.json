@@ -739,17 +739,19 @@
     },
     {
       "name": "reply-with-pictures",
-      "description": "Pictures added to a reply land in its tray; one seal signs the words and the pictures together into the thread.",
+      "description": "Pictures added to a reply pass the comment's square crop and land in its tray; one seal signs the words and the pictures together into the thread.",
       "status": "resolved",
       "steps": [
         "start · ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
-        "ReplyCompose · 5 «+ Add pictures or a video» → ReplyPictures — picks land in the tray",
+        "ReplyCompose · 5 «+ Add pictures or a video» → ReplyCrop — pictures — the comment's square crop, then the tray",
+        "ReplyCrop · 3 «Next» → ReplyPictures — entered from the reply — the squares join the tray and their cropped exports start uploading",
         "ReplyPictures · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
       ],
       "boards": [
         "ReplyEntry",
         "ReplyCompose",
+        "ReplyCrop",
         "ReplyPictures",
         "ReplySeal",
         "ReplySettled"
@@ -3595,7 +3597,7 @@
       "description": "Picks over the reply's cap or in a format nothing here reads are named in the composer with why; what was accepted goes on with the words to the seal.",
       "status": "resolved",
       "steps": [
-        "start · ReplyCompose · 5 «+ Add pictures or a video» → ReplyMediaErrors — over its cap, or a format nothing here reads — the composer says why",
+        "start · ReplyCompose · 5 «+ Add pictures or a video» → ReplyMediaErrors — over its cap, or a format nothing here reads — the composer says why, before any crop",
         "end · ReplyMediaErrors · 3 «Next» → ReplySeal — what was accepted goes with the words"
       ],
       "boards": [
@@ -6835,6 +6837,12 @@
     "ReplyComposeComment": {
       "flows": [
         "reply-to-a-comment"
+      ],
+      "endpoint": []
+    },
+    "ReplyCrop": {
+      "flows": [
+        "reply-with-pictures"
       ],
       "endpoint": []
     },

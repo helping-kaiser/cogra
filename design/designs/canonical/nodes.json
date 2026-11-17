@@ -15260,6 +15260,27 @@
         "postDetail.header.menu": []
       }
     },
+    "ReplyCrop": {
+      "prefix": "replyCrop",
+      "keys": {
+        "replyCrop.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)"
+      },
+      "nodes": {
+        "replyCrop.header": [],
+        "replyCrop.header.back": [],
+        "replyCrop.header.leave": [],
+        "replyCrop.header.title": [],
+        "replyCrop.next": [],
+        "replyCrop.pictures": [],
+        "replyCrop.pictures.thumb": [
+          "1",
+          "2"
+        ],
+        "replyCrop.viewport": [],
+        "replyCrop.zoom": [],
+        "replyCrop.zoom.input": []
+      }
+    },
     "ReplyEntry": {
       "prefix": "postDetail",
       "keys": {
