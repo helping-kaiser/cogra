@@ -103,7 +103,7 @@ describe("ChangeEmail", () => {
   it("change_email_waits_for_both_fields", () => {
     renderWithProviders(<ChangeEmailView />, { store: signedIn() });
     expect(screen.getByTestId("changeEmail.commit.action")).toBeDisabled();
-    expect(screen.getByTestId("changeEmail.commit.reason")).toHaveTextContent(
+    expect(screen.getByTestId("changeEmail.commit.action")).toHaveAccessibleDescription(
       "Waiting for a new email and your password",
     );
     // The nodes wear the fault chip's key — `none` at rest.
