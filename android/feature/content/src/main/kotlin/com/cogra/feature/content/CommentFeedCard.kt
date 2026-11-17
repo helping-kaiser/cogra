@@ -43,6 +43,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -69,6 +73,8 @@ import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.ButtonSize
 import com.cogra.core.designsystem.v2.atom.CograButton
+import com.cogra.core.designsystem.v2.media.CoverKind
+import com.cogra.core.designsystem.v2.media.CoversSurface
 import com.cogra.core.designsystem.v2.media.SensitiveSource
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.StateTokens
@@ -116,6 +122,8 @@ internal fun CommentFeedCard(
     onShare: () -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
+    /** A cited post, from the tags-and-references sheet its count opens (RefsSheet.md:15). */
+    onOpenPost: (String) -> Unit,
     onCite: () -> Unit,
     onLicense: () -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
@@ -125,16 +133,19 @@ internal fun CommentFeedCard(
     shape: CommentCardShape = CommentCardShape.Thread,
     /** The card stands on its author's own page — a profile's comments view — so the chip is inert. */
     authorHere: Boolean = false,
+    /** A row flag stands attached above the card: its top-left corner squares ([cardShape]). */
+    attach: Boolean = false,
 ) {
     val card = node.keyed(comment.id)
     val line = shape as? CommentCardShape.Line
     Card(
+        shape = cardShape(attach),
         modifier = Modifier
             .fillMaxWidth()
-            // IN THE LINE SHAPE THE WORDS ARE NO DOOR: the card is reached
-            // through its pointer, its Reply and its replies line
-            // (ProfileComments.md:23-27).
-            .then(if (line == null) Modifier.clickable(onClick = onOpenPlace) else Modifier)
+            // THE CARD'S OWN DOOR IN EITHER SHAPE: tapped outside its pointer
+            // or head row and its own controls, it opens the thread at this
+            // comment (FeedKinds.md; ProfileComments.md:43, ProfileCommentsOwn.md:15).
+            .clickable(onClick = onOpenPlace)
             .dataNode(card),
     ) {
         Column(
@@ -152,6 +163,7 @@ internal fun CommentFeedCard(
                     onReveal = onReveal,
                     onOpenActor = onOpenActor,
                     onOpenTopic = onOpenTopic,
+                    onOpenPost = onOpenPost,
                     onCite = onCite,
                     onLicense = onLicense,
                     menu = menu,
@@ -516,6 +528,7 @@ private fun OwnPart(
     onReveal: () -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
+    onOpenPost: (String) -> Unit,
     onCite: () -> Unit,
     onLicense: () -> Unit,
     menu: CommentCardMenu,
@@ -569,10 +582,40 @@ private fun OwnPart(
         sensitiveReason = comment.sensitiveReason,
         node = node,
     )
+    CommentTopicsLine(comment, testTagPrefix, onOpenTopic, onOpenActor, onOpenPost)
+}
+
+/**
+ * THE COUNT IS A DOOR on every card, a comment's too (TopicsLine.jsx:202-212;
+ * graph.json FeedKinds 27): the one tags-and-references sheet every node kind
+ * opens, over the host as the post card's is.
+ */
+@Composable
+private fun CommentTopicsLine(
+    comment: CommentView,
+    testTagPrefix: String,
+    onOpenTopic: (String) -> Unit,
+    onOpenActor: (String) -> Unit,
+    onOpenPost: (String) -> Unit,
+) {
+    var refsOpen by rememberSaveable(comment.id) { mutableStateOf(false) }
+    CoversSurface(open = refsOpen, kind = CoverKind.Suspend)
     TopicsLine(
         topics = comment.topics,
         references = comment.references,
         onOpenTopic = onOpenTopic,
         testTagPrefix = testTagPrefix,
+        onOpenReferences = { refsOpen = true },
     )
+    if (refsOpen) {
+        RefsSheet(
+            topics = comment.topics,
+            references = comment.references,
+            onDismiss = { refsOpen = false },
+            onOpenTopic = onOpenTopic,
+            onOpenActor = onOpenActor,
+            onOpenPost = onOpenPost,
+            testTagPrefix = testTagPrefix,
+        )
+    }
 }

@@ -8,8 +8,9 @@
 // (api-spec.md "Search", *Order*); this only decides how each row reads and
 // what stands between rows:
 //
-// - the people section's caption `Profiles` and its `See all profiles` door
-//   (ExplorePerson.md:3-9), unless Profiles alone is the filter's kind (:15);
+// - each section's caption — `Profiles`, `Tags`, `Posts and comments`
+//   (ExploreSearch.md:11) — and the people's `See all profiles` door
+//   (ExplorePerson.md:3-9), neither when Profiles alone is the filter's kind (:21);
 // - under RANKED, the seam before the first row the ranker could not score,
 //   in each section — each section its ranked head, then its own rest;
 // - each row's right edge: the viewer-relative rank while scored
@@ -80,6 +81,12 @@ sealed interface ResultItem {
     ) : ResultItem
 
     data object ProfilesLabel : ResultItem
+
+    /** `Tags` over the topics (ExploreSearch.md:11). */
+    data object TagsLabel : ResultItem
+
+    /** `Posts and comments` over the content (ExploreSearch.md:11). */
+    data object ContentLabel : ResultItem
 
     data object ProfilesDoor : ResultItem
 
@@ -196,7 +203,7 @@ fun layoutResults(
         if (section != previous) {
             // The people section closes with its door, where more match (:7).
             if (previous == SearchSection.PEOPLE && hasMorePeople && !profilesAlone) items += ResultItem.ProfilesDoor
-            if (section == SearchSection.PEOPLE && !profilesAlone) items += ResultItem.ProfilesLabel
+            captionOf(section, profilesAlone)?.let { items += it }
             previous = section
             seamed = false
         }
@@ -208,4 +215,14 @@ fun layoutResults(
     }
     if (previous == SearchSection.PEOPLE && hasMorePeople && !profilesAlone) items += ResultItem.ProfilesDoor
     return items
+}
+
+/**
+ * Every section stands under its caption (ExploreSearch.md:11); Profiles
+ * alone stands its people with none (ExplorePerson.md:21).
+ */
+private fun captionOf(section: SearchSection, profilesAlone: Boolean): ResultItem? = when (section) {
+    SearchSection.PEOPLE -> ResultItem.ProfilesLabel.takeUnless { profilesAlone }
+    SearchSection.TOPICS -> ResultItem.TagsLabel
+    SearchSection.CONTENT -> ResultItem.ContentLabel
 }

@@ -405,9 +405,11 @@ class StancePadTest {
         assertThat(opened).isEqualTo(1)
     }
 
-    // RowSigning.md / StanceControl.jsx: the hold's row line.
+    // RowSigning.md / StanceControl.jsx: the row line's wait, for a signing the
+    // control's own hold did not start (a cancelled Set, a Retry); the hold's
+    // own wait draws no line (seam 355, HoldWaitTest).
     @Test
-    fun aHoldPast200msSaysSigningUnderTheFace() {
+    fun aWaitNotStartedByAHoldSaysSigningUnderTheFacePast200ms() {
         compose.mainClock.autoAdvance = false
         show(StanceControlState(standing = heldStanding, busy = true))
         compose.mainClock.advanceTimeBy(SETTING_AFTER_MS - 50)

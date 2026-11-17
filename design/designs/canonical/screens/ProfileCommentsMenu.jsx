@@ -1,7 +1,7 @@
 /* THE PROFILE'S COMMENTS VIEW, A COMMENT'S MENU OPEN (round 36, backlog 149;
    jakob 2026-11-11, H5 and H7). Someone else's comment on their Comments tab
-   raises the comment's menu (ProfileComments.md) — Save, Cite, Cited by,
-   Opinions on this, License terms, Report at the tail, no Hide row.
+   raises the comment's menu (ProfileComments.md) — Save, Cite, `Hide @ada`,
+   Cited by, Opinions on this, License terms, Report at the tail.
 
    IT RISES OVER THE PROFILE, UNSTACKED (H5), as the feed's post menu rises
    over the feed: no thread is open beneath it here, so there is no sheet to
@@ -24,12 +24,12 @@ export function Screen() {
           onReply={() => {}}
           target="“The long way home” — @ada"
           onOpenTarget={() => {}}
-          menuItems={COMMENT_CARD_MENU}
+          menuItems={readerCommentCardMenu("ada")}
           node="commentCard"
           id="5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e"
         />
       </ProfileTabTop>
-      <CardMenuSheet items={COMMENT_MENU} ariaLabel="Comment actions" />
+      <CardMenuSheet items={readerCommentMenu("ada")} ariaLabel="Comment actions" />
     </>
   );
 }

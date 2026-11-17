@@ -34,13 +34,19 @@
      `One picture didn't upload.` with `Retry · Remove it` under the picture's
      row (`ComposeUploading`), and Save still answers — the seal is where
      signing waits for it (`ReplySealUploadFailed`).
+   - `upload-refused` is that upload answered no by the server (round 51,
+     jakob 2026-11-17, impl 348-3): a refusal, not a fault, so the line keeps
+     the refused files' one way out — `One picture didn't upload.` with
+     `Remove it` alone, never `Retry` — and Save still answers, as at
+     `upload-failed`. The line is a drawn copy beside the named one and
+     carries no name, so no path moves.
    - `refused` is a write-rule refusal already known at Save: the line
      `You can't sign right now.` stands on Save in the row's quiet register
      (`RowWriteRule`), its "?" opening `Why signing waits`, and Save dims —
      nobody is sent to the seal. */
 export const NODE = "profileEdit";
-export const PROPS = { state: { editor: "enum", options: ["rest", "picture", "changed", "removed", "upload-failed", "refused"], default: "rest" } };
-export const VALS = `monoShown: this.props.state === "picture" || this.props.state === "upload-failed" ? "none" : "flex", photoShown: this.props.state === "picture" || this.props.state === "upload-failed" ? "flex" : "none", removeShown: this.props.state === "picture" ? "inline-flex" : "none", undoShown: this.props.state === "removed" ? "inline-flex" : "none", changeLabel: this.props.state === "picture" || this.props.state === "removed" ? "Change" : "Change picture", uploadFailedShown: this.props.state === "upload-failed" ? "block" : "none", nothingShown: this.props.state === "rest" || this.props.state === "picture" ? "flex" : "none", refusedShown: this.props.state === "refused" ? "flex" : "none", saveOpacity: this.props.state === "rest" || this.props.state === "picture" || this.props.state === "refused" ? "var(--state-disabled)" : "1", saveCursor: this.props.state === "rest" || this.props.state === "picture" || this.props.state === "refused" ? "default" : "pointer"`;
+export const PROPS = { state: { editor: "enum", options: ["rest", "picture", "changed", "removed", "upload-failed", "upload-refused", "refused"], default: "rest" } };
+export const VALS = `monoShown: this.props.state === "picture" || this.props.state === "upload-failed" || this.props.state === "upload-refused" ? "none" : "flex", photoShown: this.props.state === "picture" || this.props.state === "upload-failed" || this.props.state === "upload-refused" ? "flex" : "none", uploadRefusedShown: this.props.state === "upload-refused" ? "block" : "none", removeShown: this.props.state === "picture" ? "inline-flex" : "none", undoShown: this.props.state === "removed" ? "inline-flex" : "none", changeLabel: this.props.state === "picture" || this.props.state === "removed" ? "Change" : "Change picture", uploadFailedShown: this.props.state === "upload-failed" ? "block" : "none", nothingShown: this.props.state === "rest" || this.props.state === "picture" ? "flex" : "none", refusedShown: this.props.state === "refused" ? "flex" : "none", saveOpacity: this.props.state === "rest" || this.props.state === "picture" || this.props.state === "refused" ? "var(--state-disabled)" : "1", saveCursor: this.props.state === "rest" || this.props.state === "picture" || this.props.state === "refused" ? "default" : "pointer"`;
 
 const QUIET_LINE = {
   margin: 0,
@@ -72,6 +78,9 @@ export function Screen() {
           </div>
           <div style={{ display: "{{uploadFailedShown}}" }}>
             <UploadErrorLine onRetry={() => {}} onRemove={() => {}} node="uploadError" />
+          </div>
+          <div style={{ display: "{{uploadRefusedShown}}" }}>
+            <UploadErrorLine onRemove={() => {}} />
           </div>
         </div>
         <TextField node="name" label="Display name" corner="Optional" kind="name" cap={50} value="Sol Ferreira" />

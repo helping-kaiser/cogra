@@ -2,10 +2,12 @@
 
 WHEN tap the ⋮ on profile.comments.commentCard GIVEN the comment is someone else's and was removed -> profile.menuSheet rises over the profile, unstacked, AND the profile stands unchanged beneath its wash
 
-ALWAYS profile.menuSheet reads Save or Unsave, then Cite in a new post, then profile.menuSheet.citedBy, then Opinions on this, then License terms, then profile.menuSheet.report at the sheet tail, the reader's comment menu whole
+ALWAYS profile.menuSheet reads Save or Unsave, then Cite in a new post, then Hide with the comment's author's handle, then profile.menuSheet.citedBy, then Opinions on this, then License terms, then profile.menuSheet.report at the sheet tail, the reader's comment menu whole
+
+WHEN tap profile.menuSheet.hide -> the sheet closes AND the reader stays on the profile, the removed comment's mark in its place, AND the snackbar reads @ada is hidden. with Undo AND NEVER a confirm step appears
 
 WHEN tap profile.menuSheet.license -> the menu closes AND the terms the comment was published under come up over the profile, as any comment's do
 
-WHEN a guest taps Save, Cite in a new post or Report -> the guest gate opens AND NEVER profile.menuSheet.citedBy, Opinions on this or License terms raise it
+WHEN a guest taps Save, Cite in a new post, Hide or Report -> the guest gate opens AND NEVER profile.menuSheet.citedBy, Opinions on this or License terms raise it
 
 WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND nothing changes

@@ -10,7 +10,9 @@ WHEN the removal has not answered 200ms after the press -> feed.dialog.remove re
 
 WHEN the removal is taken -> feed.dialog closes AND the card stands in its place in the feed as its mark, Removed by its author AND NEVER the card leaves the feed without a mark
 
-WHEN the removal does not go through -> feed.dialog stays up with its pair AND feed.dialog.line reads That didn't send. Try again. AND feed.dialog.remove reads Retry AND the post is not removed
+WHEN the removal does not go through GIVEN no answer reaches the device -> feed.dialog stays up with its pair AND feed.dialog.line reads That didn't send. Try again. AND feed.dialog.remove reads Retry AND the post is not removed
+
+WHEN the removal does not go through GIVEN the server answers INTERNAL, FORBIDDEN, SIGNATURE_INVALID or a BAD_INPUT naming no field -> feed.dialog stays up with its pair AND feed.dialog.line reads That didn't go through. Try again. AND feed.dialog.remove reads Retry AND the post is not removed
 
 WHEN press feed.dialog.keep GIVEN feed.dialog.remove was not pressed -> feed.dialog closes AND nothing is removed
 
