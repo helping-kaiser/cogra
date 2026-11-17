@@ -102,9 +102,9 @@ pub(crate) struct Carrying<'a, B>(pub &'a B);
 impl<B: L1Boundary> L1Boundary for Carrying<'_, B> {
     async fn seal(
         &self,
-        pre: common::l1::PreSignedProposal,
-    ) -> Result<common::l1::VerifiedAct, BoundaryError> {
-        self.0.seal(pre).await
+        submission: common::l1::proposal::Submission,
+    ) -> Result<common::l1::proposal::SealedAct, BoundaryError> {
+        self.0.seal(submission).await
     }
 
     async fn approve(

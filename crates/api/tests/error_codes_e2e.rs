@@ -212,7 +212,7 @@ async fn a_staged_write_past_gc_is_staged_write_expired(pool: PgPool) {
             .expect("b64"),
     )
     .expect("decodes");
-    let pre = key.pre_sign(proposal);
+    let pre = common::l1::proposal::PreSigned::sign(&key, proposal);
     let data = rig
         .gql(
             Some(&token),
@@ -221,7 +221,7 @@ async fn a_staged_write_past_gc_is_staged_write_expired(pool: PgPool) {
              }",
             json!({ "input": { "proposals": [{
                 "stagedWriteId": id,
-                "signature": B64.encode(wire::encode_pre_commitment_of(&pre)),
+                "signature": B64.encode(pre.pre_commitment_blob().encode()),
             }]}}),
         )
         .await;

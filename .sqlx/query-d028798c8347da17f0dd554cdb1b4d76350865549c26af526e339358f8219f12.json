@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO act_payloads (act_id, payload, content_nonce, content_salt)\n         VALUES ($1, $2, $3, $4)\n         ON CONFLICT (act_id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bytea",
+        "Bytea",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d028798c8347da17f0dd554cdb1b4d76350865549c26af526e339358f8219f12"
+}
