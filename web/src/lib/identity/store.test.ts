@@ -15,14 +15,15 @@ import { randomBytes } from "@/lib/crypto/bytes";
 import { verify, Tags } from "@/lib/crypto/hashing";
 import { AddrId, ActId } from "@/lib/crypto/identifiers";
 import { Proposal, StructuralBody } from "@/lib/crypto/handshake";
+import { encodeProposal } from "@/lib/crypto/wire";
 import { createIdentityStore, CustodyBlockedError, type IdentityStore } from "./store";
 
 const ACCOUNT_A = "11111111-1111-4111-8111-111111111111";
 const ACCOUNT_B = "22222222-2222-4222-8222-222222222222";
 
-function sampleProposal(): Proposal {
+function sampleProposal(author: string = "aa".repeat(20)): Proposal {
   const body = new StructuralBody({
-    author: "aa".repeat(20),
+    author,
     seq: 1n,
     family: "registration",
     middle: null,
@@ -36,6 +37,41 @@ function sampleProposal(): Proposal {
   return new Proposal(body, new TextEncoder().encode("payload"), [
     new ActId("dd".repeat(20), 9n, "publish"),
   ]);
+}
+
+/** Material a fresh key pre-signed over a proposal naming it as author. */
+async function preSignedByAFreshKey() {
+  const key = await ActorKey.generate();
+  return key.preSign(sampleProposal(await key.address()));
+}
+
+/** A handshake record of the current two-nonce shape (the bytes need not sign anything). */
+function currentShapeRecord() {
+  return {
+    proposal: encodeProposal(sampleProposal()),
+    authorPubkey: new Uint8Array(32).fill(1),
+    contentNonce: new Uint8Array(32).fill(2),
+    dependencyNonce: new Uint8Array(32).fill(3),
+    preSignature: new Uint8Array(64).fill(4),
+  };
+}
+
+/** One raw request against the handshake store, outside the store under test. */
+function rawHandshake<T>(run: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const req = indexedDB.open("cogra.identity");
+    req.onsuccess = () => {
+      const db = req.result;
+      const tx = db.transaction("handshake", "readwrite");
+      const request = run(tx.objectStore("handshake"));
+      tx.oncomplete = () => {
+        db.close();
+        resolve(request.result);
+      };
+      tx.onerror = () => reject(tx.error);
+    };
+    req.onerror = () => reject(req.error);
+  });
 }
 
 /**
@@ -76,7 +112,7 @@ async function seedLegacy(records: {
         tx.objectStore("ux").put(records.reciprocationDismissed, "reciprocationDismissed");
       }
       for (const id of records.handshakeIds ?? []) {
-        tx.objectStore("handshake").put({ marker: id }, id);
+        tx.objectStore("handshake").put(currentShapeRecord(), id);
       }
       tx.oncomplete = () => {
         db.close();
@@ -159,15 +195,18 @@ describe("identity store", () => {
 
   it("round-trips handshake material by staged-write id", async () => {
     const key = await ActorKey.generate();
-    const pre = await key.preSign(sampleProposal());
+    const pre = await key.preSign(sampleProposal(await key.address()));
     await store.saveHandshake("staged-1", pre);
 
     const loaded = await store.handshake("staged-1");
     expect(loaded).not.toBeNull();
-    expect(loaded?.nonce).toEqual(pre.nonce);
+    expect(loaded?.contentNonce).toEqual(pre.contentNonce);
+    expect(loaded?.dependencyNonce).toEqual(pre.dependencyNonce);
     expect(loaded?.preSignature).toEqual(pre.preSignature);
     expect(loaded?.authorPubkey).toEqual(pre.authorPubkey);
     expect(loaded?.proposal.equals(pre.proposal)).toBe(true);
+    // The material reloaded from custody still forms the P it signed.
+    expect(await loaded?.preCommitment()).toEqual(await pre.preCommitment());
 
     expect(await store.handshakeIds()).toEqual(["staged-1"]);
     await store.clearHandshake("staged-1");
@@ -178,6 +217,68 @@ describe("identity store", () => {
   it("returns null for unknown handshake ids", async () => {
     expect(await store.handshake("missing")).toBeNull();
   });
+
+  /** Saves a current record and, beside it, a one-nonce record, raw, under the active account. */
+  async function seedOneNonceBeside(): Promise<{ contentNonce: Uint8Array }> {
+    const key = await ActorKey.generate();
+    const pre = await key.preSign(sampleProposal(await key.address()));
+    // Opens the database at the store's version, so the raw write below
+    // lands in the layout the store reads.
+    await store.saveHandshake("staged-new", pre);
+    const oneNonce = {
+      proposal: encodeProposal(pre.proposal),
+      authorPubkey: pre.authorPubkey.slice(),
+      nonce: pre.contentNonce.slice(),
+      preSignature: pre.preSignature.slice(),
+    };
+    await rawHandshake((s) => s.put(oneNonce, `${ACCOUNT_A}/staged-old`));
+    return { contentNonce: pre.contentNonce };
+  }
+
+  it("reads a stored one-nonce handshake record as absent, and deletes it", async () => {
+    const { contentNonce } = await seedOneNonceBeside();
+
+    expect(await store.handshake("staged-old")).toBeNull();
+    expect(await rawHandshake((s) => s.get(`${ACCOUNT_A}/staged-old`))).toBeUndefined();
+    // The current-shape record beside it still reads.
+    expect((await store.handshake("staged-new"))?.contentNonce).toEqual(contentNonce);
+  });
+
+  it("never lists a one-nonce handshake record, and deletes it", async () => {
+    await seedOneNonceBeside();
+
+    expect(await store.handshakeIds()).toEqual(["staged-new"]);
+    expect(await rawHandshake((s) => s.getAllKeys())).toEqual([`${ACCOUNT_A}/staged-new`]);
+  });
+
+  /**
+   * Shapes a later build might write without a database version bump — not
+   * this build's to judge. Each must survive this build's reads and listings.
+   */
+  const FUTURE_SHAPES: Record<string, () => unknown> = {
+    "the current fields plus one": () => ({ ...currentShapeRecord(), carriage: new Uint8Array(8) }),
+    "a renamed nonce field": () => {
+      const { contentNonce, ...rest } = currentShapeRecord();
+      return { ...rest, payloadNonce: contentNonce };
+    },
+    "a stored undefined": () => undefined,
+  };
+
+  for (const [shape, make] of Object.entries(FUTURE_SHAPES)) {
+    it(`leaves a record of an unknown shape alone: ${shape}`, async () => {
+      await store.saveHandshake("staged-new", await preSignedByAFreshKey());
+      const stored = make();
+      const key = `${ACCOUNT_A}/staged-future`;
+      await rawHandshake((s) => s.put(stored, key));
+
+      // Reads as absent and is not listed …
+      expect(await store.handshake("staged-future")).toBeNull();
+      expect(await store.handshakeIds()).toEqual(["staged-new"]);
+      // … and survives both, byte for byte.
+      expect(await rawHandshake((s) => s.getAllKeys())).toEqual([`${ACCOUNT_A}/staged-future`, `${ACCOUNT_A}/staged-new`]);
+      expect(await rawHandshake((s) => s.get(key))).toEqual(stored);
+    });
+  }
 
   it("upgrades a v1 database in place", async () => {
     await new Promise<void>((resolve, reject) => {
@@ -226,7 +327,7 @@ describe("identity store", () => {
 
   it("scopes handshake ids to the active account", async () => {
     const key = await ActorKey.generate();
-    const pre = await key.preSign(sampleProposal());
+    const pre = await key.preSign(sampleProposal(await key.address()));
     await store.saveHandshake("staged-a", pre);
 
     account = ACCOUNT_B;
@@ -293,7 +394,7 @@ describe("identity store", () => {
 
   it("purges a flagged account's material, leaving the other account's", async () => {
     const key = await ActorKey.generate();
-    const pre = await key.preSign(sampleProposal());
+    const pre = await key.preSign(sampleProposal(await key.address()));
     await store.saveActor(randomBytes(32), true);
     await store.savePendingBackupBlob(randomBytes(64));
     await store.saveHandshake("staged-1", pre);
@@ -351,11 +452,11 @@ describe("identity store", () => {
   // the key being replaced, and no later key can approve it.
   it("clears this account's handshake material and nobody else's", async () => {
     await store.saveActor(randomBytes(32), true);
-    await store.saveHandshake("staged-a", await (await ActorKey.generate()).preSign(sampleProposal()));
+    await store.saveHandshake("staged-a", await preSignedByAFreshKey());
 
     account = ACCOUNT_B;
     await store.saveActor(randomBytes(32), true);
-    await store.saveHandshake("staged-b", await (await ActorKey.generate()).preSign(sampleProposal()));
+    await store.saveHandshake("staged-b", await preSignedByAFreshKey());
 
     account = ACCOUNT_A;
     await store.clearHandshakes();

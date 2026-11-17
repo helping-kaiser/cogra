@@ -14,6 +14,8 @@ WHEN the seal opens GIVEN the new picture's upload is still running -> the gate 
 
 WHEN the new picture's upload fails while the seal waits on it -> the gate line reads One picture didn't upload. Signing waits for it. followed by Retry AND Sign the change is disabled AND NEVER Remove it stands on the seal
 
+WHEN the server refuses the new picture's upload while the seal waits on it -> the gate line reads One picture didn't upload. alone in the error ink AND NEVER Signing waits for it. stands beside it AND NEVER Retry stands AND Sign the change is disabled AND Back is the way out, to the crop
+
 ALWAYS the gate line's fact One picture didn't upload. wears the error ink and Signing waits for it. the quiet voice
 
 WHEN an upload fails GIVEN Sign the change was pressed while the upload ran -> the held press drops AND Sign the change reads Sign the change again AND Back reads Back again AND NEVER anything is signed

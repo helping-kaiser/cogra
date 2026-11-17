@@ -8,6 +8,8 @@ ALWAYS the picked row's first picture wears the Cover badge
 
 WHEN a picture's upload fails -> its thumbnail is marked AND the line One picture didn't upload. stands under the row with Retry and Remove it
 
+WHEN the server refuses a picture at its upload -> the line One picture didn't upload. stands under the row with Remove it alone AND NEVER Retry stands, retrying being unable to change the answer
+
 WHEN more than one picture's upload fails -> each failed thumbnail is marked AND the line N pictures didn't upload., as 2 pictures didn't upload., stands under the row with Retry and Remove them
 
 WHEN press Remove them -> every failed picture leaves the batch

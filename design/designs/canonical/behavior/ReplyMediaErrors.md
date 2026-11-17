@@ -12,6 +12,12 @@ ALWAYS the caps are named only in a refusal, never announced ahead
 
 ALWAYS a file is judged by its size and format before it is judged against the comment's body, one file and one line with the nearest reason
 
+ALWAYS a file is judged when the picker hands it back, before the comment's square crop, and a refused file never reaches the crop
+
+WHEN a pick comes back holding accepted and refused pictures -> the comment's square crop opens on the accepted pictures only AND the refused files' lines stand on the media row when the composer comes back
+
+WHEN a pick comes back holding refused files only -> the refusals stand on the media row AND NEVER the crop opens
+
 ALWAYS a refused file's line offers Remove it and never Retry
 
 WHEN tap Remove it on a refused file -> the refusal leaves the composer

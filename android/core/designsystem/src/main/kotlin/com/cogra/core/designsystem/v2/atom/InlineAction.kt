@@ -7,6 +7,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -46,8 +48,11 @@ fun InlineAction(
     contentDescription: String? = null,
     /** The word's data-node on a registered screen; replaces [testTag]. */
     node: DataNode? = null,
+    /** The word's ink where `primary` is not legible — the snackbar's `--action-on-snackbar`. */
+    color: Color = Color.Unspecified,
 ) {
     val tag = node?.tag ?: testTag
+    val ink = color.takeOrElse { MaterialTheme.colorScheme.primary }
     val named = if (contentDescription != null) {
         Modifier.semantics { this.contentDescription = contentDescription }
     } else {
@@ -57,7 +62,7 @@ fun InlineAction(
         Text(
             text = text,
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.primary,
+            color = ink,
             modifier = modifier
                 .minimumInteractiveComponentSize()
                 .defaultMinSize(minHeight = 0.dp)
@@ -75,7 +80,7 @@ fun InlineAction(
     Text(
         text = text,
         style = style,
-        color = MaterialTheme.colorScheme.primary,
+        color = ink,
         modifier = modifier
             .then(if (tag != null) Modifier.testTag(tag) else Modifier)
             .hitTarget(

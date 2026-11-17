@@ -17,11 +17,11 @@ import org.bouncycastle.math.ec.rfc8032.Ed25519
  * formula, so no artifact of an earlier formula verifies under a later one.
  */
 object Tags {
-    const val PRE_DIGEST_CONTENT = "cogra-l1:pre-digest:content:v2"
-    const val PRE_DIGEST_DEPS = "cogra-l1:pre-digest:deps:v2"
-    const val PRE_COMMITMENT = "cogra-l1:pre-commitment:v1"
-    const val COMMIT_CONTENT = "cogra-l1:commitment:content:v2"
-    const val COMMIT_DEPS = "cogra-l1:commitment:deps:v2"
+    const val PRE_DIGEST_CONTENT = "cogra-l1:pre-digest:content:v3"
+    const val PRE_DIGEST_DEPS = "cogra-l1:pre-digest:deps:v3"
+    const val PRE_COMMITMENT = "cogra-l1:pre-commitment:v2"
+    const val COMMIT_CONTENT = "cogra-l1:commitment:content:v3"
+    const val COMMIT_DEPS = "cogra-l1:commitment:deps:v3"
     const val HOST_SEAL = "cogra-l1:host-seal:v2"
     const val APPROVAL = "cogra-l1:approval:v2"
 }
@@ -56,7 +56,7 @@ fun sha256Tagged(tag: String, parts: List<ByteArray>): ByteArray {
 
 /**
  * The actor-side pre-digest of a removable projection: SHA-256 over (tag,
- * act identifier, the actor's private nonce, bytes) — the exact bytes
+ * act identifier, the projection's own private nonce, bytes) — the exact bytes
  * bound to the one act they were proposed for, before any host salt
  * exists.
  */

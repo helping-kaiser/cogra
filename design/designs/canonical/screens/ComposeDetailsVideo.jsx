@@ -13,12 +13,18 @@
    square clip still meets the frame picker, and arrives here with its face
    already chosen.
 
-   THE DOOR IS A FIELD'S EMPTY STATE, not a shortcut back into a stage. The
-   picture path refuses a second entrance to the crop (jakob 2026-08-31,
-   "none") and this does not break that rule: for a vertical clip the door is
-   the ONLY entrance, because the step it opens was never walked. That is also
-   why a clip that came through the cover step shows no door — its face is
-   chosen, and the step is one Back away.
+   THE COVER STANDS BESIDE THE CLIP, ALWAYS (round 52, jakob 2026-11-17,
+   decision 4: "this way we also have a entrance gate for changing the
+   cover"). The clip's 54 × 96 tile has a second tile beside it at the same
+   96 high and the cover's own shape — `CoverTile`. This board's clip is
+   vertical, so it skipped the step and the same place holds the dashed `Add
+   a cover` door at a tall clip's 4:5, 76.8 × 96 — the default, as the board
+   stood. Once a cover is chosen through that door, the tile shows it,
+   wearing the `Cover` pill, at the same 4:5, 76.8 × 96 (a tall clip's cover
+   is cut at 4:5, `CoverCrop`), and it is the door back into the step, named
+   `Change the cover`; the `cover` chip's `chosen` draws it. A square clip's
+   cover would stand 96 × 96, a wide one's 170.7 × 96. Either door opens the
+   cover step, and its Next comes back here with the choice.
 
    THE CLIP CARRIES ITS OWN ×, AND NO MANAGER (jakob's ruling 2026-09-15). A
    video is the whole body, so there is nothing to reorder and no set for a
@@ -42,6 +48,9 @@
    video data loads — and no flash can come of it, because a frame-1 still IS
    the frame playback starts on. When extraction fails, the post ships without
    a still and the neutral tile stands (Cover · no frames came back). */
+export const PROPS = { cover: { editor: "enum", options: ["none", "chosen"], default: "none" } };
+export const VALS = `noneShown: this.props.cover === "chosen" ? "none" : "flex", chosenShown: this.props.cover === "chosen" ? "flex" : "none"`;
+
 export function Screen() {
   return (
     <>
@@ -49,15 +58,15 @@ export function Screen() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>Video</FieldLabel>
-          <MediaThumb src="clip-lakeside.jpg" alt="" width={54} height={96} video onRemove={() => {}} removeLabel="Remove this video" />
+          <div style={{ display: "{{noneShown}}", alignItems: "center", gap: 8 }}>
+            <MediaThumb src="clip-lakeside.jpg" alt="" width={54} height={96} video onRemove={() => {}} removeLabel="Remove this video" />
+            <CoverTile width={76.8} height={96} />
+          </div>
+          <div style={{ display: "{{chosenShown}}", alignItems: "center", gap: 8 }}>
+            <MediaThumb src="clip-lakeside.jpg" alt="" width={54} height={96} video onRemove={() => {}} removeLabel="Remove this video" />
+            <CoverTile src="clip-lakeside.jpg" transform="scale(1.5)" width={76.8} height={96} />
+          </div>
           <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} />
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>Cover</FieldLabel>
-          <InlineAction size="sm" selfStart>
-            Add a cover
-          </InlineAction>
         </div>
 
         <TextField label="Title" corner="Optional" cap={100} value="Forty seconds of the lake doing nothing" />

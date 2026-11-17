@@ -26,10 +26,10 @@ export const NODE = "profileEditSeal";
    the row's second line (jakob 2026-11-17, C4: the row wraps, never cut
    off). Only the value's words follow the chip; no path moves. */
 export const PROPS = {
-  state: { editor: "enum", options: ["rest", "signing", "uploading", "upload-failed"], default: "rest" },
+  state: { editor: "enum", options: ["rest", "signing", "uploading", "upload-failed", "upload-refused"], default: "rest" },
   holds: { editor: "enum", options: ["new", "removed", "all"], default: "new" },
 };
-export const VALS = `restFootShown: this.props.state === "rest" ? "flex" : "none", signFootShown: this.props.state === "signing" ? "flex" : "none", uploadingFootShown: this.props.state === "uploading" ? "flex" : "none", failedFootShown: this.props.state === "upload-failed" ? "flex" : "none", newShown: this.props.holds === "new" ? "inline" : "none", removedShown: this.props.holds === "removed" ? "inline" : "none", allShown: this.props.holds === "all" ? "inline" : "none", photoShown: this.props.holds === "removed" ? "none" : "flex", monoShown: this.props.holds === "removed" ? "flex" : "none"`;
+export const VALS = `restFootShown: this.props.state === "rest" ? "flex" : "none", signFootShown: this.props.state === "signing" ? "flex" : "none", uploadingFootShown: this.props.state === "uploading" ? "flex" : "none", failedFootShown: this.props.state === "upload-failed" ? "flex" : "none", refusedFootShown: this.props.state === "upload-refused" ? "flex" : "none", newShown: this.props.holds === "new" ? "inline" : "none", removedShown: this.props.holds === "removed" ? "inline" : "none", allShown: this.props.holds === "all" ? "inline" : "none", photoShown: this.props.holds === "removed" ? "none" : "flex", monoShown: this.props.holds === "removed" ? "flex" : "none"`;
 
 export function Screen() {
   return (
@@ -68,6 +68,14 @@ export function Screen() {
         </div>
         <div style={{ display: "{{failedFootShown}}", flexDirection: "column", gap: 16 }} data-node-chip="state" data-node-key="upload-failed">
           <UploadStatusLine failed onRetry={() => {}} node="gate" />
+          <SealFooter signLabel="Sign the change" busyLabel="Signing the change…" disabled node="foot" />
+        </div>
+        {/* `upload-refused` (round 51 act 2, jakob 2026-11-17, B3): the server
+            refused the new picture — the gate's refused reading, the fact
+            alone, no Retry; Sign disabled, Back to the edit, where Remove it
+            stands under the picture's row. */}
+        <div style={{ display: "{{refusedFootShown}}", flexDirection: "column", gap: 16 }} data-node-chip="state" data-node-key="upload-refused">
+          <UploadStatusLine refused node="gate" />
           <SealFooter signLabel="Sign the change" busyLabel="Signing the change…" disabled node="foot" />
         </div>
       </div>

@@ -36,9 +36,13 @@ WHEN press Next GIVEN the body is one video -> NEVER the clip's length decides w
 
 ALWAYS the header back arrow is named Back, never Back a step
 
-WHEN press the header back arrow -> the wizard leaves for where the composer was opened from AND the draft is kept AND NEVER a dialog asks
+WHEN press the header back arrow GIVEN the composer holds something of the author's own -> the wizard leaves for where the composer was opened from AND the draft is kept AND NEVER a dialog asks
 
-WHEN press the header X -> the whole flow is left for where the composer was opened from AND the draft is kept AND NEVER a dialog asks
+WHEN press the header X GIVEN the composer holds something of the author's own -> the whole flow is left for where the composer was opened from AND the draft is kept AND NEVER a dialog asks
+
+WHEN press the header back arrow or the header X GIVEN the composer holds nothing of the author's own, as the phone's pick step reads it -> the composer is left for where it was opened from AND nothing is kept AND NEVER a dialog asks
+
+ALWAYS the header X is named Leave GIVEN the composer holds nothing of the author's own, and Leave — your draft is kept once it holds anything
 
 WHEN tap Write words instead GIVEN the body holds pictures or a clip -> an ask to discard the body opens over the stage AND NEVER the body switches before the ask is answered
 

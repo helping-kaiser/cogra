@@ -24,7 +24,7 @@ WHEN tap Unhide with the author's handle -> the sheet closes AND the reader stay
 
 WHEN tap Unhide with the author's handle GIVEN the unhide does not go through -> the unhide reverts AND the target's row says That didn't go through. with Retry
 
-WHEN tap Cite in a new post -> the post wizard opens fresh at its first stage AND the post rides along unseen until the details stage
+WHEN tap Cite in a new post -> the post wizard opens as New post opens it, fresh at its first stage or, with a draft kept on this device, under the draft card, whose Continue takes what rides along into the draft AND the post rides along unseen until the details stage
 
 WHEN tap Cite in a new post GIVEN the reader is an applicant -> the menu closes AND the snackbar reads You can post once you're in. AND NEVER the wizard opens
 

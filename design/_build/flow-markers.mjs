@@ -69,7 +69,9 @@ const ownPostMenuMarks = [
   { n: 7, find: ">Cite in a new post</button>", tag: "button" },
   ...postReadingMarks(8),
 ];
-const commentMenuMarks = (save) => [
+// The Hide row (round 51, jakob 2026-11-17, impl 349-1) arrived after the
+// rows were numbered, so it takes the next free number, 8.
+const commentMenuMarks = (save, hide) => [
   { n: 1, find: save, tag: "button" },
   { n: 2, find: ">Cite in a new post</button>", tag: "button" },
   { n: 3, find: ">License terms</button>", tag: "button" },
@@ -77,6 +79,7 @@ const commentMenuMarks = (save) => [
   { n: 5, find: ">Opinions on this</button>", tag: "button" },
   { n: 6, find: ">Cited by</button>", tag: "button" },
   { n: 7, find: ">Report</button>", tag: "button" },
+  { n: 8, find: hide, tag: "button" },
 ];
 const ownCommentMenuMarks = [
   { n: 1, find: ">Save</button>", tag: "button" },
@@ -492,6 +495,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: "View 2 replies", tag: "button" },
     { n: 7, find: ">Add a comment</span>", tag: "span" },
     { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
+    // A comment card's reference count, a door as on every card (the
+    // TopicsLine master) — the next free number; the post's line beneath the
+    // sheet is a span inside its own opener, so `</button>` finds only the
+    // comments'.
+    { n: 9, find: ">· 1 reference</button>", tag: "button", all: true },
   ],
   // The same sheet at the end of the reply flow (item 85): the same controls,
   // minus the "View n replies" line the landing has already opened — so every
@@ -507,6 +515,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Reply</button>", tag: "button", all: true },
     { n: 6, find: ">Add a comment</span>", tag: "span" },
     { n: 7, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 8, find: ">· 1 reference</button>", tag: "button", all: true },
   ],
   // The thread after the reader's own Remove (the comment-removal round): the
   // same sheet with the same controls, so ReplyEntry's numbers. The removed
@@ -524,6 +533,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: "View 2 replies", tag: "button" },
     { n: 7, find: ">Add a comment</span>", tag: "span" },
     { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 9, find: ">· 1 reference</button>", tag: "button", all: true },
   ],
   ReplyMedia: [
     { n: 1, find: '<a href="/u/', tag: "a", all: true },
@@ -567,6 +577,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 16, find: 'aria-label="Remove this citation: Post, Removed by its author"', tag: "button" },
     { n: 17, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
     { n: 18, find: 'aria-label="Undo withdrawing Tide tables and the third headland — @juno"', tag: "button" },
+    // The `fault` chip's two answers (round 51): one Retry, one act, the next free number.
+    { n: 20, find: ">Retry</button>", tag: "button", all: true },
   ],
   CommentEditActs: [
     { n: 1, find: ">Done</button>", tag: "button" },
@@ -582,9 +594,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'aria-label="Remove this picture"', tag: "button", all: true },
     { n: 6, find: ">Describe the pictures</button>", tag: "button" },
     { n: 7, find: "+ Add pictures · 2 of 4", tag: "button" },
-    // The failed picture's line (the `upload` chip, jakob 2026-10-05, P17).
+    // The failed picture's line (the `upload` chip, jakob 2026-10-05, P17),
+    // and the refused one's `Remove it` alone (round 52).
     { n: 8, find: ">Retry</button>", tag: "button" },
-    { n: 9, find: ">Remove it</button>", tag: "button" },
+    { n: 9, find: ">Remove it</button>", tag: "button", all: true },
   ],
   ReplyVideo: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
@@ -593,10 +606,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: "if the light comes through at all.", tag: "p" },
     { n: 5, find: 'aria-label="Remove this video"', tag: "button" },
     { n: 6, find: ">Describe the video</button>", tag: "button" },
+    // The `cover` chip draws the row once per value (round 52 act 3).
     { n: 7, find: 'class="cg-cover-frame"', tag: "div", all: true },
-    { n: 8, find: 'class="cg-cover-own"', tag: "div" },
+    { n: 8, find: 'class="cg-cover-own"', tag: "div", all: true },
     // The `batch` chip's second clip, refused (round 27): its one way out.
     { n: 9, find: ">Remove it</button>", tag: "button" },
+    // The cover's tile beside the clip (round 52 act 3): the dashed door, or the chosen cover's.
+    { n: 10, find: ">Add a cover</span>", tag: "button" },
+    { n: 10, find: 'aria-label="Change the cover"', tag: "button", all: true },
   ],
   ReplyMediaErrors: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
@@ -607,6 +624,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: "+ Add pictures · 4 of 4</button>", tag: "button" },
     { n: 7, find: 'aria-label="Remove this picture"', tag: "button", all: true },
     { n: 8, find: ">Describe the pictures</button>", tag: "button" },
+  ],
+  // The comment's square crop (round 52): CoverCrop's stage and ComposeCrop's strip.
+  ReplyCrop: [
+    { n: 1, find: 'aria-label="{{backLabel}}"', tag: "a" },
+    { n: 2, find: 'aria-label="{{leaveLabel}}"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: "transform:scale(1.15)", tag: "div" },
+    { n: 5, find: 'data-field="Zoom"', tag: "div" },
+    { n: 6, find: "position:relative;width:48px", tag: "div", all: true },
   ],
   ReplyPicturesWeb: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
@@ -747,14 +773,16 @@ Object.assign(FLOW_MARKERS, {
   ProfilePostsMenu: readerMenuMarks(">Save</button>", ">Hide @ada</button>"),
   HistoryPostMenuOwn: ownPostMenuMarks,
   ProfilePostsMenuOwn: ownPostMenuMarks,
-  HistoryCommentMenu: commentMenuMarks(">Save</button>"),
-  SavedCommentMenu: commentMenuMarks(">Unsave</button>"),
-  ProfileCommentsMenu: commentMenuMarks(">Save</button>"),
+  // Round 51: the `author` chip's hidden copy of the hide row at 9, as on
+  // `HistoryPostMenu`.
+  HistoryCommentMenu: [...commentMenuMarks(">Save</button>", ">Hide @tobias</button>"), { n: 9, find: ">Unhide @tobias</button>", tag: "button" }],
+  SavedCommentMenu: commentMenuMarks(">Unsave</button>", ">Hide @tobias</button>"),
+  ProfileCommentsMenu: commentMenuMarks(">Save</button>", ">Hide @ada</button>"),
   // A removed comment's menu on the profile (round 46, point C): the same rows.
-  ProfileCommentsRemovedMenu: commentMenuMarks(">Save</button>"),
+  ProfileCommentsRemovedMenu: commentMenuMarks(">Save</button>", ">Hide @ada</button>"),
   HistoryCommentMenuOwn: ownCommentMenuMarks,
   // Round 48 (seam 320-14): the feed's comment card menus and your own comment in Saved.
-  FeedCommentMenu: commentMenuMarks(">Save</button>"),
+  FeedCommentMenu: commentMenuMarks(">Save</button>", ">Hide @tobias</button>"),
   FeedCommentMenuOwn: ownCommentMenuMarks,
   SavedCommentMenuOwn: [{ n: 1, find: ">Unsave</button>", tag: "button" }, ...ownCommentMenuMarks.filter((m) => m.n !== 1)],
   ProfileCommentsMenuOwn: ownCommentMenuMarks,
@@ -808,7 +836,9 @@ Object.assign(FLOW_MARKERS, {
   // like the detail's, numbered as ReportConfirm and PostLicense number them.
   FeedReportConfirm: [
     { n: 1, find: ">Report</button>", tag: "button" },
-    { n: 2, find: ">Cancel</button>", tag: "button" },
+    { n: 2, find: ">Cancel</button>", tag: "button", all: true },
+    // Round 51 act 2: the `answer` chip's failed sheets, Report reading Retry — one act.
+    { n: 1, find: ">Retry</button>", tag: "button", all: true },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   FeedPostLicense: [{ n: 1, find: 'class="cg-scrim-in"', tag: "div" }],
@@ -816,7 +846,9 @@ Object.assign(FLOW_MARKERS, {
   // sheet's own pair and its scrim are all that carries numbers.
   ReportConfirm: [
     { n: 1, find: ">Report</button>", tag: "button" },
-    { n: 2, find: ">Cancel</button>", tag: "button" },
+    { n: 2, find: ">Cancel</button>", tag: "button", all: true },
+    // Round 51 act 2: the `answer` chip's failed sheets, Report reading Retry — one act.
+    { n: 1, find: ">Retry</button>", tag: "button", all: true },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   // TWO WASHES on this board — the thread's, and the menu's stacked over the
@@ -830,6 +862,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Opinions on this</button>", tag: "button" },
     { n: 6, find: ">Cited by</button>", tag: "button" },
     { n: 7, find: ">Report</button>", tag: "button" },
+    { n: 8, find: ">Hide @tobias</button>", tag: "button" },
   ],
   // Your own comment's menu (the comment-removal round): CommentMenu's rows
   // keep their numbers — the badge is an identity, not a position — and
@@ -1008,10 +1041,23 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: "position:relative;width:125px", tag: "div", all: true },
   ],
   ComposeCrop: [
+    // The `opener` chip names both (round 52 act 3).
+    { n: 1, find: 'aria-label="{{backLabel}}"', tag: "a" },
+    { n: 2, find: 'aria-label="{{leaveLabel}}"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    // The `shape` chip draws the chips once per value (round 44): every copy.
+    { n: 4, find: ">Tall 4:5</button>", tag: "button", all: true },
+    { n: 4, find: ">Square 1:1</button>", tag: "button", all: true },
+    { n: 4, find: ">Wide 1.91:1</button>", tag: "button", all: true },
+    { n: 5, find: "transform:scale(1.15)", tag: "div" },
+    { n: 6, find: "position:relative;width:48px", tag: "div", all: true },
+    { n: 7, find: 'data-field="Zoom"', tag: "div" },
+  ],
+  // The same crop in a short, wide window (round 52): ComposeCrop's marks.
+  ComposeCropShort: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
-    // The `shape` chip draws the chips once per value (round 44): every copy.
     { n: 4, find: ">Tall 4:5</button>", tag: "button", all: true },
     { n: 4, find: ">Square 1:1</button>", tag: "button", all: true },
     { n: 4, find: ">Wide 1.91:1</button>", tag: "button", all: true },
@@ -1022,9 +1068,10 @@ Object.assign(FLOW_MARKERS, {
   ComposeCover: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
-    { n: 3, find: "transform:translate(-50%, -50%)", tag: "span" },
+    // The `cover` chip draws the preview and the strip once per value (round 52).
+    { n: 3, find: "transform:translate(-50%, -50%)", tag: "span", all: true },
     { n: 4, find: 'class="cg-cover-frame"', tag: "div", all: true },
-    { n: 5, find: 'class="cg-cover-own"', tag: "div" },
+    { n: 5, find: 'class="cg-cover-own"', tag: "div", all: true },
     { n: 6, find: ">Next</button>", tag: "button" },
   ],
   ComposeCoverPlaying: [
@@ -1259,10 +1306,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: ">Write words instead</button>", tag: "button" },
     { n: 5, find: 'aria-label="Remove this video"', tag: "button" },
+    // The cover beside the clip, its own door (round 52).
+    { n: 6, find: 'aria-label="Change the cover"', tag: "button" },
   ],
   CoverCrop: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
-    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 1, find: 'aria-label="{{backLabel}}"', tag: "a" },
+    { n: 2, find: 'aria-label="{{leaveLabel}}"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: "transform:scale(1.15)", tag: "div" },
     { n: 5, find: 'data-field="Zoom"', tag: "div" },
@@ -1273,20 +1322,23 @@ Object.assign(FLOW_MARKERS, {
   ComposeCoverNoFrames: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
-    { n: 3, find: 'class="cg-cover-own"', tag: "div" },
+    // The `cover` chip draws the row once per value (round 52).
+    { n: 3, find: 'class="cg-cover-own"', tag: "div", all: true },
     { n: 4, find: ">Next</button>", tag: "button" },
   ],
   ComposeDetailsVideo: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Describe the video</button>", tag: "button" },
-    { n: 4, find: ">Add a cover</button>", tag: "button" },
+    // The cover tile beside the clip (round 52): the dashed door, or the chosen cover's.
+    { n: 4, find: ">Add a cover</span>", tag: "button" },
+    { n: 4, find: 'aria-label="Change the cover"', tag: "button" },
     { n: 5, find: 'data-field="Title"', tag: "div" },
     { n: 6, find: 'data-field="Description"', tag: "div" },
     { n: 7, find: "+ Add a tag", tag: "button" },
     { n: 8, find: "+ Cite something", tag: "button" },
     { n: 9, find: ">Next</button>", tag: "button" },
-    { n: 10, find: 'aria-label="Remove this video"', tag: "button" },
+    { n: 10, find: 'aria-label="Remove this video"', tag: "button", all: true },
   ],
   ReplyVideoFailed: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
@@ -1297,6 +1349,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Remove it</button>", tag: "button" },
     { n: 7, find: ">Describe the video</button>", tag: "button" },
     { n: 8, find: ">Add a cover</button>", tag: "button" },
+    // The dashed cover tile beside the clip (round 52 act 3).
+    { n: 9, find: ">Add a cover</span>", tag: "button" },
   ],
   CommentEditVideo: [
     { n: 14, find: "aria-label=\"#glovebox — set how it relates\"", tag: "button" },
@@ -1307,8 +1361,8 @@ Object.assign(FLOW_MARKERS, {
     // The `clip` chip draws the clip's tile and its describe row once per value (round 44).
     { n: 5, find: 'aria-label="Remove this video"', tag: "button", all: true },
     { n: 6, find: ">Describe the video</button>", tag: "button", all: true },
-    // The kept cover's and the picked-cover copy's (round 46).
-    { n: 7, find: ">Change the cover</button>", tag: "button", all: true },
+    // The kept cover's and the picked-cover copy's tile beside the clip (round 52).
+    { n: 7, find: 'aria-label="Change the cover"', tag: "button", all: true },
     { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
     { n: 9, find: "+ Add a tag", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
@@ -1321,10 +1375,13 @@ Object.assign(FLOW_MARKERS, {
     // The withdrawn tag's Undo (the readme's edit-withdrawal law), as on CommentEdit.
     { n: 15, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
     // The `clip` chip's picked clip (round 44, seam 295-3): the cover door,
-    // and the failure's and the refusal's ways out in their copies.
-    { n: 16, find: ">Add a cover</button>", tag: "button" },
+    // and the failure's and the refusal's ways out in their copies — the
+    // dashed door beside the clip in each of those copies (round 52).
+    { n: 16, find: ">Add a cover</span>", tag: "button", all: true },
     { n: 17, find: ">Retry</button>", tag: "button", all: true },
     { n: 18, find: ">Remove it</button>", tag: "button", all: true },
+    // The `fault` chip's two answers (round 52, round 51's rule): one Retry, one act.
+    { n: 19, find: 'data-node="commentEdit.fault.retry"', tag: "button", all: true },
   ],
   EditComposeVideo: [
     { n: 14, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },
@@ -1333,9 +1390,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
     { n: 4, find: 'aria-label="Remove this video"', tag: "button" },
     { n: 5, find: ">Describe the video</button>", tag: "button" },
-    { n: 6, find: ">Add a cover</button>", tag: "button" },
-    // The `upload` chip's chosen-cover half: the same picker, through the same crop.
-    { n: 6, find: ">Change the cover</button>", tag: "button" },
+    // The cover's tile beside the clip (round 52): the dashed door, and the
+    // `upload` chip's chosen-cover half — the same picker, through the same crop.
+    { n: 6, find: ">Add a cover</span>", tag: "button" },
+    { n: 6, find: 'aria-label="Change the cover"', tag: "button" },
     { n: 7, find: 'data-field="Title"', tag: "div" },
     { n: 8, find: 'data-field="Description"', tag: "div" },
     { n: 9, find: 'aria-label="Remove #coastroad"', tag: "button" },
@@ -1350,6 +1408,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 16, find: ">Adjust</button>", tag: "button" },
     // The References block (seam 248), the next free number.
     { n: 17, find: "+ Cite something", tag: "button" },
+    // The `fault` chip's two answers (round 52, round 51's rule): one Retry, one act.
+    { n: 18, find: 'data-node="postEdit.fault.retry"', tag: "button", all: true },
   ],
   ComposeUploading: [
     { n: 12, find: "aria-label=\"#tidemarket — set how it relates\"", tag: "button" },
@@ -1419,7 +1479,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: ">Choose from your files</button>", tag: "button" },
   ],
   AvatarCrop: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 1, find: 'aria-label="{{backLabel}}"', tag: "a" },
     { n: 2, find: 'aria-label="Leave"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: "transform:scale(1.2)", tag: "div" },
@@ -1869,7 +1929,9 @@ Object.assign(FLOW_MARKERS, {
     // Act 3 (jakob 2026-11-17, C2): a staged removal's Undo, where Remove stood.
     { n: 11, find: 'aria-label="Undo removing the picture"', tag: "button" },
     { n: 8, find: ">Retry</button>", tag: "button" },
-    { n: 9, find: ">Remove it</button>", tag: "button" },
+    // Round 51: the refused upload's line (`upload-refused`) carries the same
+    // Remove it, one act.
+    { n: 9, find: ">Remove it</button>", tag: "button", all: true },
     { n: 10, find: 'aria-label="Why signing waits"', tag: "button" },
   ],
   ProfileEditSeal: [
@@ -2730,8 +2792,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 12, find: ">Sign the edit</button>", tag: "button", all: true },
     { n: 12, find: ">Signing the edit…</button>", tag: "button" },
     // A failed upload's two Retries — the row's and the gate's — are one act.
-    { n: 19, find: ">Retry</button>", tag: "button", all: true },
+    // The `fault` chip's two (round 51) stand after them, in the commit's
+    // place: the signing asked again, the next free number.
+    { n: 19, find: ">Retry</button>", tag: "button" },
+    { n: 19, find: ">Retry</button>", tag: "button", skip: 1 },
+    { n: 23, find: ">Retry</button>", tag: "button", skip: 2 },
+    { n: 23, find: ">Retry</button>", tag: "button", skip: 3 },
     { n: 20, find: ">Remove it</button>", tag: "button" },
+    // Round 51 act 2: the `upload` chip's `refused` row line, the same act.
+    { n: 20, find: ">Remove it</button>", tag: "button", skip: 1 },
     { n: 13, find: ">Mark</button>", tag: "button" },
     { n: 15, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
     // The `target` chip's removed-target row: the same row, named by its mark.
@@ -2744,7 +2813,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 21, find: ">Adjust</button>", tag: "button" },
     // The `tag` chip's refused tag (round 50): its line's Remove it, after the
     // failed upload's.
-    { n: 22, find: ">Remove it</button>", tag: "button", skip: 1 },
+    { n: 22, find: ">Remove it</button>", tag: "button", skip: 2 },
   ],
   /* The same edit with an empty batch — `EditCompose`'s markers, minus the one
      control that stops being one. The acts footer is a plain span at zero, so

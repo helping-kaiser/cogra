@@ -6309,4 +6309,122 @@ under it; (b) it keeps 88% and the rule names the pinned-height sheet as its
 exception.
 
 Closed by round 50, act 3 (jakob 2026-11-17, C5 as recommended): the sheet sizes to its
-content up to 88% (FeedFilterSheet's it), its foot 16px under the last section.
+content up to 88% (FeedFilterSheet's `fit`), its foot 16px under the last section.
+
+### 250 · A card's fault line when no answer came · *design* · **filed 2026-11-17** · **closed 2026-11-17**
+
+Round 51 (the one rule for a refused or failed act, jakob 2026-11-17). On a
+card the line stands last with `Retry` at its end, and the card form drawn today
+is the copy fault's, `That didn't go through.` with `Retry` for every failure
+(`Invites.md`; `Revoke` now its twin). The words-by-answer half would give no
+answer its own words, but none exist at card scale: (a) as drawn — `That didn't
+go through.` for every card failure, the copy fault's reading; (b) `That didn't
+send. Try again.` with `Retry` at its end — says "try again" twice, which the
+upload line's note rules out; (c) a short `That didn't send.` — new copy.
+
+Closed by round 51, act 2 (jakob 2026-11-17, B2 as recommended): (a) — a card reads `That didn't go through.` with `Retry` for every failure, no answer and refusal alike; the rule names the card as the one host where both answers read so (copy-voice, *One rule for a refused or failed act*; `NetworkError`, `Invites`).
+
+### 251 · What a seal's gate line reads for a refused upload · *design* · **filed 2026-11-17** · **closed 2026-11-17**
+
+Round 51 (jakob 2026-11-17, his 8: a refused picture reads `One picture didn't
+upload.` with `Remove it` alone). The seals' gate line — `One picture didn't
+upload. Signing waits for it.` with `Retry`, never `Remove it` on a seal
+(`ComposeSealUploading`, `ReplySealUploadFailed`, the edits' gate) — has no
+refused reading. Options: (a) the gate keeps its fault reading and `Retry`
+re-asks (cannot succeed); (b) the gate reads the refusal with no `Retry`, the
+way out being back to the stage that holds the picture, where `Remove it`
+stands; (c) the gate line takes `Remove it` on the seal. Blocks drawing the post
+edit's refused upload (`EditCompose`'s `upload` chip), whose gate stands on the
+same screen.
+
+Closed by round 51, act 2 (jakob 2026-11-17, B3 as recommended): (b) — the gate reads the refusal without `Retry`: the fact alone, `One picture didn't upload.` (`The video didn't upload.` for a clip), since `Signing waits for it.` would wait for ever; Sign stays disabled and Back is the way out, to the stage that holds `Remove it` (`UploadStatusLine`'s `refused`; `AvatarSeal`, `ProfileEditSeal` `upload-refused`; `EditCompose`'s `upload` = `refused`).
+
+### 252 · A hidden person's comment cards in the feed · *design* · **filed 2026-11-17** · **closed 2026-11-17**
+
+Round 51 (Hide on a comment, jakob 2026-11-17). After a hide the feed's law
+says "that person's rows leave the feed" (`FeedHidden.md`, `FeedPostMenu.md`);
+no sentence names the feed's comment cards. `docs/primitive/feed-ranking.md`
+§9.1 reads the hide as "never show me content from X", which would take their
+comment cards too. `FeedCommentMenu.md` says the card the hide was made from
+leaves with the rest. The sentence for every other comment card of theirs
+waits: (a) "their posts and their comment cards leave" (the docs' reading); (b)
+posts only.
+
+Closed by round 51, act 2 (jakob 2026-11-17, B1 as recommended): a hidden person's comment cards leave the feed like their posts (`FeedHidden` and the feed menus' aftermath); the threads keep their comments, History, Saved and a profile their own rules.
+
+### 253 · A closed pad's `Signing…` line grows the card · *design* · **filed 2026-11-17** · **closed 2026-11-17**
+
+Round 51 (the hold's wait, jakob 2026-11-17, impl 354). A hold's wait is the
+closed ring and no line. A pad closed under `Set` (`PadFailed`'s `closed`,
+`SigningAfterClose`) still carries `Signing…` under the face, so the card grows
+by that line for the wait — the jump his A23 named, by another door. Not in the
+ruling; the question is whether the closed pad's wait takes the ring too.
+
+Closed by round 51, act 2 (jakob 2026-11-17, B4 as recommended): a pad or a dialog over it closed while it signs waits as a hold does — the closed ring, `Signing…` spoken only, no line; the failure keeps its line. One vehicle in the master (`StanceControl`'s `busy` with the pad closed draws as `held`). The other after-Close lines — a profile change under the head, an edit, a post or a reply where it lands, the kept picks' batch — are not this ruling.
+
+### 254 · A Cite composer opened while a draft is kept · *design* · **filed 2026-11-17** · **closed 2026-11-17**
+
+Round 51 (no draft for an untouched composer). `ComposeDraft` keeps one draft
+per target, and `Cite in a new post` opens the wizard "fresh at its first
+stage". Whether an earlier draft survives a Cite or Mention composer that is
+left untouched — or the draft card meets the reader first — is not written.
+
+Closed by round 51, act 2 (jakob 2026-11-17, B5 as recommended, his addition: opening the wizard from Cite or Mention "is just like another door to the wizard"): a kept draft stays as it was when a Cite or Mention composer is left untouched; the doors are written as doors (`ComposeDraft`). What happens when such a door opens over a kept draft is backlog 256.
+
+### 255 · The report sheet carries its failure on the snackbar · *design* · **filed 2026-11-17** · **closed 2026-11-17**
+
+Round 51 (the one rule). `ReportConfirm` answers a refusal and no answer alike
+with the shared snackbar `That didn't send. Try again.` — the interim placement
+of 2026-10-12 (copy-voice, `Report`). The rule puts a small sheet's failure in
+the sheet, its commitment reading `Retry`, the words by the answer, and
+`NetworkError` says a failure is never carried on the snackbar. Round 51 changed
+only the signing hosts and left it: (a) as drawn; (b) the rule's dialog shape.
+
+Closed by round 51, act 2 (jakob 2026-11-17, B6 as recommended): (b) — a failed report keeps its sheet up, the line above the pair in the answer's words, `Report` reading `Retry`, never the snackbar (`ReportConfirm` and `FeedReportConfirm`, `answer` chip).
+
+### 256 · A Cite or Mention door opened over a kept draft · *design* · **filed 2026-11-17** · **closed 2026-11-17**
+
+Round 51, act 2 (jakob 2026-11-17, B5: Cite and Mention are "just like another door to the wizard"). From New
+post, a kept draft's card leads the pick step (`ComposeDraft`); the Cite and Mention edges say the wizard "opens
+fresh at its first stage" with the reference riding along (graph, every `Cite in a new post` edge;
+`ComposePick.md`). The tree does not say which wins when a draft is kept, nor where the reference goes. Options:
+(a) the draft card leads, as from New post; `Continue` resumes the draft and the reference joins it, staged
+among its references; `Discard` starts fresh with the reference riding; (b) the draft card leads; the reference
+rides only a fresh start, and `Continue` resumes the draft without it; (c) the door opens fresh as its edge
+says, the kept draft waiting untouched behind it.
+
+Closed by round 51, act 3 (jakob 2026-11-17, option (a), "as rec"): from Cite, Mention or a tag card's compose glyph with a draft kept, the draft card leads as from New post; `Continue` resumes the draft and what the door brought joins it, `Discard` starts a fresh pick with it riding; with no draft kept the door opens fresh (`ComposeDraft`, `ComposeDraftDiscard`, `ComposeCited`, every door's sidecar and graph edge).
+
+### 260 · The reply composer: the clip and its cover do not fit side by side · *design* · **filed 2026-11-17** · **closed 2026-11-17**
+
+Round 52 (jakob 2026-11-17, decision 4: the cover beside the clip at the same
+height and its own shape). The reply composer's clip tile is the comment's
+square at 220 × 220 (`ReplyVideo`, `ReplyVideoFailed`); a comment's cover is
+square too, so two tiles need 220 + 8 + 220 = 448 against the 342 column.
+Options: (a) both tiles shrink to share the column, 167 × 167 each
+((342 − 8) ∕ 2); (b) the clip keeps its 220 and the cover stands beside it at
+what is left, 114 × 114, the same top, not the same height. Either way the
+frame row stays the chooser on this one-screen composer, and the cover tile
+shows its choice: what a tap on the tile does here (scroll to the row, or open
+the picker as on the edits) is part of the answer. Until then the host keeps
+the ringed inset (`MediaThumb`'s `coverSrc`, used nowhere else).
+
+Closed by round 52, act 3 (jakob 2026-11-17, (a), "but why would the cover tap not open the
+cover crop here aswell?", then "Yes, both"): both tiles 167 × 167; the cover's tile is a door
+— the picker, then the cover's crop locked to the comment's square — as on the edits; the
+frame row stays the chooser for frames, a frame never cropped (`ReplyVideo`'s `cover` chip,
+`ReplyVideoFailed`). The inset and `MediaThumb`'s `coverSrc` are gone.
+
+### 261 · The post crop opened from an edit: whether the shape row stands · *design* · **filed 2026-11-17** · **closed 2026-11-17**
+
+Round 52 (the C8 back names on the crops' boards). Pictures added to a
+published post's edit pass the crop locked to the post's one shape
+(`EditCompose.md`, `ComposeCrop.md`). Whether the shape row stands there —
+dimmed at the locked shape, or gone as on the cover and comment crops — is not
+written, so `ComposeCrop` draws no `opener` chip yet (its arrow's name, `Back to
+the edit`, is law). Options: (a) the row goes, the frame at the post's shape;
+(b) the row stands, the post's shape selected, the others inert.
+
+Closed by round 52, act 3 (jakob 2026-11-17, "Yes, both"): (a) — the shape row is hidden on
+the edit's crop, the stage at the post's shape, drag and zoom unchanged; `ComposeCrop`'s
+`opener` chip (`post` · `edit`) draws it and names the arrow and the X.

@@ -18,6 +18,8 @@ import { useGlobalMute, PagerDots } from "./MediaAttachment.jsx";
    · The frame is never cut here. `contain`, centred, as large as the surface
      allows — a viewer that crops is not a viewer. This is the surface the feed
      card's 4:5 clamp exists against: whatever a card crops, the viewer restores.
+     A comment's picture IS the square its author framed in the comment's crop
+     (jakob 2026-11-17, `ReplyCrop`), so the viewer shows that square whole.
    · A CLIP NEVER SHOWS ITS COVER HERE (jakob 2026-11-13, V1: the viewer follows
      the reel). Opened on a clip, the viewer shows the clip itself at the
      clip's own shape — playing, or paused on its own frame where the device

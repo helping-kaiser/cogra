@@ -17,7 +17,7 @@
 // picture and never moves; the library lays the picture fitted whole into the
 // stage and the reader moves and zooms it under the frame, the rest of it in
 // view under the scrim. The zoom's floor is the frame's fill and its ceiling
-// about 4× (`zoomBounds`): a framing handed in below the floor — the untouched
+// 10× (`zoomBounds`): a framing handed in below the floor — the untouched
 // `CENTERED`, a picture reshaped while it was not on screen — rises to it the
 // moment the picture is measured. (react-easy-crop 6.2.4 README: `cropSize`,
 // `minZoom` / `maxZoom`, `objectFit`, `style` / `classes`.)
@@ -27,7 +27,7 @@
 // 2026-10-05):
 //
 //  · THE ZOOM IS ON SCREEN — `CropZoom`, a range slider under the stage, from
-//    the fill to about 4×, because a desktop browser has no pinch. Its value
+//    the fill to 10×, because a desktop browser has no pinch. Its value
 //    is the zoom as a share of the fill, so its floor reads 1 on every crop.
 //  · THE PICTURE PANS BY KEY, under the master's name `Move the picture`: an
 //    arrow moves it 1 % of itself, 10 % with Shift, and never past where an

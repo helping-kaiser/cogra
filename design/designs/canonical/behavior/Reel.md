@@ -66,7 +66,7 @@ WHEN swipe to another clip GIVEN the device suppresses autoplay -> that clip sta
 
 ALWAYS the stream never shows a clip's cover, its clip playing or paused on its own frame at its own shape
 
-ALWAYS the clip's cover stands in the stream, whole at its own 4:5, centred on the stream's black, nothing cropped, GIVEN the clip itself cannot load and its cover has
+ALWAYS the clip's cover stands in the stream, whole at its own 4:5, centred on the stream's black, nothing cropped, GIVEN the clip itself cannot load and its cover has loaded
 
 WHEN the clip itself cannot load -> the outlined Retry stands alone on its cover AND NEVER a sentence stands with it
 

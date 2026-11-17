@@ -28,16 +28,16 @@ import { VideoTransport } from "./VideoControls.jsx";
      machine-guessed description.
    · THE RATIO VOCABULARY IS THE CROP RULING'S (readme §13, compose): tall 4:5,
      square 1:1, wide 1.91:1 — one shape for the whole post, chosen at the crop
-     step. `tall` is also the CLAMP: uncropped media (a comment's pictures never
-     crop — jakob 2026-08-31) is not shown taller than 4:5; a 9:16 tile eats a
-     phone screen whole, which is the opposite of a scrollable feed.
+     step. A comment's pictures are cropped too, each to the comment's square
+     in the comment's own crop (jakob 2026-11-17, `ReplyCrop`). `tall` is also
+     the CLAMP: nothing is shown taller than 4:5; a 9:16 tile eats a phone
+     screen whole, which is the opposite of a scrollable feed.
    · NOTHING IS LETTERBOXED (jakob 2026-09-03). A tile is filled, never fitted:
-     an uncropped picture — a comment's, which never crops on the way up —
-     DISPLAY-CROPS to the frame it is given, centred, exactly as a clip does.
-     Bars beside a picture spend a card's scarcest resource on nothing, and the
-     whole frame is one tap away in the viewer, which is the surface that exists
-     to lose nothing. The crop is display-only: the bytes stored are still the
-     author's own, uncropped.
+     a picture handed a frame of another shape DISPLAY-CROPS to it, centred,
+     exactly as a clip does. Bars beside a picture spend a card's scarcest
+     resource on nothing. Every picture's stored bytes are the shape its
+     author cropped, so a post's or a comment's picture meets a frame of its
+     own shape, and the viewer shows that same picture whole.
    · VIDEO AUTOPLAYS, MUTED, and the mute decision is GLOBAL AND STICKY. Unmute
      one video and the next one down is already unmuted; mute it again and they
      all go quiet. Tapping every clip to start it is friction with no upside, and
@@ -460,9 +460,9 @@ export function PagerDots({ count, current, tone = "card", node }) {
    video (with its cover) — the gallery renders what it is given.
 
    Every frame renders at the ONE frame ratio: the explicit `ratio` prop, else
-   the first item's, so uncropped sets (a comment's pictures) pass a fixed frame
-   (square) and each display-crops to it — a pager whose height changed per
-   swipe would bounce the card under the reader's thumb.
+   the first item's, so a comment's pictures pass the comment's square — a
+   pager whose height changed per swipe would bounce the card under the
+   reader's thumb.
 
    THE SWIPE HAS A NON-DRAG TWIN (the K13 round; readme §10, every drag gesture
    has one). The strip is focusable, named by where the reader is — `Picture 2

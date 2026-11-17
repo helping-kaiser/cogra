@@ -65,10 +65,9 @@ private const val VISIBLE_CHIPS = 2
  * split: on a detail surface the WHOLE line is the opener — drawn at the
  * chips' 34dp across the content width and answering at 48 (readme §10, jakob
  * 2026-10-07) — with the chips inert inside it; on a summary card the counts
- * open it and the chips still reach the tag page. Given neither handler the
- * counts stay the plain fact they were — a comment's line is that case,
- * since the sheet a comment would open sits inside the sheet the thread
- * already is.
+ * open it and the chips still reach the tag page, a comment's line as a
+ * post's (TopicsLine.jsx:202-212). Given neither handler the counts stay the
+ * plain fact they were.
  */
 @Composable
 internal fun TopicsLine(

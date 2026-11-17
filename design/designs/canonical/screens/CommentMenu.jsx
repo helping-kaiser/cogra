@@ -7,13 +7,10 @@
    round), and it lands in the one mixed Saved list beside posts and people.
    The row carries the state, as it does on a post: `Unsave` once it is kept.
 
-   NO HIDE ROW HERE, AND THE ABSENCE IS RULED (jakob 2026-09-12: "he clicks the
-   profile of the commenter and hides from there"). Hiding is an act on an
-   ACTOR, and the route to it is the commenter's own profile — their chip is one
-   tap away and its ⋮ carries the row. A thread of many voices is not where that
-   decision belongs. The post menu keeps its own for the opposite reason: a post
-   IS its author's act, and a feed of them is what a reader asking to be rid of
-   someone is looking at.
+   `Hide @tobias` STANDS THIRD, the post menu's slot (jakob 2026-11-17, impl
+   349-1), naming the comment's author — @tobias's, the thread's first. In the
+   open thread the hidden person's comments stay where they stand, so the
+   snackbar `@tobias is hidden.` with `Undo` is the act's one answer.
 
    IT IS DRAWN STACKED ON PURPOSE. The thread already lives in a sheet, so this
    menu is a sheet on a sheet, and that is the state the reader is actually in:
@@ -39,7 +36,7 @@ export function Screen() {
       <CommentsThreadSheet node="threadSheet" />
 
       <BottomSheet open stacked ariaLabel="Comment actions" node="menuSheet">
-        {COMMENT_MENU.map((item) => (
+        {readerCommentMenu("tobias").map((item) => (
           <SheetItem key={item.label} label={item.label} node={item.node} />
         ))}
       </BottomSheet>
