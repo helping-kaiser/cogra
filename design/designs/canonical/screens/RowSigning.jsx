@@ -14,17 +14,21 @@
 
    THE FIRST CARD IS STILL SIGNING. Signed acts wait for their signature, so
    the face has not moved: Tobias's post still wears the resting face of a
-   reader with no opinion yet. Past 200ms the row says `Signing…`, quiet, in
-   the pending marker's register, and the anchor refuses a second hold until
-   the answer comes. Signed, the face moves and the snackbar confirms, as it
-   always has.
+   reader with no opinion yet. The ring that filled during the hold stays
+   closed around the face while the signing runs (jakob 2026-11-17, impl
+   354, his A23), and no line stands under it, so the card keeps its height:
+   `Signing…` is spoken from a visually hidden status once 200ms pass, never
+   drawn. The anchor refuses a second hold until the answer comes. Signed,
+   the ring goes, the face moves and the snackbar confirms, as it always
+   has.
 
    THE SECOND CARD DID NOT SIGN. The reader's standing opinion of Ada's post
    is exactly what it was — the face never moved, so nothing has to move back.
    The row line is `SigningPending`'s `row` form: `That didn't sign.` in the
    failure voice, one of the three things `--error` may mean, and `Retry` as
-   the bare word ending it, which asks the same hold again. It is short
-   because the row is one line of controls by rule.
+   the bare word ending it, which asks the same hold again — its own wait
+   the closed ring again, the line gone. It is short because the row is one
+   line of controls by rule.
 
    THE THIRD CARD IS A COMFORT THAT FAILED (the failure pack: "a comfort
    that fails reverts and says so in the same place"; jakob 2026-10-01,
@@ -54,7 +58,7 @@ export function Screen() {
           <PostCard {...TOBIAS_POST} stanceHoldProgress={0.6} />
         </div>
         <div style={{ display: "{{signShown}}" }}>
-          <PostCard {...TOBIAS_POST} stanceSigning="busy" />
+          <PostCard {...TOBIAS_POST} stanceSigning="held" />
         </div>
         <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} stanceSigning="failed" />
         <PostCard {...SOL_POST} stanceSigning="comfortFailed" />

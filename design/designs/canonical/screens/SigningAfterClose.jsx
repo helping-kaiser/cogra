@@ -12,7 +12,7 @@
 
    THE PATTERN, IN TWO PARTS, FROM WHAT THE TREE ALREADY DRAWS:
    · THE WAIT stands where the act will show, in the pending marker's quiet
-     register (`RowSigning`'s `Signing…`, `PadFailed`'s `closed`). Signed
+     register (`PadFailed`'s `closed`). Signed
      acts wait for their signature, so nothing is drawn as landed before it
      is taken: a post or a reply that has no card yet is named by its own
      commit's in-flight label, `Signing and publishing…` or `Signing

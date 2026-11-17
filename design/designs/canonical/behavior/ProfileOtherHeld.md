@@ -18,7 +18,7 @@ WHEN tap the wide anchor -> the pad blooms at the lower centre of the viewport A
 
 WHEN a press-and-hold on the wide anchor signs -> the anchor refuses a second press-and-hold until the signing answers AND NEVER the anchor's face moves before the signature is taken
 
-WHEN the hold's signing has not answered 200ms after the hold -> the line under the anchor's face reads Signing… AND NEVER a spinner appears
+WHEN the hold's signing has not answered 200ms after the hold -> a visually hidden status speaks Signing… AND the ring that filled during the hold stays closed around the anchor's face AND NEVER a line stands under it for the wait AND NEVER a spinner appears
 
 WHEN the hold's signing is taken -> another modest positive act joins the reader's opinion AND the anchor's face moves to the resulting opinion AND the snackbar confirms the signature
 

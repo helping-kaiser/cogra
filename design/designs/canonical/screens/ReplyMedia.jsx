@@ -38,7 +38,7 @@ export function Screen() {
           bundle={mkBundle(0.1, 0.1)}
           onReply={() => {}}
           license={{ attribution: 0, provenance: 0 }}
-          menuItems={COMMENT_CARD_MENU}
+          menuItems={readerCommentCardMenu("tobias")}
         />
         <CommentCard
           author={SOL}

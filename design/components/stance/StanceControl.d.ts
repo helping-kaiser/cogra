@@ -105,9 +105,14 @@ export interface StanceControlProps {
    * (the pad's Cancel already reads `Close`; Set keeps its label and refuses
    * a second press), or `"busy"`, past 200ms (`Setting…` beside `Close`):
    * nothing cancels it, and closing passes the wait to the row — or
-   * one that did not go through (`"failed"`). Pad closed, it is the hold's: the anchor is inert
-   * while busy, and the target's row carries `Signing…` or `SigningPending`'s
-   * row line with `Retry` under the face, which has not moved. Pad open, it
+   * one that did not go through (`"failed"`). `"held"` is a hold's own wait:
+   * the ring that filled during the hold stays closed around the face, no
+   * line stands under it so the card never grows, and `Signing…` is spoken
+   * from a visually hidden status once 200ms pass. Pad closed, `"busy"` is a
+   * closed pad's wait and draws the same (round 51 act 2: one vehicle); the anchor is inert.
+   * `"failed"` puts `SigningPending`'s row line with `Retry`
+   * under the face, which has not moved — its `Retry` after a hold waits as
+   * `"held"` again. Pad open, it
    * is Set's: `Setting…`, inert; then the fault line above the commit row and
    * an outlined `Retry` in Set's slot. `"writeRule"` is the write rule's
    * refusal, a notice and not a fault: on the row, the quiet line `You can't
@@ -118,7 +123,7 @@ export interface StanceControlProps {
    * didn't go through.` with `Retry`, the hold's vehicle. Row only.
    * Off by default.
    */
-  signing?: "pressed" | "busy" | "failed" | "writeRule" | "comfortFailed";
+  signing?: "pressed" | "busy" | "held" | "failed" | "writeRule" | "comfortFailed";
   /** The hold mid-way, for a board: the ring that fills around the face over the 500ms hold, drawn standing at this 0–1 fill. Absent, the ring is the press's own and fills live. */
   holdProgress?: number;
   /** The pad's knob under the finger, for a board: `StancePad`'s pressed layer (a 40px disc at 10 %) drawn around the knob. Absent, the layer is the drag's own. */

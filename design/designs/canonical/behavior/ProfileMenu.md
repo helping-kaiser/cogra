@@ -14,7 +14,7 @@ WHEN tap Save GIVEN the save does not go through -> the save reverts AND the tar
 
 WHEN tap Unsave -> the sheet closes AND profile.snackbar reads Removed from Saved. with Undo on profile.snackbar.action
 
-WHEN tap Mention in a new post -> the post wizard opens fresh at its first stage AND the person rides along as a staged reference, unseen until the details stage
+WHEN tap Mention in a new post -> the post wizard opens as New post opens it, fresh at its first stage or, with a draft kept on this device, under the draft card, whose Continue takes what rides along into the draft AND the person rides along as a staged reference, unseen until the details stage
 
 WHEN tap Mention in a new post GIVEN the reader is an applicant -> the menu closes AND the snackbar reads You can post once you're in. AND NEVER the wizard opens
 
@@ -24,7 +24,7 @@ WHEN tap Hide with the person's handle -> the sheet closes AND the reader stays 
 
 WHEN tap Hide with the person's handle GIVEN the hide does not go through -> the hide reverts AND the target's row says That didn't go through. with Retry, the profile's actions row when the menu opened on the profile
 
-WHEN tap Hide with the person's handle GIVEN the menu was opened from a profile card in the feed -> the sheet closes AND that person's rows leave the feed AND the rows behind them move up AND the snackbar reads @ada is hidden. with Undo
+WHEN tap Hide with the person's handle GIVEN the menu was opened from a profile card in the feed -> the sheet closes AND that person's rows leave the feed, their posts and their comment cards alike, AND the rows behind them move up AND the snackbar reads @ada is hidden. with Undo
 
 ALWAYS the menu carries no Share this profile row GIVEN it was opened from a profile card in the feed, whose own row carries the share
 

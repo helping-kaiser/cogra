@@ -914,29 +914,34 @@
           "rest",
           "signing",
           "uploading",
-          "upload-failed"
+          "upload-failed",
+          "upload-refused"
         ],
         "avatarSeal.foot.back": [
           "rest",
           "signing",
           "uploading",
-          "upload-failed"
+          "upload-failed",
+          "upload-refused"
         ],
         "avatarSeal.foot.sign": [
           "rest",
           "signing",
           "uploading",
-          "upload-failed"
+          "upload-failed",
+          "upload-refused"
         ],
         "avatarSeal.gate": [
           "uploading",
-          "upload-failed"
+          "upload-failed",
+          "upload-refused"
         ],
         "avatarSeal.gate.line": [
           "uploading"
         ],
         "avatarSeal.gate.message": [
-          "upload-failed"
+          "upload-failed",
+          "upload-refused"
         ],
         "avatarSeal.gate.retry": [
           "upload-failed"
@@ -1297,6 +1302,7 @@
     "CommentEdit": {
       "prefix": "commentEdit",
       "keys": {
+        "commentEdit.fault": "the fault chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "commentEdit.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
         "commentEdit.references.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)",
         "commentEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
@@ -1314,6 +1320,14 @@
         "commentEdit.facts.sensitive.action": [],
         "commentEdit.facts.sensitive.label": [],
         "commentEdit.facts.sensitive.value": [],
+        "commentEdit.fault": [
+          "unsent",
+          "refused"
+        ],
+        "commentEdit.fault.retry": [
+          "unsent",
+          "refused"
+        ],
         "commentEdit.gate": [],
         "commentEdit.gate.line": [],
         "commentEdit.header": [],
@@ -1908,6 +1922,7 @@
         "postDetail.menuSheet.cite": [],
         "postDetail.menuSheet.citedBy": [],
         "postDetail.menuSheet.dragHandle": [],
+        "postDetail.menuSheet.hide": [],
         "postDetail.menuSheet.license": [],
         "postDetail.menuSheet.opinions": [],
         "postDetail.menuSheet.report": [],
@@ -2235,26 +2250,32 @@
         ],
         "postDetail.dialog": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.dialog.body": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.dialog.keep": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.dialog.line": [
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.dialog.remove": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.dialog.title": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.header": [],
         "postDetail.header.back": [],
@@ -3334,6 +3355,7 @@
         "postEdit.acts": "the signing chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "postEdit.body.mediaRow": "the upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "postEdit.body.mediaRow.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
+        "postEdit.fault": "the fault chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "postEdit.gate": "the upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "postEdit.references.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)",
         "postEdit.sign": "the signing or upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
@@ -3356,12 +3378,14 @@
         "postEdit.body.mediaRow": [
           "none",
           "uploading",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postEdit.body.mediaRow.caption": [
           "none",
           "uploading",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postEdit.body.mediaRow.thumb": [
           "none/1",
@@ -3369,7 +3393,9 @@
           "uploading/1",
           "uploading/2",
           "failed/1",
-          "failed/2"
+          "failed/2",
+          "refused/1",
+          "refused/2"
         ],
         "postEdit.body.rule": [],
         "postEdit.body.uploadError": [],
@@ -3395,15 +3421,25 @@
         "postEdit.facts.sensitive.action": [],
         "postEdit.facts.sensitive.label": [],
         "postEdit.facts.sensitive.value": [],
+        "postEdit.fault": [
+          "unsent",
+          "refused"
+        ],
+        "postEdit.fault.retry": [
+          "unsent",
+          "refused"
+        ],
         "postEdit.gate": [
           "uploading",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postEdit.gate.line": [
           "uploading"
         ],
         "postEdit.gate.message": [
-          "failed"
+          "failed",
+          "refused"
         ],
         "postEdit.gate.retry": [
           "failed"
@@ -3448,7 +3484,8 @@
         "postEdit.sign": [
           "none",
           "slow",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postEdit.tags": [],
         "postEdit.tags.add": [],
@@ -4491,6 +4528,7 @@
         "feed.menuSheet.cite": [],
         "feed.menuSheet.citedBy": [],
         "feed.menuSheet.dragHandle": [],
+        "feed.menuSheet.hide": [],
         "feed.menuSheet.license": [],
         "feed.menuSheet.opinions": [],
         "feed.menuSheet.report": [],
@@ -6325,26 +6363,32 @@
         ],
         "feed.dialog": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "feed.dialog.body": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "feed.dialog.keep": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "feed.dialog.line": [
-          "failed"
+          "failed",
+          "refused"
         ],
         "feed.dialog.remove": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "feed.dialog.title": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ]
       }
     },
@@ -7893,6 +7937,7 @@
         "history.menuSheet.cite": [],
         "history.menuSheet.citedBy": [],
         "history.menuSheet.dragHandle": [],
+        "history.menuSheet.hide": [],
         "history.menuSheet.license": [],
         "history.menuSheet.opinions": [],
         "history.menuSheet.report": [],
@@ -11857,6 +11902,7 @@
         "profile.menuSheet.cite": [],
         "profile.menuSheet.citedBy": [],
         "profile.menuSheet.dragHandle": [],
+        "profile.menuSheet.hide": [],
         "profile.menuSheet.license": [],
         "profile.menuSheet.opinions": [],
         "profile.menuSheet.report": [],
@@ -12132,6 +12178,7 @@
         "profile.menuSheet.cite": [],
         "profile.menuSheet.citedBy": [],
         "profile.menuSheet.dragHandle": [],
+        "profile.menuSheet.hide": [],
         "profile.menuSheet.license": [],
         "profile.menuSheet.opinions": [],
         "profile.menuSheet.report": [],
@@ -12502,29 +12549,34 @@
           "rest",
           "signing",
           "uploading",
-          "upload-failed"
+          "upload-failed",
+          "upload-refused"
         ],
         "profileEditSeal.foot.back": [
           "rest",
           "signing",
           "uploading",
-          "upload-failed"
+          "upload-failed",
+          "upload-refused"
         ],
         "profileEditSeal.foot.sign": [
           "rest",
           "signing",
           "uploading",
-          "upload-failed"
+          "upload-failed",
+          "upload-refused"
         ],
         "profileEditSeal.gate": [
           "uploading",
-          "upload-failed"
+          "upload-failed",
+          "upload-refused"
         ],
         "profileEditSeal.gate.line": [
           "uploading"
         ],
         "profileEditSeal.gate.message": [
-          "upload-failed"
+          "upload-failed",
+          "upload-refused"
         ],
         "profileEditSeal.gate.retry": [
           "upload-failed"
@@ -14992,26 +15044,32 @@
         ],
         "postDetail.dialog": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.dialog.body": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.dialog.keep": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.dialog.line": [
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.dialog.remove": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.dialog.title": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.header": [],
         "postDetail.header.back": [],
@@ -16253,6 +16311,7 @@
         "saved.menuSheet.cite": [],
         "saved.menuSheet.citedBy": [],
         "saved.menuSheet.dragHandle": [],
+        "saved.menuSheet.hide": [],
         "saved.menuSheet.license": [],
         "saved.menuSheet.opinions": [],
         "saved.menuSheet.report": [],

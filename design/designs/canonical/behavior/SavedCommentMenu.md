@@ -2,9 +2,11 @@
 
 WHEN tap the ⋮ on saved.commentCard GIVEN the comment is someone else's -> saved.menuSheet rises over Saved, unstacked, AND Saved stands unchanged beneath its wash
 
-ALWAYS saved.menuSheet reads Unsave, then Cite in a new post, then saved.menuSheet.citedBy, then Opinions on this, then License terms, then saved.menuSheet.report at the sheet tail, the comment's menu's own rows with the comment kept
+ALWAYS saved.menuSheet reads Unsave, then Cite in a new post, then Hide with the comment's author's handle, then saved.menuSheet.citedBy, then Opinions on this, then License terms, then saved.menuSheet.report at the sheet tail, the comment's menu's own rows with the comment kept
 
-ALWAYS the comment's menu carries no Hide row
+WHEN tap saved.menuSheet.hide -> the sheet closes AND every card in Saved stays where it is AND the snackbar reads @ada is hidden. with Undo AND NEVER a confirm step appears
+
+ALWAYS saved.menuSheet.hide reads Unhide with the comment's author's handle GIVEN the author is already hidden, the hidden author's comment still standing here, and keeps its one name whatever it reads, as the reader's comment menu reads it
 
 WHEN tap saved.menuSheet.save -> the sheet closes AND the card leaves Saved AND the cards behind it move up AND saved.snackbar reads Removed from Saved. with Undo
 

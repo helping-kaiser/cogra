@@ -69,7 +69,9 @@ const ownPostMenuMarks = [
   { n: 7, find: ">Cite in a new post</button>", tag: "button" },
   ...postReadingMarks(8),
 ];
-const commentMenuMarks = (save) => [
+// The Hide row (round 51, jakob 2026-11-17, impl 349-1) arrived after the
+// rows were numbered, so it takes the next free number, 8.
+const commentMenuMarks = (save, hide) => [
   { n: 1, find: save, tag: "button" },
   { n: 2, find: ">Cite in a new post</button>", tag: "button" },
   { n: 3, find: ">License terms</button>", tag: "button" },
@@ -77,6 +79,7 @@ const commentMenuMarks = (save) => [
   { n: 5, find: ">Opinions on this</button>", tag: "button" },
   { n: 6, find: ">Cited by</button>", tag: "button" },
   { n: 7, find: ">Report</button>", tag: "button" },
+  { n: 8, find: hide, tag: "button" },
 ];
 const ownCommentMenuMarks = [
   { n: 1, find: ">Save</button>", tag: "button" },
@@ -492,6 +495,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: "View 2 replies", tag: "button" },
     { n: 7, find: ">Add a comment</span>", tag: "span" },
     { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
+    // A comment card's reference count, a door as on every card (the
+    // TopicsLine master) — the next free number; the post's line beneath the
+    // sheet is a span inside its own opener, so `</button>` finds only the
+    // comments'.
+    { n: 9, find: ">· 1 reference</button>", tag: "button", all: true },
   ],
   // The same sheet at the end of the reply flow (item 85): the same controls,
   // minus the "View n replies" line the landing has already opened — so every
@@ -507,6 +515,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Reply</button>", tag: "button", all: true },
     { n: 6, find: ">Add a comment</span>", tag: "span" },
     { n: 7, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 8, find: ">· 1 reference</button>", tag: "button", all: true },
   ],
   // The thread after the reader's own Remove (the comment-removal round): the
   // same sheet with the same controls, so ReplyEntry's numbers. The removed
@@ -524,6 +533,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: "View 2 replies", tag: "button" },
     { n: 7, find: ">Add a comment</span>", tag: "span" },
     { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 9, find: ">· 1 reference</button>", tag: "button", all: true },
   ],
   ReplyMedia: [
     { n: 1, find: '<a href="/u/', tag: "a", all: true },
@@ -567,6 +577,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 16, find: 'aria-label="Remove this citation: Post, Removed by its author"', tag: "button" },
     { n: 17, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
     { n: 18, find: 'aria-label="Undo withdrawing Tide tables and the third headland — @juno"', tag: "button" },
+    // The `fault` chip's two answers (round 51): one Retry, one act, the next free number.
+    { n: 20, find: ">Retry</button>", tag: "button", all: true },
   ],
   CommentEditActs: [
     { n: 1, find: ">Done</button>", tag: "button" },
@@ -747,14 +759,16 @@ Object.assign(FLOW_MARKERS, {
   ProfilePostsMenu: readerMenuMarks(">Save</button>", ">Hide @ada</button>"),
   HistoryPostMenuOwn: ownPostMenuMarks,
   ProfilePostsMenuOwn: ownPostMenuMarks,
-  HistoryCommentMenu: commentMenuMarks(">Save</button>"),
-  SavedCommentMenu: commentMenuMarks(">Unsave</button>"),
-  ProfileCommentsMenu: commentMenuMarks(">Save</button>"),
+  // Round 51: the `author` chip's hidden copy of the hide row at 9, as on
+  // `HistoryPostMenu`.
+  HistoryCommentMenu: [...commentMenuMarks(">Save</button>", ">Hide @tobias</button>"), { n: 9, find: ">Unhide @tobias</button>", tag: "button" }],
+  SavedCommentMenu: commentMenuMarks(">Unsave</button>", ">Hide @tobias</button>"),
+  ProfileCommentsMenu: commentMenuMarks(">Save</button>", ">Hide @ada</button>"),
   // A removed comment's menu on the profile (round 46, point C): the same rows.
-  ProfileCommentsRemovedMenu: commentMenuMarks(">Save</button>"),
+  ProfileCommentsRemovedMenu: commentMenuMarks(">Save</button>", ">Hide @ada</button>"),
   HistoryCommentMenuOwn: ownCommentMenuMarks,
   // Round 48 (seam 320-14): the feed's comment card menus and your own comment in Saved.
-  FeedCommentMenu: commentMenuMarks(">Save</button>"),
+  FeedCommentMenu: commentMenuMarks(">Save</button>", ">Hide @tobias</button>"),
   FeedCommentMenuOwn: ownCommentMenuMarks,
   SavedCommentMenuOwn: [{ n: 1, find: ">Unsave</button>", tag: "button" }, ...ownCommentMenuMarks.filter((m) => m.n !== 1)],
   ProfileCommentsMenuOwn: ownCommentMenuMarks,
@@ -808,7 +822,9 @@ Object.assign(FLOW_MARKERS, {
   // like the detail's, numbered as ReportConfirm and PostLicense number them.
   FeedReportConfirm: [
     { n: 1, find: ">Report</button>", tag: "button" },
-    { n: 2, find: ">Cancel</button>", tag: "button" },
+    { n: 2, find: ">Cancel</button>", tag: "button", all: true },
+    // Round 51 act 2: the `answer` chip's failed sheets, Report reading Retry — one act.
+    { n: 1, find: ">Retry</button>", tag: "button", all: true },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   FeedPostLicense: [{ n: 1, find: 'class="cg-scrim-in"', tag: "div" }],
@@ -816,7 +832,9 @@ Object.assign(FLOW_MARKERS, {
   // sheet's own pair and its scrim are all that carries numbers.
   ReportConfirm: [
     { n: 1, find: ">Report</button>", tag: "button" },
-    { n: 2, find: ">Cancel</button>", tag: "button" },
+    { n: 2, find: ">Cancel</button>", tag: "button", all: true },
+    // Round 51 act 2: the `answer` chip's failed sheets, Report reading Retry — one act.
+    { n: 1, find: ">Retry</button>", tag: "button", all: true },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   // TWO WASHES on this board — the thread's, and the menu's stacked over the
@@ -830,6 +848,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Opinions on this</button>", tag: "button" },
     { n: 6, find: ">Cited by</button>", tag: "button" },
     { n: 7, find: ">Report</button>", tag: "button" },
+    { n: 8, find: ">Hide @tobias</button>", tag: "button" },
   ],
   // Your own comment's menu (the comment-removal round): CommentMenu's rows
   // keep their numbers — the badge is an identity, not a position — and
@@ -1869,7 +1888,9 @@ Object.assign(FLOW_MARKERS, {
     // Act 3 (jakob 2026-11-17, C2): a staged removal's Undo, where Remove stood.
     { n: 11, find: 'aria-label="Undo removing the picture"', tag: "button" },
     { n: 8, find: ">Retry</button>", tag: "button" },
-    { n: 9, find: ">Remove it</button>", tag: "button" },
+    // Round 51: the refused upload's line (`upload-refused`) carries the same
+    // Remove it, one act.
+    { n: 9, find: ">Remove it</button>", tag: "button", all: true },
     { n: 10, find: 'aria-label="Why signing waits"', tag: "button" },
   ],
   ProfileEditSeal: [
@@ -2730,8 +2751,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 12, find: ">Sign the edit</button>", tag: "button", all: true },
     { n: 12, find: ">Signing the edit…</button>", tag: "button" },
     // A failed upload's two Retries — the row's and the gate's — are one act.
-    { n: 19, find: ">Retry</button>", tag: "button", all: true },
+    // The `fault` chip's two (round 51) stand after them, in the commit's
+    // place: the signing asked again, the next free number.
+    { n: 19, find: ">Retry</button>", tag: "button" },
+    { n: 19, find: ">Retry</button>", tag: "button", skip: 1 },
+    { n: 23, find: ">Retry</button>", tag: "button", skip: 2 },
+    { n: 23, find: ">Retry</button>", tag: "button", skip: 3 },
     { n: 20, find: ">Remove it</button>", tag: "button" },
+    // Round 51 act 2: the `upload` chip's `refused` row line, the same act.
+    { n: 20, find: ">Remove it</button>", tag: "button", skip: 1 },
     { n: 13, find: ">Mark</button>", tag: "button" },
     { n: 15, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
     // The `target` chip's removed-target row: the same row, named by its mark.
@@ -2744,7 +2772,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 21, find: ">Adjust</button>", tag: "button" },
     // The `tag` chip's refused tag (round 50): its line's Remove it, after the
     // failed upload's.
-    { n: 22, find: ">Remove it</button>", tag: "button", skip: 1 },
+    { n: 22, find: ">Remove it</button>", tag: "button", skip: 2 },
   ],
   /* The same edit with an empty batch — `EditCompose`'s markers, minus the one
      control that stops being one. The acts footer is a plain span at zero, so
