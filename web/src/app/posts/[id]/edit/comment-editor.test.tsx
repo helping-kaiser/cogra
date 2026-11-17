@@ -356,6 +356,46 @@ describe("CommentEditor — + Add pictures and the gate (CommentEdit)", () => {
     expect(screen.queryByTestId("comment-edit-write-rule")).not.toBeInTheDocument();
     expect(screen.getByTestId("commentEdit.words.input")).toHaveValue("New words.");
   });
+
+  // NetworkError.md:13 — a FORBIDDEN answer reads the not-through line,
+  // never "You can't do that here.", the bug notice or the connection line.
+  it("reads a FORBIDDEN prepare as That didn't go through., nothing signed", async () => {
+    server.use(
+      gqlLink.mutation("PrepareCommentEdit", () =>
+        HttpResponse.json({
+          data: null,
+          errors: [{ message: "member account required", extensions: { code: "FORBIDDEN" } }],
+        }),
+      ),
+    );
+    const { signer } = draw(comment());
+    fireEvent.change(await screen.findByTestId("commentEdit.words.input"), { target: { value: "New words." } });
+    fireEvent.click(save());
+    expect(await screen.findByTestId("comment-edit-refused")).toHaveTextContent("That didn't go through. Try again.");
+    expect(screen.queryByTestId("comment-edit-failed")).toBeNull();
+    expect(screen.queryByText(/You can't do that here|reach the server/)).toBeNull();
+    expect(signer.signStaged).not.toHaveBeenCalled();
+    expect(screen.getByTestId("commentEdit.words.input")).toHaveValue("New words.");
+  });
+
+  it("reads a write the server refuses FORBIDDEN as That didn't go through., never the bug notice", async () => {
+    prepared();
+    const signer = fakeWriteSigner({
+      signStaged: vi.fn((staged) =>
+        Promise.resolve({
+          kind: "refused" as const,
+          id: staged.id,
+          errors: [{ code: "FORBIDDEN" as const, message: "not yours", field: null }],
+        }),
+      ),
+    });
+    draw(comment(), signer);
+    fireEvent.change(await screen.findByTestId("commentEdit.words.input"), { target: { value: "New words." } });
+    fireEvent.click(save());
+    expect(await screen.findByTestId("comment-edit-refused")).toHaveTextContent("That didn't go through. Try again.");
+    expect(screen.queryByTestId("comment-edit-bug")).toBeNull();
+    expect(screen.queryByTestId("comment-edit-failed")).toBeNull();
+  });
 });
 
 describe("CommentEditor — a clip's face (CommentEditVideo)", () => {

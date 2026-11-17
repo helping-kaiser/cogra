@@ -25,11 +25,11 @@ import { checkPasswordResetLink, confirmPasswordReset, requestPasswordReset } fr
 import { passwordLength } from "@/lib/onboarding/registration-rules";
 import { mismatchAfterEdit, mismatchOnPress } from "@/lib/onboarding/repeat-password";
 import { buttonClassName } from "@/lib/ui/button";
-import { part, type DataNode } from "@/lib/ui/data-node";
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { FormPasswordField, FormTextField } from "@/lib/ui2/form-fields";
 import { QuietNote } from "@/lib/ui2/quiet-note";
 import { NO_ANSWER, NOT_THROUGH, RATE_LIMITED_LINE, TaskPage } from "@/lib/ui2/task-page";
-import { WaitingCommit } from "@/lib/ui2/waiting-commit";
+import { useSlowAnswer, WaitingCommit } from "@/lib/ui2/waiting-commit";
 
 const SIGN_IN_ONLY =
   "This restores your sign-in only. Your key stays wherever it is — restoring the key is its own step, with your recovery code.";
@@ -38,6 +38,9 @@ const LENGTH_LINES = {
   long: "A password is at most 128 characters.",
 } as const;
 const BREACHED = "That password has turned up in a data breach — pick another one.";
+
+/** The reset family's registered prefix — Reset, ResetNew, ResetExpired (nodes.json `reset`, round 28). */
+const RESET: DataNode = { path: "reset" };
 
 export function ResetForm() {
   const token = useSearchParams().get("token");
@@ -99,6 +102,8 @@ function ResetRequest() {
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
   const [fault, setFault] = useState<string | null>(null);
+  // Reset.md: the ways out refuse a press from 200ms after the press until the answer.
+  const held = useSlowAnswer(busy);
 
   const onRequest = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -125,8 +130,10 @@ function ResetRequest() {
 
   return (
     <TaskPage
+      node={RESET}
       backHref="/login"
       backLabel="Back"
+      backHeld={held}
       title="Reset your password"
       lead="Resetting the password signs out every device."
     >
@@ -138,7 +145,7 @@ function ResetRequest() {
             enterKeyHint="go"
             value={email}
             onChange={setEmail}
-            testId="reset_email"
+            node={part(RESET, "email")}
           />
         </div>
         <div className="mt-6">
@@ -149,7 +156,7 @@ function ResetRequest() {
             waiting={email === ""}
             busy={busy}
             fault={fault}
-            testId="reset_request"
+            node={part(RESET, "commit")}
           />
         </div>
         {sent && (
@@ -158,15 +165,12 @@ function ResetRequest() {
           </p>
         )}
         <div className="mt-6">
-          <QuietNote>{SIGN_IN_ONLY}</QuietNote>
+          <QuietNote node={part(RESET, "note")}>{SIGN_IN_ONLY}</QuietNote>
         </div>
       </form>
     </TaskPage>
   );
 }
-
-/** ResetNew's registered prefix (nodes.json `reset`, round 28). */
-const RESET_NEW: DataNode = { path: "reset" };
 
 function ResetNew({ token, email, onExpired }: { token: string; email: string | null; onExpired: () => void }) {
   const client = useApolloClient();
@@ -216,7 +220,7 @@ function ResetNew({ token, email, onExpired }: { token: string; email: string | 
 
   return (
     <TaskPage
-      node={RESET_NEW}
+      node={RESET}
       title="Set a new password"
       lead="Setting a new password signs out every device."
     >
@@ -245,7 +249,7 @@ function ResetNew({ token, email, onExpired }: { token: string; email: string | 
             enterKeyHint="next"
             hint="At least 12 characters."
             error={line?.text ?? null}
-            node={part(RESET_NEW, "password")}
+            node={part(RESET, "password")}
           />
         </div>
         <div className="mt-6">
@@ -255,7 +259,7 @@ function ResetNew({ token, email, onExpired }: { token: string; email: string | 
             onChange={onRepeat}
             autoComplete="new-password"
             error={repeatLine}
-            node={part(RESET_NEW, "confirm")}
+            node={part(RESET, "confirm")}
           />
         </div>
         <div className="mt-6">
@@ -266,11 +270,11 @@ function ResetNew({ token, email, onExpired }: { token: string; email: string | 
             waiting={password === "" || repeat === ""}
             busy={busy}
             fault={fault}
-            node={part(RESET_NEW, "commit")}
+            node={part(RESET, "commit")}
           />
         </div>
         <div className="mt-6">
-          <QuietNote node={part(RESET_NEW, "note")}>{SIGN_IN_ONLY}</QuietNote>
+          <QuietNote node={part(RESET, "note")}>{SIGN_IN_ONLY}</QuietNote>
         </div>
       </form>
     </TaskPage>
@@ -281,13 +285,14 @@ function ResetExpired() {
   const router = useRouter();
   return (
     <TaskPage
+      node={RESET}
       title="This link doesn't work anymore"
       lead="A reset link works once and expires after 15 minutes."
     >
       <div className="mt-6 flex flex-col gap-2">
         <button
           type="button"
-          data-testid="reset_again"
+          {...testAttributes(part(RESET, "again"))}
           onClick={() => router.replace("/reset")}
           className={`${buttonClassName({ variant: "outline" })} w-full`}
         >
@@ -295,7 +300,7 @@ function ResetExpired() {
         </button>
         <button
           type="button"
-          data-testid="reset_sign_in"
+          {...testAttributes(part(RESET, "onward"))}
           onClick={() => router.replace("/login")}
           className={`${buttonClassName({ variant: "text" })} w-full`}
         >
