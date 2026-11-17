@@ -83,7 +83,7 @@ describe("ChangeHandle", () => {
   it("change_handle_waits_for_a_character", () => {
     renderPage();
     expect(screen.getByTestId("changeHandle.commit.action")).toBeDisabled();
-    expect(screen.getByTestId("changeHandle.commit.reason")).toHaveTextContent("Waiting for a new handle");
+    expect(screen.getByTestId("changeHandle.commit.action")).toHaveAccessibleDescription("Waiting for a new handle");
     type("s");
     expect(screen.getByTestId("changeHandle.commit.action")).toBeEnabled();
   });
