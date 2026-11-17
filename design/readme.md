@@ -12165,6 +12165,18 @@ and 19 as recommended), built on round 49 (60d9c51c0).
   `SettingsReading` keeps 131 under its short content in the 88%-pinned
   sheet (backlog 243). Flows re-blessed: `edit-avatar-via-edit-screen`,
   `edit-your-profile` (Save's two readings).
+- **A cover's thumb wears the cover's shape** (impl's seam 342): the post
+  edit's chosen cover stands 54 × 67.5 under its tall clip's 54 × 96 —
+  a cover takes the clip's shape, a tall clip's at 4:5 (`CoverCrop`).
+  The comment edit's cover already draws at 4:5; `CoverRow`'s square
+  frame candidates and the square cover mark on a wide clip's pick tile
+  are left as they are, open.
+- **Merged with round 49's tip** (ed3cfc74e): `CommentEdit` carries both
+  chips, `post` and `tag`. Against ed3cfc74e, 21 board paths and 28
+  (board, path, key) strings added, none gone; `composeCrop.shapes`
+  stays unkeyed. Pixel-identical to ed3cfc74e on the boards only round
+  49 changed, and to round 50's own tip on the boards only round 50
+  changed (headless Chromium, every chip combination).
 ---
 
 ## 14. The canvases
