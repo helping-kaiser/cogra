@@ -12,7 +12,7 @@ ALWAYS the viewer never shows a clip's cover, the clip playing or paused on its 
 
 WHEN the viewer opens on a clip GIVEN the device suppresses autoplay -> the clip stands paused on its own frame AND NEVER its cover stands in its place
 
-ALWAYS the clip's cover stands in the viewer, whole at its own 4:5, centred on the black, nothing cropped, GIVEN the clip itself cannot load and its cover has
+ALWAYS the clip's cover stands in the viewer, whole at its own 4:5, centred on the black, nothing cropped, GIVEN the clip itself cannot load and its cover has loaded
 
 WHEN the clip itself cannot load -> the outlined Retry stands alone on its cover AND NEVER a sentence stands with it
 
