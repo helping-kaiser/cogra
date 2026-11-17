@@ -56,7 +56,13 @@ class ReferenceRowTest {
     fun aLiveRowOpensItsDestination() {
         var opened = 0
         compose.setContent {
-            ReferenceRow(MarkKind.COMMENT, "The wax-stick ones", edge = RowEdge.Citation(point), onOpen = { opened++ }, node = node)
+            ReferenceRow(
+                MarkKind.COMMENT,
+                "The wax-stick ones",
+                edge = RowEdge.Citation(point),
+                onOpen = { opened++ },
+                node = node,
+            )
         }
         compose.onNodeWithTag(node.tag).assertHasClickAction().performClick()
         assertThat(opened).isEqualTo(1)
