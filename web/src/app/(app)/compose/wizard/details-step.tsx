@@ -368,11 +368,20 @@ function BodyStrip({
                 : failed[0].upload.message
               : `${failed.length} pictures didn't upload.`
           }
-          onRetry={() => {
-            for (const asset of failed) {
-              if (asset.upload.kind === "failed" && asset.upload.retryable) onRetry(asset.id);
-            }
-          }}
+          // NEVER A RETRY THAT DOES NOTHING: it is drawn only while one of the
+          // failures can be tried again, and the line otherwise takes its
+          // refusal form, `Remove it` alone (`UploadErrorLine`). A Retry
+          // whose press skipped every failure was a dead button (hand test
+          // 2026-11-17).
+          onRetry={
+            failed.some((asset) => asset.upload.kind === "failed" && asset.upload.retryable)
+              ? () => {
+                  for (const asset of failed) {
+                    if (asset.upload.kind === "failed" && asset.upload.retryable) onRetry(asset.id);
+                  }
+                }
+              : undefined
+          }
           onRemove={() => {
             for (const asset of failed) onRemove(asset.id);
           }}

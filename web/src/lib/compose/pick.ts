@@ -148,6 +148,34 @@ export const COMMENT_SCALE: PickScale = {
   destination: "COMMENT",
 };
 
+/**
+ * The picture's own copy of its bytes, taken while the pick can still read them.
+ *
+ * A picked `File` is a handle onto the device's file, not the bytes: the File
+ * API makes it a snapshot that a later read refuses with `NotReadableError`
+ * once the file behind it has changed or its grant has lapsed
+ * (https://w3c.github.io/FileAPI/#file-section, "snapshot state";
+ * https://developer.mozilla.org/en-US/docs/Web/API/FileReader/error). A
+ * phone's photo picker hands out exactly such handles. The upload reads its
+ * source minutes after the pick — the crop sits between — and Retry reads the
+ * SAME handle again, which is why a failed read never recovered on Retry while
+ * removing the picture and picking it afresh worked at once (hand test
+ * 2026-11-17). Holding the bytes here makes every later read — the encode, a
+ * Retry, the draft's save — read what the author picked, whatever the handle
+ * does afterwards.
+ *
+ * Null when the bytes cannot be read even now: the file is then refused at the
+ * pick, in the unreadable line, rather than joining a batch it can never leave.
+ */
+export async function holdBytes(file: File): Promise<File | null> {
+  try {
+    const bytes = await file.arrayBuffer();
+    return new File([bytes], file.name, { type: file.type, lastModified: file.lastModified });
+  } catch {
+    return null;
+  }
+}
+
 function isVideoType(file: File): boolean {
   return file.type.startsWith("video/");
 }
@@ -226,11 +254,22 @@ export async function screenPick(
       // down that path arrived as a still with nothing said; the browser has
       // no animated encoder to convert it with, so saying no is the honest
       // answer. A still GIF converts exactly as it always did.
-      if (await isAnimatedGif(file)) {
+      //
+      // THE PICTURE JOINS AS ITS OWN BYTES, never as the picker's handle
+      // (`holdBytes`), and the bytes are taken FIRST, so the GIF scan reads
+      // them too and a handle that reads nothing is said in words rather
+      // than failing the whole pick. A clip is not copied: it can run to
+      // hundreds of megabytes, more than a phone's tab should hold twice.
+      const held = await holdBytes(file);
+      if (held === null) {
+        refuse(file, UNREADABLE);
+        continue;
+      }
+      if (await isAnimatedGif(held)) {
         refuse(file, ANIMATED_GIF);
         continue;
       }
-      pictures.push(file);
+      pictures.push(held);
       continue;
     }
 
