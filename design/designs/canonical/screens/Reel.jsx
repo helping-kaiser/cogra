@@ -99,7 +99,9 @@ export function Screen() {
             the reel is fine in this edge case), with the read fault's
             outlined `Retry` alone on it — no sentence. */}
         <div style={{ display: "{{coverShown}}", position: "absolute", inset: 0, alignItems: "center", justifyContent: "center" }} {...stateCopy("unloaded")}>
-          <img src="clip-lakeside.jpg" alt="" style={{ display: "block", width: "100%", aspectRatio: "4 / 5", objectFit: "cover" }} />
+          <div style={{ width: "100%", aspectRatio: "4 / 5", flex: "none" }}>
+            <img src="clip-lakeside.jpg" alt="" style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
           <span style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)" }}>
             <Button variant="outline" size="sm" node="retry">Retry</Button>
           </span>
