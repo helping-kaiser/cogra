@@ -93,13 +93,18 @@
    `slow` is the edit past its press, so its header's X is named `Close` and
    it and the arrow close the edit while the edit goes on; the edited card
    carries the wait and the answer (`SigningAfterClose`). */
+/* THE `tag` CHIP (round 50, jakob 2026-11-17, his 19): `refused` is the
+   server's answer at Sign that `#saltmaps`, picked in this edit, did not
+   land — `This tag didn't land.` with `Remove it` under the chips, the chip
+   ringed in the error ink, `Sign the edit` standing (`editTagRefusedLine`). */
 export const NODE = "postEdit";
 export const PROPS = {
   target: { editor: "enum", options: ["live", "removed"], default: "live" },
   upload: { editor: "enum", options: ["none", "uploading", "failed"], default: "none" },
   signing: { editor: "enum", options: ["none", "slow"], default: "none" },
+  tag: { editor: "enum", options: ["landed", "refused"], default: "landed" },
 };
-export const VALS = `liveShown: this.props.target === "removed" ? "none" : "block", removedShown: this.props.target === "removed" ? "block" : "none", gateShown: this.props.upload === "uploading" ? "block" : "none", rowShown: this.props.upload === "none" ? "block" : "none", rowUploadingShown: this.props.upload === "uploading" ? "block" : "none", rowFailedShown: this.props.upload === "failed" ? "block" : "none", errorShown: this.props.upload === "failed" ? "block" : "none", gateFailedShown: this.props.upload === "failed" ? "block" : "none", footQuietShown: this.props.signing === "slow" && this.props.upload !== "failed" ? "none" : "flex", footSlowShown: this.props.signing === "slow" && this.props.upload !== "failed" ? "flex" : "none", signRestShown: this.props.signing !== "slow" && this.props.upload !== "failed" ? "block" : "none", signBusyShown: this.props.signing === "slow" && this.props.upload !== "failed" ? "block" : "none", signFailedShown: this.props.upload === "failed" ? "block" : "none"`;
+export const VALS = `liveShown: this.props.target === "removed" ? "none" : "block", removedShown: this.props.target === "removed" ? "block" : "none", gateShown: this.props.upload === "uploading" ? "block" : "none", rowShown: this.props.upload === "none" ? "block" : "none", rowUploadingShown: this.props.upload === "uploading" ? "block" : "none", rowFailedShown: this.props.upload === "failed" ? "block" : "none", errorShown: this.props.upload === "failed" ? "block" : "none", gateFailedShown: this.props.upload === "failed" ? "block" : "none", footQuietShown: this.props.signing === "slow" && this.props.upload !== "failed" ? "none" : "flex", footSlowShown: this.props.signing === "slow" && this.props.upload !== "failed" ? "flex" : "none", signRestShown: this.props.signing !== "slow" && this.props.upload !== "failed" ? "block" : "none", signBusyShown: this.props.signing === "slow" && this.props.upload !== "failed" ? "block" : "none", signFailedShown: this.props.upload === "failed" ? "block" : "none", tagRing: this.props.tag === "refused" ? "1px solid var(--error)" : "none", tagRefusedShown: this.props.tag === "refused" ? "block" : "none"`;
 
 export function Screen() {
   return <EditComposeBody holes />;

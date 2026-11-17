@@ -45,9 +45,26 @@ export function Screen() {
     <>
       <SettingsBody />
 
-      <BottomSheet open ariaLabel="Default license" maxHeight="88%" node="licenseSheet">
+      <BottomSheet
+        open
+        ariaLabel="Default license"
+        maxHeight="88%"
+        foot={
+          <div style={{ padding: "0 24px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }} data-node="foot">
+              <span style={{ flex: 1, fontSize: "var(--text-body-small)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }} data-node="summary">
+                <LicenseSummary />
+              </span>
+              <Button node="done">Done</Button>
+            </div>
+          </div>
+        }
+        node="licenseSheet"
+      >
         <SheetTitle trailing={<HelpDot ariaLabel="License" node="help" />} node="title">Default license</SheetTitle>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 24px" }}>
+        {/* The axes end flush, so the column pads its last edge to the
+            sheet's foot gap, 16 (`BottomSheet`). */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 24px 16px" }}>
           <QuietNote node="note">
             A post's terms settle when it is first signed, so changing this never reaches one you
             have already published.
@@ -59,12 +76,7 @@ export function Screen() {
           <LicenseAxisLabel node="recordLabel">Public record of use</LicenseAxisLabel>
           <LicenseAxis axis="record" name="default-license-provenance" tiers={PROVENANCE_TIERS} chosen={0} node="record" />
 
-          <div style={{ display: "flex", alignItems: "center", gap: 8, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }} data-node="foot">
-            <span style={{ flex: 1, fontSize: "var(--text-body-small)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }} data-node="summary">
-              <LicenseSummary />
-            </span>
-            <Button node="done">Done</Button>
-          </div>
+
         </div>
       </BottomSheet>
     </>

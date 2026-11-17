@@ -549,6 +549,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: "{{addLabel}}", tag: "button" },
     { n: 7, find: ">Describe the pictures</button>", tag: "button" },
     { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
+    // The `tag` chip's refused second tag (round 50): the same two controls
+    // every tag chip carries, and the line's Remove it.
+    { n: 14, find: "aria-label=\"#saltmaps — set how it relates\"", tag: "button" },
+    { n: 8, find: 'aria-label="Remove #saltmaps"', tag: "button" },
+    { n: 19, find: ">Remove it</button>", tag: "button" },
     { n: 9, find: "+ Add a tag", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
     { n: 11, find: "signing 5 things", tag: "button" },
@@ -1424,10 +1429,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave"', tag: "button" },
     { n: 3, find: 'aria-label="Changing your picture"', tag: "button" },
-    { n: 4, find: ">Sign the change</button>", tag: "button" },
-    { n: 5, find: ">Back</button>", tag: "button" },
+    // `all`: the `upload-failed` foot draws the pair a second time.
+    { n: 4, find: ">Sign the change</button>", tag: "button", all: true },
+    { n: 5, find: ">Back</button>", tag: "button", all: true },
     { n: 4, find: ">Signing the change…</button>", tag: "button" },
     { n: 5, find: ">Close</button>", tag: "button" },
+    // Round 50: the gate's Retry at the upload's fault reading.
+    { n: 6, find: ">Retry</button>", tag: "button" },
   ],
 });
 
@@ -1474,10 +1482,14 @@ Object.assign(FLOW_MARKERS, {
     // comes before the caption, so the first bare Retry is the face's), and
     // the load-more fault's Retry at the caption's head.
     { n: 16, find: 'aria-label="Play this video"', tag: "button" },
-    { n: 17, find: ">Retry</button>", tag: "button" },
+    // The stage's own Retry (`unloaded`, round 50 act 3) comes first in the
+    // markup, so the face's is the second bare Retry.
+    { n: 17, find: ">Retry</button>", tag: "button", skip: 1 },
     { n: 18, find: 'aria-label="Retry loading more"', tag: "button" },
     // The rail's ⋮ (round 49, M2): the post's menu over the stream.
     { n: 19, find: 'aria-label="More on this post"', tag: "button" },
+    // A clip that cannot load (round 50 act 3, C6): its cover's Retry.
+    { n: 20, find: ">Retry</button>", tag: "button" },
   ],
   ReelSensitive: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "button" },
@@ -1846,20 +1858,30 @@ Object.assign(FLOW_MARKERS, {
   ],
   ProfileEdit: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: ">Change picture</button>", tag: "button" },
+    { n: 2, find: 'aria-label="Change picture"', tag: "button" },
     { n: 3, find: 'data-field="Display name"', tag: "div" },
     { n: 4, find: 'data-field="Bio"', tag: "div" },
     { n: 5, find: 'data-field="Website"', tag: "div" },
     { n: 6, find: ">Save</button>", tag: "button" },
+    // Round 50: the picture's removal, its failed upload's two ways out and
+    // the write rule's "?" on Save (the `state` chip).
+    { n: 7, find: 'aria-label="Remove picture"', tag: "button" },
+    // Act 3 (jakob 2026-11-17, C2): a staged removal's Undo, where Remove stood.
+    { n: 11, find: 'aria-label="Undo removing the picture"', tag: "button" },
+    { n: 8, find: ">Retry</button>", tag: "button" },
+    { n: 9, find: ">Remove it</button>", tag: "button" },
+    { n: 10, find: 'aria-label="Why signing waits"', tag: "button" },
   ],
   ProfileEditSeal: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave"', tag: "button" },
     { n: 3, find: 'aria-label="Changing your profile"', tag: "button" },
-    { n: 4, find: ">Sign the change</button>", tag: "button" },
-    { n: 5, find: ">Back</button>", tag: "button" },
+    // `all`: the upload gate's two feet draw the pair again (act 3).
+    { n: 4, find: ">Sign the change</button>", tag: "button", all: true },
+    { n: 5, find: ">Back</button>", tag: "button", all: true },
     { n: 4, find: ">Signing the change…</button>", tag: "button" },
     { n: 5, find: ">Close</button>", tag: "button" },
+    { n: 6, find: ">Retry</button>", tag: "button" },
   ],
 });
 
@@ -2720,6 +2742,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 18, find: 'aria-label="Undo withdrawing Tide tables and the third headland — @juno"', tag: "button" },
     // The opinion row's Adjust (jakob 2026-10-16, PR-101): the one-axis pad over the edit.
     { n: 21, find: ">Adjust</button>", tag: "button" },
+    // The `tag` chip's refused tag (round 50): its line's Remove it, after the
+    // failed upload's.
+    { n: 22, find: ">Remove it</button>", tag: "button", skip: 1 },
   ],
   /* The same edit with an empty batch — `EditCompose`'s markers, minus the one
      control that stops being one. The acts footer is a plain span at zero, so
