@@ -21,33 +21,58 @@
    fourth spelling of it here is the drift the round exists to end.
 
    NOTHING IS CHOSEN UNTIL THE AUTHOR PICKS: the ring on the first frame draws
-   what chosen looks like, not a cover the step arrived with. */
+   what chosen looks like, not a cover the step arrived with.
+
+   THE PREVIEW SHOWS THE CHOSEN COVER, AND A PICTURE OF YOUR OWN SHOWS IN THE
+   STRIP (round 52, jakob 2026-11-17, decision 4). The `cover` chip draws
+   the two kinds of choice: `frame`, the first frame chosen, as the board
+   stood; `own`, a picture of the author's own back from the cover's crop —
+   it takes the dashed tile's place in the strip, outlined as chosen, the
+   frames dimmed around it (`CoverRow`'s `own`), and the preview shows it at
+   the clip's shape. A tap on it opens the picker again, as the edits' cover
+   door does: re-picked and re-cropped, never re-framed here. */
+export const PROPS = { cover: { editor: "enum", options: ["frame", "own"], default: "frame" } };
+export const VALS = `frameShown: this.props.cover === "own" ? "none" : "flex", ownShown: this.props.cover === "own" ? "flex" : "none"`;
+
 const PREVIEW_WIDTH = 342; // the wizard's 390 less its two 24px gutters
 const CLIP_RATIO = 1; // square — the shape this clip posts at
+const CLIP_FRAMES = [
+  { src: "post-photo.jpg" },
+  { src: "post-photo.jpg", transform: "scale(1.25) translateX(-4%)" },
+  { src: "post-photo.jpg", transform: "scale(1.5)" },
+  { src: "post-photo.jpg", transform: "scale(1.8) translateY(6%)" },
+];
 
 export function Screen() {
   return (
     <>
       <WizardHeader title="The video's face" stageLabel="Video only" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "16px 24px", overflow: "hidden" }}>
-        <MediaThumb
-          src="post-photo.jpg"
-          width={PREVIEW_WIDTH}
-          height={PREVIEW_WIDTH / CLIP_RATIO}
-          radius="var(--radius-medium)"
-          video
-          duration="0:42"
-        />
+        <div style={{ display: "{{frameShown}}", flexDirection: "column", gap: 16 }}>
+          <MediaThumb
+            src="post-photo.jpg"
+            width={PREVIEW_WIDTH}
+            height={PREVIEW_WIDTH / CLIP_RATIO}
+            radius="var(--radius-medium)"
+            video
+            duration="0:42"
+          />
 
-        <CoverRow
-          frames={[
-            { src: "post-photo.jpg" },
-            { src: "post-photo.jpg", transform: "scale(1.25) translateX(-4%)" },
-            { src: "post-photo.jpg", transform: "scale(1.5)" },
-            { src: "post-photo.jpg", transform: "scale(1.8) translateY(6%)" },
-          ]}
-          selected={0}
-        />
+          <CoverRow frames={CLIP_FRAMES} selected={0} />
+        </div>
+        <div style={{ display: "{{ownShown}}", flexDirection: "column", gap: 16 }}>
+          <MediaThumb
+            src="gallery-market.jpg"
+            transform="scale(1.15)"
+            width={PREVIEW_WIDTH}
+            height={PREVIEW_WIDTH / CLIP_RATIO}
+            radius="var(--radius-medium)"
+            video
+            duration="0:42"
+          />
+
+          <CoverRow frames={CLIP_FRAMES} own={{ src: "gallery-market.jpg", transform: "scale(1.15)" }} />
+        </div>
 
         <div style={{ flex: 1 }} />
 

@@ -72,7 +72,7 @@ ALWAYS no history.tagCard.through stands GIVEN the tag reaches the reader throug
 
 WHEN a card's Feed score is tapped -> the score's trace opens AND its back arrow reads Back to History
 
-WHEN Tag a new post with it on a history.tagCard is tapped -> the post composer opens at its first stage AND the tag rides staged among the new post's tags
+WHEN Tag a new post with it on a history.tagCard is tapped -> the post composer opens as New post opens it, at its first stage or, with a draft kept on this device, under the draft card, whose Continue takes the tag into the draft AND the tag rides staged among the new post's tags
 
 ALWAYS Tag a new post with it on a history.tagCard wears the locked look, at the disabled opacity and still tappable GIVEN the reader is an applicant
 
@@ -80,9 +80,9 @@ WHEN Tag a new post with it on a history.tagCard is tapped GIVEN the reader is a
 
 WHEN a press-and-hold on a card's stance face signs -> the face refuses a second press-and-hold until the signing answers AND NEVER the face moves before the signature is taken
 
-WHEN the hold's signing has not answered 200ms after the hold -> the line under the face reads Signing… AND NEVER a spinner appears
+WHEN the hold's signing has not answered 200ms after the hold -> a visually hidden status speaks Signing… AND the ring that filled during the hold stays closed around the face AND NEVER a line stands under it for the wait AND NEVER a spinner appears
 
-WHEN the hold's signing answers within 200ms of the hold -> NEVER the line Signing… appears
+WHEN the hold's signing answers within 200ms of the hold -> NEVER the status Signing… is spoken
 
 WHEN the hold's signing is taken -> the face moves to the new opinion AND the snackbar confirms the signature
 

@@ -236,3 +236,91 @@ pub async fn parameters_seeded(pool: &PgPool) -> Result<bool, sqlx::Error> {
         .fetch_one(pool)
         .await
 }
+
+/// The nonces the bootstrap pre-signs one genesis act under, as its
+/// handshake custody keeps them. The content nonce is None once a
+/// non-empty payload's carriage row holds it instead.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HandshakeNonces {
+    pub content_nonce: Option<Vec<u8>>,
+    pub dependency_nonce: Vec<u8>,
+}
+
+/// Keeps a genesis act's two nonces before its seal is requested, and
+/// returns the nonces kept for the act — the ones passed in on the first
+/// call, the ones an earlier run kept on every later one, so a re-run
+/// pre-signs under the same nonces and the same pre-commitment. The
+/// content nonce's digest is reserved for the act in the same
+/// transaction, as the write path reserves every content nonce it carries
+/// (`staged::record_pre_signed`).
+pub async fn keep_handshake_nonces(
+    pool: &PgPool,
+    act_id: &str,
+    author: &str,
+    content_nonce: &[u8],
+    dependency_nonce: &[u8],
+) -> Result<HandshakeNonces, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    sqlx::query!(
+        "INSERT INTO genesis_handshake_nonces (act_id, content_nonce, dependency_nonce)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (act_id) DO NOTHING",
+        act_id,
+        content_nonce,
+        dependency_nonce,
+    )
+    .execute(&mut *tx)
+    .await?;
+    let kept = sqlx::query_as!(
+        HandshakeNonces,
+        "SELECT content_nonce, dependency_nonce
+         FROM genesis_handshake_nonces WHERE act_id = $1",
+        act_id,
+    )
+    .fetch_one(&mut *tx)
+    .await?;
+    if let Some(nonce) = &kept.content_nonce {
+        let digest = common::l1::crypto::nonce_digest(author, nonce);
+        sqlx::query!(
+            "INSERT INTO content_nonce_digests (digest, act_id) VALUES ($1, $2)
+             ON CONFLICT (digest) DO NOTHING",
+            digest.as_slice(),
+            act_id,
+        )
+        .execute(&mut *tx)
+        .await?;
+    }
+    tx.commit().await?;
+    Ok(kept)
+}
+
+/// The nonces kept for one genesis act, if the bootstrap kept any.
+pub async fn handshake_nonces(
+    pool: &PgPool,
+    act_id: &str,
+) -> Result<Option<HandshakeNonces>, sqlx::Error> {
+    sqlx::query_as!(
+        HandshakeNonces,
+        "SELECT content_nonce, dependency_nonce
+         FROM genesis_handshake_nonces WHERE act_id = $1",
+        act_id,
+    )
+    .fetch_optional(pool)
+    .await
+}
+
+/// Moves a genesis act's content nonce out of the handshake custody, on
+/// the transaction that wrote its carriage row: from then on the carriage
+/// holds it beside the payload, and the reduction removes it with them.
+pub async fn take_carried_content_nonce(
+    conn: &mut PgConnection,
+    act_id: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        "UPDATE genesis_handshake_nonces SET content_nonce = NULL WHERE act_id = $1",
+        act_id,
+    )
+    .execute(conn)
+    .await?;
+    Ok(())
+}

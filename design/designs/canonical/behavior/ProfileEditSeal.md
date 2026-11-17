@@ -24,6 +24,8 @@ WHEN the seal opens GIVEN the new picture's upload is still running -> the gate 
 
 WHEN the new picture's upload fails while the seal waits on it -> the gate line reads One picture didn't upload. Signing waits for it. followed by Retry AND Sign the change is disabled AND NEVER Remove it stands on the seal
 
+WHEN the server refuses the new picture's upload while the seal waits on it -> the gate line reads One picture didn't upload. alone in the error ink AND NEVER Signing waits for it. stands beside it AND NEVER Retry stands AND Sign the change is disabled AND Back is the way out, to the edit, where Remove it stands under the picture's row
+
 WHEN press Retry on the gate line -> the upload starts again AND the gate line returns to its running reading AND Sign the change is enabled again
 
 WHEN tap the "?" -> the dialog Changing your profile opens

@@ -38,9 +38,9 @@ WHEN tap postDetail.card.media.frame -> the fullscreen viewer opens on that fram
 
 WHEN a press-and-hold on postDetail.card.actionRow.stance.anchor signs -> postDetail.card.actionRow.stance.anchor refuses a second press-and-hold until the signing answers AND NEVER postDetail.card.actionRow.stance.anchor.face moves before the signature is taken
 
-WHEN the hold's signing has not answered 200ms after the hold -> the line under postDetail.card.actionRow.stance.anchor.face reads Signing… AND NEVER a spinner appears
+WHEN the hold's signing has not answered 200ms after the hold -> a visually hidden status speaks Signing… AND the ring that filled during the hold stays closed around postDetail.card.actionRow.stance.anchor.face AND NEVER a line stands under it for the wait AND NEVER a spinner appears
 
-WHEN the hold's signing answers within 200ms of the hold -> NEVER the line Signing… appears
+WHEN the hold's signing answers within 200ms of the hold -> NEVER the status Signing… is spoken
 
 WHEN the hold's signing is taken -> postDetail.card.actionRow.stance.anchor.face moves to the new opinion AND the snackbar confirms the signature
 

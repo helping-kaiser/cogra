@@ -9,7 +9,7 @@
 
 import { CborDecodeError, CborDecoder, CborEncoder } from "./cbor";
 import { ActId, IdentifierError, NodeId } from "./identifiers";
-import { Proposal, StructuralBody, VerifiedAct } from "./handshake";
+import { Proposal, SealedAct, StructuralBody, VerifiedAct } from "./handshake";
 
 /** A wire blob that does not parse. */
 export class WireError extends Error {
@@ -19,13 +19,33 @@ export class WireError extends Error {
   }
 }
 
-/** The wire format version every envelope opens with. */
+/** The wire format version of the prepared-proposal envelope. */
 const WIRE_VERSION = 1n;
 
-/** The device's pre-commitment leg: nonce plus pre-commitment signature. */
+/**
+ * The wire format version of the two handshake envelopes — the
+ * pre-commitment blob and the sealed act (reference:
+ * crates/common/src/l1/proposal/transport.rs).
+ */
+const HANDSHAKE_WIRE_VERSION = 2n;
+
+/**
+ * Opens a handshake envelope: the version is judged before the arity, so a
+ * frame of another version is refused as that version rather than as a
+ * malformed frame — the reference's order.
+ */
+function openHandshake(d: CborDecoder, arity: bigint, what: string): void {
+  const n = d.array();
+  const version = d.uint();
+  if (version !== HANDSHAKE_WIRE_VERSION) throw new WireError(`unsupported wire version ${version}`);
+  if (n !== arity) throw new WireError(`malformed ${what}`);
+}
+
+/** The device's pre-commitment leg: both nonces plus the pre-commitment signature. */
 export class PreCommitment {
   constructor(
-    readonly nonce: Uint8Array,
+    readonly contentNonce: Uint8Array,
+    readonly dependencyNonce: Uint8Array,
     readonly preSignature: Uint8Array,
   ) {}
 }
@@ -112,55 +132,51 @@ export function decodeProposal(bytes: Uint8Array): Proposal {
 }
 
 /**
- * The host-sealed verified act, as `StagedWrite.verifiedAct` carries it
- * — every host-added field visible to the device before approval.
+ * The sealed act, as `StagedWrite.verifiedAct` carries it — every
+ * host-added field visible to the device before approval: `[2, body, P,
+ * pre-signature, C_c, C_d, content edition, dependency edition, content
+ * salt, dependency salt, seal]`. It carries no payload, no nonce and no
+ * dependency list: the device holds those itself.
  */
-export function encodeVerifiedAct(act: VerifiedAct): Uint8Array<ArrayBuffer> {
+export function encodeVerifiedAct(sealed: SealedAct): Uint8Array<ArrayBuffer> {
+  const act = sealed.act;
   const e = new CborEncoder();
-  e.array(15n);
-  e.uint(WIRE_VERSION);
-  e.bytes(act.proposal.body.canonicalBytes());
-  e.bytes(act.proposal.payload);
-  encodeDeps(e, act.proposal.deps);
-  e.bytes(act.authorPubkey);
-  e.bytes(act.nonce);
-  e.bytes(act.preSignature);
+  e.array(11n);
+  e.uint(HANDSHAKE_WIRE_VERSION);
+  e.bytes(act.body.canonicalBytes());
   e.bytes(act.preCommitment);
-  e.bytes(act.contentSalt);
-  e.bytes(act.depsSalt);
+  e.bytes(act.preSignature);
   e.bytes(act.contentCommitment);
   e.bytes(act.depsCommitment);
   e.uint(act.contentEdition);
   e.uint(act.depsEdition);
-  e.bytes(act.hostSeal);
+  e.bytes(sealed.contentSalt);
+  e.bytes(sealed.depsSalt);
+  e.bytes(sealed.hostSeal);
   return e.finish();
 }
 
-export function decodeVerifiedAct(bytes: Uint8Array): VerifiedAct {
+export function decodeVerifiedAct(bytes: Uint8Array): SealedAct {
   const d = new CborDecoder(bytes);
   try {
-    if (d.array() !== 15n) throw new WireError("malformed verified act");
-    const version = d.uint();
-    if (version !== WIRE_VERSION) throw new WireError(`unsupported wire version ${version}`);
-    const body = decodeBody(d.bytes());
-    const payload = d.bytes();
-    const deps = decodeDeps(d);
+    openHandshake(d, 11n, "verified act");
     const act = new VerifiedAct({
-      proposal: new Proposal(body, payload, deps),
-      authorPubkey: d.bytes(),
-      nonce: d.bytes(),
-      preSignature: d.bytes(),
+      body: decodeBody(d.bytes()),
       preCommitment: d.bytes(),
-      contentSalt: d.bytes(),
-      depsSalt: d.bytes(),
+      preSignature: d.bytes(),
       contentCommitment: d.bytes(),
       depsCommitment: d.bytes(),
       contentEdition: d.uint(),
       depsEdition: d.uint(),
+    });
+    const sealed = new SealedAct({
+      act,
+      contentSalt: d.bytes(),
+      depsSalt: d.bytes(),
       hostSeal: d.bytes(),
     });
     d.finish();
-    return act;
+    return sealed;
   } catch (e) {
     wrapMalformed(e, "verified act");
   }
@@ -168,39 +184,42 @@ export function decodeVerifiedAct(bytes: Uint8Array): VerifiedAct {
 
 /**
  * The device's pre-commitment leg as the opaque `signature` input
- * carries it. The author's public key never rides the wire — the
- * backend binds it from the account's identity association.
+ * carries it: `[2, content nonce, dependency nonce, pre-signature]`. The
+ * author's public key never rides the wire — the backend binds it from
+ * the account's identity association.
  */
 export function encodePreCommitment(
-  nonce: Uint8Array,
+  contentNonce: Uint8Array,
+  dependencyNonce: Uint8Array,
   preSignature: Uint8Array,
 ): Uint8Array<ArrayBuffer> {
   const e = new CborEncoder();
-  e.array(3n);
-  e.uint(WIRE_VERSION);
-  e.bytes(nonce);
+  e.array(4n);
+  e.uint(HANDSHAKE_WIRE_VERSION);
+  e.bytes(contentNonce);
+  e.bytes(dependencyNonce);
   e.bytes(preSignature);
   return e.finish();
 }
 
 /** Convenience for the device side: the pre-signed proposal's wire blob. */
 export function encodePreCommitmentOf(pre: {
-  nonce: Uint8Array;
+  contentNonce: Uint8Array;
+  dependencyNonce: Uint8Array;
   preSignature: Uint8Array;
 }): Uint8Array<ArrayBuffer> {
-  return encodePreCommitment(pre.nonce, pre.preSignature);
+  return encodePreCommitment(pre.contentNonce, pre.dependencyNonce, pre.preSignature);
 }
 
 export function decodePreCommitment(bytes: Uint8Array): PreCommitment {
   const d = new CborDecoder(bytes);
   try {
-    if (d.array() !== 3n) throw new WireError("malformed pre-commitment");
-    const version = d.uint();
-    if (version !== WIRE_VERSION) throw new WireError(`unsupported wire version ${version}`);
-    const nonce = d.bytes();
+    openHandshake(d, 4n, "pre-commitment");
+    const contentNonce = d.bytes();
+    const dependencyNonce = d.bytes();
     const signature = d.bytes();
     d.finish();
-    return new PreCommitment(nonce, signature);
+    return new PreCommitment(contentNonce, dependencyNonce, signature);
   } catch (e) {
     wrapMalformed(e, "pre-commitment");
   }

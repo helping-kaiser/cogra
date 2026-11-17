@@ -10,7 +10,9 @@ WHEN the removal has not answered 200ms after the press -> postDetail.dialog.rem
 
 WHEN the removal is taken -> the post stands as its mark, Removed by its author AND NEVER the post leaves without a mark
 
-WHEN the removal does not go through -> postDetail.dialog stays up with its pair AND postDetail.dialog.line reads That didn't send. Try again. AND postDetail.dialog.remove reads Retry AND the post is not removed
+WHEN the removal does not go through GIVEN no answer reaches the device -> postDetail.dialog stays up with its pair AND postDetail.dialog.line reads That didn't send. Try again. AND postDetail.dialog.remove reads Retry AND the post is not removed
+
+WHEN the removal does not go through GIVEN the server answers INTERNAL, FORBIDDEN, SIGNATURE_INVALID or a BAD_INPUT naming no field -> postDetail.dialog stays up with its pair AND postDetail.dialog.line reads That didn't go through. Try again. AND postDetail.dialog.remove reads Retry AND the post is not removed
 
 WHEN press postDetail.dialog.keep GIVEN postDetail.dialog.remove was not pressed -> postDetail.dialog closes AND nothing is removed
 

@@ -224,10 +224,11 @@
     },
     {
       "name": "reply-with-pictures",
-      "description": "Pictures added to a reply land in its tray; one seal signs the words and the pictures together into the thread.",
+      "description": "Pictures added to a reply pass the comment's square crop and land in its tray; one seal signs the words and the pictures together into the thread.",
       "start": { "board": "ReplyEntry", "via": 7, "to": "ReplyCompose" },
       "waypoints": [
-        { "board": "ReplyCompose", "via": 5, "case": "picks land in the tray" },
+        { "board": "ReplyCompose", "via": 5, "case": "pictures — the comment's square crop, then the tray" },
+        { "board": "ReplyCrop", "via": 3, "case": "entered from the reply — the squares join the tray and their cropped exports start uploading" },
         { "board": "ReplyPictures", "via": 3, "to": "ReplySeal" }
       ],
       "end": { "board": "ReplySeal", "via": 9, "case": "signed — the thread reopened where it was left, the reply settling on its parent" }
@@ -289,7 +290,7 @@
     {
       "name": "give-a-vertical-clip-a-cover",
       "description": "The door on details opens the step the clip skipped; the face chosen there comes back to the stage that asked, and the post signs from it.",
-      "start": { "board": "ComposeDetailsVideo", "via": 4, "to": "ComposeCover" },
+      "start": { "board": "ComposeDetailsVideo", "via": 4, "case": "the dashed door: the step a vertical clip skipped, opened on purpose — Next comes back here with the choice" },
       "waypoints": [
         { "board": "ComposeCover", "via": 6 },
         { "board": "ComposeDetailsVideo", "via": 9, "to": "ComposeSeal" }
@@ -1040,7 +1041,7 @@
     {
       "name": "cover-a-clip-with-a-picture-of-your-own",
       "description": "A picture of your own on the cover step comes back through the crop, locked to the video's shape; Next sets it as the cover on the row that asked.",
-      "start": { "board": "ComposeCover", "via": 5, "to": "CoverCrop" },
+      "start": { "board": "ComposeCover", "via": 5, "case": "the picture comes back through the crop, locked to the video's shape — both platforms; its Next brings it back here, standing in the tile's place outlined as chosen (the cover chip at own)" },
       "end": { "board": "CoverCrop", "via": 3 }
     },
     {

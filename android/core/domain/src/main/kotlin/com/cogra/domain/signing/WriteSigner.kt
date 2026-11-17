@@ -2,10 +2,11 @@
 // submit → (await seal) → verify → approve → observe (architecture.md "The
 // write path"). A batch is checked against the gesture its user ordered
 // before its first pre-signature (Intent.kt).
-// Handshake material persists in the IdentityStore between the two
-// signatures so the flow survives process death without ever trusting
-// the server's echo of the nonce; `resume` picks up every persisted
-// handshake wherever it stopped.
+// Handshake material — both nonces and the pre-signature — persists in
+// the IdentityStore between the two signatures so the flow survives
+// process death; the server never returns a nonce, so the approve step
+// recomputes from what this device holds. `resume` picks up every
+// persisted handshake wherever it stopped.
 
 package com.cogra.domain.signing
 
@@ -54,6 +55,16 @@ sealed interface WriteResult {
 
     /** Transport failed mid-handshake; material is kept and `resume` retries. */
     data class Failed(override val stagedWriteId: String, val cause: Exception) : WriteResult
+
+    companion object {
+        /**
+         * Whether a signing pass signed: every write Done, and at least one
+         * write. An empty pass signed nothing — a resume over cleared
+         * material returns none — so it is never a success.
+         */
+        fun allDone(results: List<WriteResult>): Boolean =
+            results.isNotEmpty() && results.all { it is WriteResult.Done }
+    }
 }
 
 /** Thrown when signing is requested with no actor key on the device. */

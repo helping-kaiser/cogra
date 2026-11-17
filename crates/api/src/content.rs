@@ -322,6 +322,10 @@ pub enum ContentError {
     Gallery(#[from] GalleryError),
     #[error(transparent)]
     Prepare(#[from] PrepareError),
+    /// The staged write being materialized was reaped by a redaction
+    /// after its leg was recorded. Nothing was staged.
+    #[error("the staged write was reaped by a redaction")]
+    Reaped,
     #[error("internal: {0}")]
     Internal(String),
 }
@@ -1188,6 +1192,13 @@ async fn parent_node(pool: &PgPool, target: Uuid) -> Result<nodes::ResolvedNode,
 /// removal already holds the node and the edit is refused as removed
 /// content takes none, or this row lands first and the removal's own look
 /// under its lock sweeps it.
+///
+/// The rows are built from bytes loaded before the leg was recorded, and
+/// a redaction may have reaped the write since. So the transaction first
+/// takes the staged row's share lock and refuses a reaped write as
+/// [`ContentError::Reaped`] (`staged::lock_unreaped`), before the node
+/// lock: a redaction takes the staged row first too, so the two never
+/// wait on each other in opposite orders.
 pub async fn stage_pending(
     pool: &PgPool,
     write: &staged::StagedWrite,
@@ -1200,7 +1211,10 @@ pub async fn stage_pending(
         Family::Registration => {
             return crate::profile::stage_pending(pool, write, created_at)
                 .await
-                .map_err(|e| ContentError::Internal(e.to_string()));
+                .map_err(|e| match e {
+                    crate::profile::ProfileError::Reaped => ContentError::Reaped,
+                    e => ContentError::Internal(e.to_string()),
+                });
         }
         _ => return Ok(()),
     };
@@ -1234,6 +1248,7 @@ pub async fn stage_pending(
         .begin()
         .await
         .map_err(|e| ContentError::Internal(e.to_string()))?;
+    lock_unreaped(&mut tx, write.id).await?;
     let edited = match shape {
         ContentShape::EditPost(id) => Some(postgres_store::removal::ContentNode::Post(id)),
         ContentShape::EditComment(id) => Some(postgres_store::removal::ContentNode::Comment(id)),
@@ -1265,6 +1280,19 @@ pub async fn stage_pending(
         .await
         .map_err(|e| ContentError::Internal(e.to_string()))?;
     Ok(())
+}
+
+/// Takes the staged row's share lock on the staging transaction and
+/// refuses a reaped write; see [`stage_pending`].
+async fn lock_unreaped(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    id: Uuid,
+) -> Result<(), ContentError> {
+    match staged::lock_unreaped(tx, id).await {
+        Ok(()) => Ok(()),
+        Err(staged::StagedError::Reaped(_)) => Err(ContentError::Reaped),
+        Err(e) => Err(ContentError::Internal(e.to_string())),
+    }
 }
 
 /// What a content write does to the display rows: mint a node, or add a
@@ -1536,9 +1564,8 @@ async fn land_one(
         }
     };
     let payload = &staged_row.proposal.payload;
-    let sealed = staged_row
-        .sealed
-        .as_ref()
+    let carried = staged_row
+        .carried_pair()
         .ok_or_else(|| ContentError::Internal("landed write without sealed parts".into()))?;
     let content = CograContent::read_payload(payload)
         .map_err(|e| ContentError::Internal(format!("landed payload not admissible: {e}")))?
@@ -1559,8 +1586,7 @@ async fn land_one(
         .begin()
         .await
         .map_err(|e| ContentError::Internal(e.to_string()))?;
-    content_store::insert_act_payload(&mut tx, &write.act_id, payload, &sealed.content_salt)
-        .await?;
+    content_store::insert_act_payload(&mut tx, &write.act_id, carried).await?;
     if let Some(reduced_at) = content_store::lock_act_payload(&mut tx, &write.act_id)
         .await?
         .filter(|carriage| carriage.reduced)
@@ -1677,7 +1703,8 @@ async fn land_reduced(
         .begin()
         .await
         .map_err(|e| ContentError::Internal(e.to_string()))?;
-    content_store::insert_reduced_act_payload(&mut tx, &write.act_id, reaped.reaped_at).await?;
+    content_store::insert_reduced_act_payload(&mut tx, &write.act_id, Some(reaped.reaped_at))
+        .await?;
     if let Some(created_at) = reaped.pre_signed_at {
         match (family, is_genesis, reaped.node_id, edited) {
             (ContentFamily::Post, true, Some(node), _) => {

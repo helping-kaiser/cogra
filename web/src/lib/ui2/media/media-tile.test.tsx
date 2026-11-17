@@ -65,15 +65,32 @@ describe("MediaTile", () => {
     });
   });
 
-  describe("an explicit ratio (the comment scale, the gallery's secondary squares)", () => {
-    it("still caps both axes and centres the narrowed frame", () => {
+  // W-THREAD-MEDIA-SIZE. The comment scale is drawn as the master's frame
+  // (`MediaAttachment.jsx`: `aspectRatio`, `width: 100%`, `maxHeight`) and the
+  // built boards carry exactly that (`FeedCommentShapes.dc.html`:
+  // `aspect-ratio:1 / 1;width:100%;max-height:220px`): the cap takes its bite
+  // out of the HEIGHT alone, and the frame keeps the column's width. A width
+  // bound derived from the cap shrank every comment picture to a 220px box
+  // centred in the column — much smaller than the board and android.
+  describe("an explicit ratio (the comment scale)", () => {
+    it("caps the height alone and keeps the column's width, as the board draws it", () => {
       render(<MediaTile src="/media/sq" ratio={1} maxHeight="220px" testId="tile" />);
       const tile = screen.getByTestId("tile");
       expect(tile.style.aspectRatio).toBe("1 / 1");
       expect(tile.style.maxHeight).toBe("220px");
-      // jsdom's CSSOM simplifies a `* 1` factor away on serialization.
-      expect(tile.style.maxWidth).toBe("calc(220px)");
-      expect(tile.style.marginInline).toBe("auto");
+      expect(tile.style.maxWidth).toBe("");
+      expect(tile.style.marginInline).toBe("");
+      expect(tile.className).toContain("w-full");
+    });
+
+    it("draws a comment clip's frame the same way", () => {
+      render(
+        <MediaTile src="/media/clip" mimeType="video/mp4" ratio={1} maxHeight="220px" testId="clip" />,
+      );
+      const frame = screen.getByTestId("clip-frame");
+      expect(frame.style.maxHeight).toBe("220px");
+      expect(frame.style.maxWidth).toBe("");
+      expect(frame.className).toContain("w-full");
     });
   });
 

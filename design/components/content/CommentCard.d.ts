@@ -9,9 +9,9 @@ export interface CommentCardProps {
   timestamp?: string;
   /**
    * The comment's pictures — below the words, inset at the card's medium rung
-   * (an attachment, not the body). Never cropped; multiples render in the same
-   * pager as a post's gallery, in a fixed square frame each whole frame fits
-   * inside. The authoring-side cap is four pictures, or one video with its
+   * (an attachment, not the body). Every picture stands square, one as much as
+   * four — the square its author framed in the comment's crop; multiples render
+   * in the same pager as a post's gallery. The authoring-side cap is four pictures, or one video with its
    * cover — the same grammar a post's body carries, at comment scale.
    */
   media?: readonly import("../media/MediaAttachment").MediaAttachmentProps[];

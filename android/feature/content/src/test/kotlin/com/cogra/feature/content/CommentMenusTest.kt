@@ -130,12 +130,12 @@ class CommentMenusTest {
                         onReveal = { _, _ -> },
                         onOpenActor = { people += it },
                         onOpenTopic = {},
+                        onOpenPost = { opened += it },
                         onReference = {},
                         onLicense = {},
                         onSignInOrJoin = {},
                         onRequireAccount = onRequireAccount,
                         reportSheet = report ?: reportDoor(onRequireAccount, "comments_report_sheet"),
-                        onOpenPost = { opened += it },
                     )
                 }
             }

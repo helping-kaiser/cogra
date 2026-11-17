@@ -68,6 +68,14 @@ WHEN the signing has not answered 5s after the press -> the line Still signing �
 
 WHEN the signing answers GIVEN the slow line stands under the acts footer -> the slow line goes
 
+WHEN the signing gets no answer GIVEN the edit stands open -> postEdit.fault reads That didn't send. Try again. in postEdit.sign's place AND postEdit.fault.retry stands under it, outlined, AND postEdit.acts stays above the line AND everything the reader chose stays as it was
+
+WHEN the signing is answered with a refusal GIVEN the edit stands open -> postEdit.fault reads That didn't go through. Try again. in postEdit.sign's place AND postEdit.fault.retry stands under it, outlined, AND postEdit.acts stays above the line AND everything the reader chose stays as it was
+
+WHEN press postEdit.fault.retry -> the same signing is asked again AND past 200ms the commit's slot reads Signing the edit… AND the header's X is named Close
+
+ALWAYS the header's arrow and X are the edit's way back GIVEN postEdit.fault stands, and no Back stands under the fault's Retry
+
 WHEN press Sign the edit GIVEN the count the signing prepared differs from the count the footer read -> the held press drops AND the footer reads the prepared count AND Sign the edit reads Sign the edit again AND the line The count changed while you were editing — check it, then sign again. stands under the acts footer AND NEVER anything is signed
 
 WHEN press Sign the edit again GIVEN the count line stands under the acts footer -> the count line goes
@@ -78,9 +86,13 @@ WHEN an upload fails GIVEN Sign the edit was pressed while the uploads ran -> th
 
 ALWAYS Sign the edit is disabled GIVEN the gate line shows its fault reading
 
+WHEN the server refuses a picture the edit took at its upload -> the gate line reads One picture didn't upload. alone in the error ink AND NEVER Signing waits for it. stands beside it AND NEVER Retry stands on the gate AND Sign the edit is disabled until Remove it under the picked row takes the picture out
+
 WHEN press Retry GIVEN the held press dropped -> the gate runs again AND NEVER signing proceeds until Sign the edit is pressed again
 
 WHEN a picture the edit took fails to upload -> its thumbnail is marked AND the line One picture didn't upload. stands under the picked row with Retry and Remove it AND the gate line takes its fault reading
+
+WHEN the server refuses a picture the edit took at its upload -> the line One picture didn't upload. stands under the picked row with Remove it alone AND NEVER Retry stands under the row, retrying being unable to change the answer
 
 WHEN press Retry under the picked row -> the failed upload tries again AND the gate runs again
 

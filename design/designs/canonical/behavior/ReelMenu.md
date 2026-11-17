@@ -16,7 +16,7 @@ WHEN tap reel.menuSheet.save GIVEN the post is not kept -> the post is kept AND 
 
 WHEN tap reel.menuSheet.save GIVEN the post is kept -> the sheet closes AND the snackbar reads Removed from Saved. with Undo
 
-WHEN tap reel.menuSheet.cite -> the post wizard opens fresh at its first stage AND the post rides along unseen until the details stage
+WHEN tap reel.menuSheet.cite -> the post wizard opens as New post opens it, fresh at its first stage or, with a draft kept on this device, under the draft card, whose Continue takes what rides along into the draft AND the post rides along unseen until the details stage
 
 WHEN tap reel.menuSheet.citedBy -> the menu closes AND what cites the post comes up over the stream
 

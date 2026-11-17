@@ -1,10 +1,14 @@
 # ComposePickVideoCover · `spec:design:behavior-compose-pick-video-cover`
 
-WHEN the pick step is reached back from the cover step GIVEN a cover was chosen -> the clip's tile wears the chosen cover inset in its bottom-left corner AND the choice is kept
+WHEN the pick step is reached back from the cover step GIVEN a cover was chosen -> the chosen cover stands as its own tile beside the clip's AND the choice is kept
 
-ALWAYS the clip's tile wears the clip's frame 0 as its face and the chosen cover only as the inset
+ALWAYS the clip's tile wears the clip's frame 0 as its face
 
-ALWAYS the clip and its cover stand as one tile, never as two
+ALWAYS the cover's tile stands beside the clip's at the clip tile's height and at the cover's own shape, a tall clip's 4:5, a square clip's 1:1, a wide clip's 16:9, wearing the Cover pill
+
+ALWAYS the cover's tile is named Change the cover
+
+WHEN tap the cover's tile -> the cover step opens with the chosen cover still chosen AND NEVER the step asks for it afresh
 
 ALWAYS the grid takes no picks GIVEN a clip is staged
 

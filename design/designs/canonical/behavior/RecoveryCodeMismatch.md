@@ -28,6 +28,8 @@ WHEN press I've written it down GIVEN the code was made by the ceremony -> the k
 
 WHEN press I've written it down GIVEN the code was made or replaced from settings -> the new backup uploads AND Settings opens AND the snackbar reads Your key is backed up with the new code.
 
+WHEN press I've written it down GIVEN the code was made by the ceremony and the attach is refused because the application was approved meanwhile -> the ceremony ends AND the feed opens with the member's key-elsewhere card at its head, as KeyCeremony says AND NEVER the new key is attached AND NEVER the backup uploads AND NEVER a fault line or Retry stands
+
 WHEN press I've written it down GIVEN no answer reaches the device -> the code stays on screen until the backup uploads AND the line That didn't send. Try again. stands above I've written it down AND I've written it down stays, the retry
 
 WHEN the tab is closed or the app is killed before the code confirms -> nothing this screen would make exists

@@ -20,7 +20,14 @@
    A FILE IS JUDGED ON ITS OWN BEFORE IT IS JUDGED AGAINST THE BODY (jakob
    2026-09-03): size and format answer first, the grammar second. The
    oversized clip is refused by its cap, the good clip by the mixed-kind
-   line — one file, one line, the nearest reason. */
+   line — one file, one line, the nearest reason.
+
+   A REFUSAL COMES BEFORE THE CROP (round 52). A file is judged the moment
+   the picker hands it back, so a refused one never reaches the comment's
+   square crop (`ReplyCrop`): the crop opens on the accepted pictures alone,
+   and the refusals stand on this row when its Next brings the composer
+   back. With the tray full, as here, every pick is refused and no crop
+   opens. The four tiles are the squares their author framed. */
 export function Screen() {
   return (
     <>
@@ -40,10 +47,10 @@ export function Screen() {
           <WordsBody rows={REPLY_WORDS_ROWS} cap={REPLY_WORDS_CAP} paragraphs={["I have the whole walk on film somewhere — these four are the ones that survived."]} />
 
           <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-            <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" width={58} height={72} fit="contain" onRemove={() => {}} />
-            <MediaThumb src="gallery-market.jpg" alt="" width={96} height={72} fit="contain" onRemove={() => {}} />
-            <MediaThumb src="gallery-honey.jpg" alt="" width={72} height={72} fit="contain" onRemove={() => {}} />
-            <MediaThumb src="gallery-veg.jpg" alt="" width={96} height={72} fit="contain" progress={0.65} />
+            <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={72} onRemove={() => {}} />
+            <MediaThumb src="gallery-market.jpg" alt="" size={72} onRemove={() => {}} />
+            <MediaThumb src="gallery-honey.jpg" alt="" size={72} onRemove={() => {}} />
+            <MediaThumb src="gallery-veg.jpg" alt="" size={72} progress={0.65} />
           </div>
 
           <DescribeCounter described={0} total={4} onDescribe={() => {}} />

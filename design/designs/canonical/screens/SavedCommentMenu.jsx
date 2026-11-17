@@ -1,8 +1,8 @@
 /* SAVED, A COMMENT CARD'S MENU OPEN (round 36, backlog 149; jakob
    2026-11-11, H7). The comment's menu over Saved, unstacked as over History
    (`HistoryCommentMenu`): `Unsave` first, the comment being kept (Saved.md),
-   then Cite, Cited by, Opinions on this, License terms, Report at the tail,
-   and no Hide row (the comment menu's rule).
+   then Cite, `Hide @tobias`, Cited by, Opinions on this, License terms,
+   Report at the tail.
 
    REGISTERED under the `saved` prefix, `saved.menuSheet`, told apart from the
    post's menu by board. */
@@ -23,7 +23,7 @@ export function Screen() {
           node="commentCard"
         />
       </SavedTop>
-      <CardMenuSheet items={keptMenu(COMMENT_MENU)} ariaLabel="Comment actions" />
+      <CardMenuSheet items={keptMenu(readerCommentMenu("tobias"))} ariaLabel="Comment actions" />
     </>
   );
 }

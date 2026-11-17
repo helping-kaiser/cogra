@@ -25,10 +25,17 @@ export interface UploadStatusLineProps {
    * button stays disabled. `done`/`total` are unused while it shows.
    */
   failed?: boolean;
+  /**
+   * The gate's refused reading (round 51 act 2): the server refused the
+   * picture at upload, so the failure's fact (`message`) stands alone — no
+   * "Signing waits for it.", no Retry; the sign button stays disabled and the
+   * way out is the seal's Back, to the stage that holds Remove it.
+   */
+  refused?: boolean;
   /** The failure's fact — "One picture didn't upload." by default. */
   message?: string;
   onRetry?: () => void;
-  /** The data-node name its placer gives the line (design ⇄ impl seam 002; renders as attributes only). Given one, it also names `line` (uploading), or `message`, `wait` and `retry` (failed). */
+  /** The data-node name its placer gives the line (design ⇄ impl seam 002; renders as attributes only). Given one, it also names `line` (uploading), or `message`, `wait` and `retry` (failed), or `message` (refused). */
   node?: string;
 }
 

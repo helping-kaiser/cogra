@@ -319,6 +319,39 @@ class CograNavGraphTest {
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Topic>()).isTrue()
     }
 
+    // TagPage.md:15, :41 — the tag page draws the feed's own post card under
+    // the claim that put it there, wired by the shell: a tag chip on that card
+    // opens the other tag's page, whose arrow names this tag on the way back.
+    @Test
+    fun theTagPageDrawsTheFeedsCardsAndAnotherTagNamesItOnTheWayBack() {
+        val tagged = com.cogra.domain.testing.testPost("p1").copy(
+            topics = listOf(
+                com.cogra.domain.testing.testTopicClaim("rust"),
+                com.cogra.domain.testing.testTopicClaim("fieldnotes"),
+            ),
+        )
+        content.listing = listOf(tagged)
+        topics.content["rust"] = listOf(
+            com.cogra.domain.testing.testTaggedContent("p1").copy(node = com.cogra.domain.TaggedNode.Post(tagged)),
+        )
+        render()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
+        waitForTag("feed.card.tagsLine.tag:rust")
+        compose.onNodeWithTag("feed.card.tagsLine.tag:rust").performClick()
+
+        waitForTag("tagPage.card:p1")
+        compose.onNodeWithTag("tagPage.claim:p1").assertExists()
+        compose.onNodeWithTag("topic_content_POST_p1").assertDoesNotExist()
+
+        compose.onNodeWithTag("tagPage.card.tagsLine.tag:fieldnotes").performClick()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.takeIf { it.destination.hasRoute<Topic>() }
+                ?.toRoute<Topic>()?.name == "fieldnotes"
+        }
+        compose.onNodeWithContentDescription("Back to #rust").assertExists()
+    }
+
     // Backlog item 68, ruled 2026-09-14: chats moved down the release
     // order but the band's chats affordance stays on the root, and a
     // signed-in tap now reaches the coming-soon destination rather than
