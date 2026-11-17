@@ -6335,7 +6335,7 @@ stands; (c) the gate line takes `Remove it` on the seal. Blocks drawing the post
 edit's refused upload (`EditCompose`'s `upload` chip), whose gate stands on the
 same screen.
 
-### 252 · A hidden person's comment cards in the feed · *design* · **filed 2026-11-17**
+### 252 · A hidden person's comment cards in the feed · *design* · **filed 2026-11-17** · **closed 2026-11-17**
 
 Round 51 (Hide on a comment, jakob 2026-11-17). After a hide the feed's law
 says "that person's rows leave the feed" (`FeedHidden.md`, `FeedPostMenu.md`);
@@ -6345,6 +6345,8 @@ comment cards too. `FeedCommentMenu.md` says the card the hide was made from
 leaves with the rest. The sentence for every other comment card of theirs
 waits: (a) "their posts and their comment cards leave" (the docs' reading); (b)
 posts only.
+
+Closed by round 51, act 2 (jakob 2026-11-17, B1 as recommended): a hidden person's comment cards leave the feed like their posts (`FeedHidden` and the feed menus' aftermath); the threads keep their comments, History, Saved and a profile their own rules.
 
 ### 253 · A closed pad's `Signing…` line grows the card · *design* · **filed 2026-11-17**
 

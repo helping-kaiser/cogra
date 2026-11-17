@@ -24,7 +24,7 @@ WHEN tap Hide with the person's handle -> the sheet closes AND the reader stays 
 
 WHEN tap Hide with the person's handle GIVEN the hide does not go through -> the hide reverts AND the target's row says That didn't go through. with Retry, the profile's actions row when the menu opened on the profile
 
-WHEN tap Hide with the person's handle GIVEN the menu was opened from a profile card in the feed -> the sheet closes AND that person's rows leave the feed AND the rows behind them move up AND the snackbar reads @ada is hidden. with Undo
+WHEN tap Hide with the person's handle GIVEN the menu was opened from a profile card in the feed -> the sheet closes AND that person's rows leave the feed, their posts and their comment cards alike, AND the rows behind them move up AND the snackbar reads @ada is hidden. with Undo
 
 ALWAYS the menu carries no Share this profile row GIVEN it was opened from a profile card in the feed, whose own row carries the share
 
