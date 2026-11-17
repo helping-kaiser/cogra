@@ -555,6 +555,12 @@ noun):
   name. / The signing is paid for, like your posts. The record that
   you changed it stays, like every signed action. *(Blessed, jakob
   2026-10-20.)*
+- **Changing your profile** (the profile edit's seal): Your profile is
+  a public record, and changes to it are signed actions in your name. /
+  Everything you change here signs together, as one change, paid for
+  like your posts. The record that you changed it stays, like every
+  signed action. *(New 2026-11-17, drafted at jakob's word, his 11; to
+  be blessed.)*
 - **The filter** (the feed's and search's filter sheets; the seen
   sentence is the surface's own, jakob 2026-10-14): What you
   let in, and in what order — the kinds combine freely, ranked or
