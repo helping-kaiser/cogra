@@ -15,13 +15,13 @@ import com.cogra.network.auth.AuthGuard
 import com.cogra.network.auth.SessionRefresher
 import com.cogra.network.repo.NodeOpinionsRepositoryImpl
 import com.google.common.truth.Truth.assertThat
-import javax.inject.Provider
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import javax.inject.Provider
 
 class NodeOpinionsRepositoryTest {
 
