@@ -70,8 +70,20 @@ function fillConfirm(password = "long enough password", repeat = password) {
 const MISMATCH = "The two passwords don't match.";
 
 function requestFor(email = "a@b.c") {
-  fireEvent.change(screen.getByTestId("reset_email"), { target: { value: email } });
-  fireEvent.click(screen.getByTestId("reset_request"));
+  fireEvent.change(screen.getByTestId("reset.email.input"), { target: { value: email } });
+  fireEvent.click(screen.getByTestId("reset.commit.action"));
+}
+
+/**
+ * A commit's wait is its spoken description alone (_shared.jsx `WaitingCommit`;
+ * Reset.md, ResetNew.md: "stands disabled with no line above it and its spoken
+ * description reads …"): visually hidden, never a node.
+ */
+function expectSpokenWaitOnly(commit: HTMLElement, reason: string) {
+  expect(commit).toBeDisabled();
+  expect(commit).toHaveAccessibleDescription(reason);
+  expect(screen.getByText(reason)).toHaveClass("sr-only");
+  expect(screen.queryByTestId("reset.commit.reason")).not.toBeInTheDocument();
 }
 
 const rateLimited = (operation: string) =>
@@ -99,12 +111,30 @@ describe("the reset request (Reset)", () => {
     expect(screen.queryByText(/reset token/i)).not.toBeInTheDocument();
   });
 
-  it("send_reset_link_stands_disabled_with_its_waiting_line_until_the_email_holds_a_character", () => {
+  // Reset.jsx registers the `reset` prefix (round 28): header, title, body,
+  // the field `email`, the commit `commit`, the quiet note `note`.
+  it("wears_the_boards_registered_nodes", () => {
     renderWithProviders(<ResetForm />);
-    expect(screen.getByTestId("reset_request")).toBeDisabled();
-    expect(screen.getByText("Waiting for your email")).toBeInTheDocument();
-    fireEvent.change(screen.getByTestId("reset_email"), { target: { value: "a" } });
-    expect(screen.getByTestId("reset_request")).toBeEnabled();
+    expect(screen.getByTestId("reset.header.back")).toHaveAccessibleName("Back");
+    expect(screen.getByTestId("reset.title")).toHaveTextContent("Reset your password");
+    expect(screen.getByTestId("reset.body")).toHaveTextContent("Resetting the password signs out every device.");
+    expect(screen.getByTestId("reset.email.label")).toHaveTextContent("Email");
+    expect(screen.getByTestId("reset.email.input")).toHaveAttribute("type", "email");
+    expect(screen.getByTestId("reset.commit.action")).toHaveTextContent("Send reset link");
+    expect(screen.getByTestId("reset.note")).toHaveTextContent(SIGN_IN_ONLY);
+  });
+
+  // Reset.md: "ALWAYS Send reset link stands disabled with no line above it
+  // and its spoken description reads Waiting for your email GIVEN Email is
+  // empty" · "WHEN the first character is typed in Email -> Send reset link
+  // wakes AND its spoken description Waiting for your email goes".
+  it("send_reset_link_stands_disabled_with_no_line_only_its_spoken_wait_until_the_email_holds_a_character", () => {
+    renderWithProviders(<ResetForm />);
+    const commit = screen.getByTestId("reset.commit.action");
+    expectSpokenWaitOnly(commit, "Waiting for your email");
+    fireEvent.change(screen.getByTestId("reset.email.input"), { target: { value: "a" } });
+    expect(commit).toBeEnabled();
+    expect(commit).not.toHaveAccessibleDescription();
     expect(screen.queryByText("Waiting for your email")).not.toBeInTheDocument();
   });
 
@@ -123,7 +153,7 @@ describe("the reset request (Reset)", () => {
     renderWithProviders(<ResetForm />);
     requestFor();
     expect(await screen.findByRole("alert")).toHaveTextContent("That didn't send. Try again.");
-    expect(screen.getByTestId("reset_email")).toHaveValue("a@b.c");
+    expect(screen.getByTestId("reset.email.input")).toHaveValue("a@b.c");
     expect(screen.queryByTestId("reset_requested")).not.toBeInTheDocument();
   });
 
@@ -151,7 +181,6 @@ describe("the new password (ResetNew)", () => {
     expect(screen.getByLabelText("New password")).toBeInTheDocument();
     expect(screen.getByText("At least 12 characters.")).toBeInTheDocument();
     expect(screen.getByText(SIGN_IN_ONLY)).toBeInTheDocument();
-    expect(screen.getByText("Waiting for a new password")).toBeInTheDocument();
   });
 
   it("routes to login after a confirmed reset — every session was revoked", async () => {
@@ -202,21 +231,21 @@ describe("the new password (ResetNew)", () => {
     expect(screen.getByTestId("reset.note")).toHaveTextContent(SIGN_IN_ONLY);
   });
 
-  // ResetNew.md: "ALWAYS Set the new password stands disabled with Waiting
-  // for a new password right above it GIVEN New password or Repeat password
-  // is empty" · "WHEN both password fields hold a character -> Set the new
-  // password wakes AND the line Waiting for a new password goes".
-  it("set_the_new_password_waits_until_both_fields_hold_a_character", async () => {
+  // ResetNew.md: "ALWAYS Set the new password stands disabled with no line
+  // above it and its spoken description reads Waiting for a new password GIVEN
+  // New password or Repeat password is empty" · "WHEN both password fields
+  // hold a character -> Set the new password wakes AND its spoken description
+  // Waiting for a new password goes".
+  it("set_the_new_password_waits_with_no_line_only_its_spoken_wait_until_both_fields_hold_a_character", async () => {
     await renderNew();
     const commit = screen.getByTestId("reset.commit.action");
-    expect(commit).toBeDisabled();
-    expect(screen.getByTestId("reset.commit.reason")).toHaveTextContent("Waiting for a new password");
+    expectSpokenWaitOnly(commit, "Waiting for a new password");
     typeIn("password", "x");
-    expect(commit).toBeDisabled();
-    expect(screen.getByTestId("reset.commit.reason")).toBeInTheDocument();
+    expectSpokenWaitOnly(commit, "Waiting for a new password");
     typeIn("confirm", "y");
     expect(commit).toBeEnabled();
-    expect(screen.queryByTestId("reset.commit.reason")).not.toBeInTheDocument();
+    expect(commit).not.toHaveAccessibleDescription();
+    expect(screen.queryByText("Waiting for a new password")).not.toBeInTheDocument();
   });
 
   // ResetNew.md: "WHEN press Set the new password GIVEN Repeat password
@@ -319,6 +348,24 @@ describe("the spent link (ResetExpired)", () => {
     expect(nav.replace).toHaveBeenCalledWith("/reset");
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
     expect(nav.replace).toHaveBeenCalledWith("/login");
+  });
+
+  // ResetExpired.jsx registers `title`, `body`, `again` and `onward` under
+  // the `reset` prefix; ResetExpired.md: "ALWAYS Reset your password is
+  // outlined and Sign in stands plain below it, both following the words".
+  it("wears_the_boards_registered_nodes_the_outlined_act_above_the_plain_one", async () => {
+    server.use(resetCheck(null));
+    renderWithProviders(<ResetForm />);
+    expect(await screen.findByTestId("reset.title")).toHaveTextContent("This link doesn't work anymore");
+    expect(screen.getByTestId("reset.body")).toHaveTextContent("A reset link works once and expires after 15 minutes.");
+    const again = screen.getByTestId("reset.again");
+    const onward = screen.getByTestId("reset.onward");
+    expect(again).toHaveTextContent("Reset your password");
+    expect(onward).toHaveTextContent("Sign in");
+    expect(again.compareDocumentPosition(onward) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByTestId("reset.body").compareDocumentPosition(again) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByTestId("reset_again")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("reset_sign_in")).not.toBeInTheDocument();
   });
 });
 
