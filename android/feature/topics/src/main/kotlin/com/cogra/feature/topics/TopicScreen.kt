@@ -34,6 +34,7 @@ package com.cogra.feature.topics
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,6 +48,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Share
@@ -67,9 +69,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -81,6 +87,7 @@ import com.cogra.core.designsystem.NodeSnackbarVisuals
 import com.cogra.core.designsystem.SeenCardsEffect
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.surfaceTopAppBarColors
+import com.cogra.core.designsystem.v2.atom.hitTarget
 import com.cogra.core.designsystem.v2.media.ScrollStageHost
 import com.cogra.core.designsystem.v2.media.ScrollStageRow
 import com.cogra.core.designsystem.v2.token.Space
@@ -297,10 +304,26 @@ private fun StanceRow(name: String, stanceControl: (@Composable () -> Unit)?, on
                 Box(Modifier.fillMaxWidth().testTag("topic_stance_row")) { stanceControl() }
             }
         }
-        IconButton(onClick = onShare, modifier = Modifier.dataNode(TAG_PAGE / "share")) {
+        // DRAWN COMPACT, TAPPED AT 48 (`TagPage`'s row, `ShareButton.jsx`): the
+        // 18 glyph on 6 above and below and 8 at the sides, its 48 target an
+        // invisible margin, so the row's right edge is the drawn pill's.
+        val description = stringResource(R.string.topics_share, name)
+        Box(
+            modifier = Modifier
+                .dataNode(TAG_PAGE / "share")
+                .hitTarget(
+                    interactive = Modifier
+                        .clip(CircleShape)
+                        .clickable(role = Role.Button, onClick = onShare)
+                        .semantics(mergeDescendants = true) { contentDescription = description },
+                    drawnWidth = SHARE_GLYPH + Space.x2 * 2,
+                    drawnHeight = SHARE_GLYPH + SHARE_INSET * 2,
+                )
+                .padding(horizontal = Space.x2, vertical = SHARE_INSET),
+        ) {
             Icon(
                 Icons.Filled.Share,
-                contentDescription = stringResource(R.string.topics_share, name),
+                contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(SHARE_GLYPH),
             )
@@ -308,8 +331,9 @@ private fun StanceRow(name: String, stanceControl: (@Composable () -> Unit)?, on
     }
 }
 
-/** The share's glyph is 18 (`TagPage`'s row), inside the 48 the button's hit takes. */
+/** The share's glyph is 18, drawn on 6 above and below (`TagPage`'s row). */
 private val SHARE_GLYPH = 18.dp
+private val SHARE_INSET = 6.dp
 
 /** What the list reports to History as the reader sees it (History.md). */
 private class TopicSeen(

@@ -65,12 +65,12 @@ private fun ClaimFlag(entry: TaggedContentView, node: DataNode) {
     val small = MaterialTheme.shapes.small
     Row(
         modifier = Modifier
+            .dataNode(node)
             .background(
                 MaterialTheme.colorScheme.surfaceContainerHigh,
                 small.copy(bottomStart = CornerSize(0.dp), bottomEnd = CornerSize(0.dp)),
             )
-            .padding(horizontal = FLAG_HORIZONTAL, vertical = FLAG_VERTICAL)
-            .dataNode(node),
+            .padding(horizontal = FLAG_HORIZONTAL, vertical = FLAG_VERTICAL),
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -80,9 +80,12 @@ private fun ClaimFlag(entry: TaggedContentView, node: DataNode) {
             horizontalArrangement = Arrangement.spacedBy(Space.x2),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // The glyph at body-medium on a line of 1 (`TaggedRow.jsx`), so the
+            // flag's height is the body-small line's, 20 with its inset.
+            val glyph = MaterialTheme.typography.bodyMedium
             Text(
                 text = anchor.emoji,
-                style = MaterialTheme.typography.bodyMedium,
+                style = glyph.copy(lineHeight = glyph.fontSize),
                 modifier = Modifier.dataNode(node / "glyph"),
             )
             Text(
