@@ -170,7 +170,7 @@
         "start · Profile · 6 «Edit profile» → ProfileEdit",
         "ProfileEdit · 2 «Change picture» → AvatarCrop — the system picker, then the crop — Next returns here; one seal covers everything",
         "AvatarCrop · 3 «Next» → ProfileEdit — come from the edit screen — the edit's one seal signs it",
-        "ProfileEdit · 6 «Save» → ProfileEditSeal",
+        "ProfileEdit · 6 «Save» → ProfileEditSeal — a change is staged",
         "end · ProfileEditSeal · 4 «Sign the change» → back — signed — the profile updates"
       ],
       "boards": [
@@ -1534,7 +1534,7 @@
       "status": "resolved",
       "steps": [
         "start · Profile · 6 «Edit profile» → ProfileEdit",
-        "ProfileEdit · 6 «Save» → ProfileEditSeal",
+        "ProfileEdit · 6 «Save» → ProfileEditSeal — a change is staged",
         "end · ProfileEditSeal · 4 «Sign the change» → back — signed — the profile updates"
       ],
       "boards": [

@@ -555,6 +555,11 @@ noun):
   name. / The signing is paid for, like your posts. The record that
   you changed it stays, like every signed action. *(Blessed, jakob
   2026-10-20.)*
+- **Changing your profile** (the profile edit's seal): Your profile is
+  a public record, and changes to it are signed actions in your name. /
+  Everything you change here signs together, as one change, paid for
+  like your posts. The record that you changed it stays, like every
+  signed action. *(Blessed, jakob 2026-11-17.)*
 - **The filter** (the feed's and search's filter sheets; the seen
   sentence is the surface's own, jakob 2026-10-14): What you
   let in, and in what order — the kinds combine freely, ranked or
@@ -610,6 +615,11 @@ out (*Remove it*; never *Retry* — retrying cannot change the answer):
 - `That video is too big — a post's video can be up to 100 MB.`
 - `That picture is too big — a picture can be up to 10 MB.`
 - `That file isn't a picture or a video CoGra can read.`
+- `That file isn't a picture CoGra can read.` — the profile picture's
+  crop, where a video is no answer either (*blessed (jakob
+  2026-11-17)*). The picture's refusals stand on the crop, under the
+  circle, with `Next` dimmed (`AvatarCrop`; the placement *blessed
+  (jakob 2026-11-17)*).
 - `A post carries pictures or one video, not both.`
 - `A comment carries pictures or one video, not both.`
 - `That GIF moves, and CoGra can't take a moving GIF here. A still one
@@ -1006,7 +1016,14 @@ boards already speak, recorded so the registry is whole:
   2026-10-28, blessed (jakob 2026-11-10)*); the X says what leaving keeps: `Leave — your
   draft is kept` (the post), `Leave — the reply is discarded`, `Leave —
   the edit is discarded` (a comment edit and a post edit), and a bare `Leave` on the
-  profile's and the picture's seals and the picture's crop.
+  profile's and the picture's seals and the picture's crop. A crop opened
+  from an edit names its arrow by where it goes: `Back to the edit` — the
+  picture crop and the cover crop entered from a post edit or a comment
+  edit, the profile picture's crop entered from Edit profile — and `Back
+  to your profile` on the profile picture's crop entered from the
+  profile head's badge; a crop that is a stage of the new post's or the
+  reply's wizard keeps `Back a step` (jakob 2026-11-17, C8, as
+  recommended).
 - **The overflow doors and their sheets** — `More on this post` · `More
   on this comment` · `More on your profile` · `More about @ada` (another's
   profile and a person card; `More about this account` for a deleted
@@ -1098,6 +1115,14 @@ own places, **blessed (jakob 2026-10-16)**: the open
 application's card reads `Their approval brings you in.` under `Waiting on @mira` — `ApplicantWaiting`'s
 line — and the empty chronicle
 reads `Nothing here yet.`, the line alone, as every empty state.
+
+**A member whose standing is not known yet** (jakob 2026-11-17, his
+15: "open by default"): until the first read of the account answers,
+every door stands open as it does for a member, never in the locked
+look and never held; a standing that turns out too low drops the doors
+at the epoch's close. A refusal that arrives meanwhile reads as a fault
+the server answered (`NetworkError`): `That didn't go through. Try
+again.` in the commit's place, with `Retry`.
 
 ## In-flight labels
 
@@ -1660,7 +1685,11 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   - **A staged tag that never landed** — on the Tags row, under its
     chips: `This tag didn't land.` with `Remove it`, no reason given (jakob
     2026-11-11, *blessed*). **Drawn** on `ComposeSeal`'s and `ReplySeal`'s
-    `state` chip, `tag-refused`.
+    `state` chip, `tag-refused`. The edits take the same words under
+    their tags, `Sign the edit` standing, and with more than one tag on
+    the row the refused chip wears the error ring (jakob 2026-11-17, his
+    19). **Drawn** on `EditCompose`'s and `CommentEdit`'s `tag` chip,
+    `refused`.
   - **Any other refusal** — a bug the picking stage should have
     blocked. A notice in the commit's place, never the failure voice:
     `This shouldn't have happened` over `That's a fault on our side,
@@ -2556,10 +2585,30 @@ words, recorded so the registry is whole:
   yet.` — and a deleted account, which will give none again, `This
   account gave no opinions.` (*blessed (jakob 2026-11-10)*).
 - **The edit** (`ProfileEdit`) — titled `Edit profile`, its fields
-  `Display name` · `Bio` · `Website`.
+  `Display name` · `Bio` · `Website`; the picture's row `Change picture`
+  alone, and with a picture standing two buttons side by side, never one
+  above the other, in their short forms `Change` · `Remove` (spoken
+  `Change picture` · `Remove picture`); a staged removal shows `Change` ·
+  `Undo` (spoken `Undo removing the picture`, *new 2026-11-17, to be blessed*), and `Remove` is hidden
+  while a new picture is staged (jakob 2026-11-17, his review of round
+  50 and C2, C3). With nothing staged, Save stands inert under `Nothing
+  to sign yet` (`EditComposeUnchanged`'s line). A write-rule refusal
+  known at Save stands on Save as `You can't sign right now.` in the
+  row's quiet register, with a "?" opening `Why signing waits`, and Save
+  dims, until the next staged change or the next opening of the edit
+  (C1). A new picture whose upload failed reads `One picture didn't
+  upload.` with `Retry · Remove it` under the picture's row
+  (`ComposeUploading`). The placements *blessed (jakob 2026-11-17)*.
 - **The profile's seal** (`ProfileEditSeal`) — `Your profile`; the acts row
   `Profile` reading `A new picture, bio and website`, its count spoken
-  `1 profile change`; under the card `Every change to your profile is
+  `1 profile change`. The row's grammar (*blessed (jakob 2026-11-17)*): `A
+  new` and the changed parts in the edit's order — `picture`, `display
+  name`, `bio`, `website` — joined by commas and a last `and` (`A new
+  bio`, `A new display name and website`, `A new picture, display name,
+  bio and website`); a removed picture alone reads `The picture removed`,
+  and after other parts `, the picture removed` (`A new bio, the picture
+  removed`), the value running on to a second line rather than cut off
+  (C4); under the card `Every change to your profile is
   signed in your name and stays in your public record.`; its "?" is named
   `Changing your profile`.
 - **The picture** — the crop titled `Your picture`, no line under its

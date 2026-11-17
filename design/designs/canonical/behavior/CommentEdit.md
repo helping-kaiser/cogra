@@ -102,6 +102,12 @@ WHEN press Not now on the write rule's notice -> the notice goes AND the comment
 
 WHEN the signing is refused for one staged citation GIVEN the cited post never landed -> that citation's row reads This post didn't land, so it can't be cited. followed by Remove it AND NEVER Retry appears
 
+WHEN the signing is refused for one staged tag GIVEN the tag never landed -> the line This tag didn't land. stands under the tags in the failure voice followed by Remove it AND Sign the edit stays AND NEVER Retry appears AND NEVER a reason is given AND NEVER the tag picker's name lines stand on the edit
+
+ALWAYS the refused tag's chip wears the error ring GIVEN more than one tag stands on the row
+
+WHEN press Remove it under the tags -> the refused pick is unstaged as its chip's × unstages it AND the line goes AND the footer counts one fewer
+
 WHEN the signing is refused for one staged act GIVEN the act's target landed -> the notice This shouldn't have happened takes the commit's place AND Try again, Report a problem and Discard the edit stand with it
 
 WHEN tap Discard the edit under the notice This shouldn't have happened -> the discard dialog Discard the changes? opens over the edit with Nothing is kept. AND NEVER the changes are discarded unasked
