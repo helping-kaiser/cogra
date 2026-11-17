@@ -20,15 +20,22 @@
    `2`, heard as `2 things`. The title, the footer and the rows add up to the
    same five, and Sign is the confirmation: no dialog asks again. */
 
+/* REGISTERED under the `commentEdit` prefix (round 48, seam 323-6; backlog 220),
+   the edit's own names beneath, the sheet `actsSheet` as the edit's other
+   sheets are named (`pairSheet`, `pickedSheet`): its `title`, the `help`, the
+   card `acts` (`ActsCard`'s `actRow` keyed by place, as `keptPicksSeal.acts`),
+   and `done`. Names only: not a pixel moves. */
+export const NODE = "commentEdit";
 export function Screen() {
   return (
     <>
       <CommentEditBody />
 
-      <BottomSheet open ariaLabel="What the edit signs">
-        <SheetTitle trailing={<HelpDot ariaLabel="How signing works" onOpen={() => {}} />}>5 things, signed together</SheetTitle>
+      <BottomSheet open ariaLabel="What the edit signs" node="actsSheet">
+        <SheetTitle trailing={<HelpDot ariaLabel="How signing works" onOpen={() => {}} node="help" />} node="title">5 things, signed together</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "0 24px 16px" }}>
           <ActsCard
+            node="acts"
             rows={[
               { label: "Edit", value: "The glovebox camera earns its keep — this is the print…", count: "1", countNoun: "edit" },
               { label: "Tags added", value: "#glovebox", count: "1", countNoun: "tag" },
@@ -37,7 +44,7 @@ export function Screen() {
             ]}
           />
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <Button variant="text">Done</Button>
+            <Button variant="text" node="done">Done</Button>
           </div>
         </div>
       </BottomSheet>

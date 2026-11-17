@@ -44,6 +44,7 @@ export interface CommentCardProps {
   references?: number;
   /** Makes the count open the topics-and-references sheet. */
   onOpenReferences?: () => void;
+  /** Signed out, the stance reads the borrowed view; `Reply` and the comment glyph still stand at full strength, `Reply` raising the join ask (GuestGate.md:3). */
   signedIn?: boolean;
   /** Owned by the shell, like `PostCard.taught`. Defaults to true. */
   taught?: boolean;
@@ -113,7 +114,8 @@ export interface CommentCardProps {
   /**
    * The locked look on the text `Reply` for an applicant reader (auth.md):
    * `var(--state-disabled)`, the button still tappable, its tap answering
-   * `You can comment once you're in.` Carried down to the replies.
+   * `You can comment once you're in.` Carried down to the replies. Never worn by
+   * the list card's comment glyph (`replyGlyph`), the door to reading the thread.
    */
   replyOpacity?: string | number;
   /** Shows `ShareButton`, closing the row — the feed card's. A thread passes none. */

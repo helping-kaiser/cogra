@@ -24,7 +24,8 @@
    this row's place. It needs no board of its own — one line of blessed copy
    in a slot this board already shows.
 
-   IT IS `ProfileOwnBody`, WITH ONE ROW ADDED, and it is pattern-exemplar exempt
+   IT IS `ProfileOwnBody` ON ITS EVERYTHING TAB (the chronicle, reached by
+   the tab — the profile lands on Posts), WITH ONE ROW ADDED, and it is pattern-exemplar exempt
    for the reason readme §13 gives `NetworkError`: the failed page is the whole
    subject, and the band, the header, the tabs and the five nav slots belong
    to `Profile` and are wired there. Wiring them twice would give one control
@@ -32,6 +33,7 @@
 export function Screen() {
   return (
     <ProfileOwnBody
+      tab="everything"
       tail={
         /* The row the next page would have filled. */
         <p
