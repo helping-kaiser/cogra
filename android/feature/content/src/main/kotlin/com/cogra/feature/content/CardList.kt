@@ -152,8 +152,7 @@ internal fun ListCommentCard(
     val comment = (actions.editReturn?.shown(listed) ?: listed).marked(rememberRemovedMarks())
     var licenseOpen by remember(comment.id) { mutableStateOf(false) }
     var removeOpen by remember(comment.id) { mutableStateOf(false) }
-    var citedByOpen by remember(comment.id) { mutableStateOf(false) }
-    var opinionsOpen by remember(comment.id) { mutableStateOf(false) }
+    var reading by remember(comment.id) { mutableStateOf<Reading?>(null) }
     val own = actions.viewerId != null && comment.author?.id == actions.viewerId
     CommentFeedCard(
         comment = comment,
@@ -181,8 +180,8 @@ internal fun ListCommentCard(
         onOpenTopic = doors.onOpenTopic,
         onCite = { actions.onCitePost(comment.id) },
         onLicense = { licenseOpen = true },
-        onCitedBy = { citedByOpen = true },
-        onOpinions = { opinionsOpen = true },
+        onCitedBy = { reading = Reading.CitedBy },
+        onOpinions = { reading = Reading.Opinions },
         stanceControl = actions.stanceControl,
         shape = shape,
         authorHere = authorHere,
@@ -190,28 +189,10 @@ internal fun ListCommentCard(
     if (licenseOpen) {
         LicenseSheet(license = comment.license, onDismiss = { licenseOpen = false })
     }
-    // WHAT CITES THE COMMENT, over the host and unstacked, as the menu rose
-    // (FeedCommentMenu.md:11, HistoryCommentMenu.md:11, SavedCommentMenu.md:13,
-    // ProfileCommentsMenu.md:11).
-    if (citedByOpen) {
-        CitedBySheet(
-            nodeId = comment.id,
-            onDismiss = { citedByOpen = false },
-            onOpenPost = doors.onOpenPost,
-            testTag = "${testTagPrefix}_cited_by_sheet",
-        )
-    }
-    // THE COMMENT'S OPINIONS, over the host and unstacked (FeedCommentMenu.md:9,
-    // HistoryCommentMenu.md:9, SavedCommentMenu.md:11, ProfileCommentsMenu.md:9).
-    if (opinionsOpen) {
-        OpinionsSheet(
-            nodeId = comment.id,
-            on = OpinionsOn.Comment,
-            onDismiss = { opinionsOpen = false },
-            onOpenPerson = doors.onOpenActor,
-            testTag = "${testTagPrefix}_opinions_sheet",
-        )
-    }
+    // A READING, over the host and unstacked, as the menu rose (FeedCommentMenu.md:11,
+    // HistoryCommentMenu.md:11, SavedCommentMenu.md:13, ProfileCommentsMenu.md:11).
+    val readings = commentReadings(doors.onOpenPost, doors.onOpenActor, testTagPrefix)
+    ReadingSheet(reading, comment.id, readings) { reading = null }
     // The own comment's menu off its thread (RM-G9): the comment's confirm,
     // over the list; taken, the card stands as its mark in place.
     if (removeOpen) {

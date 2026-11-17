@@ -324,25 +324,15 @@ fun CommentsSheet(
     // comment that landed in THIS thread behind the thread it landed in.
     val snackbar = remember { SnackbarHostState() }
     val savedHost = rememberSavedHost(saved, snackbar, null, onRequireAccount)
-    val signedCopy = stringResource(R.string.content_post_saved)
-    LaunchedEffect(state.commentSigned) {
-        if (state.commentSigned) {
-            snackbar.showSnackbar(signedCopy)
-            onCommentSignedShown()
-        }
-    }
+    AnnounceCommentSigned(state.commentSigned, snackbar, onCommentSignedShown)
     // AN APPLICANT'S TWO DOORS INTO THE COMPOSER ANSWER IN PLACE ([rememberCommentGuard]).
     val guard = rememberCommentGuard(state.commentLocked, snackbar)
     val listState = rememberLazyListState()
     ThreadPlacement(state, listState, restoreTo, onRestored, onLanded)
-    // WHICH CONFIRM STANDS OVER THE THREAD ([ThreadConfirm]): the menu closes and
-    // it comes up over the thread, which stays where the reader opened the menu.
+    // WHICH CONFIRM OR READING STANDS OVER THE THREAD ([ThreadConfirm]): the menu
+    // closes and it comes up over the thread, which stays where the reader opened
+    // the menu (CommentCitedByEmpty.md:3).
     var confirm by remember { mutableStateOf<ThreadConfirm?>(null) }
-    // WHICH COMMENT'S CITED BY IS UP (CommentCitedByEmpty.md:3): stacked over
-    // the thread, which stays open beneath its wash.
-    var citedBy by remember { mutableStateOf<String?>(null) }
-    // …and whose opinions sheet (CommentOpinionsEmpty.md:3), the same way.
-    var opinionsOn by remember { mutableStateOf<String?>(null) }
     val depart: (() -> Unit) -> Unit = { go ->
         onDepart(
             CommentsScroll(
@@ -409,8 +399,8 @@ fun CommentsSheet(
                 onLicense = onLicense,
                 onRemoveComment = { comment -> confirm = ThreadConfirm.Remove(comment) },
                 onReportComment = { comment -> confirm = ThreadConfirm.Report(comment.id) },
-                onCitedBy = { comment -> citedBy = comment.id },
-                onOpinions = { comment -> opinionsOn = comment.id },
+                onCitedBy = { comment -> confirm = ThreadConfirm.Read(Reading.CitedBy, comment.id) },
+                onOpinions = { comment -> confirm = ThreadConfirm.Read(Reading.Opinions, comment.id) },
                 stanceControl = stanceControl,
             )
         }
@@ -420,35 +410,35 @@ fun CommentsSheet(
     // the dialog is its own window, raised after the sheet's. Taken, only the
     // one comment gives way to its mark — the list is not re-read, so the
     // reader's place and every unfolded branch hold (CommentRemoved.md:19).
-    ThreadConfirms(confirm, reportSheet, snackbar, onClose = { confirm = null })
-    citedBy?.let { id ->
-        CitedBySheet(
-            nodeId = id,
-            onDismiss = { citedBy = null },
-            // A row leaves the surface, so it leaves the thread's place behind.
-            onOpenPost = { post -> depart { onOpenPost(post) } },
-            stacked = true,
-            testTag = THREAD_CITED_BY_SHEET,
-        )
-    }
-    opinionsOn?.let { id ->
-        OpinionsSheet(
-            nodeId = id,
-            on = OpinionsOn.Comment,
-            onDismiss = { opinionsOn = null },
-            // A holder's profile leaves the surface, as the thread's other people do.
-            onOpenPerson = { handle -> depart { onOpenActor(handle) } },
-            stacked = true,
-            testTag = THREAD_OPINIONS_SHEET,
-        )
+    // A reading's row leaves the surface, so it leaves the thread's place behind.
+    val readings = threadReadings({ post -> depart { onOpenPost(post) } }, { handle -> depart { onOpenActor(handle) } })
+    ThreadConfirms(confirm, reportSheet, snackbar, readings, onClose = { confirm = null })
+}
+
+/** The comment's reading sheets over the thread: the design registers no node for them (CommentCitedByEmpty). */
+internal const val THREAD_READINGS = "comment"
+
+/** The comment's Cited by sheet over the thread, by its tag. */
+internal const val THREAD_CITED_BY_SHEET = "${THREAD_READINGS}_cited_by_sheet"
+
+/** How the thread wears a comment's readings: stacked over it, its own clips its own. */
+private fun threadReadings(onOpenPost: (String) -> Unit, onOpenPerson: (String) -> Unit) =
+    ReadingHost(onOpenPost, onOpenPerson, OpinionsOn.Comment, THREAD_READINGS, stacked = true, suspendsVideo = false)
+
+/** The thread's own snackbar says a just-signed comment once ([CommentsUiState.commentSigned]). */
+@Composable
+private fun AnnounceCommentSigned(signed: Boolean, snackbar: SnackbarHostState, onShown: () -> Unit) {
+    val signedCopy = stringResource(R.string.content_post_saved)
+    LaunchedEffect(signed) {
+        if (signed) {
+            snackbar.showSnackbar(signedCopy)
+            onShown()
+        }
     }
 }
 
-/** The comment's Cited by sheet over the thread: the design registers no node for it (CommentCitedByEmpty). */
-internal const val THREAD_CITED_BY_SHEET = "comment_cited_by_sheet"
-
 /** The comment's opinions sheet over the thread: unregistered, as its Cited by (CommentOpinionsEmpty). */
-internal const val THREAD_OPINIONS_SHEET = "comment_opinions_sheet"
+internal const val THREAD_OPINIONS_SHEET = "${THREAD_READINGS}_opinions_sheet"
 
 /**
  * The confirm over the thread: the think-twice dialog for the reader's own
@@ -458,6 +448,9 @@ private sealed interface ThreadConfirm {
     data class Remove(val comment: CommentView) : ThreadConfirm
 
     data class Report(val commentId: String) : ThreadConfirm
+
+    /** A reading of the comment, stacked over the thread (CommentCitedByEmpty.md:3). */
+    data class Read(val reading: Reading, val commentId: String) : ThreadConfirm
 }
 
 @Composable
@@ -465,11 +458,13 @@ private fun ThreadConfirms(
     confirm: ThreadConfirm?,
     reportSheet: ReportSheetSlot,
     snackbar: SnackbarHostState,
+    readings: ReadingHost,
     onClose: () -> Unit,
 ) {
     when (confirm) {
         is ThreadConfirm.Remove -> CommentRemoveConfirm(confirm.comment, onClose = onClose)
         is ThreadConfirm.Report -> ThreadReport(confirm.commentId, reportSheet, snackbar, onClose)
+        is ThreadConfirm.Read -> ReadingSheet(confirm.reading, confirm.commentId, readings, onClose)
         null -> Unit
     }
 }
