@@ -1,6 +1,6 @@
 // The feed's cards hosted on a profile's tabs (ProfilePosts.md, ProfileComments.md):
 // the post card unchanged but for its inert author chip, and the comment card in
-// its line shape — the `On …` pointer leading, the words whole and no door, the
+// its line shape — the `On …` pointer leading, the words whole and a door, the
 // thread's text Reply, the "View n replies" line under the card — every door
 // landing on the thread the comment lives in. web's twins are
 // `profile-posts.test.tsx` and `profile-comments.test.tsx`.
@@ -172,12 +172,11 @@ class HostedCardsTest {
         assertThat(opened).containsExactly("comment:p9/c1")
     }
 
-    // ProfileComments.md:21, :25 — Reply opens the thread aimed at the
-    // comment; the words are no door and the author chip is inert.
+    // ProfileComments.md:35, :39 — Reply opens the thread aimed at the
+    // comment; the author chip is inert.
     @Test
-    fun replyOpensTheThreadAimedAtTheCommentAndTheWordsAreNoDoor() {
+    fun replyOpensTheThreadAimedAtTheCommentAndTheAuthorChipIsInert() {
         host { it.comment(comment(), cards, replies, null) }
-        compose.onNodeWithText("The glovebox camera earns its keep.").performClick()
         compose.onNodeIn(
             "profile.comments.commentCard:c1",
             "profile.comments.commentCard.authorChip",
@@ -187,6 +186,16 @@ class HostedCardsTest {
         compose.onNodeIn("profile.comments.commentCard:c1", "profile.comments.commentCard.actionRow.reply")
             .performClick()
         assertThat(opened).containsExactly("comment:p9/c1+reply")
+    }
+
+    // ProfileComments.md:43, ProfileCommentsOwn.md:15 — the card tapped outside
+    // its pointer and its own controls opens the post's comment section
+    // scrolled to that comment (round 3 hand test, A8: it opened nothing).
+    @Test
+    fun theCardsWordsOpenTheThreadAtTheComment() {
+        host { it.comment(comment(), cards, replies, null) }
+        compose.onNodeWithText("The glovebox camera earns its keep.").performClick()
+        assertThat(opened).containsExactly("comment:p9/c1")
     }
 
     // ProfileComments.md:27 — the replies line under the card opens the thread
