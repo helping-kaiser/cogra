@@ -76,17 +76,13 @@ impl Rig {
 
     async fn sign_and_relay(&self, id: Uuid, key: &ActorKey) {
         let write = staged::load(&self.pool, id).await.expect("loads");
-        let pre = key.pre_sign(write.proposal);
-        let parts = PreSignedParts {
-            author_pubkey: pre.author_pubkey.clone(),
-            nonce: pre.nonce.clone(),
-            pre_signature: pre.pre_signature.clone(),
-        };
+        let pre = common::l1::proposal::PreSigned::sign(key, write.proposal);
+        let parts = PreSignedParts::from(&pre);
         let sealed = api::relay::submit_pre_signed(&self.boundary, &self.pool, id, parts)
             .await
             .expect("seals");
         let host_key = self.boundary.host_public_key().await.expect("host key");
-        let witness = key.approve(&pre, &sealed, &host_key).expect("approves");
+        let witness = pre.approve(key, &sealed, &host_key).expect("approves");
         api::relay::submit_approval(&self.boundary, &self.pool, id, witness.approval_signature)
             .await
             .expect("relays");
@@ -1103,6 +1099,27 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
         .expect("reads record")
         .expect("record");
     assert!(record.payload_marked);
+    let id = body.act_id();
+    let (nonce, salt) = sqlx::query_as::<_, (Vec<u8>, Vec<u8>)>(
+        "SELECT content_nonce, content_salt FROM act_payloads WHERE act_id = $1",
+    )
+    .bind(id.to_string())
+    .fetch_one(&rig.pool)
+    .await
+    .expect("the carried pair");
+    let stored = rig
+        .standin
+        .sealed_act(&id)
+        .await
+        .expect("reads")
+        .expect("stored");
+    let pre_digest = common::l1::proposal::content_pre_digest(&id, &nonce, &carried.0);
+    assert_eq!(
+        common::l1::proposal::content_commitment(&id, &stored.pre_commitment, &salt, &pre_digest)
+            .to_vec(),
+        record.payload_witness,
+        "the mark alone proves only that a carriage row exists; this one opens the record's witness"
+    );
     assert_eq!(record.target().expect("leg").target, own_mint);
 }
 
@@ -2125,16 +2142,12 @@ mod galleries {
         let write = staged::load(&rig.pool, edit.writes[0].id)
             .await
             .expect("loads");
-        let pre = key.pre_sign(write.proposal);
+        let pre = common::l1::proposal::PreSigned::sign(&key, write.proposal);
         api::relay::submit_pre_signed(
             &rig.boundary,
             &rig.pool,
             edit.writes[0].id,
-            PreSignedParts {
-                author_pubkey: pre.author_pubkey.clone(),
-                nonce: pre.nonce.clone(),
-                pre_signature: pre.pre_signature.clone(),
-            },
+            PreSignedParts::from(&pre),
         )
         .await
         .expect("seals");

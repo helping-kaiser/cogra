@@ -51,7 +51,8 @@ The graph lives on PeerNetworks **Layer 1** — every binding fact
 is an L1 record, and nothing CoGra stores is authoritative about
 it. One store: **PostgreSQL**, partitioned by truth relationship —
 the L1 record mirror (cached, rebuildable from the published
-ordered sequence), overlay caches of published fold rules, and
+ordered sequence, the payload mark read from CoGra's carriage),
+overlay caches of published fold rules, and
 authoritative L2 state (display content, identity association).
 Money lives on the rails — admission money (burn value, recorded
 beneath L1 and read as `B_i`) and the **CGT rail** (balances,

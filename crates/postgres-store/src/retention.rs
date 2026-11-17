@@ -6,7 +6,7 @@
 //! media asset follows it.
 //!
 //! An archive row is one *unit*: for a graph-side redaction, the act's
-//! envelope, content salt, proposal nonce, witness and media list, held
+//! envelope, content nonce, content salt, witness and media list, held
 //! together and hard-deleted together. The unit's shape is the caller's
 //! (`original_data` is schema-on-read); this module stores it, records the
 //! media it references, and answers the two questions those references

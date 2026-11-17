@@ -362,14 +362,14 @@ fn over_the_body_limit(err: &(dyn std::error::Error + 'static)) -> bool {
 /// escape): about 75 KB with its document, topics and citations. The
 /// widest request of all is a relay carrying the longest batch one
 /// prepare can stage under the shipped signing budget
-/// ([`ratelimit::SigningBudget::longest_batch`], 1 000): about 210 bytes
-/// an entry — a staged-write id and a base64 pre-commitment of a 32-byte
-/// nonce and a 64-byte signature — so about 210 KB. 320 KiB is the
+/// ([`ratelimit::SigningBudget::longest_batch`], 1 000): about 256 bytes
+/// an entry — a staged-write id and a base64 pre-commitment of two 32-byte
+/// nonces and a 64-byte signature — so about 258 KB. 384 KiB is the
 /// smallest multiple of 64 KiB above the 1.5× floor over it, and it
 /// bounds what an anonymous caller makes the server hold before the parse.
 /// `the_widest_legitimate_request_fits_under_the_json_ceiling` re-measures
 /// both against it.
-pub const GRAPHQL_JSON_BODY_LIMIT_BYTES: usize = 320 * 1024;
+pub const GRAPHQL_JSON_BODY_LIMIT_BYTES: usize = 384 * 1024;
 
 /// The body's content type when it is a multipart upload. The same parse
 /// and the same test the library's `receive_batch_body` applies, so the
@@ -485,7 +485,7 @@ fn unauthenticated_upload() -> axum::response::Response {
 /// one request only below [`media::RESUMABLE_THRESHOLD_BYTES`]; the
 /// envelope is the `operations` and `map` fields at their ceiling and the
 /// rest at [`multipart::MULTIPART_ENVELOPE_BYTES`]. At the defaults this
-/// is 10 MiB + 704 KiB.
+/// is 10 MiB + 832 KiB.
 fn anonymous_upload_absorb_bytes(media: &MediaConfig) -> usize {
     media
         .max_upload_bytes

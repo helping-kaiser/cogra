@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE mirror_records SET payload_marked = TRUE\n         WHERE record_id = $1 AND NOT payload_marked",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cab780d4b4167251e189c5560567959cc69a225cbf93195e48f613b150b25d54"
+}

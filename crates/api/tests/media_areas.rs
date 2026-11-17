@@ -18,8 +18,7 @@ use api::schema::types::{ErrorCode, TERMINAL_WRITE_REFUSALS};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use common::l1::client::ActorKey;
-use common::l1::handshake::PreSignedProposal;
-use common::l1::wire;
+use common::l1::proposal::PreSigned;
 use l1_standin::{StandIn, StandInConfig};
 use postgres_store::staged::{self, PreSignedParts, StagedState};
 use postgres_store::{genesis, media as media_store};
@@ -170,19 +169,15 @@ impl Rig {
     async fn landed_post(&self, actor: Uuid, key: &ActorKey, body: &str, media: &[Uuid]) -> String {
         let (id, act_id) = self.prepare_post(actor, body, media).await;
         let write = staged::load(&self.pool, id).await.expect("loads");
-        let pre = key.pre_sign(write.proposal);
-        let parts = PreSignedParts {
-            author_pubkey: pre.author_pubkey.clone(),
-            nonce: pre.nonce.clone(),
-            pre_signature: pre.pre_signature.clone(),
-        };
+        let pre = PreSigned::sign(key, write.proposal);
+        let parts = PreSignedParts::from(&pre);
         let sealed = api::relay::submit_pre_signed(&self.boundary, &self.pool, id, parts)
             .await
             .expect("seals");
         let host_key = api::l1::L1Boundary::host_public_key(&self.boundary)
             .await
             .expect("host key");
-        let witness = key.approve(&pre, &sealed, &host_key).expect("approves");
+        let witness = pre.approve(key, &sealed, &host_key).expect("approves");
         api::relay::submit_approval(&self.boundary, &self.pool, id, witness.approval_signature)
             .await
             .expect("relays");
@@ -234,7 +229,7 @@ impl Rig {
 
     /// The device's seal leg through `submitProposals`, as `actor`, over
     /// the schema built on this rig's stand-in and media areas.
-    async fn submit(&self, actor: Uuid, staged_id: Uuid, pre: &PreSignedProposal) -> Value {
+    async fn submit(&self, actor: Uuid, staged_id: Uuid, pre: &PreSigned) -> Value {
         let (mut ctx, _) = rig::api_context(
             self.pool.clone(),
             Arc::new(api::mailer::DevMailer::new(None)),
@@ -255,7 +250,7 @@ impl Rig {
                 .variables(async_graphql::Variables::from_json(json!({ "input": {
                     "proposals": [{
                         "stagedWriteId": staged_id,
-                        "signature": B64.encode(wire::encode_pre_commitment_of(pre)),
+                        "signature": B64.encode(pre.pre_commitment_blob().encode()),
                     }]
                 }})))
                 .data(Some(Viewer {
@@ -662,7 +657,7 @@ async fn a_released_carried_post_signs_only_once_its_media_is_live(pool: PgPool)
     let staged_id = rig.carried_post(actor, &[picture.id]).await;
     rig.release(staged_id).await;
     let write = staged::load(&rig.pool, staged_id).await.expect("loads");
-    let pre = key.pre_sign(write.proposal);
+    let pre = PreSigned::sign(&key, write.proposal);
 
     let refused = rig.submit(actor, staged_id, &pre).await;
     assert_eq!(
@@ -703,7 +698,7 @@ async fn a_released_carried_write_naming_no_media_signs_at_once(pool: PgPool) {
     let staged_id = rig.carried_post(actor, &[]).await;
     rig.release(staged_id).await;
     let write = staged::load(&rig.pool, staged_id).await.expect("loads");
-    let pre = key.pre_sign(write.proposal);
+    let pre = PreSigned::sign(&key, write.proposal);
 
     let sealed = rig.submit(actor, staged_id, &pre).await;
     assert_eq!(sealed["userErrors"], json!([]), "{sealed}");
@@ -723,7 +718,7 @@ async fn an_unreleased_carried_writes_media_stays_carried(pool: PgPool) {
     let picture = rig.asset_in(actor, "carried", 0xB2).await;
     let staged_id = rig.carried_post(actor, &[picture.id]).await;
     let write = staged::load(&rig.pool, staged_id).await.expect("loads");
-    let pre = key.pre_sign(write.proposal);
+    let pre = PreSigned::sign(&key, write.proposal);
 
     let refused = rig.submit(actor, staged_id, &pre).await;
     assert_eq!(refused["userErrors"][0]["code"], "BAD_INPUT", "{refused}");

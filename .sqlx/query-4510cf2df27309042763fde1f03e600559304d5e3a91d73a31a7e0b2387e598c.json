@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO content_nonce_digests (digest, act_id) VALUES ($1, $2)\n             ON CONFLICT (digest) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Bytea",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4510cf2df27309042763fde1f03e600559304d5e3a91d73a31a7e0b2387e598c"
+}
