@@ -6934,3 +6934,127 @@ function ReferencePickerBody({ v = REF_PICKER_HOLES }) {
     </>
   );
 }
+
+/* THE POST'S CROP, whole — `ComposeCrop` at a 390 column, `ComposeCropShort`
+   in a short, wide window (round 52). The law is `ComposeCrop`'s docblock.
+
+   THE STAGE FITS THE WINDOW (round 52, jakob 2026-11-17, decision 3: "the
+   stage is also capped by the window's height, so header, shape row, stage,
+   slider, note, thumbnails and Next always fit without scrolling"). The stage
+   stands as large as the column allows — its 390 × 488 at a 390 column — and
+   never taller than the window leaves once every other block and gap has its
+   place: the 48 header, the body's 8 top, the 32 shape row, the 48 zoom, the
+   16 line, the 48 strip, the 40 Next, the body's 16 foot and the seven 12
+   gaps, 328 in all. Capped, its width follows its height at 390 : 488, the
+   frames and the picture scaling with it, and it stands centred in the
+   column; the blocks around it keep their sizes. `stage` passes the drawn
+   size; every frame is its figure at a 390 column times the stage's scale. */
+const COMPOSE_CROP_SHAPE_SEL = (s) =>
+  `${s}Checked: this.props.shape === "${s}" ? "true" : "false", ${s}Border: this.props.shape === "${s}" ? "1px solid transparent" : "1px solid var(--border-field)", ${s}Background: this.props.shape === "${s}" ? "var(--secondary-container)" : "transparent", ${s}Color: this.props.shape === "${s}" ? "var(--on-secondary-container)" : "var(--text-body)"`;
+const composeCropShapeHoles = (s) => ({ checked: `{{${s}Checked}}`, border: `{{${s}Border}}`, background: `{{${s}Background}}`, color: `{{${s}Color}}` });
+/* Each shape chip's selection, as `Chip`'s `selected` would draw it, and the
+   frame each shape shows. */
+const COMPOSE_CROP_VALS = `${COMPOSE_CROP_SHAPE_SEL("tall")}, ${COMPOSE_CROP_SHAPE_SEL("square")}, ${COMPOSE_CROP_SHAPE_SEL("wide")}, tallFrame: this.props.shape === "tall" ? "block" : "none", squareFrame: this.props.shape === "square" ? "block" : "none", wideFrame: this.props.shape === "wide" ? "block" : "none"`;
+
+/* The frame per shape inside the stage at a 390 column: full width, centred. */
+const COMPOSE_CROP_FRAMES = [
+  { shape: "tall", height: 488 },
+  { shape: "square", height: 390 },
+  { shape: "wide", height: 204 },
+];
+
+const COMPOSE_CROP_THIRDS = "rgba(255,255,255,0.55)";
+
+function ComposeCropFrame({ shape, height, stage }) {
+  const k = stage.width / 390;
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        display: `{{${shape}Frame}}`,
+        position: "absolute",
+        left: 0,
+        top: (stage.height - height * k) / 2,
+        width: stage.width,
+        height: height * k,
+        boxShadow: "0 0 0 400px rgba(0,0,0,0.45)",
+      }}
+    >
+      {/* The rule of thirds, drawn on the frame rather than around it. */}
+      <span style={{ position: "absolute", left: "33.33%", top: 0, bottom: 0, width: 1, background: COMPOSE_CROP_THIRDS }} />
+      <span style={{ position: "absolute", left: "66.66%", top: 0, bottom: 0, width: 1, background: COMPOSE_CROP_THIRDS }} />
+      <span style={{ position: "absolute", top: "33.33%", left: 0, right: 0, height: 1, background: COMPOSE_CROP_THIRDS }} />
+      <span style={{ position: "absolute", top: "66.66%", left: 0, right: 0, height: 1, background: COMPOSE_CROP_THIRDS }} />
+    </div>
+  );
+}
+
+const COMPOSE_CROP_PICTURES = ["post-photo.jpg", "inviter.jpg"];
+
+function ComposeCropBody({ stage = { width: 390, height: 488 }, pictures = COMPOSE_CROP_PICTURES }) {
+  const capped = stage.width < 390;
+  return (
+    <>
+      <WizardHeader title="Crop" node="header" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 16px", overflow: "hidden" }}>
+        {/* THE SHAPE ROW IS DRAWN ONCE (round 49, seam 338): the `shape`
+            setting re-selects its chips through `Chip`'s `selectedHoles`, so
+            the row and its chips carry no key — one row, as the clients
+            draw it. */}
+        <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8 }} data-node="shapes">
+            <Chip label="Tall 4:5" selectedHoles={composeCropShapeHoles("tall")} onToggle={() => {}} node="tallChip" />
+            <Chip label="Square 1:1" selectedHoles={composeCropShapeHoles("square")} onToggle={() => {}} node="squareChip" />
+            <Chip label="Wide 1.91:1" selectedHoles={composeCropShapeHoles("wide")} onToggle={() => {}} node="wideChip" />
+          </div>
+        </div>
+
+        {/* THE STAGE: one size under every shape. The picture covers it at the
+            crop's zoom and stays put across a shape switch (its centre and its
+            zoom kept); only the frame over it changes. Capped by the window,
+            it stands centred in the column. */}
+        <div
+          tabIndex={0}
+          role="group"
+          aria-label={CROP_PAN_NAME}
+          className="cg-focus"
+          style={capped
+            ? { position: "relative", width: stage.width, height: stage.height, alignSelf: "center", overflow: "hidden", flex: "none" }
+            : { position: "relative", width: 390, height: 488, margin: "0 -24px", overflow: "hidden", flex: "none" }}
+          data-node="viewport"
+        >
+          <img
+            src="post-photo.jpg"
+            alt=""
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transform: "scale(1.15)", transformOrigin: "40% 60%" }}
+          />
+          {COMPOSE_CROP_FRAMES.map((frame) => (
+            <ComposeCropFrame key={frame.shape} {...frame} stage={stage} />
+          ))}
+        </div>
+
+        <CropZoom scale={1.15} node="zoom" />
+
+        <QuietNote node="howTo">One shape for the whole post.</QuietNote>
+
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }} data-node="pictures">
+          {pictures.map((src, index) =>
+            index === 0 ? (
+              <span key={src} style={{ display: "inline-flex", flex: "none", borderRadius: "var(--radius-small)", outline: "2px solid var(--primary)", outlineOffset: 1 }}>
+                <MediaThumb src={src} node="thumb" nodeKey={String(index + 1)} />
+              </span>
+            ) : (
+              <span key={src} style={{ display: "inline-flex", flex: "none", opacity: 0.65 }}>
+                <MediaThumb src={src} node="thumb" nodeKey={String(index + 1)} />
+              </span>
+            )
+          )}
+        </div>
+
+        <div style={{ flex: 1 }} />
+
+        <Button style={{ width: "100%" }} node="next">Next</Button>
+      </div>
+    </>
+  );
+}

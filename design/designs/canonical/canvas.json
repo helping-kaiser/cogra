@@ -470,6 +470,15 @@
       "page": "compose"
     },
     {
+      "file": "ComposeCropShort.dc.html",
+      "title": "Compose · the crop, a short wide window",
+      "x": 480,
+      "y": 5300,
+      "w": 672,
+      "h": 720,
+      "page": "compose"
+    },
+    {
       "file": "ComposeCover.dc.html",
       "title": "Compose · the video's face",
       "x": 960,

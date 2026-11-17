@@ -1028,6 +1028,18 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: "position:relative;width:48px", tag: "div", all: true },
     { n: 7, find: 'data-field="Zoom"', tag: "div" },
   ],
+  // The same crop in a short, wide window (round 52): ComposeCrop's marks.
+  ComposeCropShort: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: ">Tall 4:5</button>", tag: "button", all: true },
+    { n: 4, find: ">Square 1:1</button>", tag: "button", all: true },
+    { n: 4, find: ">Wide 1.91:1</button>", tag: "button", all: true },
+    { n: 5, find: "transform:scale(1.15)", tag: "div" },
+    { n: 6, find: "position:relative;width:48px", tag: "div", all: true },
+    { n: 7, find: 'data-field="Zoom"', tag: "div" },
+  ],
   ComposeCover: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },

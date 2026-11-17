@@ -1645,7 +1645,16 @@ Instagram's model: one shape for the whole post — Tall 4:5, Square
 1:1, or Wide 1.91:1 — with drag-to-move and pinch-to-zoom framing
 per picture: the frame stands still at the shape and the picture moves
 and zooms under it, on a stage that keeps its 390 × 488 under every
-shape (round 44, one crop model on both clients); 4:5 as the tallest shape is what guarantees the feed
+shape (round 44, one crop model on both clients). **The stage fits the
+window** (jakob 2026-11-17), on every crop — the post's, the cover's, the
+profile picture's and the comment's — on both clients: it stands as large
+as the column allows and never taller than the window leaves once the
+header, the shape row, the zoom, the line, the strip and the pinned `Next`
+have their place; capped, it keeps its proportion and stands centred, the
+frame and the picture scaling with it, so nothing scrolls and nothing is
+cut off. Its floor is 240 high, and under that the page scrolls under the
+pinned `Next` (*Text scale*). `ComposeCropShort` draws a 672 × 720
+browser window. 4:5 as the tallest shape is what guarantees the feed
 card's height cap (below). Wizard screens carry no step numbers and
 no stage label (paths differ in length; the title names the stage,
 and `What you sign` names the end — jakob 2026-11-12).

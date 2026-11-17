@@ -10,6 +10,14 @@ ALWAYS the crop's frame stands still at the square, and the picture is what move
 
 ALWAYS the picture outside the frame stays in view under a 45 % black
 
+ALWAYS the stage stands as large as the column allows, its 390 × 488 and the frame inside it being the figures at a 390 column, and never taller than the window leaves once the header, the zoom slider, the strip, Next and their gaps have their place
+
+ALWAYS a stage the window caps keeps its 390 : 488 and stands centred in the column, the frame and the picture scaling with it, and the blocks around it keep their sizes
+
+ALWAYS the stage never stands under 240 high, and under that the page scrolls under the pinned Next
+
+ALWAYS Next is pinned in the foot
+
 ALWAYS the strip of the picked pictures stands under the zoom slider GIVEN more than one picture was picked, the framed picture outlined and the rest at 65 %
 
 ALWAYS no strip stands GIVEN one picture was picked

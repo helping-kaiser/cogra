@@ -52,7 +52,13 @@ WHEN move the zoom slider -> the picture zooms in place AND NEVER below the fill
 
 ALWAYS the post crop has one zoom ceiling under every shape, 10× the Tall frame's fill, so a shape switch never has to shrink a picture to meet a lower one
 
-ALWAYS the stage scales with the column width, its 390 × 488 and every frame inside it being the figures at a 390 column
+ALWAYS the stage stands as large as the column allows, its 390 × 488 and every frame inside it being the figures at a 390 column, and never taller than the window leaves once the header, the shape row, the zoom slider, the line, the strip, Next and their gaps have their place
+
+ALWAYS a stage the window caps keeps its 390 : 488 and stands centred in the column, the frame and the picture scaling with it, and the blocks around it keep their sizes
+
+ALWAYS the stage never stands under 240 high, and under that the page scrolls under the pinned Next
+
+ALWAYS Next is pinned in the foot
 
 WHEN press an arrow key GIVEN the crop has focus -> the picture moves 1 % that way AND NEVER past where its edge meets the crop's
 

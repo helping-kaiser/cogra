@@ -1319,6 +1319,14 @@
     { "from": "ComposeCrop", "via": 6, "kind": "advance", "label": "picture strip", "to": [{ "terminal": "self", "case": "frames each picture in turn" }] },
     { "from": "ComposeCrop", "via": 7, "kind": "advance", "label": "zoom slider", "to": [{ "terminal": "self", "case": "the zoom, from the fill (1×) to 10× — the pinch, on screen" }] },
 
+    { "from": "ComposeCropShort", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposePickWeb", "case": "one stage back, the picks kept — the same crop in a short, wide window (ComposeCrop's arc)" }] },
+    { "from": "ComposeCropShort", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow for where the composer was opened from — draft kept" }] },
+    { "from": "ComposeCropShort", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ComposeDetails", "case": "pictures — details next" }] },
+    { "from": "ComposeCropShort", "via": 4, "kind": "advance", "label": "shape chips", "to": [{ "terminal": "self", "case": "one shape for the whole post — the frame scales with the capped stage" }] },
+    { "from": "ComposeCropShort", "via": 5, "kind": "advance", "label": "the crop viewport", "to": [{ "terminal": "self", "case": "the stage capped by the window's height, 313.28 × 392 here; drag moves the picture, pinch zooms it; focused, the arrow keys move it" }] },
+    { "from": "ComposeCropShort", "via": 6, "kind": "advance", "label": "picture strip", "to": [{ "terminal": "self", "case": "frames each picture in turn — all three in view, nothing below the window" }] },
+    { "from": "ComposeCropShort", "via": 7, "kind": "advance", "label": "zoom slider", "to": [{ "terminal": "self", "case": "the zoom, from the fill (1×) to 10× — the pinch, on screen" }] },
+
     { "from": "ComposeCover", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposePickVideo", "case": "one stage back, no cover chosen — the pick with the clip staged; the video path never crosses the crop" }, { "board": "ComposePickVideoCover", "case": "a cover was chosen — the pick shows the clip wearing it" }, { "board": "ComposeDetailsVideo", "case": "the step was opened by the details door — back is the stage that asked" }] },
     { "from": "ComposeCover", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow for where the composer was opened from — draft kept" }] },
     { "from": "ComposeCover", "via": 3, "kind": "detour", "label": "play", "to": [{ "board": "ComposeCoverPlaying", "case": "the preview runs — the cover gives way to the transport" }] },
