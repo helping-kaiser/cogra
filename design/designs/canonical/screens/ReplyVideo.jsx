@@ -11,8 +11,10 @@
 
    THE ROW IS SHOWING BECAUSE IT WAS ASKED FOR (jakob 2026-09-10). This clip is
    vertical, and a vertical clip's default is no cover at either scale: the
-   composer opens with the "Add a cover" door in the row's place, which is what
-   `ReplyVideoFailed` draws. This is the state the door opens — and it is also,
+   composer opens with no row, the dashed `Add a cover` tile beside the clip
+   its one door (round 53, jakob 2026-11-17: no text door under `Cover`),
+   which is what `ReplyVideoFailed` draws. This is the state the tile opens —
+   and it is also,
    unchanged, what a horizontal or square clip wears from the start. One
    drawing, because there is one row; what differs is whether anyone had to ask
    for it.
@@ -38,7 +40,9 @@
    the cover`, as on the edits: the platform's picker, then the cover's crop
    locked to the comment's square (`CoverCrop`, `opener` = reply), back to
    the composer. With no cover the same place holds the dashed `Add a cover`
-   door, its words on the tile, the same route. The frame row below stays the
+   door, its words on the tile, the same route once the row stands; for a
+   tall clip whose row was not asked for, the dashed tile opens the row
+   instead (round 53). The frame row below stays the
    chooser for frames: a tapped frame becomes the cover's tile as it is,
    never cropped. A picture of the author's own stands in the row's picture
    tile's place, outlined (`CoverRow`'s `own`). The `cover` chip draws the

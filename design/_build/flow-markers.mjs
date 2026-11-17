@@ -1348,8 +1348,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Retry</button>", tag: "button" },
     { n: 6, find: ">Remove it</button>", tag: "button" },
     { n: 7, find: ">Describe the video</button>", tag: "button" },
-    { n: 8, find: ">Add a cover</button>", tag: "button" },
-    // The dashed cover tile beside the clip (round 52 act 3).
+    // The dashed cover tile beside the clip (round 52 act 3) — a tall clip's
+    // one door to its cover row (round 53: the text door under `Cover` went).
     { n: 9, find: ">Add a cover</span>", tag: "button" },
   ],
   CommentEditVideo: [

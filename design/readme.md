@@ -6362,7 +6362,10 @@ board's private habit; jakob ruled it as recommended.
   **reply composer** shares its column between the two, 167 × 167 each
   (jakob 2026-11-17), its tile opening the picker and the cover's crop
   as on the edits, the frame row below the chooser for frames — a frame
-  is never cropped. A
+  is never cropped. For a tall clip the row waits until asked for, and
+  the dashed tile is what asks: it opens the row, the one door, no text
+  door standing under a *Cover* label (round 53); once the row stands
+  the tile is the picker's door. A
   **reading surface** shows the cover as the card's still, and branches
   on nothing: whether that still was chosen or taken was settled while
   the post was written.
