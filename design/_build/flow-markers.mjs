@@ -1261,8 +1261,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'aria-label="Remove this video"', tag: "button" },
   ],
   CoverCrop: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
-    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 1, find: 'aria-label="{{backLabel}}"', tag: "a" },
+    { n: 2, find: 'aria-label="{{leaveLabel}}"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: "transform:scale(1.15)", tag: "div" },
     { n: 5, find: 'data-field="Zoom"', tag: "div" },
@@ -1419,7 +1419,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: ">Choose from your files</button>", tag: "button" },
   ],
   AvatarCrop: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 1, find: 'aria-label="{{backLabel}}"', tag: "a" },
     { n: 2, find: 'aria-label="Leave"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: "transform:scale(1.2)", tag: "div" },
