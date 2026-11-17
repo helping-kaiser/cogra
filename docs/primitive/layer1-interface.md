@@ -906,7 +906,7 @@ formation, package validity, or the epoch target;
 | $\gamma$ | $1/4$ (chartered activation exponent; **not** the reciprocal of $L_{\text{hop}}$) | `def:epoch:responsive-vouch-activation` |
 | $Q(1)$ | $\approx 0.6975$ (activation normalization of the deployed core) | `def:epoch:responsive-vouch-activation` |
 | $\kappa_{\text{self}}$, $\omega_D$ | unity (self-retention base and every published domain weight; reference values pending the calibration lock) | `tbl:epoch:standing-domain-weights` |
-| certificate screen $\mathcal{K}_k$ | a rung passes iff $m_\theta\,\mathcal{K}_k \le 1$; the accepted rung $t_k$ is the greatest rung the deployment's declared certification procedure proves passing — a rung it leaves INDECISIVE is passed over; the anchor $t_k = 0$ always certifies | `def:dynamics:conserved-standing-certificate`, `def:epoch:tilt-backoff-grid` |
+| certificate screen $\mathcal{K}_k$ | a rung passes iff $m_\theta\,\mathcal{K}_k \le 1$; the accepted rung $t_k$ is the greatest attempted rung whose stated enclosure proves PASS under `post:deployment:replay-verification` — a rung left INDECISIVE is passed over; the anchor $t_k = 0$ always certifies | `def:dynamics:conserved-standing-certificate`, `def:epoch:tilt-backoff-grid` |
 | $M_{\text{payload}}$ | deployment-calibrated; **per act, aggregate over a hyper-edge's projections**, stated in bytes of the deployment's declared payload encoding | `def:graph:act-payload-projection` |
 
 Canonical raw defaults and derived raw constants (terminal formulas,
@@ -3070,10 +3070,18 @@ exports more history than its present balance could pay for at today's action
 price (`thm:epoch:emission-export-bound`).
 
 **Tilt backoff (`def:epoch:tilt-backoff-grid`, `alg:epoch:tilt-backoff`).**
-The accepted strength $t_k$ is the greatest element of the published finite
-grid $\mathcal{G}_t$ (chartered depth $J_{\text{tilt}}$, terminating at zero)
-whose certificate the deployment's declared certification procedure proves
-passing. A lower accepted rung is a performance outcome with a passing
+The accepted strength $t_k$ is the greatest attempted rung of the published
+finite grid $\mathcal{G}_t$ (chartered depth $J_{\text{tilt}}$, terminating
+at zero) whose stated enclosure proves PASS under
+`post:deployment:replay-verification`. The anchor is no attempt: its
+certificate is zero and its evidence is exact. Each positive rung is
+attempted once, in descending order through the first PASS, or through the
+least positive rung if none passes, and its enclosure and verdict are
+published; a missing, repeated, out-of-order or below-acceptance attempt
+fails verification. A rung that cannot be evaluated has no stated sound
+enclosure and so no verdict: it is neither recorded INDECISIVE nor skipped,
+and no rung below it, the anchor included, is accepted for that proposed set
+under that record (`cond:deployment:canonical-replay`). A lower accepted rung is a performance outcome with a passing
 certificate, not an unsafe epoch. Backoff preserves the shape exactly — a lower rung
 is **the same signal at lower volume**, never a signal substitution — and
 each rung is independently certified rather than inferred from a higher one.
@@ -3085,11 +3093,11 @@ different axis (`rem:epoch:tilt-backoff-is-not-export-backoff`). A rung can
 fail two ways and the certificate must say which
 (`rem:epoch:certificate-failure-versus-indecisive-enclosure`): a
 *certificate failure* proves the fence does not hold and the graph moved; an
-*indecisive enclosure* proves nothing and is published as INDECISIVE, never
-as FAIL. A rung the declared procedure leaves indecisive is passed over; the
-procedure's precision and refinement policy is the deployment's published,
-versioned choice, and a more refined published procedure may accept a higher
-rung. Every accepted rung still carries a proved pass.
+*indecisive enclosure* proves neither side of the fence under
+`post:deployment:replay-verification`, is recorded as INDECISIVE, never as
+FAIL, and that rung is passed over. Every accepted rung has a proved PASS,
+and the anchor always certifies, so safety rests on no unproved rung. A
+loose enclosure can cost the host tilt volume, priced by reputation.
 
 **Raw signed double-cover service (`subsec:epoch:raw-signed-service`).** The
 double-cover traversal is a public raw-graph service for consumers
@@ -3343,8 +3351,9 @@ the marker, its lineage, and its fixed interpretation, not edge membership.
 Residual balances, standing, emission, and contributing width all use this
 one settled read and the writing epoch's debit vintage; the next controller
 price cannot replace that vintage. Any participant accepting the complete
-package, with the same published constants, compiler edition, and
-certificate procedure, reproduces every epoch-$k$ quantity. The epoch history
+package, with the same published constants, compiler edition, and published
+attempted-rung enclosures and verdicts, determines the same epoch-$k$ values
+(`prop:epoch:epoch-replay-determinism`). The epoch history
 is the recognized epoch-marker sequence of the admissible history, read past
 the settlement depth, with the empty initial boundary and pending markers
 distinguished by M5 (§1.2). Epochs number certificates from 1, and positions
@@ -3383,8 +3392,9 @@ memory, no below-wall branch**. It has no effect on standing.
  6: Read emission fractions 𝔢_u and contributing widths from 𝖠 + the ledger
                                                   (def:epoch:source-emission)
  7: For each rung t of 𝒢_t, greatest first: evaluate 𝒦_k over ℬ_k;
-    break when the declared procedure proves m_θ·𝒦_k ≤ 1;
-    record each rung above as FAILED or INDECISIVE  (alg:epoch:tilt-backoff)
+    break when its stated enclosure proves m_θ·𝒦_k ≤ 1 (PASS);
+    record each rung above with its enclosure and FAIL or INDECISIVE verdict
+                                                  (alg:epoch:tilt-backoff)
  8: Solve the unique equilibrium x* at the accepted rung t_k
                                     (thm:dynamics:certified-conserved-standing-uniqueness)
  9: Compute transport entries Π_ui and final standing α^(k)
@@ -3402,13 +3412,18 @@ the shared epoch package — its published marker policy with identity and
 fixed edition, the marker's lineage and acceptance evidence, $E_k$, the
 marker-defined burn state and increment, the prior completed state, the
 writing epoch's debit vintage, and the published constants — together with
-the projection-compiler version and the declared certificate procedure, the
-entire epoch-$k$ derivation — rates, fold cells, coefficients, the base
-matrix, emission fractions, the accepted rung, the transport, final standing,
-title, the raw Self-edge reading, activations, stamps, headroom, and the
+the projection-compiler version and the published attempted-rung enclosures
+and verdicts under `post:deployment:replay-verification`, the entire
+epoch-$k$ derivation — rates, fold cells, coefficients, the base matrix,
+emission fractions, the accepted rung, the transport, final standing, title,
+the raw Self-edge reading, activations, stamps, headroom, and the
 certificate — is deterministic: for these fixed inputs a function of the
 authoritative order $\mathcal{Q}_k$ (`lem:graph:ordered-replay-determinism`),
-invariant under every payload state.
+invariant under every payload state. The accepted rung $t_k$ follows from
+the published attempts under `def:epoch:tilt-backoff-grid` and
+`post:deployment:replay-verification`; other mathematical values follow from
+it and the remaining inputs. Published enclosures of evaluated objects may
+differ across builds.
 
 ### 11.7 The θ-debit ledger and the two-gate write rule
 
@@ -3486,9 +3501,9 @@ Price axis:
   - (X1) *derivability* — $\rho_\theta^{(k+1)}$ is a function of the epoch-$k$
     certificate and the published constants alone, replayable by any
     participant;
-  - (X2) *in-epoch certification* — the accepted rung is the greatest element
-    of $\mathcal{G}_t$ whose certificate the declared procedure proves passing
-    at the wall in force and on the epoch's own contributing width,
+  - (X2) *in-epoch certification* — the accepted rung is the greatest
+    attempted rung of $\mathcal{G}_t$ whose stated enclosure proves PASS under
+    `post:deployment:replay-verification` at the wall in force and on the epoch's own contributing width,
     $m_\theta\,\mathcal{K}_k \le 1$; the anchor always certifies, and
     higher-rung failures and indecisive enclosures stay distinct and
     published;
@@ -3621,7 +3636,9 @@ $[0.072857886,\ 0.072858002]$ ($\rho^* \approx 0.072857922$) and strictly
 below $3/37 \approx 0.081081081$, so either declaration gives
 $\rho_{\theta,\min} \ge \rho^* > 0$. Before its first epoch the deployment
 publicly declares $\rho_{\theta,\min} \in \{\rho^*, 3/37\}$ beside $\nu$ in
-its structural tier. The declaration is fixed for the deployment: changing
+its structural tier, according to the comparisons certified under its
+published arithmetic and comparison rules (`rem:epoch:floor-is-a-landmark`).
+The declaration is fixed for the deployment: changing
 it is a public structural change with regenerated evidence, never an epoch
 dial or host-policy choice, and any third value requires its own derivation.
 The floor is distinct from the wall in force, the policy floor, the effective
@@ -4062,7 +4079,7 @@ package's intermediate values are binding but not straddlers (§2).
 | $\mathfrak{e}_u$, $\mathfrak{E}$ | Source emission fraction $\min(1, \hat{r}_u/\rho_\theta)$ and its diagonal: history travels on the back of balance; a property of the source's pair, never of one relation. | `def:epoch:source-emission` |
 | $\boldsymbol{\Pi}(\boldsymbol{x})$, $\Pi_{ui}$, $\tilde{b}_i$, $\tilde{N}_i$ | Conserved transport — emission applied once to the depth-mass mixture of hop products — its entries, and the transported pair mass. Sole relational input to standing; every row sums to one. | `def:epoch:finite-depth-conserved-transport`, `post:epoch:standing-pair-mass-conservation` |
 | $\boldsymbol{x}^*$, $\mathcal{B}_k$ | The epoch's unique conserved equilibrium and the rate-hull box it is solved on, known before the solve begins. | `def:epoch:conserved-standing-equilibrium`, `prop:epoch:final-standing-hull` |
-| $\mathcal{K}_k$ | Conserved standing certificate; a rung passes iff $m_\theta\,\mathcal{K}_k \le 1$, the accepted rung is the greatest one the declared procedure proves passing, and the verdict distinguishes certificate failure from indecisive enclosure. | `def:dynamics:conserved-standing-certificate` |
+| $\mathcal{K}_k$ | Conserved standing certificate; a rung passes iff $m_\theta\,\mathcal{K}_k \le 1$, the accepted rung is the greatest attempted one whose stated enclosure proves PASS (`post:deployment:replay-verification`), and the verdict distinguishes certificate failure from indecisive enclosure. | `def:dynamics:conserved-standing-certificate` |
 | $\rho_{\text{act}}(q)$, $\rho_{\text{ep}}^{(k)}$ | Final act stamp (act-owned reduced final standing) and act-weighted epoch stamp. | `def:epoch:final-act-stamps` |
 | $W^+(v), W^-(v)$ | Raw double-cover output registers: the maximum positive- and negative-parity path products to $v$ over paths simple in the raw snapshot, summarizing the enumerated path prefixes (which, not the registers, are the extension state) — terminal raw-service outputs, read by no standing quantity. | `def:epoch:double-cover-bfs-state` |
 | $\mathrm{pos}(e)$ **(L1·verify)** | Audit position under the identity-key linearization; consumed by no formula. | `def:epoch:log-position` |
