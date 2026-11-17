@@ -11,6 +11,9 @@ export interface PickedSheetItem {
   described?: boolean;
   onDescribe?: () => void;
   onRemove?: () => void;
+  /** A published post's edit only: `Crop` after `Describe`, opening the
+   *  post's crop on this picture (round 53). Absent, no `Crop` stands. */
+  onCrop?: () => void;
   /** The drag's non-drag twins — offered only where the move is possible:
    *  never on the cover for the first two, never on the last row for the third. */
   onMakeCover?: () => void;
@@ -24,7 +27,7 @@ export interface PickedSheetProps {
   items?: readonly PickedSheetItem[];
   onDone?: () => void;
   inline?: boolean;
-  /** The data-node name its placer gives the sheet (design ⇄ impl seam 002; renders as attributes only). Given one, it also names `title`, one `picture` per row keyed by its place (with `reorder`, `thumb`, `label`, `described` or `describe`, `makeCover`, `moveUp`, `moveDown`, `remove`), `note` and `done`. */
+  /** The data-node name its placer gives the sheet (design ⇄ impl seam 002; renders as attributes only). Given one, it also names `title`, one `picture` per row keyed by its place (with `reorder`, `thumb`, `label`, `described` or `describe`, `crop` where given, `makeCover`, `moveUp`, `moveDown`, `remove`), `note` and `done`. */
   node?: string;
 }
 

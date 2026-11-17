@@ -9,9 +9,10 @@
    a post being composed with its answers already filled in.
 
    THE BODY EDITS LIKE A COMPOSER'S, because an edit carries complete state:
-   the row's manager reorders, recovers the cover, removes and describes, and
-   "+ Add pictures · 2 of 10" takes more. The two together are the whole of
-   what the ruling asked for — the body may end up a different KIND than the
+   the row's manager reorders, recovers the cover, removes, describes and
+   crops, and "+ Add pictures · 2 of 10" takes more, through the post's crop
+   with its shape row and every picture of the post in its strip (round 53).
+   The two together are the whole of what the ruling asked for — the body may end up a different KIND than the
    one that was published, and the manager is where that begins.
 
    THE LICENSE IS LOCKED, and the lock is a mark rather than an action: a
@@ -53,8 +54,10 @@
 
    THE FIXTURE'S STORY (jakob 2026-10-05, the 136 round's 5a): both pictures
    in the row were added in this edit. A picture the post already carried
-   never uploads again, so the gate counts the new ones alone, and `Uploading
-   1 of 2` is true of this row: the first has landed, the second is going up.
+   uploads again only when the crop re-framed it or changed the post's shape
+   (round 53, jakob 2026-11-17, option C), so the gate counts the new and the
+   re-framed ones alone, and `Uploading 1 of 2` is true of this row: the
+   first has landed, the second is going up.
 
    A FAILED UPLOAD MARKS ITS TILE TOO (jakob 2026-10-05, the 136 round's 2).
    The edit's media row is the compose media row, so it fails the compose way

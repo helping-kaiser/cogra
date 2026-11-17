@@ -10,7 +10,7 @@ ALWAYS every change made in the sheet applies the moment it is made, and none wa
 
 WHEN drag a picture by its handle to a new place -> the pictures take the new order AND the picture now first is the cover
 
-ALWAYS a picture's second line reads Describe or Described, then postEdit.pickedSheet.picture.makeCover, postEdit.pickedSheet.picture.moveUp and postEdit.pickedSheet.picture.moveDown as small inline actions, each only where the move is possible
+ALWAYS a picture's second line reads Describe or Described, then postEdit.pickedSheet.picture.crop on every picture, then postEdit.pickedSheet.picture.makeCover, postEdit.pickedSheet.picture.moveUp and postEdit.pickedSheet.picture.moveDown as small inline actions, each only where the move is possible
 
 ALWAYS the cover offers neither postEdit.pickedSheet.picture.makeCover nor postEdit.pickedSheet.picture.moveUp, and the last picture offers no postEdit.pickedSheet.picture.moveDown
 
@@ -31,6 +31,10 @@ WHEN tap the last picture's remove control -> the sheet closes onto the words ed
 WHEN tap the last picture's remove control GIVEN the post carries a description -> the media-to-words flip drops the standing description with the last picture AND NEVER the signed edit carries a description
 
 WHEN tap a picture's Describe -> the describe sheet opens for that picture
+
+WHEN tap postEdit.pickedSheet.picture.crop -> the post's crop opens with that picture in the crop viewport AND the strip holds every picture of the post AND the shape row stands with the post's shape selected
+
+WHEN the post's crop opened from postEdit.pickedSheet.picture.crop closes by Next or by its back arrow -> the sheet stands over the edit again AND the picture's thumbnail shows the framing the crop left it
 
 WHEN press Done -> the sheet closes to the edit AND everything already applied stands
 

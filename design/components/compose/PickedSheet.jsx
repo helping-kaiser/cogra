@@ -32,6 +32,13 @@ import { MediaThumb } from "./MediaThumb.jsx";
    · REMOVE — the X on each row.
    · DESCRIBE — the per-picture entry into `DescribeSheet`; a described
      picture shows the quiet word "Described" instead of the link.
+   · CROP — on a published post's edit only (round 53, jakob 2026-11-17,
+     option C): `Crop` stands on every row, right after `Describe`, and opens
+     the post's crop on that picture. It comes before the moves because it
+     acts on the picture itself, as `Describe` does, and stands on every row,
+     while the moves after it are the drag's twins and come and go with the
+     row's place. The new post's sheets carry none: their crop is the
+     wizard's own step, one Back away.
 
    Rows are 56px thumbs with a name ("Cover — shown first", "Picture 2") so a
    screen-reader pass reads as a list of pictures, not a list of buttons. */
@@ -39,7 +46,7 @@ import { MediaThumb } from "./MediaThumb.jsx";
 /* `node` is the data-node name its placer gives the sheet (seam 248): the
    sheet takes it, its `title`, one `picture` per row keyed by its place in the
    media, counted from 1 — `reorder`, `thumb`, `label`, `described` or
-   `describe`, `makeCover`, `moveUp`, `moveDown`, `remove` — the `note` and
+   `describe`, `crop` where given, `makeCover`, `moveUp`, `moveDown`, `remove` — the `note` and
    `done`. Given none, it renders exactly as before. */
 export function PickedSheet({ open = false, onClose, items = [], onDone, inline = false, node }) {
   const part = (name) => node && name;
@@ -101,6 +108,11 @@ export function PickedSheet({ open = false, onClose, items = [], onDone, inline 
                 ) : (
                   <InlineAction size="sm" onClick={item.onDescribe} node={part("describe")}>
                     Describe
+                  </InlineAction>
+                )}
+                {item.onCrop && (
+                  <InlineAction size="sm" onClick={item.onCrop} node={part("crop")}>
+                    Crop
                   </InlineAction>
                 )}
                 {index > 0 && (
