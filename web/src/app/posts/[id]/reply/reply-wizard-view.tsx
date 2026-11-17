@@ -46,7 +46,7 @@ import { runUpload, runVideoUpload } from "@/lib/compose/uploads";
 import { useObjectUrl, usePreviewUrls, useRevokeOnChange } from "@/lib/compose/previews";
 import { commentAttachmentClaims, commentMediaLedger } from "@/lib/compose/comment-media";
 import { contentExpectation } from "@/lib/compose/payload-expectation";
-import { COMMENT_SCALE, screenPick, type PickRefusal } from "@/lib/compose/pick";
+import { COMMENT_SCALE, holdBytes, screenPick, type PickRefusal } from "@/lib/compose/pick";
 import { captureFrames, captureFrameZero, probeVideo } from "@/lib/ui2/media/video";
 import {
   advanceGate,
@@ -693,7 +693,11 @@ export function ReplyWizard({
                 const frame = mine?.frames[index];
                 if (frame) chooseCover(frame, index);
               }}
-              onPickCover={(file) => chooseCover(file, COVER_FROM_PICTURE)}
+              // The face joins as its own bytes (`holdBytes`), so its upload
+              // and every Retry of it read what was picked.
+              onPickCover={(file) =>
+                void holdBytes(file).then((held) => chooseCover(held ?? file, COVER_FROM_PICTURE))
+              }
               onDismissRefusal={(id) =>
                 setRefusals((current) => current.filter((refusal) => refusal.id !== id))
               }
