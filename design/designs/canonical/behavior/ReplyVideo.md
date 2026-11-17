@@ -14,7 +14,9 @@ ALWAYS the cover's tile shows the chosen cover wearing the Cover pill and is nam
 
 ALWAYS the cover's tile is the dashed Add a cover door, its words on the tile, GIVEN no cover was chosen
 
-WHEN tap the cover's tile -> the platform's own picker opens AND the picture comes back through the cover's crop, locked to the comment's square AND NEVER the clip's frames are offered
+WHEN tap the cover's tile GIVEN the cover row stands -> the platform's own picker opens AND the picture comes back through the cover's crop, locked to the comment's square AND NEVER the clip's frames are offered
+
+WHEN tap the dashed Add a cover tile GIVEN the clip is tall and its cover row has not been opened -> the cover row opens under the clip AND NEVER the picker opens from this tap
 
 WHEN press Next on the cover's crop GIVEN it was opened from the cover's tile -> the composer comes back with the picture as the cover in the cover's tile AND in the row's picture tile, outlined as chosen
 
@@ -22,9 +24,7 @@ WHEN press the cover's crop's back arrow GIVEN it was opened from the cover's ti
 
 ALWAYS the cover row shows from the start GIVEN the clip is horizontal or square
 
-ALWAYS Add a cover stands in the cover row's place GIVEN the clip is vertical and no cover was asked for
-
-WHEN tap Add a cover -> the cover row opens where the door stood
+ALWAYS the cover row does not stand, the dashed Add a cover tile beside the clip being its one door and no text door standing under a Cover label, GIVEN the clip is tall and no cover was asked for
 
 WHEN tap a cover frame -> that frame becomes the clip's face AND it stands in the cover's tile as it is AND NEVER a crop opens for a frame
 

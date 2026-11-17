@@ -150,8 +150,8 @@ export function CoverRow({
    names what it is and the name says what it does.
 
    NO COVER YET, THE SAME PLACE HOLDS THE OTHER HALF: a dashed tile at the
-   same size, the add glyph on it, and the words `Add a cover` — on the tile
-   where it is wide enough to carry them, beside it as the door's own label
+   same size, the add glyph in its exact middle, and the words `Add a cover`
+   — on the tile, 4 under the glyph, where it is wide enough to carry them, beside it as the door's own label
    where it is not (`labelBeside`, which the placer sets from the tile it
    measured). One control either way: the tile and its words are one press. */
 const ADD_WORDS = {
@@ -202,10 +202,19 @@ export function CoverTile({ src, transform, width, height, progress, failed = fa
           gap: 4,
           color: "var(--text-secondary)",
           flex: "none",
+          ...(labelBeside ? {} : { position: "relative" }),
         }}
       >
         <Icon name="add" size={20} />
-        {!labelBeside && <span style={ADD_WORDS}>{addLabel}</span>}
+        {/* THE GLYPH HOLDS THE TILE'S EXACT MIDDLE, THE WORDS STAND UNDER IT
+            (round 53 act 2, jakob 2026-11-17: "the '+' sign should be in the
+            middle of the square … and the words below it"). The glyph is the
+            flex column's one child, so it centres on both axes alone; the
+            words are taken out of the flow and set 4 below the glyph's
+            20 px box — the gap the group kept — centred across the tile. */}
+        {!labelBeside && (
+          <span style={{ ...ADD_WORDS, position: "absolute", left: 0, right: 0, top: "calc(50% + 14px)", textAlign: "center" }}>{addLabel}</span>
+        )}
       </span>
       {labelBeside && <span style={ADD_WORDS}>{addLabel}</span>}
     </button>

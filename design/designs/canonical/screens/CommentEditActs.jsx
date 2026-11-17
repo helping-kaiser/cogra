@@ -14,7 +14,8 @@
    `EditActs` names the set — `Edit`, `Tags added`, `Tags withdrawn`, `Tags
    revised`, `Citations added`, `Citations revised`, `Citations withdrawn` —
    a row per kind in the batch; a video edit's new face rides the `Edit` row
-   (seam 248). A tag withdrawal is one
+   (seam 248), as does a picture added, removed or re-framed in the
+   comment's square crop (round 53). A tag withdrawal is one
    record; a citation's withdrawal is `ReferenceClaim.withdrawalCost`
    records, and the one withdrawn here was revised past 1, so its row reads
    `2`, heard as `2 things`. The title, the footer and the rows add up to the

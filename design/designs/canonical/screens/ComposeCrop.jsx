@@ -43,12 +43,23 @@
    `viewport`, the `zoom` slider, the `howTo` line, the `pictures` strip with
    one `thumb` per picture keyed by its place, and `next`. */
 export const NODE = "composeCrop";
-/* THE `opener` CHIP (round 52 act 3, jakob 2026-11-17, C8 and "the shape
-   buttons are hidden on the edit's crop"): `post`, a stage of the new post's
-   wizard — `Back a step`, `Leave — your draft is kept`; `edit`, pictures
-   added to a published post's edit — `Back to the edit`, `Leave — the edit
-   is discarded`, and no shape row: the crop is locked to the post's one
-   shape, which the stage shows, drag and zoom unchanged. */
+/* THE `opener` CHIP (round 52 act 3, C8; round 53, jakob 2026-11-17, option
+   C: "yes C and all pictures"): `post`, a stage of the new post's wizard —
+   `Back a step`, `Leave — your draft is kept`; `edit`, a published post's
+   edit — `Back to the edit`, `Leave — the edit is discarded`. ON AN EDIT THE
+   CROP IS THE NEW POST'S CROP: the shape row with the post's shape selected
+   and all three chips live, a shape change holding for every picture in the
+   post by the new post's own rules (each keeps its scale and position, rises
+   to the fill, shifts to meet the frame); the stage, the zoom, the line and `Next` as here.
+   What differs is the strip: every picture of the post, in the edit's order —
+   the ones it already carries and the ones just added. Opened from `+ Add
+   pictures` the new ones are selected first, as drawn (the third picture,
+   on the stage); opened from `Crop` on a picture in the edit's picture sheet
+   (`EditPicked`), that picture. A picture the post already carries is framed
+   within its published cut-out — only the cropped export ever left the
+   device — so it can be framed tighter, never wider; one whose framing or
+   shape changed is a replacement in the signed edit, riding the edit's own
+   record as an added picture does. */
 export const PROPS = {
   shape: { editor: "enum", options: ["tall", "square", "wide"], default: "tall" },
   opener: { editor: "enum", options: ["post", "edit"], default: "post" },
