@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -82,6 +83,7 @@ internal fun OpinionsSheet(
 }
 
 /** The sheet over [rows] as read: null while the read is out, empty when nobody holds an opinion. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun OpinionsSheetContent(
     rows: List<HeldOpinion>?,
