@@ -111,6 +111,8 @@ function approvalData(
       if (incomplete !== undefined && incomplete.kind === "refused") {
         return refused(incomplete.errors);
       }
+      // A failed leg keeps its cause: an answered INTERNAL is not no answer.
+      if (incomplete !== undefined && incomplete.kind === "failed") return failed(incomplete.cause);
       if (incomplete !== undefined) {
         return failed(new Error(`staged write ${incomplete.id} did not complete: ${incomplete.kind}`));
       }

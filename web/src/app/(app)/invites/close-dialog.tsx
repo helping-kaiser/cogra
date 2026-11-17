@@ -21,14 +21,14 @@ import { useEffect, useRef, useState } from "react";
 import { buttonClassName } from "@/lib/ui/button";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { DialogSurface } from "@/lib/ui2/dialog-surface";
-import { DIDNT_SEND, RETRY } from "@/lib/invites/queue";
-import { NOT_THROUGH_LINE } from "@/lib/ui/error-messages";
+import { RETRY } from "@/lib/invites/queue";
 
 /**
  * What a closing answered: taken, no answer, or the server's FORBIDDEN —
  * an answer, so its line is the not-through one (NetworkError.md:13).
  */
-export type CloseAnswer = "taken" | "failed" | "notThrough";
+/** A closing taken, or the fault line its dialog says (no answer, or an answered fault's own line, NetworkError.md:13-19). */
+export type CloseAnswer = "taken" | { readonly line: string };
 
 /** How long a closing may stay unanswered before it says it is still working. */
 export const CLOSING_AFTER_MS = 200;
@@ -114,7 +114,7 @@ export function CloseDialog({
       {failed && (
         // The failure voice inside the dialog, never a snackbar (:23).
         <p role="alert" data-testid="invites-dialog-failed" className="m-0 mt-4 text-body-medium text-error">
-          {fault === "notThrough" ? NOT_THROUGH_LINE : DIDNT_SEND}
+          {fault?.line}
         </p>
       )}
     </DialogSurface>

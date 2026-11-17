@@ -52,8 +52,7 @@ import { buttonClassName } from "@/lib/ui/button";
 import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { shareLink } from "@/lib/ui/share";
 import { TransportError } from "@/lib/ui/transport-error";
-import { NOT_THROUGH_LINE } from "@/lib/ui/error-messages";
-import { hasCode } from "@/lib/api/outcome";
+import { outcomeFaultLine } from "@/lib/ui/error-messages";
 import { AddressCard } from "@/lib/ui2/address-card";
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { SettingsGroup, SettingsRow } from "@/lib/ui2/settings-row";
@@ -91,7 +90,8 @@ export function InviteSheet({
   const [choosing, setChoosing] = useState(false);
   const [inFlight, setInFlight] = useState(false);
   const [slow, setSlow] = useState(false);
-  const [fault, setFault] = useState<"failed" | "notThrough" | null>(null);
+  // The create's fault: its answered line, or undefined for no answer (TransportError's own).
+  const [fault, setFault] = useState<{ readonly line: string | undefined } | null>(null);
   const [created, setCreated] = useState<InviteLinkView | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -126,7 +126,7 @@ export function InviteSheet({
       onCreated(outcome.value);
     } else {
       // The staged choices stay as they were (:23).
-      setFault(hasCode(outcome, "FORBIDDEN") ? "notThrough" : "failed");
+      setFault({ line: outcomeFaultLine(outcome) ?? undefined });
     }
   };
 
@@ -162,7 +162,7 @@ export function InviteSheet({
             {fault !== null && (
               <TransportError
                 testId="invites-sheet-failed"
-                message={fault === "notThrough" ? NOT_THROUGH_LINE : undefined}
+                message={fault.line}
               />
             )}
             <div className="flex justify-end">

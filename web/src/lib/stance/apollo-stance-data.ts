@@ -218,6 +218,9 @@ export function createApolloStanceData(deps: {
     if (incomplete !== undefined && incomplete.kind === "refused") {
       return refused(incomplete.errors);
     }
+    // A FAILED LEG KEEPS ITS CAUSE: an INTERNAL the server answered is read as
+    // an answer, never as no answer (NetworkError.md:13).
+    if (incomplete !== undefined && incomplete.kind === "failed") return failed(incomplete.cause);
     if (incomplete !== undefined) {
       return failed(
         new Error(`staged write ${incomplete.id} did not complete: ${incomplete.kind}`),

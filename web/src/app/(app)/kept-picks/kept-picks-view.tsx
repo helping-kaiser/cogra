@@ -58,7 +58,7 @@ import {
   type StanceAxes,
 } from "@/lib/ui/stance-format";
 import { TransportError } from "@/lib/ui/transport-error";
-import { NOT_THROUGH_LINE } from "@/lib/ui/error-messages";
+import { NOT_THROUGH_LINE, outcomeFaultLine, UNVERIFIED_LINE } from "@/lib/ui/error-messages";
 import { ActsCard, actsTotal, SLOW_SIGNING_LINE, type ActsRow } from "@/lib/ui2/compose/acts-card";
 import { StagedRow } from "@/lib/ui2/compose/staged-reference";
 import { HeaderBar } from "@/lib/ui2/header-bar";
@@ -115,11 +115,14 @@ function axesOf(target: StanceTarget): StanceAxes {
   return target.kind === "topic" ? AFFINITY_AXES : STANCE_AXES;
 }
 
-type SealFault = "offline" | "notThrough" | "writeRule" | "bug";
+type SealFault = "offline" | "notThrough" | "unverified" | "writeRule" | "bug";
 
+/** An answered fault of the whole act reads its own line (NetworkError.md:13-19), never the no-answer one. */
 function faultOf(outcome: Outcome<StanceCommit>): SealFault {
   if (hasCode(outcome, "WRITE_RULE_FAILED")) return "writeRule";
-  if (hasCode(outcome, "FORBIDDEN")) return "notThrough";
+  const line = outcomeFaultLine(outcome);
+  if (line === UNVERIFIED_LINE) return "unverified";
+  if (line === NOT_THROUGH_LINE) return "notThrough";
   return outcome.kind === "refused" ? "bug" : "offline";
 }
 
@@ -127,6 +130,7 @@ function faultOf(outcome: Outcome<StanceCommit>): SealFault {
 function retryLineOf(fault: SealFault | null): string | null {
   if (fault === "offline") return OFFLINE_LINE;
   if (fault === "notThrough") return NOT_THROUGH_LINE;
+  if (fault === "unverified") return UNVERIFIED_LINE;
   return null;
 }
 
