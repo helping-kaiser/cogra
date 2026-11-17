@@ -2,7 +2,7 @@
 
 WHEN tap the ⋮ on a feed card of the reader's own -> feed.menuSheet rises over the feed AND the feed stands unchanged beneath its wash
 
-ALWAYS feed.menuSheet reads Save or Unsave, then Cite in a new post, then Edit, then Mark as sensitive, then Remove, then License terms, the own post menu's rows on the post detail, and carries no Hide and no Report row
+ALWAYS feed.menuSheet reads Save or Unsave, then Cite in a new post, then Edit, then Mark as sensitive, then Remove, then feed.menuSheet.citedBy, then Opinions on this, then License terms, the own post menu's rows on the post detail, and carries no Hide and no Report row
 
 ALWAYS the own menu off the post detail is the detail's own menu, on the feed, History, Saved, the own profile's Posts and Comments tabs and a comment card of the reader's own on any of them, a comment's menu holding the own comment menu's rows
 

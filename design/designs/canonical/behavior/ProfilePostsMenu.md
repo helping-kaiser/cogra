@@ -2,7 +2,7 @@
 
 WHEN tap the ⋮ on profile.posts.card GIVEN profile.tabRow.postsTab is lit and the post is someone else's -> profile.menuSheet rises over the profile AND the profile stands unchanged beneath its wash
 
-ALWAYS the post card's menu on the profile reads Save or Unsave, then Cite in a new post, then Hide with the author's handle, then License terms, then profile.menuSheet.report at the sheet tail, the reader's post menu's own rows
+ALWAYS the post card's menu on the profile reads Save or Unsave, then Cite in a new post, then Hide with the author's handle, then profile.menuSheet.citedBy, then Opinions on this, then License terms, then profile.menuSheet.report at the sheet tail, the reader's post menu's own rows
 
 ALWAYS the post card's menu keeps Hide with the author's handle on the author's own profile, though the profile's own menu carries the same row
 

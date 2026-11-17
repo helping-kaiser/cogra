@@ -1,6 +1,6 @@
 # RemoveMenu · `spec:design:behavior-remove-menu`
 
-ALWAYS the menu reads Save or Unsave, then Cite in a new post, then Edit, then Mark as sensitive, then Remove, then License terms, the own post menu's rows
+ALWAYS the menu reads Save or Unsave, then Cite in a new post, then Edit, then Mark as sensitive, then Remove, then postDetail.menuSheet.citedBy, then Opinions on this, then License terms, the own post menu's rows
 
 ALWAYS Save, or Unsave while the post is kept, is the menu's first row
 
@@ -19,6 +19,12 @@ WHEN tap Edit -> the post's edit opens
 WHEN tap Mark as sensitive -> the post's edit opens AND NEVER the post is marked without the edit's signing
 
 WHEN tap Remove -> the think-twice dialog opens
+
+WHEN tap postDetail.menuSheet.citedBy -> the menu closes AND what cites the post comes up over the surface the menu was opened from
+
+WHEN tap Opinions on this -> the menu closes AND the post's opinions sheet comes up over the surface the menu was opened from
+
+ALWAYS Opinions on this and postDetail.menuSheet.citedBy stand in the menu whatever their counts, the post live or removed
 
 WHEN tap License terms -> the menu closes AND the post's terms come up in a sheet over the post
 

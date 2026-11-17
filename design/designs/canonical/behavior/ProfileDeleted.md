@@ -2,6 +2,14 @@
 
 ALWAYS a deleted account's profile keeps the other-profile page's whole structure: the header, the real counts, the tabs and the chronicle of what the account did
 
+WHEN a deleted account's profile opens, from any door -> it lands with profile.tabRow.postsTab lit and profile.posts below it, as every profile does AND NEVER it lands on Everything or Comments
+
+ALWAYS each post under profile.posts stands as its post card under profile.posts.card.authorChip reading Deleted account, the reserved disc, GIVEN the deletion took the identity alone
+
+ALWAYS each post under profile.posts stands as profile.posts.card.removalMark, Removed by its author with its date, GIVEN the deletion took the content too
+
+WHEN tap profile.tabRow.everythingTab -> the chronicle stands below profile.tabRow AND the header above stays as it was
+
 ALWAYS the avatar is the reserved disc, with no monogram and no glyph
 
 ALWAYS the name slot reads Deleted account in the system's quiet voice
@@ -24,7 +32,7 @@ ALWAYS the wide anchor's accessible name says this account and never a handle
 
 ALWAYS profile.bottomBar keeps lit the slot of the root the profile was opened from, profile.bottomBar.feedSlot from the feed
 
-ALWAYS the page is reached by structure that still points at the account, an author chip or a name in a chronicle, and never by a shared handle link
+ALWAYS the page is reached by structure that still points at the account, a post's or a comment's author or a name in a chronicle, and never by a shared handle link
 
 WHEN a deleted account's profile opens -> profile.identity.removalMark stands in the bio's place AND the header, the real counts, the tabs and the chronicle stand around it AND NEVER the page is stripped to a notice AND NEVER the page stands without the mark AND NEVER a handle is printed or invented
 
@@ -50,7 +58,7 @@ WHEN tap the Opinions by figure -> the opinions page opens on this account on it
 
 WHEN tap the Posts figure -> NEVER anything happens
 
-WHEN tap profile.tabRow.postsTab -> the account's posts stand below profile.tabRow as post cards AND the header above stays as it was
+WHEN tap profile.tabRow.postsTab GIVEN another tab is lit -> the account's posts stand below profile.tabRow as post cards AND the header above stays as it was
 
 WHEN tap profile.tabRow.commentsTab -> the account's comments stand below profile.tabRow as comment cards AND the header above stays as it was
 

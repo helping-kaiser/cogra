@@ -23,7 +23,7 @@
    `SealSigningSlow` draw the two moments.
 
    A STAGED TAG THAT NEVER LANDED (round 30, jakob 2026-11-11, Q7) is the
-   `state` chip's `tagRefused`: the seal with its one staged tag,
+   `state` chip's `tag-refused`: the seal with its one staged tag,
    `#fieldnotes`, refused at signing — the Tags row reads back as before and
    under it `This tag didn't land.` with `Remove it`, no reason given, and
    `Sign and publish` stays. It is `SealFaultRow`'s unlanded-citation row at
@@ -34,9 +34,19 @@
    beneath it reads `Close` from the press itself; it, the header's arrow
    and its X close the seal and the post goes on, its wait and its answer at
    the feed's head (`SigningAfterClose`). `SealSigning` draws the same
-   moment whole. */
-export const PROPS = { state: { editor: "enum", options: ["rest", "tagRefused", "signing"], default: "rest" } };
-export const VALS = `restCardShown: this.props.state === "tagRefused" ? "none" : "flex", tagRefusedShown: this.props.state === "tagRefused" ? "flex" : "none", restFootShown: this.props.state === "signing" ? "none" : "flex", signFootShown: this.props.state === "signing" ? "flex" : "none"`;
+   moment whole.
+
+   REGISTERED as `composeSeal` (round 49, backlog 220): the header, the
+   summary line, the acts card `acts`, the three facts under `facts`
+   (`license`, `backing`, `sensitive`) and the foot `footer` — `postEdit`'s
+   names where the edit has the same part. The `state` chip draws the card
+   and the foot once per value, `rest`, `tag-refused` and `signing`, one
+   shown at a time, so each copy is keyed by its one value (a key is
+   lowercase, so the value is `tag-refused`); drawn so, the board is
+   pixel-identical to its earlier two-copy drawing at every value. */
+export const NODE = "composeSeal";
+export const PROPS = { state: { editor: "enum", options: ["rest", "tag-refused", "signing"], default: "rest" } };
+export const VALS = `restShown: this.props.state === "rest" ? "flex" : "none", tagRefusedShown: this.props.state === "tag-refused" ? "flex" : "none", signingShown: this.props.state === "signing" ? "flex" : "none"`;
 
 export function Screen() {
   return <ComposeSealBody chipped />;

@@ -2,7 +2,7 @@
 
 WHEN tap the ⋮ on a post card of the reader's own in History -> history.menuSheet rises over History AND History stands unchanged beneath its wash
 
-ALWAYS history.menuSheet reads Save or Unsave, then Cite in a new post, then Edit, then Mark as sensitive, then Remove, then License terms, the own post menu's rows, and carries no Hide and no Report row
+ALWAYS history.menuSheet reads Save or Unsave, then Cite in a new post, then Edit, then Mark as sensitive, then Remove, then history.menuSheet.citedBy, then Opinions on this, then License terms, the own post menu's rows, and carries no Hide and no Report row
 
 WHEN tap history.menuSheet.edit -> the post's edit opens
 

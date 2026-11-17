@@ -12,14 +12,20 @@
    a different phone. The card below the sheet shows the row it leaves behind:
    opinion · score · comment, three where there were four.
 
-   SHARE LEADS THE SHEET. Every other row here is a menu row by nature — save,
-   cite, hide, the license — and share is the one row that was a one-tap control
-   a moment ago, on a wider screen. A reader who opens this ⋮ to share came for
-   the row that moved, so it takes the position their thumb was already aiming
-   at; appending it would put the displaced control furthest from the hand that
-   lost it, and the row's own rule already refuses growth by arrival order. The
-   four below keep their order exactly, the license closing the sheet as it
-   closes every other.
+   SHARE LEADS THE SHEET (jakob 2026-11-13, M3: as drawn — the one exception
+   to Save leading, written where that rule is). Every other row here is a
+   menu row by nature — save, cite, hide, the readings, the license — and
+   share is the one row that was a one-tap control a moment ago, on a wider
+   screen. A reader who opens this ⋮ to share came for the row that moved, so
+   it takes the position their thumb was already aiming at; appending it would
+   put the displaced control furthest from the hand that lost it, and the
+   row's own rule already refuses growth by arrival order. The rows below keep
+   their order exactly, the license closing the sheet as it closes every
+   other, Report at the tail.
+
+   IT READS `Share this post` (jakob 2026-11-13, M4), the share control's one
+   name everywhere it appears (copy-voice, *Accessible names*) — the glyph's
+   name on the wider phone, now the row's words.
 
    NOTHING ELSE MOVES. Same master, same rows, same words — this is the reader's
    menu with one row visiting, not a second menu. The wide phone's board stays
@@ -45,7 +51,7 @@
 export const NODE = "postDetail";
 export const FRAME = { width: 320, height: 568 };
 
-const NARROW_MENU = [{ label: "Share", onSelect: () => {}, node: "share" }, ...READER_POST_MENU];
+const NARROW_MENU = [{ label: "Share this post", onSelect: () => {}, node: "share" }, ...READER_POST_MENU];
 
 export function Screen() {
   return (

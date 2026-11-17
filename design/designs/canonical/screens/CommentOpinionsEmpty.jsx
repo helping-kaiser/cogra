@@ -4,11 +4,12 @@
    ONE BOARD, TWO THINGS CHECKED, and both are the things the post's own sheet
    cannot show. The comment path's sheet is two sheets deep — the menu closes,
    the opinions come up over the thread, and the thread is still there under the
-   wash — which is the `CommentLicense` arrangement exactly. And this is where
-   the empty state is reachable at all: a post's row drops away at zero
+   wash — which is the `CommentLicense` arrangement exactly. And this is the
+   empty state at comment scale: a count line drops away at zero
    (`SettingsHidden`'s rule — a tap that can only open an empty list is a tap
    spent on nothing), while a menu keeps its rows whatever the count, so the
-   comment's door is the one a reader can walk through and find nobody.
+   menu's row is the door a reader can walk through and find nobody — the
+   comment's, and the post's too (`PostOpinions`' `list` chip).
 
    The populated rows are drawn on `PostOpinions`; nothing about them changes
    here but what the title names.

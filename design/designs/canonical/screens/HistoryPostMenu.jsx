@@ -1,7 +1,8 @@
 /* HISTORY, A POST CARD'S MENU OPEN (round 36, backlog 149; jakob 2026-11-11,
    H7). Every card in History is the feed's own card, fully live, so its ⋮
    raises the feed's sheet: the reader's post menu, `READER_POST_MENU`'s rows
-   — Save, Cite, Hide @ada, License terms, Report at the tail. History adds
+   — Save, Cite, Hide @ada, Cited by, Opinions on this, License terms, Report
+   at the tail. History adds
    no row and takes none away: it offers no way to remove one thing from it
    (History.md).
 

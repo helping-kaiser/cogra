@@ -42,6 +42,10 @@ ALWAYS the counts count Unicode scalar values, never UTF-16 code units
 
 WHEN press composeDetails.next GIVEN composeDetails.title and composeDetails.description are empty -> NEVER composeDetails.next refuses
 
+WHEN tap composeDetails.tags.add -> the tag picker opens over the stage AND NEVER a tag's name is typed on the stage itself
+
+ALWAYS the tag picker is the only place a tag's name is typed, on every composer and every edit, and no composer carries a typed tag field of its own
+
 WHEN tap composeDetails.tags.tag.remove -> the tag leaves the post's staged tags on the spot AND NEVER a dialog asks
 
 WHEN tap composeDetails.tags.tag -> the tag's pair opens in a sheet over the stage

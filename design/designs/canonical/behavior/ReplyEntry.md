@@ -30,6 +30,10 @@ ALWAYS every comment's Reply stands at the disabled opacity and stays tappable G
 
 ALWAYS the comments sheet's foot stands for every reader, signed out and applicant included
 
+ALWAYS the foot, every comment's Reply and a list card's comment glyph stand at full strength GIVEN the reader is signed out, as Main, FeedBare and GuestGate draw a guest's acting controls, the dimmed look being the applicant's alone (jakob 2026-11-17)
+
+ALWAYS postDetail.threadSheet.foot wears the borrowed view's face, as the guest band shows it, GIVEN the reader is signed out
+
 WHEN a deep link opens the thread on a comment -> the comments sheet opens with that comment scrolled to the sheet's top AND the comment's branch stands expanded AND the comment wears a tonal highlight AND the highlight has faded WITHIN 1s
 
 WHEN a deep link opens the thread on a comment GIVEN reduced motion is set -> the comment's tonal highlight clears WITHIN 1s AND NEVER the highlight fades

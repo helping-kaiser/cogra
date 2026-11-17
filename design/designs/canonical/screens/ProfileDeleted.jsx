@@ -70,6 +70,11 @@
    `ProfileOther` is: the shells keep their paths, and the mark is
    `removalMark`. */
 export const NODE = "profile";
+/* It lands on Posts, as every profile does (jakob 2026-11-17): the `tab` chip
+   draws the landing and the chronicle, the `contents` chip the Posts tab with
+   the contents kept or removed (`ProfileDeletedBody`). */
+export const PROPS = { ...TAB_CHIP, ...CONTENTS_CHIP };
+export const VALS = `${TAB_VALS}, ${CONTENTS_VALS}`;
 export function Screen() {
-  return <ProfileDeletedBody />;
+  return <ProfileDeletedBody tab="chip" />;
 }

@@ -6,7 +6,8 @@
    THE PAGE STAYS WHOLE. Hiding is a comfort over the reader's own feed, not
    an act on the person: their profile still opens and still reads in full,
    so nothing here dims, collapses or gains a mark — the stance anchor, the
-   figures and the chronicle are the page as it stood under the sheet. The
+   figures and the Posts tab the page lands on are the page as it stood
+   under the sheet. The
    feed is where the hide shows, the next time it is opened (`FeedHidden`).
 
    THE SNACKBAR IS THE FEED'S, WORD FOR WORD — `@ada is hidden.` with
@@ -22,10 +23,14 @@
    Hide packet's registration ask), named as `ProfileOther` names the page;
    the snackbar is `snackbar`, its `message` and its `action`. */
 export const NODE = "profile";
+/* The page lands on Posts (round 49); the `tab` chip keeps its Everything
+   drawing, so the page's registered names stand. */
+export const PROPS = { ...TAB_CHIP };
+export const VALS = TAB_VALS;
 export function Screen() {
   return (
     <>
-      <ProfileOtherBody />
+      <ProfileOtherBody tab="chip" />
       <Snackbar message="@ada is hidden." action="Undo" offset={80} node="snackbar" />
     </>
   );

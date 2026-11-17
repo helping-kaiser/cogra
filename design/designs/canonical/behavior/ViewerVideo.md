@@ -8,6 +8,12 @@ WHEN the viewer opens on the post's clip -> the clip stands at the position the 
 
 ALWAYS the clip stands whole at its own ratio, never cut
 
+ALWAYS the viewer never shows a clip's cover, the clip playing or paused on its own frame at its own shape, so the shape never jumps at play
+
+WHEN the viewer opens on a clip GIVEN the device suppresses autoplay -> the clip stands paused on its own frame AND NEVER its cover stands in its place
+
+ALWAYS the clip's cover stands in the viewer, whole at its own 4:5, centred on the black, nothing cropped, GIVEN the clip itself cannot load and its cover has
+
 ALWAYS the viewer carries no acts and never shows the description
 
 ALWAYS the transport carries play and pause between the two skips, and elapsed, the timeline and total on a bar held clear of the screen's bottom edge

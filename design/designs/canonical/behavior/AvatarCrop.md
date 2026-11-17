@@ -18,7 +18,7 @@ WHEN press Next GIVEN the crop was opened from the avatar's change badge -> the 
 
 WHEN press Next GIVEN the crop was opened from Change picture on the profile edit -> the profile edit comes back holding the new picture AND NEVER the picture's own seal opens
 
-WHEN press the header back arrow -> the reader goes one stage back, to where the picture was chosen
+WHEN press the header back arrow -> the screen that asked for the picture comes back AND the picture goes unused AND NEVER a pick stage opens
 
 WHEN press the header X -> the flow is left AND nothing is signed
 

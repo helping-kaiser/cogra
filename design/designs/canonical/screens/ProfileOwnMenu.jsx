@@ -20,10 +20,14 @@
    is `Profile`'s, and the sheet is `menuSheet`, each row named by its own
    `node`. */
 export const NODE = "profile";
+/* The page beneath lands on Posts (round 49); the `tab` chip keeps its
+   Everything drawing, so the page's registered names stand. */
+export const PROPS = { ...TAB_CHIP };
+export const VALS = TAB_VALS;
 export function Screen() {
   return (
     <>
-      <ProfileOwnBody />
+      <ProfileOwnBody tab="chip" />
 
       <BottomSheet open ariaLabel="More on your profile" node="menuSheet">
         {OWN_PROFILE_MENU.map((item) => (

@@ -87,11 +87,11 @@ import {
    landing line's and the action row's place, as on the pad.
 
    THE PAD IS THE TEACHER (the check round's Q6, jakob 2026-10-06). The
-   account's first-ever pad open carries the two coaching lines in the shell's
-   `padNote` slot — the press-and-hold shortcut, and `Nothing is signed until
-   Set.` — wherever that pad opens (B8). That is the one teaching: a reader who
-   has found the pad has already found everything they need, and the only
-   thing left to say is that the hold is faster.
+   account's first-ever pad open carries `Nothing is signed until Set.` in the
+   shell's `padNote` slot, wherever that pad opens (B8); the press-and-hold
+   shortcut stands in the pad's help, never on the pad (jakob 2026-11-12,
+   `VouchBackPad.md`). A reader who has found the pad has already found
+   everything they need, and the help says the hold is faster.
 
    RELEASING THE FINGER NEVER COMMITS. Release parks the pick and leaves the pad
    open; an explicit SET commits; CANCEL or a press outside stages nothing. An
@@ -481,9 +481,9 @@ export function StanceControl({
     });
   };
 
-  /* THE TAP OPENS. The first open ever is the teaching moment — the shell's
-     two coaching lines ride it in `padNote` — and never again, so a feed of
-     twenty cannot teach twenty times. */
+  /* THE TAP OPENS. The first open ever carries `Nothing is signed until Set.`
+     in the shell's `padNote` — and never again, so a feed of twenty cannot
+     teach twenty times; the press-and-hold shortcut lives in the pad's help. */
   const onTap = () => {
     if (suppressClick.current) {
       suppressClick.current = false;

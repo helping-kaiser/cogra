@@ -8,7 +8,7 @@ ALWAYS postDetail.card.removalMark carries the line and the removal's date and n
 
 ALWAYS the author's mark never reads like Removed under the platform's rules
 
-ALWAYS postDetail.header carries postDetail.header.back and postDetail.header.menu, whose rows read Save or Unsave, then Cite in a new post, then License terms, your own post's menu less Edit, Mark as sensitive and Remove GIVEN the post is the reader's own
+ALWAYS postDetail.header carries postDetail.header.back and postDetail.header.menu, whose rows read Save or Unsave, then Cite in a new post, then Cited by, then Opinions on this, then License terms, your own post's menu less Edit, Mark as sensitive and Remove GIVEN the post is the reader's own
 
 WHEN tap postDetail.header.menu -> the sheet rises over the detail with those rows AND NEVER Edit, Mark as sensitive or Remove stands
 

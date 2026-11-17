@@ -2,7 +2,7 @@
 
 WHEN tap a tagged post card's ⋮ on the tag's page -> tagPage.menuSheet rises over the tag's page AND the page stands unchanged beneath its wash
 
-ALWAYS tagPage.menuSheet reads Save or Unsave, then Cite in a new post, then Hide with the author's handle, then License terms, then tagPage.menuSheet.report at the sheet tail, the reader's post menu's own rows
+ALWAYS tagPage.menuSheet reads Save or Unsave, then Cite in a new post, then Hide with the author's handle, then tagPage.menuSheet.citedBy, then Opinions on this, then License terms, then tagPage.menuSheet.report at the sheet tail, the reader's post menu's own rows
 
 WHEN tap tagPage.menuSheet.hide -> the sheet closes AND the tag's page stands as it stood, every row in its place AND tagPage.snackbar reads @tobias is hidden. with Undo AND NEVER a confirm step appears
 

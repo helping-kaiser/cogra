@@ -1,6 +1,6 @@
 # ReaderPostMenu · `spec:design:behavior-reader-post-menu`
 
-ALWAYS the reader's post menu reads Save or Unsave, then Cite in a new post, then Hide with the author's handle, then License terms, then postDetail.menuSheet.report at the sheet tail
+ALWAYS the reader's post menu reads Save or Unsave, then Cite in a new post, then Hide with the author's handle, then postDetail.menuSheet.citedBy, then Opinions on this, then License terms, then postDetail.menuSheet.report at the sheet tail
 
 ALWAYS the menu's first row reads Save GIVEN the post is not kept
 
@@ -27,6 +27,14 @@ WHEN tap Unhide with the author's handle GIVEN the unhide does not go through ->
 WHEN tap Cite in a new post -> the post wizard opens fresh at its first stage AND the post rides along unseen until the details stage
 
 WHEN tap Cite in a new post GIVEN the reader is an applicant -> the menu closes AND the snackbar reads You can post once you're in. AND NEVER the wizard opens
+
+WHEN tap postDetail.menuSheet.citedBy -> the menu closes AND what cites the post comes up over the surface the menu was opened from
+
+WHEN tap Opinions on this -> the menu closes AND the post's opinions sheet comes up over the surface the menu was opened from
+
+ALWAYS Opinions on this and postDetail.menuSheet.citedBy stand in the post's menu whatever their counts, on every card and host, the post live or removed
+
+ALWAYS the post detail's count lines keep their own rule beside the two rows, absent at zero and on a removed post
 
 WHEN tap License terms -> the menu closes AND the post's terms come up in a sheet over the surface the menu was opened from
 

@@ -2,7 +2,7 @@
 
 WHEN tap the ⋮ on profile.posts.card GIVEN the profile is the reader's own and profile.tabRow.postsTab is lit -> profile.menuSheet rises over the reader's own profile AND the profile stands unchanged beneath its wash
 
-ALWAYS the own post's menu on the own profile reads Save or Unsave, then Cite in a new post, then Edit, then Mark as sensitive, then Remove, then License terms, the own post menu's rows, and carries no Hide and no Report row
+ALWAYS the own post's menu on the own profile reads Save or Unsave, then Cite in a new post, then Edit, then Mark as sensitive, then Remove, then profile.menuSheet.citedBy, then Opinions on this, then License terms, the own post menu's rows, and carries no Hide and no Report row
 
 WHEN tap profile.menuSheet.edit -> the post's edit opens
 

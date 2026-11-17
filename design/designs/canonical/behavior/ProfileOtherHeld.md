@@ -36,7 +36,9 @@ WHEN tap the Opinions by figure -> the opinions page opens on this profile on it
 
 WHEN tap the Posts figure -> NEVER anything happens
 
-WHEN tap the Posts tab -> the person's posts stand below the tab row as post cards AND the header above stays as it was
+ALWAYS the page lands on its Posts tab, as every profile does
+
+WHEN tap the Posts tab GIVEN another tab is lit -> the person's posts stand below the tab row as post cards AND the header above stays as it was
 
 WHEN tap the Comments tab -> the person's comments stand below the tab row as comment cards AND the header above stays as it was
 

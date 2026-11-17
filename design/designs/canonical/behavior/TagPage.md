@@ -57,3 +57,9 @@ WHEN tap the topic's stance face GIVEN the topic is not held -> the pad blooms w
 WHEN the page's first read gets no answer -> the header stands AND the line Can't reach the server — this tag can't load right now. stands in the page's place over an outlined Retry AND NEVER the stance row or a card stands
 
 WHEN tap Retry -> the page is read again AND it answers as the read does
+
+WHEN a link or a typed address opens a tag page GIVEN its name cannot be a tag name, breaking the naming gate -> the header keeps the name asked for AND the page reads This tag doesn't exist. in the page's place AND NEVER the stance row, a card or a Retry stands
+
+ALWAYS the page for a name that cannot be a tag is the answer no, never the failure voice and never the error colour, and nothing on it retries
+
+ALWAYS a legal name nothing carries opens the tag page empty, reading Nothing carries this tag right now., and never This tag doesn't exist.

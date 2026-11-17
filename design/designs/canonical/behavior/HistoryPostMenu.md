@@ -2,7 +2,7 @@
 
 WHEN tap a post card's ⋮ in History GIVEN the post is someone else's -> history.menuSheet rises over History AND History stands unchanged beneath its wash
 
-ALWAYS history.menuSheet reads Save or Unsave, then Cite in a new post, then Hide with the author's handle, then License terms, then history.menuSheet.report at the sheet tail, the reader's post menu's own rows
+ALWAYS history.menuSheet reads Save or Unsave, then Cite in a new post, then Hide with the author's handle, then history.menuSheet.citedBy, then Opinions on this, then License terms, then history.menuSheet.report at the sheet tail, the reader's post menu's own rows
 
 ALWAYS history.menuSheet carries no row of History's own, History offering no way to remove one thing from it
 
