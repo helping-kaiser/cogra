@@ -12256,6 +12256,14 @@ rec"), his 2, 3 and 4, built on rounds 48–50 merged (ecffb3ba9).
   (backlog 260) and keeps its inset; the edits' `cover` field paths gave
   way to `video.cover` (removed: `postEdit.cover` and `commentEdit.cover`
   with their `add`, `change`, `label`, `thumb`).
+- **Round 51's rules on these boards** (decisions 6 and 8): a picture the
+  server refuses at upload keeps `One picture didn't upload.` with
+  `Remove it` alone, a clip `That video didn't upload.` (`ReplyPictures`'
+  `upload` chip, `refused`; law on `ComposeUploading`, `ReplyVideoFailed`
+  and the edit-video boards; the seals' gate unruled); the edit-video
+  boards take the edit's fault in the commit's place, `fault` chip
+  `unsent` · `refused`, `postEdit.fault` / `commentEdit.fault` with an
+  outlined `Retry`, the count above, no `Back`.
 - **Adjacent**: `Reel.md` and `ViewerVideo.md` end their cover sentence
   ("…and its cover has loaded"); `AvatarCrop` and `CoverCrop` take an
   `opener` chip so the boards speak the C8 back names; the
