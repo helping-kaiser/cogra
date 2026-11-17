@@ -60,7 +60,7 @@ export function Screen() {
             </span>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               <Button variant="outline" size="sm" node="picture">Change picture</Button>
-              <Button variant="outline" size="sm" style={{ display: "{{removeShown}}" }} node="removePicture">Remove picture</Button>
+              <Button variant="outline" size="sm" style={{ display: "{{removeShown}}" }} node="remove">Remove picture</Button>
             </div>
           </div>
           <div style={{ display: "{{uploadFailedShown}}" }}>
@@ -74,7 +74,7 @@ export function Screen() {
         <div style={{ display: "{{nothingShown}}", flexDirection: "column" }}>
           <ActsFooter count={0} node="acts" />
         </div>
-        <div role="status" style={{ display: "{{refusedShown}}", alignItems: "center", justifyContent: "center", gap: 4 }} data-node="writeRule">
+        <div role="status" style={{ display: "{{refusedShown}}", alignItems: "center", justifyContent: "center", gap: 4 }} data-node="refused">
           <p style={QUIET_LINE} data-node="line">You can&apos;t sign right now.</p>
           <HelpDot ariaLabel="Why signing waits" onOpen={() => {}} node="help" />
         </div>
