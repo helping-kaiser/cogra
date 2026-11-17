@@ -6310,3 +6310,62 @@ exception.
 
 Closed by round 50, act 3 (jakob 2026-11-17, C5 as recommended): the sheet sizes to its
 content up to 88% (FeedFilterSheet's it), its foot 16px under the last section.
+
+### 250 · A card's fault line when no answer came · *design* · **filed 2026-11-17**
+
+Round 51 (the one rule for a refused or failed act, jakob 2026-11-17). On a
+card the line stands last with `Retry` at its end, and the card form drawn today
+is the copy fault's, `That didn't go through.` with `Retry` for every failure
+(`Invites.md`; `Revoke` now its twin). The words-by-answer half would give no
+answer its own words, but none exist at card scale: (a) as drawn — `That didn't
+go through.` for every card failure, the copy fault's reading; (b) `That didn't
+send. Try again.` with `Retry` at its end — says "try again" twice, which the
+upload line's note rules out; (c) a short `That didn't send.` — new copy.
+
+### 251 · What a seal's gate line reads for a refused upload · *design* · **filed 2026-11-17**
+
+Round 51 (jakob 2026-11-17, his 8: a refused picture reads `One picture didn't
+upload.` with `Remove it` alone). The seals' gate line — `One picture didn't
+upload. Signing waits for it.` with `Retry`, never `Remove it` on a seal
+(`ComposeSealUploading`, `ReplySealUploadFailed`, the edits' gate) — has no
+refused reading. Options: (a) the gate keeps its fault reading and `Retry`
+re-asks (cannot succeed); (b) the gate reads the refusal with no `Retry`, the
+way out being back to the stage that holds the picture, where `Remove it`
+stands; (c) the gate line takes `Remove it` on the seal. Blocks drawing the post
+edit's refused upload (`EditCompose`'s `upload` chip), whose gate stands on the
+same screen.
+
+### 252 · A hidden person's comment cards in the feed · *design* · **filed 2026-11-17**
+
+Round 51 (Hide on a comment, jakob 2026-11-17). After a hide the feed's law
+says "that person's rows leave the feed" (`FeedHidden.md`, `FeedPostMenu.md`);
+no sentence names the feed's comment cards. `docs/primitive/feed-ranking.md`
+§9.1 reads the hide as "never show me content from X", which would take their
+comment cards too. `FeedCommentMenu.md` says the card the hide was made from
+leaves with the rest. The sentence for every other comment card of theirs
+waits: (a) "their posts and their comment cards leave" (the docs' reading); (b)
+posts only.
+
+### 253 · A closed pad's `Signing…` line grows the card · *design* · **filed 2026-11-17**
+
+Round 51 (the hold's wait, jakob 2026-11-17, impl 354). A hold's wait is the
+closed ring and no line. A pad closed under `Set` (`PadFailed`'s `closed`,
+`SigningAfterClose`) still carries `Signing…` under the face, so the card grows
+by that line for the wait — the jump his A23 named, by another door. Not in the
+ruling; the question is whether the closed pad's wait takes the ring too.
+
+### 254 · A Cite composer opened while a draft is kept · *design* · **filed 2026-11-17**
+
+Round 51 (no draft for an untouched composer). `ComposeDraft` keeps one draft
+per target, and `Cite in a new post` opens the wizard "fresh at its first
+stage". Whether an earlier draft survives a Cite or Mention composer that is
+left untouched — or the draft card meets the reader first — is not written.
+
+### 255 · The report sheet carries its failure on the snackbar · *design* · **filed 2026-11-17**
+
+Round 51 (the one rule). `ReportConfirm` answers a refusal and no answer alike
+with the shared snackbar `That didn't send. Try again.` — the interim placement
+of 2026-10-12 (copy-voice, `Report`). The rule puts a small sheet's failure in
+the sheet, its commitment reading `Retry`, the words by the answer, and
+`NetworkError` says a failure is never carried on the snackbar. Round 51 changed
+only the signing hosts and left it: (a) as drawn; (b) the rule's dialog shape.
