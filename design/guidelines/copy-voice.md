@@ -559,8 +559,7 @@ noun):
   a public record, and changes to it are signed actions in your name. /
   Everything you change here signs together, as one change, paid for
   like your posts. The record that you changed it stays, like every
-  signed action. *(New 2026-11-17, drafted at jakob's word, his 11; to
-  be blessed.)*
+  signed action. *(Blessed, jakob 2026-11-17.)*
 - **The filter** (the feed's and search's filter sheets; the seen
   sentence is the surface's own, jakob 2026-10-14): What you
   let in, and in what order — the kinds combine freely, ranked or
@@ -617,9 +616,10 @@ out (*Remove it*; never *Retry* — retrying cannot change the answer):
 - `That picture is too big — a picture can be up to 10 MB.`
 - `That file isn't a picture or a video CoGra can read.`
 - `That file isn't a picture CoGra can read.` — the profile picture's
-  crop, where a video is no answer either (round 50, jakob 2026-11-17,
-  his 9; *to be blessed*). The picture's refusals stand on the crop,
-  under the circle, with `Next` dimmed (`AvatarCrop`).
+  crop, where a video is no answer either (*blessed (jakob
+  2026-11-17)*). The picture's refusals stand on the crop, under the
+  circle, with `Next` dimmed (`AvatarCrop`; the placement *blessed
+  (jakob 2026-11-17)*).
 - `A post carries pictures or one video, not both.`
 - `A comment carries pictures or one video, not both.`
 - `That GIF moves, and CoGra can't take a moving GIF here. A still one
@@ -2585,24 +2585,30 @@ words, recorded so the registry is whole:
   yet.` — and a deleted account, which will give none again, `This
   account gave no opinions.` (*blessed (jakob 2026-11-10)*).
 - **The edit** (`ProfileEdit`) — titled `Edit profile`, its fields
-  `Display name` · `Bio` · `Website`; the picture's row `Change picture`,
-  and `Remove picture` beside it while a picture stands (round 50, jakob
-  2026-11-17, his 8; *to be blessed*). With nothing staged, Save stands
-  inert under `Nothing to sign yet` (`EditComposeUnchanged`'s line, his
-  12). A write-rule refusal known at Save stands on Save as `You can't
-  sign right now.` in the row's quiet register, with a "?" opening `Why
-  signing waits`, and Save dims (his 13; *the placement to be blessed*).
-  A new picture whose upload failed reads `One picture didn't upload.`
-  with `Retry · Remove it` under the picture's row (`ComposeUploading`).
+  `Display name` · `Bio` · `Website`; the picture's row `Change picture`
+  alone, and with a picture standing two buttons side by side, never one
+  above the other, in their short forms `Change` · `Remove` (spoken
+  `Change picture` · `Remove picture`); a staged removal shows `Change` ·
+  `Undo` (spoken `Undo removing the picture`, *new 2026-11-17, to be blessed*), and `Remove` is hidden
+  while a new picture is staged (jakob 2026-11-17, his review of round
+  50 and C2, C3). With nothing staged, Save stands inert under `Nothing
+  to sign yet` (`EditComposeUnchanged`'s line). A write-rule refusal
+  known at Save stands on Save as `You can't sign right now.` in the
+  row's quiet register, with a "?" opening `Why signing waits`, and Save
+  dims, until the next staged change or the next opening of the edit
+  (C1). A new picture whose upload failed reads `One picture didn't
+  upload.` with `Retry · Remove it` under the picture's row
+  (`ComposeUploading`). The placements *blessed (jakob 2026-11-17)*.
 - **The profile's seal** (`ProfileEditSeal`) — `Your profile`; the acts row
   `Profile` reading `A new picture, bio and website`, its count spoken
-  `1 profile change`. The row's grammar (round 50; *to be blessed*): `A
+  `1 profile change`. The row's grammar (*blessed (jakob 2026-11-17)*): `A
   new` and the changed parts in the edit's order — `picture`, `display
   name`, `bio`, `website` — joined by commas and a last `and` (`A new
   bio`, `A new display name and website`, `A new picture, display name,
   bio and website`); a removed picture alone reads `The picture removed`,
   and after other parts `, the picture removed` (`A new bio, the picture
-  removed`); under the card `Every change to your profile is
+  removed`), the value running on to a second line rather than cut off
+  (C4); under the card `Every change to your profile is
   signed in your name and stays in your public record.`; its "?" is named
   `Changing your profile`.
 - **The picture** — the crop titled `Your picture`, no line under its
