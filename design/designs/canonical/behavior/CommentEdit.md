@@ -10,7 +10,7 @@ ALWAYS commentEdit.target names the post by its stand-in GIVEN the post has no t
 
 ALWAYS commentEdit.target reads Your comment on, then the post's author's handle, then 's removed post., as Your comment on @ada's removed post., GIVEN the post was removed, as the comment card names it
 
-ALWAYS the comment edit holds at most four pictures, uncropped
+ALWAYS the comment edit holds at most four pictures, each the square its author framed
 
 ALWAYS the footer reads the live count of the batch, You're signing N things
 
@@ -19,6 +19,10 @@ WHEN tap the acts footer -> the acts sheet opens over the edit
 WHEN tap a picture's remove control -> the picture leaves the batch
 
 WHEN tap + Add pictures -> the platform's own picker opens AND NEVER a pick stage opens
+
+WHEN pictures come back from the picker at the edit -> the comment's square crop opens on the new pictures only AND they join commentEdit.pictures as their squares at its Next AND their cropped exports start uploading AND every picture the comment already holds keeps its framing
+
+WHEN press the comment's square crop's back arrow GIVEN it was opened from the edit -> the edit comes back as it was AND the picked pictures go unused
 
 ALWAYS the comment edit's add row reads + Add pictures or a video GIVEN the comment holds words alone, no picture and no clip
 

@@ -2843,7 +2843,7 @@ function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes
 /* THE COMMENT EDIT, whole — `CommentEdit` itself, and what its acts sheet
    stands on. It is `EditComposeBody` at comment scale (backlog 126, jakob
    2026-10-02: "same semantics at comment scale"): the comment's own anatomy —
-   the words, the uncropped pictures, the tags, the citations, the locked
+   the words, the square pictures, the tags, the citations, the locked
    license — carrying the post edit's withdrawal package unchanged.
 
    ITS CITATIONS STAND AS ROWS, each opening `RefPairEdit` — the same sheet the
@@ -2901,7 +2901,7 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ display: shown("picturesShown") }}>
-                <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} fit="contain" onRemove={() => {}} node="thumb" nodeKey="1" />
+                <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} onRemove={() => {}} node="thumb" nodeKey="1" />
               </div>
               <InlineAction size="sm" node="add">{bodyChip ? "{{addLabel}}" : "+ Add pictures · 1 of 4"}</InlineAction>
             </div>

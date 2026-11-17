@@ -20,7 +20,8 @@ import { Icon } from "../navigation/Icon.jsx";
    · `progress` — the upload ring on a scrim. Upload starts AFTER the crop:
      the crop happens on the device and only the cropped export is ever
      uploaded (jakob 2026-08-31 — the original frame can hold what the author
-     never meant to share). Crop-less comment pictures upload at pick.
+     never meant to share). A comment's pictures pass the comment's square
+     crop (`ReplyCrop`) and upload from its Next, as a post's do.
    · `failed` — the picture dims and wears the error badge; the words and the
      Retry · Remove affordances live beside the row (`UploadErrorLine`), not
      crammed into 48px.
@@ -31,8 +32,10 @@ import { Icon } from "../navigation/Icon.jsx";
      to carry them). AUTHORING-SIDE ONLY: a reading surface never draws
      play/pause — there, presence on screen is the policy.
 
-   Uncropped tiles (a reply's pictures) pass `width`/`height` and
-   `fit="contain"` so the whole frame shows inside the tile.
+   A clip's preview at comment scale (the reply composer's, the comment
+   edit's) passes `width`/`height` and `fit="contain"` so the whole frame
+   shows inside the tile. A comment's pictures are squares, so their tiles
+   are square, filled.
 
    THE NEUTRAL TILE (video-cover round, 2026-09-10) is the sourceless state:
    where a clip yields no still at all — extraction came back with nothing —

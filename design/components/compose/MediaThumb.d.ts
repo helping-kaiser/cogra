@@ -3,12 +3,13 @@
  * surface (pick tray, details row, Show all sheet, reply composer, comment
  * edit). Its states are the upload story: `cover` badge, `progress` ring,
  * `failed` badge, remove X. Upload starts after the crop — only the cropped
- * export is ever uploaded; crop-less comment pictures upload at pick.
+ * export is ever uploaded; a comment's pictures pass the comment's square crop
+ * and upload from its Next, as a post's do.
  */
 export interface MediaThumbProps {
   src?: string;
   alt?: string;
-  /** Square edge in px (default 48). `width`/`height` override for uncropped tiles. */
+  /** Square edge in px (default 48). `width`/`height` override for a clip's tile. */
   size?: number;
   width?: number;
   height?: number;

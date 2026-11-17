@@ -2,8 +2,7 @@
    comment carries up to four pictures OR one video and its cover, never both
    kinds — the post's grammar at comment caps. Entry is unchanged: "+ Add"
    opens the platform's own picker and a video pick lands here, so there is no
-   pick stage and no crop; the video uploads at pick like a comment's
-   pictures do.
+   pick stage, and a clip takes no crop; the video uploads at pick.
 
    The frame is the comment pager's fixed square at comment scale (220px), the
    whole frame fitted inside it — a comment never turns into a post. The video's

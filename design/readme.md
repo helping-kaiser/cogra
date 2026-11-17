@@ -1982,8 +1982,9 @@ media and comment editing.
   *Comment video and the media error states*.
 - **Upload starts after the crop.** The crop happens on the device
   and **only the cropped export is ever uploaded** — the original
-  frame can hold what the author never meant to share. Comment
-  pictures never crop, so they upload at pick. Progress rides the
+  frame can hold what the author never meant to share. A comment's
+  pictures pass the comment's square crop (`ReplyCrop`) and upload
+  from its Next, the same way. Progress rides the
   thumbnails as rings; a failed picture is marked on its tile with
   `Retry · Remove it` beside the row; **the seal gates** — "Uploading
   n of m — signing waits for the pictures" (`…for the video.` on a
@@ -1999,8 +2000,9 @@ media and comment editing.
 - **Comment media is words-first**: pictures sit below the words,
   inset at the card's medium rung (an attachment, not the body),
   **capped at comment scale** so a comment never turns into a post,
-  never cropped — a single picture at its own ratio, multiples in
-  the same pager on a fixed square frame. **Comment editing**
+  and **square**: every picture is the square its author framed in
+  the comment's crop, a single one too, multiples in the same pager
+  on the square frame. **Comment editing**
   mirrors the post's one-screen-one-batch (words, pictures, topics,
   citations; license locked), entered from `Edit` on an own
   comment; the Edited marker is the same one posts wear.
@@ -2030,7 +2032,7 @@ set of findings; jakob's rulings 2026-08-31):
   bytes only; a description is witnessed in the act's manifest
   and rides the prepare input per placement (`AttachmentInput`),
   cached on the version's junction row like gallery order. So
-  comment pictures upload at pick, descriptions land at sign,
+  pictures upload from the crop, descriptions land at sign,
   nothing gates on the other — the alt-text-vs-upload race the
   implementation session feared cannot exist. The describe entry
   is the same counter line everywhere a composer shows picked
@@ -2531,8 +2533,8 @@ file that is too big or in a format nothing here reads.
   video"**, one holding pictures reads **"+ Add pictures · n of 4"**
   (the video is out — the grammar is exclusive), and one holding a
   video carries **no add control at all**, the cover row standing
-  alone. There is still no pick stage and no crop, so the video
-  uploads at pick like a comment's pictures do.
+  alone. There is no pick stage and a clip takes no crop, so the
+  video uploads at pick.
 - **The cover is the post's, inlined.** `ComposeCover`'s row — the
   frame strip, the tile that takes a picture of your own, *A frame, or
   a picture of your own.* — sits under the video at comment scale
@@ -2738,11 +2740,9 @@ item 33, jakob's rulings the same day).
   post-fits-the-screen cap still bounds the tile as it bounds every
   tile, and under it the tile is **filled, never fitted**. **Square is
   the comment scale's shape**, and a comment's pictures and clips alike
-  fill it: an uncropped picture display-crops to its frame, centred,
-  because bars beside a picture spend a card's scarcest resource on
-  nothing and the whole frame is one tap away in the viewer. The crop
-  is display-only — a comment's picture still travels uncropped, and
-  what the author uploaded is what the record holds.
+  fill it: a picture IS the square its author framed in the comment's
+  crop (`ReplyCrop`), only that square is uploaded, and the viewer
+  shows that square whole.
 - **The control ladder** — a deliberate revision of the conform
   round's sound-only-on-every-reading-surface rule. A **feed card**
   carries the sound disc alone. A **detail view** carries play/pause

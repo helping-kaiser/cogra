@@ -803,9 +803,18 @@
       "page": "comments"
     },
     {
+      "file": "ReplyCrop.dc.html",
+      "title": "Reply · the crop",
+      "x": 960,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
       "file": "ReplyPicturesWeb.dc.html",
       "title": "Reply · pictures on the web",
-      "x": 960,
+      "x": 1440,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -814,7 +823,7 @@
     {
       "file": "ReplyVideo.dc.html",
       "title": "Reply · a video and its cover",
-      "x": 1440,
+      "x": 1920,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -823,7 +832,7 @@
     {
       "file": "ReplyMediaErrors.dc.html",
       "title": "Reply · files refused",
-      "x": 1920,
+      "x": 2400,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -832,7 +841,7 @@
     {
       "file": "ReplyPad.dc.html",
       "title": "Reply · the pad",
-      "x": 2400,
+      "x": 2880,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -841,7 +850,7 @@
     {
       "file": "ReplySeal.dc.html",
       "title": "Reply · what you sign",
-      "x": 2880,
+      "x": 3360,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -850,7 +859,7 @@
     {
       "file": "ReplyCited.dc.html",
       "title": "Reply · what you sign, a reference staged",
-      "x": 3360,
+      "x": 3840,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -859,7 +868,7 @@
     {
       "file": "ReplyCitedMany.dc.html",
       "title": "Reply · what you sign, three references staged",
-      "x": 5760,
+      "x": 6240,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -868,7 +877,7 @@
     {
       "file": "ReplyComposeComment.dc.html",
       "title": "Reply · write, answering a comment",
-      "x": 6240,
+      "x": 6720,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -877,7 +886,7 @@
     {
       "file": "ReplySealComment.dc.html",
       "title": "Reply · what you sign, answering a comment",
-      "x": 6720,
+      "x": 7200,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -886,7 +895,7 @@
     {
       "file": "ReplySealKeyAbsent.dc.html",
       "title": "Reply · what you sign, key absent",
-      "x": 7200,
+      "x": 7680,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -895,7 +904,7 @@
     {
       "file": "ReplySealUploading.dc.html",
       "title": "Reply · what you sign, waiting on uploads",
-      "x": 7680,
+      "x": 8160,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -904,7 +913,7 @@
     {
       "file": "ReplySealUploadFailed.dc.html",
       "title": "Reply · what you sign, an upload failed",
-      "x": 8160,
+      "x": 8640,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -913,7 +922,7 @@
     {
       "file": "DiscardConfirm.dc.html",
       "title": "Discard confirm · reply and edit",
-      "x": 3840,
+      "x": 4320,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -922,7 +931,7 @@
     {
       "file": "ReplyVideoFailed.dc.html",
       "title": "Reply · the clip didn't upload",
-      "x": 4320,
+      "x": 4800,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -931,7 +940,7 @@
     {
       "file": "CommentEditVideo.dc.html",
       "title": "Edit comment · a clip",
-      "x": 4800,
+      "x": 5280,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -940,7 +949,7 @@
     {
       "file": "ReplyPadHelp.dc.html",
       "title": "Reply · the pad's \"?\"",
-      "x": 5280,
+      "x": 5760,
       "y": 1060,
       "w": 390,
       "h": 844,

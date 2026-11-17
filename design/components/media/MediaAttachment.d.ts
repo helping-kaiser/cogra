@@ -4,9 +4,10 @@
  *
  * A PICTURE's ratio vocabulary is the compose crop ruling's — `tall` 4:5,
  * `square` 1:1, `wide` 1.91:1. `tall` is also the CLAMP. Nothing is letterboxed:
- * a tile is filled (`fit="cover"`, the default), so an uncropped picture — a
- * comment's — display-crops to its frame, centred, and the whole frame is one
- * tap away in the viewer. The crop is display-only; the bytes stay uncropped.
+ * a tile is filled (`fit="cover"`, the default), so a picture handed a frame of
+ * another shape display-crops to it, centred. A comment's pictures are cropped
+ * to the comment's square on the way up (`ReplyCrop`), and the viewer shows
+ * that square whole.
  *
  * A CLIP is not cropped by an author, so it keeps its own shape, clamped to
  * tall: `landscape` 16:9 and `square` display true, and anything taller than
@@ -121,8 +122,8 @@ export declare function PagerDots(props: PagerDotsProps): JSX.Element | null;
 /**
  * A swipeable pager: one frame at the post's one crop shape, dots below —
  * dots only, never a "1/n" count. Every frame renders at the shared ratio
- * (the `ratio` prop, else the first item's), so uncropped sets pass a fixed
- * frame and display-crop to it. The cap is authoring-side: at most ten
+ * (the `ratio` prop, else the first item's), so a comment's pictures pass the
+ * comment's square. The cap is authoring-side: at most ten
  * pictures, or one video.
  */
 export interface MediaGalleryProps {

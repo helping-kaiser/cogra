@@ -608,6 +608,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: 'aria-label="Remove this picture"', tag: "button", all: true },
     { n: 8, find: ">Describe the pictures</button>", tag: "button" },
   ],
+  // The comment's square crop (round 52): CoverCrop's stage and ComposeCrop's strip.
+  ReplyCrop: [
+    { n: 1, find: 'aria-label="{{backLabel}}"', tag: "a" },
+    { n: 2, find: 'aria-label="{{leaveLabel}}"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: "transform:scale(1.15)", tag: "div" },
+    { n: 5, find: 'data-field="Zoom"', tag: "div" },
+    { n: 6, find: "position:relative;width:48px", tag: "div", all: true },
+  ],
   ReplyPicturesWeb: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },

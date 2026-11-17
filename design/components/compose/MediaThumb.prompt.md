@@ -5,14 +5,14 @@ Use `MediaThumb` for every authoring-side picture tile — the pick tray, the de
 <MediaThumb src={b} progress={0.65} />          {/* uploading — ring on a scrim */}
 <MediaThumb src={c} failed />                   {/* didn't upload — dimmed + badge; words in UploadErrorLine */}
 <MediaThumb src={d} onRemove={remove} />        {/* the X, top-right */}
-<MediaThumb src={e} width={70} height={88} fit="contain" />  {/* uncropped (comments) — whole frame */}
+<MediaThumb src={e} size={88} />               {/* a comment's picture — the square its author framed */}
 <MediaThumb src={f} video duration="0:18" width={220} height={220} />  {/* a video and its cover */}
 <MediaThumb src={f} video coverSrc={g} width={114} height={64} />  {/* the clip, with the cover it was given */}
 ```
 
 What holds:
 
-- **Upload starts after the crop.** The crop happens on the device and only the cropped export is ever uploaded — the original can hold what the author never meant to share. Comment pictures never crop, so they upload at pick. The `progress` ring is that story on the tile.
+- **Upload starts after the crop.** The crop happens on the device and only the cropped export is ever uploaded — the original can hold what the author never meant to share. A comment's pictures pass the comment's square crop and upload from its Next, the same way. The `progress` ring is that story on the tile.
 - **A failed tile dims and wears the badge; its words live beside the row** (`UploadErrorLine` — "One picture didn't upload. Retry · Remove it"). Never cram retry into 48px.
 - The remove X hides on a failed tile — the line owns that tile's ways out.
 - **`video` draws the composer's video preview** — the play disc on the frame, the duration on the trailing corner (the pill needs an 80px tile). This is authoring-side only: a reading surface never draws play/pause, where presence on screen is the policy (`MediaAttachment`).

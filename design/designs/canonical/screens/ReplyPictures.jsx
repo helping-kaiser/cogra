@@ -1,9 +1,11 @@
 /* The reply composer with pictures attached (media slice): words first, the
-   uncropped tiles join them — whole frames in MediaThumb, one still
-   uploading (comment pictures upload at pick; there is no crop). Four is the
-   cap. Comments have no pick stage: "+ Add" opens the platform's own picker
+   pictures join them as the squares their author framed in the comment's
+   crop (`ReplyCrop`, round 52) — square tiles in MediaThumb, one still
+   uploading (the upload starts at the crop's Next). Four is the cap.
+   Comments have no pick stage: "+ Add" opens the platform's own picker
    (Android's photo-picker sheet here; the browser's file dialog on the
-   ReplyPicturesWeb board).
+   ReplyPicturesWeb board), and what it brings back passes the crop first —
+   the new pictures only; the ones in the tray keep their framing.
 
    A PICTURE THAT DIDN'T UPLOAD FAILS THE COMPOSE WAY (jakob 2026-10-05, the
    collected brief's P17 — the 136 round's ruling 2, mirrored onto the reply).
@@ -34,12 +36,12 @@ export function Screen() {
         <WordsBody rows={REPLY_WORDS_ROWS} cap={REPLY_WORDS_CAP} paragraphs={["The glovebox camera earns its keep — this is the print from 2019 that almost catches it."]} />
 
         <div style={{ display: "{{runningShown}}", gap: 8, alignItems: "flex-start" }}>
-          <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" width={70} height={88} fit="contain" onRemove={() => {}} />
-          <MediaThumb src="gallery-market.jpg" alt="" width={117} height={88} fit="contain" progress={0.65} />
+          <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={88} onRemove={() => {}} />
+          <MediaThumb src="gallery-market.jpg" alt="" size={88} progress={0.65} />
         </div>
         <div style={{ display: "{{failedShown}}", gap: 8, alignItems: "flex-start" }}>
-          <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" width={70} height={88} fit="contain" onRemove={() => {}} />
-          <MediaThumb src="gallery-market.jpg" alt="" width={117} height={88} fit="contain" failed />
+          <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={88} onRemove={() => {}} />
+          <MediaThumb src="gallery-market.jpg" alt="" size={88} failed />
         </div>
         <div style={{ display: "{{errorShown}}" }}>
           <UploadErrorLine onRetry={() => {}} onRemove={() => {}} />
