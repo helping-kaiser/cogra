@@ -25,10 +25,10 @@ import {
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { exitDuration, SHEET_OUT_MS } from "@/lib/ui/motion";
 import { nameInLine, nameInText } from "@/lib/ui/names";
-import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 
 import { CoveringLayerProvider, useCoversSurface } from "./covering-layer";
+import { pressIsOnScrim, useSheetDrag } from "./sheet-drag";
 
 /**
  * THE SLIVER A SHEET AT ITS CEILING LEAVES BEHIND (`_shared.jsx:1249` —
@@ -139,7 +139,14 @@ export function BottomSheet({
   initialFocus,
   rows = false,
   maxHeight,
+  dragFromHandle = false,
 }: {
+  /**
+   * A SHEET HOSTING A PAD DRAGS ONLY FROM ITS HANDLE AND TITLE ZONE
+   * (`BottomSheet.jsx`; StancePad.prompt.md: "the field owns every pointer
+   * that starts on it"): the pair sheets, whose square is the pad.
+   */
+  dragFromHandle?: boolean;
   /**
    * The height class the board asks for (`BottomSheet.jsx` `maxHeight`), held
    * under the ceiling like every class — {@link SHEET_RAISED} for the boards
@@ -330,27 +337,18 @@ export function BottomSheet({
     onClose();
   };
 
-  // PULLING DOWN IS HOW A DRAWER IS DROPPED (design/readme.md: "pulling down
-  // already means dismiss and one gesture may not mean two things"). The
-  // handle was drawn but inert, so the sheet answered only the backdrop, the
-  // back arrow and Escape — and the one gesture a reader reaches for first
-  // did nothing.
+  // PULLING DOWN IS HOW A DRAWER IS DROPPED — M3's drag (`sheet-drag.ts`):
+  // from the handle zone always, from a list only at its scroll-top, past a
+  // quarter of the sheet or on a fling, and a snap back otherwise.
   //
-  // IT PULLS THE SHEET, NEVER ITS CONTENTS. The gesture starts only when the
-  // body is at its own top, so a scrolled thread scrolls; and it moves the
-  // surface alone — nothing it does reaches what the sheet is showing, which
-  // is what keeps an unfolded branch unfolded through a pull.
+  // IT PULLS THE SHEET, NEVER ITS CONTENTS: it moves the surface alone, so
+  // nothing it does reaches what the sheet is showing, which is what keeps an
+  // unfolded branch unfolded through a pull.
   const body = useRef<HTMLDivElement | null>(null);
-  const pulledFrom = useRef<number | null>(null);
-  const [pull, setPull] = useState(0);
-
-  const endPull = () => {
-    if (pulledFrom.current === null) return;
-    const travel = pull;
-    pulledFrom.current = null;
-    setPull(0);
-    if (travel >= PULL_THRESHOLD) onClose();
-  };
+  // The lowest element of the handle zone: the title row, or the grip where
+  // the sheet draws no title.
+  const handleZone = useRef<HTMLElement | null>(null);
+  const drag = useSheetDrag({ sheet: ref, handleZone, handleOnly: dragFromHandle, open, onDismiss: onClose });
 
   return (
     <dialog
@@ -359,27 +357,19 @@ export function BottomSheet({
       aria-label={title}
       onClose={onDialogClose}
       // A press outside drops the sheet — the same gesture as the back arrow,
-      // because a sheet is a drawer rather than a decision.
+      // because a sheet is a drawer rather than a decision. A press on the
+      // surface's own padding targets the dialog too, and is not one.
       onClick={(event) => {
-        if (event.target === ref.current) onClose();
+        if (ref.current && pressIsOnScrim(ref.current, event)) onClose();
       }}
-      onPointerDown={(event) => {
-        // A pull is a touch gesture; a mouse drag on a sheet is a selection.
-        if (event.pointerType === "mouse") return;
-        if ((body.current?.scrollTop ?? 0) > 0) return;
-        pulledFrom.current = event.clientY;
-      }}
-      onPointerMove={(event) => {
-        if (pulledFrom.current === null) return;
-        const travel = event.clientY - pulledFrom.current;
-        // Upward is the reader scrolling into the sheet, not dropping it.
-        setPull(travel > 0 ? travel : 0);
-      }}
-      onPointerUp={endPull}
-      onPointerCancel={endPull}
       style={
         {
-          "--cg-sheet-drag": `${pull}px`,
+          // The drag's offset rides `translate`, which composes with the
+          // entry and exit animations' `transform` rather than fighting them:
+          // a dismissing drag leaves from where it was let go, and a snap back
+          // eases home (`cg-sheet-settle`) unless the reader asked for
+          // stillness.
+          translate: drag.offset === 0 ? undefined : `0px ${drag.offset}px`,
           ...sheetHeight(tallest, height, maxHeight),
           paddingTop: SHEET_PAD_TOP,
           paddingRight: 0,
@@ -393,7 +383,7 @@ export function BottomSheet({
       // rounded corners keep a strip of the surface behind visible.
       className={`${
         closing ? "cg-sheet-out" : "cg-sheet-in"
-      } mt-auto mb-0 w-full max-w-[42rem] rounded-t-extra-large border-0 ${
+      }${drag.dragging ? " select-none" : " cg-sheet-settle"} mt-auto mb-0 w-full max-w-[42rem] rounded-t-extra-large border-0 ${
         // ONE SCRIM, HOWEVER MANY SHEETS. The system has a single dimming
         // token (`--scrim-dialog`, 50% black) and stacking moves the z-layer,
         // never the tone (design/components/core/BottomSheet.jsx). Every
@@ -422,6 +412,9 @@ export function BottomSheet({
             over it is the surface's padding, the 12 under it its own. */}
         <span
           aria-hidden="true"
+          ref={(grip) => {
+            if (titleHidden) handleZone.current = grip;
+          }}
           className="mx-auto mb-3 h-1 w-8 flex-none rounded-full bg-outline-variant"
           {...testAttributes(part(node, "dragHandle"))}
         />
@@ -430,7 +423,10 @@ export function BottomSheet({
             line or end-cut past one. */}
         {titleHidden ? null : titleTrailing === undefined ? (
           <h2
-            ref={titleRef}
+            ref={(title) => {
+              titleRef.current = title;
+              handleZone.current = title;
+            }}
             tabIndex={-1}
             className="m-0 px-6 pb-2 text-title-medium outline-none"
             {...testAttributes(part(node, "title"))}
@@ -439,6 +435,9 @@ export function BottomSheet({
           </h2>
         ) : (
           <div
+            ref={(row) => {
+              handleZone.current = row;
+            }}
             className="flex items-center gap-2 px-6 pb-2"
             {...testAttributes(part(node, "title"))}
           >
@@ -449,9 +448,8 @@ export function BottomSheet({
           </div>
         )}
         <div
-          // The pull needs the scroller too — it may only start at its top —
-          // so the node goes to this component's own ref as well as the
-          // caller's.
+          // The scroll host below needs the scroller too, so the node goes to
+          // this component's own ref as well as the caller's.
           ref={(node) => {
             body.current = node;
             if (bodyRef) bodyRef.current = node;
