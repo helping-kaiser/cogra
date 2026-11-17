@@ -1424,10 +1424,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave"', tag: "button" },
     { n: 3, find: 'aria-label="Changing your picture"', tag: "button" },
-    { n: 4, find: ">Sign the change</button>", tag: "button" },
-    { n: 5, find: ">Back</button>", tag: "button" },
+    // `all`: the `upload-failed` foot draws the pair a second time.
+    { n: 4, find: ">Sign the change</button>", tag: "button", all: true },
+    { n: 5, find: ">Back</button>", tag: "button", all: true },
     { n: 4, find: ">Signing the change…</button>", tag: "button" },
     { n: 5, find: ">Close</button>", tag: "button" },
+    // Round 50: the gate's Retry at the upload's fault reading.
+    { n: 6, find: ">Retry</button>", tag: "button" },
   ],
 });
 
@@ -1851,6 +1854,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'data-field="Bio"', tag: "div" },
     { n: 5, find: 'data-field="Website"', tag: "div" },
     { n: 6, find: ">Save</button>", tag: "button" },
+    // Round 50: the picture's removal, its failed upload's two ways out and
+    // the write rule's "?" on Save (the `state` chip).
+    { n: 7, find: ">Remove picture</button>", tag: "button" },
+    { n: 8, find: ">Retry</button>", tag: "button" },
+    { n: 9, find: ">Remove it</button>", tag: "button" },
+    { n: 10, find: 'aria-label="Why signing waits"', tag: "button" },
   ],
   ProfileEditSeal: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },

@@ -2297,7 +2297,7 @@
 
     { "from": "AvatarCrop", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "the screen that asked for the picture comes back and the picture goes unused — never a pick stage (CoverCrop's and ComposeCrop's rule)" }] },
     { "from": "AvatarCrop", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow" }] },
-    { "from": "AvatarCrop", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "AvatarSeal", "case": "the standalone change off the profile badge — its own seal" }, { "board": "ProfileEdit", "case": "come from the edit screen — the edit's one seal signs it" }] },
+    { "from": "AvatarCrop", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "AvatarSeal", "case": "the standalone change off the profile badge — its own seal" }, { "board": "ProfileEdit", "case": "come from the edit screen — the edit's one seal signs it" }, { "terminal": "self", "case": "the picked file was refused — Next dims under the refusal's line and nothing moves on" }] },
     { "from": "AvatarCrop", "via": 4, "kind": "advance", "label": "the crop stage", "to": [{ "terminal": "self", "case": "the circle stands still; drag moves the picture under it, pinch zooms it; focused, the arrow keys move it" }] },
     { "from": "AvatarCrop", "via": 5, "kind": "advance", "label": "zoom slider", "to": [{ "terminal": "self", "case": "the zoom, from the fill (1×) to 10× — the pinch, on screen" }] },
 
@@ -2305,6 +2305,7 @@
     { "from": "AvatarSeal", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow" }] },
     { "from": "AvatarSeal", "via": 3, "kind": "detour", "label": "? — Changing your picture", "to": [{ "board": "HelpDialog", "case": "the Changing-your-picture text" }] },
     { "from": "AvatarSeal", "via": 4, "kind": "advance", "label": "Sign the change", "to": [{ "terminal": "back", "case": "signed — shown everywhere you appear" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master); its way out reads Not now and returns to the seal, nothing kept" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }, { "board": "WriteRuleFailed", "case": "the write rule refuses — nothing staged or spent; the seal keeps no draft, so the notice reads the pad's Nothing was signed or spent. with Not now back to the seal (master)" }, { "board": "SealFaultBug", "case": "any other refusal of one staged act — a bug: the notice owns it, with Try again, Report a problem and Not now, which returns to the crop with the picture as it was (master)" }] },
+    { "from": "AvatarSeal", "via": 6, "kind": "advance", "label": "Retry", "to": [{ "terminal": "self", "case": "the new picture's failed upload starts again; the gate line returns to its running reading and Sign the change answers again" }] },
     { "from": "AvatarSeal", "via": 5, "kind": "back", "label": "Back", "to": [{ "board": "AvatarCrop", "case": "one stage back" }, { "terminal": "back", "case": "Close — once Sign the change is pressed: the seal closes and the change goes on (where its wait shows: backlog 165)" }] },
 
     { "from": "GuestGate", "via": 1, "kind": "back", "label": "Keep browsing", "to": [{ "terminal": "back", "case": "the ask closes — the read stays where it was" }] },
@@ -2514,7 +2515,11 @@
     { "from": "ProfileEdit", "via": 3, "kind": "advance", "label": "Display name", "to": [{ "terminal": "self", "case": "edit in place" }] },
     { "from": "ProfileEdit", "via": 4, "kind": "advance", "label": "Bio", "to": [{ "terminal": "self", "case": "edit in place" }] },
     { "from": "ProfileEdit", "via": 5, "kind": "advance", "label": "Website", "to": [{ "terminal": "self", "case": "edit in place" }] },
-    { "from": "ProfileEdit", "via": 6, "kind": "advance", "label": "Save", "to": [{ "board": "ProfileEditSeal" }] },
+    { "from": "ProfileEdit", "via": 6, "kind": "advance", "label": "Save", "to": [{ "board": "ProfileEditSeal", "case": "a change is staged" }, { "terminal": "self", "case": "nothing staged — inert under Nothing to sign yet; or the write rule already refuses — You can't sign right now. stands on Save and nobody is sent to the seal" }] },
+    { "from": "ProfileEdit", "via": 7, "kind": "advance", "label": "Remove picture", "to": [{ "terminal": "self", "case": "while a picture stands — the removal is staged, the monogram returns at once; Save signs it under the one seal" }] },
+    { "from": "ProfileEdit", "via": 8, "kind": "advance", "label": "Retry", "to": [{ "terminal": "self", "case": "the new picture's failed upload tries again" }] },
+    { "from": "ProfileEdit", "via": 9, "kind": "cancel", "label": "Remove it", "to": [{ "terminal": "self", "case": "the new picture whose upload failed leaves the edit; the picture as it stood returns" }] },
+    { "from": "ProfileEdit", "via": 10, "kind": "detour", "label": "? — Why signing waits", "to": [{ "board": "HelpDialog", "case": "the Why-signing-waits text, the no-draft reading" }] },
 
     { "from": "ProfileEditSeal", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ProfileEdit", "case": "one stage back" }] },
     { "from": "ProfileEditSeal", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves — nothing signed" }] },
