@@ -1171,8 +1171,10 @@ every sheet, pad and dialog — each modal (§4, *Sheets*):
 detail's pager is a focusable strip paged by ← and →, with the platform's
 scroll actions, its dots a visual readout only; the crops carry a
 visible zoom slider and pan by arrow keys (`CropZoom`, `CropViewport`);
-picture reordering offers `Make it the cover`, `Move up` and `Move
-down` (`PickedSheet`); the pad has its sliders and direct entry (§8).
+picture reordering offers `Make it the cover` drawn on every row but
+the cover, and the handle's ↑ / ↓ keys and its `Move up` / `Move down`
+screen-reader actions, nothing drawn (`PickedSheet`; jakob 2026-11-17);
+the pad has its sliders and direct entry (§8).
 The viewer is named by what it shows (`Picture 2 of 4`), takes focus on
 its X and hands it back to the frame that opened it, and pages without
 wrapping.
@@ -1645,7 +1647,14 @@ Instagram's model: one shape for the whole post — Tall 4:5, Square
 1:1, or Wide 1.91:1 — with drag-to-move and pinch-to-zoom framing
 per picture: the frame stands still at the shape and the picture moves
 and zooms under it, on a stage that keeps its 390 × 488 under every
-shape (round 44, one crop model on both clients). **The stage fits the
+shape (round 44, one crop model on both clients). **A post's edit opens
+the same crop** (jakob 2026-11-17, option C), from `+ Add pictures` and
+from `Crop` on a picture in the edit's picture sheet: the shape row live
+at the post's shape, every picture of the post in the strip, a shape
+change holding for all of them. A picture the post already carries is
+framed within its published cut-out, tighter and never wider, and one
+whose framing or shape changed is replaced in the signed edit, riding the
+edit's own record. **The stage fits the
 window** (jakob 2026-11-17), on every crop — the post's, the cover's, the
 profile picture's and the comment's — on both clients: it stands as large
 as the column allows and never taller than the window leaves once the
@@ -2178,8 +2187,9 @@ next to brands like Instagram):
 - **The picked row carries no "Crop" or "Edit" links** (jakob, same
   day: "none") — the whole row is the affordance and opens the Show
   all sheet; re-cropping is the crop step's job, one Back away in the
-  linear wizard. A second entrance to the same step is the two-menus
-  pattern the system refuses. The shortcut links the details and edit
+  linear wizard, and on a post's edit, which has no crop step behind it,
+  the Show all sheet's `Crop` on each picture (round 53). A second
+  entrance to the same step is the two-menus pattern the system refuses. The shortcut links the details and edit
   boards had carried since the compose section are deleted.
 - **Web picks through the browser** (round 3, from the implementation
   session's findings): browsers have no device-gallery API, so the web
@@ -6354,7 +6364,10 @@ board's private habit; jakob ruled it as recommended.
   **reply composer** shares its column between the two, 167 × 167 each
   (jakob 2026-11-17), its tile opening the picker and the cover's crop
   as on the edits, the frame row below the chooser for frames — a frame
-  is never cropped. A
+  is never cropped. For a tall clip the row waits until asked for, and
+  the dashed tile is what asks: it opens the row, the one door, no text
+  door standing under a *Cover* label (round 53); once the row stands
+  the tile is the picker's door. A
   **reading surface** shows the cover as the card's still, and branches
   on nothing: whether that still was chosen or taken was settled while
   the post was written.
@@ -12329,7 +12342,8 @@ merged in (6f95dac35, then its acts 2 and 3, 55cd99081 and c126296b8).
   10×, and the post crop's strip when more than one was picked, each
   picture its own framing; no shape chips, no line. The upload starts at
   its `Next`, and only the squares leave the device; adding pictures later
-  crops the new ones only; its back arrow returns the composer or the
+  crops the new ones only (on a comment's edit, round 53 puts every picture
+  in the strip); its back arrow returns the composer or the
   edit as it was, the picks unused, named `Back a step` from the reply and
   `Back to the edit` from an edit (its `opener` chip). Refused files are
   judged when the picker hands them back, before the crop, on the media
@@ -12390,10 +12404,104 @@ merged in (6f95dac35, then its acts 2 and 3, 55cd99081 and c126296b8).
   the frame row stays the chooser for frames, a frame never cropped
   (`ReplyVideo`'s `cover` chip: `none` · `frame` · `own`). The inset is gone
   from the product, and `MediaThumb`'s `coverSrc` with it. The post crop
-  entered from an edit hides its shape row, the stage at the post's shape
-  (`ComposeCrop`'s `opener` chip, `post` · `edit`, which also names the
-  arrow and the X); the row is hidden, never left out, so its unkeyed paths
-  stand. Backlog 260 and 261 closed.
+  entered from an edit took an `opener` chip, `post` · `edit`, naming the
+  arrow and the X; its hidden shape row is replaced the same day by round
+  53's option C (the edit's crop is the new post's crop). Backlog 260 and
+  261 closed.
+
+### Round 53, re-cropping on the edits, one door to a tall clip's cover, the viewer's clip that cannot load — 2026-11-17
+
+jakob's answers of 2026-11-17 on the five follow-ups of rounds 51 / 52 and
+the re-crop question (option C, "yes C and all pictures"; then "Yes, same"
+for a comment), built on rounds 48–52 merged (22945a993).
+
+- **On a post's edit the crop is the new post's crop** (option C; his
+  reasoning: "if we allow cropping of added images then why not give them
+  the choice to re-crop the existing ones?"). This replaces round 52's
+  hidden shape row of the same day. `ComposeCrop` entered from an edit
+  draws the shape row with the post's shape selected and all three chips
+  live, the stage, the zoom, `One shape for the whole post.`, the strip and
+  `Next`; the `opener` chip keeps the arrow's and the X's names and sets
+  the strip: every picture of the post in the edit's order, the ones it
+  carries and the ones just added, the new ones selected first from `+ Add
+  pictures` (drawn: the third picture on the stage), the picture itself
+  from its own door. That door is `Crop` on every row of the edit's
+  picture sheet (`EditPicked`), after `Describe` and before the moves —
+  an act on the picture itself, as `Describe` is, standing on every row
+  while the moves come and go with the row's place; `PickedSheet` takes it
+  as `onCrop`, so the new post's sheets do not move. A picture the post
+  already carries is framed within its published cut-out — only the
+  cropped export ever left the device — so tighter, never wider, its zoom
+  from that cut-out's fill of the current shape to the one ceiling; a
+  shape change holds for every picture by the new post's own rules.
+  `Next` brings the edit back and starts the uploads of the added and the
+  re-framed pictures; the gate waits on both. An unchanged picture is
+  not replaced; a re-framed one is a replacement in the signed edit and
+  rides the `Edit` record, the post's new content state, as an added or a
+  removed picture and a clip's new face do — no row, no count of its own
+  (`EditActs`' complete set of kinds). Back leaves nothing of the visit
+  standing; the X is `DiscardConfirm`, as before. A feed card's gallery
+  takes the shape of the post's current version (`FeedGallery.md`).
+- **The same on a comment's edit** ("Yes, same"): `ReplyCrop` with
+  `opener` = `edit` holds every picture of the comment in its strip, the
+  new ones selected first (its `pictures` = `two`; `one` is the comment's
+  one picture opened from its own door); an existing picture is framed
+  within its published square, tighter, never wider; a re-framed one is a
+  replacement riding the comment edit's own record (`CommentEditActs`).
+  The door on `CommentEdit` is not drawn: the comment edit has no picture
+  sheet, and the options wait on jakob (backlog 264).
+- **A tall clip's cover in the reply composer has one door** (his
+  follow-up 1, "yes"): the dashed `Add a cover` tile opens the frame row,
+  and the text door under `Cover` is gone from `ReplyVideoFailed`; once the
+  row stands the tile is round 52's door, the picker then the cover's
+  square crop. No registered path went with it (the board is unregistered).
+- **Settled as they stand** (his follow-ups 2, 4, 5): both ways to a
+  picture of your own stay in the reply composer, the draft card's words
+  stay, and the other after-Close `Signing…` lines stay lines. Nothing in
+  the tree carried them as open.
+- **The viewer's clip that cannot load is drawn** (round 50's law, the
+  reel's twin): `ViewerVideo`'s `clip` chip, `unloaded` — the cover whole
+  at 4:5 on the black with the outlined `Retry` alone, the transport gone
+  with the clip, the X staying (`MediaViewer`'s `unloadedHoles`; every
+  other viewer board's markup unchanged). Backlog 230's note.
+- **Backlog** 262–264 filed (a re-framed picture's failed upload, where
+  the crop opened from the picture sheet returns, the comment edit's door).
+- **The gate**: against 22945a993, 214 screens; 8492 → 8493 board paths,
+  1 added, none gone (`postEdit.pickedSheet.picture.crop`); 3 (board, path,
+  key) strings added, none gone (its keys `1`, `2`, and `composeCrop`'s
+  third `thumb`).
+- **Act 2, jakob's review (2026-11-17, PR #519: "as rec" on B1 and B2,
+  `Crop` "blessed", then "as rec (b)" on the moves)**:
+  - The dashed `Add a cover` tile stands its plus in its exact middle, the
+    words 4 under it (`CoverTile`; his "the '+' sign should be in the
+    middle of the square … and the words below it"): every host carrying
+    the words on the tile — `ReplyVideo`, `ReplyVideoFailed`,
+    `ComposeDetailsVideo`, `EditComposeVideo`; `labelBeside` hosts
+    unchanged. Measured: the glyph's centre on the tile's within 0.01 on
+    167 × 167 and 76.8 × 96 tiles.
+  - The comment edit re-crops by a text door, `Crop the pictures`,
+    directly above `Describe the pictures`, in its pattern and by its rule
+    (the same words for one picture as for four, none on a words comment);
+    it opens `ReplyCrop` with every picture of the comment, the first on
+    the stage (`commentEdit.pictures.crop`). Backlog 264 closed.
+  - A re-cropped picture whose upload fails offers `Retry · Undo`, a refused
+    one `Undo` alone; `Undo` drops the re-crop and the published picture
+    stands; a picture added in the edit keeps `Remove it`; the same on the
+    comment's edit (`UploadErrorLine`'s `onUndo`; `EditCompose` and
+    `CommentEdit` `upload` = `recrop-failed`). Backlog 262 closed.
+  - `Crop` on the picture sheet is blessed.
+  - The picture sheet draws `Make it the cover` alone as the drag's tap
+    twin; `Move up` and `Move down` are the handle's screen-reader actions
+    beside its ↑ / ↓ keys, nothing drawn (`PickedSheet`, both sheets). The
+    middle rows' actions stand on one line: `Describe · Crop · Make it the
+    cover` on `EditPicked`, `Describe · Make it the cover` on
+    `ComposePicked`.
+  - **The gate**: against act 1 (9acc9e3cc), 214 screens; 8493 → 8491
+    board paths, 2 added (`commentEdit.pictures.crop` on `CommentEdit` and
+    `CommentEditActs`), 4 gone — the ruled removal of
+    `composeDetails.pickedSheet.picture.moveUp` / `.moveDown` and
+    `postEdit.pickedSheet.picture.moveUp` / `.moveDown`; the `upload`
+    chip's `recrop-failed` copies of `postEdit.body.mediaRow` added.
 ---
 
 ## 14. The canvases

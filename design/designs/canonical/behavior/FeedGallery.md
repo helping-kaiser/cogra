@@ -2,6 +2,8 @@
 
 ALWAYS a gallery shows one frame at the post's one crop shape, each picture whole as the author shaped it
 
+ALWAYS the gallery's shape is the shape of the post's current version, an edit that changed the shape in the post's crop showing every picture at the new one
+
 ALWAYS the card stands one frame tall however many pictures it carries
 
 ALWAYS the pager's position reads in dots only, never a count pill
