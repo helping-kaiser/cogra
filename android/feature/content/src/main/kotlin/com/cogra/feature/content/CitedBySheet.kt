@@ -165,9 +165,10 @@ internal fun CitedBySheetContent(
             // `SheetTitle`'s own `0 24 8`.
             SheetTitle(
                 text = stringResource(R.string.content_cited_by_title),
+                // The node is the heading box, its `0 24 8` inside it (`SheetTitle.jsx`).
                 modifier = Modifier
-                    .padding(start = Space.x6, end = Space.x6, bottom = Space.x2)
-                    .dataNode(node?.div("title")),
+                    .dataNode(node?.div("title"))
+                    .padding(start = Space.x6, end = Space.x6, bottom = Space.x2),
             )
             when {
                 rows == null -> Unit
@@ -177,6 +178,7 @@ internal fun CitedBySheetContent(
                     // CitedBy.md:19, CommentCitedByEmpty.md:7-9: the line alone, calm, never the error colour.
                     EmptyState(
                         testTag = "${testTag}_empty",
+                        modifier = Modifier.fillMaxWidth(),
                         title = stringResource(R.string.content_cited_by_empty),
                         node = node?.div("empty")?.keyed("empty"),
                     )
