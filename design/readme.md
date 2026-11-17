@@ -12134,7 +12134,15 @@ and 19 as recommended), built on round 49 (60d9c51c0).
   ink beside another (`tag` chip, `refused`). The post edit gains the
   comment edit's citation and bug rules. The seals draw one tag and are
   unchanged.
-- **Backlog** 221, 223 and 230 read and left open; 240–242 filed.
+- **Backlog** 221, 223 and 230 read and left open; 240–243 filed.
+- **The gate**: against round 49 (60d9c51c0), 212 screens; 8389 → 8410
+  board paths, 21 added, none gone, no key rule changed. Foot gaps
+  measured at the scroll's end (headless Chromium, 390 × 844): History,
+  search, the default license and the feed filter 16 (the feed's 15.7
+  subpixel; search's 17 was its picker's label, the control itself 16);
+  `SettingsReading` keeps 131 under its short content in the 88%-pinned
+  sheet (backlog 243). Flows re-blessed: `edit-avatar-via-edit-screen`,
+  `edit-your-profile` (Save's two readings).
 ---
 
 ## 14. The canvases

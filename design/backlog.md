@@ -6273,3 +6273,15 @@ Round 50 (the row grammar, item 5). `ActsCard`'s value is one line, ellipsized:
 and website, the picture removed` run past the slot at 390 wide (the slot holds
 about 30 characters of body-medium beside the 76px label). The drawn readings
 fit. A two-line value, or a shorter grammar, is a drawing choice for jakob.
+
+### 243 · The reading settings' filter sheet stands 131px above its foot · *design* · **filed 2026-11-17**
+
+Round 50 (jakob 2026-11-17, his 10: 16px from the last content to the foot's
+hairline). `SettingsReading` raises `FeedFilterSheet` pinned at 88% (`height`,
+so the Done row sits under scrolling sections on the feed), but its content is
+short, so 131px of empty sheet stand above the foot. The sheet's structure did
+not change with the slot (by code reading; the base render was not re-measured).
+Meeting the rule there changes the sheet's height, a visible change beyond the
+gap: (a) the settings sheet sizes to its content (`maxHeight` 88%), the foot 16
+under it; (b) it keeps 88% and the rule names the pinned-height sheet as its
+exception.
