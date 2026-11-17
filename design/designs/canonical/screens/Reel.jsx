@@ -76,11 +76,11 @@ export const NODE = "reel";
 export const PROPS = {
   state: {
     editor: "enum",
-    options: ["playing", "suppressed", "settling", "moved", "end", "fault", "unsigned", "refused", "copied"],
+    options: ["playing", "suppressed", "settling", "moved", "end", "fault", "unsigned", "refused", "copied", "unloaded"],
     default: "playing",
   },
 };
-export const VALS = `soundDisc: this.props.state === "suppressed" ? "none" : "contents", playDisc: this.props.state === "suppressed" ? "contents" : "none", railFigure: this.props.state === "settling" || this.props.state === "moved" ? "none" : "contents", railSettling: this.props.state === "settling" ? "contents" : "none", railDash: this.props.state === "moved" ? "contents" : "none", lineUnsigned: this.props.state === "unsigned" ? "block" : "none", lineRefused: this.props.state === "refused" ? "block" : "none", lineEnd: this.props.state === "end" ? "block" : "none", lineFault: this.props.state === "fault" ? "block" : "none", snackbarShown: this.props.state === "copied" ? "contents" : "none"`;
+export const VALS = `soundDisc: this.props.state === "suppressed" ? "none" : "contents", playDisc: this.props.state === "suppressed" ? "contents" : "none", railFigure: this.props.state === "settling" || this.props.state === "moved" ? "none" : "contents", railSettling: this.props.state === "settling" ? "contents" : "none", railDash: this.props.state === "moved" ? "contents" : "none", lineUnsigned: this.props.state === "unsigned" ? "block" : "none", lineRefused: this.props.state === "refused" ? "block" : "none", lineEnd: this.props.state === "end" ? "block" : "none", lineFault: this.props.state === "fault" ? "block" : "none", snackbarShown: this.props.state === "copied" ? "contents" : "none", clipShown: this.props.state === "unloaded" ? "none" : "block", coverShown: this.props.state === "unloaded" ? "flex" : "none", seekShown: this.props.state === "unloaded" ? "none" : "block"`;
 
 const stateCopy = (value) => ({ "data-node-chip": "state", "data-node-key": value });
 
@@ -91,8 +91,21 @@ export function Screen() {
         <img
           src="clip-lakeside.jpg"
           alt="A man standing at the edge of a lake as the light drops."
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          style={{ display: "{{clipShown}}", position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
         />
+        {/* THE `state` CHIP'S `unloaded` (round 50, jakob 2026-11-17, C6): the
+            clip itself cannot load, so its cover stands in the stream, whole
+            at 4:5, centred on the black, nothing cropped (N7: a 4:5 cover in
+            the reel is fine in this edge case), with the read fault's
+            outlined `Retry` alone on it — no sentence. */}
+        <div style={{ display: "{{coverShown}}", position: "absolute", inset: 0, alignItems: "center", justifyContent: "center" }} {...stateCopy("unloaded")}>
+          <div style={{ width: "100%", aspectRatio: "4 / 5", flex: "none" }}>
+            <img src="clip-lakeside.jpg" alt="" style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
+          <span style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)" }}>
+            <Button variant="outline" size="sm" node="retry">Retry</Button>
+          </span>
+        </div>
       </div>
       {/* The two washes: chrome over photography needs its own contrast, and a
           gradient does it without drawing a bar across the frame. */}
@@ -176,7 +189,7 @@ export function Screen() {
         }
       />
 
-      <div style={{ position: "absolute", left: 0, right: 0, bottom: BAND_HEIGHT + 4, zIndex: 3 }}>
+      <div style={{ display: "{{seekShown}}", position: "absolute", left: 0, right: 0, bottom: BAND_HEIGHT + 4, zIndex: 3 }}>
         <SeekLine progress={0.34} elapsed="0:14" duration="0:41" node="seekLine" />
       </div>
 
