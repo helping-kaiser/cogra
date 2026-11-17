@@ -3043,14 +3043,23 @@ Object.assign(FLOW_MARKERS, {
     { n: 12, find: ' Opinions by them"', tag: "button" },
     { n: 3, find: 'aria-label="Give your opinion on this account"', tag: "button" },
     { n: 3, find: ">Choose your opinion on this account</button>", tag: "button" },
-    { n: 4, find: 'aria-label="Posts"', tag: "button" },
-    { n: 4, find: 'aria-label="Comments"', tag: "button" },
-    { n: 4, find: 'aria-label="Everything"', tag: "button" },
-    { n: 5, find: "Three mornings on the wall", tag: "button" },
+    { n: 4, find: 'aria-label="Posts"', tag: "button", all: true },
+    { n: 4, find: 'aria-label="Comments"', tag: "button", all: true },
+    { n: 4, find: 'aria-label="Everything"', tag: "button", all: true },
+    // Whole lines, end and all: the landing's card carries the first one's words (round 49).
+    { n: 5, find: "Three mornings on the wall, watching the tide come in over the flats.</span", tag: "button" },
     { n: 5, find: "The tunnel is faster", tag: "button" },
     { n: 5, find: "Low sun on the salt crust", tag: "button" },
     ...nav(6),
     { n: 11, find: 'aria-label="More about this account"', tag: "button" },
+    // The Posts landing's card, kept or removed (round 49, jakob 2026-11-17).
+    { n: 13, find: '<a href="/u/marlow"', tag: "a", all: true },
+    { n: 14, find: 'aria-label="More on this post"', tag: "button", all: true },
+    { n: 15, find: 'aria-label="Give your opinion on this post"', tag: "button", all: true },
+    { n: 15, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
+    { n: 16, find: ">Feed score</span>", tag: "button", all: true },
+    { n: 17, find: 'aria-label="2 comments"', tag: "button", all: true },
+    { n: 18, find: 'aria-label="Share this post"', tag: "button", all: true },
   ],
 });
 

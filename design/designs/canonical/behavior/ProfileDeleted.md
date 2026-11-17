@@ -2,7 +2,13 @@
 
 ALWAYS a deleted account's profile keeps the other-profile page's whole structure: the header, the real counts, the tabs and the chronicle of what the account did
 
-ALWAYS a deleted account's profile stands with profile.tabRow.everythingTab lit, the chronicle below it, where every other profile lands with profile.tabRow.postsTab lit (round 49: kept until jakob rules what that tab shows for a deleted account)
+WHEN a deleted account's profile opens, from any door -> it lands with profile.tabRow.postsTab lit and profile.posts below it, as every profile does AND NEVER it lands on Everything or Comments
+
+ALWAYS each post under profile.posts stands as its post card under profile.posts.card.authorChip reading Deleted account, the reserved disc, GIVEN the deletion took the identity alone
+
+ALWAYS each post under profile.posts stands as its removal mark, Removed by its author with its date, GIVEN the deletion took the content too
+
+WHEN tap profile.tabRow.everythingTab -> the chronicle stands below profile.tabRow AND the header above stays as it was
 
 ALWAYS the avatar is the reserved disc, with no monogram and no glyph
 
@@ -52,7 +58,7 @@ WHEN tap the Opinions by figure -> the opinions page opens on this account on it
 
 WHEN tap the Posts figure -> NEVER anything happens
 
-WHEN tap profile.tabRow.postsTab -> the account's posts stand below profile.tabRow as post cards AND the header above stays as it was
+WHEN tap profile.tabRow.postsTab GIVEN another tab is lit -> the account's posts stand below profile.tabRow as post cards AND the header above stays as it was
 
 WHEN tap profile.tabRow.commentsTab -> the account's comments stand below profile.tabRow as comment cards AND the header above stays as it was
 

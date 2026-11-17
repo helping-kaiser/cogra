@@ -33,10 +33,13 @@
    is `ProfileDeleted`'s, and the sheet is `menuSheet`, its rows named as
    `ProfileMenu`'s are. */
 export const NODE = "profile";
+/* The page beneath lands on Posts (jakob 2026-11-17), its chips `ProfileDeleted`'s. */
+export const PROPS = { ...TAB_CHIP, ...CONTENTS_CHIP };
+export const VALS = `${TAB_VALS}, ${CONTENTS_VALS}`;
 export function Screen() {
   return (
     <>
-      <ProfileDeletedBody />
+      <ProfileDeletedBody tab="chip" />
 
       <BottomSheet open ariaLabel="Profile actions" node="menuSheet">
         {PROFILE_DELETED_MENU.map((item) => (
