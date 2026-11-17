@@ -10,6 +10,9 @@
 // - ONE STAGED CITATION whose target is gone (`NOT_FOUND` on
 //   `references.<index>.target`): a target that landed never stops answering,
 //   so this is a cited post or comment that never landed — said on its row;
+// - FORBIDDEN, the whole act refused (`notThrough`): `That didn't go through.
+//   Try again.` with Retry in the commit's place — never the no-answer line,
+//   because the server answered, and never a row (NetworkError.md:13);
 // - ANY OTHER refusal of a staged act: a bug the picking stage should have
 //   blocked — the notice in the bug's own words, and no row marked.
 
@@ -19,6 +22,7 @@ import type { ReferenceDraft } from "@/lib/references/draft";
 
 export type SealFault =
   | { readonly kind: "offline" }
+  | { readonly kind: "notThrough" }
   | { readonly kind: "row"; readonly targetId: string }
   | { readonly kind: "bug" }
   | { readonly kind: "writeRule" };
@@ -28,6 +32,7 @@ export function sealFaultOf(
   references: readonly ReferenceDraft[],
 ): SealFault {
   if (errors.some((error) => error.code === "WRITE_RULE_FAILED")) return { kind: "writeRule" };
+  if (errors.some((error) => error.code === "FORBIDDEN")) return { kind: "notThrough" };
   for (const error of errors) {
     const index = pathIndex(error.field, "references");
     const onTarget = error.field !== null && error.field.length === 3 && error.field[2] === "target";
