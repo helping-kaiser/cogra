@@ -163,8 +163,12 @@ fun dependencyCommitment(actId: ActId, preCommitment: ByteArray, salt: ByteArray
  */
 const val CONTENT_EDITION: ULong = 2u
 
-/** The dependency edition a verified act is sealed under. The device refuses any other. */
-const val DEPENDENCY_EDITION: ULong = 1u
+/**
+ * The dependency edition a verified act is sealed under: the dependency
+ * commitment is formed under the two-nonce tag over the two-nonce
+ * pre-commitment. The device refuses any other.
+ */
+const val DEPENDENCY_EDITION: ULong = 2u
 
 /**
  * The actor's pre-signed proposal: the proposal it signed, both nonces

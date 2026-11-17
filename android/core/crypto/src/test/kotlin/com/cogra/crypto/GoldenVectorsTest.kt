@@ -306,8 +306,8 @@ class GoldenVectorsTest {
         "a content commitment over the payload bytes" to
             "content commitment is not formed over this device's content pre-digest",
         "a pre-commitment the device did not form" to "host returned a different pre-commitment than was formed",
-        "an unexpected content edition" to "unexpected editions (content 1, dependencies 1)",
-        "an unexpected dependency edition" to "unexpected editions (content 2, dependencies 2)",
+        "an unexpected content edition" to "unexpected editions (content 1, dependencies 2)",
+        "an unexpected dependency edition" to "unexpected editions (content 2, dependencies 1)",
     )
 
     @Test

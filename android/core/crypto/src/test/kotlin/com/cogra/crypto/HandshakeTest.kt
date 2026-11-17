@@ -255,7 +255,7 @@ class HandshakeTest {
 
     @Test
     fun aVerifiedActWithAnUnexpectedEditionIsRefusedBeforeApproval() {
-        for ((content, dependency) in listOf(1UL to 1UL, 1UL to 2UL, 2UL to 2UL, 3UL to 1UL)) {
+        for ((content, dependency) in listOf(1UL to 2UL, 1UL to 1UL, 2UL to 1UL, 3UL to 2UL)) {
             assertThat(refusal(seal(pre, host, contentEdition = content, dependencyEdition = dependency)))
                 .startsWith("unexpected editions (content $content, dependencies $dependency)")
         }
