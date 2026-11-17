@@ -12294,6 +12294,13 @@ the email line (impl 354, 351, "as rec"), built on rounds 48–50 (ecffb3ba9).
   threshold gates the spoken `Signing…`, and an edit's fault draws no
   `Back`. Backlog 250–255 closed; 256 filed (a Cite or Mention door
   opened over a kept draft).
+- **Act 3 (jakob 2026-11-17, 256 (a))**: a wizard opened by Cite, Mention
+  or a tag card's compose glyph while a draft is kept meets the draft card,
+  as from New post; `Continue` resumes the draft and what the door brought
+  joins it, `Discard` starts a fresh pick with it riding; with no draft
+  kept the door opens fresh at the first stage. Leaving the draft card by
+  its arrow or X keeps the draft as it was. Every door's sidecar and graph
+  edge carries the kept-draft case (`ComposeDraft`). Backlog 256 closed.
 ---
 
 ## 14. The canvases

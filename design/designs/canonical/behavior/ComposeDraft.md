@@ -1,6 +1,6 @@
 # ComposeDraft · `spec:design:behavior-compose-draft`
 
-WHEN New post is pressed GIVEN a draft is kept on this device -> the draft card leads the screen above the pick step AND the pick region stands dimmed beneath it
+WHEN New post, Cite in a new post, Mention in a new post or a tag card's compose glyph is pressed GIVEN a draft is kept on this device -> the draft card leads the screen above the pick step AND the pick region stands dimmed beneath it, from every door alike
 
 ALWAYS the draft card wears the brand ring
 
@@ -10,9 +10,9 @@ ALWAYS one draft is kept per target, on this device only
 
 ALWAYS a draft is kept only once the composer holds something of the author's own, never for a fresh pick or for only what Cite in a new post, Mention in a new post or a tag card's compose glyph opened it with
 
-ALWAYS Cite in a new post and Mention in a new post are doors to the wizard as New post is, and opening the wizard by one of them is no draft of its own, though the citation or the mention it brings is added later
+ALWAYS Cite in a new post, Mention in a new post and a tag card's compose glyph are doors to the wizard as New post is, and opening the wizard by one of them is no draft of its own, though the citation, the mention or the tag it brings is added later
 
-WHEN a composer opened by Cite in a new post or Mention in a new post is left holding nothing of the author's own GIVEN a draft is kept on this device -> the kept draft stays as it was AND NEVER the reference joins it
+WHEN the draft card is left by the header back arrow or X GIVEN Cite in a new post, Mention in a new post or a tag card's compose glyph opened the wizard -> the kept draft stays as it was AND NEVER the reference or tag that door brought joins it
 
 WHEN New post is pressed GIVEN the last composer was left holding nothing of the author's own and no draft was kept before it -> the pick step opens fresh AND NEVER the draft card stands
 
@@ -22,7 +22,11 @@ WHEN focus reaches the dimmed pictures -> one control named Answer your draft be
 
 WHEN press Continue -> the draft resumes where it was left
 
+WHEN press Continue GIVEN Cite in a new post, Mention in a new post or a tag card's compose glyph opened the wizard -> the draft resumes where it was left AND the reference or tag that door brought joins the draft, staged among its own
+
 WHEN press Discard -> the draft is discarded AND a fresh pick begins with the pictures in reach
+
+WHEN press Discard GIVEN Cite in a new post, Mention in a new post or a tag card's compose glyph opened the wizard -> the draft is discarded AND a fresh pick begins with the reference or tag that door brought riding it, as when the door opens with no draft kept
 
 WHEN press the header back arrow -> compose is left for where the composer was opened from AND the draft stays AND NEVER a dialog asks
 

@@ -14,7 +14,7 @@ WHEN tap feed.menuSheet.save GIVEN the save does not go through -> the save reve
 
 WHEN tap feed.menuSheet.save GIVEN the post is kept -> the sheet closes AND feed.snackbar reads Removed from Saved. with Undo on feed.snackbar.action
 
-WHEN tap feed.menuSheet.cite -> the post wizard opens fresh at its first stage AND the post rides along unseen until the details stage
+WHEN tap feed.menuSheet.cite -> the post wizard opens as New post opens it, fresh at its first stage or, with a draft kept on this device, under the draft card, whose Continue takes what rides along into the draft AND the post rides along unseen until the details stage
 
 WHEN tap feed.menuSheet.hide -> the sheet closes AND that person's rows leave the feed, their posts and their comment cards alike, AND the rows behind them move up AND feed.snackbar reads @ada is hidden. with Undo AND NEVER a confirm step appears
 

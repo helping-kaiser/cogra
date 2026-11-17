@@ -8,7 +8,7 @@ WHEN an applicant taps feed.menuSheet.mention, on the feed, History or Saved ali
 
 ALWAYS the menu of feed.profileCard holds the same rows on every host the card stands on, the feed, History and Saved, Saved's first row reading Unsave
 
-WHEN tap feed.menuSheet.mention -> the post wizard opens fresh at its first stage AND the person rides along as a staged reference, unseen until the details stage
+WHEN tap feed.menuSheet.mention -> the post wizard opens as New post opens it, fresh at its first stage or, with a draft kept on this device, under the draft card, whose Continue takes what rides along into the draft AND the person rides along as a staged reference, unseen until the details stage
 
 WHEN tap feed.menuSheet.hide -> the sheet closes AND that person's rows leave the feed, their posts and their comment cards alike, AND the rows behind them move up AND the snackbar reads @mira is hidden. with Undo AND NEVER a confirm step appears
 

@@ -1,6 +1,8 @@
 # ComposeCited · `spec:design:behavior-compose-cited`
 
-WHEN the details stage opens GIVEN Cite in a new post or Mention in a new post opened the composer -> the reference brought along stands staged in the References block AND nothing else is written
+WHEN the details stage opens GIVEN Cite in a new post or Mention in a new post opened the composer and no draft was continued -> the reference brought along stands staged in the References block AND nothing else is written
+
+WHEN the details stage opens GIVEN Cite in a new post or Mention in a new post opened the wizard and the kept draft was continued -> the reference brought along stands staged in the References block among the draft's own AND everything the draft held stands as it was left
 
 ALWAYS a cited post and a mentioned person stand in the References block as one row shape
 

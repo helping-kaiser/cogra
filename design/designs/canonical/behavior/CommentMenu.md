@@ -28,7 +28,7 @@ WHEN tap Save GIVEN the save does not go through -> the save reverts AND the tar
 
 WHEN tap Unsave -> the menu closes AND postDetail.snackbar reads Removed from Saved. with Undo on postDetail.snackbar.action
 
-WHEN tap Cite in a new post -> the post wizard opens fresh at its first stage AND the comment rides along unseen until the details stage
+WHEN tap Cite in a new post -> the post wizard opens as New post opens it, fresh at its first stage or, with a draft kept on this device, under the draft card, whose Continue takes what rides along into the draft AND the comment rides along unseen until the details stage
 
 WHEN an applicant taps Cite in a new post on a comment's menu, on any host -> the menu closes AND the snackbar reads You can post once you're in. AND NEVER the wizard opens
 
