@@ -6457,3 +6457,17 @@ comes back on `Next` and on the back arrow. Drawn by `Describe`'s precedent from
 back with the picture sheet over it, as the crop was opened from there (`ComposeCrop.md`,
 `EditPicked.md`, graph `ComposeCrop` via 1 / 3, `EditPicked` via 9). Option (b): the sheet is
 left and the bare edit comes back. To be confirmed.
+
+### 264 · The comment edit's door to re-crop a picture it holds · *design* · **filed 2026-11-17**
+
+Round 53, item 5 (jakob 2026-11-17, "Yes, same"): a comment's existing pictures can be
+re-cropped on its edit, through `ReplyCrop` (`opener` = `edit`). The law and the crop are
+drawn; the door is not. A comment edit's picture is a 56 thumb on `commentEdit.pictures` with
+its remove × alone — no sheet like the post's `EditPicked`, no per-picture action line;
+`Describe the pictures` (`DescribeCounter`) is the row's one door and opens one sheet for all.
+Options, drawn as scratch alternatives (not in the tree): (a) the thumbnail itself is the door,
+as `CoverTile` is on the edits (`Change the cover`), spoken by a new name such as `Crop picture
+1`, nothing visible changing; (b) a row-level door under the thumbnails, `DescribeCounter`'s
+twin, opening the crop on the first picture with the strip holding all — new words, such as
+`Crop the pictures`; (c) the post edit's pattern scaled down — `PickedRow` opening a
+`PickedSheet` with `Crop` per picture — a new sheet on this edit.

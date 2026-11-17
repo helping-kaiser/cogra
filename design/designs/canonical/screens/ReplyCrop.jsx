@@ -24,8 +24,9 @@
 
    THE `opener` CHIP NAMES THE TWO WAYS IN (jakob 2026-11-17, C8): from the
    reply composer the arrow is `Back a step` and the X `Leave — the reply is
-   discarded`; from a comment edit's `+ Add pictures` the arrow is `Back to
-   the edit` and the X `Leave — the edit is discarded` — the X of the flow
+   discarded`; from a comment edit — its `+ Add pictures`, or a picture's own
+   crop door (round 53) — the arrow is `Back to the edit` and the X `Leave —
+   the edit is discarded` — the X of the flow
    that opened the crop, asking first where that flow's X asks.
 
    REGISTERED under its own `replyCrop` prefix, `CoverCrop`'s names and
@@ -36,21 +37,38 @@ export const PROPS = {
   opener: { editor: "enum", options: ["reply", "edit"], default: "reply" },
   pictures: { editor: "enum", options: ["two", "one"], default: "two" },
 };
-export const VALS = `backLabel: this.props.opener === "edit" ? "Back to the edit" : "Back a step", leaveLabel: this.props.opener === "edit" ? "Leave — the edit is discarded" : "Leave — the reply is discarded", stripShown: this.props.pictures === "one" ? "none" : "flex"`;
+/* ON A COMMENT'S EDIT THE STRIP HOLDS EVERY PICTURE OF THE COMMENT (round 53,
+   jakob 2026-11-17, "Yes, same" — the post edit's option C at the comment's
+   scale). At `edit` with `two`, the comment's own picture (the one
+   `CommentEdit` holds) and the one just added from `+ Add pictures`, in the
+   edit's order, the new one selected first and on the stage; at `edit` with
+   `one`, the comment's one picture opened from its own door, no strip. A
+   picture the comment already holds is framed within its published square,
+   tighter and never wider; one whose framing changed is a replacement in the
+   signed edit, riding the edit's own record as an added picture does. The
+   square frame, the zoom and no shape row are the same at both openers. The
+   new picture's stage is drawn unregistered beside the registered
+   `viewport`, which is hidden, never left out, so its path stands. */
+export const VALS = `backLabel: this.props.opener === "edit" ? "Back to the edit" : "Back a step", leaveLabel: this.props.opener === "edit" ? "Leave — the edit is discarded" : "Leave — the reply is discarded", stripShown: this.props.pictures === "one" ? "none" : "flex", stageFirstShown: this.props.opener === "edit" && this.props.pictures === "two" ? "none" : "contents", stageNewShown: this.props.opener === "edit" && this.props.pictures === "two" ? "contents" : "none", thumb1Outline: this.props.opener === "edit" ? "none" : "2px solid var(--primary)", thumb1Opacity: this.props.opener === "edit" ? "0.65" : "1", thumb2Outline: this.props.opener === "edit" ? "2px solid var(--primary)" : "none", thumb2Opacity: this.props.opener === "edit" ? "1" : "0.65"`;
 
 export function Screen() {
   return (
     <>
       <WizardHeader title="Crop" backLabel="{{backLabel}}" leaveLabel="{{leaveLabel}}" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 16px", overflow: "hidden" }}>
-        <CropViewport src="comment-camera.jpg" shape="rect" stageHeight={488} height={342} scale={1.15} origin="50% 40%" node="viewport" />
+        <div style={{ display: "{{stageFirstShown}}" }}>
+          <CropViewport src="comment-camera.jpg" shape="rect" stageHeight={488} height={342} scale={1.15} origin="50% 40%" node="viewport" />
+        </div>
+        <div style={{ display: "{{stageNewShown}}" }}>
+          <CropViewport src="gallery-market.jpg" shape="rect" stageHeight={488} height={342} scale={1.15} origin="50% 40%" />
+        </div>
         <CropZoom scale={1.15} node="zoom" />
 
         <div style={{ display: "{{stripShown}}", gap: 8, alignItems: "center" }} data-node="pictures">
-          <span style={{ display: "inline-flex", flex: "none", borderRadius: "var(--radius-small)", outline: "2px solid var(--primary)", outlineOffset: 1 }}>
+          <span style={{ display: "inline-flex", flex: "none", borderRadius: "var(--radius-small)", outline: "{{thumb1Outline}}", outlineOffset: 1, opacity: "{{thumb1Opacity}}" }}>
             <MediaThumb src="comment-camera.jpg" node="thumb" nodeKey="1" />
           </span>
-          <span style={{ display: "inline-flex", flex: "none", opacity: 0.65 }}>
+          <span style={{ display: "inline-flex", flex: "none", borderRadius: "var(--radius-small)", outline: "{{thumb2Outline}}", outlineOffset: 1, opacity: "{{thumb2Opacity}}" }}>
             <MediaThumb src="gallery-market.jpg" node="thumb" nodeKey="2" />
           </span>
         </div>

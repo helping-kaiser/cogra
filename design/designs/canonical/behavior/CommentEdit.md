@@ -20,9 +20,15 @@ WHEN tap a picture's remove control -> the picture leaves the batch
 
 WHEN tap + Add pictures -> the platform's own picker opens AND NEVER a pick stage opens
 
-WHEN pictures come back from the picker at the edit -> the comment's square crop opens on the new pictures only AND they join commentEdit.pictures as their squares at its Next AND their cropped exports start uploading AND every picture the comment already holds keeps its framing
+WHEN pictures come back from the picker at the edit -> the comment's square crop opens, its strip holding every picture of the comment with the new ones selected first, AND they join commentEdit.pictures as their squares at its Next AND the cropped exports of the pictures added or re-framed start uploading
 
-WHEN press the comment's square crop's back arrow GIVEN it was opened from the edit -> the edit comes back as it was AND the picked pictures go unused
+ALWAYS a picture the comment already holds can be re-framed in the comment's square crop, within its published square, tighter and never wider
+
+ALWAYS a picture the comment already holds uploads again only when the crop changed its framing, its new square a replacement of it in the signed edit, and never otherwise
+
+ALWAYS a picture the crop replaced rides the edit's own record, the comment's new content state, staging it when nothing else has and adding nothing to the footer's count when it is already staged
+
+WHEN press the comment's square crop's back arrow GIVEN it was opened from the edit -> the edit comes back as it was before the crop opened AND every picture added and every framing changed in that visit goes unused
 
 ALWAYS the comment edit's add row reads + Add pictures or a video GIVEN the comment holds words alone, no picture and no clip
 
@@ -54,9 +60,9 @@ ALWAYS a standing citation whose target was removed keeps its row, wearing the r
 
 ALWAYS a standing citation whose target was removed keeps its pair, its sheet and its ×, and adds nothing to the batch by standing
 
-ALWAYS the line Uploading N of M — signing waits for the picture. stands above the acts footer GIVEN pictures the edit took are uploading and M is 1
+ALWAYS the line Uploading N of M — signing waits for the picture. stands above the acts footer GIVEN pictures the edit took or re-framed are uploading and M is 1
 
-ALWAYS the line Uploading N of M — signing waits for the pictures. stands above the acts footer GIVEN pictures the edit took are uploading and M is 2 or more
+ALWAYS the line Uploading N of M — signing waits for the pictures. stands above the acts footer GIVEN pictures the edit took or re-framed are uploading and M is 2 or more
 
 ALWAYS Sign the edit is enabled GIVEN an upload is running
 
@@ -64,7 +70,7 @@ WHEN press Sign the edit GIVEN an upload is running -> Sign the edit refuses a s
 
 WHEN the signing has not answered 200ms after a press of Sign the edit, held at the upload gate or not -> Sign the edit reads Signing the edit… in its own place AND NEVER a spinner appears
 
-ALWAYS each picture the edit took that is still uploading wears its progress as a ring on its thumbnail, the ring drawn once on EditCompose's board at its uploading state
+ALWAYS each picture the edit took or re-framed that is still uploading wears its progress as a ring on its thumbnail, the ring drawn once on EditCompose's board at its uploading state
 
 WHEN the signing has not answered 5s after the press -> the line Still signing — the network is slow right now. stands under the acts footer AND NEVER a progress indicator appears
 
