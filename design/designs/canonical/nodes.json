@@ -2719,7 +2719,8 @@
         "composeCrop.pictures": [],
         "composeCrop.pictures.thumb": [
           "1",
-          "2"
+          "2",
+          "3"
         ],
         "composeCrop.shapes": [],
         "composeCrop.shapes.squareChip": [],
@@ -3686,6 +3687,10 @@
         "postEdit.pickedSheet.done": [],
         "postEdit.pickedSheet.dragHandle": [],
         "postEdit.pickedSheet.picture": [
+          "1",
+          "2"
+        ],
+        "postEdit.pickedSheet.picture.crop": [
           "1",
           "2"
         ],
