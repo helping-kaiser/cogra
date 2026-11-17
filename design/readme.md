@@ -12503,6 +12503,23 @@ for a comment), built on rounds 48–52 merged (22945a993).
     `postEdit.pickedSheet.picture.moveUp` / `.moveDown`; the `upload`
     chip's `recrop-failed` copies of `postEdit.body.mediaRow` added.
 
+### Round 54, `PadKeyAbsent`'s pad into `StanceControl` — 2026-11-17
+
+Backlog 221 as filed (round 48, seam 320-16) and as round 50 read it — a
+pixel-identical move of the hand-built pad into the master, then names —
+built on c84455977.
+
+- **Not moved.** A key-absent state in `writeRule`'s grammar puts the pad's
+  box, field, notice and text button exactly where the hand-built ones
+  stand, and moves no other board; but the master draws its own "?" in the
+  pad's corner, which the hand-built pad lacks, and says the empty
+  standing in body-small where the hand-built `QuietNote` uses
+  label-small. Which side wins is a drawing choice, so `PadKeyAbsent`
+  stays as drawn, unregistered. The measurements, the sub-pixel residue
+  under them and the attempt are in backlog 221, which stays open.
+- **The gate**: no source changed but the backlog and this record; the
+  boards, bundle and registry stand as at c84455977.
+
 ### Round 55, the menu hosts the sidecars named and no board drew — 2026-11-17
 
 No new ruling: round 36's one menu board per place a card's menu is raised,
