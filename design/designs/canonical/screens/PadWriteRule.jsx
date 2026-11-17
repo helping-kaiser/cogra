@@ -35,11 +35,17 @@
 
    THE FIXTURE IS `PadStanding`'S — @ada, one standing edge at +1.00 / +1.00,
    the pick pulling back to −0.55 / −0.15 — so `PadStanding`, `PadFailed` and
-   this board read as one pad in three moments. */
+   this board read as one pad in three moments.
+
+   REGISTERED under the `feed` prefix (round 48, seam 320-16), named as
+   `PadStanding` names the same pad: the band, its `filterTrigger`, the
+   bottom bar, and the post `card` keyed by its id, its open pad
+   `card.actionRow.stance.pad.*`. The wash stays unnamed. */
+export const NODE = "feed";
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />} />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band" />
       <FeedList>
         <PostCard
           {...ADA_POST}
@@ -48,9 +54,10 @@ export function Screen() {
           stancePadInset={80}
           stanceDefaultPick={{ pDirected: -0.55, pInterest: -0.15 }}
           stanceSigning="writeRule"
+          node="card"
         />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
 
       {/* The wash sits over the shell; the parked pad (fixed, above it) stays
           sharp. */}

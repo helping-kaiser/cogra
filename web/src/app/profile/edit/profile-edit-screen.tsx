@@ -40,13 +40,9 @@ import {
   prepareProfileUpdate,
   type MediaSelection,
 } from "@/lib/api/profile-api";
-import { echoes, uploadDigestOf, uploadMedia } from "@/lib/api/media-api";
-import { firstRefusalMessage, mediaRefusalMessage } from "@/lib/ui/error-messages";
+import { answeredFaultLine, firstRefusalMessage } from "@/lib/ui/error-messages";
 import { profileExpectation, type MediaLedger } from "@/lib/compose/payload-expectation";
-import { TOO_BIG_PICTURE } from "@/lib/compose/pick";
-import { ECHO_MISMATCH } from "@/lib/compose/uploads";
-import { pictureTooBig } from "@/lib/ui2/media/caps";
-import { encodeForUpload } from "@/lib/ui2/media/encode-image";
+import { uploadProfilePicture } from "@/lib/profile/avatar-upload";
 import {
   BIO_MAX_CHARS,
   DISPLAY_NAME_MAX_CHARS,
@@ -67,17 +63,14 @@ import { CENTERED, type Crop } from "@/lib/ui2/media/crop";
 import { carrySnackbar } from "@/lib/ui/carried-snackbar";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
-import { sealFaultOf } from "@/lib/compose/seal-fault";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import type { Expectation } from "@/lib/signing/intent";
-import type { WriteResult } from "@/lib/signing/write-signer";
-import { PROFILE_SIGNED, type ProfileChangeOutcome } from "@/lib/profile/profile-change";
+import { outcomeOf, PROFILE_SIGNED } from "@/lib/profile/profile-change";
 import { AvatarCrop } from "./avatar-crop";
 import { changeSummary, type ProfileFields } from "./change-summary";
 import { ProfileEditSeal } from "./profile-edit-seal";
 import {
   PictureDisc,
-  PROFILE_RATIOS,
   ProfileMediaField,
   UNCHANGED,
   type ProfileMediaChoice,
@@ -89,22 +82,6 @@ type Sealing = {
   readonly expected: Expectation;
   readonly summary: string;
 };
-
-/**
- * What one signing came to, for the seal's states: every write taken is the
- * change taken; a refusal reads by the failure pack (`sealFaultOf`: the write
- * rule, else a bug); a device's own refusal of the bytes is a bug; no answer
- * — a transport failure, a seal still out — is the fault line.
- */
-function outcomeOf(results: readonly WriteResult[]): ProfileChangeOutcome {
-  if (results.every((result) => result.kind === "done" || result.kind === "carried")) return { kind: "taken" };
-  const refused = results.flatMap((result) => (result.kind === "refused" ? result.errors : []));
-  if (refused.length > 0) {
-    return { kind: sealFaultOf(refused, []).kind === "writeRule" ? "writeRule" : "bug" };
-  }
-  if (results.some((result) => result.kind === "rejectedByDevice")) return { kind: "bug" };
-  return { kind: "offline" };
-}
 
 export function ProfileEditScreen({ store = identityStore }: { store?: IdentityStore }) {
   const phase = useAuthPhase();
@@ -183,55 +160,14 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
    */
   const resolve = async (
     choice: ProfileMediaChoice,
-    ratio: number,
   ): Promise<{ selection: MediaSelection; ledger: MediaLedger; error?: string }> => {
     const none: MediaLedger = new Map();
     if (choice.kind === "unchanged") return { selection: "unchanged", ledger: none };
     if (choice.kind === "cleared") return { selection: { clear: true }, ledger: none };
-    let encoded;
-    let uploadDigest: string;
-    try {
-      encoded = await encodeForUpload(choice.file, { ratio, crop: choice.crop });
-      uploadDigest = await uploadDigestOf(encoded.blob);
-    } catch {
-      return {
-        selection: "unchanged",
-        ledger: none,
-        error: "This browser couldn't read that picture.",
-      };
-    }
-    // HT-19: an avatar is a picture and takes the picture cap, in the composer's
-    // own words and at the same moment — on the encoded bytes, before they go.
-    if (pictureTooBig(encoded.blob)) {
-      return { selection: "unchanged", ledger: none, error: TOO_BIG_PICTURE };
-    }
-    const result = await guard.run(() => uploadMedia(client, { blob: encoded.blob }));
-    if (result.kind === "success") {
-      // The echo first: an avatar whose recorded bytes are not the ones sent
-      // is never named (uploads.ts).
-      if (!echoes(result.value, uploadDigest)) {
-        return { selection: "unchanged", ledger: none, error: ECHO_MISMATCH };
-      }
-      return {
-        selection: { mediaId: result.value.id },
-        ledger: new Map([
-          [
-            result.value.id,
-            { digest: result.value.digest, uploadDigest, mime: result.value.mimeType },
-          ],
-        ]),
-      };
-    }
-    return {
-      selection: "unchanged",
-      ledger: none,
-      error:
-        result.kind === "refused"
-          ? (result.errors[0] === undefined
-              ? "The server refused that picture."
-              : mediaRefusalMessage(result.errors[0].code, "picture"))
-          : "Couldn't reach the server.",
-    };
+    const uploaded = await uploadProfilePicture(client, guard, choice);
+    return uploaded.kind === "uploaded"
+      ? { selection: uploaded.selection, ledger: uploaded.ledger }
+      : { selection: "unchanged", ledger: none, error: uploaded.message };
   };
 
   const onSubmit = async (event: React.FormEvent) => {
@@ -244,7 +180,7 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
     // The pictures go up BEFORE the record is prepared: an update naming an
     // asset id that does not exist yet would be refused, and a refusal at that
     // point would have already cost the author their framing.
-    const uploaded = [await resolve(avatar, PROFILE_RATIOS.avatar)];
+    const uploaded = [await resolve(avatar)];
     const failure = uploaded.find((result) => result.error !== undefined);
     if (failure?.error !== undefined) {
       setSubmitting(false);
@@ -266,7 +202,11 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
     }
     if (prepared.kind === "failed") {
       setSubmitting(false);
-      setTransportFailed(true);
+      // An INTERNAL is an answer: the not-through line in the refusal's slot,
+      // never "can't reach the server" (NetworkError.md:13).
+      const answered = answeredFaultLine(prepared.cause);
+      if (answered !== null) setRefusedMessage(answered);
+      else setTransportFailed(true);
       return;
     }
     // One profile update on this device's own profile, its payload held to

@@ -46,6 +46,7 @@ export function EmptySignConfirm({
   busy = false,
   slow = false,
   failed = false,
+  failedLine = "That didn't send. Try again.",
   writeRule = false,
   onConfirm,
   onCancel,
@@ -60,6 +61,8 @@ export function EmptySignConfirm({
   slow?: boolean;
   /** The signing did not complete; the dialog stays open and says so. */
   failed?: boolean;
+  /** What it says: the no-answer line, or FORBIDDEN's not-through line (NetworkError.md:13). */
+  failedLine?: string;
   /**
    * THE WRITE RULE'S NO IS `SeveranceConfirm`'S (EmptySignConfirm.md, round
    * 21): the same moment over the same pad, so the same answer — the quiet
@@ -89,7 +92,7 @@ export function EmptySignConfirm({
         ...(failed
           ? [
               <p key="failed" role="alert" data-testid="empty-sign-failed" className="m-0 text-error">
-                That didn&apos;t send. Try again.
+                {failedLine}
               </p>,
             ]
           : []),

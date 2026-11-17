@@ -330,6 +330,8 @@ const OWN_POST_MENU = [
   { label: "Edit history", onSelect: () => {} },
   { label: "Mark as sensitive", onSelect: () => {} },
   { label: "Remove", onSelect: () => {} },
+  { label: "Cited by", onSelect: () => {} },
+  { label: "Opinions on this", onSelect: () => {} },
   { label: "License terms", onSelect: () => {} },
 ];
 

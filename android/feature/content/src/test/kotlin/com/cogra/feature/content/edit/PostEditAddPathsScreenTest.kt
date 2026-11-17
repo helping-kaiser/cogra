@@ -264,7 +264,7 @@ class PostEditAddPathsScreenTest {
     }
 
     @Test
-    fun theCoversCropIsLockedToTheClipAndSaysSo() {
+    fun theCoversCropIsLockedToTheClipWithNoChips() {
         var back = 0
         var next = 0
         render(
@@ -273,13 +273,28 @@ class PostEditAddPathsScreenTest {
         )
 
         compose.onNodeWithText("The cover").assertExists()
-        compose.onNodeWithText(CROP_HOW_TO_LINE).assertExists()
-        compose.onNodeWithText(COVER_CROP_LINE).assertExists()
         compose.onNodeWithTag("composeCrop.shapes").assertDoesNotExist()
         compose.onNodeWithTag("coverCrop.next").performClick()
         compose.onNodeWithContentDescription("Back to the edit").performClick()
         assertThat(next).isEqualTo(1)
         assertThat(back).isEqualTo(1)
+    }
+
+    /**
+     * CoverCrop.jsx draws the header, the stage, the zoom and Next — no line:
+     * neither how to move the picture nor what shape it takes (round 44, the
+     * removable-text pass; `coverCrop.howTo` / `.shapeNote` left the registry).
+     */
+    @Test
+    fun theCoversCropDrawsTheBoardsPartsAndNoLine() {
+        render(edit(EditGallery.of(listOf(clip))).copy(cropping = coverCrop))
+
+        listOf("header", "header.title", "header.back", "header.leave", "viewport", "zoom", "zoom.input", "next")
+            .forEach { part -> compose.onNodeWithTag("coverCrop.$part", useUnmergedTree = true).assertExists() }
+        compose.onNodeWithTag("coverCrop.howTo", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("coverCrop.shapeNote", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithText("Drag to move, pinch to zoom.").assertDoesNotExist()
+        compose.onNodeWithText("The cover takes the video's shape.").assertDoesNotExist()
     }
 
     /** CoverCrop.md: the X entered from a post edit's cover row raises the edit's own ask. */

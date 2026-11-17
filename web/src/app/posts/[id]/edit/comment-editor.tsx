@@ -25,7 +25,9 @@ import { useApolloClient } from "@apollo/client/react";
 
 import type { CommentFieldsFragment } from "@/__generated__/graphql";
 import { fetchCommentSelfMark, prepareCommentEdit } from "@/lib/api/content-api";
-import { firstRefusalMessage } from "@/lib/ui/error-messages";
+import { firstRefusalMessage, NO_ANSWER_LINE, outcomeFaultLine, wholeActLine } from "@/lib/ui/error-messages";
+import { sealFaultOfResults } from "@/lib/compose/seal-fault";
+import type { Outcome } from "@/lib/api/outcome";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import type { UserError } from "@/lib/api/outcome";
 import { fetchGraphIds, graphIdOf } from "@/lib/api/graph-ids-api";
@@ -196,7 +198,9 @@ export function CommentEditor({
   const slow = useWaitedPast(signing, SLOW_NETWORK_MS);
   const [countChanged, setCountChanged] = useState(false);
   const [fault, setFault] = useState<SealFault | null>(null);
-  const [failed, setFailed] = useState(false);
+  // The network error's foot: its line in the commit's place, Retry under it
+  // (NetworkError.md:3, :13-19; CommentEdit.md:97). Null at rest.
+  const [failedLine, setFailedLine] = useState<string | null>(null);
   const [refusal, setRefusal] = useState<string | null>(null);
   const [tagErrors, setTagErrors] = useState<Readonly<Record<number, string>>>({});
   const [referenceErrors, setReferenceErrors] = useState<Readonly<Record<number, string>>>({});
@@ -365,11 +369,21 @@ export function CommentEditor({
     setBusy(true);
     setHeld(false);
     const end = () => setBusy(false);
+    // A step that did not answer with what the edit needed: an answered fault
+    // of the whole edit says its own line (NetworkError.md:13-19), anything
+    // else is no answer at all (NetworkError.md:3).
+    const unanswered = (outcome: Outcome<unknown>) => {
+      const line = outcomeFaultLine(outcome);
+      setFailedLine(line ?? NO_ANSWER_LINE);
+    };
     const writes: StagedWriteView[] = [];
     const perTag: Record<number, string> = {};
     const perReference: Record<number, string> = {};
     let general: string | null = null;
     let nextFault: SealFault | null = null;
+    // An answered fault of the whole edit refuses it whole, never one chip: its
+    // line in the fault's slot (NetworkError.md:13-19).
+    let notThrough: string | null = null;
 
     // The L1 ids of the comment, the node it answers, and every cited node
     // the edit touches — read before anything is staged, so the batch is
@@ -384,7 +398,7 @@ export function CommentEditor({
     );
     if (graphIds.kind !== "success") {
       end();
-      setFailed(true);
+      unanswered(graphIds);
       return;
     }
     const commentGraphId = graphIdOf(graphIds.value, comment.id);
@@ -405,7 +419,7 @@ export function CommentEditor({
       const kept = await guard.run(() => fetchKnownMedia(client, keptMediaIds(editing.gallery)));
       if (kept.kind !== "success") {
         end();
-        setFailed(true);
+        unanswered(kept);
         return;
       }
       const ledger = new Map([...kept.value, ...addedLedger(editing.gallery)]);
@@ -426,11 +440,12 @@ export function CommentEditor({
       const prepared = await guard.run(() => prepareCommentEdit(client, sent));
       if (prepared.kind === "failed") {
         end();
-        setFailed(true);
+        unanswered(prepared);
         return;
       }
       if (prepared.kind === "refused") {
         if (writeRuleIn(prepared.errors)) nextFault = { kind: "writeRule" };
+        else if (wholeActLine(prepared.errors) !== null) notThrough = notThrough ?? wholeActLine(prepared.errors);
         else general = firstRefusalMessage(prepared.errors, "The server refused this write.");
       } else {
         writes.push(...prepared.value.writes);
@@ -448,12 +463,16 @@ export function CommentEditor({
       );
       if (prepared.kind === "failed") {
         end();
-        setFailed(true);
+        unanswered(prepared);
         return;
       }
       if (prepared.kind === "refused") {
         if (writeRuleIn(prepared.errors)) {
           nextFault = { kind: "writeRule" };
+          continue;
+        }
+        if (wholeActLine(prepared.errors) !== null) {
+          notThrough = notThrough ?? wholeActLine(prepared.errors);
           continue;
         }
         // A PRE-STAGING refusal is a field error, never the signing line
@@ -490,12 +509,16 @@ export function CommentEditor({
       );
       if (prepared.kind === "failed") {
         end();
-        setFailed(true);
+        unanswered(prepared);
         return;
       }
       if (prepared.kind === "refused") {
         if (writeRuleIn(prepared.errors)) {
           nextFault = { kind: "writeRule" };
+          continue;
+        }
+        if (wholeActLine(prepared.errors) !== null) {
+          notThrough = notThrough ?? wholeActLine(prepared.errors);
           continue;
         }
         // A cited post that never landed: its row says so, with Remove it
@@ -521,6 +544,11 @@ export function CommentEditor({
       }
     }
 
+    if (notThrough !== null && nextFault?.kind !== "writeRule") {
+      end();
+      setFailedLine(notThrough);
+      return;
+    }
     if (nextFault !== null) {
       end();
       setFault(nextFault);
@@ -548,6 +576,13 @@ export function CommentEditor({
       onSigned();
       return;
     }
+    // An answered fault of the whole edit: its own line, never the bug notice
+    // and never the no-answer line (NetworkError.md:13-19).
+    const answered = sealFaultOfResults(results, []);
+    if (answered.kind === "notThrough") {
+      setFailedLine(answered.line);
+      return;
+    }
     const refused = results.find((result) => result.kind === "refused");
     if (refused !== undefined && refused.kind === "refused") {
       // A refused act whose target landed is a bug the picking stage should
@@ -557,7 +592,7 @@ export function CommentEditor({
     }
     // No answer reached the edit: the network error answers, and everything
     // the reader chose stays as it was.
-    setFailed(true);
+    setFailedLine(NO_ANSWER_LINE);
   };
 
   // The last upload landing releases a held press into `submit`, which takes
@@ -588,7 +623,7 @@ export function CommentEditor({
     }
     setCountChanged(false);
     setRefusal(null);
-    setFailed(false);
+    setFailedLine(null);
     setFault(null);
     setTagErrors({});
     setReferenceErrors({});
@@ -717,7 +752,7 @@ export function CommentEditor({
               }
         }
         refusal={refusal}
-        failed={failed}
+        failedLine={failedLine}
         onWords={(draft) => update(() => ({ draft }), true)}
         onSensitive={(sensitive) => update(() => ({ sensitive }), true)}
         onSensitiveReason={(sensitiveReason) => update(() => ({ sensitiveReason }), true)}

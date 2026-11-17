@@ -20,6 +20,10 @@ WHEN press Next -> the cover is set AND the step that asked for it comes back AN
 
 WHEN press the header back arrow -> the step that asked for the cover comes back AND the picture goes unused
 
+ALWAYS the header back arrow is named Back to the edit GIVEN the crop was entered from a post edit or a comment edit
+
+ALWAYS the header back arrow is named Back a step GIVEN the crop is a stage of the new post's or the reply's wizard
+
 WHEN press the header X GIVEN the crop was entered from a post's compose -> the whole flow is left for where the composer was opened from AND the draft is kept AND NEVER a dialog asks
 
 WHEN press the header X GIVEN the crop was entered from a post edit's cover row -> DiscardConfirm opens, as the edit's own X raises it AND NEVER the edit is discarded before the dialog is answered
@@ -28,9 +32,9 @@ WHEN press the header X GIVEN the crop was entered from a reply's cover row -> D
 
 WHEN press the header X GIVEN the crop was entered from a comment edit's cover row -> DiscardConfirm opens, as the edit's own X raises it AND NEVER the edit is discarded before the dialog is answered
 
-ALWAYS the zoom slider stands under the crop on both platforms, its thumb at the crop's zoom between the fill and about 4×
+ALWAYS the zoom slider stands under the crop on both platforms, its thumb at the crop's zoom between the fill and 10×
 
-WHEN move the zoom slider -> the picture zooms in place AND NEVER below the fill or past about 4×
+WHEN move the zoom slider -> the picture zooms in place AND NEVER below the fill or past 10×
 
 WHEN press an arrow key GIVEN the crop has focus -> the picture moves 1 % that way AND NEVER past where its edge meets the crop's
 
