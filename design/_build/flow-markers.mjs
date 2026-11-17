@@ -492,6 +492,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: "View 2 replies", tag: "button" },
     { n: 7, find: ">Add a comment</span>", tag: "span" },
     { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
+    // A comment card's reference count, a door as on every card (the
+    // TopicsLine master) — the next free number; the post's line beneath the
+    // sheet is a span inside its own opener, so `</button>` finds only the
+    // comments'.
+    { n: 9, find: ">· 1 reference</button>", tag: "button", all: true },
   ],
   // The same sheet at the end of the reply flow (item 85): the same controls,
   // minus the "View n replies" line the landing has already opened — so every
@@ -507,6 +512,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Reply</button>", tag: "button", all: true },
     { n: 6, find: ">Add a comment</span>", tag: "span" },
     { n: 7, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 8, find: ">· 1 reference</button>", tag: "button", all: true },
   ],
   // The thread after the reader's own Remove (the comment-removal round): the
   // same sheet with the same controls, so ReplyEntry's numbers. The removed
@@ -524,6 +530,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: "View 2 replies", tag: "button" },
     { n: 7, find: ">Add a comment</span>", tag: "span" },
     { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 9, find: ">· 1 reference</button>", tag: "button", all: true },
   ],
   ReplyMedia: [
     { n: 1, find: '<a href="/u/', tag: "a", all: true },
