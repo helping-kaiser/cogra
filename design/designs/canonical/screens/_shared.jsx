@@ -2721,6 +2721,17 @@ function EditPickedRow({ faultHoles }) {
       <div style={{ display: "{{rowRefusedShown}}" }}>
         <UploadErrorLine onRemove={() => {}} />
       </div>
+      {/* `recrop-failed` (round 53 act 2, jakob 2026-11-17, B2 = (b)): the
+          first picture, which the post already carries, was re-framed in the
+          crop and its new cut-out did not upload. Its tile is marked; the
+          line offers `Retry · Undo`, never `Remove it` — `Undo` drops the
+          re-crop and the published picture stands. The gate and the commit
+          read as at `failed`. The line is a drawn copy and carries no name,
+          as the refused line. */}
+      <div style={{ display: "{{rowRecropShown}}" }} {...chipCopy("upload", "recrop-failed")}>{row([{ ...EDIT_PICTURES[0], failed: true }, EDIT_PICTURES[1]])}</div>
+      <div style={{ display: "{{rowRecropShown}}" }}>
+        <UploadErrorLine onRetry={() => {}} onUndo={() => {}} />
+      </div>
     </>
   );
 }
@@ -2975,7 +2986,21 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ display: shown("picturesShown") }}>
-                <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} onRemove={() => {}} node="thumb" nodeKey="1" />
+                {holes ? (
+                  <>
+                    <span style={{ display: "{{thumbRestShown}}" }}>
+                      <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} onRemove={() => {}} node="thumb" nodeKey="1" />
+                    </span>
+                    {/* The `upload` chip's `recrop-failed` (round 53 act 2):
+                        the comment's own picture, re-framed, its new square
+                        not uploaded — the tile marked, a drawn copy. */}
+                    <span style={{ display: "{{thumbRecropShown}}" }}>
+                      <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} failed onRemove={() => {}} />
+                    </span>
+                  </>
+                ) : (
+                  <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} onRemove={() => {}} node="thumb" nodeKey="1" />
+                )}
               </div>
               <InlineAction size="sm" node="add">{bodyChip ? "{{addLabel}}" : "+ Add pictures · 1 of 4"}</InlineAction>
             </div>
@@ -2986,6 +3011,11 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
                 four, and no door when the comment holds words alone. It opens
                 `ReplyCrop` (`opener` = edit) with every picture of the
                 comment in the strip; the thumbnails stay what they are. */}
+            {holes && (
+              <div style={{ display: "{{thumbRecropShown}}" }}>
+                <UploadErrorLine onRetry={() => {}} onUndo={() => {}} />
+              </div>
+            )}
             <div style={{ display: shown("picturesShown"), flexDirection: "column" }}>
               <p style={{ margin: 0, fontSize: "var(--text-label-small)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)" }}>
                 <InlineAction size="sm" onClick={() => {}} style={{ fontSize: "inherit", lineHeight: "inherit" }} node="crop">
@@ -3038,6 +3068,13 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
         {/* Five things: the edit, #glovebox added, #coastroad withdrawn, and the
             citation's withdrawal at its two counter-records (`CommentEditActs`). */}
         <EditGate holes={holes} done={0} total={1} />
+        {/* `recrop-failed`: the gate's fault reading and the commit disabled,
+            as the post edit's `failed` — drawn copies, carrying no name. */}
+        {holes && (
+          <div style={{ display: "{{thumbRecropShown}}" }}>
+            <UploadStatusLine failed onRetry={() => {}} />
+          </div>
+        )}
         <ActsFooter count={5} node="acts" />
         {holes ? (
           <>
@@ -3046,6 +3083,9 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
             </div>
             <div style={{ display: "{{signBusyShown}}" }}>
               <Button style={{ width: "100%" }} busy busyLabel="Signing the edit…">Sign the edit</Button>
+            </div>
+            <div style={{ display: "{{signRecropShown}}" }}>
+              <Button style={{ width: "100%" }} disabled>Sign the edit</Button>
             </div>
             {editFault()}
           </>

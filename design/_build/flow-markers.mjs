@@ -579,8 +579,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 16, find: 'aria-label="Remove this citation: Post, Removed by its author"', tag: "button" },
     { n: 17, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
     { n: 18, find: 'aria-label="Undo withdrawing Tide tables and the third headland — @juno"', tag: "button" },
+    // Round 53 act 2: the `recrop-failed` line's Retry and the gate's come
+    // first in the markup, one act; the line's Undo after them.
+    { n: 22, find: ">Retry</button>", tag: "button" },
+    { n: 22, find: ">Retry</button>", tag: "button", skip: 1 },
+    { n: 23, find: ">Undo</button>", tag: "button" },
     // The `fault` chip's two answers (round 51): one Retry, one act, the next free number.
-    { n: 20, find: ">Retry</button>", tag: "button", all: true },
+    { n: 20, find: ">Retry</button>", tag: "button", skip: 2 },
+    { n: 20, find: ">Retry</button>", tag: "button", skip: 3 },
   ],
   CommentEditActs: [
     { n: 1, find: ">Done</button>", tag: "button" },
@@ -2798,10 +2804,14 @@ Object.assign(FLOW_MARKERS, {
     // A failed upload's two Retries — the row's and the gate's — are one act.
     // The `fault` chip's two (round 51) stand after them, in the commit's
     // place: the signing asked again, the next free number.
+    // Round 53 act 2: the `recrop-failed` row line's Retry is the same act,
+    // standing second in the markup; its Undo is the next free number.
     { n: 19, find: ">Retry</button>", tag: "button" },
     { n: 19, find: ">Retry</button>", tag: "button", skip: 1 },
-    { n: 23, find: ">Retry</button>", tag: "button", skip: 2 },
+    { n: 19, find: ">Retry</button>", tag: "button", skip: 2 },
     { n: 23, find: ">Retry</button>", tag: "button", skip: 3 },
+    { n: 23, find: ">Retry</button>", tag: "button", skip: 4 },
+    { n: 24, find: ">Undo</button>", tag: "button" },
     { n: 20, find: ">Remove it</button>", tag: "button" },
     // Round 51 act 2: the `upload` chip's `refused` row line, the same act.
     { n: 20, find: ">Remove it</button>", tag: "button", skip: 1 },

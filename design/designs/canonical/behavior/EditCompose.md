@@ -98,6 +98,14 @@ WHEN a picture the edit took fails to upload -> its thumbnail is marked AND the 
 
 WHEN the server refuses a picture the edit took at its upload -> the line One picture didn't upload. stands under the picked row with Remove it alone AND NEVER Retry stands under the row, retrying being unable to change the answer
 
+WHEN the re-framed cut-out of a picture the post already carries fails to upload -> its thumbnail is marked AND the line One picture didn't upload. stands under the picked row with Retry and Undo AND the gate line takes its fault reading AND NEVER Remove it stands for that picture
+
+WHEN the server refuses the re-framed cut-out of a picture the post already carries at its upload -> the line One picture didn't upload. stands under the picked row with Undo alone AND the gate line reads the fact alone AND Sign the edit is disabled until Undo drops the re-crop AND NEVER Retry or Remove it stands for that picture
+
+WHEN press Undo under the picked row -> the re-crop is dropped AND the picture stands as published AND the line and its mark on the thumbnail go AND NEVER the picture leaves the post
+
+ALWAYS a picture added in this edit whose upload fails or is refused keeps Remove it, nothing published standing behind it
+
 WHEN press Retry under the picked row -> the failed upload tries again AND the gate runs again
 
 WHEN press Remove it under the picked row GIVEN nothing else the edit took is uploading -> the failed picture leaves the batch AND the gate line goes AND Sign the edit is enabled

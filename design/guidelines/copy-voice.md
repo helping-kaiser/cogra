@@ -728,6 +728,15 @@ upload.` — with no `Signing waits for it.`, which would wait for ever, and
 no `Retry`; the sign button stays disabled and `Back` is the way out, to
 the stage that holds `Remove it` (jakob 2026-11-17, round 51 act 2).
 
+**A re-crop that did not upload is undone, never removed.** A picture
+the post or the comment already carries, re-framed on its edit, whose
+new cut-out failed reads `One picture didn't upload.` with `Retry ·
+Undo`, and `Undo` alone when the server refused it: `Undo` drops the
+re-crop and the published picture stands — the word Edit profile's
+staged removal already uses for taking a staged change back (jakob
+2026-11-17, round 53 act 2, B2 = (b)). A picture added in the edit keeps
+`Remove it`.
+
 **The cover's own words** — the way to the crop a gallery picture goes
 through, from an edit:
 
