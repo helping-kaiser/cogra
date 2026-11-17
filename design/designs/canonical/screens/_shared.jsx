@@ -1386,7 +1386,36 @@ function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "A
    what matters here is that the sheet board gets the identical husk, so the two
    boards differ by the sheet alone. Named as `ProfileOtherBody` names its
    page; the mark in the bio's place is `removalMark`. */
-function ProfileDeletedBody() {
+/* IT LANDS ON POSTS TOO (jakob 2026-11-17: "if they chose to remove contents
+   aswell then there is just removal marks there, if they chose to keep
+   contents on the page then the posts still exist"). The `tab` chip draws the
+   landing and the chronicle; the `contents` chip draws the Posts tab's two
+   readings: `kept`, the posts as any card under the redacted actor's chip
+   (`Deleted account`, the reserved disc); `removed`, each post its removal
+   mark — `Removed by its author`, swept content's mark (copy-voice). */
+const DELETED_POST = {
+  id: "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913",
+  author: { handle: "marlow", redacted: true },
+  content: "Three mornings on the wall, watching the tide come in over the flats.",
+  timestamp: "9d",
+  score: "3.20",
+  comments: 2,
+  license: { attribution: 0, provenance: 0 },
+  menuItems: [SAVE_ROW, CITE_ROW, { label: HIDE_ACTOR_LABEL(null, true), onSelect: () => {}, node: "hide" }, CITED_BY_ROW, OPINIONS_ROW, REPORT_ROW],
+};
+const CONTENTS_CHIP = { contents: { editor: "enum", options: ["kept", "removed"], default: "kept" } };
+const CONTENTS_VALS = `contentsKept: this.props.contents === "removed" ? "none" : "contents", contentsRemoved: this.props.contents === "removed" ? "contents" : "none"`;
+function ProfileDeletedBody({ tab = "everything" } = {}) {
+  const posts = (
+    <>
+      <div style={{ display: "{{contentsKept}}" }} data-node-chip="contents" data-node-key="kept">
+        <PostCard {...DELETED_POST} node="card" />
+      </div>
+      <div style={{ display: "{{contentsRemoved}}" }} data-node-chip="contents" data-node-key="removed">
+        <PostCard id={DELETED_POST.id} author={DELETED_POST.author} timestamp="9d" redacted={{ reason: "author", when: "3d" }} score="3.20" comments={2} menuItems={DELETED_POST.menuItems} node="card" />
+      </div>
+    </>
+  );
   return (
     <>
       <PageHeader backHref="#" backLabel="Back to feed" node="header" />
@@ -1406,13 +1435,18 @@ function ProfileDeletedBody() {
             showHandle={false}
           />
         </div>
-        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
-        <ChronicleList node="chronicle">
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="9d" second="Three mornings on the wall, watching the tide come in over the flats." onOpen={() => {}} node="act" nodeKey="1" />
-          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="12d" second="The tunnel is faster; the coast road is the reason to drive at all." onOpen={() => {}} node="act" nodeKey="2" />
-          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.5, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @sol" trailing="14d" inert node="act" nodeKey="3" />
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="21d" second="Low sun on the salt crust, and nobody else out there." onOpen={() => {}} node="act" nodeKey="4" />
-        </ChronicleList>
+        <ProfileTabs
+          tab={tab}
+          posts={posts}
+          chronicle={
+            <ChronicleList node="chronicle">
+              <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="9d" second="Three mornings on the wall, watching the tide come in over the flats." onOpen={() => {}} node="act" nodeKey="1" />
+              <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="12d" second="The tunnel is faster; the coast road is the reason to drive at all." onOpen={() => {}} node="act" nodeKey="2" />
+              <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.5, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @sol" trailing="14d" inert node="act" nodeKey="3" />
+              <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="21d" second="Low sun on the salt crust, and nobody else out there." onOpen={() => {}} node="act" nodeKey="4" />
+            </ChronicleList>
+          }
+        />
       </div>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
@@ -2843,8 +2877,21 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
           {/* The line names the POST, a reply's as a top-level comment's, on
-              every host (jakob 2026-11-13, N5). */}
-          <QuietNote node="target">Your comment on "The long way home".</QuietNote>
+              every host (jakob 2026-11-13, N5); a post that was removed is
+              named as the comment card names it, `@ada's removed post`
+              (jakob 2026-11-17) — `CommentEdit`'s `post` chip. */}
+          {bodyChip ? (
+            <>
+              <div style={{ display: "{{postLiveShown}}" }} data-node-chip="post" data-node-key="live">
+                <QuietNote node="target">Your comment on "The long way home".</QuietNote>
+              </div>
+              <div style={{ display: "{{postRemovedShown}}" }} data-node-chip="post" data-node-key="removed">
+                <QuietNote node="target">Your comment on @ada's removed post.</QuietNote>
+              </div>
+            </>
+          ) : (
+            <QuietNote node="target">Your comment on "The long way home".</QuietNote>
+          )}
 
           <TextField label="Words" rows={3} cap={2000} value="The glovebox camera earns its keep — this is the print from 2019 that almost catches it." node="words" />
 
@@ -2980,6 +3027,13 @@ function CommentComposerFoot({ fieldOpacity, shown, node }) {
           <span style={{ display: shown.applicant }}>
             <MonogramAvatar name="Juno Baptiste" />
           </span>
+          {shown.guest && (
+            /* A guest reads through the borrowed view, so the foot wears its
+               face, as the guest band does (jakob 2026-11-17, 18). */
+            <span style={{ display: shown.guest }}>
+              <MonogramAvatar name="Mira Voss" src="inviter.jpg" />
+            </span>
+          )}
         </>
       ) : (
         <MonogramAvatar name="Sol Ferreira" />
@@ -3273,6 +3327,13 @@ function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, remov
               <CommentCard {...solComment} menuItems={COMMENT_CARD_MENU} node={card} />
             </ul>
           </li>
+          {shown.guest && (
+            <li style={{ display: shown.guest, flexDirection: "column", listStyle: "none" }} {...readerCopy("guest")}>
+              <ul style={NESTED_LIST}>
+                <CommentCard {...SOL_THREAD_COMMENT} menuItems={COMMENT_CARD_MENU} node={card} />
+              </ul>
+            </li>
+          )}
         </>
       ) : (
         ownSol

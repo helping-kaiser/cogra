@@ -356,7 +356,7 @@ export function PostCard({
   const body = (
     <>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-2)" }}>
-        {lead ?? (author && <ActorChip handle={author.handle} displayName={author.displayName} node={node && "authorChip"} />)}
+        {lead ?? (author && <ActorChip handle={author.handle} displayName={author.displayName} redacted={author.redacted} node={node && "authorChip"} />)}
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", flex: "none" }}>
           {timestamp && <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", color: "var(--text-secondary)" }} data-node={node && "timestamp"}>{timestamp}</span>}
           {/* ON A DETAIL SURFACE THE PAGE HEADER OWNS THE ONE OVERFLOW — a dot in

@@ -64,9 +64,12 @@ export const PROPS = {
   upload: { editor: "enum", options: ["none", "uploading"], default: "none" },
   body: { editor: "enum", options: ["pictures", "words"], default: "pictures" },
   signing: { editor: "enum", options: ["none", "signing"], default: "none" },
+  /* THE `post` CHIP draws the line when the comment's post was removed
+     (jakob 2026-11-17): `Your comment on @ada's removed post.` */
+  post: { editor: "enum", options: ["live", "removed"], default: "live" },
   tag: { editor: "enum", options: ["landed", "refused"], default: "landed" },
 };
-export const VALS = `signRestShown: this.props.signing === "signing" ? "none" : "block", signBusyShown: this.props.signing === "signing" ? "block" : "none", liveShown: this.props.target === "removed" ? "none" : "block", removedShown: this.props.target === "removed" ? "block" : "none", gateShown: this.props.upload === "uploading" ? "block" : "none", picturesShown: this.props.body === "words" ? "none" : "flex", addLabel: this.props.body === "words" ? "+ Add pictures or a video" : "+ Add pictures · 1 of 4", tagRing: this.props.tag === "refused" ? "1px solid var(--error)" : "none", tagRefusedShown: this.props.tag === "refused" ? "block" : "none", tagSecondShown: this.props.tag === "refused" ? "inline-flex" : "none"`;
+export const VALS = `signRestShown: this.props.signing === "signing" ? "none" : "block", signBusyShown: this.props.signing === "signing" ? "block" : "none", liveShown: this.props.target === "removed" ? "none" : "block", removedShown: this.props.target === "removed" ? "block" : "none", gateShown: this.props.upload === "uploading" ? "block" : "none", picturesShown: this.props.body === "words" ? "none" : "flex", addLabel: this.props.body === "words" ? "+ Add pictures or a video" : "+ Add pictures · 1 of 4", postLiveShown: this.props.post === "removed" ? "none" : "block", postRemovedShown: this.props.post === "removed" ? "block" : "none", tagRing: this.props.tag === "refused" ? "1px solid var(--error)" : "none", tagRefusedShown: this.props.tag === "refused" ? "block" : "none", tagSecondShown: this.props.tag === "refused" ? "inline-flex" : "none"`;
 
 export function Screen() {
   return <CommentEditBody holes bodyChip />;

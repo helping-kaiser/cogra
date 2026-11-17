@@ -1292,7 +1292,8 @@
       "keys": {
         "commentEdit.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
         "commentEdit.references.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)",
-        "commentEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+        "commentEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "commentEdit.target": "the post chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "commentEdit.acts": [],
@@ -1372,7 +1373,10 @@
         ],
         "commentEdit.tags.withdrawn": [],
         "commentEdit.tags.withdrawn.undo": [],
-        "commentEdit.target": [],
+        "commentEdit.target": [
+          "live",
+          "removed"
+        ],
         "commentEdit.words": [],
         "commentEdit.words.input": [],
         "commentEdit.words.label": []
@@ -2658,8 +2662,7 @@
     "ComposeCrop": {
       "prefix": "composeCrop",
       "keys": {
-        "composeCrop.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
-        "composeCrop.shapes": "the shape chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+        "composeCrop.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)"
       },
       "nodes": {
         "composeCrop.header": [],
@@ -2673,26 +2676,10 @@
           "1",
           "2"
         ],
-        "composeCrop.shapes": [
-          "tall",
-          "square",
-          "wide"
-        ],
-        "composeCrop.shapes.squareChip": [
-          "tall",
-          "square",
-          "wide"
-        ],
-        "composeCrop.shapes.tallChip": [
-          "tall",
-          "square",
-          "wide"
-        ],
-        "composeCrop.shapes.wideChip": [
-          "tall",
-          "square",
-          "wide"
-        ],
+        "composeCrop.shapes": [],
+        "composeCrop.shapes.squareChip": [],
+        "composeCrop.shapes.tallChip": [],
+        "composeCrop.shapes.wideChip": [],
         "composeCrop.viewport": [],
         "composeCrop.zoom": [],
         "composeCrop.zoom.input": []
@@ -12151,7 +12138,9 @@
     "ProfileDeleted": {
       "prefix": "profile",
       "keys": {
-        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)"
+        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)",
+        "profile.posts.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "profile.tabRow": "the tab chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "profile.bottomBar": [],
@@ -12217,16 +12206,88 @@
         "profile.identity.removalMark.detail": [],
         "profile.identity.removalMark.line": [],
         "profile.identity.removalMark.when": [],
-        "profile.tabRow": [],
-        "profile.tabRow.commentsTab": [],
-        "profile.tabRow.everythingTab": [],
-        "profile.tabRow.postsTab": []
+        "profile.posts": [],
+        "profile.posts.card": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.comments": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.comments.count": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.score": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.score.value": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.share": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.stance": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.stance.anchor": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.face": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.authorChip": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.authorChip.avatar": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.authorChip.name": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.body": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.menu": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.removalMark": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.removalMark.line": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.removalMark.when": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.timestamp": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.tabRow": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.commentsTab": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.everythingTab": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.postsTab": [
+          "posts",
+          "everything"
+        ]
       }
     },
     "ProfileDeletedMenu": {
       "prefix": "profile",
       "keys": {
-        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)"
+        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)",
+        "profile.posts.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "profile.tabRow": "the tab chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "profile.bottomBar": [],
@@ -12298,10 +12359,80 @@
         "profile.menuSheet.report": [],
         "profile.menuSheet.save": [],
         "profile.menuSheet.share": [],
-        "profile.tabRow": [],
-        "profile.tabRow.commentsTab": [],
-        "profile.tabRow.everythingTab": [],
-        "profile.tabRow.postsTab": []
+        "profile.posts": [],
+        "profile.posts.card": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.comments": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.comments.count": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.score": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.score.value": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.share": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.stance": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.stance.anchor": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.face": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.authorChip": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.authorChip.avatar": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.authorChip.name": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.body": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.menu": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.removalMark": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.removalMark.line": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.removalMark.when": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.timestamp": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.tabRow": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.commentsTab": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.everythingTab": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.postsTab": [
+          "posts",
+          "everything"
+        ]
       }
     },
     "ProfileEdit": {
@@ -14176,7 +14307,8 @@
         "reel.menuSheet.remove": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "reel.menuSheet.report": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "reel.menuSheet.save": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
-        "reel.rail": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+        "reel.rail": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.stage.removalMark": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "reel.backDisc": [],
@@ -14188,7 +14320,8 @@
         "reel.bottomBar.walletSlot": [],
         "reel.caption": [
           "reader",
-          "own"
+          "own",
+          "own-removed"
         ],
         "reel.caption.description": [
           "reader",
@@ -14196,7 +14329,8 @@
         ],
         "reel.caption.handle": [
           "reader",
-          "own"
+          "own",
+          "own-removed"
         ],
         "reel.caption.more": [
           "reader",
@@ -14245,47 +14379,66 @@
         ],
         "reel.rail": [
           "reader",
-          "own"
+          "own",
+          "own-removed"
         ],
         "reel.rail.author": [
           "reader",
-          "own"
+          "own",
+          "own-removed"
         ],
         "reel.rail.comments": [
           "reader",
-          "own"
+          "own",
+          "own-removed"
         ],
         "reel.rail.menu": [
           "reader",
-          "own"
+          "own",
+          "own-removed"
         ],
         "reel.rail.score": [
           "reader",
-          "own"
+          "own",
+          "own-removed"
         ],
         "reel.rail.score.value": [
           "reader",
-          "own"
+          "own",
+          "own-removed"
         ],
         "reel.rail.share": [
           "reader",
-          "own"
+          "own",
+          "own-removed"
         ],
         "reel.rail.stance": [
           "reader",
-          "own"
+          "own",
+          "own-removed"
         ],
         "reel.rail.stance.anchor": [
           "reader",
-          "own"
+          "own",
+          "own-removed"
         ],
         "reel.rail.stance.anchor.face": [
           "reader",
-          "own"
+          "own",
+          "own-removed"
         ],
         "reel.seekLine": [],
         "reel.soundDisc": [],
         "reel.stage": [],
+        "reel.stage.removalMark": [
+          "own-removed"
+        ],
+        "reel.stage.removalMark.line": [
+          "own-removed"
+        ],
+        "reel.stage.removalMark.when": [
+          "own-removed"
+        ],
         "reel.washBottom": [],
         "reel.washTop": []
       }

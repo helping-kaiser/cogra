@@ -2,10 +2,10 @@
  * The stream's rail: the post card's action row turned on its side and laid
  * over the clip (readme §13, the reel round).
  *
- * The order is ruled — author · opinion · comments · share · ⋮ · score. People
- * lead; then the acts in the card's own order; the ⋮, the post's menu, after
- * them; the score last, because it is the door out of the stream and a thumb
- * reaching for the opinion must not pass over the exit. Topics and the
+ * The order is ruled — author · opinion · comments · share · score · ⋮. People
+ * lead; then the acts in the card's own order; the score, the door to the
+ * post; the ⋮, the post's menu, lowest, as the dots end every such list
+ * (jakob 2026-11-17). Topics and the
  * reference count are absent by rule: they belong to the detail view the score
  * opens.
  *

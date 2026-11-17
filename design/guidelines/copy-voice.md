@@ -840,7 +840,9 @@ recorded so the registry is whole.
 - **The comment edit** — `Your comment on "The long way home".` under its
   title, naming the POST for a reply as for a top-level comment, on
   every host the edit opens from (jakob 2026-11-13, N5); an untitled
-  post takes its stand-in (*An untitled post*), and its sections `Words` and `Pictures` (`CommentEdit`; `Cover`
+  post takes its stand-in (*An untitled post*), and a removed one reads
+  `Your comment on @ada's removed post.`, the comment card's own naming
+  (jakob 2026-11-17, **blessed**); and its sections `Words` and `Pictures` (`CommentEdit`; `Cover`
   on `CommentEditVideo`).
 
 ## Accessible names
@@ -1094,6 +1096,10 @@ doors answer in the same register (PR-103, **blessed (jakob
 - The composer opened by its own address leaves the reader where app-open
   lands for them, with `You can post once you're in.`, as the Invites
   page's own address does.
+- The dimmed look is the applicant's alone (jakob 2026-11-17): an
+  applicant is already joining, and the dimming tells them what they
+  cannot do yet. A guest's acting buttons stand at full strength and
+  prompt them to join (`GuestGate`; `ReplyEntry`'s `reader` = `guest`).
 
 The line rides the surface's own snackbar where it has one (the
 profile's, the thread's), else the shell's; nothing opens.
