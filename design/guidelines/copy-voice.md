@@ -2633,7 +2633,7 @@ words, recorded so the registry is whole:
   alone, and with a picture standing two buttons side by side, never one
   above the other, in their short forms `Change` · `Remove` (spoken
   `Change picture` · `Remove picture`); a staged removal shows `Change` ·
-  `Undo` (spoken `Undo removing the picture`, *new 2026-11-17, to be blessed*), and `Remove` is hidden
+  `Undo` (spoken `Undo removing the picture`, blessed, jakob 2026-11-17), and `Remove` is hidden
   while a new picture is staged (jakob 2026-11-17, his review of round
   50 and C2, C3). With nothing staged, Save stands inert under `Nothing
   to sign yet` (`EditComposeUnchanged`'s line). A write-rule refusal
