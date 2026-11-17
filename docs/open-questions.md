@@ -36,7 +36,7 @@ within a phase, order is flexible.
 | 7. At the L1 swap | 3 | **Q56, Q58, Q61** | What the seam exposes of the burn realization (its computational inputs and audit evidence); the write rule's second gate on the surface — whether a W2a stamp-wall refusal needs its own reading once real stamps exist (on the stand-in W2a cannot fire, so one `WRITE_RULE_FAILED` reads the solvency words); and who in CoGra is the deployment that publishes the marker policy, with which finality-breach response. Deferred to the swap. |
 | 8. When everyone can tag anything | 1 | **Q59** | Semi-passable Types — whether a path may cross a Type along tag edges whose author the viewer reaches, at viewer-to-tagger strength. The sinks invariant stands until open tagging makes a topic's crowd worth routing through; stored so the option is not lost. |
 | 9. When a second party writes to Layer 1 | 1 | **Q63** | The payload mark of an act CoGra does not carry — a CoGra actor writing through a third-party Layer 2. It reads unmarked until then. |
-| — Parked | 3 | **Q62, Q64, Q65** | An authenticated carriage receipt beside the seal — none is issued now; whether ingestion checks that the carried pair opens the witness — it checks nothing until a second carrier exists; and four races in the seal leg, accepted as known gaps. |
+| — Parked | 4 | **Q62, Q64, Q65, Q66** | An authenticated carriage receipt beside the seal — none is issued now; whether ingestion checks that the carried pair opens the witness — it checks nothing until a second carrier exists; four races in the seal leg, accepted as known gaps; and how a deferral's verdict reaches its author — asked of the L1 team, nothing built until the specification settles the duty's scope. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -927,3 +927,42 @@ normal use, or its outcome turns out unrecoverable.
 ### Related
 
 Q64 (the witness check at ingestion).
+
+## Q66 — Issuing a deferral's verdict to its author
+
+**Where it shows up:**
+[architecture.md "Write eligibility and account states"](implementation/architecture.md#write-eligibility-and-account-states)
+(the W1 pre-check)
+**Status:** open (parked — documented and asked of the L1 team;
+nothing is built until the specification settles the duty's scope;
+jakob, 2026-11-17)
+
+### Context
+
+Specification v0.34.0, unchanged in v0.34.1, gives the host a duty:
+it issues each verdict on which the rejection of a proposed set
+rests, FAIL and INDECISIVE included, as a whole certificate to the
+party the comparison measures, with the rejection and unasked; a bare
+rejection without the enclosure the host compared is forbidden. An
+own-balance comparison measures the author whose act it compares.
+[layer1-interface.md](primitive/layer1-interface.md) reproduces
+v0.32.0, which has no such duty.
+
+At close the stand-in orders an approved act only when its author's
+balance pays θ. An act whose author cannot pay is left unwritten,
+stays approved for a later close, and nobody is told. The seam
+(`L1Boundary`) has no path from the host to an author for a verdict.
+The case is rare: prepare refuses an insolvent author before signing
+(`WRITE_RULE_FAILED`), so a deferral at close needs the balance to
+fall between prepare and close.
+
+### The question
+
+Is a deferral at close a rejection the duty covers, and if so, how
+does its verdict reach the author — what the certificate names, and
+by which channel? The L1 team has been asked; the duty's scope is
+under revision on their side.
+
+### Related
+
+Q58 (the write rule's second gate on the surface).
