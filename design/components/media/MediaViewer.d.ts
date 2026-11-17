@@ -35,6 +35,10 @@ export interface MediaViewerProps {
   elapsed?: string;
   duration?: string;
   progress?: number;
+  /** A clip that cannot load (round 50's law, drawn round 53): the board's display holes for the clip, its 4:5 cover with the outlined `Retry` alone, and the transport, plus the cover's `src`. Absent, nothing of the state is drawn. */
+  unloadedHoles?: { src: string; clip: string; cover: string; transport: string };
+  /** The `Retry` on the cover of a clip that cannot load: asks for the clip again. */
+  onRetry?: () => void;
 }
 
 export declare function MediaViewer(props: MediaViewerProps): JSX.Element | null;

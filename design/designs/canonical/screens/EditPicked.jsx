@@ -1,6 +1,7 @@
 /* SHOW ALL, OVER THE EDIT (the edit body round, 2026-09-10) — the per-picture
    manager the edit's picked row opens: reorder (first = cover), remove,
-   describe, the same `PickedSheet` the pick step and the details stage open.
+   describe, crop, the same `PickedSheet` the pick step and the details stage
+   open, with the edit's own `Crop` on every row.
 
    IT IS ITS OWN BOARD RATHER THAN `ComposePicked` because of the overlay rule
    (2026-09-08): a sheet covers the surface the reader came from, and that
@@ -21,9 +22,15 @@
    THE PICTURES ARE THE EDIT'S OWN — the two `EditComposeBody` carries, in its
    order, the first one the cover. A manager showing a different set than the
    row that opened it would be a third sketch of one post. */
+/* EVERY PICTURE CARRIES `Crop` (round 53, jakob 2026-11-17, option C: "yes
+   C and all pictures"): after `Describe`, it opens the post's crop
+   (`ComposeCrop`, `opener` at `edit`) on that picture, the strip holding
+   every picture of the post. A picture the post already carries is framed
+   within its published cut-out, tighter and never wider; a changed framing
+   or shape replaces the picture in the signed edit. */
 const PICKED = [
-  { src: "post-photo.jpg", alt: "The coast road", described: true },
-  { src: "inviter.jpg", alt: "", onDescribe: () => {}, onRemove: () => {} },
+  { src: "post-photo.jpg", alt: "The coast road", described: true, onCrop: () => {} },
+  { src: "inviter.jpg", alt: "", onDescribe: () => {}, onCrop: () => {}, onRemove: () => {} },
 ];
 
 /* REGISTERED under the `postEdit` prefix (seam 248): the edit beneath is

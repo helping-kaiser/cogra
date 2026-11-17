@@ -46,7 +46,9 @@ export interface UploadErrorLineProps {
   /** Omit for a refused file — the Retry link is dropped, not disabled. */
   onRetry?: () => void;
   onRemove?: () => void;
-  /** The data-node name its placer gives the line (design ⇄ impl seam 002; renders as attributes only). Given one, it also names `message`, `retry` and `remove`. */
+  /** A re-cropped picture the post or comment already carries (round 53 act 2): `Undo` stands in `Remove it`'s place and drops the re-crop alone, the published picture standing. */
+  onUndo?: () => void;
+  /** The data-node name its placer gives the line (design ⇄ impl seam 002; renders as attributes only). Given one, it also names `message`, `retry` and `remove` (or `undo`). */
   node?: string;
 }
 

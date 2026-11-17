@@ -30,7 +30,11 @@ WHEN tap the picked row -> the Show all sheet opens over the edit itself
 
 WHEN press + Add pictures · 2 of 10 -> the device's own picker opens AND NEVER a pick stage opens
 
-WHEN pictures are picked from + Add pictures -> they pass the crop locked to the post's one shape AND the picked row grows by them
+WHEN pictures are picked from + Add pictures -> they pass the post's crop, its shape row standing with the post's shape selected and its strip holding every picture of the post, the new ones selected first, AND the picked row grows by them
+
+ALWAYS a picture the post already carries uploads again only when the crop changed its framing or the post's shape, its new cut-out a replacement of it in the signed edit, and never otherwise
+
+ALWAYS a picture the crop replaced rides the edit's own record, the post's new content state, staging it when nothing else has and adding nothing to the footer's count when it is already staged
 
 WHEN pictures picked from + Add pictures break the cap of ten or come in a format nothing here reads -> the refusal says why on postEdit.body.mediaRow AND NEVER a dialog opens
 
@@ -52,9 +56,9 @@ ALWAYS a standing citation whose target was removed keeps its row, wearing the r
 
 ALWAYS a standing citation whose target was removed keeps its pair, its sheet and its ×, and adds nothing to the batch by standing
 
-ALWAYS the line Uploading N of M — signing waits for the picture. stands above the acts footer GIVEN pictures the edit took are uploading and M is 1
+ALWAYS the line Uploading N of M — signing waits for the picture. stands above the acts footer GIVEN pictures the edit took or re-framed are uploading and M is 1
 
-ALWAYS the line Uploading N of M — signing waits for the pictures. stands above the acts footer GIVEN pictures the edit took are uploading and M is 2 or more
+ALWAYS the line Uploading N of M — signing waits for the pictures. stands above the acts footer GIVEN pictures the edit took or re-framed are uploading and M is 2 or more
 
 ALWAYS Sign the edit is enabled GIVEN an upload is running
 
@@ -62,7 +66,7 @@ WHEN press Sign the edit GIVEN an upload is running -> Sign the edit refuses a s
 
 WHEN the signing has not answered 200ms after a press of Sign the edit, held at the upload gate or not -> Sign the edit reads Signing the edit… in its own place AND NEVER a spinner appears
 
-ALWAYS each picture the edit took that is still uploading wears its progress as a ring on its thumbnail
+ALWAYS each picture the edit took or re-framed that is still uploading wears its progress as a ring on its thumbnail
 
 WHEN the signing has not answered 5s after the press -> the line Still signing — the network is slow right now. stands under the acts footer AND NEVER a progress indicator appears
 
@@ -93,6 +97,14 @@ WHEN press Retry GIVEN the held press dropped -> the gate runs again AND NEVER s
 WHEN a picture the edit took fails to upload -> its thumbnail is marked AND the line One picture didn't upload. stands under the picked row with Retry and Remove it AND the gate line takes its fault reading
 
 WHEN the server refuses a picture the edit took at its upload -> the line One picture didn't upload. stands under the picked row with Remove it alone AND NEVER Retry stands under the row, retrying being unable to change the answer
+
+WHEN the re-framed cut-out of a picture the post already carries fails to upload -> its thumbnail is marked AND the line One picture didn't upload. stands under the picked row with Retry and Undo AND the gate line takes its fault reading AND NEVER Remove it stands for that picture
+
+WHEN the server refuses the re-framed cut-out of a picture the post already carries at its upload -> the line One picture didn't upload. stands under the picked row with Undo alone AND the gate line reads the fact alone AND Sign the edit is disabled until Undo drops the re-crop AND NEVER Retry or Remove it stands for that picture
+
+WHEN press Undo under the picked row -> the re-crop is dropped AND the picture stands as published AND the line and its mark on the thumbnail go AND NEVER the picture leaves the post
+
+ALWAYS a picture added in this edit whose upload fails or is refused keeps Remove it, nothing published standing behind it
 
 WHEN press Retry under the picked row -> the failed upload tries again AND the gate runs again
 

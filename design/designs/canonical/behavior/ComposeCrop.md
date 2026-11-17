@@ -30,17 +30,31 @@ WHEN tap a picture in the strip -> that picture takes the crop viewport for its 
 
 WHEN press Next GIVEN the crop was entered from compose's pick step -> the details stage opens AND the pictures' cropped exports start uploading AND NEVER an uncropped picture leaves the device
 
-WHEN press Next GIVEN the crop was entered from an edit -> the edit comes back with the pictures on its media row AND the pictures' cropped exports start uploading AND NEVER an uncropped picture leaves the device AND NEVER a pick stage opens
+WHEN press Next GIVEN the crop was entered from an edit -> the edit comes back with the pictures on its media row, its picture sheet over it where the crop was opened from the sheet, AND the cropped exports of the pictures added or re-framed in this visit start uploading AND NEVER an uncropped picture leaves the device AND NEVER a pick stage opens
 
-WHEN the crop is reached by adding pictures to a published post's edit -> the crop is locked to the post's one shape AND the stage shows that shape's frame AND NEVER the shape chips stand
+ALWAYS the crop entered from a post's edit stands as the new post's crop, the shape row with the post's shape selected and all three chips live, the stage, the zoom slider, the line, the strip and Next
 
-ALWAYS composeCrop.shapes is hidden and never left out of the screen GIVEN the crop was entered from an edit, so its paths stand in every state
+ALWAYS the strip holds every picture of the post in the edit's order, the pictures the post already carries and the ones just added, GIVEN the crop was entered from an edit
 
-ALWAYS drag, pinch, the zoom slider and the strip stand as on the new post's crop GIVEN the crop was entered from an edit
+WHEN the crop is reached by adding pictures to a post's edit -> the strip holds the post's pictures and the new ones AND the first new picture takes the crop viewport
+
+WHEN tap a picture's Crop in the edit's picture sheet -> the crop opens with that picture in the crop viewport AND the strip holds every picture of the post
+
+ALWAYS a picture the post already carries is framed within its published cut-out, the only part of it that ever left the device, so it can be framed tighter and never wider
+
+ALWAYS the zoom slider's floor is the published cut-out's fill of the current shape and its ceiling the post crop's one ceiling GIVEN the picture in the crop viewport is one the post already carries
+
+ALWAYS a picture just added is framed within the picked original, as on the new post's crop
+
+WHEN tap a shape chip GIVEN the crop was entered from an edit -> every picture in the post takes that shape, the pictures it already carries among them, each keeping its scale and its position, rising to the fill and shifting to meet the frame as on the new post's crop
+
+ALWAYS a picture the post already carries whose framing and shape stand as published is not replaced, and one whose framing or shape changed is a replacement of that picture in the signed edit
+
+ALWAYS a replaced picture rides the edit's own record, the post's new content state, as an added or a removed picture does, staging that record when nothing else has and adding no row and nothing to the count when it is already staged
 
 WHEN press the header back arrow GIVEN the crop was entered from compose's pick step -> the pick step comes back AND the picks are kept
 
-WHEN press the header back arrow GIVEN the crop was entered from an edit -> the edit comes back as it was left AND the pictures go unused AND NEVER a pick stage opens
+WHEN press the header back arrow GIVEN the crop was entered from an edit -> the edit comes back as it was before the crop opened, its picture sheet over it where the crop was opened from the sheet, AND every picture added and every framing or shape changed in this visit goes unused AND NEVER a pick stage opens
 
 ALWAYS the header back arrow is named Back to the edit GIVEN the crop was entered from a post edit
 

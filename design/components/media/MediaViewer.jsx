@@ -1,5 +1,6 @@
 import React from "react";
 import { Icon } from "../navigation/Icon.jsx";
+import { Button } from "../core/Button.jsx";
 import { VideoTransport, GESTURE_ZONE } from "./VideoControls.jsx";
 import { useGlobalMute, PagerDots } from "./MediaAttachment.jsx";
 
@@ -95,6 +96,8 @@ export function MediaViewer({
   elapsed = "0:00",
   duration = "0:00",
   progress = 0,
+  unloadedHoles,
+  onRetry,
 }) {
   const [current, setCurrent] = React.useState(index);
   const [muted, setMuted] = useGlobalMute();
@@ -159,7 +162,7 @@ export function MediaViewer({
         autoPlay
         playsInline
         aria-label={item.alt}
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", display: unloadedHoles && unloadedHoles.clip }}
       />
     ) : (
       <img
@@ -187,11 +190,27 @@ export function MediaViewer({
           drawn is bounded by the screen whatever shape the frame is. */}
       <div className="cg-viewer-stage" style={{ position: "absolute", inset: 0 }}>
         {media}
+        {/* THE CLIP THAT CANNOT LOAD (round 50's law, drawn round 53 by the
+            reel's twin): its cover stands whole at its 4:5, centred on the
+            black, nothing cropped, with the read fault's outlined `Retry`
+            alone on it — no sentence, no transport. `unloadedHoles` passes
+            the board's display holes (`clip`, `cover`, `transport`) and the
+            cover's `src`; without it nothing here is drawn. */}
+        {item.kind === "video" && unloadedHoles && (
+          <div style={{ display: unloadedHoles.cover, position: "absolute", inset: 0, alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: "100%", aspectRatio: "4 / 5", flex: "none" }}>
+              <img src={unloadedHoles.src} alt="" style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
+            </div>
+            <span style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)" }}>
+              <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>
+            </span>
+          </div>
+        )}
         {/* The transport is the product's own, not the browser's default set:
             one control vocabulary across the detail view, the stream and here,
             rather than three players that each look like their platform. No
             fullscreen toggle — this IS the fullscreen. */}
-        {item.kind === "video" && (
+        {item.kind === "video" && !unloadedHoles && (
           <VideoTransport
             playing={playing}
             elapsed={elapsed}
@@ -201,6 +220,19 @@ export function MediaViewer({
             fullscreen={false}
             onToggleMute={() => setMuted(!muted)}
           />
+        )}
+        {item.kind === "video" && unloadedHoles && (
+          <div style={{ display: unloadedHoles.transport }}>
+            <VideoTransport
+              playing={playing}
+              elapsed={elapsed}
+              duration={duration}
+              progress={progress}
+              muted={muted}
+              fullscreen={false}
+              onToggleMute={() => setMuted(!muted)}
+            />
+          </div>
         )}
       </div>
       {dots}

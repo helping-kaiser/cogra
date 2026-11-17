@@ -18,8 +18,10 @@
    THE WAY TO A COVER STAYS, and here it is the DOOR (jakob 2026-09-10). This
    clip is vertical, and a vertical clip's default is no cover at any scale —
    there is no step to skip in a one-screen composer, so what gives way is the
-   row: "Add a cover" stands where the strip would, and the strip is what it
-   opens (`ReplyVideo` draws that state, the same clip with its row showing).
+   row. The door is the dashed `Add a cover` tile beside the clip, and the
+   frame row is what it opens (round 53, jakob 2026-11-17: one door, not the
+   tile and a text door under `Cover`); `ReplyVideo` draws that state, the
+   same clip with its row showing, where the tile is the picker's door.
 
    The failure changes nothing about that. Frames are cut from the file on the
    device, so they exist whether or not the bytes ever reached CoGra, and the
@@ -52,9 +54,11 @@ export function Screen() {
         <WordsBody rows={REPLY_WORDS_ROWS} cap={REPLY_WORDS_CAP} paragraphs={["Eighteen seconds of the same headland, if the light comes through at all."]} />
 
         {/* THE COVER STANDS BESIDE THE CLIP (round 52 act 3, `ReplyVideo`'s
-            pair): both tiles 167 × 167; this vertical clip has no cover, so
-            its tile is the dashed `Add a cover` door — the picker, then the
-            cover's crop locked to the comment's square. */}
+            pair): both tiles 167 × 167; this tall clip has no cover and its
+            frame row has not been asked for, so its tile is the dashed `Add
+            a cover` door, and the door opens the frame row (round 53, jakob
+            2026-11-17, his follow-up 1: "yes"). It is the one way to a
+            cover here: no text door stands under a `Cover` label. */}
         <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
           <MediaThumb
             src="comment-camera.jpg"
@@ -71,13 +75,6 @@ export function Screen() {
         <UploadErrorLine message="That video didn't upload." onRetry={() => {}} onRemove={() => {}} />
 
         <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} />
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <FieldLabel>Cover</FieldLabel>
-          <InlineAction size="sm" selfStart>
-            Add a cover
-          </InlineAction>
-        </div>
 
         <div style={{ flex: 1 }} />
 

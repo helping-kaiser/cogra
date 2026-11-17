@@ -20,15 +20,27 @@ WHEN tap a picture's remove control -> the picture leaves the batch
 
 WHEN tap + Add pictures -> the platform's own picker opens AND NEVER a pick stage opens
 
-WHEN pictures come back from the picker at the edit -> the comment's square crop opens on the new pictures only AND they join commentEdit.pictures as their squares at its Next AND their cropped exports start uploading AND every picture the comment already holds keeps its framing
+WHEN pictures come back from the picker at the edit -> the comment's square crop opens, its strip holding every picture of the comment with the new ones selected first, AND they join commentEdit.pictures as their squares at its Next AND the cropped exports of the pictures added or re-framed start uploading
 
-WHEN press the comment's square crop's back arrow GIVEN it was opened from the edit -> the edit comes back as it was AND the picked pictures go unused
+ALWAYS a picture the comment already holds can be re-framed in the comment's square crop, within its published square, tighter and never wider
+
+ALWAYS a picture the comment already holds uploads again only when the crop changed its framing, its new square a replacement of it in the signed edit, and never otherwise
+
+ALWAYS a picture the crop replaced rides the edit's own record, the comment's new content state, staging it when nothing else has and adding nothing to the footer's count when it is already staged
+
+WHEN press the comment's square crop's back arrow GIVEN it was opened from the edit -> the edit comes back as it was before the crop opened AND every picture added and every framing changed in that visit goes unused
 
 ALWAYS the comment edit's add row reads + Add pictures or a video GIVEN the comment holds words alone, no picture and no clip
 
 ALWAYS whether the comment holds words alone is read on the edit's own state, so a comment whose pictures or clip were removed in this edit holds words alone and may take a video
 
-ALWAYS commentEdit.pictures holds commentEdit.pictures.add alone, with no commentEdit.pictures.label, no commentEdit.pictures.thumb and no commentEdit.pictures.describeRow, GIVEN the comment holds words alone
+ALWAYS commentEdit.pictures holds commentEdit.pictures.add alone, with no commentEdit.pictures.label, no commentEdit.pictures.thumb, no commentEdit.pictures.crop and no commentEdit.pictures.describeRow, GIVEN the comment holds words alone
+
+ALWAYS commentEdit.pictures.crop reads Crop the pictures and stands directly above commentEdit.pictures.describeRow, in the describe door's pattern, its words the same for one picture as for four, GIVEN the comment holds pictures
+
+WHEN tap commentEdit.pictures.crop -> the comment's square crop opens from the edit with every picture of the comment in its strip, the first picture in the crop viewport AND NEVER the picker opens
+
+ALWAYS a picture's thumbnail on commentEdit.pictures carries its remove control alone and opens no crop
 
 WHEN tap + Add pictures or a video -> the platform's own picker opens AND NEVER a pick stage opens
 
@@ -54,9 +66,9 @@ ALWAYS a standing citation whose target was removed keeps its row, wearing the r
 
 ALWAYS a standing citation whose target was removed keeps its pair, its sheet and its ×, and adds nothing to the batch by standing
 
-ALWAYS the line Uploading N of M — signing waits for the picture. stands above the acts footer GIVEN pictures the edit took are uploading and M is 1
+ALWAYS the line Uploading N of M — signing waits for the picture. stands above the acts footer GIVEN pictures the edit took or re-framed are uploading and M is 1
 
-ALWAYS the line Uploading N of M — signing waits for the pictures. stands above the acts footer GIVEN pictures the edit took are uploading and M is 2 or more
+ALWAYS the line Uploading N of M — signing waits for the pictures. stands above the acts footer GIVEN pictures the edit took or re-framed are uploading and M is 2 or more
 
 ALWAYS Sign the edit is enabled GIVEN an upload is running
 
@@ -64,7 +76,7 @@ WHEN press Sign the edit GIVEN an upload is running -> Sign the edit refuses a s
 
 WHEN the signing has not answered 200ms after a press of Sign the edit, held at the upload gate or not -> Sign the edit reads Signing the edit… in its own place AND NEVER a spinner appears
 
-ALWAYS each picture the edit took that is still uploading wears its progress as a ring on its thumbnail, the ring drawn once on EditCompose's board at its uploading state
+ALWAYS each picture the edit took or re-framed that is still uploading wears its progress as a ring on its thumbnail, the ring drawn once on EditCompose's board at its uploading state
 
 WHEN the signing has not answered 5s after the press -> the line Still signing — the network is slow right now. stands under the acts footer AND NEVER a progress indicator appears
 
@@ -87,6 +99,14 @@ WHEN press Retry GIVEN the held press dropped -> the gate runs again AND NEVER s
 WHEN a picture the edit took fails to upload -> its thumbnail is marked AND the line One picture didn't upload. stands under the pictures with Retry and Remove it AND the gate line takes its fault reading
 
 WHEN the server refuses a picture the edit took at its upload -> the line One picture didn't upload. stands under the pictures with Remove it alone AND NEVER Retry stands under the pictures, retrying being unable to change the answer
+
+WHEN the re-framed square of a picture the comment already holds fails to upload -> its thumbnail is marked AND the line One picture didn't upload. stands under the pictures with Retry and Undo AND the gate line takes its fault reading AND Sign the edit is disabled AND NEVER Remove it stands for that picture
+
+WHEN the server refuses the re-framed square of a picture the comment already holds at its upload -> the line One picture didn't upload. stands under the pictures with Undo alone AND the gate line reads the fact alone AND Sign the edit is disabled until Undo drops the re-crop AND NEVER Retry or Remove it stands for that picture
+
+WHEN press Undo under the pictures -> the re-crop is dropped AND the picture stands as published AND the line and its mark on the thumbnail go AND NEVER the picture leaves the comment
+
+ALWAYS a picture added in this edit whose upload fails or is refused keeps Remove it, nothing published standing behind it
 
 WHEN press Retry under the pictures -> the failed upload tries again AND the gate runs again
 
