@@ -32,10 +32,11 @@
    that default is set, so its `Reset` stages the app's — the one place a
    reader gets back to CoGra's defaults. Done saves it as theirs.
 
-   THE FOOT IS PINNED AND THE SECTIONS SCROLL. Four sections already outrun the
-   sheet's 88%, so a commitment placed after them would be the one control a
-   reader has to scroll to find. `FeedFilterSheet` takes the height when it is
-   given a foot.
+   THE FOOT IS PINNED AND THE SHEET FITS ITS CONTENT (jakob 2026-11-17, C5).
+   The sheet sizes to its sections, up to 88% (`fit`), so its foot stands
+   16px under the last of them, the sheet's foot rule; past 88% the sections
+   scroll above the pinned foot, so the commitment is never a control a
+   reader has to scroll to find.
 
    THE ORDER SECTION IS DRAWN AT ITS DESIGNED DEFAULT, `Ranked`. §13's standing
    ruling — the filter honestly reads Newest until slice 3's ranker ships —
@@ -79,6 +80,7 @@ export function Screen() {
           </>
         }
         foot={<FilterFoot node="foot" />}
+        fit
       />
     </>
   );

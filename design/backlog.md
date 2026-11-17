@@ -6292,7 +6292,7 @@ Closed by round 50, act 3 (jakob 2026-11-17, C4 as recommended): the `Profile` r
 value runs on to a second line — `ActsCard`'s row `wrap`, set on that row alone;
 `ProfileEditSeal`'s `holds` chip draws the longest reading at `all`.
 
-### 243 · The reading settings' filter sheet stands 131px above its foot · *design* · **filed 2026-11-17**
+### 243 · The reading settings' filter sheet stands 131px above its foot · *design* · **filed 2026-11-17** · **closed 2026-11-17**
 
 Round 50 (jakob 2026-11-17, his 10: 16px from the last content to the foot's
 hairline). `SettingsReading` raises `FeedFilterSheet` pinned at 88% (`height`,
@@ -6303,3 +6303,6 @@ Meeting the rule there changes the sheet's height, a visible change beyond the
 gap: (a) the settings sheet sizes to its content (`maxHeight` 88%), the foot 16
 under it; (b) it keeps 88% and the rule names the pinned-height sheet as its
 exception.
+
+Closed by round 50, act 3 (jakob 2026-11-17, C5 as recommended): the sheet sizes to its
+content up to 88% (FeedFilterSheet's it), its foot 16px under the last section.
