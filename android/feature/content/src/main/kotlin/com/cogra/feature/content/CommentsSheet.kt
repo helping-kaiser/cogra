@@ -341,15 +341,7 @@ fun CommentsSheet(
     // THE COMMENT WHOSE TAGS AND REFERENCES STAND OVER THE THREAD: its count
     // is a door, as on every card (TopicsLine.jsx:202-212).
     var refsFor by remember { mutableStateOf<CommentView?>(null) }
-    val depart: (() -> Unit) -> Unit = { go ->
-        onDepart(
-            CommentsScroll(
-                listState.firstVisibleItemIndex,
-                listState.firstVisibleItemScrollOffset,
-            ),
-        )
-        go()
-    }
+    val depart = departing(listState, onDepart)
     // THE TALLEST CLASS, ASKED FOR BY NAME (`BottomSheet.jsx`'s `tallest`,
     // readme §13 "The sheets-and-video round" 2026-09-22): pinned AT the
     // ceiling rather than held under it, because a thread is the one
@@ -418,20 +410,43 @@ fun CommentsSheet(
     // one comment gives way to its mark — the list is not re-read, so the
     // reader's place and every unfolded branch hold (CommentRemoved.md:19).
     ThreadConfirms(confirm, reportSheet, snackbar, onClose = { confirm = null })
-    // Stacked over the thread; a row that leaves the surface leaves the
-    // thread's place behind, as every door out of it does.
     refsFor?.let { comment ->
-        RefsSheet(
-            topics = comment.topics,
-            references = comment.references,
-            onDismiss = { refsFor = null },
-            onOpenTopic = { name -> depart { onOpenTopic(name) } },
-            onOpenActor = { handle -> depart { onOpenActor(handle) } },
-            onOpenPost = { id -> depart { onOpenPost(id) } },
-            testTagPrefix = "comment_${comment.id}",
-            stacked = true,
-        )
+        ThreadRefs(comment, depart, onOpenTopic, onOpenActor, onOpenPost) { refsFor = null }
     }
+}
+
+/**
+ * The reader's place, handed up as a door leaves the surface: every door out of
+ * the thread leaves it behind (ReplyEntry.md: back returns at the offset it was left).
+ */
+private fun departing(listState: LazyListState, onDepart: (CommentsScroll) -> Unit): (() -> Unit) -> Unit = { go ->
+    onDepart(CommentsScroll(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset))
+    go()
+}
+
+/**
+ * A comment's tags and references, stacked over the thread; a row that leaves
+ * the surface leaves the thread's place behind, as every door out of it does.
+ */
+@Composable
+private fun ThreadRefs(
+    comment: CommentView,
+    depart: (() -> Unit) -> Unit,
+    onOpenTopic: (String) -> Unit,
+    onOpenActor: (String) -> Unit,
+    onOpenPost: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    RefsSheet(
+        topics = comment.topics,
+        references = comment.references,
+        onDismiss = onDismiss,
+        onOpenTopic = { name -> depart { onOpenTopic(name) } },
+        onOpenActor = { handle -> depart { onOpenActor(handle) } },
+        onOpenPost = { id -> depart { onOpenPost(id) } },
+        testTagPrefix = "comment_${comment.id}",
+        stacked = true,
+    )
 }
 
 /**

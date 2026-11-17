@@ -579,9 +579,22 @@ private fun OwnPart(
         sensitiveReason = comment.sensitiveReason,
         node = node,
     )
-    // THE COUNT IS A DOOR on every card, a comment's too (TopicsLine.jsx:202-212;
-    // graph.json FeedKinds 27): the one tags-and-references sheet every node
-    // kind opens, over the host as the post card's is.
+    CommentTopicsLine(comment, testTagPrefix, onOpenTopic, onOpenActor, onOpenPost)
+}
+
+/**
+ * THE COUNT IS A DOOR on every card, a comment's too (TopicsLine.jsx:202-212;
+ * graph.json FeedKinds 27): the one tags-and-references sheet every node kind
+ * opens, over the host as the post card's is.
+ */
+@Composable
+private fun CommentTopicsLine(
+    comment: CommentView,
+    testTagPrefix: String,
+    onOpenTopic: (String) -> Unit,
+    onOpenActor: (String) -> Unit,
+    onOpenPost: (String) -> Unit,
+) {
     var refsOpen by rememberSaveable(comment.id) { mutableStateOf(false) }
     CoversSurface(open = refsOpen, kind = CoverKind.Suspend)
     TopicsLine(
