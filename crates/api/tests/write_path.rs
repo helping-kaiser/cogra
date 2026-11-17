@@ -252,6 +252,16 @@ async fn prepare_refuses_a_self_dependency_before_staging(pool: PgPool) {
         .await
         .expect("count");
     assert_eq!(staged_count, 0);
+    let next = prepare::prepare(
+        &rig.boundary,
+        &rig.pool,
+        GC,
+        actor_id,
+        rig.registration(&key),
+    )
+    .await
+    .expect("prepares");
+    assert_eq!(next.proposal.body.seq, 0);
 }
 
 /// Prepare is the one point a gesture's dependency list enters the
