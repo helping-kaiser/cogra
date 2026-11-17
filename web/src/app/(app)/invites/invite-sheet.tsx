@@ -10,7 +10,8 @@
 // `Create invite` makes the link with the staged choices and the sheet turns to
 // its second stage, the fresh link; past 200ms it reads `Creating invite…`, and
 // a create that did not go through answers in the network fault's grammar with
-// the choices kept (:19-23).
+// the choices kept (:19-23) — a FORBIDDEN answer in the not-through line,
+// never the "can't reach the server" one (NetworkError.md:13).
 //
 // THE FRESH LINK'S STAGE SERVES THE LINK AND NOTHING ELSE (InviteCreated.md):
 // `Your invite link`, the link whole in mono with its label and caption, its
@@ -51,6 +52,8 @@ import { buttonClassName } from "@/lib/ui/button";
 import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { shareLink } from "@/lib/ui/share";
 import { TransportError } from "@/lib/ui/transport-error";
+import { NOT_THROUGH_LINE } from "@/lib/ui/error-messages";
+import { hasCode } from "@/lib/api/outcome";
 import { AddressCard } from "@/lib/ui2/address-card";
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { SettingsGroup, SettingsRow } from "@/lib/ui2/settings-row";
@@ -88,7 +91,7 @@ export function InviteSheet({
   const [choosing, setChoosing] = useState(false);
   const [inFlight, setInFlight] = useState(false);
   const [slow, setSlow] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [fault, setFault] = useState<"failed" | "notThrough" | null>(null);
   const [created, setCreated] = useState<InviteLinkView | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -98,7 +101,7 @@ export function InviteSheet({
     onClose();
     // The next open starts over at the drawn defaults.
     setCreated(null);
-    setFailed(false);
+    setFault(null);
     setSingleUse(true);
     setExpiry(DEFAULT_EXPIRY);
   };
@@ -106,7 +109,7 @@ export function InviteSheet({
   const create = async () => {
     if (inFlight) return;
     setInFlight(true);
-    setFailed(false);
+    setFault(null);
     timer.current = setTimeout(() => setSlow(true), CREATING_AFTER_MS);
     const outcome = await guard.run(() =>
       createInviteLink(client, {
@@ -123,7 +126,7 @@ export function InviteSheet({
       onCreated(outcome.value);
     } else {
       // The staged choices stay as they were (:23).
-      setFailed(true);
+      setFault(hasCode(outcome, "FORBIDDEN") ? "notThrough" : "failed");
     }
   };
 
@@ -156,7 +159,12 @@ export function InviteSheet({
                 node={part(OPTIONS, "expiry")}
               />
             </SettingsGroup>
-            {failed && <TransportError testId="invites-sheet-failed" />}
+            {fault !== null && (
+              <TransportError
+                testId="invites-sheet-failed"
+                message={fault === "notThrough" ? NOT_THROUGH_LINE : undefined}
+              />
+            )}
             <div className="flex justify-end">
               <button
                 type="button"
