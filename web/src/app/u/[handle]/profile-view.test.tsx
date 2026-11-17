@@ -5,6 +5,7 @@ import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { resetSeenQueueForTests } from "@/lib/history/seen-queue";
+import { heldPicture, releaseHeldPicture } from "@/lib/profile/held-picture";
 import { forgetAllProfileViews } from "@/lib/profile/profile-memory";
 import { readerState } from "@/lib/session/reader-state";
 import { createTokenStore } from "@/lib/session/token-store";
@@ -977,6 +978,42 @@ describe("ProfileScreen", () => {
     expect(screen.getByTestId(byNode("profile.band.bell"))).toBeInTheDocument();
     // Your own page repeats the handle under the name (the band carries none).
     expect(screen.getByTestId(byNode("profile.identity.handle"))).toHaveTextContent("@ada");
+  });
+
+  // Profile.md:47 — the own avatar wears the change badge, the door to the
+  // picture's crop and its own seal (ProfileHeader.jsx `changeBadge`).
+  it("the own avatar's change badge picks a picture and opens the picture's own flow", async () => {
+    server.use(
+      meHandler(),
+      gqlLink.query("MyProfile", () => HttpResponse.json({ data: { me: profile("u1", "ada") } })),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
+    const badge = await screen.findByTestId(byNode("profile.identity.changeBadge"));
+    expect(badge).toHaveAccessibleName("Change your picture");
+    // The avatar is a picture, never a door: the badge is the only one.
+    expect(screen.getByTestId(byNode("profile.identity.avatar")).closest("button, a")).toBeNull();
+    const input = screen.getByTestId("profile-change-badge-input") as HTMLInputElement;
+    const opened = vi.spyOn(input, "click");
+    fireEvent.click(badge);
+    expect(opened).toHaveBeenCalledTimes(1);
+    push.mockClear();
+    const file = new File([new Uint8Array([1]) as BlobPart], "face.jpg", { type: "image/jpeg" });
+    fireEvent.change(input, { target: { files: [file] } });
+    expect(push).toHaveBeenCalledWith("/profile/picture");
+    expect(heldPicture()).toBe(file);
+    releaseHeldPicture();
+  });
+
+  it("draws no change badge on someone else's profile", async () => {
+    server.use(
+      gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u2", "ada") } })),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    await screen.findByTestId(byNode("profile.identity.name"));
+    expect(screen.queryByTestId(byNode("profile.identity.changeBadge"))).toBeNull();
+    expect(screen.queryByTestId("profile-change-badge-input")).toBeNull();
   });
 
   // A signed profile edit is served from its signature on, pending until it

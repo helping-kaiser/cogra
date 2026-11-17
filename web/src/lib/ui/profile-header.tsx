@@ -38,13 +38,17 @@
 // link here, the web's element for a door that navigates; the master draws a
 // button for the canvas's own click.
 //
-// NOT DRAWN YET: the avatar's change badge (the crop and seal live only
-// inside the edit screen).
+// THE AVATAR CHANGES WITHOUT THE EDIT SCREEN (ProfileHeader.jsx, jakob
+// 2026-09-01): one's own avatar wears a change badge, the door to the
+// picture's own crop and seal (Profile.md:47). The avatar itself is not
+// tappable — the badge is the door, the picture is a picture — and the 28px
+// badge answers to 48px through `cg-hit` without moving a pixel.
 
 import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { Icon } from "@/lib/ui/icons";
 import { MonogramAvatar } from "@/lib/ui2/monogram-avatar";
 import { REDACTED_ACTOR_NAME } from "@/lib/ui2/content-row";
 
@@ -178,9 +182,12 @@ export function ProfileHeader({
   figures,
   figuresHref,
   own = false,
+  onAvatarChange,
   node,
   children,
 }: {
+  /** One's own avatar's change badge; absent, no badge is drawn. */
+  onAvatarChange?: () => void;
   /** The three record counts; a null count is not drawn, and none at all draws no cell. */
   figures?: Figures | null;
   /** Where the figures row opens the opinions page; absent, the figures are a plain cell. */
@@ -227,6 +234,17 @@ export function ProfileHeader({
             node={part(node, "avatar")}
             testId="profile-avatar"
           />
+          {own && !redacted && onAvatarChange && (
+            <button
+              type="button"
+              aria-label="Change your picture"
+              onClick={onAvatarChange}
+              {...testAttributes(part(node, "changeBadge"), "profile-change-badge")}
+              className="cg-state cg-focus cg-hit absolute -bottom-0.5 -right-0.5 grid size-7 cursor-pointer place-items-center rounded-full border-2 border-solid border-surface bg-secondary-container p-0 text-on-secondary-container"
+            >
+              <Icon name="photo_camera" size={16} />
+            </button>
+          )}
         </div>
         <div className={`flex min-w-0 flex-col gap-0.5 self-end [grid-area:name] ${own ? UNDER_OWN_NAME : UNDER_OTHER_NAME}`}>
           <h1
