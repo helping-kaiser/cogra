@@ -7,6 +7,8 @@
 //! between CoGra and the substrate, in both directions. Bare section
 //! references below are that document's.
 
+use std::fmt;
+
 use super::census::{Family, LegRole};
 use super::crypto::{self, tags};
 use super::encoding::Encoder;
@@ -94,10 +96,11 @@ pub fn canonical_deps(deps: &[ActId]) -> Vec<u8> {
     e.finish()
 }
 
-/// The order of a canonical dependency list: sorted by act identifier and
-/// duplicate-free (§8.2, "Act dependency projection"). The seam leaves
-/// the order to the deployment's identifier encoding, and this one orders
-/// bytewise over each identifier's canonical text form — the form
+/// The order of a canonical dependency list. The Layer 1 specification
+/// (`def:graph:act-dependency-projection`) has the list sorted by act
+/// identifier with no duplicates and fixes no order on identifiers, so
+/// the order is the deployment's: this one orders bytewise over each
+/// identifier's canonical text form — the form
 /// [`canonical_deps`] encodes — so anyone holding the encoded list checks
 /// it without parsing an identifier.
 pub fn dependency_order(a: &ActId, b: &ActId) -> std::cmp::Ordering {
@@ -122,13 +125,25 @@ pub fn is_canonical_dep_list(deps: &[ActId]) -> bool {
 }
 
 /// A proposal before signing: body plus the two removable projections.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct Proposal {
     pub body: StructuralBody,
     /// Payload bytes — canonical empty is the zero-length string (§8.4).
     pub payload: Vec<u8>,
     /// Declared dependencies (each naming a whole act).
     pub deps: Vec<ActId>,
+}
+
+/// The payload is what the content nonce conceals, so `Debug` shows its
+/// length and never its bytes.
+impl fmt::Debug for Proposal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Proposal")
+            .field("body", &self.body)
+            .field("payload", &format_args!("<{} bytes>", self.payload.len()))
+            .field("deps", &self.deps)
+            .finish()
+    }
 }
 
 /// The actor's signed pre-commitment over the canonical structural body

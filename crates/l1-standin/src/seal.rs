@@ -54,8 +54,10 @@ fn formation(msg: impl Into<String>) -> StandInError {
 ///   fold reads it. Offer revision is a new Offer.
 /// - **Dependency bounds**, checked against `MAX_DEPS`, and the list's own
 ///   form: no self-dependency, and strictly ascending under
-///   [`common::l1::handshake::dependency_order`] — sorted and
-///   duplicate-free (§8.2, "Act dependency projection"). The payload bound
+///   [`common::l1::handshake::dependency_order`], so the list is sorted
+///   and has no duplicates, as the Layer 1 specification's dependency
+///   projection requires (`def:graph:act-dependency-projection`). The
+///   payload bound
 ///   is a carriage check and the content nonce's format, length,
 ///   freshness and non-reuse are carriage obligations, none of them a
 ///   condition of the act (§8.2, "Verified act" and "Proposal

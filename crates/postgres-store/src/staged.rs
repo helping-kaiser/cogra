@@ -1140,12 +1140,19 @@ pub async fn staged_act(pool: &PgPool, act_id: &str) -> Result<Option<StagedAct>
 /// Pre-commitment staging writes display rows from bytes it loaded
 /// before this transaction. A redaction can reap the write after its leg
 /// was recorded and before staging. The share lock conflicts with the
-/// redaction's `FOR UPDATE` ([`lock_copy`]): if the redaction holds the
-/// row, this waits and then reads the reaped version; if this holds it,
-/// the redaction waits until the staged rows are committed and its scope
-/// sees them. The caller takes this lock before any other lock in the
-/// transaction, so the order matches the redaction's: staged row first,
-/// then node or profile rows.
+/// redaction's `FOR UPDATE` ([`lock_copy`]), so a reap committed before
+/// staging is seen: this waits for it and then reads the reaped version.
+///
+/// The reverse order is not covered. When staging holds the lock, the
+/// redaction waits for it, but a content removal resolves its display
+/// entity before its transaction begins and tombstones only an entity it
+/// found, so a post staged after that resolution survives the reap. A
+/// profile version is backstopped by account deletion's
+/// [`crate::deletion::close`], which blanks every open version row.
+///
+/// The caller takes this lock before any other lock in the transaction,
+/// so the order matches the redaction's: staged row first, then node or
+/// profile rows.
 pub async fn lock_unreaped(conn: &mut PgConnection, id: Uuid) -> Result<(), StagedError> {
     let reaped = sqlx::query_scalar!(
         "SELECT payload IS NULL AS \"reaped!\" FROM staged_writes WHERE id = $1 FOR SHARE",
