@@ -12070,11 +12070,13 @@ built on round 48's final tree (merged in, fe728bfd7).
     wears the borrowed view's face, @mira's, and the foot and every `Reply`
     stand at full strength — the dimmed look is the applicant's alone
     (copy-voice, *The applicant lock, one rule*).
-  - Seam 338: `ComposeCrop`'s shape row is drawn once per `shape` value
-    because only the selected chip differs. Drawn once, it is
-    pixel-identical at all three values, but its key rule is registered
-    and the registry takes no change to it without the implementers'
-    agreement, so the row stays keyed by the selected shape for now.
+  - Seam 338, an agreed breaking change (the implementers: "Either the
+    key goes, or tell us the key"; both clients carry the row unkeyed):
+    `ComposeCrop`'s shape row is drawn once, its `shape` setting
+    re-selecting the chips through `Chip`'s `selectedHoles` —
+    pixel-identical at tall, square and wide. The old key rule of
+    `composeCrop.shapes` left `nodes.json` by hand, as the registry law
+    has it; the row and its three chips are unkeyed, no path gone.
 - **The gate**: against round 48's final tree (fe728bfd7), 209 → 212
   screens (`ReelMenu`, `ComposeSeal`, `ReplySeal`), 8126 → 8432 board
   paths, 2151 → 2235 distinct — 84 added, none gone, and no board lost a
