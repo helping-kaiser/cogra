@@ -7,7 +7,9 @@
    one menu that also holds Remove is the last place to move rows around. The
    license closes this menu as it closes the others.
 
-   THE ROWS ARE `OWN_POST_MENU`, not four written out by hand. The list is the
+   THE ROWS ARE `OWN_POST_MENU` — Save, Cite in a new post, Edit, Mark as
+   sensitive, Remove, Cited by, Opinions on this, License terms — not
+   written out by hand. The list is the
    same atom `DetailHeader` is handed above, so the sheet a reader sees and the
    menu the header mounts cannot disagree — which is how the other three menu
    boards have always been drawn.

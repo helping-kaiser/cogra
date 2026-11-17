@@ -6,6 +6,8 @@
 export interface ChipProps {
   label: string;
   selected?: boolean;
+  /** A board's holes for the selection its own setting chooses — `{{hole}}` strings the board's VALS fill with what `selected` would draw — so a re-selected row is drawn once (round 49). */
+  selectedHoles?: { checked: string; border: string; background: string; color: string };
   onToggle?: () => void;
   /** When the label alone does not say what is being filtered. */
   ariaLabel?: string;
