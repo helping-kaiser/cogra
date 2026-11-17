@@ -417,6 +417,37 @@ describe("the sign-in screen (SignIn)", () => {
     ]);
   });
 
+  // SignIn.md: "ALWAYS the screen's ways out refuse a press, undimmed and
+  // unchanged in face, from 200ms after the press of Sign in until its
+  // answer comes".
+  it("the_ways_out_refuse_a_press_from_200ms_after_sign_in_until_the_answer", async () => {
+    let answer: () => void = () => {};
+    server.use(
+      gqlLink.mutation("LogIn", async () => {
+        await new Promise<void>((resolve) => {
+          answer = resolve;
+        });
+        return HttpResponse.error();
+      }),
+    );
+    renderWithProviders(<LoginForm />);
+    const exits = ["signIn.header.back", "signIn.forgot", "signIn.invite", "signIn.browse", "signIn.apk"].map(
+      (id) => screen.getByTestId(id),
+    );
+    const faces = exits.map((exit) => exit.className);
+    fillAndSubmit();
+    for (const exit of exits) expect(exit).not.toHaveAttribute("aria-disabled");
+    expect(await screen.findByText("Signing in…")).toBeInTheDocument();
+    for (const exit of exits) {
+      expect(exit).toHaveAttribute("aria-disabled", "true");
+      expect(fireEvent.click(exit)).toBe(false);
+    }
+    expect(exits.map((exit) => exit.className)).toEqual(faces);
+    answer();
+    expect(await screen.findByTestId("signIn.fault")).toHaveTextContent("That didn't send. Try again.");
+    for (const exit of exits) expect(exit).not.toHaveAttribute("aria-disabled");
+  });
+
   it("sign_in_reads_signing_in_after_200ms_and_never_spins", async () => {
     server.use(
       gqlLink.mutation("LogIn", async () => {
