@@ -1146,8 +1146,8 @@ pub async fn staged_act(pool: &PgPool, act_id: &str) -> Result<Option<StagedAct>
 /// The reverse order is not covered. When staging holds the lock, the
 /// redaction waits for it, but a content removal resolves its display
 /// entity before its transaction begins and tombstones only an entity it
-/// found, so a post staged after that resolution survives the reap. A
-/// profile version is backstopped by account deletion's
+/// found, so a post or a revision staged after that resolution survives
+/// the reap. A profile version is backstopped by account deletion's
 /// [`crate::deletion::close`], which blanks every open version row.
 ///
 /// The caller takes this lock before any other lock in the transaction,
