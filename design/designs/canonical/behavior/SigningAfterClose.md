@@ -40,4 +40,6 @@ WHEN a profile or picture change's signing is taken GIVEN its seal was closed ->
 
 WHEN a profile or picture change's signing does not go through GIVEN its seal was closed -> the head stands as it was AND the line under it reads That didn't sign. in the failure voice followed by Retry AND NEVER the snackbar carries the failure
 
+WHEN a profile or picture change is refused by the write rule or for any other reason, a bug, GIVEN its seal was closed -> the head stands as it was AND the line under it reads That didn't sign. in the failure voice followed by Retry, as any failure reads AND NEVER the line reads You can't sign right now.
+
 ALWAYS a reply or an edit keeps no draft, and after its failure Retry is the way back

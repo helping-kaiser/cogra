@@ -56,4 +56,6 @@ WHEN the change has not answered GIVEN the seal was closed while it signed -> th
 
 WHEN the signing does not go through GIVEN the seal was closed while it signed -> the profile's head stands as it was AND the line under it reads That didn't sign. in the failure voice followed by Retry AND NEVER the snackbar carries the failure
 
+WHEN the signing is refused by the write rule or for any other reason, a bug, GIVEN the seal was closed while it signed -> the profile's head stands as it was AND the line under it reads That didn't sign. in the failure voice followed by Retry, as any failure reads AND NEVER the line reads You can't sign right now.
+
 WHEN tap Retry under the profile's head -> the same change is asked to sign again AND the line reads Signing… once 200ms pass without an answer
