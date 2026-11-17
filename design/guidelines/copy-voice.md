@@ -717,6 +717,17 @@ Retry (`UploadErrorLine` with both ways out):
   the line is drawn short because Retry stands beside it and the pair
   would say "try again" twice.
 
+**A picture the server refuses at upload** — a refusal, not a fault
+(jakob 2026-11-17, impl 348-3): the server answered no, so retrying
+cannot change the answer, and the line keeps the refused files' one way
+out. The row reads `One picture didn't upload.` with `Remove it` alone,
+never `Retry`. A clip takes the same rule in its own words, `That video
+didn't upload.` with `Remove it` alone. On a seal's gate the refusal is
+the fact alone — `One picture didn't upload.`, a clip's `The video didn't
+upload.` — with no `Signing waits for it.`, which would wait for ever, and
+no `Retry`; the sign button stays disabled and `Back` is the way out, to
+the stage that holds `Remove it` (jakob 2026-11-17, round 51 act 2).
+
 **The cover's own words** — the way to the crop a gallery picture goes
 through, from an edit:
 
@@ -1014,7 +1025,11 @@ boards already speak, recorded so the registry is whole:
   stage but the first: the post's pick step, whose arrow leaves toward
   where compose began, is named `Back` (seam 245, ask 13 D; *new
   2026-10-28, blessed (jakob 2026-11-10)*); the X says what leaving keeps: `Leave — your
-  draft is kept` (the post), `Leave — the reply is discarded`, `Leave —
+  draft is kept` (the post, once it holds anything of the author's own),
+  a bare `Leave` on the post while it holds nothing of the author's own —
+  a fresh pick, or only what `Cite in a new post`, `Mention in a new post`
+  or a tag's compose glyph opened it with, which keeps no draft (jakob
+  2026-11-17, impl 349-6) — `Leave — the reply is discarded`, `Leave —
   the edit is discarded` (a comment edit and a post edit), and a bare `Leave` on the
   profile's and the picture's seals and the picture's crop. A crop opened
   from an edit names its arrow by where it goes: `Back to the edit` — the
@@ -1138,11 +1153,15 @@ a quick answer never flashes a word.
 - `Setting…` — the pad's `Set`, carried by `StanceControl`.
 - `Walking it back…` and `Disconnecting…` — the severance dialog's
   commitment, in each family's own words.
-- `Signing…` — the line under the face while a press-and-hold signs.
-  A hold has no label to swap, so the target's row carries it, in the
-  pending marker's quiet register. **Drawn** on `RowSigning`. The same
-  line carries a pad's or a dialog's act after `Close` shut it (jakob
-  2026-11-11). **Drawn** on `PadFailed`'s `closed`.
+- `Signing…` — a press-and-hold's wait, SPOKEN, never drawn (jakob
+  2026-11-17, impl 354, his A23): a hold has no label to swap, so the ring
+  that filled during the hold stays closed around the face until the
+  signature is taken, no line stands under it and the card never grows,
+  and a visually hidden status says `Signing…` once the answer is 200ms
+  late. **Drawn** on `RowSigning` (the closed ring). A pad's or a
+  dialog's act after `Close` shut it (jakob 2026-11-11) waits the same
+  way, the closed ring and the spoken status, no line (jakob 2026-11-17,
+  round 51 act 2). **Drawn** on `PadFailed`'s `closed`.
 - `Close` — the way out of a signing surface once its commit is
   pressed (jakob 2026-11-11): the pad, the alternates, the walk-back,
   the empty sign, the handle change, every seal and edit, and the
@@ -1180,7 +1199,9 @@ a quick answer never flashes a word.
   again (`Settings`' `kept`), a removal under the removed thing's card
   (`FeedRemoveConfirm`'s `closedFailed`) and a closed application on its
   row (jakob 2026-11-11, S3–S5, round 41). The dialogs' own failure while
-  they stand open keeps `That didn't send. Try again.`
+  they stand open keeps the in-place words: `That didn't send. Try again.`
+  with no answer, `That didn't go through. Try again.` for an answered
+  refusal (*One rule for a refused or failed act*).
 - `Changing handle…`, `That didn't go through.` with `Retry`, and `That
   handle is taken.` — the handle change's wait, failure and refusal on
   the Handle row after `Close`, the dialog's and the hidden-accounts
@@ -1305,9 +1326,10 @@ each menu's rows stand in one order:
   `Opinions on this` · `License terms`.
 - **A post's on a phone narrower than 360** — `Share this post` first,
   then another's rows as above.
-- **A comment's, another's** — `Save` · `Cite in a new post` · `Cited by`
-  · `Opinions on this` · `License terms` · `Report`, removed or not; no
-  Hide row.
+- **A comment's, another's** — `Save` · `Cite in a new post` · `Hide @ada`
+  · `Cited by` · `Opinions on this` · `License terms` · `Report`, removed
+  or not — the post's rows, row for row. Every host's ⋮ raises it — the
+  thread, the feed, History, Saved and a profile's Comments tab.
 - **A comment's, your own** — `Save` · `Cite in a new post` · `Edit` ·
   `Remove` · `Cited by` · `Opinions on this` · `License terms`; removed,
   less `Edit` and `Remove`.
@@ -1354,10 +1376,12 @@ The rows, word by word:
   their twins (*drafted 2026-10-09 — their wording jakob's at review*) —
   over no body line, the pair `Report` · `Cancel` and the snackbar
   `Reported.` (**blessed**). It never connects to Report-a-problem. A
-  report the server refuses — the day's reports spent, or the thing gone —
-  answers as no answer does, the sheet staying and the shared snackbar
-  `That didn't send. Try again.` (item 95's line, the interim for FC-G15;
-  *new 2026-10-12 as a placement — the line itself blessed*).
+  report that fails keeps the sheet up in the rule's dialog shape (jakob
+  2026-11-17, round 51 act 2): the line above the pair — `That didn't
+  send. Try again.` with no answer, `That didn't go through. Try again.`
+  for a refusal (the day's reports spent, or the thing gone) — and
+  `Report` reading `Retry`; never the snackbar (`ReportConfirm`'s
+  `answer`).
 - `Save` while a thing is not kept, `Unsave` while it is — one word
   either way (jakob 2026-09-11). It is the FIRST row of every menu that
   has it, a post's, a comment's, a person's and your own post's alike,
@@ -1524,14 +1548,42 @@ stands, and the rest of the surface stays readable.
   offered (`WriteRuleFailed`). A refusal that is our bug takes the same
   panel in its own words, with `Try again` (`SealFaultBug`).
 
+**One rule for a refused or failed act** (jakob 2026-11-17, impl 348, "all
+as rec"; impl 351). The WORDS follow the answer, the SHAPE follows the host.
+
+- The words: no answer at all — `That didn't send. Try again.`; an
+  answered refusal — `INTERNAL`, `FORBIDDEN`, `SIGNATURE_INVALID`, a
+  `BAD_INPUT` naming no field — `That didn't go through. Try again.`; a
+  signed act answered on a target's row — `That didn't sign.`
+  (`RowSigning`). A refusal the signer on the device makes itself, no
+  server answer at all, reads as an answered refusal: `That didn't go
+  through. Try again.` A code with words of its own keeps them in the same
+  shape (`EMAIL_NOT_VERIFIED`'s, below).
+- The shape: a seal or an edit screen — the line in the commit's place,
+  an outlined `Retry` under it (`NetworkError`; `EditCompose`'s and
+  `CommentEdit`'s `fault`); a dialog or a small sheet — the line in it, the
+  commitment itself reading `Retry` (`RemoveConfirm`'s `answer`); a card —
+  the line last on the card with `Retry` at its end, the copy fault's form
+  (`Invites`' copy fault and its `Revoke`): `That didn't go through.` with
+  `Retry`.
+- The card is the one host where both answers read alike: no answer and an
+  answered refusal both say `That didn't go through.` with `Retry` (jakob
+  2026-11-17, round 51 act 2). The card's copy fault already reads so, and
+  the line is the row line's short form — `Retry` stands at its end, so
+  the line never says "try again" twice.
+- What is not a fault keeps its own vehicle: the write rule's and the
+  budget's notices, a refused staged act's row, a field's own line, a
+  refused file's line with `Remove it` alone.
+
 Every line here is blessed (the failure pack's, the failure fixes' and
 the review fixes' lines, jakob 2026-10-01), all of them (the last flags cleared 2026-10-02).
 *Copy-only* marks a line no board draws yet.
 
 **No answer at all** (offline; not a code):
 
-- Seal, pad or dialog: `That didn't send. Try again.` **Drawn** on
-  `NetworkError` and `PadFailed`; `SeveranceConfirm` carries it, and the
+- Seal, edit, pad or dialog: `That didn't send. Try again.` **Drawn** on
+  `NetworkError`, `PadFailed`, the edits' `fault` and the remove dialogs'
+  `answer`; `SeveranceConfirm` carries it, and the
   alternates' dialog, its commit reading `Retry` (the alternates card;
   seam 245, ask 14). Its commit's wait reads `Signing…`. A form
   says the same line in SignInError's slot above its submit, the fields
@@ -1571,10 +1623,12 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   ink.
 - `INTERNAL`, `FORBIDDEN` — in place: `That didn't go through. Try
   again.` The house line says "can't reach the server", which is false
-  for a fault the server answered. *Copy-only* (`NetworkError.md`'s
-  line; the board draws the offline fault alone).
+  for a fault the server answered. **Drawn** on `EditCompose`'s and
+  `CommentEdit`'s `fault` (`refused`) and the remove dialogs' `answer`
+  (`refused`).
 - `EMAIL_NOT_VERIFIED` — in place: `Verify your email first — the link
-  is in your inbox.` The client gates acting on verification, so this
+  is in your inbox.`, with `Retry` like every in-place fault (jakob
+  2026-11-17, impl 351). The client gates acting on verification, so this
   is the rare case that slips past the gate. *Copy-only.*
 - `RATE_LIMITED` — in place, in SignInError's slot. Sign-in's login
   backoff says the drawn line, `Too many tries in a row. Wait a moment,
@@ -2589,7 +2643,7 @@ words, recorded so the registry is whole:
   alone, and with a picture standing two buttons side by side, never one
   above the other, in their short forms `Change` · `Remove` (spoken
   `Change picture` · `Remove picture`); a staged removal shows `Change` ·
-  `Undo` (spoken `Undo removing the picture`, *new 2026-11-17, to be blessed*), and `Remove` is hidden
+  `Undo` (spoken `Undo removing the picture`, blessed, jakob 2026-11-17), and `Remove` is hidden
   while a new picture is staged (jakob 2026-11-17, his review of round
   50 and C2, C3). With nothing staged, Save stands inert under `Nothing
   to sign yet` (`EditComposeUnchanged`'s line). A write-rule refusal
@@ -3152,20 +3206,21 @@ Drawn on `ProfileOwnMenu`, `Saved`, `SavedEmpty`, `SavedUndo`,
 act and the place cannot drift apart. The pair of verbs is blessed and
 lives under *Menu rows*.
 
-**Hiding names its person.** `Hide @ada`, on the post menu and on the
-profile menu, because the handle is what a reader recognises and what
+**Hiding names its person.** `Hide @ada`, on the post menu, the comment
+menu and the profile menu, because the handle is what a reader recognises and what
 they will look for again in settings. The pair on the other side is
 `Hidden accounts` and `Unhide`.
 
 **On a hidden person's card the row turns.** Wherever a hidden person's
-post, profile card or profile still stands — History until its next load,
-Saved, the tag's page, a post or profile reached by a link or a search —
+post, comment, profile card or profile still stands — History until its
+next load, Saved, the tag's page, a thread, a profile's Comments tab, a
+post or profile reached by a link or a search —
 the hide row reads `Unhide @ada`: Settings' word in the row's own form, the
 handle after it (`Unhide this account` where the actor is redacted, as
 `Hide this account` is). It answers with Settings' snackbar, `@ada is
 unhidden.` with `Undo` (jakob
-2026-11-11, M1; round 41). **Drawn** on `HistoryPostMenu` (`author`
-hidden) and `HistoryProfileMenu`. (*`Unhide @ada` blessed (jakob
+2026-11-11, M1; round 41). **Drawn** on `HistoryPostMenu` and
+`HistoryCommentMenu` (`author` hidden) and `HistoryProfileMenu`. (*`Unhide @ada` blessed (jakob
 2026-11-11, round 41's first question); `Unhide this account` blessed
 (jakob 2026-11-12, the re-ask's twelfth).*)
 
@@ -3173,7 +3228,9 @@ hidden) and `HistoryProfileMenu`. (*`Unhide @ada` blessed (jakob
 `@ada is hidden.` with `Undo` beside it — hidden already says how far
 it reaches (jakob 2026-11-12). It lands wherever the tap was made, in the same words: over the feed
 (`FeedHidden`), over the post being read (`PostDetailHidden`) and over
-the person's profile (`ProfileOtherHidden`).
+the person's profile (`ProfileOtherHidden`), and over the open thread,
+where the hidden person's comments stay where they stand and the
+snackbar is the only answer (`CommentMenu`).
 A deleted account has no handle to spell, so hiding one answers `This
 account is hidden.`, with the same
 `Undo` (`ProfileDeletedMenu`; *blessed (jakob 2026-10-05)*).

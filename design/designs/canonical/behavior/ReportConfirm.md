@@ -8,9 +8,9 @@ ALWAYS the surface the menu's Report row was opened from stands unchanged beneat
 
 WHEN tap postDetail.reportSheet.report -> the sheet closes AND the report goes out AND the snackbar reads Reported. AND NEVER ReportProblem opens AND NEVER a mark lands on the reported thing
 
-WHEN tap postDetail.reportSheet.report GIVEN no answer reaches the device -> the sheet stays AND the snackbar reads That didn't send. Try again.
+WHEN tap postDetail.reportSheet.report GIVEN no answer reaches the device -> the sheet stays AND the line That didn't send. Try again. stands in it above the pair in the failure voice AND postDetail.reportSheet.report reads Retry AND NEVER the snackbar carries the failure
 
-WHEN tap postDetail.reportSheet.report GIVEN the report is refused, the day's reports spent or the thing gone -> the sheet stays AND the snackbar reads That didn't send. Try again. AND NEVER the snackbar reads Reported.
+WHEN tap postDetail.reportSheet.report GIVEN the report is refused, the day's reports spent or the thing gone -> the sheet stays AND the line That didn't go through. Try again. stands in it above the pair in the failure voice AND postDetail.reportSheet.report reads Retry AND NEVER the snackbar carries the failure AND NEVER the snackbar reads Reported.
 
 WHEN tap postDetail.reportSheet.cancel -> the sheet closes AND NEVER anything is sent
 

@@ -16,6 +16,10 @@ WHEN the attach is taken -> the key is attached and kept with no backup AND the 
 
 WHEN press I accept the risk GIVEN no answer reaches the device -> the dialog stays up with its pair AND the line That didn't send. Try again. stands in it AND I accept the risk reads Retry AND NEVER the snackbar Key made — no backup yet. You can make a code in settings. appears
 
+WHEN press I accept the risk GIVEN the server answers INTERNAL, FORBIDDEN, SIGNATURE_INVALID or a BAD_INPUT naming no field -> the dialog stays up with its pair AND the line That didn't go through. Try again. stands in it AND I accept the risk reads Retry AND NEVER the snackbar Key made — no backup yet. You can make a code in settings. appears
+
+WHEN the attach is refused because the application was approved meanwhile GIVEN the ceremony opened from the key-elsewhere card -> the dialog and the ceremony close AND the feed opens with the member's key-elsewhere card at its head, as KeyCeremony says AND NEVER a fault line or Retry stands AND NEVER a snackbar answers
+
 ALWAYS the pledge reads Everything you publish is signed with a key that is created on this browser and stays in your hands — CoGra never holds it and can never reissue it. on the web, and says in this app in the app GIVEN the ceremony stands beneath the dialog
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

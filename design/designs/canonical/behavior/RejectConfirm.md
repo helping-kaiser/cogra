@@ -20,7 +20,9 @@ WHEN the closing is taken -> the dialog closes AND the row leaves this reader's 
 
 ALWAYS closing an application removes nothing from the record: the person keeps the account they made, signed in and free to read, and any other member can still vouch them in
 
-WHEN the closing does not go through -> the dialog stays up with its pair AND the line That didn't send. Try again. stands in it AND Close it reads Retry AND the application is still waiting
+WHEN the closing does not go through GIVEN no answer reaches the device -> the dialog stays up with its pair AND the line That didn't send. Try again. stands in it AND Close it reads Retry AND the application is still waiting
+
+WHEN the closing does not go through GIVEN the server answers INTERNAL, FORBIDDEN, SIGNATURE_INVALID or a BAD_INPUT naming no field -> the dialog stays up with its pair AND the line That didn't go through. Try again. stands in it AND Close it reads Retry AND the application is still waiting
 
 WHEN press Keep it GIVEN Close it was not pressed -> the dialog closes AND the application is still waiting
 

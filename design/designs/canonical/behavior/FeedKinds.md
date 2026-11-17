@@ -34,7 +34,7 @@ WHEN feed.commentCard.actionRow.reply is tapped GIVEN the reader is an applicant
 
 ALWAYS the comments sheet a feed card raises is postDetail.threadSheet, the thread drawn once, one path wherever it is raised
 
-WHEN feed.tagCard.actionRow.compose, Tag a new post with it, is tapped -> the post composer opens at its first stage AND the tag rides staged among the new post's tags
+WHEN feed.tagCard.actionRow.compose, Tag a new post with it, is tapped -> the post composer opens as New post opens it, at its first stage or, with a draft kept on this device, under the draft card, whose Continue takes the tag into the draft AND the tag rides staged among the new post's tags
 
 ALWAYS feed.tagCard.actionRow.compose wears the locked look, at the disabled opacity and still tappable GIVEN the reader is an applicant
 

@@ -20,7 +20,11 @@ WHEN tap invites.createSheet.create -> the link is made with the staged choices 
 
 WHEN invites.createSheet.create has not answered 200ms after the press -> invites.createSheet.create reads Creating invite… AND NEVER a spinner appears
 
-WHEN invites.createSheet.create does not go through -> the fault answers in the network fault's grammar AND the staged choices stay as they were
+WHEN invites.createSheet.create gets no answer -> the sheet stays up AND the line That didn't send. Try again. stands in it above invites.createSheet.create AND invites.createSheet.create reads Retry AND the staged choices stay as they were
+
+WHEN invites.createSheet.create is answered with a refusal -> the sheet stays up AND the line That didn't go through. Try again. stands in it above invites.createSheet.create AND invites.createSheet.create reads Retry AND the staged choices stay as they were
+
+WHEN tap invites.createSheet.create GIVEN it reads Retry -> the same invite is asked for again AND past 200ms it reads Creating invite…
 
 WHEN tap the scrim, swipe the sheet down, press Back or press Escape -> the sheet closes onto the page beneath AND nothing is created
 

@@ -112,6 +112,7 @@ class FeedSheetStageTest {
                         onReveal = { _, _ -> },
                         onOpenActor = {},
                         onOpenTopic = {},
+                        onOpenPost = {},
                         onReference = {},
                         onLicense = {},
                         onSignInOrJoin = {},

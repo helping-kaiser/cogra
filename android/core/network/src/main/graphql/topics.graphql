@@ -24,42 +24,46 @@ query Hashtag($name: String!, $limit: Int, $includePending: Boolean!) {
     taggedContent(limit: $limit, includePending: $includePending) {
       node {
         __typename
+        # THE TAG PAGE DRAWS THE FEED'S OWN CARDS (TagPage.md:15). A post is
+        # read here as the feed's window reads it, its comment count the same
+        # cost-free aggregate. A comment is only named here: the static price
+        # sums EVERY branch for every row although each row is one kind, and
+        # both cards in one document cost twice the query budget at the page's
+        # 20 rows. The comment cards come from `TaggedComments` below, for the
+        # comment rows this answer names.
         ... on Post {
-          id
-          title {
-            value
-            status
-          }
-          content {
-            value
-            status
-          }
-          author {
-            id
-            handle
-            displayName {
-              value
-            }
+          ...PostFields
+          commentCount: comments(first: 0, includePending: $includePending) {
+            totalCount
           }
         }
         ... on Comment {
           id
-          content {
-            value
-            status
-          }
-          author {
-            id
-            handle
-            displayName {
-              value
-            }
-          }
         }
       }
       relevance
       confidence
       pending
+    }
+  }
+}
+
+# The tag page's comment cards (TagPage.md:15, :17): each tagged comment as a
+# profile's comments view reads it — what it answers (the card's `On …`
+# pointer) and its thread's post, where its doors land. No replies count: a
+# tagged comment's card offers no view-replies line. Priced per id
+# (`ids.len()`), only for the comment rows the `Hashtag` read named.
+query TaggedComments($ids: [UUID!]!) {
+  nodes(ids: $ids) {
+    __typename
+    ... on Comment {
+      ...CommentFields
+      target {
+        ...CommentHeadFields
+      }
+      post {
+        id
+      }
     }
   }
 }

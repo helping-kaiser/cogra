@@ -10,7 +10,7 @@ ALWAYS the reply composer keeps no draft
 
 WHEN tap + Add pictures or a video -> the platform's own picker opens AND NEVER a pick stage opens
 
-WHEN picked pictures come back from the picker -> they land in the composer's tray
+WHEN picked pictures come back from the picker -> the comment's square crop opens on them AND they land in the composer's tray at its Next
 
 WHEN a picked video comes back from the picker -> the composer takes its video state
 

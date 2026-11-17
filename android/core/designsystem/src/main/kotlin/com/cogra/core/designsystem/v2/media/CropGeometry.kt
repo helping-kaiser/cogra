@@ -57,12 +57,11 @@ data class CropPlacement(val zoom: Float, val x: Float, val y: Float)
 object CropGeometry {
 
     /**
-     * The zoom's ceiling, as a share of the fill: "about 4×" (each crop's
-     * sidecar; `CROP_ZOOM_MAX`, CropViewport.jsx). ONE constant, and nothing
-     * else depends on its value — the ruled 10× (boards in #477) is a
-     * one-line flip.
+     * The zoom's ceiling, as a share of the fill: 10× (ComposeCrop.md:45-49,
+     * CoverCrop.md:31-33, AvatarCrop.md:25-27; `CROP_ZOOM_MAX`,
+     * CropViewport.jsx). ONE constant, and nothing else depends on its value.
      */
-    const val MAX_ZOOM = 4f
+    const val MAX_ZOOM = 10f
 
     /** The zoom's floor, as a share of the fill: the picture just covers the frame. */
     const val MIN_ZOOM = 1f

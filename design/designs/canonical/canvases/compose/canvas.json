@@ -19,6 +19,15 @@
       "page": "compose"
     },
     {
+      "file": "ComposeCropShort.dc.html",
+      "title": "Compose · the crop, a short wide window",
+      "x": 480,
+      "y": 5300,
+      "w": 672,
+      "h": 720,
+      "page": "compose"
+    },
+    {
       "file": "ComposeCover.dc.html",
       "title": "Compose · the video's face",
       "x": 960,
@@ -416,7 +425,7 @@
     },
     {
       "file": "ComposePickVideoCover.dc.html",
-      "title": "Pick · the clip wears its cover",
+      "title": "Pick · the clip beside its cover",
       "x": 2400,
       "y": 1060,
       "w": 390,
@@ -572,7 +581,7 @@
       "x": -4190,
       "y": 0,
       "w": 3770,
-      "h": 5037,
+      "h": 5197,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -581,7 +590,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 5140,
+      "h": 5404,
       "page": "media",
       "title": "Media · flow map"
     },
