@@ -722,8 +722,11 @@ Retry (`UploadErrorLine` with both ways out):
 cannot change the answer, and the line keeps the refused files' one way
 out. The row reads `One picture didn't upload.` with `Remove it` alone,
 never `Retry`. A clip takes the same rule in its own words, `That video
-didn't upload.` with `Remove it` alone. What a seal's gate line reads for
-a refused upload is open (backlog 251).
+didn't upload.` with `Remove it` alone. On a seal's gate the refusal is
+the fact alone — `One picture didn't upload.`, a clip's `The video didn't
+upload.` — with no `Signing waits for it.`, which would wait for ever, and
+no `Retry`; the sign button stays disabled and `Back` is the way out, to
+the stage that holds `Remove it` (jakob 2026-11-17, round 51 act 2).
 
 **The cover's own words** — the way to the crop a gallery picture goes
 through, from an edit:
