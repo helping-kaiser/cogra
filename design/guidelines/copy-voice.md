@@ -830,7 +830,9 @@ recorded so the registry is whole.
 - **The comment edit** — `Your comment on "The long way home".` under its
   title, naming the POST for a reply as for a top-level comment, on
   every host the edit opens from (jakob 2026-11-13, N5); an untitled
-  post takes its stand-in (*An untitled post*), and its sections `Words` and `Pictures` (`CommentEdit`; `Cover`
+  post takes its stand-in (*An untitled post*), and a removed one reads
+  `Your comment on @ada's removed post.`, the comment card's own naming
+  (jakob 2026-11-17, **blessed**); and its sections `Words` and `Pictures` (`CommentEdit`; `Cover`
   on `CommentEditVideo`).
 
 ## Accessible names

@@ -8,6 +8,8 @@ ALWAYS commentEdit.target names the post the comment stands on, Your comment on,
 
 ALWAYS commentEdit.target names the post by its stand-in GIVEN the post has no title — a words post by its first line, a media post as Pictures by @ada or A video by @ada
 
+ALWAYS commentEdit.target reads Your comment on, then the post's author's handle, then 's removed post., as Your comment on @ada's removed post., GIVEN the post was removed, as the comment card names it
+
 ALWAYS the comment edit holds at most four pictures, uncropped
 
 ALWAYS the footer reads the live count of the batch, You're signing N things
