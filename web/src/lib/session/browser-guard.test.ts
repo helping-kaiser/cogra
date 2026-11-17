@@ -15,6 +15,7 @@ import {
   SettingsAccountDocument,
 } from "@/__generated__/graphql";
 import { createGuardedClient, guardOf } from "./browser-guard";
+import { takeSessionEnded } from "./ended-session";
 import { createTokenStore, type TokenStore } from "./token-store";
 
 type Sent = { readonly operation: string; readonly authorization: string | undefined };
@@ -169,6 +170,39 @@ describe("the session gate on a page's first requests", () => {
     expect(sent[1]!.authorization).toBeUndefined();
     // The tokens stay: a transport failure is not a sign-out.
     expect(store.refreshToken()).toBe("stored-refresh");
+  });
+
+  // SignInExpired.md: a session answered REFRESH_TOKEN_INVALID mid-use opens
+  // the sign-in with its signed-out sentence; a transport failure does not.
+  it("marks an invalidated session for the sign-in to say so, and only that", async () => {
+    window.sessionStorage.clear();
+    const store = reloadedTab();
+    const client = clientOver(store);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init: RequestInit) => {
+        const body = JSON.parse(init.body as string) as { operationName: string };
+        const data =
+          body.operationName === "RefreshSession"
+            ? {
+                refreshSession: {
+                  auth: null,
+                  userErrors: [{ code: "REFRESH_TOKEN_INVALID", message: "revoked", field: null }],
+                },
+              }
+            : { me: null };
+        return new Response(JSON.stringify({ data }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }),
+    );
+
+    await client.query({ query: MeDocument, fetchPolicy: "network-only" });
+
+    expect(store.refreshToken()).toBeNull();
+    expect(takeSessionEnded()).toBe(true);
+    expect(takeSessionEnded()).toBe(false);
   });
 
   it("refuses a client it did not build", () => {

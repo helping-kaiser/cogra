@@ -1,10 +1,11 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { delay } from "msw/utils/delay";
 import { HttpResponse } from "msw/http";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { LogInMutationVariables } from "@/__generated__/graphql";
 import type { DeviceLockEngine } from "@/lib/identity/device-lock";
+import { markSessionEnded } from "@/lib/session/ended-session";
 import { createSecurityNotices } from "@/lib/session/security-notices";
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
@@ -328,6 +329,34 @@ describe("LoginForm", () => {
     renderWithProviders(<LoginForm />, { store });
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/email-change"));
     window.sessionStorage.clear();
+  });
+});
+
+// SignInExpired.jsx / SignInExpired.md: a session ended mid-use opens the
+// sign-in itself, with the one calm sentence under the heading.
+describe("the sign-in after a session ended mid-use (SignInExpired)", () => {
+  afterEach(() => window.sessionStorage.clear());
+
+  it("says_youve_been_signed_out_under_the_heading_in_the_secondary_ink", async () => {
+    markSessionEnded();
+    renderWithProviders(<LoginForm />);
+    const body = await screen.findByTestId("signIn.body");
+    expect(body).toHaveTextContent("You've been signed out.");
+    expect(body).toHaveClass("text-on-surface-variant");
+    expect(body).not.toHaveAttribute("role", "alert");
+    // Every control is SignIn's: the fields wait empty, Sign in waits.
+    expect(screen.getByTestId("signIn.commit.action")).toBeDisabled();
+    expect(screen.queryByTestId("signIn.fault")).not.toBeInTheDocument();
+  });
+
+  it("says_the_sentence_once_and_never_on_a_plain_visit", async () => {
+    markSessionEnded();
+    const first = renderWithProviders(<LoginForm />);
+    await screen.findByTestId("signIn.body");
+    first.unmount();
+    renderWithProviders(<LoginForm />);
+    expect(screen.getByTestId("signIn.title")).toBeInTheDocument();
+    expect(screen.queryByTestId("signIn.body")).not.toBeInTheDocument();
   });
 });
 
