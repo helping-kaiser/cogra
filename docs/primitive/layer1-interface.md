@@ -3842,7 +3842,7 @@ operator duties (both at the end of this section).
   record fields. For a hyper-edge leg, the record also contains its role
   and sibling identity, so complete-act identity is independently
   reconstructible.
-- **Independent Reproduction of Conserved Standing
+- **Independent Verification of Conserved Standing
   (`subsec:deployment:conserved-standing-reproducibility`).** Every binding
   input, intermediate value, validity verdict, and output of the conserved
   standing package (`def:network:conserved-standing-package`) is
@@ -3865,12 +3865,18 @@ operator duties (both at the end of this section).
   folds and recipient resolution to every accepted act → cell coefficients
   and domain profiles → assemble the base allocation matrix → recompute every
   emission fraction and the contributing width from the same completed
-  ledger and debit vintage → evaluate the certificate at each attempted rung
-  → iterate the conserved map at the accepted rung to the published residual
+  ledger and debit vintage → check each attempted rung under
+  `post:deployment:replay-verification` and its order under
+  `def:epoch:tilt-backoff-grid` → iterate the conserved map at the accepted rung to the published residual
   → derive final standing, projected activations, stamps, and W2 decisions.
   Projection completeness and dynamic safety are orthogonal checks
   (`rem:deployment:completeness-safety-orthogonal`); a valid package
-  requires both, and controller replay is a separate obligation.
+  requires both, and controller replay is a separate obligation. Any
+  participant verifies the binding standing package and checks its stated
+  enclosures and verdicts: opposing sound PASS and FAIL on the same question
+  identify an attributable discrepancy, as does a recomputed exact object
+  that differs from the published record; a finer reader deciding a
+  published INDECISIVE finds none.
 - **Canonical Standing Encoding
   (`subsec:deployment:canonical-standing-encoding`,
   `post:deployment:canonical-standing-publication`).** The host publishes
@@ -3878,21 +3884,32 @@ operator duties (both at the end of this section).
   ordering of Actors and of each row's support, a declared representation
   for every rational quantity, and a declared rounding disclosure for every
   inexact value — itself published and versioned under no-silent-change.
+  The published bytes are checked under this encoding and
+  `post:deployment:replay-verification`. Two honest participants checking
+  the same package must agree on exact objects and encoded bytes;
+  independently evaluated enclosure endpoints need not match bit for bit.
   The encoded fields include the floor declaration with its exact defining
   object and comparison procedure, the controller edition and reduced
   constants, the wall in force, the completed-epoch width and accepted rung,
   the proposal, and the delivered next wall with its burn image; the
   declaration prescribes no exact-real codec. The prior wall is explicit
   public controller state, not a prior standing-vector input, and the
-  in-force debit vintage stays distinct from the led output. The encoded
-  certificate verdict includes every attempted rung and whether it failed
-  or was indecisive. A recomputation either matches the published bits or
-  finds a discrepancy to attribute. The byte serialization is the
-  deployment's, published and versioned with its deterministic certification
-  and replay procedure (`cond:deployment:canonical-encoding`,
-  `cond:deployment:canonical-replay`, §13.1); the same procedure must
-  reproduce the same verdicts, including INDECISIVE. Publishing an encoding
-  badly is a deployment defect; not declaring one is a protocol defect.
+  in-force debit vintage stays distinct from the led output. Verification
+  checks the normative content — the items (i)–(viii) of
+  `def:network:conserved-standing-package` — under the
+  declared encoding and `post:deployment:replay-verification`; published
+  bits bind exact objects and encoded bytes, not a participant's
+  independently evaluated enclosure endpoints. A participant unable to check
+  decides nothing, and producer metadata outside that content neither
+  creates nor excuses a discrepancy. The encoded certificate evidence names
+  each attempted rung, its enclosure and verdict, so a reader distinguishes
+  proved FAIL from INDECISIVE without trusting the host's backoff summary.
+  The byte serialization is the deployment's, published and versioned under
+  `cond:deployment:canonical-encoding`, with attempted-rung enclosures and
+  verdicts published under `cond:deployment:canonical-replay` (§13.1).
+  Numerical enclosures may carry declared comparison allowances for values.
+  Publishing an encoding badly is a deployment defect; not declaring one is
+  a protocol defect.
 - **Formula Completeness (`subsec:deployment:completeness`).** The published
   material — protocol constants; edge-type specifications and census; tensor
   pipeline; path-view extraction; mask and tier rules; determinant sign and
@@ -3958,10 +3975,10 @@ and retains the material needed to replay that edition.
 | Condition | Duty |
 |---|---|
 | `cond:deployment:standing-parameters` | Publish the tilt profile and backoff grid, the depth mass and its deepest supported depth, the self-retention base, the domain weights, and each act family's normalized domain profile, with their defining formulas and admissibility evidence. |
-| `cond:deployment:wall-calibration` | Publish the numéraire, policy-floor schedule, structural floor declaration and its exact defining object, margin, controller edition, initialization, reduced constants, and arithmetic and comparison procedure. Evaluate both chartered floors against the declared economic and work criteria; neither is a default. Publish proposal and delivered wall separately, including the floor, deadband and step-cap order, preserve the debit vintage in force, and certify the charged value. A floor switch is a public structural change with regenerated evidence; a third floor needs its own derivation. |
+| `cond:deployment:wall-calibration` | Publish the numéraire, policy-floor schedule, structural floor declaration and its exact defining object, margin, controller edition, initialization, reduced constants, and arithmetic and comparison rules under `post:deployment:replay-verification`. For an evaluated binding-floor test whose enclosure straddles the floor, the producer may refine before publication; otherwise reject the proposed set under `post:network:host-contract`, keeping that verdict out of the accepted publication and issuing it under `post:deployment:verdict-issuance`; the controller terminates with a verdict or rejection. Evaluate both chartered floors against the declared economic and work criteria; neither is a default. Publish proposal and delivered wall separately, including the floor, deadband and step-cap order, preserve the debit vintage in force, and certify the charged value. A floor switch is a public structural change with regenerated evidence; a third floor needs its own derivation. |
 | `cond:deployment:boundary-policy` | Publish the epoch target size, minimum and maximum durations, policy-floor schedule, threshold announcement lead, candidate-set search policy and trial budget, validation timeout, solver availability target, and fallback, with a constant-change adaptation window during which cadence retargeting is frozen. |
 | `cond:deployment:canonical-encoding` | Publish and version one canonical encoding of the standing package, with round-trip evidence. |
-| `cond:deployment:canonical-replay` | Publish the deterministic certification procedure with its precision, refinement, equality handling, and stopping limits, and every attempted rung with its PASS, FAIL, or INDECISIVE verdict. |
+| `cond:deployment:canonical-replay` | Publish each attempted positive rung with its stated enclosure and verdict under `post:deployment:replay-verification`. Attempt positive rungs from greatest to least through the first PASS, or through the least positive rung if none passes; accept the greatest attempted PASS, with the exact anchor available. A missing, repeated, out-of-order or below-acceptance attempt fails verification. A record holds positive attempts only, and the anchor has no row; a record whose attempts end at the least positive rung without a PASS shows acceptance of the anchor. A rung that cannot be evaluated has no stated sound enclosure and therefore no verdict: it cannot be published as INDECISIVE and cannot be skipped, so no rung below it, the anchor included, is accepted for that proposed set under that record. Any sound enclosure of the rung, however loose, carries a verdict and lets the descent continue; without one, the producer's way on is another proposed set or the declared fallback of `cond:deployment:boundary-policy`. A participant unable to check reports that it could not verify, neither a discrepancy nor a confirmation. A voluntary build declaration names the implementation, source revisions, environment and store discipline; reproduction follows the record's order, and a participant unable to run it reports non-reproduction, neither a discrepancy nor a confirmation. At a binding threshold, refinement is the producer's option before publication; reject an unresolved proposed set under `post:network:host-contract` and issue its verdict under `post:deployment:verdict-issuance`. |
 
 **Centralized-phase monitoring (`post:deployment:centralized-monitoring`).**
 During the centralized phase the operator publishes reproducible
@@ -3971,7 +3988,7 @@ target never waives the floor, a passing certificate, exact standing, or X9.
 
 | Condition | Duty |
 |---|---|
-| `cond:deployment:certificate-monitoring` | Publish per accepted epoch the evaluated certificate, contributing width, accepted rung, enclosure radius, standing movement, transported mass by hop, and below-wall fraction, with fallback and rung frequencies that distinguish FAIL from INDECISIVE. |
+| `cond:deployment:certificate-monitoring` | Publish per accepted epoch the evaluated certificate, contributing width, accepted rung, enclosure radius, standing movement, transported mass by hop, and below-wall fraction, with fallback and rung frequencies that distinguish proved FAIL from INDECISIVE enclosures under `post:deployment:replay-verification`. For a fixed deployment and attempted set, the relative frequencies of proved FAIL and INDECISIVE can vary with the tightness of the producer's evaluation and are not deployment invariants. |
 | `cond:deployment:title-certificate-monitoring` | Recompute $\mathrm{owner}^{(k)}$ from the published partition at every boundary, compare it with the published certificate, and publish every disagreement with its evidence; a disagreement triggers the published review, not a rewrite of the certificate. |
 | `cond:deployment:emission-experience` | Publish the wall in force, the emission-fraction distribution, exported mass, and community sag and fading-Actor observations against a declared experience envelope, with the declared response; no response silently changes the source-emission rule. |
 | `cond:deployment:controller-performance` | Publish the controller's response model, hypotheses, tested range, and tracking, steady-error, settling, and chatter observations, and calibrate $a$, $r$, $d$ within the published edition; a failed target prompts review, not margin escalation or a new controller input. |
