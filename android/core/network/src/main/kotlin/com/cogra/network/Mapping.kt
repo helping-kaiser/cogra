@@ -58,6 +58,7 @@ import com.cogra.network.graphql.CompleteMediaUploadMutation
 import com.cogra.network.graphql.HashtagQuery
 import com.cogra.network.graphql.MediaAttachmentQuery
 import com.cogra.network.graphql.ReferenceCandidatesQuery
+import com.cogra.network.graphql.TaggedCommentsQuery
 import com.cogra.network.graphql.UploadMediaMutation
 import com.cogra.network.graphql.fragment.ApplicationFields
 import com.cogra.network.graphql.fragment.CommentFields
@@ -349,30 +350,38 @@ internal fun HashtagQuery.TaggedContent.toDomain(): TaggedContentView? {
                 node = TaggedNode.Post(view),
             )
         }
-        comment != null -> {
-            val view = comment.commentFields.toDomain()
-            TaggedContentView(
-                kind = TaggedContentKind.COMMENT,
-                id = view.id,
-                title = null,
-                snippet = view.content.value,
-                authorHandle = view.author?.handle,
-                authorDisplayName = view.author?.displayName,
-                relevance = relevance,
-                confidence = confidence,
-                pending = pending,
-                node = TaggedNode.Comment(
-                    ProfileComment(
-                        comment = view,
-                        target = comment.target?.commentHeadFields?.toTarget(),
-                        threadPostId = comment.post?.id,
-                    ),
-                ),
-            )
-        }
+        // Only named here; its card arrives from `TaggedComments` ([withCard]).
+        comment != null -> TaggedContentView(
+            kind = TaggedContentKind.COMMENT,
+            id = comment.id,
+            title = null,
+            snippet = null,
+            authorHandle = null,
+            authorDisplayName = null,
+            relevance = relevance,
+            confidence = confidence,
+            pending = pending,
+        )
         else -> null
     }
 }
+
+/** One tagged comment as its card reads it, or null for a slot that resolved to no comment. */
+internal fun TaggedCommentsQuery.Node.toListed(): ProfileComment? = onComment?.let { comment ->
+    ProfileComment(
+        comment = comment.commentFields.toDomain(),
+        target = comment.target?.commentHeadFields?.toTarget(),
+        threadPostId = comment.post?.id,
+    )
+}
+
+/** A comment row with its card filled in from the `TaggedComments` read. */
+internal fun TaggedContentView.withCard(listed: ProfileComment): TaggedContentView = copy(
+    snippet = listed.comment.content.value,
+    authorHandle = listed.comment.author?.handle,
+    authorDisplayName = listed.comment.author?.displayName,
+    node = TaggedNode.Comment(listed),
+)
 
 /**
  * The typed far end of a citation, or null for a node class this
