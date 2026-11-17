@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { useReducer } from "react";
+import { useEffect, useReducer } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { emptyWizard, wizardReducer, type PickedAsset, type WizardState } from "@/lib/compose/wizard";
@@ -80,7 +80,10 @@ function Host() {
     step: "crop" as const,
     assets: [asset("one"), asset("two")],
   }));
-  state = current;
+  // Handed out after the commit, never written during render.
+  useEffect(() => {
+    state = current;
+  });
   return (
     <CropStep
       assets={current.assets}
