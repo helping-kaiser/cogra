@@ -28,7 +28,7 @@ import { nameInLine, nameInText } from "@/lib/ui/names";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 
 import { CoveringLayerProvider, useCoversSurface } from "./covering-layer";
-import { useSheetDrag } from "./sheet-drag";
+import { pressIsOnScrim, useSheetDrag } from "./sheet-drag";
 
 /**
  * THE SLIVER A SHEET AT ITS CEILING LEAVES BEHIND (`_shared.jsx:1249` —
@@ -357,9 +357,10 @@ export function BottomSheet({
       aria-label={title}
       onClose={onDialogClose}
       // A press outside drops the sheet — the same gesture as the back arrow,
-      // because a sheet is a drawer rather than a decision.
+      // because a sheet is a drawer rather than a decision. A press on the
+      // surface's own padding targets the dialog too, and is not one.
       onClick={(event) => {
-        if (event.target === ref.current) onClose();
+        if (ref.current && pressIsOnScrim(ref.current, event)) onClose();
       }}
       style={
         {

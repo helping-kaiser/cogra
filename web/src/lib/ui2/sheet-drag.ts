@@ -42,6 +42,21 @@ const VELOCITY_WINDOW_MS = 100;
 /** Elements whose own pointer behaviour a sheet drag may never take over. */
 const OWNED_FIELD = "input, textarea, select, [contenteditable=''], [contenteditable='true']";
 
+/**
+ * Whether a press on the `<dialog>` is a press on its scrim. The backdrop is
+ * the dialog's own pseudo-element, so a press there targets the dialog — and
+ * so does a press on the surface's own padding (the strip over the grip, the
+ * inset under the last child). Only where the press landed tells them apart.
+ * A box with no area has not been laid out and cannot tell: it reads as the
+ * scrim, the dialog's only target that is not a child.
+ */
+export function pressIsOnScrim(dialog: HTMLElement, event: { target: EventTarget | null; clientX: number; clientY: number }): boolean {
+  if (event.target !== dialog) return false;
+  const box = dialog.getBoundingClientRect();
+  if (box.width === 0 || box.height === 0) return true;
+  return event.clientY < box.top || event.clientY > box.bottom || event.clientX < box.left || event.clientX > box.right;
+}
+
 /** Whether a release at `travel` px, moving at `velocity` px/ms, dismisses a sheet `height` px tall. */
 export function releaseDismisses(travel: number, height: number, velocity: number): boolean {
   if (travel <= 0) return false;
@@ -140,13 +155,13 @@ export function useSheetDrag({
     const dialog = sheet.current;
     if (!dialog || !open) return;
 
+    // A press on the scrim drops the sheet by its own route, never by a drag.
+    // An unlaid-out box is let through here: nothing can be dragged on it
+    // anyway, and its press is the drag's to test.
     const inside = (event: PointerEvent): boolean => {
-      // A press on the scrim lands on the dialog itself, outside its box: that
-      // is a tap on the scrim, which drops the sheet by its own route.
-      // A box with no area has not been laid out and cannot tell the two apart.
       const box = dialog.getBoundingClientRect();
-      if (event.target !== dialog || box.width === 0 || box.height === 0) return true;
-      return event.clientY >= box.top && event.clientY <= box.bottom && event.clientX >= box.left && event.clientX <= box.right;
+      if (box.width === 0 || box.height === 0) return true;
+      return !pressIsOnScrim(dialog, event);
     };
 
     let suppressClick = false;

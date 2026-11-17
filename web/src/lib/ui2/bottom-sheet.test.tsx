@@ -512,6 +512,18 @@ describe("BottomSheet", () => {
       at("pointerDown", dialog, 500, 20);
       expect(touch(490)).toBe(false);
     });
+
+    // The surface's own padding targets the dialog just as the scrim does: a
+    // tap on the strip over the grip is a press on the sheet, never the scrim.
+    it("drops on a press on the scrim, never on one on the sheet's own padding", () => {
+      const onClose = vi.fn();
+      render(sheet(onClose));
+      const dialog = layOut();
+      fireEvent.click(dialog, { clientX: 200, clientY: SHEET_TOP + 4 });
+      expect(onClose).not.toHaveBeenCalled();
+      fireEvent.click(dialog, { clientX: 200, clientY: SHEET_TOP - 50 });
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
   });
 
   it("pins the foot below the body, outside what scrolls", () => {
