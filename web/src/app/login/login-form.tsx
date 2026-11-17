@@ -36,7 +36,7 @@ import { Checkbox } from "@/lib/ui2/checkbox";
 import { FormPasswordField, FormTextField } from "@/lib/ui2/form-fields";
 import { LinkRow, LinkStack } from "@/lib/ui2/link-stack";
 import { TaskPage } from "@/lib/ui2/task-page";
-import { WaitingCommit } from "@/lib/ui2/waiting-commit";
+import { useSlowAnswer, WaitingCommit } from "@/lib/ui2/waiting-commit";
 
 // Where `make web-apk` stages the Android debug APK (development.md
 // "Reaching the web dev server from the phone").
@@ -97,6 +97,8 @@ export function LoginForm({
 
   const canSubmit = email !== "" && password !== "" && !inProgress;
   const fault = error !== null ? loginMessage(error) : transportFailed ? NO_ANSWER : null;
+  // SignIn.md: the ways out refuse a press from 200ms after the press until the answer.
+  const held = useSlowAnswer(inProgress);
 
   /** Credentials changed: a session held for the old ones is not this sign-in's. */
   const dropHeld = () => {
@@ -159,6 +161,7 @@ export function LoginForm({
       node={SIGN_IN}
       backHref="/feed"
       backLabel="Back"
+      backHeld={held}
       title="Sign in to CoGra"
     >
       <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-4" noValidate>
@@ -207,18 +210,18 @@ export function LoginForm({
         />
       </form>
       <LinkStack>
-        <LinkRow href="/reset" node={part(SIGN_IN, "forgot")}>
+        <LinkRow href="/reset" node={part(SIGN_IN, "forgot")} held={held}>
           Forgot password?
         </LinkRow>
-        <LinkRow href="/join" node={part(SIGN_IN, "invite")}>
+        <LinkRow href="/join" node={part(SIGN_IN, "invite")} held={held}>
           New here? Enter your invite
         </LinkRow>
-        <LinkRow href="/feed" node={part(SIGN_IN, "browse")}>
+        <LinkRow href="/feed" node={part(SIGN_IN, "browse")} held={held}>
           Just looking? Browse the feed →
         </LinkRow>
         {/* A static file under public/, staged by `make web-apk` — a plain
             anchor, since it leaves the router entirely. */}
-        <LinkRow href={APK_HREF} download node={part(SIGN_IN, "apk")}>
+        <LinkRow href={APK_HREF} download node={part(SIGN_IN, "apk")} held={held}>
           On Android? Download the app (APK)
         </LinkRow>
       </LinkStack>
