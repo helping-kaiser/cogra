@@ -12273,6 +12273,27 @@ the email line (impl 354, 351, "as rec"), built on rounds 48–50 (ecffb3ba9).
   edits' `fault` and `fault.retry`); 32 (board, path, key) strings added,
   none gone — the remove dialogs' `refused` copies among them; no key
   rule changed.
+- **Act 2, jakob's review (2026-11-17, B1–6 as recommended, C fine)**:
+  a hidden person's comment cards leave the feed like their posts, the
+  threads keeping their comments (B1); a card reads `That didn't go
+  through.` with `Retry` for every failure, no answer included — the one
+  host where both answers read alike, as the copy fault already did
+  (B2); a seal's gate reads a refused upload as the fact alone,
+  `One picture didn't upload.` (a clip's `The video didn't upload.`),
+  since `Signing waits for it.` would wait for ever — no `Retry`, Sign
+  disabled, `Back` to the stage that holds `Remove it` (B3;
+  `UploadStatusLine`'s `refused`; `AvatarSeal` and `ProfileEditSeal`
+  `upload-refused`, `EditCompose`'s `upload` = `refused`); a pad or a
+  dialog over it closed while it signs waits on the closed ring as a hold
+  does, one vehicle in the master (B4); Cite and Mention are doors to the
+  wizard as New post is, and an untouched one leaves a kept draft as it
+  was (B5, his addition); a failed report keeps its sheet up with the
+  line and `Retry`, never the snackbar (B6; `ReportConfirm`'s and
+  `FeedReportConfirm`'s `answer`). The three told points stand as law (C):
+  the tag card's compose glyph counts with Cite and Mention, the 200ms
+  threshold gates the spoken `Signing…`, and an edit's fault draws no
+  `Back`. Backlog 250–255 closed; 256 filed (a Cite or Mention door
+  opened over a kept draft).
 ---
 
 ## 14. The canvases

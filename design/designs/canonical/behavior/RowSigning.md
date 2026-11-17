@@ -4,7 +4,7 @@ WHEN a press-and-hold on a stance face reaches 500ms -> the modest positive +0.1
 
 WHEN the hold's signing runs -> the ring that filled during the hold stays closed around the face AND NEVER a line stands under the face for the wait AND NEVER the card grows AND NEVER a spinner appears
 
-WHEN a pad or a dialog over it is closed while its signing runs -> the act's wait stands on the target's row as a hold's does, the closed ring around the face and Signing… spoken only AND NEVER a line stands under the face for the wait
+WHEN a pad or a dialog over it is closed while its signing runs -> the act's wait stands on the target's row as a hold's does, the closed ring around the face and Signing… spoken once 200ms pass without an answer AND NEVER a line stands under the face for the wait
 
 WHEN the hold's signing has not answered 200ms after the hold -> a visually hidden status speaks Signing… AND NEVER Signing… is drawn
 
