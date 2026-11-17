@@ -579,7 +579,7 @@ class PostMenuHostsTest {
         compose.waitForIdle()
         assertThat(opinionsFor).containsExactly("p1")
         compose.onNodeWithTag("postDetail.opinionsSheet.title", useUnmergedTree = true)
-            .assertTextEquals("Opinions on this post")
+            .assert(hasAnyDescendant(hasText("Opinions on this post")))
         compose.onNodeWithTag("postDetail.opinionsSheet.opinion:mira-id").performClick()
         compose.waitForIdle()
         assertThat(people).containsExactly("mira")

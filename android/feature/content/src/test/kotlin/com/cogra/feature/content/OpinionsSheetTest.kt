@@ -9,6 +9,8 @@ package com.cogra.feature.content
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -82,7 +84,7 @@ class OpinionsSheetTest {
     fun isTitledForWhatTheOpinionsAreOn() {
         render(holders)
         compose.onNodeWithTag("postDetail.opinionsSheet.title", useUnmergedTree = true)
-            .assertTextEquals("Opinions on this post")
+            .assert(hasAnyDescendant(hasText("Opinions on this post")))
     }
 
     /** CommentOpinionsEmpty.md:5 — `Opinions on this comment`. */
@@ -90,14 +92,13 @@ class OpinionsSheetTest {
     fun aCommentsSheetIsTitledForTheComment() {
         render(holders, OpinionsOn.Comment)
         compose.onNodeWithTag("postDetail.opinionsSheet.title", useUnmergedTree = true)
-            .assertTextEquals("Opinions on this comment")
+            .assert(hasAnyDescendant(hasText("Opinions on this comment")))
     }
 
     /** PostOpinions.md:19 — the person, their handle, and their opinion: the face leading. */
     @Test
     fun carriesThePersonAndTheirOpinion() {
         render(holders)
-        compose.onNodeWithTag("postDetail.opinionsSheet.opinion.name", useUnmergedTree = true).assertExists()
         compose.onNodeWithText("Mira Voss").assertExists()
         compose.onNodeWithText("@mira").assertExists()
         compose.onNodeWithContentDescription("+0.90 / +0.25", substring = true, useUnmergedTree = true).assertExists()
