@@ -87,14 +87,13 @@ use crate::wall::DECLARATION;
 use crate::{StandIn, StandInError};
 
 /// One approved act as the selection sees it: the parsed body plus the
-/// three columns publication carries. Where the row came from is the
-/// caller's business.
+/// columns publication carries. Where the row came from is the caller's
+/// business.
 #[derive(Debug, Clone)]
 pub(crate) struct Candidate {
     pub act_id: String,
     pub author: String,
     pub body: common::l1::StructuralBody,
-    pub payload_len: usize,
     pub payload_witness: Vec<u8>,
     /// Declared dependencies and causal parents together — every act this
     /// one must follow.
@@ -330,7 +329,6 @@ pub(crate) fn select_and_order(
             epoch,
             act_time: *act_time,
             position,
-            payload_marked: candidate.payload_len > 0,
             payload_witness: candidate.payload_witness.clone(),
             legs: published_legs,
         });
@@ -425,7 +423,7 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, Stand
     let rows = sqlx::query!(
         "SELECT act_id, author, seq, family, middle, target, p_d, p_i,
                 settlement_ref, license, asserted_parents, deps,
-                payload_len, content_commitment
+                content_commitment
          FROM l1_acts WHERE status = 'approved'
          ORDER BY approved_at, act_id",
     )
@@ -441,9 +439,6 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, Stand
             act_id: row.act_id.clone(),
             author: row.author.clone(),
             body: stored_body!(row).to_body()?,
-            payload_len: usize::try_from(row.payload_len).map_err(|_| {
-                StandInError::Formation(format!("stored act {} has a negative length", row.act_id))
-            })?,
             payload_witness: row.content_commitment.clone(),
             prerequisites,
             parents,
@@ -640,14 +635,12 @@ fn publishable(package: &EpochPackage) -> Result<(), StandInError> {
 /// loop is tens of thousands of round trips inside it. Returns the epoch
 /// row's close instant — the boundary timestamp the package attests.
 ///
-/// Acceptance ends the host's handshake custody: the payload, its content
-/// salt and the proposal nonce are nulled together in the statement that
-/// accepts, and the row keeps its length and both commitments. The nonce
-/// goes with them because the public pre-commitment is formed over it and
-/// the payload, so a kept nonce would let anyone confirm a guessed
-/// payload. The nonce's digest stays, so its non-reuse is still checked
-/// at the author's later seals, and the dependency salt stays — the
-/// ordering fraud proof opens it (data-model.md "Act payload carriage").
+/// Acceptance drops the content salt in the statement that accepts: it is
+/// opening material of the content commitment, which the carriage layer
+/// holds (layer1-interface.md §8.4, "Custody across phases"), and the row
+/// keeps both commitments. The dependency opening — list, nonce and salt —
+/// stays: the ordering fraud proof opens the dependency commitment from
+/// it (§8.2, "Ordering fraud proof").
 async fn persist(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     epoch: i64,
@@ -684,7 +677,7 @@ async fn persist(
     sqlx::query!(
         "UPDATE l1_acts SET status = 'accepted', epoch = $1,
                 act_time = published.act_time, position = published.position,
-                payload = NULL, content_salt = NULL, nonce = NULL
+                content_salt = NULL
            FROM UNNEST($2::TEXT[], $3::BIGINT[], $4::BIGINT[])
                 AS published(act_id, act_time, position)
           WHERE l1_acts.act_id = published.act_id",
@@ -904,7 +897,7 @@ async fn load_epoch(
 ) -> Result<EpochPackage, StandInError> {
     let rows = sqlx::query!(
         r#"SELECT act_id, author, family, act_time AS "act_time!",
-                  position AS "position!", payload_len, content_commitment,
+                  position AS "position!", content_commitment,
                   asserted_parents, settlement_ref
            FROM l1_acts WHERE epoch = $1 AND status = 'accepted'
            ORDER BY position"#,
@@ -974,7 +967,6 @@ async fn load_epoch(
             epoch,
             act_time: row.act_time,
             position: row.position,
-            payload_marked: row.payload_len > 0,
             payload_witness: row.content_commitment,
         });
     }
@@ -1015,7 +1007,6 @@ mod tests {
             act_id: body.act_id().to_string(),
             author: author.to_string(),
             body,
-            payload_len: 0,
             payload_witness: vec![],
             prerequisites: prerequisites.iter().map(|p| p.to_string()).collect(),
             parents: vec![],
@@ -1276,7 +1267,6 @@ mod tests {
             act_id: body.act_id().to_string(),
             author: "alice".to_string(),
             body,
-            payload_len: 0,
             payload_witness: vec![],
             prerequisites: vec![],
             parents: vec![],
@@ -1479,7 +1469,6 @@ mod tests {
                     act_id: ids[seq].clone(),
                     author: AUTHORS[s.author].to_string(),
                     body,
-                    payload_len: 0,
                     payload_witness: vec![],
                     prerequisites,
                     parents: vec![],

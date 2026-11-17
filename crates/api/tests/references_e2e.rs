@@ -40,8 +40,8 @@ struct Citer {
 
 struct SignedWrite {
     id: String,
-    pre: common::l1::handshake::PreSignedProposal,
-    act: common::l1::handshake::VerifiedAct,
+    pre: common::l1::proposal::PreSigned,
+    act: common::l1::proposal::SealedAct,
 }
 
 impl Citer {
@@ -169,7 +169,7 @@ impl Citer {
                     .expect("b64"),
             )
             .expect("decodes");
-            let pre = key.pre_sign(proposal);
+            let pre = common::l1::proposal::PreSigned::sign(key, proposal);
             let sealed = self
                 .gql(
                     Some(token),
@@ -180,11 +180,11 @@ impl Citer {
                      }",
                     json!({ "input": { "proposals": [{
                         "stagedWriteId": id,
-                        "signature": B64.encode(wire::encode_pre_commitment_of(&pre)),
+                        "signature": B64.encode(pre.pre_commitment_blob().encode()),
                     }]}}),
                 )
                 .await;
-            let act = wire::decode_verified_act(
+            let act = common::l1::proposal::SealedAct::decode(
                 &B64.decode(
                     sealed["submitProposals"]["stagedWrites"][0]["verifiedAct"]
                         .as_str()
@@ -201,8 +201,9 @@ impl Citer {
     async fn approve(&self, token: &str, key: &ActorKey, signed: &[SignedWrite]) {
         let host_key = self.standin.host_public_key().await.expect("host key");
         for write in signed {
-            let witness = key
-                .approve(&write.pre, &write.act, &host_key)
+            let witness = write
+                .pre
+                .approve(key, &write.act, &host_key)
                 .expect("approves");
             let approved = self
                 .gql(
