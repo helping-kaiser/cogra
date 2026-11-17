@@ -18,14 +18,34 @@ WHEN press Next GIVEN the crop was opened from the avatar's change badge -> the 
 
 WHEN press Next GIVEN the crop was opened from Change picture on the profile edit -> the profile edit comes back holding the new picture AND NEVER the picture's own seal opens
 
-WHEN press the header back arrow -> the reader goes one stage back, to where the picture was chosen
+WHEN press the header back arrow -> the screen that asked for the picture comes back AND the picture goes unused AND NEVER a pick stage opens
+
+ALWAYS the header back arrow is named Back to the edit GIVEN the crop was entered from Change picture on the profile edit
+
+ALWAYS the header back arrow is named Back to your profile GIVEN the crop was entered from the avatar's change badge
 
 WHEN press the header X -> the flow is left AND nothing is signed
 
-ALWAYS the zoom slider stands under the crop on both platforms, its thumb at the crop's zoom between the fill and about 4×
+ALWAYS the zoom slider stands under the crop on both platforms, its thumb at the crop's zoom between the fill and 10×
 
-WHEN move the zoom slider -> the picture zooms in place AND NEVER below the fill or past about 4×
+WHEN move the zoom slider -> the picture zooms in place AND NEVER below the fill or past 10×
 
 WHEN press an arrow key GIVEN the crop has focus -> the picture moves 1 % that way AND NEVER past where its edge meets the crop's
 
 WHEN press an arrow key with Shift held GIVEN the crop has focus -> the picture moves 10 % that way AND NEVER past where its edge meets the crop's
+
+WHEN a picked file is refused -> the crop opens with its circle empty AND the refusal's line stands under the circle in the error voice AND Next stays and dims AND NEVER the zoom slider stands AND NEVER a dialog or a snackbar carries the refusal
+
+ALWAYS a refusal on the crop offers no Retry and no Remove it, the header back arrow its way out
+
+WHEN a picture over 10 MiB is picked -> the crop's line reads That picture is too big — a picture can be up to 10 MB.
+
+WHEN a moving GIF is picked -> the crop's line reads That GIF moves, and CoGra can't take a moving GIF here. A still one is fine.
+
+WHEN a still GIF is picked -> it is converted on the device AND NEVER refused
+
+WHEN a file nothing here reads as a picture is picked, a video included -> the crop's line reads That file isn't a picture CoGra can read.
+
+WHEN press Next GIVEN the picked file was refused -> NEVER anything moves on
+
+ALWAYS the refusal holds for both openers, the avatar's change badge and Change picture on the profile edit

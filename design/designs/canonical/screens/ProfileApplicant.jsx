@@ -7,6 +7,9 @@
    you're in.`, an informational line, never a gate screen (jakob
    2026-09-01).
 
+   THE PAGE LANDS ON POSTS, as every profile does (jakob 2026-11-13); the
+   `tab` chip draws `posts` and `everything`, both empty.
+
    NOTHING IS STAGED, SO THE CHRONICLE IS EMPTY (PR-103, round 16).
    Applicant acting is post-MVP: nothing an applicant does waits with the
    application, and nothing has landed, so the figures read zero and the
@@ -45,8 +48,8 @@
    both copies take the card's one path, keyed by the chip's value (the
    chip-drawn duplicate rule). */
 export const NODE = "profile";
-export const PROPS = { application: { editor: "enum", options: ["waiting", "closed"], default: "waiting" } };
-export const VALS = `waitingShown: this.props.application === "closed" ? "none" : "block", closedShown: this.props.application === "closed" ? "block" : "none"`;
+export const PROPS = { application: { editor: "enum", options: ["waiting", "closed"], default: "waiting" }, ...TAB_CHIP };
+export const VALS = `waitingShown: this.props.application === "closed" ? "none" : "block", closedShown: this.props.application === "closed" ? "block" : "none", ${TAB_VALS}`;
 
 export function Screen() {
   return (
@@ -101,10 +104,19 @@ export function Screen() {
             menu={ownProfileMenu()}
           />
         </div>
-        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
-        <ChronicleList node="chronicle">
-          <EmptyState title="Nothing here yet." node="empty" />
-        </ChronicleList>
+        <ProfileTabs
+          tab="chip"
+          posts={
+            <div style={{ padding: "0 16px" }}>
+              <EmptyState title="Nothing here yet." node="empty" />
+            </div>
+          }
+          chronicle={
+            <ChronicleList node="chronicle">
+              <EmptyState title="Nothing here yet." node="empty" />
+            </ChronicleList>
+          }
+        />
       </div>
       <Snackbar message="You can invite once you're in." node="snackbar" />
       <BottomNav active="profile" slots={ALL_SLOTS} inline composeOpacity="var(--state-disabled)" node="bottomBar" />

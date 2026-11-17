@@ -36,14 +36,21 @@
    three newest above the results (`TagPicker`); this board draws none. The refused name stages nothing,
    so nothing is added on the way out. */
 /* REGISTERED under the `tagPicker` prefix (seam 248), `TagPicker`'s names;
-   the refusal that stands in the rule's place is `refusal`. */
+   the refusal that stands in the rule's place is `refusal`.
+
+   THE `refusal` CHIP DRAWS THE GATE'S TWO HALVES (round 48): `charset`, the
+   space above; `length`, a name past 128 characters, refused in the same
+   line with the length rule's own words (`TagPickerRefused.md`; copy-voice,
+   *The tag name's refusal*). One field and one line, their words the chip's. */
 export const NODE = "tagPicker";
+export const PROPS = { refusal: { editor: "enum", options: ["charset", "length"], default: "charset" } };
+export const VALS = `typed: this.props.refusal === "length" ? "#salt_maps_of_the_coast_road_and_the_third_headland_light_and_the_third_headland_light_and_the_third_headland_light_and_the_third_" : "#salt maps", refusalLine: this.props.refusal === "length" ? "A tag name is at most 128 characters." : "A tag name is letters, digits, dot, dash and underscore."`;
 export function Screen() {
   return (
     <>
       <PageHeader backHref="#" backLabel="Back to the post" title="Add a tag" action={<HelpDot ariaLabel="Tagging" node="help" />} node="header" />
       <div style={{ flex: "none" }}>
-        <SearchBar query="#salt maps" placeholder="Name a tag" ariaLabel="Name a tag" error describedBy="tag-name-refusal" node="nameField" />
+        <SearchBar query="{{typed}}" placeholder="Name a tag" ariaLabel="Name a tag" error describedBy="tag-name-refusal" node="nameField" />
         <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 24px 8px" }}>
           <p
             data-node="refusal"
@@ -58,7 +65,7 @@ export function Screen() {
               color: "var(--error)",
             }}
           >
-            A tag name is letters, digits, dot, dash and underscore.
+            {"{{refusalLine}}"}
           </p>
         </div>
         <PickAnnouncement node="announcement" />

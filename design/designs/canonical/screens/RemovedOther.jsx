@@ -3,7 +3,8 @@
    words and pictures were, the author, the age, the opinion still given, the
    score, the comment count and the share — with the reader's menu in the
    header, the rows the removed card's ⋮ raises: Save, Cite in a new post,
-   Hide with the author's handle, License terms, Report at the tail —
+   Hide with the author's handle, Cited by, Opinions on this, License terms,
+   Report at the tail —
    `READER_POST_MENU`, the license kept since its terms still bind every use
    made (`FeedRemovedMenu` draws the sheet open). One menu per post, wherever it is opened.
 
