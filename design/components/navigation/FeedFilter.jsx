@@ -448,7 +448,7 @@ export function FeedPeopleRows({ people = "everyone", sign = "either", onPeople,
    `topic` with a `tag` chip per topic, keyed by its name, and `allTopics`.
    The feed's own `FeedFilter` passes none: `FeedSheet` draws this sheet
    beside the band, as `HistoryFilter` draws its own, and names it there. */
-export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp, open = false, onClose, ariaLabel = "What your feed shows", lead, foot, topics = [], onOpenTopics, peopleRows, node }) {
+export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp, open = false, onClose, ariaLabel = "What your feed shows", lead, foot, fit = false, topics = [], onOpenTopics, peopleRows, node }) {
   const set = (patch) => onChange && onChange({ ...value, ...patch });
   const toggle = (key, entry) => {
     const list = value[key] || [];
@@ -536,22 +536,19 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
        filter opens taller so the whole control is present; it still scrolls
        on shorter screens. The sheet carries its own "?" (like the pads):
        the dialog explains the filter and names the settings default. */
-    <BottomSheet open={open} onClose={onClose} ariaLabel={ariaLabel} {...(foot ? { height: "88%" } : { maxHeight: "88%" })} node={node}>
+    /* `fit` sizes the sheet to its content even with a foot (jakob 2026-11-17,
+       C5): the settings sheet holds less than the feed's, and a pinned 88%
+       left empty sheet above its foot, against the foot's 16px rule. */
+    <BottomSheet open={open} onClose={onClose} ariaLabel={ariaLabel} {...(foot && !fit ? { height: "88%" } : { maxHeight: "88%" })} foot={foot} node={node}>
       {lead ?? (
         <div style={{ position: "absolute", top: "var(--space-1)", right: "var(--space-2)" }}>
           <HelpDot ariaLabel="How the filter works" onOpen={onHelp} node={node && "help"} />
         </div>
       )}
-      {foot ? (
-        <>
-          {/* The last section keeps its own gap between itself and the
-              hairline below it. */}
-          <div style={{ flex: 1, minHeight: 0, overflowY: "auto", paddingBottom: "var(--space-4)" }}>{sections}</div>
-          {foot}
-        </>
-      ) : (
-        sections
-      )}
+      {/* The sheet's foot slot pins `foot` and scrolls the sections above it;
+          the last section's own 16px is the gap to the hairline
+          (`BottomSheet`). */}
+      {sections}
     </BottomSheet>
   );
 }

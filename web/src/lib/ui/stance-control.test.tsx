@@ -1,3 +1,4 @@
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { act, fireEvent, screen, within } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -1337,6 +1338,56 @@ describe("the pad as its masters draw it", () => {
     expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
   });
 
+  // NetworkError.md:13 with copy-voice's pad placement: a FORBIDDEN answer
+  // reads the not-through line, never the no-answer line.
+  it("keeps the pad at the pick with That didn't go through. and an outlined Retry on a FORBIDDEN", async () => {
+    const data = mount();
+    await settle();
+    await openPad();
+    data.commit = createStubStanceData({ refuse: "FORBIDDEN" }).commit;
+    await pressSet();
+    await settle();
+    expect(screen.getByTestId(`${PREFIX}-pad`)).toBeInTheDocument();
+    const fault = screen.getByTestId(`${PREFIX}-pad-failed`);
+    expect(fault).toHaveTextContent("That didn't go through. Try again.");
+    expect(fault).not.toHaveTextContent(/didn't send|reach the server/);
+    const retry = screen.getByTestId(`${PREFIX}-set`);
+    expect(retry).toHaveTextContent("Retry");
+    expect(retry.className).toContain("border-outline");
+    expect(screen.queryByTestId(`${PREFIX}-write-rule`)).toBeNull();
+  });
+
+  // NetworkError.md:13-19 — the rest of the answered whole-act faults on the
+  // pad, each in its own line above the commit row, Retry in Set's slot.
+  it.each([
+    ["INTERNAL", "That didn't go through. Try again."],
+    ["SIGNATURE_INVALID", "That didn't go through. Try again."],
+    ["EMAIL_NOT_VERIFIED", "Verify your email first — the link is in your inbox."],
+  ] as const)("keeps the pad at the pick with its line and an outlined Retry on a %s", async (code, line) => {
+    const data = mount();
+    await settle();
+    await openPad();
+    data.commit = createStubStanceData({ refuse: code }).commit;
+    await pressSet();
+    await settle();
+    const fault = screen.getByTestId(`${PREFIX}-pad-failed`);
+    expect(fault).toHaveTextContent(line);
+    expect(fault).not.toHaveTextContent(/didn't send|reach the server/);
+    expect(screen.getByTestId(`${PREFIX}-set`)).toHaveTextContent("Retry");
+  });
+
+  it("reads an INTERNAL the signing was answered with as not through, never the no-answer line", async () => {
+    const data = mount();
+    await settle();
+    await openPad();
+    const internal = new CombinedGraphQLErrors({ errors: [{ message: "no", extensions: { code: "INTERNAL" } }] });
+    data.commit = async () => ({ kind: "failed", cause: internal });
+    await pressSet();
+    await settle();
+    expect(screen.getByTestId(`${PREFIX}-pad-failed`)).toHaveTextContent("That didn't go through. Try again.");
+    expect(screen.getByTestId(`${PREFIX}-set`)).toHaveTextContent("Retry");
+  });
+
   it("stands the write rule's notice where the landing and the commit row were", async () => {
     // PadWriteRule.md.
     const data = mount({ refuse: "WRITE_RULE_FAILED" });
@@ -2408,6 +2459,46 @@ describe("severance", () => {
     expect(screen.getByTestId("severance-failed")).toBeInTheDocument();
     expect(screen.getByTestId<HTMLDialogElement>("severance-confirm").open).toBe(true);
   });
+
+  it("says That didn't go through. in the walk-back's dialog, Walk it back reading Retry, on a FORBIDDEN", async () => {
+    // NetworkError.md:13; copy-voice: a dialog keeps its pair, its commitment reads Retry.
+    const data = mount({
+      seed: { "post-1": { records: [{ pDirected: 0.5, pInterest: 0.5 }] } },
+    });
+    await settle();
+    await openPad();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-sever`));
+    });
+    data.sever = createStubStanceData({ refuse: "FORBIDDEN" }).sever;
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-proceed"));
+    });
+    expect(screen.getByTestId("severance-failed")).toHaveTextContent("That didn't go through. Try again.");
+    expect(screen.getByTestId("severance-proceed")).toHaveTextContent("Retry");
+    expect(screen.getByTestId<HTMLDialogElement>("severance-confirm").open).toBe(true);
+  });
+
+  // Seam 355: on a dialog too the words follow the answer.
+  it.each([
+    ["SIGNATURE_INVALID", "That didn't go through. Try again."],
+    ["EMAIL_NOT_VERIFIED", "Verify your email first — the link is in your inbox."],
+  ] as const)("says the %s answer's line in the walk-back's dialog, Walk it back reading Retry", async (code, line) => {
+    const data = mount({
+      seed: { "post-1": { records: [{ pDirected: 0.5, pInterest: 0.5 }] } },
+    });
+    await settle();
+    await openPad();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-sever`));
+    });
+    data.sever = createStubStanceData({ refuse: code }).sever;
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-proceed"));
+    });
+    expect(screen.getByTestId("severance-failed")).toHaveTextContent(line);
+    expect(screen.getByTestId("severance-proceed")).toHaveTextContent("Retry");
+  });
 });
 
 // THE EMPTY SIGN (EmptySignConfirm.md, PadStanding.md:71; jakob 2026-10-21,
@@ -2525,6 +2616,21 @@ describe("the empty sign", () => {
       fireEvent.click(screen.getByTestId("empty-sign-proceed"));
     });
     expect(screen.getByTestId("empty-sign-failed")).toHaveTextContent("That didn't send. Try again.");
+    expect(screen.getByTestId("empty-sign-proceed")).toHaveTextContent("Retry");
+    expect(screen.getByTestId<HTMLDialogElement>("empty-sign-confirm").open).toBe(true);
+  });
+
+  it("keeps the ask up with That didn't go through. and Retry on a FORBIDDEN", async () => {
+    // NetworkError.md:13.
+    const data = mount();
+    await settle();
+    await openPad();
+    await dragToNothing();
+    data.commit = createStubStanceData({ refuse: "FORBIDDEN" }).commit;
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("empty-sign-proceed"));
+    });
+    expect(screen.getByTestId("empty-sign-failed")).toHaveTextContent("That didn't go through. Try again.");
     expect(screen.getByTestId("empty-sign-proceed")).toHaveTextContent("Retry");
     expect(screen.getByTestId<HTMLDialogElement>("empty-sign-confirm").open).toBe(true);
   });
@@ -3027,6 +3133,20 @@ describe("round 21's waits, write rule and typed input", () => {
   // PadFailed.md: "the dialog stays up at the pick AND the line That didn't
   // send. Try again. stands above its action row AND an outlined Retry takes
   // Sign it's slot AND Cancel and Walk it back keep their places".
+  it("keeps the alternates at the pick with That didn't go through. and an outlined Retry on a FORBIDDEN", async () => {
+    // NetworkError.md:13.
+    const data = mount({ seed: { "post-1": { records: [{ pDirected: 0.5, pInterest: 0.5 }] } } });
+    await settle();
+    await openAlternates();
+    data.commit = createStubStanceData({ refuse: "FORBIDDEN" }).commit;
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("stance-alt-commit"));
+    });
+    await settle();
+    expect(screen.getByTestId("stance-alt-failed")).toHaveTextContent("That didn't go through. Try again.");
+    expect(screen.getByTestId("stance-alt-commit")).toHaveTextContent("Retry");
+  });
+
   it("keeps the alternates at the pick with the fault and an outlined Retry", async () => {
     const data = mount({ seed: { "post-1": { records: [{ pDirected: 0.5, pInterest: 0.5 }] } } });
     await settle();

@@ -29,22 +29,28 @@ import React from "react";
 
    THE WINDOW IS ALWAYS CENTRED, and that is why it takes a height and not a
    position: it is inset `inset` from each side, and the leftover height splits
-   evenly above and below. The circle's 342 square lands at top 24, the cover's
-   342×192 at top 99, and neither board has to state a coordinate.
+   evenly above and below. The circle's 342 square lands at top 24 on its 390
+   stage; on the cover's 390 × 488 stage the wide 342×192 lands at top 148, the
+   square 342 at top 73 and the tall 342×427.5 at top 30.25, and no board has
+   to state a coordinate.
 
    THE DRAG HAS A NON-DRAG TWIN, AND THE PINCH A VISIBLE ONE (the K13 round;
    readme §10). Under the viewport stands `CropZoom`, a visible slider on both
    platforms — a desktop browser has no pinch, so zoom has to be on screen for
    everyone, not only for assistive tech. Its bounds are the crop's own: at
    the minimum the picture just fills the window (1×, nothing outside the
-   picture can show), at the maximum it stands at about 4×. The viewport
+   picture can show), at the maximum it stands at 10× (jakob 2026-11-13). The viewport
    itself takes focus, and the arrow keys pan the picture inside the window,
-   stopping where an edge of the picture meets the window's edge. A pinch
+   stopping where an edge of the picture meets the window's edge. THE POST
+   CROP HAS ONE CEILING under every shape (jakob 2026-11-13; ComposeCrop.md): 10×
+   the Tall frame's fill, the largest, so a shape switch — which never shrinks
+   a picture — never meets a ceiling below the scale it keeps. Every figure
+   here is the stage at a 390 column; the stage scales with the column. A pinch
    moves the slider with it, and the slider moves the picture: one value, two
    ways to set it. */
 
 export const CROP_ZOOM_MIN = 1;
-export const CROP_ZOOM_MAX = 4;
+export const CROP_ZOOM_MAX = 10;
 
 export function CropViewport({
   src,

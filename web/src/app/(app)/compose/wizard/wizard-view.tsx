@@ -24,7 +24,12 @@ import { PillButton } from "@/lib/ui2/pill-button";
 import { preparePost } from "@/lib/api/content-api";
 import { fetchDefaultLicense } from "@/lib/api/settings-api";
 import { isPublicDomain } from "@/lib/license";
-import { sealFaultOf, type SealFault } from "@/lib/compose/seal-fault";
+import {
+  sealFaultOf,
+  sealFaultOfOutcome,
+  sealFaultOfResults,
+  type SealFault,
+} from "@/lib/compose/seal-fault";
 import { SLOW_NETWORK_MS, useSlowAnswer, useWaitedPast } from "@/lib/ui2/waiting-commit";
 import { fetchReferenceCandidates } from "@/lib/api/references-api";
 import { newReferenceDraft } from "@/lib/references/draft";
@@ -62,7 +67,7 @@ import {
 } from "@/lib/compose/wizard";
 import { captureFrames, captureFrameZero, probeVideo } from "@/lib/ui2/media/video";
 import { newComposeId } from "@/lib/compose/ids";
-import { POST_SCALE, screenPick, type PickRefusal } from "@/lib/compose/pick";
+import { holdBytes, POST_SCALE, screenPick, type PickRefusal } from "@/lib/compose/pick";
 import {
   composeDraftStore,
   draftIsWorthKeeping,
@@ -741,7 +746,7 @@ export function ComposeWizard({
     );
     if (graphIds.kind !== "success") {
       setBusy(false);
-      setFault({ kind: "offline" });
+      setFault(sealFaultOfOutcome(graphIds));
       return;
     }
 
@@ -764,7 +769,7 @@ export function ComposeWizard({
 
     if (prepared.kind === "failed") {
       setBusy(false);
-      setFault({ kind: "offline" });
+      setFault(sealFaultOfOutcome(prepared));
       return;
     }
     if (prepared.kind === "refused") {
@@ -837,12 +842,7 @@ export function ComposeWizard({
       router.push("/feed?compose=expired");
       return;
     }
-    const refused = results.find((result) => result.kind === "refused");
-    setFault(
-      refused !== undefined && refused.kind === "refused"
-        ? sealFaultOf(refused.errors, state.references)
-        : { kind: "offline" },
-    );
+    setFault(sealFaultOfResults(results, state.references));
   };
 
   // ---- rendering -----------------------------------------------------------
@@ -1159,7 +1159,13 @@ export function ComposeWizard({
             const frame = frames[index];
             if (frame) chooseCover(frame, index);
           }}
-          onPickPicture={(file) => chooseCover(file, COVER_FROM_PICTURE)}
+          // The face joins as its own bytes, as a picked picture does
+          // (`holdBytes`): its upload, and every Retry of it, reads those.
+          // A handle that reads nothing even now goes on as it is, and its
+          // upload says so with Retry.
+          onPickPicture={(file) =>
+            void holdBytes(file).then((held) => chooseCover(held ?? file, COVER_FROM_PICTURE))
+          }
           onNext={() => dispatch({ type: "advance" })}
         />
       )}

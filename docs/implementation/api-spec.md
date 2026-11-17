@@ -2792,15 +2792,22 @@ type Query {
 
   "Anonymous check of a password-reset link, so the app opens the
    expired-link screen rather than a form that can only fail
-   (ResetNew, ResetExpired). True while the link is live — the token
-   known, unused and unexpired — the predicate
-   `confirmPasswordReset` consumes it under. It reads and never
-   writes: nothing is consumed. Unknown, malformed, used and expired
-   all answer false alike, and the answer carries nothing about the
-   account the link belongs to. Spends the per-IP token-confirmation
-   budget, a tripped one answering RATE_LIMITED (auth.md \"Rate
-   limiting\")."
+   (ResetNew, ResetExpired), and the form can name the account a
+   password manager files the new password under. Non-null while the
+   link is live — the token known, unused and unexpired — the
+   predicate `confirmPasswordReset` consumes it under. It reads and
+   never writes: nothing is consumed. Unknown, malformed, used and
+   expired all answer null alike. Holding the live 256-bit token is
+   the proof: it was mailed to the account and already lets its
+   holder set the password, so the address it reveals is no more
+   than the link grants. Spends the per-IP token-confirmation budget,
+   a tripped one answering RATE_LIMITED (auth.md \"Rate limiting\")."
+  passwordResetLink(token: String!): PasswordResetLinkCheck
+
+  "The Boolean form of `passwordResetLink`: true exactly where that
+   is non-null, carrying nothing about the account. Same budget."
   passwordResetLinkCheck(token: String!): Boolean!
+    @deprecated(reason: "Use `passwordResetLink`, null exactly where this answers false.")
 
   "The governed network parameters, from the operational carrier —
    all of them, or the named keys. The catalog is network.md's; the
@@ -5842,6 +5849,15 @@ type EmailChangeLinkCheck {
  newer request, while live. EXPIRED: its window closed before both
  sides landed."
 enum EmailChangeLinkState { PENDING APPLIED CANCELED EXPIRED }
+
+"The anonymous view of a live password-reset link (the
+ `passwordResetLink` query). Holding the token is holding the link."
+type PasswordResetLinkCheck {
+  "The login email of the account the link resets — the username a
+   password manager files the new password under (ResetNew's hidden
+   username field). Never in the link."
+  email: String!
+}
 
 "Remove the payload of a record the viewer authored — the
  per-content self-service erasure path (erasure.md §1). Immediate

@@ -4,6 +4,12 @@ ALWAYS the comment edit is one screen and one batch: words, pictures or one vide
 
 ALWAYS the comment edit's license row is locked
 
+ALWAYS commentEdit.target names the post the comment stands on, Your comment on, then the post's title in quotes, then a full stop, as Your comment on "The long way home"., whether the comment answers the post or another comment, on every host the edit opens from — the thread, History, Saved and the profile's Comments tab
+
+ALWAYS commentEdit.target names the post by its stand-in GIVEN the post has no title — a words post by its first line, a media post as Pictures by @ada or A video by @ada
+
+ALWAYS commentEdit.target reads Your comment on, then the post's author's handle, then 's removed post., as Your comment on @ada's removed post., GIVEN the post was removed, as the comment card names it
+
 ALWAYS the comment edit holds at most four pictures, uncropped
 
 ALWAYS the footer reads the live count of the batch, You're signing N things
@@ -95,6 +101,12 @@ WHEN the write rule refuses the edit -> nothing is staged or spent AND the notic
 WHEN press Not now on the write rule's notice -> the notice goes AND the comment edit stands again with the changes as they were
 
 WHEN the signing is refused for one staged citation GIVEN the cited post never landed -> that citation's row reads This post didn't land, so it can't be cited. followed by Remove it AND NEVER Retry appears
+
+WHEN the signing is refused for one staged tag GIVEN the tag never landed -> the line This tag didn't land. stands under the tags in the failure voice followed by Remove it AND Sign the edit stays AND NEVER Retry appears AND NEVER a reason is given AND NEVER the tag picker's name lines stand on the edit
+
+ALWAYS the refused tag's chip wears the error ring GIVEN more than one tag stands on the row
+
+WHEN press Remove it under the tags -> the refused pick is unstaged as its chip's × unstages it AND the line goes AND the footer counts one fewer
 
 WHEN the signing is refused for one staged act GIVEN the act's target landed -> the notice This shouldn't have happened takes the commit's place AND Try again, Report a problem and Discard the edit stand with it
 

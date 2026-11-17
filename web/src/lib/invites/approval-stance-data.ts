@@ -27,6 +27,7 @@ import {
   type ApplicationView,
 } from "@/lib/api/invites-api";
 import { failed, refused, success, type Outcome } from "@/lib/api/outcome";
+import { DeviceRefusalError } from "@/lib/signing/device-refusal";
 import type { AuthGuard } from "@/lib/session/guard";
 import { expectation, stanceRecord } from "@/lib/signing/intent";
 import type { WriteSigner } from "@/lib/signing/write-signer";
@@ -110,6 +111,11 @@ function approvalData(
       const incomplete = results.find((result) => result.kind !== "done");
       if (incomplete !== undefined && incomplete.kind === "refused") {
         return refused(incomplete.errors);
+      }
+      // A failed leg keeps its cause: an answered INTERNAL is not no answer.
+      if (incomplete !== undefined && incomplete.kind === "failed") return failed(incomplete.cause);
+      if (incomplete !== undefined && incomplete.kind === "rejectedByDevice") {
+        return failed(new DeviceRefusalError(incomplete.reason));
       }
       if (incomplete !== undefined) {
         return failed(new Error(`staged write ${incomplete.id} did not complete: ${incomplete.kind}`));

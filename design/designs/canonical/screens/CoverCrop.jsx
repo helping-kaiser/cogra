@@ -31,7 +31,7 @@
    (round 44, the removable-text pass).
 
    THE ZOOM IS ON SCREEN (the K13 round): `CropZoom` under the stage, its
-   thumb at this crop's 1.15× between the fill (1×) and about 4×, on both
+   thumb at this crop's 1.15× between the fill (1×) and 10×, on both
    platforms; the focused stage moves the picture with the arrow keys
    (`CropViewport`), 1 % a press, 10 % with Shift (jakob 2026-10-05).
 

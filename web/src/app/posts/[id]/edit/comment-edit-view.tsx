@@ -160,7 +160,7 @@ export function CommentEditView({
   refusals = [],
   cropping = null,
   refusal,
-  failed,
+  failedLine,
   onWords,
   onSensitive,
   onSensitiveReason,
@@ -236,7 +236,8 @@ export function CommentEditView({
    */
   picker?: ReactNode;
   refusal: string | null;
-  failed: boolean;
+  /** The network error's line in the commit's place, Retry under it (NetworkError.md:3, :13-19); null at rest. */
+  failedLine: string | null;
   onWords: (words: string) => void;
   onSensitive: (next: boolean) => void;
   onSensitiveReason: (next: string) => void;
@@ -321,6 +322,24 @@ export function CommentEditView({
   } else if (fault?.kind === "bug") {
     commit = (
       <EditBugNotice onTryAgain={onTryAgain} onReport={onReport} onDiscard={onDiscard} testIdPrefix="comment-edit" />
+    );
+  } else if (failedLine !== null) {
+    // THE NETWORK ERROR'S FOOT, standing where `Sign the edit` stood: the line,
+    // an outlined Retry under it (CommentEdit.md:97, NetworkError.md:3).
+    commit = (
+      <div className="flex flex-col gap-2">
+        <TransportError testId="comment-edit-failed" message={failedLine} />
+        <PillButton
+          testId="comment-edit-retry"
+          variant="outlined"
+          full
+          onClick={() => {
+            if (!signing) onSign();
+          }}
+        >
+          Retry
+        </PillButton>
+      </div>
     );
   } else {
     // Inert, never hidden, at an empty batch; a press while the signing is
@@ -637,9 +656,7 @@ export function CommentEditView({
                 tags={tags}
                 onChange={onTags}
                 fieldErrors={tagErrors}
-                cap={null}
                 testIdPrefix="comment-edit"
-                pairs="sheet"
                 onOpenPicker={onOpenTagPicker}
                 node={part(NODE, "tags")}
                 after={withdrawnTags(loadedTags, tags).map((tag) => (
@@ -736,7 +753,6 @@ export function CommentEditView({
                 {refusal}
               </p>
             )}
-            {failed && <TransportError testId="comment-edit-failed" />}
 
             {/* THE GATE: while the bytes the edit took go up, the seal's line
                 over the foot — naming the cover where the edit set one; failed,

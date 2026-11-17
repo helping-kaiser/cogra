@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import type { KnownMedia } from "@/lib/api/media-api";
 import {
+  avatarExpectation,
   contentExpectation,
   galleryMediaIds,
   ledgerEntry,
@@ -129,6 +130,19 @@ describe("a profile payload's expectation", () => {
         coverTaken: false,
         uploadDigest: STILL.uploadDigest,
       },
+    });
+  });
+});
+
+describe("a picture-only change's expectation", () => {
+  it("states no text field and holds the avatar to this device's upload", () => {
+    const expected = avatarExpectation(NODE, { mediaId: "still" }, LEDGER);
+    // Each text field was omitted, so the payload must carry none: the decoder
+    // reads an absent field as null, never as the empty-string clear.
+    expect(expected).toMatchObject({ node: NODE, displayName: null, bio: null, websiteUrl: null });
+    expect(expected.avatar).toMatchObject({
+      state: "set",
+      asset: { kind: "asset", digest: STILL.digest, uploadDigest: STILL.uploadDigest },
     });
   });
 });
