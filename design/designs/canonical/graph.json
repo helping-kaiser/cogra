@@ -2264,6 +2264,7 @@
     { "from": "ViewerVideo", "via": 3, "kind": "advance", "label": "seek line", "to": [{ "terminal": "self", "case": "tap or drag — the clip moves under the finger" }] },
     { "from": "ViewerVideo", "via": 4, "kind": "advance", "label": "video sound", "to": [{ "terminal": "self", "case": "the sticky decision every video shares" }] },
     { "from": "ViewerVideo", "via": 5, "kind": "advance", "label": "skip ten seconds", "to": [{ "terminal": "self", "case": "back or forward, the clip stays where it is drawn" }] },
+    { "from": "ViewerVideo", "via": 6, "kind": "advance", "label": "Retry — the clip that cannot load", "to": [{ "terminal": "self", "case": "the clip is asked for again; it plays in the cover's place once it loads (the clip chip's unloaded, the reel's twin)" }] },
 
     { "from": "ViewerLandscape", "via": 1, "kind": "back", "label": "close the viewer (X)", "to": [{ "terminal": "back", "case": "the X, or a swipe down" }] },
     { "from": "ViewerLandscape", "via": 2, "kind": "advance", "label": "play/pause", "to": [{ "terminal": "self", "case": "the clip stops and starts where it is" }] },

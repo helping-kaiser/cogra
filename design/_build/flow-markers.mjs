@@ -1665,6 +1665,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'aria-label="Turn sound on"', tag: "button" },
     { n: 5, find: 'aria-label="Back ten seconds"', tag: "button" },
     { n: 5, find: 'aria-label="Forward ten seconds"', tag: "button" },
+    // A clip that cannot load (round 53, the reel's twin): its cover's Retry.
+    { n: 6, find: ">Retry</button>", tag: "button" },
   ],
   ViewerLandscape: [
     { n: 1, find: 'aria-label="Close"', tag: "button" },

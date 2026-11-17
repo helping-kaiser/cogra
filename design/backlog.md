@@ -6239,6 +6239,9 @@ Closed by round 50, act 3 (jakob 2026-11-17, C6 as recommended): the cover with 
 fault's outlined `Retry` alone, no sentence — drawn on `Reel`'s `state` chip,
 `unloaded`; the viewer carries it as law (`ViewerVideo` is not a chipped board).
 
+Drawn on the viewer by round 53: `ViewerVideo`'s `clip` chip, `unloaded`, the reel's twin
+(`MediaViewer`'s `unloadedHoles`), the transport gone with the clip, the X staying.
+
 ### 231 · The stream's ⋮: what Hide and Remove leave on the stream · *design* · **filed 2026-11-13** · **closed 2026-11-17**
 
 Round 49 (M2). `ReelMenu` draws the clip's post menu over the stream, but each
