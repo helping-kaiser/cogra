@@ -42,7 +42,7 @@ import { useAuthPhase } from "@/lib/session/provider";
 import { expectation, profileUpdate } from "@/lib/signing/intent";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { carrySnackbar } from "@/lib/ui/carried-snackbar";
-import { firstRefusalMessage } from "@/lib/ui/error-messages";
+import { answeredFaultLine, firstRefusalMessage } from "@/lib/ui/error-messages";
 import { TransportError } from "@/lib/ui/transport-error";
 import { CENTERED, type Crop } from "@/lib/ui2/media/crop";
 import { AvatarCrop } from "../edit/avatar-crop";
@@ -133,7 +133,10 @@ export function AvatarFlowScreen({ store = identityStore }: { store?: IdentitySt
       return;
     }
     if (prepared.kind === "failed") {
-      setProblem({ kind: "unreachable" });
+      // An INTERNAL is an answer: the not-through line, never the
+      // unreachable one (NetworkError.md:13).
+      const answered = answeredFaultLine(prepared.cause);
+      setProblem(answered === null ? { kind: "unreachable" } : { kind: "line", message: answered });
       return;
     }
     // AvatarCrop.md:17: from the badge, Next opens the picture's own seal.
