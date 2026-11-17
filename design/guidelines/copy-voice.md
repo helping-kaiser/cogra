@@ -1086,6 +1086,10 @@ doors answer in the same register (PR-103, **blessed (jakob
 - The composer opened by its own address leaves the reader where app-open
   lands for them, with `You can post once you're in.`, as the Invites
   page's own address does.
+- The dimmed look is the applicant's alone (jakob 2026-11-17): an
+  applicant is already joining, and the dimming tells them what they
+  cannot do yet. A guest's acting buttons stand at full strength and
+  prompt them to join (`GuestGate`; `ReplyEntry`'s `reader` = `guest`).
 
 The line rides the surface's own snackbar where it has one (the
 profile's, the thread's), else the shell's; nothing opens.

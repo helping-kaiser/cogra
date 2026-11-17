@@ -2995,6 +2995,13 @@ function CommentComposerFoot({ fieldOpacity, shown, node }) {
           <span style={{ display: shown.applicant }}>
             <MonogramAvatar name="Juno Baptiste" />
           </span>
+          {shown.guest && (
+            /* A guest reads through the borrowed view, so the foot wears its
+               face, as the guest band does (jakob 2026-11-17, 18). */
+            <span style={{ display: shown.guest }}>
+              <MonogramAvatar name="Mira Voss" src="inviter.jpg" />
+            </span>
+          )}
         </>
       ) : (
         <MonogramAvatar name="Sol Ferreira" />
@@ -3288,6 +3295,13 @@ function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, remov
               <CommentCard {...solComment} menuItems={COMMENT_CARD_MENU} node={card} />
             </ul>
           </li>
+          {shown.guest && (
+            <li style={{ display: shown.guest, flexDirection: "column", listStyle: "none" }} {...readerCopy("guest")}>
+              <ul style={NESTED_LIST}>
+                <CommentCard {...SOL_THREAD_COMMENT} menuItems={COMMENT_CARD_MENU} node={card} />
+              </ul>
+            </li>
+          )}
         </>
       ) : (
         ownSol
