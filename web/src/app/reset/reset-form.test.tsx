@@ -15,12 +15,18 @@ vi.mock("next/navigation", () => ({
 // THE LINK IS READ FIRST (ResetNew.md: a used or expired link opens
 // ResetExpired "AND NEVER ResetNew opens"): every test holding a link answers
 // the read-only check, live unless it says otherwise.
-const resetCheck = (live: boolean) =>
-  gqlLink.query("PasswordResetLinkCheck", () =>
-    HttpResponse.json({ data: { passwordResetLinkCheck: live } }),
+const LINK_EMAIL = "pixeljoiner@example.com";
+const resetCheck = (email: string | null) =>
+  gqlLink.query("PasswordResetLink", () =>
+    HttpResponse.json({
+      data: {
+        passwordResetLink:
+          email === null ? null : { __typename: "PasswordResetLinkCheck", email },
+      },
+    }),
   );
 
-const server = startMswServer(resetCheck(true));
+const server = startMswServer(resetCheck(LINK_EMAIL));
 
 /** ResetForm on a held link, once its check has answered live. */
 async function renderNew() {
@@ -325,9 +331,9 @@ describe("the link's check (ResetNew · ResetExpired)", () => {
   it("a_reset_link_already_used_or_past_its_time_opens_reset_expired_and_never_reset_new", async () => {
     let asked: unknown = null;
     server.use(
-      gqlLink.query("PasswordResetLinkCheck", ({ variables }) => {
+      gqlLink.query("PasswordResetLink", ({ variables }) => {
         asked = variables;
-        return HttpResponse.json({ data: { passwordResetLinkCheck: false } });
+        return HttpResponse.json({ data: { passwordResetLink: null } });
       }),
     );
     renderWithProviders(<ResetForm />);
@@ -345,11 +351,47 @@ describe("the link's check (ResetNew · ResetExpired)", () => {
 
   it("a_check_that_gets_no_answer_opens_the_form_whose_press_still_meets_a_spent_link", async () => {
     server.use(
-      gqlLink.query("PasswordResetLinkCheck", () => HttpResponse.error()),
+      gqlLink.query("PasswordResetLink", () => HttpResponse.error()),
       confirmRefused("RESET_TOKEN_INVALID"),
     );
     await renderNew();
     fillConfirm();
     expect(await screen.findByRole("heading", { level: 1, name: "This link doesn't work anymore" })).toBeInTheDocument();
+  });
+
+  it("a_null_answer_shows_the_expired_state", async () => {
+    server.use(resetCheck(null));
+    renderWithProviders(<ResetForm />);
+    expect(await screen.findByRole("heading", { level: 1, name: "This link doesn't work anymore" })).toBeInTheDocument();
+    expect(document.querySelector('input[autocomplete="username"]')).toBeNull();
+  });
+
+  it("a_live_link_carries_the_account_email_in_one_hidden_username_input_before_the_password_fields", async () => {
+    await renderNew();
+    const hidden = document.querySelectorAll('input[autocomplete="username"]');
+    expect(hidden).toHaveLength(1);
+    const input = hidden[0] as HTMLInputElement;
+    expect(input.value).toBe(LINK_EMAIL);
+    expect(input.closest("form")).toBe(newInput("password").closest("form"));
+    expect(input.compareDocumentPosition(newInput("password")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(input).toHaveAttribute("hidden");
+    expect(input).toHaveAttribute("tabindex", "-1");
+    expect(input).toHaveAttribute("aria-hidden", "true");
+    expect(newInput("password")).toHaveAttribute("autocomplete", "new-password");
+    expect(newInput("confirm")).toHaveAttribute("autocomplete", "new-password");
+  });
+
+  it("the_email_never_appears_in_a_url", async () => {
+    server.use(confirmRefused("WEAK_PASSWORD"));
+    await renderNew();
+    fillConfirm();
+    await screen.findByText("That password has turned up in a data breach — pick another one.");
+    const carries = (text: string | null) => (text ?? "").includes(LINK_EMAIL) || (text ?? "").includes(encodeURIComponent(LINK_EMAIL));
+    expect(carries(window.location.href)).toBe(false);
+    expect(carries(document.referrer)).toBe(false);
+    for (const link of document.querySelectorAll("[href], form[action]")) {
+      expect(carries(link.getAttribute("href") ?? link.getAttribute("action"))).toBe(false);
+    }
+    for (const call of nav.replace.mock.calls) expect(carries(String(call[0]))).toBe(false);
   });
 });
