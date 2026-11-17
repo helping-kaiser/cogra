@@ -1514,10 +1514,9 @@ private fun CardMenuHeader(
 ) {
     var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
     var removeOpen by remember { mutableStateOf(false) }
-    var citedByOpen by remember { mutableStateOf(false) }
+    var reading by remember { mutableStateOf<Reading?>(null) }
     CoversSurface(open = licenseShown != null, kind = CoverKind.Suspend)
     CoversSurface(open = removeOpen, kind = CoverKind.Suspend)
-    CoversSurface(open = citedByOpen, kind = CoverKind.Suspend)
     val menuSheet = placement.menuSheet
     val tag = "${placement.tag}_${post.id}"
     // A REMOVED POST HAS NO MENU LEFT (`Removed.jsx:5-6`): there is nothing
@@ -1551,7 +1550,7 @@ private fun CardMenuHeader(
                 onCite = { onCite(post.id) },
                 onRemove = { removeOpen = true },
                 onLicense = { licenseShown = post.license },
-                onCitedBy = { citedByOpen = true },
+                onCitedBy = { reading = Reading.CitedBy },
                 onShare = shareRow,
                 // The rows sit under the trigger's own tag, which
                 // `ContentCardHeader` derives the same way.
@@ -1576,15 +1575,8 @@ private fun CardMenuHeader(
         LicenseSheet(license = license, onDismiss = { licenseShown = null }, node = placement.licenseSheet)
     }
     if (removeOpen) CardRemoveConfirm(post, placement, tag, onClose = { removeOpen = false })
-    // WHAT CITES THE POST, over the host, the list still open beneath it (CitedBy.md:5).
-    if (citedByOpen) {
-        CitedBySheet(
-            nodeId = post.id,
-            onDismiss = { citedByOpen = false },
-            onOpenPost = onOpenPost,
-            testTag = "${tag}_cited_by_sheet",
-        )
-    }
+    // A READING, over the host, the list still open beneath it (CitedBy.md:5).
+    ReadingSheet(reading, post.id, ReadingHost(onOpenPost, tag), onDismiss = { reading = null })
 }
 
 /**
