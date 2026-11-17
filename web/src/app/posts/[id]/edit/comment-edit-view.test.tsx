@@ -36,7 +36,7 @@ function draw(overrides: Partial<Parameters<typeof CommentEditView>[0]> = {}) {
     actsOpen: false,
     busy: false,
     refusal: null,
-    failed: false,
+    failedLine: null,
     onWords: vi.fn(),
     onSensitive: vi.fn(),
     onSensitiveReason: vi.fn(),

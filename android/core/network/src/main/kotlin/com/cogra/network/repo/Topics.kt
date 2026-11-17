@@ -12,16 +12,21 @@ import com.apollographql.apollo.api.Optional
 import com.cogra.domain.HashtagView
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.TaggedContentKind
 import com.cogra.domain.TaggedContentView
+import com.cogra.domain.flatMap
 import com.cogra.domain.map
 import com.cogra.domain.repo.TopicRepository
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
 import com.cogra.network.graphql.HashtagQuery
 import com.cogra.network.graphql.PrepareTagMutation
+import com.cogra.network.graphql.TaggedCommentsQuery
 import com.cogra.network.graphql.type.PrepareTagInput
 import com.cogra.network.payloadOutcome
 import com.cogra.network.toDomain
+import com.cogra.network.toListed
+import com.cogra.network.withCard
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -49,6 +54,29 @@ class TopicRepositoryImpl @Inject constructor(
                 includePending = includePending,
             ),
         ).fetch().map { data -> data.hashtag?.taggedContent.orEmpty().mapNotNull { it.toDomain() } }
+    }.flatMap { rows -> withCommentCards(rows) }
+
+    /**
+     * THE COMMENT ROWS' CARDS, READ SECOND. The `Hashtag` read names a
+     * tagged comment and carries every post's card; one static price for
+     * both cards on every row would cost twice the query budget at the
+     * page's 20 rows, so the comment cards come from one `TaggedComments`
+     * read over exactly the comment ids it named — none sent when no comment
+     * is tagged. Either read failing fails the page, as one read did; a slot
+     * that resolves to no comment leaves its row without a card, unshown.
+     */
+    private suspend fun withCommentCards(rows: List<TaggedContentView>): Outcome<List<TaggedContentView>> {
+        val ids = rows.filter { it.kind == TaggedContentKind.COMMENT }.map { it.id }
+        if (ids.isEmpty()) return Outcome.Success(rows)
+        return guard.run {
+            client.query(TaggedCommentsQuery(ids = ids)).fetch().map { data ->
+                val cards = data.nodes.mapNotNull { it?.toListed() }.associateBy { it.comment.id }
+                rows.map { row ->
+                    val card = cards[row.id].takeIf { row.kind == TaggedContentKind.COMMENT }
+                    if (card == null) row else row.withCard(card)
+                }
+            }
+        }
     }
 
     override suspend fun prepareTag(

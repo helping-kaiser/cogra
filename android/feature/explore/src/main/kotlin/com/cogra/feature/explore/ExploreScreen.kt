@@ -594,6 +594,12 @@ private fun LazyListScope.resultItem(item: ResultItem, doors: ExploreDoors, acti
         ResultItem.ProfilesLabel -> item(key = "profilesLabel") {
             SectionLabel(stringResource(R.string.explore_profiles), node = EXPLORE / "profilesLabel")
         }
+        ResultItem.TagsLabel -> item(key = "tagsLabel") {
+            SectionLabel(stringResource(R.string.explore_tags_caption), node = EXPLORE / "tagsLabel")
+        }
+        ResultItem.ContentLabel -> item(key = "contentLabel") {
+            SectionLabel(stringResource(R.string.explore_content_caption), node = EXPLORE / "contentLabel")
+        }
         ResultItem.ProfilesDoor -> item(key = "profilesDoor") {
             // `Button variant="text" size="sm"` on its own line, `0 8 8` (ExplorePerson.jsx).
             Row(Modifier.padding(start = Space.x2, end = Space.x2, bottom = Space.x2)) {

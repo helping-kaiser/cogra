@@ -1,6 +1,5 @@
 package com.cogra.core.designsystem.v2.media
 
-import com.cogra.core.designsystem.v2.media.CropGeometry.MAX_ZOOM
 import com.cogra.core.designsystem.v2.media.CropGeometry.boardStage
 import com.cogra.core.designsystem.v2.media.CropGeometry.fillOf
 import com.cogra.core.designsystem.v2.media.CropGeometry.fittedPicture
@@ -118,21 +117,21 @@ class CropGeometryTest {
     }
 
     @Test
-    fun `puts a post's ceiling at 4x of its tallest frame, under every shape`() {
+    fun `puts a post's ceiling at 10x of its tallest frame, under every shape`() {
         val tallBounds = zoomBounds(CropKind.Post, landscape, tall, w)
-        near(tallBounds.ceiling, 4f * tallBounds.floor)
+        near(tallBounds.ceiling, 10f * tallBounds.floor)
         for (shape in listOf(square, wide)) {
             near(zoomBounds(CropKind.Post, landscape, shape, w).ceiling, tallBounds.ceiling)
         }
     }
 
     @Test
-    fun `puts a cover's and the circle's ceiling at 4x their own fill`() {
+    fun `puts a cover's and the circle's ceiling at 10x their own fill`() {
         val cover = zoomBounds(CropKind.Cover, landscape, 16f / 9f, w)
-        near(cover.ceiling, MAX_ZOOM * cover.floor)
+        near(cover.ceiling, 10f * cover.floor)
         val avatar = zoomBounds(CropKind.Avatar, fittedPicture(4f / 3f, stageOf(CropKind.Avatar, w)), 1f, w)
         near(avatar.floor, 342f / 292.5f)
-        near(avatar.ceiling, 4f * avatar.floor)
+        near(avatar.ceiling, 10f * avatar.floor)
     }
 
     @Test

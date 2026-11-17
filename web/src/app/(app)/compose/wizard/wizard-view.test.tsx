@@ -576,6 +576,136 @@ describe("the compose wizard", () => {
     expect(screen.getByTestId("wizard-sign")).not.toBeDisabled();
   });
 
+  // THE HAND TEST OF 2026-11-17: three pictures failed at once, Retry never
+  // recovered them, and removing them and adding the same three again went up
+  // at once. Retry must do what that re-add does.
+  describe("Retry after a failed read", () => {
+    /** A decoder that refuses while `reading.fails` holds, as a phone's can. */
+    function flakyDecoder() {
+      const reading = { fails: false };
+      vi.stubGlobal(
+        "createImageBitmap",
+        vi.fn(async () => {
+          if (reading.fails) throw new DOMException("could not be read", "NotReadableError");
+          return { width: 1200, height: 1500, close: () => {} };
+        }),
+      );
+      return reading;
+    }
+
+    function countedUploads() {
+      const sent = { count: 0 };
+      server.use(
+        gqlLink.mutation("UploadMedia", () => {
+          sent.count += 1;
+          return HttpResponse.json({
+            data: {
+              uploadMedia: {
+                __typename: "UploadMediaPayload",
+                media: echoedMedia(`m-${sent.count}`),
+                userErrors: [],
+              },
+            },
+          });
+        }),
+      );
+      return sent;
+    }
+
+    it("reads all three again on Retry, and they land", async () => {
+      const reading = flakyDecoder();
+      const sent = countedUploads();
+      render();
+      await pick(["one.jpg", "two.jpg", "three.jpg"]);
+      fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
+      reading.fails = true;
+      fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
+
+      const line = await screen.findByTestId("wizard-upload-error");
+      expect(line).toHaveTextContent("3 pictures didn't upload.");
+      expect(sent.count).toBe(0);
+
+      // The moment passes; the server would take them now.
+      reading.fails = false;
+      fireEvent.click(screen.getByTestId("wizard-upload-error-retry"));
+
+      await waitFor(() => expect(sent.count).toBe(3));
+      await waitFor(() => expect(screen.queryByTestId("wizard-upload-error")).toBeNull());
+    });
+
+    it("says one failed read in the board's line, with Retry and Remove it", async () => {
+      const reading = flakyDecoder();
+      countedUploads();
+      render();
+      await pick(["one.jpg"]);
+      fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
+      reading.fails = true;
+      fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
+
+      // ComposeUploading.md: "One picture didn't upload." with Retry and Remove it.
+      const line = await screen.findByTestId("wizard-upload-error");
+      expect(line).toHaveTextContent("One picture didn't upload.");
+      expect(within(line).getByTestId("wizard-upload-error-retry")).toBeInTheDocument();
+      expect(within(line).getByTestId("wizard-upload-error-remove")).toHaveTextContent("Remove it");
+    });
+
+    // THE PICKED HANDLE GOING STALE: the File API lets a picked file refuse a
+    // later read, and every Retry read the same handle. The picture joins as
+    // its own bytes, so neither the upload nor a Retry depends on the handle.
+    it("uploads a picture whose picked handle stops reading after the pick", async () => {
+      const picked: Blob[] = [];
+      vi.stubGlobal(
+        "createImageBitmap",
+        vi.fn(async (source: Blob) => {
+          if (picked.includes(source)) throw new DOMException("could not be read", "NotReadableError");
+          return { width: 1200, height: 1500, close: () => {} };
+        }),
+      );
+      const sent = countedUploads();
+      render();
+      const input = await screen.findByTestId("wizard-file-input");
+      const files = ["one.jpg", "two.jpg", "three.jpg"].map(
+        (name) => new File([new Uint8Array([1, 2, 3]) as BlobPart], name, { type: "image/jpeg" }),
+      );
+      picked.push(...files);
+      Object.defineProperty(input, "files", { value: files, configurable: true });
+      fireEvent.change(input);
+      await act(async () => {});
+      fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
+      fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
+
+      await waitFor(() => expect(sent.count).toBe(3));
+      expect(screen.queryByTestId("wizard-upload-error")).toBeNull();
+    });
+
+    // A failure no retry can change keeps its refusal form: no Retry that
+    // presses into nothing.
+    it("draws no Retry for a picture whose encode lands over the cap", async () => {
+      class Fat {
+        constructor(
+          public width: number,
+          public height: number,
+        ) {}
+        getContext() {
+          return { drawImage: () => {} };
+        }
+        async convertToBlob({ type }: { type: string }) {
+          return new Blob([new Uint8Array(new ArrayBuffer(11 * 1024 * 1024)) as BlobPart], { type });
+        }
+      }
+      render();
+      await pick(["one.jpg"]);
+      fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
+      vi.stubGlobal("OffscreenCanvas", Fat);
+      fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
+
+      const line = await screen.findByTestId("wizard-upload-error");
+      expect(line).toHaveTextContent("That picture is too big");
+      expect(within(line).queryByTestId("wizard-upload-error-retry")).toBeNull();
+      expect(within(line).getByTestId("wizard-upload-error-remove")).toBeInTheDocument();
+    });
+  });
+
   it("keeps the draft and says nothing was spent when the batch expires", async () => {
     const drafts = fakeDrafts();
     server.use(preparePost());

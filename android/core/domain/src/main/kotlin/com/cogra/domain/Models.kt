@@ -776,7 +776,22 @@ data class TaggedContentView(
     val relevance: Double,
     val confidence: Double,
     val pending: Boolean,
+    /**
+     * The thing itself, as its own card reads it (TagPage.md:15): the tag
+     * page draws the feed's post or comment card under the claim, so the read
+     * carries the whole node. Null for a node class this build does not draw.
+     */
+    val node: TaggedNode? = null,
 )
+
+/** A tagged thing as the card that draws it reads it. */
+sealed interface TaggedNode {
+    /** A post, as the feed's post card reads it, its comment count included. */
+    data class Post(val post: PostView) : TaggedNode
+
+    /** A comment listed away from its thread: what it answers and its thread's post (`CommentCard`'s line shape). */
+    data class Comment(val listed: ProfileComment) : TaggedNode
+}
 
 /** One forward page of a keyset connection. */
 data class Page<T>(
