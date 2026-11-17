@@ -204,7 +204,6 @@ describe("an answered fault on the change's seal", () => {
     ["FORBIDDEN", "That didn't go through. Try again."],
     ["INTERNAL", "That didn't go through. Try again."],
     ["SIGNATURE_INVALID", "That didn't go through. Try again."],
-    ["EMAIL_NOT_VERIFIED", "Verify your email first — the link is in your inbox."],
   ] as const)("reads a %s signing as its line with Retry and Back", async (code, line) => {
     const run = vi
       .fn<() => Promise<ProfileChangeOutcome>>()
@@ -223,4 +222,20 @@ describe("an answered fault on the change's seal", () => {
     });
     expect(handlers.onTaken).toHaveBeenCalledTimes(1);
   });
+});
+
+// NetworkError.md:19 draws EMAIL_NOT_VERIFIED's line in the commit's place
+// with no Retry (seam 350): the line and Back, nothing re-sends.
+it("reads an EMAIL_NOT_VERIFIED signing as Verify your email first, with Back and no Retry", async () => {
+  draw({
+    sign: async () =>
+      outcomeOf([{ kind: "refused", id: "w0", errors: [{ code: "EMAIL_NOT_VERIFIED", message: "", field: null }] }]),
+  });
+  await press();
+  expect(screen.getByTestId("profile-edit-seal-offline")).toHaveTextContent(
+    "Verify your email first — the link is in your inbox.",
+  );
+  expect(screen.queryByTestId("profile-edit-seal-retry")).not.toBeInTheDocument();
+  expect(screen.queryByTestId("profile-edit-seal-sign")).not.toBeInTheDocument();
+  expect(screen.getByTestId("profile-edit-seal-back")).toHaveTextContent("Back");
 });

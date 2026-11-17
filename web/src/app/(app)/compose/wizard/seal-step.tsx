@@ -54,6 +54,7 @@ import { UnreachableConfirm } from "@/lib/ui2/compose/unreachable-confirm";
 import { AttachmentReadout, AttachmentStanding } from "@/lib/ui/attachment-readout";
 import { LicenseRows } from "@/lib/ui/license-rows";
 import { TransportError } from "@/lib/ui/transport-error";
+import { lineOffersRetry } from "@/lib/ui/error-messages";
 import { bundleReadout, EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
@@ -361,9 +362,11 @@ export function SealStep({
             testId="wizard-transport-error"
             message={fault.kind === "offline" ? OFFLINE_LINE : fault.line}
           />
-          <PillButton testId="wizard-retry" variant="outlined" full onClick={onRetry}>
-            Retry
-          </PillButton>
+          {(fault.kind === "offline" || lineOffersRetry(fault.line)) && (
+            <PillButton testId="wizard-retry" variant="outlined" full onClick={onRetry}>
+              Retry
+            </PillButton>
+          )}
           <PillButton testId="wizard-back" variant="text" full onClick={onBack}>
             Back
           </PillButton>

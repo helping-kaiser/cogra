@@ -43,6 +43,7 @@ import { QuietNote } from "@/lib/ui2/quiet-note";
 import { ActsCard, actsTotal, SLOW_SIGNING_LINE } from "@/lib/ui2/compose/acts-card";
 import { useSlowAnswer, useWaitedPast, SLOW_NETWORK_MS } from "@/lib/ui2/waiting-commit";
 import { TransportError } from "@/lib/ui/transport-error";
+import { lineOffersRetry } from "@/lib/ui/error-messages";
 import { KEY_ABSENT_TITLE } from "@/lib/ui/key-absent-notice";
 import {
   closeProfileChangeSeal,
@@ -192,9 +193,11 @@ export function ChangeSeal({
               testId={`${id}-offline`}
               message={foot.kind === "offline" ? OFFLINE_LINE : foot.line}
             />
-            <PillButton testId={`${id}-retry`} variant="outlined" full onClick={() => void press()}>
-              Retry
-            </PillButton>
+            {(foot.kind === "offline" || lineOffersRetry(foot.line)) && (
+              <PillButton testId={`${id}-retry`} variant="outlined" full onClick={() => void press()}>
+                Retry
+              </PillButton>
+            )}
             <PillButton testId={`${id}-back`} variant="text" full onClick={onBack}>
               Back
             </PillButton>
