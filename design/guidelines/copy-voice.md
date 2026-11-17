@@ -717,6 +717,14 @@ Retry (`UploadErrorLine` with both ways out):
   the line is drawn short because Retry stands beside it and the pair
   would say "try again" twice.
 
+**A picture the server refuses at upload** — a refusal, not a fault
+(jakob 2026-11-17, impl 348-3): the server answered no, so retrying
+cannot change the answer, and the line keeps the refused files' one way
+out. The row reads `One picture didn't upload.` with `Remove it` alone,
+never `Retry`. A clip takes the same rule in its own words, `That video
+didn't upload.` with `Remove it` alone. What a seal's gate line reads for
+a refused upload is open (backlog 251).
+
 **The cover's own words** — the way to the crop a gallery picture goes
 through, from an edit:
 

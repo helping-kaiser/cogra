@@ -2540,7 +2540,7 @@
     { "from": "ProfileEdit", "via": 7, "kind": "advance", "label": "Remove picture", "to": [{ "terminal": "self", "case": "while a picture stands and no new one is staged — the removal is staged, the monogram returns at once; Save signs it under the one seal" }] },
     { "from": "ProfileEdit", "via": 11, "kind": "cancel", "label": "Undo", "to": [{ "terminal": "self", "case": "a staged removal is unstaged — the picture returns where it stood; with nothing else staged the edit is at rest again" }] },
     { "from": "ProfileEdit", "via": 8, "kind": "advance", "label": "Retry", "to": [{ "terminal": "self", "case": "the new picture's failed upload tries again" }] },
-    { "from": "ProfileEdit", "via": 9, "kind": "cancel", "label": "Remove it", "to": [{ "terminal": "self", "case": "the new picture whose upload failed leaves the edit; the picture as it stood returns" }] },
+    { "from": "ProfileEdit", "via": 9, "kind": "cancel", "label": "Remove it", "to": [{ "terminal": "self", "case": "the new picture whose upload failed, or the server refused (the state chip's upload-refused, Remove it alone — round 51), leaves the edit; the picture as it stood returns" }] },
     { "from": "ProfileEdit", "via": 10, "kind": "detour", "label": "? — Why signing waits", "to": [{ "board": "HelpDialog", "case": "the Why-signing-waits text, the no-draft reading" }] },
 
     { "from": "ProfileEditSeal", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ProfileEdit", "case": "one stage back" }] },

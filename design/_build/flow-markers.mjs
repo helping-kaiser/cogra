@@ -1884,7 +1884,9 @@ Object.assign(FLOW_MARKERS, {
     // Act 3 (jakob 2026-11-17, C2): a staged removal's Undo, where Remove stood.
     { n: 11, find: 'aria-label="Undo removing the picture"', tag: "button" },
     { n: 8, find: ">Retry</button>", tag: "button" },
-    { n: 9, find: ">Remove it</button>", tag: "button" },
+    // Round 51: the refused upload's line (`upload-refused`) carries the same
+    // Remove it, one act.
+    { n: 9, find: ">Remove it</button>", tag: "button", all: true },
     { n: 10, find: 'aria-label="Why signing waits"', tag: "button" },
   ],
   ProfileEditSeal: [

@@ -90,6 +90,8 @@ WHEN press Retry GIVEN the held press dropped -> the gate runs again AND NEVER s
 
 WHEN a picture the edit took fails to upload -> its thumbnail is marked AND the line One picture didn't upload. stands under the picked row with Retry and Remove it AND the gate line takes its fault reading
 
+WHEN the server refuses a picture the edit took at its upload -> the line One picture didn't upload. stands under the picked row with Remove it alone AND NEVER Retry stands under the row, retrying being unable to change the answer
+
 WHEN press Retry under the picked row -> the failed upload tries again AND the gate runs again
 
 WHEN press Remove it under the picked row GIVEN nothing else the edit took is uploading -> the failed picture leaves the batch AND the gate line goes AND Sign the edit is enabled
