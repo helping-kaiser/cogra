@@ -1561,7 +1561,8 @@
           "picked",
           "picked-cover",
           "second",
-          "failed"
+          "failed",
+          "refused"
         ],
         "commentEdit.gate.line": [
           "picked",
@@ -1569,7 +1570,8 @@
           "second"
         ],
         "commentEdit.gate.message": [
-          "failed"
+          "failed",
+          "refused"
         ],
         "commentEdit.gate.retry": [
           "failed"
@@ -1586,7 +1588,8 @@
         "commentEdit.references.add": [],
         "commentEdit.references.label": [],
         "commentEdit.sign": [
-          "failed"
+          "failed",
+          "refused"
         ],
         "commentEdit.tags": [],
         "commentEdit.tags.add": [],
@@ -1605,30 +1608,35 @@
           "picked",
           "picked-cover",
           "failed",
+          "refused",
           "second"
         ],
         "commentEdit.video.describeRow": [
           "picked",
           "picked-cover",
           "failed",
+          "refused",
           "second"
         ],
         "commentEdit.video.describeRow.count": [
           "picked",
           "picked-cover",
           "failed",
+          "refused",
           "second"
         ],
         "commentEdit.video.describeRow.describe": [
           "picked",
           "picked-cover",
           "failed",
+          "refused",
           "second"
         ],
         "commentEdit.video.describeRow.reason": [
           "picked",
           "picked-cover",
           "failed",
+          "refused",
           "second"
         ],
         "commentEdit.video.label": [],
@@ -1636,6 +1644,7 @@
           "picked",
           "picked-cover",
           "failed",
+          "refused",
           "second"
         ],
         "commentEdit.video.thumb.remove": [
@@ -1644,13 +1653,16 @@
           "second"
         ],
         "commentEdit.video.uploadError": [
-          "failed"
+          "failed",
+          "refused"
         ],
         "commentEdit.video.uploadError.message": [
-          "failed"
+          "failed",
+          "refused"
         ],
         "commentEdit.video.uploadError.remove": [
-          "failed"
+          "failed",
+          "refused"
         ],
         "commentEdit.video.uploadError.retry": [
           "failed"
