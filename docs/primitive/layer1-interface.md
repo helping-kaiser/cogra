@@ -802,9 +802,9 @@ Stated independently of any mechanism that achieves them.
   folds, each act's fold cell and coefficient, its recipient resolution,
   and the base allocation matrix the published domain weights and profiles
   determine from them; **(iv) allocation and transport** — the tilt profile
-  shape, the accepted rung $t_k$ with the certificate verdict (pass, fail or
-  indecisive) of every rung of the published grid attempted above it, the
-  depth mass, the source emission fractions, and the conserved transport
+  shape, the accepted rung $t_k$ with each rung attempted above it, with its
+  stated enclosure and verdict under `post:deployment:replay-verification`,
+  the depth mass, the source emission fractions, and the conserved transport
   with the hop allocation matrices it composes; **(v) final standing and
   admission** — the declared rate hull box, the standing certificate
   $\mathcal{K}_k$, the fixed-point enclosure, the equilibrium
@@ -821,17 +821,36 @@ Stated independently of any mechanism that achieves them.
   contributing width and accepted rung, and the proposal and delivered led
   wall whose burn image is the threshold schedule
   (`def:epoch:wall-controller`), all under no-silent-change; **(vii)
-  reproducibility evidence** — formula editions, declared constants,
-  interval boxes, residual bounds, and reports sufficient for any
-  participant to rerun the calculation. Every binding value is reproducible from
-  the accepted records, final ledger, explicit public previous-wall state,
-  public formulas, and constants. Previous standing,
-  warm starts, and cached solver state are not package inputs. **No hashes,
-  roots, or source digests are normative.** A finite implementation must
+  verification evidence** — formula editions, declared constants,
+  interval boxes, residual bounds, and the stated enclosure and verdict for
+  every attempted rung, checked under `post:deployment:replay-verification`.
+  Every binding value is determined by, and checkable from, the accepted
+  records, final ledger, explicit public previous-wall state, public
+  formulas, constants and published attempted-rung evidence
+  (`post:deployment:replay-verification`, `def:epoch:tilt-backoff-grid`);
+  verification grants audit rights without override. Previous standing,
+  warm starts, cached path products and local solver state are not package
+  inputs: the host may use them to reduce work, but they may select only a
+  result supported by the published evidence. A loose enclosure may change
+  whether a rung is decided PASS or FAIL or remains INDECISIVE; the host
+  bears any lost tilt volume and answers for it in reputation. **No hashes,
+  roots, or source digests are normative.** A build declaration naming
+  source revisions by hash is a non-normative assertion; re-execution
+  establishes consistency with it. An inconsistency is attributable to the
+  host's declaration about the package only when the host binds the
+  declaration to that package — for instance by signing it with a digest
+  covering at least the package's normative content — so that a replaced or
+  transplanted declaration is refused before comparison; it never
+  invalidates a package whose evidence checks. A finite implementation must
   publish a standing enclosure narrow enough to decide every binding
-  threshold comparison — an enclosure straddling $\rho_\theta$ for an
-  author or $\rho_{\text{eff}}$ for the epoch stamp leaves the proposed set
-  uncertified. Misbehavior at the boundary is *evidence, not prevention*
+  threshold comparison of an accepted set — an enclosure straddling
+  $\rho_\theta$ for an author or $\rho_{\text{eff}}$ for the epoch stamp
+  leaves the proposed set uncertified. Refinement is the producer's option
+  before publication; when no refinement before publication decides the
+  comparison, the set is rejected, and no verdict of the rejected set is any
+  part of the accepted publication. The host issues each verdict on which
+  the rejection rests, whole, to the party the comparison measures
+  (`post:deployment:verdict-issuance`). Misbehavior at the boundary is *evidence, not prevention*
   (`post:graph:boundary-accountability`). The boundary timestamp is a host
   assertion: the closure cause and the asserted timestamp are checkable for
   mutual consistency with the published duration bounds, with no obligation
@@ -842,9 +861,10 @@ computation that can feed admission is specified by published formula over
 the public record and independently reproducible from records and constants
 alone. For standing, verification checks the completed ledger and
 accepted-act census, reproduces fold cells, base allocation and source
-emission, and evaluates the declared certificate at each attempted rung
-(`subsec:deployment:conserved-standing-reproducibility`). The published
-procedure accepts the greatest proved passing rung; independent replay
+emission, and checks each attempted rung's stated enclosure and verdict
+(`subsec:deployment:conserved-standing-reproducibility`,
+`post:deployment:replay-verification`). The accepted rung is the greatest
+attempted PASS under the published evidence; independent verification
 checks the conserved equilibrium through a certified residual enclosure
 (`def:epoch:tilt-backoff-grid`,
 `lem:dynamics:fixed-point-residual-enclosure`). The certificate is the
