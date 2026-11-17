@@ -4009,6 +4009,222 @@ failed criterion is reported with its disposition.
 | `cond:deployment:terminal-regression` | For a standing-edition change, publish regression inputs and deltas for each terminal consumer that reads standing, with its declared tolerance and response to a failed criterion. |
 | `cond:deployment:complete-act-conformance` | Publish compiler/replay evidence covering parallel acts, complete-act identity, fold cells, recipient resolution, domain profiles, and base allocation, and reproduce the accepted-act census under projection completeness. |
 
+### 13.2 Replay verification and verdict certificates
+
+**Replay Verification (`post:deployment:replay-verification`).**
+
+- *Exact comparisons.* Comparisons of stated integer and rational values
+  and of exact endpoints of stated enclosures are decided exactly and always
+  terminate with a verdict. The enclosure discipline governs evaluated
+  quantities only. What is stated is exact: an integer or rational value,
+  the endpoints of a stated enclosure, or an exact object stated by its
+  definition.
+- *Stating.* Stating is a declared choice of the producer; deciding is not.
+  The published comparison procedure declares for each comparison, before
+  any proposal is judged under it, how each side is stated: as an exact
+  value, as an exact object by its definition, or as a sound enclosure. The
+  comparison record states which way each side was carried, and only a side
+  stated by enclosure can leave a comparison INDECISIVE. An evaluated
+  quantity owes no exact evaluation even where it is rational: inside a
+  declared enclosure route the effort spent is a choice of the producer, and
+  widening into a sound enclosure is always permitted and only costs
+  decisiveness. Widening never reaches data the accepted record already
+  states: record data are exact, are compared as stated, and are never
+  restated as enclosures. An exact object stated by its definition is
+  compared through a defining identity (`rem:epoch:floor-is-a-landmark`).
+- *At an exact threshold.* Where a value meets an exact threshold, an
+  at-most test decides PASS when a sound enclosure has that value as its
+  upper endpoint, an at-least test decides PASS when it has that value as
+  its lower endpoint, a less-than test decides FAIL when it has that value
+  as its lower endpoint, and a greater-than test decides FAIL when it has
+  that value as its upper endpoint. Equality decides PASS exactly when both
+  endpoints equal the value.
+- *Verdicts.* Each evaluated comparison in the record is published as a
+  stated sound enclosure — a closed interval with exact endpoints that
+  contains the exact value of the evaluated quantity — together with its
+  threshold and the verdict that the endpoints alone define. For a test that
+  a quantity is at most a threshold: PASS iff the upper endpoint is at most
+  the threshold; FAIL iff the lower endpoint is above the threshold;
+  INDECISIVE iff the lower endpoint is at most the threshold and the upper
+  endpoint is above it. Every other comparison is decided likewise: PASS
+  when every point of the enclosure satisfies it, FAIL when no point does,
+  INDECISIVE otherwise. A threshold that is itself evaluated is stated as a
+  sound enclosure in the same way, and the comparison is decided over every
+  pair of values the two enclosures admit; an exact threshold is the point
+  case. A reduction the standard declares, such as an enclosure of a
+  difference against zero, is part of the standard and resolves from the
+  certificate reference (`def:deployment:verdict-certificate`). Every
+  verdict carries its enclosure and threshold; an outcome without a stated
+  sound enclosure is not a verdict. A verdict asserts no precision, width
+  or effort beyond these endpoints.
+- *The rung test* (`def:epoch:tilt-backoff-grid`) is one instance, with
+  $m_\theta\,\mathcal{K}_k$ at the attempted rung as the quantity and one as
+  the threshold (`def:dynamics:conserved-standing-certificate`): PASS iff the
+  upper endpoint is at most one, FAIL iff the lower endpoint is above one,
+  INDECISIVE iff the lower endpoint is at most one and the upper endpoint is
+  above one.
+- *Refinement and rejection.* Refinement is the producer's option before
+  publication. At a rung, an INDECISIVE enclosure is published and the
+  descent continues. At a binding threshold, an INDECISIVE enclosure is a
+  verdict that decides nothing and authorizes nothing: a proposed set left
+  unresolved is rejected (`post:network:host-contract`), and no verdict of a
+  rejected set is any part of the accepted publication. Each verdict on
+  which a rejection rests, FAIL or INDECISIVE, is issued whole to the party
+  it measures; showing it further is the right of that party and the duty of
+  no one, within the scopes of `post:deployment:rejected-verdicts`.
+- *Representation.* How endpoints are represented belongs to the
+  deployment's published encoding (`cond:deployment:canonical-encoding`).
+- *Verification.* Verification recomputes every exact object and compares
+  it with the published object; the reader checks every stated enclosure for
+  soundness by its own sound evaluation at any refinement, then checks that
+  the verdict follows from its endpoints and threshold. No particular build,
+  declared procedure or witness is required. A finer reader may decide a
+  comparison the record leaves INDECISIVE without finding a discrepancy;
+  opposing sound PASS and FAIL for the same question are attributable
+  discrepancies, as is a recomputed exact object that differs from the
+  published one. A reader unable to check finds neither a discrepancy nor a
+  confirmation. A witness is an optional aid. Reproduction under a published
+  build declaration, with each store starting empty as declared, is a
+  voluntary test of the producer and never a precondition of package
+  acceptance.
+
+**Verdict certificates (`subsec:deployment:verdict-certificates`).**
+
+- **Verdict Certificate (`def:deployment:verdict-certificate`).** A triple
+  $C = (S, E, o)$ for one comparison. The *standard reference* $S$ resolves
+  in the public record to the standard of that comparison: its predicate (an
+  order relation or equality between a reduced quantity and its threshold),
+  the threshold, the reduction that forms the reduced quantity, and the
+  published comparison procedure. $S$ names the boundary whose thresholds
+  were in force at judgment and the procedure editions then in force, so the
+  standard is accepted content before any proposal is judged under it; it
+  fixes what is compared and how its sides are stated, never how a reader
+  evaluates them. The *enclosure* $E$ gives each side of the reduced
+  comparison as a closed interval with exact endpoints, lower at most upper:
+  a side stated exactly is the point interval of its value, and an evaluated
+  side is a sound enclosure stated by the route the procedure declares. The
+  *outcome* $o$ is PASS, FAIL or INDECISIVE. The certificate is valid when
+  $o = V(E, S)$, where $V$ is total: PASS when every pair of quantity and
+  threshold values that $E$ admits satisfies the predicate, FAIL when no such
+  pair does, INDECISIVE otherwise. Replay resolves $S$ in the public record,
+  recomputes $V$ and compares it with $o$; it needs the certificate and the
+  public record and nothing else. The outcome is derivable and is carried so
+  that replay is a check rather than an interpretation. The certificate
+  certifies the comparison only: binding $E$ to a proposal and its inputs is
+  the evidence layer above it, published with every accepted package and
+  absent from a bare certificate, so a certificate alone asserts no
+  acceptance.
+- **Stated Verdicts Replay Alike (`lem:deployment:stated-verdict-replay`).**
+  For a stated certificate $(S, E, o)$, every replayer that resolves $S$ in
+  the same public record computes the same outcome $V(E, S)$, so validity is
+  decided from the certificate and the public record alone. Replay checks
+  that the outcome follows from the enclosure and the standard; it does not
+  check that the enclosure is sound, which needs the inputs of the evaluated
+  quantity.
+- **Sound Verdicts Never Conflict (`lem:deployment:sound-verdict-agreement`).**
+  Two sound enclosures $E$, $F$ for the same comparison under the same
+  standard never decide opposite ways (one PASS, the other FAIL). Their
+  intersection is a sound enclosure and decides whatever either decides. A
+  sound enclosure contained in $E$ keeps any decision of $E$ and can move
+  INDECISIVE to PASS or FAIL; a sound enclosure containing $E$ never reverses
+  a decision of $E$ and can only keep it or move it to INDECISIVE. Where the
+  exact value of the reduced quantity equals an exact threshold, a sound
+  enclosure decides an order predicate exactly when the endpoint on which
+  that predicate turns equals the value: for an at-most test its upper
+  endpoint at the threshold proves PASS, for an at-least test its lower
+  endpoint proves PASS, for a less-than test its lower endpoint proves FAIL,
+  and for a greater-than test its upper endpoint proves FAIL. Equality
+  decides PASS exactly when both endpoints equal the value. An enclosure
+  holding the value in its interior is INDECISIVE, as is every sound
+  refinement that keeps the value in its interior; a sound refinement
+  bringing the deciding endpoint to the value decides the order test, while
+  a point refinement decides equality.
+- **Verdict Issuance (`post:deployment:verdict-issuance`).** The host
+  chooses each enclosure within the constraints that the paper and the
+  declared comparison procedure fix: soundness is required and tightness is
+  chosen. The host issues each verdict on which the rejection of a proposed
+  set rests, FAIL and INDECISIVE included, as a whole certificate under
+  `def:deployment:verdict-certificate` to the party the comparison measures,
+  with the rejection and unasked. A bare rejection, without the enclosure the
+  host compared, is forbidden. An own-balance or individual-safety
+  comparison measures the author whose act it compares. A comparison that
+  measures no single party, such as the epoch door, and the wall, floor and
+  controller comparisons of the deployment itself are issued to the
+  deployment itself; this self-issuance asks nothing beyond the evidence the
+  deployment already keeps (`cond:deployment:wall-calibration`,
+  `cond:deployment:boundary-search-evidence`). From the issued certificate
+  and the public record alone, the party measured can recompute the outcome
+  from the stated enclosure and the standard and obtains the outcome the
+  host stated; this fixes no representation. The reference names the record
+  state it resolves against, and an issued certificate binds the host as its
+  statement of that verdict, as `post:network:host-contract` binds it to the
+  published package. The certificate lets its holder check that the outcome
+  follows from the enclosure, not that the enclosure is sound. The party
+  measured is owed the certificate, not the evidence layer, whose inputs
+  include acts of other authors that the rejected set leaves unwritten. That
+  the issued enclosure is the one the host compared is conduct of the host,
+  priced by reputation, as is its choice of tightness: a finer sound
+  enclosure computed by anyone holding the inputs decides an INDECISIVE left
+  by parsimony, never contradicts the outcome, and leaves undecided only a
+  comparison whose value meets its threshold. Whether and which proposed
+  sets the host evaluates remains its discretion under
+  `post:epoch:final-act-sequence-closure`; the duty makes visible the
+  enclosure chosen at every comparison on which a rejection rests. Showing
+  an issued certificate further is the right of the party measured and the
+  duty of no one: the host can neither demand secrecy nor force publicity.
+- **Rejected Verdicts (`post:deployment:rejected-verdicts`).** Every verdict
+  of a judged proposed set falls in one of three cases. *Accepted*: the
+  whole certificate set and its evidence layer are published with the
+  accepted package (`post:network:host-contract`,
+  `cond:deployment:canonical-replay`), failed and INDECISIVE rung attempts
+  included where they are the evidence of the accepted value. *Rejected and
+  noted*: the verdict of a rejected set is shown by choice; a note carries a
+  valid certificate whole or does not exist, asserts no acceptance, decides
+  nothing for the rejected set, and by its presence or absence changes no
+  accepted record, verdict or rejection. *Rejected and private*: nothing is
+  shown and no certificate is owed to the public; the party measured holds
+  any certificate issued to it, and the standard is public regardless. The
+  verdicts of a rejected set live outside the accepted record: an issued
+  certificate with the party measured, and a note where its maker places it,
+  separately identified from every accepted package. The deployment may note
+  its own comparisons whole in its own publication beside its calibration
+  evidence (`post:deployment:calibration-evidence`); where the inputs are
+  public, as for those comparisons, any reader can refine a noted
+  INDECISIVE, and a finer decision can only sharpen it. A third party shown
+  a note can check that the outcome follows from the enclosure and that the
+  reference resolves; it cannot check soundness without the inputs, and it
+  learns nothing of acceptance or of other trials. Two bounds apply, each in
+  its own scope; both bind the accepted record, the host and the deployment,
+  and neither limits what a party measured shows of its own certificate:
+  no accepted record represents an unwritten act, and the host shows the
+  certificate of an author only as that author chooses
+  (`rem:epoch:consent-exposure`); no verdict of a rejected trial is gathered
+  into a demand ledger or a register of persons
+  (`rem:epoch:admission-statistics-quarantine`) — counts without persons,
+  such as those of `cond:deployment:certificate-monitoring` and
+  `cond:deployment:boundary-search-evidence`, are no such ledger.
+- **Stated Exactness and Chosen Imprecision
+  (`rem:deployment:stated-exactness`).** The requirement to decide exactly
+  attaches to the comparison of what is stated, never to the computation of
+  the quantity: a deployment may state a rational evaluated quantity by a
+  sound enclosure for cost alone, and comparing what it states remains a
+  bounded number of exact comparisons, however the endpoints were obtained.
+  Under two premises — every stated enclosure is sound, and every declared
+  reduction is an exact equivalence of the comparison — inexactness of every
+  kind (measured, represented, computed or chosen) can influence a verdict
+  only by leaving it INDECISIVE: it never makes two replays of a stated
+  certificate disagree and never turns PASS into FAIL. Replay checks neither
+  premise; soundness is checked by evaluation, which needs the inputs. An
+  exact object stated by its definition, such as the ridge $\rho^*$, is
+  exact without being rational and is decided by a defining identity or
+  through a sound enclosure. Realizations that state the same data reach the
+  same verdicts, and realizations that differ only in the enclosures they
+  produce can differ only between a decision and INDECISIVE. Where the paper
+  does not constrain an enclosure, its selection is discretion of the host;
+  the chosen width is visible in every certificate — at a rung in the
+  published attempts, at a binding threshold in the issued certificate
+  (`post:deployment:verdict-issuance`).
+
 ---
 
 ## 14 Symbol ledger (Layer-1-tagged objects)
