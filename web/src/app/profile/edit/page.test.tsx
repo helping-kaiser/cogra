@@ -10,7 +10,14 @@ import { PICTURE_MAX_BYTES } from "@/lib/ui2/media/caps";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
-import ProfileEditPage from "./page";
+import { fakeIdentityStore } from "@/test/identity";
+import { ProfileEditScreen } from "./profile-edit-screen";
+import { CarriedSnackbar } from "@/lib/ui/carried-snackbar";
+
+/** The screen with the signing key on this browser. */
+function ProfileEditPage() {
+  return <ProfileEditScreen store={fakeIdentityStore({ keyOnDevice: true })} />;
+}
 
 const { push, replace } = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
 vi.mock("next/navigation", () => ({
@@ -349,7 +356,13 @@ describe("ProfileEditPage", () => {
       }),
     );
     const signer = fakeWriteSigner();
-    renderWithProviders(<ProfileEditPage />, { store: signedInStore(), writeSigner: signer });
+    renderWithProviders(
+      <>
+        <ProfileEditPage />
+        <CarriedSnackbar />
+      </>,
+      { store: signedInStore(), writeSigner: signer },
+    );
 
     const bio = await screen.findByTestId("profile-edit-bio");
     fireEvent.change(bio, { target: { value: "" } });
@@ -357,9 +370,14 @@ describe("ProfileEditPage", () => {
       target: { value: "https://ada.example" },
     });
     fireEvent.click(screen.getByTestId("profile-edit-save"));
+    // ProfileEdit.md:15: Save opens the seal and signs nothing; its commit does.
+    fireEvent.click(await screen.findByTestId("profile-edit-seal-sign"));
 
     await waitFor(() => expect(push).toHaveBeenCalledWith("/profile"));
     expect(signer.signStaged).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("carried-snackbar")).toHaveTextContent(
+      "Signed — your profile shows it now, still settling.",
+    );
     // The form holds the full field set: a blanked bio rides null —
     // the wire's explicit clear (api-spec.md "Content authoring").
     expect(variables).toEqual({
@@ -577,6 +595,7 @@ describe("ProfileEditPage", () => {
       fireEvent.click(screen.getByTestId("profile-edit-save"));
 
       await waitFor(() => expect(seen.input).toHaveProperty("avatarMediaId", "m-9"));
+      fireEvent.click(await screen.findByTestId("profile-edit-seal-sign"));
       await waitFor(() => expect(push).toHaveBeenCalledWith("/profile"));
     });
 

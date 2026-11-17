@@ -140,6 +140,9 @@ private val HISTORY_PLACEMENT = CardPlacement(
     menuRows = POST_MENU_ROWS,
 )
 
+/** History's comment card menu: `history.menuSheet`, every row registered (HistoryCommentMenu, -Own). */
+private val HISTORY_COMMENT_MENU = CommentMenuPlacement(HISTORY / "menuSheet", CommentMenuPlacement.ALL)
+
 /** The report confirm over History — no History board draws one, so it keeps its tag. */
 internal const val HISTORY_REPORT_SHEET = "history_report_sheet"
 
@@ -168,6 +171,7 @@ fun HistoryRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val returns = HostReturn(commentsReturn, onCommentsReturnConsumed, rememberCommentReread())
     // HISTORY'S REMOVAL, for the own cards' ⋮ and the thread a count raises: a
     // card removed here stands as its mark in place (RM-G9), as over Saved.
     ProvideRemoval {
@@ -186,7 +190,10 @@ fun HistoryRoute(
                 onBack = onBack,
             ),
             doors = doors,
-            hooks = viewModel.cardHooks(viewerId, onEditPost, onCitePost) { url -> context.sharePost(url) },
+            hooks = viewModel.cardHooks(viewerId, onEditPost, onCitePost, onEditComment) { url ->
+                context.sharePost(url)
+            },
+            returns = returns,
             tagCards = TagCardHooks(
                 onShare = { name -> context.sharePost(viewModel.topicShareUrl(name)) },
                 stance = topicStanceControl,
@@ -203,8 +210,7 @@ fun HistoryRoute(
                     onReply = onReply,
                     onEditComment = onEditComment,
                     onSignInOrJoin = onSignInOrJoin,
-                    commentsReturn = commentsReturn,
-                    onCommentsReturnConsumed = onCommentsReturnConsumed,
+                    returns = returns,
                     onCommentsDepart = onCommentsDepart,
                 )
             },
@@ -218,6 +224,7 @@ private fun HistoryViewModel.cardHooks(
     viewerId: String?,
     onEditPost: (String) -> Unit,
     onCitePost: (String) -> Unit,
+    onEditComment: (commentId: String, parentTitle: String) -> Unit,
     share: (String) -> Unit,
 ) = CardHooks(
     viewerId = viewerId,
@@ -225,6 +232,7 @@ private fun HistoryViewModel.cardHooks(
     shareUrls = shareUrls,
     onEditPost = onEditPost,
     onCitePost = onCitePost,
+    onEditComment = onEditComment,
     onReveal = ::onReveal,
     stanceControl = nodeStanceControl,
 )
@@ -367,6 +375,8 @@ fun HistoryScreen(
     now: Instant = Instant.now(),
     commentsSheet: @Composable (postId: String, onDismiss: () -> Unit) -> Unit = { _, _ -> },
     reportSheet: ReportSheetSlot = { _, _, _ -> },
+    /** What came back from a comment edit or reply signed off this page, and the one-comment re-read ([EditReturn]). */
+    returns: HostReturn = HostReturn(),
 ) {
     val snackbar = LocalSnackbarHostState.current
     // THE CARDS' MENUS SAVE THROUGH THE ONE OVERLAY AND HIDE THROUGH THE ONE
@@ -377,11 +387,12 @@ fun HistoryScreen(
     val listState = rememberLazyListState()
     val layers = remember { CoveringLayers() }
     var commentsFor by rememberSaveable { mutableStateOf<String?>(null) }
-    var reportFor by remember { mutableStateOf<String?>(null) }
+    var reportFor by remember { mutableStateOf<ReportAsk?>(null) }
+    val editReturn = rememberEditReturn(returns, threadOpen = commentsFor != null)
     var sheetOpen by rememberSaveable { mutableStateOf(false) }
     val notify = rememberHistoryNotify(snackbar)
     LoadNextAtTheTail(listState, state.hasNextPage, state.moreFailed, view.rows.size, callbacks.onLoadMore)
-    val actions = CardActions(hooks, doors.cards, state.reveals, { commentsFor = it }, { reportFor = it })
+    val actions = CardActions(hooks, doors.cards, state.reveals, { commentsFor = it }, { reportFor = it }, editReturn)
     val tagActions = TagCardActions(
         onOpen = doors.cards.onOpenTopic,
         onCompose = doors.onComposeWithTag,
@@ -416,7 +427,7 @@ fun HistoryScreen(
             )
         }
         commentsFor?.let { postId -> commentsSheet(postId) { commentsFor = null } }
-        reportFor?.let { postId -> reportSheet(postId, { reportFor = null }, notify) }
+        reportFor?.let { ask -> reportSheet(ask, { reportFor = null }, notify) }
     }
 }
 
@@ -711,7 +722,7 @@ private fun HistoryCardFor(entry: HistoryEntry, actions: CardActions, tags: TagC
             viewerId = actions.viewerId,
             onEdit = actions.onEditPost,
             onCite = actions.onCitePost,
-            onReport = { actions.onReport(card.post.id) },
+            onReport = { actions.onReport(ReportAsk(card.post.id, ReportKind.Post)) },
             revealed = actions.reveals.isRevealed(card.post.id, card.post.sensitiveMark()),
             onReveal = { actions.onReveal(card.post.id, card.post.sensitiveMark()) },
             stanceControl = actions.stanceControl,
@@ -727,6 +738,7 @@ private fun HistoryCardFor(entry: HistoryEntry, actions: CardActions, tags: TagC
             node = HISTORY / "commentCard",
             testTagPrefix = "history_comment_${card.comment.id}",
             actions = actions,
+            menu = HISTORY_COMMENT_MENU,
         )
 
         is HistoryCard.Person -> ProfileFeedCard(

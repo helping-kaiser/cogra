@@ -9,9 +9,13 @@ package com.cogra.feature.content
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import com.cogra.core.designsystem.DataNode
@@ -22,6 +26,7 @@ import com.cogra.domain.content.isRevealed
 import com.cogra.domain.removal.RemovalKind
 import com.cogra.domain.removal.marked
 import com.cogra.domain.saved.CommentTarget
+import com.cogra.domain.saved.headRowOf
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.stance.StanceControlRoute
@@ -53,6 +58,8 @@ data class CardHooks(
     val shareUrls: CardShareUrls = CardShareUrls({ it }, { _, comment -> comment }, { it }),
     val onEditPost: (String) -> Unit = {},
     val onCitePost: (String) -> Unit = {},
+    /** The own comment menu's Edit: the comment's edit over the host, [parentTitle] its caption. */
+    val onEditComment: (commentId: String, parentTitle: String) -> Unit = { _, _ -> },
     val onReveal: (String, SensitiveMark) -> Unit = { _, _ -> },
     val stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit =
         { _, _, _ -> },
@@ -64,13 +71,16 @@ internal data class CardActions(
     val doors: CardDoors,
     val reveals: Map<String, SensitiveMark>,
     val onOpenComments: (String) -> Unit,
-    val onReport: (String) -> Unit,
+    val onReport: (ReportAsk) -> Unit,
+    /** The host's off-thread edit return: which edit it opened, and the comments it re-read since. */
+    val editReturn: EditReturn? = null,
 ) {
     val viewerId: String? get() = hooks.viewerId
     val onShare: (String) -> Unit get() = hooks.onShare
     val shareUrls: CardShareUrls get() = hooks.shareUrls
     val onEditPost: (String) -> Unit get() = hooks.onEditPost
     val onCitePost: (String) -> Unit get() = hooks.onCitePost
+    val onEditComment: (String, String) -> Unit get() = hooks.onEditComment
     val onReveal: (String, SensitiveMark) -> Unit get() = hooks.onReveal
     val stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit
         get() = hooks.stanceControl
@@ -89,8 +99,8 @@ internal fun ListThread(
     onReply: (ReplyTarget) -> Unit,
     onEditComment: (commentId: String, parentTitle: String) -> Unit,
     onSignInOrJoin: () -> Unit,
-    commentsReturn: CommentsReturn,
-    onCommentsReturnConsumed: () -> Unit,
+    /** What came back to the thread's host: the thread reads it as its own return. */
+    returns: HostReturn,
     onCommentsDepart: (CommentsScroll) -> Unit,
 ) {
     CommentsSheetRoute(
@@ -105,8 +115,8 @@ internal fun ListThread(
         onReference = onCitePost,
         onSignInOrJoin = onSignInOrJoin,
         onDepart = onCommentsDepart,
-        commentsReturn = commentsReturn,
-        onReturnConsumed = onCommentsReturnConsumed,
+        commentsReturn = returns.value,
+        onReturnConsumed = returns.onConsumed,
         stanceControl = { target, tag, node ->
             StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node)
         },
@@ -131,21 +141,20 @@ internal fun ListCommentCard(
     onOpenTarget: (() -> Unit)? = null,
     /** The reply's door where it differs from the thread aimed at the comment — an applicant's lock. */
     onReply: (() -> Unit)? = null,
+    /** The sheet the card's ⋮ raises on this host and the rows its boards register; null keeps the rows' tags. */
+    menu: CommentMenuPlacement? = null,
 ) {
     val doors = actions.doors
     // THE CARD AS THIS DEVICE KNOWS IT NOW: removed here or anywhere since the
     // page was read, it stands as its mark in place (RM-G9).
-    val comment = listed.marked(rememberRemovedMarks())
+    // …and an edit signed off the thread since, standing in its place ([EditReturn]).
+    val comment = (actions.editReturn?.shown(listed) ?: listed).marked(rememberRemovedMarks())
     var licenseOpen by remember(comment.id) { mutableStateOf(false) }
     var removeOpen by remember(comment.id) { mutableStateOf(false) }
     val own = actions.viewerId != null && comment.author?.id == actions.viewerId
     CommentFeedCard(
         comment = comment,
-        onRemove = if (own) {
-            { removeOpen = true }
-        } else {
-            null
-        },
+        menu = listedCommentMenu(comment, own, target, actions, menu) { removeOpen = true },
         target = target,
         node = node,
         testTagPrefix = testTagPrefix,
@@ -189,6 +198,63 @@ internal fun ListCommentCard(
     }
 }
 
+/** A host's side of the comment return: what came back, how it is marked read, and the one-comment re-read. */
+data class HostReturn(
+    val value: CommentsReturn = CommentsReturn(),
+    val onConsumed: () -> Unit = {},
+    val reread: suspend (String) -> CommentView? = { null },
+)
+
+/**
+ * AN EDIT OPENED OFF THE THREAD RETURNS TO ITS HOST (CommentEdit.md:89,
+ * HistoryCommentMenuOwn.md:17, Saved.md:135, ProfileCommentsMenuOwn.md:17):
+ * signed, "that host comes back as it was left AND the edited comment's card
+ * settles in place there wearing Still settling" — so the host does NOT read
+ * its list again (History.md:117: the order stands until the next open or
+ * pull). It re-reads the ONE comment it opened the edit for and stands the
+ * fresh read in that card's place; the list, its order and its scroll hold.
+ * web's twin is the card's `fetchComment` re-read (`comment-feed-card.tsx`).
+ *
+ * The edit is its own destination, so the host's composition leaves while it
+ * runs: which comment was opened rides saved state, and the re-read lands
+ * once the host is back.
+ */
+@Stable
+internal class EditReturn(
+    private val opened: MutableState<String?>,
+    /** The comments re-read since an edit off the thread was signed, by id. */
+    val settled: Map<String, CommentView>,
+) {
+    /** The own menu's Edit was tapped on [commentId]'s card. */
+    fun opening(commentId: String) {
+        opened.value = commentId
+    }
+
+    /** The card as the host shows it: the fresh read once its edit was signed, else as listed. */
+    fun shown(listed: CommentView): CommentView = settled[listed.id] ?: listed
+}
+
+/**
+ * The host's half of [EditReturn]. A return the host does not handle — a
+ * signed reply or edit while no edit of its own was opened, with no thread
+ * standing over it to take it — is consumed all the same, so it cannot fire
+ * the thread's signed line the next time a thread opens here.
+ */
+@Composable
+internal fun rememberEditReturn(returns: HostReturn, threadOpen: Boolean): EditReturn {
+    val commentsReturn = returns.value
+    val opened = rememberSaveable { mutableStateOf<String?>(null) }
+    val settled = remember { mutableStateMapOf<String, CommentView>() }
+    LaunchedEffect(commentsReturn.landed, threadOpen) {
+        if (!commentsReturn.landed || threadOpen) return@LaunchedEffect
+        val id = opened.value
+        opened.value = null
+        returns.onConsumed()
+        if (id != null) returns.reread(id)?.let { settled[id] = it }
+    }
+    return remember(opened, settled) { EditReturn(opened, settled) }
+}
+
 /** THE NEXT PAGE ARRIVES BECAUSE THE READER KEPT GOING (readme §13): asked a few cards short of the end. */
 @Composable
 internal fun LoadNextAtTheTail(
@@ -207,3 +273,37 @@ internal fun LoadNextAtTheTail(
             }
     }
 }
+
+/**
+ * What the edit's caption names (`Your comment on "…".`, which quotes it): a
+ * post's own title, else the head row's words — `@mira's comment` (seam 320-15).
+ */
+private fun editCaption(target: CommentTarget?): String = when (target) {
+    null -> ""
+    is CommentTarget.Post -> headRowOf(target).title
+    else -> headRowOf(target).label
+}
+
+/**
+ * A listed comment's ⋮: the own rows or another's, their doors over the host.
+ * THE EDIT OPENED OFF THE THREAD RETURNS TO THIS HOST (CommentEdit.md:89): the
+ * host notes which comment it opened ([EditReturn]), and the edit's caption
+ * names what the comment answers, as the head row does.
+ */
+private fun listedCommentMenu(
+    comment: CommentView,
+    own: Boolean,
+    target: CommentTarget?,
+    actions: CardActions,
+    placement: CommentMenuPlacement?,
+    onRemove: () -> Unit,
+) = CommentCardMenu(
+    own = own,
+    onEdit = {
+        actions.editReturn?.opening(comment.id)
+        actions.onEditComment(comment.id, editCaption(target))
+    },
+    onRemove = onRemove,
+    onReport = { actions.onReport(ReportAsk(comment.id, ReportKind.Comment)) },
+    placement = placement,
+)

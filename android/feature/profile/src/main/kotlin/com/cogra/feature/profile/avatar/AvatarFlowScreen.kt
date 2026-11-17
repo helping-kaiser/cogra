@@ -29,7 +29,7 @@ import com.cogra.core.designsystem.v2.atom.HelpDialog
 import com.cogra.core.designsystem.v2.atom.SummaryRow
 import com.cogra.core.designsystem.v2.atom.WizardHeader
 import com.cogra.core.designsystem.v2.media.CropFraming
-import com.cogra.core.designsystem.v2.media.CropMask
+import com.cogra.core.designsystem.v2.media.CropKind
 import com.cogra.core.designsystem.v2.media.CropState
 import com.cogra.core.designsystem.v2.media.MediaCrop
 import com.cogra.core.designsystem.v2.media.MediaItem
@@ -155,6 +155,9 @@ private fun ColumnScope.CropStage(
         initial = state.crop?.window
             ?.let { CropFraming.of(it.left, it.top, it.right, it.bottom) }
             ?: CropFraming.Whole,
+        sourceRatio = state.sourceRatio,
+        kind = CropKind.Avatar,
+        frameRatio = 1f,
     )
 
     // Reported after every composition, not only on Next: a process death
@@ -173,10 +176,9 @@ private fun ColumnScope.CropStage(
         shape = MediaShape.Square,
         state = crop,
         caption = "Drag to move, pinch to zoom.",
-        mask = CropMask.Circle,
-        // `AvatarCrop` draws its stage square (`CropViewport`'s 390).
-        stageRatio = 1f,
         testTag = "avatar_crop",
+        // `AvatarCrop`: the 342 circle at 24 in the square 390 stage (AvatarCrop.md:7).
+        kind = CropKind.Avatar,
     )
     Text(
         text = "One picture, shown everywhere you appear.",

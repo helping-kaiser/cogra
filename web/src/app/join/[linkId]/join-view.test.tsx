@@ -366,24 +366,24 @@ describe("JoinView", () => {
       expect(screen.getByText("At least 12 characters.")).toBeInTheDocument();
     });
 
-    // Join.md: "ALWAYS Create account stands disabled with Waiting for a
-    // handle, your email and a password right above it GIVEN Handle, Email,
-    // Password or Repeat password is empty" · "WHEN all four fields hold a
-    // character -> Create account wakes AND the line … goes".
-    it("create_account_stands_disabled_with_its_waiting_line_until_all_four_fields_hold_a_character", async () => {
+    // Join.md: the commit stands disabled with no line above it and its
+    // spoken description reads Waiting for a handle, your email and a
+    // password until all four fields hold a character (design 80fd29912).
+    it("create_account_stands_disabled_with_its_spoken_wait_until_all_four_fields_hold_a_character", async () => {
       server.use(usableCheck);
       renderWithProviders(<JoinView linkId={ID} />);
       await screen.findByTestId("join.handle.input");
       const reason = "Waiting for a handle, your email and a password";
-      expect(screen.getByTestId("join.commit.reason")).toHaveTextContent(reason);
+      expect(screen.getByTestId("join.commit.action")).toHaveAccessibleDescription(reason);
+      expect(screen.getByText(reason)).toHaveClass("sr-only");
       expect(screen.getByTestId("join.commit.action")).toBeDisabled();
       typeIn("handle", "a");
       typeIn("email", "b");
       typeIn("password", "x");
       expect(screen.getByTestId("join.commit.action")).toBeDisabled();
-      expect(screen.getByTestId("join.commit.reason")).toHaveTextContent(reason);
+      expect(screen.getByTestId("join.commit.action")).toHaveAccessibleDescription(reason);
       typeIn("confirm", "y");
-      expect(screen.queryByTestId("join.commit.reason")).not.toBeInTheDocument();
+      expect(screen.queryByText(reason)).not.toBeInTheDocument();
       expect(screen.getByTestId("join.commit.action")).toBeEnabled();
     });
 

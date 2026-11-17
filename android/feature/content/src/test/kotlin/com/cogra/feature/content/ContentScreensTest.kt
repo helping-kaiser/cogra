@@ -1890,8 +1890,13 @@ class ContentScreensTest {
         )
     }
 
+    /**
+     * CommentMenuOwn.md:3, :11 (seam 304) — Edit is a row of the own comment's
+     * menu, between Cite and Remove, and NO comment card carries an Edit button;
+     * another's menu has no Edit and ends with Report (CommentMenu.md:7).
+     */
     @Test
-    fun theViewersOwnCommentOffersEditOthersDoNot() {
+    fun theViewersOwnCommentOffersEditInItsMenuAndNoCardCarriesEdit() {
         renderDetail(
             detailFixture(
                 loading = false,
@@ -1901,8 +1906,11 @@ class ContentScreensTest {
             viewerId = "viewer",
         )
         openComments()
-        compose.onNodeIn(threadCard("mine"), threadPart("actionRow.edit")).assertExists()
+        compose.onNodeIn(threadCard("mine"), threadPart("actionRow.edit")).assertDoesNotExist()
         compose.onNodeIn(threadCard("theirs"), threadPart("actionRow.edit")).assertDoesNotExist()
+        compose.onNodeIn(threadCard("mine"), threadPart("menu")).performScrollTo().performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.edit").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.report").assertDoesNotExist()
     }
 
     @Test
@@ -1919,7 +1927,7 @@ class ContentScreensTest {
         compose.onNodeWithTag("comment_edited_c2").assertDoesNotExist()
     }
 
-    /** `ReplyMedia` 6 — Edit on an own comment opens `CommentEdit`. */
+    /** CommentMenuOwn.md:13 — the own menu's Edit closes the menu and opens the comment's edit. */
     @Test
     fun theEditAffordanceOpensTheEditScreen() {
         var editing: com.cogra.domain.CommentView? = null
@@ -1933,7 +1941,8 @@ class ContentScreensTest {
             onEditComment = { editing = it },
         )
         openComments()
-        compose.onNodeIn(threadCard("mine"), threadPart("actionRow.edit")).performScrollTo().performClick()
+        compose.onNodeIn(threadCard("mine"), threadPart("menu")).performScrollTo().performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.edit").performClick()
         assertThat(editing?.id).isEqualTo("mine")
     }
 

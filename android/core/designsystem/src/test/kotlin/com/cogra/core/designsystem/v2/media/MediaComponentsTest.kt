@@ -421,8 +421,11 @@ class MediaComponentsTest {
         compose.runOnUiThread { action!!.action() }
     }
 
-    /** A half-size window, so a nudge has room to move in any direction. */
-    private fun centredState() = CropState(CropFraming(0.25f, 0.25f, 0.75f, 0.75f))
+    /**
+     * The 3:2 picture under the square frame at twice the fill — a third of
+     * its width, half its height, centred — so a nudge has room either way.
+     */
+    private fun centredState() = CropState(CropFraming(1f / 3f, 0.25f, 2f / 3f, 0.75f), 1.5f, CropKind.Post, 1f)
 
     @Test
     fun theCropIsCompletableWithoutAGesture() {
@@ -434,7 +437,7 @@ class MediaComponentsTest {
 
         // The non-drag route actually moves the framing — this is the D17
         // requirement, not a decoration.
-        assertThat(state.framing.left).isLessThan(0.25f)
+        assertThat(state.framing.left).isLessThan(1f / 3f)
     }
 
     @Test
@@ -444,7 +447,7 @@ class MediaComponentsTest {
 
         fireCropAction("Nudge right")
         compose.waitForIdle()
-        assertThat(state.framing.left).isGreaterThan(0.25f)
+        assertThat(state.framing.left).isGreaterThan(1f / 3f)
 
         fireCropAction("Nudge down")
         compose.waitForIdle()
@@ -464,7 +467,7 @@ class MediaComponentsTest {
         fireCropAction("Zoom in")
         compose.waitForIdle()
         val zoomedIn = state.framing.width
-        assertThat(zoomedIn).isLessThan(0.5f)
+        assertThat(zoomedIn).isLessThan(1f / 3f)
 
         fireCropAction("Zoom out")
         compose.waitForIdle()
@@ -474,9 +477,13 @@ class MediaComponentsTest {
         fireCropAction("Nudge left")
         fireCropAction("Reset framing")
         compose.waitForIdle()
-        // Reset goes back to the whole picture, which is what a shape
-        // switch re-frames against.
-        assertThat(state.framing).isEqualTo(CropFraming.Whole)
+        // Reset puts the picture at rest: centred at the frame's fill, the
+        // largest square of the 3:2 picture.
+        val rest = state.framing
+        assertThat(rest.left).isWithin(1e-4f).of(1f / 6f)
+        assertThat(rest.right).isWithin(1e-4f).of(5f / 6f)
+        assertThat(rest.top).isWithin(1e-4f).of(0f)
+        assertThat(rest.bottom).isWithin(1e-4f).of(1f)
     }
 
     @Test
@@ -493,13 +500,14 @@ class MediaComponentsTest {
 
     @Test
     fun theFramingIsReadBackSoTheActionsAreNotFiredBlind() {
-        val state = CropState(CropFraming.Whole)
+        val state = CropState(CropFraming.Whole, null, CropKind.Post, 1f)
         cropContent(state)
 
+        // At rest the square frame keeps the 3:2 picture's middle two thirds.
         crop().assert(
             SemanticsMatcher.expectValue(
                 SemanticsProperties.StateDescription,
-                "Keeping 100% of the picture, centred",
+                "Keeping 66% of the picture, centred",
             ),
         )
 
@@ -512,7 +520,7 @@ class MediaComponentsTest {
             SemanticsMatcher.keyIsDefined(SemanticsProperties.StateDescription),
         )
         assertThat(state.framingDescription()).isNotEqualTo(
-            "Keeping 100% of the picture, centred",
+            "Keeping 66% of the picture, centred",
         )
     }
 
@@ -535,7 +543,7 @@ class MediaComponentsTest {
 
         fireCropAction("Nudge left")
         compose.waitForIdle()
-        assertThat(first.framing.left).isLessThan(0.25f)
+        assertThat(first.framing.left).isLessThan(1f / 3f)
 
         // The filmstrip moves to the next picture: the second state is
         // framable in its own right, and the first one's framing stays
@@ -546,8 +554,8 @@ class MediaComponentsTest {
         fireCropAction("Nudge right")
         compose.waitForIdle()
 
-        assertThat(second.framing.left).isGreaterThan(0.25f)
-        assertThat(first.framing.left).isLessThan(0.25f)
+        assertThat(second.framing.left).isGreaterThan(1f / 3f)
+        assertThat(first.framing.left).isLessThan(1f / 3f)
     }
 
     @Test

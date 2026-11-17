@@ -11,7 +11,7 @@ import {
   DismissVouchBackDocument,
   LogInDocument,
   MeDocument,
-  PasswordResetLinkCheckDocument,
+  PasswordResetLinkDocument,
   RefreshSessionDocument,
   RequestPasswordResetDocument,
   UploadKeyBackupDocument,
@@ -132,23 +132,23 @@ export function confirmPasswordReset(
 }
 
 /**
- * Whether a reset link is still live — read-only, never consuming
- * (api-spec.md `passwordResetLinkCheck`). False alike for a link used, one
+ * The login email of the account a live reset link resets — read-only, never
+ * consuming (api-spec.md `passwordResetLink`). Null alike for a link used, one
  * past its time and a token nothing knows: ResetExpired never says which.
  */
 export async function checkPasswordResetLink(
   client: ApolloClient,
   token: string,
-): Promise<Outcome<boolean>> {
+): Promise<Outcome<string | null>> {
   const fetched = await fetchOutcome(() =>
     client.query({
-      query: PasswordResetLinkCheckDocument,
+      query: PasswordResetLinkDocument,
       variables: { token },
       fetchPolicy: "network-only",
     }),
   );
   if (fetched.kind !== "success") return fetched;
-  return success(fetched.value.passwordResetLinkCheck);
+  return success(fetched.value.passwordResetLink?.email ?? null);
 }
 
 /**

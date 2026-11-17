@@ -143,17 +143,30 @@ export function profileExpectation(
   },
   ledger: MediaLedger,
 ): ExpectedProfile {
-  const avatarId = mediaField(sent.avatar);
   return {
     node,
     displayName: sent.displayName,
     bio: sent.bio ?? "",
     websiteUrl: sent.websiteUrl ?? "",
-    avatar:
-      avatarId === undefined
-        ? { state: "untouched" }
-        : avatarId === null
-          ? { state: "cleared" }
-          : { state: "set", asset: assetExpectation(avatarId, null, null, false, ledger) },
+    avatar: avatarSlot(sent.avatar, ledger),
   };
+}
+
+/**
+ * What a picture-only change's payload must decode to (`prepareAvatarChange`):
+ * no text field at all — each was omitted, so the payload carries none and the
+ * decoder reads it as null — and the avatar three-valued. A payload restating
+ * a name, bio or website was not the gesture ordered and is refused.
+ */
+export function avatarExpectation(node: string, avatar: MediaSelection, ledger: MediaLedger): ExpectedProfile {
+  return { node, displayName: null, bio: null, websiteUrl: null, avatar: avatarSlot(avatar, ledger) };
+}
+
+function avatarSlot(selection: MediaSelection | undefined, ledger: MediaLedger): ExpectedProfile["avatar"] {
+  const avatarId = mediaField(selection);
+  return avatarId === undefined
+    ? { state: "untouched" }
+    : avatarId === null
+      ? { state: "cleared" }
+      : { state: "set", asset: assetExpectation(avatarId, null, null, false, ledger) };
 }

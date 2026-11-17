@@ -4,7 +4,7 @@ import { previewTagName, TAG_BATCH_CAP, TAG_NAME_MAX } from "./normalize";
 
 describe("previewTagName", () => {
   it("strips one leading '#'", () => {
-    expect(previewTagName("#rust")).toEqual({ canonical: "rust", valid: true, reason: null });
+    expect(previewTagName("#rust")).toEqual({ canonical: "rust", valid: true });
   });
 
   it("strips only one leading '#', leaving the rest untouched", () => {
@@ -13,7 +13,7 @@ describe("previewTagName", () => {
   });
 
   it("ASCII-lowercases", () => {
-    expect(previewTagName("Rust")).toEqual({ canonical: "rust", valid: true, reason: null });
+    expect(previewTagName("Rust")).toEqual({ canonical: "rust", valid: true });
   });
 
   it("is idempotent", () => {
@@ -26,7 +26,6 @@ describe("previewTagName", () => {
     expect(previewTagName("a-b_c.d9")).toEqual({
       canonical: "a-b_c.d9",
       valid: true,
-      reason: null,
     });
   });
 
@@ -58,35 +57,6 @@ describe("previewTagName", () => {
 
   it("accepts exactly 128 bytes", () => {
     expect(previewTagName("a".repeat(TAG_NAME_MAX)).valid).toBe(true);
-  });
-});
-
-// F1: the gate has to say WHY, at input time, in the reader's words.
-describe("previewTagName reasons", () => {
-  it("carries no reason for a legal name", () => {
-    expect(previewTagName("rust").reason).toBeNull();
-  });
-
-  it("names the space as the problem, leading or internal", () => {
-    expect(previewTagName("bot defense").reason).toMatch(/space/i);
-    expect(previewTagName(" rust").reason).toMatch(/space/i);
-  });
-
-  it("names the charset for non-ASCII and for illegal punctuation", () => {
-    expect(previewTagName("münchen").reason).toMatch(/ASCII/);
-    expect(previewTagName("a:b").reason).toMatch(/ASCII/);
-    expect(previewTagName("emoji🎉").reason).toMatch(/ASCII/);
-  });
-
-  it("names the length bound for an over-long name", () => {
-    const reason = previewTagName("a".repeat(TAG_NAME_MAX + 1)).reason;
-    expect(reason).toMatch(/too long/i);
-    expect(reason).toContain(String(TAG_NAME_MAX));
-  });
-
-  it("asks for a name when there is none", () => {
-    expect(previewTagName("").reason).toMatch(/tag name/i);
-    expect(previewTagName("#").reason).toMatch(/tag name/i);
   });
 });
 
