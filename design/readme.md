@@ -12177,6 +12177,21 @@ and 19 as recommended), built on round 49 (60d9c51c0).
   stays unkeyed. Pixel-identical to ed3cfc74e on the boards only round
   49 changed, and to round 50's own tip on the boards only round 50
   changed (headless Chromium, every chip combination).
+- **Act 3, jakob's second review (2026-11-17)**: the words and the five
+  placements blessed; the picture's two buttons side by side, never one
+  above the other, in the short forms `Change` · `Remove` wherever two
+  stand (the long forms measure 133 + 8 + 135 against the row's 262); a
+  staged removal's `Undo` where `Remove` stood (C2); `Remove` hidden
+  while a new picture is staged (C3); the write-rule line standing until
+  the next change or opening (C1); the seal's `Profile` row running on to
+  a second line (`ActsCard`'s row `wrap`, that row alone; `holds` =
+  `all`, C4); the reading settings' sheet sized to its content (C5); a
+  clip that cannot load standing as its cover with the outlined `Retry`
+  alone (`Reel`'s `state` = `unloaded`, the viewer as law, C6); a crop's
+  arrow named `Back to the edit` or `Back to your profile` (C8); the
+  profile seal's upload gate drawn, `uploading` and `upload-failed`, as
+  the picture seal's; the picture seal's landing sentence. Backlog 230,
+  240–243 closed.
 ---
 
 ## 14. The canvases
