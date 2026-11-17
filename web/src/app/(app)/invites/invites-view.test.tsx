@@ -51,14 +51,6 @@ vi.mock("next/navigation", () => ({
 
 const server = startMswServer();
 
-/** The server's transport-tier FORBIDDEN: an answer, carried in the errors array. */
-function forbiddenAnswer() {
-  return HttpResponse.json({
-    data: null,
-    errors: [{ message: "member account required", extensions: { code: "FORBIDDEN" } }],
-  });
-}
-
 function signedInStore() {
   const store = createTokenStore();
   store.save({ accessToken: "access-1", refreshToken: "refresh-1", accountId: "acct-1" });
@@ -347,7 +339,14 @@ describe("Invites (behavior/Invites.md)", () => {
   // reach the server" line.
   it(":59 a revoke the server refuses FORBIDDEN keeps the card and reads That didn't go through.", async () => {
     show();
-    server.use(gqlLink.mutation("RevokeInviteLink", () => forbiddenAnswer()));
+    server.use(
+      gqlLink.mutation("RevokeInviteLink", () =>
+        HttpResponse.json({
+          data: null,
+          errors: [{ message: "member account required", extensions: { code: "FORBIDDEN" } }],
+        }),
+      ),
+    );
     const cards = await screen.findAllByTestId("invites.link");
     fireEvent.click(within(cards[0]).getByTestId("invites.link.action"));
     const line = await screen.findByTestId("invites-revoke-failed");
@@ -743,7 +742,14 @@ describe("the create sheet (behavior/InviteNew.md, InviteExpiry.md, InviteCreate
 
   it("InviteNew.md:23 a create the server refuses FORBIDDEN reads That didn't go through. and keeps the choices", async () => {
     show();
-    server.use(gqlLink.mutation("CreateInviteLink", () => forbiddenAnswer()));
+    server.use(
+      gqlLink.mutation("CreateInviteLink", () =>
+        HttpResponse.json({
+          data: null,
+          errors: [{ message: "member account required", extensions: { code: "FORBIDDEN" } }],
+        }),
+      ),
+    );
     const sheet = await openSheet();
     fireEvent.click(within(sheet).getByRole("switch"));
     fireEvent.click(within(sheet).getByTestId("invites.createSheet.create"));
@@ -1000,7 +1006,14 @@ describe("the closing dialogs (behavior/RejectConfirm.md, RejectAllConfirm.md)",
 
   it("NetworkError.md:13 a closing the server refuses FORBIDDEN reads That didn't go through. with Retry", async () => {
     show();
-    server.use(gqlLink.mutation("RejectApplication", () => forbiddenAnswer()));
+    server.use(
+      gqlLink.mutation("RejectApplication", () =>
+        HttpResponse.json({
+          data: null,
+          errors: [{ message: "member account required", extensions: { code: "FORBIDDEN" } }],
+        }),
+      ),
+    );
     await screen.findAllByTestId("invites.application");
     fireEvent.click(within(row("imke")).getByTestId("invites.application.close"));
     fireEvent.click(await screen.findByTestId("invites.dialog.close"));
