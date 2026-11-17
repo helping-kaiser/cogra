@@ -869,13 +869,20 @@
     },
     "AvatarCrop": {
       "prefix": "avatarCrop",
-      "keys": {},
+      "keys": {
+        "avatarCrop.refusal": "the picked chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+      },
       "nodes": {
         "avatarCrop.header": [],
         "avatarCrop.header.back": [],
         "avatarCrop.header.leave": [],
         "avatarCrop.header.title": [],
         "avatarCrop.next": [],
+        "avatarCrop.refusal": [
+          "too-big",
+          "gif",
+          "unreadable"
+        ],
         "avatarCrop.viewport": [],
         "avatarCrop.zoom": [],
         "avatarCrop.zoom.input": []
@@ -885,7 +892,8 @@
       "prefix": "avatarSeal",
       "keys": {
         "avatarSeal.acts.actRow": "the row's position in the acts card, counted from 1 (ActsCard)",
-        "avatarSeal.foot": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+        "avatarSeal.foot": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "avatarSeal.gate": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "avatarSeal.acts": [],
@@ -904,15 +912,37 @@
         "avatarSeal.acts.total": [],
         "avatarSeal.foot": [
           "rest",
-          "signing"
+          "signing",
+          "uploading",
+          "upload-failed"
         ],
         "avatarSeal.foot.back": [
           "rest",
-          "signing"
+          "signing",
+          "uploading",
+          "upload-failed"
         ],
         "avatarSeal.foot.sign": [
           "rest",
-          "signing"
+          "signing",
+          "uploading",
+          "upload-failed"
+        ],
+        "avatarSeal.gate": [
+          "uploading",
+          "upload-failed"
+        ],
+        "avatarSeal.gate.line": [
+          "uploading"
+        ],
+        "avatarSeal.gate.message": [
+          "upload-failed"
+        ],
+        "avatarSeal.gate.retry": [
+          "upload-failed"
+        ],
+        "avatarSeal.gate.wait": [
+          "upload-failed"
         ],
         "avatarSeal.header": [],
         "avatarSeal.header.back": [],
@@ -1337,11 +1367,16 @@
         "commentEdit.tags": [],
         "commentEdit.tags.add": [],
         "commentEdit.tags.label": [],
+        "commentEdit.tags.refused": [],
+        "commentEdit.tags.refused.message": [],
+        "commentEdit.tags.refused.remove": [],
         "commentEdit.tags.tag": [
-          "glovebox"
+          "glovebox",
+          "saltmaps"
         ],
         "commentEdit.tags.tag.remove": [
-          "glovebox"
+          "glovebox",
+          "saltmaps"
         ],
         "commentEdit.tags.withdrawn": [],
         "commentEdit.tags.withdrawn.undo": [],
@@ -3418,6 +3453,9 @@
         "postEdit.tags": [],
         "postEdit.tags.add": [],
         "postEdit.tags.label": [],
+        "postEdit.tags.refused": [],
+        "postEdit.tags.refused.message": [],
+        "postEdit.tags.refused.remove": [],
         "postEdit.tags.tag": [
           "fieldnotes",
           "saltmaps"
@@ -12408,6 +12446,8 @@
       "prefix": "profileEdit",
       "keys": {},
       "nodes": {
+        "profileEdit.acts": [],
+        "profileEdit.acts.line": [],
         "profileEdit.bio": [],
         "profileEdit.bio.corner": [],
         "profileEdit.bio.input": [],
@@ -12420,7 +12460,16 @@
         "profileEdit.name.input": [],
         "profileEdit.name.label": [],
         "profileEdit.picture": [],
+        "profileEdit.refused": [],
+        "profileEdit.refused.help": [],
+        "profileEdit.refused.line": [],
+        "profileEdit.remove": [],
         "profileEdit.save": [],
+        "profileEdit.undo": [],
+        "profileEdit.uploadError": [],
+        "profileEdit.uploadError.message": [],
+        "profileEdit.uploadError.remove": [],
+        "profileEdit.uploadError.retry": [],
         "profileEdit.website": [],
         "profileEdit.website.corner": [],
         "profileEdit.website.input": [],
@@ -12431,7 +12480,8 @@
       "prefix": "profileEditSeal",
       "keys": {
         "profileEditSeal.acts.actRow": "the row's position in the acts card, counted from 1 (ActsCard)",
-        "profileEditSeal.foot": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+        "profileEditSeal.foot": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "profileEditSeal.gate": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "profileEditSeal.acts": [],
@@ -12450,15 +12500,37 @@
         "profileEditSeal.acts.total": [],
         "profileEditSeal.foot": [
           "rest",
-          "signing"
+          "signing",
+          "uploading",
+          "upload-failed"
         ],
         "profileEditSeal.foot.back": [
           "rest",
-          "signing"
+          "signing",
+          "uploading",
+          "upload-failed"
         ],
         "profileEditSeal.foot.sign": [
           "rest",
-          "signing"
+          "signing",
+          "uploading",
+          "upload-failed"
+        ],
+        "profileEditSeal.gate": [
+          "uploading",
+          "upload-failed"
+        ],
+        "profileEditSeal.gate.line": [
+          "uploading"
+        ],
+        "profileEditSeal.gate.message": [
+          "upload-failed"
+        ],
+        "profileEditSeal.gate.retry": [
+          "upload-failed"
+        ],
+        "profileEditSeal.gate.wait": [
+          "upload-failed"
         ],
         "profileEditSeal.header": [],
         "profileEditSeal.header.back": [],
@@ -14193,7 +14265,8 @@
       "keys": {
         "reel.caption.notice": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "reel.rail.score": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
-        "reel.rail.stanceLine": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+        "reel.rail.stanceLine": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.stage.retry": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "reel.backDisc": [],
@@ -14248,6 +14321,9 @@
         "reel.snackbar.message": [],
         "reel.soundDisc": [],
         "reel.stage": [],
+        "reel.stage.retry": [
+          "unloaded"
+        ],
         "reel.washBottom": [],
         "reel.washTop": []
       }
