@@ -1905,7 +1905,7 @@
       "x": -4190,
       "y": 0,
       "w": 3770,
-      "h": 4916,
+      "h": 5063,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1914,7 +1914,7 @@
       "x": -5640,
       "y": 0,
       "w": 5220,
-      "h": 3644,
+      "h": 3739,
       "page": "comments",
       "title": "Comments · flow map"
     },
@@ -1941,7 +1941,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 5071,
+      "h": 5097,
       "page": "media",
       "title": "Media · flow map"
     },
@@ -1950,7 +1950,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 2343,
+      "h": 2395,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
     },
