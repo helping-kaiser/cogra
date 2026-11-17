@@ -133,10 +133,13 @@ internal fun CommentFeedCard(
     shape: CommentCardShape = CommentCardShape.Thread,
     /** The card stands on its author's own page — a profile's comments view — so the chip is inert. */
     authorHere: Boolean = false,
+    /** A row flag stands attached above the card: its top-left corner squares ([cardShape]). */
+    attach: Boolean = false,
 ) {
     val card = node.keyed(comment.id)
     val line = shape as? CommentCardShape.Line
     Card(
+        shape = cardShape(attach),
         modifier = Modifier
             .fillMaxWidth()
             // IN THE LINE SHAPE THE WORDS ARE NO DOOR: the card is reached
