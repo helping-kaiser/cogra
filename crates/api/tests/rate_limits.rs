@@ -660,6 +660,40 @@ async fn the_reset_link_check_spends_the_confirmation_budget(pool: PgPool) {
     assert_eq!(json["data"]["passwordResetLinkCheck"], false, "{json}");
 }
 
+/// The email-carrying reset link check spends the same per-IP budget as
+/// the Boolean one: the two together trip it, and a tripped budget
+/// refuses both alike.
+///
+/// The reset link's two checks spend one confirmation budget.
+/// ´claim:ratelimit:the-reset-link-checks-share-the-confirmation-budget´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_reset_link_checks_share_the_confirmation_budget(pool: PgPool) {
+    let mut limits = RateLimitConfig::unlimited();
+    limits.confirm_ip = Window {
+        limit: 2,
+        window_secs: 3600.0,
+    };
+    let rig = Rig::new(pool, limits);
+    const LINK: &str = "query($token: String!) { passwordResetLink(token: $token) { email } }";
+    const CHECK: &str = "query($token: String!) { passwordResetLinkCheck(token: $token) }";
+
+    let json = rig.gql("10.6.0.1", LINK, json!({ "token": "guess" })).await;
+    assert_eq!(transport_code(&json), None, "{json}");
+    assert!(json["data"]["passwordResetLink"].is_null(), "{json}");
+    let json = rig
+        .gql("10.6.0.1", CHECK, json!({ "token": "guess" }))
+        .await;
+    assert_eq!(transport_code(&json), None, "{json}");
+    for query in [LINK, CHECK] {
+        let json = rig
+            .gql("10.6.0.1", query, json!({ "token": "guess" }))
+            .await;
+        assert_eq!(transport_code(&json), Some("RATE_LIMITED"), "{json}");
+    }
+    let json = rig.gql("10.6.0.2", LINK, json!({ "token": "guess" })).await;
+    assert!(json["data"]["passwordResetLink"].is_null(), "{json}");
+}
+
 /// A window counts attempts and resets when it expires. A zero-length
 /// window has always just expired, so every attempt is the first of a
 /// fresh one.

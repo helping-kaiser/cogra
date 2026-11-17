@@ -4,6 +4,7 @@
 // board is registered yet (feed-card-rework §16), so these pin behavior by test
 // id; the structural diff waits on registration.
 
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { act, cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -650,6 +651,45 @@ describe("PostEditRoute — one batch (EditCompose, EditActs)", () => {
     expect(footer()).toHaveTextContent("Nothing to sign yet");
   });
 
+  // jakob 2026-11-13 (seam 327): a refused tag NAME reads as the picker's own
+  // line (TagPickerRefused), never the server's `a topic name …` text.
+  it("reads a refused tag name on its chip as the picker's line, never the server's text", async () => {
+    serve(editablePost());
+    server.use(
+      gqlLink.mutation("PrepareTag", () =>
+        HttpResponse.json({
+          data: {
+            prepareTag: {
+              __typename: "PreparePayload",
+              writes: null,
+              userErrors: [
+                {
+                  __typename: "UserError",
+                  message: "a topic name is at most 128 bytes, got 129",
+                  code: "BAD_INPUT",
+                  field: ["name"],
+                },
+              ],
+            },
+          },
+        }),
+      ),
+    );
+    const signer = draw();
+    fireEvent.click(await screen.findByTestId("postEdit.tags.add"));
+    fireEvent.change(await screen.findByRole("searchbox", { name: "Name a tag" }), {
+      target: { value: "saltmaps" },
+    });
+    fireEvent.click(await screen.findByTestId(byNode("tagPicker.tag", "saltmaps")));
+    fireEvent.click(screen.getByTestId("tagPicker.done"));
+    await screen.findByTestId("postEdit.header");
+    fireEvent.click(sign());
+    const line = await screen.findByTestId("post-edit-tag-error-0");
+    expect(line).toHaveTextContent("A tag name is letters, digits, dot, dash and underscore.");
+    expect(screen.getByTestId("post-edit")).not.toHaveTextContent(/topic name/);
+    expect(signer.signStaged).not.toHaveBeenCalled();
+  });
+
   it("counts a citation's withdrawal at its counter-records", async () => {
     serve(editablePost({ references: [referenceClaim("u-juno", "juno", 2)] }));
     draw();
@@ -839,6 +879,160 @@ describe("PostEditRoute — signing", () => {
     fireEvent.click(sign());
     expect(await screen.findByTestId("home_restore")).toBeInTheDocument();
     expect(prepared).toBe(false);
+  });
+
+  // NetworkError.md:13 — the server's FORBIDDEN refuses the whole edit: the
+  // not-through line, never "You can't do that here." and never on a chip.
+  it("reads a FORBIDDEN prepare as That didn't go through., the whole edit's line, nothing signed", async () => {
+    serve(editablePost());
+    server.use(
+      gqlLink.mutation("PreparePostEdit", () =>
+        HttpResponse.json({
+          data: null,
+          errors: [{ message: "member account required", extensions: { code: "FORBIDDEN" } }],
+        }),
+      ),
+    );
+    const signer = draw();
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
+    fireEvent.click(sign());
+    const line = await screen.findByTestId("post-edit-failed");
+    expect(line).toHaveTextContent("That didn't go through. Try again.");
+    expect(screen.getByTestId("post-edit")).not.toHaveTextContent(/You can't do that here|reach the server/);
+    expect(screen.queryByTestId("post-edit-refused")).toBeNull();
+    expect(signer.signStaged).not.toHaveBeenCalled();
+    // The network error's foot: the outlined Retry stands where Sign the edit stood.
+    expect(screen.getByTestId("post-edit-retry")).toHaveTextContent("Retry");
+    expect(screen.queryByTestId("post-edit-sign")).toBeNull();
+  });
+
+  it("reads a FORBIDDEN tag prepare on the whole edit, never under the chip", async () => {
+    serve(editablePost());
+    server.use(
+      gqlLink.mutation("PrepareTag", () =>
+        HttpResponse.json({
+          data: null,
+          errors: [{ message: "member account required", extensions: { code: "FORBIDDEN" } }],
+        }),
+      ),
+    );
+    const signer = draw();
+    fireEvent.click(await screen.findByTestId("postEdit.tags.add"));
+    fireEvent.change(await screen.findByRole("searchbox", { name: "Name a tag" }), {
+      target: { value: "saltmaps" },
+    });
+    fireEvent.click(await screen.findByTestId(byNode("tagPicker.tag", "saltmaps")));
+    fireEvent.click(screen.getByTestId("tagPicker.done"));
+    await screen.findByTestId("postEdit.header");
+    fireEvent.click(sign());
+    expect(await screen.findByTestId("post-edit-failed")).toHaveTextContent("That didn't go through. Try again.");
+    expect(screen.queryByTestId("post-edit-tag-error-0")).toBeNull();
+    expect(signer.signStaged).not.toHaveBeenCalled();
+  });
+
+  // NetworkError.md:13-19 — every answered fault of the whole edit says its
+  // own line in the fault's slot; none of them is the no-answer line.
+  it.each([
+    ["an INTERNAL", "INTERNAL", "That didn't go through. Try again."],
+    ["an EMAIL_NOT_VERIFIED", "EMAIL_NOT_VERIFIED", "Verify your email first — the link is in your inbox."],
+  ])("reads %s prepare as its own line, never a lost answer", async (_name, code, line) => {
+    serve(editablePost());
+    server.use(
+      gqlLink.mutation("PreparePostEdit", () =>
+        HttpResponse.json({ data: null, errors: [{ message: "no", extensions: { code } }] }),
+      ),
+    );
+    const signer = draw();
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
+    fireEvent.click(sign());
+    expect(await screen.findByTestId("post-edit-failed")).toHaveTextContent(line);
+    expect(screen.queryByTestId("post-edit-refused")).toBeNull();
+    expect(signer.signStaged).not.toHaveBeenCalled();
+    expect(screen.getByTestId("post-edit-retry")).toHaveTextContent("Retry");
+  });
+
+  it("reads a BAD_INPUT naming no field as That didn't go through.", async () => {
+    serve(editablePost());
+    server.use(
+      gqlLink.mutation("PreparePostEdit", () =>
+        HttpResponse.json({
+          data: {
+            preparePostEdit: {
+              __typename: "PrepareContentPayload",
+              node: null,
+              writes: [],
+              userErrors: [{ __typename: "UserError", code: "BAD_INPUT", field: null, message: "no" }],
+            },
+          },
+        }),
+      ),
+    );
+    draw();
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
+    fireEvent.click(sign());
+    expect(await screen.findByTestId("post-edit-failed")).toHaveTextContent("That didn't go through. Try again.");
+  });
+
+  it.each([
+    [
+      "a SIGNATURE_INVALID",
+      { kind: "refused" as const, id: "w0", errors: [{ code: "SIGNATURE_INVALID" as const, message: "", field: null }] },
+    ],
+    [
+      "an INTERNAL on a signing leg",
+      {
+        kind: "failed" as const,
+        id: "w0",
+        cause: new CombinedGraphQLErrors({ errors: [{ message: "no", extensions: { code: "INTERNAL" } }] }),
+      },
+    ],
+  ])("reads %s as That didn't go through., never the no-answer line", async (_name, result) => {
+    serve(editablePost());
+    server.use(gqlLink.mutation("PreparePostEdit", () => HttpResponse.json({ data: editPrepared() })));
+    draw({ signer: fakeWriteSigner({ signStaged: vi.fn(() => Promise.resolve(result)) }) });
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
+    fireEvent.click(sign());
+    expect(await screen.findByTestId("post-edit-failed")).toHaveTextContent("That didn't go through. Try again.");
+    expect(screen.getByTestId("post-edit-retry")).toBeInTheDocument();
+  });
+
+  // NetworkError.md:3 — a lost answer is the network error's own line, never
+  // TransportError's long "Can't reach the server…" fallback.
+  it("says That didn't send. Try again. when no answer reaches the edit", async () => {
+    serve(editablePost());
+    server.use(gqlLink.mutation("PreparePostEdit", () => HttpResponse.json({ data: editPrepared() })));
+    draw({
+      signer: fakeWriteSigner({
+        signStaged: vi.fn(() => Promise.resolve({ kind: "failed" as const, id: "w0", cause: new Error("offline") })),
+      }),
+    });
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
+    fireEvent.click(sign());
+    const line = await screen.findByTestId("post-edit-failed");
+    expect(line).toHaveTextContent("That didn't send. Try again.");
+    expect(line).not.toHaveTextContent(/reach the server/);
+    // The line takes the commit's place, an outlined Retry under it where Sign
+    // the edit stood (seam 352; CommentEdit.md:97, NetworkError.md:3).
+    expect(screen.queryByTestId("post-edit-sign")).toBeNull();
+    const retry = screen.getByTestId("post-edit-retry");
+    expect(retry).toHaveTextContent("Retry");
+    expect(retry.className).toContain("border-outline");
+  });
+
+  // NetworkError.md:23 — Retry asks the same signing again.
+  it("signs again from Retry and opens the post when it goes through", async () => {
+    serve(editablePost());
+    server.use(gqlLink.mutation("PreparePostEdit", () => HttpResponse.json({ data: editPrepared() })));
+    const signStaged = vi
+      .fn()
+      .mockResolvedValueOnce({ kind: "failed" as const, id: "w0", cause: new Error("offline") })
+      .mockResolvedValue({ kind: "done" as const, id: "w0", state: "RELAYING" as const });
+    draw({ signer: fakeWriteSigner({ signStaged }) });
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
+    fireEvent.click(sign());
+    fireEvent.click(await screen.findByTestId("post-edit-retry"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
+    expect(signStaged).toHaveBeenCalledTimes(2);
   });
 
   it("takes the commit's place with the write rule's notice and no Retry", async () => {

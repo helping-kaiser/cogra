@@ -47,6 +47,7 @@ export function SeveranceConfirm({
   busy = false,
   slow = false,
   failed = false,
+  failedLine = "That didn't send. Try again.",
   writeRule = false,
   axes = STANCE_AXES,
   onConfirm,
@@ -68,6 +69,8 @@ export function SeveranceConfirm({
   slow?: boolean;
   /** The signing did not complete; the dialog stays open and says so. */
   failed?: boolean;
+  /** What it says: the no-answer line, or FORBIDDEN's not-through line (NetworkError.md:13). */
+  failedLine?: string;
   /**
    * THE WRITE RULE REFUSED THE WALK-BACK (SeveranceConfirm.md, round 21): a
    * notice, not a fault. Its pre-check staged and spent nothing, so the quiet
@@ -134,7 +137,7 @@ export function SeveranceConfirm({
         ...(failed
           ? [
               <p key="failed" role="alert" data-testid="severance-failed" className="m-0 text-error">
-                That didn&apos;t send. Try again.
+                {failedLine}
               </p>,
             ]
           : []),

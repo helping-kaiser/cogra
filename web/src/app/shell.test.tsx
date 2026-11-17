@@ -335,7 +335,7 @@ describe("AppShell", () => {
     expect(scroller).not.toContainElement(screen.getByTestId(byNode("feed.bottomBar")));
   });
 
-  it.each(["/compose", "/profile/edit", "/settings", "/settings/key", "/invites", "/key", "/restore"])(
+  it.each(["/compose", "/profile/edit", "/profile/picture", "/settings", "/settings/key", "/invites", "/key", "/restore"])(
     "leaves the task flow %s without the bar",
     async (path) => {
       pathname = path;

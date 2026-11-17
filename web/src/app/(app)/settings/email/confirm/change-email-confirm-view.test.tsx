@@ -85,7 +85,7 @@ describe("ChangeEmailConfirm", () => {
   it("commit_reads_confirm_the_code", async () => {
     rendered();
     expect(await screen.findByTestId("changeEmail.commit.action")).toHaveTextContent("Confirm the code");
-    expect(screen.getByTestId("changeEmail.commit.reason")).toHaveTextContent("Waiting for the code");
+    expect(screen.getByTestId("changeEmail.commit.action")).toHaveAccessibleDescription("Waiting for the code");
     expect(screen.getByTestId("changeEmail.title")).toHaveTextContent("Confirm the change");
     // The false "either message's code" line is gone.
     expect(document.body).not.toHaveTextContent("either message");

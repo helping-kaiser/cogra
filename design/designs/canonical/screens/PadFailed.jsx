@@ -37,7 +37,14 @@
    and the snackbar confirms; not signed, the row says `That didn't sign.`
    with a Retry that asks the same pick again. A press outside the pad, Back
    and Escape do what Close does, from the press on. `failed` is this
-   board's own moment. */
+   board's own moment.
+
+   REGISTERED under the `feed` prefix (round 48, seam 320-16), named as
+   `PadStanding` names the same pad over the same feed: the band, its
+   `filterTrigger`, the bottom bar, and the post `card` keyed by its id in
+   each of the four `moment` copies, its open pad `card.actionRow.stance.pad.*`.
+   The wash stays unnamed. */
+export const NODE = "feed";
 export const PROPS = { moment: { editor: "enum", options: ["failed", "pressed", "setting", "closed"], default: "failed" } };
 export const VALS = `failedShown: this.props.moment === "failed" ? "block" : "none", pressedShown: this.props.moment === "pressed" ? "block" : "none", settingShown: this.props.moment === "setting" ? "block" : "none", closedShown: this.props.moment === "closed" ? "block" : "none", washShown: this.props.moment === "closed" ? "none" : "block"`;
 
@@ -46,22 +53,22 @@ const PULLED_BACK = { pDirected: -0.55, pInterest: -0.15 };
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />} />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band" />
       <FeedList>
-        <div style={{ display: "{{failedShown}}" }}>
-          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={PULLED_BACK} stanceSigning="failed" />
+        <div style={{ display: "{{failedShown}}" }} data-node-chip="moment" data-node-key="failed">
+          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={PULLED_BACK} stanceSigning="failed" node="card" />
         </div>
-        <div style={{ display: "{{pressedShown}}" }}>
-          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={PULLED_BACK} stanceSigning="pressed" />
+        <div style={{ display: "{{pressedShown}}" }} data-node-chip="moment" data-node-key="pressed">
+          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={PULLED_BACK} stanceSigning="pressed" node="card" />
         </div>
-        <div style={{ display: "{{settingShown}}" }}>
-          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={PULLED_BACK} stanceSigning="busy" />
+        <div style={{ display: "{{settingShown}}" }} data-node-chip="moment" data-node-key="setting">
+          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={PULLED_BACK} stanceSigning="busy" node="card" />
         </div>
-        <div style={{ display: "{{closedShown}}" }}>
-          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceSigning="busy" />
+        <div style={{ display: "{{closedShown}}" }} data-node-chip="moment" data-node-key="closed">
+          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceSigning="busy" node="card" />
         </div>
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
 
       {/* The wash sits over the shell; the parked pad (fixed, above it) stays
           sharp. Closed, the pad is gone and so is its wash. */}

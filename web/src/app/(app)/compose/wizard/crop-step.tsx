@@ -93,7 +93,15 @@ export function CropStep({
         </div>
       )}
 
+      {/* ONE FRAME PER PICTURE (`key`): a tap in the strip mounts a fresh
+          frame for the picture it names. Handed on to the next picture, the
+          one cropper reported in the commit of the swap — its zoom changed —
+          against the last picture's laid size and into the frame's last
+          framing, and wrote that under the new picture's id; the next swap
+          did the same back (w-cropswap, 2026-11-17). React: "Resetting all
+          state when a prop changes" — a key, not an effect. */}
       <CropFrame
+        key={asset.id}
         src={previews[asset.id] ?? ""}
         shape={shape}
         crop={asset.crop}

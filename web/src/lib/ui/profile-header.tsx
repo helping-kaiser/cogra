@@ -29,22 +29,34 @@
 // under the avatar-and-name block — a container query on the header's own
 // width, 96px of avatar and gap plus the labels' width in rem.
 //
-// THE FIGURES ARE ONE DOOR (ProfileHeader.jsx `onCounts`; graph.json `the
-// figures row` → `ProfileStances`): one tap target, both directions, onto
-// the opinions page — never three doors. Its name says the visible words and
-// numbers, then its purpose (copy-voice, *The profile's figures, spoken*):
-// `… , opinions on and by @ada`, `… , your opinions, both directions` on
-// one's own, `… , opinions on and by this account` on a deleted one. It is a
-// link here, the web's element for a door that navigates; the master draws a
-// button for the canvas's own click.
+// THE ROW HOLDS TWO DOORS AND A FACT (ProfileHeader.jsx `onCounts`, J-A;
+// Profile.md:13, ProfileOther.md:9): `Opinions on …` opens the opinions page
+// on its On state, `Opinions by …` on By, and `Posts` is no door. The row
+// itself is no target. Each door is spoken as its figure's number and visible
+// words and nothing more (copy-voice, *The profile's figures, spoken*):
+// `1,204 Opinions on them`, `7 Opinions by you`. A door is a link here, the
+// web's element for a door that navigates; the master draws a button for the
+// canvas's own click.
 //
-// NOT DRAWN YET: the avatar's change badge (the crop and seal live only
-// inside the edit screen).
+// THE NAME IS WHOLE ON AT MOST TWO LINES (Profile.md:85-87, round 47): at the
+// role's 22px on 28px it wraps at its spaces and a too-wide word breaks
+// inside; a name that would take more lines takes the largest whole size from
+// 22 down that holds two (`nameFitSize`), measured in the browser before the
+// paint (`useNameFit`). Nothing is cut and nothing else in the head changes.
+//
+// THE AVATAR CHANGES WITHOUT THE EDIT SCREEN (ProfileHeader.jsx, jakob
+// 2026-09-01): one's own avatar wears a change badge, the door to the
+// picture's own crop and seal (Profile.md:47). The avatar itself is not
+// tappable — the badge is the door, the picture is a picture — and the 28px
+// badge answers to 48px through `cg-hit` without moving a pixel.
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useRef, useState, type ReactNode, type RefObject } from "react";
 
+import type { OpinionDirection } from "@/lib/profile/opinions-route";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { Icon } from "@/lib/ui/icons";
+import { useMeasureEffect } from "@/lib/ui/measure-effect";
 import { MonogramAvatar } from "@/lib/ui2/monogram-avatar";
 import { REDACTED_ACTOR_NAME } from "@/lib/ui2/content-row";
 
@@ -73,13 +85,27 @@ const FIGURE_FORMAT = new Intl.NumberFormat("en-US");
 /**
  * One figure: its number in title-medium, its label quiet beneath it, never
  * wrapping. Each sets its role whole, tracking included (`ProfileHeader.jsx`,
- * round 27).
+ * round 27). Given `href` it is a door onto the opinions page, spoken as its
+ * number and words alone, its 48px target grown by `cg-hit` without moving a
+ * pixel of the drawing (ProfileHeader.jsx, *Every door answers to 48px*);
+ * the door adds no border and no padding, the same column.
  */
-function Figure({ value, label, node }: { value: number; label: string; node?: DataNode }) {
-  return (
-    <div {...testAttributes(node)} className="flex min-w-0 flex-col">
+function Figure({
+  value,
+  label,
+  node,
+  href,
+}: {
+  value: number;
+  label: string;
+  node?: DataNode;
+  href?: string;
+}) {
+  const figure = FIGURE_FORMAT.format(value);
+  const content = (
+    <>
       <span {...testAttributes(part(node, "value"))} className="text-title-medium">
-        {FIGURE_FORMAT.format(value)}
+        {figure}
       </span>
       <span
         {...testAttributes(part(node, "label"))}
@@ -87,7 +113,24 @@ function Figure({ value, label, node }: { value: number; label: string; node?: D
       >
         {label}
       </span>
-    </div>
+    </>
+  );
+  if (href === undefined) {
+    return (
+      <div {...testAttributes(node)} className="flex min-w-0 flex-col">
+        {content}
+      </div>
+    );
+  }
+  return (
+    <Link
+      href={href}
+      aria-label={`${figure} ${label}`}
+      {...testAttributes(node)}
+      className="cg-state cg-focus cg-hit flex min-w-0 flex-col rounded-small text-left font-sans text-on-surface no-underline"
+    >
+      {content}
+    </Link>
   );
 }
 
@@ -97,62 +140,88 @@ type Figures = {
   readonly opinionsBy: number | null;
 };
 
+/** The name's size and leading, in whole pixels. */
+export type NameFit = { readonly size: number; readonly lineHeight: number };
+
+/** The title-large role's own size and leading, where every name starts. */
+const ROLE_SIZE = 22;
+const ROLE_LEADING = 28;
+
 /**
- * The door's name (ProfileHeader.jsx `figuresReading`, `figuresPurpose`):
- * each drawn figure's number and label, then where the door goes.
+ * THE NAME'S TWO-LINE RULE (ProfileHeader.jsx `nameFitSize`; Profile.md:87):
+ * the largest whole-pixel size from 22 down, in steps of 1, at which the name
+ * takes at most two lines, its leading round(size × 28 / 22) px, half up.
+ * `lines` counts the name's lines at a size and leading. No smallest size is
+ * ruled: two lines are the hard cap.
  */
-export function figuresName(figures: Figures | null | undefined, own: boolean, redacted: boolean, handle: string): string {
-  const said = (value: number | null | undefined, label: string) =>
-    value === null || value === undefined ? null : `${FIGURE_FORMAT.format(value)} ${label}`;
-  const reading = [
-    said(figures?.posts, "Posts"),
-    said(figures?.opinionsOn, own ? "Opinions on you" : "Opinions on them"),
-    said(figures?.opinionsBy, own ? "Opinions by you" : "Opinions by them"),
-  ].filter((words) => words !== null);
-  const purpose = own
-    ? "your opinions, both directions"
-    : redacted
-      ? "opinions on and by this account"
-      : `opinions on and by @${handle}`;
-  return `${reading.join(", ")}, ${purpose}`;
+export function nameFitSize(lines: (size: number, lineHeight: number) => number): NameFit {
+  for (let size = ROLE_SIZE; size > 1; size -= 1) {
+    const lineHeight = Math.round((size * ROLE_LEADING) / ROLE_SIZE);
+    if (lines(size, lineHeight) <= 2) return { size, lineHeight };
+  }
+  return { size: 1, lineHeight: 1 };
 }
 
 /**
- * The figures' one cell: a door onto the opinions page where there is one to
- * open, its 48px target grown by `cg-hit` without moving a pixel of the
- * drawing (ProfileHeader.jsx, *Both doors answer to 48px*), else the plain
- * row the master draws without `onCounts`.
+ * The fitted size of the name heading, as `[nameRef, fit]`: hand `nameRef`
+ * to the heading, which always renders; `fit` is null while the name holds
+ * two lines at the role's own size, else the size the rule gives it.
+ *
+ * THE BROWSER COUNTS THE LINES. The heading is a block whose height is its
+ * lines times its leading, so each candidate size is set on it and its height
+ * read (MDN, `Element.getBoundingClientRect`), all before the paint
+ * (`useMeasureEffect`; react.dev, *useLayoutEffect*: "measure layout before
+ * the browser repaints the screen"), and the inline size it had is put back
+ * for React to render the result. The fit follows the line's width (MDN,
+ * `ResizeObserver`) and the web font's arrival (MDN, `FontFaceSet.ready`).
  */
-function FiguresCell({
-  href,
-  name,
-  node,
-  className,
-  children,
-}: {
-  href: string | undefined;
-  name: string;
-  node: DataNode | undefined;
-  className: string;
-  children: ReactNode;
-}) {
-  if (href === undefined) {
-    return (
-      <div {...testAttributes(node, "profile-figures")} className={className}>
-        {children}
-      </div>
-    );
-  }
-  return (
-    <Link
-      href={href}
-      aria-label={name}
-      {...testAttributes(node, "profile-figures")}
-      className={`cg-state cg-focus cg-hit w-fit max-w-full rounded-small text-left font-sans text-on-surface no-underline ${className}`}
-    >
-      {children}
-    </Link>
-  );
+function useNameFit(name: string): [nameRef: RefObject<HTMLHeadingElement | null>, fit: NameFit | null] {
+  const nameRef = useRef<HTMLHeadingElement>(null);
+  const [fit, setFit] = useState<NameFit | null>(null);
+
+  useMeasureEffect(() => {
+    const element = nameRef.current;
+    if (element === null) return;
+    const measure = () => {
+      const { fontSize, lineHeight } = element.style;
+      const next = nameFitSize((size, leading) => {
+        element.style.fontSize = `${size}px`;
+        element.style.lineHeight = `${leading}px`;
+        return Math.round(element.getBoundingClientRect().height / leading);
+      });
+      element.style.fontSize = fontSize;
+      element.style.lineHeight = lineHeight;
+      setFit((previous) => {
+        if (next.size === ROLE_SIZE) return null;
+        return previous?.size === next.size && previous.lineHeight === next.lineHeight ? previous : next;
+      });
+    };
+    measure();
+
+    // Only a change of the line's WIDTH refits: the fit's own height change
+    // is the observer's echo, never a reason to measure again.
+    let width = element.getBoundingClientRect().width;
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(() => {
+            const now = element.getBoundingClientRect().width;
+            if (now === width) return;
+            width = now;
+            measure();
+          });
+    observer?.observe(element);
+    let live = true;
+    void document.fonts?.ready.then(() => {
+      if (live) measure();
+    });
+    return () => {
+      live = false;
+      observer?.disconnect();
+    };
+  }, [name]);
+
+  return [nameRef, fit];
 }
 
 /**
@@ -178,13 +247,16 @@ export function ProfileHeader({
   figures,
   figuresHref,
   own = false,
+  onAvatarChange,
   node,
   children,
 }: {
+  /** One's own avatar's change badge; absent, no badge is drawn. */
+  onAvatarChange?: () => void;
   /** The three record counts; a null count is not drawn, and none at all draws no cell. */
   figures?: Figures | null;
-  /** Where the figures row opens the opinions page; absent, the figures are a plain cell. */
-  figuresHref?: string;
+  /** Where each opinion figure opens the opinions page, by its direction; absent, no figure is a door. */
+  figuresHref?: (direction: OpinionDirection) => string;
   /** One's own profile, whose figures say `you`. */
   own?: boolean;
   handle: string;
@@ -211,6 +283,7 @@ export function ProfileHeader({
     : displayName?.trim()
       ? displayName
       : handle;
+  const [nameRef, nameFit] = useNameFit(name);
   return (
     <header
       {...testAttributes(node, "profile-identity")}
@@ -227,11 +300,29 @@ export function ProfileHeader({
             node={part(node, "avatar")}
             testId="profile-avatar"
           />
+          {own && !redacted && onAvatarChange && (
+            <button
+              type="button"
+              aria-label="Change your picture"
+              onClick={onAvatarChange}
+              {...testAttributes(part(node, "changeBadge"), "profile-change-badge")}
+              // Placed inline, as the master places it: `cg-state` sets
+              // `position: relative` outside Tailwind's layers, so an
+              // `absolute` utility loses to it and the badge drops below
+              // the avatar (measured by the conformance harness).
+              style={{ position: "absolute", right: -2, bottom: -2 }}
+              className="cg-state cg-focus cg-hit grid size-7 cursor-pointer place-items-center rounded-full border-2 border-solid border-surface bg-secondary-container p-0 text-on-secondary-container"
+            >
+              <Icon name="photo_camera" size={16} />
+            </button>
+          )}
         </div>
         <div className={`flex min-w-0 flex-col gap-0.5 self-end [grid-area:name] ${own ? UNDER_OWN_NAME : UNDER_OTHER_NAME}`}>
           <h1
+            ref={nameRef}
             {...testAttributes(part(node, "name"), "profile-display-name")}
-            className={`m-0 text-title-large [overflow-wrap:anywhere] ${redacted ? "text-on-surface-variant" : ""}`}
+            style={nameFit === null ? undefined : { fontSize: nameFit.size, lineHeight: `${nameFit.lineHeight}px` }}
+            className={`m-0 text-title-large [overflow-wrap:break-word] [word-break:normal] ${redacted ? "text-on-surface-variant" : ""}`}
           >
             {name}
           </h1>
@@ -247,11 +338,11 @@ export function ProfileHeader({
           )}
         </div>
         {figuresShown && (
-          <FiguresCell
-            href={figuresHref}
-            name={figuresName(figures, own, redacted, handle)}
-            node={part(node, "figures")}
-            className={`mt-1.5 flex gap-5 self-start [grid-area:figures] ${own ? UNDER_OWN_FIGURES : UNDER_OTHER_FIGURES}`}
+          // The row itself is no target: its two opinion figures are the doors
+          // (ProfileHeader.jsx, *The row holds two doors and a fact*).
+          <div
+            {...testAttributes(part(node, "figures"), "profile-figures")}
+            className={`mt-1.5 flex w-fit max-w-full gap-5 self-start text-on-surface [grid-area:figures] ${own ? UNDER_OWN_FIGURES : UNDER_OTHER_FIGURES}`}
           >
             {figures && figures.posts !== null && (
               <Figure value={figures.posts} label="Posts" node={part(node, "figures.posts")} />
@@ -261,6 +352,7 @@ export function ProfileHeader({
                 value={figures.opinionsOn}
                 label={own ? "Opinions on you" : "Opinions on them"}
                 node={part(node, "figures.stancesOn")}
+                href={figuresHref?.("on")}
               />
             )}
             {figures && figures.opinionsBy !== null && (
@@ -268,9 +360,10 @@ export function ProfileHeader({
                 value={figures.opinionsBy}
                 label={own ? "Opinions by you" : "Opinions by them"}
                 node={part(node, "figures.stancesTaken")}
+                href={figuresHref?.("by")}
               />
             )}
-          </FiguresCell>
+          </div>
         )}
       </div>
       </div>
@@ -306,9 +399,14 @@ export function ProfileHeader({
   );
 }
 
+/**
+ * The website row: a block in the header's column, so it spans the column's
+ * width as the master's row does (ProfileHeader.jsx: no `alignSelf`, the
+ * column's stretch), its words in primary.
+ */
 function Website({ value, node }: { value: string; node?: DataNode }) {
   const href = websiteHref(value);
-  const className = "self-start text-body-medium text-primary no-underline [overflow-wrap:anywhere]";
+  const className = "text-body-medium text-primary no-underline [overflow-wrap:anywhere]";
   return href === null ? (
     <span {...testAttributes(node, "profile-website")} className={className}>
       {value}

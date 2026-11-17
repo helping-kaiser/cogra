@@ -1,5 +1,7 @@
 # ProfilePostsOwn · `spec:design:behavior-profile-posts-own`
 
+ALWAYS the reader's own profile's Posts view is where the own profile lands, from any door, its states — empty, loading, failed — the landing's own
+
 ALWAYS the reader's own profile's Posts view keeps the own profile's head as the profile's own page draws it, the band, the header with Edit profile and Invites, and profile.tabRow.postsTab lit
 
 ALWAYS profile.posts lists the reader's own posts, each card the feed's own, fully live

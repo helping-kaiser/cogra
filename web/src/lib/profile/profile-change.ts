@@ -19,14 +19,37 @@
 
 import { useSyncExternalStore } from "react";
 
+import { sealFaultOf, sealFaultOfResults } from "@/lib/compose/seal-fault";
+import type { WriteResult } from "@/lib/signing/write-signer";
 import { carrySnackbar } from "@/lib/ui/carried-snackbar";
 
 /** What one signing of a profile change came to. */
 export type ProfileChangeOutcome =
   | { readonly kind: "taken" }
   | { readonly kind: "offline" }
+  | { readonly kind: "notThrough"; readonly line: string }
   | { readonly kind: "writeRule" }
   | { readonly kind: "bug" };
+
+/**
+ * What one signing came to, for the seals' states: every write taken is the
+ * change taken; a refusal reads by the failure pack (`sealFaultOf`: the write
+ * rule, an answered fault of the whole act, else a bug); a device's own
+ * refusal of the bytes is not through (seam 355); no answer — a transport failure, a seal still
+ * out — is the fault line, and a transport fault the server did answer (an
+ * INTERNAL) the not-through one (NetworkError.md:3, :13-19).
+ */
+export function outcomeOf(results: readonly WriteResult[]): ProfileChangeOutcome {
+  if (results.every((result) => result.kind === "done" || result.kind === "carried")) return { kind: "taken" };
+  const refused = results.flatMap((result) => (result.kind === "refused" ? result.errors : []));
+  if (refused.length > 0) {
+    const fault = sealFaultOf(refused, []);
+    if (fault.kind === "writeRule" || fault.kind === "notThrough") return fault;
+    return { kind: "bug" };
+  }
+  const failed = sealFaultOfResults(results, []);
+  return failed.kind === "notThrough" ? failed : { kind: "offline" };
+}
 
 /** What the profile's head reads. */
 export type ProfileChangeState =

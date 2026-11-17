@@ -35,6 +35,12 @@
    applicant, and @sol's comment is someone else's — no `Edit`, and its ⋮
    opens `CommentMenu`.
 
+   A GUEST'S THREAD (`reader` = `guest`; jakob 2026-11-17, 16 and 18): the
+   guest reads through the borrowed view, so the foot wears its face — @mira's,
+   as the guest band shows it — and @sol's comment is someone else's. The foot
+   and every `Reply` stand at full strength and raise the join ask
+   (`GuestGate`): the dimmed look is the applicant's alone.
+
    REGISTERED under the `postDetail` prefix (round 27, seam 252): the thread at
    rest is the post's detail with its sheet raised, named as `CommentMenu`
    names it — the detail beneath, the sheet `threadSheet`, each top-level
@@ -45,8 +51,8 @@
    `snackbar`, the page's own, as `SettingsUnhidden` names the one over its
    sheet (round 45, seam 297; android tagged it `comments_snackbar`). */
 export const NODE = "postDetail";
-export const PROPS = { reader: { editor: "enum", options: ["member", "applicant"], default: "member" }, ...PICK_CHIP };
-export const VALS = `lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none", memberShown: this.props.reader === "applicant" ? "none" : "flex", applicantShown: this.props.reader === "applicant" ? "flex" : "none", ${PICK_VALS}`;
+export const PROPS = { reader: { editor: "enum", options: ["member", "applicant", "guest"], default: "member" }, ...PICK_CHIP };
+export const VALS = `lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none", memberShown: this.props.reader === "member" ? "flex" : "none", applicantShown: this.props.reader === "applicant" ? "flex" : "none", guestShown: this.props.reader === "guest" ? "flex" : "none", ${PICK_VALS}`;
 
 export function Screen() {
   return (
@@ -55,7 +61,7 @@ export function Screen() {
       <CommentsThreadSheet
         footOpacity="{{lockOpacity}}"
         replyOpacity="{{lockOpacity}}"
-        shown={{ member: "{{memberShown}}", applicant: "{{applicantShown}}" }}
+        shown={{ member: "{{memberShown}}", applicant: "{{applicantShown}}", guest: "{{guestShown}}" }}
         pick
         node="threadSheet"
       />

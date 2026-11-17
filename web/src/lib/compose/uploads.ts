@@ -170,8 +170,15 @@ function transportMessage(outcome: Outcome<unknown> & { kind: "failed" }): strin
  * rejected promise there is an unhandled rejection rather than a message the
  * reader can act on. Every failure comes back as a `failed` step instead, and
  * the two kinds are told apart because only one of them is worth a retry
- * button — a picture this browser cannot decode will not decode on the second
- * press either.
+ * button — a picture whose encode lands over the cap lands there again.
+ *
+ * A FAILED READ IS WORTH A RETRY. Every picture reaching here was read once
+ * already — the pick held its bytes (`holdBytes`) and the composer drew them — so a
+ * decode that fails now is a fault of the moment (a phone short of memory with
+ * ten pictures decoding at once), not a fact about the picture. Retry runs the
+ * whole leg again from those bytes, which is exactly what removing the picture
+ * and adding it again does; refusing the button there left the only way out
+ * the long one (hand test 2026-11-17).
  *
  * THE UPLOAD IS GUARDED like every other authenticated call. The access token
  * lives in this tab's memory alone, so a tab that has loaded rather than signed
@@ -203,7 +210,7 @@ export async function runUpload(
     step({
       kind: "failed",
       message: "This browser couldn't read that picture.",
-      retryable: false,
+      retryable: true,
     });
     return;
   }
@@ -219,7 +226,7 @@ export async function runUpload(
     step({
       kind: "failed",
       message: "This browser couldn't read that picture.",
-      retryable: false,
+      retryable: true,
     });
     return;
   }
@@ -323,7 +330,9 @@ export async function runVideoUpload(
     // cheap, and the cap check below needs no second path for it.
     coverDigest = await uploadDigestOf(encoded.blob);
   } catch {
-    onCover({ kind: "failed", message: "This browser couldn't read that cover.", retryable: false });
+    // Retryable for the picture's reason (`runUpload`): the cover was read
+    // once already, and the video's Retry runs this leg again.
+    onCover({ kind: "failed", message: "This browser couldn't read that cover.", retryable: true });
     onVideo({ kind: "failed", message: "The cover didn't upload.", retryable: true });
     return;
   }

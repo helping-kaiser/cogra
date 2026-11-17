@@ -36,11 +36,22 @@
 
    THE CHROME: the way back top-left and the sound disc top-right, both on the
    media disc's surface because they sit on photography; the rail down the right,
-   white and shadowed so it survives a bright frame; the caption above the bar.
+   white and shadowed so it survives a bright frame, its ⋮ raising the post's
+   own menu over the stream (jakob 2026-11-13, M2; `ReelMenu` draws it open);
+   the caption above the bar.
    No pause: a clip in a stream plays, and stopping it is what the detail view is
    for. The one play is the card's own: where the device suppresses autoplay the
-   clip stands paused on its cover and the play disc takes the sound disc's
+   clip stands paused on its own frame and the play disc takes the sound disc's
    corner until the tap starts it (RL-G3).
+
+   THE STREAM NEVER SHOWS A COVER (jakob 2026-11-13, N7: "in the reel scroller
+   covers should not be shown at all"). A cover is the card's face, a tall
+   clip's at the tile's 4:5; here the clip plays at its own 9:16, or stands
+   paused on its own frame, and the shape never jumps at play. Only a clip
+   that cannot load at all may show its cover in the stream — whole, at its
+   own 4:5, centred on the stream's black, nothing cropped. The tree draws no
+   state for a clip that did not load, so that sentence is law only
+   (backlog 230).
 
    THE `state` CHIP draws the stream's other faces, each one change from
    `playing`: `suppressed` (the play disc); `settling` (the rail's score door a
@@ -65,11 +76,11 @@ export const NODE = "reel";
 export const PROPS = {
   state: {
     editor: "enum",
-    options: ["playing", "suppressed", "settling", "moved", "end", "fault", "unsigned", "refused", "copied"],
+    options: ["playing", "suppressed", "settling", "moved", "end", "fault", "unsigned", "refused", "copied", "unloaded"],
     default: "playing",
   },
 };
-export const VALS = `soundDisc: this.props.state === "suppressed" ? "none" : "contents", playDisc: this.props.state === "suppressed" ? "contents" : "none", railFigure: this.props.state === "settling" || this.props.state === "moved" ? "none" : "contents", railSettling: this.props.state === "settling" ? "contents" : "none", railDash: this.props.state === "moved" ? "contents" : "none", lineUnsigned: this.props.state === "unsigned" ? "block" : "none", lineRefused: this.props.state === "refused" ? "block" : "none", lineEnd: this.props.state === "end" ? "block" : "none", lineFault: this.props.state === "fault" ? "block" : "none", snackbarShown: this.props.state === "copied" ? "contents" : "none"`;
+export const VALS = `soundDisc: this.props.state === "suppressed" ? "none" : "contents", playDisc: this.props.state === "suppressed" ? "contents" : "none", railFigure: this.props.state === "settling" || this.props.state === "moved" ? "none" : "contents", railSettling: this.props.state === "settling" ? "contents" : "none", railDash: this.props.state === "moved" ? "contents" : "none", lineUnsigned: this.props.state === "unsigned" ? "block" : "none", lineRefused: this.props.state === "refused" ? "block" : "none", lineEnd: this.props.state === "end" ? "block" : "none", lineFault: this.props.state === "fault" ? "block" : "none", snackbarShown: this.props.state === "copied" ? "contents" : "none", clipShown: this.props.state === "unloaded" ? "none" : "block", coverShown: this.props.state === "unloaded" ? "flex" : "none", seekShown: this.props.state === "unloaded" ? "none" : "block"`;
 
 const stateCopy = (value) => ({ "data-node-chip": "state", "data-node-key": value });
 
@@ -80,8 +91,21 @@ export function Screen() {
         <img
           src="clip-lakeside.jpg"
           alt="A man standing at the edge of a lake as the light drops."
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          style={{ display: "{{clipShown}}", position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
         />
+        {/* THE `state` CHIP'S `unloaded` (round 50, jakob 2026-11-17, C6): the
+            clip itself cannot load, so its cover stands in the stream, whole
+            at 4:5, centred on the black, nothing cropped (N7: a 4:5 cover in
+            the reel is fine in this edge case), with the read fault's
+            outlined `Retry` alone on it — no sentence. */}
+        <div style={{ display: "{{coverShown}}", position: "absolute", inset: 0, alignItems: "center", justifyContent: "center" }} {...stateCopy("unloaded")}>
+          <div style={{ width: "100%", aspectRatio: "4 / 5", flex: "none" }}>
+            <img src="clip-lakeside.jpg" alt="" style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
+          <span style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)" }}>
+            <Button variant="outline" size="sm" node="retry">Retry</Button>
+          </span>
+        </div>
       </div>
       {/* The two washes: chrome over photography needs its own contrast, and a
           gradient does it without drawing a bar across the frame. */}
@@ -165,7 +189,7 @@ export function Screen() {
         }
       />
 
-      <div style={{ position: "absolute", left: 0, right: 0, bottom: BAND_HEIGHT + 4, zIndex: 3 }}>
+      <div style={{ display: "{{seekShown}}", position: "absolute", left: 0, right: 0, bottom: BAND_HEIGHT + 4, zIndex: 3 }}>
         <SeekLine progress={0.34} elapsed="0:14" duration="0:41" node="seekLine" />
       </div>
 

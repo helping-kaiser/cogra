@@ -867,6 +867,91 @@
         "invites.linksLabel": []
       }
     },
+    "AvatarCrop": {
+      "prefix": "avatarCrop",
+      "keys": {
+        "avatarCrop.refusal": "the picked chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+      },
+      "nodes": {
+        "avatarCrop.header": [],
+        "avatarCrop.header.back": [],
+        "avatarCrop.header.leave": [],
+        "avatarCrop.header.title": [],
+        "avatarCrop.next": [],
+        "avatarCrop.refusal": [
+          "too-big",
+          "gif",
+          "unreadable"
+        ],
+        "avatarCrop.viewport": [],
+        "avatarCrop.zoom": [],
+        "avatarCrop.zoom.input": []
+      }
+    },
+    "AvatarSeal": {
+      "prefix": "avatarSeal",
+      "keys": {
+        "avatarSeal.acts.actRow": "the row's position in the acts card, counted from 1 (ActsCard)",
+        "avatarSeal.foot": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "avatarSeal.gate": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+      },
+      "nodes": {
+        "avatarSeal.acts": [],
+        "avatarSeal.acts.actRow": [
+          "1"
+        ],
+        "avatarSeal.acts.actRow.count": [
+          "1"
+        ],
+        "avatarSeal.acts.actRow.label": [
+          "1"
+        ],
+        "avatarSeal.acts.actRow.value": [
+          "1"
+        ],
+        "avatarSeal.acts.total": [],
+        "avatarSeal.foot": [
+          "rest",
+          "signing",
+          "uploading",
+          "upload-failed"
+        ],
+        "avatarSeal.foot.back": [
+          "rest",
+          "signing",
+          "uploading",
+          "upload-failed"
+        ],
+        "avatarSeal.foot.sign": [
+          "rest",
+          "signing",
+          "uploading",
+          "upload-failed"
+        ],
+        "avatarSeal.gate": [
+          "uploading",
+          "upload-failed"
+        ],
+        "avatarSeal.gate.line": [
+          "uploading"
+        ],
+        "avatarSeal.gate.message": [
+          "upload-failed"
+        ],
+        "avatarSeal.gate.retry": [
+          "upload-failed"
+        ],
+        "avatarSeal.gate.wait": [
+          "upload-failed"
+        ],
+        "avatarSeal.header": [],
+        "avatarSeal.header.back": [],
+        "avatarSeal.header.help": [],
+        "avatarSeal.header.leave": [],
+        "avatarSeal.header.title": [],
+        "avatarSeal.note": []
+      }
+    },
     "ChangeEmail": {
       "prefix": "changeEmail",
       "keys": {
@@ -1214,7 +1299,8 @@
       "keys": {
         "commentEdit.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
         "commentEdit.references.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)",
-        "commentEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+        "commentEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "commentEdit.target": "the post chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "commentEdit.acts": [],
@@ -1230,6 +1316,129 @@
         "commentEdit.facts.sensitive.value": [],
         "commentEdit.gate": [],
         "commentEdit.gate.line": [],
+        "commentEdit.header": [],
+        "commentEdit.header.back": [],
+        "commentEdit.header.help": [],
+        "commentEdit.header.leave": [],
+        "commentEdit.header.title": [],
+        "commentEdit.pictures": [],
+        "commentEdit.pictures.add": [],
+        "commentEdit.pictures.describeRow": [],
+        "commentEdit.pictures.describeRow.count": [],
+        "commentEdit.pictures.describeRow.describe": [],
+        "commentEdit.pictures.describeRow.reason": [],
+        "commentEdit.pictures.label": [],
+        "commentEdit.pictures.thumb": [
+          "1"
+        ],
+        "commentEdit.pictures.thumb.remove": [
+          "1"
+        ],
+        "commentEdit.references": [],
+        "commentEdit.references.add": [],
+        "commentEdit.references.label": [],
+        "commentEdit.references.stagedReference": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.kind": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.mark": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.name": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.pair": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.pair.exact": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.pair.face": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.remove": [
+          "1"
+        ],
+        "commentEdit.references.withdrawn": [],
+        "commentEdit.references.withdrawn.undo": [],
+        "commentEdit.sign": [],
+        "commentEdit.tags": [],
+        "commentEdit.tags.add": [],
+        "commentEdit.tags.label": [],
+        "commentEdit.tags.refused": [],
+        "commentEdit.tags.refused.message": [],
+        "commentEdit.tags.refused.remove": [],
+        "commentEdit.tags.tag": [
+          "glovebox",
+          "saltmaps"
+        ],
+        "commentEdit.tags.tag.remove": [
+          "glovebox",
+          "saltmaps"
+        ],
+        "commentEdit.tags.withdrawn": [],
+        "commentEdit.tags.withdrawn.undo": [],
+        "commentEdit.target": [
+          "live",
+          "removed"
+        ],
+        "commentEdit.words": [],
+        "commentEdit.words.input": [],
+        "commentEdit.words.label": []
+      }
+    },
+    "CommentEditActs": {
+      "prefix": "commentEdit",
+      "keys": {
+        "commentEdit.actsSheet.acts.actRow": "the row's position in the acts card, counted from 1 (ActsCard)",
+        "commentEdit.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
+        "commentEdit.references.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)",
+        "commentEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "commentEdit.acts": [],
+        "commentEdit.acts.line": [],
+        "commentEdit.actsSheet": [],
+        "commentEdit.actsSheet.acts": [],
+        "commentEdit.actsSheet.acts.actRow": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "commentEdit.actsSheet.acts.actRow.count": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "commentEdit.actsSheet.acts.actRow.label": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "commentEdit.actsSheet.acts.actRow.value": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "commentEdit.actsSheet.done": [],
+        "commentEdit.actsSheet.dragHandle": [],
+        "commentEdit.actsSheet.title": [],
+        "commentEdit.actsSheet.title.help": [],
+        "commentEdit.facts": [],
+        "commentEdit.facts.license": [],
+        "commentEdit.facts.license.label": [],
+        "commentEdit.facts.license.lock": [],
+        "commentEdit.facts.license.value": [],
+        "commentEdit.facts.sensitive": [],
+        "commentEdit.facts.sensitive.action": [],
+        "commentEdit.facts.sensitive.label": [],
+        "commentEdit.facts.sensitive.value": [],
         "commentEdit.header": [],
         "commentEdit.header.back": [],
         "commentEdit.header.help": [],
@@ -1598,6 +1807,8 @@
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
         "postDetail.threadSheet.dragHandle": [],
+        "postDetail.threadSheet.foot": [],
+        "postDetail.threadSheet.foot.addComment": [],
         "postDetail.threadSheet.title": [],
         "postDetail.threadSheet.viewReplies": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
@@ -1761,6 +1972,8 @@
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
         "postDetail.threadSheet.dragHandle": [],
+        "postDetail.threadSheet.foot": [],
+        "postDetail.threadSheet.foot.addComment": [],
         "postDetail.threadSheet.title": [],
         "postDetail.threadSheet.viewReplies": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
@@ -1925,6 +2138,8 @@
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
         "postDetail.threadSheet.dragHandle": [],
+        "postDetail.threadSheet.foot": [],
+        "postDetail.threadSheet.foot.addComment": [],
         "postDetail.threadSheet.title": [],
         "postDetail.threadSheet.viewReplies": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
@@ -2104,6 +2319,8 @@
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
         "postDetail.threadSheet.dragHandle": [],
+        "postDetail.threadSheet.foot": [],
+        "postDetail.threadSheet.foot.addComment": [],
         "postDetail.threadSheet.title": [],
         "postDetail.threadSheet.viewReplies": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
@@ -2268,6 +2485,8 @@
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
         "postDetail.threadSheet.dragHandle": [],
+        "postDetail.threadSheet.foot": [],
+        "postDetail.threadSheet.foot.addComment": [],
         "postDetail.threadSheet.title": [],
         "postDetail.threadSheet.viewReplies": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
@@ -2439,6 +2658,8 @@
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
         "postDetail.threadSheet.dragHandle": [],
+        "postDetail.threadSheet.foot": [],
+        "postDetail.threadSheet.foot.addComment": [],
         "postDetail.threadSheet.title": [],
         "postDetail.threadSheet.viewReplies": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
@@ -2448,8 +2669,7 @@
     "ComposeCrop": {
       "prefix": "composeCrop",
       "keys": {
-        "composeCrop.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
-        "composeCrop.shapes": "the shape chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+        "composeCrop.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)"
       },
       "nodes": {
         "composeCrop.header": [],
@@ -2463,26 +2683,10 @@
           "1",
           "2"
         ],
-        "composeCrop.shapes": [
-          "tall",
-          "square",
-          "wide"
-        ],
-        "composeCrop.shapes.squareChip": [
-          "tall",
-          "square",
-          "wide"
-        ],
-        "composeCrop.shapes.tallChip": [
-          "tall",
-          "square",
-          "wide"
-        ],
-        "composeCrop.shapes.wideChip": [
-          "tall",
-          "square",
-          "wide"
-        ],
+        "composeCrop.shapes": [],
+        "composeCrop.shapes.squareChip": [],
+        "composeCrop.shapes.tallChip": [],
+        "composeCrop.shapes.wideChip": [],
         "composeCrop.viewport": [],
         "composeCrop.zoom": [],
         "composeCrop.zoom.input": []
@@ -2685,6 +2889,106 @@
           "3"
         ],
         "composeDetails.pickedSheet.title": []
+      }
+    },
+    "ComposeSeal": {
+      "prefix": "composeSeal",
+      "keys": {
+        "composeSeal.acts": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "composeSeal.acts.actRow": "the row's position in the acts card, counted from 1 (ActsCard)",
+        "composeSeal.footer": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+      },
+      "nodes": {
+        "composeSeal.acts": [
+          "rest",
+          "tag-refused",
+          "signing"
+        ],
+        "composeSeal.acts.actRow": [
+          "rest/1",
+          "rest/2",
+          "rest/3",
+          "tag-refused/1",
+          "tag-refused/2",
+          "tag-refused/3",
+          "signing/1",
+          "signing/2",
+          "signing/3"
+        ],
+        "composeSeal.acts.actRow.count": [
+          "rest/1",
+          "rest/2",
+          "rest/3",
+          "tag-refused/1",
+          "tag-refused/2",
+          "tag-refused/3",
+          "signing/1",
+          "signing/2",
+          "signing/3"
+        ],
+        "composeSeal.acts.actRow.label": [
+          "rest/1",
+          "rest/2",
+          "rest/3",
+          "tag-refused/1",
+          "tag-refused/2",
+          "tag-refused/3",
+          "signing/1",
+          "signing/2",
+          "signing/3"
+        ],
+        "composeSeal.acts.actRow.value": [
+          "rest/1",
+          "rest/2",
+          "rest/3",
+          "tag-refused/1",
+          "tag-refused/2",
+          "tag-refused/3",
+          "signing/1",
+          "signing/2",
+          "signing/3"
+        ],
+        "composeSeal.acts.total": [
+          "rest",
+          "tag-refused",
+          "signing"
+        ],
+        "composeSeal.facts": [],
+        "composeSeal.facts.backing": [],
+        "composeSeal.facts.backing.action": [],
+        "composeSeal.facts.backing.label": [],
+        "composeSeal.facts.backing.value": [],
+        "composeSeal.facts.backing.value.exact": [],
+        "composeSeal.facts.backing.value.face": [],
+        "composeSeal.facts.license": [],
+        "composeSeal.facts.license.action": [],
+        "composeSeal.facts.license.label": [],
+        "composeSeal.facts.license.value": [],
+        "composeSeal.facts.sensitive": [],
+        "composeSeal.facts.sensitive.action": [],
+        "composeSeal.facts.sensitive.label": [],
+        "composeSeal.facts.sensitive.value": [],
+        "composeSeal.footer": [
+          "rest",
+          "tag-refused",
+          "signing"
+        ],
+        "composeSeal.footer.back": [
+          "rest",
+          "tag-refused",
+          "signing"
+        ],
+        "composeSeal.footer.sign": [
+          "rest",
+          "tag-refused",
+          "signing"
+        ],
+        "composeSeal.header": [],
+        "composeSeal.header.back": [],
+        "composeSeal.header.help": [],
+        "composeSeal.header.leave": [],
+        "composeSeal.header.title": [],
+        "composeSeal.summary": []
       }
     },
     "CoverCrop": {
@@ -2901,6 +3205,129 @@
         "deleteAccount.title": []
       }
     },
+    "EditActs": {
+      "prefix": "postEdit",
+      "keys": {
+        "postEdit.actsSheet.acts.actRow": "the row's position in the acts card, counted from 1 (ActsCard)",
+        "postEdit.body.mediaRow.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
+        "postEdit.references.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)",
+        "postEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "postEdit.acts": [],
+        "postEdit.acts.line": [],
+        "postEdit.actsSheet": [],
+        "postEdit.actsSheet.acts": [],
+        "postEdit.actsSheet.acts.actRow": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "postEdit.actsSheet.acts.actRow.count": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "postEdit.actsSheet.acts.actRow.label": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "postEdit.actsSheet.acts.actRow.value": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "postEdit.actsSheet.done": [],
+        "postEdit.actsSheet.dragHandle": [],
+        "postEdit.actsSheet.title": [],
+        "postEdit.actsSheet.title.help": [],
+        "postEdit.body": [],
+        "postEdit.body.add": [],
+        "postEdit.body.mediaRow": [],
+        "postEdit.body.mediaRow.caption": [],
+        "postEdit.body.mediaRow.thumb": [
+          "1",
+          "2"
+        ],
+        "postEdit.body.rule": [],
+        "postEdit.description": [],
+        "postEdit.description.corner": [],
+        "postEdit.description.input": [],
+        "postEdit.description.label": [],
+        "postEdit.facts": [],
+        "postEdit.facts.backing": [],
+        "postEdit.facts.backing.action": [],
+        "postEdit.facts.backing.label": [],
+        "postEdit.facts.backing.value": [],
+        "postEdit.facts.backing.value.exact": [],
+        "postEdit.facts.backing.value.face": [],
+        "postEdit.facts.license": [],
+        "postEdit.facts.license.label": [],
+        "postEdit.facts.license.lock": [],
+        "postEdit.facts.license.value": [],
+        "postEdit.facts.sensitive": [],
+        "postEdit.facts.sensitive.action": [],
+        "postEdit.facts.sensitive.label": [],
+        "postEdit.facts.sensitive.value": [],
+        "postEdit.header": [],
+        "postEdit.header.back": [],
+        "postEdit.header.help": [],
+        "postEdit.header.leave": [],
+        "postEdit.header.title": [],
+        "postEdit.references": [],
+        "postEdit.references.add": [],
+        "postEdit.references.label": [],
+        "postEdit.references.stagedReference": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.kind": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.mark": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.name": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.pair": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.pair.exact": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.pair.face": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.remove": [
+          "1"
+        ],
+        "postEdit.references.withdrawn": [],
+        "postEdit.references.withdrawn.undo": [],
+        "postEdit.sign": [],
+        "postEdit.tags": [],
+        "postEdit.tags.add": [],
+        "postEdit.tags.label": [],
+        "postEdit.tags.tag": [
+          "fieldnotes",
+          "saltmaps"
+        ],
+        "postEdit.tags.tag.remove": [
+          "fieldnotes",
+          "saltmaps"
+        ],
+        "postEdit.tags.withdrawn": [],
+        "postEdit.tags.withdrawn.undo": [],
+        "postEdit.title": [],
+        "postEdit.title.corner": [],
+        "postEdit.title.input": [],
+        "postEdit.title.label": []
+      }
+    },
     "EditCompose": {
       "prefix": "postEdit",
       "keys": {
@@ -3026,6 +3453,9 @@
         "postEdit.tags": [],
         "postEdit.tags.add": [],
         "postEdit.tags.label": [],
+        "postEdit.tags.refused": [],
+        "postEdit.tags.refused.message": [],
+        "postEdit.tags.refused.remove": [],
         "postEdit.tags.tag": [
           "fieldnotes",
           "saltmaps"
@@ -3914,6 +4344,313 @@
         ]
       }
     },
+    "FeedCommentMenu": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "feed.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.comments": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.score": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.score.value": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.share": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.stance": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.authorChip": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.authorChip.avatar": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.authorChip.handle": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.authorChip.name": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.description": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.media": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.media.dots": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.media.frame": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/1",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/2"
+        ],
+        "feed.card.menu": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.opener": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.tagsLine": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.tagsLine.tag": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/fieldnotes",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/saltmaps"
+        ],
+        "feed.card.timestamp": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.title": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.commentCard": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "feed.commentCard.actionRow": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "feed.commentCard.actionRow.reply": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "feed.commentCard.actionRow.score": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "feed.commentCard.actionRow.score.value": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "feed.commentCard.actionRow.share": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "feed.commentCard.actionRow.stance": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "feed.commentCard.actionRow.stance.anchor": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "feed.commentCard.actionRow.stance.anchor.face": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "feed.commentCard.authorChip": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "feed.commentCard.authorChip.avatar": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "feed.commentCard.authorChip.handle": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "feed.commentCard.authorChip.name": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "feed.commentCard.menu": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "feed.commentCard.target": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "feed.menuSheet": [],
+        "feed.menuSheet.cite": [],
+        "feed.menuSheet.citedBy": [],
+        "feed.menuSheet.dragHandle": [],
+        "feed.menuSheet.license": [],
+        "feed.menuSheet.opinions": [],
+        "feed.menuSheet.report": [],
+        "feed.menuSheet.save": []
+      }
+    },
+    "FeedCommentMenuOwn": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "feed.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.comments": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.score": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.score.value": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.share": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.stance": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.authorChip": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.authorChip.avatar": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.authorChip.handle": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.authorChip.name": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.description": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.media": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.media.dots": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.media.frame": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/1",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/2"
+        ],
+        "feed.card.menu": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.opener": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.tagsLine": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.tagsLine.tag": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/fieldnotes",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/saltmaps"
+        ],
+        "feed.card.timestamp": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.title": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.commentCard": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "feed.commentCard.actionRow": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "feed.commentCard.actionRow.reply": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "feed.commentCard.actionRow.score": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "feed.commentCard.actionRow.score.value": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "feed.commentCard.actionRow.share": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "feed.commentCard.actionRow.stance": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "feed.commentCard.actionRow.stance.anchor": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "feed.commentCard.actionRow.stance.anchor.face": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "feed.commentCard.authorChip": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "feed.commentCard.authorChip.avatar": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "feed.commentCard.authorChip.handle": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "feed.commentCard.authorChip.name": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "feed.commentCard.menu": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "feed.commentCard.target": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "feed.menuSheet": [],
+        "feed.menuSheet.cite": [],
+        "feed.menuSheet.citedBy": [],
+        "feed.menuSheet.dragHandle": [],
+        "feed.menuSheet.edit": [],
+        "feed.menuSheet.license": [],
+        "feed.menuSheet.opinions": [],
+        "feed.menuSheet.remove": [],
+        "feed.menuSheet.save": []
+      }
+    },
     "FeedCommentShapes": {
       "prefix": "feed",
       "keys": {
@@ -4721,6 +5458,8 @@
         "feed.profileCard.name": [
           "cdbd41fc-faec-4c16-9813-7f718b8a0989"
         ],
+        "feed.snackbar": [],
+        "feed.snackbar.message": [],
         "feed.tagCard": [
           "fc7d18fe-c334-4c2a-82b3-eed28f2eaa26"
         ],
@@ -5167,9 +5906,11 @@
         ],
         "feed.menuSheet": [],
         "feed.menuSheet.cite": [],
+        "feed.menuSheet.citedBy": [],
         "feed.menuSheet.dragHandle": [],
         "feed.menuSheet.hide": [],
         "feed.menuSheet.license": [],
+        "feed.menuSheet.opinions": [],
         "feed.menuSheet.report": [],
         "feed.menuSheet.save": []
       }
@@ -5301,10 +6042,12 @@
         ],
         "feed.menuSheet": [],
         "feed.menuSheet.cite": [],
+        "feed.menuSheet.citedBy": [],
         "feed.menuSheet.dragHandle": [],
         "feed.menuSheet.edit": [],
         "feed.menuSheet.license": [],
         "feed.menuSheet.markSensitive": [],
+        "feed.menuSheet.opinions": [],
         "feed.menuSheet.remove": [],
         "feed.menuSheet.save": []
       }
@@ -5829,9 +6572,11 @@
         ],
         "feed.menuSheet": [],
         "feed.menuSheet.cite": [],
+        "feed.menuSheet.citedBy": [],
         "feed.menuSheet.dragHandle": [],
         "feed.menuSheet.hide": [],
         "feed.menuSheet.license": [],
+        "feed.menuSheet.opinions": [],
         "feed.menuSheet.report": [],
         "feed.menuSheet.save": []
       }
@@ -5960,8 +6705,10 @@
         ],
         "feed.menuSheet": [],
         "feed.menuSheet.cite": [],
+        "feed.menuSheet.citedBy": [],
         "feed.menuSheet.dragHandle": [],
         "feed.menuSheet.license": [],
+        "feed.menuSheet.opinions": [],
         "feed.menuSheet.save": []
       }
     },
@@ -6429,6 +7176,175 @@
           "everyone",
           "your-people"
         ],
+        "feed.filterSheet.topic": [],
+        "feed.filterSheet.topic.allTopics": [],
+        "feed.filterSheet.topic.hint": [],
+        "feed.filterSheet.topic.label": [],
+        "feed.filterSheet.topic.tag": [
+          "saltmaps",
+          "coastroad",
+          "fieldnotes",
+          "tidetables"
+        ]
+      }
+    },
+    "FeedSheetFormsOff": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "feed.filterSheet.topic.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.body": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "feed.card.menu": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.opener": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.filterSheet": [],
+        "feed.filterSheet.also": [],
+        "feed.filterSheet.also.label": [],
+        "feed.filterSheet.also.removedChip": [],
+        "feed.filterSheet.also.sensitiveChip": [],
+        "feed.filterSheet.also.settlingChip": [],
+        "feed.filterSheet.dragHandle": [],
+        "feed.filterSheet.foot": [],
+        "feed.filterSheet.foot.done": [],
+        "feed.filterSheet.foot.reset": [],
+        "feed.filterSheet.forms": [],
+        "feed.filterSheet.forms.hint": [],
+        "feed.filterSheet.forms.label": [],
+        "feed.filterSheet.forms.photosChip": [],
+        "feed.filterSheet.forms.textChip": [],
+        "feed.filterSheet.forms.videoChip": [],
+        "feed.filterSheet.help": [],
+        "feed.filterSheet.kinds": [],
+        "feed.filterSheet.kinds.commentsChip": [],
+        "feed.filterSheet.kinds.label": [],
+        "feed.filterSheet.kinds.postsChip": [],
+        "feed.filterSheet.kinds.profilesChip": [],
+        "feed.filterSheet.kinds.topicsChip": [],
+        "feed.filterSheet.order": [],
+        "feed.filterSheet.order.label": [],
+        "feed.filterSheet.order.picker": [],
+        "feed.filterSheet.order.picker.newestOption": [],
+        "feed.filterSheet.order.picker.rankedOption": [],
+        "feed.filterSheet.order.seen": [],
+        "feed.filterSheet.order.seen.box": [],
+        "feed.filterSheet.order.seen.label": [],
+        "feed.filterSheet.people": [],
+        "feed.filterSheet.people.everyone": [],
+        "feed.filterSheet.people.everyone.dot": [],
+        "feed.filterSheet.people.everyone.label": [],
+        "feed.filterSheet.people.label": [],
+        "feed.filterSheet.people.yourPeople": [],
+        "feed.filterSheet.people.yourPeople.dot": [],
+        "feed.filterSheet.people.yourPeople.hint": [],
+        "feed.filterSheet.people.yourPeople.label": [],
         "feed.filterSheet.topic": [],
         "feed.filterSheet.topic.allTopics": [],
         "feed.filterSheet.topic.hint": [],
@@ -7617,9 +8533,11 @@
         "history.header.title": [],
         "history.menuSheet": [],
         "history.menuSheet.cite": [],
+        "history.menuSheet.citedBy": [],
         "history.menuSheet.dragHandle": [],
         "history.menuSheet.hide": [],
         "history.menuSheet.license": [],
+        "history.menuSheet.opinions": [],
         "history.menuSheet.report": [],
         "history.menuSheet.save": [],
         "history.searchField": [],
@@ -7728,10 +8646,12 @@
         "history.header.title": [],
         "history.menuSheet": [],
         "history.menuSheet.cite": [],
+        "history.menuSheet.citedBy": [],
         "history.menuSheet.dragHandle": [],
         "history.menuSheet.edit": [],
         "history.menuSheet.license": [],
         "history.menuSheet.markSensitive": [],
+        "history.menuSheet.opinions": [],
         "history.menuSheet.remove": [],
         "history.menuSheet.save": [],
         "history.searchField": [],
@@ -9245,6 +10165,185 @@
         "onboarding.title": []
       }
     },
+    "PadFailed": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.cancel": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.bottom": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.left": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.right": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.square": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.square.knob": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.square.zeroAcross": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.square.zeroDown": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.top": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.help": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.landing": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.landing.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.landing.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.landing.label": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.set": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.sever": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.current": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.current.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.current.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.current.label": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.pick": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.pick.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.pick.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.pick.label": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "feed.card.menu": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.opener": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ]
+      }
+    },
     "PadPending": {
       "prefix": "feed",
       "keys": {
@@ -9598,6 +10697,167 @@
           "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
         ],
         "feed.card.actionRow.stance.pad.zeroPanel.back": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "feed.card.menu": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.opener": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ]
+      }
+    },
+    "PadWriteRule": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.bottom": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.left": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.right": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.square": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.square.knob": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.square.zeroAcross": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.square.zeroDown": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.field.top": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.help": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.notNow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.current": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.current.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.current.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.current.label": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.pick": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.pick.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.pick.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.actionRow.stance.pad.standing.pick.label": [
           "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
         ],
         "feed.card.authorChip": [
@@ -10139,7 +11399,11 @@
     "Profile": {
       "prefix": "profile",
       "keys": {
-        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)"
+        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)",
+        "profile.posts.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "profile.posts.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "profile.posts.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "profile.tabRow": "the tab chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "profile.band": [],
@@ -10213,16 +11477,107 @@
         "profile.identity.handle": [],
         "profile.identity.name": [],
         "profile.identity.website": [],
-        "profile.tabRow": [],
-        "profile.tabRow.commentsTab": [],
-        "profile.tabRow.everythingTab": [],
-        "profile.tabRow.postsTab": []
+        "profile.posts": [],
+        "profile.posts.card": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.comments": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.comments.count": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.score": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.score.value": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.share": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.stance": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.stance.anchor": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.exact": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.face": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.authorChip": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.authorChip.avatar": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.authorChip.handle": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.authorChip.name": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.description": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.media": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.media.dots": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.media.frame": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/1",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/2"
+        ],
+        "profile.posts.card.menu": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.opener": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.tagsLine": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.tagsLine.tag": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/fieldnotes",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/saltmaps"
+        ],
+        "profile.posts.card.timestamp": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.title": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.tabRow": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.commentsTab": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.everythingTab": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.postsTab": [
+          "posts",
+          "everything"
+        ]
       }
     },
     "ProfileApplicant": {
       "prefix": "profile",
       "keys": {
-        "profile.application": "the application chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+        "profile.application": "the application chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "profile.tabRow": "the tab chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "profile.application": [
@@ -10291,19 +11646,33 @@
         "profile.identity.figures.stancesTaken.value": [],
         "profile.identity.handle": [],
         "profile.identity.name": [],
+        "profile.posts": [],
+        "profile.posts.empty": [],
+        "profile.posts.empty.title": [],
         "profile.snackbar": [],
         "profile.snackbar.message": [],
-        "profile.tabRow": [],
-        "profile.tabRow.commentsTab": [],
-        "profile.tabRow.everythingTab": [],
-        "profile.tabRow.postsTab": []
+        "profile.tabRow": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.commentsTab": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.everythingTab": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.postsTab": [
+          "posts",
+          "everything"
+        ]
       }
     },
     "ProfileComments": {
       "prefix": "profile",
       "keys": {
-        "profile.comments.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
-        "profile.comments.viewReplies": "the comment's id, the lowercase UUID the wire carries — the key of the card the line hangs under (CommentCard)"
+        "profile.comments.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
       },
       "nodes": {
         "profile.bottomBar": [],
@@ -10378,9 +11747,6 @@
         "profile.comments.loading": [],
         "profile.comments.moreFault": [],
         "profile.comments.moreFault.retry": [],
-        "profile.comments.viewReplies": [
-          "5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e"
-        ],
         "profile.header": [],
         "profile.header.back": [],
         "profile.header.title": [],
@@ -10404,6 +11770,8 @@
         "profile.identity.figures.stancesTaken.label": [],
         "profile.identity.figures.stancesTaken.value": [],
         "profile.identity.name": [],
+        "profile.snackbar": [],
+        "profile.snackbar.message": [],
         "profile.tabRow": [],
         "profile.tabRow.commentsTab": [],
         "profile.tabRow.everythingTab": [],
@@ -10413,8 +11781,7 @@
     "ProfileCommentsMenu": {
       "prefix": "profile",
       "keys": {
-        "profile.comments.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
-        "profile.comments.viewReplies": "the comment's id, the lowercase UUID the wire carries — the key of the card the line hangs under (CommentCard)"
+        "profile.comments.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
       },
       "nodes": {
         "profile.bottomBar": [],
@@ -10461,9 +11828,6 @@
           "5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e"
         ],
         "profile.comments.commentCard.target": [
-          "5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e"
-        ],
-        "profile.comments.viewReplies": [
           "5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e"
         ],
         "profile.header": [],
@@ -10781,7 +12145,9 @@
     "ProfileDeleted": {
       "prefix": "profile",
       "keys": {
-        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)"
+        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)",
+        "profile.posts.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "profile.tabRow": "the tab chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "profile.bottomBar": [],
@@ -10847,16 +12213,88 @@
         "profile.identity.removalMark.detail": [],
         "profile.identity.removalMark.line": [],
         "profile.identity.removalMark.when": [],
-        "profile.tabRow": [],
-        "profile.tabRow.commentsTab": [],
-        "profile.tabRow.everythingTab": [],
-        "profile.tabRow.postsTab": []
+        "profile.posts": [],
+        "profile.posts.card": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.comments": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.comments.count": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.score": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.score.value": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.share": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.stance": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.stance.anchor": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.face": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.authorChip": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.authorChip.avatar": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.authorChip.name": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.body": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.menu": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.removalMark": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.removalMark.line": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.removalMark.when": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.timestamp": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.tabRow": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.commentsTab": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.everythingTab": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.postsTab": [
+          "posts",
+          "everything"
+        ]
       }
     },
     "ProfileDeletedMenu": {
       "prefix": "profile",
       "keys": {
-        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)"
+        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)",
+        "profile.posts.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "profile.tabRow": "the tab chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "profile.bottomBar": [],
@@ -10928,16 +12366,188 @@
         "profile.menuSheet.report": [],
         "profile.menuSheet.save": [],
         "profile.menuSheet.share": [],
-        "profile.tabRow": [],
-        "profile.tabRow.commentsTab": [],
-        "profile.tabRow.everythingTab": [],
-        "profile.tabRow.postsTab": []
+        "profile.posts": [],
+        "profile.posts.card": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.comments": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.comments.count": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.score": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.score.value": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.share": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.stance": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.stance.anchor": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.face": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.authorChip": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.authorChip.avatar": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.authorChip.name": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.body": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.menu": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.removalMark": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.removalMark.line": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.removalMark.when": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.timestamp": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.tabRow": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.commentsTab": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.everythingTab": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.postsTab": [
+          "posts",
+          "everything"
+        ]
+      }
+    },
+    "ProfileEdit": {
+      "prefix": "profileEdit",
+      "keys": {},
+      "nodes": {
+        "profileEdit.acts": [],
+        "profileEdit.acts.line": [],
+        "profileEdit.bio": [],
+        "profileEdit.bio.corner": [],
+        "profileEdit.bio.input": [],
+        "profileEdit.bio.label": [],
+        "profileEdit.header": [],
+        "profileEdit.header.back": [],
+        "profileEdit.header.title": [],
+        "profileEdit.name": [],
+        "profileEdit.name.corner": [],
+        "profileEdit.name.input": [],
+        "profileEdit.name.label": [],
+        "profileEdit.picture": [],
+        "profileEdit.refused": [],
+        "profileEdit.refused.help": [],
+        "profileEdit.refused.line": [],
+        "profileEdit.remove": [],
+        "profileEdit.save": [],
+        "profileEdit.undo": [],
+        "profileEdit.uploadError": [],
+        "profileEdit.uploadError.message": [],
+        "profileEdit.uploadError.remove": [],
+        "profileEdit.uploadError.retry": [],
+        "profileEdit.website": [],
+        "profileEdit.website.corner": [],
+        "profileEdit.website.input": [],
+        "profileEdit.website.label": []
+      }
+    },
+    "ProfileEditSeal": {
+      "prefix": "profileEditSeal",
+      "keys": {
+        "profileEditSeal.acts.actRow": "the row's position in the acts card, counted from 1 (ActsCard)",
+        "profileEditSeal.foot": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "profileEditSeal.gate": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+      },
+      "nodes": {
+        "profileEditSeal.acts": [],
+        "profileEditSeal.acts.actRow": [
+          "1"
+        ],
+        "profileEditSeal.acts.actRow.count": [
+          "1"
+        ],
+        "profileEditSeal.acts.actRow.label": [
+          "1"
+        ],
+        "profileEditSeal.acts.actRow.value": [
+          "1"
+        ],
+        "profileEditSeal.acts.total": [],
+        "profileEditSeal.foot": [
+          "rest",
+          "signing",
+          "uploading",
+          "upload-failed"
+        ],
+        "profileEditSeal.foot.back": [
+          "rest",
+          "signing",
+          "uploading",
+          "upload-failed"
+        ],
+        "profileEditSeal.foot.sign": [
+          "rest",
+          "signing",
+          "uploading",
+          "upload-failed"
+        ],
+        "profileEditSeal.gate": [
+          "uploading",
+          "upload-failed"
+        ],
+        "profileEditSeal.gate.line": [
+          "uploading"
+        ],
+        "profileEditSeal.gate.message": [
+          "upload-failed"
+        ],
+        "profileEditSeal.gate.retry": [
+          "upload-failed"
+        ],
+        "profileEditSeal.gate.wait": [
+          "upload-failed"
+        ],
+        "profileEditSeal.header": [],
+        "profileEditSeal.header.back": [],
+        "profileEditSeal.header.help": [],
+        "profileEditSeal.header.leave": [],
+        "profileEditSeal.header.title": [],
+        "profileEditSeal.note": []
       }
     },
     "ProfileMenu": {
       "prefix": "profile",
       "keys": {
-        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)"
+        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)",
+        "profile.posts.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "profile.posts.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "profile.posts.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "profile.tabRow": "the tab chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "profile.bottomBar": [],
@@ -11013,16 +12623,109 @@
         "profile.menuSheet.report": [],
         "profile.menuSheet.save": [],
         "profile.menuSheet.share": [],
-        "profile.tabRow": [],
-        "profile.tabRow.commentsTab": [],
-        "profile.tabRow.everythingTab": [],
-        "profile.tabRow.postsTab": []
+        "profile.posts": [],
+        "profile.posts.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "profile.posts.card.menu": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.opener": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "profile.posts.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.tabRow": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.commentsTab": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.everythingTab": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.postsTab": [
+          "posts",
+          "everything"
+        ]
       }
     },
     "ProfileOther": {
       "prefix": "profile",
       "keys": {
-        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)"
+        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)",
+        "profile.posts.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "profile.posts.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "profile.posts.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "profile.tabRow": "the tab chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "profile.bottomBar": [],
@@ -11091,16 +12794,109 @@
         "profile.identity.figures.stancesTaken.label": [],
         "profile.identity.figures.stancesTaken.value": [],
         "profile.identity.name": [],
-        "profile.tabRow": [],
-        "profile.tabRow.commentsTab": [],
-        "profile.tabRow.everythingTab": [],
-        "profile.tabRow.postsTab": []
+        "profile.posts": [],
+        "profile.posts.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "profile.posts.card.menu": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.opener": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "profile.posts.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.tabRow": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.commentsTab": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.everythingTab": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.postsTab": [
+          "posts",
+          "everything"
+        ]
       }
     },
     "ProfileOtherHidden": {
       "prefix": "profile",
       "keys": {
-        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)"
+        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)",
+        "profile.posts.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "profile.posts.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "profile.posts.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "profile.tabRow": "the tab chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "profile.bottomBar": [],
@@ -11169,19 +12965,112 @@
         "profile.identity.figures.stancesTaken.label": [],
         "profile.identity.figures.stancesTaken.value": [],
         "profile.identity.name": [],
+        "profile.posts": [],
+        "profile.posts.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "profile.posts.card.menu": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.opener": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "profile.posts.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
         "profile.snackbar": [],
         "profile.snackbar.action": [],
         "profile.snackbar.message": [],
-        "profile.tabRow": [],
-        "profile.tabRow.commentsTab": [],
-        "profile.tabRow.everythingTab": [],
-        "profile.tabRow.postsTab": []
+        "profile.tabRow": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.commentsTab": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.everythingTab": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.postsTab": [
+          "posts",
+          "everything"
+        ]
       }
     },
     "ProfileOwnMenu": {
       "prefix": "profile",
       "keys": {
-        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)"
+        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)",
+        "profile.posts.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "profile.posts.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "profile.posts.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "profile.tabRow": "the tab chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "profile.band": [],
@@ -11260,10 +13149,100 @@
         "profile.menuSheet.history": [],
         "profile.menuSheet.saved": [],
         "profile.menuSheet.share": [],
-        "profile.tabRow": [],
-        "profile.tabRow.commentsTab": [],
-        "profile.tabRow.everythingTab": [],
-        "profile.tabRow.postsTab": []
+        "profile.posts": [],
+        "profile.posts.card": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.comments": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.comments.count": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.score": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.score.value": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.share": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.stance": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.stance.anchor": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.exact": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.face": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.authorChip": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.authorChip.avatar": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.authorChip.handle": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.authorChip.name": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.description": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.media": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.media.dots": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.media.frame": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/1",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/2"
+        ],
+        "profile.posts.card.menu": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.opener": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.tagsLine": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.tagsLine.tag": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/fieldnotes",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/saltmaps"
+        ],
+        "profile.posts.card.timestamp": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.title": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.tabRow": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.commentsTab": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.everythingTab": [
+          "posts",
+          "everything"
+        ],
+        "profile.tabRow.postsTab": [
+          "posts",
+          "everything"
+        ]
       }
     },
     "ProfilePosts": {
@@ -11449,9 +13428,11 @@
         "profile.identity.name": [],
         "profile.menuSheet": [],
         "profile.menuSheet.cite": [],
+        "profile.menuSheet.citedBy": [],
         "profile.menuSheet.dragHandle": [],
         "profile.menuSheet.hide": [],
         "profile.menuSheet.license": [],
+        "profile.menuSheet.opinions": [],
         "profile.menuSheet.report": [],
         "profile.menuSheet.save": [],
         "profile.posts": [],
@@ -11581,10 +13562,12 @@
         "profile.identity.website": [],
         "profile.menuSheet": [],
         "profile.menuSheet.cite": [],
+        "profile.menuSheet.citedBy": [],
         "profile.menuSheet.dragHandle": [],
         "profile.menuSheet.edit": [],
         "profile.menuSheet.license": [],
         "profile.menuSheet.markSensitive": [],
+        "profile.menuSheet.opinions": [],
         "profile.menuSheet.remove": [],
         "profile.menuSheet.save": [],
         "profile.posts": [],
@@ -12139,9 +14122,11 @@
         "postDetail.header.menu": [],
         "postDetail.menuSheet": [],
         "postDetail.menuSheet.cite": [],
+        "postDetail.menuSheet.citedBy": [],
         "postDetail.menuSheet.dragHandle": [],
         "postDetail.menuSheet.hide": [],
         "postDetail.menuSheet.license": [],
+        "postDetail.menuSheet.opinions": [],
         "postDetail.menuSheet.report": [],
         "postDetail.menuSheet.save": []
       }
@@ -12232,9 +14217,11 @@
         "postDetail.header.menu": [],
         "postDetail.menuSheet": [],
         "postDetail.menuSheet.cite": [],
+        "postDetail.menuSheet.citedBy": [],
         "postDetail.menuSheet.dragHandle": [],
         "postDetail.menuSheet.hide": [],
         "postDetail.menuSheet.license": [],
+        "postDetail.menuSheet.opinions": [],
         "postDetail.menuSheet.report": [],
         "postDetail.menuSheet.save": [],
         "postDetail.menuSheet.share": []
@@ -12278,7 +14265,8 @@
       "keys": {
         "reel.caption.notice": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "reel.rail.score": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
-        "reel.rail.stanceLine": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+        "reel.rail.stanceLine": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.stage.retry": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "reel.backDisc": [],
@@ -12304,6 +14292,7 @@
         "reel.rail": [],
         "reel.rail.author": [],
         "reel.rail.comments": [],
+        "reel.rail.menu": [],
         "reel.rail.score": [
           "playing",
           "settling",
@@ -12332,6 +14321,159 @@
         "reel.snackbar.message": [],
         "reel.soundDisc": [],
         "reel.stage": [],
+        "reel.stage.retry": [
+          "unloaded"
+        ],
+        "reel.washBottom": [],
+        "reel.washTop": []
+      }
+    },
+    "ReelMenu": {
+      "prefix": "reel",
+      "keys": {
+        "reel.caption": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.menuSheet.cite": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.menuSheet.citedBy": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.menuSheet.edit": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.menuSheet.hide": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.menuSheet.license": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.menuSheet.markSensitive": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.menuSheet.opinions": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.menuSheet.remove": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.menuSheet.report": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.menuSheet.save": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.rail": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.stage.removalMark": "the whose chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+      },
+      "nodes": {
+        "reel.backDisc": [],
+        "reel.bottomBar": [],
+        "reel.bottomBar.composeSlot": [],
+        "reel.bottomBar.feedSlot": [],
+        "reel.bottomBar.profileSlot": [],
+        "reel.bottomBar.searchSlot": [],
+        "reel.bottomBar.walletSlot": [],
+        "reel.caption": [
+          "reader",
+          "own",
+          "own-removed"
+        ],
+        "reel.caption.description": [
+          "reader",
+          "own"
+        ],
+        "reel.caption.handle": [
+          "reader",
+          "own",
+          "own-removed"
+        ],
+        "reel.caption.more": [
+          "reader",
+          "own"
+        ],
+        "reel.caption.title": [
+          "reader",
+          "own"
+        ],
+        "reel.menuSheet": [],
+        "reel.menuSheet.cite": [
+          "reader",
+          "own"
+        ],
+        "reel.menuSheet.citedBy": [
+          "reader",
+          "own"
+        ],
+        "reel.menuSheet.dragHandle": [],
+        "reel.menuSheet.edit": [
+          "own"
+        ],
+        "reel.menuSheet.hide": [
+          "reader"
+        ],
+        "reel.menuSheet.license": [
+          "reader",
+          "own"
+        ],
+        "reel.menuSheet.markSensitive": [
+          "own"
+        ],
+        "reel.menuSheet.opinions": [
+          "reader",
+          "own"
+        ],
+        "reel.menuSheet.remove": [
+          "own"
+        ],
+        "reel.menuSheet.report": [
+          "reader"
+        ],
+        "reel.menuSheet.save": [
+          "reader",
+          "own"
+        ],
+        "reel.rail": [
+          "reader",
+          "own",
+          "own-removed"
+        ],
+        "reel.rail.author": [
+          "reader",
+          "own",
+          "own-removed"
+        ],
+        "reel.rail.comments": [
+          "reader",
+          "own",
+          "own-removed"
+        ],
+        "reel.rail.menu": [
+          "reader",
+          "own",
+          "own-removed"
+        ],
+        "reel.rail.score": [
+          "reader",
+          "own",
+          "own-removed"
+        ],
+        "reel.rail.score.value": [
+          "reader",
+          "own",
+          "own-removed"
+        ],
+        "reel.rail.share": [
+          "reader",
+          "own",
+          "own-removed"
+        ],
+        "reel.rail.stance": [
+          "reader",
+          "own",
+          "own-removed"
+        ],
+        "reel.rail.stance.anchor": [
+          "reader",
+          "own",
+          "own-removed"
+        ],
+        "reel.rail.stance.anchor.face": [
+          "reader",
+          "own",
+          "own-removed"
+        ],
+        "reel.seekLine": [],
+        "reel.soundDisc": [],
+        "reel.stage": [],
+        "reel.stage.removalMark": [
+          "own-removed"
+        ],
+        "reel.stage.removalMark.line": [
+          "own-removed"
+        ],
+        "reel.stage.removalMark.when": [
+          "own-removed"
+        ],
         "reel.washBottom": [],
         "reel.washTop": []
       }
@@ -12356,6 +14498,7 @@
         "reel.rail": [],
         "reel.rail.author": [],
         "reel.rail.comments": [],
+        "reel.rail.menu": [],
         "reel.rail.score": [],
         "reel.rail.score.value": [],
         "reel.rail.share": [],
@@ -12962,10 +15105,12 @@
         "postDetail.header.menu": [],
         "postDetail.menuSheet": [],
         "postDetail.menuSheet.cite": [],
+        "postDetail.menuSheet.citedBy": [],
         "postDetail.menuSheet.dragHandle": [],
         "postDetail.menuSheet.edit": [],
         "postDetail.menuSheet.license": [],
         "postDetail.menuSheet.markSensitive": [],
+        "postDetail.menuSheet.opinions": [],
         "postDetail.menuSheet.remove": [],
         "postDetail.menuSheet.save": []
       }
@@ -13269,10 +15414,314 @@
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
         "postDetail.threadSheet.dragHandle": [],
+        "postDetail.threadSheet.foot": [],
+        "postDetail.threadSheet.foot.addComment": [],
         "postDetail.threadSheet.title": [],
         "postDetail.threadSheet.viewReplies": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
         ]
+      }
+    },
+    "ReplySeal": {
+      "prefix": "replySeal",
+      "keys": {
+        "replySeal.card": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "replySeal.card.acts": "the tags chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "replySeal.card.acts.actRow": "the row's position in the acts card, counted from 1 (ActsCard)",
+        "replySeal.footer": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+      },
+      "nodes": {
+        "replySeal.card": [
+          "rest",
+          "refused",
+          "bug",
+          "tag-refused",
+          "signing"
+        ],
+        "replySeal.card.acts": [
+          "rest/none",
+          "rest/two",
+          "rest/seven",
+          "refused/none",
+          "refused/two",
+          "refused/seven",
+          "bug/none",
+          "bug/two",
+          "bug/seven",
+          "tag-refused",
+          "signing/none",
+          "signing/two",
+          "signing/seven"
+        ],
+        "replySeal.card.acts.actRow": [
+          "rest/none/1",
+          "rest/none/2",
+          "rest/none/3",
+          "rest/two/1",
+          "rest/two/2",
+          "rest/two/3",
+          "rest/two/4",
+          "rest/seven/1",
+          "rest/seven/2",
+          "rest/seven/3",
+          "rest/seven/4",
+          "refused/none/1",
+          "refused/none/2",
+          "refused/none/3",
+          "refused/none/4",
+          "refused/two/1",
+          "refused/two/2",
+          "refused/two/3",
+          "refused/two/4",
+          "refused/two/5",
+          "refused/seven/1",
+          "refused/seven/2",
+          "refused/seven/3",
+          "refused/seven/4",
+          "refused/seven/5",
+          "bug/none/1",
+          "bug/none/2",
+          "bug/none/3",
+          "bug/two/1",
+          "bug/two/2",
+          "bug/two/3",
+          "bug/two/4",
+          "bug/seven/1",
+          "bug/seven/2",
+          "bug/seven/3",
+          "bug/seven/4",
+          "tag-refused/1",
+          "tag-refused/2",
+          "tag-refused/3",
+          "tag-refused/4",
+          "signing/none/1",
+          "signing/none/2",
+          "signing/none/3",
+          "signing/two/1",
+          "signing/two/2",
+          "signing/two/3",
+          "signing/two/4",
+          "signing/seven/1",
+          "signing/seven/2",
+          "signing/seven/3",
+          "signing/seven/4"
+        ],
+        "replySeal.card.acts.actRow.action": [
+          "rest/none/2",
+          "rest/none/3",
+          "rest/two/3",
+          "rest/two/4",
+          "rest/seven/3",
+          "rest/seven/4",
+          "refused/none/3",
+          "refused/none/4",
+          "refused/two/4",
+          "refused/two/5",
+          "refused/seven/4",
+          "refused/seven/5",
+          "bug/none/2",
+          "bug/none/3",
+          "bug/two/3",
+          "bug/two/4",
+          "bug/seven/3",
+          "bug/seven/4",
+          "tag-refused/3",
+          "tag-refused/4",
+          "signing/none/2",
+          "signing/none/3",
+          "signing/two/3",
+          "signing/two/4",
+          "signing/seven/3",
+          "signing/seven/4"
+        ],
+        "replySeal.card.acts.actRow.count": [
+          "rest/none/1",
+          "rest/none/2",
+          "rest/none/3",
+          "rest/two/1",
+          "rest/two/2",
+          "rest/two/3",
+          "rest/two/4",
+          "rest/seven/1",
+          "rest/seven/2",
+          "rest/seven/3",
+          "rest/seven/4",
+          "refused/none/1",
+          "refused/none/2",
+          "refused/none/3",
+          "refused/none/4",
+          "refused/two/1",
+          "refused/two/2",
+          "refused/two/3",
+          "refused/two/4",
+          "refused/two/5",
+          "refused/seven/1",
+          "refused/seven/2",
+          "refused/seven/3",
+          "refused/seven/4",
+          "refused/seven/5",
+          "bug/none/1",
+          "bug/none/2",
+          "bug/none/3",
+          "bug/two/1",
+          "bug/two/2",
+          "bug/two/3",
+          "bug/two/4",
+          "bug/seven/1",
+          "bug/seven/2",
+          "bug/seven/3",
+          "bug/seven/4",
+          "tag-refused/1",
+          "tag-refused/2",
+          "tag-refused/3",
+          "tag-refused/4",
+          "signing/none/1",
+          "signing/none/2",
+          "signing/none/3",
+          "signing/two/1",
+          "signing/two/2",
+          "signing/two/3",
+          "signing/two/4",
+          "signing/seven/1",
+          "signing/seven/2",
+          "signing/seven/3",
+          "signing/seven/4"
+        ],
+        "replySeal.card.acts.actRow.label": [
+          "rest/none/1",
+          "rest/none/2",
+          "rest/none/3",
+          "rest/two/1",
+          "rest/two/2",
+          "rest/two/3",
+          "rest/two/4",
+          "rest/seven/1",
+          "rest/seven/2",
+          "rest/seven/3",
+          "rest/seven/4",
+          "refused/none/1",
+          "refused/none/2",
+          "refused/none/3",
+          "refused/none/4",
+          "refused/two/1",
+          "refused/two/2",
+          "refused/two/3",
+          "refused/two/4",
+          "refused/two/5",
+          "refused/seven/1",
+          "refused/seven/2",
+          "refused/seven/3",
+          "refused/seven/4",
+          "refused/seven/5",
+          "bug/none/1",
+          "bug/none/2",
+          "bug/none/3",
+          "bug/two/1",
+          "bug/two/2",
+          "bug/two/3",
+          "bug/two/4",
+          "bug/seven/1",
+          "bug/seven/2",
+          "bug/seven/3",
+          "bug/seven/4",
+          "tag-refused/1",
+          "tag-refused/2",
+          "tag-refused/3",
+          "tag-refused/4",
+          "signing/none/1",
+          "signing/none/2",
+          "signing/none/3",
+          "signing/two/1",
+          "signing/two/2",
+          "signing/two/3",
+          "signing/two/4",
+          "signing/seven/1",
+          "signing/seven/2",
+          "signing/seven/3",
+          "signing/seven/4"
+        ],
+        "replySeal.card.acts.actRow.value": [
+          "rest/none/1",
+          "rest/two/1",
+          "rest/two/2",
+          "rest/seven/1",
+          "rest/seven/2",
+          "refused/none/1",
+          "refused/none/2",
+          "refused/two/1",
+          "refused/two/2",
+          "refused/two/3",
+          "refused/seven/1",
+          "refused/seven/2",
+          "refused/seven/3",
+          "bug/none/1",
+          "bug/two/1",
+          "bug/two/2",
+          "bug/seven/1",
+          "bug/seven/2",
+          "tag-refused/1",
+          "tag-refused/2",
+          "signing/none/1",
+          "signing/two/1",
+          "signing/two/2",
+          "signing/seven/1",
+          "signing/seven/2"
+        ],
+        "replySeal.card.acts.total": [
+          "rest/none",
+          "rest/two",
+          "rest/seven",
+          "refused/none",
+          "refused/two",
+          "refused/seven",
+          "bug/none",
+          "bug/two",
+          "bug/seven",
+          "tag-refused",
+          "signing/none",
+          "signing/two",
+          "signing/seven"
+        ],
+        "replySeal.facts": [],
+        "replySeal.facts.license": [],
+        "replySeal.facts.license.action": [],
+        "replySeal.facts.license.label": [],
+        "replySeal.facts.license.value": [],
+        "replySeal.facts.sensitive": [],
+        "replySeal.facts.sensitive.action": [],
+        "replySeal.facts.sensitive.label": [],
+        "replySeal.facts.sensitive.value": [],
+        "replySeal.facts.toward": [],
+        "replySeal.facts.toward.action": [],
+        "replySeal.facts.toward.label": [],
+        "replySeal.facts.toward.value": [],
+        "replySeal.facts.toward.value.exact": [],
+        "replySeal.facts.toward.value.face": [],
+        "replySeal.footer": [
+          "rest",
+          "refused",
+          "tag-refused",
+          "signing"
+        ],
+        "replySeal.footer.back": [
+          "rest",
+          "refused",
+          "tag-refused",
+          "signing"
+        ],
+        "replySeal.footer.sign": [
+          "rest",
+          "refused",
+          "tag-refused",
+          "signing"
+        ],
+        "replySeal.header": [],
+        "replySeal.header.back": [],
+        "replySeal.header.help": [],
+        "replySeal.header.leave": [],
+        "replySeal.header.title": [],
+        "replySeal.note": [],
+        "replySeal.summary": []
       }
     },
     "ReportConfirm": {
@@ -13382,6 +15831,7 @@
         "reset.header": [],
         "reset.header.back": [],
         "reset.note": [],
+        "reset.status": [],
         "reset.title": []
       }
     },
@@ -13397,7 +15847,9 @@
     },
     "ResetNew": {
       "prefix": "reset",
-      "keys": {},
+      "keys": {
+        "reset.fault": "the link chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+      },
       "nodes": {
         "reset.body": [],
         "reset.commit": [],
@@ -13406,6 +15858,15 @@
         "reset.confirm.input": [],
         "reset.confirm.label": [],
         "reset.confirm.reveal": [],
+        "reset.fault": [
+          "fault",
+          "limited"
+        ],
+        "reset.fault.retry": [
+          "fault",
+          "limited"
+        ],
+        "reset.loading": [],
         "reset.note": [],
         "reset.password": [],
         "reset.password.input": [],
@@ -13801,6 +16262,159 @@
         "saved.searchField.input": []
       }
     },
+    "SavedCommentMenuOwn": {
+      "prefix": "saved",
+      "keys": {
+        "saved.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "saved.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "saved.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "saved.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
+      },
+      "nodes": {
+        "saved.bottomBar": [],
+        "saved.bottomBar.composeSlot": [],
+        "saved.bottomBar.feedSlot": [],
+        "saved.bottomBar.profileSlot": [],
+        "saved.bottomBar.searchSlot": [],
+        "saved.bottomBar.walletSlot": [],
+        "saved.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.stance.anchor.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "saved.card.menu": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.opener": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "saved.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.commentCard": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "saved.commentCard.actionRow": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "saved.commentCard.actionRow.reply": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "saved.commentCard.actionRow.score": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "saved.commentCard.actionRow.score.value": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "saved.commentCard.actionRow.share": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "saved.commentCard.actionRow.stance": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "saved.commentCard.actionRow.stance.anchor": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "saved.commentCard.actionRow.stance.anchor.face": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "saved.commentCard.authorChip": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "saved.commentCard.authorChip.avatar": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "saved.commentCard.authorChip.handle": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "saved.commentCard.authorChip.name": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "saved.commentCard.menu": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "saved.commentCard.target": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "saved.header": [],
+        "saved.header.back": [],
+        "saved.header.title": [],
+        "saved.menuSheet": [],
+        "saved.menuSheet.cite": [],
+        "saved.menuSheet.citedBy": [],
+        "saved.menuSheet.dragHandle": [],
+        "saved.menuSheet.edit": [],
+        "saved.menuSheet.license": [],
+        "saved.menuSheet.opinions": [],
+        "saved.menuSheet.remove": [],
+        "saved.menuSheet.save": [],
+        "saved.searchField": [],
+        "saved.searchField.glyph": [],
+        "saved.searchField.input": []
+      }
+    },
     "SavedEmpty": {
       "prefix": "saved",
       "keys": {},
@@ -13934,9 +16548,11 @@
         "saved.header.title": [],
         "saved.menuSheet": [],
         "saved.menuSheet.cite": [],
+        "saved.menuSheet.citedBy": [],
         "saved.menuSheet.dragHandle": [],
         "saved.menuSheet.hide": [],
         "saved.menuSheet.license": [],
+        "saved.menuSheet.opinions": [],
         "saved.menuSheet.report": [],
         "saved.menuSheet.save": [],
         "saved.searchField": [],
@@ -16138,6 +18754,48 @@
         "postEdit.title.label": []
       }
     },
+    "TagPageHeldPad": {
+      "prefix": "tagPage",
+      "keys": {},
+      "nodes": {
+        "tagPage.actionRow": [],
+        "tagPage.actionRow.share": [],
+        "tagPage.actionRow.stance": [],
+        "tagPage.actionRow.stance.anchor": [],
+        "tagPage.actionRow.stance.anchor.exact": [],
+        "tagPage.actionRow.stance.anchor.face": [],
+        "tagPage.actionRow.stance.pad": [],
+        "tagPage.actionRow.stance.pad.cancel": [],
+        "tagPage.actionRow.stance.pad.field": [],
+        "tagPage.actionRow.stance.pad.field.bottom": [],
+        "tagPage.actionRow.stance.pad.field.left": [],
+        "tagPage.actionRow.stance.pad.field.right": [],
+        "tagPage.actionRow.stance.pad.field.square": [],
+        "tagPage.actionRow.stance.pad.field.square.knob": [],
+        "tagPage.actionRow.stance.pad.field.square.zeroAcross": [],
+        "tagPage.actionRow.stance.pad.field.square.zeroDown": [],
+        "tagPage.actionRow.stance.pad.field.top": [],
+        "tagPage.actionRow.stance.pad.help": [],
+        "tagPage.actionRow.stance.pad.landing": [],
+        "tagPage.actionRow.stance.pad.landing.exact": [],
+        "tagPage.actionRow.stance.pad.landing.face": [],
+        "tagPage.actionRow.stance.pad.landing.label": [],
+        "tagPage.actionRow.stance.pad.set": [],
+        "tagPage.actionRow.stance.pad.sever": [],
+        "tagPage.actionRow.stance.pad.standing": [],
+        "tagPage.actionRow.stance.pad.standing.current": [],
+        "tagPage.actionRow.stance.pad.standing.current.exact": [],
+        "tagPage.actionRow.stance.pad.standing.current.face": [],
+        "tagPage.actionRow.stance.pad.standing.current.label": [],
+        "tagPage.actionRow.stance.pad.standing.pick": [],
+        "tagPage.actionRow.stance.pad.standing.pick.exact": [],
+        "tagPage.actionRow.stance.pad.standing.pick.face": [],
+        "tagPage.actionRow.stance.pad.standing.pick.label": [],
+        "tagPage.header": [],
+        "tagPage.header.back": [],
+        "tagPage.header.title": []
+      }
+    },
     "TagPageHidden": {
       "prefix": "tagPage",
       "keys": {},
@@ -16153,9 +18811,11 @@
       "nodes": {
         "tagPage.menuSheet": [],
         "tagPage.menuSheet.cite": [],
+        "tagPage.menuSheet.citedBy": [],
         "tagPage.menuSheet.dragHandle": [],
         "tagPage.menuSheet.hide": [],
         "tagPage.menuSheet.license": [],
+        "tagPage.menuSheet.opinions": [],
         "tagPage.menuSheet.report": [],
         "tagPage.menuSheet.save": []
       }

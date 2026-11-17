@@ -353,9 +353,14 @@ export function SealStep({
             Keep the draft, restore later
           </PillButton>
         </>
-      ) : fault?.kind === "offline" ? (
+      ) : fault?.kind === "offline" || fault?.kind === "notThrough" ? (
+        // No answer, or an answered fault of the whole act: the same foot, its own
+        // line (NetworkError.md:3, :13-19) — never the no-answer line for an answer.
         <div className="flex flex-col gap-2">
-          <TransportError testId="wizard-transport-error" message={OFFLINE_LINE} />
+          <TransportError
+            testId="wizard-transport-error"
+            message={fault.kind === "offline" ? OFFLINE_LINE : fault.line}
+          />
           <PillButton testId="wizard-retry" variant="outlined" full onClick={onRetry}>
             Retry
           </PillButton>

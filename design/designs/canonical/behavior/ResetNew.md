@@ -2,6 +2,16 @@
 
 WHEN the reset mail's link is opened GIVEN the link is live -> ResetNew opens AND NEVER a field asks for the link's own secret
 
+WHEN the reset mail's link is opened -> the link is checked before the form stands AND nothing stands on the screen for the first 200ms AND NEVER the form stands before the check answers
+
+WHEN the check has not answered 200ms after the link opened -> reset.loading reads Loading… at the column's head AND NEVER a spinner appears
+
+WHEN the check gets no answer -> reset.fault reads Can't reach the server — this link can't be checked right now. over reset.fault.retry, outlined and reading Retry, in the form's place AND NEVER the form stands
+
+WHEN the check is refused by its budget -> reset.fault reads Too many tries. Wait a little, then try again. over the same reset.fault.retry AND NEVER the form stands
+
+WHEN tap reset.fault.retry -> the same link is checked again AND the screen answers as the check does, the form when the link is live and ResetExpired when it is spent
+
 ALWAYS the screen carries no header and no back arrow
 
 ALWAYS the screen holds two password fields, New password and under it Repeat password, masked alike, each with its own reveal control, and one commitment, Set the new password

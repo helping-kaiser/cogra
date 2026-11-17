@@ -30,7 +30,8 @@ import { useRouter } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
 import { prepareComment } from "@/lib/api/content-api";
-import { hasFieldErrors, partitionFieldErrors } from "@/lib/api/field-errors";
+import { hasFieldErrors, partitionFieldErrors, pathIndex } from "@/lib/api/field-errors";
+import { refusesTagName, tagNameRefusal } from "@/lib/topics/picker";
 import { writeRefusalMessage } from "@/lib/ui/error-messages";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { fetchGraphIds, graphIdOf } from "@/lib/api/graph-ids-api";
@@ -45,7 +46,7 @@ import { runUpload, runVideoUpload } from "@/lib/compose/uploads";
 import { useObjectUrl, usePreviewUrls, useRevokeOnChange } from "@/lib/compose/previews";
 import { commentAttachmentClaims, commentMediaLedger } from "@/lib/compose/comment-media";
 import { contentExpectation } from "@/lib/compose/payload-expectation";
-import { COMMENT_SCALE, screenPick, type PickRefusal } from "@/lib/compose/pick";
+import { COMMENT_SCALE, holdBytes, screenPick, type PickRefusal } from "@/lib/compose/pick";
 import { captureFrames, captureFrameZero, probeVideo } from "@/lib/ui2/media/video";
 import {
   advanceGate,
@@ -71,7 +72,12 @@ import { DiscardConfirm } from "@/lib/ui2/compose/discard-confirm";
 import { ReferencePicker } from "@/lib/ui2/compose/reference-picker";
 import { TagPicker } from "@/lib/ui2/compose/tag-picker";
 import { COVER_FROM_PICTURE, effectiveCover } from "@/lib/compose/wizard";
-import { sealFaultOf, type SealFault } from "@/lib/compose/seal-fault";
+import {
+  sealFaultOf,
+  sealFaultOfOutcome,
+  sealFaultOfResults,
+  type SealFault,
+} from "@/lib/compose/seal-fault";
 import { SLOW_NETWORK_MS, useSlowAnswer, useWaitedPast } from "@/lib/ui2/waiting-commit";
 import { ReplyComposeStep } from "./reply-compose-step";
 import { ReplySealStep, type ReplySheet } from "./reply-seal-step";
@@ -457,7 +463,7 @@ export function ReplyWizard({
     );
     if (graphIds.kind !== "success") {
       setBusy(false);
-      setFault({ kind: "offline" });
+      setFault(sealFaultOfOutcome(graphIds));
       return;
     }
     // One request, read twice: once by the API layer and once by the payload
@@ -477,7 +483,7 @@ export function ReplyWizard({
 
     if (prepared.kind === "failed") {
       setBusy(false);
-      setFault({ kind: "offline" });
+      setFault(sealFaultOfOutcome(prepared));
       return;
     }
     if (prepared.kind === "refused") {
@@ -494,9 +500,11 @@ export function ReplyWizard({
       // A tag or citation the server named by its place is said on its own
       // acts-card row with `Remove it` (`ActsCard`'s fault row) — no line at
       // the foot, the commit staying. Anything else is the bug notice.
-      const partition = partitionFieldErrors(prepared.errors, (error) =>
-        writeRefusalMessage(error.code),
-      );
+      // A refused tag NAME reads as the picker's own line for it (TagPickerRefused).
+      const partition = partitionFieldErrors(prepared.errors, (error) => {
+        const name = state.tags[pathIndex(error.field, "tags") ?? -1]?.name;
+        return name !== undefined && refusesTagName(error) ? tagNameRefusal(name) : writeRefusalMessage(error.code);
+      });
       if (hasFieldErrors(partition)) {
         setTagErrors(partition.perTag);
         setReferenceErrors(partition.perReference);
@@ -538,16 +546,12 @@ export function ReplyWizard({
     // comment did not land — and nothing was spent. There is no draft to keep,
     // so the reader stays on the seal with what they wrote still in front of
     // them, which is the only place the words survive.
-    const refused = results.find((result) => result.kind === "refused");
-    if (refused === undefined || refused.kind !== "refused") {
-      // No answer reached the seal: the fault line and Retry, in the foot.
-      setFault({ kind: "offline" });
-      return;
-    }
+    // No answer reached the seal: the fault line and Retry, in the foot; an
+    // answered fault of the whole act, its own line in the same place.
     // The write rule's notice; a cited post that never landed, on its row; any
     // other refused act, whose target landed, the bug notice
     // (ReplySealComment.md:9-11).
-    setFault(sealFaultOf(refused.errors, state.references));
+    setFault(sealFaultOfResults(results, state.references));
   };
 
   // ---- the gate ------------------------------------------------------------
@@ -690,7 +694,11 @@ export function ReplyWizard({
                 const frame = mine?.frames[index];
                 if (frame) chooseCover(frame, index);
               }}
-              onPickCover={(file) => chooseCover(file, COVER_FROM_PICTURE)}
+              // The face joins as its own bytes (`holdBytes`), so its upload
+              // and every Retry of it read what was picked.
+              onPickCover={(file) =>
+                void holdBytes(file).then((held) => chooseCover(held ?? file, COVER_FROM_PICTURE))
+              }
               onDismissRefusal={(id) =>
                 setRefusals((current) => current.filter((refusal) => refusal.id !== id))
               }
