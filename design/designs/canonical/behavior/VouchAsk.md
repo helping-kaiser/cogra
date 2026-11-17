@@ -26,7 +26,7 @@ WHEN a press-and-hold on the stance affordance reaches 500ms GIVEN a member -> t
 
 WHEN a press-and-hold on the stance affordance reaches 500ms GIVEN a member and the asker is not fully registered yet -> the application is staged AND the modest positive +0.10 / +0.10 is kept as a kept approval AND Invites opens where that row is AND the snackbar reads @noor has to finish registering before you can approve AND NEVER anything is signed or spent
 
-WHEN the hold's signing has not answered 200ms after the hold -> the line under the affordance's face reads Signing… AND NEVER a spinner appears
+WHEN the hold's signing has not answered 200ms after the hold -> a visually hidden status speaks Signing… AND the ring that filled during the hold stays closed around the affordance's face AND NEVER a line stands under it for the wait AND NEVER a spinner appears
 
 WHEN the hold's signing is taken -> the vouch lands AND Invites opens with the person now this member's to have vouched in AND the snackbar reads Signed, still settling. Current opinion with the pick's face
 

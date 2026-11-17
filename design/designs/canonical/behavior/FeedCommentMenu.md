@@ -2,9 +2,9 @@
 
 WHEN tap the ⋮ on feed.commentCard GIVEN the comment is someone else's -> feed.menuSheet rises over the feed, unstacked, AND the feed stands unchanged beneath its wash
 
-ALWAYS feed.menuSheet reads Save or Unsave, then Cite in a new post, then feed.menuSheet.citedBy, then Opinions on this, then License terms, then feed.menuSheet.report at the sheet tail, the comment's menu's own rows
+ALWAYS feed.menuSheet reads Save or Unsave, then Cite in a new post, then Hide with the comment's author's handle, then feed.menuSheet.citedBy, then Opinions on this, then License terms, then feed.menuSheet.report at the sheet tail, the comment's menu's own rows
 
-ALWAYS the comment's menu carries no Hide row
+WHEN tap feed.menuSheet.hide -> the sheet closes AND that person's rows leave the feed, feed.commentCard among them, AND the rows behind them move up AND feed.snackbar reads @ada is hidden. with Undo AND NEVER a confirm step appears
 
 WHEN tap feed.menuSheet.opinions -> the menu closes AND the comment's opinions sheet comes up over the feed
 

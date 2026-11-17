@@ -1297,6 +1297,7 @@
     "CommentEdit": {
       "prefix": "commentEdit",
       "keys": {
+        "commentEdit.fault": "the fault chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "commentEdit.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
         "commentEdit.references.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)",
         "commentEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
@@ -1314,6 +1315,14 @@
         "commentEdit.facts.sensitive.action": [],
         "commentEdit.facts.sensitive.label": [],
         "commentEdit.facts.sensitive.value": [],
+        "commentEdit.fault": [
+          "unsent",
+          "refused"
+        ],
+        "commentEdit.fault.retry": [
+          "unsent",
+          "refused"
+        ],
         "commentEdit.gate": [],
         "commentEdit.gate.line": [],
         "commentEdit.header": [],
@@ -1913,6 +1922,7 @@
         "postDetail.menuSheet.cite": [],
         "postDetail.menuSheet.citedBy": [],
         "postDetail.menuSheet.dragHandle": [],
+        "postDetail.menuSheet.hide": [],
         "postDetail.menuSheet.license": [],
         "postDetail.menuSheet.opinions": [],
         "postDetail.menuSheet.report": [],
@@ -2240,26 +2250,32 @@
         ],
         "postDetail.dialog": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.dialog.body": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.dialog.keep": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.dialog.line": [
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.dialog.remove": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.dialog.title": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.header": [],
         "postDetail.header.back": [],
@@ -3366,6 +3382,7 @@
         "postEdit.acts": "the signing chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "postEdit.body.mediaRow": "the upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "postEdit.body.mediaRow.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
+        "postEdit.fault": "the fault chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "postEdit.gate": "the upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "postEdit.references.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)",
         "postEdit.sign": "the signing or upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
@@ -3427,6 +3444,14 @@
         "postEdit.facts.sensitive.action": [],
         "postEdit.facts.sensitive.label": [],
         "postEdit.facts.sensitive.value": [],
+        "postEdit.fault": [
+          "unsent",
+          "refused"
+        ],
+        "postEdit.fault.retry": [
+          "unsent",
+          "refused"
+        ],
         "postEdit.gate": [
           "uploading",
           "failed"
@@ -4532,6 +4557,7 @@
         "feed.menuSheet.cite": [],
         "feed.menuSheet.citedBy": [],
         "feed.menuSheet.dragHandle": [],
+        "feed.menuSheet.hide": [],
         "feed.menuSheet.license": [],
         "feed.menuSheet.opinions": [],
         "feed.menuSheet.report": [],
@@ -6366,26 +6392,32 @@
         ],
         "feed.dialog": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "feed.dialog.body": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "feed.dialog.keep": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "feed.dialog.line": [
-          "failed"
+          "failed",
+          "refused"
         ],
         "feed.dialog.remove": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "feed.dialog.title": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ]
       }
     },
@@ -7934,6 +7966,7 @@
         "history.menuSheet.cite": [],
         "history.menuSheet.citedBy": [],
         "history.menuSheet.dragHandle": [],
+        "history.menuSheet.hide": [],
         "history.menuSheet.license": [],
         "history.menuSheet.opinions": [],
         "history.menuSheet.report": [],
@@ -11898,6 +11931,7 @@
         "profile.menuSheet.cite": [],
         "profile.menuSheet.citedBy": [],
         "profile.menuSheet.dragHandle": [],
+        "profile.menuSheet.hide": [],
         "profile.menuSheet.license": [],
         "profile.menuSheet.opinions": [],
         "profile.menuSheet.report": [],
@@ -12173,6 +12207,7 @@
         "profile.menuSheet.cite": [],
         "profile.menuSheet.citedBy": [],
         "profile.menuSheet.dragHandle": [],
+        "profile.menuSheet.hide": [],
         "profile.menuSheet.license": [],
         "profile.menuSheet.opinions": [],
         "profile.menuSheet.report": [],
@@ -15033,26 +15068,32 @@
         ],
         "postDetail.dialog": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.dialog.body": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.dialog.keep": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.dialog.line": [
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.dialog.remove": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.dialog.title": [
           "asking",
-          "failed"
+          "failed",
+          "refused"
         ],
         "postDetail.header": [],
         "postDetail.header.back": [],
@@ -16315,6 +16356,7 @@
         "saved.menuSheet.cite": [],
         "saved.menuSheet.citedBy": [],
         "saved.menuSheet.dragHandle": [],
+        "saved.menuSheet.hide": [],
         "saved.menuSheet.license": [],
         "saved.menuSheet.opinions": [],
         "saved.menuSheet.report": [],

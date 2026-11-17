@@ -28,7 +28,9 @@ WHEN the closing is taken -> the dialog closes AND every application still waiti
 
 ALWAYS closing a group removes nothing from the record: each person keeps the account they made, signed in and free to read, and any member can still vouch any of them in
 
-WHEN the closing does not go through -> the dialog stays up with its pair AND the line That didn't send. Try again. stands in it AND Close them reads Retry AND the group is still waiting, all of it
+WHEN the closing does not go through GIVEN no answer reaches the device -> the dialog stays up with its pair AND the line That didn't send. Try again. stands in it AND Close them reads Retry AND the group is still waiting, all of it
+
+WHEN the closing does not go through GIVEN the server answers INTERNAL, FORBIDDEN, SIGNATURE_INVALID or a BAD_INPUT naming no field -> the dialog stays up with its pair AND the line That didn't go through. Try again. stands in it AND Close them reads Retry AND the group is still waiting, all of it
 
 WHEN press Keep them GIVEN Close them was not pressed -> the dialog closes AND the group is still waiting, all of it
 

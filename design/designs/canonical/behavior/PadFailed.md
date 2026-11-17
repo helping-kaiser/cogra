@@ -1,6 +1,8 @@
 # PadFailed · `spec:design:behavior-pad-failed`
 
-WHEN the pad's signing does not go through -> the pad stays open on the same target AND the standing line, the pick and the landing line stay exactly as they were AND the line That didn't send. Try again. stands above the commit row AND an outlined Retry takes Set's slot
+WHEN the pad's signing does not go through GIVEN no answer reaches the device -> the pad stays open on the same target AND the standing line, the pick and the landing line stay exactly as they were AND the line That didn't send. Try again. stands above the commit row AND an outlined Retry takes Set's slot
+
+WHEN the pad's signing does not go through GIVEN the server answers INTERNAL, FORBIDDEN, SIGNATURE_INVALID or a BAD_INPUT naming no field -> the pad stays open on the same target AND the standing line, the pick and the landing line stay exactly as they were AND the line That didn't go through. Try again. stands above the commit row AND an outlined Retry takes Set's slot
 
 ALWAYS the fault line is in the failure voice and announced as an alert
 
@@ -54,4 +56,6 @@ WHEN the alternates' signing has not answered 200ms after Sign it GIVEN the read
 
 WHEN tap Close in the alternates GIVEN Sign it is waiting on its signing -> the alternates close as Close closes the pad AND the act goes on, carried by the target's row
 
-WHEN the alternates' signing does not go through GIVEN the reader's input is sliders or typed values -> the dialog stays up at the pick AND the line That didn't send. Try again. stands above its row of actions AND an outlined Retry takes Sign it's slot AND Cancel and Walk it back keep their places
+WHEN the alternates' signing gets no answer GIVEN the reader's input is sliders or typed values -> the dialog stays up at the pick AND the line That didn't send. Try again. stands above its row of actions AND an outlined Retry takes Sign it's slot AND Cancel and Walk it back keep their places
+
+WHEN the alternates' signing is answered with a refusal GIVEN the reader's input is sliders or typed values and the server answers INTERNAL, FORBIDDEN, SIGNATURE_INVALID or a BAD_INPUT naming no field -> the dialog stays up at the pick AND the line That didn't go through. Try again. stands above its row of actions AND an outlined Retry takes Sign it's slot AND Cancel and Walk it back keep their places

@@ -1680,7 +1680,12 @@ nothing is signed; the draft stays on the device, and the state
 wears `tertiary` — a waiting state, never `error`. Leaving mid-write
 keeps one local draft per target, on-device only, on the surfaces
 that keep drafts — the post wizard and the profile picture; there
-the draft is the safety, so nothing asks on the way out. The reply
+the draft is the safety, so nothing asks on the way out. A post
+wizard keeps a draft only once it holds something of the author's
+own: a fresh pick, or only the reference or tag it was opened with
+(`Cite in a new post`, `Mention in a new post`, a tag's compose
+glyph), leaves nothing behind, its X named a bare `Leave` (jakob
+2026-11-17). The reply
 wizard, the comment edit and the post edit keep no draft (the post
 edit's, jakob 2026-10-14): leaving them discards, so a non-empty
 composer, or an edit changed since it opened, is asked first — one shared dialog (the *DiscardConfirm* board)
@@ -12204,10 +12209,87 @@ and 19 as recommended), built on round 49 (60d9c51c0).
   the picture seal's; the picture seal's landing sentence. Backlog 230,
   240–243 closed.
 
+### Round 51, Hide on a comment, no draft for an untouched composer, one rule for refused acts — 2026-11-17
+
+jakob's answers of 2026-11-17 to the hand test's eight decisions (impl
+348 / 349, "all as rec"; this round takes 1, 5, 6, 7, 8 and the comment
+line's door, round 52 the crop and the covers) and to the hold's wait and
+the email line (impl 354, 351, "as rec"), built on rounds 48–50 (ecffb3ba9).
+
+- **`Hide @ada` on someone else's comment** (his 1). Every reader comment
+  menu — the thread, the feed, History, Saved, a profile's Comments tab,
+  a removed comment — reads Save · Cite in a new post · `Hide @ada` ·
+  Cited by · Opinions on this · License terms · Report, the post menu row
+  for row, the row naming the comment's author (`readerCommentMenu`).
+  It replaces the ruling of 2026-09-12 that kept Hide off a comment ("he
+  clicks the profile of the commenter and hides from there"): hiding is
+  an act on the person, and a comment is as good a place to meet them as
+  a post. Your own comment's menus take none. Everything else is the post
+  menu's twin: `Unhide @ada` once hidden (`HistoryCommentMenu`'s `author`
+  chip draws it), no confirm, `@ada is hidden.` with `Undo`, a failure on
+  the row with `Retry`, a guest's tap the gate; the aftermath per host as
+  after a hide from a post. In the open thread the hidden person's
+  comments stay where they stand, and the snackbar is the one answer.
+- **A composer holding nothing of the author's own keeps no draft** (his
+  5; impl 349-6, his W3: "the user did not add any contents of himself
+  yet"). A fresh pick, or only what `Cite in a new post`, `Mention in a
+  new post` or a tag's compose glyph opened it with, leaves nothing
+  behind, and New post next time opens fresh. The reference rides the
+  composer and joins the draft once there is one. The X is a bare `Leave`
+  while nothing of the author's own is held, `Leave — your draft is kept`
+  once it is; no dialog asks either way. No board draws the untouched
+  composer, so the short name is law only.
+- **One rule for a refused or failed act** (his 6; impl 348, 351).
+  The words follow the answer — no answer `That didn't send. Try again.`,
+  an answered refusal `That didn't go through. Try again.`, a signed act
+  answered on a row `That didn't sign.` — and the shape follows the host:
+  a seal or an edit, the line in the commit's place over an outlined
+  `Retry`; a dialog or a small sheet, the commitment reading `Retry`; a
+  card, the line last with `Retry` at its end. A refusal the device's own
+  signer makes reads as an answered one, and `EMAIL_NOT_VERIFIED`'s own
+  line takes `Retry` too (copy-voice, *Faults by code*; `NetworkError`).
+  Drawn: `EditCompose`'s and `CommentEdit`'s `fault` chip (`unsent`,
+  `refused`) — the line in `Sign the edit`'s place, `Retry` under it, the
+  acts count kept above as the edit's read-back, and no `Back` under
+  `Retry`: the seal draws one because its foot at rest is commit-and-back,
+  an edit's way back is its header; the remove dialogs' `answer` =
+  `refused`. Written: every signing dialog and pad (the walk-back, the
+  empty sign, the rejects, the handle change, the key decline, the
+  alternates, the pads), `InviteNew` in the dialog shape, `Revoke` as the
+  copy fault's twin, `EditWords`.
+- **The key step when approval lands midway** (his 7). A new key from the
+  key-elsewhere card refused because the application was approved
+  meanwhile ends the ceremony with no line and no `Retry`; the member's
+  key-elsewhere card takes over, `KeyElsewhere` or `KeyElsewhereNoBackup`
+  by the account's backup (`KeyCeremony`, `KeyDecline`, `RecoveryCode`).
+- **A picture the server refuses at upload** (his 8): `One picture
+  didn't upload.` with `Remove it` alone, never `Retry` — a refusal, not a
+  fault (copy-voice, beside the upload fault). Drawn on `ProfileEdit`'s
+  `state` = `upload-refused`; law on the edits' picture rows. What the
+  seals' gate reads for it is open (backlog 251), which holds back the
+  post edit's drawing.
+- **A comment's tags-and-references count in the thread** opens the
+  sheet, as on every card; its chips open the tag's page (`ReplyEntry`,
+  graph edges from the three thread boards).
+- **The hold's wait takes no room** (impl 354, his A23). The ring that
+  filled during the hold stays closed around the face until the signature
+  is taken; no `Signing…` line stands under the face, so the card never
+  grows, and a visually hidden status speaks `Signing…` once the answer
+  is 200ms late. A failure keeps its line, and its `Retry` waits on the
+  closed ring again (`StanceControl`'s `signing` = `held`; `RowSigning`).
+  A pad closed under `Set` keeps its line (backlog 253).
+- **Backlog** 250–255 filed.
+- **The gate**: against rounds 48–50 (ecffb3ba9), 212 screens; 8461 →
+  8471 board paths, 10 added, none gone (the six `hide` rows and the
+  edits' `fault` and `fault.retry`); 32 (board, path, key) strings added,
+  none gone — the remove dialogs' `refused` copies among them; no key
+  rule changed.
+
 ### Round 52, a comment's pictures cropped square, the crop fits the window, the cover beside the clip — 2026-11-17
 
 jakob's answers of 2026-11-17 to the hand test's eight decisions ("All as
-rec"), his 2, 3 and 4, built on rounds 48–50 merged (ecffb3ba9).
+rec"), his 2, 3 and 4, built on rounds 48–50 merged (ecffb3ba9), round 51
+(6f95dac35) merged in.
 
 - **A comment's pictures are cropped square** (2; his W2: "ofcourse all
   media should be square in comments but why is there no crop step for
@@ -12263,7 +12345,8 @@ rec"), his 2, 3 and 4, built on rounds 48–50 merged (ecffb3ba9).
   and the edit-video boards; the seals' gate unruled); the edit-video
   boards take the edit's fault in the commit's place, `fault` chip
   `unsent` · `refused`, `postEdit.fault` / `commentEdit.fault` with an
-  outlined `Retry`, the count above, no `Back`.
+  outlined `Retry`, the count above, no `Back` — round 51's `editFault`,
+  one helper for all four edits.
 - **Adjacent**: `Reel.md` and `ViewerVideo.md` end their cover sentence
   ("…and its cover has loaded"); `AvatarCrop` and `CoverCrop` take an
   `opener` chip so the boards speak the C8 back names; the

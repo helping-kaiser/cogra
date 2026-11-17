@@ -95,21 +95,8 @@ export const PROPS = {
    and no wait. */
 export const VALS = `keptShown: this.props.clip === "kept" ? "flex" : "none", pickedShown: this.props.clip === "picked" ? "flex" : "none", bothShown: this.props.clip === "picked-cover" ? "flex" : "none", failedShown: this.props.clip === "failed" ? "flex" : "none", secondShown: this.props.clip === "second" ? "flex" : "none", signRestShown: this.props.signing === "signing" || this.props.clip === "failed" || this.props.fault !== "none" ? "none" : "block", signBusyShown: this.props.signing === "signing" && this.props.clip !== "failed" && this.props.fault === "none" ? "block" : "none", signFailedShown: this.props.clip === "failed" && this.props.fault === "none" ? "block" : "none", gateShown: this.props.clip === "kept" && this.props.upload === "uploading" ? "flex" : "none", gateLineShown: this.props.clip === "kept" && this.props.upload === "uploading" && this.props.fault === "none" ? "flex" : "none", gatePickedShown: this.props.clip === "picked" && this.props.fault === "none" ? "flex" : "none", gateBothShown: this.props.clip === "picked-cover" && this.props.fault === "none" ? "flex" : "none", gateSecondShown: this.props.clip === "second" && this.props.fault === "none" ? "flex" : "none", gateFailedShown: this.props.clip === "failed" && this.props.fault === "none" ? "flex" : "none", restShown: this.props.clip === "kept" && this.props.upload === "uploading" ? "none" : "flex", faultUnsentShown: this.props.fault === "unsent" ? "flex" : "none", faultRefusedShown: this.props.fault === "refused" ? "flex" : "none"`;
 
-/* The edit's fault in the commit's place — round 51's `editFault`
-   (`EditCompose`, `CommentEdit`), drawn here until the two rounds meet. */
-const EDIT_VIDEO_FAULT_LINES = { unsent: "That didn't send. Try again.", refused: "That didn't go through. Try again." };
-function editVideoFault() {
-  return Object.entries(EDIT_VIDEO_FAULT_LINES).map(([answer, line]) => (
-    <div key={answer} style={{ display: `{{fault${answer === "unsent" ? "Unsent" : "Refused"}Shown}}`, flexDirection: "column" }} {...chipCopy("fault", answer)}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-node="fault">
-        <TransportError message={line} />
-        <Button variant="outline" style={{ width: "100%" }} node="retry">
-          Retry
-        </Button>
-      </div>
-    </div>
-  ));
-}
+/* The fault is round 51's `editFault` (`_shared.jsx`), the one helper every
+   edit's foot draws it with. */
 
 export function Screen() {
   return (
@@ -224,7 +211,7 @@ export function Screen() {
         <div style={{ display: "{{signFailedShown}}" }} {...chipCopy("clip", "failed")}>
           <Button style={{ width: "100%" }} disabled node="sign">Sign the edit</Button>
         </div>
-        {editVideoFault()}
+        {editFault()}
       </div>
     </>
   );

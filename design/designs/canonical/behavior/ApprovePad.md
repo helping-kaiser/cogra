@@ -48,6 +48,8 @@ WHEN tap Set GIVEN the pick lands at exactly (0, 0) -> the dialog Sign an empty 
 
 WHEN tap Set it anyway in that dialog -> the vouch lands as Set lands it AND the person is vouched in, starting out cut off AND NEVER the act is blocked
 
-WHEN the signing does not go through -> the pad stays open at the pick AND the line That didn't send. Try again. stands above the commit row AND an outlined Retry takes Set's slot
+WHEN the signing does not go through GIVEN no answer reaches the device -> the pad stays open at the pick AND the line That didn't send. Try again. stands above the commit row AND an outlined Retry takes Set's slot
+
+WHEN the signing does not go through GIVEN the server answers INTERNAL, FORBIDDEN, SIGNATURE_INVALID or a BAD_INPUT naming no field -> the pad stays open at the pick AND the line That didn't go through. Try again. stands above the commit row AND an outlined Retry takes Set's slot
 
 WHEN the write rule refuses the signing -> the pad stays open at the pick AND the notice You can't sign right now stands where the landing line and Set were, with Not now AND nothing is staged or spent

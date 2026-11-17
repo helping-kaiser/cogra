@@ -32,7 +32,9 @@ ALWAYS the standing an empty sign leaves wears 🤷 and is spoken Says nothing, 
 
 ALWAYS Walk it back stands on the pad over the standing an empty sign leaves, its cost 1 thing
 
-WHEN the signing does not go through -> the dialog stays up AND the line That didn't send. Try again. stands above the pair AND Set it anyway reads Retry AND nothing is signed
+WHEN the signing does not go through GIVEN no answer reaches the device -> the dialog stays up AND the line That didn't send. Try again. stands above the pair AND Set it anyway reads Retry AND nothing is signed
+
+WHEN the signing does not go through GIVEN the server answers INTERNAL, FORBIDDEN, SIGNATURE_INVALID or a BAD_INPUT naming no field -> the dialog stays up AND the line That didn't go through. Try again. stands above the pair AND Set it anyway reads Retry AND nothing is signed
 
 WHEN the write rule refuses the empty sign -> the dialog stays up AND the line You can't sign right now. Nothing was signed or spent. stands where the fault line would, in the pending marker's quiet register AND Set it anyway dims AND NEVER a Retry stands AND NEVER anything is staged, signed or spent
 

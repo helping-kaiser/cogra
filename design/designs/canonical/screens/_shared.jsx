@@ -772,8 +772,17 @@ const UNSAVE_ROW = { ...SAVE_ROW, label: "Unsave" };
 const keptMenu = (rows) => rows.map((row) => (row === SAVE_ROW ? UNSAVE_ROW : row));
 /* THE COMMENT'S MENU carries the two readings (`CITED_BY_ROW`,
    `OPINIONS_ROW`) as every content menu does; a comment has no detail
-   surface, so the rows are its one door to each list. */
-const COMMENT_MENU = [...CARD_MENU, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW, REPORT_ROW];
+   surface, so the rows are its one door to each list.
+
+   HIDE STANDS IN THE POST MENU'S SLOT (jakob 2026-11-17, impl 349-1: the
+   hand test's decision 1, "all as rec"): someone else's comment reads Save ·
+   Cite in a new post · `Hide @tobias` · Cited by · Opinions on this ·
+   License terms · Report, the reader's post menu row for row, the row naming
+   the comment's author. Hiding is an act on the person, so a comment is as
+   good a place to meet it as a post (RULINGS, a removed post keeps Hide: "hide
+   targets the user"); your own comment's menus take none, as your own post's
+   take none. */
+const readerCommentMenu = (handle) => [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {}, node: "hide" }, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW, REPORT_ROW];
 /* YOUR OWN COMMENT'S MENU (the comment-removal round, 2026-10-01; round 41):
    the reader's menu with `Edit` and `Remove` joined among the acts — after
    Save and Cite, before the two readings, the license closing it. That is
@@ -788,11 +797,12 @@ const OWN_COMMENT_MENU = [...CARD_MENU, EDIT_ROW, REMOVE_ROW, CITED_BY_ROW, OPIN
 /* A COMMENT CARD'S OWN ⋮ IS THE COMMENT'S MENU (round 36), the post card's
    rule (`readerCardMenu`): the rows less the license the card appends, the
    report row standing after it. */
-const COMMENT_CARD_MENU = COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
+const readerCommentCardMenu = (handle) => readerCommentMenu(handle).filter((row) => row !== LICENSE_ROW);
 const OWN_COMMENT_CARD_MENU = OWN_COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
 /* A REMOVED COMMENT'S MENUS FOLLOW THE POST'S (jakob 2026-11-13, point C):
-   another's raises the reader's comment menu whole (`COMMENT_MENU`, the
-   license row kept); your own raises `OWN_COMMENT_MENU` less Edit and Remove
+   another's raises the reader's comment menu whole (`readerCommentMenu`, the
+   license row and `Hide` kept — hide targets the person, who outlives the
+   removal); your own raises `OWN_COMMENT_MENU` less Edit and Remove
    — Save, Cite in a new post, Cited by, Opinions on this, License terms. The
    card's ⋮ takes each less the license, which `CommentCard` appends. */
 const OWN_REMOVED_COMMENT_MENU = OWN_COMMENT_MENU.filter((row) => row !== EDIT_ROW && row !== REMOVE_ROW);
@@ -820,12 +830,15 @@ const REMOVE_CONFIRM_COPY = {
    on the base wash layer and the sheet one above it, so the dialog is the
    thing raised last. Over the post detail there is no sheet to clear.
 
-   `failed` IS THE REMOVAL THAT DID NOT GO THROUGH (seam 248, RM-G7; the
-   failure pack's grammar at dialog scale, `SeveranceConfirm`'s): the dialog
-   never closed — the act waits for its answer — so it stays up with its
-   pair, `That didn't send. Try again.` stands above it in the dialog's
-   `line` slot, and `Remove`'s own slot reads `Retry`, still a text button in
-   no colour. `Keep it` keeps its place: the way out is the way out it was.
+   `failed` IS THE REMOVAL THAT GOT NO ANSWER (seam 248, RM-G7; the failure
+   pack's grammar at dialog scale, `SeveranceConfirm`'s): the dialog never
+   closed — the act waits for its answer — so it stays up with its pair,
+   `That didn't send. Try again.` stands above it in the dialog's `line`
+   slot, and `Remove`'s own slot reads `Retry`, still a text button in no
+   colour. `Keep it` keeps its place: the way out is the way out it was.
+   `refused` IS THE REMOVAL THE SERVER ANSWERED NO (round 51, jakob
+   2026-11-17, impl 348: the words follow the answer, the shape the host):
+   the same dialog, its line `That didn't go through. Try again.`.
    One anatomy for both kinds, so the post and the comment fail alike. */
 /* `removing` IS THE REMOVAL IN FLIGHT (round 37, jakob 2026-11-11: the
    remove and reject dialogs take the same Close while they sign): past 200ms
@@ -833,17 +846,17 @@ const REMOVE_CONFIRM_COPY = {
    `Close` from the press itself — closes the dialog while the removal goes
    on, its wait and its answer on the removed thing's own row. A board draws
    it unnamed beside the named copies, so no path moves. */
-function RemoveDialog({ kind, overSheet = false, failed = false, removing = false, node }) {
+function RemoveDialog({ kind, overSheet = false, failed = false, refused = false, removing = false, node }) {
   const { title, body } = REMOVE_CONFIRM_COPY[kind];
   const dialog = (
     <DialogSurface
       onScrimPress={() => {}}
       title={title}
       body={[body, "This is immediate and permanent."]}
-      line={failed ? "That didn't send. Try again." : undefined}
+      line={failed ? "That didn't send. Try again." : refused ? "That didn't go through. Try again." : undefined}
       actions={
         <>
-          <Button variant="text" busy={removing} busyLabel="Removing…" node={node && "remove"}>{failed ? "Retry" : "Remove"}</Button>
+          <Button variant="text" busy={removing} busyLabel="Removing…" node={node && "remove"}>{failed || refused ? "Retry" : "Remove"}</Button>
           <Button node={node && "keep"}>{removing ? "Close" : "Keep it"}</Button>
         </>
       }
@@ -2724,6 +2737,35 @@ function editFootSign({ unchanged, faultHoles }) {
   );
 }
 
+/* THE EDIT'S FAULT, IN THE COMMIT'S PLACE (round 51; jakob 2026-11-17, impl
+   348: one rule for a refused or failed act). The edit is the seal's host
+   kind, so a signing that fails takes the seal's shape (`NetworkError`): the
+   line stands where `Sign the edit` stood, in its code's words — no answer
+   `That didn't send. Try again.`, an answered refusal `That didn't go
+   through. Try again.` — and an outlined `Retry` under it asks the same
+   signing again. Everything above the foot reads back unchanged, and the
+   acts count stays over the line: it is the edit's read-back of the batch,
+   the acts card's part on a seal. NO `Back` UNDER `Retry`: the seal draws
+   one because its foot's pair at rest is commit-and-back, and the fault
+   keeps the way back the surface had; an edit's foot at rest is the count
+   and the commit alone, its way back the header's arrow and X, which the
+   fault leaves where they are. The `fault` chip draws it on `EditCompose`
+   and `CommentEdit`, keyed by the answer. */
+const EDIT_FAULT_LINES = { unsent: "That didn't send. Try again.", refused: "That didn't go through. Try again." };
+
+function editFault() {
+  return Object.entries(EDIT_FAULT_LINES).map(([answer, line]) => (
+    <div key={answer} style={{ display: `{{fault${answer === "unsent" ? "Unsent" : "Refused"}Shown}}`, flexDirection: "column" }} {...chipCopy("fault", answer)}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-node="fault">
+        <TransportError message={line} />
+        <Button variant="outline" style={{ width: "100%" }} node="retry">
+          Retry
+        </Button>
+      </div>
+    </div>
+  ));
+}
+
 /* THE POST EDIT'S BACKING ROW (jakob 2026-10-16, PR-101). An edit is an
    ordinary-role Publish toward the post — the family that minted it — so it
    carries the same one free parameter, the author's backing, and the row
@@ -2836,6 +2878,7 @@ function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes
         <EditGate holes={holes} faultHoles={holes} done={1} total={2} />
         {editFootCount({ unchanged, faultHoles: holes })}
         {editFootSign({ unchanged, faultHoles: holes })}
+        {holes && editFault()}
       </div>
     </>
   );
@@ -2960,6 +3003,7 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
             <div style={{ display: "{{signBusyShown}}" }}>
               <Button style={{ width: "100%" }} busy busyLabel="Signing the edit…">Sign the edit</Button>
             </div>
+            {editFault()}
           </>
         ) : (
           <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
@@ -3099,7 +3143,7 @@ const TOBIAS_REPLIES = [
     timestamp: "35m",
     onReply: () => {},
     license: { attribution: 0, provenance: 0 },
-    menuItems: COMMENT_CARD_MENU,
+    menuItems: readerCommentCardMenu("ada"),
   },
   {
     id: "t2",
@@ -3108,7 +3152,7 @@ const TOBIAS_REPLIES = [
     timestamp: "28m",
     onReply: () => {},
     license: { attribution: 0, provenance: 0 },
-    menuItems: COMMENT_CARD_MENU,
+    menuItems: readerCommentCardMenu("mira"),
   },
 ];
 
@@ -3174,7 +3218,7 @@ const SOL_THREAD_COMMENT = {
       timestamp: "40m",
       onReply: () => {},
       license: { attribution: 0, provenance: 0 },
-      menuItems: COMMENT_CARD_MENU,
+      menuItems: readerCommentCardMenu("ada"),
     },
     {
       id: "r2",
@@ -3183,7 +3227,7 @@ const SOL_THREAD_COMMENT = {
       timestamp: "22m",
       onReply: () => {},
       license: { attribution: 0, provenance: 0 },
-      menuItems: COMMENT_CARD_MENU,
+      menuItems: readerCommentCardMenu("tobias"),
     },
   ],
 };
@@ -3288,7 +3332,7 @@ function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, remov
       topics={["glovebox", "coastroad"]}
       references={1}
       license={{ attribution: 0, provenance: 0 }}
-      menuItems={COMMENT_CARD_MENU}
+      menuItems={readerCommentCardMenu("tobias")}
     >
       {landed ? settledReply : closeLine}
     </CommentCard>
@@ -3316,7 +3360,7 @@ function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, remov
         onReply={() => {}}
         replyOpacity={replyOpacity}
         license={{ attribution: 0, provenance: 0 }}
-        menuItems={COMMENT_CARD_MENU}
+        menuItems={readerCommentCardMenu("mira")}
       />
       {shown ? (
         <>
@@ -3325,13 +3369,13 @@ function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, remov
           </li>
           <li style={{ display: shown.applicant, flexDirection: "column", listStyle: "none" }} {...readerCopy("applicant")}>
             <ul style={NESTED_LIST}>
-              <CommentCard {...solComment} menuItems={COMMENT_CARD_MENU} node={card} />
+              <CommentCard {...solComment} menuItems={readerCommentCardMenu("sol")} node={card} />
             </ul>
           </li>
           {shown.guest && (
             <li style={{ display: shown.guest, flexDirection: "column", listStyle: "none" }} {...readerCopy("guest")}>
               <ul style={NESTED_LIST}>
-                <CommentCard {...SOL_THREAD_COMMENT} menuItems={COMMENT_CARD_MENU} node={card} />
+                <CommentCard {...SOL_THREAD_COMMENT} menuItems={readerCommentCardMenu("sol")} node={card} />
               </ul>
             </li>
           )}
@@ -5116,13 +5160,13 @@ const FEED_LEAD_TITLE = {
 
    ITS ⋮ IS THE COMMENT'S MENU (jakob 2026-10-01), the sheet every comment's ⋮
    opens (`CommentMenu`), never the post card's: the card stands for a
-   comment, so its menu holds what a comment's does — Save and Cite, then
-   `Cited by` and `Opinions on this`, the license closing it. Your own
-   comment's adds `Remove` among the acts (`CommentMenuOwn`), as everywhere.
+   comment, so its menu holds what a comment's does — Save and Cite, `Hide`
+   with the comment's author, then `Cited by` and `Opinions on this`, the
+   license closing it. Your own comment's takes `Edit` and `Remove` among the
+   acts and no Hide (`CommentMenuOwn`), as everywhere.
    The card appends the license row itself, so the rows handed it stop short
    of it, and the report row, marked `tail`, stays after it: the card's ⋮
    ends License terms · Report, as `CommentMenu` reads. */
-const FEED_COMMENT_MENU = COMMENT_CARD_MENU;
 const FEED_OWN_COMMENT_MENU = OWN_COMMENT_CARD_MENU;
 /* WHAT THE HEAD ROW NAMES, PER TARGET (the closing batch, jakob 2026-10-01).
    · AN UNTITLED POST — a text post's title is optional — is named by its
@@ -5186,7 +5230,7 @@ function CommentFeedCard({ id, author, content, timestamp, parent, parentKind = 
       replyGlyph
       onShare={() => {}}
       license={{ attribution: 0, provenance: 0 }}
-      menuItems={own ? FEED_OWN_COMMENT_MENU : FEED_COMMENT_MENU}
+      menuItems={own ? FEED_OWN_COMMENT_MENU : readerCommentCardMenu(author.handle)}
       node={node}
     />
   );

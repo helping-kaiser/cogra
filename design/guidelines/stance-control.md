@@ -336,9 +336,12 @@ never show again.
 **The hold is never silent, and it waits for its signature** (the
 failure pack). A gesture that stages a priced act must never be
 silent: silence reads as failure and invites the same act again. The
-anchor goes inert at the hold, and past 200ms the target's row says
-`Signing…` under the face. Once the signature is taken, the resting
-target updates to the new opinion and a snackbar confirms it — before
+anchor goes inert at the hold, and the ring that filled during the
+hold stays closed around the face while the signing runs — no line
+under the face, so the card never grows; past 200ms a visually hidden
+status speaks `Signing…` (jakob 2026-11-17, impl 354). Once the
+signature is taken, the ring goes, the resting target updates to the
+new opinion and a snackbar confirms it — before
 the record lands, which is what `Still settling` is for. A hold that
 did not sign leaves the face where it was, and the row says `That
 didn't sign.` with `Retry`. The snackbar never carries a failure.
@@ -353,8 +356,8 @@ in the same place — the one exception to the 200ms law, since a way out
 still reading Cancel would mislead (jakob 2026-11-11) — while `Set` keeps
 its label until 200ms pass and then reads `Setting…`. Close, a press
 outside, Back and Esc close the pad.
-Closed, the act goes on: the signing's wait moves to the target's row,
-exactly a hold's — `Signing…` under the face, the anchor refusing a
+Closed, the act goes on: the signing's wait moves to the target's row —
+`Signing…` under the face in the pending marker's quiet register, the anchor refusing a
 second hold, then the new face and the snackbar, or `That didn't sign.`
 with a `Retry` that asks the same pick again. A Set the reader regrets is
 walked back afterwards. `PadFailed`'s `moment` chip draws it. The

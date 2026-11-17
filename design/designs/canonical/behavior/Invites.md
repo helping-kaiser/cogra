@@ -108,7 +108,9 @@ WHEN a link's Revoke lands GIVEN no application waits and no other link is live 
 
 WHEN a link's Revoke lands GIVEN no application waits and no other link is live and the reader has vouched someone in -> New invite and People you let in stand AND NEVER the empty Invites stands
 
-WHEN a link's Revoke does not go through -> the card stays AND the fault answers in the network fault's grammar
+WHEN a link's Revoke does not go through -> the card stays AND the line That didn't go through. stands last on that link's card with Retry at its end, as invites.link.copyFault stands AND NEVER the snackbar carries it AND NEVER the error dialog or a notice is raised
+
+WHEN tap the Retry at the end of a Revoke's line -> the revoke is asked again AND past 200ms Revoke reads Revoking… AND the line leaves the card once the revoke answers
 
 WHEN a row or a card removes itself -> focus moves to the next row, else the previous, else the empty state
 

@@ -79,21 +79,8 @@ export const PROPS = {
 };
 export const VALS = `signRestShown: this.props.signing === "signing" || this.props.fault !== "none" ? "none" : "block", signBusyShown: this.props.signing === "signing" && this.props.fault === "none" ? "block" : "none", doorShown: this.props.upload === "uploading" ? "none" : "flex", coverShown: this.props.upload === "uploading" ? "flex" : "none", gateShown: this.props.upload === "uploading" ? "flex" : "none", gateLineShown: this.props.upload === "uploading" && this.props.fault === "none" ? "flex" : "none", restShown: this.props.upload === "uploading" ? "none" : "flex", faultUnsentShown: this.props.fault === "unsent" ? "flex" : "none", faultRefusedShown: this.props.fault === "refused" ? "flex" : "none"`;
 
-/* The edit's fault in the commit's place — round 51's `editFault`
-   (`EditCompose`, `CommentEdit`), drawn here until the two rounds meet. */
-const EDIT_VIDEO_FAULT_LINES = { unsent: "That didn't send. Try again.", refused: "That didn't go through. Try again." };
-function editVideoFault() {
-  return Object.entries(EDIT_VIDEO_FAULT_LINES).map(([answer, line]) => (
-    <div key={answer} style={{ display: `{{fault${answer === "unsent" ? "Unsent" : "Refused"}Shown}}`, flexDirection: "column" }} {...chipCopy("fault", answer)}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-node="fault">
-        <TransportError message={line} />
-        <Button variant="outline" style={{ width: "100%" }} node="retry">
-          Retry
-        </Button>
-      </div>
-    </div>
-  ));
-}
+/* The fault is round 51's `editFault` (`_shared.jsx`), the one helper every
+   edit's foot draws it with. */
 
 export function Screen() {
   return (
@@ -174,7 +161,7 @@ export function Screen() {
         <div style={{ display: "{{signBusyShown}}" }}>
           <Button style={{ width: "100%" }} busy busyLabel="Signing the edit…">Sign the edit</Button>
         </div>
-        {editVideoFault()}
+        {editFault()}
       </div>
     </>
   );

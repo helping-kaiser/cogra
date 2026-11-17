@@ -84,6 +84,8 @@ WHEN press Retry GIVEN the held press dropped -> the gate runs again AND NEVER s
 
 WHEN a picture the edit took fails to upload -> its thumbnail is marked AND the line One picture didn't upload. stands under the pictures with Retry and Remove it AND the gate line takes its fault reading
 
+WHEN the server refuses a picture the edit took at its upload -> the line One picture didn't upload. stands under the pictures with Remove it alone AND NEVER Retry stands under the pictures, retrying being unable to change the answer
+
 WHEN press Retry under the pictures -> the failed upload tries again AND the gate runs again
 
 WHEN press Remove it under the pictures GIVEN nothing else the edit took is uploading -> the failed picture leaves the batch AND the gate line goes AND Sign the edit is enabled
@@ -98,7 +100,13 @@ WHEN the signing is taken GIVEN the edit was opened from the thread -> the threa
 
 WHEN the signing is taken GIVEN the edit was opened off the thread, from History, Saved or the profile's Comments tab -> that host comes back as it was left AND the edited comment's card settles in place there wearing Still settling, as the thread's card settles AND NEVER the thread opens
 
-WHEN the signing does not go through GIVEN no answer reached the edit -> the network error answers AND everything the reader chose stays as it was
+WHEN the signing gets no answer GIVEN the edit stands open -> commentEdit.fault reads That didn't send. Try again. in commentEdit.sign's place AND commentEdit.fault.retry stands under it, outlined, AND commentEdit.acts stays above the line AND everything the reader chose stays as it was
+
+WHEN the signing is answered with a refusal GIVEN the edit stands open -> commentEdit.fault reads That didn't go through. Try again. in commentEdit.sign's place AND commentEdit.fault.retry stands under it, outlined, AND commentEdit.acts stays above the line AND everything the reader chose stays as it was
+
+WHEN press commentEdit.fault.retry -> the same signing is asked again AND past 200ms the commit's slot reads Signing the edit… AND the header's X is named Close
+
+ALWAYS the header's arrow and X are the edit's way back GIVEN commentEdit.fault stands, and no Back stands under the fault's Retry
 
 WHEN the write rule refuses the edit -> nothing is staged or spent AND the notice's fact ends Nothing was signed or spent — your edit is still here. AND the way out under the notice reads Not now AND NEVER the notice says a draft is kept AND NEVER Retry appears
 
