@@ -2754,6 +2754,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 23, find: ">Retry</button>", tag: "button", skip: 2 },
     { n: 23, find: ">Retry</button>", tag: "button", skip: 3 },
     { n: 20, find: ">Remove it</button>", tag: "button" },
+    // Round 51 act 2: the `upload` chip's `refused` row line, the same act.
+    { n: 20, find: ">Remove it</button>", tag: "button", skip: 1 },
     { n: 13, find: ">Mark</button>", tag: "button" },
     { n: 15, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
     // The `target` chip's removed-target row: the same row, named by its mark.
@@ -2766,7 +2768,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 21, find: ">Adjust</button>", tag: "button" },
     // The `tag` chip's refused tag (round 50): its line's Remove it, after the
     // failed upload's.
-    { n: 22, find: ">Remove it</button>", tag: "button", skip: 1 },
+    { n: 22, find: ">Remove it</button>", tag: "button", skip: 2 },
   ],
   /* The same edit with an empty batch — `EditCompose`'s markers, minus the one
      control that stops being one. The acts footer is a plain span at zero, so

@@ -97,6 +97,12 @@
    server's answer at Sign that `#saltmaps`, picked in this edit, did not
    land — `This tag didn't land.` with `Remove it` under the chips, the chip
    ringed in the error ink, `Sign the edit` standing (`editTagRefusedLine`). */
+/* THE `upload` CHIP'S `refused` (round 51 act 2, jakob 2026-11-17, B3): the
+   server refused the second picture at its upload — a refusal, not a fault.
+   The tile is marked as at `failed`; under the row `One picture didn't
+   upload.` with `Remove it` alone; the gate reads the fact alone, no `Signing
+   waits for it.` and no `Retry`; `Sign the edit` disabled until `Remove it`
+   takes the picture out. */
 /* THE `fault` CHIP (round 51, jakob 2026-11-17, impl 348): the signing
    failed while the edit stood open — `unsent`, no answer, `That didn't send.
    Try again.`; `refused`, an answered refusal, `That didn't go through. Try
@@ -106,12 +112,12 @@
 export const NODE = "postEdit";
 export const PROPS = {
   target: { editor: "enum", options: ["live", "removed"], default: "live" },
-  upload: { editor: "enum", options: ["none", "uploading", "failed"], default: "none" },
+  upload: { editor: "enum", options: ["none", "uploading", "failed", "refused"], default: "none" },
   signing: { editor: "enum", options: ["none", "slow"], default: "none" },
   tag: { editor: "enum", options: ["landed", "refused"], default: "landed" },
   fault: { editor: "enum", options: ["none", "unsent", "refused"], default: "none" },
 };
-export const VALS = `liveShown: this.props.target === "removed" ? "none" : "block", removedShown: this.props.target === "removed" ? "block" : "none", gateShown: this.props.upload === "uploading" && this.props.fault === "none" ? "block" : "none", rowShown: this.props.upload === "none" ? "block" : "none", rowUploadingShown: this.props.upload === "uploading" ? "block" : "none", rowFailedShown: this.props.upload === "failed" ? "block" : "none", errorShown: this.props.upload === "failed" ? "block" : "none", gateFailedShown: this.props.upload === "failed" && this.props.fault === "none" ? "block" : "none", footQuietShown: this.props.signing === "slow" && this.props.upload !== "failed" && this.props.fault === "none" ? "none" : "flex", footSlowShown: this.props.signing === "slow" && this.props.upload !== "failed" && this.props.fault === "none" ? "flex" : "none", signRestShown: this.props.signing !== "slow" && this.props.upload !== "failed" && this.props.fault === "none" ? "block" : "none", signBusyShown: this.props.signing === "slow" && this.props.upload !== "failed" && this.props.fault === "none" ? "block" : "none", signFailedShown: this.props.upload === "failed" && this.props.fault === "none" ? "block" : "none", faultUnsentShown: this.props.fault === "unsent" ? "flex" : "none", faultRefusedShown: this.props.fault === "refused" ? "flex" : "none", tagRing: this.props.tag === "refused" ? "1px solid var(--error)" : "none", tagRefusedShown: this.props.tag === "refused" ? "block" : "none"`;
+export const VALS = `liveShown: this.props.target === "removed" ? "none" : "block", removedShown: this.props.target === "removed" ? "block" : "none", gateShown: this.props.upload === "uploading" && this.props.fault === "none" ? "block" : "none", rowShown: this.props.upload === "none" ? "block" : "none", rowUploadingShown: this.props.upload === "uploading" ? "block" : "none", rowFailedShown: this.props.upload === "failed" ? "block" : "none", errorShown: this.props.upload === "failed" ? "block" : "none", gateFailedShown: this.props.upload === "failed" && this.props.fault === "none" ? "block" : "none", footQuietShown: this.props.signing === "slow" && this.props.upload !== "failed" && this.props.upload !== "refused" && this.props.fault === "none" ? "none" : "flex", footSlowShown: this.props.signing === "slow" && this.props.upload !== "failed" && this.props.upload !== "refused" && this.props.fault === "none" ? "flex" : "none", signRestShown: this.props.signing !== "slow" && this.props.upload !== "failed" && this.props.upload !== "refused" && this.props.fault === "none" ? "block" : "none", signBusyShown: this.props.signing === "slow" && this.props.upload !== "failed" && this.props.upload !== "refused" && this.props.fault === "none" ? "block" : "none", signFailedShown: this.props.upload === "failed" && this.props.fault === "none" ? "block" : "none", rowRefusedShown: this.props.upload === "refused" ? "block" : "none", gateRefusedShown: this.props.upload === "refused" && this.props.fault === "none" ? "block" : "none", signRefusedShown: this.props.upload === "refused" && this.props.fault === "none" ? "block" : "none", faultUnsentShown: this.props.fault === "unsent" ? "flex" : "none", faultRefusedShown: this.props.fault === "refused" ? "flex" : "none", tagRing: this.props.tag === "refused" ? "1px solid var(--error)" : "none", tagRefusedShown: this.props.tag === "refused" ? "block" : "none"`;
 
 export function Screen() {
   return <EditComposeBody holes />;

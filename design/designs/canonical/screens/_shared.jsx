@@ -2671,6 +2671,9 @@ function EditGate({ holes, faultHoles, done, total }) {
       <div style={{ display: "{{gateFailedShown}}" }} {...chipCopy("upload", "failed")}>
         <UploadStatusLine failed onRetry={() => {}} node="gate" />
       </div>
+      <div style={{ display: "{{gateRefusedShown}}" }} {...chipCopy("upload", "refused")}>
+        <UploadStatusLine refused node="gate" />
+      </div>
     </>
   );
 }
@@ -2692,6 +2695,13 @@ function EditPickedRow({ faultHoles }) {
       <div style={{ display: "{{rowFailedShown}}" }} {...chipCopy("upload", "failed")}>{row([EDIT_PICTURES[0], { ...EDIT_PICTURES[1], failed: true }])}</div>
       <div style={{ display: "{{errorShown}}" }}>
         <UploadErrorLine onRetry={() => {}} onRemove={() => {}} node="uploadError" />
+      </div>
+      {/* `refused` (round 51 act 2, jakob 2026-11-17, B3): the server refused
+          the picture — the tile marked as at `failed`, the row's line with
+          `Remove it` alone; the line is a drawn copy and carries no name. */}
+      <div style={{ display: "{{rowRefusedShown}}" }} {...chipCopy("upload", "refused")}>{row([EDIT_PICTURES[0], { ...EDIT_PICTURES[1], failed: true }])}</div>
+      <div style={{ display: "{{rowRefusedShown}}" }}>
+        <UploadErrorLine onRemove={() => {}} />
       </div>
     </>
   );
@@ -2730,6 +2740,9 @@ function editFootSign({ unchanged, faultHoles }) {
         <Button style={{ width: "100%" }} busy busyLabel="Signing the edit…" node="sign">Sign the edit</Button>
       </div>
       <div style={{ display: "{{signFailedShown}}" }} {...chipCopy("upload", "failed")}>
+        <Button style={{ width: "100%" }} disabled node="sign">Sign the edit</Button>
+      </div>
+      <div style={{ display: "{{signRefusedShown}}" }} {...chipCopy("upload", "refused")}>
         <Button style={{ width: "100%" }} disabled node="sign">Sign the edit</Button>
       </div>
     </>

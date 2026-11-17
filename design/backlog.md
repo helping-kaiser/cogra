@@ -6324,7 +6324,7 @@ upload line's note rules out; (c) a short `That didn't send.` — new copy.
 
 Closed by round 51, act 2 (jakob 2026-11-17, B2 as recommended): (a) — a card reads `That didn't go through.` with `Retry` for every failure, no answer and refusal alike; the rule names the card as the one host where both answers read so (copy-voice, *One rule for a refused or failed act*; `NetworkError`, `Invites`).
 
-### 251 · What a seal's gate line reads for a refused upload · *design* · **filed 2026-11-17**
+### 251 · What a seal's gate line reads for a refused upload · *design* · **filed 2026-11-17** · **closed 2026-11-17**
 
 Round 51 (jakob 2026-11-17, his 8: a refused picture reads `One picture didn't
 upload.` with `Remove it` alone). The seals' gate line — `One picture didn't
@@ -6336,6 +6336,8 @@ way out being back to the stage that holds the picture, where `Remove it`
 stands; (c) the gate line takes `Remove it` on the seal. Blocks drawing the post
 edit's refused upload (`EditCompose`'s `upload` chip), whose gate stands on the
 same screen.
+
+Closed by round 51, act 2 (jakob 2026-11-17, B3 as recommended): (b) — the gate reads the refusal without `Retry`: the fact alone, `One picture didn't upload.` (`The video didn't upload.` for a clip), since `Signing waits for it.` would wait for ever; Sign stays disabled and Back is the way out, to the stage that holds `Remove it` (`UploadStatusLine`'s `refused`; `AvatarSeal`, `ProfileEditSeal` `upload-refused`; `EditCompose`'s `upload` = `refused`).
 
 ### 252 · A hidden person's comment cards in the feed · *design* · **filed 2026-11-17** · **closed 2026-11-17**
 
