@@ -43,7 +43,7 @@ The label is always visible and always `label-large` — there is no floating-la
 <TextField label="Handle" value={handle} onChange={setHandle} hint="3–30 characters: a–z, 0–9, _" />
 ```
 
-`FieldLabel` is that label row on its own, for a composer caption whose section is a tray or a list rather than an input — Pictures, Video, Cover, Topics, References. `TextField` renders the same component over its own field, so the two can never drift apart.
+`FieldLabel` is that label row on its own, for a composer caption whose section is a tray or a list rather than an input — Pictures, Video, Cover, Tags, References. `TextField` renders the same component over its own field, so the two can never drift apart.
 
 ```jsx
 <FieldLabel>Tags</FieldLabel>

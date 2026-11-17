@@ -49,3 +49,5 @@ ALWAYS Your tags' second line counts the topics the reader holds, the length of 
 WHEN tap the bar's Explore slot GIVEN Explore is at its top -> NEVER Explore refreshes
 
 WHEN pull down GIVEN Explore stands at rest -> NEVER Explore refreshes AND NEVER a refresh indicator shows
+
+ALWAYS explore.searchField.input fills its row, whatever the query's length, and a board's width for it is its sample text's

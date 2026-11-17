@@ -66,12 +66,18 @@
    a pad is parked. And no `padInset` rides with it: the inset lifts the parked
    card clear of a bottom bar, and a tag page has none — it is a subpage of
    search, which is the settings round's rule for a surface a reader arrives
-   at, reads, and leaves. */
+   at, reads, and leaves.
+
+   REGISTERED under the `tagPage` prefix (round 48, seam 320-16): the `header`,
+   and the stance row `actionRow` — the wide anchor `stance`, its open pad
+   `stance.pad.*` (`StanceControl`'s anatomy), and `share`. The list beneath and
+   the wash stay unnamed. */
+export const NODE = "tagPage";
 
 export function Screen() {
   return (
     <>
-      <TagPageBody bundle={mkBundle(0.6, 0.35)} stanceOpen stanceDefaultPick={{ pDirected: 0.25, pInterest: 0.3 }} />
+      <TagPageBody bundle={mkBundle(0.6, 0.35)} stanceOpen stanceDefaultPick={{ pDirected: 0.25, pInterest: 0.3 }} named />
 
       {/* The wash sits over the shell; the parked pad (fixed, above it) stays
           sharp. */}

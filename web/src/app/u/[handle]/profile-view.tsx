@@ -586,10 +586,11 @@ export function ProfileScreen({
               website={profile.websiteUrl.value}
               redacted={deleted}
               figures={figures}
-              // THE FIGURES OPEN THE OPINIONS PAGE (graph.json `the figures row`),
-              // under this profile, carrying its own origin so the page lights
-              // the root this profile did and returns to it as it was opened.
-              figuresHref={opinionsHref(handle, "on", openedFrom)}
+              // EACH OPINION FIGURE OPENS THE OPINIONS PAGE ON ITS OWN
+              // DIRECTION (Profile.md:49-51, ProfileOther.md:57-59), under this
+              // profile, carrying its own origin so the page lights the root
+              // this profile did and returns to it as it was opened.
+              figuresHref={(direction) => opinionsHref(handle, direction, openedFrom)}
               own={own}
               onAvatarChange={own ? picturePick.open : undefined}
               // The handle repeats only where the bar does not carry it: the
