@@ -20,7 +20,10 @@
 //    and the arrow, close the seal and the change goes on — its wait and its
 //    answer then stand under the profile's head (`profile-change.ts`).
 //  · No answer reached the seal: the fault line and `Retry` take the
-//    commit's place, everything above the foot as it was.
+//    commit's place, everything above the foot as it was. An answered fault
+//    of the whole act (FORBIDDEN, INTERNAL, SIGNATURE_INVALID, a fieldless
+//    BAD_INPUT, EMAIL_NOT_VERIFIED) takes the same foot in its own line
+//    (NetworkError.md:13-19), never the no-answer line.
 //  · The write rule: `You can't sign right now` over its fact, `Not now`
 //    back to the seal at rest; never Retry, never the error colour.
 //  · Any other refusal, a bug: `This shouldn't have happened` with `Try
@@ -66,6 +69,7 @@ type Foot =
   | { readonly kind: "rest" }
   | { readonly kind: "signing" }
   | { readonly kind: "offline" }
+  | { readonly kind: "notThrough"; readonly line: string }
   | { readonly kind: "writeRule" }
   | { readonly kind: "bug" }
   | { readonly kind: "keyAbsent" };
@@ -125,7 +129,7 @@ export function ChangeSeal({
     setFoot({ kind: "signing" });
     const outcome = await signProfileChange(sign);
     if (outcome.kind === "taken") onTaken();
-    else setFoot({ kind: outcome.kind });
+    else setFoot(outcome);
   };
 
   // From the press, every way out only closes the seal; the act goes on.
@@ -182,9 +186,12 @@ export function ChangeSeal({
               Not now
             </PillButton>
           </>
-        ) : foot.kind === "offline" ? (
+        ) : foot.kind === "offline" || foot.kind === "notThrough" ? (
           <div className="flex flex-col gap-2">
-            <TransportError testId={`${id}-offline`} message={OFFLINE_LINE} />
+            <TransportError
+              testId={`${id}-offline`}
+              message={foot.kind === "offline" ? OFFLINE_LINE : foot.line}
+            />
             <PillButton testId={`${id}-retry`} variant="outlined" full onClick={() => void press()}>
               Retry
             </PillButton>

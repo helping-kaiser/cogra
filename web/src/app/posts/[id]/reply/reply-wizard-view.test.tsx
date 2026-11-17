@@ -822,6 +822,23 @@ describe("the reply wizard", () => {
       await waitFor(() => expect(onSigned).toHaveBeenCalledWith("comment-9"));
     });
 
+    // NetworkError.md:13 — an INTERNAL on the errors array is an answer, so
+    // the not-through line, never the no-answer one.
+    it("NetworkError.md:13 an INTERNAL prepare reads That didn't go through. with Retry", async () => {
+      server.use(
+        gqlLink.mutation("PrepareComment", () =>
+          HttpResponse.json({ data: null, errors: [{ message: "no", extensions: { code: "INTERNAL" } }] }),
+        ),
+      );
+      draw();
+      await toSeal();
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      const line = await screen.findByTestId("reply-transport-error");
+      expect(line).toHaveTextContent("That didn't go through. Try again.");
+      expect(line).not.toHaveTextContent(/didn't send|reach the server/);
+      expect(screen.getByTestId("reply-retry")).toBeInTheDocument();
+    });
+
     it("SealSigning.md: going a stage back and returning shows the plain commit again", async () => {
       server.use(gqlLink.mutation("PrepareComment", () => HttpResponse.error()));
       draw();
@@ -937,7 +954,7 @@ describe("the reply wizard", () => {
         signStaged: vi.fn(async () => ({
           kind: "refused" as const,
           id: "w1",
-          errors: [{ message: "no", code: "BAD_INPUT" as const, field: null }],
+          errors: [{ message: "no", code: "BAD_INPUT" as const, field: ["content"] }],
         })),
       });
       const onLeave = vi.fn();
