@@ -43,11 +43,20 @@
    `viewport`, the `zoom` slider, the `howTo` line, the `pictures` strip with
    one `thumb` per picture keyed by its place, and `next`. */
 export const NODE = "composeCrop";
-export const PROPS = { shape: { editor: "enum", options: ["tall", "square", "wide"], default: "tall" } };
+/* THE `opener` CHIP (round 52 act 3, jakob 2026-11-17, C8 and "the shape
+   buttons are hidden on the edit's crop"): `post`, a stage of the new post's
+   wizard — `Back a step`, `Leave — your draft is kept`; `edit`, pictures
+   added to a published post's edit — `Back to the edit`, `Leave — the edit
+   is discarded`, and no shape row: the crop is locked to the post's one
+   shape, which the stage shows, drag and zoom unchanged. */
+export const PROPS = {
+  shape: { editor: "enum", options: ["tall", "square", "wide"], default: "tall" },
+  opener: { editor: "enum", options: ["post", "edit"], default: "post" },
+};
 /* The body is `ComposeCropBody` (`_shared.jsx`), drawn at a 390 column here
    and in a short, wide window on `ComposeCropShort`. */
-export const VALS = COMPOSE_CROP_VALS;
+export const VALS = `${COMPOSE_CROP_VALS}, ${COMPOSE_CROP_OPENER_VALS}`;
 
 export function Screen() {
-  return <ComposeCropBody />;
+  return <ComposeCropBody openerHoles />;
 }

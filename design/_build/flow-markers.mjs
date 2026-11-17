@@ -1041,8 +1041,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: "position:relative;width:125px", tag: "div", all: true },
   ],
   ComposeCrop: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
-    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    // The `opener` chip names both (round 52 act 3).
+    { n: 1, find: 'aria-label="{{backLabel}}"', tag: "a" },
+    { n: 2, find: 'aria-label="{{leaveLabel}}"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     // The `shape` chip draws the chips once per value (round 44): every copy.
     { n: 4, find: ">Tall 4:5</button>", tag: "button", all: true },

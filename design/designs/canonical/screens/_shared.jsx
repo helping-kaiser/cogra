@@ -7066,17 +7066,29 @@ function ComposeCropFrame({ shape, height, stage }) {
 
 const COMPOSE_CROP_PICTURES = ["post-photo.jpg", "inviter.jpg"];
 
-function ComposeCropBody({ stage = { width: 390, height: 488 }, pictures = COMPOSE_CROP_PICTURES }) {
+/* THE `opener` HOLES (round 52 act 3, jakob 2026-11-17: "the shape buttons
+   are hidden on the edit's crop"). `ComposeCrop` passes `openerHoles`: its
+   `opener` chip names the arrow and the X by who opened the crop and, at
+   `edit`, hides the shape row — the crop is locked to the post's one shape.
+   The row is HIDDEN, never left out: it stays one unkeyed row in the
+   markup, so its paths stand in every state (round 49's rule). */
+const COMPOSE_CROP_OPENER_VALS = `backLabel: this.props.opener === "edit" ? "Back to the edit" : "Back a step", leaveLabel: this.props.opener === "edit" ? "Leave — the edit is discarded" : "Leave — your draft is kept", shapesShown: this.props.opener === "edit" ? "none" : "flex"`;
+
+function ComposeCropBody({ stage = { width: 390, height: 488 }, pictures = COMPOSE_CROP_PICTURES, openerHoles = false }) {
   const capped = stage.width < 390;
   return (
     <>
-      <WizardHeader title="Crop" node="header" />
+      {openerHoles ? (
+        <WizardHeader title="Crop" backLabel="{{backLabel}}" leaveLabel="{{leaveLabel}}" node="header" />
+      ) : (
+        <WizardHeader title="Crop" node="header" />
+      )}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 16px", overflow: "hidden" }}>
         {/* THE SHAPE ROW IS DRAWN ONCE (round 49, seam 338): the `shape`
             setting re-selects its chips through `Chip`'s `selectedHoles`, so
             the row and its chips carry no key — one row, as the clients
             draw it. */}
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: openerHoles ? "{{shapesShown}}" : "flex", gap: 8 }}>
           <div style={{ display: "flex", gap: 8 }} data-node="shapes">
             <Chip label="Tall 4:5" selectedHoles={composeCropShapeHoles("tall")} onToggle={() => {}} node="tallChip" />
             <Chip label="Square 1:1" selectedHoles={composeCropShapeHoles("square")} onToggle={() => {}} node="squareChip" />
