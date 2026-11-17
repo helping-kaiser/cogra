@@ -1482,10 +1482,14 @@ Object.assign(FLOW_MARKERS, {
     // comes before the caption, so the first bare Retry is the face's), and
     // the load-more fault's Retry at the caption's head.
     { n: 16, find: 'aria-label="Play this video"', tag: "button" },
-    { n: 17, find: ">Retry</button>", tag: "button" },
+    // The stage's own Retry (`unloaded`, round 50 act 3) comes first in the
+    // markup, so the face's is the second bare Retry.
+    { n: 17, find: ">Retry</button>", tag: "button", skip: 1 },
     { n: 18, find: 'aria-label="Retry loading more"', tag: "button" },
     // The rail's ⋮ (round 49, M2): the post's menu over the stream.
     { n: 19, find: 'aria-label="More on this post"', tag: "button" },
+    // A clip that cannot load (round 50 act 3, C6): its cover's Retry.
+    { n: 20, find: ">Retry</button>", tag: "button" },
   ],
   ReelSensitive: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "button" },

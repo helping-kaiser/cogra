@@ -6216,7 +6216,7 @@ settled; drawing them stays open.
 Round 50 read it: needs no ruling — each board is its law's rows drawn — but
 it is ten boards and a lane of its own; it stays open.
 
-### 230 · A clip that cannot load has no drawn state · *design* · **filed 2026-11-13**
+### 230 · A clip that cannot load has no drawn state · *design* · **filed 2026-11-13** · **closed 2026-11-17**
 
 Round 49 (jakob 2026-11-13, N7 and V1). The stream and the viewer never show
 a clip's cover; only a clip that cannot load may show its cover there, whole
@@ -6234,6 +6234,10 @@ code*: a read with nothing loaded; its noun `this video` would be new); (c) the
 cover with `Retry` alone. (b) follows the read-fault rule every other surface
 keeps; its "can't reach the server" is untrue for a file that is broken rather
 than unreachable.
+
+Closed by round 50, act 3 (jakob 2026-11-17, C6 as recommended): the cover with the read
+fault's outlined `Retry` alone, no sentence — drawn on `Reel`'s `state` chip,
+`unloaded`; the viewer carries it as law (`ViewerVideo` is not a chipped board).
 
 ### 231 · The stream's ⋮: what Hide and Remove leave on the stream · *design* · **filed 2026-11-13** · **closed 2026-11-17**
 

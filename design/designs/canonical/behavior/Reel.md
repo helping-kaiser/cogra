@@ -68,6 +68,10 @@ ALWAYS the stream never shows a clip's cover, its clip playing or paused on its 
 
 ALWAYS the clip's cover stands in the stream, whole at its own 4:5, centred on the stream's black, nothing cropped, GIVEN the clip itself cannot load and its cover has
 
+WHEN the clip itself cannot load -> the outlined Retry stands alone on its cover AND NEVER a sentence stands with it
+
+WHEN press Retry on the cover of a clip that cannot load -> the clip is asked for again AND it plays in the cover's place once it loads
+
 WHEN tap reel.playDisc -> the clip plays AND reel.soundDisc takes the disc's corner
 
 WHEN drag reel.seekLine -> the clip moves under the finger
