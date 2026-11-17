@@ -798,8 +798,9 @@ type Record {
   "The epoch in which the record landed — the graph's own clock;
    epoch ages read against the public epoch certificates."
   landingEpoch: Int!
-  "When the record landed: its epoch's attested boundary timestamp
-   (layer1-interface.md, the Host Contract). Wall-clock time for
+  "When the record landed: its epoch's asserted boundary timestamp
+   (layer1-interface.md, the Host Contract; checkable only for
+   consistency with the published duration bounds). Wall-clock time for
    display — the ages ladder reads it; `landingEpoch` and the causal
    key carry the order."
   landedAt: DateTime!
@@ -3612,7 +3613,9 @@ type PreparedWrite {
    alter it nor author one unasked. Deterministic CBOR
    `[1, body, payload, deps]`: the structural body's canonical
    bytes, the payload bytes, and the dependency list as act
-   identifiers. Its envelope version is its own and is 1."
+   identifiers, strictly ascending in Layer 1's componentwise
+   order: author by bytes, then sequence as a number, then family
+   by bytes. Its envelope version is its own and is 1."
   canonicalProposal: String!
   "Epoch budget: a staged write that never completes the handshake
    and lands is garbage-collected — staged payload included — after

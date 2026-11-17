@@ -212,7 +212,7 @@ the exact host-sealed verified act
 1. **Prepare.** The backend validates the gesture (envelope
    conformance, L2 policy), pre-checks the write rule below, and
    assembles the canonical proposal — act body, payload envelope,
-   dependency list — and returns it to the client.
+   dependency list in canonical order — and returns it to the client.
 2. **Pre-sign.** On the device, the client first checks the
    proposal against the gesture its user ordered: it rebuilds what
    every act's body must be from the choices the user made, and

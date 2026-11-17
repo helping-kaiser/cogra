@@ -234,9 +234,9 @@ pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), M
     .execute(&mut *tx)
     .await?;
     sqlx::query!(
-        "INSERT INTO mirror_epochs (epoch, attested_at) VALUES ($1, $2)",
+        "INSERT INTO mirror_epochs (epoch, asserted_at) VALUES ($1, $2)",
         package.epoch,
-        package.attested_at,
+        package.asserted_at,
     )
     .execute(&mut *tx)
     .await?;
@@ -607,7 +607,7 @@ pub async fn records_by_ids(
         .collect())
 }
 
-/// The attested boundary timestamps of the given epochs, keyed by epoch:
+/// The asserted boundary timestamps of the given epochs, keyed by epoch:
 /// when each epoch's records landed. An epoch the mirror has not ingested
 /// is absent.
 pub async fn epoch_instants(
@@ -615,17 +615,17 @@ pub async fn epoch_instants(
     epochs: &[i64],
 ) -> Result<std::collections::HashMap<i64, chrono::DateTime<chrono::Utc>>, MirrorError> {
     Ok(sqlx::query!(
-        "SELECT epoch, attested_at FROM mirror_epochs WHERE epoch = ANY($1)",
+        "SELECT epoch, asserted_at FROM mirror_epochs WHERE epoch = ANY($1)",
         epochs,
     )
     .fetch_all(pool)
     .await?
     .into_iter()
-    .map(|row| (row.epoch, row.attested_at))
+    .map(|row| (row.epoch, row.asserted_at))
     .collect())
 }
 
-/// The oldest ingested epoch the mirror holds no attested instant for, if
+/// The oldest ingested epoch the mirror holds no asserted instant for, if
 /// any. Ingested epochs are contiguous from 1 to the cursor, so a full
 /// set is a count check; only an incomplete one is searched.
 pub async fn first_epoch_without_instant(pool: &PgPool) -> Result<Option<i64>, MirrorError> {
@@ -643,7 +643,7 @@ pub async fn first_epoch_without_instant(pool: &PgPool) -> Result<Option<i64>, M
     .await?)
 }
 
-/// Records the attested instants of already-ingested epochs, read back
+/// Records the asserted instants of already-ingested epochs, read back
 /// from their published packages. An epoch that already has one keeps it.
 pub async fn record_instants(
     pool: &PgPool,
@@ -652,7 +652,7 @@ pub async fn record_instants(
     let epochs: Vec<i64> = instants.iter().map(|(epoch, _)| *epoch).collect();
     let at: Vec<chrono::DateTime<chrono::Utc>> = instants.iter().map(|(_, at)| *at).collect();
     Ok(sqlx::query!(
-        "INSERT INTO mirror_epochs (epoch, attested_at)
+        "INSERT INTO mirror_epochs (epoch, asserted_at)
          SELECT * FROM unnest($1::bigint[], $2::timestamptz[])
          ON CONFLICT (epoch) DO NOTHING",
         &epochs,
