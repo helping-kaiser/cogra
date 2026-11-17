@@ -616,6 +616,10 @@ out (*Remove it*; never *Retry* — retrying cannot change the answer):
 - `That video is too big — a post's video can be up to 100 MB.`
 - `That picture is too big — a picture can be up to 10 MB.`
 - `That file isn't a picture or a video CoGra can read.`
+- `That file isn't a picture CoGra can read.` — the profile picture's
+  crop, where a video is no answer either (round 50, jakob 2026-11-17,
+  his 9; *to be blessed*). The picture's refusals stand on the crop,
+  under the circle, with `Next` dimmed (`AvatarCrop`).
 - `A post carries pictures or one video, not both.`
 - `A comment carries pictures or one video, not both.`
 - `That GIF moves, and CoGra can't take a moving GIF here. A still one
