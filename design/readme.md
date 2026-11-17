@@ -12376,6 +12376,17 @@ merged in (6f95dac35, then its act 2, 55cd99081).
   ("…and its cover has loaded"); `AvatarCrop` and `CoverCrop` take an
   `opener` chip so the boards speak the C8 back names; the
   reply-with-pictures flow walks through the crop. Backlog 260–261 filed.
+- **Act 3, jakob's answers on 260 and 261 (2026-11-17, "Yes, both")**: the
+  reply composer shares its column, the clip and its cover 167 × 167 each
+  (`ReplyVideo`, `ReplyVideoFailed`), and the cover's tile is a door there
+  too — the picker, then the cover's crop locked to the comment's square;
+  the frame row stays the chooser for frames, a frame never cropped
+  (`ReplyVideo`'s `cover` chip: `none` · `frame` · `own`). The inset is gone
+  from the product, and `MediaThumb`'s `coverSrc` with it. The post crop
+  entered from an edit hides its shape row, the stage at the post's shape
+  (`ComposeCrop`'s `opener` chip, `post` · `edit`, which also names the
+  arrow and the X); the row is hidden, never left out, so its unkeyed paths
+  stand. Backlog 260 and 261 closed.
 ---
 
 ## 14. The canvases

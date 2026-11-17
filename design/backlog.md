@@ -6393,7 +6393,7 @@ among its references; `Discard` starts fresh with the reference riding; (b) the 
 rides only a fresh start, and `Continue` resumes the draft without it; (c) the door opens fresh as its edge
 says, the kept draft waiting untouched behind it.
 
-### 260 · The reply composer: the clip and its cover do not fit side by side · *design* · **filed 2026-11-17**
+### 260 · The reply composer: the clip and its cover do not fit side by side · *design* · **filed 2026-11-17** · **closed 2026-11-17**
 
 Round 52 (jakob 2026-11-17, decision 4: the cover beside the clip at the same
 height and its own shape). The reply composer's clip tile is the comment's
@@ -6407,7 +6407,13 @@ shows its choice: what a tap on the tile does here (scroll to the row, or open
 the picker as on the edits) is part of the answer. Until then the host keeps
 the ringed inset (`MediaThumb`'s `coverSrc`, used nowhere else).
 
-### 261 · The post crop opened from an edit: whether the shape row stands · *design* · **filed 2026-11-17**
+Closed by round 52, act 3 (jakob 2026-11-17, (a), "but why would the cover tap not open the
+cover crop here aswell?", then "Yes, both"): both tiles 167 × 167; the cover's tile is a door
+— the picker, then the cover's crop locked to the comment's square — as on the edits; the
+frame row stays the chooser for frames, a frame never cropped (`ReplyVideo`'s `cover` chip,
+`ReplyVideoFailed`). The inset and `MediaThumb`'s `coverSrc` are gone.
+
+### 261 · The post crop opened from an edit: whether the shape row stands · *design* · **filed 2026-11-17** · **closed 2026-11-17**
 
 Round 52 (the C8 back names on the crops' boards). Pictures added to a
 published post's edit pass the crop locked to the post's one shape
@@ -6416,3 +6422,7 @@ dimmed at the locked shape, or gone as on the cover and comment crops — is not
 written, so `ComposeCrop` draws no `opener` chip yet (its arrow's name, `Back to
 the edit`, is law). Options: (a) the row goes, the frame at the post's shape;
 (b) the row stands, the post's shape selected, the others inert.
+
+Closed by round 52, act 3 (jakob 2026-11-17, "Yes, both"): (a) — the shape row is hidden on
+the edit's crop, the stage at the post's shape, drag and zoom unchanged; `ComposeCrop`'s
+`opener` chip (`post` · `edit`) draws it and names the arrow and the X.
