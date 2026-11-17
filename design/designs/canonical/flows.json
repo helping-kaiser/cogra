@@ -224,10 +224,11 @@
     },
     {
       "name": "reply-with-pictures",
-      "description": "Pictures added to a reply land in its tray; one seal signs the words and the pictures together into the thread.",
+      "description": "Pictures added to a reply pass the comment's square crop and land in its tray; one seal signs the words and the pictures together into the thread.",
       "start": { "board": "ReplyEntry", "via": 7, "to": "ReplyCompose" },
       "waypoints": [
-        { "board": "ReplyCompose", "via": 5, "case": "picks land in the tray" },
+        { "board": "ReplyCompose", "via": 5, "case": "pictures — the comment's square crop, then the tray" },
+        { "board": "ReplyCrop", "via": 3, "case": "entered from the reply — the squares join the tray and their cropped exports start uploading" },
         { "board": "ReplyPictures", "via": 3, "to": "ReplySeal" }
       ],
       "end": { "board": "ReplySeal", "via": 9, "case": "signed — the thread reopened where it was left, the reply settling on its parent" }
