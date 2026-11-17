@@ -65,7 +65,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -604,15 +606,9 @@ fun StanceControl(
     // pad over nothing signed carries three controls, over a standing four.
     // A VARIANT PAD CARRIES NO WALK IT BACK (VouchBackPad.md:11).
     val severable = rememberSeverableAtRest(state.standing != null && variant == null, state.busy)
-    val view = LocalView.current
-    val hold = rememberUpdatedState(onHoldDefault)
-    // THE HOLD COMMITS WITH THE PLATFORM'S ONE PULSE (readme §4, *Haptics*).
-    val holdWithPulse = remember(view) {
-        {
-            view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-            hold.value()
-        }
-    }
+    val held = rememberHeldSigning(state, onHoldDefault)
+    val holdWithPulse = held.withPulse
+    val holdWait = held.waiting
 
     StanceConfirmation(state.confirmation, state.walkedBack, target, axes, zeroWords, onConfirmationShown)
     // THE PAD AND THE WALK-BACK DIALOG SAY THEY ARE UP, wherever the control
@@ -665,63 +661,70 @@ fun StanceControl(
             Box { considered() }
         } else {
             var holding by remember { mutableStateOf(false) }
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .sizeIn(minWidth = TARGET_MIN, minHeight = if (wide) WIDE_TARGET_MIN else TARGET_MIN)
-                    .then(
-                        if (wide) {
-                            Modifier
-                                .fillMaxWidth()
-                                .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
-                        } else {
-                            Modifier
-                        },
-                    )
-                    .clip(CircleShape)
-                    .stanceGesture(
-                        enabled = !state.busy,
-                        onHoldDefault = holdWithPulse,
-                        onOpenPad = onOpenPad,
-                        onHolding = { holding = it },
-                    )
-                    // Colour never carries meaning alone, and a drag gesture
-                    // always has a non-drag equivalent (design.md §10): the
-                    // node reads as a button whose name says the opinion,
-                    // double-tap opens the pad as a tap does, double-tap-and-
-                    // hold signs the default as a hold does, and the
-                    // alternates ride the custom action — the master's
-                    // visually-hidden `Choose your opinion on …`.
-                    .semantics(mergeDescendants = true) {
-                        role = Role.Button
-                        contentDescription = description
-                        onClick {
-                            onOpenPad()
-                            true
-                        }
-                        onLongClick {
-                            onHoldDefault()
-                            true
-                        }
-                        customActions = listOf(
-                            CustomAccessibilityAction(chooseLabel) {
-                                onOpenAlternates()
-                                true
+            // The anchor and, beside it in no room at all, the hold's wait as it is
+            // spoken: one child of the column, so the column's gap is not spent.
+            Box {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .sizeIn(minWidth = TARGET_MIN, minHeight = if (wide) WIDE_TARGET_MIN else TARGET_MIN)
+                        .then(
+                            if (wide) {
+                                Modifier
+                                    .fillMaxWidth()
+                                    .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                            } else {
+                                Modifier
                             },
                         )
-                    }
-                    .testTag(anchor?.tag ?: "${testTagPrefix}_stance"),
-            ) {
-                StanceRestingFace(
-                    standing = state.restingPoint,
-                    face = state.restingAnchor(zeroWords),
-                    testTagPrefix = testTagPrefix,
-                    anchor = anchor,
-                    emptyFace = emptyFaceFor(lineFaceInk),
-                    holding = holding,
-                    wide = wide,
-                )
-                considered()
+                        .clip(CircleShape)
+                        .stanceGesture(
+                            enabled = !state.busy,
+                            onHoldDefault = holdWithPulse,
+                            onOpenPad = onOpenPad,
+                            onHolding = { holding = it },
+                        )
+                        // Colour never carries meaning alone, and a drag gesture
+                        // always has a non-drag equivalent (design.md §10): the
+                        // node reads as a button whose name says the opinion,
+                        // double-tap opens the pad as a tap does, double-tap-and-
+                        // hold signs the default as a hold does, and the
+                        // alternates ride the custom action — the master's
+                        // visually-hidden `Choose your opinion on …`.
+                        .semantics(mergeDescendants = true) {
+                            role = Role.Button
+                            contentDescription = description
+                            onClick {
+                                onOpenPad()
+                                true
+                            }
+                            onLongClick {
+                                held.markHeld()
+                                onHoldDefault()
+                                true
+                            }
+                            customActions = listOf(
+                                CustomAccessibilityAction(chooseLabel) {
+                                    onOpenAlternates()
+                                    true
+                                },
+                            )
+                        }
+                        .testTag(anchor?.tag ?: "${testTagPrefix}_stance"),
+                ) {
+                    StanceRestingFace(
+                        standing = state.restingPoint,
+                        face = state.restingAnchor(zeroWords),
+                        testTagPrefix = testTagPrefix,
+                        anchor = anchor,
+                        emptyFace = emptyFaceFor(lineFaceInk),
+                        holding = holding,
+                        ringClosed = holdWait,
+                        wide = wide,
+                    )
+                    considered()
+                }
+                SpokenHoldWait(holdWait)
             }
         }
 
@@ -730,7 +733,7 @@ fun StanceControl(
         // again. With the pad open, the pad's own commit row carries both. A Set
         // whose pad was cancelled while it signed passes its wait here too —
         // Cancel closes the pad, never the act (round 21, ask 16).
-        if (!padOnly) RowLines(state, node, onRetrySigning, testTagPrefix)
+        if (!padOnly) RowLines(state, node, onRetrySigning, testTagPrefix, holdWait)
 
         state.severance?.let { prompt ->
             SeveranceConfirm(
@@ -759,13 +762,80 @@ fun StanceControl(
 }
 
 /**
+ * THE HOLD'S WAIT TAKES NO ROOM (seam 355, jakob's A23): a signing this
+ * control's own hold started waits under the closed ring, never under a
+ * `Signing…` line that grows the card. Any other wait the row carries — a Set
+ * whose pad was cancelled, a Retry from the failure line — keeps its line,
+ * which stands where a line already stood or was asked for.
+ */
+@Stable
+private class HeldSigning(
+    private val marked: MutableState<Boolean>,
+    /** The hold, with the platform's one pulse (readme §4, *Haptics*). */
+    val withPulse: () -> Unit,
+    /** The hold's own signing is running and the pad is closed. */
+    val waiting: Boolean,
+) {
+    /** The hold reached by another way — the accessibility long-press. */
+    fun markHeld() {
+        marked.value = true
+    }
+}
+
+@Composable
+private fun rememberHeldSigning(state: StanceControlState, onHoldDefault: () -> Unit): HeldSigning {
+    val view = LocalView.current
+    val hold = rememberUpdatedState(onHoldDefault)
+    val marked = remember { mutableStateOf(false) }
+    val withPulse = remember(view) {
+        {
+            view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+            marked.value = true
+            hold.value()
+        }
+    }
+    val closed = state.pad == StancePadMode.CLOSED
+    // The held signing is over once its wait ends, or once the pad opens.
+    LaunchedEffect(state.busy, closed) {
+        if (!(state.busy && closed)) marked.value = false
+    }
+    return HeldSigning(marked, withPulse, waiting = marked.value && state.busy && closed)
+}
+
+/**
+ * `Signing…` IS STILL SPOKEN for the hold's wait (seam 355), past the same
+ * 200ms: a zero-size polite live region beside the anchor, never inside it,
+ * so the face's own spoken name stays its opinion.
+ */
+@Composable
+private fun SpokenHoldWait(waiting: Boolean) {
+    val slow = rememberSlow(waiting)
+    if (!(waiting && slow)) return
+    val words = stringResource(R.string.row_line_signing)
+    Box(
+        Modifier
+            .size(0.dp)
+            .semantics {
+                contentDescription = words
+                liveRegion = LiveRegionMode.Polite
+            },
+    )
+}
+
+/**
  * Under the face: what a kept pick waits on, then — the pad closed — the
  * hold's row line.
  */
 @Composable
-private fun RowLines(state: StanceControlState, node: DataNode?, onRetry: () -> Unit, testTagPrefix: String) {
+private fun RowLines(
+    state: StanceControlState,
+    node: DataNode?,
+    onRetry: () -> Unit,
+    testTagPrefix: String,
+    holdWait: Boolean,
+) {
     KeptLine(state, node, testTagPrefix)
-    if (state.pad == StancePadMode.CLOSED) HoldRowLine(state, onRetry = onRetry, testTagPrefix = testTagPrefix)
+    if (state.pad == StancePadMode.CLOSED) HoldRowLine(state, onRetry, testTagPrefix, holdWait)
 }
 
 /**
@@ -778,11 +848,16 @@ private val StanceControlState.restingPoint: StancePoint? get() = kept?.pick ?: 
 private fun StanceControlState.restingAnchor(zeroWords: StanceZeroWords): StanceAnchor? =
     kept?.let { bundleReadout(it.pick, EMPTY_PICK_LABEL) } ?: standing?.let { restingReadout(it, severed, zeroWords) }
 
-/** The hold's row line: `Signing…` past 200ms, `That didn't sign.` with Retry once it fails. */
+/**
+ * The row line: `Signing…` past 200ms, `That didn't sign.` with Retry once it
+ * fails. [holdWait] — a signing this control's own hold started — draws no
+ * `Signing…`: the closed ring is its wait and the line is only spoken (seam 355).
+ */
 @Composable
-private fun HoldRowLine(state: StanceControlState, onRetry: () -> Unit, testTagPrefix: String) {
+private fun HoldRowLine(state: StanceControlState, onRetry: () -> Unit, testTagPrefix: String, holdWait: Boolean) {
     val slow = rememberSlow(state.busy)
     when {
+        holdWait -> Unit
         state.busy && slow -> RowLine(RowLineState.Signing, "${testTagPrefix}_stance_row")
         // The write rule refused the hold: a notice, so the quiet register
         // and no Retry — asking again at once meets the same answer.
@@ -1495,6 +1570,8 @@ private fun StanceRestingFace(
     anchor: DataNode?,
     emptyFace: EmptyFace,
     holding: Boolean,
+    /** The hold went through and its signing runs: the ring stands closed (seam 355). */
+    ringClosed: Boolean,
     wide: Boolean,
 ) {
     Row(
@@ -1531,7 +1608,7 @@ private fun StanceRestingFace(
                     modifier = Modifier.dataNode(anchor?.div("face")),
                 )
             }
-            if (holding) HoldRing()
+            if (holding || ringClosed) HoldRing(closed = ringClosed, tag = "${testTagPrefix}_stance_ring")
         }
         if (standing == null) {
             if (wide) {
@@ -1555,9 +1632,13 @@ private fun StanceRestingFace(
     }
 }
 
-/** The hold's ring (`HoldRing`): 40dp, a 4dp `primary` stroke, no track, filling from twelve o'clock. */
+/**
+ * The hold's ring (`HoldRing`): 40dp, a 4dp `primary` stroke, no track, filling
+ * from twelve o'clock. [closed]: the hold went through and the ring stands whole
+ * while its signing runs, going when the signature is taken (seam 355).
+ */
 @Composable
-private fun HoldRing() {
+private fun HoldRing(closed: Boolean, tag: String) {
     val timeout = LocalViewConfiguration.current.longPressTimeoutMillis.toFloat()
     var progress by remember { mutableFloatStateOf(0f) }
     LaunchedEffect(Unit) {
@@ -1577,12 +1658,12 @@ private fun HoldRing() {
         val ring = measurable.measure(Constraints.fixed(HOLD_RING.roundToPx(), HOLD_RING.roundToPx()))
         layout(0, 0) { ring.place(-ring.width / 2, -ring.height / 2) }
     }
-    Canvas(centred.clearAndSetSemantics { }) {
+    Canvas(centred.testTag(tag).clearAndSetSemantics { }) {
         val stroke = HOLD_RING_STROKE.toPx()
         drawArc(
             color = ink,
             startAngle = -90f,
-            sweepAngle = 360f * progress,
+            sweepAngle = 360f * if (closed) 1f else progress,
             useCenter = false,
             topLeft = Offset(stroke / 2f, stroke / 2f),
             size = Size(size.width - stroke, size.height - stroke),
