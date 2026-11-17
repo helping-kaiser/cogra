@@ -1552,7 +1552,10 @@ residue in the structural record, one-way tombstoning. The dependency
 projection is the actor's finite canonical dependency list
 $\mathrm{deps}(q)$ — each element naming one authored act, never an
 individual leg, declaring that $q$'s key of record must exceed each
-member's (`cond:graph:authoritative-order-dependency-placement`); the
+member's (`cond:graph:authoritative-order-dependency-placement`). The
+encoding is sorted by act identifier, duplicate-free,
+self-dependency-free, bounded in count and byte length, and versioned; the
+canonical empty list is valid and distinct from a missing one. The
 declaration grants no inclusion right. States: full-empty /
 full / tombstoned (list and opening removed, the binding commitment residue
 remaining — the anchor a later opening reopens). Tombstoning changes no
