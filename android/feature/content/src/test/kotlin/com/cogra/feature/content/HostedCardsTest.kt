@@ -100,7 +100,11 @@ class HostedCardsTest {
     private val cards = DataNode("profile") / "comments" / "commentCard"
     private val replies = DataNode("profile") / "comments" / "viewReplies"
 
-    private fun host(signedIn: Boolean = true, body: @Composable (HostedCards) -> Unit) {
+    private fun host(
+        signedIn: Boolean = true,
+        placement: HostedPlacement = HostedPlacement.Profile,
+        body: @Composable (HostedCards) -> Unit,
+    ) {
         compose.setContent {
             HostedCardsScope(
                 doors = doors,
@@ -115,8 +119,9 @@ class HostedCardsTest {
                 ),
                 hooks = CardHooks(viewerId = "u2"),
                 revealed = emptyMap(),
-                tag = "profile",
+                tag = if (placement == HostedPlacement.Profile) "profile" else "tagPage",
                 notify = {},
+                placement = placement,
             ) { hosted -> Column { body(hosted) } }
         }
     }
@@ -237,5 +242,61 @@ class HostedCardsTest {
         assertThat(shown("profile.comments.commentCard.target")).isTrue()
         assertThat(shown("profile.comments.commentCard.menu")).isFalse()
         assertThat(shown("profile.comments.commentCard.actionRow.reply")).isTrue()
+    }
+
+    // -- A tag's page (TagPage.md, TagPageMenu.md) --
+
+    private val tagCard = DataNode("tagPage") / "card"
+    private val tagComment = DataNode("tagPage") / "commentCard"
+
+    // TagPage.md:15 — the feed's post card, wearing `tagPage.card` keyed by
+    // the post's id; the author is not the page here, so the chip is a door.
+    @Test
+    fun aTagPagesPostIsTheFeedsCardAndItsAuthorIsADoor() {
+        host(placement = HostedPlacement.TagPage) { it.post(post(), tagCard) }
+        assertThat(shown("tagPage.card:p1")).isTrue()
+        compose.onNodeIn("tagPage.card:p1", "tagPage.card.authorChip", useUnmergedTree = true).performClick()
+        assertThat(opened).containsExactly("actor:ada")
+        compose.onNodeWithText("Took the coast road.").performClick()
+        assertThat(opened).containsExactly("actor:ada", "post:p1").inOrder()
+    }
+
+    // TagPageMenu.md:3, :5 — a tagged post's ⋮ raises `tagPage.menuSheet`, the
+    // reader's rows under it, Report at the tail.
+    @Test
+    fun aTagPagesPostMenuRaisesTheTagPagesSheet() {
+        host(placement = HostedPlacement.TagPage) { it.post(post(), tagCard) }
+        compose.onNodeWithTag("tagPage.card.menu").performClick()
+        compose.onNodeWithTag("tagPage.menuSheet").assertExists()
+        val tops = listOf(
+            "tagPage.menuSheet.save",
+            "tagPage.menuSheet.cite",
+            "tagPage.menuSheet.hide",
+            "tagPage.menuSheet.license",
+            "tagPage.menuSheet.report",
+        ).map { compose.onNodeWithTag(it).fetchSemanticsNode().boundsInRoot.top }
+        assertThat(tops).isInStrictOrder()
+    }
+
+    // TagPage.md:15, :17 — a tagged comment stands as the comment card leading
+    // with the thread it answers, and offers no Reply and no view-replies line.
+    @Test
+    fun aTaggedCommentLeadsWithItsThreadAndOffersNoReplyAndNoRepliesLine() {
+        host(placement = HostedPlacement.TagPage) { it.comment(comment(replies = 2), tagComment, tagComment, null) }
+        compose.onNodeWithText("On “Salt maps of the coast road” — @sol").assertIsDisplayed()
+        assertThat(shown("tagPage.commentCard.actionRow.reply")).isFalse()
+        assertThat(shown("tagPage.commentCard:c1")).isTrue()
+        compose.onNodeWithText("View 2 replies").assertDoesNotExist()
+        compose.onNodeIn("tagPage.commentCard:c1", "tagPage.commentCard.target").performClick()
+        assertThat(opened).containsExactly("comment:p9/c1")
+    }
+
+    // A tagged comment's author is a door too: the page is the tag's, not theirs.
+    @Test
+    fun aTaggedCommentsAuthorIsADoor() {
+        host(placement = HostedPlacement.TagPage) { it.comment(comment(), tagComment, tagComment, null) }
+        compose.onNodeIn("tagPage.commentCard:c1", "tagPage.commentCard.authorChip", useUnmergedTree = true)
+            .performClick()
+        assertThat(opened).containsExactly("actor:ada")
     }
 }

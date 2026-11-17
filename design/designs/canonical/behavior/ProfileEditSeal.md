@@ -2,6 +2,16 @@
 
 ALWAYS the seal reads back the change as one acts-card row, Profile, saying what the change holds, counted as 1 profile change
 
+ALWAYS the Profile row reads A new followed by the changed parts in the edit's order, picture, display name, bio and website, joined by commas and a last and, as A new picture, bio and website
+
+ALWAYS the Profile row reads The picture removed GIVEN the picture's removal is the only change
+
+ALWAYS the Profile row ends , the picture removed after the other parts, as A new bio, the picture removed GIVEN the picture's removal is staged with other changes
+
+ALWAYS the seal's head shows the picture the change leaves, the monogram GIVEN the picture is removed
+
+ALWAYS the Profile row's value runs on to a second line, never cut off, GIVEN it is longer than one line
+
 ALWAYS the acts card's total reads 1 thing, signed
 
 ALWAYS the acts card carries no all-or-nothing line
@@ -9,6 +19,12 @@ ALWAYS the acts card carries no all-or-nothing line
 ALWAYS the line Every change to your profile is signed in your name and stays in your public record. stands under the acts card
 
 ALWAYS one seal covers a new picture and the fields together GIVEN the picture was changed through the edit
+
+WHEN the seal opens GIVEN the new picture's upload is still running -> the gate line reads Uploading 0 of 1 — signing waits for the picture. over the foot AND Sign the change stays enabled AND a press waits for the upload, then signs
+
+WHEN the new picture's upload fails while the seal waits on it -> the gate line reads One picture didn't upload. Signing waits for it. followed by Retry AND Sign the change is disabled AND NEVER Remove it stands on the seal
+
+WHEN press Retry on the gate line -> the upload starts again AND the gate line returns to its running reading AND Sign the change is enabled again
 
 WHEN tap the "?" -> the dialog Changing your profile opens
 
@@ -57,5 +73,7 @@ WHEN press Close, the header back arrow, the header X or the system's Back GIVEN
 WHEN the change has not answered GIVEN the seal was closed while it signed -> the reader's own profile stands as it was AND the line under its head reads Signing… in the pending marker's quiet register
 
 WHEN the signing does not go through GIVEN the seal was closed while it signed -> the profile's head stands as it was AND the line under it reads That didn't sign. in the failure voice followed by Retry AND NEVER the snackbar carries the failure
+
+WHEN the signing is refused by the write rule or for any other reason, a bug, GIVEN the seal was closed while it signed -> the profile's head stands as it was AND the line under it reads That didn't sign. in the failure voice followed by Retry, as any failure reads AND NEVER the line reads You can't sign right now.
 
 WHEN tap Retry under the profile's head -> the same change is asked to sign again AND the line reads Signing… once 200ms pass without an answer

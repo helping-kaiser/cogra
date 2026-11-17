@@ -1,7 +1,9 @@
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { describe, expect, it } from "vitest";
 
 import { newReferenceDraft } from "@/lib/references/draft";
-import { sealFaultOf } from "./seal-fault";
+import { NOT_THROUGH_LINE, UNVERIFIED_LINE } from "@/lib/ui/error-messages";
+import { sealFaultOf, sealFaultOfFailure, sealFaultOfResults } from "./seal-fault";
 
 const refs = [
   newReferenceDraft("p-1", { kind: "Post", label: "One", href: "/posts/p-1" }),
@@ -39,7 +41,7 @@ describe("sealFaultOf", () => {
   // NetworkError.md:13: the server answered FORBIDDEN — the whole act did not
   // go through, wherever the code was anchored, and it outranks a row.
   it("reads FORBIDDEN as not through, never the bug or a row", () => {
-    expect(sealFaultOf([{ code: "FORBIDDEN", message: "", field: null }], refs)).toEqual({ kind: "notThrough" });
+    expect(sealFaultOf([{ code: "FORBIDDEN", message: "", field: null }], refs)).toEqual({ kind: "notThrough", line: NOT_THROUGH_LINE });
     expect(
       sealFaultOf(
         [
@@ -48,6 +50,86 @@ describe("sealFaultOf", () => {
         ],
         refs,
       ),
-    ).toEqual({ kind: "notThrough" });
+    ).toEqual({ kind: "notThrough", line: NOT_THROUGH_LINE });
+  });
+});
+
+// NetworkError.md:13-19 — every answered fault of the whole act, read once.
+describe("sealFaultOf — the answered whole-act faults", () => {
+  it.each(["INTERNAL", "SIGNATURE_INVALID"] as const)("reads %s as not through", (code) => {
+    expect(sealFaultOf([{ code, message: "", field: null }], refs)).toEqual({
+      kind: "notThrough",
+      line: NOT_THROUGH_LINE,
+    });
+  });
+
+  it("reads a BAD_INPUT naming no field as not through, and one naming a field as before", () => {
+    expect(sealFaultOf([{ code: "BAD_INPUT", message: "", field: null }], refs)).toEqual({
+      kind: "notThrough",
+      line: NOT_THROUGH_LINE,
+    });
+    expect(sealFaultOf([{ code: "BAD_INPUT", message: "", field: [] }], refs)).toEqual({
+      kind: "notThrough",
+      line: NOT_THROUGH_LINE,
+    });
+    expect(sealFaultOf([{ code: "BAD_INPUT", message: "", field: ["content"] }], refs)).toEqual({ kind: "bug" });
+  });
+
+  it("reads EMAIL_NOT_VERIFIED in its own line", () => {
+    expect(sealFaultOf([{ code: "EMAIL_NOT_VERIFIED", message: "", field: null }], refs)).toEqual({
+      kind: "notThrough",
+      line: UNVERIFIED_LINE,
+    });
+  });
+
+  it("still reads the write rule first", () => {
+    expect(
+      sealFaultOf(
+        [
+          { code: "INTERNAL", message: "", field: null },
+          { code: "WRITE_RULE_FAILED", message: "", field: null },
+        ],
+        refs,
+      ),
+    ).toEqual({ kind: "writeRule" });
+  });
+});
+
+describe("sealFaultOfFailure / sealFaultOfResults", () => {
+  const internal = new CombinedGraphQLErrors({ errors: [{ message: "no", extensions: { code: "INTERNAL" } }] });
+
+  // NetworkError.md:13: an INTERNAL on the errors array is an answer.
+  it("reads a transport INTERNAL as not through and a link fault as no answer", () => {
+    expect(sealFaultOfFailure(internal)).toEqual({ kind: "notThrough", line: NOT_THROUGH_LINE });
+    expect(sealFaultOfFailure(new Error("offline"))).toEqual({ kind: "offline" });
+  });
+
+  it("reads a batch: a refusal first, then an answered failed leg, else no answer", () => {
+    expect(sealFaultOfResults([{ kind: "failed", id: "a", cause: internal }], refs)).toEqual({
+      kind: "notThrough",
+      line: NOT_THROUGH_LINE,
+    });
+    expect(
+      sealFaultOfResults(
+        [
+          { kind: "failed", id: "a", cause: internal },
+          { kind: "refused", id: "b", errors: [{ code: "WRITE_RULE_FAILED", message: "", field: null }] },
+        ],
+        refs,
+      ),
+    ).toEqual({ kind: "writeRule" });
+    expect(sealFaultOfResults([{ kind: "failed", id: "a", cause: new Error("x") }, { kind: "awaitingSeal", id: "b" }], refs)).toEqual({
+      kind: "offline",
+    });
+  });
+});
+
+// Seam 355: a refusal the device's own signer made is an answer — not through.
+describe("sealFaultOfResults — the device's own refusal", () => {
+  it("reads rejectedByDevice as not through, never the no-answer line", () => {
+    expect(sealFaultOfResults([{ kind: "rejectedByDevice", id: "a", reason: "bad seal" }], refs)).toEqual({
+      kind: "notThrough",
+      line: NOT_THROUGH_LINE,
+    });
   });
 });
