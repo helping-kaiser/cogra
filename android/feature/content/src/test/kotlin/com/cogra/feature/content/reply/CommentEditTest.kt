@@ -498,7 +498,9 @@ class CommentEditTest {
         }
 
         compose.onNodeWithText("The cover").assertExists()
-        compose.onNodeWithText("The cover takes the video's shape.").assertExists()
+        // No line under the crop (CoverCrop.jsx; round 44).
+        compose.onNodeWithText("The cover takes the video's shape.").assertDoesNotExist()
+        compose.onNodeWithText("Drag to move, pinch to zoom.").assertDoesNotExist()
         compose.onNodeWithTag("composeCrop.shapes").assertDoesNotExist()
         compose.onNodeWithContentDescription(COMMENT_EDIT_LEAVE_LABEL).performClick()
         assertThat(leaves).isEqualTo(1)
