@@ -9,7 +9,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.StancePoint
-import com.cogra.core.designsystem.pair
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -32,7 +31,7 @@ class ReferenceRowTest {
             ReferenceRow(MarkKind.POST, "Salt maps", edge = RowEdge.Citation(point), onOpen = {}, node = node)
         }
         // The twenty faces' glyph stands, but the word is withheld: a citation is not a stance.
-        compose.onNodeWithContentDescription(point.pair()).assertExists()
+        compose.onNodeWithContentDescription("+0.40 / +0.20").assertExists()
     }
 
     @Test
