@@ -945,8 +945,6 @@ rests, FAIL and INDECISIVE included, as a whole certificate to the
 party the comparison measures, with the rejection and unasked; a bare
 rejection without the enclosure the host compared is forbidden. An
 own-balance comparison measures the author whose act it compares.
-[layer1-interface.md](primitive/layer1-interface.md) reproduces
-v0.32.0, which has no such duty.
 
 At close the stand-in orders an approved act only when its author's
 balance pays θ. An act whose author cannot pay is left unwritten,
