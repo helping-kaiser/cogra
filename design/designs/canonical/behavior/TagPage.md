@@ -53,3 +53,7 @@ WHEN a guest taps a stance face on the tag page -> the guest gate opens over the
 WHEN a press-and-hold on the topic's stance face lands -> a positive Affinity is signed AND the topic is held
 
 WHEN tap the topic's stance face GIVEN the topic is not held -> the pad blooms with the master's three controls
+
+WHEN the page's first read gets no answer -> the header stands AND the line Can't reach the server — this tag can't load right now. stands in the page's place over an outlined Retry AND NEVER the stance row or a card stands
+
+WHEN tap Retry -> the page is read again AND it answers as the read does

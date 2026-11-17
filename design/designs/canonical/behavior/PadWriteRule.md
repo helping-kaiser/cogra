@@ -1,6 +1,6 @@
 # PadWriteRule · `spec:design:behavior-pad-write-rule`
 
-WHEN the write rule refuses the pad's signing -> the pad stays open at the pick AND the field and the standing line stay where they were AND the notice You can't sign right now stands where the landing line and the commit row were, over Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent. AND Not now stands under the notice
+WHEN the write rule refuses the pad's signing -> the pad stays open at the pick AND the field and the standing line stay where they were AND the notice You can't sign right now stands where the landing line and the commit row were, over Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent. AND feed.card.actionRow.stance.pad.notNow stands under the notice
 
 ALWAYS nothing is staged, signed or spent GIVEN the notice stands
 
@@ -18,10 +18,10 @@ WHEN tap the pad's ? -> the pad's four help lines replace its field in place AND
 
 WHEN drag on the pad field GIVEN the notice stands -> the pick moves AND the notice stays AND NEVER anything is signed
 
-WHEN tap Not now -> the pad closes AND nothing is signed or spent AND the pick is not kept AND the standing opinion is what it was
+WHEN tap feed.card.actionRow.stance.pad.notNow -> the pad closes AND nothing is signed or spent AND the pick is not kept AND the standing opinion is what it was
 
 WHEN press outside the pad, press the system's Back or press Escape GIVEN the notice stands -> the pad closes AND nothing is signed or spent AND the pick is not kept
 
-WHEN the write rule refuses the alternates' signing GIVEN the reader's input is sliders or typed values -> the dialog stays up at the pick AND the readouts and the tracks stay where they were AND the same notice stands where the landing line and the action row were, with its own ? AND Not now stands under it AND NEVER a Retry, Sign it, Cancel or Walk it back stands
+WHEN the write rule refuses the alternates' signing GIVEN the reader's input is sliders or typed values -> the dialog stays up at the pick AND the readouts and the tracks stay where they were AND the same notice stands where the landing line and the row of actions were, with its own ? AND the notice's way out stands under it, worded as feed.card.actionRow.stance.pad.notNow AND NEVER a Retry, Sign it, Cancel or Walk it back stands
 
-WHEN tap Not now in the alternates -> the dialog closes AND nothing is signed or spent AND the pick is not kept
+WHEN tap the notice's way out in the alternates -> the dialog closes AND nothing is signed or spent AND the pick is not kept

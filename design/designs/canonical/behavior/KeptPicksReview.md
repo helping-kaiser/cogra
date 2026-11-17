@@ -12,7 +12,7 @@ ALWAYS a kept vouch-back or approval never joins the review
 
 ALWAYS a kept pick whose target was removed or redacted keeps its row, wearing the removed-mark face in place of a live preview, and still signs
 
-ALWAYS each kept pick's row reads its target's kind under the name: Post, Comment, Person or Topic
+ALWAYS each kept pick's row reads its target's kind under the name: Post, Comment, Person or Tag
 
 ALWAYS a kept pick whose target's read gets no answer keeps its row, named by its kind alone, A post, A comment or A person, over its kind word, and still signs
 
