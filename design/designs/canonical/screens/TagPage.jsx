@@ -99,7 +99,7 @@
    — a space, a character no name may carry, past 128 — names no Type at
    all, so the answer is the not-found family's, `ProfileNotFound`'s shape:
    the header keeping the name asked for, since it is the only thing known
-   about what was asked, `This tag doesn't exist.` as an `EmptyState` in the
+   about what was asked (jakob 2026-11-17: "keep the asked for name"), `This tag doesn't exist.` as an `EmptyState` in the
    page's place, no Retry and no stance row — nothing about asking again
    makes a tag exist. A LEGAL name nobody has used is not this: it is a tag
    nothing carries yet (`TagPageEmpty`). */
