@@ -468,6 +468,7 @@ fun PostDetailScreen(
                                 // Over the page — never stacked.
                                 onLicense = { license -> licenseShown = license },
                                 onCitedBy = { reading = Reading.CitedBy },
+                                onOpinions = { reading = Reading.Opinions },
                                 onShare = share,
                                 onReport = { id -> reportFor = id },
                                 node = header / "menu",
@@ -620,7 +621,8 @@ fun PostDetailScreen(
         // the words' and pictures' place (Removed.md).
         if (removeOpen) DetailRemoveConfirm(post, onClose = { removeOpen = false })
         // A READING, over the detail, the post still open beneath it (CitedBy.md:3).
-        ReadingSheet(reading, post?.id, ReadingHost(onOpenPost, "detail", registered = true)) { reading = null }
+        val readings = postReadings(onOpenPost, onOpenActor, "detail", registered = true)
+        ReadingSheet(reading, post?.id, readings) { reading = null }
         // The confirm rises where the menu stood, over this page; it says it
         // is up itself, so the detail clip stops beneath it.
         reportFor?.let { id ->
@@ -664,6 +666,7 @@ private fun DetailMenu(
     onRemove: () -> Unit,
     onLicense: (LicenseChoice) -> Unit,
     onCitedBy: () -> Unit,
+    onOpinions: () -> Unit,
     onShare: (String) -> Unit,
     onReport: (String) -> Unit,
     node: DataNode,
@@ -693,6 +696,7 @@ private fun DetailMenu(
             onRemove = onRemove,
             onLicense = { onLicense(post.license) },
             onCitedBy = onCitedBy,
+            onOpinions = onOpinions,
             onShare = shareRow,
             testTagPrefix = "detail_menu",
             onReport = { onReport(post.id) },

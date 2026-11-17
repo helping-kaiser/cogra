@@ -1318,6 +1318,7 @@ internal val POST_MENU_ROWS = setOf(
     PostMenuRow.Cite,
     PostMenuRow.Hide,
     PostMenuRow.CitedBy,
+    PostMenuRow.Opinions,
     PostMenuRow.License,
     PostMenuRow.Report,
     PostMenuRow.Edit,
@@ -1327,8 +1328,7 @@ internal val POST_MENU_ROWS = setOf(
 
 /**
  * The feed's comment card menu: `feed.menuSheet`, its registered rows
- * (FeedCommentMenu, FeedCommentMenuOwn). `Opinions on this` keeps its
- * per-comment tag until its sheet lands on this client.
+ * (FeedCommentMenu, FeedCommentMenuOwn).
  */
 internal val FEED_COMMENT_MENU = CommentMenuPlacement(
     sheet = FEED / "menuSheet",
@@ -1338,6 +1338,7 @@ internal val FEED_COMMENT_MENU = CommentMenuPlacement(
         CommentMenuRow.Edit,
         CommentMenuRow.Remove,
         CommentMenuRow.CitedBy,
+        CommentMenuRow.Opinions,
         CommentMenuRow.License,
         CommentMenuRow.Report,
     ),
@@ -1554,6 +1555,7 @@ private fun CardMenuHeader(
                 onRemove = { removeOpen = true },
                 onLicense = { licenseShown = post.license },
                 onCitedBy = { reading = Reading.CitedBy },
+                onOpinions = { reading = Reading.Opinions },
                 onShare = shareRow,
                 // The rows sit under the trigger's own tag, which
                 // `ContentCardHeader` derives the same way.
@@ -1579,7 +1581,7 @@ private fun CardMenuHeader(
     }
     if (removeOpen) CardRemoveConfirm(post, placement, tag, onClose = { removeOpen = false })
     // A READING, over the host, the list still open beneath it (CitedBy.md:5).
-    ReadingSheet(reading, post.id, ReadingHost(onOpenPost, tag), onDismiss = { reading = null })
+    ReadingSheet(reading, post.id, postReadings(onOpenPost, onOpenActor, tag)) { reading = null }
 }
 
 /**

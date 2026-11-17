@@ -215,6 +215,10 @@
     <!-- What cites this (CitedBy.md, CommentCitedByEmpty.md): one title on both doors. -->
     <string name="content_cited_by_title">Cited by</string>
     <string name="content_cited_by_empty">Nothing cites this yet</string>
+    <!-- Who holds an opinion on this (PostOpinions.md, CommentOpinionsEmpty.md; copy-voice, the opinions list). -->
+    <string name="content_opinions_title_post">Opinions on this post</string>
+    <string name="content_opinions_title_comment">Opinions on this comment</string>
+    <string name="content_opinions_empty">No opinions yet</string>
     <!-- The comment feed card (`_shared.jsx` CommentFeedCard; FeedCommentShapes.md): the head
          row's door names what the comment answers, and the comment glyph is the reply. -->
     <string name="content_card_on">On %1$s</string>

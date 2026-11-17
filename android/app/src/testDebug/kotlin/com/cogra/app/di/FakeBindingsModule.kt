@@ -74,6 +74,7 @@ import com.cogra.domain.removal.RemovalRepository
 import com.cogra.domain.stance.HeldOpinion
 import com.cogra.domain.stance.KeptPickStore
 import com.cogra.domain.stance.KeptPreviewRepository
+import com.cogra.domain.stance.NodeOpinionsRepository
 import com.cogra.domain.stance.OpinionDirection
 import com.cogra.domain.report.ReportRepository
 import com.cogra.domain.saved.SavedRepository
@@ -903,6 +904,13 @@ object FakeBindingsModule {
     @Provides
     fun citedByRepository(): CitedByRepository = object : CitedByRepository {
         override suspend fun citedBy(nodeId: String) = Outcome.Success(emptyList<CitingArtifact<CitingView>>())
+    }
+
+    // Nobody holds an opinion on anything, by default: an opinions sheet
+    // opened in a nav test reads its empty line.
+    @Provides
+    fun nodeOpinionsRepository(): NodeOpinionsRepository = object : NodeOpinionsRepository {
+        override suspend fun opinionsOn(nodeId: String) = Outcome.Success(emptyList<HeldOpinion>())
     }
 
     // A member with nothing standing, by default: no band, and the row opens

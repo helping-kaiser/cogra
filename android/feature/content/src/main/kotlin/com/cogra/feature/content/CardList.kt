@@ -189,6 +189,7 @@ internal fun ListCommentCard(
         onCite = { actions.onCitePost(comment.id) },
         onLicense = { licenseOpen = true },
         onCitedBy = { reading = Reading.CitedBy },
+        onOpinions = { reading = Reading.Opinions },
         stanceControl = actions.stanceControl,
         shape = shape,
         authorHere = authorHere,
@@ -199,7 +200,8 @@ internal fun ListCommentCard(
     }
     // A READING, over the host and unstacked, as the menu rose (FeedCommentMenu.md:11,
     // HistoryCommentMenu.md:11, SavedCommentMenu.md:13, ProfileCommentsMenu.md:11).
-    ReadingSheet(reading, comment.id, ReadingHost(doors.onOpenPost, testTagPrefix), onDismiss = { reading = null })
+    val readings = commentReadings(doors.onOpenPost, doors.onOpenActor, testTagPrefix)
+    ReadingSheet(reading, comment.id, readings) { reading = null }
     // The own comment's menu off its thread (RM-G9): the comment's confirm,
     // over the list; taken, the card stands as its mark in place.
     if (removeOpen) {
