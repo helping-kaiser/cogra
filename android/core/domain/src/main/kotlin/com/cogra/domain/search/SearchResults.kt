@@ -203,13 +203,7 @@ fun layoutResults(
         if (section != previous) {
             // The people section closes with its door, where more match (:7).
             if (previous == SearchSection.PEOPLE && hasMorePeople && !profilesAlone) items += ResultItem.ProfilesDoor
-            // Every section under its caption (ExploreSearch.md:11); Profiles
-            // alone stands its people with none (ExplorePerson.md:21).
-            when (section) {
-                SearchSection.PEOPLE -> if (!profilesAlone) items += ResultItem.ProfilesLabel
-                SearchSection.TOPICS -> items += ResultItem.TagsLabel
-                SearchSection.CONTENT -> items += ResultItem.ContentLabel
-            }
+            captionOf(section, profilesAlone)?.let { items += it }
             previous = section
             seamed = false
         }
@@ -221,4 +215,14 @@ fun layoutResults(
     }
     if (previous == SearchSection.PEOPLE && hasMorePeople && !profilesAlone) items += ResultItem.ProfilesDoor
     return items
+}
+
+/**
+ * Every section stands under its caption (ExploreSearch.md:11); Profiles
+ * alone stands its people with none (ExplorePerson.md:21).
+ */
+private fun captionOf(section: SearchSection, profilesAlone: Boolean): ResultItem? = when (section) {
+    SearchSection.PEOPLE -> ResultItem.ProfilesLabel.takeUnless { profilesAlone }
+    SearchSection.TOPICS -> ResultItem.TagsLabel
+    SearchSection.CONTENT -> ResultItem.ContentLabel
 }
