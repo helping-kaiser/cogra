@@ -10,7 +10,7 @@ ALWAYS the rows read the same whichever removed the post, its author or a passed
 
 WHEN tap feed.menuSheet.save -> the removed post is kept as any post is kept AND the sheet closes
 
-WHEN tap feed.menuSheet.cite -> the post wizard opens fresh at its first stage AND the removed post rides along unseen until the details stage
+WHEN tap feed.menuSheet.cite -> the post wizard opens as New post opens it, fresh at its first stage or, with a draft kept on this device, under the draft card, whose Continue takes what rides along into the draft AND the removed post rides along unseen until the details stage
 
 WHEN tap feed.menuSheet.hide -> the sheet closes AND the author is hidden as from any post of theirs AND that person's rows leave the feed, their posts and their comment cards alike, AND NEVER a confirm step appears
 

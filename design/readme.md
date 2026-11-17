@@ -12305,12 +12305,19 @@ the email line (impl 354, 351, "as rec"), built on rounds 48–50 (ecffb3ba9).
   threshold gates the spoken `Signing…`, and an edit's fault draws no
   `Back`. Backlog 250–255 closed; 256 filed (a Cite or Mention door
   opened over a kept draft).
+- **Act 3 (jakob 2026-11-17, 256 (a))**: a wizard opened by Cite, Mention
+  or a tag card's compose glyph while a draft is kept meets the draft card,
+  as from New post; `Continue` resumes the draft and what the door brought
+  joins it, `Discard` starts a fresh pick with it riding; with no draft
+  kept the door opens fresh at the first stage. Leaving the draft card by
+  its arrow or X keeps the draft as it was. Every door's sidecar and graph
+  edge carries the kept-draft case (`ComposeDraft`). Backlog 256 closed.
 
 ### Round 52, a comment's pictures cropped square, the crop fits the window, the cover beside the clip — 2026-11-17
 
 jakob's answers of 2026-11-17 to the hand test's eight decisions ("All as
 rec"), his 2, 3 and 4, built on rounds 48–50 merged (ecffb3ba9), round 51
-merged in (6f95dac35, then its act 2, 55cd99081).
+merged in (6f95dac35, then its acts 2 and 3, 55cd99081 and c126296b8).
 
 - **A comment's pictures are cropped square** (2; his W2: "ofcourse all
   media should be square in comments but why is there no crop step for

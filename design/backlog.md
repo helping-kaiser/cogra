@@ -6382,7 +6382,7 @@ only the signing hosts and left it: (a) as drawn; (b) the rule's dialog shape.
 
 Closed by round 51, act 2 (jakob 2026-11-17, B6 as recommended): (b) — a failed report keeps its sheet up, the line above the pair in the answer's words, `Report` reading `Retry`, never the snackbar (`ReportConfirm` and `FeedReportConfirm`, `answer` chip).
 
-### 256 · A Cite or Mention door opened over a kept draft · *design* · **filed 2026-11-17**
+### 256 · A Cite or Mention door opened over a kept draft · *design* · **filed 2026-11-17** · **closed 2026-11-17**
 
 Round 51, act 2 (jakob 2026-11-17, B5: Cite and Mention are "just like another door to the wizard"). From New
 post, a kept draft's card leads the pick step (`ComposeDraft`); the Cite and Mention edges say the wizard "opens
@@ -6392,6 +6392,8 @@ fresh at its first stage" with the reference riding along (graph, every `Cite in
 among its references; `Discard` starts fresh with the reference riding; (b) the draft card leads; the reference
 rides only a fresh start, and `Continue` resumes the draft without it; (c) the door opens fresh as its edge
 says, the kept draft waiting untouched behind it.
+
+Closed by round 51, act 3 (jakob 2026-11-17, option (a), "as rec"): from Cite, Mention or a tag card's compose glyph with a draft kept, the draft card leads as from New post; `Continue` resumes the draft and what the door brought joins it, `Discard` starts a fresh pick with it riding; with no draft kept the door opens fresh (`ComposeDraft`, `ComposeDraftDiscard`, `ComposeCited`, every door's sidecar and graph edge).
 
 ### 260 · The reply composer: the clip and its cover do not fit side by side · *design* · **filed 2026-11-17** · **closed 2026-11-17**
 
