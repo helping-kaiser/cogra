@@ -309,7 +309,7 @@ describe("runUpload", () => {
     });
   });
 
-  it("marks an unreachable server retryable and an unreadable picture not", async () => {
+  it("marks an unreachable server retryable, and a picture whose read failed too", async () => {
     encodable();
     const unreachable = {
       mutate: vi.fn(async () => {
@@ -324,7 +324,9 @@ describe("runUpload", () => {
       retryable: true,
     });
 
-    // No decoder at all: the picture never becomes bytes, so a retry is a lie.
+    // A read that fails is RETRYABLE (hand test 2026-11-17): the picture was
+    // read once already, so this is the moment's fault, and Retry runs the
+    // same leg a fresh add would.
     vi.stubGlobal(
       "createImageBitmap",
       vi.fn(async () => {
@@ -335,8 +337,26 @@ describe("runUpload", () => {
     await runUpload(clientAnswering({}), guard, asset, 1, broken.step);
     expect(broken.seen).toEqual([
       { kind: "encoding" },
-      { kind: "failed", message: "This browser couldn't read that picture.", retryable: false },
+      { kind: "failed", message: "This browser couldn't read that picture.", retryable: true },
     ]);
+  });
+
+  // THE RETRY IS A WHOLE NEW LEG. A read that failed once and reads now lands
+  // on the second run over the same asset — no state from the failed run is
+  // carried into it.
+  it("lands on a second run over the same asset once the read succeeds", async () => {
+    encodable();
+    const decode = vi.mocked(createImageBitmap);
+    decode.mockRejectedValueOnce(new DOMException("could not be read", "NotReadableError"));
+    const client = clientEchoing("m-again");
+
+    const first = steps();
+    await runUpload(client, guard, asset, 1, first.step);
+    expect(first.seen.at(-1)).toMatchObject({ kind: "failed", retryable: true });
+
+    const second = steps();
+    await runUpload(client, guard, asset, 1, second.step);
+    expect(second.seen.at(-1)).toEqual(done("m-again"));
   });
 
   it("never rejects, whatever fails", async () => {
@@ -702,6 +722,39 @@ describe("runVideoUpload", () => {
     });
     // The cover went up; the video never did.
     expect((client.mutate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1);
+  });
+
+  // The reply's hand test (2026-11-17): a cover whose read failed kept failing
+  // on every Retry. Its read failure is the picture's — retryable — and the
+  // clip's Retry runs the pair again.
+  it("says a cover that could not be read can be tried again, and the pair lands on the next run", async () => {
+    encodable();
+    vi.mocked(createImageBitmap).mockRejectedValueOnce(
+      new DOMException("could not be read", "NotReadableError"),
+    );
+    const client = clientAnsweringInTurn("media-cover", "media-video");
+
+    const video = steps();
+    const poster = steps();
+    await runVideoUpload(client, guard, clip, cover, video.step, poster.step, SCALE);
+    expect(poster.seen.at(-1)).toEqual({
+      kind: "failed",
+      message: "This browser couldn't read that cover.",
+      retryable: true,
+    });
+    expect(video.seen.at(-1)).toEqual({
+      kind: "failed",
+      message: "The cover didn't upload.",
+      retryable: true,
+    });
+
+    const again = steps();
+    const posterAgain = steps();
+    await runVideoUpload(client, guard, clip, cover, again.step, posterAgain.step, SCALE, {
+      sleep: async () => {},
+    });
+    expect(posterAgain.seen.at(-1)).toMatchObject({ kind: "done", mediaId: "media-cover" });
+    expect(again.seen.at(-1)).toMatchObject({ kind: "done", mediaId: "media-video" });
   });
 
   it("compresses first, for the destination's cap, and strips what the compression made", async () => {

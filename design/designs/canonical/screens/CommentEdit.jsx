@@ -52,14 +52,24 @@
    past 200ms the commit reads `Signing the edit…`, and the header's X —
    named `Close` from the press — and its arrow close the edit while it goes
    on; the edited card carries the wait and the answer (`SigningAfterClose`). */
+/* THE `tag` CHIP (round 50, jakob 2026-11-17, his 19): `refused` stages a
+   second tag, `#saltmaps`, picked in this edit, and draws the server's answer
+   at Sign that it did not land — `This tag didn't land.` with `Remove it`
+   under the chips, the chip ringed in the error ink, `Sign the edit` standing
+   (`editTagRefusedLine`). With one tag on the row the ring would say nothing
+   the line does not. */
 export const NODE = "commentEdit";
 export const PROPS = {
   target: { editor: "enum", options: ["live", "removed"], default: "live" },
   upload: { editor: "enum", options: ["none", "uploading"], default: "none" },
   body: { editor: "enum", options: ["pictures", "words"], default: "pictures" },
   signing: { editor: "enum", options: ["none", "signing"], default: "none" },
+  /* THE `post` CHIP draws the line when the comment's post was removed
+     (jakob 2026-11-17): `Your comment on @ada's removed post.` */
+  post: { editor: "enum", options: ["live", "removed"], default: "live" },
+  tag: { editor: "enum", options: ["landed", "refused"], default: "landed" },
 };
-export const VALS = `signRestShown: this.props.signing === "signing" ? "none" : "block", signBusyShown: this.props.signing === "signing" ? "block" : "none", liveShown: this.props.target === "removed" ? "none" : "block", removedShown: this.props.target === "removed" ? "block" : "none", gateShown: this.props.upload === "uploading" ? "block" : "none", picturesShown: this.props.body === "words" ? "none" : "flex", addLabel: this.props.body === "words" ? "+ Add pictures or a video" : "+ Add pictures · 1 of 4"`;
+export const VALS = `signRestShown: this.props.signing === "signing" ? "none" : "block", signBusyShown: this.props.signing === "signing" ? "block" : "none", liveShown: this.props.target === "removed" ? "none" : "block", removedShown: this.props.target === "removed" ? "block" : "none", gateShown: this.props.upload === "uploading" ? "block" : "none", picturesShown: this.props.body === "words" ? "none" : "flex", addLabel: this.props.body === "words" ? "+ Add pictures or a video" : "+ Add pictures · 1 of 4", postLiveShown: this.props.post === "removed" ? "none" : "block", postRemovedShown: this.props.post === "removed" ? "block" : "none", tagRing: this.props.tag === "refused" ? "1px solid var(--error)" : "none", tagRefusedShown: this.props.tag === "refused" ? "block" : "none", tagSecondShown: this.props.tag === "refused" ? "inline-flex" : "none"`;
 
 export function Screen() {
   return <CommentEditBody holes bodyChip />;

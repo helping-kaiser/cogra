@@ -49,7 +49,7 @@ export type Crop = {
   readonly y: number;
   /**
    * The library's zoom: the picture's scale over its whole-picture fit in the
-   * stage. Held between the frame's fill and about 4× of it (`zoomBounds`).
+   * stage. Held between the frame's fill and 10× of it (`zoomBounds`).
    */
   readonly zoom: number;
   /**
@@ -67,11 +67,11 @@ export type Crop = {
 
 /**
  * The zoom track's two ends, as shares of the frame's fill: the floor is the
- * fill itself, the ceiling about 4× (CropViewport.jsx `CROP_ZOOM_MIN` /
+ * fill itself, the ceiling 10× (CropViewport.jsx `CROP_ZOOM_MIN` /
  * `CROP_ZOOM_MAX`; each crop's sidecar).
  */
 export const MIN_ZOOM = 1;
-export const MAX_ZOOM = 4;
+export const MAX_ZOOM = 10;
 
 /**
  * Untouched. Its zoom of 1 is the whole picture in the stage, under the floor
@@ -186,10 +186,10 @@ export type ZoomBounds = { readonly floor: number; readonly ceiling: number };
  * fit, `fittedPicture`) under the frame of `ratio`.
  *
  * The floor is the frame's fill: nothing outside the picture can show inside
- * the frame. The ceiling is about 4× — of the TALLEST frame the stage holds on
+ * the frame. The ceiling is 10× — of the TALLEST frame the stage holds on
  * a post, so that a shape switch, which may only ever raise the zoom
  * (ComposeCrop.md:19-21), never meets a ceiling below where the picture
- * stands. A cover and the circle have one frame, so theirs is 4× their fill.
+ * stands. A cover and the circle have one frame, so theirs is 10× their fill.
  */
 export function zoomBounds(kind: CropKind, picture: Size, ratio: number, stageWidth: number): ZoomBounds {
   const floor = fillOf(picture, frameOf(kind, ratio, stageWidth));

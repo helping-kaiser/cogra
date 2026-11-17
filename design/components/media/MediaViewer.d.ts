@@ -18,6 +18,7 @@
  */
 export interface MediaViewerItem {
   src?: string;
+  /** A clip's still before it plays: the clip's OWN frame at its own shape, never the 4:5 cover a card wears (jakob 2026-11-13, V1); the cover stands in only where the clip cannot load, whole at its 4:5. */
   poster?: string;
   alt?: string;
   kind?: "image" | "video";

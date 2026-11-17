@@ -33,7 +33,7 @@ import { useApolloClient } from "@apollo/client/react";
 import { useRouter } from "next/navigation";
 
 import { fetchMe } from "@/lib/api/auth-api";
-import { hasCode, type Outcome } from "@/lib/api/outcome";
+import type { Outcome } from "@/lib/api/outcome";
 import {
   fetchInvites,
   rejectApplication,
@@ -63,6 +63,7 @@ import {
   CLOSING_THEM,
   COPY_THE_LINK,
   CREATE_INVITE,
+  DIDNT_SEND,
   HOW_VOUCHING_WORKS,
   HOW_VOUCHING_WORKS_HELP,
   INVITES_EMPTY,
@@ -118,7 +119,7 @@ import { StanceControl } from "@/lib/ui/stance-control";
 import { signedLine } from "@/lib/ui/stance-readout";
 import { ladderAge } from "@/lib/ui/timestamp";
 import { TransportError } from "@/lib/ui/transport-error";
-import { NOT_THROUGH_LINE } from "@/lib/ui/error-messages";
+import { outcomeFaultLine } from "@/lib/ui/error-messages";
 import { AddressCard } from "@/lib/ui2/address-card";
 import { ContentRow } from "@/lib/ui2/content-row";
 import { SectionLabel } from "@/lib/ui2/section-label";
@@ -174,7 +175,8 @@ export function InvitesView({
   const [approving, setApproving] = useState<string | null>(null);
   const [closing, setClosing] = useState<Closing | null>(null);
   const [revoking, setRevoking] = useState<{ id: string; slow: boolean } | null>(null);
-  const [revokeFault, setRevokeFault] = useState<"failed" | "notThrough" | null>(null);
+  // The revoke's fault: its answered line, or undefined for no answer (TransportError's own).
+  const [revokeFault, setRevokeFault] = useState<{ readonly line: string | undefined } | null>(null);
   // The link whose copy did not go through: its card carries the line (Invites.md:59).
   const [copyFailed, setCopyFailed] = useState<string | null>(null);
   // What an ask link handed over on the way here: its snackbar, and the row
@@ -309,7 +311,7 @@ export function InvitesView({
     } else {
       // The card stays (:59).
       setRevoking(null);
-      setRevokeFault(hasCode(outcome, "FORBIDDEN") ? "notThrough" : "failed");
+      setRevokeFault({ line: outcomeFaultLine(outcome) ?? undefined });
     }
   };
 
@@ -318,7 +320,7 @@ export function InvitesView({
       asked.kind === "one"
         ? await guard.run(() => rejectApplication(client, asked.application.id))
         : await guard.run(() => rejectLinkApplications(client, asked.group.linkId));
-    if (outcome.kind !== "success") return hasCode(outcome, "FORBIDDEN") ? "notThrough" : "failed";
+    if (outcome.kind !== "success") return { line: outcomeFaultLine(outcome) ?? DIDNT_SEND };
     // A kept approval's close drops the kept vouch; nothing is signed
     // (RejectConfirm.md:7, Invites.md:89).
     const closed = asked.kind === "one" ? [asked.application] : asked.group.rows;
@@ -494,7 +496,7 @@ export function InvitesView({
             <div className="px-6 pt-2">
               <TransportError
                 testId="invites-revoke-failed"
-                message={revokeFault === "notThrough" ? NOT_THROUGH_LINE : undefined}
+                message={revokeFault.line}
               />
             </div>
           )}

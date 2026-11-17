@@ -141,7 +141,13 @@ export function CommentCard({
      `fieldOpacity`; it carries down to the replies, as `signedIn` does. The
      list card's comment glyph (`replyGlyph`) never wears it: it is the door to
      READING the thread, open to an applicant (jakob 2026-11-13); the lock is the
-     thread's foot and its `Reply`. */
+     thread's foot and its `Reply`.
+
+     A GUEST'S DOORS STAND TOO (GuestGate.md:3): signed out, `Reply` and the
+     list card's comment glyph are drawn at full strength, as every drawn guest
+     board draws a guest's acting controls (`Main`, `FeedBare`, `GuestGate`) —
+     the dimmed look is the applicant's alone. `Reply` raises the join ask;
+     the glyph opens the thread as for anyone. `signedIn` gates neither. */
   replyOpacity,
   /* SHARE CLOSES THE ROW where it is given — the feed card's — exactly as
      `PostCard`'s does. A thread passes none. */
@@ -423,7 +429,7 @@ export function CommentCard({
             the comment grows lands beside it — and it spreads across the card
             the same way, every control on a 48px target (jakob's ruling, the
             geek round). */}
-        {(showStance || score !== undefined || (signedIn && onReply) || onShare || actions) && (
+        {(showStance || score !== undefined || onReply || onShare || actions) && (
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", columnGap: "var(--space-2)", rowGap: "var(--space-1)", width: "100%" }} data-node={node && "actionRow"}>
           {/* Owned by the shell — see PostCard. Named as PostCard names its
               row (seam 248): `stance`, `score`, `reply`, `share`. */}
@@ -431,10 +437,10 @@ export function CommentCard({
           {score !== undefined && (
             <ExplainableNumber glyph="graph" label="Feed score" value={score} onOpenDetail={onOpenScore ?? (() => {})} node={node && "score"} />
           )}
-          {signedIn && onReply && replyGlyph && (
+          {onReply && replyGlyph && (
             <GlyphAction glyph="chat_bubble" label={author ? `Reply to @${author.handle}` : "Reply"} onPress={onReply} node={node && "reply"} />
           )}
-          {signedIn && onReply && !replyGlyph && (
+          {onReply && !replyGlyph && (
             <Button variant="text" size="sm" onClick={onReply} style={replyOpacity !== undefined ? { opacity: replyOpacity } : undefined} node={node && "reply"}>
               Reply
             </Button>
