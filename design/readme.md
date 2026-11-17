@@ -12076,13 +12076,13 @@ built on round 48's final tree (merged in, fe728bfd7).
     and the registry takes no change to it without the implementers'
     agreement, so the row stays keyed by the selected shape for now.
 - **The gate**: against round 48's final tree (fe728bfd7), 209 → 212
-  screens (`ReelMenu`, `ComposeSeal`, `ReplySeal`), 8126 → 8389 board
-  paths, 2151 → 2229 distinct — 78 added, none gone, and no board lost a
+  screens (`ReelMenu`, `ComposeSeal`, `ReplySeal`), 8126 → 8432 board
+  paths, 2151 → 2235 distinct — 84 added, none gone, and no board lost a
   path; the narrow phone's row keeps `menuSheet.share`. Flows re-blessed:
-  `cite-a-post` 25 → 26 origins, and the landing card's six (`reply-to-a-post`,
+  `cite-a-post` 25 → 26 origins, and the landing cards' (`reply-to-a-post`,
   `take-a-stance-on-a-post`, `open-a-posts-pictures`, `watch-the-stream`,
-  `follow-a-citation`, `trace-a-score-to-its-records`). Backlog 230 and 231
-  filed; 220 closed; 223 amended.
+  `follow-a-citation`, `trace-a-score-to-its-records`). Backlog 230 filed;
+  220 and 231 closed; 223 amended.
 ---
 
 ## 14. The canvases
