@@ -1014,7 +1014,11 @@ boards already speak, recorded so the registry is whole:
   stage but the first: the post's pick step, whose arrow leaves toward
   where compose began, is named `Back` (seam 245, ask 13 D; *new
   2026-10-28, blessed (jakob 2026-11-10)*); the X says what leaving keeps: `Leave — your
-  draft is kept` (the post), `Leave — the reply is discarded`, `Leave —
+  draft is kept` (the post, once it holds anything of the author's own),
+  a bare `Leave` on the post while it holds nothing of the author's own —
+  a fresh pick, or only what `Cite in a new post`, `Mention in a new post`
+  or a tag's compose glyph opened it with, which keeps no draft (jakob
+  2026-11-17, impl 349-6) — `Leave — the reply is discarded`, `Leave —
   the edit is discarded` (a comment edit and a post edit), and a bare `Leave` on the
   profile's and the picture's seals and the picture's crop. A crop opened
   from an edit names its arrow by where it goes: `Back to the edit` — the

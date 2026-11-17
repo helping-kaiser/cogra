@@ -14,15 +14,19 @@ ALWAYS the body's count counts the whole body in Unicode scalar values, never on
 
 WHEN press Next GIVEN the body is empty -> Next stays inert AND NEVER the details stage opens AND NEVER an empty post reaches a seal
 
-WHEN press Next GIVEN a reference rides the draft -> the details stage opens with the reference staged
+WHEN press Next GIVEN a reference rides the composer -> the details stage opens with the reference staged
 
-WHEN press Next GIVEN no reference rides the draft -> the words path's details stage opens with no media row and no description field
+WHEN press Next GIVEN no reference rides the composer -> the words path's details stage opens with no media row and no description field
 
 WHEN press Next -> NEVER the crop or the cover step opens
 
 WHEN press the header back arrow -> the pick step comes back, one stage behind
 
-WHEN press the header X -> the whole flow is left for where the composer was opened from AND the draft is kept AND NEVER a dialog asks
+WHEN press the header X GIVEN the composer holds something of the author's own -> the whole flow is left for where the composer was opened from AND the draft is kept AND NEVER a dialog asks
+
+WHEN press the header X GIVEN the body is empty and the composer holds nothing else of the author's own -> the whole flow is left for where the composer was opened from AND nothing is kept AND NEVER a dialog asks
+
+ALWAYS the header X is named Leave GIVEN the composer holds nothing of the author's own, and Leave — your draft is kept once it holds anything
 
 WHEN tap Add pictures instead GIVEN the body holds words -> an ask to discard the body opens over the stage AND NEVER the body switches before the ask is answered
 

@@ -1671,7 +1671,12 @@ nothing is signed; the draft stays on the device, and the state
 wears `tertiary` — a waiting state, never `error`. Leaving mid-write
 keeps one local draft per target, on-device only, on the surfaces
 that keep drafts — the post wizard and the profile picture; there
-the draft is the safety, so nothing asks on the way out. The reply
+the draft is the safety, so nothing asks on the way out. A post
+wizard keeps a draft only once it holds something of the author's
+own: a fresh pick, or only the reference or tag it was opened with
+(`Cite in a new post`, `Mention in a new post`, a tag's compose
+glyph), leaves nothing behind, its X named a bare `Leave` (jakob
+2026-11-17). The reply
 wizard, the comment edit and the post edit keep no draft (the post
 edit's, jakob 2026-10-14): leaving them discards, so a non-empty
 composer, or an edit changed since it opened, is asked first — one shared dialog (the *DiscardConfirm* board)
