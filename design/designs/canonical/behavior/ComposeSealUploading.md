@@ -18,6 +18,10 @@ WHEN an upload fails GIVEN Sign and publish was pressed while the uploads ran ->
 
 WHEN press Retry GIVEN the held press dropped -> the gate runs again AND NEVER signing proceeds until Sign and publish is pressed again
 
+WHEN the server refuses a picture's upload while the seal waits on it -> the gate line reads One picture didn't upload. alone in the error ink AND NEVER Signing waits for it. stands beside it AND NEVER Retry stands AND Sign and publish is disabled AND Back is the way out, to the stage that holds Remove it
+
+WHEN the server refuses the clip's upload while the seal waits on it -> the gate line reads The video didn't upload. alone in the error ink AND NEVER Signing waits for it. stands beside it AND NEVER Retry stands AND Sign and publish is disabled AND Back is the way out, to the stage that holds Remove it
+
 WHEN the last upload lands GIVEN Sign and publish was not pressed -> the upload line goes AND Sign and publish stays as it was
 
 ALWAYS every act the signature commits is read back in the acts card while the uploads run

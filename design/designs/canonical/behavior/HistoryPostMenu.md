@@ -10,7 +10,7 @@ WHEN tap history.menuSheet.save GIVEN the post is not kept -> the post is kept A
 
 WHEN tap history.menuSheet.save GIVEN the post is kept -> the sheet closes AND the snackbar reads Removed from Saved. with Undo
 
-WHEN tap history.menuSheet.cite -> the post wizard opens fresh at its first stage AND the post rides along unseen until the details stage
+WHEN tap history.menuSheet.cite -> the post wizard opens as New post opens it, fresh at its first stage or, with a draft kept on this device, under the draft card, whose Continue takes what rides along into the draft AND the post rides along unseen until the details stage
 
 WHEN tap history.menuSheet.hide GIVEN the author is not hidden -> the sheet closes AND History stands as it stood, every card in its place AND history.snackbar reads @ada is hidden. with Undo AND NEVER a confirm step appears
 

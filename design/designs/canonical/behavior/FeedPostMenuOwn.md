@@ -12,7 +12,7 @@ WHEN tap feed.menuSheet.save GIVEN the post is not kept -> the post is kept AND 
 
 WHEN tap feed.menuSheet.save GIVEN the save does not go through -> the save reverts AND the target's row says so with Retry
 
-WHEN tap feed.menuSheet.cite -> the post wizard opens fresh at its first stage AND the post rides along unseen until the details stage
+WHEN tap feed.menuSheet.cite -> the post wizard opens as New post opens it, fresh at its first stage or, with a draft kept on this device, under the draft card, whose Continue takes what rides along into the draft AND the post rides along unseen until the details stage
 
 WHEN tap feed.menuSheet.edit -> the post's edit opens
 

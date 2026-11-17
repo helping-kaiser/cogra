@@ -29,9 +29,17 @@
    back arrow is the way out, back to the screen that asked for the picture.
    No `Remove it` and no `Retry`: there is no list to remove the file from,
    and asking again cannot make it fit. */
+/* THE `opener` CHIP NAMES THE BACK ARROW BY WHO OPENED THE CROP (jakob
+   2026-11-17, C8): `Back to your profile` from the profile head's badge,
+   `Back to the edit` from `Change picture` on Edit profile — the arrow
+   returns to that screen, so it says which. Nothing else on the crop
+   differs between the two. */
 export const NODE = "avatarCrop";
-export const PROPS = { picked: { editor: "enum", options: ["fine", "too-big", "gif", "unreadable"], default: "fine" } };
-export const VALS = `cropShown: this.props.picked === "fine" ? "flex" : "none", emptyShown: this.props.picked === "fine" ? "none" : "block", tooBigShown: this.props.picked === "too-big" ? "block" : "none", gifShown: this.props.picked === "gif" ? "block" : "none", unreadableShown: this.props.picked === "unreadable" ? "block" : "none", nextOpacity: this.props.picked === "fine" ? "1" : "var(--state-disabled)", nextCursor: this.props.picked === "fine" ? "pointer" : "default"`;
+export const PROPS = {
+  opener: { editor: "enum", options: ["badge", "edit"], default: "badge" },
+  picked: { editor: "enum", options: ["fine", "too-big", "gif", "unreadable"], default: "fine" },
+};
+export const VALS = `backLabel: this.props.opener === "edit" ? "Back to the edit" : "Back to your profile", cropShown: this.props.picked === "fine" ? "flex" : "none", emptyShown: this.props.picked === "fine" ? "none" : "block", tooBigShown: this.props.picked === "too-big" ? "block" : "none", gifShown: this.props.picked === "gif" ? "block" : "none", unreadableShown: this.props.picked === "unreadable" ? "block" : "none", nextOpacity: this.props.picked === "fine" ? "1" : "var(--state-disabled)", nextCursor: this.props.picked === "fine" ? "pointer" : "default"`;
 
 const REFUSAL = {
   margin: 0,
@@ -46,7 +54,7 @@ const pickedCopy = (value) => ({ "data-node-chip": "picked", "data-node-key": va
 export function Screen() {
   return (
     <>
-      <WizardHeader title="Your picture" leaveLabel="Leave" node="header" />
+      <WizardHeader title="Your picture" backLabel="{{backLabel}}" leaveLabel="Leave" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 16px", overflow: "hidden" }}>
         <div style={{ display: "{{cropShown}}", flexDirection: "column", gap: 12 }}>
           <CropViewport src="comment-camera.jpg" shape="circle" scale={1.2} origin="50% 35%" node="viewport" />

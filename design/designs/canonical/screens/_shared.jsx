@@ -122,6 +122,7 @@ const {
   FactRow,
   QuotedRow,
   CoverRow,
+  CoverTile,
   Caret,
   SectionLabel,
   SettingsGroup,
@@ -771,8 +772,17 @@ const UNSAVE_ROW = { ...SAVE_ROW, label: "Unsave" };
 const keptMenu = (rows) => rows.map((row) => (row === SAVE_ROW ? UNSAVE_ROW : row));
 /* THE COMMENT'S MENU carries the two readings (`CITED_BY_ROW`,
    `OPINIONS_ROW`) as every content menu does; a comment has no detail
-   surface, so the rows are its one door to each list. */
-const COMMENT_MENU = [...CARD_MENU, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW, REPORT_ROW];
+   surface, so the rows are its one door to each list.
+
+   HIDE STANDS IN THE POST MENU'S SLOT (jakob 2026-11-17, impl 349-1: the
+   hand test's decision 1, "all as rec"): someone else's comment reads Save ·
+   Cite in a new post · `Hide @tobias` · Cited by · Opinions on this ·
+   License terms · Report, the reader's post menu row for row, the row naming
+   the comment's author. Hiding is an act on the person, so a comment is as
+   good a place to meet it as a post (RULINGS, a removed post keeps Hide: "hide
+   targets the user"); your own comment's menus take none, as your own post's
+   take none. */
+const readerCommentMenu = (handle) => [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {}, node: "hide" }, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW, REPORT_ROW];
 /* YOUR OWN COMMENT'S MENU (the comment-removal round, 2026-10-01; round 41):
    the reader's menu with `Edit` and `Remove` joined among the acts — after
    Save and Cite, before the two readings, the license closing it. That is
@@ -787,11 +797,12 @@ const OWN_COMMENT_MENU = [...CARD_MENU, EDIT_ROW, REMOVE_ROW, CITED_BY_ROW, OPIN
 /* A COMMENT CARD'S OWN ⋮ IS THE COMMENT'S MENU (round 36), the post card's
    rule (`readerCardMenu`): the rows less the license the card appends, the
    report row standing after it. */
-const COMMENT_CARD_MENU = COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
+const readerCommentCardMenu = (handle) => readerCommentMenu(handle).filter((row) => row !== LICENSE_ROW);
 const OWN_COMMENT_CARD_MENU = OWN_COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
 /* A REMOVED COMMENT'S MENUS FOLLOW THE POST'S (jakob 2026-11-13, point C):
-   another's raises the reader's comment menu whole (`COMMENT_MENU`, the
-   license row kept); your own raises `OWN_COMMENT_MENU` less Edit and Remove
+   another's raises the reader's comment menu whole (`readerCommentMenu`, the
+   license row and `Hide` kept — hide targets the person, who outlives the
+   removal); your own raises `OWN_COMMENT_MENU` less Edit and Remove
    — Save, Cite in a new post, Cited by, Opinions on this, License terms. The
    card's ⋮ takes each less the license, which `CommentCard` appends. */
 const OWN_REMOVED_COMMENT_MENU = OWN_COMMENT_MENU.filter((row) => row !== EDIT_ROW && row !== REMOVE_ROW);
@@ -819,12 +830,15 @@ const REMOVE_CONFIRM_COPY = {
    on the base wash layer and the sheet one above it, so the dialog is the
    thing raised last. Over the post detail there is no sheet to clear.
 
-   `failed` IS THE REMOVAL THAT DID NOT GO THROUGH (seam 248, RM-G7; the
-   failure pack's grammar at dialog scale, `SeveranceConfirm`'s): the dialog
-   never closed — the act waits for its answer — so it stays up with its
-   pair, `That didn't send. Try again.` stands above it in the dialog's
-   `line` slot, and `Remove`'s own slot reads `Retry`, still a text button in
-   no colour. `Keep it` keeps its place: the way out is the way out it was.
+   `failed` IS THE REMOVAL THAT GOT NO ANSWER (seam 248, RM-G7; the failure
+   pack's grammar at dialog scale, `SeveranceConfirm`'s): the dialog never
+   closed — the act waits for its answer — so it stays up with its pair,
+   `That didn't send. Try again.` stands above it in the dialog's `line`
+   slot, and `Remove`'s own slot reads `Retry`, still a text button in no
+   colour. `Keep it` keeps its place: the way out is the way out it was.
+   `refused` IS THE REMOVAL THE SERVER ANSWERED NO (round 51, jakob
+   2026-11-17, impl 348: the words follow the answer, the shape the host):
+   the same dialog, its line `That didn't go through. Try again.`.
    One anatomy for both kinds, so the post and the comment fail alike. */
 /* `removing` IS THE REMOVAL IN FLIGHT (round 37, jakob 2026-11-11: the
    remove and reject dialogs take the same Close while they sign): past 200ms
@@ -832,17 +846,17 @@ const REMOVE_CONFIRM_COPY = {
    `Close` from the press itself — closes the dialog while the removal goes
    on, its wait and its answer on the removed thing's own row. A board draws
    it unnamed beside the named copies, so no path moves. */
-function RemoveDialog({ kind, overSheet = false, failed = false, removing = false, node }) {
+function RemoveDialog({ kind, overSheet = false, failed = false, refused = false, removing = false, node }) {
   const { title, body } = REMOVE_CONFIRM_COPY[kind];
   const dialog = (
     <DialogSurface
       onScrimPress={() => {}}
       title={title}
       body={[body, "This is immediate and permanent."]}
-      line={failed ? "That didn't send. Try again." : undefined}
+      line={failed ? "That didn't send. Try again." : refused ? "That didn't go through. Try again." : undefined}
       actions={
         <>
-          <Button variant="text" busy={removing} busyLabel="Removing…" node={node && "remove"}>{failed ? "Retry" : "Remove"}</Button>
+          <Button variant="text" busy={removing} busyLabel="Removing…" node={node && "remove"}>{failed || refused ? "Retry" : "Remove"}</Button>
           <Button node={node && "keep"}>{removing ? "Close" : "Keep it"}</Button>
         </>
       }
@@ -888,14 +902,31 @@ function LicenseSheet({ license, stacked = false, node }) {
    the detail and `FeedReportConfirm` over the feed (FC-G10), one sheet on
    two hosts, so the two cannot disagree. Board glue, not a master: the
    sheet, its title and the `Cancel`/`Report` pair, each
-   named under the placer's `reportSheet`. */
-function ReportPostSheet() {
+   named under the placer's `reportSheet`.
+
+   A FAILED REPORT KEEPS THE SHEET UP (round 51 act 2, jakob 2026-11-17, B6:
+   the rule's dialog shape, never the snackbar). `answer` draws it: the line
+   stands in the sheet above the pair, in the failure voice — `failed`, no
+   answer, `That didn't send. Try again.`; `refused`, an answered refusal
+   (the day's reports spent, the thing gone), `That didn't go through. Try
+   again.` — and `Report` itself reads `Retry`. `Cancel` keeps its place.
+   The failed copies are drawn unnamed beside the named sheet, so no path
+   moves. */
+const REPORT_FAULT_LINES = { failed: "That didn't send. Try again.", refused: "That didn't go through. Try again." };
+function ReportPostSheet({ answer } = {}) {
+  const line = REPORT_FAULT_LINES[answer];
+  const n = (segment) => (line ? undefined : segment);
   return (
-    <BottomSheet open ariaLabel="Report this post" node="reportSheet">
-      <SheetTitle node="title">Report this post?</SheetTitle>
+    <BottomSheet open ariaLabel="Report this post" node={n("reportSheet")}>
+      <SheetTitle node={n("title")}>Report this post?</SheetTitle>
+      {line && (
+        <div style={{ padding: "var(--space-2) var(--space-6) 0" }}>
+          <TransportError message={line} />
+        </div>
+      )}
       <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-2)", padding: "var(--space-2) var(--space-6) 0" }}>
-        <Button variant="text" node="cancel">Cancel</Button>
-        <Button node="report">Report</Button>
+        <Button variant="text" node={n("cancel")}>Cancel</Button>
+        <Button node={n("report")}>{line ? "Retry" : "Report"}</Button>
       </div>
     </BottomSheet>
   );
@@ -2658,6 +2689,9 @@ function EditGate({ holes, faultHoles, done, total }) {
       <div style={{ display: "{{gateFailedShown}}" }} {...chipCopy("upload", "failed")}>
         <UploadStatusLine failed onRetry={() => {}} node="gate" />
       </div>
+      <div style={{ display: "{{gateRefusedShown}}" }} {...chipCopy("upload", "refused")}>
+        <UploadStatusLine refused node="gate" />
+      </div>
     </>
   );
 }
@@ -2679,6 +2713,13 @@ function EditPickedRow({ faultHoles }) {
       <div style={{ display: "{{rowFailedShown}}" }} {...chipCopy("upload", "failed")}>{row([EDIT_PICTURES[0], { ...EDIT_PICTURES[1], failed: true }])}</div>
       <div style={{ display: "{{errorShown}}" }}>
         <UploadErrorLine onRetry={() => {}} onRemove={() => {}} node="uploadError" />
+      </div>
+      {/* `refused` (round 51 act 2, jakob 2026-11-17, B3): the server refused
+          the picture — the tile marked as at `failed`, the row's line with
+          `Remove it` alone; the line is a drawn copy and carries no name. */}
+      <div style={{ display: "{{rowRefusedShown}}" }} {...chipCopy("upload", "refused")}>{row([EDIT_PICTURES[0], { ...EDIT_PICTURES[1], failed: true }])}</div>
+      <div style={{ display: "{{rowRefusedShown}}" }}>
+        <UploadErrorLine onRemove={() => {}} />
       </div>
     </>
   );
@@ -2719,8 +2760,40 @@ function editFootSign({ unchanged, faultHoles }) {
       <div style={{ display: "{{signFailedShown}}" }} {...chipCopy("upload", "failed")}>
         <Button style={{ width: "100%" }} disabled node="sign">Sign the edit</Button>
       </div>
+      <div style={{ display: "{{signRefusedShown}}" }} {...chipCopy("upload", "refused")}>
+        <Button style={{ width: "100%" }} disabled node="sign">Sign the edit</Button>
+      </div>
     </>
   );
+}
+
+/* THE EDIT'S FAULT, IN THE COMMIT'S PLACE (round 51; jakob 2026-11-17, impl
+   348: one rule for a refused or failed act). The edit is the seal's host
+   kind, so a signing that fails takes the seal's shape (`NetworkError`): the
+   line stands where `Sign the edit` stood, in its code's words — no answer
+   `That didn't send. Try again.`, an answered refusal `That didn't go
+   through. Try again.` — and an outlined `Retry` under it asks the same
+   signing again. Everything above the foot reads back unchanged, and the
+   acts count stays over the line: it is the edit's read-back of the batch,
+   the acts card's part on a seal. NO `Back` UNDER `Retry`: the seal draws
+   one because its foot's pair at rest is commit-and-back, and the fault
+   keeps the way back the surface had; an edit's foot at rest is the count
+   and the commit alone, its way back the header's arrow and X, which the
+   fault leaves where they are. The `fault` chip draws it on `EditCompose`
+   and `CommentEdit`, keyed by the answer. */
+const EDIT_FAULT_LINES = { unsent: "That didn't send. Try again.", refused: "That didn't go through. Try again." };
+
+function editFault() {
+  return Object.entries(EDIT_FAULT_LINES).map(([answer, line]) => (
+    <div key={answer} style={{ display: `{{fault${answer === "unsent" ? "Unsent" : "Refused"}Shown}}`, flexDirection: "column" }} {...chipCopy("fault", answer)}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-node="fault">
+        <TransportError message={line} />
+        <Button variant="outline" style={{ width: "100%" }} node="retry">
+          Retry
+        </Button>
+      </div>
+    </div>
+  ));
 }
 
 /* THE POST EDIT'S BACKING ROW (jakob 2026-10-16, PR-101). An edit is an
@@ -2835,6 +2908,7 @@ function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes
         <EditGate holes={holes} faultHoles={holes} done={1} total={2} />
         {editFootCount({ unchanged, faultHoles: holes })}
         {editFootSign({ unchanged, faultHoles: holes })}
+        {holes && editFault()}
       </div>
     </>
   );
@@ -2843,7 +2917,7 @@ function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes
 /* THE COMMENT EDIT, whole — `CommentEdit` itself, and what its acts sheet
    stands on. It is `EditComposeBody` at comment scale (backlog 126, jakob
    2026-10-02: "same semantics at comment scale"): the comment's own anatomy —
-   the words, the uncropped pictures, the tags, the citations, the locked
+   the words, the square pictures, the tags, the citations, the locked
    license — carrying the post edit's withdrawal package unchanged.
 
    ITS CITATIONS STAND AS ROWS, each opening `RefPairEdit` — the same sheet the
@@ -2901,7 +2975,7 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ display: shown("picturesShown") }}>
-                <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} fit="contain" onRemove={() => {}} node="thumb" nodeKey="1" />
+                <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} onRemove={() => {}} node="thumb" nodeKey="1" />
               </div>
               <InlineAction size="sm" node="add">{bodyChip ? "{{addLabel}}" : "+ Add pictures · 1 of 4"}</InlineAction>
             </div>
@@ -2959,6 +3033,7 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
             <div style={{ display: "{{signBusyShown}}" }}>
               <Button style={{ width: "100%" }} busy busyLabel="Signing the edit…">Sign the edit</Button>
             </div>
+            {editFault()}
           </>
         ) : (
           <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
@@ -3098,7 +3173,7 @@ const TOBIAS_REPLIES = [
     timestamp: "35m",
     onReply: () => {},
     license: { attribution: 0, provenance: 0 },
-    menuItems: COMMENT_CARD_MENU,
+    menuItems: readerCommentCardMenu("ada"),
   },
   {
     id: "t2",
@@ -3107,7 +3182,7 @@ const TOBIAS_REPLIES = [
     timestamp: "28m",
     onReply: () => {},
     license: { attribution: 0, provenance: 0 },
-    menuItems: COMMENT_CARD_MENU,
+    menuItems: readerCommentCardMenu("mira"),
   },
 ];
 
@@ -3173,7 +3248,7 @@ const SOL_THREAD_COMMENT = {
       timestamp: "40m",
       onReply: () => {},
       license: { attribution: 0, provenance: 0 },
-      menuItems: COMMENT_CARD_MENU,
+      menuItems: readerCommentCardMenu("ada"),
     },
     {
       id: "r2",
@@ -3182,7 +3257,7 @@ const SOL_THREAD_COMMENT = {
       timestamp: "22m",
       onReply: () => {},
       license: { attribution: 0, provenance: 0 },
-      menuItems: COMMENT_CARD_MENU,
+      menuItems: readerCommentCardMenu("tobias"),
     },
   ],
 };
@@ -3287,7 +3362,7 @@ function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, remov
       topics={["glovebox", "coastroad"]}
       references={1}
       license={{ attribution: 0, provenance: 0 }}
-      menuItems={COMMENT_CARD_MENU}
+      menuItems={readerCommentCardMenu("tobias")}
     >
       {landed ? settledReply : closeLine}
     </CommentCard>
@@ -3315,7 +3390,7 @@ function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, remov
         onReply={() => {}}
         replyOpacity={replyOpacity}
         license={{ attribution: 0, provenance: 0 }}
-        menuItems={COMMENT_CARD_MENU}
+        menuItems={readerCommentCardMenu("mira")}
       />
       {shown ? (
         <>
@@ -3324,13 +3399,13 @@ function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, remov
           </li>
           <li style={{ display: shown.applicant, flexDirection: "column", listStyle: "none" }} {...readerCopy("applicant")}>
             <ul style={NESTED_LIST}>
-              <CommentCard {...solComment} menuItems={COMMENT_CARD_MENU} node={card} />
+              <CommentCard {...solComment} menuItems={readerCommentCardMenu("sol")} node={card} />
             </ul>
           </li>
           {shown.guest && (
             <li style={{ display: shown.guest, flexDirection: "column", listStyle: "none" }} {...readerCopy("guest")}>
               <ul style={NESTED_LIST}>
-                <CommentCard {...SOL_THREAD_COMMENT} menuItems={COMMENT_CARD_MENU} node={card} />
+                <CommentCard {...SOL_THREAD_COMMENT} menuItems={readerCommentCardMenu("sol")} node={card} />
               </ul>
             </li>
           )}
@@ -5115,13 +5190,13 @@ const FEED_LEAD_TITLE = {
 
    ITS ⋮ IS THE COMMENT'S MENU (jakob 2026-10-01), the sheet every comment's ⋮
    opens (`CommentMenu`), never the post card's: the card stands for a
-   comment, so its menu holds what a comment's does — Save and Cite, then
-   `Cited by` and `Opinions on this`, the license closing it. Your own
-   comment's adds `Remove` among the acts (`CommentMenuOwn`), as everywhere.
+   comment, so its menu holds what a comment's does — Save and Cite, `Hide`
+   with the comment's author, then `Cited by` and `Opinions on this`, the
+   license closing it. Your own comment's takes `Edit` and `Remove` among the
+   acts and no Hide (`CommentMenuOwn`), as everywhere.
    The card appends the license row itself, so the rows handed it stop short
    of it, and the report row, marked `tail`, stays after it: the card's ⋮
    ends License terms · Report, as `CommentMenu` reads. */
-const FEED_COMMENT_MENU = COMMENT_CARD_MENU;
 const FEED_OWN_COMMENT_MENU = OWN_COMMENT_CARD_MENU;
 /* WHAT THE HEAD ROW NAMES, PER TARGET (the closing batch, jakob 2026-10-01).
    · AN UNTITLED POST — a text post's title is optional — is named by its
@@ -5185,7 +5260,7 @@ function CommentFeedCard({ id, author, content, timestamp, parent, parentKind = 
       replyGlyph
       onShare={() => {}}
       license={{ attribution: 0, provenance: 0 }}
-      menuItems={own ? FEED_OWN_COMMENT_MENU : FEED_COMMENT_MENU}
+      menuItems={own ? FEED_OWN_COMMENT_MENU : readerCommentCardMenu(author.handle)}
       node={node}
     />
   );
@@ -6930,6 +7005,142 @@ function ReferencePickerBody({ v = REF_PICKER_HOLES }) {
             ))}
           </FilterSection>
         </BottomSheet>
+      </div>
+    </>
+  );
+}
+
+/* THE POST'S CROP, whole — `ComposeCrop` at a 390 column, `ComposeCropShort`
+   in a short, wide window (round 52). The law is `ComposeCrop`'s docblock.
+
+   THE STAGE FITS THE WINDOW (round 52, jakob 2026-11-17, decision 3: "the
+   stage is also capped by the window's height, so header, shape row, stage,
+   slider, note, thumbnails and Next always fit without scrolling"). The stage
+   stands as large as the column allows — its 390 × 488 at a 390 column — and
+   never taller than the window leaves once every other block and gap has its
+   place: the 48 header, the body's 8 top, the 32 shape row, the 48 zoom, the
+   16 line, the 48 strip, the 40 Next, the body's 16 foot and the seven 12
+   gaps, 328 in all. Capped, its width follows its height at 390 : 488, the
+   frames and the picture scaling with it, and it stands centred in the
+   column; the blocks around it keep their sizes. `stage` passes the drawn
+   size; every frame is its figure at a 390 column times the stage's scale. */
+const COMPOSE_CROP_SHAPE_SEL = (s) =>
+  `${s}Checked: this.props.shape === "${s}" ? "true" : "false", ${s}Border: this.props.shape === "${s}" ? "1px solid transparent" : "1px solid var(--border-field)", ${s}Background: this.props.shape === "${s}" ? "var(--secondary-container)" : "transparent", ${s}Color: this.props.shape === "${s}" ? "var(--on-secondary-container)" : "var(--text-body)"`;
+const composeCropShapeHoles = (s) => ({ checked: `{{${s}Checked}}`, border: `{{${s}Border}}`, background: `{{${s}Background}}`, color: `{{${s}Color}}` });
+/* Each shape chip's selection, as `Chip`'s `selected` would draw it, and the
+   frame each shape shows. */
+const COMPOSE_CROP_VALS = `${COMPOSE_CROP_SHAPE_SEL("tall")}, ${COMPOSE_CROP_SHAPE_SEL("square")}, ${COMPOSE_CROP_SHAPE_SEL("wide")}, tallFrame: this.props.shape === "tall" ? "block" : "none", squareFrame: this.props.shape === "square" ? "block" : "none", wideFrame: this.props.shape === "wide" ? "block" : "none"`;
+
+/* The frame per shape inside the stage at a 390 column: full width, centred. */
+const COMPOSE_CROP_FRAMES = [
+  { shape: "tall", height: 488 },
+  { shape: "square", height: 390 },
+  { shape: "wide", height: 204 },
+];
+
+const COMPOSE_CROP_THIRDS = "rgba(255,255,255,0.55)";
+
+function ComposeCropFrame({ shape, height, stage }) {
+  const k = stage.width / 390;
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        display: `{{${shape}Frame}}`,
+        position: "absolute",
+        left: 0,
+        top: (stage.height - height * k) / 2,
+        width: stage.width,
+        height: height * k,
+        boxShadow: "0 0 0 400px rgba(0,0,0,0.45)",
+      }}
+    >
+      {/* The rule of thirds, drawn on the frame rather than around it. */}
+      <span style={{ position: "absolute", left: "33.33%", top: 0, bottom: 0, width: 1, background: COMPOSE_CROP_THIRDS }} />
+      <span style={{ position: "absolute", left: "66.66%", top: 0, bottom: 0, width: 1, background: COMPOSE_CROP_THIRDS }} />
+      <span style={{ position: "absolute", top: "33.33%", left: 0, right: 0, height: 1, background: COMPOSE_CROP_THIRDS }} />
+      <span style={{ position: "absolute", top: "66.66%", left: 0, right: 0, height: 1, background: COMPOSE_CROP_THIRDS }} />
+    </div>
+  );
+}
+
+const COMPOSE_CROP_PICTURES = ["post-photo.jpg", "inviter.jpg"];
+
+/* THE `opener` HOLES (round 52 act 3, jakob 2026-11-17: "the shape buttons
+   are hidden on the edit's crop"). `ComposeCrop` passes `openerHoles`: its
+   `opener` chip names the arrow and the X by who opened the crop and, at
+   `edit`, hides the shape row — the crop is locked to the post's one shape.
+   The row is HIDDEN, never left out: it stays one unkeyed row in the
+   markup, so its paths stand in every state (round 49's rule). */
+const COMPOSE_CROP_OPENER_VALS = `backLabel: this.props.opener === "edit" ? "Back to the edit" : "Back a step", leaveLabel: this.props.opener === "edit" ? "Leave — the edit is discarded" : "Leave — your draft is kept", shapesShown: this.props.opener === "edit" ? "none" : "flex"`;
+
+function ComposeCropBody({ stage = { width: 390, height: 488 }, pictures = COMPOSE_CROP_PICTURES, openerHoles = false }) {
+  const capped = stage.width < 390;
+  return (
+    <>
+      {openerHoles ? (
+        <WizardHeader title="Crop" backLabel="{{backLabel}}" leaveLabel="{{leaveLabel}}" node="header" />
+      ) : (
+        <WizardHeader title="Crop" node="header" />
+      )}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 16px", overflow: "hidden" }}>
+        {/* THE SHAPE ROW IS DRAWN ONCE (round 49, seam 338): the `shape`
+            setting re-selects its chips through `Chip`'s `selectedHoles`, so
+            the row and its chips carry no key — one row, as the clients
+            draw it. */}
+        <div style={{ display: openerHoles ? "{{shapesShown}}" : "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8 }} data-node="shapes">
+            <Chip label="Tall 4:5" selectedHoles={composeCropShapeHoles("tall")} onToggle={() => {}} node="tallChip" />
+            <Chip label="Square 1:1" selectedHoles={composeCropShapeHoles("square")} onToggle={() => {}} node="squareChip" />
+            <Chip label="Wide 1.91:1" selectedHoles={composeCropShapeHoles("wide")} onToggle={() => {}} node="wideChip" />
+          </div>
+        </div>
+
+        {/* THE STAGE: one size under every shape. The picture covers it at the
+            crop's zoom and stays put across a shape switch (its centre and its
+            zoom kept); only the frame over it changes. Capped by the window,
+            it stands centred in the column. */}
+        <div
+          tabIndex={0}
+          role="group"
+          aria-label={CROP_PAN_NAME}
+          className="cg-focus"
+          style={capped
+            ? { position: "relative", width: stage.width, height: stage.height, alignSelf: "center", overflow: "hidden", flex: "none" }
+            : { position: "relative", width: 390, height: 488, margin: "0 -24px", overflow: "hidden", flex: "none" }}
+          data-node="viewport"
+        >
+          <img
+            src="post-photo.jpg"
+            alt=""
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transform: "scale(1.15)", transformOrigin: "40% 60%" }}
+          />
+          {COMPOSE_CROP_FRAMES.map((frame) => (
+            <ComposeCropFrame key={frame.shape} {...frame} stage={stage} />
+          ))}
+        </div>
+
+        <CropZoom scale={1.15} node="zoom" />
+
+        <QuietNote node="howTo">One shape for the whole post.</QuietNote>
+
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }} data-node="pictures">
+          {pictures.map((src, index) =>
+            index === 0 ? (
+              <span key={src} style={{ display: "inline-flex", flex: "none", borderRadius: "var(--radius-small)", outline: "2px solid var(--primary)", outlineOffset: 1 }}>
+                <MediaThumb src={src} node="thumb" nodeKey={String(index + 1)} />
+              </span>
+            ) : (
+              <span key={src} style={{ display: "inline-flex", flex: "none", opacity: 0.65 }}>
+                <MediaThumb src={src} node="thumb" nodeKey={String(index + 1)} />
+              </span>
+            )
+          )}
+        </div>
+
+        <div style={{ flex: 1 }} />
+
+        <Button style={{ width: "100%" }} node="next">Next</Button>
       </div>
     </>
   );

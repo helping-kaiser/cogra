@@ -68,7 +68,8 @@ the envelope carries either a body text — at most 5000 characters
 
 One act, two homes. L1 accepts the structural record with the
 payload witness; CoGra — the carriage service — holds the payload
-bytes and the salt (Postgres rows; media bytes in blob storage).
+bytes, their content nonce and the salt (Postgres rows; media bytes
+in blob storage).
 The bytes are no copy of anything: carriage is their only home,
 verifiable against the witness. The record mirror caches the
 structural record for traversal — it may lag L1, never diverge.
@@ -218,7 +219,7 @@ author's own per-content removal, the author's account deletion
 mechanics live in [moderation.md](moderation.md),
 [erasure.md](erasure.md), and
 [retention-archive.md](../primitive/retention-archive.md). A full
-deletion sweeps payload and salt across the whole revision chain —
+deletion sweeps payload, content nonce and salt across the whole revision chain —
 the genesis payload and every edit record's payload (§4) — while
 every structural record stays; a single superseded revision can
 also be removed alone

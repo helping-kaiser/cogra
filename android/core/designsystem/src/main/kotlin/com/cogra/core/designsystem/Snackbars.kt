@@ -31,8 +31,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarVisuals
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
@@ -41,6 +39,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.v2.atom.InlineAction
+import com.cogra.core.designsystem.v2.atom.InlineSize
 
 val LocalSnackbarHostState = compositionLocalOf<SnackbarHostState?> { null }
 
@@ -128,7 +128,8 @@ fun CograSnackbar(data: SnackbarData, testTag: String? = null) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            // `gap: var(--space-4)` (Snackbar.jsx).
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             // TEXT THAT WRAPS (NamesLong.md; `Snackbar.jsx`): a handle in the
             // message is one unit that moves whole to the next line.
@@ -140,17 +141,20 @@ fun CograSnackbar(data: SnackbarData, testTag: String? = null) {
                     .then(if (spoken != null) Modifier.semantics { contentDescription = spoken } else Modifier)
                     .dataNode(node?.div("message")),
             )
+            // A WORD, not a button body, riding the message's line (Snackbar.jsx):
+            // its 48dp target is an overlay that adds no height (`cg-hit`). A
+            // TextButton's 40dp body, grown to 48 by the interactive minimum,
+            // set the row's height and stood the snackbar 72dp tall.
             data.visuals.actionLabel?.let { label ->
-                TextButton(
+                InlineAction(
+                    text = label,
                     onClick = { data.performAction() },
-                    modifier = Modifier.testTag(
-                        node?.div("action")?.tag
-                            ?: testTag?.let { "${it}_action" }
-                            ?: "snackbar_action",
-                    ),
-                ) {
-                    Text(label, color = SnackbarDefaults.actionContentColor)
-                }
+                    size = InlineSize.Large,
+                    color = SnackbarDefaults.actionContentColor,
+                    testTag = node?.div("action")?.tag
+                        ?: testTag?.let { "${it}_action" }
+                        ?: "snackbar_action",
+                )
             }
             if (data.visuals.withDismissAction) {
                 IconButton(

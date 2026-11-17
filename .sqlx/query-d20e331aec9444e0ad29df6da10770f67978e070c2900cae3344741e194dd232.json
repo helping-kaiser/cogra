@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO act_payloads (act_id, payload, content_nonce, content_salt)\n         SELECT act_id, payload, content_nonce, content_salt\n         FROM staged_writes\n         WHERE act_id = ANY($1) AND state <> 'carried'\n           AND length(payload) > 0\n           AND content_nonce IS NOT NULL AND content_salt IS NOT NULL\n         FOR SHARE\n         ON CONFLICT (act_id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d20e331aec9444e0ad29df6da10770f67978e070c2900cae3344741e194dd232"
+}

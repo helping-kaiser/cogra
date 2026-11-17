@@ -63,10 +63,25 @@ function Ring({ progress = 0.55, size = 18 }) {
    waiting on one picture says so: at a `total` of one the line reads
    `…signing waits for the picture.`, and `the pictures` from two up. The
    video and the cover are one thing already, so their nouns never change. */
+/* THE GATE HAS A REFUSED READING (round 51 act 2, jakob 2026-11-17, B3). A
+   picture the server refused at upload will never land, so the gate's
+   consequence — `Signing waits for it.` — would be untrue and `Retry` cannot
+   change the answer: `refused` keeps the failure's fact alone, in error ink,
+   with no `Retry`. The sign button stays disabled, and the way out is the
+   seal's `Back`, to the stage that holds `Remove it`. A clip's reads `The
+   video didn't upload.` through `message`, as its fault does. */
 /* `node` is the data-node name its placer gives the line (seam 248): the line
    takes it, and names its parts — uploading, `line`; failed, `message`,
-   `wait` and `retry`. Given none, it renders exactly as before. */
-export function UploadStatusLine({ done, total, progress, media = "pictures", failed = false, message = "One picture didn't upload.", onRetry, node }) {
+   `wait` and `retry`; refused, `message`. Given none, it renders exactly as
+   before. */
+export function UploadStatusLine({ done, total, progress, media = "pictures", failed = false, refused = false, message = "One picture didn't upload.", onRetry, node }) {
+  if (refused) {
+    return (
+      <p style={{ margin: 0, textAlign: "center", fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node}>
+        <span style={{ color: "var(--error)" }} data-node={node && "message"}>{message}</span>
+      </p>
+    );
+  }
   if (failed) {
     return (
       <p style={{ margin: 0, textAlign: "center", fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node}>

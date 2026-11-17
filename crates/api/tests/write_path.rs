@@ -10,6 +10,7 @@ use api::relay::{self, RelayError};
 use common::l1::Family;
 use common::l1::client::ActorKey;
 use common::l1::identifier::NodeId;
+use common::l1::proposal::PreSigned;
 use l1_standin::{StandIn, StandInConfig};
 use postgres_store::staged::{self, PreSignedParts, StagedState};
 use postgres_store::{genesis, mirror};
@@ -78,17 +79,13 @@ impl Rig {
     /// write, leaving it relaying.
     async fn sign_and_relay(&self, id: Uuid, key: &ActorKey) {
         let write = staged::load(&self.pool, id).await.expect("loads");
-        let pre = key.pre_sign(write.proposal);
-        let parts = PreSignedParts {
-            author_pubkey: pre.author_pubkey.clone(),
-            nonce: pre.nonce.clone(),
-            pre_signature: pre.pre_signature.clone(),
-        };
-        let sealed = relay::submit_pre_signed(&self.boundary, &self.pool, id, parts)
-            .await
-            .expect("seals");
+        let pre = PreSigned::sign(key, write.proposal);
+        let sealed =
+            relay::submit_pre_signed(&self.boundary, &self.pool, id, PreSignedParts::from(&pre))
+                .await
+                .expect("seals");
         let host_key = self.boundary.host_public_key().await.expect("host key");
-        let witness = key.approve(&pre, &sealed, &host_key).expect("approves");
+        let witness = pre.approve(key, &sealed, &host_key).expect("approves");
         relay::submit_approval(&self.boundary, &self.pool, id, witness.approval_signature)
             .await
             .expect("relays");
@@ -286,7 +283,8 @@ async fn a_bad_pre_signature_is_refused_and_the_device_can_retry(pool: PgPool) {
 
     let garbage = PreSignedParts {
         author_pubkey: key.public_key_bytes(),
-        nonce: vec![0; 32],
+        content_nonce: vec![0; 32],
+        dependency_nonce: vec![1; 32],
         pre_signature: vec![0; 64],
     };
     assert!(matches!(
@@ -324,12 +322,8 @@ async fn a_lost_response_replays_the_stored_seal(pool: PgPool) {
     .expect("prepares");
 
     let write = staged::load(&rig.pool, prepared.id).await.expect("loads");
-    let pre = key.pre_sign(write.proposal);
-    let parts = PreSignedParts {
-        author_pubkey: pre.author_pubkey.clone(),
-        nonce: pre.nonce.clone(),
-        pre_signature: pre.pre_signature.clone(),
-    };
+    let pre = PreSigned::sign(&key, write.proposal);
+    let parts = PreSignedParts::from(&pre);
     let first = relay::submit_pre_signed(&rig.boundary, &rig.pool, prepared.id, parts.clone())
         .await
         .expect("seals");
@@ -339,7 +333,7 @@ async fn a_lost_response_replays_the_stored_seal(pool: PgPool) {
     assert_eq!(first, second);
 
     let host_key = rig.boundary.host_public_key().await.expect("host key");
-    let witness = key.approve(&pre, &first, &host_key).expect("approves");
+    let witness = pre.approve(&key, &first, &host_key).expect("approves");
     relay::submit_approval(
         &rig.boundary,
         &rig.pool,
@@ -380,18 +374,14 @@ async fn a_differing_resubmission_is_refused_not_answered(pool: PgPool) {
     .expect("prepares");
 
     let write = staged::load(&rig.pool, prepared.id).await.expect("loads");
-    let pre = key.pre_sign(write.proposal);
-    let parts = PreSignedParts {
-        author_pubkey: pre.author_pubkey.clone(),
-        nonce: pre.nonce.clone(),
-        pre_signature: pre.pre_signature.clone(),
-    };
+    let pre = PreSigned::sign(&key, write.proposal);
+    let parts = PreSignedParts::from(&pre);
     let sealed = relay::submit_pre_signed(&rig.boundary, &rig.pool, prepared.id, parts.clone())
         .await
         .expect("seals");
 
     let differing = PreSignedParts {
-        nonce: vec![9; 32],
+        content_nonce: vec![9; 32],
         ..parts.clone()
     };
     assert!(matches!(
@@ -431,16 +421,12 @@ async fn approval_is_refused_out_of_order_and_on_a_bad_witness(pool: PgPool) {
     ));
 
     let write = staged::load(&rig.pool, prepared.id).await.expect("loads");
-    let pre = key.pre_sign(write.proposal);
+    let pre = PreSigned::sign(&key, write.proposal);
     relay::submit_pre_signed(
         &rig.boundary,
         &rig.pool,
         prepared.id,
-        PreSignedParts {
-            author_pubkey: pre.author_pubkey.clone(),
-            nonce: pre.nonce.clone(),
-            pre_signature: pre.pre_signature.clone(),
-        },
+        PreSignedParts::from(&pre),
     )
     .await
     .expect("seals");
@@ -481,16 +467,14 @@ async fn a_seal_lost_before_storing_expires_the_write(pool: PgPool) {
     .expect("prepares");
 
     let write = staged::load(&rig.pool, prepared.id).await.expect("loads");
-    let pre = key.pre_sign(write.proposal);
-    rig.boundary.seal(pre.clone()).await.expect("seals on L1");
+    let pre = PreSigned::sign(&key, write.proposal);
+    rig.boundary
+        .seal(pre.submission())
+        .await
+        .expect("seals on L1");
 
-    let parts = PreSignedParts {
-        author_pubkey: pre.author_pubkey.clone(),
-        nonce: pre.nonce.clone(),
-        pre_signature: pre.pre_signature.clone(),
-    };
     assert!(matches!(
-        relay::submit_pre_signed(&rig.boundary, &rig.pool, prepared.id, parts).await,
+        relay::submit_pre_signed(&rig.boundary, &rig.pool, prepared.id, PreSignedParts::from(&pre)).await,
         Err(RelayError::Wedged(id)) if id == prepared.id
     ));
     assert_eq!(
@@ -563,4 +547,232 @@ async fn the_ingestion_pass_collects_writes_that_never_land(pool: PgPool) {
         staged::load(&rig.pool, abandoned.id).await,
         Err(staged::StagedError::NotFound(_))
     ));
+}
+
+impl Rig {
+    async fn prepared_registration(&self, actor_id: Uuid, key: &ActorKey) -> Uuid {
+        prepare::prepare(
+            &self.boundary,
+            &self.pool,
+            GC,
+            actor_id,
+            self.registration(key),
+        )
+        .await
+        .expect("prepares")
+        .id
+    }
+
+    /// The stand-in's rows for one act: none means nothing reached the host.
+    async fn host_rows(&self, act_id: &str) -> i64 {
+        sqlx::query_scalar("SELECT COUNT(*) FROM l1_acts WHERE act_id = $1")
+            .bind(act_id)
+            .fetch_one(&self.pool)
+            .await
+            .expect("counts")
+    }
+
+    /// The stand-in's row for one act as text, every column rendered —
+    /// bytes as their hex — for a search of what the host holds.
+    async fn host_row_text(&self, act_id: &str) -> String {
+        sqlx::query_scalar("SELECT row_to_json(a)::text FROM l1_acts a WHERE act_id = $1")
+            .bind(act_id)
+            .fetch_one(&self.pool)
+            .await
+            .expect("the host's row")
+    }
+
+    /// Asserts a refused submission left the write unsigned: still
+    /// awaiting its pre-signature, holding no pre-commitment leg, so no
+    /// staged row is left that a later relay could submit.
+    async fn assert_unsigned(&self, id: Uuid) {
+        let write = staged::load(&self.pool, id).await.expect("loads");
+        assert_eq!(write.state, StagedState::AwaitingPreSign);
+        assert!(write.pre_signed.is_none(), "nothing was recorded");
+        assert_eq!(
+            self.host_rows(&write.proposal.body.act_id().to_string())
+                .await,
+            0,
+            "nothing reached the host"
+        );
+    }
+}
+
+/// A content nonce its author already used for another act is refused at
+/// the API — CoGra carries the pair, and non-reuse is a carriage check
+/// (layer1-interface.md §8.2, "Entropy custody") — before anything is
+/// sent to the host: the stand-in holds no row for the second act, and its
+/// staged write stays unsigned. Re-signed under a fresh content nonce, the
+/// same write lands.
+///
+/// A content nonce reused by its author is refused before the host sees the act, and the same write re-signed under a fresh nonce lands.
+/// ´claim:relay:a-reused-content-nonce-never-reaches-the-host´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_reused_content_nonce_is_refused_before_the_host_sees_the_act(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor_id, key) = rig.funded_actor("alice").await;
+    let first = rig.prepared_registration(actor_id, &key).await;
+    let second = rig.prepared_registration(actor_id, &key).await;
+
+    let write = staged::load(&rig.pool, first).await.expect("loads");
+    let used = PreSigned::sign(&key, write.proposal);
+    relay::submit_pre_signed(&rig.boundary, &rig.pool, first, PreSignedParts::from(&used))
+        .await
+        .expect("the first use seals");
+
+    let write = staged::load(&rig.pool, second).await.expect("loads");
+    let reused = PreSigned::sign_with_nonces(
+        &key,
+        write.proposal.clone(),
+        used.content_nonce.clone(),
+        vec![0x5a; 32],
+    );
+    assert!(
+        reused.submission().verify_pre_commitment().is_ok(),
+        "the reuse is the only fault: the host would seal it"
+    );
+    let refused = relay::submit_pre_signed(
+        &rig.boundary,
+        &rig.pool,
+        second,
+        PreSignedParts::from(&reused),
+    )
+    .await;
+    assert!(
+        matches!(&refused, Err(RelayError::Carriage(m)) if m.contains("already used")),
+        "got {refused:?}"
+    );
+    rig.assert_unsigned(second).await;
+
+    rig.sign_and_relay(second, &key).await;
+    rig.close_and_ingest().await;
+    assert_eq!(
+        staged::load(&rig.pool, second).await.expect("loads").state,
+        StagedState::Landed
+    );
+}
+
+/// The other carriage checks refuse the same way, each before anything
+/// reaches the host and each on a write whose signature is otherwise good:
+/// a content nonce equal to the dependency nonce — the host keeps the
+/// dependency nonce, so anyone reading its rows could test payload
+/// guesses against P — a content nonce or a dependency nonce off the
+/// published length, and a payload past M_payload. For each, the same
+/// staged write re-signed without the fault lands.
+///
+/// A content pair failing a carriage check is refused before the host sees the act, and the write re-signed without the fault lands.
+/// ´claim:relay:a-failed-carriage-check-never-reaches-the-host´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_content_pair_failing_a_carriage_check_never_reaches_the_host(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor_id, key) = rig.funded_actor("alice").await;
+    let max = StandInConfig::default().max_payload_bytes;
+    let cases: [(&str, Vec<u8>, Vec<u8>, bool); 4] = [
+        (
+            "repeats the dependency nonce",
+            vec![0x11; 32],
+            vec![0x11; 32],
+            false,
+        ),
+        (
+            "content nonce is 31 bytes",
+            vec![0x22; 31],
+            vec![0x23; 32],
+            false,
+        ),
+        (
+            "dependency nonce is 33 bytes",
+            vec![0x33; 32],
+            vec![0x34; 33],
+            false,
+        ),
+        ("exceeds M_payload", vec![0x44; 32], vec![0x45; 32], true),
+    ];
+    let mut ids = Vec::new();
+    for (case, content_nonce, dependency_nonce, oversized) in cases {
+        let id = rig.prepared_registration(actor_id, &key).await;
+        let original = staged::load(&rig.pool, id).await.expect("loads").proposal;
+        if oversized {
+            sqlx::query("UPDATE staged_writes SET payload = $2 WHERE id = $1")
+                .bind(id)
+                .bind(vec![0x55u8; max + 1])
+                .execute(&rig.pool)
+                .await
+                .expect("the fixture grows the staged payload past the bound");
+        }
+        let write = staged::load(&rig.pool, id).await.expect("loads");
+        let faulty =
+            PreSigned::sign_with_nonces(&key, write.proposal, content_nonce, dependency_nonce);
+        let refused =
+            relay::submit_pre_signed(&rig.boundary, &rig.pool, id, PreSignedParts::from(&faulty))
+                .await;
+        assert!(
+            matches!(refused, Err(RelayError::Carriage(_))),
+            "{case}: got {refused:?}"
+        );
+        rig.assert_unsigned(id).await;
+        if oversized {
+            sqlx::query("UPDATE staged_writes SET payload = $2 WHERE id = $1")
+                .bind(id)
+                .bind(&original.payload)
+                .execute(&rig.pool)
+                .await
+                .expect("restores the payload");
+        }
+        rig.sign_and_relay(id, &key).await;
+        ids.push(id);
+    }
+    rig.close_and_ingest().await;
+    for id in ids {
+        assert_eq!(
+            staged::load(&rig.pool, id).await.expect("loads").state,
+            StagedState::Landed
+        );
+    }
+}
+
+/// The stand-in's row for an act written through the API holds neither the
+/// payload nor the content nonce at any stage — sealed, approved, accepted
+/// — while it does hold the dependency nonce, the control that the search
+/// sees bytes at all (layer1-interface.md §8.2: the host's checks never
+/// need the pair, and CoGra is its carrier). The pair sits in CoGra's
+/// carriage once the record lands.
+///
+/// The host's row for an act written through the API never holds the payload or the content nonce.
+/// ´claim:relay:the-host-never-holds-the-content-pair´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_host_never_holds_the_content_pair_of_an_api_write(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor_id, key) = rig.funded_actor("alice").await;
+    let id = rig.prepared_registration(actor_id, &key).await;
+    let write = staged::load(&rig.pool, id).await.expect("loads");
+    let act_id = write.proposal.body.act_id().to_string();
+    let payload_hex = hex::encode(&write.proposal.payload);
+    let pre = PreSigned::sign(&key, write.proposal);
+    let content_hex = hex::encode(&pre.content_nonce);
+    let dependency_hex = hex::encode(&pre.dependency_nonce);
+    let check = |row: String, stage: &str| {
+        assert!(!row.contains(&payload_hex), "{stage}: the payload");
+        assert!(!row.contains(&content_hex), "{stage}: the content nonce");
+        assert!(row.contains(&dependency_hex), "{stage}: the control");
+    };
+
+    let sealed = relay::submit_pre_signed(&rig.boundary, &rig.pool, id, PreSignedParts::from(&pre))
+        .await
+        .expect("seals");
+    check(rig.host_row_text(&act_id).await, "sealed");
+    let host_key = rig.boundary.host_public_key().await.expect("host key");
+    let witness = pre.approve(&key, &sealed, &host_key).expect("approves");
+    relay::submit_approval(&rig.boundary, &rig.pool, id, witness.approval_signature)
+        .await
+        .expect("relays");
+    check(rig.host_row_text(&act_id).await, "approved");
+    rig.close_and_ingest().await;
+    check(rig.host_row_text(&act_id).await, "accepted");
+
+    let carriage = postgres_store::content::act_payload(&rig.pool, &act_id)
+        .await
+        .expect("reads")
+        .expect("carried");
+    assert_eq!(carriage.content_nonce, Some(pre.content_nonce.clone()));
 }

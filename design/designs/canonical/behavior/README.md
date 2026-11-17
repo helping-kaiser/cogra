@@ -33,7 +33,8 @@ Where each sidecar's words come from:
   *clip* where a line holds for either.
   Its hold lines are the failure pack's (readme §13, *The
   failure pack*): a signed act waits for its signature, the 200ms law
-  decides when the row says `Signing…`, and a hold that fails says so
+  decides when the status speaks `Signing…` (the closed ring is the
+  hold's drawn wait, round 51), and a hold that fails says so
   on the target's row, never on the snackbar — and one the write rule
   refuses says so quietly there, with no Retry (copy-voice, *Faults by
   code*). A failed comfort's revert says so on the same row, and the

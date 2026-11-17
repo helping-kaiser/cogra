@@ -30,7 +30,7 @@ WHEN tap Cancel -> the pad closes onto Invites AND nothing is signed AND the app
 
 WHEN press Set -> Cancel reads Close in the same place from the press itself, as PadFailed's pressed moment draws it AND Set reads Setting… beside it once 200ms pass without an answer, as PadFailed's setting moment draws it
 
-WHEN tap Close, press outside the pad, press the system's Back or press Escape GIVEN Set is waiting on its signing -> the pad closes AND the act goes on, its wait carried by the line under the target's face, as PadFailed's closed moment draws it AND NEVER the act is cancelled
+WHEN tap Close, press outside the pad, press the system's Back or press Escape GIVEN Set is waiting on its signing -> the pad closes AND the act goes on, its wait carried by the closed ring around the target's face, Signing… spoken from a visually hidden status and never drawn, as PadFailed's closed moment draws it AND NEVER a line stands under the face for the wait AND NEVER the act is cancelled
 
 WHEN press outside the pad, press the system's Back or press Escape -> the pad closes onto Invites AND nothing is signed AND the application is still waiting
 
@@ -48,6 +48,8 @@ WHEN tap Set GIVEN the pick lands at exactly (0, 0) -> the dialog Sign an empty 
 
 WHEN tap Set it anyway in that dialog -> the vouch lands as Set lands it AND the person is vouched in, starting out cut off AND NEVER the act is blocked
 
-WHEN the signing does not go through -> the pad stays open at the pick AND the line That didn't send. Try again. stands above the commit row AND an outlined Retry takes Set's slot
+WHEN the signing does not go through GIVEN no answer reaches the device -> the pad stays open at the pick AND the line That didn't send. Try again. stands above the commit row AND an outlined Retry takes Set's slot
+
+WHEN the signing does not go through GIVEN the server answers INTERNAL, FORBIDDEN, SIGNATURE_INVALID or a BAD_INPUT naming no field -> the pad stays open at the pick AND the line That didn't go through. Try again. stands above the commit row AND an outlined Retry takes Set's slot
 
 WHEN the write rule refuses the signing -> the pad stays open at the pick AND the notice You can't sign right now stands where the landing line and Set were, with Not now AND nothing is staged or spent

@@ -2,11 +2,13 @@
 
 ALWAYS the clip itself never changes at an edit and is never swapped for another
 
-ALWAYS the cover field reads Add a cover GIVEN no cover was ever chosen, even when a taken still exists
+ALWAYS postEdit.video.cover stands beside postEdit.video.thumb at its 96 high and at the cover's own shape, a tall clip's 4:5, 76.8 × 96, a square clip's 1:1, a wide clip's 16:9, never the clip's own
 
-ALWAYS the cover field shows the chosen cover and Change the cover GIVEN a cover was chosen
+ALWAYS postEdit.video.cover is the dashed Add a cover door GIVEN no cover was ever chosen, even when a taken still exists
 
-ALWAYS the chosen cover's thumbnail wears the cover's shape, a tall clip's at 4:5, never the clip's own
+ALWAYS postEdit.video.cover shows the chosen cover wearing the Cover pill and is named Change the cover GIVEN a cover was chosen
+
+WHEN tap postEdit.video.cover GIVEN a cover was chosen -> the device's own picker opens AND NEVER the clip's frames are offered
 
 ALWAYS the line A video is the whole post. stands where an add control would
 
@@ -78,11 +80,11 @@ ALWAYS Sign the edit is disabled GIVEN the gate line shows its fault reading
 
 WHEN press Retry GIVEN the held press dropped -> the gate runs again AND NEVER signing proceeds until Sign the edit is pressed again
 
-WHEN the cover the edit set fails to upload -> the cover's thumbnail is marked AND the line One picture didn't upload. stands under the cover row with Retry and Remove it AND the gate line takes its fault reading
+WHEN the cover the edit set fails to upload -> postEdit.video.cover is marked AND the line One picture didn't upload. stands under the clip and its cover with Retry and Remove it AND the gate line takes its fault reading
 
-WHEN press Retry under the cover row -> the cover's upload tries again AND the gate runs again
+WHEN press Retry under the clip and its cover -> the cover's upload tries again AND the gate runs again
 
-WHEN press Remove it under the cover row -> the new cover leaves the batch AND the cover field reads as it stood before the edit, the chosen cover or Add a cover AND the gate line goes AND Sign the edit is enabled
+WHEN press Remove it under the clip and its cover -> the new cover leaves the batch AND postEdit.video.cover reads as it stood before the edit, the chosen cover or the Add a cover door AND the gate line goes AND Sign the edit is enabled
 
 WHEN the last upload lands GIVEN Sign the edit was not pressed -> the upload line goes AND Sign the edit stays as it was
 
@@ -97,3 +99,15 @@ WHEN tap Discard in the dialog Discard the changes? -> the changes are discarded
 WHEN press Sign the edit -> the header X is named Close from the press itself AND NEVER the dialog Discard the changes? opens while it signs
 
 WHEN press the header back arrow, the header X or the system's Back GIVEN Sign the edit was pressed and has not answered -> the edit closes AND the edit goes on, its wait and its answer on the edited card as SigningAfterClose draws them AND NEVER the edit is cancelled
+
+WHEN the server refuses the cover the edit set at its upload -> the gate line reads One picture didn't upload. alone in the error ink AND NEVER Signing waits for it. stands beside it AND NEVER Retry stands on the gate AND Sign the edit is disabled until Remove it under the clip and its cover takes the cover out
+
+WHEN the server refuses the cover the edit set at its upload -> the line One picture didn't upload. stands under the clip and its cover with Remove it alone AND NEVER Retry stands under them, retrying being unable to change the answer
+
+WHEN the signing gets no answer GIVEN the edit stands open -> postEdit.fault reads That didn't send. Try again. in postEdit.sign's place AND postEdit.fault.retry stands under it, outlined, AND postEdit.acts stays above the line AND everything the reader chose stays as it was
+
+WHEN the signing is answered with a refusal GIVEN the edit stands open -> postEdit.fault reads That didn't go through. Try again. in postEdit.sign's place AND postEdit.fault.retry stands under it, outlined, AND postEdit.acts stays above the line AND everything the reader chose stays as it was
+
+WHEN press postEdit.fault.retry -> the same signing is asked again AND past 200ms the commit's slot reads Signing the edit… AND the header's X is named Close
+
+ALWAYS the header's arrow and X are the edit's way back GIVEN postEdit.fault stands, and no Back stands under the fault's Retry
