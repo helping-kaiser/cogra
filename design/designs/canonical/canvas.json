@@ -2028,10 +2028,10 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -9410,
+      "x": -9700,
       "y": 0,
-      "w": 8990,
-      "h": 5925,
+      "w": 9280,
+      "h": 6003,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -2091,10 +2091,10 @@
     },
     {
       "file": "MapProfile.dc.html",
-      "x": -5930,
+      "x": -6220,
       "y": 0,
-      "w": 5510,
-      "h": 9968,
+      "w": 5800,
+      "h": 10072,
       "page": "profile",
       "title": "Profile · flow map"
     },
