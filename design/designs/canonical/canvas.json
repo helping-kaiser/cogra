@@ -1896,7 +1896,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 6471,
+      "h": 6562,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -1905,7 +1905,7 @@
       "x": -4190,
       "y": 0,
       "w": 3770,
-      "h": 5037,
+      "h": 5158,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1914,7 +1914,7 @@
       "x": -5640,
       "y": 0,
       "w": 5220,
-      "h": 3739,
+      "h": 3929,
       "page": "comments",
       "title": "Comments · flow map"
     },
@@ -1941,7 +1941,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 5140,
+      "h": 5153,
       "page": "media",
       "title": "Media · flow map"
     },
@@ -1986,7 +1986,7 @@
       "x": -5930,
       "y": 0,
       "w": 5510,
-      "h": 9877,
+      "h": 9890,
       "page": "profile",
       "title": "Profile · flow map"
     },
