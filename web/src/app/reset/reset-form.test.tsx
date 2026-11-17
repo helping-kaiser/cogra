@@ -138,6 +138,33 @@ describe("the reset request (Reset)", () => {
     expect(screen.queryByText("Waiting for your email")).not.toBeInTheDocument();
   });
 
+  // Reset.md: "ALWAYS the screen's ways out refuse a press, undimmed and
+  // unchanged in face, from 200ms after the press of Send reset link until
+  // its answer comes".
+  it("the_back_arrow_refuses_a_press_from_200ms_after_send_until_the_answer", async () => {
+    let answer: () => void = () => {};
+    server.use(
+      gqlLink.mutation("RequestPasswordReset", async () => {
+        await new Promise<void>((resolve) => {
+          answer = resolve;
+        });
+        return HttpResponse.json({
+          data: { requestPasswordReset: { __typename: "RequestPasswordResetPayload", ok: true } },
+        });
+      }),
+    );
+    renderWithProviders(<ResetForm />);
+    const back = screen.getByTestId("reset.header.back");
+    requestFor();
+    expect(back).not.toHaveAttribute("aria-disabled");
+    expect(await screen.findByText("Sending reset link…")).toBeInTheDocument();
+    expect(back).toHaveAttribute("aria-disabled", "true");
+    expect(fireEvent.click(back)).toBe(false);
+    answer();
+    expect(await screen.findByTestId("reset_requested")).toBeInTheDocument();
+    expect(back).not.toHaveAttribute("aria-disabled");
+  });
+
   it("the_status_line_stands_only_after_a_press_and_never_says_whether_the_email_has_an_account", async () => {
     server.use(requestOk);
     renderWithProviders(<ResetForm />);
