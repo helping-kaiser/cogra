@@ -12328,7 +12328,7 @@ rec"), his 2, 3 and 4, built on rounds 48–50 merged (ecffb3ba9), round 51
   dashed `Add a cover` door in its place, its words beside it where the
   tile is too small. Drawn on the pick tray (114 × 64 beside the clip's
   114 × 64), the details stage (a cover tile always, its `cover` chip;
-  76.8 × 96 dashed or 96 × 96 chosen beside the 54 × 96 clip), the post
+  a tall clip's 76.8 × 96, dashed or chosen, beside the 54 × 96 clip), the post
   edit (76.8 × 96) and the comment edit (56 × 56, words beside). The cover
   step's strip takes a picture of the author's own in the dashed tile's
   place, outlined (`CoverRow`'s `own`; the `cover` chips on `ComposeCover`

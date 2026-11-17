@@ -16,14 +16,15 @@
    THE COVER STANDS BESIDE THE CLIP, ALWAYS (round 52, jakob 2026-11-17,
    decision 4: "this way we also have a entrance gate for changing the
    cover"). The clip's 54 × 96 tile has a second tile beside it at the same
-   96 high and the cover's own shape — `CoverTile`. A clip that came through
-   the cover step shows its chosen cover there, wearing the `Cover` pill, and
-   the tile is the door back into the step, named `Change the cover`; the
-   `cover` chip's `chosen` draws it, a square clip's 96 × 96. A vertical
-   clip skipped the step, so the same place holds the dashed `Add a cover`
-   door at a tall clip's 4:5, 76.8 × 96 — the default, as the board stood.
-   Either door opens the cover step, and its Next comes back here with the
-   choice.
+   96 high and the cover's own shape — `CoverTile`. This board's clip is
+   vertical, so it skipped the step and the same place holds the dashed `Add
+   a cover` door at a tall clip's 4:5, 76.8 × 96 — the default, as the board
+   stood. Once a cover is chosen through that door, the tile shows it,
+   wearing the `Cover` pill, at the same 4:5, 76.8 × 96 (a tall clip's cover
+   is cut at 4:5, `CoverCrop`), and it is the door back into the step, named
+   `Change the cover`; the `cover` chip's `chosen` draws it. A square clip's
+   cover would stand 96 × 96, a wide one's 170.7 × 96. Either door opens the
+   cover step, and its Next comes back here with the choice.
 
    THE CLIP CARRIES ITS OWN ×, AND NO MANAGER (jakob's ruling 2026-09-15). A
    video is the whole body, so there is nothing to reorder and no set for a
@@ -63,7 +64,7 @@ export function Screen() {
           </div>
           <div style={{ display: "{{chosenShown}}", alignItems: "center", gap: 8 }}>
             <MediaThumb src="clip-lakeside.jpg" alt="" width={54} height={96} video onRemove={() => {}} removeLabel="Remove this video" />
-            <CoverTile src="clip-lakeside.jpg" transform="scale(1.5)" width={96} height={96} />
+            <CoverTile src="clip-lakeside.jpg" transform="scale(1.5)" width={76.8} height={96} />
           </div>
           <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} />
         </div>
