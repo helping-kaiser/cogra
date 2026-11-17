@@ -10,6 +10,16 @@ ALWAYS the line Every change to your profile is signed in your name and stays in
 
 WHEN tap the "?" -> the dialog Changing your picture opens
 
+WHEN the seal opens GIVEN the new picture's upload is still running -> the gate line reads Uploading 0 of 1 — signing waits for the picture. over the foot AND Sign the change stays enabled AND a press waits for the upload, then signs
+
+WHEN the new picture's upload fails while the seal waits on it -> the gate line reads One picture didn't upload. Signing waits for it. followed by Retry AND Sign the change is disabled AND NEVER Remove it stands on the seal
+
+ALWAYS the gate line's fact One picture didn't upload. wears the error ink and Signing waits for it. the quiet voice
+
+WHEN an upload fails GIVEN Sign the change was pressed while the upload ran -> the held press drops AND Sign the change reads Sign the change again AND Back reads Back again AND NEVER anything is signed
+
+WHEN press Retry on the gate line -> the upload starts again AND the gate line returns to its running reading AND Sign the change is enabled again AND NEVER signing proceeds until Sign the change is pressed again
+
 WHEN Sign the change is pressed -> Sign the change refuses a second press until the signing answers AND NEVER Sign the change dims
 
 WHEN the signing has not answered 200ms after the press -> Sign the change reads Signing the change… AND NEVER a spinner appears
