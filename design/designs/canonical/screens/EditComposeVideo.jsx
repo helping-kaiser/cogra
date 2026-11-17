@@ -45,6 +45,12 @@
    edit), so it stages the Edit record when nothing has yet, and adds nothing
    when the edit's record is already staged, as here.
 
+   THE COVER'S THUMB WEARS THE COVER'S SHAPE, NOT THE CLIP'S (round 50,
+   impl's seam 342). This clip is tall, and a tall clip's cover is cut at 4:5
+   (`CoverCrop`, jakob 2026-11-12 and 2026-11-13, N7), so the chosen face
+   stands 54 × 67.5 under the clip's own 54 × 96: the same width, the cover's
+   shape. The clip's tile keeps the clip's shape.
+
    REGISTERED under the `postEdit` prefix (seam 248), `EditComposeBody`'s
    names; the clip's block is `video`, the cover's `cover` (its door `add` and
    `note` at rest, the chosen face `thumb` and `change` once one is chosen),
@@ -92,7 +98,7 @@ export function Screen() {
               </InlineAction>
             </div>
             <div style={{ display: "{{coverShown}}", alignItems: "center", gap: 8 }}>
-              <MediaThumb src="post-photo.jpg" alt="" width={54} height={96} fit="cover" node="thumb" />
+              <MediaThumb src="post-photo.jpg" alt="" width={54} height={67.5} fit="cover" node="thumb" />
               <Button variant="text" size="sm" node="change">Change the cover</Button>
             </div>
           </div>
