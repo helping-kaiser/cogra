@@ -304,9 +304,10 @@ describe("the picker", () => {
 
   // Round 5: "shape-switch must allow re-framing any section at any ratio". The
   // measured rectangle carries the OLD shape, so keeping it would bake the old
-  // shape into the upload; dropping it makes the cropper measure a fresh one
-  // against the original picture. Where the reader had put each picture — the
-  // position and the zoom — is theirs and stays.
+  // shape into the upload. With no stage width to measure against it is
+  // dropped, and the cropper measures a fresh one against the original
+  // picture. Where the reader had put each picture — the position and the
+  // zoom — is theirs and stays.
   it("re-frames every picture against the original when the post's shape changes", () => {
     const framed = run(
       emptyWizard(),
@@ -363,7 +364,8 @@ describe("the picker", () => {
     expect(crop.zoom).toBe(1.2);
     expect(crop.x).toBe(10);
     expect(crop.y).toBe(-20);
-    expect(crop.area).toBeNull();
+    // Measured again, for the new shape, at the place it kept.
+    expect(crop.area).toEqual({ x: 103, y: 1432, width: 2664, height: 1395 });
     // Never measured, so there is no size to keep it at: it stays as it was.
     expect(framed.assets[0]!.crop).toEqual({ x: 0, y: 0, zoom: 1, area: null, areaPercent: null });
   });

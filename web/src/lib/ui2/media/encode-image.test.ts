@@ -363,8 +363,8 @@ describe("encodeForUpload", () => {
   // rectangle used to be authoritative about its own shape too, on the reading
   // that a draft framed at one shape and encoded while the wizard named another
   // should upload what the author saw. That case cannot arise — the shape action
-  // drops `area` on every change of shape, so a measurement always belongs to
-  // the shape in force — and the reading cost more than it bought: a rectangle
+  // re-measures or drops `area` on every change of shape, so a measurement always
+  // belongs to the shape in force — and the reading cost more than it bought: a rectangle
   // of the wrong shape, at the limit one covering the whole picture, uploaded
   // the untouched original (jakob's hand test, the 4:5 post that kept its
   // 426x1080 cat).
