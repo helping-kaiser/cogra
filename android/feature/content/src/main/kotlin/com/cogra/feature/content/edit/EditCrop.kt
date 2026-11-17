@@ -41,10 +41,6 @@ sealed interface EditCrop {
     ) : EditCrop
 }
 
-/** The crop's how-to line and what the cover's crop is for (CoverCrop.jsx; copy-voice, *The crops' how-to line*). */
-const val CROP_HOW_TO_LINE = "Drag to move, pinch to zoom."
-const val COVER_CROP_LINE = "The cover takes the video's shape."
-
 /**
  * THE POST'S ONE SHAPE (D17), read back off a picture it was published with:
  * the pictures' shared ratio is the only record of the shape the author

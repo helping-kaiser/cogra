@@ -637,6 +637,30 @@ describe("picking a video", () => {
     expect(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next"))).not.toBeDisabled();
   });
 
+  // THE HAND TEST OF 2026-11-17: an upload that failed on a picked file's
+  // handle failed again on every Retry, which read the same handle. A face
+  // picked from the device joins as its own bytes, so its upload and every
+  // Retry of it read what was picked, not the handle.
+  it("keeps a face picked from the device as its own bytes, not the picked handle", async () => {
+    const drafts = fakeDrafts();
+    renderWithProviders(
+      <ComposeWizard store={fakeIdentityStore({ keyOnDevice: true })} drafts={drafts} />,
+      { store: signedInStore(), writeSigner: fakeWriteSigner() },
+    );
+    await pickFiles([aVideo()]);
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
+    const face = new File([new Uint8Array([4, 5, 6]) as BlobPart], "face.jpg", { type: "image/jpeg" });
+    const input = await screen.findByTestId("wizard-cover-file-input");
+    Object.defineProperty(input, "files", { value: [face], configurable: true });
+    fireEvent.change(input);
+
+    await waitFor(async () => expect((await drafts.load())?.cover?.frame).toBe(-1), { timeout: 3000 });
+    const kept = (await drafts.load())!.cover!.file;
+    expect(kept).not.toBe(face);
+    expect(kept.type).toBe("image/jpeg");
+    expect(new Uint8Array(await kept.arrayBuffer())).toEqual(new Uint8Array([4, 5, 6]));
+  });
+
   // ONE TILE, NEVER TWO, AND NO MANAGER (jakob's ruling mirrored from
   // Android PR #813; `ComposeDetailsVideo.jsx:15-34,22-32`,
   // `ComposePickVideoCover.jsx:12-19`, design/readme.md §13 "The cover's
