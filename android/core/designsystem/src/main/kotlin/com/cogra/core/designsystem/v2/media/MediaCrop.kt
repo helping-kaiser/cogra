@@ -136,24 +136,20 @@ fun MediaCrop(
  * pager's square in a comment, so there are no shape chips — choosing a shape
  * here would let the cover disagree with the thing it is the face of
  * (CoverCrop.md). The stage is the post crop's 390 × 488, the frame [ratio]
- * between the gutters (CoverCrop.md:11).
+ * between the gutters (CoverCrop.md:11). Nothing stands under the zoom: no
+ * line says how to move the picture or what shape it takes (round 44;
+ * CoverCrop.jsx draws the stage, the zoom and Next alone).
  */
 @Composable
 fun LockedCrop(
     item: MediaItem,
     ratio: Float,
     state: CropState,
-    notes: List<String>,
     modifier: Modifier = Modifier,
     bleed: Dp = Layout.ScreenGutter,
     testTag: String? = null,
-    /**
-     * The crop's data-node on a registered screen (`coverCrop`): its
-     * `viewport` and `zoom` (with its `input`) wear its parts, and each of
-     * [notes] the part [noteParts] names in its place.
-     */
+    /** The crop's data-node on a registered screen (`coverCrop`): its `viewport` and `zoom` (with its `input`). */
     node: DataNode? = null,
-    noteParts: List<String> = listOf("howTo", "shapeNote"),
 ) {
     SyncFrame(state, item, ratio)
     Column(
@@ -163,13 +159,6 @@ fun LockedCrop(
         CropViewport(item, state, bleed, node?.div("viewport")?.tag ?: testTag)
 
         CropZoom(state = state, testTag = testTag?.let { "${it}_zoom" }, node = node?.div("zoom"))
-
-        notes.forEachIndexed { index, note ->
-            QuietNote(
-                text = note,
-                modifier = Modifier.fillMaxWidth().dataNode(noteParts.getOrNull(index)?.let { node?.div(it) }),
-            )
-        }
     }
 }
 

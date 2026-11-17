@@ -130,7 +130,12 @@ import {
   type BundleState,
 } from "@/lib/ui/stance-readout";
 import { TransportError } from "@/lib/ui/transport-error";
-import { NOT_THROUGH_LINE } from "@/lib/ui/error-messages";
+import {
+  NO_ANSWER_LINE,
+  NOT_THROUGH_LINE,
+  outcomeFaultLine,
+  UNVERIFIED_LINE,
+} from "@/lib/ui/error-messages";
 import { WriteRuleNotice } from "@/lib/ui/write-rule-notice";
 import { PairField } from "@/lib/ui2/compose/pair-field";
 import { useCoversSurface } from "@/lib/ui2/covering-layer";
@@ -187,24 +192,26 @@ type Pending = {
 };
 
 /**
- * What did not go through on a surface: no answer (`failed`), the server's
- * FORBIDDEN (`notThrough`, NetworkError.md:13 — an answer, so never the
+ * What did not go through on a surface: no answer (`failed`), an answered
+ * fault of the whole act (`notThrough` — FORBIDDEN, INTERNAL,
+ * SIGNATURE_INVALID, a fieldless BAD_INPUT — or `unverified`,
+ * EMAIL_NOT_VERIFIED; NetworkError.md:13-19: an answer, so never the
  * no-answer line), or the write rule's notice.
  */
-type Fault = "failed" | "notThrough" | "writeRule";
+type Fault = "failed" | "notThrough" | "unverified" | "writeRule";
 
-/** The two faults that re-raise their surface with Retry. */
-const retries = (fault: Fault | null): boolean => fault === "failed" || fault === "notThrough";
+/** The faults that re-raise their surface with Retry. */
+const retries = (fault: Fault | null): boolean => fault !== null && fault !== "writeRule";
 
 /** The line a retrying fault says above its commit (copy-voice, *Faults by code*). */
-const retryLine = (fault: Fault | null): string => (fault === "notThrough" ? NOT_THROUGH_LINE : NO_ANSWER_LINE);
+const retryLine = (fault: Fault | null): string =>
+  fault === "notThrough" ? NOT_THROUGH_LINE : fault === "unverified" ? UNVERIFIED_LINE : NO_ANSWER_LINE;
 
-const NO_ANSWER_LINE = "That didn't send. Try again.";
-
-/** A refused commit's fault: the write rule's notice, FORBIDDEN's not-through, else the fault. */
+/** A refused commit's fault: the write rule's notice, an answered whole-act fault, else no answer. */
 function refusalFault(outcome: Outcome<unknown>): Fault {
   if (hasCode(outcome, "WRITE_RULE_FAILED")) return "writeRule";
-  return hasCode(outcome, "FORBIDDEN") ? "notThrough" : "failed";
+  const line = outcomeFaultLine(outcome);
+  return line === UNVERIFIED_LINE ? "unverified" : line === NOT_THROUGH_LINE ? "notThrough" : "failed";
 }
 
 /**

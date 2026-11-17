@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.cogra.core.designsystem.BackingValue
 import com.cogra.core.designsystem.attachmentLanding
 import com.cogra.core.designsystem.hundredth
+import com.cogra.core.designsystem.v2.media.cappedToTallestTile
 import com.cogra.core.designsystem.walkBackPick
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.LicenseChoice
@@ -583,11 +584,12 @@ class PostEditViewModel @Inject constructor(
     /**
      * `Add a cover` / `Change the cover`: the device's own picker handed back
      * a picture — NEVER the clip's frames — and it passes the cover's crop,
-     * locked to the clip's own shape, before it lands (EditComposeVideo.md).
+     * locked to the clip's shape as the clip stands in a card: its own
+     * ratio, a clip taller than 4:5 at 4:5 (CoverCrop.md:3; web `coverRatio`).
      */
     fun onPickCover(uri: String) = _state.update { st ->
         val clip = st.gallery.clip ?: return@update st
-        st.copy(cropping = EditCrop.Cover(PickedAsset(uri), ratio = clip.asset.aspectRatio))
+        st.copy(cropping = EditCrop.Cover(PickedAsset(uri), ratio = clip.asset.aspectRatio.cappedToTallestTile()))
     }
 
     fun onCoverCropChanged(crop: CropSpec) = _state.update { st ->
