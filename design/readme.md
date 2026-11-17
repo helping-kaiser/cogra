@@ -12367,7 +12367,11 @@ merged in (6f95dac35, then its act 2, 55cd99081).
   boards take the edit's fault in the commit's place, `fault` chip
   `unsent` · `refused`, `postEdit.fault` / `commentEdit.fault` with an
   outlined `Retry`, the count above, no `Back` — round 51's `editFault`,
-  one helper for all four edits.
+  one helper for all four edits; and a refused upload at their gate reads
+  the fact alone, as on `EditCompose` (round 51 act 2): `CommentEditVideo`'s
+  `clip` chip draws it at `refused`, `The video didn't upload.` on the gate
+  and `Sign the edit` disabled until `Remove it`; a refused cover keeps `One
+  picture didn't upload.`
 - **Adjacent**: `Reel.md` and `ViewerVideo.md` end their cover sentence
   ("…and its cover has loaded"); `AvatarCrop` and `CoverCrop` take an
   `opener` chip so the boards speak the C8 back names; the
