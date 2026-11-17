@@ -98,7 +98,7 @@ export function LoginForm({
   const canSubmit = email !== "" && password !== "" && !inProgress;
   const fault = error !== null ? loginMessage(error) : transportFailed ? NO_ANSWER : null;
   // SignIn.md: the ways out refuse a press from 200ms after the press until the answer.
-  const held = useSlowAnswer(inProgress);
+  const exitsHeld = useSlowAnswer(inProgress);
 
   /** Credentials changed: a session held for the old ones is not this sign-in's. */
   const dropHeld = () => {
@@ -161,7 +161,7 @@ export function LoginForm({
       node={SIGN_IN}
       backHref="/feed"
       backLabel="Back"
-      backHeld={held}
+      backHeld={exitsHeld}
       title="Sign in to CoGra"
     >
       <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-4" noValidate>
@@ -210,18 +210,18 @@ export function LoginForm({
         />
       </form>
       <LinkStack>
-        <LinkRow href="/reset" node={part(SIGN_IN, "forgot")} held={held}>
+        <LinkRow href="/reset" node={part(SIGN_IN, "forgot")} held={exitsHeld}>
           Forgot password?
         </LinkRow>
-        <LinkRow href="/join" node={part(SIGN_IN, "invite")} held={held}>
+        <LinkRow href="/join" node={part(SIGN_IN, "invite")} held={exitsHeld}>
           New here? Enter your invite
         </LinkRow>
-        <LinkRow href="/feed" node={part(SIGN_IN, "browse")} held={held}>
+        <LinkRow href="/feed" node={part(SIGN_IN, "browse")} held={exitsHeld}>
           Just looking? Browse the feed →
         </LinkRow>
         {/* A static file under public/, staged by `make web-apk` — a plain
             anchor, since it leaves the router entirely. */}
-        <LinkRow href={APK_HREF} download node={part(SIGN_IN, "apk")} held={held}>
+        <LinkRow href={APK_HREF} download node={part(SIGN_IN, "apk")} held={exitsHeld}>
           On Android? Download the app (APK)
         </LinkRow>
       </LinkStack>
