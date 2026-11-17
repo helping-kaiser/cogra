@@ -650,6 +650,45 @@ describe("PostEditRoute — one batch (EditCompose, EditActs)", () => {
     expect(footer()).toHaveTextContent("Nothing to sign yet");
   });
 
+  // jakob 2026-11-13 (seam 327): a refused tag NAME reads as the picker's own
+  // line (TagPickerRefused), never the server's `a topic name …` text.
+  it("reads a refused tag name on its chip as the picker's line, never the server's text", async () => {
+    serve(editablePost());
+    server.use(
+      gqlLink.mutation("PrepareTag", () =>
+        HttpResponse.json({
+          data: {
+            prepareTag: {
+              __typename: "PreparePayload",
+              writes: null,
+              userErrors: [
+                {
+                  __typename: "UserError",
+                  message: "a topic name is at most 128 bytes, got 129",
+                  code: "BAD_INPUT",
+                  field: ["name"],
+                },
+              ],
+            },
+          },
+        }),
+      ),
+    );
+    const signer = draw();
+    fireEvent.click(await screen.findByTestId("postEdit.tags.add"));
+    fireEvent.change(await screen.findByRole("searchbox", { name: "Name a tag" }), {
+      target: { value: "saltmaps" },
+    });
+    fireEvent.click(await screen.findByTestId(byNode("tagPicker.tag", "saltmaps")));
+    fireEvent.click(screen.getByTestId("tagPicker.done"));
+    await screen.findByTestId("postEdit.header");
+    fireEvent.click(sign());
+    const line = await screen.findByTestId("post-edit-tag-error-0");
+    expect(line).toHaveTextContent("A tag name is letters, digits, dot, dash and underscore.");
+    expect(screen.getByTestId("post-edit")).not.toHaveTextContent(/topic name/);
+    expect(signer.signStaged).not.toHaveBeenCalled();
+  });
+
   it("counts a citation's withdrawal at its counter-records", async () => {
     serve(editablePost({ references: [referenceClaim("u-juno", "juno", 2)] }));
     draw();
@@ -839,6 +878,54 @@ describe("PostEditRoute — signing", () => {
     fireEvent.click(sign());
     expect(await screen.findByTestId("home_restore")).toBeInTheDocument();
     expect(prepared).toBe(false);
+  });
+
+  // NetworkError.md:13 — the server's FORBIDDEN refuses the whole edit: the
+  // not-through line, never "You can't do that here." and never on a chip.
+  it("reads a FORBIDDEN prepare as That didn't go through., the whole edit's line, nothing signed", async () => {
+    serve(editablePost());
+    server.use(
+      gqlLink.mutation("PreparePostEdit", () =>
+        HttpResponse.json({
+          data: null,
+          errors: [{ message: "member account required", extensions: { code: "FORBIDDEN" } }],
+        }),
+      ),
+    );
+    const signer = draw();
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
+    fireEvent.click(sign());
+    const line = await screen.findByTestId("post-edit-refused");
+    expect(line).toHaveTextContent("That didn't go through. Try again.");
+    expect(screen.getByTestId("post-edit")).not.toHaveTextContent(/You can't do that here|reach the server/);
+    expect(screen.queryByTestId("post-edit-failed")).toBeNull();
+    expect(signer.signStaged).not.toHaveBeenCalled();
+    // The commit stays, the re-press.
+    expect(sign()).not.toBeDisabled();
+  });
+
+  it("reads a FORBIDDEN tag prepare on the whole edit, never under the chip", async () => {
+    serve(editablePost());
+    server.use(
+      gqlLink.mutation("PrepareTag", () =>
+        HttpResponse.json({
+          data: null,
+          errors: [{ message: "member account required", extensions: { code: "FORBIDDEN" } }],
+        }),
+      ),
+    );
+    const signer = draw();
+    fireEvent.click(await screen.findByTestId("postEdit.tags.add"));
+    fireEvent.change(await screen.findByRole("searchbox", { name: "Name a tag" }), {
+      target: { value: "saltmaps" },
+    });
+    fireEvent.click(await screen.findByTestId(byNode("tagPicker.tag", "saltmaps")));
+    fireEvent.click(screen.getByTestId("tagPicker.done"));
+    await screen.findByTestId("postEdit.header");
+    fireEvent.click(sign());
+    expect(await screen.findByTestId("post-edit-refused")).toHaveTextContent("That didn't go through. Try again.");
+    expect(screen.queryByTestId("post-edit-tag-error-0")).toBeNull();
+    expect(signer.signStaged).not.toHaveBeenCalled();
   });
 
   it("takes the commit's place with the write rule's notice and no Retry", async () => {

@@ -14,6 +14,7 @@
 
 package com.cogra.feature.content
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -87,8 +88,17 @@ class ReportViewModel @Inject constructor(
     fun outcomeConsumed() = _state.update { it.copy(outcome = null) }
 }
 
-/** What a screen raises when its menu's Report row is tapped, for one post. */
-typealias ReportSheetSlot = @Composable (postId: String, onDismiss: () -> Unit, notify: (String) -> Unit) -> Unit
+/** What kind of thing a report names — its confirm's title (`Report this post?`, `Report this comment?`). */
+enum class ReportKind(@StringRes internal val title: Int) {
+    Post(R.string.content_report_title_post),
+    Comment(R.string.content_report_title_comment),
+}
+
+/** One report asked for: the node it names and what kind of thing that is. */
+data class ReportAsk(val target: String, val kind: ReportKind)
+
+/** What a screen raises when its menu's Report row is tapped, for one thing. */
+typealias ReportSheetSlot = @Composable (ask: ReportAsk, onDismiss: () -> Unit, notify: (String) -> Unit) -> Unit
 
 /**
  * THE REPORT ROW'S DOOR, as a screen's slot: a signed-out reader is asked to
@@ -97,11 +107,11 @@ typealias ReportSheetSlot = @Composable (postId: String, onDismiss: () -> Unit, 
  * confirm, wearing [node] where its host's board registers one.
  */
 fun reportDoor(onRequireAccount: (() -> Unit)?, testTag: String, node: DataNode? = null): ReportSheetSlot =
-    { postId, onDismiss, notify ->
+    { ask, onDismiss, notify ->
         if (onRequireAccount != null) {
             GuestReport(onRequireAccount = onRequireAccount, onDismiss = onDismiss)
         } else {
-            ReportSheetRoute(postId = postId, onDismiss = onDismiss, notify = notify, testTag = testTag, node = node)
+            ReportSheetRoute(ask = ask, onDismiss = onDismiss, notify = notify, testTag = testTag, node = node)
         }
     }
 
@@ -115,7 +125,7 @@ private fun GuestReport(onRequireAccount: () -> Unit, onDismiss: () -> Unit) {
 }
 
 /**
- * The confirm for one post, over the surface the menu was opened from, with
+ * The confirm for one post or comment, over the surface the menu was opened from, with
  * its aftermath on that surface's snackbar through [notify].
  *
  * Gone through: the sheet closes and the snackbar says `Reported.`
@@ -128,7 +138,7 @@ private fun GuestReport(onRequireAccount: () -> Unit, onDismiss: () -> Unit) {
  */
 @Composable
 fun ReportSheetRoute(
-    postId: String,
+    ask: ReportAsk,
     onDismiss: () -> Unit,
     notify: (String) -> Unit,
     testTag: String,
@@ -143,7 +153,7 @@ fun ReportSheetRoute(
         viewModel.outcomeConsumed()
         // An answer about another thing — a report this sheet did not send —
         // is not this sheet's to tell.
-        if (outcome.target != postId) return@LaunchedEffect
+        if (outcome.target != ask.target) return@LaunchedEffect
         if (outcome.sent) {
             notify(sentLine)
             onDismiss()
@@ -152,8 +162,9 @@ fun ReportSheetRoute(
         }
     }
     ReportConfirmSheet(
+        kind = ask.kind,
         sending = state.sending != null,
-        onReport = { viewModel.send(postId) },
+        onReport = { viewModel.send(ask.target) },
         onDismiss = onDismiss,
         testTag = testTag,
         node = node,
@@ -168,6 +179,7 @@ fun ReportSheetRoute(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ReportConfirmSheet(
+    kind: ReportKind,
     sending: Boolean,
     onReport: () -> Unit,
     onDismiss: () -> Unit,
@@ -189,7 +201,7 @@ internal fun ReportConfirmSheet(
                 .padding(bottom = Space.x6),
         ) {
             Text(
-                text = stringResource(R.string.content_report_title_post),
+                text = stringResource(kind.title),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier
                     .padding(horizontal = Space.x6)

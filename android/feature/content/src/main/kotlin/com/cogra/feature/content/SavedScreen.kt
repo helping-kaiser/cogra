@@ -121,6 +121,23 @@ private val SAVED_MENU_ROWS = setOf(
     PostMenuRow.Report,
 )
 
+/**
+ * Saved's comment card menu: `saved.menuSheet` (SavedCommentMenu). An own
+ * comment's Edit and Remove are not registered under Saved (seam 320-14), so
+ * they keep their per-comment tags.
+ */
+private val SAVED_COMMENT_MENU = CommentMenuPlacement(
+    sheet = SAVED / "menuSheet",
+    rows = setOf(
+        CommentMenuRow.Save,
+        CommentMenuRow.Cite,
+        CommentMenuRow.CitedBy,
+        CommentMenuRow.Opinions,
+        CommentMenuRow.License,
+        CommentMenuRow.Report,
+    ),
+)
+
 /** Saved's post card: the feed's own, keyed by the post's id as the feed keys it. */
 private val SAVED_PLACEMENT = CardPlacement(
     card = SAVED / "card",
@@ -153,6 +170,7 @@ fun SavedRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val returns = HostReturn(commentsReturn, onCommentsReturnConsumed, rememberCommentReread())
     // SAVED'S REMOVAL, for the own cards' ⋮ and the thread a count raises: a
     // card removed here stands as its mark in place (RM-G9).
     ProvideRemoval {
@@ -176,6 +194,7 @@ fun SavedRoute(
                 ),
                 onEditPost = onEditPost,
                 onCitePost = onCitePost,
+                onEditComment = onEditComment,
                 onReveal = viewModel::onReveal,
                 stanceControl = nodeStanceControl,
             ),
@@ -191,12 +210,12 @@ fun SavedRoute(
                     onReply = onReply,
                     onEditComment = onEditComment,
                     onSignInOrJoin = onSignInOrJoin,
-                    commentsReturn = commentsReturn,
-                    onCommentsReturnConsumed = onCommentsReturnConsumed,
+                    returns = returns,
                     onCommentsDepart = onCommentsDepart,
                 )
             },
             reportSheet = reportDoor(null, SAVED_REPORT_SHEET),
+            returns = returns,
         )
     }
 }
@@ -253,6 +272,8 @@ fun SavedScreen(
     hooks: CardHooks = CardHooks(),
     commentsSheet: @Composable (postId: String, onDismiss: () -> Unit) -> Unit = { _, _ -> },
     reportSheet: ReportSheetSlot = { _, _, _ -> },
+    /** What came back from a comment edit or reply signed off this page, and the one-comment re-read ([EditReturn]). */
+    returns: HostReturn = HostReturn(),
 ) {
     val overlay = writes.overlayState()
     val snackbar = LocalSnackbarHostState.current
@@ -263,10 +284,11 @@ fun SavedScreen(
     val listState = rememberLazyListState()
     val layers = remember { CoveringLayers() }
     var commentsFor by rememberSaveable { mutableStateOf<String?>(null) }
-    var reportFor by remember { mutableStateOf<String?>(null) }
+    var reportFor by remember { mutableStateOf<ReportAsk?>(null) }
+    val editReturn = rememberEditReturn(returns, threadOpen = commentsFor != null)
     val notify = rememberSavedNotify(snackbar)
     LoadNextAtTheTail(listState, state.hasNextPage, state.moreFailed, view.shown.size, onLoadMore)
-    val actions = CardActions(hooks, doors, state.reveals, { commentsFor = it }, { reportFor = it })
+    val actions = CardActions(hooks, doors, state.reveals, { commentsFor = it }, { reportFor = it }, editReturn)
     CompositionLocalProvider(LocalCoveringLayers provides layers, LocalSavedHost provides savedHost) {
         SavedScaffold(
             state = state,
@@ -281,7 +303,7 @@ fun SavedScreen(
             onBack = onBack,
         )
         commentsFor?.let { postId -> commentsSheet(postId) { commentsFor = null } }
-        reportFor?.let { postId -> reportSheet(postId, { reportFor = null }, notify) }
+        reportFor?.let { ask -> reportSheet(ask, { reportFor = null }, notify) }
     }
 }
 
@@ -436,7 +458,7 @@ private fun SavedCardFor(entry: SavedEntry, actions: CardActions) {
             viewerId = actions.viewerId,
             onEdit = actions.onEditPost,
             onCite = actions.onCitePost,
-            onReport = { actions.onReport(card.post.id) },
+            onReport = { actions.onReport(ReportAsk(card.post.id, ReportKind.Post)) },
             revealed = actions.reveals.isRevealed(card.post.id, card.post.sensitiveMark()),
             onReveal = { actions.onReveal(card.post.id, card.post.sensitiveMark()) },
             stanceControl = actions.stanceControl,
@@ -450,6 +472,7 @@ private fun SavedCardFor(entry: SavedEntry, actions: CardActions) {
             node = SAVED / "commentCard",
             testTagPrefix = "saved_comment_${card.comment.id}",
             actions = actions,
+            menu = SAVED_COMMENT_MENU,
         )
 
         is SavedCard.Person -> ProfileFeedCard(

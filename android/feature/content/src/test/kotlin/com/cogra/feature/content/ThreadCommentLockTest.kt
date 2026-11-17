@@ -1,10 +1,18 @@
 package com.cogra.feature.content
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import com.cogra.domain.AccountState
+import com.cogra.domain.CommentPage
+import com.cogra.domain.Outcome
+import com.cogra.domain.Page
+import com.cogra.domain.ReaderStanding
+import com.cogra.domain.content.SensitiveReveals
+import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.testComment
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -93,6 +101,49 @@ class ThreadCommentLockTest {
         compose.setContent { Thread(locked = false, signedIn = false) }
         compose.onNodeWithTag("detail_comment_signin").assertExists()
         compose.onNodeWithTag("detail_add_comment").assertDoesNotExist()
+    }
+
+    /** The thread's real holder, its reader standing as [state], answering one comment. */
+    private fun thread(state: AccountState): CommentsViewModel {
+        val standing = ReaderStanding().apply { record(state) }
+        val content = object : ThrowingContentRepository() {
+            override suspend fun comments(
+                postId: String,
+                first: Int,
+                after: String?,
+                includePending: Boolean,
+            ): Outcome<CommentPage?> = Outcome.Success(
+                CommentPage(page = Page(listOf(testComment("c1")), null, hasNextPage = false), total = 1),
+            )
+        }
+        return CommentsViewModel(content = content, reveals = SensitiveReveals(), standing = standing)
+    }
+
+    /** The sheet's route as it binds: the holder made, then started on the post, then the landing aimed. */
+    private fun aimAt(vm: CommentsViewModel, asked: MutableList<ReplyTargetRequest>) {
+        compose.setContent {
+            LaunchedEffect(Unit) { vm.start("p1") }
+            AimedReply("p1", landOn = "c1", aimReply = true, state = vm.state, onReply = { asked += it })
+        }
+        compose.waitUntil(timeoutMillis = 10_000) { vm.state.value.comments.isNotEmpty() }
+        compose.waitForIdle()
+    }
+
+    // ReplyEntry.md:25 — the comment card's glyph and Reply (feed, History,
+    // Saved) land aimed at the comment; GIVEN an applicant -> NEVER the composer opens.
+    @Test
+    fun anApplicantsAimedLandingOpensNoComposer() {
+        val asked = mutableListOf<ReplyTargetRequest>()
+        aimAt(thread(AccountState.APPLICANT), asked)
+        assertThat(asked).isEmpty()
+    }
+
+    // A member's aimed landing opens the composer at the landed comment.
+    @Test
+    fun aMembersAimedLandingOpensTheComposerAtTheComment() {
+        val asked = mutableListOf<ReplyTargetRequest>()
+        aimAt(thread(AccountState.MEMBER), asked)
+        assertThat(asked.map { it.comment?.id }).containsExactly("c1")
     }
 
     private companion object {

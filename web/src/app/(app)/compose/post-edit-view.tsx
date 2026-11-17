@@ -386,9 +386,7 @@ export function PostEditView({
           tags={state.tags}
           onChange={onTags}
           fieldErrors={tagErrors}
-          cap={null}
           testIdPrefix="post-edit"
-          pairs="sheet"
           onOpenPicker={onOpenTagPicker}
           node={part(NODE, "tags")}
           after={withdrawnTagList.map((tag) => (

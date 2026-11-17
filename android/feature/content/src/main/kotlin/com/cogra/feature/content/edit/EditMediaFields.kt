@@ -42,7 +42,7 @@ import com.cogra.core.designsystem.v2.compose.UploadMedia
 import com.cogra.core.designsystem.v2.compose.UploadStatusLine
 import com.cogra.core.designsystem.v2.compose.failedPicturesLine
 import com.cogra.core.designsystem.v2.compose.removeFailedLabel
-import com.cogra.core.designsystem.v2.media.CropAspect
+import com.cogra.core.designsystem.v2.media.CropKind
 import com.cogra.core.designsystem.v2.media.LockedCrop
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.MediaThumb
@@ -427,7 +427,12 @@ internal fun EditCropStage(crop: EditCrop, actions: EditCropActions, testTagPref
 
 @Composable
 private fun CoverCropBody(crop: EditCrop.Cover, onChanged: (CropSpec) -> Unit, testTagPrefix: String) {
-    val state = rememberCropState(initial = crop.crop.toFraming())
+    val state = rememberCropState(
+        initial = crop.crop.toFraming(),
+        sourceRatio = crop.asset.sourceRatio,
+        kind = CropKind.Cover,
+        frameRatio = crop.ratio,
+    )
     // Reported after every composition, as the post crop's framings are: a
     // process death between the last nudge and Next would otherwise upload a
     // framing the author never saw.
@@ -435,7 +440,7 @@ private fun CoverCropBody(crop: EditCrop.Cover, onChanged: (CropSpec) -> Unit, t
     SideEffect { onChanged(spec) }
     LockedCrop(
         item = MediaItem(crop.asset.uri, crop.asset.sourceRatio ?: 0f, null),
-        window = CropAspect.of(crop.ratio),
+        ratio = crop.ratio,
         state = state,
         notes = listOf(CROP_HOW_TO_LINE, COVER_CROP_LINE),
         testTag = "${testTagPrefix}_cover_crop_view",

@@ -25,11 +25,11 @@ import { checkPasswordResetLink, confirmPasswordReset, requestPasswordReset } fr
 import { passwordLength } from "@/lib/onboarding/registration-rules";
 import { mismatchAfterEdit, mismatchOnPress } from "@/lib/onboarding/repeat-password";
 import { buttonClassName } from "@/lib/ui/button";
-import { part, type DataNode } from "@/lib/ui/data-node";
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { FormPasswordField, FormTextField } from "@/lib/ui2/form-fields";
 import { QuietNote } from "@/lib/ui2/quiet-note";
 import { NO_ANSWER, NOT_THROUGH, RATE_LIMITED_LINE, TaskPage } from "@/lib/ui2/task-page";
-import { WaitingCommit } from "@/lib/ui2/waiting-commit";
+import { useSlowAnswer, WaitingCommit } from "@/lib/ui2/waiting-commit";
 
 const SIGN_IN_ONLY =
   "This restores your sign-in only. Your key stays wherever it is — restoring the key is its own step, with your recovery code.";
@@ -39,17 +39,28 @@ const LENGTH_LINES = {
 } as const;
 const BREACHED = "That password has turned up in a data breach — pick another one.";
 
+/** The reset family's registered prefix — Reset, ResetNew, ResetExpired (nodes.json `reset`, round 28). */
+const RESET: DataNode = { path: "reset" };
+
 export function ResetForm() {
   const token = useSearchParams().get("token");
   // Keyed by the link it answered, so leaving to /reset finds the request.
   const [expiredFor, setExpiredFor] = useState<string | null>(null);
-  const [liveFor, setLiveFor] = useState<string | null>(null);
+  // The live link's account email, kept with the link it answered.
+  const [live, setLive] = useState<{ token: string; email: string | null } | null>(null);
   const held = token !== null && token !== "" ? token : null;
   if (held !== null && expiredFor === held) return <ResetExpired />;
-  if (held !== null && liveFor !== held) {
-    return <ResetCheck token={held} onAnswer={(live) => (live ? setLiveFor : setExpiredFor)(held)} />;
+  if (held !== null && live?.token !== held) {
+    return (
+      <ResetCheck
+        token={held}
+        onAnswer={(answer) =>
+          answer.live ? setLive({ token: held, email: answer.email }) : setExpiredFor(held)
+        }
+      />
+    );
   }
-  if (held !== null) return <ResetNew token={held} onExpired={() => setExpiredFor(held)} />;
+  if (held !== null) return <ResetNew token={held} email={live?.email ?? null} onExpired={() => setExpiredFor(held)} />;
   return <ResetRequest />;
 }
 
@@ -61,7 +72,9 @@ export function ResetForm() {
  * take back. A check that gets no answer opens the form: the press itself
  * still meets a spent link with RESET_TOKEN_INVALID and opens ResetExpired.
  */
-function ResetCheck({ token, onAnswer }: { token: string; onAnswer: (live: boolean) => void }) {
+type LinkAnswer = { live: false } | { live: true; email: string | null };
+
+function ResetCheck({ token, onAnswer }: { token: string; onAnswer: (answer: LinkAnswer) => void }) {
   const client = useApolloClient();
   // The answer lands through the newest callback, while the read runs once per
   // link (React docs, "Removing Effect Dependencies": an event read from a ref).
@@ -73,7 +86,8 @@ function ResetCheck({ token, onAnswer }: { token: string; onAnswer: (live: boole
     let cancelled = false;
     void checkPasswordResetLink(client, token.trim()).then((outcome) => {
       if (cancelled) return;
-      answer.current(!(outcome.kind === "success" && !outcome.value));
+      if (outcome.kind !== "success") answer.current({ live: true, email: null });
+      else answer.current(outcome.value === null ? { live: false } : { live: true, email: outcome.value });
     });
     return () => {
       cancelled = true;
@@ -88,6 +102,8 @@ function ResetRequest() {
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
   const [fault, setFault] = useState<string | null>(null);
+  // Reset.md: the ways out refuse a press from 200ms after the press until the answer.
+  const held = useSlowAnswer(busy);
 
   const onRequest = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -114,8 +130,10 @@ function ResetRequest() {
 
   return (
     <TaskPage
+      node={RESET}
       backHref="/login"
       backLabel="Back"
+      backHeld={held}
       title="Reset your password"
       lead="Resetting the password signs out every device."
     >
@@ -127,7 +145,7 @@ function ResetRequest() {
             enterKeyHint="go"
             value={email}
             onChange={setEmail}
-            testId="reset_email"
+            node={part(RESET, "email")}
           />
         </div>
         <div className="mt-6">
@@ -138,7 +156,7 @@ function ResetRequest() {
             waiting={email === ""}
             busy={busy}
             fault={fault}
-            testId="reset_request"
+            node={part(RESET, "commit")}
           />
         </div>
         {sent && (
@@ -147,17 +165,14 @@ function ResetRequest() {
           </p>
         )}
         <div className="mt-6">
-          <QuietNote>{SIGN_IN_ONLY}</QuietNote>
+          <QuietNote node={part(RESET, "note")}>{SIGN_IN_ONLY}</QuietNote>
         </div>
       </form>
     </TaskPage>
   );
 }
 
-/** ResetNew's registered prefix (nodes.json `reset`, round 28). */
-const RESET_NEW: DataNode = { path: "reset" };
-
-function ResetNew({ token, onExpired }: { token: string; onExpired: () => void }) {
+function ResetNew({ token, email, onExpired }: { token: string; email: string | null; onExpired: () => void }) {
   const client = useApolloClient();
   const router = useRouter();
   const [password, setPassword] = useState("");
@@ -205,11 +220,26 @@ function ResetNew({ token, onExpired }: { token: string; onExpired: () => void }
 
   return (
     <TaskPage
-      node={RESET_NEW}
+      node={RESET}
       title="Set a new password"
       lead="Setting a new password signs out every device."
     >
       <form onSubmit={onConfirm} className="flex flex-col" noValidate>
+        {email !== null && (
+          // The account the new password is filed under (Chromium, "Create Amazing
+          // Password Forms": use hidden fields for implicit information). Never
+          // shown, focused or announced; the value never leaves this form's DOM.
+          <input
+            type="text"
+            name="username"
+            autoComplete="username"
+            value={email}
+            readOnly
+            hidden
+            tabIndex={-1}
+            aria-hidden="true"
+          />
+        )}
         <div className="mt-8">
           <FormPasswordField
             label="New password"
@@ -219,7 +249,7 @@ function ResetNew({ token, onExpired }: { token: string; onExpired: () => void }
             enterKeyHint="next"
             hint="At least 12 characters."
             error={line?.text ?? null}
-            node={part(RESET_NEW, "password")}
+            node={part(RESET, "password")}
           />
         </div>
         <div className="mt-6">
@@ -229,7 +259,7 @@ function ResetNew({ token, onExpired }: { token: string; onExpired: () => void }
             onChange={onRepeat}
             autoComplete="new-password"
             error={repeatLine}
-            node={part(RESET_NEW, "confirm")}
+            node={part(RESET, "confirm")}
           />
         </div>
         <div className="mt-6">
@@ -240,11 +270,11 @@ function ResetNew({ token, onExpired }: { token: string; onExpired: () => void }
             waiting={password === "" || repeat === ""}
             busy={busy}
             fault={fault}
-            node={part(RESET_NEW, "commit")}
+            node={part(RESET, "commit")}
           />
         </div>
         <div className="mt-6">
-          <QuietNote node={part(RESET_NEW, "note")}>{SIGN_IN_ONLY}</QuietNote>
+          <QuietNote node={part(RESET, "note")}>{SIGN_IN_ONLY}</QuietNote>
         </div>
       </form>
     </TaskPage>
@@ -255,13 +285,14 @@ function ResetExpired() {
   const router = useRouter();
   return (
     <TaskPage
+      node={RESET}
       title="This link doesn't work anymore"
       lead="A reset link works once and expires after 15 minutes."
     >
       <div className="mt-6 flex flex-col gap-2">
         <button
           type="button"
-          data-testid="reset_again"
+          {...testAttributes(part(RESET, "again"))}
           onClick={() => router.replace("/reset")}
           className={`${buttonClassName({ variant: "outline" })} w-full`}
         >
@@ -269,7 +300,7 @@ function ResetExpired() {
         </button>
         <button
           type="button"
-          data-testid="reset_sign_in"
+          {...testAttributes(part(RESET, "onward"))}
           onClick={() => router.replace("/login")}
           className={`${buttonClassName({ variant: "text" })} w-full`}
         >

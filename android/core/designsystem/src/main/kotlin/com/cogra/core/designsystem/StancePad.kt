@@ -93,6 +93,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationException
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalViewConfiguration
@@ -112,6 +113,7 @@ import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
@@ -1565,7 +1567,17 @@ private fun HoldRing() {
         }
     }
     val ink = MaterialTheme.colorScheme.primary
-    Canvas(Modifier.size(HOLD_RING).clearAndSetSemantics { }) {
+    // THE RING TAKES NO ROOM (`StanceControl.jsx` `withHoldRing`: "the ring
+    // centred on it, the face's own box unchanged, so nothing beside it
+    // moves"): it lays out as a zero-size point at the face's centre and draws
+    // its 40dp around it — the master's absolute, translate(-50%, -50%) ring.
+    // Measured in the face's box it grew the anchor past the face, and the
+    // row's graph glyph and comment icon stepped right at every press.
+    val centred = Modifier.layout { measurable, _ ->
+        val ring = measurable.measure(Constraints.fixed(HOLD_RING.roundToPx(), HOLD_RING.roundToPx()))
+        layout(0, 0) { ring.place(-ring.width / 2, -ring.height / 2) }
+    }
+    Canvas(centred.clearAndSetSemantics { }) {
         val stroke = HOLD_RING_STROKE.toPx()
         drawArc(
             color = ink,

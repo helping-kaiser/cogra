@@ -33,9 +33,21 @@ describe("sealFaultOf", () => {
     expect(sealFaultOf([{ code: "BAD_INPUT", message: "", field: ["tags", "0", "name"] }], refs)).toEqual({
       kind: "bug",
     });
-    expect(
-      sealFaultOf([{ code: "FORBIDDEN", message: "", field: ["references", "0", "target"] }], refs),
-    ).toEqual({ kind: "bug" });
     expect(sealFaultOf([], refs)).toEqual({ kind: "bug" });
+  });
+
+  // NetworkError.md:13: the server answered FORBIDDEN — the whole act did not
+  // go through, wherever the code was anchored, and it outranks a row.
+  it("reads FORBIDDEN as not through, never the bug or a row", () => {
+    expect(sealFaultOf([{ code: "FORBIDDEN", message: "", field: null }], refs)).toEqual({ kind: "notThrough" });
+    expect(
+      sealFaultOf(
+        [
+          { code: "NOT_FOUND", message: "", field: ["references", "1", "target"] },
+          { code: "FORBIDDEN", message: "", field: ["references", "0", "target"] },
+        ],
+        refs,
+      ),
+    ).toEqual({ kind: "notThrough" });
   });
 });

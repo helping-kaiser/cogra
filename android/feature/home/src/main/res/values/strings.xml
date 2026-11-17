@@ -31,10 +31,8 @@
     <string name="home_open_feed">Feed</string>
     <string name="home_open_settings">Settings</string>
 
-    <string name="home_verify_explainer">We emailed you a verification token. Paste it here to prove the address is yours.</string>
-    <string name="home_verify_token">Verification token</string>
-    <string name="home_verify_submit">Verify email</string>
-    <string name="home_verify_failed">That token is invalid or expired — resend and try the newest one.</string>
+    <!-- The task card's title (ApplicantFeed, feed.verifyCard.title; copy-voice, the applicant task cards). -->
+    <string name="home_verify_title">Verify your email</string>
     <string name="home_verify_resend">Resend the email</string>
     <string name="home_verify_resent">If an application holds that address, a fresh token is on its way.</string>
     <string name="home_verify_email">Email</string>

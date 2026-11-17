@@ -637,9 +637,7 @@ export function CommentEditView({
                 tags={tags}
                 onChange={onTags}
                 fieldErrors={tagErrors}
-                cap={null}
                 testIdPrefix="comment-edit"
-                pairs="sheet"
                 onOpenPicker={onOpenTagPicker}
                 node={part(NODE, "tags")}
                 after={withdrawnTags(loadedTags, tags).map((tag) => (

@@ -679,6 +679,40 @@ describe("the reply wizard", () => {
       expect(screen.queryByTestId("reply-seal-tags")).toBeNull();
     });
 
+    // jakob 2026-11-13 (seam 327): a refused tag NAME reads as the picker's
+    // own line (TagPickerRefused), never the server's `a topic name …` text.
+    it("reads a refused tag name as the picker's line, never the server's text", async () => {
+      server.use(
+        tagNames(),
+        gqlLink.mutation("PrepareComment", () =>
+          HttpResponse.json({
+            data: {
+              prepareComment: {
+                __typename: "PrepareContentPayload",
+                node: null,
+                writes: null,
+                userErrors: [
+                  {
+                    __typename: "UserError",
+                    message: "`reserved` is not a legal topic name: ASCII letters, digits, `.`, `-`, `_` only",
+                    code: "BAD_INPUT",
+                    field: ["tags", "0", "name"],
+                  },
+                ],
+              },
+            },
+          }),
+        ),
+      );
+      draw();
+      await toSeal();
+      stageTag("reserved");
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      const fault = await screen.findByTestId("reply-seal-tags-fault");
+      expect(fault).toHaveTextContent("A tag name is letters, digits, dot, dash and underscore.");
+      expect(screen.getByTestId("reply-seal")).not.toHaveTextContent(/topic name/);
+    });
+
     // ReplySeal.md:19 — the fault line and Retry IN THE FOOT, in Sign
     // comment's place; Retry is the same signing, asked again.
     it("surfaces a submit that never reached the server in the foot, and Retry asks again", async () => {
@@ -689,6 +723,30 @@ describe("the reply wizard", () => {
       const line = await screen.findByTestId("reply-transport-error");
       expect(line).toHaveTextContent("That didn't send. Try again.");
       expect(within(screen.getByTestId("reply-seal")).getByTestId("reply-transport-error")).toBe(line);
+      expect(screen.queryByTestId("reply-sign")).toBeNull();
+      server.use(prepareOk("comment-9"));
+      fireEvent.click(screen.getByTestId("reply-retry"));
+      await waitFor(() => expect(onSigned).toHaveBeenCalledWith("comment-9"));
+    });
+
+    // NetworkError.md:13 — the server's FORBIDDEN at the prepare is an answer,
+    // never the no-answer line and never the bug notice.
+    it("NetworkError.md:13 a FORBIDDEN prepare reads That didn't go through. with Retry in Sign comment's place", async () => {
+      server.use(
+        gqlLink.mutation("PrepareComment", () =>
+          HttpResponse.json({
+            data: null,
+            errors: [{ message: "member account required", extensions: { code: "FORBIDDEN" } }],
+          }),
+        ),
+      );
+      const { onSigned } = draw();
+      await toSeal();
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      const line = await screen.findByTestId("reply-transport-error");
+      expect(line).toHaveTextContent("That didn't go through. Try again.");
+      expect(line).not.toHaveTextContent(/didn't send|reach the server/);
+      expect(screen.queryByTestId("reply-seal-bug")).toBeNull();
       expect(screen.queryByTestId("reply-sign")).toBeNull();
       server.use(prepareOk("comment-9"));
       fireEvent.click(screen.getByTestId("reply-retry"));
