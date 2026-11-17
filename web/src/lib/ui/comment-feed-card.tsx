@@ -486,6 +486,7 @@ export function CommentFeedCard({
             maxHeight="220px"
             surface="reading"
             testId={`${testId}-media`}
+            dataNode={part(node, "media")}
           />
         </div>
       )}
