@@ -305,8 +305,11 @@ class CropGestureTest {
         touch {
             down(0, mid - Offset(SPAN / 4f, 0f))
             down(1, mid + Offset(SPAN / 4f, 0f))
+            // Spread far enough to pass the 10× ceiling: the zoom counts only
+            // from the minimum scaling span (~170 px) out, so the fingers end
+            // ~3000 px apart, well past 10 × 170 plus the slop.
             repeat(FAR_STEPS) { step ->
-                val half = SPAN / 4f + (step + 1) * STEP * 3
+                val half = SPAN / 4f + (step + 1) * STEP * 6
                 updatePointerTo(0, mid - Offset(half, 0f))
                 updatePointerTo(1, mid + Offset(half, 0f))
                 move()
