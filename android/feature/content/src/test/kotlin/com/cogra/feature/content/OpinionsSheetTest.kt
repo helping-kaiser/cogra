@@ -7,6 +7,7 @@
 package com.cogra.feature.content
 
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasAnyDescendant
