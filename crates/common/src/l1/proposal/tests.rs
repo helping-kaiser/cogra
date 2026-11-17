@@ -586,7 +586,7 @@ fn approval_refuses_what_the_device_cannot_recompute() {
     let mut content_edition = sealed.clone();
     content_edition.act.content_edition = 1;
     let mut dependency_edition = sealed.clone();
-    dependency_edition.act.dependency_edition = 2;
+    dependency_edition.act.dependency_edition = 1;
     let mut salt = sealed.clone();
     salt.content_salt = vec![9; crypto::SALT_LEN];
     let mut dependency_salt = sealed.clone();
