@@ -788,10 +788,13 @@ export function createIdentityStore(deps: {
         seed: actorRecord?.seed ?? null,
         hasActor: actorRecord !== undefined,
         backupBlob: blob ?? null,
-        handshakes: handshakeKeys.map((key, i) => ({
-          id: String(key).slice(prefix.length),
-          record: handshakeValues[i]!,
-        })),
+        // A stored `undefined` encodes to zero bytes, which the unlock cannot
+        // parse; every other value, of any shape, is carried through.
+        handshakes: handshakeKeys.flatMap((key, i) =>
+          handshakeValues[i] === undefined
+            ? []
+            : [{ id: String(key).slice(prefix.length), record: handshakeValues[i]! }],
+        ),
       };
     },
 

@@ -234,6 +234,28 @@ describe("LOCK (§3.5)", () => {
     expect(await w.identity.heldLock(A)).not.toBeNull();
   });
 
+  it("a_stored_undefined_handshake_never_blocks_the_unlock", async () => {
+    const { seed, pre } = await signedInForget(w);
+    await new Promise<void>((resolve, reject) => {
+      const req = w.idb.open("cogra.identity");
+      req.onsuccess = () => {
+        const db = req.result;
+        const tx = db.transaction("handshake", "readwrite");
+        tx.objectStore("handshake").put(undefined, `${A}/x`);
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        tx.onerror = () => reject(tx.error);
+      };
+      req.onerror = () => reject(req.error);
+    });
+    expect(await w.engine.lock(A, clearTokens(w))).toBe(true);
+    expect(await signInAgain(w, A, true)).toEqual({ ready: true, lockLost: false });
+    expect(equalBytes((await w.identity.actorSeed())!, seed)).toBe(true);
+    expect((await w.identity.handshake("staged-1"))?.preSignature).toEqual(pre.preSignature);
+  });
+
   it("keep_them_locked_leaves_no_usable_key_draft_or_pick", async () => {
     const { seed } = await signedInForget(w);
     await w.engine.lock(A, clearTokens(w));
