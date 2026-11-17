@@ -159,6 +159,7 @@ internal fun ListCommentCard(
     val comment = (actions.editReturn?.shown(listed) ?: listed).marked(rememberRemovedMarks())
     var licenseOpen by remember(comment.id) { mutableStateOf(false) }
     var removeOpen by remember(comment.id) { mutableStateOf(false) }
+    var reading by remember(comment.id) { mutableStateOf<Reading?>(null) }
     val own = actions.viewerId != null && comment.author?.id == actions.viewerId
     CommentFeedCard(
         comment = comment,
@@ -187,6 +188,7 @@ internal fun ListCommentCard(
         onOpenTopic = doors.onOpenTopic,
         onCite = { actions.onCitePost(comment.id) },
         onLicense = { licenseOpen = true },
+        onCitedBy = { reading = Reading.CitedBy },
         stanceControl = actions.stanceControl,
         shape = shape,
         authorHere = authorHere,
@@ -195,6 +197,9 @@ internal fun ListCommentCard(
     if (licenseOpen) {
         LicenseSheet(license = comment.license, onDismiss = { licenseOpen = false })
     }
+    // A READING, over the host and unstacked, as the menu rose (FeedCommentMenu.md:11,
+    // HistoryCommentMenu.md:11, SavedCommentMenu.md:13, ProfileCommentsMenu.md:11).
+    ReadingSheet(reading, comment.id, ReadingHost(doors.onOpenPost, testTagPrefix), onDismiss = { reading = null })
     // The own comment's menu off its thread (RM-G9): the comment's confirm,
     // over the list; taken, the card stands as its mark in place.
     if (removeOpen) {

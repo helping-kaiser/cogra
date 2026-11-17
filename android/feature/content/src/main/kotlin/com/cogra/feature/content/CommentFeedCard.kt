@@ -126,6 +126,8 @@ internal fun CommentFeedCard(
     onOpenPost: (String) -> Unit,
     onCite: () -> Unit,
     onLicense: () -> Unit,
+    /** The ⋮'s Cited by row: what cites the comment, over the host (CommentMenu.md:25). */
+    onCitedBy: () -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
     /** What the card's ⋮ holds and where it registers: the own rows or another's, and their doors. */
     menu: CommentCardMenu = CommentCardMenu(),
@@ -166,6 +168,7 @@ internal fun CommentFeedCard(
                     onOpenPost = onOpenPost,
                     onCite = onCite,
                     onLicense = onLicense,
+                    onCitedBy = onCitedBy,
                     menu = menu,
                     // A profile's list draws the words whole (`CommentCard`'s
                     // `clampLines`, off outside the feed).
@@ -531,6 +534,7 @@ private fun OwnPart(
     onOpenPost: (String) -> Unit,
     onCite: () -> Unit,
     onLicense: () -> Unit,
+    onCitedBy: () -> Unit,
     menu: CommentCardMenu,
     /** The words fold at two lines under `More` — in the feed, never on a listed comment. */
     clamped: Boolean,
@@ -552,6 +556,7 @@ private fun OwnPart(
                 own = menu.own,
                 onCite = onCite,
                 onLicense = onLicense,
+                onCitedBy = onCitedBy,
                 onEdit = menu.onEdit,
                 onRemove = menu.onRemove,
                 onReport = menu.onReport,

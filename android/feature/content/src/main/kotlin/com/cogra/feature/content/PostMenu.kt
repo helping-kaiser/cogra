@@ -22,6 +22,11 @@ import com.cogra.domain.LicenseChoice
  * detail's app bar build the same two row sets. They live here rather than
  * in either caller, because a second copy is how the two drift.
  *
+ * `Cited by` STANDS WHATEVER THE COUNT IS, on every card and host
+ * (ReaderPostMenu.md:35): after the acts — Hide on the reader's menu, Remove on
+ * the author's — and before the license (FeedPostMenu.md:5,
+ * FeedPostMenuOwn.md:5). A reading, it opens for a guest too (:25).
+ *
  * ROWS WHOSE DESTINATION IS NOT BUILT YET STAND ANYWAY and do nothing
  * (jakob 2026-09-14, the introduced-but-inert law): a menu that grew a
  * row per slice would be a different menu every release, and the row
@@ -33,6 +38,8 @@ import com.cogra.domain.LicenseChoice
  *   this menu instead, leading the sheet. Null where it does not apply —
  *   own posts have no drawn board for it, and at 360dp and above the row
  *   keeps it.
+ * @param onCitedBy the `Cited by` row's door: what cites the post, over the
+ *   surface the menu was opened from (ReaderPostMenu.md:31).
  * @param onReport the report row's door — the confirm over the surface the
  *   menu was opened from, or the join prompt for a guest. Null where the
  *   surface hosts no confirm yet, and the row then stands inert.
@@ -52,6 +59,7 @@ internal fun postMenuRows(
     onCite: () -> Unit,
     onRemove: () -> Unit,
     onLicense: () -> Unit,
+    onCitedBy: () -> Unit,
     onShare: (() -> Unit)?,
     testTagPrefix: String,
     onReport: (() -> Unit)? = null,
@@ -75,6 +83,7 @@ internal fun postMenuRows(
     val edit = stringResource(R.string.content_edit)
     val sensitive = stringResource(R.string.content_menu_sensitive)
     val remove = stringResource(R.string.content_menu_remove)
+    val citedBy = stringResource(R.string.content_menu_cited_by)
     val licenseLabel = stringResource(R.string.content_menu_license)
     val report = stringResource(R.string.content_menu_report)
     val share = stringResource(R.string.content_menu_share)
@@ -114,6 +123,7 @@ internal fun postMenuRows(
             // `Hide @ada` and `Unhide @ada` are one node.
             add(MenuRow(hideRow?.label ?: hide, tag(PostMenuRow.Hide, "hide"), hideRow?.onSelect ?: {}))
         }
+        add(MenuRow(citedBy, tag(PostMenuRow.CitedBy, "cited_by"), onCitedBy))
         // The license rode the payload, so a redacted record has none to show
         // (`PostCard.jsx:146-148`).
         if (license != null) {
