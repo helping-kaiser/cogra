@@ -173,7 +173,7 @@ it("a verified act with an unexpected dependency edition is refused before appro
   const actor = await ActorKey.generate();
   const host = await ActorKey.generate();
   const sent = await actor.preSign(proposal(await actor.address()));
-  const sealed = await sealBy(host, sent, { depsEdition: 2n });
+  const sealed = await sealBy(host, sent, { depsEdition: 1n });
   await expect(actor.approve(sent, sealed, host.publicKeyBytes())).rejects.toThrow(/unexpected editions/);
 });
 

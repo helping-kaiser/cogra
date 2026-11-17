@@ -217,7 +217,7 @@ export function dependencyCommitment(
 export const CONTENT_EDITION = 2n;
 
 /** The dependency edition a verified act is sealed under. */
-export const DEPENDENCY_EDITION = 1n;
+export const DEPENDENCY_EDITION = 2n;
 
 /**
  * The actor's pre-signed proposal: the proposal it signed, both nonces it

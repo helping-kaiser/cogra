@@ -405,8 +405,8 @@ const APPROVE_REFUSALS: Record<string, string> = {
   "a content commitment over the payload bytes":
     "content commitment is not formed over this device's content pre-digest",
   "a pre-commitment the device did not form": "host returned a different pre-commitment than was formed",
-  "an unexpected content edition": "unexpected editions (content 1, dependencies 1)",
-  "an unexpected dependency edition": "unexpected editions (content 2, dependencies 2)",
+  "an unexpected content edition": "unexpected editions (content 1, dependencies 2)",
+  "an unexpected dependency edition": "unexpected editions (content 2, dependencies 1)",
 };
 
 it("the device refuses every two-nonce refusal vector, for its stated reason", async () => {
