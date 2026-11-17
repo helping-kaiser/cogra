@@ -1150,11 +1150,15 @@ a quick answer never flashes a word.
 - `Setting…` — the pad's `Set`, carried by `StanceControl`.
 - `Walking it back…` and `Disconnecting…` — the severance dialog's
   commitment, in each family's own words.
-- `Signing…` — the line under the face while a press-and-hold signs.
-  A hold has no label to swap, so the target's row carries it, in the
-  pending marker's quiet register. **Drawn** on `RowSigning`. The same
-  line carries a pad's or a dialog's act after `Close` shut it (jakob
-  2026-11-11). **Drawn** on `PadFailed`'s `closed`.
+- `Signing…` — a press-and-hold's wait, SPOKEN, never drawn (jakob
+  2026-11-17, impl 354, his A23): a hold has no label to swap, so the ring
+  that filled during the hold stays closed around the face until the
+  signature is taken, no line stands under it and the card never grows,
+  and a visually hidden status says `Signing…` once the answer is 200ms
+  late. **Drawn** on `RowSigning` (the closed ring). As a line, quiet
+  under the face in the pending marker's register, it carries a pad's or
+  a dialog's act after `Close` shut it (jakob 2026-11-11). **Drawn** on
+  `PadFailed`'s `closed`.
 - `Close` — the way out of a signing surface once its commit is
   pressed (jakob 2026-11-11): the pad, the alternates, the walk-back,
   the empty sign, the handle change, every seal and edit, and the

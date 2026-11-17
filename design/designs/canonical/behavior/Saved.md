@@ -72,9 +72,9 @@ ALWAYS a hidden account's things and profile stay in Saved
 
 WHEN a press-and-hold on a card's stance face signs -> the face refuses a second press-and-hold until the signing answers AND NEVER the face moves before the signature is taken
 
-WHEN the hold's signing has not answered 200ms after the hold -> the line under the face reads Signing… AND NEVER a spinner appears
+WHEN the hold's signing has not answered 200ms after the hold -> a visually hidden status speaks Signing… AND the ring that filled during the hold stays closed around the face AND NEVER a line stands under it for the wait AND NEVER a spinner appears
 
-WHEN the hold's signing answers within 200ms of the hold -> NEVER the line Signing… appears
+WHEN the hold's signing answers within 200ms of the hold -> NEVER the status Signing… is spoken
 
 WHEN the hold's signing is taken -> the face moves to the new opinion AND the snackbar confirms the signature
 
