@@ -2,13 +2,13 @@
 
 > **Provenance.** This document is a derived reference extracted from the
 > **PeerNetworks Layer 1** specification by the **Peer Team** (Peer Network,
-> v0.32.0), reproducing its binding surface for the purpose
+> v0.34.1), reproducing its binding surface for the purpose
 > of building CoGra as a Layer 2 on it. It is not the normative source —
 > the PeerNetworks paper is. Licensed under CC-BY-4.0; see
 > [LICENSE-DOCS](../../LICENSE-DOCS).
 
-**Derived file — hard facts only.** v0.32.0 ships as the flat source
-(`PeerNetwork_PeerNetwork_v0.32.0_flat.tex`). It carries the **Edition 4**
+**Derived file — hard facts only.** v0.34.1 ships as the flat source
+(`PeerNetwork_PeerNetwork_v0.34.1_flat.tex`). It carries the **Edition 4**
 act-ownership refoundation (authored acts, the admission handshake, the
 authoritative act order) and the **Edition 5** refoundation of standing as
 one conserved allocation operator. This reference draws two scopes from it:
@@ -29,8 +29,8 @@ one conserved allocation operator. This reference draws two scopes from it:
 Proofs and motivation prose are omitted.
 
 **Pinned anchor set.** This file's citation set is pinned under the spec's
-anchor-stability contract: 450 distinct anchor names,
-`anchor_set_hash = 2ad892124e020ab7058fd06746f100a450d9da0ab93e8f5383e3b2cb33f0c100`
+anchor-stability contract: 458 distinct anchor names,
+`anchor_set_hash = 1dce7dbbe886b1a25c9feafc152a9e664de1801bd8ada950a1c18980bb343a99`
 (sha256 over the sorted distinct anchor names joined by `\n`, no trailing
 newline). Once
 registered with the Peer Team, renaming any pinned label is a breaking
