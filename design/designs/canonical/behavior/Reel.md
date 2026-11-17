@@ -20,9 +20,9 @@ ALWAYS reel.bottomBar lights the root of the stack the stream was opened from, t
 
 ALWAYS reel.bottomBar lights Feed GIVEN the stream was reached with no origin, as from a shared link
 
-ALWAYS reel.rail reads, top to bottom, reel.rail.author, reel.rail.stance, reel.rail.comments, reel.rail.share, reel.rail.menu and reel.rail.score
+ALWAYS reel.rail reads, top to bottom, reel.rail.author, reel.rail.stance, reel.rail.comments, reel.rail.share, reel.rail.score and reel.rail.menu
 
-ALWAYS reel.rail.menu is the post's ⋮, named More on this post as the card's is, standing above reel.rail.score because it is no exit
+ALWAYS reel.rail.menu is the post's ⋮, named More on this post as the card's is, the rail's lowest item, as the dots end every such list
 
 WHEN tap reel.rail.menu -> reel.menuSheet rises over the stream with the post's menu, the card's own rows AND NEVER the stream closes
 

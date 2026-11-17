@@ -7,22 +7,18 @@ import { ExplainableNumber } from "../proposed/ExplainableNumber.jsx";
 /* THE STREAM'S RAIL (readme §13, the reel round) — the post card's action row
    turned on its side and laid over the clip.
 
-   THE ORDER IS RULED, top to bottom: author · opinion · comments · share · ⋮ ·
-   the score. People lead, the way they lead on a card (§1) — the author is the
+   THE ORDER IS RULED, top to bottom: author · opinion · comments · share ·
+   score · ⋮. People lead, the way they lead on a card (§1) — the author is the
    one thing here that is not an act. Then the acts in the card's own order,
-   with share arriving after them. THE SCORE SITS LAST because it is the door
-   out of the stream: a thumb reaching for the opinion never passes over the
-   exit.
+   share arriving after them, then the score, the door to the post.
 
-   THE ⋮ IS THE POST'S MENU (jakob 2026-11-13, M2: "as rec we add the dots"),
-   the same rows the card's ⋮ raises — the reader's post menu, or the own one
-   on the reader's own clip — rising over the stream. It is not an exit, so it
-   stands above the score; it gathers the acts that have no glyph of their
-   own, so it follows the acts that do, closing them as a card's ⋮ closes its
-   head. Named as the card's is, `More on this post`. Topics and the reference
-   count stay absent — they belong to the detail view the score opens. The
-   column's bottom is the placer's, so the ⋮ raises the rail's top by one
-   item's pitch and moves nothing below it.
+   THE ⋮ IS THE POST'S MENU AND STANDS LOWEST (jakob 2026-11-13, M2; 2026-11-17:
+   "three dots always sit at the end of these lists"): the same rows the
+   card's ⋮ raises — the reader's post menu, or the own one on the reader's
+   own clip — rising over the stream, the clip paused under it. Named as the
+   card's is, `More on this post`. Topics and the reference count stay absent
+   — they belong to the detail view the score opens. The column's bottom is
+   the placer's, so the column grows upward.
 
    IT READS OVER ANY FRAME. Every glyph is white at 28px with a soft shadow, and
    counts ride beneath their glyph. A token colour on photography is not a quiet
@@ -216,8 +212,8 @@ export function ReelRail({
         />
       )}
       <ReelRailItem label="Share this post" glyph="share" onClick={onShare} node={node && "share"} />
-      <ReelRailItem label="More on this post" glyph="more_vert" onClick={onOpenMenu} node={node && "menu"} />
       {scoreSlot ?? ((score !== undefined || settling) && <ReelRailScore score={score} settling={settling} onOpen={onOpenScore} node={node && "score"} />)}
+      <ReelRailItem label="More on this post" glyph="more_vert" onClick={onOpenMenu} node={node && "menu"} />
     </div>
   );
 }
