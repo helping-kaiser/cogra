@@ -1093,6 +1093,14 @@ application's card reads `Their approval brings you in.` under `Waiting on @mira
 line — and the empty chronicle
 reads `Nothing here yet.`, the line alone, as every empty state.
 
+**A member whose standing is not known yet** (jakob 2026-11-17, his
+15: "open by default"): until the first read of the account answers,
+every door stands open as it does for a member, never in the locked
+look and never held; a standing that turns out too low drops the doors
+at the epoch's close. A refusal that arrives meanwhile reads as a fault
+the server answered (`NetworkError`): `That didn't go through. Try
+again.` in the commit's place, with `Retry`.
+
 ## In-flight labels
 
 The failure pack (jakob, 2026-09-30). A commit whose answer has not
