@@ -1876,10 +1876,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave"', tag: "button" },
     { n: 3, find: 'aria-label="Changing your profile"', tag: "button" },
-    { n: 4, find: ">Sign the change</button>", tag: "button" },
-    { n: 5, find: ">Back</button>", tag: "button" },
+    // `all`: the upload gate's two feet draw the pair again (act 3).
+    { n: 4, find: ">Sign the change</button>", tag: "button", all: true },
+    { n: 5, find: ">Back</button>", tag: "button", all: true },
     { n: 4, find: ">Signing the change…</button>", tag: "button" },
     { n: 5, find: ">Close</button>", tag: "button" },
+    { n: 6, find: ">Retry</button>", tag: "button" },
   ],
 });
 

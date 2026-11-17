@@ -32,7 +32,7 @@ ALWAYS Back reads Close and the X is named Close GIVEN Sign the change was press
 
 WHEN the signing has not answered 5s after the press -> the subline under the total reads Still signing — the network is slow right now. AND NEVER a progress indicator appears
 
-WHEN the signing is taken -> the new picture shows everywhere the reader appears
+WHEN the signing is taken -> the profile shows the change AND the new picture shows everywhere the reader appears AND the snackbar reads Signed — your profile shows it now, still settling.
 
 WHEN the signing does not go through GIVEN no answer reached the seal -> the fault line and Retry take the place of Sign the change AND everything above the foot stays as it was
 
