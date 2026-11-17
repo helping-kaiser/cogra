@@ -35,7 +35,7 @@ export type ProfileChangeOutcome =
  * What one signing came to, for the seals' states: every write taken is the
  * change taken; a refusal reads by the failure pack (`sealFaultOf`: the write
  * rule, an answered fault of the whole act, else a bug); a device's own
- * refusal of the bytes is a bug; no answer — a transport failure, a seal still
+ * refusal of the bytes is not through (seam 355); no answer — a transport failure, a seal still
  * out — is the fault line, and a transport fault the server did answer (an
  * INTERNAL) the not-through one (NetworkError.md:3, :13-19).
  */
@@ -47,7 +47,6 @@ export function outcomeOf(results: readonly WriteResult[]): ProfileChangeOutcome
     if (fault.kind === "writeRule" || fault.kind === "notThrough") return fault;
     return { kind: "bug" };
   }
-  if (results.some((result) => result.kind === "rejectedByDevice")) return { kind: "bug" };
   const failed = sealFaultOfResults(results, []);
   return failed.kind === "notThrough" ? failed : { kind: "offline" };
 }

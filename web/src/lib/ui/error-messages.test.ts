@@ -1,6 +1,7 @@
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { describe, expect, it } from "vitest";
 
+import { DeviceRefusalError } from "@/lib/signing/device-refusal";
 import {
   answeredFaultLine,
   fallbackMessage,
@@ -58,6 +59,10 @@ describe("the answered whole-act lines", () => {
     for (const code of ["WRITE_RULE_FAILED", "NOT_FOUND", "RATE_LIMITED"] as const) {
       expect(wholeActLine([{ code, message: "", field: null }])).toBeNull();
     }
+  });
+
+  it("reads the device's own refusal as an answer (seam 355)", () => {
+    expect(answeredFaultLine(new DeviceRefusalError("bad seal"))).toBe(NOT_THROUGH_LINE);
   });
 
   it("reads a transport INTERNAL as an answer and a link fault as none", () => {

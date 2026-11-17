@@ -123,3 +123,13 @@ describe("sealFaultOfFailure / sealFaultOfResults", () => {
     });
   });
 });
+
+// Seam 355: a refusal the device's own signer made is an answer — not through.
+describe("sealFaultOfResults — the device's own refusal", () => {
+  it("reads rejectedByDevice as not through, never the no-answer line", () => {
+    expect(sealFaultOfResults([{ kind: "rejectedByDevice", id: "a", reason: "bad seal" }], refs)).toEqual({
+      kind: "notThrough",
+      line: NOT_THROUGH_LINE,
+    });
+  });
+});

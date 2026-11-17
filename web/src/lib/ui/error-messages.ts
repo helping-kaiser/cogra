@@ -6,6 +6,7 @@ import { CombinedGraphQLErrors } from "@apollo/client/errors";
 
 import type { ErrorCode } from "@/__generated__/graphql";
 import type { Outcome, UserError } from "@/lib/api/outcome";
+import { DeviceRefusalError } from "@/lib/signing/device-refusal";
 
 /**
  * An answered refusal of the whole act — FORBIDDEN, INTERNAL,
@@ -53,6 +54,8 @@ export function wholeActLine(errors: readonly UserError[]): string | null {
  * null.
  */
 export function answeredFaultLine(cause: unknown): string | null {
+  // The device's own signer said no: an answer too (seam 355).
+  if (cause instanceof DeviceRefusalError) return NOT_THROUGH_LINE;
   if (!CombinedGraphQLErrors.is(cause)) return null;
   const codes = cause.errors.map((error) => error.extensions?.code);
   return codes.some((code) => code === "INTERNAL" || code === "BAD_INPUT" || code === "SIGNATURE_INVALID")

@@ -22,7 +22,7 @@ import { pathIndex } from "@/lib/api/field-errors";
 import type { Outcome, UserError } from "@/lib/api/outcome";
 import type { ReferenceDraft } from "@/lib/references/draft";
 import type { WriteResult } from "@/lib/signing/write-signer";
-import { answeredFaultLine, outcomeFaultLine, wholeActLine } from "@/lib/ui/error-messages";
+import { answeredFaultLine, NOT_THROUGH_LINE, outcomeFaultLine, wholeActLine } from "@/lib/ui/error-messages";
 
 export type SealFault =
   | { readonly kind: "offline" }
@@ -61,7 +61,8 @@ export function sealFaultOfFailure(cause: unknown): SealFault {
 
 /**
  * What a signed batch that did not all go through reads as: its first
- * refusal by `sealFaultOf`, else a failed leg by `sealFaultOfFailure`.
+ * refusal by `sealFaultOf`, then a device's own refusal as not through,
+ * else a failed leg by `sealFaultOfFailure`.
  */
 export function sealFaultOfResults(
   results: readonly WriteResult[],
@@ -69,6 +70,10 @@ export function sealFaultOfResults(
 ): SealFault {
   const refused = results.find((result) => result.kind === "refused");
   if (refused !== undefined && refused.kind === "refused") return sealFaultOf(refused.errors, references);
+  // The device's own signer refused the bytes: an answer, not through (seam 355).
+  if (results.some((result) => result.kind === "rejectedByDevice")) {
+    return { kind: "notThrough", line: NOT_THROUGH_LINE };
+  }
   for (const result of results) {
     if (result.kind !== "failed") continue;
     const fault = sealFaultOfFailure(result.cause);

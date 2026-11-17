@@ -129,3 +129,11 @@ describe("outcomeOf", () => {
     });
   });
 });
+
+// Seam 355: the device's own refusal reads not through, never the bug notice.
+it("reads a device's own refusal of the bytes as not through", () => {
+  expect(outcomeOf([{ kind: "rejectedByDevice", id: "w0", reason: "bad seal" }])).toEqual({
+    kind: "notThrough",
+    line: NOT_THROUGH_LINE,
+  });
+});
