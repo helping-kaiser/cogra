@@ -12,8 +12,10 @@
 // one account read (`AccountPreferencesSync`, which already reads `me` once per
 // account for the veil) publishes into it — the same shape as the veil's own
 // `sensitive-content.ts`. A door reads it through `useReaderIsApplicant`.
-// The landing is the one change of state a session sees live: the
-// registration loop that observes it (`signing/provider.tsx`) settles MEMBER.
+// The landing is the change of state a session sees live, by two witnesses:
+// the registration loop that observes it (`signing/provider.tsx`) settles
+// MEMBER, and any later `me` read a surface makes (the feed's, the profile's)
+// publishes what it answered through the sync's cache watch.
 //
 // SETTLED OR NOT. A surface that must not flash the wizard before the answer
 // (the composer opened by address) waits for `settled`; a read that did not

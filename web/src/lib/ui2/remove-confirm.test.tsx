@@ -104,8 +104,9 @@ describe("RemoveConfirm (RemoveConfirm.md)", () => {
     const dialog = screen.getByTestId("remove");
     expect(dialog).toHaveAccessibleName("Remove this post?");
     expect(dialog).toHaveTextContent(
-      `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place — "Removed by its author" — and the post's spot in threads stays with it.`,
+      `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place.`,
     );
+    expect(dialog).not.toHaveTextContent("Removed by its author");
     expect(dialog).toHaveTextContent("This is immediate and permanent.");
   });
 
@@ -198,7 +199,8 @@ describe("RemoveConfirm (RemoveConfirm.md)", () => {
 
   // :13 WHEN the removal does not go through -> the dialog stays up with its
   // pair AND the line That didn't send. Try again. stands in it AND Remove
-  // reads Retry AND the post is not removed
+  // reads Retry AND the post is not removed — a FORBIDDEN answer in the
+  // not-through line instead (NetworkError.md:13: an answer, never no answer)
   const refusal = () =>
     HttpResponse.json({
       data: {
@@ -210,15 +212,23 @@ describe("RemoveConfirm (RemoveConfirm.md)", () => {
       },
     });
   it.each([
-    ["the answer is lost", "lost"],
-    ["the server refuses", "refused"],
-  ] as const)("keeps the dialog up with the line and Retry when %s", async (_, how) => {
+    ["the answer is lost", "lost", "That didn't send. Try again."],
+    ["the server refuses FORBIDDEN", "refused", "That didn't go through. Try again."],
+    // NetworkError.md:13 — an INTERNAL on the errors array is an answer too.
+    ["the server answers INTERNAL", "internal", "That didn't go through. Try again."],
+  ] as const)("keeps the dialog up with the line and Retry when %s", async (_, how, line) => {
     server.use(
-      gqlLink.mutation("RemoveContent", () => (how === "lost" ? HttpResponse.error() : refusal())),
+      gqlLink.mutation("RemoveContent", () =>
+        how === "lost"
+          ? HttpResponse.error()
+          : how === "internal"
+            ? HttpResponse.json({ data: null, errors: [{ message: "no", extensions: { code: "INTERNAL" } }] })
+            : refusal(),
+      ),
     );
     const { onClose, onRemoved } = mount();
     fireEvent.click(removeButton());
-    expect(await screen.findByTestId("remove-failed")).toHaveTextContent("That didn't send. Try again.");
+    expect(await screen.findByTestId("remove-failed")).toHaveTextContent(line);
     expect(removeButton()).toHaveTextContent("Retry");
     expect(keepButton()).toHaveTextContent("Keep it");
     expect((screen.getByTestId("remove") as HTMLDialogElement).open).toBe(true);
@@ -271,8 +281,9 @@ describe("CommentRemoveConfirm (CommentRemoveConfirm.md)", () => {
     const dialog = screen.getByTestId("remove");
     expect(dialog).toHaveAccessibleName("Remove this comment?");
     expect(dialog).toHaveTextContent(
-      `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place — "Removed by its author" — and the comment's spot in its thread stays with it.`,
+      `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place.`,
     );
+    expect(dialog).not.toHaveTextContent("Removed by its author");
   });
 
   // :5 ALWAYS Keep it is the filled answer and Remove a text button in no colour

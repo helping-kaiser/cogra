@@ -69,8 +69,13 @@ export interface ProfileHeaderProps {
   redacted?: boolean;
   /** Off where the screen's own top bar already carries @handle. Defaults to true. */
   showHandle?: boolean;
+  /** The name's fitted size and leading (`nameFitSize`): unset at the role's 22px / 28px; a name that would take more than two lines takes the largest whole px that holds two, the leading round(size × 28 / 22). Never cut. */
+  nameSize?: string;
+  nameLineHeight?: string;
   /** The data-node name its placer gives this header (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `avatar`, `changeBadge`, `name`, `handle`, `figures` (`posts`, `stancesOn`, `stancesTaken`, each with its `value` and `label`), `bio` (a string bio — a node bio is named by its own placer), `website`, `actionRow` (`edit`, `invites` with its `dot`, `stance` with its `anchor`, `message`; the `menu` is named by its own placer). */
   node?: string;
 }
 
 export declare function ProfileHeader(props: ProfileHeaderProps): JSX.Element;
+/** The head's two-line rule: given a measure of the name's line count at a size and leading, the largest whole size from 22 down that holds at most two lines, with its leading. */
+export declare function nameFitSize(lines: (size: number, lineHeight: number) => number): { size: number; lineHeight: number };

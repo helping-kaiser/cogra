@@ -47,12 +47,13 @@ describe("ComponentGallery", () => {
   it("drives the shape selection through to the crop frame", () => {
     render(<ComponentGallery />);
     expect(screen.getByTestId("gallery-shape-tall")).toHaveAttribute("aria-checked", "true");
-    expect(screen.getByTestId("crop-frame").style.aspectRatio).toBe(`${4 / 5} / 1`);
+    // One stage under every shape (ComposeCrop.md:7): the frame changes inside it.
+    expect(screen.getByTestId("crop-frame").style.aspectRatio).toBe("390 / 488");
 
     fireEvent.click(screen.getByTestId("gallery-shape-wide"));
 
     expect(screen.getByTestId("gallery-shape-wide")).toHaveAttribute("aria-checked", "true");
-    expect(screen.getByTestId("crop-frame").style.aspectRatio).toBe("1.91 / 1");
+    expect(screen.getByTestId("crop-frame").style.aspectRatio).toBe("390 / 488");
   });
 
   it("opens the sheet from its trigger", () => {

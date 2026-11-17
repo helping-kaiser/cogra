@@ -14,7 +14,6 @@ import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
@@ -30,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.NameInText
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
@@ -107,7 +107,10 @@ fun DialogSurface(
                 .dataNode(node),
         ) {
             Column(modifier = Modifier.padding(Space.x6)) {
-                Text(
+                // TEXT THAT WRAPS (NamesLong.md; `DialogSurface`, JoinPrompt.jsx):
+                // a handle in the title or a paragraph is one unit, whole on
+                // its line or end-cut past a full one.
+                NameInText(
                     text = title,
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier
@@ -129,7 +132,7 @@ fun DialogSurface(
                     verticalArrangement = Arrangement.spacedBy(Space.x4),
                 ) {
                     paragraphs.forEach { paragraph ->
-                        Text(
+                        NameInText(
                             text = paragraph,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -678,6 +678,14 @@ it (§10). Nothing beneath the scrim takes a tap — the sliver of feed
 above the filter sheet is visual only. The opinion pad is modal the same
 way. The comments sheet is modal over its scrim at a single detent.
 
+**A sheet's foot stands 16px under its content** (jakob 2026-11-17, his
+10). A sheet that ends on a commit row passes it as `BottomSheet`'s
+`foot`, pinned under everything else: the row's hairline, 10px, its
+controls, the surface's 24px. 16px stand between the last content and
+that hairline on every sheet; the content brings them, the slot adds
+none. Where the content scrolls it passes under the foot and, at the
+scroll's end, stands 16px above the hairline.
+
 **The drag is the platform's** — M3's modal bottom sheet. The sheet
 follows the finger from its handle area, and from a list at its
 scroll-top; it dismisses past about **25 %** of its height or on a
@@ -957,7 +965,10 @@ paper over:
   2026-11-11). On another's profile the stance wears the wide anchor with
   Message beside it; one's own avatar wears the change badge (the
   standalone crop-and-seal shortcut). No cover image: the largest thing on
-  a person's screen should not be decoration.
+  a person's screen should not be decoration. Under it the tab row reads
+  Posts, Comments, Everything, and **every profile lands on Posts** —
+  one's own and another's (jakob 2026-11-13: "learned behavior from other
+  socials"); the chronicle is the Everything tab.
 - **Media avatars** — `MonogramAvatar` and `ActorChip` take a photo at both
   sizes. The monogram stays the designed fallback rather than a gap waiting
   for one, and a broken image falls back to it silently.
@@ -2716,10 +2727,13 @@ item 33, jakob's rulings the same day).
 - **A clip keeps its own shape, clamped to tall.** A clip's ratio is
   not a crop an author chose, so the crop vocabulary does not govern
   it: **16:9 and 1:1 display true, and anything taller than 4:5
-  centre-crops to 4:5** in a card. The cover shares the clip's ratio
-  and crops identically — it is the same clip's face, and a face that
-  disagreed with it would be a lie. **Letterboxing exists nowhere in
-  the product**: a clip fills the frame it is given, and the full 9:16
+  centre-crops to 4:5** in a card. The cover of a clip taller than 4:5
+  stands at 4:5, the tile's own shape — the card's face (jakob
+  2026-11-13, N7). **The stream and the viewer never show a cover**: a
+  clip there plays at its own shape, or stands paused on its own frame,
+  and only a clip that cannot load may show its cover, whole at its 4:5,
+  centred, nothing cropped (N7, V1). **Letterboxing exists nowhere else
+  in the product**: a clip fills the frame it is given, and the full 9:16
   frame lives on the stream and in the viewer. The
   post-fits-the-screen cap still bounds the tile as it bounds every
   tile, and under it the tile is **filled, never fitted**. **Square is
@@ -8009,7 +8023,14 @@ jakob's rulings closing the day's rounds, executed in one lane.
   a handle that still does not fit ellipsizes, `ActorChip`'s law.
 - **A long name or handle takes one of three cases** (jakob 2026-11-11,
   round 40; limits: handle 3–30 characters, display name at most 50;
-  drawn on `NamesLong`).
+  drawn on `NamesLong`). THE NAMED EXCEPTION, the profile's head (seam 318;
+  ruled by jakob 2026-11-13, backlogs 213 and 214): there the display name
+  is always shown whole on AT MOST TWO LINES — it wraps at its spaces, a
+  word wider than the line breaks INSIDE the word (the one place in the tree
+  a name may), and a name that would take more than two lines at 22px is
+  shrunk to the largest whole pixel that holds two, its line-height
+  round(size × 28 / 22) px (`ProfileHeader`'s `nameFitSize`). Never cut, and two
+  lines are the hard cap: the size has no floor.
   1. *Person rows* — the actor chip: the row never wraps, the name
      ellipsizes first, the handle stays whole until it alone cannot fit
      (`ActorChip`; `ContentRow`'s bare-handle aside reads the same law).
@@ -8035,7 +8056,13 @@ jakob's rulings closing the day's rounds, executed in one lane.
      same one unit. `overflow-wrap: anywhere` stays only for other unbroken
      tokens — an email in a settings status, a pasted URL. `DialogSurface`,
      `Snackbar`, `TaskCard`, `BorrowedViewBand`, `QuotedRow`'s title,
-     `SettingsRow`'s status, the pads' and the intro's lines carry it.
+     `SettingsRow`'s status, the pads' and the intro's lines carry it, and
+     `VouchBack`'s card (round 48). A screen reader hears the unit as ONE
+     string, the name and its punctuation with no space between: where a
+     client draws the unit in parts, the parts are hidden from assistive
+     tech and the whole string is spoken once in their place (round 48).
+     The one-line law's lines also carry `StanceRow`'s name and handle,
+     `ReelCaption`'s handle and the person card's lead (round 48).
 - **The comment card's ⋮ is the comment's menu** (`CommentMenu`, or
   `CommentMenuOwn` on your own), never the post card's.
 - **The score hangs on the thing it scores.** At the top of the trace
@@ -11001,7 +11028,7 @@ Q14), the ruled part.
   clips tagged with that tag in the page's order; a clip wider than tall
   opens the post. Law and edges only.
 - **A tag that never landed** reads `This tag didn't land.` with `Remove
-  it` on the Tags row, no reason given — the `state` chip's `tagRefused`
+  it` on the Tags row, no reason given — the `state` chip's `tag-refused`
   on `ComposeSeal` and `ReplySeal`, the unlanded citation's row.
 - **The reply's one citation** keeps `Reference` and its ×, and reads its
   name over its pair.
@@ -11790,8 +11817,8 @@ vouch-back pad and Wallet; lane B's crop, composer side, feed and profile).
 - **The cover's frame always has the clip's dimensions** (review, 1;
   backlog 200): tall clip a tall cover, square a square, wide a wide —
   the shape the clip stands at in a card — and the crop exports only that
-  shape. The cover crop takes the post crop's 390 × 488 stage (the
-  orchestrator's reading); `CoverCrop`'s `clip` chip measures wide 342 ×
+  shape, a tall clip's at 4:5 (confirmed by jakob 2026-11-13). The cover
+  crop takes the post crop's 390 × 488 stage; `CoverCrop`'s `clip` chip measures wide 342 ×
   192 at 148, tall 342 × 427.5 at 30.25, square 342 × 342 at 73.
   `CropViewport` takes a `stageHeight`.
 - **A picked clip and a new cover upload under one gate** (2; backlog
@@ -11814,8 +11841,8 @@ vouch-back pad and Wallet; lane B's crop, composer side, feed and profile).
   backlog 206). Another's: the reader's post menu — Save, Cite in a new
   post, Hide @author, License terms, Report — on the card and in the
   detail's header (`RemovedOther`, new). Your own: your post's menu less
-  Edit and Remove — Save, Cite in a new post, Mark as sensitive, License
-  terms — on the card (`FeedRemoved`; `FeedRemovedMenuOwn`, new) and in
+  Edit, Mark as sensitive and Remove — Save, Cite in a new post, License
+  terms (jakob 2026-11-13) — on the card (`FeedRemoved`; `FeedRemovedMenuOwn`, new) and in
   the detail's header (`Removed`). License terms stays because the terms
   still bind every use already made. `FeedRemovedMenu`'s card carries its
   removal date.
@@ -11840,6 +11867,331 @@ vouch-back pad and Wallet; lane B's crop, composer side, feed and profile).
   by ruling (`settings.sensitive.footnote`, `changeHandle.body`,
   `wallet.comingSoonCard.line`) plus ChangeEmail's `changeEmail.body` entry. Against main: 63 distinct gone, 92 added, none of rounds 42–46's
   ruled removals back.
+- **Act 3, jakob's review of round 46** (2026-11-13, points A–F and one
+  defect). `ActsCard` draws its total row only when it has something to
+  say: the edit sheets' card ended in 60px of nothing under its last act,
+  and now ends 4px under it; the seals, which pass a total, are unchanged.
+  The Giving an opinion "?" paragraph is blessed (A). Your own removed
+  post's menu loses Mark as sensitive — Save, Cite in a new post, License
+  terms (B). A removed comment's menu follows the post's (C): another's
+  raises the reader's comment menu whole, your own your comment menu less
+  Edit and Remove (`ProfileCommentsRemovedMenu`, `CommentRemovedMenu`,
+  new). `How signing works` takes a sentence at the end of the cost paragraph, `An edit is signed too — the new version
+  is a new record in your name, and it costs like any signing.` (D). The
+  tall cover's 4:5 and a reader's removed-post License row are confirmed
+  (E). The profile head's display name wraps at its spaces, never inside a
+  word, an over-long word end-cut — the named exception to the long-names
+  rule, shown to jakob and awaiting his word (F; `ProfileOther`'s `name`
+  setting; backlog 213). Registry: 194 → 196 screens, 7387 → 7501 board
+  paths, 2029 distinct unchanged; one board entry leaves with the ruled
+  row (`feed.menuSheet.markSensitive` on `FeedRemovedMenuOwn`).
+### Round 47, after jakob's review of round 46 — 2026-11-13
+
+- **An acts card with no total row ends on its last act, unlined**: a line
+  separates, and nothing follows it there (`ActsCard`; `Edit · the
+  actions`, `Edit comment · the acts`). Every card with a total is unchanged.
+- **The profile head's name is always shown whole, on at most two lines**
+  (seam 318; backlogs 213 and 214, ruled: "i prefer the shrunk 2 line
+  version over the 3 liner"): at 22px on 28px it wraps at its spaces and a
+  word wider than the line breaks INSIDE the word — the one place in the
+  tree a name may; a name that would take more than two lines is shrunk to
+  the largest whole pixel that holds two, its line-height round(size × 28 /
+  22) px, several words or one word alike. Nothing is cut; the handle line
+  and the rest of the head keep their sizes. Every board drawing
+  `ProfileHeader` takes it. Measured at the head's 262px: the 50-character
+  sample 19px, a 50-character unbroken name 20px, 50 × `W` 10px, 50 × `m`
+  12px, 50 × `i` 22px (no shrink). Two lines are the hard cap,
+  the size with no floor (backlog 215, ruled); `ProfileOther`'s `name` setting draws sample, two-lines, fifty,
+  one-word and widest.
+
+### Round 48, the implementers' gaps — 2026-11-13
+
+Seam 320's and 323's gaps that jakob ruled or that needed no ruling, on
+round 47's tree, and his review of the round's screens (jakob 2026-11-13:
+2a, 3b, 4b, 5b, N1, N9, N10). Round 47's `ActsCard`, the head's whole name
+and the head's sentence in the long-names law stand beside this round's
+spoken unit.
+
+- **The applicant lock is one rule** (N1; copy-voice, *The applicant lock,
+  one rule*; `staged-surfaces.md`'s posting row): a control on a card, bar
+  or header whose only destination is an act wears the locked look and
+  answers in place — the thread's foot and `Reply`, `Invites`, `New post`,
+  the stance faces, a tag card's compose button and `Open the draft`
+  (`FeedKinds` and `ComposeExpired`, `reader` chip); a door to reading is
+  never locked; a menu row looks normal and answers in place, the menu
+  closing first (`Cite in a new post`, `Mention in a new post`, named in
+  the menus' sidecars on any host); the composer's own address lands where
+  app-open lands. The line rides the surface's own snackbar, else the
+  shell's.
+- **A comment card's comment button opens the thread for an applicant**
+  (jakob 2026-11-13, on the feed's and History's cards): it is the door to
+  reading, at full strength; the lock stands inside the thread, its foot
+  and every `Reply`. On the profile's Comments tab `Reply` is the door to
+  writing and wears the lock (`ProfileComments`, `reader` chip).
+- **A comment card in a list is about the comment** (jakob 2026-11-13): no
+  `View n replies` on the feed, History, Saved, a profile's Comments tabs,
+  a tag page or search; a tap on the card lands on its post with the
+  thread sheet open, scrolled to that comment, where the replies' line
+  stands (`CommentCard`'s prose and each host's sidecar).
+  `profile.comments.viewReplies` leaves the registry by this ruling.
+- **The reset link is checked before its form stands** (4b, 5b):
+  `ResetNew`'s `link` chip — `checking`, `Loading…` after 200ms; `fault`,
+  `Can't reach the server — this link can't be checked right now.` over an
+  outlined `Retry` (N9, blessed); `limited`, the reset's own
+  `RATE_LIMITED` line over the same control. Reset's answered state is the
+  `request` chip's `sent`, `reset.status` under the commit.
+- **Drawn where the law already spoke**: the tag picker's length refusal
+  (`TagPickerRefused`, `refusal`); the tag page's first page with no
+  answer, `Can't reach the server — this tag can't load right now.` over
+  `Retry` (`TagPage`, `load`; N10, blessed); the feed filter with no kind
+  that has forms (`FeedSheetFormsOff`), so `feed.filterSheet.forms.hint`
+  registers; the batch close for two, `Both…` / `either of them`
+  (`RejectAllConfirm`, `count`); the vouch-back pad's help in place
+  (`VouchBackPad`, `pad`, a drawn copy with no names).
+- **Menu boards for registration**: `FeedCommentMenu`,
+  `FeedCommentMenuOwn`, `SavedCommentMenuOwn`, their rows as the law states
+  them; the other law-only hosts are backlog 223. `cite-a-post` re-blessed
+  at 25 origins.
+- **Registered, names only** (each render byte-identical once its
+  annotations are stripped): the thread's foot
+  (`postDetail.threadSheet.foot.addComment`); `PadFailed`, `PadWriteRule`
+  (`feed`) and `TagPageHeldPad` (`tagPage`); `EditActs`, `CommentEditActs`
+  (`actsSheet`); `AvatarCrop`, `AvatarSeal`, `ProfileEdit`,
+  `ProfileEditSeal`. Not registered: `ComposeSeal` and `ReplySeal`, whose
+  chip copies stand for more than one chip value (backlog 220);
+  `PadKeyAbsent`, a hand-built pad (backlog 221).
+- **Long names** (320-12, 320-13): `StanceRow`'s lines, `ReelCaption`'s
+  handle and the person card's handle line clip at their end; `VouchBack`'s
+  card passes its title and body through `nameInText`; a name unit is
+  spoken as one string, the drawn unit hidden from assistive tech and a
+  visually hidden twin speaking name and punctuation. `NamesLong` draws
+  each at the longest sample, its wrapping column spaced at 10 to hold the
+  vouch card inside 844 (measured, headless Chromium).
+- **The crop zooms from the fill to 10×** (jakob 2026-11-13), on the post,
+  cover and avatar crops; the post crop has one ceiling, 10× the Tall frame's
+  fill under every shape, so a shape switch never shrinks a picture; the
+  stage scales with the column (`ComposeCrop.md`, `CropViewport`'s
+  `CROP_ZOOM_MAX`, the three boards' thumbs redrawn on the 10× track).
+  `SearchBar`'s input fills its row, a board's width for it being its
+  sample's.
+- **Stale text**: `KeptPicksReview.md`'s `Tag`; the composer captions'
+  `Tags`; `CropViewport`'s cover frame on the 390 × 488 stage; History's
+  kept search tail; Hide's place among the person menu's acts;
+  `RemoveMenu`'s order; `OverflowMenu`'s two readings; backlog 162 closed.
+- **The gate**: against main, 194 → 209 screens, 7387 → 8126 board paths,
+  2029 → 2151 distinct — 123 added, one gone by ruling
+  (`profile.comments.viewReplies`). Backlog 222 closed, 220 partly, 162
+  closed as stale; 220, 221 and 223 open.
+
+### Round 49, the menus' readings, the reel's ⋮, the tags and the covers — 2026-11-13
+
+jakob's answers of 2026-11-13 on the menus audit (M1–M4) and on N2–N7, V1
+(the viewer follows the reel) and the android hand test's profile landing,
+built on round 48's final tree (merged in, fe728bfd7).
+
+- **Every post menu carries the two readings** (M1): `Cited by` ·
+  `Opinions on this` just before `License terms`, as the comment's menu
+  has them — another's post, your own, removed or not, on every host and
+  the narrow phone. One change in the atoms (`readerPostMenu`,
+  `readerCardMenu`, `OWN_POST_MENU`, and the removed menus built from
+  them) reaches all thirteen menu boards and every card's ⋮. The rows
+  open `PostOpinions` and `CitedBy` over the surface the menu was opened
+  from, at any count, so a post's empty lists are reachable; they say so
+  in the comment sheets' words, the sheets' `list` chip. The detail's
+  count lines are unchanged. A post has two doors to each list, the count
+  line on its detail and the row in its menu; a comment has the row.
+- **The reel's rail gains a ⋮** (M2), its LOWEST item (jakob 2026-11-17:
+  "three dots always sit at the end of these lists"): author · opinion ·
+  comments · share · score · ⋮, named `More on this post` as the card's ⋮.
+  It raises the card's own rows over the stream: `ReelMenu` (new), its
+  `whose` chip the reader's menu on @mira's clip, the own menu on @sol's,
+  and `own-removed`, your clip after its removal lands. Measured (headless
+  Chromium, 390 × 844): the rail's top at 330, 286px under the sound disc;
+  the score at 580–628 and the ⋮ 16px under it at 644–684; the caption's
+  right edge 16px clear of the rail; the sheet in the app's theme over the
+  stream, its rows as the card's.
+- **The narrow phone's share row leads and reads `Share this post`** (M3,
+  M4): copy-voice's Save-first rule and the atom's note name the
+  exception — a control moved off the card into the menu takes the first
+  place; the row keeps its path, `menuSheet.share`. copy-voice's *Menu
+  rows* lists every menu's rows in order.
+- **Tags** (N2, N3, N4): the picker is the only place a tag's name is
+  typed; with nothing typed, or a bare `#`, it offers nothing and refuses
+  nothing (law only — no board draws an empty field). A tag page for a
+  name that cannot be a tag reads `This tag doesn't exist.` — `TagPage`'s
+  `load` chip, `notFound`, `ProfileNotFound`'s shape, the name kept in the
+  header; a legal unused name stays `TagPageEmpty`.
+- **The reply's edit line names the post** (N5), `Your comment on "The long
+  way home".` at every depth and on every host; an untitled post takes its
+  stand-in.
+- **The trace adds up to the cent** (N6), a tiny path printing its exact
+  figure by the tiny rule.
+- **Covers stay on cards** (N7, V1): a tall clip's cover stays 4:5. The
+  stream and the viewer never show a cover — the clip plays at its own
+  shape or stands paused on its own frame — and only a clip that cannot
+  load may show its cover there, whole at 4:5, centred, nothing cropped.
+  No board draws a clip that did not load (backlog 230). The viewer's
+  boards already draw the clip's own 9:16 frame, so none changed.
+- **Every profile lands on its Posts tab** (jakob 2026-11-13, the android
+  hand test: "learned behavior from other socials"), one's own and
+  another's. `ProfileTabs` draws the tab row and what stands under it;
+  `Profile`, `ProfileOther`, `ProfileApplicant`, `ProfileMenu`,
+  `ProfileOwnMenu` and `ProfileOtherHidden` take a `tab` chip — `posts`
+  the landing, `everything` the chronicle, drawn behind its hole so its
+  names and keys stand (the registry is append-only per board), the row
+  keyed by the chip. `ProfileOtherHeld`, `EmptySignConfirm` and
+  `SigningAfterClose` draw the landing; `ProfileMoreFailed` keeps
+  Everything, its subject being the chronicle's failed page. A deleted
+  account's page lands on Posts too (jakob 2026-11-17): `ProfileDeleted`
+  and `ProfileDeletedMenu` take the `tab` chip and a `contents` chip —
+  `kept`, the posts as cards under the redacted actor's chip (`PostCard`
+  hands `author.redacted` to `ActorChip`), `removed`, each post its
+  `Removed by its author` mark, swept content's mark; the chronicle on
+  Everything keeps its words.
+- **The seals register** (backlog 220, options a + c): the `state` value
+  `tagRefused` reads `tag-refused` (a key is lowercase letters, digits, `-`
+  and `_`); `ComposeSeal`'s card and foot are drawn once per value
+  (`composeSeal`), `ReplySeal`'s card once per `state` and, inside a
+  box-less `card` wrapper, once per `tags`, its foot once per `state`
+  (`replySeal`). Pixel-identical to the earlier drawings at all 3 and 15
+  combinations (headless Chromium, screenshot hashes).
+- **The tree's own rules, applied** (act 3): the crops' zoom edges read
+  10×; the picture crop's back arrow returns to the screen that asked, the
+  picture unused, never a pick stage (`CoverCrop`'s and `ComposeCrop`'s
+  rule); `StanceControl`'s first open carries `Nothing is signed until
+  Set.` alone, the hold in the pad's help; the profile and picture seals'
+  write-rule notice carries its own "?" (`WriteRuleFailed`), law only;
+  `CommentCard` keeps a guest's `Reply` and comment glyph at full strength,
+  as the drawn guest boards draw a guest's controls; copy-voice marks the
+  answered-fault line *Copy-only*.
+- **jakob's answers of 2026-11-17** (act 4):
+  - The stream after `Hide` from its ⋮: the person's clips leave at once,
+    the one on screen too, and the next clip takes the screen — "for now
+    until we get some feedback against it".
+  - After your own `Remove` the stream stays and the removal mark stands
+    in the clip's place, the confirmation (`ReelMenu`'s `whose` =
+    `own-removed`); the clip pauses under the sheet. Backlog 231 closed.
+  - The comment edit names a removed post `Your comment on @ada's removed
+    post.` (`CommentEdit`'s `post` chip); the tag page's not-found keeps
+    the asked-for name, as drawn.
+  - A guest's thread is drawn (`ReplyEntry`'s `reader` = `guest`): the foot
+    wears the borrowed view's face, @mira's, and the foot and every `Reply`
+    stand at full strength — the dimmed look is the applicant's alone
+    (copy-voice, *The applicant lock, one rule*).
+  - Seam 338, an agreed breaking change (the implementers: "Either the
+    key goes, or tell us the key"; both clients carry the row unkeyed):
+    `ComposeCrop`'s shape row is drawn once, its `shape` setting
+    re-selecting the chips through `Chip`'s `selectedHoles` —
+    pixel-identical at tall, square and wide. The old key rule of
+    `composeCrop.shapes` left `nodes.json` by hand, as the registry law
+    has it; the row and its three chips are unkeyed, no path gone.
+- **The gate**: against round 48's final tree (fe728bfd7), 209 → 212
+  screens (`ReelMenu`, `ComposeSeal`, `ReplySeal`), 8126 → 8432 board
+  paths, 2151 → 2235 distinct — 84 added, none gone, and no board lost a
+  path; the narrow phone's row keeps `menuSheet.share`. Flows re-blessed:
+  `cite-a-post` 25 → 26 origins, and the landing cards' (`reply-to-a-post`,
+  `take-a-stance-on-a-post`, `open-a-posts-pictures`, `watch-the-stream`,
+  `follow-a-citation`, `trace-a-score-to-its-records`). Backlog 230 filed;
+  220 and 231 closed; 223 amended.
+
+### Round 50, Edit profile and the profile picture; the sheet's foot; a refused tag on the edits — 2026-11-17
+
+jakob's answers of 2026-11-17 to the collected points (his 8–15, then 10
+and 19 as recommended), built on round 49 (60d9c51c0).
+
+- **Removing the picture is drawn** (8). `ProfileEdit` takes a `state`
+  chip; its default, `rest`, is the edit as it opens. `picture` is a
+  reader whose picture stands: `Remove picture` beside `Change picture`,
+  in its size and outline, only while a picture stands. `removed` is it
+  pressed: the removal staged, the monogram back at once, Save signing
+  it with the rest under the one seal — the payload's clearing `[]`.
+  Edit profile only; the head's badge keeps its one door.
+  `ProfileEditSeal`'s `holds` chip reads it back: `The picture removed`,
+  the head in the monogram. The seal's head now shows the picture the
+  change leaves (a new picture's photo at `new`; it wore the monogram).
+- **The row's grammar** (332-2): `A new` and the changed parts in the
+  edit's order, joined by commas and a last `and`; a removed picture
+  alone `The picture removed`, after other parts `, the picture removed`.
+  The sample stands. Longer readings run past the one-line value
+  (backlog 242).
+- **A refused picture says so on the crop** (9). No pick stage of
+  CoGra's own exists, so `AvatarCrop`'s `picked` chip carries it, for
+  both openers: the circle empty in its place (the refused tile's
+  honesty), the zoom gone with the picture, the refusal under the circle
+  in the refused files' error voice, `Next` dimmed, the back arrow the
+  way out. The words: the picture cap's line, the moving GIF's line, and
+  a picture-only reading of the unreadable file's line. An upload that
+  fails after the crop takes its twins' words: on `AvatarSeal` the gate's
+  fault reading with `Retry` and the commit disabled (`state` chip,
+  `upload-failed`); on Edit profile `One picture didn't upload.` with
+  `Retry · Remove it` under the picture's row (`upload-failed`), Save
+  still answering — the seal gates, and `ProfileEditSeal` carries the
+  gate as law.
+- **`Changing your profile` has a body** (11), drafted in the picture's
+  voice: what is not obvious is that everything changed here signs
+  together, as one change.
+- **Nothing staged, nothing to sign** (12): Save stays visible and inert
+  under `Nothing to sign yet`, the post edit's guard — the staged change,
+  never the bytes. That is the edit's opening state, so it is the
+  board's default; a staged change (`changed`) lifts it.
+- **A write-rule refusal known at Save stays on the edit** (13):
+  `You can't sign right now.` in the row's quiet register on Save, its
+  "?" opening `Why signing waits`, Save dimmed (`refused`); nobody is
+  sent to the seal. How long it stands is open (backlog 240).
+- **After Close, every refusal reads `That didn't sign.` with `Retry`**
+  (14), the write rule and a bug included — law in `ProfileEditSeal`,
+  `AvatarSeal` and `SigningAfterClose`.
+- **Standing not known yet: the doors stand open** (15) — copy-voice, the
+  applicant-foot family's end; a standing that turns out too low drops
+  the doors at the epoch's close, and a refusal meanwhile reads as an
+  answered fault.
+- **The sheet's foot** (10): `BottomSheet` gains a `foot` slot, and the
+  master states the gap, 16px from the last content to the hairline
+  (§4, *Sheets*). The filters and the default license pass their rows
+  through it; the license goes 8 → 16, the feed filter's sections end on
+  their own 16.
+- **A tag refused at Sign on the edits** (19): `EditCompose` and
+  `CommentEdit` read `This tag didn't land.` with `Remove it` under the
+  chips, `Sign the edit` standing, the refused chip ringed in the error
+  ink beside another (`tag` chip, `refused`). The post edit gains the
+  comment edit's citation and bug rules. The seals draw one tag and are
+  unchanged.
+- **Backlog** 221, 223 and 230 read and left open; 240–243 filed.
+- **The gate**: against round 49 (60d9c51c0), 212 screens; 8389 → 8410
+  board paths, 21 added, none gone, no key rule changed. Foot gaps
+  measured at the scroll's end (headless Chromium, 390 × 844): History,
+  search, the default license and the feed filter 16 (the feed's 15.7
+  subpixel; search's 17 was its picker's label, the control itself 16);
+  `SettingsReading` keeps 131 under its short content in the 88%-pinned
+  sheet (backlog 243). Flows re-blessed: `edit-avatar-via-edit-screen`,
+  `edit-your-profile` (Save's two readings).
+- **A cover's thumb wears the cover's shape** (impl's seam 342): the post
+  edit's chosen cover stands 54 × 67.5 under its tall clip's 54 × 96 —
+  a cover takes the clip's shape, a tall clip's at 4:5 (`CoverCrop`).
+  The comment edit's cover already draws at 4:5; the cover step's frame
+  strip and the pick's cover mark stay as they are (jakob 2026-11-17, C7)
+  — the cover flow as a whole is being looked at again (impl 349-4).
+- **Merged with round 49's tip** (ed3cfc74e): `CommentEdit` carries both
+  chips, `post` and `tag`. Against ed3cfc74e, 21 board paths and 28
+  (board, path, key) strings added, none gone; `composeCrop.shapes`
+  stays unkeyed. Pixel-identical to ed3cfc74e on the boards only round
+  49 changed, and to round 50's own tip on the boards only round 50
+  changed (headless Chromium, every chip combination).
+- **Act 3, jakob's second review (2026-11-17)**: the words and the five
+  placements blessed; the picture's two buttons side by side, never one
+  above the other, in the short forms `Change` · `Remove` wherever two
+  stand (the long forms measure 133 + 8 + 135 against the row's 262); a
+  staged removal's `Undo` where `Remove` stood (C2); `Remove` hidden
+  while a new picture is staged (C3); the write-rule line standing until
+  the next change or opening (C1); the seal's `Profile` row running on to
+  a second line (`ActsCard`'s row `wrap`, that row alone; `holds` =
+  `all`, C4); the reading settings' sheet sized to its content (C5); a
+  clip that cannot load standing as its cover with the outlined `Retry`
+  alone (`Reel`'s `state` = `unloaded`, the viewer as law, C6); a crop's
+  arrow named `Back to the edit` or `Back to your profile` (C8); the
+  profile seal's upload gate drawn, `uploading` and `upload-failed`, as
+  the picture seal's; the picture seal's landing sentence. Backlog 230,
+  240–243 closed.
 ---
 
 ## 14. The canvases

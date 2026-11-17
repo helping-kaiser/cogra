@@ -32,8 +32,9 @@
 // moves the face only once signed: past 200ms the row says `Signing…`, and a
 // failure says `That didn't sign.` with Retry. Never a snackbar for a failure.
 //
-// THE PAD IS THE TEACHER: the account's first-ever open carries the two
-// coaching lines, and they close with the pad and never show again.
+// THE FIRST-EVER OPEN SAYS ONE LINE: `Nothing is signed until Set.` closes
+// with the pad and never shows again; the shortcut is said in the vouch-back
+// pad's "?" (copy-voice, jakob 2026-11-12).
 //
 // RELEASING THE FINGER NEVER COMMITS. Release parks the pick; Set signs it;
 // Cancel, a press on the wash, or Escape stages nothing. The walk-back — and a
@@ -108,7 +109,13 @@ import { RowLine, type RowLineState } from "@/lib/ui/row-line";
 import { SeveranceConfirm } from "@/lib/ui/severance-confirm";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { StanceAlternates } from "@/lib/ui/stance-alternates";
-import { padHelp, StanceCoaching, unreachableHelp } from "@/lib/ui/stance-pad-help";
+import {
+  padHelp,
+  PressAndHoldLine,
+  StanceFirstOpenLine,
+  unreachableHelp,
+  type PadHelpLine,
+} from "@/lib/ui/stance-pad-help";
 import {
   formatStancePair,
   severanceWords,
@@ -123,6 +130,12 @@ import {
   type BundleState,
 } from "@/lib/ui/stance-readout";
 import { TransportError } from "@/lib/ui/transport-error";
+import {
+  NO_ANSWER_LINE,
+  NOT_THROUGH_LINE,
+  outcomeFaultLine,
+  UNVERIFIED_LINE,
+} from "@/lib/ui/error-messages";
 import { WriteRuleNotice } from "@/lib/ui/write-rule-notice";
 import { PairField } from "@/lib/ui2/compose/pair-field";
 import { useCoversSurface } from "@/lib/ui2/covering-layer";
@@ -178,8 +191,28 @@ type Pending = {
   severed: boolean;
 };
 
-/** What did not go through on a surface: a fault, or the write rule's notice. */
-type Fault = "failed" | "writeRule";
+/**
+ * What did not go through on a surface: no answer (`failed`), an answered
+ * fault of the whole act (`notThrough` — FORBIDDEN, INTERNAL,
+ * SIGNATURE_INVALID, a fieldless BAD_INPUT — or `unverified`,
+ * EMAIL_NOT_VERIFIED; NetworkError.md:13-19: an answer, so never the
+ * no-answer line), or the write rule's notice.
+ */
+type Fault = "failed" | "notThrough" | "unverified" | "writeRule";
+
+/** The faults that re-raise their surface with Retry. */
+const retries = (fault: Fault | null): boolean => fault !== null && fault !== "writeRule";
+
+/** The line a retrying fault says above its commit (copy-voice, *Faults by code*). */
+const retryLine = (fault: Fault | null): string =>
+  fault === "notThrough" ? NOT_THROUGH_LINE : fault === "unverified" ? UNVERIFIED_LINE : NO_ANSWER_LINE;
+
+/** A refused commit's fault: the write rule's notice, an answered whole-act fault, else no answer. */
+function refusalFault(outcome: Outcome<unknown>): Fault {
+  if (hasCode(outcome, "WRITE_RULE_FAILED")) return "writeRule";
+  const line = outcomeFaultLine(outcome);
+  return line === UNVERIFIED_LINE ? "unverified" : line === NOT_THROUGH_LINE ? "notThrough" : "failed";
+}
 
 /**
  * A PAD OPENED AS SOMETHING IN PARTICULAR — the vouch-back (VouchBackPad.md,
@@ -203,8 +236,8 @@ export type PadVariant = {
    * `How vouching works`, ApprovePad.md:19 — the master's `helpLabel`).
    */
   readonly helpLabel?: string;
-  /** The help that replaces the pad's body in place (:21). */
-  readonly help: readonly string[];
+  /** The help that replaces the pad's body in place (:21); a line may be the press-and-hold one. */
+  readonly help: readonly PadHelpLine[];
   /**
    * The line — or lines — above the field's foot on every open of this
    * variant (:13; the approval pads' two lines, ApprovePad.md:17).
@@ -449,7 +482,7 @@ export function StanceControl({
   // already open, exactly as `openConsidered` below would leave it.
   const [open, setOpen] = useState(padOnly !== undefined && mode === "pad");
   const [alternates, setAlternates] = useState(padOnly !== undefined && mode !== "pad");
-  /** This open is the account's first-ever, so the pad carries the coaching lines. */
+  /** This open is the account's first-ever, so the pad carries its one first-open line. */
   const [coaching, setCoaching] = useState(padOnly !== undefined && mode === "pad" && !taught);
   /** False, the "?"'s help, or the unreachable landing's 🤔 explanation. */
   const [explaining, setExplaining] = useState<false | "help" | "zero">(false);
@@ -685,7 +718,7 @@ export function StanceControl({
     setAlternates(false);
     setExplaining(false);
     setPadFault(null);
-    // The coaching lines close with the pad and never show again.
+    // The first-open line closes with the pad and never shows again.
     setCoaching(false);
   };
 
@@ -804,10 +837,12 @@ export function StanceControl({
     // re-raise: the target's row carries it, as a hold's would.
     if (origin === "pad" && openRef.current) setPadFault(fault);
     else
+      // The row draws no not-through form of its own (RowSigning.md), so a
+      // FORBIDDEN on a row reads as a hold's fault does.
       setRowLine(
-        fault === "failed"
-          ? { kind: "didntSign", onRetry: () => void signPick(sent, "row") }
-          : { kind: "writeRule" },
+        fault === "writeRule"
+          ? { kind: "writeRule" }
+          : { kind: "didntSign", onRetry: () => void signPick(sent, "row") },
       );
   };
 
@@ -817,7 +852,7 @@ export function StanceControl({
   ): { kind: "taken"; records: number } | { kind: Fault } =>
     outcome.kind === "success"
       ? { kind: "taken", records: outcome.value.records }
-      : { kind: hasCode(outcome, "WRITE_RULE_FAILED") ? "writeRule" : "failed" };
+      : { kind: refusalFault(outcome) };
 
   /**
    * Every commit route lands here: read where the pick puts the bundle,
@@ -852,7 +887,7 @@ export function StanceControl({
       if (committed.kind === "success") {
         return { kind: "taken" as const, landing, records: committed.value.records };
       }
-      return { kind: hasCode(committed, "WRITE_RULE_FAILED") ? ("writeRule" as const) : ("failed" as const) };
+      return { kind: refusalFault(committed) };
     });
     switch (answer.kind) {
       case "dropped":
@@ -1208,11 +1243,15 @@ export function StanceControl({
             parking. */}
         {explaining !== false ? (
           <div data-testid={`${testIdPrefix}-explanation`} className="flex flex-col gap-2">
-            {helpLines.map((line) => (
-              <p key={line} className="m-0 text-body-small text-on-surface-variant">
-                {line}
-              </p>
-            ))}
+            {helpLines.map((line, index) =>
+              typeof line === "string" ? (
+                <p key={index} className="m-0 text-body-small text-on-surface-variant">
+                  {line}
+                </p>
+              ) : (
+                <PressAndHoldLine key={index} />
+              ),
+            )}
             <button
               type="button"
               data-testid={`${testIdPrefix}-explain-back`}
@@ -1235,7 +1274,7 @@ export function StanceControl({
             />
             {/* The master's `padNote` slot, between the field and the landing
                 line: a variant's own line on every open, and the first-ever
-                open's two coaching lines. */}
+                open's one line. */}
             {variant !== undefined ? (
               <div
                 {...testAttributes(part(padNode, "note"), `${testIdPrefix}-note`)}
@@ -1246,10 +1285,10 @@ export function StanceControl({
                     {line}
                   </p>
                 ))}
-                {coaching && <StanceCoaching testId={`${testIdPrefix}-coaching`} />}
+                {coaching && <StanceFirstOpenLine testId={`${testIdPrefix}-coaching`} />}
               </div>
             ) : (
-              coaching && <StanceCoaching testId={`${testIdPrefix}-coaching`} />
+              coaching && <StanceFirstOpenLine testId={`${testIdPrefix}-coaching`} />
             )}
             {padFault !== "writeRule" && keyAbsent !== true && (
               <StanceLandingLine
@@ -1300,9 +1339,7 @@ export function StanceControl({
         {/* A SIGNING THAT DID NOT GO THROUGH says so above the commit row, in
             the failure voice, and Set's slot becomes the outlined Retry — the
             same commitment asked again. */}
-        {padFault === "failed" && (
-          <TransportError testId={`${testIdPrefix}-pad-failed`} message="That didn't send. Try again." />
-        )}
+        {retries(padFault) && <TransportError testId={`${testIdPrefix}-pad-failed`} message={retryLine(padFault)} />}
         {padFault !== "writeRule" && keyAbsent !== true && (
           // ONE ROW: the walk-away on the left, pushed away from the two
           // decisions on the right — a walk-away beside a commit is a misfire
@@ -1340,11 +1377,11 @@ export function StanceControl({
                 void signPick(pick, "pad");
               }}
               className={buttonClassName({
-                variant: padFault === "failed" ? "outline" : "primary",
+                variant: retries(padFault) ? "outline" : "primary",
                 size: "sm",
               })}
             >
-              {padSetting ? "Setting…" : padFault === "failed" ? "Retry" : "Set"}
+              {padSetting ? "Setting…" : retries(padFault) ? "Retry" : "Set"}
             </button>
           </div>
         )}
@@ -1532,7 +1569,8 @@ export function StanceControl({
           onPick={setPick}
           busy={busy}
           slow={padSetting}
-          fault={padFault}
+          fault={padFault === "writeRule" ? "writeRule" : retries(padFault) ? "failed" : null}
+          failedLine={retryLine(padFault)}
           onWriteRuleHelp={() => setNoticeHelp(HELP_TOPICS.whySigningWaitsOnPad)}
           onCommit={() => void signPick(pick, "pad")}
           onCancel={closeAll}
@@ -1581,7 +1619,8 @@ export function StanceControl({
           alreadySevered={confirming.alreadySevered}
           busy={inFlight === "confirm"}
           slow={inFlight === "confirm" && slow}
-          failed={confirmFault === "failed"}
+          failed={retries(confirmFault)}
+          failedLine={retryLine(confirmFault)}
           writeRule={confirmFault === "writeRule"}
           axes={axes}
           onCancel={() => {
@@ -1600,7 +1639,8 @@ export function StanceControl({
           vouchIn={vouchesIn}
           busy={inFlight === "empty"}
           slow={inFlight === "empty" && slow}
-          failed={emptyFault === "failed"}
+          failed={retries(emptyFault)}
+          failedLine={retryLine(emptyFault)}
           writeRule={emptyFault === "writeRule"}
           onCancel={() => {
             setEmptyAsk(null);

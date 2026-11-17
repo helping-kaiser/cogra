@@ -53,7 +53,6 @@ export type ProfileViewMemory = {
   readonly figures: ProfileFigures | null;
   readonly viewer: MeUser | null;
   readonly own: boolean;
-  readonly applicant: boolean;
   readonly list: HeldProfileList;
   readonly endCursor: string | null;
   readonly hasNextPage: boolean;

@@ -20,6 +20,10 @@ ALWAYS the header collapses on the way down and returns on the way up
 
 ALWAYS profile.tabRow reads Posts, Comments and Everything, by glyph, each named in the accessibility tree
 
+WHEN the reader's own profile opens, from any door -> it lands with profile.tabRow.postsTab lit and profile.posts below it as post cards AND NEVER it lands on Everything or Comments
+
+WHEN tap profile.tabRow.everythingTab -> the chronicle stands below profile.tabRow AND the header above stays as it was
+
 ALWAYS the chronicle stands one act to a card, newest first, each card leading with its act's disc, then its verb and snippet, its age on the trailing edge
 
 ALWAYS a chronicle card reads Still settling GIVEN its act still pends
@@ -58,7 +62,7 @@ WHEN tap Invites GIVEN an application waits or a link is live -> Invites opens
 
 WHEN tap Invites GIVEN no application waits and no link is live -> Invites opens on its empty state
 
-WHEN tap profile.tabRow.postsTab -> the reader's posts stand below profile.tabRow as post cards AND the header above stays as it was
+WHEN tap profile.tabRow.postsTab GIVEN another tab is lit -> the reader's posts stand below profile.tabRow as post cards AND the header above stays as it was
 
 WHEN tap profile.tabRow.commentsTab -> the reader's comments stand below profile.tabRow as comment cards AND the header above stays as it was
 
@@ -81,3 +85,7 @@ ALWAYS a return to the profile keeps the list below profile.tabRow and its place
 ALWAYS a line under the head reads Signing… in the pending marker's quiet register GIVEN a profile or picture change was closed on while it signs, the head standing as it was until the change is taken
 
 ALWAYS the line under the head reads That didn't sign. in the failure voice followed by Retry GIVEN that change did not go through, and stands until Retry or the next change
+
+ALWAYS profile.identity.name is shown whole on at most two lines, the named exception to the long-names rule, the head alone: at 22px on 28px it wraps at its spaces and a word wider than its line breaks inside the word, the one place a name may, and it is never cut GIVEN the display name is longer than its line
+
+ALWAYS profile.identity.name takes the largest whole-pixel size, from 22 down in steps of 1, at which it holds two lines, its line-height round(size × 28 / 22) px, and the handle line and the rest of the head keep their sizes GIVEN at 22px it would take more than two lines, several words or one long word alike, with no smallest size: two lines are the hard cap

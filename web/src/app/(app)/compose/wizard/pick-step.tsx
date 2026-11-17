@@ -39,12 +39,6 @@ const ACCEPT = `image/*,${PICKABLE_VIDEO_TYPES}`;
 /** The staged clip's tile in the tray, as `ComposePickVideo.jsx` draws it. */
 const CLIP_TILE = { width: 114, height: 64 } as const;
 
-/**
- * How many 48px picture tiles still leave the tray caption its one line
- * (PickTray.jsx, round 22): past three the tiles stand alone.
- */
-const CAPTION_ROOM = 3;
-
 export function PickStep({
   mode,
   words,
@@ -54,7 +48,6 @@ export function PickStep({
   error,
   blocked,
   coverSrc,
-  vertical = false,
   durationMs,
   clipFace,
   onWords,
@@ -79,11 +72,6 @@ export function PickStep({
    * a picture post, and on a video whose cover is not yet settled.
    */
   coverSrc?: string | null;
-  /**
-   * Whether the staged clip is vertical — the shape whose cover step is
-   * skipped (`isVerticalClip`), so the tray promises no cover step.
-   */
-  vertical?: boolean;
   /** The clip's length; with it the tray draws the clip's video tile. */
   durationMs?: number;
   /**
@@ -118,7 +106,6 @@ export function PickStep({
       error={error}
       blocked={blocked}
       coverSrc={coverSrc}
-      vertical={vertical}
       durationMs={durationMs}
       clipFace={clipFace}
       onMode={onMode}
@@ -156,19 +143,18 @@ function NextAction({
 }
 
 function Prompt({
-  children,
   action,
   actionTestId,
   onAction,
 }: {
-  children: string;
   action: string;
   actionTestId: string;
   onAction: () => void;
 }) {
+  // `PickPrompt.jsx`: the caption is optional and neither step draws one
+  // (seam 314), so the row holds the escape alone, at its end.
   return (
-    <div className="flex flex-none items-center gap-2 px-6 py-2">
-      <p className="m-0 flex-1 text-body-medium text-on-surface-variant">{children}</p>
+    <div className="flex flex-none items-center justify-end gap-2 px-6 py-2">
       {/* `PickPrompt.jsx`: the escape is the small text Button. */}
       <PillButton testId={actionTestId} variant="text" size="sm" onClick={onAction}>
         {action}
@@ -198,9 +184,7 @@ function WordsBody({
   const id = useId();
   return (
     <>
-      <Prompt action="Add pictures instead" actionTestId="wizard-to-media" onAction={() => onMode("media")}>
-        The body is your words.
-      </Prompt>
+      <Prompt action="Add pictures instead" actionTestId="wizard-to-media" onAction={() => onMode("media")} />
       <div className="flex flex-1 flex-col gap-1 px-6 pb-6 pt-2">
         <label htmlFor={id} className="text-label-large">
           What do you want to publish?
@@ -243,7 +227,6 @@ function MediaBody({
   error,
   blocked,
   coverSrc,
-  vertical,
   durationMs,
   clipFace,
   onMode,
@@ -259,7 +242,6 @@ function MediaBody({
   error: string | null;
   blocked: boolean;
   coverSrc?: string | null;
-  vertical: boolean;
   durationMs?: number;
   clipFace?: string | null;
   onMode: (next: "words" | "media") => void;
@@ -288,9 +270,7 @@ function MediaBody({
 
   return (
     <>
-      <Prompt action="Write words instead" actionTestId="wizard-to-words" onAction={() => onMode("words")}>
-        Pick one picture, several, or one video.
-      </Prompt>
+      <Prompt action="Write words instead" actionTestId="wizard-to-words" onAction={() => onMode("words")} />
 
       {assets.length > 0 && (
         // `PickTray.jsx`: the count in label-small, `Show all` as the small
@@ -358,25 +338,14 @@ function MediaBody({
                 </li>
               ))}
             </ul>
-            {/* THE CAPTION STANDS ONLY WHILE THE TILES LEAVE IT ITS LINE
-                (ComposePick.md / ComposePickWeb.md, round 22): up to three
-                picture tiles; past that the tiles stand alone. A staged clip
-                is one tile, so its caption always stands. */}
-            {(holdsVideo || assets.length <= CAPTION_ROOM) && (
-            <span data-testid="wizard-tray-caption" className={`min-w-0 flex-1 text-label-small text-on-surface-variant`}>
-              {!holdsVideo
-                ? "The first one is the cover."
-                : // THE CAPTION TAKES THE SETTLED FACT once the cover step has
-                  // given the clip its face (`ComposePickVideoCover`).
-                  coverSrc
-                  ? "A video is the whole post. This one has its cover."
-                  : // A VERTICAL CLIP MEETS NO COVER STEP (ComposePickVideo.md:
-                    // "the tray's line reads A video is the whole post. GIVEN
-                    // the clip is vertical"), so the tray promises none.
-                    vertical
-                    ? "A video is the whole post."
-                    : "A video is the whole post. Its cover comes next."}
-            </span>
+            {/* A CLIP'S TRAY SAYS THE ONE THING A VIDEO CHANGES (ComposePick.jsx,
+                ComposePickVideo.jsx; seam 314): a picture tray carries no
+                caption, a clip's reads the same line before and after its
+                cover is chosen. */}
+            {holdsVideo && (
+              <span data-testid="wizard-tray-caption" className="min-w-0 flex-1 text-label-small text-on-surface-variant">
+                A video is the whole post.
+              </span>
             )}
           </div>
         </div>

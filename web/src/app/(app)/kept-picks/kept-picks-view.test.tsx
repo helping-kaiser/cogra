@@ -126,7 +126,7 @@ describe("the kept picks' review", () => {
     await keepPick("u1", MIRA, { pDirected: 0.3, pInterest: 0.3 }, "approval");
     mount();
     const line = await screen.findByTestId("keptPicks.approval");
-    expect(line).toHaveTextContent("An approval waits in your invites — go there to sign it.");
+    expect(line).toHaveTextContent("An approval waits in your invites.");
     fireEvent.click(within(line).getByText("Open Invites"));
     expect(router.push).toHaveBeenCalledWith("/invites?from=kept-picks");
     expect((await listKeptPicks("u1")).length).toBe(2);
@@ -220,12 +220,13 @@ describe("the kept picks' review", () => {
 });
 
 describe("the kept picks' seal", () => {
-  it("is the standard seal: What you sign, Last step, the ?, the acts card, Sign the picks over Back", async () => {
+  it("is the standard seal: What you sign, the ?, the acts card, Sign the picks over Back", async () => {
     // KeptPicksSeal.md:3-7.
     await keepTheBoardsPicks();
     mount();
     await openSeal();
-    expect(screen.getByTestId("keptPicksSeal.header.stage")).toHaveTextContent("Last step");
+    // No stage label and no land-together line (seam 314): the "?" says it.
+    expect(screen.queryByTestId("keptPicksSeal.header.stage")).toBeNull();
     expect(screen.getByRole("button", { name: "How signing works" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Leave — your picks are kept" })).toBeInTheDocument();
     const acts = screen.getByTestId("keptPicksSeal.acts");
@@ -239,7 +240,7 @@ describe("the kept picks' seal", () => {
     expect(screen.getByTestId("keptPicksSeal.header.help")).toHaveAccessibleName("How signing works");
     expect(screen.getByTestId("keptPicksSeal.foot")).toContainElement(screen.getByTestId("keptPicksSeal.foot.sign"));
     expect(screen.getByTestId("keptPicksSeal.acts.total")).toHaveTextContent("3 things, signed together");
-    expect(screen.getByTestId("keptPicksSeal.acts.note")).toHaveTextContent("They land together, or none does.");
+    expect(screen.queryByTestId("keptPicksSeal.acts.note")).toBeNull();
     expect(screen.getByTestId("keptPicksSeal.foot.sign")).toHaveTextContent("Sign the picks");
     expect(screen.getByTestId("keptPicksSeal.foot.back")).toHaveTextContent("Back");
     // Nothing on the seal is removable.
@@ -322,6 +323,40 @@ describe("the kept picks' seal", () => {
     expect((await listKeptPicks("u1")).length).toBe(3);
   });
 
+  it("reads a FORBIDDEN answer as That didn't go through. with Retry in the commit's slot, every pick kept", async () => {
+    // NetworkError.md:13 — never the no-answer line, never the bug notice.
+    await keepTheBoardsPicks();
+    mount({ refuse: "FORBIDDEN" });
+    await openSeal();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("keptPicksSeal.foot.sign"));
+    });
+    const line = await screen.findByTestId("keptPicksSeal.fault");
+    expect(line).toHaveTextContent("That didn't go through. Try again.");
+    expect(line).not.toHaveTextContent(/didn't send|reach the server/);
+    expect(screen.queryByTestId("keptPicksSeal.bug")).toBeNull();
+    expect(screen.getByTestId("keptPicksSeal.foot.sign")).toHaveTextContent("Retry");
+    expect((await listKeptPicks("u1")).length).toBe(3);
+  });
+
+  // NetworkError.md:15, :19 — the other answered whole-act faults, each its own line.
+  it.each([
+    ["SIGNATURE_INVALID", "That didn't go through. Try again."],
+    ["EMAIL_NOT_VERIFIED", "Verify your email first — the link is in your inbox."],
+  ] as const)("reads a %s answer in its own line with Retry in the commit's slot, every pick kept", async (code, text) => {
+    await keepTheBoardsPicks();
+    mount({ refuse: code });
+    await openSeal();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("keptPicksSeal.foot.sign"));
+    });
+    const line = await screen.findByTestId("keptPicksSeal.fault");
+    expect(line).toHaveTextContent(text);
+    expect(screen.queryByTestId("keptPicksSeal.bug")).toBeNull();
+    expect(screen.getByTestId("keptPicksSeal.foot.sign")).toHaveTextContent("Retry");
+    expect((await listKeptPicks("u1")).length).toBe(3);
+  });
+
   it("answers the write rule with the notice, its fact ending your picks are still kept., and Not now back to the review", async () => {
     // KeptPicksSeal.md:29-31; KeptPicksReview.md:23-25.
     await keepTheBoardsPicks();
@@ -344,7 +379,7 @@ describe("the kept picks' seal", () => {
   it("answers any other refusal with the bug notice: Try again in it, Report a problem and Not now under it", async () => {
     // KeptPicksSeal.md:33-35.
     await keepTheBoardsPicks();
-    mount({ refuse: "BAD_INPUT" });
+    mount({ refuse: "NOT_FOUND" });
     await openSeal();
     await act(async () => {
       fireEvent.click(screen.getByTestId("keptPicksSeal.foot.sign"));
@@ -397,7 +432,7 @@ describe("the kept picks' seal", () => {
     const data = mount();
     await openSeal();
     expect(screen.getByTestId("keptPicksSeal.approval")).toHaveTextContent(
-      "An approval waits in your invites — go there to sign it.",
+      "An approval waits in your invites.",
     );
     await act(async () => {
       fireEvent.click(screen.getByTestId("keptPicksSeal.foot.sign"));

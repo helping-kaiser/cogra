@@ -30,7 +30,7 @@ export function ChatsView({ from = null }: { from?: string | null }) {
       <div className="flex flex-col px-6 py-2">
         <EmptyState
           testId="chats-empty"
-          title="Chats — coming soon. Your conversations will be here."
+          title="Chats — coming soon"
         />
       </div>
     </main>

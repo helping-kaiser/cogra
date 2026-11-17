@@ -4,7 +4,8 @@
 // held open where a line needs it running), a press is held at the gate, and
 // a clip's new face is signed as the clip's cover pointer.
 
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -356,6 +357,120 @@ describe("CommentEditor — + Add pictures and the gate (CommentEdit)", () => {
     expect(screen.queryByTestId("comment-edit-write-rule")).not.toBeInTheDocument();
     expect(screen.getByTestId("commentEdit.words.input")).toHaveValue("New words.");
   });
+
+  // NetworkError.md:13 — a FORBIDDEN answer reads the not-through line,
+  // never "You can't do that here.", the bug notice or the connection line.
+  it("reads a FORBIDDEN prepare as That didn't go through., nothing signed", async () => {
+    server.use(
+      gqlLink.mutation("PrepareCommentEdit", () =>
+        HttpResponse.json({
+          data: null,
+          errors: [{ message: "member account required", extensions: { code: "FORBIDDEN" } }],
+        }),
+      ),
+    );
+    const { signer } = draw(comment());
+    fireEvent.change(await screen.findByTestId("commentEdit.words.input"), { target: { value: "New words." } });
+    fireEvent.click(save());
+    expect(await screen.findByTestId("comment-edit-failed")).toHaveTextContent("That didn't go through. Try again.");
+    expect(screen.queryByTestId("comment-edit-refused")).toBeNull();
+    expect(screen.getByTestId("comment-edit-retry")).toBeInTheDocument();
+    expect(screen.queryByText(/You can't do that here|reach the server/)).toBeNull();
+    expect(signer.signStaged).not.toHaveBeenCalled();
+    expect(screen.getByTestId("commentEdit.words.input")).toHaveValue("New words.");
+  });
+
+  it("reads a write the server refuses FORBIDDEN as That didn't go through., never the bug notice", async () => {
+    prepared();
+    const signer = fakeWriteSigner({
+      signStaged: vi.fn((staged) =>
+        Promise.resolve({
+          kind: "refused" as const,
+          id: staged.id,
+          errors: [{ code: "FORBIDDEN" as const, message: "not yours", field: null }],
+        }),
+      ),
+    });
+    draw(comment(), signer);
+    fireEvent.change(await screen.findByTestId("commentEdit.words.input"), { target: { value: "New words." } });
+    fireEvent.click(save());
+    expect(await screen.findByTestId("comment-edit-failed")).toHaveTextContent("That didn't go through. Try again.");
+    expect(screen.queryByTestId("comment-edit-bug")).toBeNull();
+    expect(screen.getByTestId("comment-edit-retry")).toBeInTheDocument();
+  });
+
+  // NetworkError.md:13-19 — the rest of the answered whole-edit faults.
+  it.each([
+    ["an INTERNAL", "INTERNAL", "That didn't go through. Try again."],
+    ["an EMAIL_NOT_VERIFIED", "EMAIL_NOT_VERIFIED", "Verify your email first — the link is in your inbox."],
+  ])("reads %s prepare as its own line, never a lost answer", async (_name, code, line) => {
+    server.use(
+      gqlLink.mutation("PrepareCommentEdit", () =>
+        HttpResponse.json({ data: null, errors: [{ message: "no", extensions: { code } }] }),
+      ),
+    );
+    const { signer } = draw(comment());
+    fireEvent.change(await screen.findByTestId("commentEdit.words.input"), { target: { value: "New words." } });
+    fireEvent.click(save());
+    expect(await screen.findByTestId("comment-edit-failed")).toHaveTextContent(line);
+    expect(screen.getByTestId("comment-edit-retry")).toHaveTextContent("Retry");
+    expect(signer.signStaged).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [
+      "a SIGNATURE_INVALID",
+      (id: string) => ({
+        kind: "refused" as const,
+        id,
+        errors: [{ code: "SIGNATURE_INVALID" as const, message: "", field: null }],
+      }),
+    ],
+    [
+      "a BAD_INPUT naming no field",
+      (id: string) => ({
+        kind: "refused" as const,
+        id,
+        errors: [{ code: "BAD_INPUT" as const, message: "", field: null }],
+      }),
+    ],
+    [
+      "an INTERNAL on a signing leg",
+      (id: string) => ({
+        kind: "failed" as const,
+        id,
+        cause: new CombinedGraphQLErrors({ errors: [{ message: "no", extensions: { code: "INTERNAL" } }] }),
+      }),
+    ],
+  ])("reads %s as That didn't go through., never the bug notice or the no-answer line", async (_name, result) => {
+    prepared();
+    const signer = fakeWriteSigner({ signStaged: vi.fn((staged) => Promise.resolve(result(staged.id))) });
+    draw(comment(), signer);
+    fireEvent.change(await screen.findByTestId("commentEdit.words.input"), { target: { value: "New words." } });
+    fireEvent.click(save());
+    expect(await screen.findByTestId("comment-edit-failed")).toHaveTextContent("That didn't go through. Try again.");
+    expect(screen.queryByTestId("comment-edit-bug")).toBeNull();
+    expect(screen.getByTestId("comment-edit-retry")).toBeInTheDocument();
+  });
+
+  // NetworkError.md:3 — a lost answer says the network error's own line.
+  it("says That didn't send. Try again. when no answer reaches the edit", async () => {
+    prepared();
+    const signer = fakeWriteSigner({
+      signStaged: vi.fn((staged) => Promise.resolve({ kind: "failed" as const, id: staged.id, cause: new Error("offline") })),
+    });
+    draw(comment(), signer);
+    fireEvent.change(await screen.findByTestId("commentEdit.words.input"), { target: { value: "New words." } });
+    fireEvent.click(save());
+    const line = await screen.findByTestId("comment-edit-failed");
+    expect(line).toHaveTextContent("That didn't send. Try again.");
+    expect(line).not.toHaveTextContent(/reach the server/);
+    // In the commit's place, an outlined Retry under it where Sign the edit
+    // stood (CommentEdit.md:97, NetworkError.md:3; seam 352).
+    expect(screen.queryByTestId("comment-edit-save")).toBeNull();
+    expect(screen.getByTestId("comment-edit-retry").className).toContain("border-outline");
+    expect(screen.getByTestId("commentEdit.words.input")).toHaveValue("New words.");
+  });
 });
 
 describe("CommentEditor — a clip's face (CommentEditVideo)", () => {
@@ -370,9 +485,10 @@ describe("CommentEditor — a clip's face (CommentEditVideo)", () => {
     const { onSigned } = draw(comment([CLIP]));
     fireEvent.click(await screen.findByTestId("commentEdit.cover.change"));
     await pickInto("comment-edit-cover-input", [picture("face.jpg")]);
-    expect(await screen.findByTestId("comment-edit-cover-crop")).toHaveTextContent(
-      "The cover takes the video's shape.",
-    );
+    // The crop explains nothing (round 44): the stage, the zoom and Next.
+    const crop = await screen.findByTestId("comment-edit-cover-crop");
+    expect(within(crop).getByTestId("coverCrop.viewport")).toBeInTheDocument();
+    expect(crop).not.toHaveTextContent("The cover takes the video's shape.");
     fireEvent.click(screen.getByTestId("coverCrop.next"));
     expect(await screen.findByTestId("commentEdit.gate")).toHaveTextContent(
       "Uploading 0 of 1 — signing waits for the cover.",

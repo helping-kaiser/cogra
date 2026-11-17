@@ -345,7 +345,7 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     serveAda();
     serveChronicle();
     serveComments({ "": { comments: [profileComment("c1")], next: null } });
-    renderWithProviders(<ProfileScreen handle="ada" />, { store: signedIn() });
+    renderWithProviders(<ProfileScreen handle="ada" />, { store: signedIn(), reader: "APPLICANT" });
     await openCommentsTab();
     const reply = await screen.findByTestId(byNode("profile.comments.commentCard.actionRow.reply", "c1"));
     await waitFor(() => expect(reply.tagName).toBe("BUTTON"));

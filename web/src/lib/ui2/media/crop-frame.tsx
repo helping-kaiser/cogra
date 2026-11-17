@@ -1,63 +1,75 @@
 "use client";
 
-// The crop frame — the boarded chrome (ComposeCrop) around `react-easy-crop`.
+// The crop frame — the boarded chrome (ComposeCrop, CoverCrop, AvatarCrop)
+// around `react-easy-crop`.
 //
 // THE ENGINE IS THE LIBRARY, NOT US (jakob, round 5: "i cant imagine that you
-// cant find a nice opensource cropping that we can use here"). The hand-rolled
-// focal-point cropper this replaces had two defects that were properties of its
-// model rather than bugs on top of it:
+// cant find a nice opensource cropping that we can use here"). Its drag, pinch,
+// wheel and Safari gesture handling, its bound on the offset and its measured
+// rectangle are its own; what lives here is the stage, the frame and the zoom's
+// bounds the boards draw, the scrim, the zoom track and the keyboard route.
 //
-//   · it cover-fitted the picture to the frame, so at rest a wide photograph in
-//     a 4:5 frame showed a vertical slice and the rest of the picture was never
-//     drawn — the reader could not see what they were choosing between; and
-//   · every re-frame was expressed against that already-trimmed window.
-//
-// `react-easy-crop` defaults `objectFit` to "contain": the picture is shown
-// WHOLE and the crop rectangle is computed from the MEDIA and laid inside it.
-// So the full picture renders at rest, every section is reachable, and changing
-// the shape recomputes that rectangle against the original picture rather than
-// against the previous crop. Both defects die by construction, which is why the
-// library replaces the model and not just the gestures.
+// ONE CROP MODEL (jakob 2026-11-11, seam 301; sizes ComposeCrop.md:7-13,
+// CoverCrop.md:11, AvatarCrop.md:7). The STAGE is one size under every shape —
+// 390 × 488 for a post and a cover, 390 × 390 for the circle, at the column's
+// width (`stageOf`). The FRAME is fixed inside it at the shape (`frameOf`) and
+// handed to the library as its `cropSize`, so the window never depends on the
+// picture and never moves; the library lays the picture fitted whole into the
+// stage and the reader moves and zooms it under the frame, the rest of it in
+// view under the scrim. The zoom's floor is the frame's fill and its ceiling
+// about 4× (`zoomBounds`): a framing handed in below the floor — the untouched
+// `CENTERED`, a picture reshaped while it was not on screen — rises to it the
+// moment the picture is measured. (react-easy-crop 6.2.4 README: `cropSize`,
+// `minZoom` / `maxZoom`, `objectFit`, `style` / `classes`.)
 //
 // THE NON-DRAG ROUTE IS OURS TO FINISH (design.md §10: a non-drag equivalent
 // for every drag gesture). The K13 round drew it (CropViewport.jsx, jakob
-// 2026-10-05), superseding the earlier ruling that kept it invisible:
+// 2026-10-05):
 //
-//  · THE ZOOM IS ON SCREEN — `CropZoom`, a range slider under the cut, between
-//    the fill and about 4×, because a desktop browser has no pinch. A crop
-//    asks for it with `zoomSlider`.
-//  · THE CUT PANS BY KEY, under the master's name `Move the picture`: an arrow
-//    moves the picture 1 % of itself, 10 % with Shift, and never past where an
-//    edge of the picture meets the cut's (ComposeCrop.md). The library's own
-//    arrow handling steps in pixels, so the keys are taken here first.
+//  · THE ZOOM IS ON SCREEN — `CropZoom`, a range slider under the stage, from
+//    the fill to about 4×, because a desktop browser has no pinch. Its value
+//    is the zoom as a share of the fill, so its floor reads 1 on every crop.
+//  · THE PICTURE PANS BY KEY, under the master's name `Move the picture`: an
+//    arrow moves it 1 % of itself, 10 % with Shift, and never past where an
+//    edge of the picture meets the frame's (each crop's sidecar). The
+//    library's own arrow handling steps in pixels, so the keys are taken here
+//    first.
 //  · `+`/`-`/`Home` stay as the keyboard's zoom, and a visually hidden
 //    paragraph names the keys. `crop-frame.test.tsx` fails if either goes.
 //
-// THE FRAME IS FULL-BLEED (jakob, round 6: "the area for cropping was to
-// small"). ComposeCrop and AvatarCrop both draw the viewport edge to edge —
-// `margin: 0 -24px` out of the 24px column, and no rounded corners, because a
-// bled frame has no corners to round. The `-mx-6` here assumes exactly that
-// column, which is what every surface holding a cropper has.
+// THE STAGE IS FULL-BLEED (jakob, round 6: "the area for cropping was to
+// small"; every crop board's `margin: 0 -24px`). The `-mx-6` here assumes the
+// 24px column every surface holding a cropper has.
 //
-// THE FRAMING SURVIVES LEAVING THE SCREEN (jakob, round 6: "when returning to
-// the crop section ... the crop should be 'remembered'"). `crop` and `zoom` are
-// react-easy-crop's CONTROLLED props — the README's props table calls `crop`
-// required and says `{ x: 0, y: 0 }` centres the media — so the cropper shows
-// whatever it is handed, and handing it the saved framing on a remount IS the
-// re-seed. That is also why the saved `area` is not fed back through
-// `initialCroppedAreaPixels`: the same README warns that `croppedAreaPixels` is
-// rounded and "may result in a slight drifting crop/zoom" when used to restore,
-// and recommends the percentages instead. Driving the controlled props avoids
-// the round trip altogether. (react-easy-crop 6.2.3, `README.md` — the props
-// table and `initialCroppedAreaPercentages`.)
+// THE FRAMING SURVIVES LEAVING THE SCREEN (jakob, round 6). `crop` and `zoom`
+// are react-easy-crop's CONTROLLED props, so handing the saved framing to a
+// remounted cropper IS the re-seed; the saved `area` is never replayed through
+// `initialCroppedAreaPixels`, whose rounding the README warns "may result in a
+// slight drifting crop/zoom".
 
-import { useCallback, useEffect, useRef, type Ref } from "react";
-import Cropper, { type Area, type Point } from "react-easy-crop";
+import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from "react";
+import Cropper, { type Area, type MediaSize, type Point } from "react-easy-crop";
 
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { useMeasureEffect } from "@/lib/ui/measure-effect";
 
-import { CENTERED, clampZoom, MAX_ZOOM, MIN_ZOOM, sameCrop, usableArea, type Crop } from "./crop";
-import { AVATAR_RATIO, cssRatio, POST_SHAPES, type PostShape } from "./aspect";
+import {
+  CENTERED,
+  CROP_STAGE,
+  fittedPicture,
+  frameOf,
+  holdZoom,
+  MAX_ZOOM,
+  MIN_ZOOM,
+  sameCrop,
+  stageOf,
+  usableArea,
+  zoomBounds,
+  type Crop,
+  type CropKind,
+  type Size,
+} from "./crop";
+import { AVATAR_RATIO, POST_SHAPES, type PostShape } from "./aspect";
 
 // The frame's shape. A post takes one of the three ruled shapes; the
 // profile's avatar is its own fixed frame and is not a post shape (D13).
@@ -65,33 +77,38 @@ export type CropFrameShape = PostShape | "avatar";
 
 /**
  * A shape no chip offers: a cover's, locked to the clip it fronts — the clip's
- * own ratio in a post, the comment pager's square in a comment (CoverCrop.md).
- * Given as the ratio itself, since a clip's is any ratio. Its frame is
- * `CropViewport`'s square, the cut a window inside it with the rest darkened —
- * the avatar's construction, which the cover's crop is (CoverCrop.jsx).
+ * shape as it stands in a card in a post, the comment pager's square in a
+ * comment (CoverCrop.md:3). Given as the ratio itself.
  */
 export type LockedRatio = { readonly ratio: number };
 
 function ratioOf(shape: CropFrameShape | LockedRatio): number {
-  return typeof shape === "string" ? SHAPE_RATIO[shape] : shape.ratio;
+  if (typeof shape !== "string") return shape.ratio;
+  return shape === "avatar" ? AVATAR_RATIO : POST_SHAPES[shape].ratio;
 }
 
-const SHAPE_RATIO: Record<CropFrameShape, number> = {
-  tall: POST_SHAPES.tall.ratio,
-  square: POST_SHAPES.square.ratio,
-  wide: POST_SHAPES.wide.ratio,
-  avatar: AVATAR_RATIO,
-};
+function kindOf(shape: CropFrameShape | LockedRatio): CropKind {
+  if (typeof shape !== "string") return "cover";
+  return shape === "avatar" ? "avatar" : "post";
+}
 
-/** One press of a zoom key. The library's own arrow step is in pixels. */
+/** One press of a zoom key, as a share of the fill. */
 const ZOOM_STEP = 0.1;
 
 /**
- * The library's arrow-key step, in pixels. Its default is 1, which moves the
- * framing by an amount a reader cannot see — a keyboard route nobody can tell
- * is working is not a route.
+ * The library's arrow-key step, in pixels — only reached if our own arrow
+ * route below has nothing measured yet. Its default of 1 moves the framing
+ * by an amount a reader cannot see.
  */
 const KEYBOARD_STEP = 8;
+
+/** The measured stage and picture, and what the boards derive from them. */
+type Geometry = {
+  readonly picture: Size;
+  readonly frame: Size;
+  readonly floor: number;
+  readonly ceiling: number;
+};
 
 export function CropFrame({
   src,
@@ -109,17 +126,20 @@ export function CropFrame({
   crop?: Crop;
   onChange: (next: Crop) => void;
   alt?: string;
-  /** The viewport, for a host that re-frames against its width (`reshape`). */
+  /** The stage, for a host that re-frames against its width (`reshape`). */
   viewportRef?: Ref<HTMLDivElement>;
-  /** Draws `CropZoom` under the cut (ComposeCrop: "the zoom slider stands under the crop on both platforms"). */
+  /** Draws `CropZoom` under the stage (each crop board: "the zoom slider stands under the crop on both platforms"). */
   zoomSlider?: boolean;
   testId?: string;
   /**
-   * The registered crop screen (`composeCrop`, `coverCrop`): the frame is its
+   * The registered crop screen (`composeCrop`, `coverCrop`): the stage is its
    * `viewport`, the slider's row its `zoom` and the slider `zoom.input`.
    */
   node?: DataNode;
 }) {
+  const kind = kindOf(shape);
+  const ratio = ratioOf(shape);
+
   // The library reports position, zoom, and the framed area through three
   // separate callbacks that can fire in one tick. Each merges into the newest
   // value rather than into the one this render closed over, or the second
@@ -143,8 +163,56 @@ export function CropFrame({
     [onChange],
   );
 
+  // THE STAGE'S WIDTH, read off the laid-out stage and kept current by a
+  // `ResizeObserver` (MDN): the frame and the zoom's bounds are proportions of
+  // it. The ref is the host's too (`viewportRef`).
+  const [stage, setStage] = useState<HTMLDivElement | null>(null);
+  const [width, setWidth] = useState(0);
+  // The host's ref is handed the same element (React: `useImperativeHandle`).
+  useImperativeHandle<HTMLDivElement | null, HTMLDivElement | null>(
+    viewportRef as Ref<HTMLDivElement | null> | undefined,
+    () => stage,
+    [stage],
+  );
+  useMeasureEffect(() => {
+    if (stage === null) return;
+    const measure = () => setWidth(stage.clientWidth);
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, [stage]);
+
+  // The picture's own pixels, as the library read them on load, kept with the
+  // source they belong to so a new picture never borrows the last one's.
+  const [natural, setNatural] = useState<{ src: string; size: Size } | null>(null);
+  const onMediaLoaded = useCallback(
+    (media: MediaSize) => setNatural({ src, size: { width: media.naturalWidth, height: media.naturalHeight } }),
+    [src],
+  );
+
+  const source = natural !== null && natural.src === src ? natural.size : null;
+  const geometry = useMemo<Geometry | null>(() => {
+    if (!(width > 0) || source === null || !(source.width > 0) || !(source.height > 0)) return null;
+    const picture = fittedPicture(source, stageOf(kind, width));
+    return { picture, frame: frameSize(kind, ratio, width), ...zoomBounds(kind, picture, ratio, width) };
+  }, [width, source, kind, ratio]);
+
+  const zoom = geometry === null ? crop.zoom : holdZoom(crop.zoom, geometry);
+
+  // THE FLOOR HOLDS. A framing below the fill — the untouched one, a picture
+  // reshaped unseen, a draft from a wider window — rises to it once the
+  // picture is measured; the library then holds the offset to the frame.
+  useEffect(() => {
+    if (geometry !== null && zoom !== crop.zoom) emit({ zoom });
+  }, [geometry, zoom, crop.zoom, emit]);
+
   const onCropChange = useCallback((point: Point) => emit({ x: point.x, y: point.y }), [emit]);
-  const onZoomChange = useCallback((zoom: number) => emit({ zoom: clampZoom(zoom) }), [emit]);
+  const onZoomChange = useCallback(
+    (next: number) => emit({ zoom: geometry === null ? next : holdZoom(next, geometry) }),
+    [emit, geometry],
+  );
   // `croppedAreaPixels` is the rectangle of the SOURCE the frame shows, in the
   // source's own pixels — exactly what the encoder bakes, and independent of
   // the viewport that produced it.
@@ -166,92 +234,96 @@ export function CropFrame({
     [emit],
   );
 
+  const floor = geometry?.floor ?? MIN_ZOOM;
   const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const step = ZOOM_STEP * floor;
+    const held = (value: number) => (geometry === null ? value : holdZoom(value, geometry));
     switch (event.key) {
       case "+":
       case "=":
         event.preventDefault();
-        return emit({ zoom: clampZoom(latest.current.zoom + ZOOM_STEP) });
+        return emit({ zoom: held(latest.current.zoom + step) });
       case "-":
       case "_":
         event.preventDefault();
-        return emit({ zoom: clampZoom(latest.current.zoom - ZOOM_STEP) });
+        return emit({ zoom: held(latest.current.zoom - step) });
       case "Home":
         event.preventDefault();
         // The area is dropped with the framing: the library measures a fresh
         // one the moment it re-renders centred.
-        return emit({ x: 0, y: 0, zoom: MIN_ZOOM, area: null, areaPercent: null });
+        return emit({ x: 0, y: 0, zoom: floor, area: null, areaPercent: null });
       default:
         return;
     }
   };
 
-  // The rendered picture and the cut, as the library measures them — what a
-  // key's 1 % is of, and where the picture's edge meets the cut's.
-  const media = useRef<{ width: number; height: number } | null>(null);
-  const cut = useRef<{ width: number; height: number } | null>(null);
-
   // THE ARROWS ARE TAKEN BEFORE THE LIBRARY SEES THEM (capture phase): its own
   // step is a fixed pixel count, the board's is a share of the picture.
   const onArrow = (event: React.KeyboardEvent<HTMLDivElement>) => {
     const move = ARROWS[event.key];
-    if (move === undefined || media.current === null || cut.current === null) return;
+    if (move === undefined || geometry === null) return;
     event.preventDefault();
     event.stopPropagation();
     const now = latest.current;
-    emit(panBy(now, move, event.shiftKey ? PAN_STEP_SHIFT : PAN_STEP, media.current, cut.current));
+    emit(
+      panBy(
+        { x: now.x, y: now.y, zoom: holdZoom(now.zoom, geometry) },
+        move,
+        event.shiftKey ? PAN_STEP_SHIFT : PAN_STEP,
+        geometry.picture,
+        geometry.frame,
+      ),
+    );
   };
 
-  const round = shape === "avatar";
+  const board = CROP_STAGE[kind];
   const describedBy = `${testId}-keys`;
+  const ceiling = geometry?.ceiling ?? MAX_ZOOM;
 
   return (
     <>
       {/* No `w-full`: an auto width plus the negative margins is what makes the
-          frame the column's width PLUS its padding. A fixed 100% would only
-          shift the frame sideways. The avatar's frame is not itself a circle —
-          the library draws the round crop area and the scrim around it, which
-          is what AvatarCrop boards. */}
+          stage the column's width PLUS its padding. */}
       <div
-        ref={viewportRef}
+        ref={setStage}
         {...testAttributes(part(node, "viewport"), testId)}
-        style={{ aspectRatio: cssRatio(typeof shape === "string" ? SHAPE_RATIO[shape] : 1) }}
-        className="relative -mx-6 overflow-hidden bg-surface-container-high"
+        style={{ aspectRatio: `${board.width} / ${board.height}` }}
+        // No ground of its own: every crop board's stage is transparent, so
+        // what the picture leaves uncovered is the page under the scrim.
+        className="relative -mx-6 flex-none overflow-hidden"
         onKeyDown={onKeyDown}
         onKeyDownCapture={onArrow}
       >
-        {/* ONE CROPPER PER SHAPE (`key`): on a change of its cut the library
+        {/* ONE CROPPER PER FRAME (`key`): on a change of its cut the library
             scales the offset by the cut's growth, which keeps a framing
             through a window resize (react-easy-crop 6.2.4
             `recomputeCropPosition`) — on a shape change it would move the
             picture the host has just kept in place (`reshape`). A fresh
             cropper takes the offset it is handed, bounded only. */}
         <Cropper
-          key={ratioOf(shape)}
+          key={ratio}
           image={src}
-          aspect={ratioOf(shape)}
+          aspect={ratio}
+          // The FIXED frame (`frameOf`): with a `cropSize` the library's window
+          // is this size whatever the picture, centred in the stage.
+          cropSize={width > 0 ? frameSize(kind, ratio, width) : undefined}
           crop={{ x: crop.x, y: crop.y }}
-          zoom={clampZoom(crop.zoom)}
-          minZoom={MIN_ZOOM}
-          maxZoom={MAX_ZOOM}
-          cropShape={round ? "round" : "rect"}
-          // The whole picture, always. This one prop is the first of the two
-          // reported defects; it is not a taste setting.
+          zoom={zoom}
+          minZoom={floor}
+          maxZoom={ceiling}
+          cropShape={kind === "avatar" ? "round" : "rect"}
+          // The whole picture laid in the stage at 1×; the floor, not this,
+          // is what keeps the frame covered.
           objectFit="contain"
-          // The rule-of-thirds guides the canvas draws are the library's own. A
-          // locked window draws none: `CropViewport` is a window and a mask, the
-          // guides being a composition aid for the shape an author chooses.
-          showGrid={typeof shape === "string"}
+          // The rule of thirds is a composition aid for the shape an author
+          // chooses (ComposeCrop.md:15); a locked window draws none.
+          showGrid={kind === "post"}
           keyboardStep={KEYBOARD_STEP}
           onCropChange={onCropChange}
           onZoomChange={onZoomChange}
           onCropComplete={onCropComplete}
-          onMediaLoaded={(size) => {
-            media.current = { width: size.width, height: size.height };
-          }}
-          onCropSizeChange={(size) => {
-            cut.current = size;
-          }}
+          onMediaLoaded={onMediaLoaded}
+          classes={{ cropAreaClassName: `cg-crop-frame cg-crop-frame--${kind}` }}
           mediaProps={{ alt }}
           cropperProps={{ role: "group", "aria-label": CROP_PAN_NAME, "aria-describedby": describedBy }}
         />
@@ -260,29 +332,64 @@ export function CropFrame({
         Drag the picture to move it, or use the arrow keys. Press plus to zoom in, minus to zoom
         out, and Home to centre it again.
       </p>
-      {/* `CropZoom` (CropViewport.jsx): the house slider in `primary` at the
-          column's width, 48px tall so the thumb's target is the minimum, no
-          words beside it — its name says what it does. */}
+      {/* `CropZoom` (CropViewport.jsx): the drawn track (`.cg-range`,
+          `CROP_ZOOM_CSS`) at the column's width, 48px tall so the thumb's
+          target is the minimum, no words beside it — its name says what it
+          does. Its value is the zoom as a share of the fill. */}
       {zoomSlider && (
-        <div className="flex-none" {...testAttributes(part(node, "zoom"))}>
-          <input
-            type="range"
-            {...testAttributes(part(node, "zoom.input"), `${testId}-zoom`)}
-            min={MIN_ZOOM}
-            max={MAX_ZOOM}
-            step={0.01}
-            value={clampZoom(crop.zoom)}
-            aria-label={CROP_ZOOM_NAME}
-            onChange={(event) => emit({ zoom: clampZoom(Number(event.target.value)) })}
-            className="cg-focus m-0 block h-12 w-full flex-none accent-primary"
-          />
-        </div>
+        <ZoomTrack
+          value={zoom / floor}
+          // The input's own step is a hundredth; its bounds are too, so a
+          // reader's assistive tech never hears "5.000000000000001".
+          max={Math.round((ceiling / floor) * 100) / 100}
+          onChange={(share) => emit({ zoom: geometry === null ? share * floor : holdZoom(share * floor, geometry) })}
+          node={node}
+          testId={testId}
+        />
       )}
     </>
   );
 }
 
-/** The cut's and the slider's spoken names (CropViewport.jsx; blessed, jakob 2026-10-05). */
+/** The frame's size before the picture is measured — the stage's, not the picture's. */
+function frameSize(kind: CropKind, ratio: number, width: number): Size {
+  const frame = frameOf(kind, ratio, width);
+  return { width: frame.width, height: frame.height };
+}
+
+function ZoomTrack({
+  value,
+  max,
+  onChange,
+  node,
+  testId,
+}: {
+  value: number;
+  max: number;
+  onChange: (share: number) => void;
+  node?: DataNode;
+  testId: string;
+}) {
+  const at = max > MIN_ZOOM ? ((value - MIN_ZOOM) / (max - MIN_ZOOM)) * 100 : 0;
+  return (
+    <div className="flex-none" {...testAttributes(part(node, "zoom"))}>
+      <input
+        type="range"
+        {...testAttributes(part(node, "zoom.input"), `${testId}-zoom`)}
+        min={MIN_ZOOM}
+        max={max}
+        step={0.01}
+        value={value}
+        aria-label={CROP_ZOOM_NAME}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="cg-focus cg-range m-0 block h-12 w-full flex-none"
+        style={{ "--cg-range-at": `${Math.min(100, Math.max(0, at)).toFixed(2)}%` } as React.CSSProperties}
+      />
+    </div>
+  );
+}
+
+/** The stage's and the slider's spoken names (CropViewport.jsx; blessed, jakob 2026-10-05). */
 export const CROP_PAN_NAME = "Move the picture";
 export const CROP_ZOOM_NAME = "Zoom";
 
@@ -299,21 +406,22 @@ const ARROWS: Record<string, readonly [number, number]> = {
 
 /**
  * The framing one arrow press leaves: the picture moved `share` of its own
- * rendered size along `move`, held where its edge meets the cut's — the
- * library's own bound (`restrictPosition`: |offset| ≤ |picture · zoom − cut| / 2).
+ * rendered size along `move`, held where its edge meets the frame's — the
+ * library's own bound (`restrictPosition`: |offset| ≤ |picture · zoom − frame| / 2).
+ * `picture` is the library's 1× lay, `crop.zoom` already held to the bounds.
  */
 export function panBy(
   crop: Pick<Crop, "x" | "y" | "zoom">,
   move: readonly [number, number],
   share: number,
-  media: { width: number; height: number },
-  cut: { width: number; height: number },
+  picture: Size,
+  frame: Size,
 ): { x: number; y: number } {
-  const zoom = clampZoom(crop.zoom);
-  const bound = (picture: number, window: number) => Math.abs((picture * zoom) / 2 - window / 2);
+  const { zoom } = crop;
+  const bound = (laid: number, window: number) => Math.abs((laid * zoom) / 2 - window / 2);
   const hold = (value: number, limit: number) => Math.max(-limit, Math.min(limit, value));
   return {
-    x: hold(crop.x + move[0] * share * media.width * zoom, bound(media.width, cut.width)),
-    y: hold(crop.y + move[1] * share * media.height * zoom, bound(media.height, cut.height)),
+    x: hold(crop.x + move[0] * share * picture.width * zoom, bound(picture.width, frame.width)),
+    y: hold(crop.y + move[1] * share * picture.height * zoom, bound(picture.height, frame.height)),
   };
 }

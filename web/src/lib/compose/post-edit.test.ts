@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import type { EditGallery, KeptPicture } from "./comment-edit";
 import type { PickedAsset } from "./wizard";
 import {
+  coverRatio,
   isClipBody,
   isMediaBody,
   postEditInput,
@@ -266,9 +267,19 @@ describe("a clip's new face", () => {
     ]);
   });
 
-  it("is cut at the clip's own ratio", () => {
+  // CoverCrop.md:3,5 (seam 319): the clip's shape as it stands in a card — a
+  // clip taller than 4:5 at 4:5 — and only that shape is exported.
+  it("is cut at the clip's shape in a card, a tall clip at 4:5", () => {
     const set = run(clipPost(), { type: "cover", cover: framed("face") });
-    expect(uploadRatio(set, "face")).toBeCloseTo(9 / 16);
+    expect(uploadRatio(set, "face")).toBe(4 / 5);
+  });
+
+  it("keeps a clip's own ratio from 4:5 out to the widest", () => {
+    expect(coverRatio(16 / 9)).toBe(16 / 9);
+    expect(coverRatio(1)).toBe(1);
+    expect(coverRatio(4 / 5)).toBe(4 / 5);
+    expect(coverRatio(9 / 16)).toBe(4 / 5);
+    expect(coverRatio(null)).toBe(1);
   });
 
   // EditComposeVideo.md: "Remove it under the cover row -> the new cover

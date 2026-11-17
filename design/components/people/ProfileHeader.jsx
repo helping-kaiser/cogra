@@ -133,6 +133,20 @@ function Figure({ value, label, node, onOpen, ariaLabel }) {
   );
 }
 
+/* THE NAME'S TWO-LINE RULE, as a client computes it (jakob 2026-11-13): the
+   largest whole-pixel size from 22 down, in steps of 1, at which the name —
+   wrapped at its spaces, a too-wide word broken inside — takes at most two
+   lines of the name's width, the leading round(size × 28 / 22) px. `lines`
+   measures the name at a size and leading; the result is passed back as
+   `nameSize` / `nameLineHeight`. No smallest size is ruled. */
+export function nameFitSize(lines) {
+  for (let size = 22; size > 1; size -= 1) {
+    const lineHeight = Math.round((size * 28) / 22);
+    if (lines(size, lineHeight) <= 2) return { size, lineHeight };
+  }
+  return { size: 1, lineHeight: 1 };
+}
+
 export function ProfileHeader({
   handle,
   displayName,
@@ -162,6 +176,12 @@ export function ProfileHeader({
   invitesOpacity,
   redacted = false,
   showHandle = true,
+  /* THE NAME'S FITTED SIZE, the result of the two-line rule below: the size
+     and leading the rule gives this name (`nameFitSize`), unset at the
+     role's own 22px / 28px. A client computes them by the rule; a static
+     board passes what the rule gives its sample. */
+  nameSize,
+  nameLineHeight,
   node,
 }) {
   const name = redacted ? REDACTED_ACTOR_NAME : displayName && displayName.trim() ? displayName : handle;
@@ -258,7 +278,7 @@ export function ProfileHeader({
         </div>
         <div className="cg-profile-name" style={{ gridArea: "name", alignSelf: "end", display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
           <h1
-            style={{ margin: 0, fontSize: "var(--text-title-large)", letterSpacing: "var(--text-title-large--letter-spacing)", lineHeight: "var(--text-title-large--line-height)", fontWeight: "var(--text-title-large--font-weight)", overflowWrap: "anywhere", color: redacted ? "var(--text-secondary)" : undefined }}
+            style={{ margin: 0, fontSize: nameSize ?? "var(--text-title-large)", letterSpacing: "var(--text-title-large--letter-spacing)", lineHeight: nameLineHeight ?? "var(--text-title-large--line-height)", fontWeight: "var(--text-title-large--font-weight)", overflowWrap: "break-word", wordBreak: "normal", color: redacted ? "var(--text-secondary)" : undefined }}
             data-node={node && "name"}
           >
             {name}
@@ -267,8 +287,20 @@ export function ProfileHeader({
               carry it — a drill-in is titled @handle, so it passes showHandle
               false (jakob 2026-09-01). A redacted actor has none to repeat.
               The handle line is a ONE-LINE PLACE (round 40): it never wraps,
-              and a handle too long for it is cut with "…"; the name above is
-              a heading and wraps, breaking inside a word it cannot fit. */}
+              and a handle too long for it is cut with "…". THE NAME ABOVE IS THE
+              NAMED EXCEPTION (seam 318; ruled by jakob 2026-11-13: "i still want
+              people to be able to see the full name", and "i prefer the shrunk
+              2 line version"): on the profile's head alone the display name is
+              always shown whole, on AT MOST TWO LINES. At the role's 22px on
+              28px it wraps at its spaces, and a word wider than the line breaks
+              INSIDE the word (the one place in the tree a name may). A name that
+              would take more than two lines there is shrunk, several words or one
+              long word alike: its size is the largest whole pixel, from 22 down
+              in steps of 1, at which it holds two lines, its line-height
+              round(size × 28 / 22) px, half up (`nameFitSize`). Nothing is ever
+              cut; only the name's own size changes, the handle line and the
+              rest of the head keep theirs. Two lines are the hard cap and the size has no
+              floor: the name shrinks until it holds them (jakob 2026-11-13). `ProfileOther`'s `name` setting draws it. */}
           {showHandle && !redacted && (
             <span style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} data-node={node && "handle"}>
               @{handle}

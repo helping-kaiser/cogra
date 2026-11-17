@@ -16,6 +16,7 @@
 import type { ReactNode } from "react";
 
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { NOT_THROUGH_LINE } from "@/lib/ui/error-messages";
 import { PageHeader } from "@/lib/ui/page-header";
 
 export function TaskPage({
@@ -89,4 +90,4 @@ export function TaskPage({
 /** The whole-act lines a credential form can say above its commit (copy-voice *Faults by code*). */
 export const NO_ANSWER = "That didn't send. Try again.";
 export const RATE_LIMITED_LINE = "Too many tries. Wait a little, then try again.";
-export const NOT_THROUGH = "That didn't go through. Try again.";
+export const NOT_THROUGH = NOT_THROUGH_LINE;

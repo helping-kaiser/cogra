@@ -203,10 +203,11 @@ describe("ReplySealStep — the board's rows and lines", () => {
     expect(screen.queryByTestId("reply-seal-acts-note")).toBeNull();
   });
 
-  it("ReplyCited.md:5 carries the all-or-nothing subline once the signature carries more than one thing", () => {
+  it("ReplyCited.md:5 says no land-together line at several things — the seal's ? says it (seam 314)", () => {
     renderSeal({ references: [citation("p-2", "Tide tables")] });
     expect(screen.getByTestId("reply-seal-acts-total")).toHaveTextContent("2 things, signed together");
-    expect(screen.getByTestId("reply-seal-acts-note")).toHaveTextContent("They land together, or none does.");
+    expect(screen.queryByTestId("reply-seal-acts-note")).toBeNull();
+    expect(screen.queryByText("They land together, or none does.")).toBeNull();
   });
 
   it("ReplyCited.md:9 tapping the staged citation's name opens its pair sheet", () => {

@@ -106,7 +106,7 @@ describe("the ask (behavior/VouchAsk.md)", () => {
     const ask = await screen.findByTestId("vouchAsk.ask");
     expect(within(ask).getByTestId("vouchAsk.ask.title")).toHaveTextContent("@noor is asking to be vouched in");
     expect(within(ask).getByTestId("vouchAsk.ask.body")).toHaveTextContent(
-      "They have an account and can read; what they do not have yet is anyone standing for them. Your opinion is what brings them in.",
+      "Your opinion is what brings them in.",
     );
     expect(within(ask).getByTestId("vouchAsk.ask.avatar")).toHaveTextContent("N");
     expect(screen.getByTestId("vouchAsk.header.title")).toHaveTextContent("A vouch, asked for");
@@ -299,6 +299,8 @@ describe("the dead ends (behavior/VouchAskInvalid.md, VouchAskUnusable.md)", () 
   it("VouchAskUnusable.md:11-:17 a landed asker: the heading, nobody else named, the profile door", async () => {
     asMember({ usable: false, applicantHandle: "noor", reason: "LANDED" });
     expect(await screen.findByTestId("vouchAsk.title")).toHaveTextContent("@noor is already in");
+    // The heading alone, then the door (seam 314: `vouchAsk.body` left this board).
+    expect(screen.queryByTestId("vouchAsk.body")).toBeNull();
     expect(document.body.innerHTML).not.toContain("text-error");
     const door = screen.getByTestId("vouchAsk.profileDoor");
     expect(door).toHaveTextContent("See @noor's profile");

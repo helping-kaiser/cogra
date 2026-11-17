@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
@@ -15,7 +15,12 @@ vi.mock("next/navigation", async (importOriginal) => ({
   useRouter: () => ({ push, replace: vi.fn(), back: vi.fn(), forward: vi.fn(), refresh: vi.fn(), prefetch: vi.fn() }),
 }));
 
-beforeEach(() => push.mockClear());
+beforeEach(() => {
+  push.mockClear();
+  // The token store persists in localStorage: an earlier test's session must
+  // not sign in the next one, or a "guest" is a member in disguise.
+  window.localStorage.clear();
+});
 
 startMswServer(...stanceHandlers());
 
@@ -133,5 +138,41 @@ describe("TagFeedCard's Tag a new post with it", () => {
   it("a_guests_tag_act_is_never_told_post_once_in", () => {
     mount(null);
     expect(screen.queryByTestId("carried-snackbar")).toBeNull();
+  });
+
+  // FeedTagShapes.md:29, GuestGate.md:3 — a guest's tap on the compose glyph
+  // opens the ask over the feed AND NEVER the reader is bounced to another
+  // screen (no /compose, so no /login after it).
+  it("a_guests_compose_glyph_opens_the_guest_gate_over_the_feed", () => {
+    mount(null);
+    const ask = screen.getByTestId("join-prompt");
+    expect(ask).toHaveTextContent("Join the conversation");
+    expect(ask).toHaveTextContent("Posting and profiles need an account.");
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  // Keep browsing closes the ask and the read stands where it was (GuestGate.md).
+  it("keep_browsing_closes_the_guest_gate_and_stays", () => {
+    mount(null);
+    fireEvent.click(screen.getByTestId("join-prompt-dismiss"));
+    expect(screen.queryByTestId("join-prompt")).toBeNull();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  // FeedTagShapes.md:29's other half — the card's face, the shared control.
+  it("a_guests_tap_on_the_tag_cards_face_opens_the_guest_gate", async () => {
+    renderWithProviders(
+      <TagFeedCard topic={TOPIC} from="feed" testId="tag" node={{ path: "feed.tagCard", key: "t1" }} onLinkCopied={() => {}} />,
+      { reader: null },
+    );
+    // The face's own gesture, as `stance-control.test.tsx` drives it.
+    const face = await screen.findByTestId("feed.tagCard.actionRow.stance.anchor");
+    await act(async () => {
+      fireEvent.pointerDown(face, { pointerId: 9, clientX: 0, clientY: 0 });
+      fireEvent.pointerUp(face, { pointerId: 9 });
+      fireEvent.click(face);
+    });
+    expect(await screen.findByTestId("join-prompt")).toHaveTextContent("Join the conversation");
+    expect(push).not.toHaveBeenCalled();
   });
 });

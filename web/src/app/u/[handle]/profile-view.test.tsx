@@ -1,11 +1,15 @@
 import { InMemoryCache } from "@apollo/client";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
+import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { resetSeenQueueForTests } from "@/lib/history/seen-queue";
+import { heldPicture, releaseHeldPicture } from "@/lib/profile/held-picture";
 import { forgetAllProfileViews } from "@/lib/profile/profile-memory";
+import { readerState } from "@/lib/session/reader-state";
 import { createTokenStore } from "@/lib/session/token-store";
+import { AccountPreferencesSync } from "@/lib/settings/account-preferences-sync";
 import { createStubStanceData } from "@/lib/stance/stub-stance-data";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
@@ -291,9 +295,10 @@ describe("ProfileScreen", () => {
     expect(screen.getByTestId(byNode("profile.identity.figures.stancesTaken.value"))).toHaveTextContent("7");
   });
 
-  // THE FIGURES ARE ONE DOOR ONTO THE OPINIONS PAGE (ProfileHeader.jsx
-  // `onCounts`; graph.json `the figures row` → ProfileStances; copy-voice,
-  // *The profile's figures, spoken*): never three, never inert.
+  // THE TWO OPINION FIGURES ARE TWO DOORS (ProfileOther.md:9 and 57-61,
+  // Profile.md:13 and 49-53; ProfileHeader.jsx `onCounts`; copy-voice, *The
+  // profile's figures, spoken*): each opens the opinions page on its own
+  // direction, the Posts figure is no door.
   describe("the figures row", () => {
     function figures(id: string) {
       return gqlLink.query("ProfileFigures", () =>
@@ -311,35 +316,41 @@ describe("ProfileScreen", () => {
       );
     }
 
-    it("opens someone's opinions page, named by its numbers and its purpose", async () => {
+    it("opens someone's opinions page on On from Opinions on, and on By from Opinions by", async () => {
       server.use(
         gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u2", "ada") } })),
         recordsHandler([]),
         figures("u2"),
       );
       renderWithProviders(<ProfileScreen handle="ada" />);
-      const door = await screen.findByRole("link", {
-        name: "12 Posts, 1,204 Opinions on them, 7 Opinions by them, opinions on and by @ada",
-      });
-      expect(door).toHaveAttribute("data-testid", "profile.identity.figures");
-      expect(door).toHaveAttribute("href", "/u/ada/opinions");
-      expect(door.className).toContain("cg-hit");
+      const on = await screen.findByRole("link", { name: "1,204 Opinions on them" });
+      expect(on).toHaveAttribute("data-testid", "profile.identity.figures.stancesOn");
+      expect(on).toHaveAttribute("href", "/u/ada/opinions");
+      const by = screen.getByRole("link", { name: "7 Opinions by them" });
+      expect(by).toHaveAttribute("data-testid", "profile.identity.figures.stancesTaken");
+      expect(by).toHaveAttribute("href", "/u/ada/opinions?tab=by");
+      expect(screen.getByTestId(byNode("profile.identity.figures")).tagName).toBe("DIV");
+      expect(screen.getByTestId(byNode("profile.identity.figures.posts")).closest("a")).toBeNull();
     });
 
-    it("carries the profile's own origin onto the page, so its way back holds", async () => {
+    it("carries the profile's own origin onto the page from either door, so its way back holds", async () => {
       server.use(
         gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u2", "ada") } })),
         recordsHandler([]),
         figures("u2"),
       );
       renderWithProviders(<ProfileScreen handle="ada" from="saved" />);
-      expect(await screen.findByTestId(byNode("profile.identity.figures"))).toHaveAttribute(
+      expect(await screen.findByTestId(byNode("profile.identity.figures.stancesOn"))).toHaveAttribute(
         "href",
         "/u/ada/opinions?from=saved",
       );
+      expect(screen.getByTestId(byNode("profile.identity.figures.stancesTaken"))).toHaveAttribute(
+        "href",
+        "/u/ada/opinions?tab=by&from=saved",
+      );
     });
 
-    it("opens your own opinions page from your own root, both directions", async () => {
+    it("opens your own opinions page from your own root on each direction", async () => {
       server.use(
         meHandler(),
         gqlLink.query("MyProfile", () => HttpResponse.json({ data: { me: profile("u1", "ada") } })),
@@ -347,10 +358,14 @@ describe("ProfileScreen", () => {
         figures("u1"),
       );
       renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
-      const door = await screen.findByRole("link", {
-        name: "12 Posts, 1,204 Opinions on you, 7 Opinions by you, your opinions, both directions",
-      });
-      expect(door).toHaveAttribute("href", "/profile/opinions");
+      expect(await screen.findByRole("link", { name: "1,204 Opinions on you" })).toHaveAttribute(
+        "href",
+        "/profile/opinions",
+      );
+      expect(screen.getByRole("link", { name: "7 Opinions by you" })).toHaveAttribute(
+        "href",
+        "/profile/opinions?tab=by",
+      );
     });
   });
 
@@ -775,7 +790,7 @@ describe("ProfileScreen", () => {
       fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
       fireEvent.click(screen.getByTestId("profile.menuSheet.hide"));
       expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent(
-        "@ada is hidden — their posts stay out of your feed.",
+        "@ada is hidden.",
       );
       // ProfileMenu.md:23 — the reader stays on the profile.
       expect(screen.getByTestId("profile.identity.actionRow.menu")).toBeInTheDocument();
@@ -795,7 +810,7 @@ describe("ProfileScreen", () => {
       fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
       fireEvent.click(screen.getByTestId("profile.menuSheet.hide"));
       expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent(
-        "This account is hidden — its posts stay out of your feed.",
+        "This account is hidden.",
       );
     });
 
@@ -840,7 +855,7 @@ describe("ProfileScreen", () => {
       fireEvent.click(screen.getByTestId("profile.menuSheet.hide"));
       expect(screen.queryByRole("alertdialog")).toBeNull();
       expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent(
-        "@ada is unhidden — their posts can reach your feed again.",
+        "@ada is unhidden.",
       );
       expect(screen.getByTestId("profile.snackbar.action")).toHaveTextContent("Undo");
       expect(screen.getByTestId("profile.identity.actionRow.menu")).toBeInTheDocument();
@@ -976,6 +991,47 @@ describe("ProfileScreen", () => {
     expect(screen.getByTestId(byNode("profile.identity.handle"))).toHaveTextContent("@ada");
   });
 
+  // Profile.md:47 — the own avatar wears the change badge, the door to the
+  // picture's crop and its own seal (ProfileHeader.jsx `changeBadge`).
+  it("the own avatar's change badge picks a picture and opens the picture's own flow", async () => {
+    server.use(
+      meHandler(),
+      gqlLink.query("MyProfile", () => HttpResponse.json({ data: { me: profile("u1", "ada") } })),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
+    const badge = await screen.findByTestId(byNode("profile.identity.changeBadge"));
+    expect(badge).toHaveAccessibleName("Change your picture");
+    // On the avatar's corner, -2/-2 (ProfileHeader.jsx): inline, because
+    // `cg-state`'s unlayered `position: relative` beats an `absolute` utility.
+    expect(badge.style.position).toBe("absolute");
+    expect(badge.style.right).toBe("-2px");
+    expect(badge.style.bottom).toBe("-2px");
+    // The avatar is a picture, never a door: the badge is the only one.
+    expect(screen.getByTestId(byNode("profile.identity.avatar")).closest("button, a")).toBeNull();
+    const input = screen.getByTestId("profile-change-badge-input") as HTMLInputElement;
+    const opened = vi.spyOn(input, "click");
+    fireEvent.click(badge);
+    expect(opened).toHaveBeenCalledTimes(1);
+    push.mockClear();
+    const file = new File([new Uint8Array([1]) as BlobPart], "face.jpg", { type: "image/jpeg" });
+    fireEvent.change(input, { target: { files: [file] } });
+    expect(push).toHaveBeenCalledWith("/profile/picture");
+    expect(heldPicture()).toBe(file);
+    releaseHeldPicture();
+  });
+
+  it("draws no change badge on someone else's profile", async () => {
+    server.use(
+      gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u2", "ada") } })),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    await screen.findByTestId(byNode("profile.identity.name"));
+    expect(screen.queryByTestId(byNode("profile.identity.changeBadge"))).toBeNull();
+    expect(screen.queryByTestId("profile-change-badge-input")).toBeNull();
+  });
+
   // A signed profile edit is served from its signature on, pending until it
   // lands (substrate.md §6), and a handle change is immediate — so returning
   // to the profile from the editor or from settings shows the change on the
@@ -1009,7 +1065,7 @@ describe("ProfileScreen", () => {
       ),
       recordsHandler([]),
     );
-    renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
+    renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore(), reader: "APPLICANT" });
     const invites = await screen.findByTestId(byNode("profile.identity.actionRow.invites"));
     // Visible but locked (auth.md "Application"; ProfileApplicant.md:15): a
     // button at the disabled opacity, not a link, answering in the snackbar.
@@ -1021,7 +1077,84 @@ describe("ProfileScreen", () => {
     );
     // The applicant's empty chronicle says what fills it, and when.
     expect(screen.getByTestId(byNode("profile.chronicle.empty.title"))).toHaveTextContent(
-      "Nothing here yet. Your posts and opinions show up here once you're in.",
+      /^Nothing here yet\.$/,
+    );
+  });
+
+  // ONE SOURCE FOR THE APPLICANT (`reader-state.ts`): the profile's locks read
+  // the session's reader state, never a verdict of their own.
+  it("the_applicant_locks_read_the_shared_reader_state", async () => {
+    server.use(
+      meHandler("MEMBER"),
+      gqlLink.query("MyProfile", () =>
+        HttpResponse.json({ data: { me: profile("u1", "ada") } }),
+      ),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore(), reader: "APPLICANT" });
+    // The page's own read says member; the shared state says applicant, and the
+    // lock follows the shared state. The Invites lock is what still tells the
+    // applicant apart here: the empty chronicle reads the same for both
+    // (round 42 cut its applicant tail).
+    await waitFor(() => expect(screen.getByTestId(byNode("profile.chronicle.empty.title"))).toBeInTheDocument());
+    const invites = screen.getByTestId(byNode("profile.identity.actionRow.invites"));
+    expect(invites).not.toHaveAttribute("href");
+    expect(invites.className).toContain("opacity-[var(--state-disabled)]");
+    fireEvent.click(invites);
+    expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent("You can invite once you're in.");
+  });
+
+  // AN APPLICANT LET IN MID-SESSION: the profile's own fresh `me` read says
+  // member, and the locks lift with no reload.
+  it("the_profiles_fresh_me_read_saying_member_lifts_its_locks", async () => {
+    const served = { accountState: "APPLICANT" as "APPLICANT" | "MEMBER" };
+    server.use(
+      gqlLink.query("Me", () =>
+        HttpResponse.json({
+          data: {
+            me: {
+              __typename: "User",
+              id: "u1",
+              handle: "ada",
+              displayName: { __typename: "ModeratedText", value: null },
+              actorPubkey: null,
+              accountState: served.accountState,
+              hasReciprocated: true,
+              vouchBackDismissed: false,
+              invitedBy: null,
+              preferences: { __typename: "UserPreferences", contentFilteringSeverityLevel: null },
+            },
+          },
+        }),
+      ),
+      gqlLink.query("MyProfile", () =>
+        HttpResponse.json({ data: { me: profile("u1", "ada") } }),
+      ),
+      recordsHandler([]),
+    );
+    function Later() {
+      const [shown, show] = useState(false);
+      return (
+        <>
+          <button type="button" data-testid="later-open" onClick={() => show(true)} />
+          {shown && <ProfileScreen handle={null} />}
+        </>
+      );
+    }
+    renderWithProviders(
+      <>
+        <AccountPreferencesSync />
+        <Later />
+      </>,
+      { store: signedInStore() },
+    );
+    await waitFor(() => expect(readerState().accountState).toBe("APPLICANT"));
+    served.accountState = "MEMBER";
+    fireEvent.click(screen.getByTestId("later-open"));
+    await waitFor(() => expect(readerState().accountState).toBe("MEMBER"));
+    // The locked button gives way to the link (re-read: the element changes).
+    await waitFor(() =>
+      expect(screen.getByTestId(byNode("profile.identity.actionRow.invites"))).toHaveAttribute("href", "/invites"),
     );
   });
 

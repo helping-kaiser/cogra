@@ -222,9 +222,7 @@ describe("Report on a comment off the thread", () => {
       expect(confirm).toHaveAccessibleName("Report this comment?");
       expect((confirm as HTMLDialogElement).open).toBe(true);
       expect(screen.queryAllByTestId(`${host}.menuSheet`).some((d) => (d as HTMLDialogElement).open)).toBe(false);
-      expect(screen.getByTestId("card-report-sheet-text")).toHaveTextContent(
-        "It goes to the people who run CoGra for a look.",
-      );
+      expect(screen.queryByTestId("card-report-sheet-text")).toBeNull();
       expect(report.targets).toEqual([]);
     },
   );

@@ -307,6 +307,75 @@ describe("the reply wizard", () => {
     });
   });
 
+  // THE HAND TEST OF 2026-11-17: a failed upload that Retry never recovered,
+  // while removing the picture and adding it again went up at once. Retry
+  // must do what that re-add does.
+  describe("Retry after a failed read", () => {
+    function countedUploads() {
+      const sent = { count: 0 };
+      server.use(
+        gqlLink.mutation("UploadMedia", () => {
+          sent.count += 1;
+          return HttpResponse.json({
+            data: {
+              uploadMedia: {
+                __typename: "UploadMediaPayload",
+                media: echoedMedia(`m-${sent.count}`),
+                userErrors: [],
+              },
+            },
+          });
+        }),
+      );
+      return sent;
+    }
+
+    it("offers Retry on a picture whose read failed, and it lands", async () => {
+      const reading = { fails: true };
+      vi.stubGlobal(
+        "createImageBitmap",
+        vi.fn(async () => {
+          if (reading.fails) throw new DOMException("could not be read", "NotReadableError");
+          return { width: 1200, height: 1500, close: () => {} };
+        }),
+      );
+      const sent = countedUploads();
+      draw();
+      write("With a picture.");
+      await pick(["a.jpg"]);
+
+      const line = await screen.findByTestId(/^reply-media-error-/);
+      expect(sent.count).toBe(0);
+      reading.fails = false;
+      fireEvent.click(within(line).getByTestId(/^reply-media-retry-/));
+
+      await waitFor(() => expect(sent.count).toBe(1));
+      await waitFor(() => expect(screen.queryByTestId(/^reply-media-error-/)).toBeNull());
+    });
+
+    it("uploads a picture whose picked handle stops reading after the pick", async () => {
+      const picked: Blob[] = [];
+      vi.stubGlobal(
+        "createImageBitmap",
+        vi.fn(async (source: Blob) => {
+          if (picked.includes(source)) throw new DOMException("could not be read", "NotReadableError");
+          return { width: 1200, height: 1500, close: () => {} };
+        }),
+      );
+      const sent = countedUploads();
+      draw();
+      write("With a picture.");
+      const input = await screen.findByTestId("reply-media-input");
+      const file = new File([new Uint8Array([1, 2, 3]) as BlobPart], "a.jpg", { type: "image/jpeg" });
+      picked.push(file);
+      Object.defineProperty(input, "files", { value: [file], configurable: true });
+      fireEvent.change(input);
+
+      await waitFor(() => expect(sent.count).toBe(1));
+      expect(screen.queryByTestId(/^reply-media-error-/)).toBeNull();
+    });
+  });
+
   describe("the seal", () => {
     it("says what is answered and how long the answer is", async () => {
       draw();
@@ -352,9 +421,9 @@ describe("the reply wizard", () => {
     it("carries the license row, on the default", async () => {
       draw();
       await toSeal();
-      expect(screen.getByTestId("reply-seal")).toHaveTextContent(
-        "Public domain — nobody owes you a name, and uses go unlogged.",
-      );
+      // The reading is the pair's name alone (round 42, `licenseSummary`).
+      expect(screen.getByTestId("reply-seal")).toHaveTextContent("Public domain");
+      expect(screen.getByTestId("reply-seal")).not.toHaveTextContent("nobody owes you a name");
       expect(screen.getByTestId("reply-seal")).not.toHaveTextContent("your default");
       expect(screen.getByTestId("reply-open-license")).toBeInTheDocument();
     });
@@ -679,6 +748,40 @@ describe("the reply wizard", () => {
       expect(screen.queryByTestId("reply-seal-tags")).toBeNull();
     });
 
+    // jakob 2026-11-13 (seam 327): a refused tag NAME reads as the picker's
+    // own line (TagPickerRefused), never the server's `a topic name …` text.
+    it("reads a refused tag name as the picker's line, never the server's text", async () => {
+      server.use(
+        tagNames(),
+        gqlLink.mutation("PrepareComment", () =>
+          HttpResponse.json({
+            data: {
+              prepareComment: {
+                __typename: "PrepareContentPayload",
+                node: null,
+                writes: null,
+                userErrors: [
+                  {
+                    __typename: "UserError",
+                    message: "`reserved` is not a legal topic name: ASCII letters, digits, `.`, `-`, `_` only",
+                    code: "BAD_INPUT",
+                    field: ["tags", "0", "name"],
+                  },
+                ],
+              },
+            },
+          }),
+        ),
+      );
+      draw();
+      await toSeal();
+      stageTag("reserved");
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      const fault = await screen.findByTestId("reply-seal-tags-fault");
+      expect(fault).toHaveTextContent("A tag name is letters, digits, dot, dash and underscore.");
+      expect(screen.getByTestId("reply-seal")).not.toHaveTextContent(/topic name/);
+    });
+
     // ReplySeal.md:19 — the fault line and Retry IN THE FOOT, in Sign
     // comment's place; Retry is the same signing, asked again.
     it("surfaces a submit that never reached the server in the foot, and Retry asks again", async () => {
@@ -693,6 +796,47 @@ describe("the reply wizard", () => {
       server.use(prepareOk("comment-9"));
       fireEvent.click(screen.getByTestId("reply-retry"));
       await waitFor(() => expect(onSigned).toHaveBeenCalledWith("comment-9"));
+    });
+
+    // NetworkError.md:13 — the server's FORBIDDEN at the prepare is an answer,
+    // never the no-answer line and never the bug notice.
+    it("NetworkError.md:13 a FORBIDDEN prepare reads That didn't go through. with Retry in Sign comment's place", async () => {
+      server.use(
+        gqlLink.mutation("PrepareComment", () =>
+          HttpResponse.json({
+            data: null,
+            errors: [{ message: "member account required", extensions: { code: "FORBIDDEN" } }],
+          }),
+        ),
+      );
+      const { onSigned } = draw();
+      await toSeal();
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      const line = await screen.findByTestId("reply-transport-error");
+      expect(line).toHaveTextContent("That didn't go through. Try again.");
+      expect(line).not.toHaveTextContent(/didn't send|reach the server/);
+      expect(screen.queryByTestId("reply-seal-bug")).toBeNull();
+      expect(screen.queryByTestId("reply-sign")).toBeNull();
+      server.use(prepareOk("comment-9"));
+      fireEvent.click(screen.getByTestId("reply-retry"));
+      await waitFor(() => expect(onSigned).toHaveBeenCalledWith("comment-9"));
+    });
+
+    // NetworkError.md:13 — an INTERNAL on the errors array is an answer, so
+    // the not-through line, never the no-answer one.
+    it("NetworkError.md:13 an INTERNAL prepare reads That didn't go through. with Retry", async () => {
+      server.use(
+        gqlLink.mutation("PrepareComment", () =>
+          HttpResponse.json({ data: null, errors: [{ message: "no", extensions: { code: "INTERNAL" } }] }),
+        ),
+      );
+      draw();
+      await toSeal();
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      const line = await screen.findByTestId("reply-transport-error");
+      expect(line).toHaveTextContent("That didn't go through. Try again.");
+      expect(line).not.toHaveTextContent(/didn't send|reach the server/);
+      expect(screen.getByTestId("reply-retry")).toBeInTheDocument();
     });
 
     it("SealSigning.md: going a stage back and returning shows the plain commit again", async () => {
@@ -810,7 +954,7 @@ describe("the reply wizard", () => {
         signStaged: vi.fn(async () => ({
           kind: "refused" as const,
           id: "w1",
-          errors: [{ message: "no", code: "BAD_INPUT" as const, field: null }],
+          errors: [{ message: "no", code: "BAD_INPUT" as const, field: ["content"] }],
         })),
       });
       const onLeave = vi.fn();
@@ -1004,10 +1148,11 @@ describe("the reply wizard", () => {
       );
     });
 
-    it("ReplySeal: the seal's header carries Last step and the one ? as WizardHeader's pair", async () => {
+    it("ReplySeal: the seal's header carries the one ? and no stage label (seam 314)", async () => {
       draw();
       await toSeal();
-      expect(screen.getByTestId("header-stage")).toHaveTextContent("Last step");
+      expect(screen.queryByTestId("header-stage")).toBeNull();
+      expect(screen.queryByText("Last step")).toBeNull();
       fireEvent.click(screen.getByRole("button", { name: "How signing works" }));
       expect(await screen.findByTestId("reply-help-dialog")).toBeInTheDocument();
     });

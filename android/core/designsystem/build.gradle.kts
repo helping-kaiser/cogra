@@ -51,11 +51,6 @@ dependencies {
     // HTTP at all — it ships no network fetcher by default.
     api(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
-    // The crop step's engine. `MediaCrop` hosts the library's own
-    // `CropImageView` under our chrome, so the geometry — the whole
-    // picture on screen, the draggable window, the ratio switch — is the
-    // library's rather than ours.
-    implementation(libs.android.image.cropper)
     // The fullscreen viewer's pinch-zoom and pan, and the rule that decides
     // when a drag belongs to the picture rather than to the pager under it.
     // Hand-rolled `detectTransformGestures` is what ate the viewer's page
@@ -102,4 +97,10 @@ dependencies {
     // Coil's own test artifact: a fake ImageLoader engine, so a media test
     // asserts layout and semantics without a network or a real decode.
     testImplementation(libs.coil.test)
+    // The crop's round trip runs the REAL upload pipeline beside the real
+    // preview transformation: the framed window, cut by both, must be the
+    // same rectangle of the same upright picture.
+    testImplementation(project(":core:media"))
+    testImplementation(libs.androidx.exifinterface)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

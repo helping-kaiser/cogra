@@ -119,8 +119,8 @@ internal fun CommentFeedCard(
     onCite: () -> Unit,
     onLicense: () -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
-    /** The own comment's Remove row (`FEED_OWN_COMMENT_MENU`); null on someone else's. */
-    onRemove: (() -> Unit)? = null,
+    /** What the card's ⋮ holds and where it registers: the own rows or another's, and their doors. */
+    menu: CommentCardMenu = CommentCardMenu(),
     /** How the card names what it answers: the feed's head row, or the line a listed comment leads with. */
     shape: CommentCardShape = CommentCardShape.Thread,
     /** The card stands on its author's own page — a profile's comments view — so the chip is inert. */
@@ -154,7 +154,7 @@ internal fun CommentFeedCard(
                     onOpenTopic = onOpenTopic,
                     onCite = onCite,
                     onLicense = onLicense,
-                    onRemove = onRemove,
+                    menu = menu,
                     // A profile's list draws the words whole (`CommentCard`'s
                     // `clampLines`, off outside the feed).
                     clamped = line == null,
@@ -205,6 +205,19 @@ private fun HungOnTheConnector(part: @Composable () -> Unit) {
         part()
     }
 }
+
+/**
+ * A comment card's ⋮ off the thread (CommentMenu.md:5, CommentMenuOwn.md:7):
+ * the own rows or another's, the doors its rows open over the host, and the
+ * host's registered sheet. The default stands the rows inert under their tags.
+ */
+internal data class CommentCardMenu(
+    val own: Boolean = false,
+    val onEdit: () -> Unit = {},
+    val onRemove: () -> Unit = {},
+    val onReport: (() -> Unit)? = null,
+    val placement: CommentMenuPlacement? = null,
+)
 
 /**
  * HOW A COMMENT CARD NAMES WHAT IT ANSWERS (`CommentCard`'s `targetShape`).
@@ -505,7 +518,7 @@ private fun OwnPart(
     onOpenTopic: (String) -> Unit,
     onCite: () -> Unit,
     onLicense: () -> Unit,
-    onRemove: (() -> Unit)?,
+    menu: CommentCardMenu,
     /** The words fold at two lines under `More` — in the feed, never on a listed comment. */
     clamped: Boolean,
     authorHere: Boolean,
@@ -521,9 +534,20 @@ private fun OwnPart(
         menu = if (comment.removed) {
             emptyList()
         } else {
-            commentMenuRows(comment = comment, onCite = onCite, onLicense = onLicense, onRemove = onRemove)
+            commentMenuRows(
+                comment = comment,
+                own = menu.own,
+                onCite = onCite,
+                onLicense = onLicense,
+                onEdit = menu.onEdit,
+                onRemove = menu.onRemove,
+                onReport = menu.onReport,
+                placement = menu.placement,
+            )
         },
         menuContentDescription = stringResource(R.string.content_menu_comment),
+        // UNSTACKED OVER ITS HOST (CommentMenu.md:5): the host's registered sheet.
+        menuSheetNode = menu.placement?.sheet,
         node = node,
     )
     // THE COMPACT VEIL TAKES THE WORDS (FeedCommentShapes.md); the head row

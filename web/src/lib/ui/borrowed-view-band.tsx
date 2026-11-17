@@ -95,7 +95,7 @@ export const borrowedViewLine = {
   /** A signed-out reader, who can do something about it. */
   join: (handle: string) => `Browsing from @${handle}'s view — join to build your own.`,
   /** A signed-in applicant: the vantage is the same, the action is not theirs. */
-  applicant: (handle: string) => `Browsing from @${handle}'s view while your application lands.`,
+  applicant: (handle: string) => `Browsing from @${handle}'s view.`,
   /** Landed, no opinion signed yet. The band asks for nothing (VouchBack.md:17). */
   member: (handle: string) => `Browsing from @${handle}'s view — your first opinion starts your own.`,
 } as const;

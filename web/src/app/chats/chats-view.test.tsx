@@ -4,15 +4,11 @@ import { describe, expect, it } from "vitest";
 import { ChatsView } from "./chats-view";
 
 describe("ChatsView", () => {
-  // The blessed line (design/guidelines/copy-voice.md "The coming-soon
-  // surfaces"; the board's own
-  // `EmptyState title="Chats — coming soon. Your conversations will be
-  // here."`) — verbatim, never retyped.
-  it("carries the blessed coming-soon line", () => {
+  // The board reads `Chats — coming soon` and nothing under it
+  // (ChatsComingSoon.md:5).
+  it("carries the coming-soon line alone", () => {
     render(<ChatsView />);
-    expect(screen.getByTestId("chats-empty")).toHaveTextContent(
-      "Chats — coming soon. Your conversations will be here.",
-    );
+    expect(screen.getByTestId("chats-empty")).toHaveTextContent(/^Chats — coming soon$/);
   });
 
   it("names itself Chats and its back arrow returns to the feed", () => {

@@ -367,6 +367,40 @@ dialog.cg-sheet-out::backdrop {
   }
 }
 
+/* ------------------------------------------------------------------- crop --
+ * THE ZOOM TRACK IS DRAWN, NEVER THE PLATFORM'S DEFAULT (round 44, seam 292-2;
+ * `CROP_ZOOM_CSS`, design/components/compose/CropViewport.jsx): an 8px track,
+ * fully rounded, its ground `--border-field` and the part from the floor to
+ * the thumb `primary`, under a 16px `primary` thumb with no rim. The filled
+ * part is read from `--cg-range-at`, set on the input by its value.
+ */
+.cg-range { -webkit-appearance: none; appearance: none; background: transparent; }
+.cg-range::-webkit-slider-runnable-track { height: 8px; border-radius: 9999px; background: linear-gradient(var(--primary), var(--primary)) 0 0 / var(--cg-range-at, 0%) 100% no-repeat, var(--border-field); }
+.cg-range::-moz-range-track { height: 8px; border-radius: 9999px; background: var(--border-field); }
+.cg-range::-moz-range-progress { height: 8px; border-radius: 9999px; background: var(--primary); }
+.cg-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; margin-top: -4px; border: 0; border-radius: 9999px; background: var(--primary); }
+.cg-range::-moz-range-thumb { width: 16px; height: 16px; border: 0; border-radius: 9999px; background: var(--primary); }
+
+/* THE CROP'S FRAME, over `react-easy-crop`'s own crop area (its `classes`
+ * prop). The scrim is ONE BOX SHADOW spread out from the frame's edges in the
+ * shadow's currentColor — the library's construction and CropViewport.jsx's —
+ * at the boards' 45 % black. A post's frame carries the rule-of-thirds in a
+ * 55 % white and no edge (ComposeCrop.jsx `THIRDS`); a cover's window and the
+ * circle a 1px 70 % white hairline, the window's corners small
+ * (CropViewport.jsx). Two classes, so these win over the library's injected
+ * one-class rules whatever order the sheets load in. */
+.cg-crop-frame.cg-crop-frame--post,
+.cg-crop-frame.cg-crop-frame--cover,
+.cg-crop-frame.cg-crop-frame--avatar {
+  color: color-mix(in srgb, var(--scrim) 45%, transparent);
+}
+.cg-crop-frame.cg-crop-frame--post { border: 0; }
+.cg-crop-frame.cg-crop-frame--post::before,
+.cg-crop-frame.cg-crop-frame--post::after { border-color: rgba(255, 255, 255, 0.55); }
+.cg-crop-frame.cg-crop-frame--cover,
+.cg-crop-frame.cg-crop-frame--avatar { border: 1px solid rgba(255, 255, 255, 0.7); }
+.cg-crop-frame.cg-crop-frame--cover { border-radius: var(--radius-small); }
+
 /* ------------------------------------------------------------- geek mode --
  * ONE MARKUP, TWO PAINTINGS (design/readme.md §13). Every surface draws the
  * glyph AND the number; the number sits in a `.cg-exact` span, and this one

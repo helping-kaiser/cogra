@@ -16,6 +16,10 @@ ALWAYS the header collapses on the way down and returns on the way up
 
 ALWAYS profile.bottomBar keeps lit the slot of the root the profile was opened from, profile.bottomBar.feedSlot from the feed
 
+WHEN another's profile opens, from any door -> it lands with profile.tabRow.postsTab lit and profile.posts below it as post cards AND NEVER it lands on Everything or Comments
+
+WHEN tap profile.tabRow.everythingTab -> the person's chronicle stands below profile.tabRow AND the header above stays as it was
+
 ALWAYS the chronicle stands one act to a card, newest first, each card leading with its act's disc, then its verb and snippet, its age on the trailing edge
 
 ALWAYS a chronicle card with no destination is the same card, inert
@@ -60,7 +64,7 @@ WHEN tap the Opinions by figure -> the opinions page opens on this profile on it
 
 WHEN tap the Posts figure -> NEVER anything happens
 
-WHEN tap profile.tabRow.postsTab -> the person's posts stand below profile.tabRow as post cards AND the header above stays as it was
+WHEN tap profile.tabRow.postsTab GIVEN another tab is lit -> the person's posts stand below profile.tabRow as post cards AND the header above stays as it was
 
 WHEN tap profile.tabRow.commentsTab -> the person's comments stand below profile.tabRow as comment cards AND the header above stays as it was
 
@@ -74,7 +78,7 @@ WHEN tap profile.bottomBar.profileSlot -> the reader's own profile opens
 
 WHEN tap the back arrow -> the reader returns to where they came from, in the state they left it AND the arrow's label names that origin
 
-ALWAYS the back arrow reads Back to feed from the feed in any of its states, Back to the post from a post's author chip, opinions or references, Back to the comments from the comments sheet, Back to the stream from the stream, Back to Notifications from Notifications, Back to Saved from Saved, Back to History from History, Back to the opinions from a profile's opinions list, Back to the profile from a card on another's profile, Back to your profile from a card on the reader's own, Back to the search from Explore mid-query, Back to Invites from the people you let in on Invites and Back to with the tag's name from a tag's page
+ALWAYS the back arrow reads Back to feed from the feed in any of its states, Back to the post from the author on a post's detail, its opinions or its references, Back to the comments from the comments sheet, Back to the stream from the stream, Back to Notifications from Notifications, Back to Saved from Saved, Back to History from History, Back to the opinions from a profile's opinions list, Back to the profile from a card on another's profile, Back to your profile from a card on the reader's own, Back to the search from Explore mid-query, Back to Invites from the people you let in on Invites and Back to with the tag's name from a tag's page
 
 ALWAYS the back arrow reads Back to feed and leads to the feed GIVEN the profile was entered with no history behind it
 
@@ -83,3 +87,9 @@ WHEN a link to the profile opens GIVEN the app was already open -> the profile o
 WHEN pull down GIVEN the profile stands all the way at its top -> the profile refreshes AND the platform's own refresh indicator shows
 
 WHEN the profile's read never reaches the server -> the profile's unreachable state stands in its place
+
+ALWAYS profile.identity.name is shown whole on at most two lines, the named exception to the long-names rule, the head alone: at 22px on 28px it wraps at its spaces and a word wider than its line breaks inside the word, the one place a name may, and it is never cut GIVEN the display name is longer than its line
+
+ALWAYS profile.identity.name takes the largest whole-pixel size, from 22 down in steps of 1, at which it holds two lines, its line-height round(size × 28 / 22) px, and the handle line and the rest of the head keep their sizes GIVEN at 22px it would take more than two lines, several words or one long word alike, with no smallest size: two lines are the hard cap
+
+ALWAYS the name setting's values carry the size the two-line rule gives each sample at the head's 262px: sample and two-lines 22px on 28px, fifty 19px on 24px, one-word 20px on 25px, widest 10px on 13px — two lines are the hard cap, the size has no floor (round 47)

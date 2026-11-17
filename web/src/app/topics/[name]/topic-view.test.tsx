@@ -438,7 +438,7 @@ describe("TopicView — a post card's menu (TagPageMenu.md)", () => {
     fireEvent.click(screen.getByTestId("tagPage.menuSheet.hide"));
     expect(screen.queryByRole("alertdialog")).toBeNull();
     expect(screen.getByTestId("tagPage.snackbar.message")).toHaveTextContent(
-      "@tobias is hidden — their posts stay out of your feed.",
+      "@tobias is hidden.",
     );
     expect(screen.getByTestId("tagPage.snackbar.action")).toHaveTextContent("Undo");
     expect(listed()).toEqual(["topic-post-p1", "topic-post-p2"]);
@@ -460,7 +460,7 @@ describe("TopicView — a post card's menu (TagPageMenu.md)", () => {
     await waitFor(() => expect(screen.getByTestId("tagPage.menuSheet.hide")).toHaveTextContent(/^Unhide @tobias$/));
     fireEvent.click(screen.getByTestId("tagPage.menuSheet.hide"));
     expect(screen.getByTestId("tagPage.snackbar.message")).toHaveTextContent(
-      "@tobias is unhidden — their posts can reach your feed again.",
+      "@tobias is unhidden.",
     );
     expect(listed()).toEqual(["topic-post-p1", "topic-post-p2"]);
     await waitFor(() => expect(log.unhides).toEqual(["t1"]));

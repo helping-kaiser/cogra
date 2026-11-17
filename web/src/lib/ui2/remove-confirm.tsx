@@ -16,7 +16,10 @@
 // reads `Removing…`, never a spinner (K4.2, `useSlowAnswer`). A removal that
 // does not go through keeps the dialog up with its pair, the fault line above
 // it — `That didn't send. Try again.`, SeveranceConfirm's placement — and
-// `Remove` reading `Retry`. Any non-success is that one state: the client
+// `Remove` reading `Retry`. An answered fault (FORBIDDEN, INTERNAL, a fieldless
+// BAD_INPUT) says `That didn't go through. Try again.` in the same slot
+// (NetworkError.md:13-17: an answer is never read as no answer). Any other
+// non-success is the no-answer state: the client
 // never sends a refusable removal of its own content, so a refusal and a lost
 // answer are told apart by nothing a reader could act on (the packet's
 // residual flag). The line is `DialogSurface`'s own `line` slot, and every
@@ -33,6 +36,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { markAfterRemoval, removeContent, type Removal } from "@/lib/api/removal-api";
 import { useAuthGuard } from "@/lib/session/runtime";
+import { outcomeFaultLine } from "@/lib/ui/error-messages";
 import { buttonClassName } from "@/lib/ui/button";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 
@@ -45,11 +49,11 @@ export type RemoveKind = "post" | "comment";
 export const REMOVE_CONFIRM_COPY: Record<RemoveKind, { title: string; body: string }> = {
   post: {
     title: "Remove this post?",
-    body: `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place — "Removed by its author" — and the post's spot in threads stays with it.`,
+    body: `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place.`,
   },
   comment: {
     title: "Remove this comment?",
-    body: `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place — "Removed by its author" — and the comment's spot in its thread stays with it.`,
+    body: `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place.`,
   },
 };
 
@@ -66,6 +70,7 @@ export function RemoveDialog({
   kind,
   busy = false,
   failed = false,
+  failedLine = REMOVE_NOT_SENT,
   onRemove,
   onClose,
   node,
@@ -76,6 +81,8 @@ export function RemoveDialog({
   busy?: boolean;
   /** The last removal did not go through: the line stands, Remove reads Retry. */
   failed?: boolean;
+  /** What that line says: the no-answer line, or FORBIDDEN's not-through line. */
+  failedLine?: string;
   onRemove: () => void;
   /** Keep it, the scrim, Escape — ignored while `busy`. */
   onClose: () => void;
@@ -98,7 +105,7 @@ export function RemoveDialog({
       body={[copy.body, REMOVE_PERMANENT]}
       // ABOVE THE PAIR, in the surface's own `line` slot (the master's
       // `RemoveDialog`: `line={failed ? … : undefined}`).
-      line={failed ? REMOVE_NOT_SENT : undefined}
+      line={failed ? failedLine : undefined}
       lineTestId={`${testId}-failed`}
       actions={
         <>
@@ -160,7 +167,8 @@ export function RemoveConfirm({
   const client = useApolloClient();
   const guard = useAuthGuard();
   const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
+  // The removal's fault line: an answered fault's own, else the no-answer line.
+  const [fault, setFault] = useState<string | null>(null);
   // REFUSES A SECOND PRESS (RemoveConfirm.md:7): held in a ref as well as in
   // state, so two presses inside one frame — before `busy` has rendered —
   // still send one removal.
@@ -179,13 +187,13 @@ export function RemoveConfirm({
     if (inFlight.current) return;
     inFlight.current = true;
     setBusy(true);
-    setFailed(false);
+    setFault(null);
     const outcome = await guard.run(() => removeContent(client, record));
     if (outcome.kind !== "success") {
       inFlight.current = false;
       if (!mounted.current) return;
       setBusy(false);
-      setFailed(true);
+      setFault(outcomeFaultLine(outcome) ?? REMOVE_NOT_SENT);
       return;
     }
     const removal = await markAfterRemoval(client, kind, nodeId, outcome.value);
@@ -200,7 +208,8 @@ export function RemoveConfirm({
     <RemoveDialog
       kind={kind}
       busy={busy}
-      failed={failed}
+      failed={fault !== null}
+      failedLine={fault ?? REMOVE_NOT_SENT}
       onRemove={() => void remove()}
       onClose={onClose}
       node={node}

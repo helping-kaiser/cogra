@@ -16,7 +16,7 @@ export function ComingSoonCard({
   node,
 }: {
   thing: string;
-  line: string;
+  line?: string;
   testId?: string;
   /** The registered card node on a registered screen (`wallet.comingSoonCard`). */
   node?: DataNode;
@@ -30,9 +30,11 @@ export function ComingSoonCard({
       <h2 className="m-0 text-headline-small" {...testAttributes(part(node, "title"))}>
         {thing} — coming soon
       </h2>
-      <p className="m-0 text-body-medium" {...testAttributes(part(node, "line"))}>
-        {line}
-      </p>
+      {line && (
+        <p className="m-0 text-body-medium" {...testAttributes(part(node, "line"))}>
+          {line}
+        </p>
+      )}
     </div>
   );
 }

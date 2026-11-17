@@ -131,10 +131,6 @@ export function FilterFoot({
   );
 }
 
-/** OrderSection.jsx's hint, verbatim. */
-export const ORDER_HINT =
-  "Ranked puts what's closest to you first — your view, no one else's. Newest ignores it and lists by time.";
-
 /** The seen toggle's words (copy-voice.md, the filter's order section). */
 export const SHOW_WHAT_YOU_VE_SEEN = "Show what you've already seen";
 
@@ -142,7 +138,8 @@ export const SHOW_WHAT_YOU_VE_SEEN = "Show what you've already seen";
  * THE ONE ORDER SECTION (`OrderSection.jsx`, ruled identical on the feed and
  * on search, backlog item 19): Ranked or Newest — the one choice that does not
  * combine — with the seen toggle under it, both answering "how is this list
- * arranged". Search is its first web consumer.
+ * arranged". It carries no hint: the Ranked / Newest explainer lives in the
+ * sheet's "?" (copy-voice, *The filter*; jakob 2026-11-12).
  */
 export function OrderSection<T extends string>({
   options,
@@ -150,12 +147,9 @@ export function OrderSection<T extends string>({
   onOrder,
   seen,
   onSeen,
-  hint = ORDER_HINT,
   node,
 }: {
   options: readonly { value: T; label: string }[];
-  /** The section's hint: the borrowed view's own on a feed that borrows one (FeedSheet.md). */
-  hint?: string;
   order: T;
   onOrder: (next: T) => void;
   /** The seen toggle; omitted where it cannot stand (a guest's search, ExploreFilter.md:41). */
@@ -164,7 +158,7 @@ export function OrderSection<T extends string>({
   node?: DataNode;
 }) {
   return (
-    <FilterSection label="Order" hint={hint} node={node}>
+    <FilterSection label="Order" node={node}>
       <SegmentedFilter ariaLabel="Order" options={options} value={order} onChange={onOrder} node={part(node, "picker")} />
       {seen !== undefined && onSeen !== undefined && (
         <div className="basis-full">

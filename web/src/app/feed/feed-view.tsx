@@ -261,7 +261,7 @@ const FILTER_SHEET: DataNode = { path: "feed.filterSheet" };
 const NOTHING: DataNode = { path: "feed.nothing" };
 
 /** FeedNothing.md:5 and its way back (:7). */
-export const SHOWING_NOTHING = "Your feed is showing nothing — everything is switched off.";
+export const SHOWING_NOTHING = "Everything is switched off.";
 export const SHOW_POSTS_AGAIN = "Show posts again";
 
 /**

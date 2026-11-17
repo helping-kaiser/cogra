@@ -1,33 +1,22 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { REMOVED_COMMENT_NOTE, RemovedPlaceholder } from "./removed-placeholder";
+import { RemovedPlaceholder } from "./removed-placeholder";
 
 describe("RemovedPlaceholder", () => {
-  // Removed.md:3, :7 — the decided mark of copy-voice, both lines whole: the
-  // second names what went before what stays.
-  it("says an author's own removal in the author's terms", () => {
-    render(<RemovedPlaceholder reason="author" />);
+  // Seam 314 (round 42): the author's mark is its line and its date, no
+  // detail sentence, on every surface (SensitiveVeil.jsx `RedactedContent`
+  // draws a detail only when its reason has one).
+  it("says an author's own removal in the author's terms, its line alone", () => {
+    render(<RemovedPlaceholder reason="author" node={{ path: "postDetail.card.removalMark" }} />);
     expect(screen.getByText("Removed by its author")).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "The words and pictures are gone. The post's place in the thread, and every response, remain.",
-      ),
-    ).toBeInTheDocument();
-  });
-
-  // CommentRemoved.md:5 — the comment's second line swaps the noun.
-  it("takes the comment's second line where a comment wears it", () => {
-    render(<RemovedPlaceholder reason="author" note={REMOVED_COMMENT_NOTE} />);
-    expect(screen.getByText("Removed by its author")).toBeInTheDocument();
-    expect(
-      screen.getByText("The comment's place in the thread, and every response, remain."),
-    ).toBeInTheDocument();
+    expect(screen.queryByTestId("postDetail.card.removalMark.detail")).toBeNull();
+    expect(screen.queryByText(/The words and pictures are gone/)).toBeNull();
   });
 
   // Round 20 (seam 245 ask 6): each line sets its whole role.
   it("sets each line in its whole type role, and names its parts", () => {
-    render(<RemovedPlaceholder reason="author" when="2h" node={{ path: "postDetail.card.removalMark", key: "p1" }} />);
+    render(<RemovedPlaceholder reason="platform" when="2h" node={{ path: "postDetail.card.removalMark", key: "p1" }} />);
     expect(screen.getByTestId("postDetail.card.removalMark.line").className).toContain("text-body-medium");
     expect(screen.getByTestId("postDetail.card.removalMark.detail").className).toContain("text-body-small");
     expect(screen.getByTestId("postDetail.card.removalMark.when")).toHaveTextContent("2h");

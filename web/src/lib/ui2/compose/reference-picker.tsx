@@ -63,9 +63,6 @@ export const PICKER_DEBOUNCE_MS = 250;
 const NODE: DataNode = { path: "referencePicker" };
 const FILTER_SHEET = part(NODE, "filterSheet");
 
-/** The kinds section's words (ReferencePicker.jsx, the search filter's own). */
-const KINDS_HINT = "Combine as many as you like. All, until you narrow it.";
-
 /** The three citable kinds, as the search filter names them (`FEED_KINDS`). */
 export const CITABLE_KINDS = [
   { value: "posts", label: "Posts", kind: "POST" },
@@ -318,7 +315,7 @@ export function ReferencePicker({
         node={FILTER_SHEET}
         rows
       >
-        <FilterSection label="Kinds" hint={KINDS_HINT} node={part(FILTER_SHEET, "kinds")}>
+        <FilterSection label="Kinds" node={part(FILTER_SHEET, "kinds")}>
           {CITABLE_KINDS.map((entry) => (
             <Chip
               key={entry.value}

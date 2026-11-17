@@ -130,7 +130,9 @@ fun CograSnackbar(data: SnackbarData, testTag: String? = null) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text(
+            // TEXT THAT WRAPS (NamesLong.md; `Snackbar.jsx`): a handle in the
+            // message is one unit that moves whole to the next line.
+            NameInText(
                 text = data.visuals.message,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier

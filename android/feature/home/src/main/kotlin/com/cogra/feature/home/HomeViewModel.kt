@@ -68,12 +68,7 @@ data class HomeUiState(
     val cardPutAway: Boolean = false,
     /** One-shot: the ask link landed on the clipboard; cleared once shown. */
     val askLinkCopied: Boolean = false,
-    val verificationToken: String = "",
     val resendEmail: String = "",
-    val verifying: Boolean = false,
-    val verified: Boolean = false,
-    /** The verify refusal to render; null when none. */
-    val verifyError: ErrorCode? = null,
     /** One-shot: a fresh token was just sent; cleared once shown. */
     val resent: Boolean = false,
     val resending: Boolean = false,
@@ -247,33 +242,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun onTokenChange(v: String) = _state.update { it.copy(verificationToken = v, verifyError = null) }
-
     fun onResendEmailChange(v: String) = _state.update { it.copy(resendEmail = v, resent = false, resendError = null) }
-
-    fun onVerify() {
-        val token = _state.value.verificationToken.trim()
-        if (token.isBlank() || _state.value.verifying) return
-        _state.update { it.copy(verifying = true, verifyError = null) }
-        viewModelScope.launch {
-            when (val outcome = onboarding.verifyEmail(token)) {
-                is Outcome.Success -> {
-                    _state.update { it.copy(verifying = false, verified = true) }
-                    // The proof just changed server-side: poll now.
-                    registration.ensureAdvancing()
-                }
-                is Outcome.Refused -> _state.update {
-                    it.copy(
-                        verifying = false,
-                        verifyError = outcome.errors.firstOrNull()?.code ?: ErrorCode.INTERNAL,
-                    )
-                }
-                is Outcome.Failed -> _state.update {
-                    it.copy(verifying = false, verifyError = ErrorCode.INTERNAL)
-                }
-            }
-        }
-    }
 
     fun onResend() {
         val email = _state.value.resendEmail.trim()

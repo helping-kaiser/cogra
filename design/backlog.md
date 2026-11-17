@@ -5490,7 +5490,7 @@ Closed by round 39, by (b) — round 32's law, which round 36's graph follows:
 the menu a host card raises takes the host's prefix; the license, report and
 remove sheets its rows raise are drawn once and keep one path (readme §13).
 
-### 162 · Card fixtures on a few boards still carry Save and Cite only · *system* · **filed 2026-11-11**
+### 162 · Card fixtures on a few boards still carry Save and Cite only · *system* · **filed 2026-11-11** · **closed 2026-11-13**
 
 Round 36 (F2) handed the shared post and comment fixtures the menu their
 sheets draw (`readerCardMenu`, `COMMENT_CARD_MENU`). The boards that spell
@@ -5500,6 +5500,12 @@ their own cards still pass `CARD_MENU`: `LadderMax`, `LadderSmall`,
 `sheet.card.html`) pass the license row themselves, so the card's own append
 draws it twice, and no Report. Closed menus draw no row, so no pixel moves;
 a mechanical sweep.
+
+Closed as stale by round 48 (2026-11-13): the five boards already pass
+`readerCardMenu(...)` / `COMMENT_CARD_MENU` (`LadderMax`, `LadderSmall`,
+`LadderStates`, `LadderTopics`, `ReplyMedia`), and the specimens pass Save ·
+Cite · Hide · Report at the tail with no license row of their own (the menus
+audit of 2026-11-13, §3 item 16); nothing is left to sweep.
 
 ### 165 · After Close: where a profile change lands · *design* · **filed 2026-11-11** · **closed 2026-11-11**
 
@@ -5932,7 +5938,7 @@ takes the post crop's 390 × 488 stage, the frame 342 wide at every shape
 the square stage by height (312 × 390), narrower than the others; (c) the
 stage grows with the shape (the model jakob's ruling replaced).
 
-Closed by round 46 (jakob 2026-11-12, on the review and question 1): the cover's frame always has the clip's dimensions — tall a tall cover, square a square, wide a wide — and the crop enforces it. Drawn on the post crop's 390 × 488 stage (the orchestrator's reading, shown to him): `CoverCrop`'s `clip` chip, wide 342 × 192 at 148, tall 342 × 427.5 at 30.25, square 342 × 342 at 73.
+Closed by round 46 (jakob 2026-11-12, on the review and question 1): the cover's frame always has the clip's dimensions — tall a tall cover, square a square, wide a wide — and the crop enforces it. Drawn on the post crop's 390 × 488 stage, a tall clip's cover at 4:5 (confirmed by jakob 2026-11-13, point E): `CoverCrop`'s `clip` chip, wide 342 × 192 at 148, tall 342 × 427.5 at 30.25, square 342 × 342 at 73.
 
 ### 201 · A clip picked in a comment's edit: what the board does not draw · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
@@ -6048,7 +6054,7 @@ own, his words. Nothing waits on it.
 
 Closed by round 46 (jakob 2026-11-12, question 19, as recommended): the row stays quiet and takes the first-page family's words, `Can't reach the server — posts can't load right now.` / `… comments can't load right now.`, with `Retry`; `Couldn't load more` is a failed next page's line alone.
 
-### 210 · How signing works on an edit · *design* · **filed 2026-11-12**
+### 210 · How signing works on an edit · *design* · **filed 2026-11-12** · **closed 2026-11-13**
 
 Round 46 (question 12). The edit sheets now open the seals' `How signing
 works`, which says each piece of a POST is signed on its own, that the pieces
@@ -6058,7 +6064,9 @@ withdrawing a tag or a citation is an act that costs too. For jakob: (a) the
 dialog stays as written, one text for every seal [as built]; (b) an edit
 section is added to it — new prose, his to word.
 
-### 211 · A removed comment's menu · *design* · **filed 2026-11-12**
+Closed by jakob 2026-11-13 (point D, the wording blessed): `How signing works` ends its cost paragraph on `An edit is signed too — the new version is a new record in your name, and it costs like any signing.` (`HelpDialog`, copy-voice, the canvas's help contents).
+
+### 211 · A removed comment's menu · *design* · **filed 2026-11-12** · **closed 2026-11-13**
 
 Round 46. jakob's ruling 18 gives a removed POST a menu (cite it, read its
 license); a removed comment still has none (`CommentRemoved`, "a removed
@@ -6067,10 +6075,238 @@ Save, Cite in a new post, Cited by, Opinions on this, License terms, Report
 for another's, the own rows less Edit and Remove for yours [lean]; (b) it
 stays menu-less.
 
-### 212 · Mark as sensitive on your own removed post · *design* · **filed 2026-11-12**
+Closed by jakob 2026-11-13 (point C, as recommended): a removed comment's menu follows the post's — another's raises the reader's comment menu whole (`ProfileCommentsRemovedMenu`), your own your comment menu less Edit and Remove (`CommentRemovedMenu`).
+
+### 212 · Mark as sensitive on your own removed post · *design* · **filed 2026-11-12** · **closed 2026-11-13**
 
 Round 46. The correction to ruling 18 keeps every own row but Edit and
 Remove, so `Mark as sensitive` stands on a removed post's menu; the row opens
 the edit, and a removed post has no words or pictures left to veil. For
 jakob: (a) keep it, the mark being the record's [as built]; (b) it leaves the
 removed post's menu with Edit and Remove.
+
+Closed by jakob 2026-11-13 (point B, as recommended: "it goes"): your own removed post's menu, card and detail, reads Save, Cite in a new post, License terms (`FeedRemoved`, `Removed`, `FeedRemovedMenuOwn`).
+
+### 213 · The display name on the profile's head · *design* · **filed 2026-11-13** · **closed 2026-11-13**
+
+Round 46, act 3 (seam 318: `ProfileHeader` broke the name inside a word,
+against the long-names rule). jakob chose (b) and asked to see it: on the head
+alone the display name wraps at its spaces, never inside a word, and a single
+word longer than the line is end-cut with "…" (`ProfileOther`'s `name`
+setting: `two-lines` takes 2 lines, `three-lines` — the 50-character maximum
+in four words — takes 3 at the head's 262px, `one-word` 1 line, end-cut). For
+jakob: keep (b) as drawn [built, awaiting his word]; or (a) one line,
+end-cut, as every one-line place.
+
+Closed as ruled by jakob 2026-11-13 ("i still want people to be able to see the full name"): on the head alone the name is always shown whole — it wraps at its spaces, a word wider than the line breaks inside the word, no end-cut, no line cap. (a) is not taken.
+
+### 214 · The head's name shrinks to hold two lines · *design* · **filed 2026-11-13** · **closed 2026-11-13**
+
+Round 47 (jakob's idea: "how much smaller would we need to make the font for
+it to fit two lines?"). Shown, not ruled. At the head's 262px the name is
+title-large, 22px / 400 on a 28px line. Measured (Figtree loaded): the
+50-character sample takes 3 lines and fits 2 at 19px; 50 characters of `W` in
+words take 5 and fit 2 at 12px; 50 × `W` without a space takes 5 and fits 2
+at 10px; the 40-character two-lines sample needs 13px for one line.
+`ProfileOther`'s `name` = three-lines-shrunk draws the sample at 19px on a
+24px line. For jakob: whether the head shrinks at all, and if so by what rule
+(steps, a floor) — nothing is built beyond the one sample.
+
+Closed as ruled by jakob 2026-11-13 ("i prefer the shrunk 2 line version over the 3 liner"): a head name that would take more than two lines at 22px takes the largest whole-pixel size that holds two, its line-height round(size × 28 / 22), several words or one word alike (`ProfileHeader`'s `nameFitSize`). The smallest size is backlog 215.
+
+### 215 · The smallest size of the head's name · *design* · **filed 2026-11-13** · **closed 2026-11-13**
+
+Round 47. The two-line rule shrinks the head's name to the largest whole
+pixel that holds two lines, and no floor is ruled, so the widest legal name —
+50 × `W` with no space — stands at 10px on 13px (`ProfileOther`'s `name` =
+widest); 50 × `m` and 50 `W` in words take 12px, the 50-character sample
+19px. For jakob, now that he has seen the widest: (a) no floor, as drawn;
+(b) a floor (a size he names), the name past it taking a third line.
+
+Closed as ruled by jakob 2026-11-13 ("F1 as drawn so two lines is the hard cap and it shrinks until it fits"): (a), no floor — the head's name shrinks until it holds two lines, the widest legal name at 10px on 13px.
+
+### 220 · The seals and the edit sheets have no registry rows · *system* · **filed 2026-11-13** · **closed 2026-11-13**
+
+Round 48 (seam 323-6). `ComposeSeal`, `ReplySeal`, `EditActs` and
+`CommentEditActs` export no `NODE`, so the clients' harness has no verdict
+on them. Why: no round asked for them — the seals' sheet boards stayed
+unregistered by habit (round 35's gate line) — and their bodies
+(`ComposeSealBody`, `ReplySealBody`, the acts sheet) pass no node names
+down; the acts card itself, `ActsCard`, names no rows, and round 47 (PR
+#454) is changing `ActsCard`, so naming its parts waits for that merge. Then:
+the seal prefixes (`composeSeal`, `replySeal`, or under `composeDetails` /
+`postEdit` / `commentEdit` for the edit sheets) and `ActsCard`'s row names.
+
+Partly closed by round 48, act 2 (2026-11-13): `ActsCard` already names its rows
+(`actRow` by place, `total`) once placed with a `node`, so `EditActs` and
+`CommentEditActs` register (`postEdit.actsSheet`, `commentEdit.actsSheet`), and
+so do `AvatarCrop`, `AvatarSeal`, `ProfileEdit` and `ProfileEditSeal` — names
+only, each render byte-identical with its annotations stripped. Still open:
+`ComposeSeal` and `ReplySeal`. No written rule keeps them out (round 35's gate
+line only describes them); their chip copies do: `ComposeSeal`'s rest card stands
+for two values of `state` (`rest` and `signing`), and `ReplySeal`'s seven copies
+are drawn per pair of `tags` × `state`, while a chip-drawn copy is keyed by one
+value of one chip (`node-paths.mjs`). Registering them first redraws the copies
+one per value — pixel-identical, but a restructuring of both boards' bodies.
+
+Round 49 tried `ComposeSeal` (one card and one foot per `state` value, names
+after `postEdit`'s: `header`, `summary`, `acts`, `facts.{license,backing,
+sensitive}`, `footer`). The render stops at the join: the copy keyed by the
+value `tagRefused` breaks the key rule — a key is lowercase letters, digits,
+`-` and `_` — and `ReplySeal` has the same value. `ReplySeal`'s cards also
+vary on `tags` × `state`, and a chip copy inside another chip's copy needs a
+named node between them. The choice that unblocks both: rename the chip value
+(`tag-refused`, the boards' settings changing name), or let the key rule take
+camelCase chip values; and for `ReplySeal`, a named wrapper between its two
+chips' copies (a new path segment). The attempt is kept as a patch in round
+49's scratch folder.
+
+Closed by round 49, act 2 (the orchestrator's call: the rename and the
+wrapper): `tagRefused` reads `tag-refused` on both boards; `ComposeSeal`
+registers as `composeSeal`, `ReplySeal` as `replySeal` with its box-less
+`card` wrapper between the `state` and `tags` copies — each pixel-identical
+to its earlier drawing at every chip combination (3 and 15, headless
+Chromium).
+
+### 221 · `PadKeyAbsent`'s pad is hand-built, so it cannot register yet · *system* · **filed 2026-11-13**
+
+Round 48 (seam 320-16). `PadFailed`, `PadWriteRule` and `TagPageHeldPad`
+register (round 48); `PadKeyAbsent` draws its pad by hand beside the card,
+not through `StanceControl`, so its parts have no anatomy to take names
+from — a name minted on the hand-built copy would drift from the master.
+The fix is a key-absent state on `StanceControl` (the board then renders it
+as `PadStanding` does) — a drawing change, so it waits for a round that may
+redraw.
+
+Round 50 read it: needs no ruling (a pixel-identical move of the pad into
+`StanceControl`, then names), but it is a stance-master lane of its own and
+stays open.
+
+### 222 · The feed's comment-card menu and your own comment's menu on Saved are undrawn · *design* · **filed 2026-11-13** · **closed 2026-11-13**
+
+Round 48 (seam 320-14). The clients draw `feed.menuSheet.citedBy` /
+`.opinions` (a comment card's ⋮ on the feed) and `saved.menuSheet.edit` /
+`.remove` (your own comment's ⋮ on Saved), but no board draws either menu
+open — `HistoryCommentMenu` and `SavedCommentMenu` draw their hosts' — so
+there is nothing to register. Each is one board when drawn, by round 36's
+rule (one menu board per place a card's menu is raised): `FeedCommentMenu`
+and `SavedCommentMenuOwn`. Held while the menus audit (jakob 2026-11-13,
+round 47's review) runs, since it may reorder the rows.
+
+Closed by round 48, act 2: `FeedCommentMenu`, `FeedCommentMenuOwn` and
+`SavedCommentMenuOwn` draw the rows exactly as the law states them, nothing
+reordered; the four paths register. The other undrawn hosts are backlog 223.
+
+### 223 · The menu hosts the sidecars name but no board draws · *design* · **filed 2026-11-13**
+
+Round 48 (the menus audit of 2026-11-13, §3 item 11). Round 36's rule is one
+menu board per place a card's menu is raised; round 48 drew the feed's comment
+card menus and your own comment's menu on Saved. Still law-only: your own post
+in Saved and on a tag page (`FeedPostMenuOwn.md:7`); another's removed comment
+over the thread (`CommentRemoved.md:9`); your own removed comment on your own
+profile and in History; removed posts in History, Saved, the profile and the tag
+page; the Saved profile card (`FeedProfileMenu.md:7`); the deleted account's
+feed card (`FEED_DELETED_PROFILE_MENU`). Each is one board drawn exactly as its
+law states the rows; held while jakob decides whether post menus gain rows (M1).
+
+M1 is ruled (round 49): every post menu carries `Cited by` and `Opinions on
+this` before `License terms`, so each of these boards now has its rows
+settled; drawing them stays open.
+
+Round 50 read it: needs no ruling — each board is its law's rows drawn — but
+it is ten boards and a lane of its own; it stays open.
+
+### 230 · A clip that cannot load has no drawn state · *design* · **filed 2026-11-13** · **closed 2026-11-17**
+
+Round 49 (jakob 2026-11-13, N7 and V1). The stream and the viewer never show
+a clip's cover; only a clip that cannot load may show its cover there, whole
+at its own 4:5, centred on the black, nothing cropped (`Reel.md`,
+`ViewerVideo.md`, `MediaViewer`'s prose). The tree draws no state for a clip
+that did not load — `Reel`'s `fault` is the next clips' load, the clip on
+screen still playing — so the sentence is law only. Drawing it needs the
+failure's own words and controls (a line? a Retry?), which no ruling gives.
+
+Round 50 read it: still open, a question for jakob. Options: (a) the cover
+alone, whole at 4:5, no words — the stream moves on at a swipe as from any
+clip; (b) the cover with the house noun form over an outlined `Retry`, `Can't
+reach the server — this video can't load right now.` (copy-voice, *Faults by
+code*: a read with nothing loaded; its noun `this video` would be new); (c) the
+cover with `Retry` alone. (b) follows the read-fault rule every other surface
+keeps; its "can't reach the server" is untrue for a file that is broken rather
+than unreachable.
+
+Closed by round 50, act 3 (jakob 2026-11-17, C6 as recommended): the cover with the read
+fault's outlined `Retry` alone, no sentence — drawn on `Reel`'s `state` chip,
+`unloaded`; the viewer carries it as law (`ViewerVideo` is not a chipped board).
+
+### 231 · The stream's ⋮: what Hide and Remove leave on the stream · *design* · **filed 2026-11-13** · **closed 2026-11-17**
+
+Round 49 (M2). `ReelMenu` draws the clip's post menu over the stream, but each
+host rules its own aftermath and the stream has none: what the stream shows
+after `Hide @mira` (her clips leave the stream? the clip on screen stays until
+a swipe?), after your own clip's `Remove` lands (the next clip takes the
+screen? a removal mark?), and whether the clip pauses while the sheet is up
+(the pad pauses it, the comments sheet stops it). The graph carries the two as
+gaps (`ReelMenu` 3 and 11).
+
+Closed by round 49, act 4 (jakob 2026-11-17): after Hide the person's clips
+leave the stream at once, the one on screen too, the next clip taking the
+screen; after your own Remove the stream stays and the removal mark stands in
+the clip's place (`ReelMenu`'s `whose` = `own-removed`); the clip pauses under
+the sheet. The two gaps are outcomes now.
+
+### 240 · Edit profile: how long the write rule's line stands on Save · *design* · **filed 2026-11-17** · **closed 2026-11-17**
+
+Round 50 (jakob 2026-11-17, his 13). A write-rule refusal known at Save stands
+on the edit as `You can't sign right now.` with its "?", and Save dims — nobody
+is sent to the seal. When the line goes and Save answers again is not ruled:
+(a) at the next staged change or the next opening of the edit (the hold row's
+reading, `RowWriteRule`: until another act or the next fresh load); (b) on a
+timer (no precedent: no line in the tree fades on a timer); (c) Save never dims
+and each press asks again (the row's rule says asking again at once meets the
+same answer). The drawing (`ProfileEdit`'s `state` chip, `refused`) holds for
+all three.
+
+Closed by round 50, act 3 (jakob 2026-11-17, C1 as recommended): the line stands,
+and Save stays dimmed with it, until the next staged change or the next opening
+of the edit (`ProfileEdit.md`).
+
+### 241 · A staged picture removal has no Undo on the edit · *design* · **filed 2026-11-17** · **closed 2026-11-17**
+
+Round 50 (jakob 2026-11-17, his 8). `Remove picture` stages the removal and the
+monogram returns at once; the way back today is leaving the edit (nothing is
+signed before the seal). The post edit's withdrawals carry a `Withdrawn:` line
+with `Undo` (`EditCompose`); the profile edit has no such line. Options: (a) as
+drawn, no Undo — `Change picture` or leaving the edit undoes it; (b) the
+withdrawal's form under the picture's row, `Undo` beside it.
+
+Closed by round 50, act 3 (jakob 2026-11-17, C2 as recommended): `Undo` stands where
+`Remove` stood, in its style, and unstages the removal; with nothing else staged
+the edit is at rest again (`ProfileEdit`'s `state` chip, `removed`).
+
+### 242 · The profile seal's row truncates its longer readings · *system* · **filed 2026-11-17** · **closed 2026-11-17**
+
+Round 50 (the row grammar, item 5). `ActsCard`'s value is one line, ellipsized:
+`A new picture, display name, bio and website` and `A new display name, bio
+and website, the picture removed` run past the slot at 390 wide (the slot holds
+about 30 characters of body-medium beside the 76px label). The drawn readings
+fit. A two-line value, or a shorter grammar, is a drawing choice for jakob.
+
+Closed by round 50, act 3 (jakob 2026-11-17, C4 as recommended): the `Profile` row's
+value runs on to a second line — `ActsCard`'s row `wrap`, set on that row alone;
+`ProfileEditSeal`'s `holds` chip draws the longest reading at `all`.
+
+### 243 · The reading settings' filter sheet stands 131px above its foot · *design* · **filed 2026-11-17** · **closed 2026-11-17**
+
+Round 50 (jakob 2026-11-17, his 10: 16px from the last content to the foot's
+hairline). `SettingsReading` raises `FeedFilterSheet` pinned at 88% (`height`,
+so the Done row sits under scrolling sections on the feed), but its content is
+short, so 131px of empty sheet stand above the foot. The sheet's structure did
+not change with the slot (by code reading; the base render was not re-measured).
+Meeting the rule there changes the sheet's height, a visible change beyond the
+gap: (a) the settings sheet sizes to its content (`maxHeight` 88%), the foot 16
+under it; (b) it keeps 88% and the rule names the pinned-height sheet as its
+exception.
+
+Closed by round 50, act 3 (jakob 2026-11-17, C5 as recommended): the sheet sizes to its
+content up to 88% (FeedFilterSheet's it), its foot 16px under the last section.

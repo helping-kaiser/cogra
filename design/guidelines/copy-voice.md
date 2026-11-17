@@ -422,7 +422,9 @@ noun):
   post — the post itself, every tag, every citation — is signed on
   its own, in your name. They sign together: all of them land, or
   none does. / Each signing is paid for — the cost is real, so each
-  one still counts. *(Payer-neutral by the v1.0.0 scope cut, jakob
+  one still counts. An edit is signed too — the new version is a new
+  record in your name, and it costs like any signing. *(The edit's
+  sentence blessed by jakob 2026-11-13, point D. Payer-neutral by the v1.0.0 scope cut, jakob
   2026-09-25: no copy names who pays until a pool that pays and
   members who pay past it exist.)*
 - **The license**: Terms for anyone who reuses what you publish —
@@ -553,6 +555,11 @@ noun):
   name. / The signing is paid for, like your posts. The record that
   you changed it stays, like every signed action. *(Blessed, jakob
   2026-10-20.)*
+- **Changing your profile** (the profile edit's seal): Your profile is
+  a public record, and changes to it are signed actions in your name. /
+  Everything you change here signs together, as one change, paid for
+  like your posts. The record that you changed it stays, like every
+  signed action. *(Blessed, jakob 2026-11-17.)*
 - **The filter** (the feed's and search's filter sheets; the seen
   sentence is the surface's own, jakob 2026-10-14): What you
   let in, and in what order — the kinds combine freely, ranked or
@@ -576,7 +583,7 @@ noun):
   typed values take both numbers exactly. *(One paragraph naming the
   three inputs, from the rows' labels and their old hints — jakob
   2026-11-12: "one or a couple actual sentences instead of two disconnect
-  ones"; drafted 2026-11-12, review-pending.)*
+  ones"; drafted 2026-11-12; *blessed (jakob 2026-11-13)*.)*
 - **Reading** (Settings, beside the section's heading): Every feed starts
   from what it shows, and a change made inside a feed lasts until you
   change it back. Both choices stay on this device. *(The group's
@@ -608,6 +615,11 @@ out (*Remove it*; never *Retry* — retrying cannot change the answer):
 - `That video is too big — a post's video can be up to 100 MB.`
 - `That picture is too big — a picture can be up to 10 MB.`
 - `That file isn't a picture or a video CoGra can read.`
+- `That file isn't a picture CoGra can read.` — the profile picture's
+  crop, where a video is no answer either (*blessed (jakob
+  2026-11-17)*). The picture's refusals stand on the crop, under the
+  circle, with `Next` dimmed (`AvatarCrop`; the placement *blessed
+  (jakob 2026-11-17)*).
 - `A post carries pictures or one video, not both.`
 - `A comment carries pictures or one video, not both.`
 - `That GIF moves, and CoGra can't take a moving GIF here. A still one
@@ -826,7 +838,11 @@ recorded so the registry is whole.
   and reading `Reply to @ada's post` (`ReplySeal` and its family; the
   comment target's lines are under *Honesty phrasings*).
 - **The comment edit** — `Your comment on "The long way home".` under its
-  title, and its sections `Words` and `Pictures` (`CommentEdit`; `Cover`
+  title, naming the POST for a reply as for a top-level comment, on
+  every host the edit opens from (jakob 2026-11-13, N5); an untitled
+  post takes its stand-in (*An untitled post*), and a removed one reads
+  `Your comment on @ada's removed post.`, the comment card's own naming
+  (jakob 2026-11-17, **blessed**); and its sections `Words` and `Pictures` (`CommentEdit`; `Cover`
   on `CommentEditVideo`).
 
 ## Accessible names
@@ -1000,7 +1016,14 @@ boards already speak, recorded so the registry is whole:
   2026-10-28, blessed (jakob 2026-11-10)*); the X says what leaving keeps: `Leave — your
   draft is kept` (the post), `Leave — the reply is discarded`, `Leave —
   the edit is discarded` (a comment edit and a post edit), and a bare `Leave` on the
-  profile's and the picture's seals and the picture's crop.
+  profile's and the picture's seals and the picture's crop. A crop opened
+  from an edit names its arrow by where it goes: `Back to the edit` — the
+  picture crop and the cover crop entered from a post edit or a comment
+  edit, the profile picture's crop entered from Edit profile — and `Back
+  to your profile` on the profile picture's crop entered from the
+  profile head's badge; a crop that is a stage of the new post's or the
+  reply's wizard keeps `Back a step` (jakob 2026-11-17, C8, as
+  recommended).
 - **The overflow doors and their sheets** — `More on this post` · `More
   on this comment` · `More on your profile` · `More about @ada` (another's
   profile and a person card; `More about this account` for a deleted
@@ -1064,16 +1087,42 @@ doors answer in the same register (PR-103, **blessed (jakob
   the face's own name (`Give your opinion on this post`). The pad never
   blooms, and nothing is signed or staged.
 
-Every control the family answers wears the locked look (auth.md):
-visibly inactive, still tappable — the foot, `Reply` and `Invites` (jakob
-2026-10-02), and `New post` and the stance faces alike (jakob
-2026-10-16).
+**The applicant lock, one rule** (jakob 2026-11-13, N1, as recommended):
 
+- A control on a card, a bar or a header whose only destination is an act
+  wears the locked look — visibly inactive at the disabled opacity, still
+  tappable — and answers in place with its line: the thread's `Add a
+  comment` foot and every `Reply`, `Invites`, the bar's `New post`, every
+  stance face, a tag card's compose button (`Tag a new post with it`) and
+  the expired-draft notice's `Open the draft`.
+- A door to READING is never locked: a comment card's comment button opens
+  its thread as for anyone, the lock standing inside it (jakob
+  2026-11-13).
+- A menu row looks as it does for a member and answers in place — `Cite in
+  a new post`, `Mention in a new post` — the menu closing first.
+- The composer opened by its own address leaves the reader where app-open
+  lands for them, with `You can post once you're in.`, as the Invites
+  page's own address does.
+- The dimmed look is the applicant's alone (jakob 2026-11-17): an
+  applicant is already joining, and the dimming tells them what they
+  cannot do yet. A guest's acting buttons stand at full strength and
+  prompt them to join (`GuestGate`; `ReplyEntry`'s `reader` = `guest`).
+
+The line rides the surface's own snackbar where it has one (the
+profile's, the thread's), else the shell's; nothing opens.
 The applicant's own profile (`ProfileApplicant`) says the same in its
 own places, **blessed (jakob 2026-10-16)**: the open
 application's card reads `Their approval brings you in.` under `Waiting on @mira` — `ApplicantWaiting`'s
 line — and the empty chronicle
 reads `Nothing here yet.`, the line alone, as every empty state.
+
+**A member whose standing is not known yet** (jakob 2026-11-17, his
+15: "open by default"): until the first read of the account answers,
+every door stands open as it does for a member, never in the locked
+look and never held; a standing that turns out too low drops the doors
+at the epoch's close. A refusal that arrives meanwhile reads as a fault
+the server answered (`NetworkError`): `That didn't go through. Try
+again.` in the commit's place, with `Retry`.
 
 ## In-flight labels
 
@@ -1240,8 +1289,47 @@ draft, which is no commit for the law to gate.
 
 ## Menu rows
 
-The words the four overflow menus put in front of a reader, settled in
-spelling — one `License terms` everywhere, never the British spelling:
+The words every overflow menu puts in front of a reader, settled in
+spelling — one `License terms` everywhere, never the British spelling.
+The tree draws its menus from one atom per row (`_shared.jsx`), and
+each menu's rows stand in one order:
+
+- **A post's, another's** — `Save` · `Cite in a new post` · `Hide @ada` ·
+  `Cited by` · `Opinions on this` · `License terms` · `Report`; on a
+  removed post the same; on `Saved`, `Unsave` first. Every host's card
+  ⋮ raises it — the detail, the feed, History, Saved, a profile's posts,
+  a tag page and the stream's rail.
+- **A post's, your own** — `Save` · `Cite in a new post` · `Edit` ·
+  `Mark as sensitive` · `Remove` · `Cited by` · `Opinions on this` ·
+  `License terms`; removed, `Save` · `Cite in a new post` · `Cited by` ·
+  `Opinions on this` · `License terms`.
+- **A post's on a phone narrower than 360** — `Share this post` first,
+  then another's rows as above.
+- **A comment's, another's** — `Save` · `Cite in a new post` · `Cited by`
+  · `Opinions on this` · `License terms` · `Report`, removed or not; no
+  Hide row.
+- **A comment's, your own** — `Save` · `Cite in a new post` · `Edit` ·
+  `Remove` · `Cited by` · `Opinions on this` · `License terms`; removed,
+  less `Edit` and `Remove`.
+- **A person's** — `Save` · `Mention in a new post` · `Share this
+  profile` · `Hide @ada` · `Report` on the profile; on a profile card
+  the same less the share row, the hide row reading `Unhide @ada` while
+  the person is hidden; a deleted account's `Save` · `Share this
+  profile` · `Hide this account` · `Report`.
+- **Your own profile's** — `Saved` · `History` · `Share your profile`.
+
+The rows, word by word:
+
+- `Cited by` and `Opinions on this` — the two readings, on every
+  content menu, a post's and a comment's, at any count (*The opinions
+  list* and *`Cited by N`*, below). They open the lists a post's count
+  lines open; a guest reads them without the gate.
+- `Edit`, `Mark as sensitive` and `Remove` — the author's acts, on your
+  own menus only (`Mark as sensitive` on a post's alone: a comment's
+  mark rides its edit). Never a button on a card.
+- `Hide @ada` / `Unhide @ada` / `Hide this account` — *Hiding names its
+  person*, below.
+- `Saved` and `History` — your own profile's two private lists.
 
 - `License terms` — the one row, on a post's menu and a comment's
   alike. It closes both menus, the rarest read of the product sitting
@@ -1253,11 +1341,10 @@ spelling — one `License terms` everywhere, never the British spelling:
 - `Share this profile` — another's profile.
 - `Share your profile` — your own, the row that closes the profile's ⋮
   under the two private lists.
-- `Share` — the row a narrow phone's post menu gains when the card drops
-  its share glyph (`ReaderPostMenuNarrow`; *carried over — blessed by use
-  (jakob 2026-10-06)*). It stands against *Accessible names*' `Share this
-  post` "everywhere it appears, never a bare Share" — an open question
-  for jakob; the row stays as drawn meanwhile.
+- `Share this post` — the row a narrow phone's post menu gains when the
+  card drops its share glyph (`ReaderPostMenuNarrow`), in *Accessible
+  names*' words for the share control everywhere it appears (jakob
+  2026-11-13, M4, **blessed**).
 - `Report` — the sheet tail of every other-person menu, a post's, a
   comment's, a person's and a deleted account's alike; own menus carry
   none (jakob 2026-10-09, ruling 75, **blessed**). It opens the one
@@ -1274,7 +1361,10 @@ spelling — one `License terms` everywhere, never the British spelling:
 - `Save` while a thing is not kept, `Unsave` while it is — one word
   either way (jakob 2026-09-11). It is the FIRST row of every menu that
   has it, a post's, a comment's, a person's and your own post's alike,
-  so the thumb learns one position. A control says what the next tap
+  so the thumb learns one position — except where a control moved off
+  the card into the menu: that row takes the first place, and Save comes
+  second (`ReaderPostMenuNarrow`'s `Share this post`; jakob 2026-11-13,
+  M3). A control says what the next tap
   will do (§3), which is why the kept state is a verb and never the
   word *Saved* sitting there as a status — and nothing outside the menu
   shows it, so this row is the only place a reader learns whether a
@@ -1451,11 +1541,14 @@ the review fixes' lines, jakob 2026-10-01), all of them (the last flags cleared 
   `RowSigning`.
 - A read with nothing loaded: the house line's noun form, `Can't reach
   the server — {what} can't load right now.`, over an outlined `Retry`
-  — `this profile`, `notifications`, `tags`, `results` (one rule, round
+  — `this profile`, `notifications`, `tags`, `results`, and the tag page's `this tag` (*blessed (jakob 2026-11-13, N10)*) (one rule, round
   25: `ProfileUnreachable`, `Notifications`, the two pickers, search);
   the deletion mail's landing, whose act is a confirm, says `Can't reach
   the server — the deletion can't be confirmed right now.` over its `Try
-  again` (`DeleteAccountConfirmed`). A
+  again` (`DeleteAccountConfirmed`); the reset link's landing, whose
+  check signs nothing, says `Can't reach the server — this link can't
+  be checked right now.` over `Retry` (`ResetNew`'s `link` chip; *blessed (jakob
+  2026-11-13, N9)*). A
   fault line never says "try again" beside a control that does it, so the
   long line, `Can't reach the server. Check your connection and try
   again.`, is `TransportError`'s fallback for a surface that names no
@@ -1478,23 +1571,27 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   ink.
 - `INTERNAL`, `FORBIDDEN` — in place: `That didn't go through. Try
   again.` The house line says "can't reach the server", which is false
-  for a fault the server answered.
+  for a fault the server answered. *Copy-only* (`NetworkError.md`'s
+  line; the board draws the offline fault alone).
 - `EMAIL_NOT_VERIFIED` — in place: `Verify your email first — the link
   is in your inbox.` The client gates acting on verification, so this
   is the rare case that slips past the gate. *Copy-only.*
 - `RATE_LIMITED` — in place, in SignInError's slot. Sign-in's login
   backoff says the drawn line, `Too many tries in a row. Wait a moment,
   then try again.` (`SignInLimited`); every other visible one — the
-  registration, the reset, the token confirms, and the email change's
+  registration, the reset and its link's check, the token confirms, and the email change's
   request and resend once the account's mail budget is spent (jakob
   2026-10-06) — says `Too many tries. Wait a little, then try again.`
   (jakob 2026-10-05). The submit stays.
 - `NOT_FOUND` — the surface. For a profile: `This profile doesn't
   exist.` **Drawn** on `ProfileNotFound`. Posts and comments take the
   same construction: `This post doesn't exist.` and `This comment
-  doesn't exist.` **Drawn** on `PostNotFound` and `CommentNotFound`.
+  doesn't exist.` **Drawn** on `PostNotFound` and `CommentNotFound`. A
+  tag page for a name that cannot be a tag: `This tag doesn't exist.`
+  (jakob 2026-11-13, N4, **blessed**), **drawn** on `TagPage`'s
+  `notFound`; a legal name nobody has used is the empty page instead.
 - `BAD_INPUT` — on the field, in the field's own words. Where no field
-  is named, in place: `That didn't go through. Try again.`
+  is named, in place: `That didn't go through. Try again.` *Copy-only.*
 
 **Expected refusals:**
 
@@ -1525,7 +1622,7 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   `NetworkError` outcome: `That didn't go through. Try again.` Retry
   asks for a fresh challenge.
 - `SIGNATURE_INVALID` — in place: `That didn't go through. Try again.`
-  Retry signs again.
+  Retry signs again. *Copy-only.*
 - `STAGED_WRITE_EXPIRED` — the did-not-land notice in the shell: `Your
   post didn't land` (`ComposeExpired`).
 - `SIGNING_BUDGET` — the budget refusal's own code and sentence (jakob
@@ -1588,7 +1685,11 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   - **A staged tag that never landed** — on the Tags row, under its
     chips: `This tag didn't land.` with `Remove it`, no reason given (jakob
     2026-11-11, *blessed*). **Drawn** on `ComposeSeal`'s and `ReplySeal`'s
-    `state` chip, `tagRefused`.
+    `state` chip, `tag-refused`. The edits take the same words under
+    their tags, `Sign the edit` standing, and with more than one tag on
+    the row the refused chip wears the error ring (jakob 2026-11-17, his
+    19). **Drawn** on `EditCompose`'s and `CommentEdit`'s `tag` chip,
+    `refused`.
   - **Any other refusal** — a bug the picking stage should have
     blocked. A notice in the commit's place, never the failure voice:
     `This shouldn't have happened` over `That's a fault on our side,
@@ -2469,7 +2570,8 @@ words, recorded so the registry is whole:
   another's, each opinion figure counting people, never records — one
   person's bundle is one, however often revised (jakob 2026-11-10); the
   own page's `Edit profile`. The chronicle's tabs `Posts` ·
-  `Comments` · `Everything`, named `What the chronicle shows`; its rows
+  `Comments` · `Everything`, named `What the chronicle shows`, every
+  profile landing on `Posts` (jakob 2026-11-13); its rows
   `Published a post` (the post's title under it), `Commented` (the
   comment's words), `Gave an opinion` (`on @mira`), and `Updated your
   profile` · `Updated their profile`.
@@ -2483,10 +2585,30 @@ words, recorded so the registry is whole:
   yet.` — and a deleted account, which will give none again, `This
   account gave no opinions.` (*blessed (jakob 2026-11-10)*).
 - **The edit** (`ProfileEdit`) — titled `Edit profile`, its fields
-  `Display name` · `Bio` · `Website`.
+  `Display name` · `Bio` · `Website`; the picture's row `Change picture`
+  alone, and with a picture standing two buttons side by side, never one
+  above the other, in their short forms `Change` · `Remove` (spoken
+  `Change picture` · `Remove picture`); a staged removal shows `Change` ·
+  `Undo` (spoken `Undo removing the picture`, *new 2026-11-17, to be blessed*), and `Remove` is hidden
+  while a new picture is staged (jakob 2026-11-17, his review of round
+  50 and C2, C3). With nothing staged, Save stands inert under `Nothing
+  to sign yet` (`EditComposeUnchanged`'s line). A write-rule refusal
+  known at Save stands on Save as `You can't sign right now.` in the
+  row's quiet register, with a "?" opening `Why signing waits`, and Save
+  dims, until the next staged change or the next opening of the edit
+  (C1). A new picture whose upload failed reads `One picture didn't
+  upload.` with `Retry · Remove it` under the picture's row
+  (`ComposeUploading`). The placements *blessed (jakob 2026-11-17)*.
 - **The profile's seal** (`ProfileEditSeal`) — `Your profile`; the acts row
   `Profile` reading `A new picture, bio and website`, its count spoken
-  `1 profile change`; under the card `Every change to your profile is
+  `1 profile change`. The row's grammar (*blessed (jakob 2026-11-17)*): `A
+  new` and the changed parts in the edit's order — `picture`, `display
+  name`, `bio`, `website` — joined by commas and a last `and` (`A new
+  bio`, `A new display name and website`, `A new picture, display name,
+  bio and website`); a removed picture alone reads `The picture removed`,
+  and after other parts `, the picture removed` (`A new bio, the picture
+  removed`), the value running on to a second line rather than cut off
+  (C4); under the card `Every change to your profile is
   signed in your name and stays in your public record.`; its "?" is named
   `Changing your profile`.
 - **The picture** — the crop titled `Your picture`, no line under its
@@ -2576,10 +2698,12 @@ card's act is the stance face, and one line beside it teaches the tap:
 with no first-opinion words, because the card stands while the member
 holds other opinions (jakob's own, 2026-10-13). The
 pad's title and its "?" read `Your vouch back`, and the line above its
-two coaching lines opens on the title: `Your vouch back. The pad is how you shape what
-reaches you — for or against, and how much.` *Carried over — blessed by
+field opens on the title: `Your vouch back. The pad is how you shape what
+reaches you — for or against, and how much.`, `Nothing is signed until
+Set.` under it on the first-ever pad open; the coaching lives in the help
+`Your vouch back` alone (jakob 2026-11-12). *Carried over — blessed by
 use (jakob 2026-10-06):* the card's title `@mira vouched you in`
-(`VouchBack`, `VouchBackPad`), and the pad's first coaching line, `Later,
+(`VouchBack`, `VouchBackPad`), and the help's coaching line, `Later,
 tap the small face under a post to open this — press and hold it instead
 and a gentle 🙂 *(+0.10 / +0.10)* is signed on the spot.` The band's line keeps
 *first opinion*: the borrowed view does end on the first opinion,
@@ -3072,8 +3196,8 @@ no hint, as search's do. (*new 2026-10-05, blessed (jakob 2026-10-05)*: `Search 
 (`HistoryNone`): a query nothing seen carries reads `Nothing you've seen
 carries that name.` before `Search reads names and titles, never bodies —
 fewer words reach further.` (the sentence `ExploreNone` no longer
-carries: its `How searching works` "?" holds it; here, whether it moves
-behind a "?" is open); kinds that hold
+carries: its `How searching works` "?" holds it; here it stays, History
+having no "?" — kept by jakob 2026-11-12, question 13, backlog 192); kinds that hold
 nothing seen read `Nothing you've seen is of that kind.`; and both offer
 `Show everything`, which clears the query and the kinds at once (*new
 2026-10-05, blessed (jakob 2026-10-05)*: the two first sentences and
@@ -3166,6 +3290,12 @@ refused state:
 *Name*, not *tag*, because the string is what is wrong and the tag is
 fine — there is no tag yet.
 
+An empty field has no line: a tag has no empty name (jakob 2026-11-13,
+N3), so with nothing typed the picker offers nothing to add and refuses
+nothing, the rule line standing as at rest. And the picker is the only
+place a tag's name is typed — every composer's `+ Add a tag` opens it
+(N2).
+
 ## Notifications
 
 Drawn on `Notifications`, `NotificationsEmpty` and `FeedUnread`.
@@ -3178,7 +3308,11 @@ the row is the part cut, never the act: `@maximiliana_feathe… commented
 on your post` — the sentence's words keep their room first (readme §13,
 *A long name or handle takes one of three cases*; in running text the
 sentence wraps and the handle moves whole to the next line — a handle or
-name never stands on two lines). Ten kinds, ten
+name never stands on two lines; the profile's head is the named exception,
+its display name always shown whole on at most two lines: it wraps at its
+spaces, a word wider than the line breaks inside the word, and a name that
+would need more lines takes the largest size that holds two — never cut,
+jakob 2026-11-13). Ten kinds, ten
 sentences, all present tense of the act that happened:
 
 - `@ada commented on your post` — a comment on a post of yours.
@@ -3513,8 +3647,8 @@ review*).
 **The opinions list.** The post's door reads `8 opinions on this post`
 (`1 opinion on this post` in the singular), and those words are its
 accessible name — the count rides inside the name (*Manage the N
-citations*, above; the K13 round); the comment's menu row reads
-`Opinions on this`.
+citations*, above; the K13 round); the menu row of a post and of a
+comment reads `Opinions on this` (a post's, jakob 2026-11-13, M1).
 The sheets are titled `Opinions on this post` and `Opinions on this
 comment`. *Opinion* throughout, never *stance* — the reader's word
 (*Naming*, above) — and the count is bare beside it, the row's own words
@@ -3779,7 +3913,7 @@ cannot hold has to be able to leave it.
 
 **`Cited by N`** — the inbound count line on a post's detail, whose
 accessible name is its own words, `Cited by 4`; and `Cited by` as the
-sheet's title and the comment menu's row. *Cited* is
+sheet's title and the row of a post's menu and a comment's. *Cited* is
 already the product's verb for a Reference (*"@ada cited your post"*),
 and the line reads from the artifact's side: what points at this. The
 count is bare beside it, the row's own words having said what was

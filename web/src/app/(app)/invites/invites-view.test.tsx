@@ -118,6 +118,12 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+/** The answered faults beyond #501's FORBIDDEN, and the line each says (NetworkError.md:13, :19). */
+const ANSWERED = [
+  ["INTERNAL", "That didn't go through. Try again."],
+  ["EMAIL_NOT_VERIFIED", "Verify your email first — the link is in your inbox."],
+] as const;
+
 describe("Invites (behavior/Invites.md)", () => {
   it(":3-:23 New invite heads, Applications then Live links, groups by link and age, never by readiness", async () => {
     show();
@@ -332,6 +338,26 @@ describe("Invites (behavior/Invites.md)", () => {
     const cards = await screen.findAllByTestId("invites.link");
     fireEvent.click(within(cards[0]).getByTestId("invites.link.action"));
     expect(await screen.findByTestId("invites-revoke-failed")).toHaveTextContent("Can't reach the server");
+    expect(screen.getAllByTestId("invites.link")).toHaveLength(2);
+  });
+
+  // NetworkError.md:13 — the server answered FORBIDDEN: never the "can't
+  // reach the server" line.
+  it(":59 a revoke the server refuses FORBIDDEN keeps the card and reads That didn't go through.", async () => {
+    show();
+    server.use(
+      gqlLink.mutation("RevokeInviteLink", () =>
+        HttpResponse.json({
+          data: null,
+          errors: [{ message: "member account required", extensions: { code: "FORBIDDEN" } }],
+        }),
+      ),
+    );
+    const cards = await screen.findAllByTestId("invites.link");
+    fireEvent.click(within(cards[0]).getByTestId("invites.link.action"));
+    const line = await screen.findByTestId("invites-revoke-failed");
+    expect(line).toHaveTextContent("That didn't go through. Try again.");
+    expect(line).not.toHaveTextContent(/reach the server/);
     expect(screen.getAllByTestId("invites.link")).toHaveLength(2);
   });
 
@@ -640,6 +666,22 @@ describe("the create sheet (behavior/InviteNew.md, InviteExpiry.md, InviteCreate
     return screen.findByRole("dialog", { name: "New invite" });
   }
 
+  // NetworkError.md:13, :19 — the other answered faults on the create, each in its own line.
+  it.each(ANSWERED)("NetworkError.md a create answered %s reads its line, never the connection line", async (code, text) => {
+    show();
+    server.use(
+      gqlLink.mutation("CreateInviteLink", () =>
+        HttpResponse.json({ data: null, errors: [{ message: "no", extensions: { code } }] }),
+      ),
+    );
+    const sheet = await openSheet();
+    fireEvent.click(within(sheet).getByTestId("invites.createSheet.create"));
+    const line = await within(sheet).findByTestId("invites-sheet-failed");
+    expect(line).toHaveTextContent(text);
+    expect(line).not.toHaveTextContent(/reach the server/);
+    expect(within(sheet).getByTestId("invites.createSheet.create")).toHaveTextContent("Retry");
+  });
+
   it("InviteNew.md:3-:11 two choices and nothing else: single use on, 7 days, the footnote", async () => {
     show();
     const sheet = await openSheet();
@@ -649,7 +691,7 @@ describe("the create sheet (behavior/InviteNew.md, InviteExpiry.md, InviteCreate
     );
     expect(within(sheet).getByRole("button", { name: /Expires after/ })).toHaveTextContent("7 days");
     expect(within(sheet).getByTestId("invites.createSheet.options.footnote")).toHaveTextContent(
-      "With it off, anyone holding the link can apply until it expires. Either way each person still needs your approval, one at a time.",
+      "Either way each person still needs your approval, one at a time.",
     );
     // :5 no opinion control.
     expect(within(sheet).queryByRole("slider")).not.toBeInTheDocument();
@@ -716,7 +758,29 @@ describe("the create sheet (behavior/InviteNew.md, InviteExpiry.md, InviteCreate
     const sheet = await openSheet();
     fireEvent.click(within(sheet).getByRole("switch"));
     fireEvent.click(within(sheet).getByTestId("invites.createSheet.create"));
-    expect(await within(sheet).findByTestId("invites-sheet-failed")).toHaveTextContent("Can't reach the server");
+    // Seam 355: no answer says the network error's words, and the sheet's
+    // commitment itself reads Retry under the line.
+    expect(await within(sheet).findByTestId("invites-sheet-failed")).toHaveTextContent("That didn't send. Try again.");
+    expect(within(sheet).getByTestId("invites.createSheet.create")).toHaveTextContent("Retry");
+    expect(within(sheet).getByRole("switch")).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("InviteNew.md:23 a create the server refuses FORBIDDEN reads That didn't go through. and keeps the choices", async () => {
+    show();
+    server.use(
+      gqlLink.mutation("CreateInviteLink", () =>
+        HttpResponse.json({
+          data: null,
+          errors: [{ message: "member account required", extensions: { code: "FORBIDDEN" } }],
+        }),
+      ),
+    );
+    const sheet = await openSheet();
+    fireEvent.click(within(sheet).getByRole("switch"));
+    fireEvent.click(within(sheet).getByTestId("invites.createSheet.create"));
+    const line = await within(sheet).findByTestId("invites-sheet-failed");
+    expect(line).toHaveTextContent("That didn't go through. Try again.");
+    expect(line).not.toHaveTextContent(/reach the server/);
     expect(within(sheet).getByRole("switch")).toHaveAttribute("aria-checked", "false");
   });
 
@@ -767,7 +831,7 @@ describe("the approval pad (behavior/ApprovePad.md)", () => {
     expect(within(row("rafa")).queryByTestId("invites.application.close")).not.toBeInTheDocument();
     expect(within(row("rafa")).getByTestId("invites.application.stance.anchor")).toBeInTheDocument();
     expect(within(pad).getByTestId("invites.application.stance.pad.note")).toHaveTextContent(
-      "Vouching is the act. Set signs your opinion on @rafa and brings them in.It is one signed, priced act — and it is theirs to answer: their opinion back completes the pair.",
+      "Vouching is the act. Set signs your opinion on @rafa and brings them in.It is one signed, priced act.",
     );
     expect(within(pad).getByTestId("invites.application.stance.pad.help")).toHaveAccessibleName(
       "How vouching works",
@@ -921,10 +985,10 @@ describe("the closing dialogs (behavior/RejectConfirm.md, RejectAllConfirm.md)",
     const dialog = await screen.findByTestId("invites.dialog");
     expect(within(dialog).getByTestId("invites.dialog.title")).toHaveTextContent("Close @imke's application?");
     expect(within(dialog).getByTestId("invites.dialog.body")).toHaveTextContent(
-      "It leaves your list and @imke is told. Their account stays exactly as it is — signed in, and free to keep reading.",
+      "It leaves your list and @imke is told. Their account stays as it is.",
     );
     expect(within(dialog).getByTestId("invites.dialog.body")).toHaveTextContent(
-      "This is your call and nobody else's. Any member can still vouch them in, and @imke gets a link to ask with.",
+      "Any member can still vouch them in, and @imke gets a link to ask with.",
     );
     const [first, second] = within(dialog).getAllByRole("button");
     expect(first).toHaveTextContent("Close it");
@@ -963,6 +1027,55 @@ describe("the closing dialogs (behavior/RejectConfirm.md, RejectAllConfirm.md)",
     expect(await screen.findByTestId("invites-dialog-failed")).toHaveTextContent("That didn't send. Try again.");
     expect(screen.getByTestId("invites.dialog.close")).toHaveTextContent("Retry");
     expect(row("imke")).toBeInTheDocument();
+  });
+
+  it("NetworkError.md:13 a closing the server refuses FORBIDDEN reads That didn't go through. with Retry", async () => {
+    show();
+    server.use(
+      gqlLink.mutation("RejectApplication", () =>
+        HttpResponse.json({
+          data: null,
+          errors: [{ message: "member account required", extensions: { code: "FORBIDDEN" } }],
+        }),
+      ),
+    );
+    await screen.findAllByTestId("invites.application");
+    fireEvent.click(within(row("imke")).getByTestId("invites.application.close"));
+    fireEvent.click(await screen.findByTestId("invites.dialog.close"));
+    expect(await screen.findByTestId("invites-dialog-failed")).toHaveTextContent("That didn't go through. Try again.");
+    expect(screen.getByTestId("invites.dialog.close")).toHaveTextContent("Retry");
+    expect(row("imke")).toBeInTheDocument();
+  });
+
+  // Seam 355: the words follow the answer on a dialog too; its commitment reads Retry.
+  it.each(ANSWERED)("NetworkError.md a closing answered %s reads its line with Retry", async (code, text) => {
+    show();
+    server.use(
+      gqlLink.mutation("RejectApplication", () =>
+        HttpResponse.json({ data: null, errors: [{ message: "no", extensions: { code } }] }),
+      ),
+    );
+    await screen.findAllByTestId("invites.application");
+    fireEvent.click(within(row("imke")).getByTestId("invites.application.close"));
+    fireEvent.click(await screen.findByTestId("invites.dialog.close"));
+    expect(await screen.findByTestId("invites-dialog-failed")).toHaveTextContent(text);
+    expect(screen.getByTestId("invites.dialog.close")).toHaveTextContent("Retry");
+  });
+
+  // NetworkError.md:13, :19 — the other answered faults on the revoke (a
+  // card, not a dialog: Invites.md:99, :111), each in its own line.
+  it.each(ANSWERED)("NetworkError.md a revoke answered %s reads its line, never the connection line", async (code, text) => {
+    show();
+    server.use(
+      gqlLink.mutation("RevokeInviteLink", () =>
+        HttpResponse.json({ data: null, errors: [{ message: "no", extensions: { code } }] }),
+      ),
+    );
+    const cards = await screen.findAllByTestId("invites.link");
+    fireEvent.click(within(cards[0]).getByTestId("invites.link.action"));
+    const line = await screen.findByTestId("invites-revoke-failed");
+    expect(line).toHaveTextContent(text);
+    expect(line).not.toHaveTextContent(/reach the server/);
   });
 
   it("RejectConfirm.md:25-:27 Keep it, and Escape, close the dialog with nothing closed", async () => {

@@ -18,7 +18,7 @@ import { snapDimension } from "@/lib/stance/model";
 import { referenceDrafts } from "@/lib/references/claims";
 import type { ReferenceDraft } from "@/lib/references/draft";
 import type { TagDraft } from "@/lib/topics/draft";
-import { nearestPostShape, POST_SHAPES, type PostShape } from "@/lib/ui2/media/aspect";
+import { nearestPostShape, POST_SHAPES, tileRatio, type PostShape } from "@/lib/ui2/media/aspect";
 import {
   addAssets,
   clipOf,
@@ -304,10 +304,11 @@ export function uploadRatio(state: PostEditState, assetId: string): number | und
 }
 
 /**
- * The window a clip's new face is cut to: the clip's own ratio in a post
- * (CoverCrop.md). A clip the server never probed reserves the square, the
- * neutral reservation `tileRatio` makes for a shape unknown.
+ * The frame a clip's new face is cut to: the clip's shape as it stands in a
+ * card — its own ratio, a clip taller than 4:5 at 4:5 (CoverCrop.md:3,5;
+ * seam 319: "tall video = tall cover") — which is `tileRatio`, including its
+ * square for a clip the server never probed.
  */
 export function coverRatio(clipRatio: number | null): number {
-  return clipRatio !== null && Number.isFinite(clipRatio) && clipRatio > 0 ? clipRatio : 1;
+  return tileRatio(clipRatio);
 }

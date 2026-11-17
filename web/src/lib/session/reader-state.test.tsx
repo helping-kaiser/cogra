@@ -3,10 +3,12 @@
 // what `me` answered, and every door reads it — no door, and no card, asks
 // the server itself.
 
+import { gql } from "@apollo/client";
 import { act, screen, waitFor } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { fetchMe } from "@/lib/api/auth-api";
 import { AccountPreferencesSync } from "@/lib/settings/account-preferences-sync";
 import { BottomNav } from "@/lib/ui/bottom-nav";
 import type { RegistrationFlow } from "@/lib/signing/registration-flow";
@@ -115,6 +117,105 @@ describe("the reader's account state", () => {
     );
     await waitFor(() => expect(screen.getByTestId("probe")).toHaveTextContent("none"));
     expect(reads.count).toBe(0);
+  });
+});
+
+// A LATER ACCOUNT READ IS FRESHER THAN THE SESSION'S FIRST ONE: an applicant
+// let in mid-session finds the doors open as soon as any surface's `me` read
+// (the feed's, the profile's) answers member — through the Apollo cache that
+// read writes into, never a poll.
+describe("a fresher account read", () => {
+  beforeEach(() => window.localStorage.clear());
+
+  function meServing(state: { accountState: "APPLICANT" | "MEMBER" }) {
+    return gqlLink.query("Me", () =>
+      HttpResponse.json({
+        data: {
+          me: {
+            __typename: "User",
+            id: "u1",
+            handle: "noor",
+            displayName: { __typename: "ModeratedText", value: "Noor" },
+            actorPubkey: null,
+            accountState: state.accountState,
+            hasReciprocated: false,
+            vouchBackDismissed: false,
+            invitedBy: null,
+            preferences: { __typename: "UserPreferences", contentFilteringSeverityLevel: null },
+          },
+        },
+      }),
+    );
+  }
+
+  it("a_later_me_read_saying_member_lifts_the_locks_without_a_reload", async () => {
+    const served = { accountState: "APPLICANT" as "APPLICANT" | "MEMBER" };
+    server.use(meServing(served));
+    const { client } = renderWithProviders(
+      <>
+        <AccountPreferencesSync />
+        <BottomNav active="feed" signedIn node={{ path: "feed.bottomBar" }} />
+        <Probe />
+      </>,
+      { store: signedIn() },
+    );
+    await waitFor(() => expect(screen.getByTestId("probe")).toHaveTextContent("APPLICANT"));
+    // The applicant is let in; a surface reads `me` again, as the feed and
+    // the profile do on their own arrival.
+    served.accountState = "MEMBER";
+    await act(async () => {
+      await fetchMe(client);
+    });
+    await waitFor(() => expect(screen.getByTestId("probe")).toHaveTextContent("MEMBER"));
+    expect(screen.getByTestId("feed.bottomBar.composeSlot")).toHaveAttribute("href", "/compose");
+  });
+
+  it("a_cache_write_that_leaves_the_account_state_alone_never_moves_it", async () => {
+    // The landing settled the reader as member; a later write to the same
+    // user's entry that does not touch `accountState` (a profile read, a
+    // rename) must not hand the stale APPLICANT back.
+    let progress: RegistrationProgress | null = { kind: "awaitingLanding" };
+    const listeners = new Set<() => void>();
+    const flow: RegistrationFlow = {
+      progress: () => progress,
+      subscribe: (listener) => {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      },
+      ensureAdvancing: () => {},
+      consumeLanded: () => false,
+      reset: () => {},
+    };
+    server.use(meServing({ accountState: "APPLICANT" }));
+    const { client } = renderWithProviders(
+      <>
+        <AccountPreferencesSync />
+        <Probe />
+      </>,
+      { store: signedIn(), flow },
+    );
+    await waitFor(() => expect(screen.getByTestId("probe")).toHaveTextContent("APPLICANT"));
+    act(() => {
+      progress = { kind: "member" };
+      for (const listener of listeners) listener();
+    });
+    expect(screen.getByTestId("probe")).toHaveTextContent("MEMBER");
+    act(() => {
+      client.cache.writeFragment({
+        id: "User:u1",
+        fragment: gql`
+          fragment RenamedForTest on User {
+            handle
+          }
+        `,
+        data: { __typename: "User", handle: "noor_renamed" },
+      });
+    });
+    // A tick for any broadcast the write raised.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(screen.getByTestId("probe")).toHaveTextContent("MEMBER");
   });
 });
 

@@ -1,13 +1,12 @@
-// What the open pad says about itself: the two coaching lines of the
-// first-ever open, the four help lines its `?` opens, and the three lines an
-// unreachable landing's 🤔 opens.
+// What the open pad says about itself: the one line of the first-ever open,
+// the four help lines its `?` opens, the vouch-back pad's own help, and the
+// three lines an unreachable landing's 🤔 opens.
 //
-// THE PAD IS THE TEACHER (design/guidelines/stance-control.md "Teaching
-// it"; copy-voice.md "The first-ever pad teaches in two coaching lines,
-// and nothing else teaches it"). The tap that opens the pad costs
-// nothing, so a reader finds the considered route on their own; what is
-// left to teach is the shortcut. The lines ride the account's first-ever
-// pad open, wherever that pad opens, close with it, and never show again.
+// THE FIRST-EVER OPEN SAYS ONLY `Nothing is signed until Set.` (copy-voice
+// "The first-ever pad's coaching stands behind its ?", jakob 2026-11-12):
+// the line rides the account's first-ever pad open, wherever that pad opens,
+// closes with it, and never shows again. The shortcut it used to teach is
+// said in `Your vouch back`.
 //
 // THE HELP REPLACES THE PAD'S BODY (stance-control.md "The gesture": the
 // `?` "replaces the pad's body with four lines of help, and disables Set
@@ -65,27 +64,47 @@ export function unreachableHelp(axes: StanceAxes | undefined, targetLabel: strin
 }
 
 /**
- * The first-ever open's two coaching lines (`VouchBackPad`). The face is
- * drawn and the digits ride a `cg-exact` tail that paints only for a reader
- * who asked for exact values; the spoken twin says the face and the pair
- * either way (VouchBackPad.md: "the coaching's exact pair shows only when the
- * reader has asked for exact values").
+ * THE FIRST-EVER OPEN SAYS ONE THING (jakob 2026-11-12; copy-voice "The
+ * first-ever pad's coaching stands behind its ?"; VouchBackPad.md:15): on
+ * the account's first-ever pad open, wherever that pad opens, the pad says
+ * only `Nothing is signed until Set.` The shortcut and the input swap stand
+ * in `Your vouch back`, the vouch-back pad's "?".
  */
-export function StanceCoaching({ testId }: { testId: string }) {
+export const FIRST_OPEN_LINE = "Nothing is signed until Set.";
+
+export function StanceFirstOpenLine({ testId }: { testId: string }) {
   return (
-    <div data-testid={testId} className="flex flex-col gap-1">
-      <p className="m-0 text-body-small text-on-surface-variant">
-        Later, tap the small face under a post to open this — press and hold it instead and a
-        gentle <span aria-hidden="true">🙂</span>
-        <span aria-hidden="true" className="cg-exact">
-          {" (+0.10 / +0.10)"}
-        </span>
-        <span className="sr-only">Nice, For or against +0.10, How much reaches you +0.10</span> is
-        signed on the spot.
-      </p>
-      <p className="m-0 text-body-small text-on-surface-variant">
-        Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.
-      </p>
-    </div>
+    <p data-testid={testId} className="m-0 text-body-small text-on-surface-variant">
+      {FIRST_OPEN_LINE}
+    </p>
   );
 }
+
+/**
+ * A help line that is more than words: the press-and-hold shortcut, whose
+ * face is drawn and whose digits ride a `cg-exact` tail (VouchBackPad.md:17:
+ * "the help's exact pair shows only when the reader has asked for exact
+ * values, and its spoken twin says the face and the pair either way").
+ */
+export const PRESS_AND_HOLD = { kind: "pressAndHold" } as const;
+
+/** One line of a pad's in-place help: words, or the press-and-hold line. */
+export type PadHelpLine = string | typeof PRESS_AND_HOLD;
+
+/** The press-and-hold line of `Your vouch back` (_shared.jsx `YOUR_VOUCH_BACK_HELP`). */
+export function PressAndHoldLine() {
+  return (
+    <p className="m-0 text-body-small text-on-surface-variant">
+      Later, tap the small face under a post to open this — press and hold it instead and a gentle{" "}
+      <span aria-hidden="true">🙂</span>
+      <span aria-hidden="true" className="cg-exact">
+        {" (+0.10 / +0.10)"}
+      </span>
+      <span className="sr-only">Nice, For or against +0.10, How much reaches you +0.10,</span> is signed on the
+      spot.
+    </p>
+  );
+}
+
+/** The input swap, the last line of `Your vouch back`. */
+export const SWAP_THE_INPUT = "Prefer sliders or exact numbers? Swap the input in settings.";

@@ -13,6 +13,8 @@
 
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
+import { HELP_TOPICS } from "@/lib/ui2/help-dialog";
+import { HelpDot } from "@/lib/ui2/help-dot";
 import { PillButton, TextAction } from "@/lib/ui2/pill-button";
 import {
   actsFooterLine,
@@ -100,21 +102,37 @@ function ActCount({ count, noun }: { count: number; noun: string }) {
   );
 }
 
-/** `EditActs` / `CommentEditActs`: the batch, every kind, counted in records. */
+/**
+ * `EditActs` / `CommentEditActs`: the batch, every kind, counted in records.
+ *
+ * THE TITLE CARRIES THE `?` (EditActs.md, CommentEditActs.md; jakob
+ * 2026-11-12, round 46): `How signing works`, the seals' dialog, which says
+ * the acts land together or none does — so the card carries no line of it.
+ * The host opens the dialog over the sheet; nothing is signed by it.
+ */
 export function ActsSheet({
   open,
   rows,
   onClose,
+  onHelp,
   testId,
 }: {
   open: boolean;
   rows: readonly EditActRow[];
   onClose: () => void;
+  /** The title's `?`: the host opens How signing works over the sheet. */
+  onHelp: () => void;
   testId: string;
 }) {
   const count = editActCount(rows);
   return (
-    <BottomSheet open={open} onClose={onClose} title={actsSheetTitle(count)} testId={testId}>
+    <BottomSheet
+      open={open}
+      onClose={onClose}
+      title={actsSheetTitle(count)}
+      titleTrailing={<HelpDot ariaLabel={HELP_TOPICS.howSigningWorks.title} onOpen={onHelp} testId={`${testId}-help`} />}
+      testId={testId}
+    >
       <div className="flex flex-col gap-3 px-6 pb-4">
         <div
           aria-label="What the edit signs"
@@ -133,14 +151,6 @@ export function ActsSheet({
               <ActCount count={row.count} noun={row.noun} />
             </div>
           ))}
-          {rows.length > 1 && (
-            <span
-              data-testid={`${testId}-together`}
-              className="py-2 text-label-small text-on-surface-variant"
-            >
-              They land together, or none does.
-            </span>
-          )}
         </div>
         <div className="flex justify-end">
           <PillButton variant="text" testId={`${testId}-done`} onClick={onClose}>

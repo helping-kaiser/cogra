@@ -4,12 +4,12 @@
    removed by its author, stands as its mark in the feed — `LadderStates`'
    first redacted card — and its ⋮ raises the reader's card menu whole
    (`readerCardMenu`, the license appended): Save, Cite in a new post, Hide
-   @ada, License terms, then Report at the tail. The mark carries its removal's date under it, `2d`, as every feed
+   @ada, Cited by, Opinions on this, License terms, then Report at the tail. The mark carries its removal's date under it, `2d`, as every feed
    card's mark does (`FeedRemoved`'s `now`).
 
    THE LICENSE ROW STAYS (jakob 2026-11-12: "someone might have used my
-   content already under its license regulations"; the orchestrator's
-   extension of his ruling on your own to another's): the card appends it as
+   content already under its license regulations"; on another's post too,
+   confirmed by jakob 2026-11-13, point E): the card appends it as
    on any post, its sheet showing the terms the post was published under. The record never left the graph, so it
    can still be saved and cited; Hide acts on the author, who still exists and
    still ranks into the reader's feed; Report stays, because a comment section

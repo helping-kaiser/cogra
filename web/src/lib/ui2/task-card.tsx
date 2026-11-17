@@ -45,7 +45,8 @@ export function TaskCard({
   testId,
 }: {
   title: ReactNode;
-  body: ReactNode;
+  /** The card's line; a card that is its title alone passes none (ApplicantLanding, ApplicantFeed). */
+  body?: ReactNode;
   tone?: "notice";
   children?: ReactNode;
   node?: DataNode;
@@ -70,12 +71,14 @@ export function TaskCard({
           <Icon name="mark" size={20} pickColor="var(--primary-container)" />
         </span>
       </div>
-      <p
-        className="m-0 text-body-medium text-on-surface-variant [overflow-wrap:anywhere]"
-        {...testAttributes(part(node, "body"))}
-      >
-        <NameInText text={body} />
-      </p>
+      {body !== undefined && (
+        <p
+          className="m-0 text-body-medium text-on-surface-variant [overflow-wrap:anywhere]"
+          {...testAttributes(part(node, "body"))}
+        >
+          <NameInText text={body} />
+        </p>
+      )}
       {children}
     </section>
   );

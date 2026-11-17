@@ -42,17 +42,14 @@ describe("PickedSheet", () => {
     expect(screen.getByTestId("picked-sheet-body").className).not.toContain("pt-2");
   });
 
-  // Round 27 (seam 253, measured): the note box spans the sheet and its 24px is
-  // its own PADDING; the list's hairline spans the sheet over padded rows.
-  it("spans the sheet with the note box and the list, each part carrying its own inset", () => {
+  // Round 27 (seam 253, measured): the list's hairline spans the sheet over
+  // padded rows. Seam 314: no footnote under it (PickedSheet.jsx draws none —
+  // the Cover badge on the first row says it).
+  it("spans the sheet with the list, Done right under it on its own inset", () => {
     open();
     const body = screen.getByTestId("picked-sheet-body").className;
     expect(body).not.toMatch(/\bpx-6\b/);
-    const note = screen.getByText("The first one is the cover.");
-    expect(note.className).toMatch(/\bpx-6\b/);
-    expect(note.className).toMatch(/\bpt-3\b/);
-    // No margin of its own beyond the reset `m-0`.
-    expect(note.className.split(/\s+/).filter((cls) => /^-?m[xytrbl]?-/.test(cls))).toEqual(["m-0"]);
+    expect(screen.queryByText("The first one is the cover.")).toBeNull();
     const list = screen.getByTestId("picked-sheet-row-0").parentElement!;
     expect(list.className).toMatch(/\bpx-6\b/);
     expect(list.className).toContain("border-t");
@@ -103,7 +100,6 @@ describe("PickedSheet", () => {
     expect(props.onMove).toHaveBeenLastCalledWith(1, 2);
     expect(screen.getByLabelText("Reorder the cover")).toBeInTheDocument();
     expect(screen.getByLabelText("Reorder picture 2")).toBeInTheDocument();
-    expect(screen.getByText("The first one is the cover.")).toBeInTheDocument();
   });
 
   it("reports which picture is to be described", () => {

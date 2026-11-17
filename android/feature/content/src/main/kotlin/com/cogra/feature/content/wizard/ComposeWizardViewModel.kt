@@ -787,8 +787,10 @@ class ComposeWizardViewModel @Inject constructor(
      * later stages' previews read the same map to draw what the author
      * framed (jakob 2026-09-01).
      */
-    fun onCropsCommitted(crops: Map<String, CropSpec>) = _state.update { state ->
-        if (state.crops == crops) state else state.copy(crops = crops)
+    fun onCropsCommitted(crops: Map<String, CropSpec>) {
+        // A re-framed pick's upload is the wrong picture (`reframedBy`): its job stops, and it goes up again.
+        _state.value.reframedBy(crops).forEach { uploads.remove(it)?.cancel() }
+        _state.update { it.withCrops(crops) }
     }
 
     private fun cropSpecsFor(state: ComposeWizardState): Map<String, CropSpec> {

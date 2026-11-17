@@ -6,7 +6,7 @@ ALWAYS profile.comments.commentCard leads with profile.comments.commentCard.targ
 
 ALWAYS a removed comment keeps its place in the list, profile.comments.commentCard.removalMark.line reading Removed by its author where its words were,, and nothing more under it
 
-ALWAYS a removed comment keeps profile.comments.commentCard.authorChip, its time and profile.comments.commentCard.target, and carries no profile.comments.commentCard.menu
+ALWAYS a removed comment keeps profile.comments.commentCard.authorChip, its time and profile.comments.commentCard.target, and keeps profile.comments.commentCard.menu, the reader's comment menu whole — Save or Unsave, Cite in a new post, Cited by, Opinions on this, License terms, then Report at the sheet tail — GIVEN the comment is someone else's
 
 ALWAYS profile.comments.empty below profile.tabRow reads Nothing here yet., the line alone, GIVEN the person has written no comment
 
@@ -38,9 +38,13 @@ WHEN tap profile.comments.commentCard.target -> the thread it lives in opens scr
 
 WHEN tap Reply on a comment -> the thread the comment lives in opens scrolled to that comment
 
-WHEN tap profile.comments.viewReplies -> the thread the comment lives in opens scrolled to that comment
+ALWAYS a profile.comments.commentCard carries no view-replies line
 
-WHEN tap Reply on a comment GIVEN the reader is an applicant -> the snackbar reads You can comment once you're in. AND NEVER the thread's composer opens
+WHEN profile.comments.commentCard is tapped outside profile.comments.commentCard.target and its own controls -> the post's comment section opens scrolled to that comment
+
+ALWAYS every profile.comments.commentCard.actionRow.reply wears the locked look, at the disabled opacity and still tappable GIVEN the reader is an applicant
+
+WHEN tap profile.comments.commentCard.actionRow.reply GIVEN the reader is an applicant -> profile.snackbar reads You can comment once you're in. AND NEVER the thread's composer opens
 
 WHEN tap a comment's ⋮ GIVEN the comment is the reader's own -> the own comment's menu opens
 

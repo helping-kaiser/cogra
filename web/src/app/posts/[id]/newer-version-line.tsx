@@ -24,7 +24,7 @@
 import { testAttributes, type DataNode } from "@/lib/ui/data-node";
 
 /** The drawn line, verbatim (PostDetail.md:7; copy-voice.md, "Honesty phrasings"). */
-export const NEWER_VERSION_LINE = "Edited since you opened it — tap for the newest version.";
+export const NEWER_VERSION_LINE = "Edited since you opened it";
 
 export function NewerVersionLine({
   shown,

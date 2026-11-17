@@ -78,13 +78,47 @@ export const SHEET_RAISED = "88dvh";
  */
 export const SHEET_DEFAULT = "62dvh";
 
-/** What a sheet's surface — and the column inside it — is bounded by. */
+/** What a sheet's surface is bounded by. */
 function sheetHeight(tallest: boolean, height?: string, max: string = SHEET_DEFAULT): CSSProperties {
   if (height !== undefined) return { height: `min(${height}, ${SHEET_CEILING})` };
   return tallest
     ? { height: SHEET_CEILING }
     : { maxHeight: `min(${max}, ${SHEET_CEILING})` };
 }
+
+/**
+ * THE SURFACE'S OWN PADDING (`BottomSheet.jsx`: `padding: var(--space-2) 0
+ * calc(var(--space-6) + env(safe-area-inset-bottom, 0px))`): 8 over the grip,
+ * 24 and the device's bottom inset under the last child. It is the surface's,
+ * inside its border box — so a height class stays the surface's whole height —
+ * never a child's margin standing in for it.
+ */
+const SHEET_PAD_TOP = "0.5rem";
+const SHEET_PAD_BOTTOM_SUM = "1.5rem + env(safe-area-inset-bottom, 0px)";
+const SHEET_PAD_BOTTOM = `calc(${SHEET_PAD_BOTTOM_SUM})`;
+
+/**
+ * THE COLUMN FITS INSIDE THE PADDED SURFACE: a capped sheet's column takes the
+ * surface's class less that padding. A pinned one (`tallest`, `height`) has a
+ * definite surface, so its column simply fills the content box.
+ */
+function columnHeight(tallest: boolean, height?: string, max: string = SHEET_DEFAULT): CSSProperties {
+  if (tallest || height !== undefined) return { height: "100%" };
+  return { maxHeight: `calc(min(${max}, ${SHEET_CEILING}) - ${SHEET_PAD_TOP} - (${SHEET_PAD_BOTTOM_SUM}))` };
+}
+
+/**
+ * A FOOT-LESS BODY SCROLLS THROUGH THE SURFACE'S BOTTOM PADDING. The master's
+ * capped surface is its own scroller, so its padding ends the scroll and the
+ * content runs to the edge on the way there. Here the body is the scroller
+ * (so the grip and the title stay put); it reaches into the padding by exactly
+ * the padding and carries the same amount at its end — the surface's box, the
+ * content's travel and the gap under the last child all stay the master's.
+ */
+const BODY_THROUGH_PADDING: CSSProperties = {
+  marginBottom: `calc(-1 * (${SHEET_PAD_BOTTOM_SUM}))`,
+  paddingBottom: SHEET_PAD_BOTTOM,
+};
 
 export function BottomSheet({
   open,
@@ -344,7 +378,14 @@ export function BottomSheet({
       onPointerUp={endPull}
       onPointerCancel={endPull}
       style={
-        { "--cg-sheet-drag": `${pull}px`, ...sheetHeight(tallest, height, maxHeight) } as CSSProperties
+        {
+          "--cg-sheet-drag": `${pull}px`,
+          ...sheetHeight(tallest, height, maxHeight),
+          paddingTop: SHEET_PAD_TOP,
+          paddingRight: 0,
+          paddingBottom: SHEET_PAD_BOTTOM,
+          paddingLeft: 0,
+        } as CSSProperties
       }
       // `mt-auto` is what puts it at the bottom edge: a dialog is centred by
       // default, and this one rises from the edge it will go back to. It
@@ -364,23 +405,24 @@ export function BottomSheet({
         stacked
           ? "bg-surface-container-highest backdrop:bg-transparent"
           : "bg-surface-container-high backdrop:bg-scrim/50"
-      } p-0 text-on-surface`}
+      } text-on-surface`}
     >
       <div
         data-testid={`${testId}-column`}
         className="flex flex-col"
-        // The same bound as the surface: a percentage of an indefinite height
-        // resolves to nothing, so the column cannot simply ask for `100%` of
-        // a sheet that is only capped.
-        style={tallest || height !== undefined ? { height: "100%" } : sheetHeight(false, undefined, maxHeight)}
+        // The surface's bound less its padding: a percentage of an indefinite
+        // height resolves to nothing, so the column cannot simply ask for
+        // `100%` of a sheet that is only capped.
+        style={columnHeight(tallest, height, maxHeight)}
       >
         {/* The handle says the sheet can be pulled down, and it can. The
             gesture is read across the whole surface, so the grip marks where
             the eye goes rather than the only place that answers; the
-            backdrop, Escape and the sheet's own action drop it too. */}
+            backdrop, Escape and the sheet's own action drop it too. The 8
+            over it is the surface's padding, the 12 under it its own. */}
         <span
           aria-hidden="true"
-          className="mx-auto mb-3 mt-2 h-1 w-8 flex-none rounded-full bg-outline-variant"
+          className="mx-auto mb-3 h-1 w-8 flex-none rounded-full bg-outline-variant"
           {...testAttributes(part(node, "dragHandle"))}
         />
         {/* A heading is TEXT THAT WRAPS (NamesLong.md:11): `Report @…?` wraps
@@ -421,7 +463,11 @@ export function BottomSheet({
           // before the body starts scrolling, which is what puts the scroll
           // INSIDE the growing field rather than under the whole sheet. The
           // scroll stays as the fallback for content that cannot shrink.
-          className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${rows ? "pb-6" : `px-6 ${foot === undefined ? "pb-6" : "pb-3"}`}`}
+          // A FOOT STANDS 8 UNDER THE BODY (SettingsLicense: the foot in the
+          // padded column at its `gap:8px`); the 24 under the foot is the
+          // surface's padding, as it is under a foot-less body.
+          className={`flex min-h-0 flex-1 flex-col overflow-y-auto${rows ? "" : " px-6"}${foot === undefined ? "" : " pb-2"}`}
+          style={foot === undefined ? BODY_THROUGH_PADDING : undefined}
         >
           {/* What the sheet holds stands ON the sheet: a stage inside it is
               covered only by a layer raised over the sheet, and its scroller
@@ -431,7 +477,7 @@ export function BottomSheet({
             <ScrollHostProvider value={body}>{children}</ScrollHostProvider>
           </CoveringLayerProvider>
         </div>
-        {foot !== undefined && <div className="flex-none pb-6">{foot}</div>}
+        {foot !== undefined && <div className="flex-none">{foot}</div>}
       </div>
     </dialog>
   );
@@ -469,7 +515,9 @@ export function SheetItem({
       {...testAttributes(node, testId)}
       onClick={onSelect}
       aria-pressed={selected || undefined}
-      className={`cg-state cg-focus flex min-h-12 w-full items-center gap-3 text-left text-label-large ${edge ? "px-6" : "rounded-small px-2"} ${
+      // `SheetItem`'s padding: 14 over and under the label-large line
+      // (`calc((48px − 20px) / 2)`), the 48px minimum only a floor under it.
+      className={`cg-state cg-focus flex min-h-12 w-full items-center gap-3 py-3.5 text-left text-label-large ${edge ? "px-6" : "rounded-small px-2"} ${
         selected ? "text-primary" : "text-on-surface"
       }`}
     >

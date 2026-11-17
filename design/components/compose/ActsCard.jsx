@@ -99,6 +99,14 @@ const VALUE = {
   whiteSpace: "nowrap",
 };
 
+/* A ROW WHOSE VALUE IS A SENTENCE WRAPS (round 50, jakob 2026-11-17, C4):
+   the profile seal's `Profile` row reads back every changed part, and a
+   reading cut off by an ellipsis would hide what is being signed. `wrap`
+   on that one row lets its value run to a second line, the row taking 8px
+   above and below so the two lines keep the row's air; every other row
+   keeps its one line. */
+const valueStyle = (row) => (row.wrap ? { ...VALUE, overflow: "visible", textOverflow: "clip", whiteSpace: "normal", padding: "8px 0" } : VALUE);
+
 /* The door's own box is the row's box: no border, no background, no padding,
    the page's ink — so the card reads as the card it always was and only the
    state layer, the focus ring and the 48px target arrive with `BUTTON_CLASS`. */
@@ -136,6 +144,13 @@ function Count({ count, noun, node }) {
 export function ActsCard({ rows = [], total, note, noteTone = "quiet", node }) {
   const named = (index) => (node ? { "data-node": "actRow", "data-node-key": String(index + 1) } : null);
   const part = (name) => node && name;
+  /* A LINE SEPARATES, SO THE LAST ROW CARRIES NONE WHERE NOTHING FOLLOWS IT
+     (jakob 2026-11-13, on `Edit · the actions`: "lines are seperators and
+     there is nothing below it in this container to separate from"). With a
+     total row the last act's hairline divides the acts from it; with none
+     the card ends on its last act, unlined, over the card's own 4px. */
+  const bare = !(total || note);
+  const unlined = (index) => (bare && index === rows.length - 1 ? { borderBottom: 0 } : null);
   return (
     <div
       style={{
@@ -149,22 +164,22 @@ export function ActsCard({ rows = [], total, note, noteTone = "quiet", node }) {
     >
       {rows.map((row, index) =>
         row.action ? (
-          <InlineAction key={index} size="sm" onClick={row.onAct} style={{ ...ROW, textAlign: "left" }} node={node && "actRow"} nodeKey={node && String(index + 1)}>
+          <InlineAction key={index} size="sm" onClick={row.onAct} style={{ ...ROW, textAlign: "left", ...unlined(index) }} node={node && "actRow"} nodeKey={node && String(index + 1)}>
             <span style={LABEL} data-node={part("label")}>{row.label}</span>
             <span style={{ flex: 1, minWidth: 0, whiteSpace: "nowrap" }} data-node={part("action")}>{row.action}</span>
             <Count count={row.count} noun={row.countNoun} node={part("count")} />
           </InlineAction>
         ) : row.onOpen ? (
-          <button key={index} type="button" onClick={row.onOpen} aria-label={row.openLabel} className={BUTTON_CLASS} style={DOOR} {...named(index)}>
+          <button key={index} type="button" onClick={row.onOpen} aria-label={row.openLabel} className={BUTTON_CLASS} style={{ ...DOOR, ...unlined(index) }} {...named(index)}>
             <span style={LABEL} data-node={part("label")}>{row.label}</span>
-            <span style={VALUE} data-node={part("value")}>{row.value}</span>
+            <span style={valueStyle(row)} data-node={part("value")}>{row.value}</span>
             <Count count={row.count} noun={row.countNoun} node={part("count")} />
           </button>
         ) : row.fault ? (
-          <div key={index} style={{ borderBottom: ROW.borderBottom, paddingBottom: "var(--space-2)" }} {...named(index)}>
+          <div key={index} style={{ borderBottom: ROW.borderBottom, paddingBottom: "var(--space-2)", ...unlined(index) }} {...named(index)}>
             <div style={{ ...ROW, borderBottom: 0 }}>
               <span style={LABEL} data-node={part("label")}>{row.label}</span>
-              <span style={VALUE} data-node={part("value")}>{row.value}</span>
+              <span style={valueStyle(row)} data-node={part("value")}>{row.value}</span>
               <Count count={row.count} noun={row.countNoun} node={part("count")} />
             </div>
             <div style={{ paddingLeft: `calc(${LABEL.width} + var(--space-2))` }}>
@@ -172,13 +187,20 @@ export function ActsCard({ rows = [], total, note, noteTone = "quiet", node }) {
             </div>
           </div>
         ) : (
-          <div key={index} style={ROW} {...named(index)}>
+          <div key={index} style={{ ...ROW, ...unlined(index) }} {...named(index)}>
             <span style={LABEL} data-node={part("label")}>{row.label}</span>
-            <span style={VALUE} data-node={part("value")}>{row.value}</span>
+            <span style={valueStyle(row)} data-node={part("value")}>{row.value}</span>
             <Count count={row.count} noun={row.countNoun} node={part("count")} />
           </div>
         )
       )}
+      {/* THE TOTAL'S ROW STANDS ONLY WHERE IT HAS SOMETHING TO SAY (jakob
+          2026-11-13, on `Edit · the actions`: "looks like a line is missing").
+          A sheet whose title carries the count passes no `total`, and with no
+          note either the row would be 60px of nothing under the last act —
+          so it is not drawn, and the card ends after its last row with its
+          own 4px. */}
+      {!bare && (
       <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: "2px", minHeight: "48px", padding: "6px 0" }}>
         <span
           data-node={part("total")}
@@ -213,6 +235,7 @@ export function ActsCard({ rows = [], total, note, noteTone = "quiet", node }) {
           </span>
         )}
       </div>
+      )}
     </div>
   );
 }

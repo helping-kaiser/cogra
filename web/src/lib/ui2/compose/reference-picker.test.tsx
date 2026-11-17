@@ -5,10 +5,11 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { useState } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { newReferenceDraft, type ReferenceDraft } from "@/lib/references/draft";
 import { PICK_ADDED, PICK_REMOVED } from "@/lib/topics/picker";
+import { answerLog } from "@/test/answers";
 import { byNode } from "@/test/data-node";
 import { settleFetches } from "@/test/fetch";
 import { gqlLink, startMswServer } from "@/test/msw";
@@ -42,16 +43,13 @@ const SALT_MAPS = {
 /** The wire kind each fixture's target is (`NodeKind`). */
 const WIRE: Record<string, string> = { User: "USER", Post: "POST", Comment: "COMMENT" };
 
-// Every lookup the handlers below have answered in this test.
-let lookups = 0;
-beforeEach(() => {
-  lookups = 0;
-});
+// Every lookup the handlers below answer, for the reads that wait on it.
+const { answer: noteLookup, answered } = answerLog();
 
 /** The candidates served, narrowed the way the server narrows: by the asked `kinds`. */
 function candidates(...served: readonly { target: { __typename: string } }[]) {
   return gqlLink.query("ReferenceCandidates", ({ variables }) => {
-    lookups += 1;
+    noteLookup();
     const kinds = (variables as { kinds?: string[] | null }).kinds ?? null;
     const answer = kinds === null ? served : served.filter((c) => kinds.includes(WIRE[c.target.__typename] ?? ""));
     return HttpResponse.json({ data: { referenceCandidates: answer } });
@@ -101,17 +99,8 @@ const results = () =>
 const result = (id: string) => resultRows()[results().indexOf(id)]!;
 const staged = () => screen.queryAllByTestId(byNode("referencePicker.staged.stagedReference"));
 
-// THE ANSWER IS AWAITED, NEVER SLEPT ON. A lookup is a real round trip (msw 3
-// answers through undici's own send path, test/fetch.ts), so a fixed sleep
-// before reading the results is a race the runner can lose. A test that
-// expects something to APPEAR waits for it (Testing Library's async
-// methods); one that expects something to stay ABSENT first waits for the
-// lookup to be answered and delivered, so it reads the settled screen.
-async function answered(count = 1) {
-  await waitFor(() => expect(lookups).toBeGreaterThanOrEqual(count));
-  await act(() => settleFetches());
-}
-
+// THE ANSWER IS AWAITED, NEVER SLEPT ON (test/answers.ts): what should
+// appear is waited for; what should stay absent is read once `answered`.
 const showing = (expected: readonly string[]) => waitFor(() => expect(results()).toEqual(expected));
 
 const salMention = () =>

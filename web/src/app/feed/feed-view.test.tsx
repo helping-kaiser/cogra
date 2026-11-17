@@ -704,7 +704,7 @@ describe("FeedView", () => {
     renderWithProviders(<FeedView />, { store: signedInStore() });
 
     expect(await screen.findByTestId("feed-borrowed-view-line")).toHaveTextContent(
-      "Browsing from @mira's view while your application lands.",
+      "Browsing from @mira's view.",
     );
     // The applicant can do nothing about the borrowing, so no action.
     expect(screen.queryByTestId("feed-borrowed-view-action")).not.toBeInTheDocument();

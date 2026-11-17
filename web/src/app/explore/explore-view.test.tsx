@@ -15,6 +15,7 @@ import { detailRoot } from "@/app/shell";
 import { createTokenStore } from "@/lib/session/token-store";
 import { CLEAR_SEARCH } from "@/lib/ui2/search-bar";
 import { byNode } from "@/test/data-node";
+import { settleFetches } from "@/test/fetch";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import {
@@ -378,12 +379,19 @@ describe("Explore at rest", () => {
   });
 
   it("explore_md_41_the_door_prints_no_count_it_could_not_read", async () => {
-    server.use(gqlLink.query("HeldTopicsCount", () => HttpResponse.error()));
+    // The count's absence is read once its failed read has answered and been
+    // delivered, never after a guessed sleep.
+    let counted = 0;
+    server.use(
+      gqlLink.query("HeldTopicsCount", () => {
+        counted += 1;
+        return HttpResponse.error();
+      }),
+    );
     renderExplore();
     const door = screen.getByTestId(byNode("explore.topics"));
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 30));
-    });
+    await waitFor(() => expect(counted).toBe(1));
+    await act(() => settleFetches());
     expect(within(door).queryByTestId(byNode("explore.topics.second"))).toBeNull();
     expect(within(door).getByRole("link")).toHaveAttribute("href", "/explore/topics");
   });
@@ -674,6 +682,37 @@ describe("the search filter sheet", () => {
     expect(within(foot).getAllByRole("button").map((button) => button.textContent)).toEqual(["Reset", "Done"]);
   });
 
+  // Seam 314 / copy-voice *The filter*: the sections carry no hint; the
+  // Ranked / Newest explainer moved whole into the sheet's "?".
+  it("explains nothing in its sections; the ? holds the Ranked / Newest explainer", async () => {
+    serveSearch(() => answer([]));
+    renderExplore();
+    const sheet = await openSheet();
+    expect(within(sheet).queryByTestId("explore.filterSheet.kinds.hint")).toBeNull();
+    expect(within(sheet).queryByTestId("explore.filterSheet.order.hint")).toBeNull();
+    expect(sheet).not.toHaveTextContent("Combine");
+    expect(sheet).not.toHaveTextContent("Ranked puts");
+    fireEvent.click(within(sheet).getByTestId(byNode("explore.filterSheet.help")));
+    expect(await screen.findByTestId("explore-filter-help-dialog")).toHaveTextContent(
+      "Ranked puts what's closest to you first — your view, no one else's. Newest ignores it and lists by time.",
+    );
+  });
+
+  // Seam 324 on 323-1: the one filter text, its seen clause absent on search
+  // (the clause is the feed's, "— on the feed —"; search never looks at the
+  // seen list, seam 296).
+  it("says the filter text without the seen clause in search's ?", async () => {
+    serveSearch(() => answer([]));
+    renderExplore();
+    const sheet = await openSheet();
+    fireEvent.click(within(sheet).getByTestId(byNode("explore.filterSheet.help")));
+    const help = await screen.findByTestId("explore-filter-help-dialog");
+    expect(help).toHaveTextContent(
+      "What you let in, and in what order — the kinds combine freely, ranked or newest is one choice. Nothing changes until you press Done, and nothing here is signed or shared.",
+    );
+    expect(help).not.toHaveTextContent("already seen");
+  });
+
   it("explore_filter_md_5_25_33_chips_combine_stage_and_done_requeries_once", async () => {
     const asks = serveSearch(() => answer([]));
     renderExplore();
@@ -743,7 +782,7 @@ describe("nothing found, and comments without a scope", () => {
     renderExplore();
     type("@nobody brackish");
     expect(await screen.findByTestId(byNode("explore.empty.title"))).toHaveTextContent(
-      "Nothing carries that name. Search reads names and titles, never bodies — fewer words reach further.",
+      /^Nothing carries that name\.$/,
     );
     type("salt");
     await waitFor(() => expect(rowNames()).toEqual(["Salt maps"]));

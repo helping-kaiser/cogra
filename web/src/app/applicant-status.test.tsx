@@ -100,9 +100,9 @@ describe("ApplicantStatus", () => {
     expect(await screen.findByTestId("feed.application.title")).toHaveTextContent(
       "Approved — your registration is landing",
     );
-    expect(screen.getByTestId("feed.application.body")).toHaveTextContent(
-      "@mira approved your application. Nothing is needed from you while it lands.",
-    );
+    // The landing card is its title alone while the key is here (seam 314;
+    // ApplicantLanding, keyAt = here).
+    expect(screen.queryByTestId("feed.application.body")).toBeNull();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
@@ -138,9 +138,8 @@ describe("ApplicantStatus", () => {
     );
     renderStatus(approval({ keyAttached: true, keyOnDevice: true }));
     expect(screen.getByTestId("feed.verifyCard.title")).toHaveTextContent("Verify your email");
-    expect(screen.getByTestId("feed.verifyCard.body")).toHaveTextContent(
-      "We sent you a verification link — open it to prove this email is yours.",
-    );
+    // No body under the title (seam 314; ApplicantFeed draws none).
+    expect(screen.queryByTestId("feed.verifyCard.body")).toBeNull();
     expect(await screen.findByText("Sent to noor@fieldmail.org")).toBeInTheDocument();
     expect(screen.getByTestId("feed.verifyCard.wrongAddress")).toHaveAttribute("href", "/settings/email/applicant");
     expect(screen.getByTestId("feed.verifyCard.note")).toHaveTextContent(

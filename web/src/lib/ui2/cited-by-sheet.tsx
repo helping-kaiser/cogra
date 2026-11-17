@@ -48,11 +48,11 @@ const TITLE = "Cited by";
 
 /**
  * The empty line, reachable only from a comment's ⋮ — a post's count line drops
- * away at zero. `No opinions yet — yours would be the first.`'s twin, and kept
- * a twin on purpose: the two sheets are reached the same way, from the same
- * menu, and a reader who has met one should recognize the other.
+ * away at zero. The opinions sheet's empty line is its twin, and kept a twin
+ * on purpose: the two sheets are reached the same way, from the same menu,
+ * and a reader who has met one should recognize the other.
  */
-const EMPTY = "Nothing cites this yet — yours would be the first.";
+const EMPTY = "Nothing cites this yet";
 
 /**
  * What the row names, drawn from the citing artifact.

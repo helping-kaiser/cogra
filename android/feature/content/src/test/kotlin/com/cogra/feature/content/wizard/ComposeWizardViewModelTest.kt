@@ -17,6 +17,7 @@ import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
 import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.CropWindow
 import com.cogra.domain.media.DeviceMedia
 import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.MediaDestination
@@ -210,7 +211,11 @@ class ComposeWizardViewModelTest {
         /** What the pipeline's OWN output weighs — the cap's subject. */
         var encodedBytes = 4
 
+        /** Every crop the pipeline was asked to cut, in order. */
+        val cuts = mutableListOf<Pair<String, CropSpec>>()
+
         override suspend fun process(uri: String, crop: CropSpec): ProcessedPicture? {
+            cuts += uri to crop
             media.pending.addLast(uri)
             return if (uri in undecodable) {
                 null
@@ -421,6 +426,47 @@ class ComposeWizardViewModelTest {
         // uploads are always within target, so the gate never has reason
         // to poll `mediaAttachment` at all.
         assertThat(media.pollCalls).isEqualTo(0)
+    }
+
+    /**
+     * A1 (jakob's hand test, 2026-11-13): "the submitted post also shows a
+     * different section of the image than the one i picked". A picture
+     * framed again after its upload finished — back from the details stage —
+     * is sent again, cut to the new framing, when the crop is left; a picture
+     * whose framing did not move is not sent twice.
+     */
+    @Test
+    fun aPictureFramedAgainAfterItsUploadIsSentAgainAtTheNewFraming() = runTest(dispatcher) {
+        val first = CropSpec(0.8f, CropWindow(0.1f, 0f, 0.9f, 1f))
+        val untouched = CropSpec(0.8f, CropWindow(0f, 0.1f, 1f, 0.9f))
+        val moved = CropSpec(0.8f, CropWindow(0.2f, 0.1f, 0.6f, 0.6f))
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onModeChange(BodyMode.Media)
+        vm.onTogglePick("a")
+        vm.onTogglePick("b")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNext() // body -> crop
+        vm.onCropsCommitted(mapOf("a" to first, "b" to untouched))
+        vm.onNext() // crop -> details, uploads start
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(media.uploads).isEqualTo(2)
+
+        vm.onBack() // details -> crop
+        // Re-entering reports the framings as they were: nothing to resend.
+        vm.onCropsCommitted(mapOf("a" to first, "b" to untouched))
+        assertThat(vm.state.value.picked.map { it.upload }.all { it is AssetUpload.Done }).isTrue()
+
+        vm.onCropsCommitted(mapOf("a" to moved, "b" to untouched))
+        assertThat(vm.state.value.picked.first { it.uri == "a" }.upload).isEqualTo(AssetUpload.Idle)
+        assertThat(vm.state.value.picked.first { it.uri == "b" }.upload).isInstanceOf(AssetUpload.Done::class.java)
+
+        vm.onNext() // crop -> details: only the re-framed picture goes up again
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(media.uploads).isEqualTo(3)
+        assertThat(processor.cuts.last()).isEqualTo("a" to moved)
+        assertThat(vm.state.value.picked.map { it.upload }.all { it is AssetUpload.Done }).isTrue()
     }
 
     /**

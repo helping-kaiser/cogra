@@ -46,9 +46,8 @@ describe("WalletComingSoon", () => {
     expect(within(card).getByTestId(byNode("wallet.comingSoonCard.title"))).toBe(
       within(card).getByRole("heading"),
     );
-    expect(within(card).getByTestId(byNode("wallet.comingSoonCard.line"))).toHaveTextContent(
-      "Your earnings will be here.",
-    );
+    expect(within(card).queryByTestId(byNode("wallet.comingSoonCard.line"))).toBeNull();
+    expect(card).toHaveTextContent(/^Wallet — coming soon$/);
     expect(within(card).queryByRole("button")).toBeNull();
     expect(within(card).queryByRole("link")).toBeNull();
     // A root: no back arrow.

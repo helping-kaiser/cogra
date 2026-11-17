@@ -3,8 +3,8 @@
 // THE SEAL'S ACTS CARD (design/components/compose/ActsCard.jsx): the
 // container-highest card listing what one signature commits — one row per act
 // kind (a quiet 76px label, the value, the bare count) and the total as its
-// footer, with the all-or-nothing line under the total once the seal commits
-// more than one act.
+// footer, with the slow line under the total once signing outlasts 5s. The
+// all-or-nothing is said by the seal's "?" (How signing works), not here.
 //
 // THREE ROW SHAPES, one anatomy. A FACT row reads the act back; its value slot
 // ends a long one in an ellipsis so the row holds one line. A DOOR row is a fact
@@ -161,7 +161,7 @@ export function ActsCard({
 }: {
   rows: readonly (ActsRow | ActsAction)[];
   total: string;
-  /** The all-or-nothing line, or past 5s of signing the slow line. */
+  /** Past 5s of signing, the slow line. */
   note?: string | null;
   /** `slow`: the olive tertiary ink, announced once as a status. */
   noteTone?: "quiet" | "slow";
@@ -213,9 +213,6 @@ export function ActsCard({
 export function actsTotal(count: number): string {
   return count === 1 ? "1 thing, signed" : `${count} things, signed together`;
 }
-
-/** The all-or-nothing line, carried only when the seal commits more than one act. */
-export const ALL_OR_NOTHING = "They land together, or none does.";
 
 /** The slow line (copy-voice, *Faults by code*), past 5s of signing. */
 export const SLOW_SIGNING_LINE = "Still signing — the network is slow right now.";

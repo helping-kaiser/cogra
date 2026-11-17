@@ -27,13 +27,16 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { REMOVED_BY_AUTHOR, postTitle } from "@/lib/saved/row-content";
+import { useAuthPhase } from "@/lib/session/provider";
 import { POST_LOCKED, useReaderIsApplicant } from "@/lib/session/reader-state";
 import { carrySnackbar } from "./carried-snackbar";
 import { Card } from "./card";
 import { part, testAttributes, type DataNode } from "./data-node";
 import { Icon } from "./icons";
+import { JoinPrompt } from "./join-prompt";
 import { nameInLine } from "./names";
 import { NodeMark } from "./node-mark";
 import { ScoreSlot } from "@/lib/score/score-slot";
@@ -176,6 +179,8 @@ export function TagFeedCard({
 }) {
   const router = useRouter();
   const applicant = useReaderIsApplicant();
+  const phase = useAuthPhase();
+  const [joinOpen, setJoinOpen] = useState(false);
   const name = topic.name.value ?? "";
   const tag = `#${name}`;
   const href = `/topics/${encodeURIComponent(name)}?from=${from}`;
@@ -295,11 +300,14 @@ export function TagFeedCard({
         <button
           type="button"
           aria-label={TAG_ACT}
-          // An applicant is told on the shell's snackbar, never the wizard
-          // (`reader-state.ts`; the bar's New post, the same door).
-          onClick={() =>
-            applicant ? carrySnackbar(POST_LOCKED) : router.push(`/compose?tag=${encodeURIComponent(name)}`)
-          }
+          // A guest is asked over the read, never bounced (FeedTagShapes.md:29,
+          // GuestGate.md:3); an applicant is told on the shell's snackbar,
+          // never the wizard (`reader-state.ts`; the bar's New post, the same door).
+          onClick={() => {
+            if (phase !== "signedIn") setJoinOpen(true);
+            else if (applicant) carrySnackbar(POST_LOCKED);
+            else router.push(`/compose?tag=${encodeURIComponent(name)}`);
+          }}
           {...testAttributes(part(node, "actionRow.compose"), `${testId}-compose`)}
           className="cg-state cg-focus cg-hit flex flex-none items-center rounded-full border-0 bg-transparent px-2 py-1.5 text-on-surface-variant"
         >
@@ -313,6 +321,9 @@ export function TagFeedCard({
           node={part(node, "actionRow.share")}
         />
       </div>
+      {/* Conditionally mounted, as every card's ask is: `JoinPrompt` draws
+          its own dialog and covers the surface while it stands. */}
+      {joinOpen && <JoinPrompt open onClose={() => setJoinOpen(false)} />}
     </Card>
   );
 }

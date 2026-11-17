@@ -41,6 +41,7 @@ import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.NameInText
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
@@ -201,7 +202,9 @@ fun SettingsRow(
                 modifier = Modifier.dataNode(node?.div("label")),
             )
             if (status != null) {
-                Text(
+                // TEXT THAT WRAPS (NamesLong.md; `SettingsRow.jsx`): a handle
+                // in the status is one unit, whole or end-cut.
+                NameInText(
                     text = status,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -327,7 +330,8 @@ fun ChoiceDot(selected: Boolean, modifier: Modifier = Modifier) {
  */
 @Composable
 fun QuietNote(text: String, modifier: Modifier = Modifier) {
-    Text(
+    // A notice: TEXT THAT WRAPS (NamesLong.md), a handle in it one unit.
+    NameInText(
         text = text,
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,

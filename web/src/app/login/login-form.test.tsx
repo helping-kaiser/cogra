@@ -1,10 +1,11 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { delay } from "msw/utils/delay";
 import { HttpResponse } from "msw/http";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { LogInMutationVariables } from "@/__generated__/graphql";
 import type { DeviceLockEngine } from "@/lib/identity/device-lock";
+import { markSessionEnded } from "@/lib/session/ended-session";
 import { createSecurityNotices } from "@/lib/session/security-notices";
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
@@ -91,9 +92,9 @@ function fakeLeg(
 }
 
 function fillAndSubmit(email = "user@example.com", password = "correct horse battery") {
-  fireEvent.change(screen.getByTestId("login_email"), { target: { value: email } });
-  fireEvent.change(screen.getByTestId("login_password"), { target: { value: password } });
-  fireEvent.click(screen.getByTestId("login_submit"));
+  fireEvent.change(screen.getByTestId("signIn.email.input"), { target: { value: email } });
+  fireEvent.change(screen.getByTestId("signIn.password.input"), { target: { value: password } });
+  fireEvent.click(screen.getByTestId("signIn.commit.action"));
 }
 
 beforeEach(() => {
@@ -104,11 +105,11 @@ beforeEach(() => {
 describe("LoginForm", () => {
   it("gates submit on both fields", () => {
     renderWithProviders(<LoginForm />);
-    const submit = screen.getByTestId("login_submit");
+    const submit = screen.getByTestId("signIn.commit.action");
     expect(submit).toBeDisabled();
-    fireEvent.change(screen.getByTestId("login_email"), { target: { value: "a@b.c" } });
+    fireEvent.change(screen.getByTestId("signIn.email.input"), { target: { value: "a@b.c" } });
     expect(submit).toBeDisabled();
-    fireEvent.change(screen.getByTestId("login_password"), { target: { value: "p" } });
+    fireEvent.change(screen.getByTestId("signIn.password.input"), { target: { value: "p" } });
     expect(submit).toBeEnabled();
   });
 
@@ -169,7 +170,7 @@ describe("LoginForm", () => {
     const setEphemeral = vi.spyOn(identity, "setEphemeral");
     renderWithProviders(<LoginForm identity={identity} />);
     fillAndSubmit();
-    await screen.findByTestId("login_error");
+    await screen.findByTestId("signIn.fault");
     expect(setEphemeral).not.toHaveBeenCalled();
   });
 
@@ -177,28 +178,30 @@ describe("LoginForm", () => {
     server.use(loginRefused);
     renderWithProviders(<LoginForm />);
     fillAndSubmit();
-    expect(await screen.findByTestId("login_error")).toBeInTheDocument();
-    expect(screen.queryByTestId("login_transport_error")).not.toBeInTheDocument();
+    expect(await screen.findByTestId("signIn.fault")).toHaveTextContent(
+      "That email and password don't match.",
+    );
+    expect(screen.queryByText("That didn't send. Try again.")).not.toBeInTheDocument();
   });
 
   it("a refusal stands while typing, until the next press of Sign in", async () => {
     server.use(loginRefused);
     renderWithProviders(<LoginForm />);
     fillAndSubmit();
-    await screen.findByTestId("login_error");
-    fireEvent.change(screen.getByTestId("login_email"), { target: { value: "b@c.d" } });
+    await screen.findByTestId("signIn.fault");
+    fireEvent.change(screen.getByTestId("signIn.email.input"), { target: { value: "b@c.d" } });
     // SignInError.md: typing in either field never takes the line away.
-    expect(screen.getByTestId("login_error")).toHaveTextContent("That email and password don't match.");
-    expect(screen.getByTestId("login_email")).not.toHaveAttribute("aria-invalid");
-    expect(screen.getByTestId("login_password")).not.toHaveAttribute("aria-invalid");
+    expect(screen.getByTestId("signIn.fault")).toHaveTextContent("That email and password don't match.");
+    expect(screen.getByTestId("signIn.email.input")).not.toHaveAttribute("aria-invalid");
+    expect(screen.getByTestId("signIn.password.input")).not.toHaveAttribute("aria-invalid");
   });
 
-  it("keeps transport failures in their own slot", async () => {
+  it("says a transport failure in the same slot, as the no-answer line", async () => {
     server.use(gqlLink.mutation("LogIn", () => HttpResponse.error()));
     renderWithProviders(<LoginForm />);
     fillAndSubmit();
-    expect(await screen.findByTestId("login_transport_error")).toBeInTheDocument();
-    expect(screen.queryByTestId("login_error")).not.toBeInTheDocument();
+    expect(await screen.findByTestId("signIn.fault")).toHaveTextContent("That didn't send. Try again.");
+    expect(screen.getAllByRole("alert")).toHaveLength(1);
   });
 
   it("renders an errors-array rate limit as a backoff, not a connectivity failure", async () => {
@@ -213,10 +216,10 @@ describe("LoginForm", () => {
     );
     renderWithProviders(<LoginForm />);
     fillAndSubmit();
-    expect(await screen.findByTestId("login_error")).toHaveTextContent(
+    expect(await screen.findByTestId("signIn.fault")).toHaveTextContent(
       "Too many tries in a row. Wait a moment, then try again.",
     );
-    expect(screen.queryByTestId("login_transport_error")).not.toBeInTheDocument();
+    expect(screen.queryByText("That didn't send. Try again.")).not.toBeInTheDocument();
   });
 
   describe("the device lock's leg (sign-out-custody §3.5)", () => {
@@ -242,13 +245,13 @@ describe("LoginForm", () => {
       ]);
       const { store } = renderWithProviders(<LoginForm deviceLock={leg} />);
       fillAndSubmit();
-      expect(await screen.findByTestId("login_transport_error")).toHaveTextContent(
+      expect(await screen.findByTestId("signIn.fault")).toHaveTextContent(
         "That didn't send. Try again.",
       );
       expect(store.hasSession()).toBe(false);
       // The fields kept what was typed; Sign in is the retry.
-      expect(screen.getByTestId("login_email")).toHaveValue("user@example.com");
-      fireEvent.click(screen.getByTestId("login_submit"));
+      expect(screen.getByTestId("signIn.email.input")).toHaveValue("user@example.com");
+      fireEvent.click(screen.getByTestId("signIn.commit.action"));
       await waitFor(() => expect(store.hasSession()).toBe(true));
       expect(logins).toBe(1);
       expect(leg.signIn).toHaveBeenCalledTimes(2);
@@ -263,7 +266,7 @@ describe("LoginForm", () => {
       const { store } = renderWithProviders(<LoginForm identity={identity} deviceLock={leg} />);
       fireEvent.click(screen.getByLabelText(/don't remember this account/i));
       fillAndSubmit();
-      await screen.findByTestId("login_transport_error");
+      await screen.findByTestId("signIn.fault");
       expect(leg.signIn).toHaveBeenCalledWith("acct-1", "correct horse battery", "access-1", true);
       expect(store.hasSession()).toBe(false);
       expect(setEphemeral).not.toHaveBeenCalled();
@@ -278,7 +281,7 @@ describe("LoginForm", () => {
       ]);
       renderWithProviders(<LoginForm deviceLock={leg} />);
       fillAndSubmit();
-      await screen.findByTestId("login_transport_error");
+      await screen.findByTestId("signIn.fault");
       fillAndSubmit("user@example.com", "another password");
       await waitFor(() => expect(logins).toBe(2));
     });
@@ -294,9 +297,9 @@ describe("LoginForm", () => {
       ]);
       const { store } = renderWithProviders(<LoginForm notices={notices} deviceLock={leg} />);
       fillAndSubmit();
-      await screen.findByTestId("login_transport_error");
+      await screen.findByTestId("signIn.fault");
       expect(notices.lockLost()).toBe(false);
-      fireEvent.click(screen.getByTestId("login_submit"));
+      fireEvent.click(screen.getByTestId("signIn.commit.action"));
       await waitFor(() => expect(store.hasSession()).toBe(true));
       expect(notices.lockLost()).toBe(true);
     });
@@ -304,7 +307,7 @@ describe("LoginForm", () => {
 
   it("offers the Android app as a download from the served APK path", () => {
     renderWithProviders(<LoginForm />);
-    const link = screen.getByTestId("login_android_apk");
+    const link = screen.getByTestId("signIn.apk");
     expect(link).toHaveAttribute("href", "/downloads/app-debug.apk");
     // `download` keeps the browser from trying to render the binary.
     expect(link).toHaveAttribute("download");
@@ -329,8 +332,66 @@ describe("LoginForm", () => {
   });
 });
 
+// SignInExpired.jsx / SignInExpired.md: a session ended mid-use opens the
+// sign-in itself, with the one calm sentence under the heading.
+describe("the sign-in after a session ended mid-use (SignInExpired)", () => {
+  afterEach(() => window.sessionStorage.clear());
+
+  it("says_youve_been_signed_out_under_the_heading_in_the_secondary_ink", async () => {
+    markSessionEnded();
+    renderWithProviders(<LoginForm />);
+    const body = await screen.findByTestId("signIn.body");
+    expect(body).toHaveTextContent("You've been signed out.");
+    expect(body).toHaveClass("text-on-surface-variant");
+    expect(body).not.toHaveAttribute("role", "alert");
+    // Every control is SignIn's: the fields wait empty, Sign in waits.
+    expect(screen.getByTestId("signIn.commit.action")).toBeDisabled();
+    expect(screen.queryByTestId("signIn.fault")).not.toBeInTheDocument();
+  });
+
+  it("says_the_sentence_once_and_never_on_a_plain_visit", async () => {
+    markSessionEnded();
+    const first = renderWithProviders(<LoginForm />);
+    await screen.findByTestId("signIn.body");
+    first.unmount();
+    renderWithProviders(<LoginForm />);
+    expect(screen.getByTestId("signIn.title")).toBeInTheDocument();
+    expect(screen.queryByTestId("signIn.body")).not.toBeInTheDocument();
+  });
+});
+
 // SignIn.jsx / SignIn.md: the drawn anatomy, line for line.
 describe("the sign-in screen (SignIn)", () => {
+  // nodes.json `SignIn`: every registered path is worn, verbatim.
+  it("wears_every_node_the_registry_names_for_the_board", () => {
+    renderWithProviders(<LoginForm />);
+    for (const path of [
+      "signIn.apk",
+      "signIn.browse",
+      "signIn.commit",
+      "signIn.commit.action",
+      "signIn.email",
+      "signIn.email.input",
+      "signIn.email.label",
+      "signIn.forget",
+      "signIn.forget.box",
+      "signIn.forget.label",
+      "signIn.forgot",
+      "signIn.header",
+      "signIn.header.back",
+      "signIn.invite",
+      "signIn.password",
+      "signIn.password.input",
+      "signIn.password.label",
+      "signIn.password.reveal",
+      "signIn.title",
+    ]) {
+      expect(screen.getByTestId(path)).toBeInTheDocument();
+    }
+    expect(screen.queryByTestId("signIn.fault")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("signIn.body")).not.toBeInTheDocument();
+  });
+
   it("heads with Back to the bare view and the title, with no line under it", () => {
     renderWithProviders(<LoginForm />);
     const back = screen.getByRole("link", { name: "Back" });
@@ -342,11 +403,11 @@ describe("the sign-in screen (SignIn)", () => {
   it("sign_in_stands_disabled_with_its_waiting_line_until_both_fields_hold_a_character", () => {
     renderWithProviders(<LoginForm />);
     expect(screen.getByText("Waiting for your email and password")).toBeInTheDocument();
-    fireEvent.change(screen.getByTestId("login_email"), { target: { value: "a" } });
+    fireEvent.change(screen.getByTestId("signIn.email.input"), { target: { value: "a" } });
     expect(screen.getByText("Waiting for your email and password")).toBeInTheDocument();
-    fireEvent.change(screen.getByTestId("login_password"), { target: { value: "p" } });
+    fireEvent.change(screen.getByTestId("signIn.password.input"), { target: { value: "p" } });
     expect(screen.queryByText("Waiting for your email and password")).not.toBeInTheDocument();
-    expect(screen.getByTestId("login_submit")).toBeEnabled();
+    expect(screen.getByTestId("signIn.commit.action")).toBeEnabled();
   });
 
   it("don't_remember_stands_unticked_and_flips_alone", () => {
@@ -355,7 +416,7 @@ describe("the sign-in screen (SignIn)", () => {
     expect(box).not.toBeChecked();
     fireEvent.click(box);
     expect(box).toBeChecked();
-    expect(screen.getByTestId("login_submit")).toBeDisabled();
+    expect(screen.getByTestId("signIn.commit.action")).toBeDisabled();
   });
 
   it("the_reveal_control_names_what_it_does", () => {
@@ -363,12 +424,12 @@ describe("the sign-in screen (SignIn)", () => {
     const reveal = screen.getByRole("button", { name: "Show password" });
     fireEvent.click(reveal);
     expect(screen.getByRole("button", { name: "Hide password" })).toBeInTheDocument();
-    expect(screen.getByTestId("login_password")).toHaveAttribute("type", "text");
+    expect(screen.getByTestId("signIn.password.input")).toHaveAttribute("type", "text");
   });
 
   it("the_link_stack_reads_in_order_with_its_doors", () => {
     renderWithProviders(<LoginForm />);
-    const rows = ["login_forgot", "login_join", "login_browse", "login_android_apk"].map((id) =>
+    const rows = ["signIn.forgot", "signIn.invite", "signIn.browse", "signIn.apk"].map((id) =>
       screen.getByTestId(id),
     );
     expect(rows.map((row) => row.textContent)).toEqual([
@@ -385,6 +446,37 @@ describe("the sign-in screen (SignIn)", () => {
     ]);
   });
 
+  // SignIn.md: "ALWAYS the screen's ways out refuse a press, undimmed and
+  // unchanged in face, from 200ms after the press of Sign in until its
+  // answer comes".
+  it("the_ways_out_refuse_a_press_from_200ms_after_sign_in_until_the_answer", async () => {
+    let answer: () => void = () => {};
+    server.use(
+      gqlLink.mutation("LogIn", async () => {
+        await new Promise<void>((resolve) => {
+          answer = resolve;
+        });
+        return HttpResponse.error();
+      }),
+    );
+    renderWithProviders(<LoginForm />);
+    const exits = ["signIn.header.back", "signIn.forgot", "signIn.invite", "signIn.browse", "signIn.apk"].map(
+      (id) => screen.getByTestId(id),
+    );
+    const faces = exits.map((exit) => exit.className);
+    fillAndSubmit();
+    for (const exit of exits) expect(exit).not.toHaveAttribute("aria-disabled");
+    expect(await screen.findByText("Signing in…")).toBeInTheDocument();
+    for (const exit of exits) {
+      expect(exit).toHaveAttribute("aria-disabled", "true");
+      expect(fireEvent.click(exit)).toBe(false);
+    }
+    expect(exits.map((exit) => exit.className)).toEqual(faces);
+    answer();
+    expect(await screen.findByTestId("signIn.fault")).toHaveTextContent("That didn't send. Try again.");
+    for (const exit of exits) expect(exit).not.toHaveAttribute("aria-disabled");
+  });
+
   it("sign_in_reads_signing_in_after_200ms_and_never_spins", async () => {
     server.use(
       gqlLink.mutation("LogIn", async () => {
@@ -394,13 +486,13 @@ describe("the sign-in screen (SignIn)", () => {
     );
     renderWithProviders(<LoginForm />);
     fillAndSubmit();
-    const submit = screen.getByTestId("login_submit");
+    const submit = screen.getByTestId("signIn.commit.action");
     // Never within 200ms.
     expect(submit).toHaveTextContent("Sign in");
     await waitFor(() => expect(submit).toHaveTextContent("Signing in…"));
     expect(submit).toBeEnabled();
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
-    expect(await screen.findByTestId("login_transport_error")).toHaveTextContent(
+    expect(await screen.findByTestId("signIn.fault")).toHaveTextContent(
       "That didn't send. Try again.",
     );
   });

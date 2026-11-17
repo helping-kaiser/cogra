@@ -7,10 +7,12 @@ import { cleanup } from "@testing-library/react";
 import { afterEach, beforeEach } from "vitest";
 
 import { resetSeenRecordForTests } from "@/lib/history/seen-record";
+import { safeStorage } from "@/lib/safe-storage";
 import { resetSeenSyncForTests } from "@/lib/history/seen-sync";
 import { resetKeptPicksForTests } from "@/lib/stance/kept-picks";
 import { resetSettlingForTests } from "@/lib/stance/settling";
 import { resetCarriedSnackbarForTests } from "@/lib/ui/carried-snackbar";
+import { resetProfileChangeForTests } from "@/lib/profile/profile-change";
 import { resetAnnouncerForTests } from "@/lib/release/newer-version-announcer";
 import { resetReaderStateForTests } from "@/lib/session/reader-state";
 import { resetClipMemoryForTests } from "@/lib/ui2/media/clip-memory";
@@ -52,6 +54,8 @@ beforeEach(() => {
   resetKeptPicksForTests(() => custody);
   resetSettlingForTests();
   resetCarriedSnackbarForTests();
+  // A profile change one test left signing must not stand under the next head.
+  resetProfileChangeForTests();
 });
 // The newer-version announcer's one read and one decision are per page load:
 // each test is a fresh load.
@@ -59,6 +63,17 @@ beforeEach(resetAnnouncerForTests);
 // The reader's account state is the session's one account read, module state
 // (`reader-state.ts`): an applicant one test staged must not lock the next.
 beforeEach(resetReaderStateForTests);
+// THE SESSION LIVES IN BROWSER STORAGE (`token-store.ts`: the refresh token and
+// the active account in localStorage; `held-link.ts`: the held invite in
+// sessionStorage), and jsdom keeps one storage per test FILE. A session one
+// test saved would otherwise sign in the next test's fresh token store, so a
+// "guest" test ran signed in. Each test starts with both stores empty — the
+// real ones and `safe-storage.ts`'s memory fallback alike. Vitest runs a setup
+// file's hooks around every test of every file (Vitest docs, `setupFiles`).
+beforeEach(() => {
+  safeStorage("local").clear();
+  safeStorage("session").clear();
+});
 
 // jsdom implements no Pointer Events (jsdom#2527), which the stance pad
 // is built on — they are the platform's own unification of mouse, touch,

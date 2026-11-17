@@ -88,7 +88,6 @@ export function ApplicantStatus({
       return approver === null ? null : (
         <TaskCard
           title="Approved — your registration is landing"
-          body={`${approver} approved your application. Nothing is needed from you while it lands.`}
           node={LANDING}
           testId="home_landing"
         />
@@ -170,7 +169,6 @@ function VerifyCard() {
     <TaskCard
       tone="notice"
       title="Verify your email"
-      body="We sent you a verification link — open it to prove this email is yours."
       node={VERIFY}
     >
       <div className="flex items-center justify-between gap-3">

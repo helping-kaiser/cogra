@@ -39,7 +39,7 @@ export const INVITES_EMPTY =
 export const ONLY_ONE_PERSON = "Only one person can use it";
 export const EXPIRES_AFTER = "Expires after";
 export const CREATE_FOOTNOTE =
-  "With it off, anyone holding the link can apply until it expires. Either way each person still needs your approval, one at a time.";
+  "Either way each person still needs your approval, one at a time.";
 /** The fresh link's sheet (InviteCreated.md). */
 export const YOUR_INVITE_LINK = "Your invite link";
 export const SHARE_LINK = "Share link";
@@ -48,7 +48,7 @@ export const SHARE_LINK = "Share link";
 export function approvePadNote(handle: string): readonly [string, string] {
   return [
     `Vouching is the act. Set signs your opinion on ${handle} and brings them in.`,
-    "It is one signed, priced act — and it is theirs to answer: their opinion back completes the pair.",
+    "It is one signed, priced act.",
   ];
 }
 
@@ -81,8 +81,8 @@ export function rejectTitle(handle: string): string {
 
 export function rejectBody(handle: string): readonly [string, string] {
   return [
-    `It leaves your list and ${handle} is told. Their account stays exactly as it is — signed in, and free to keep reading.`,
-    `This is your call and nobody else's. Any member can still vouch them in, and ${handle} gets a link to ask with.`,
+    `It leaves your list and ${handle} is told. Their account stays as it is.`,
+    `Any member can still vouch them in, and ${handle} gets a link to ask with.`,
   ];
 }
 
@@ -113,7 +113,7 @@ export function countWord(count: number): string {
   return COUNT_WORDS[count] ?? String(count);
 }
 
-const ACCOUNTS_STAY = "Their accounts stay exactly as they are — signed in, and free to keep reading.";
+const ACCOUNTS_STAY = "Their accounts stay as they are.";
 
 /**
  * The row's two sentences, in the count's English (RejectAllConfirm.md:7-9,
@@ -126,13 +126,13 @@ export function rejectAllBody(count: number): readonly [string, string] {
   if (count <= 2) {
     return [
       `Both leave your list and both people are told. ${ACCOUNTS_STAY}`,
-      "This is your call and nobody else's. Any member can still vouch either of them in, and each gets a link to ask with.",
+      "Any member can still vouch either of them in, and each gets a link to ask with.",
     ];
   }
   const n = countWord(count);
   return [
     `All ${n} leave your list and all ${n} people are told. ${ACCOUNTS_STAY}`,
-    "This is your call and nobody else's. Any member can still vouch any of them in, and each gets a link to ask with.",
+    "Any member can still vouch any of them in, and each gets a link to ask with.",
   ];
 }
 

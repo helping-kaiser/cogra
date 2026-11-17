@@ -50,7 +50,7 @@ export function HeaderBar({
    * focus, so no keyboard rises.
    */
   focusTitle?: boolean;
-  /** The stage's name ("Last step"), set before the help slot as the master orders them. */
+  /** The stage's name ("Video only" on the cover), set before the help slot as the master orders them. */
   stageLabel?: string;
   // A screen with no way back — the recovery-code trap — simply passes none,
   // and the slot collapses rather than rendering a dead control.

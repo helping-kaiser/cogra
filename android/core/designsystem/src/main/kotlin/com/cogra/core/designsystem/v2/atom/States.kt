@@ -14,6 +14,7 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.NameInText
 import com.cogra.core.designsystem.R
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.token.Space
@@ -98,7 +99,9 @@ fun EmptyState(
             .padding(vertical = Space.x2),
         verticalArrangement = Arrangement.spacedBy(Space.x3),
     ) {
-        Text(
+        // A notice: TEXT THAT WRAPS (NamesLong.md), so `No opinions by @x yet.`
+        // keeps the handle and its stop one unit.
+        NameInText(
             text = title,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

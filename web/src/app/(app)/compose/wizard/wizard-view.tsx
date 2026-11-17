@@ -24,7 +24,12 @@ import { PillButton } from "@/lib/ui2/pill-button";
 import { preparePost } from "@/lib/api/content-api";
 import { fetchDefaultLicense } from "@/lib/api/settings-api";
 import { isPublicDomain } from "@/lib/license";
-import { sealFaultOf, type SealFault } from "@/lib/compose/seal-fault";
+import {
+  sealFaultOf,
+  sealFaultOfOutcome,
+  sealFaultOfResults,
+  type SealFault,
+} from "@/lib/compose/seal-fault";
 import { SLOW_NETWORK_MS, useSlowAnswer, useWaitedPast } from "@/lib/ui2/waiting-commit";
 import { fetchReferenceCandidates } from "@/lib/api/references-api";
 import { newReferenceDraft } from "@/lib/references/draft";
@@ -62,7 +67,7 @@ import {
 } from "@/lib/compose/wizard";
 import { captureFrames, captureFrameZero, probeVideo } from "@/lib/ui2/media/video";
 import { newComposeId } from "@/lib/compose/ids";
-import { POST_SCALE, screenPick, type PickRefusal } from "@/lib/compose/pick";
+import { holdBytes, POST_SCALE, screenPick, type PickRefusal } from "@/lib/compose/pick";
 import {
   composeDraftStore,
   draftIsWorthKeeping,
@@ -741,7 +746,7 @@ export function ComposeWizard({
     );
     if (graphIds.kind !== "success") {
       setBusy(false);
-      setFault({ kind: "offline" });
+      setFault(sealFaultOfOutcome(graphIds));
       return;
     }
 
@@ -764,7 +769,7 @@ export function ComposeWizard({
 
     if (prepared.kind === "failed") {
       setBusy(false);
-      setFault({ kind: "offline" });
+      setFault(sealFaultOfOutcome(prepared));
       return;
     }
     if (prepared.kind === "refused") {
@@ -837,12 +842,7 @@ export function ComposeWizard({
       router.push("/feed?compose=expired");
       return;
     }
-    const refused = results.find((result) => result.kind === "refused");
-    setFault(
-      refused !== undefined && refused.kind === "refused"
-        ? sealFaultOf(refused.errors, state.references)
-        : { kind: "offline" },
-    );
+    setFault(sealFaultOfResults(results, state.references));
   };
 
   // ---- rendering -----------------------------------------------------------
@@ -1005,12 +1005,10 @@ export function ComposeWizard({
         }}
         // The seal board's `?` (`HelpDot`), opening the house help dialog with
         // copy-voice's "How signing works". One `?` per screen, so only the
-        // seal carries one — beside its stage's name, "Last step".
+        // seal carries one, alone: the seal has no stage label (seam 314).
         // The stage's name in the header's own slot (WizardHeader's
-        // `stageLabel`): the seal's "Last step", the cover's "Video only".
-        stageLabel={
-          state.step === "seal" ? "Last step" : state.step === "cover" ? "Video only" : undefined
-        }
+        // `stageLabel`): only the cover's "Video only".
+        stageLabel={state.step === "cover" ? "Video only" : undefined}
         help={
           state.step === "seal" ? (
             <HelpDot
@@ -1077,21 +1075,6 @@ export function ComposeWizard({
         />
       )}
 
-      {/* The other way out of the offer, said rather than drawn: the pick screen
-          below is already the way to start fresh, so this names it instead of
-          adding a second control that would compete with Continue. Discarding
-          is the card's own affordance and the only route to it. */}
-      {offered !== null && (
-        <div className="flex flex-none items-center gap-2 px-6 py-2">
-          <p
-            data-testid="wizard-draft-fresh"
-            className="m-0 flex-1 text-body-medium text-on-surface-variant"
-          >
-            Or start fresh —
-          </p>
-        </div>
-      )}
-
       {state.step === "pick" && (
         // CW-42 (ComposeDraft.jsx): while the draft offer shows, the pick
         // step underneath is present, clearly not the subject, and the
@@ -1118,7 +1101,6 @@ export function ComposeWizard({
             error={gate.ok ? null : gate.reason}
             blocked={!gate.ok}
             coverSrc={coverPreview}
-            vertical={skipsCoverStep(state)}
             durationMs={durationMs}
             clipFace={clipFace}
             onWords={(words) => dispatch({ type: "words", words })}
@@ -1154,7 +1136,7 @@ export function ComposeWizard({
           previews={previews}
           shape={state.shape}
           focused={state.focused}
-          onShape={(shape, frameWidth) => dispatch({ type: "shape", shape, frameWidth })}
+          onShape={(shape, stageWidth) => dispatch({ type: "shape", shape, stageWidth })}
           onFocus={(index) => dispatch({ type: "focus", index })}
           onCrop={(id, crop) => dispatch({ type: "crop", id, crop })}
           onNext={() => dispatch({ type: "advance" })}
@@ -1177,7 +1159,13 @@ export function ComposeWizard({
             const frame = frames[index];
             if (frame) chooseCover(frame, index);
           }}
-          onPickPicture={(file) => chooseCover(file, COVER_FROM_PICTURE)}
+          // The face joins as its own bytes, as a picked picture does
+          // (`holdBytes`): its upload, and every Retry of it, reads those.
+          // A handle that reads nothing even now goes on as it is, and its
+          // upload says so with Retry.
+          onPickPicture={(file) =>
+            void holdBytes(file).then((held) => chooseCover(held ?? file, COVER_FROM_PICTURE))
+          }
           onNext={() => dispatch({ type: "advance" })}
         />
       )}
@@ -1398,7 +1386,7 @@ export function ComposeWizard({
         <DialogSurface
           title="Discard your draft?"
           body={[
-            "Picking pictures starts a new post, and this draft is what stands in the way. Discarding is the only thing that loses it.",
+            "Picking pictures starts a new post.",
           ]}
           onDismiss={() => setAskingDraft(false)}
           testId="wizard-draft-discard-ask"
