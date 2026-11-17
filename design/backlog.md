@@ -6362,12 +6362,14 @@ ruling; the question is whether the closed pad's wait takes the ring too.
 
 Closed by round 51, act 2 (jakob 2026-11-17, B4 as recommended): a pad or a dialog over it closed while it signs waits as a hold does — the closed ring, `Signing…` spoken only, no line; the failure keeps its line. One vehicle in the master (`StanceControl`'s `busy` with the pad closed draws as `held`). The other after-Close lines — a profile change under the head, an edit, a post or a reply where it lands, the kept picks' batch — are not this ruling.
 
-### 254 · A Cite composer opened while a draft is kept · *design* · **filed 2026-11-17**
+### 254 · A Cite composer opened while a draft is kept · *design* · **filed 2026-11-17** · **closed 2026-11-17**
 
 Round 51 (no draft for an untouched composer). `ComposeDraft` keeps one draft
 per target, and `Cite in a new post` opens the wizard "fresh at its first
 stage". Whether an earlier draft survives a Cite or Mention composer that is
 left untouched — or the draft card meets the reader first — is not written.
+
+Closed by round 51, act 2 (jakob 2026-11-17, B5 as recommended, his addition: opening the wizard from Cite or Mention "is just like another door to the wizard"): a kept draft stays as it was when a Cite or Mention composer is left untouched; the doors are written as doors (`ComposeDraft`). What happens when such a door opens over a kept draft is backlog 256.
 
 ### 255 · The report sheet carries its failure on the snackbar · *design* · **filed 2026-11-17**
 
@@ -6377,3 +6379,14 @@ of 2026-10-12 (copy-voice, `Report`). The rule puts a small sheet's failure in
 the sheet, its commitment reading `Retry`, the words by the answer, and
 `NetworkError` says a failure is never carried on the snackbar. Round 51 changed
 only the signing hosts and left it: (a) as drawn; (b) the rule's dialog shape.
+
+### 256 · A Cite or Mention door opened over a kept draft · *design* · **filed 2026-11-17**
+
+Round 51, act 2 (jakob 2026-11-17, B5: Cite and Mention are "just like another door to the wizard"). From New
+post, a kept draft's card leads the pick step (`ComposeDraft`); the Cite and Mention edges say the wizard "opens
+fresh at its first stage" with the reference riding along (graph, every `Cite in a new post` edge;
+`ComposePick.md`). The tree does not say which wins when a draft is kept, nor where the reference goes. Options:
+(a) the draft card leads, as from New post; `Continue` resumes the draft and the reference joins it, staged
+among its references; `Discard` starts fresh with the reference riding; (b) the draft card leads; the reference
+rides only a fresh start, and `Continue` resumes the draft without it; (c) the door opens fresh as its edge
+says, the kept draft waiting untouched behind it.
