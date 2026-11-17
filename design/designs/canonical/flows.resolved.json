@@ -1982,13 +1982,18 @@
         "FeedRemovedMenuOwn",
         "HistoryCommentMenu",
         "HistoryCommentMenuOwn",
+        "HistoryCommentRemovedMenuOwn",
         "HistoryPostMenu",
         "HistoryPostMenuOwn",
+        "HistoryRemovedMenu",
+        "HistoryRemovedMenuOwn",
         "ProfileCommentsMenu",
         "ProfileCommentsMenuOwn",
         "ProfileCommentsRemovedMenu",
+        "ProfileCommentsRemovedMenuOwn",
         "ProfilePostsMenu",
         "ProfilePostsMenuOwn",
+        "ProfilePostsRemovedMenuOwn",
         "ReaderPostMenu",
         "ReaderPostMenuNarrow",
         "ReelMenu",
@@ -1996,10 +2001,14 @@
         "SavedCommentMenu",
         "SavedCommentMenuOwn",
         "SavedPostMenu",
-        "TagPageMenu"
+        "SavedPostMenuOwn",
+        "SavedRemovedMenu",
+        "SavedRemovedMenuOwn",
+        "TagPageMenu",
+        "TagPageMenuOwn"
       ],
       "steps": [
-        "start · «Cite in a new post» — to ComposePick on 26 boards → ComposePick",
+        "start · «Cite in a new post» — to ComposePick on 35 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -2019,13 +2028,18 @@
         "FeedRemovedMenuOwn",
         "HistoryCommentMenu",
         "HistoryCommentMenuOwn",
+        "HistoryCommentRemovedMenuOwn",
         "HistoryPostMenu",
         "HistoryPostMenuOwn",
+        "HistoryRemovedMenu",
+        "HistoryRemovedMenuOwn",
         "ProfileCommentsMenu",
         "ProfileCommentsMenuOwn",
         "ProfileCommentsRemovedMenu",
+        "ProfileCommentsRemovedMenuOwn",
         "ProfilePostsMenu",
         "ProfilePostsMenuOwn",
+        "ProfilePostsRemovedMenuOwn",
         "ReaderPostMenu",
         "ReaderPostMenuNarrow",
         "ReelMenu",
@@ -2033,7 +2047,11 @@
         "SavedCommentMenu",
         "SavedCommentMenuOwn",
         "SavedPostMenu",
-        "TagPageMenu"
+        "SavedPostMenuOwn",
+        "SavedRemovedMenu",
+        "SavedRemovedMenuOwn",
+        "TagPageMenu",
+        "TagPageMenuOwn"
       ]
     },
     {
@@ -2043,10 +2061,11 @@
       "startsOn": [
         "FeedProfileMenu",
         "HistoryProfileMenu",
-        "ProfileMenu"
+        "ProfileMenu",
+        "SavedProfileMenu"
       ],
       "steps": [
-        "start · «Mention in a new post» — to ComposePick on 3 boards → ComposePick",
+        "start · «Mention in a new post» — to ComposePick on 4 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -2057,7 +2076,8 @@
         "ComposeCited",
         "FeedProfileMenu",
         "HistoryProfileMenu",
-        "ProfileMenu"
+        "ProfileMenu",
+        "SavedProfileMenu"
       ]
     },
     {
@@ -5798,6 +5818,12 @@
       ],
       "endpoint": []
     },
+    "HistoryCommentRemovedMenuOwn": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
     "HistoryEmpty": {
       "flows": [
         "find-nothing-read-yet",
@@ -5855,6 +5881,18 @@
     "HistoryProfileMenu": {
       "flows": [
         "mention-someone"
+      ],
+      "endpoint": []
+    },
+    "HistoryRemovedMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "HistoryRemovedMenuOwn": {
+      "flows": [
+        "cite-a-post"
       ],
       "endpoint": []
     },
@@ -6375,6 +6413,12 @@
       ],
       "endpoint": []
     },
+    "ProfileCommentsRemovedMenuOwn": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
     "ProfileDeleted": {
       "flows": [
         "hide-a-deleted-account",
@@ -6574,6 +6618,12 @@
         "see-who-stands-with-someone",
         "take-a-stance-on-a-post",
         "trace-a-score-to-its-records"
+      ],
+      "endpoint": []
+    },
+    "ProfilePostsRemovedMenuOwn": {
+      "flows": [
+        "cite-a-post"
       ],
       "endpoint": []
     },
@@ -7160,6 +7210,30 @@
       ],
       "endpoint": []
     },
+    "SavedPostMenuOwn": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "SavedProfileMenu": {
+      "flows": [
+        "mention-someone"
+      ],
+      "endpoint": []
+    },
+    "SavedRemovedMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "SavedRemovedMenuOwn": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
     "SavedSearch": {
       "flows": [
         "publish-a-post",
@@ -7477,6 +7551,12 @@
       "endpoint": []
     },
     "TagPageMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "TagPageMenuOwn": {
       "flows": [
         "cite-a-post"
       ],
