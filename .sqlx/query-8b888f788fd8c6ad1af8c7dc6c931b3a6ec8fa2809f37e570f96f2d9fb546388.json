@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE staged_writes\n                     SET state = 'awaiting_pre_sign',\n                         deps = $2,\n                         prepared_epoch = (SELECT last_epoch FROM mirror_epoch_cursor),\n                         updated_at = NOW()\n                     WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8b888f788fd8c6ad1af8c7dc6c931b3a6ec8fa2809f37e570f96f2d9fb546388"
+}
