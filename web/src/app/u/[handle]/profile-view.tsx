@@ -88,6 +88,7 @@ import { useComfortLine } from "@/lib/saved/comfort-line";
 import { useHostSnack } from "@/lib/saved/save-row";
 import { RowLine } from "@/lib/ui/row-line";
 import { useProfileChange, useProfileChangesLanded } from "@/lib/profile/profile-change";
+import { usePicturePick } from "@/app/profile/picture/use-picture-pick";
 import { useSlowAnswer } from "@/lib/ui2/waiting-commit";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { backFor, personOrigin } from "@/lib/ui/back-origin";
@@ -359,6 +360,9 @@ export function ProfileScreen({
   // again and shows the change (Profile.jsx's `change` chip: "Taken, the line
   // goes, the head shows the change").
   const landed = useProfileChangesLanded();
+  // The own avatar's change badge opens the picker, then the picture's crop
+  // and its own seal (Profile.md:47).
+  const picturePick = usePicturePick();
   const landedSeen = useRef(landed);
   useEffect(() => {
     if (landed === landedSeen.current || handle !== null) return;
@@ -587,6 +591,7 @@ export function ProfileScreen({
               // the root this profile did and returns to it as it was opened.
               figuresHref={opinionsHref(handle, "on", openedFrom)}
               own={own}
+              onAvatarChange={own ? picturePick.open : undefined}
               // The handle repeats only where the bar does not carry it: the
               // own root's band carries none.
               showHandle={handle === null}
@@ -688,6 +693,7 @@ export function ProfileScreen({
                 unsave of this person that did not go through. */}
             {comfort !== null && <RowLine state={comfort} testId="profile-row-line" />}
             {own && <ProfileChangeLine />}
+            {own && picturePick.input}
           </div>
           <TabBar
             tabs={CHRONICLE_TABS}

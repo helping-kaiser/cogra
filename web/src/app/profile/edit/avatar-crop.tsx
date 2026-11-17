@@ -11,13 +11,18 @@
 // `crop-output.test.ts` pin. The zoom track stands under it; Next is pinned
 // in the foot; no line says how to move the picture (round 44).
 //
-// THE WAYS OUT (AvatarCrop.md:17-23). This entrance is Change picture on the
-// profile edit, so Next brings the picture back to the edit, to be signed
-// with the fields under one seal — never the picture's own seal. The arrow
-// goes "one stage back, to where the picture was chosen": on the web the
-// picker is the platform's own file dialog, a surface with no screen of its
-// own to return to, so the arrow returns to the edit that opened it, the
-// picture unused. The X leaves the flow, nothing signed.
+// THE WAYS OUT (AvatarCrop.md:17-23) belong to the entrance, so the screen
+// takes them as props. From Change picture on the profile edit, Next brings
+// the picture back to the edit, to be signed with the fields under one seal —
+// never the picture's own seal; from the head's change badge, Next opens the
+// picture's own seal (`AvatarSeal`, `/profile/picture`). The arrow goes "one
+// stage back, to where the picture was chosen": on the web the picker is the
+// platform's own file dialog, a surface with no screen of its own to return
+// to, so the arrow returns to the screen that opened it — the edit or the
+// profile — the picture unused (seam 335, 325-2). The X leaves the flow,
+// nothing signed.
+
+import type { ReactNode } from "react";
 
 import { HeaderBar } from "@/lib/ui2/header-bar";
 import { PillButton } from "@/lib/ui2/pill-button";
@@ -35,17 +40,20 @@ export function AvatarCrop({
   onNext,
   onBack,
   onLeave,
+  problem,
 }: {
   /** The picked picture, as an object URL. */
   src: string;
   crop: Crop;
   onCrop: (next: Crop) => void;
-  /** Hands the framed picture back to the edit. */
+  /** Hands the framed picture on: back to the edit, or to its own seal. */
   onNext: () => void;
-  /** Back to the edit that opened the picker, the picture unused. */
+  /** Back to the screen that opened the picker, the picture unused. */
   onBack: () => void;
   /** Leaves the flow; nothing is signed. */
   onLeave: () => void;
+  /** What stopped Next, standing over it; nothing stands there otherwise. */
+  problem?: ReactNode;
 }) {
   return (
     <main
@@ -64,6 +72,7 @@ export function AvatarCrop({
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-6 pb-4 pt-2">
         <CropFrame src={src} shape="avatar" crop={crop} onChange={onCrop} zoomSlider testId="avatar-crop-frame" />
         <div className="flex-1" />
+        {problem}
         <PillButton testId="avatar-crop-next" full onClick={onNext}>
           Next
         </PillButton>
