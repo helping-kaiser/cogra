@@ -80,6 +80,15 @@ sealed interface RowEdge {
     data class Stance(val point: StancePoint) : RowEdge
 
     /**
+     * A citation's pair (`pairFamily="citation"`, what cites a node): the
+     * twenty faces' glyph, the digits in geek mode — and HEARD AS THE PAIR
+     * ALONE. A stance anchor's word names a feeling about a stance, which a
+     * citation is not (`ReferenceRow.jsx`: "the citation is the one family
+     * the word is withheld from").
+     */
+    data class Citation(val point: StancePoint) : RowEdge
+
+    /**
      * The ADD mark, where the whole row's tap picks (`ReferenceRow`: "a
      * picker's list only ever holds rows still to add, each with the add mark
      * on its edge"): the 20dp `add` glyph, the act's, never a number.
@@ -155,6 +164,12 @@ fun NodeMark(
  * its own screen-reader twin; a face is heard as its word and exact pair).
  *
  * [pending] stacks the settling marker under the edge (`PendingMarker`).
+ *
+ * [removed] IS A NAME THAT WENT (`ReferenceRow.jsx`, seam 248): the row keeps
+ * its place, its mark and its value, its name's place reads the removal mark
+ * in the system's voice — the secondary text colour at the body's weight —
+ * and the row opens nothing, because the name was the page's address: a door
+ * to nowhere is a lie.
  */
 @Composable
 fun ReferenceRow(
@@ -173,14 +188,16 @@ fun ReferenceRow(
      * (TagPicker.md, ReferencePicker.md: "dimmed and takes no tap").
      */
     enabled: Boolean = true,
+    removed: String? = null,
 ) {
     val part: (String) -> DataNode? = { node?.let { n -> DataNode("${n.path}.$it") } }
+    val door = onOpen.takeIf { removed == null }
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.x3),
         modifier = modifier
             .fillMaxWidth()
-            .then(if (onOpen != null) Modifier.clickable(enabled = enabled, onClick = onOpen) else Modifier)
+            .then(if (door != null) Modifier.clickable(enabled = enabled, onClick = door) else Modifier)
             .alpha(if (enabled) 1f else StateTokens.DISABLED)
             .defaultMinSize(minHeight = Layout.TouchTargetMin)
             .then(if (node != null) Modifier.dataNode(node) else Modifier.dataNode(testTag?.let(::DataNode)))
@@ -189,9 +206,13 @@ fun ReferenceRow(
         NodeMark(kind, name, src, Modifier.dataNode(part("mark")))
         Column(Modifier.weight(1f)) {
             Text(
-                text = name,
+                text = removed ?: name,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = if (removed != null) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 // A block in its column, as the master's span is.
@@ -234,7 +255,8 @@ private fun RightEdge(edge: RowEdge?, pending: Boolean, part: (String) -> DataNo
             Column(horizontalAlignment = Alignment.End, modifier = Modifier.dataNode(part("value"))) {
                 when (edge) {
                     is RowEdge.Value -> Text(edge.value, style = MaterialTheme.typography.bodySmall, color = quiet)
-                    is RowEdge.Stance -> StanceEdge(edge.point)
+                    is RowEdge.Stance -> StanceEdge(edge.point, spokenWord = true)
+                    is RowEdge.Citation -> StanceEdge(edge.point, spokenWord = false)
                     else -> Unit
                 }
                 if (pending) {
@@ -249,12 +271,16 @@ private fun RightEdge(edge: RowEdge?, pending: Boolean, part: (String) -> DataNo
     }
 }
 
-/** The face, and its digits only while the reader asked for exact values (geek mode). */
+/**
+ * The face, and its digits only while the reader asked for exact values (geek
+ * mode). Heard the same in both paintings: the face's word and the exact pair
+ * for a stance, the exact pair alone for a citation ([spokenWord] false).
+ */
 @Composable
-private fun StanceEdge(point: StancePoint) {
+private fun StanceEdge(point: StancePoint, spokenWord: Boolean) {
     val readout = bundleReadout(point)
-    // Heard the same in both paintings: the face's word and the exact pair.
-    val spoken = "${stringResource(readout.label)}, ${point.pair()}"
+    val word = stringResource(readout.label)
+    val spoken = if (spokenWord) "$word, ${point.pair()}" else point.pair()
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.x1),
