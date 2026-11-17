@@ -61,7 +61,6 @@ import { StancePad } from "@/lib/ui2/compose/stance-pad";
 import { UploadStatusLine } from "@/lib/ui2/compose/upload-notice";
 import { LicenseRows } from "@/lib/ui/license-rows";
 import { TransportError } from "@/lib/ui/transport-error";
-import { NOT_THROUGH_LINE } from "@/lib/ui/error-messages";
 import type { SealFault } from "@/lib/compose/seal-fault";
 // The one sentence per noun a refused citation reads, shared with the post
 // seal and the comment edit rather than spelled a third time.
@@ -405,12 +404,12 @@ export function ReplySealStep({
       ) : fault?.kind === "offline" || fault?.kind === "notThrough" ? (
         // NO ANSWER REACHED THE SEAL (ReplySeal.md:19; `NetworkError`'s foot):
         // the fault line and an outlined Retry take the commit's place, over
-        // the same way back. The rows above say what they said. A FORBIDDEN
-        // answer takes the same foot in its own line (NetworkError.md:13).
+        // the same way back. The rows above say what they said. An answered
+        // fault of the whole act takes the same foot in its own line (NetworkError.md:13-19).
         <div className="flex flex-col gap-2">
           <TransportError
             testId="reply-transport-error"
-            message={fault.kind === "offline" ? REPLY_OFFLINE_LINE : NOT_THROUGH_LINE}
+            message={fault.kind === "offline" ? REPLY_OFFLINE_LINE : fault.line}
           />
           <PillButton testId="reply-retry" variant="outlined" full onClick={onRetry}>
             Retry
