@@ -16,6 +16,7 @@ import {
   fetchProfileFigures,
   fetchProfilePosts,
   mediaField,
+  prepareAvatarChange,
   prepareProfileUpdate,
   PROFILE_PAGE_SIZE,
   rowLabel,
@@ -522,5 +523,38 @@ describe("prepareProfileUpdate", () => {
     expect(outcome.kind).toBe("refused");
     if (outcome.kind !== "refused") return;
     expect(outcome.errors[0]?.field).toEqual(["websiteUrl"]);
+  });
+});
+
+describe("prepareAvatarChange", () => {
+  it("stages the picture alone: every text field absent from the input", async () => {
+    let input: Record<string, unknown> | undefined;
+    server.use(
+      gqlLink.mutation("PrepareProfileUpdate", ({ variables }) => {
+        input = (variables as { input: Record<string, unknown> }).input;
+        return HttpResponse.json({
+          data: {
+            prepareProfileUpdate: {
+              __typename: "PrepareProfileUpdatePayload",
+              writes: [
+                {
+                  __typename: "StagedWrite",
+                  id: "sw-2",
+                  family: "REGISTRATION",
+                  canonicalProposal: "AA==",
+                  gcAfterEpochs: 3,
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const outcome = await prepareAvatarChange(client(), { mediaId: "m-1" });
+    expect(outcome.kind).toBe("success");
+    // Omitted = untouched (api-spec.md "Content authoring"): the wire carries
+    // the avatar's key and no other, never a null that would clear.
+    expect(input).toEqual({ avatarMediaId: "m-1" });
   });
 });
