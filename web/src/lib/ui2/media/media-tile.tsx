@@ -132,13 +132,12 @@ export function MediaTile({
   const reserved = ratio ?? (isVideo && !probedRatio ? PORTRAIT_CAP : tileRatio(sourceRatio));
   const objectFit = fit ?? fitFor();
   const alt = altText ?? "";
-  // AN EXPLICIT `ratio` NAMES A FIXED FRAME — the comment scale's 220px
-  // square, the gallery's secondary squares — and that frame is capped in
-  // both axes at once: `aspect-ratio` with a definite `width: 100%` lets a
-  // `max-height` take its bite out of the height alone, so bounding the
-  // WIDTH by what the cap allows at this ratio (`max-width: calc(<cap> *
-  // <ratio>)`) is what keeps the box the shape it was told to be, at the
-  // cost of narrowing on a short viewport.
+  // AN EXPLICIT `ratio` NAMES A FIXED FRAME — the comment scale — and it is
+  // the master's frame exactly (`MediaAttachment.jsx`: `aspectRatio`,
+  // `width: 100%`, `maxHeight`; the built boards carry `aspect-ratio:1 / 1;
+  // width:100%;max-height:220px`). With a definite `width: 100%` the cap takes
+  // its bite out of the HEIGHT alone: the frame keeps the column's width and
+  // the media fills it. It is never narrowed to keep the ratio.
   //
   // THE DEFAULT FRAME CARRIES NO SUCH CAP. Its ratio comes from `tileRatio`,
   // already clamped at the 4:5 portrait bound, so nothing it reserves is
@@ -152,10 +151,6 @@ export function MediaTile({
     ? {
         aspectRatio: cssRatio(reserved),
         maxHeight,
-        maxWidth: `calc(${maxHeight} * ${reserved})`,
-        // The tile no longer always fills its column, so it has to say where
-        // it sits: centred, like every other capped surface in the app.
-        marginInline: "auto",
         borderRadius: radius,
       }
     : {

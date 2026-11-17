@@ -75,3 +75,32 @@ describe("CommentFeedCard's target line, at the longest handle", () => {
     expectLineYieldsHandle(target, `@${LONG_HANDLE}`, "'s comment");
   });
 });
+
+// FeedCommentShapes: the card's own pictures are the registered
+// `feed.commentCard.media` and each picture its `frame` (nodes.json), and the
+// frame is the board's — the column's width, capped at 220px tall.
+describe("CommentFeedCard's media", () => {
+  it("wears the registered media node, its frame at the board's full-width cap", () => {
+    const comment = profileComment("c1", {
+      attachments: [
+        { id: "m1", url: "/media/m1", altText: null, status: "NORMAL", mimeType: "image/webp", options: { aspectRatio: "1:1" } },
+      ],
+    }) as unknown as CommentFeedView;
+    renderWithProviders(
+      <CommentFeedCard
+        comment={comment}
+        shape="thread"
+        from="feed"
+        testId="card"
+        node={{ path: "feed.commentCard", key: "c1" }}
+        onNotify={() => {}}
+        onLinkCopied={() => {}}
+      />,
+    );
+    const media = screen.getByTestId("feed.commentCard.media");
+    const frame = media.querySelector('[data-testid="feed.commentCard.media.frame"]') as HTMLElement;
+    expect(frame).not.toBeNull();
+    expect(frame.style.maxHeight).toBe("220px");
+    expect(frame.style.maxWidth).toBe("");
+  });
+});
