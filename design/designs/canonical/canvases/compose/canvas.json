@@ -19,6 +19,15 @@
       "page": "compose"
     },
     {
+      "file": "ComposeCropShort.dc.html",
+      "title": "Compose · the crop, a short wide window",
+      "x": 480,
+      "y": 5300,
+      "w": 672,
+      "h": 720,
+      "page": "compose"
+    },
+    {
       "file": "ComposeCover.dc.html",
       "title": "Compose · the video's face",
       "x": 960,
@@ -581,7 +590,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 5140,
+      "h": 5270,
       "page": "media",
       "title": "Media · flow map"
     },

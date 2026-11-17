@@ -1511,6 +1511,7 @@
         "commentEdit.gate": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "commentEdit.sign": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "commentEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "commentEdit.video.cover": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "commentEdit.video.describeRow": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "commentEdit.video.thumb": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "commentEdit.video.uploadError": "the clip chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
@@ -1577,6 +1578,12 @@
         "commentEdit.tags.withdrawn.undo": [],
         "commentEdit.target": [],
         "commentEdit.video": [],
+        "commentEdit.video.cover": [
+          "picked",
+          "picked-cover",
+          "failed",
+          "second"
+        ],
         "commentEdit.video.describeRow": [
           "picked",
           "picked-cover",
@@ -2681,6 +2688,33 @@
         "composeCrop.zoom.input": []
       }
     },
+    "ComposeCropShort": {
+      "prefix": "composeCrop",
+      "keys": {
+        "composeCrop.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)"
+      },
+      "nodes": {
+        "composeCrop.header": [],
+        "composeCrop.header.back": [],
+        "composeCrop.header.leave": [],
+        "composeCrop.header.title": [],
+        "composeCrop.howTo": [],
+        "composeCrop.next": [],
+        "composeCrop.pictures": [],
+        "composeCrop.pictures.thumb": [
+          "1",
+          "2",
+          "3"
+        ],
+        "composeCrop.shapes": [],
+        "composeCrop.shapes.squareChip": [],
+        "composeCrop.shapes.tallChip": [],
+        "composeCrop.shapes.wideChip": [],
+        "composeCrop.viewport": [],
+        "composeCrop.zoom": [],
+        "composeCrop.zoom.input": []
+      }
+    },
     "ComposeDetails": {
       "prefix": "composeDetails",
       "keys": {
@@ -3465,7 +3499,8 @@
       "prefix": "postEdit",
       "keys": {
         "postEdit.acts": "the upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
-        "postEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+        "postEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postEdit.video.cover": "the upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "postEdit.acts": [
@@ -3522,6 +3557,10 @@
         "postEdit.title.input": [],
         "postEdit.title.label": [],
         "postEdit.video": [],
+        "postEdit.video.cover": [
+          "none",
+          "uploading"
+        ],
         "postEdit.video.describeRow": [],
         "postEdit.video.describeRow.count": [],
         "postEdit.video.describeRow.describe": [],

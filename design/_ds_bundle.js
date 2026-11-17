@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CROP_ZOOM_MIN","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_MAX","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_PAN_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropZoom","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"GlyphAction","sourcePath":"components/content/GlyphAction.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_SUMMARY","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FIELD_KINDS","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"DetailClip","sourcePath":"components/media/DetailClip.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelPlate","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailScore","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE_SIGN","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedPeopleRows","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterFoot","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_RING","sourcePath":"components/people/ActorChip.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"UNHIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"NameInText","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"EMPTY_SIGN_WORDS","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"EmptySignConfirm","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_FIELD_HEIGHT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_DETENT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AttachmentPad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"WRITE_RULE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_WITHDRAWN_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_LANDING_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SETTLE_MS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"CURRENT_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BACKING_AFTER_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BORROWED_KEPT_LINE","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"8025e1ea9a4d","components/compose/ActsFooter.jsx":"3fb19573d483","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"182449d7762c","components/compose/CropViewport.jsx":"8bc892b62d49","components/compose/DescribeSheet.jsx":"ead574ef5e67","components/compose/MediaThumb.jsx":"865b8cf5fa29","components/compose/PickPrompt.jsx":"0421be0cfaa4","components/compose/PickTray.jsx":"8beb709fdb74","components/compose/PickedRow.jsx":"b1212a429566","components/compose/PickedSheet.jsx":"4ec491abbf37","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"7b60d0e194f1","components/compose/StagedReference.jsx":"2d9e849083b5","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"fbb646ecfc48","components/compose/UploadNotice.jsx":"d1d3933a7955","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"870e15c758ce","components/content/CommentCard.jsx":"6d58c1f1c05a","components/content/GlyphAction.jsx":"745850320ac1","components/content/OverflowMenu.jsx":"ee04b6702101","components/content/PostCard.jsx":"42b059231922","components/content/ReferenceRow.jsx":"433144561933","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"77046da6d778","components/content/TopicsLine.jsx":"8bab72cbe7be","components/core/BottomSheet.jsx":"53c440dc4ace","components/core/Button.jsx":"a8359b22860b","components/core/Card.jsx":"aad4dcc1a89a","components/core/Chip.jsx":"3a76fec8d90a","components/core/ContentRow.jsx":"8d85839a7f0d","components/core/FactRow.jsx":"7196fc76f42d","components/core/HelpDot.jsx":"e6633ace8617","components/core/JoinPrompt.jsx":"ac03f38b4939","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"92067c4e71ba","components/core/QuotedRow.jsx":"0f48f27cde18","components/core/SectionLabel.jsx":"596e97d7ab5d","components/core/SettingsRow.jsx":"2485883d47d0","components/core/Snackbar.jsx":"eaf33cd3329f","components/forms/Checkbox.jsx":"3180057f58c7","components/forms/LicenseChooser.jsx":"10c89ad52c01","components/forms/PasswordField.jsx":"afed26cbc07c","components/forms/RecoveryCode.jsx":"34a651073c95","components/forms/SearchBar.jsx":"9fe2b8d63528","components/forms/TextField.jsx":"e8101b30e26e","components/honesty/NoticePanel.jsx":"c3b0521519c4","components/honesty/PendingMarker.jsx":"f7be64bd7cbd","components/honesty/SensitiveVeil.jsx":"537105aac115","components/honesty/TransportError.jsx":"acbff9ddcc19","components/media/DetailClip.jsx":"f125292ccbf5","components/media/MediaAttachment.jsx":"f024bff628d3","components/media/MediaViewer.jsx":"9af2c373ed8f","components/media/ReelCaption.jsx":"3c11114af147","components/media/ReelRail.jsx":"7d2c7682b3d7","components/media/VideoControls.jsx":"cf8d7e6bf12a","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"d032ff0d8012","components/navigation/BottomNav.jsx":"f78daac8f6e5","components/navigation/CograBand.jsx":"561da982a156","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"fbefb06fed14","components/navigation/FeedFilter.jsx":"315bdb9c5a02","components/navigation/Icon.jsx":"d3d56ec1f2af","components/navigation/OrderSection.jsx":"7a1451d8c6eb","components/navigation/PageHeader.jsx":"cca3f47af811","components/navigation/SegmentedFilter.jsx":"2ed79a7fda3f","components/navigation/TabBar.jsx":"05778c8415f3","components/people/ActorChip.jsx":"aa51b62e9b79","components/people/ProfileHeader.jsx":"7fbab6faa50b","components/people/StanceRow.jsx":"600d1f20b059","components/proposed/ExplainableNumber.jsx":"8f40fa8530e8","components/stance/EmptySignConfirm.jsx":"05f4eb334b04","components/stance/SeveranceConfirm.jsx":"e7fc86215414","components/stance/StanceAlternates.jsx":"c0f8d00e4237","components/stance/StanceControl.jsx":"80059c3654b8","components/stance/StancePad.jsx":"ffb7a2b6ab15","components/stance/StanceReadout.jsx":"6ba270306254","components/stance/StanceSlider.jsx":"a432f68b7a15","components/states/ComingSoonCard.jsx":"68d6b017a75e","components/states/EmptyState.jsx":"ee17e47230be","components/wallet/EarnedChart.jsx":"35896e97b452","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"df9591e83c28","components/wallet/WalletBalance.jsx":"5c0847c535ef","components/wallet/WashCard.jsx":"75438d50d294","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"attachmentLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"licenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nameFitSize","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"nameInLine","sourcePath":"components/people/ActorChip.jsx"},{"name":"nameInText","sourcePath":"components/people/ActorChip.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"sensitiveSourceLine","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"snapAttachment","sourcePath":"components/stance/StancePad.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagUnreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"triggerName","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"unreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"unreachableHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"useModalFocus","sourcePath":"components/core/BottomSheet.jsx"},{"name":"useSettled","sourcePath":"components/stance/StanceReadout.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CHANGE_COVER_NAME","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CoverTile","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CROP_ZOOM_MIN","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_MAX","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_PAN_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropZoom","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"GlyphAction","sourcePath":"components/content/GlyphAction.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_SUMMARY","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FIELD_KINDS","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"DetailClip","sourcePath":"components/media/DetailClip.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelPlate","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailScore","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE_SIGN","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedPeopleRows","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterFoot","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_RING","sourcePath":"components/people/ActorChip.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"UNHIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"NameInText","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"EMPTY_SIGN_WORDS","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"EmptySignConfirm","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_FIELD_HEIGHT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_DETENT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AttachmentPad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"WRITE_RULE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_WITHDRAWN_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_LANDING_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SETTLE_MS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"CURRENT_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BACKING_AFTER_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BORROWED_KEPT_LINE","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"8025e1ea9a4d","components/compose/ActsFooter.jsx":"3fb19573d483","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"2eb85b998f83","components/compose/CropViewport.jsx":"d4bd47849636","components/compose/DescribeSheet.jsx":"ead574ef5e67","components/compose/MediaThumb.jsx":"27799095f315","components/compose/PickPrompt.jsx":"0421be0cfaa4","components/compose/PickTray.jsx":"8beb709fdb74","components/compose/PickedRow.jsx":"b1212a429566","components/compose/PickedSheet.jsx":"4ec491abbf37","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"7b60d0e194f1","components/compose/StagedReference.jsx":"2d9e849083b5","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"fbb646ecfc48","components/compose/UploadNotice.jsx":"d1d3933a7955","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"870e15c758ce","components/content/CommentCard.jsx":"6d58c1f1c05a","components/content/GlyphAction.jsx":"745850320ac1","components/content/OverflowMenu.jsx":"ee04b6702101","components/content/PostCard.jsx":"42b059231922","components/content/ReferenceRow.jsx":"433144561933","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"77046da6d778","components/content/TopicsLine.jsx":"8bab72cbe7be","components/core/BottomSheet.jsx":"53c440dc4ace","components/core/Button.jsx":"a8359b22860b","components/core/Card.jsx":"aad4dcc1a89a","components/core/Chip.jsx":"3a76fec8d90a","components/core/ContentRow.jsx":"8d85839a7f0d","components/core/FactRow.jsx":"7196fc76f42d","components/core/HelpDot.jsx":"e6633ace8617","components/core/JoinPrompt.jsx":"ac03f38b4939","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"92067c4e71ba","components/core/QuotedRow.jsx":"0f48f27cde18","components/core/SectionLabel.jsx":"596e97d7ab5d","components/core/SettingsRow.jsx":"2485883d47d0","components/core/Snackbar.jsx":"eaf33cd3329f","components/forms/Checkbox.jsx":"3180057f58c7","components/forms/LicenseChooser.jsx":"10c89ad52c01","components/forms/PasswordField.jsx":"afed26cbc07c","components/forms/RecoveryCode.jsx":"34a651073c95","components/forms/SearchBar.jsx":"9fe2b8d63528","components/forms/TextField.jsx":"e8101b30e26e","components/honesty/NoticePanel.jsx":"c3b0521519c4","components/honesty/PendingMarker.jsx":"f7be64bd7cbd","components/honesty/SensitiveVeil.jsx":"537105aac115","components/honesty/TransportError.jsx":"acbff9ddcc19","components/media/DetailClip.jsx":"f125292ccbf5","components/media/MediaAttachment.jsx":"f024bff628d3","components/media/MediaViewer.jsx":"9af2c373ed8f","components/media/ReelCaption.jsx":"3c11114af147","components/media/ReelRail.jsx":"7d2c7682b3d7","components/media/VideoControls.jsx":"cf8d7e6bf12a","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"d032ff0d8012","components/navigation/BottomNav.jsx":"f78daac8f6e5","components/navigation/CograBand.jsx":"561da982a156","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"fbefb06fed14","components/navigation/FeedFilter.jsx":"315bdb9c5a02","components/navigation/Icon.jsx":"d3d56ec1f2af","components/navigation/OrderSection.jsx":"7a1451d8c6eb","components/navigation/PageHeader.jsx":"cca3f47af811","components/navigation/SegmentedFilter.jsx":"2ed79a7fda3f","components/navigation/TabBar.jsx":"05778c8415f3","components/people/ActorChip.jsx":"aa51b62e9b79","components/people/ProfileHeader.jsx":"7fbab6faa50b","components/people/StanceRow.jsx":"600d1f20b059","components/proposed/ExplainableNumber.jsx":"8f40fa8530e8","components/stance/EmptySignConfirm.jsx":"05f4eb334b04","components/stance/SeveranceConfirm.jsx":"e7fc86215414","components/stance/StanceAlternates.jsx":"c0f8d00e4237","components/stance/StanceControl.jsx":"80059c3654b8","components/stance/StancePad.jsx":"ffb7a2b6ab15","components/stance/StanceReadout.jsx":"6ba270306254","components/stance/StanceSlider.jsx":"a432f68b7a15","components/states/ComingSoonCard.jsx":"68d6b017a75e","components/states/EmptyState.jsx":"ee17e47230be","components/wallet/EarnedChart.jsx":"35896e97b452","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"df9591e83c28","components/wallet/WalletBalance.jsx":"5c0847c535ef","components/wallet/WashCard.jsx":"75438d50d294","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"attachmentLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"licenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nameFitSize","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"nameInLine","sourcePath":"components/people/ActorChip.jsx"},{"name":"nameInText","sourcePath":"components/people/ActorChip.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"sensitiveSourceLine","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"snapAttachment","sourcePath":"components/stance/StancePad.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagUnreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"triggerName","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"unreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"unreachableHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"useModalFocus","sourcePath":"components/core/BottomSheet.jsx"},{"name":"useSettled","sourcePath":"components/stance/StanceReadout.jsx"}]} */
 
 (() => {
 
@@ -4156,9 +4156,304 @@ function CitedSheet({
 __ds_scope.CitedSheet = CitedSheet;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/CitedSheet.jsx", error: String((e && e.message) || e) }); }
 
-// components/compose/CoverRow.jsx
+// components/compose/MediaThumb.jsx
 try { (() => {
 const { Icon } = __ds_scope;
+/* The authoring-side picture tile (media slice, 2026-08-31): one thumbnail
+   anatomy for every composer surface — the pick tray, the details row, the
+   Show all sheet, the reply composer, the comment edit. The states it can
+   wear are the whole upload story:
+
+   · `cover` — the "Cover" badge, bottom-left. The first picture is the cover;
+     the badge travels with reorder, never with a separate control. A CLIP'S
+     COVER wears the same badge on a tile of its own beside the clip's
+     (`CoverTile`, round 52), so "Cover" is said one way for a post's first
+     picture and for a clip's face.
+   · `transform` — the picture's framing inside the tile, the way `CoverRow`'s
+     own tiles are framed; a cover tile carries the frame that was chosen.
+   · `coverSrc` — the inset the reply composer's clip tile still names (its
+     law waits on jakob after round 52; every other surface stands the cover
+     beside the clip, `CoverTile`): the frame itself, inset in the
+     bottom-left corner the badge owns. A third of the tile's short side (28px at the least),
+     with a hairline ring, which is what keeps a small frame legible over
+     whatever photograph it lands on. A tile is a picture's or a clip's, so
+     the badge and the mark never meet. `coverTransform` frames what is inside
+     it the way `CoverRow`'s own tiles are framed — a strip of frames is one
+     picture shown several ways, and the mark carries the way that was chosen.
+   · `progress` — the upload ring on a scrim. Upload starts AFTER the crop:
+     the crop happens on the device and only the cropped export is ever
+     uploaded (jakob 2026-08-31 — the original frame can hold what the author
+     never meant to share). A comment's pictures pass the comment's square
+     crop (`ReplyCrop`) and upload from its Next, as a post's do.
+   · `failed` — the picture dims and wears the error badge; the words and the
+     Retry · Remove affordances live beside the row (`UploadErrorLine`), not
+     crammed into 48px.
+   · `onRemove` — the X, top-right, its target grown by cg-hit.
+   · `video` — the composer's video preview: the play disc on a scrim and the
+     duration on the trailing corner, the anatomy `ComposeCover` drew for the
+     post's video (the disc and pill only appear where the tile is big enough
+     to carry them). AUTHORING-SIDE ONLY: a reading surface never draws
+     play/pause — there, presence on screen is the policy.
+
+   A clip's preview at comment scale (the reply composer's, the comment
+   edit's) passes `width`/`height` and `fit="contain"` so the whole frame
+   shows inside the tile. A comment's pictures are squares, so their tiles
+   are square, filled.
+
+   THE NEUTRAL TILE (video-cover round, 2026-09-10) is the sourceless state:
+   where a clip yields no still at all — extraction came back with nothing —
+   the tile reserves its space and `label` says what belongs there, the way
+   `MediaAttachment`'s reserved region does. Never invent imagery: a clip with
+   no face shows the absence rather than a borrowed picture. */
+
+function Ring({
+  progress,
+  size = 26
+}) {
+  const r = 12;
+  const c = 2 * Math.PI * r;
+  return /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 28 28",
+    width: size,
+    height: size,
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: "14",
+    cy: "14",
+    r: r,
+    fill: "none",
+    stroke: "rgba(255,255,255,0.35)",
+    strokeWidth: "3"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "14",
+    cy: "14",
+    r: r,
+    fill: "none",
+    stroke: "#ffffff",
+    strokeWidth: "3",
+    strokeLinecap: "round",
+    strokeDasharray: `${Math.max(0.02, Math.min(1, progress)) * c} ${c}`,
+    transform: "rotate(-90 14 14)"
+  }));
+}
+function MediaThumb({
+  src,
+  alt = "",
+  size = 48,
+  width,
+  height,
+  fit = "cover",
+  radius = "var(--radius-small)",
+  cover = false,
+  transform,
+  coverSrc,
+  coverTransform,
+  progress,
+  failed = false,
+  video = false,
+  duration,
+  label,
+  onRemove,
+  removeLabel = "Remove this picture",
+  node,
+  nodeKey
+}) {
+  const w = width ?? size;
+  const h = height ?? size;
+  const edge = Math.min(w, h);
+  const disc = Math.max(20, Math.min(56, Math.round(edge * 0.26)));
+  /* The disc rides a scrim over a frame. With no frame the tile IS the
+     absence, and a play control drawn on nothing reads as chrome — the
+     duration stays, because the clip's length is known either way. */
+  const playable = video && src && !failed && typeof progress !== "number";
+  /* The cover mark scales with the tile so it reads the same on the tray's
+     114×64 and on a larger one, and never falls under its own floor. */
+  const coverMark = Math.max(28, Math.round(edge / 3));
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      width: `${w}px`,
+      height: `${h}px`,
+      borderRadius: radius,
+      overflow: "hidden",
+      flex: "none",
+      background: "var(--surface-container-high)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center"
+    },
+    "data-node": node,
+    "data-node-key": nodeKey
+  }, src && /*#__PURE__*/React.createElement("img", {
+    src: src,
+    alt: alt,
+    "aria-hidden": alt ? undefined : "true",
+    style: fit === "contain" ? {
+      maxWidth: "100%",
+      maxHeight: "100%",
+      display: "block",
+      opacity: failed ? 0.5 : 1
+    } : transform ? {
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+      display: "block",
+      opacity: failed ? 0.5 : 1,
+      transform
+    } : {
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+      display: "block",
+      opacity: failed ? 0.5 : 1
+    }
+  }), !src && label && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-small)",
+      fontWeight: "var(--text-label-small--font-weight)",
+      lineHeight: "var(--text-label-small--line-height)",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
+      color: "var(--text-secondary)",
+      padding: "0 var(--space-2)",
+      textAlign: "center"
+    }
+  }, label), playable && /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      left: "50%",
+      top: "50%",
+      transform: "translate(-50%, -50%)",
+      width: `${disc}px`,
+      height: `${disc}px`,
+      borderRadius: "var(--radius-full)",
+      background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
+      color: "var(--on-surface-snackbar, #ffffff)",
+      display: "grid",
+      placeItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "play_arrow",
+    size: Math.round(disc * 0.57)
+  })), video && duration && edge >= 80 && /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      right: "6px",
+      bottom: "6px",
+      padding: "0 6px",
+      borderRadius: "var(--radius-small)",
+      background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
+      color: "var(--on-surface-snackbar, #ffffff)",
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      fontWeight: "var(--text-label-small--font-weight)",
+      letterSpacing: "var(--text-label-small--letter-spacing)"
+    }
+  }, duration), cover && /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      left: "3px",
+      bottom: "3px",
+      padding: "0 5px",
+      borderRadius: "var(--radius-full)",
+      background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
+      color: "var(--on-surface-snackbar, #ffffff)",
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      fontWeight: "var(--text-label-small--font-weight)",
+      letterSpacing: "var(--text-label-small--letter-spacing)"
+    }
+  }, "Cover"), coverSrc && /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      left: "3px",
+      bottom: "3px",
+      width: `${coverMark}px`,
+      height: `${coverMark}px`,
+      display: "block",
+      overflow: "hidden",
+      borderRadius: "var(--radius-small)",
+      border: "1px solid var(--outline-variant)",
+      boxSizing: "border-box"
+    }
+  }, /*#__PURE__*/React.createElement("img", {
+    src: coverSrc,
+    alt: "Cover",
+    style: coverTransform ? {
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+      display: "block",
+      transform: coverTransform
+    } : {
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+      display: "block"
+    }
+  })), typeof progress === "number" && !failed && /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      inset: 0,
+      background: "rgba(0,0,0,0.35)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center"
+    },
+    "aria-label": `Uploading, ${Math.round(progress * 100)}%`
+  }, /*#__PURE__*/React.createElement(Ring, {
+    progress: progress
+  })), failed && /*#__PURE__*/React.createElement("span", {
+    "aria-label": "Didn't upload",
+    style: {
+      position: "absolute",
+      right: "3px",
+      top: "3px",
+      width: "18px",
+      height: "18px",
+      borderRadius: "var(--radius-full)",
+      background: "var(--error)",
+      color: "var(--on-error)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: "var(--text-label-medium)",
+      letterSpacing: "var(--text-label-medium--letter-spacing)",
+      lineHeight: "var(--text-label-medium--line-height)",
+      fontWeight: 700
+    }
+  }, "!"), onRemove && !failed && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": removeLabel,
+    onClick: onRemove,
+    "data-node": node && "remove",
+    className: "cg-state cg-focus cg-hit",
+    style: {
+      position: "absolute",
+      right: "3px",
+      top: "3px",
+      width: "16px",
+      height: "16px",
+      border: 0,
+      padding: 0,
+      borderRadius: "var(--radius-full)",
+      background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
+      color: "var(--on-surface-snackbar, #ffffff)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "close",
+    size: 10
+  })));
+}
+__ds_scope.MediaThumb = MediaThumb;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/MediaThumb.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/CoverRow.jsx
+try { (() => {
+const { Icon, MediaThumb } = __ds_scope;
 /* The video's face (item 17, the conformance round): the strip of frames cut
    from the clip, plus the one tile that is not a frame at all.
 
@@ -4202,7 +4497,14 @@ const { Icon } = __ds_scope;
    THE ROW IS NOT ALWAYS THERE (same round). A vertical clip's default is no
    cover, so at comment scale the row gives way to an "Add a cover" door and
    appears when the door is opened; a horizontal or square clip wears it from
-   the start. The row draws the choosing, never the decision to choose. */
+   the start. The row draws the choosing, never the decision to choose.
+
+   A PICTURE OF YOUR OWN STANDS WHERE IT WAS ASKED FOR (round 52, jakob
+   2026-11-17, decision 4). Back from the cover's crop, the picture takes
+   the dashed tile's place in the strip — `own`, its framing the crop's —
+   outlined as chosen, the frames dimmed around it as around a chosen frame.
+   A tap on it opens the picker again, the way the edits' cover door does:
+   the picture is re-picked and re-cropped, never re-framed in place. */
 
 const TILE = {
   width: 56,
@@ -4221,9 +4523,13 @@ function CoverRow({
   label = "Cover",
   frames = [],
   selected = null,
+  /* A picture of the author's own, back from the cover's crop: `{ src,
+     transform }`. It stands in the dashed tile's place, and it is the
+     chosen cover — `selected` is ignored while it stands. */
+  own,
   caption
 }) {
-  const chosen = selected !== null && selected !== undefined;
+  const chosen = Boolean(own) || selected !== null && selected !== undefined;
   return /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
@@ -4245,7 +4551,7 @@ function CoverRow({
   }, frames.map((frame, index) => /*#__PURE__*/React.createElement("div", {
     key: frame.src ? `${frame.src}-${index}` : index,
     className: "cg-cover-frame",
-    style: index === selected ? {
+    style: index === selected && !own ? {
       ...TILE,
       outline: "2px solid var(--primary)",
       outlineOffset: 1
@@ -4260,7 +4566,21 @@ function CoverRow({
       ...FILL,
       transform: frame.transform
     } : FILL
-  }))), /*#__PURE__*/React.createElement("div", {
+  }))), own ? /*#__PURE__*/React.createElement("div", {
+    className: "cg-cover-own",
+    style: {
+      ...TILE,
+      outline: "2px solid var(--primary)",
+      outlineOffset: 1
+    }
+  }, /*#__PURE__*/React.createElement("img", {
+    src: own.src,
+    alt: "",
+    style: own.transform ? {
+      ...FILL,
+      transform: own.transform
+    } : FILL
+  })) : /*#__PURE__*/React.createElement("div", {
     className: "cg-cover-own",
     style: {
       width: 56,
@@ -4288,7 +4608,116 @@ function CoverRow({
     }
   }, caption));
 }
+
+/* THE COVER BESIDE THE CLIP (round 52, jakob 2026-11-17, decision 4 — his
+   hand test's W22: "the cover beeing full size and next to the video … this
+   way we also have a entrance gate for changing the cover"). Wherever a flow
+   shows a clip after a cover can exist, the cover stands as its own tile
+   beside the clip's: at the clip tile's height and at the cover's own shape
+   — a tall clip's 4:5, a square's 1:1, a wide's 16:9 — wearing the `Cover`
+   pill a post's first picture wears (`MediaThumb`'s `cover`).
+
+   THE TILE IS THE DOOR. Pressed, it opens what changes the cover where it
+   stands — the cover step on a new post, the picker and the cover's crop on
+   an edit — and it is named for that, `Change the cover`, so the pill
+   names what it is and the name says what it does.
+
+   NO COVER YET, THE SAME PLACE HOLDS THE OTHER HALF: a dashed tile at the
+   same size, the add glyph on it, and the words `Add a cover` — on the tile
+   where it is wide enough to carry them, beside it as the door's own label
+   where it is not (`labelBeside`, which the placer sets from the tile it
+   measured). One control either way: the tile and its words are one press. */
+const ADD_WORDS = {
+  fontSize: "var(--text-label-small)",
+  fontWeight: "var(--text-label-small--font-weight)",
+  lineHeight: "var(--text-label-small--line-height)",
+  letterSpacing: "var(--text-label-small--letter-spacing)",
+  color: "var(--primary)",
+  whiteSpace: "nowrap"
+};
+const CHANGE_COVER_NAME = "Change the cover";
+function CoverTile({
+  src,
+  transform,
+  width,
+  height,
+  progress,
+  failed = false,
+  addLabel = "Add a cover",
+  labelBeside = false,
+  onPress,
+  node
+}) {
+  if (src) {
+    return /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      "aria-label": CHANGE_COVER_NAME,
+      onClick: onPress,
+      className: "cg-state cg-focus",
+      style: {
+        display: "inline-flex",
+        flex: "none",
+        padding: 0,
+        border: 0,
+        background: "none",
+        borderRadius: "var(--radius-small)",
+        cursor: "pointer"
+      },
+      "data-node": node
+    }, /*#__PURE__*/React.createElement(MediaThumb, {
+      src: src,
+      transform: transform,
+      width: width,
+      height: height,
+      cover: true,
+      progress: progress,
+      failed: failed
+    }));
+  }
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onPress,
+    className: "cg-state cg-focus",
+    style: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 8,
+      flex: "none",
+      padding: 0,
+      border: 0,
+      background: "none",
+      borderRadius: "var(--radius-small)",
+      cursor: "pointer",
+      textAlign: "left"
+    },
+    "data-node": node
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: `${width}px`,
+      height: `${height}px`,
+      borderRadius: "var(--radius-small)",
+      border: "1px dashed var(--border-field)",
+      boxSizing: "border-box",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 4,
+      color: "var(--text-secondary)",
+      flex: "none"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "add",
+    size: 20
+  }), !labelBeside && /*#__PURE__*/React.createElement("span", {
+    style: ADD_WORDS
+  }, addLabel)), labelBeside && /*#__PURE__*/React.createElement("span", {
+    style: ADD_WORDS
+  }, addLabel));
+}
 __ds_scope.CoverRow = CoverRow;
+__ds_scope.CHANGE_COVER_NAME = CHANGE_COVER_NAME;
+__ds_scope.CoverTile = CoverTile;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/CoverRow.jsx", error: String((e && e.message) || e) }); }
 
 // components/compose/CropViewport.jsx
@@ -4337,10 +4766,21 @@ try { (() => {
    stopping where an edge of the picture meets the window's edge. THE POST
    CROP HAS ONE CEILING under every shape (jakob 2026-11-13; ComposeCrop.md): 10×
    the Tall frame's fill, the largest, so a shape switch — which never shrinks
-   a picture — never meets a ceiling below the scale it keeps. Every figure
-   here is the stage at a 390 column; the stage scales with the column. A pinch
+   a picture — never meets a ceiling below the scale it keeps. A pinch
    moves the slider with it, and the slider moves the picture: one value, two
-   ways to set it. */
+   ways to set it.
+
+   THE STAGE FITS THE WINDOW, ON EVERY CROP, BOTH CLIENTS (jakob 2026-11-17).
+   Every figure here is the stage at a 390 column. The stage stands as large
+   as the column allows AND never taller than the window leaves once every
+   other block of the crop has its place — the header, the shape row where
+   there is one, the zoom, the line, the strip of pictures, the pinned Next
+   and the gaps between them. A stage the window caps keeps its own
+   proportion (390 × 488, or the avatar's 390 square) and stands centred in
+   the column, the frame and the picture scaling with it, so nothing scrolls
+   and nothing is cut off. Its floor is 240 high: under that the page
+   scrolls under the pinned Next, the general rule (readme, *Text scale*).
+   `ComposeCropShort` draws it in a 672 × 720 window. */
 
 const CROP_ZOOM_MIN = 1;
 const CROP_ZOOM_MAX = 10;
@@ -5136,288 +5576,6 @@ function DescribeSheet({
 }
 __ds_scope.DescribeSheet = DescribeSheet;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/DescribeSheet.jsx", error: String((e && e.message) || e) }); }
-
-// components/compose/MediaThumb.jsx
-try { (() => {
-const { Icon } = __ds_scope;
-/* The authoring-side picture tile (media slice, 2026-08-31): one thumbnail
-   anatomy for every composer surface — the pick tray, the details row, the
-   Show all sheet, the reply composer, the comment edit. The states it can
-   wear are the whole upload story:
-
-   · `cover` — the "Cover" badge, bottom-left. The first picture is the cover;
-     the badge travels with reorder, never with a separate control.
-   · `coverSrc` — a CLIP's chosen cover, shown as the picture rather than the
-     word: the frame itself, inset in the same bottom-left corner the badge
-     owns, because a cover is a property of the clip and never a second thing
-     that was picked. A third of the tile's short side (28px at the least),
-     with a hairline ring, which is what keeps a small frame legible over
-     whatever photograph it lands on. A tile is a picture's or a clip's, so
-     the badge and the mark never meet. `coverTransform` frames what is inside
-     it the way `CoverRow`'s own tiles are framed — a strip of frames is one
-     picture shown several ways, and the mark carries the way that was chosen.
-   · `progress` — the upload ring on a scrim. Upload starts AFTER the crop:
-     the crop happens on the device and only the cropped export is ever
-     uploaded (jakob 2026-08-31 — the original frame can hold what the author
-     never meant to share). A comment's pictures pass the comment's square
-     crop (`ReplyCrop`) and upload from its Next, as a post's do.
-   · `failed` — the picture dims and wears the error badge; the words and the
-     Retry · Remove affordances live beside the row (`UploadErrorLine`), not
-     crammed into 48px.
-   · `onRemove` — the X, top-right, its target grown by cg-hit.
-   · `video` — the composer's video preview: the play disc on a scrim and the
-     duration on the trailing corner, the anatomy `ComposeCover` drew for the
-     post's video (the disc and pill only appear where the tile is big enough
-     to carry them). AUTHORING-SIDE ONLY: a reading surface never draws
-     play/pause — there, presence on screen is the policy.
-
-   A clip's preview at comment scale (the reply composer's, the comment
-   edit's) passes `width`/`height` and `fit="contain"` so the whole frame
-   shows inside the tile. A comment's pictures are squares, so their tiles
-   are square, filled.
-
-   THE NEUTRAL TILE (video-cover round, 2026-09-10) is the sourceless state:
-   where a clip yields no still at all — extraction came back with nothing —
-   the tile reserves its space and `label` says what belongs there, the way
-   `MediaAttachment`'s reserved region does. Never invent imagery: a clip with
-   no face shows the absence rather than a borrowed picture. */
-
-function Ring({
-  progress,
-  size = 26
-}) {
-  const r = 12;
-  const c = 2 * Math.PI * r;
-  return /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 28 28",
-    width: size,
-    height: size,
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("circle", {
-    cx: "14",
-    cy: "14",
-    r: r,
-    fill: "none",
-    stroke: "rgba(255,255,255,0.35)",
-    strokeWidth: "3"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "14",
-    cy: "14",
-    r: r,
-    fill: "none",
-    stroke: "#ffffff",
-    strokeWidth: "3",
-    strokeLinecap: "round",
-    strokeDasharray: `${Math.max(0.02, Math.min(1, progress)) * c} ${c}`,
-    transform: "rotate(-90 14 14)"
-  }));
-}
-function MediaThumb({
-  src,
-  alt = "",
-  size = 48,
-  width,
-  height,
-  fit = "cover",
-  radius = "var(--radius-small)",
-  cover = false,
-  coverSrc,
-  coverTransform,
-  progress,
-  failed = false,
-  video = false,
-  duration,
-  label,
-  onRemove,
-  removeLabel = "Remove this picture",
-  node,
-  nodeKey
-}) {
-  const w = width ?? size;
-  const h = height ?? size;
-  const edge = Math.min(w, h);
-  const disc = Math.max(20, Math.min(56, Math.round(edge * 0.26)));
-  /* The disc rides a scrim over a frame. With no frame the tile IS the
-     absence, and a play control drawn on nothing reads as chrome — the
-     duration stays, because the clip's length is known either way. */
-  const playable = video && src && !failed && typeof progress !== "number";
-  /* The cover mark scales with the tile so it reads the same on the tray's
-     114×64 and on a larger one, and never falls under its own floor. */
-  const coverMark = Math.max(28, Math.round(edge / 3));
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: "relative",
-      width: `${w}px`,
-      height: `${h}px`,
-      borderRadius: radius,
-      overflow: "hidden",
-      flex: "none",
-      background: "var(--surface-container-high)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center"
-    },
-    "data-node": node,
-    "data-node-key": nodeKey
-  }, src && /*#__PURE__*/React.createElement("img", {
-    src: src,
-    alt: alt,
-    "aria-hidden": alt ? undefined : "true",
-    style: fit === "contain" ? {
-      maxWidth: "100%",
-      maxHeight: "100%",
-      display: "block",
-      opacity: failed ? 0.5 : 1
-    } : {
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-      display: "block",
-      opacity: failed ? 0.5 : 1
-    }
-  }), !src && label && /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-label-small)",
-      fontWeight: "var(--text-label-small--font-weight)",
-      lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "var(--text-label-small--letter-spacing)",
-      color: "var(--text-secondary)",
-      padding: "0 var(--space-2)",
-      textAlign: "center"
-    }
-  }, label), playable && /*#__PURE__*/React.createElement("span", {
-    style: {
-      position: "absolute",
-      left: "50%",
-      top: "50%",
-      transform: "translate(-50%, -50%)",
-      width: `${disc}px`,
-      height: `${disc}px`,
-      borderRadius: "var(--radius-full)",
-      background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
-      color: "var(--on-surface-snackbar, #ffffff)",
-      display: "grid",
-      placeItems: "center"
-    }
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "play_arrow",
-    size: Math.round(disc * 0.57)
-  })), video && duration && edge >= 80 && /*#__PURE__*/React.createElement("span", {
-    style: {
-      position: "absolute",
-      right: "6px",
-      bottom: "6px",
-      padding: "0 6px",
-      borderRadius: "var(--radius-small)",
-      background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
-      color: "var(--on-surface-snackbar, #ffffff)",
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      fontWeight: "var(--text-label-small--font-weight)",
-      letterSpacing: "var(--text-label-small--letter-spacing)"
-    }
-  }, duration), cover && /*#__PURE__*/React.createElement("span", {
-    style: {
-      position: "absolute",
-      left: "3px",
-      bottom: "3px",
-      padding: "0 5px",
-      borderRadius: "var(--radius-full)",
-      background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
-      color: "var(--on-surface-snackbar, #ffffff)",
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      fontWeight: "var(--text-label-small--font-weight)",
-      letterSpacing: "var(--text-label-small--letter-spacing)"
-    }
-  }, "Cover"), coverSrc && /*#__PURE__*/React.createElement("span", {
-    style: {
-      position: "absolute",
-      left: "3px",
-      bottom: "3px",
-      width: `${coverMark}px`,
-      height: `${coverMark}px`,
-      display: "block",
-      overflow: "hidden",
-      borderRadius: "var(--radius-small)",
-      border: "1px solid var(--outline-variant)",
-      boxSizing: "border-box"
-    }
-  }, /*#__PURE__*/React.createElement("img", {
-    src: coverSrc,
-    alt: "Cover",
-    style: coverTransform ? {
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-      display: "block",
-      transform: coverTransform
-    } : {
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-      display: "block"
-    }
-  })), typeof progress === "number" && !failed && /*#__PURE__*/React.createElement("span", {
-    style: {
-      position: "absolute",
-      inset: 0,
-      background: "rgba(0,0,0,0.35)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center"
-    },
-    "aria-label": `Uploading, ${Math.round(progress * 100)}%`
-  }, /*#__PURE__*/React.createElement(Ring, {
-    progress: progress
-  })), failed && /*#__PURE__*/React.createElement("span", {
-    "aria-label": "Didn't upload",
-    style: {
-      position: "absolute",
-      right: "3px",
-      top: "3px",
-      width: "18px",
-      height: "18px",
-      borderRadius: "var(--radius-full)",
-      background: "var(--error)",
-      color: "var(--on-error)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: "var(--text-label-medium)",
-      letterSpacing: "var(--text-label-medium--letter-spacing)",
-      lineHeight: "var(--text-label-medium--line-height)",
-      fontWeight: 700
-    }
-  }, "!"), onRemove && !failed && /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    "aria-label": removeLabel,
-    onClick: onRemove,
-    "data-node": node && "remove",
-    className: "cg-state cg-focus cg-hit",
-    style: {
-      position: "absolute",
-      right: "3px",
-      top: "3px",
-      width: "16px",
-      height: "16px",
-      border: 0,
-      padding: 0,
-      borderRadius: "var(--radius-full)",
-      background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
-      color: "var(--on-surface-snackbar, #ffffff)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      cursor: "pointer"
-    }
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "close",
-    size: 10
-  })));
-}
-__ds_scope.MediaThumb = MediaThumb;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/MediaThumb.jsx", error: String((e && e.message) || e) }); }
 
 // components/compose/PickPrompt.jsx
 try { (() => {
@@ -18719,6 +18877,10 @@ __ds_ns.Caret = __ds_scope.Caret;
 __ds_ns.CitedSheet = __ds_scope.CitedSheet;
 
 __ds_ns.CoverRow = __ds_scope.CoverRow;
+
+__ds_ns.CHANGE_COVER_NAME = __ds_scope.CHANGE_COVER_NAME;
+
+__ds_ns.CoverTile = __ds_scope.CoverTile;
 
 __ds_ns.CROP_ZOOM_MIN = __ds_scope.CROP_ZOOM_MIN;
 
