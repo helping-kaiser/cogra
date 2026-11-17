@@ -2564,10 +2564,24 @@ words, recorded so the registry is whole:
   yet.` — and a deleted account, which will give none again, `This
   account gave no opinions.` (*blessed (jakob 2026-11-10)*).
 - **The edit** (`ProfileEdit`) — titled `Edit profile`, its fields
-  `Display name` · `Bio` · `Website`.
+  `Display name` · `Bio` · `Website`; the picture's row `Change picture`,
+  and `Remove picture` beside it while a picture stands (round 50, jakob
+  2026-11-17, his 8; *to be blessed*). With nothing staged, Save stands
+  inert under `Nothing to sign yet` (`EditComposeUnchanged`'s line, his
+  12). A write-rule refusal known at Save stands on Save as `You can't
+  sign right now.` in the row's quiet register, with a "?" opening `Why
+  signing waits`, and Save dims (his 13; *the placement to be blessed*).
+  A new picture whose upload failed reads `One picture didn't upload.`
+  with `Retry · Remove it` under the picture's row (`ComposeUploading`).
 - **The profile's seal** (`ProfileEditSeal`) — `Your profile`; the acts row
   `Profile` reading `A new picture, bio and website`, its count spoken
-  `1 profile change`; under the card `Every change to your profile is
+  `1 profile change`. The row's grammar (round 50; *to be blessed*): `A
+  new` and the changed parts in the edit's order — `picture`, `display
+  name`, `bio`, `website` — joined by commas and a last `and` (`A new
+  bio`, `A new display name and website`, `A new picture, display name,
+  bio and website`); a removed picture alone reads `The picture removed`,
+  and after other parts `, the picture removed` (`A new bio, the picture
+  removed`); under the card `Every change to your profile is
   signed in your name and stays in your public record.`; its "?" is named
   `Changing your profile`.
 - **The picture** — the crop titled `Your picture`, no line under its
