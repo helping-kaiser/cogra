@@ -385,7 +385,7 @@ fn approval_compares_the_body_by_its_canonical_bytes() {
 
 /// The content nonce conceals the payload, so a log line of the pre-signed proposal must not carry its bytes.
 ///
-/// The pre-signed proposal's Debug output omits the content nonce's bytes and still shows the act.
+/// The pre-signed proposal's Debug output omits the bytes of both nonces and of the payload and still shows the act.
 /// ´claim:proposal:the-pre-signed-debug-output-omits-the-content-nonce´
 #[test]
 fn the_pre_signed_debug_output_omits_the_content_nonce() {
@@ -401,7 +401,51 @@ fn the_pre_signed_debug_output_omits_the_content_nonce() {
     let decimal = format!("{:?}", pre.content_nonce);
     assert!(!shown.contains(&decimal));
     assert!(!shown.contains("199, 199"));
+    assert!(!shown.contains("106, 106"));
+    assert!(!shown.contains("104, 101, 108, 108, 111"));
     assert!(shown.contains(&actor.address()));
+    assert!(shown.contains("<32 bytes>"));
+    assert!(shown.contains("<5 bytes>"));
+}
+
+/// The content pair is the payload with the nonce that conceals it, so a log line of it must carry neither.
+///
+/// The content pair's Debug output shows the lengths of the payload and the nonce, never their bytes.
+/// ´claim:proposal:the-content-pair-debug-output-omits-its-bytes´
+#[test]
+fn the_content_pair_debug_output_omits_its_bytes() {
+    let actor = ActorKey::from_seed([7u8; 32]);
+    let pair = PreSigned::sign_with_nonces(
+        &actor,
+        proposal(&actor.address(), b"hello"),
+        vec![0xc7; crypto::SALT_LEN],
+        DEPENDENCY_NONCE.to_vec(),
+    )
+    .content_pair();
+    let shown = format!("{pair:?}");
+    assert!(!shown.contains("199, 199"));
+    assert!(!shown.contains("104, 101, 108, 108, 111"));
+    assert!(shown.contains("<5 bytes>"));
+    assert!(shown.contains("<32 bytes>"));
+}
+
+/// The pre-commitment blob is what the backend decodes from the wire, so a log line of it must not carry the nonces.
+///
+/// The pre-commitment blob's Debug output shows the length of each nonce, never its bytes.
+/// ´claim:proposal:the-pre-commitment-blob-debug-output-omits-the-nonces´
+#[test]
+fn the_pre_commitment_blob_debug_output_omits_the_nonces() {
+    let actor = ActorKey::from_seed([7u8; 32]);
+    let blob = PreSigned::sign_with_nonces(
+        &actor,
+        proposal(&actor.address(), b"hello"),
+        vec![0xc7; crypto::SALT_LEN],
+        DEPENDENCY_NONCE.to_vec(),
+    )
+    .pre_commitment_blob();
+    let shown = format!("{blob:?}");
+    assert!(!shown.contains("199, 199"));
+    assert!(!shown.contains("106, 106"));
     assert!(shown.contains("<32 bytes>"));
 }
 
@@ -542,7 +586,7 @@ fn approval_refuses_what_the_device_cannot_recompute() {
     let mut content_edition = sealed.clone();
     content_edition.act.content_edition = 1;
     let mut dependency_edition = sealed.clone();
-    dependency_edition.act.dependency_edition = 2;
+    dependency_edition.act.dependency_edition = 1;
     let mut salt = sealed.clone();
     salt.content_salt = vec![9; crypto::SALT_LEN];
     let mut dependency_salt = sealed.clone();

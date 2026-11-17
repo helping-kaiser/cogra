@@ -677,7 +677,7 @@ fn proposal_handshake_vectors(
     let mut content_edition = sealed.clone();
     content_edition.act.content_edition = 1;
     let mut deps_edition = sealed.clone();
-    deps_edition.act.dependency_edition = 2;
+    deps_edition.act.dependency_edition = 1;
     let mut cases: Vec<Value> = [
         ("a content commitment over the payload bytes", over_payload),
         ("a pre-commitment the device did not form", foreign),

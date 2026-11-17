@@ -92,8 +92,9 @@ impl PreSigned {
     /// and its seal.
     ///
     /// Exact equality of the returned body's canonical bytes, P and
-    /// pre-signature with what was pre-signed; the editions; the host seal; and both commitments
-    /// recomputed from material the device holds itself — C_c over its own
+    /// pre-signature with what was pre-signed; the editions; the host seal;
+    /// and both commitments recomputed from material the device holds
+    /// itself — C_c over its own
     /// content pre-digest from the payload and content nonce, C_d over its
     /// own canonical dependency encoding — with the returned salts. A
     /// commitment the host formed over anything else, the payload bytes
