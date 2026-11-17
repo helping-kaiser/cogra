@@ -122,6 +122,7 @@ const {
   FactRow,
   QuotedRow,
   CoverRow,
+  CoverTile,
   Caret,
   SectionLabel,
   SettingsGroup,
