@@ -18,6 +18,7 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { reshape } from "./crop";
 import {
   atRatio,
   encodeForUpload,
@@ -450,6 +451,36 @@ describe("encodeForUpload", () => {
     });
 
     expect(drawn[0]!.from).toEqual({ x: 100, y: 0, width: 800, height: 1000 });
+  });
+
+  // W-CROP-OFFSTAGE-RESHAPE. Two pictures; the reader framed the second (a
+  // 3000×4000 portrait, Tall, at 1.5× and moved), went back to the first and
+  // switched the post to Square. Only the first is on the stage, so no cropper
+  // ever measures the second again: what its upload bakes is what `reshape`
+  // hands the wizard. That must be the place the reader kept, cut to the new
+  // shape — the rectangle the library measures for the held framing on the
+  // board's 390 stage (react-easy-crop 6.2.4 `computeCroppedArea`): the
+  // picture lays 366 × 488 at 1×, 549 × 732 at 1.5×, under a 390 square frame
+  // → 10.84 % / 27.46 % in, 71.04 % across → 325, 1098, 2131 × 2131 — never
+  // the centred square (0, 500, 3000 × 3000).
+  it("uploads a picture re-shaped off the stage at the place it was kept", async () => {
+    const drawn = installFakeCanvas(10);
+    vi.stubGlobal(
+      "createImageBitmap",
+      vi.fn(async () => ({ width: 3000, height: 4000, close: () => {} })),
+    );
+
+    const keptTall = {
+      x: 20,
+      y: -30,
+      zoom: 1.5,
+      area: { x: 0, y: 0, width: 3000, height: 4000 },
+      areaPercent: { x: 0, y: 0, width: 100, height: 100 },
+    };
+    const offStage = reshape(keptTall, 1, 390);
+    await encodeForUpload(new Blob([new Uint8Array([0]) as BlobPart]), { ratio: 1, crop: offStage });
+
+    expect(drawn[0]!.from).toEqual({ x: 325, y: 1098, width: 2131, height: 2131 });
   });
 
   it("leaves the shape alone when no ratio is asked for", async () => {

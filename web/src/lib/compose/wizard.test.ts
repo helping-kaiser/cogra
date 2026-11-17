@@ -368,6 +368,40 @@ describe("the picker", () => {
     expect(framed.assets[0]!.crop).toEqual({ x: 0, y: 0, zoom: 1, area: null, areaPercent: null });
   });
 
+  // W-CROP-OFFSTAGE-RESHAPE. The first picture stands on the stage; the second,
+  // framed earlier, is off it, so no cropper will measure it again before the
+  // upload. Its rectangle is re-measured here for the new shape at the place it
+  // kept — what the library measures for that framing on the 412 stage
+  // (react-easy-crop 6.2.4 `computeCroppedArea`) — so the upload is never the
+  // centred fallback.
+  it("re-measures a picture that is off the stage at its kept place under the new shape", () => {
+    const framed = run(
+      emptyWizard(),
+      picks(2),
+      {
+        type: "crop",
+        id: "a1",
+        crop: {
+          x: 10,
+          y: -20,
+          zoom: 1.2,
+          area: { x: 0, y: 250, width: 3000, height: 3750 },
+          areaPercent: { x: 0, y: 6.25, width: 100, height: 93.75 },
+        },
+      },
+      { type: "focus", index: 0 },
+      { type: "shape", shape: "wide", stageWidth: 412 },
+    );
+    expect(framed.focused).toBe(0);
+    const crop = framed.assets[1]!.crop;
+    expect(crop).toMatchObject({ x: 10, y: -20, zoom: 1.2 });
+    expect(crop.area).toEqual({ x: 103, y: 1432, width: 2664, height: 1395 });
+    expect(crop.areaPercent!.x).toBeCloseTo(3.4458, 3);
+    expect(crop.areaPercent!.y).toBeCloseTo(35.7988, 3);
+    expect(crop.areaPercent!.width).toBeCloseTo(88.7978, 3);
+    expect(crop.areaPercent!.height).toBeCloseTo(34.8683, 3);
+  });
+
   it("leaves the framing untouched when the shape does not actually change", () => {
     const area = { x: 0, y: 100, width: 800, height: 1000 };
     const framed = run(
