@@ -23,6 +23,7 @@ import { forgetSeen } from "@/lib/history/seen-sync";
 import { createDeviceLockEngine, type DeviceLockEngine } from "@/lib/identity/device-lock";
 import { identityStore } from "@/lib/identity/store";
 import { createGuard, type AuthGuard } from "./guard";
+import { markSessionEnded } from "./ended-session";
 import { createRefresher } from "./refresher";
 import type { TokenStore } from "./token-store";
 
@@ -68,6 +69,8 @@ export function createGuardedClient<T extends ApolloClient>(
     // "don't remember me" opt-in — locked, or purged where a backup is
     // known, never asked (sign-out-custody §3.6).
     createRefresher(store, refreshExecutor(client), async (clearTokens) => {
+      // The sign-in this lands on says why it opened (SignInExpired.md).
+      markSessionEnded();
       const account = store.activeAccountId();
       if (account === null) return;
       await deviceLock.endLocalSession(account, clearTokens);

@@ -1,7 +1,7 @@
 "use client";
 
 // SIGN IN (design/designs/canonical/screens/SignIn.jsx; behavior/SignIn.md,
-// SignInError.md, SignInLimited.md) on the task page's anatomy — Back to the
+// SignInError.md, SignInExpired.md, SignInLimited.md) on the task page's anatomy — Back to the
 // bare view, the welcome lead, the fields, the commit that waits, and the link
 // stack flush with the gutter (Android's LoginScreen/LoginViewModel). Success
 // only writes the token store (phase flips navigate: web.md "Routes") — the
@@ -28,6 +28,7 @@ import { logIn, type LoginGrant } from "@/lib/api/auth-api";
 import type { DeviceLockEngine } from "@/lib/identity/device-lock";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { deviceLabel } from "@/lib/session/device-label";
+import { takeSessionEnded } from "@/lib/session/ended-session";
 import { afterSignIn } from "@/lib/session/held-link";
 import { useAuthPhase, useTokenStore } from "@/lib/session/provider";
 import { useDeviceLock } from "@/lib/session/runtime";
@@ -88,6 +89,18 @@ export function LoginForm({
   const held = useRef<LoginGrant | null>(null);
   /** PR-62's dead lock, seen on an earlier press of this sign-in and not yet said. */
   const lockLost = useRef(false);
+
+  /** SignInExpired: this sign-in opened because the session ended mid-use. */
+  const [signedOut, setSignedOut] = useState(false);
+  useEffect(() => {
+    // THE RULE IS DISABLED DELIBERATELY: the mark lives in this tab's
+    // sessionStorage, which the server render cannot read, so it is read
+    // after hydration — React's documented pattern for content that differs
+    // between server and client (react.dev, hydrateRoot, "Handling different
+    // client and server content").
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (takeSessionEnded()) setSignedOut(true);
+  }, []);
 
   useEffect(() => {
     // A sign-in begun from the email change's signed-out landing goes back
@@ -163,6 +176,7 @@ export function LoginForm({
       backLabel="Back"
       backHeld={exitsHeld}
       title="Sign in to CoGra"
+      lead={signedOut ? "You've been signed out." : undefined}
     >
       <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-4" noValidate>
         <FormTextField
