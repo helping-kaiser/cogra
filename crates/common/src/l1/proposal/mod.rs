@@ -52,8 +52,12 @@ pub mod domain_tags {
 /// other (§8.2, "Approval witness": correct editions).
 pub const CONTENT_EDITION: u64 = 2;
 
-/// The dependency edition a verified act is sealed under.
-pub const DEPENDENCY_EDITION: u64 = 1;
+/// The dependency edition a verified act is sealed under. An edition tag
+/// names the formation of its commitment: this one names the dependency
+/// commitment under [`domain_tags::COMMIT_DEPS`], over the pre-commitment
+/// formed from both pre-digests. A device refuses any other (§8.2,
+/// "Approval witness": correct editions).
+pub const DEPENDENCY_EDITION: u64 = 2;
 
 /// The content pre-digest h_c: the act identifier, the content nonce and
 /// the payload, under its own tag (§8.2, "Proposal pre-commitment").
@@ -139,10 +143,20 @@ pub fn dependency_commitment(
 /// The content pair (payload, content nonce), optional as a unit: bytes
 /// without their nonce cannot be verified against the content pre-digest
 /// (§8.2, "Verified act"). Its custodian removes both members together.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct ContentPair {
     pub payload: Vec<u8>,
     pub nonce: Vec<u8>,
+}
+
+/// `Debug` shows the lengths of both members and never their bytes.
+impl fmt::Debug for ContentPair {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ContentPair")
+            .field("payload", &format_args!("<{} bytes>", self.payload.len()))
+            .field("nonce", &format_args!("<{} bytes>", self.nonce.len()))
+            .finish()
+    }
 }
 
 impl ContentPair {
@@ -164,8 +178,8 @@ pub struct PreSigned {
     pub pre_signature: Vec<u8>,
 }
 
-/// The content nonce is the secret that conceals the payload, so `Debug`
-/// shows its length and never its bytes.
+/// `Debug` shows the length of each nonce and never its bytes; the
+/// proposal's own `Debug` likewise shows only the payload's length.
 impl fmt::Debug for PreSigned {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("PreSigned")
@@ -175,7 +189,10 @@ impl fmt::Debug for PreSigned {
                 "content_nonce",
                 &format_args!("<{} bytes>", self.content_nonce.len()),
             )
-            .field("dependency_nonce", &self.dependency_nonce)
+            .field(
+                "dependency_nonce",
+                &format_args!("<{} bytes>", self.dependency_nonce.len()),
+            )
             .field("pre_signature", &self.pre_signature)
             .finish()
     }

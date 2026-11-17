@@ -10,6 +10,8 @@
 //! malformed frame. The sealed act carries no payload and no nonce: the
 //! device holds those itself.
 
+use std::fmt;
+
 use super::{SealedAct, VerifiedAct};
 use crate::l1::encoding::{Decoder, Encoder};
 use crate::l1::wire::{WireError, decode_body};
@@ -32,11 +34,28 @@ fn open(d: &mut Decoder, arity: u64, what: &'static str) -> Result<(), WireError
 /// carries it: `[2, content nonce, dependency nonce, pre-signature]`. The
 /// author's key never rides it — the backend binds the key from the
 /// account's identity association.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct PreCommitmentBlob {
     pub content_nonce: Vec<u8>,
     pub dependency_nonce: Vec<u8>,
     pub pre_signature: Vec<u8>,
+}
+
+/// `Debug` shows the length of each nonce and never its bytes.
+impl fmt::Debug for PreCommitmentBlob {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PreCommitmentBlob")
+            .field(
+                "content_nonce",
+                &format_args!("<{} bytes>", self.content_nonce.len()),
+            )
+            .field(
+                "dependency_nonce",
+                &format_args!("<{} bytes>", self.dependency_nonce.len()),
+            )
+            .field("pre_signature", &self.pre_signature)
+            .finish()
+    }
 }
 
 impl PreCommitmentBlob {
