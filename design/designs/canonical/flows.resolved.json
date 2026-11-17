@@ -739,17 +739,19 @@
     },
     {
       "name": "reply-with-pictures",
-      "description": "Pictures added to a reply land in its tray; one seal signs the words and the pictures together into the thread.",
+      "description": "Pictures added to a reply pass the comment's square crop and land in its tray; one seal signs the words and the pictures together into the thread.",
       "status": "resolved",
       "steps": [
         "start · ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
-        "ReplyCompose · 5 «+ Add pictures or a video» → ReplyPictures — picks land in the tray",
+        "ReplyCompose · 5 «+ Add pictures or a video» → ReplyCrop — pictures — the comment's square crop, then the tray",
+        "ReplyCrop · 3 «Next» → ReplyPictures — entered from the reply — the squares join the tray and their cropped exports start uploading",
         "ReplyPictures · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
       ],
       "boards": [
         "ReplyEntry",
         "ReplyCompose",
+        "ReplyCrop",
         "ReplyPictures",
         "ReplySeal",
         "ReplySettled"
@@ -1019,7 +1021,7 @@
       "steps": [
         "start · «nav · New post» — to ComposePick on 63 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
-        "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
+        "ComposeCover · 6 «Next» → ComposeDetailsVideo — details — the chosen cover beside the clip as its own tile, the door back here",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
       ],
@@ -1242,8 +1244,8 @@
       "description": "The door on details opens the step the clip skipped; the face chosen there comes back to the stage that asked, and the post signs from it.",
       "status": "resolved",
       "steps": [
-        "start · ComposeDetailsVideo · 4 «Add a cover» → ComposeCover — the step a vertical clip skipped, opened on purpose — Next comes back here",
-        "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
+        "start · ComposeDetailsVideo · 4 «the cover's tile — Add a cover, or Change the cover» → ComposeCover — the dashed door: the step a vertical clip skipped, opened on purpose — Next comes back here with the choice",
+        "ComposeCover · 6 «Next» → ComposeDetailsVideo — details — the chosen cover beside the clip as its own tile, the door back here",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
       ],
@@ -3210,7 +3212,7 @@
       "steps": [
         "start · ComposePick · 9 «grid tiles» → ComposePickVideo — a video — the whole body, the step stops taking picks",
         "ComposePickVideo · 3 «Next» → ComposeCover — horizontal or square — its face, the crop never enters the video path",
-        "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
+        "ComposeCover · 6 «Next» → ComposeDetailsVideo — details — the chosen cover beside the clip as its own tile, the door back here",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
       ],
@@ -3228,7 +3230,7 @@
       "description": "Back from the cover step once a face is chosen shows the pick with the clip wearing it; Next returns to the cover step, which holds the choice rather than asking again.",
       "status": "resolved",
       "steps": [
-        "start · ComposeCover · 1 «back arrow» → ComposePickVideoCover — a cover was chosen — the pick shows the clip wearing it",
+        "start · ComposeCover · 1 «back arrow» → ComposePickVideoCover — a cover was chosen — the pick shows it beside the clip, its own tile",
         "end · ComposePickVideoCover · 3 «Next» → ComposeCover — back to the face the author already chose — the cover step holds the choice, it does not re-ask it"
       ],
       "boards": [
@@ -3241,7 +3243,7 @@
       "description": "A picture of your own on the cover step comes back through the crop, locked to the video's shape; Next sets it as the cover on the row that asked.",
       "status": "resolved",
       "steps": [
-        "start · ComposeCover · 5 «A picture (tile)» → CoverCrop — the picture comes back through the crop, locked to the video's shape — both platforms",
+        "start · ComposeCover · 5 «A picture (tile)» → CoverCrop — the picture comes back through the crop, locked to the video's shape — both platforms; its Next brings it back here, standing in the tile's place outlined as chosen (the cover chip at own)",
         "end · CoverCrop · 3 «Next» → back — the cover is set — back to the cover row that asked for it"
       ],
       "boards": [
@@ -3255,7 +3257,7 @@
       "status": "resolved",
       "steps": [
         "start · ComposeCover · 3 «play» → ComposeCoverPlaying — the preview runs — the cover gives way to the transport",
-        "end · ComposeCoverPlaying · 9 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open"
+        "end · ComposeCoverPlaying · 9 «Next» → ComposeDetailsVideo — details — the chosen cover beside the clip as its own tile, the door back here"
       ],
       "boards": [
         "ComposeCover",
@@ -3595,7 +3597,7 @@
       "description": "Picks over the reply's cap or in a format nothing here reads are named in the composer with why; what was accepted goes on with the words to the seal.",
       "status": "resolved",
       "steps": [
-        "start · ReplyCompose · 5 «+ Add pictures or a video» → ReplyMediaErrors — over its cap, or a format nothing here reads — the composer says why",
+        "start · ReplyCompose · 5 «+ Add pictures or a video» → ReplyMediaErrors — over its cap, or a format nothing here reads — the composer says why, before any crop",
         "end · ReplyMediaErrors · 3 «Next» → ReplySeal — what was accepted goes with the words"
       ],
       "boards": [
@@ -6835,6 +6837,12 @@
     "ReplyComposeComment": {
       "flows": [
         "reply-to-a-comment"
+      ],
+      "endpoint": []
+    },
+    "ReplyCrop": {
+      "flows": [
+        "reply-with-pictures"
       ],
       "endpoint": []
     },

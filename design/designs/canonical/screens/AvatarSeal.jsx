@@ -17,9 +17,13 @@ export const NODE = "avatarSeal";
    reading, `ReplySealUploadFailed`'s words exactly — `One picture didn't
    upload. Signing waits for it.` with `Retry` — over the foot, and `Sign the
    change` disabled until `Retry` re-gates. No `Remove it` on a seal: one
-   stage back is the crop. */
-export const PROPS = { state: { editor: "enum", options: ["rest", "signing", "uploading", "upload-failed"], default: "rest" } };
-export const VALS = `restFootShown: this.props.state === "rest" ? "flex" : "none", signFootShown: this.props.state === "signing" ? "flex" : "none", failedFootShown: this.props.state === "upload-failed" ? "flex" : "none", uploadingFootShown: this.props.state === "uploading" ? "flex" : "none"`;
+   stage back is the crop. `upload-refused` (round 51 act 2, jakob
+   2026-11-17, B3) is that upload refused by the server: the gate's refused
+   reading, `One picture didn't upload.` alone — no `Signing waits for it.`,
+   which would wait for ever, and no `Retry` — with `Sign the change`
+   disabled and `Back` the way out. */
+export const PROPS = { state: { editor: "enum", options: ["rest", "signing", "uploading", "upload-failed", "upload-refused"], default: "rest" } };
+export const VALS = `restFootShown: this.props.state === "rest" ? "flex" : "none", signFootShown: this.props.state === "signing" ? "flex" : "none", failedFootShown: this.props.state === "upload-failed" ? "flex" : "none", refusedFootShown: this.props.state === "upload-refused" ? "flex" : "none", uploadingFootShown: this.props.state === "uploading" ? "flex" : "none"`;
 
 export function Screen() {
   return (
@@ -53,6 +57,10 @@ export function Screen() {
         </div>
         <div style={{ display: "{{failedFootShown}}", flexDirection: "column", gap: 16 }} data-node-chip="state" data-node-key="upload-failed">
           <UploadStatusLine failed onRetry={() => {}} node="gate" />
+          <SealFooter signLabel="Sign the change" busyLabel="Signing the change…" disabled node="foot" />
+        </div>
+        <div style={{ display: "{{refusedFootShown}}", flexDirection: "column", gap: 16 }} data-node-chip="state" data-node-key="upload-refused">
+          <UploadStatusLine refused node="gate" />
           <SealFooter signLabel="Sign the change" busyLabel="Signing the change…" disabled node="foot" />
         </div>
       </div>

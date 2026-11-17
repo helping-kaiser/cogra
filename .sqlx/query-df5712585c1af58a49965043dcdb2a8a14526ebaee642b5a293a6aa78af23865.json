@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, actor_id, author, seq, family, middle,\n                target, p_d, p_i, settlement_ref, license, asserted_parents,\n                deps, payload, state, author_pubkey, nonce, pre_signature,\n                content_salt, deps_salt, content_commitment, deps_commitment,\n                host_seal, prepared_epoch, node_id, pre_signed_at, carried,\n                payload_reaped_at\n         FROM staged_writes WHERE id = $1",
+  "query": "SELECT id, actor_id, author, seq, family, middle,\n                target, p_d, p_i, settlement_ref, license, asserted_parents,\n                deps, payload, state, author_pubkey, content_nonce,\n                dependency_nonce, pre_signature,\n                content_salt, deps_salt, content_commitment, deps_commitment,\n                host_seal, prepared_epoch, node_id, pre_signed_at, carried,\n                payload_reaped_at\n         FROM staged_writes WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -85,61 +85,66 @@
       },
       {
         "ordinal": 16,
-        "name": "nonce",
+        "name": "content_nonce",
         "type_info": "Bytea"
       },
       {
         "ordinal": 17,
-        "name": "pre_signature",
+        "name": "dependency_nonce",
         "type_info": "Bytea"
       },
       {
         "ordinal": 18,
-        "name": "content_salt",
+        "name": "pre_signature",
         "type_info": "Bytea"
       },
       {
         "ordinal": 19,
-        "name": "deps_salt",
+        "name": "content_salt",
         "type_info": "Bytea"
       },
       {
         "ordinal": 20,
-        "name": "content_commitment",
+        "name": "deps_salt",
         "type_info": "Bytea"
       },
       {
         "ordinal": 21,
-        "name": "deps_commitment",
+        "name": "content_commitment",
         "type_info": "Bytea"
       },
       {
         "ordinal": 22,
-        "name": "host_seal",
+        "name": "deps_commitment",
         "type_info": "Bytea"
       },
       {
         "ordinal": 23,
+        "name": "host_seal",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 24,
         "name": "prepared_epoch",
         "type_info": "Int8"
       },
       {
-        "ordinal": 24,
+        "ordinal": 25,
         "name": "node_id",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 25,
+        "ordinal": 26,
         "name": "pre_signed_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 26,
+        "ordinal": 27,
         "name": "carried",
         "type_info": "Bool"
       },
       {
-        "ordinal": 27,
+        "ordinal": 28,
         "name": "payload_reaped_at",
         "type_info": "Timestamptz"
       }
@@ -173,6 +178,7 @@
       true,
       true,
       true,
+      true,
       false,
       true,
       true,
@@ -180,5 +186,5 @@
       true
     ]
   },
-  "hash": "0be12e0346823a25098508ee91b9da3c1e457f8f2094e0d812b6f96d88a20079"
+  "hash": "df5712585c1af58a49965043dcdb2a8a14526ebaee642b5a293a6aa78af23865"
 }

@@ -19,4 +19,8 @@ The strip that picks a video's face — frames from the clip, or a picture of yo
 
 **The dashed tile is the gallery, and it is drawn as not-a-photograph** — same square, no image, the picture glyph in secondary. A picture chosen there goes through `CropViewport` before it comes back: a frame already carries the clip's shape, and only a picture of your own can disagree with it.
 
+**A picture of your own stands where it was asked for.** Back from the crop, pass it as `own`: it takes the dashed tile's place, outlined as chosen, the frames dimmed around it. A tap on it opens the picker again — re-picked and re-cropped, never re-framed in place.
+
+**`CoverTile` is the cover beside the clip** wherever a flow shows the clip after a cover can exist: the clip tile's height, the cover's own shape, the `Cover` badge, and the door named `Change the cover`. With no cover, the dashed `Add a cover` door in the same place — the words beside the tile (`labelBeside`) where the tile is too small to carry them.
+
 The row carries its own label and its own line because the three never appear apart. The comment composer inlines it beneath the clip; the post wizard gives it a stage.

@@ -44,10 +44,21 @@ import React from "react";
    stopping where an edge of the picture meets the window's edge. THE POST
    CROP HAS ONE CEILING under every shape (jakob 2026-11-13; ComposeCrop.md): 10×
    the Tall frame's fill, the largest, so a shape switch — which never shrinks
-   a picture — never meets a ceiling below the scale it keeps. Every figure
-   here is the stage at a 390 column; the stage scales with the column. A pinch
+   a picture — never meets a ceiling below the scale it keeps. A pinch
    moves the slider with it, and the slider moves the picture: one value, two
-   ways to set it. */
+   ways to set it.
+
+   THE STAGE FITS THE WINDOW, ON EVERY CROP, BOTH CLIENTS (jakob 2026-11-17).
+   Every figure here is the stage at a 390 column. The stage stands as large
+   as the column allows AND never taller than the window leaves once every
+   other block of the crop has its place — the header, the shape row where
+   there is one, the zoom, the line, the strip of pictures, the pinned Next
+   and the gaps between them. A stage the window caps keeps its own
+   proportion (390 × 488, or the avatar's 390 square) and stands centred in
+   the column, the frame and the picture scaling with it, so nothing scrolls
+   and nothing is cut off. Its floor is 240 high: under that the page
+   scrolls under the pinned Next, the general rule (readme, *Text scale*).
+   `ComposeCropShort` draws it in a 672 × 720 window. */
 
 export const CROP_ZOOM_MIN = 1;
 export const CROP_ZOOM_MAX = 10;

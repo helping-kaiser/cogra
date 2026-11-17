@@ -10,7 +10,9 @@ WHEN the removal has not answered 200ms after the press -> postDetail.dialog.rem
 
 WHEN the removal is taken -> postDetail.dialog closes AND the comment's words and pictures give way to postDetail.threadSheet.commentCard.removalMark in the comment's own place, its line reading Removed by its author
 
-WHEN the removal does not go through -> postDetail.dialog stays up with its pair AND postDetail.dialog.line reads That didn't send. Try again. AND postDetail.dialog.remove reads Retry AND NEVER the comment is marked removed
+WHEN the removal does not go through GIVEN no answer reaches the device -> postDetail.dialog stays up with its pair AND postDetail.dialog.line reads That didn't send. Try again. AND postDetail.dialog.remove reads Retry AND NEVER the comment is marked removed
+
+WHEN the removal does not go through GIVEN the server answers INTERNAL, FORBIDDEN, SIGNATURE_INVALID or a BAD_INPUT naming no field -> postDetail.dialog stays up with its pair AND postDetail.dialog.line reads That didn't go through. Try again. AND postDetail.dialog.remove reads Retry AND NEVER the comment is marked removed
 
 WHEN press postDetail.dialog.keep GIVEN postDetail.dialog.remove was not pressed -> postDetail.dialog closes AND postDetail.threadSheet stands as it was
 

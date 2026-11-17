@@ -9,7 +9,12 @@
    REGISTERED under the `feed` prefix (the hosting-surface rule): the page as
    `Feed` names it, the sheet `reportSheet` with its `title`, `body`,
    `report` and `cancel`, mirroring `postDetail.reportSheet`'s. */
+/* THE `answer` CHIP (round 51 act 2, jakob 2026-11-17, B6): as on
+   `ReportConfirm` — a failed report keeps the sheet up, its line above the
+   pair, `Report` reading `Retry`, never the snackbar. */
 export const NODE = "feed";
+export const PROPS = { answer: { editor: "enum", options: ["asking", "failed", "refused"], default: "asking" } };
+export const VALS = `askingShown: this.props.answer === "asking" ? "block" : "none", failedShown: this.props.answer === "failed" ? "block" : "none", refusedShown: this.props.answer === "refused" ? "block" : "none"`;
 export function Screen() {
   return (
     <>
@@ -20,7 +25,15 @@ export function Screen() {
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
 
-      <ReportPostSheet />
+      <div style={{ display: "{{askingShown}}" }}>
+        <ReportPostSheet />
+      </div>
+      <div style={{ display: "{{failedShown}}" }}>
+        <ReportPostSheet answer="failed" />
+      </div>
+      <div style={{ display: "{{refusedShown}}" }}>
+        <ReportPostSheet answer="refused" />
+      </div>
     </>
   );
 }

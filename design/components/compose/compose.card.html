@@ -10,7 +10,7 @@
 .statelbl{font-size:11px;color:var(--text-secondary);max-width:114px;line-height:1.35}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { MediaThumb, PickPrompt, PickTray, PickedRow, DescribeCounter, PickedSheet, CitedSheet, DescribeSheet, CropViewport, CoverRow, Caret, UploadStatusLine, UploadErrorLine, ActsCard, ActsFooter, SealFooter, WizardFooter, TopicRemovable, StagedReference, RefusedFile, WizardHeader, Button, HelpDot, InlineAction } = window.CoGraDesignSystem_9084ba;
+const { MediaThumb, PickPrompt, PickTray, PickedRow, DescribeCounter, PickedSheet, CitedSheet, DescribeSheet, CropViewport, CoverRow, CoverTile, Caret, UploadStatusLine, UploadErrorLine, ActsCard, ActsFooter, SealFooter, WizardFooter, TopicRemovable, StagedReference, RefusedFile, WizardHeader, Button, HelpDot, InlineAction } = window.CoGraDesignSystem_9084ba;
 const P = "../../assets/photos/";
 
 function Demo(){return (
@@ -49,8 +49,11 @@ function Demo(){return (
         <span className="statelbl">the cover comes next</span>
       </div>
       <div className="state">
-        <MediaThumb src={P+"03-landscape-16x9.jpg"} alt="" width={114} height={64} video coverSrc={P+"03-landscape-16x9.jpg"} coverTransform="scale(1.5)" onRemove={()=>{}} removeLabel="Remove this video"/>
-        <span className="statelbl">the chosen frame, in the corner the Cover badge owns</span>
+        <div style={{display:"flex",gap:8}}>
+          <MediaThumb src={P+"03-landscape-16x9.jpg"} alt="" width={114} height={64} video onRemove={()=>{}} removeLabel="Remove this video"/>
+          <CoverTile src={P+"03-landscape-16x9.jpg"} transform="scale(1.5)" width={114} height={64}/>
+        </div>
+        <span className="statelbl">the chosen cover, its own tile beside the clip — the door that changes it</span>
       </div>
     </div>
     <span className="lbl">PickedRow — the whole row opens Show all; no crop/edit links, ever</span>

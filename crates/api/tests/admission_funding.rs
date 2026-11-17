@@ -23,10 +23,11 @@ use common::l1::census::Family;
 use common::l1::client::ActorKey;
 use common::l1::encoding::Encoder;
 use common::l1::handshake::{
-    AccountBalance, ApprovalWitness, BurnSettlement, BurnTicket, EpochPackage, PreSignedProposal,
-    Proposal, StructuralBody, VerifiedAct,
+    AccountBalance, ApprovalWitness, BurnSettlement, BurnTicket, EpochPackage, Proposal,
+    StructuralBody,
 };
 use common::l1::identifier::NodeId;
+use common::l1::proposal::{PreSigned, SealedAct, Submission};
 use l1_standin::{StandIn, StandInConfig};
 use postgres_store::staged::{self, PreSignedParts, StagedState};
 use postgres_store::{PgPool, auth as store};
@@ -63,8 +64,8 @@ struct Realization {
 }
 
 impl L1Boundary for Realization {
-    async fn seal(&self, pre: PreSignedProposal) -> Result<VerifiedAct, BoundaryError> {
-        self.inner.seal(pre).await
+    async fn seal(&self, submission: Submission) -> Result<SealedAct, BoundaryError> {
+        self.inner.seal(submission).await
     }
 
     async fn approve(&self, witness: ApprovalWitness) -> Result<(), BoundaryError> {
@@ -325,25 +326,28 @@ impl Rig {
         payload.array(2);
         payload.uint(1);
         payload.text("ticker");
-        let pre = ticker.pre_sign(Proposal {
-            body: StructuralBody {
-                author: ticker.address(),
-                seq: 0,
-                family: Family::Registration,
-                middle: None,
-                target: NodeId::Prof(ticker.address()),
-                p_d: 1.0,
-                p_i: 1.0,
-                settlement_ref: None,
-                license: None,
-                asserted_parents: vec![],
+        let pre = PreSigned::sign(
+            &ticker,
+            Proposal {
+                body: StructuralBody {
+                    author: ticker.address(),
+                    seq: 0,
+                    family: Family::Registration,
+                    middle: None,
+                    target: NodeId::Prof(ticker.address()),
+                    p_d: 1.0,
+                    p_i: 1.0,
+                    settlement_ref: None,
+                    license: None,
+                    asserted_parents: vec![],
+                },
+                payload: payload.finish(),
+                deps: vec![],
             },
-            payload: payload.finish(),
-            deps: vec![],
-        });
-        let sealed = self.standin.seal(pre.clone()).await.expect("seals");
+        );
+        let sealed = self.standin.seal(pre.submission()).await.expect("seals");
         let host_key = self.standin.host_public_key().await.expect("host key");
-        let witness = ticker.approve(&pre, &sealed, &host_key).expect("approves");
+        let witness = pre.approve(&ticker, &sealed, &host_key).expect("approves");
         self.standin.approve(witness).await.expect("approval");
         self.standin.close_epoch().await.expect("closes");
         self.ingest().await
@@ -353,21 +357,17 @@ impl Rig {
     /// relay; returns the write's state after the approval leg.
     async fn sign(&self, key: &ActorKey, staged_id: Uuid) -> Result<StagedState, String> {
         let write = staged::load(&self.pool, staged_id).await.expect("loads");
-        let pre = key.pre_sign(write.proposal.clone());
+        let pre = PreSigned::sign(key, write.proposal.clone());
         let sealed = api::relay::submit_pre_signed(
             &self.realization,
             &self.pool,
             staged_id,
-            PreSignedParts {
-                author_pubkey: pre.author_pubkey.clone(),
-                nonce: pre.nonce.clone(),
-                pre_signature: pre.pre_signature.clone(),
-            },
+            PreSignedParts::from(&pre),
         )
         .await
         .map_err(|e| e.to_string())?;
         let host_key = self.standin.host_public_key().await.expect("host key");
-        let witness = key.approve(&pre, &sealed, &host_key).expect("approves");
+        let witness = pre.approve(key, &sealed, &host_key).expect("approves");
         api::relay::submit_approval(
             &self.realization,
             &self.pool,
@@ -1231,16 +1231,12 @@ async fn a_held_approval_is_verified_before_it_is_held(pool: PgPool) {
     rig.approve_one(mira, rig.registration_path(applicant.account).await)
         .await;
     let registration = rig.the_registration(applicant.account).await;
-    let pre = applicant.key.pre_sign(registration.proposal.clone());
+    let pre = PreSigned::sign(&applicant.key, registration.proposal.clone());
     api::relay::submit_pre_signed(
         &rig.realization,
         &rig.pool,
         registration.id,
-        PreSignedParts {
-            author_pubkey: pre.author_pubkey.clone(),
-            nonce: pre.nonce.clone(),
-            pre_signature: pre.pre_signature.clone(),
-        },
+        PreSignedParts::from(&pre),
     )
     .await
     .expect("seals");

@@ -16,6 +16,6 @@ WHEN tap the sound control -> sound turns on or off as the one sticky decision e
 
 WHEN tap a frame -> that frame is the clip's cover AND the strip stands as it did before playing
 
-WHEN press Next -> the details stage opens AND NEVER an Add a cover door stands there
+WHEN press Next GIVEN a cover is chosen -> the details stage opens with the chosen cover beside the clip as its own tile, the door back to this step
 
 WHEN press the header X -> the whole flow is left for where the composer was opened from AND the draft is kept AND NEVER a dialog asks

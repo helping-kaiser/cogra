@@ -161,7 +161,6 @@ fn tag(author: &str, seq: u64, epoch: i64, position: i64) -> PublishedRecord {
         epoch,
         act_time: 100 - position,
         position,
-        payload_marked: false,
         payload_witness: vec![0; 32],
         legs: vec![
             PublishedLeg {
@@ -244,7 +243,6 @@ fn record(
         epoch: 1,
         act_time: 100 - position,
         position,
-        payload_marked: false,
         payload_witness: vec![0; 32],
         legs,
     }

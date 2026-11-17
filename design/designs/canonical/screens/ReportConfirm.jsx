@@ -29,7 +29,13 @@
    REGISTERED under the `postDetail` prefix (the hosting-surface rule): the
    detail beneath as `PostDetail` names it, the sheet `reportSheet` with its
    `title`, `body`, `report` and `cancel`. */
+/* THE `answer` CHIP (round 51 act 2, jakob 2026-11-17, B6): `failed` is a
+   report that got no answer, `refused` one the server answered no — the
+   sheet stays up with its line above the pair and `Report` reading `Retry`
+   (`ReportPostSheet`), never the snackbar. */
 export const NODE = "postDetail";
+export const PROPS = { answer: { editor: "enum", options: ["asking", "failed", "refused"], default: "asking" } };
+export const VALS = `askingShown: this.props.answer === "asking" ? "block" : "none", failedShown: this.props.answer === "failed" ? "block" : "none", refusedShown: this.props.answer === "refused" ? "block" : "none"`;
 export function Screen() {
   return (
     <>
@@ -39,7 +45,15 @@ export function Screen() {
       </DetailColumn>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
 
-      <ReportPostSheet />
+      <div style={{ display: "{{askingShown}}" }}>
+        <ReportPostSheet />
+      </div>
+      <div style={{ display: "{{failedShown}}" }}>
+        <ReportPostSheet answer="failed" />
+      </div>
+      <div style={{ display: "{{refusedShown}}" }}>
+        <ReportPostSheet answer="refused" />
+      </div>
     </>
   );
 }

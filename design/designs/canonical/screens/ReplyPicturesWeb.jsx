@@ -4,8 +4,10 @@
    browser's file dialog here), so nothing of the post wizard's grid or its
    web substitution appears at comment scale. The one web addition is the
    drop path: the composer accepts files dropped anywhere on it, and the
-   quiet hint beside Add says so — costs nothing on a phone. Everything
-   else is the app's board unchanged. */
+   quiet hint beside Add says so — costs nothing on a phone. What the dialog
+   or the drop brings passes the comment's square crop (`ReplyCrop`) before
+   it joins the tray, as on the phone. Everything else is the app's board
+   unchanged. */
 export function Screen() {
   return (
     <>
@@ -21,8 +23,8 @@ export function Screen() {
         <WordsBody rows={REPLY_WORDS_ROWS} cap={REPLY_WORDS_CAP} paragraphs={["The glovebox camera earns its keep — this is the print from 2019 that almost catches it."]} />
 
         <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-          <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" width={70} height={88} fit="contain" onRemove={() => {}} />
-          <MediaThumb src="gallery-market.jpg" alt="" width={117} height={88} fit="contain" progress={0.65} />
+          <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={88} onRemove={() => {}} />
+          <MediaThumb src="gallery-market.jpg" alt="" size={88} progress={0.65} />
         </div>
 
         <DescribeCounter described={0} total={2} onDescribe={() => {}} />

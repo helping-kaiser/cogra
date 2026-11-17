@@ -59,9 +59,14 @@ import {
    THE HOLD IS NEVER SILENT, AND IT WAITS FOR ITS SIGNATURE (jakob, the failure
    pack: signed acts are pessimistic). A gesture that stages a priced act must
    never be silent, because silence reads as failure and invites the same act
-   again — so the anchor goes inert at the hold, and once the wait passes 200ms
-   the target's row says `Signing…` under the face. The resting target moves to
-   the new opinion when the signature is taken, and a snackbar confirms it. If
+   again — so the anchor goes inert at the hold, and THE RING THAT FILLED
+   DURING THE HOLD STAYS CLOSED AROUND THE FACE while the signing runs (jakob
+   2026-11-17, impl 354, his A23: "the card jump/extend a bit downwards …
+   should also be removed"): no line stands under the face for a hold's
+   wait, so the card never grows, and `Signing…` is spoken from a visually
+   hidden status once 200ms pass without an answer, so a quick answer is
+   never announced. The resting target moves to the new opinion when the
+   signature is taken, the ring goes, and a snackbar confirms it. If
    it is not taken, the face never moved: the row carries `SigningPending`'s
    row line with `Retry` — the hold has no surface of its own to re-raise, and
    the Snackbar charter keeps errors off the snackbar.
@@ -78,8 +83,9 @@ import {
    said Cancel would mislead — while Set keeps its own label until 200ms pass
    and then reads `Setting…`. Close, a press outside, Back and Escape all
    close the pad. Closed, the act goes
-   on and its wait moves to the target's row as a hold's does — `Signing…`
-   under the face, then the face and the snackbar, or `That didn't sign.` with
+   on and its wait moves to the target's row as a hold's does — the closed
+   ring around the face, `Signing…` spoken only (round 51, act 2),
+   then the face and the snackbar, or `That didn't sign.` with
    a Retry that asks the same pick again. A Set the reader regrets is walked
    back afterwards. THE ALTERNATES
    WAIT THE SAME WAY (ask 14): their commit reads `Signing…`, a fault keeps
@@ -178,6 +184,10 @@ const WRITE_RULE_HELP = WRITE_RULE_WORDS.help;
 const WRITE_RULE_ROW = WRITE_RULE_WORDS.row;
 /* A comfort's revert, said on the row (copy-voice, *Faults by code*). */
 const COMFORT_FAILED_ROW = "That didn't go through.";
+/* The hold's spoken wait (round 51): the standard visually-hidden pattern,
+   absolutely placed, so the row's column takes no gap for it and the card
+   never grows. */
+const VISUALLY_HIDDEN = { position: "absolute", width: 1, height: 1, padding: 0, margin: -1, overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 };
 
 /* THE ANCHOR ON A MEDIA SURFACE (jakob, review rounds 1 and 2). On the stream
    the control sits on whatever the clip happens to be showing, where the card's
@@ -318,7 +328,11 @@ export function StanceControl({
      pack). `"pressed"` is the first 200ms after the commit (the way out
      already reads `Close`, the commit still its own label, refusing a second
      press), `"busy"` the wait past 200ms (`Close` beside the commit's
-     waiting label), `"failed"` the signing that did not complete. With the pad closed it is the hold's, and the target's row
+     waiting label), `"failed"` the signing that did not complete. `"held"`
+     is a hold's own wait (round 51; jakob 2026-11-17, impl 354): the ring
+     stays closed around the face, no line stands under it, and `Signing…`
+     is spoken from a visually hidden status; `"busy"` with the pad closed is
+     a closed pad's wait and draws the same (act 2: one vehicle). With the pad closed it is the hold's, and the target's row
      carries it under the face; with the pad open it is Set's, and the pad's
      commit row carries it; with the alternates up it is theirs, and with the
      walk-back or the empty sign raised it is that dialog's (seam 245, asks
@@ -535,20 +549,25 @@ export function StanceControl({
   const padSigning = open && !dialogUp ? signing : undefined;
   const altSigning = alternates && !dialogUp ? signing : undefined;
   const dialogSigning = dialogUp ? signing : undefined;
-  const anchorBusy = rowSigning === "busy" || rowSigning === "pressed";
+  /* ONE VEHICLE FOR THE ROW'S WAIT (round 51; act 2, jakob 2026-11-17, B4): a
+     hold's wait (`"held"`) and a closed pad's (`"busy"` with the pad closed)
+     draw alike — the closed ring, no line, `Signing…` spoken only. */
+  const holdWaiting = rowSigning === "held" || rowSigning === "busy";
+  const anchorBusy = rowSigning === "busy" || rowSigning === "pressed" || holdWaiting;
   /* From the press the way out reads `Close`; the commit's own label waits
      the 200ms (`"pressed"` is that first moment, `"busy"` the wait past it). */
   const padPressed = padSigning === "pressed";
   const padWaiting = padSigning === "busy";
   const padClosing = padWaiting || padPressed;
   /* The face, ringed while a hold is under way — the ring centred on it, the
-     face's own box unchanged, so nothing beside it moves. */
-  const ringed = holding || holdProgress !== undefined;
+     face's own box unchanged, so nothing beside it moves — and after it,
+     closed, while the hold's signing runs (`holdWaiting`). */
+  const ringed = holding || holdProgress !== undefined || holdWaiting;
   const withHoldRing = (face) =>
     ringed ? (
       <span style={{ position: "relative", display: "inline-grid", placeItems: "center" }}>
         {face}
-        <HoldRing progress={holdProgress ?? 0} live={holding} />
+        <HoldRing progress={holdWaiting ? 1 : (holdProgress ?? 0)} live={holding && !holdWaiting} />
       </span>
     ) : (
       face
@@ -702,9 +721,15 @@ export function StanceControl({
       </div>
       {/* Named `pending` under the control's own name (seam 248). */}
       {pendingPick && <PendingMarker label={pendingReview ? "Waiting for your review" : "Waiting for your key"} node={node && "pending"} />}
-      {/* THE ROW LINE (vehicle (b)): the hold's wait, quiet, and its failure,
-          in the failure voice with the way to ask again. */}
-      {rowSigning === "busy" && <PendingMarker label="Signing…" />}
+      {/* THE ROW LINE (vehicle (b)): a failure, in the failure voice with
+          the way to ask again. The row's wait — a hold's or a closed pad's —
+          draws no line: the closed ring is its sign, and `Signing…` is spoken
+          from a visually hidden status (round 51, act 2). */}
+      {holdWaiting && (
+        <span role="status" style={VISUALLY_HIDDEN}>
+          Signing…
+        </span>
+      )}
       {/* Retry asks the act that was sent: the hold's default after a hold,
           the pick after a Set its pad was closed under. */}
       {rowSigning === "failed" && (
