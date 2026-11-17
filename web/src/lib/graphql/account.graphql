@@ -89,10 +89,13 @@ mutation RequestPasswordReset($input: RequestPasswordResetInput!) {
   }
 }
 
-# The reset link's read-only check (api-spec.md `passwordResetLinkCheck`): a
-# link used or past its time opens ResetExpired, never the form (ResetNew.md).
-query PasswordResetLinkCheck($token: String!) {
-  passwordResetLinkCheck(token: $token)
+# The reset link's read-only check (api-spec.md `passwordResetLink`): null for
+# a link used or past its time, which opens ResetExpired, never the form
+# (ResetNew.md); live, it names the account the new password is filed under.
+query PasswordResetLink($token: String!) {
+  passwordResetLink(token: $token) {
+    email
+  }
 }
 
 mutation ConfirmPasswordReset($input: ConfirmPasswordResetInput!) {
