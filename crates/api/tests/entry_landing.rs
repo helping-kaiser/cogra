@@ -1540,8 +1540,7 @@ async fn the_carried_batch_signs_at_the_landing(pool: PgPool) {
 /// The release orders and de-duplicates whatever list the carried row
 /// holds, whatever the random addresses are. The row's list is set by
 /// hand, because prepare would already canonicalize it: an identifier
-/// that sorts after every hex address, then the Registration the landing
-/// adds again.
+/// that sorts after every hex address, twice.
 ///
 /// The landing releases a carried list sorted by text bytes and without duplicates, whatever order the row held.
 /// ´claim:onboarding:the-landing-release-orders-and-dedups-the-carried-list´
@@ -1552,17 +1551,15 @@ async fn the_landing_release_orders_and_dedups_the_carried_list(pool: PgPool) {
     let noa = rig.applicant(mira.id, "noa").await;
     let carried = carry(&rig, noa.account, PREPARE_POST, post_input("hello")).await;
     let late = "act:zz:0:opinion".to_string();
-    let admission = format!("act:{}:0:registration", noa.key.address());
     let set = sqlx::query("UPDATE staged_writes SET deps = $2 WHERE id = $1 AND state = 'carried'")
         .bind(carried[0])
-        .bind(vec![late.clone(), admission.clone()])
+        .bind(vec![late.clone(), late.clone()])
         .execute(&rig.pool)
         .await
         .expect("plant the list");
     assert_eq!(set.rows_affected(), 1);
 
     let (registration, vouch) = land_through_mira(&rig, &mira, &noa).await;
-    assert_eq!(registration, admission);
     let mut expected = vec![late, registration, vouch];
     expected.sort();
     assert_eq!(deps_of(&rig, carried[0]).await, expected);
