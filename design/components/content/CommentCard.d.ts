@@ -44,6 +44,7 @@ export interface CommentCardProps {
   references?: number;
   /** Makes the count open the topics-and-references sheet. */
   onOpenReferences?: () => void;
+  /** Signed out, the stance reads the borrowed view; `Reply` and the comment glyph still stand at full strength, `Reply` raising the join ask (GuestGate.md:3). */
   signedIn?: boolean;
   /** Owned by the shell, like `PostCard.taught`. Defaults to true. */
   taught?: boolean;

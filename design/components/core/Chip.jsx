@@ -100,13 +100,18 @@ const READOUT = {
   flex: "none",
 };
 
-export function Chip({ label, selected = false, onToggle, ariaLabel, disabled = false, size = "md", tone = "filter", node, nodeKey }) {
+/* `selectedHoles` lets a board draw ONE chip whose selection its own setting
+   chooses — `{ checked, border, background, color }`, each a `{{hole}}` the
+   board's VALS fills with what `selected` would give — so a row a chip
+   setting re-selects is drawn once, not once per value (round 49, seam 338). */
+export function Chip({ label, selected = false, selectedHoles, onToggle, ariaLabel, disabled = false, size = "md", tone = "filter", node, nodeKey }) {
   if (tone === "readout") return <span style={READOUT} data-node={node} data-node-key={node && nodeKey}>{label}</span>;
+  const h = selectedHoles;
   return (
     <button
       type="button"
       role="switch"
-      aria-checked={selected}
+      aria-checked={h ? h.checked : selected}
       aria-label={ariaLabel}
       disabled={disabled}
       onClick={onToggle}
@@ -115,9 +120,9 @@ export function Chip({ label, selected = false, onToggle, ariaLabel, disabled = 
       className="cg-state cg-focus cg-hit"
       style={{
         ...pill(size),
-        border: selected ? "1px solid transparent" : "1px solid var(--border-field)",
-        background: selected ? "var(--secondary-container)" : "transparent",
-        color: selected ? "var(--on-secondary-container)" : "var(--text-body)",
+        border: h ? h.border : selected ? "1px solid transparent" : "1px solid var(--border-field)",
+        background: h ? h.background : selected ? "var(--secondary-container)" : "transparent",
+        color: h ? h.color : selected ? "var(--on-secondary-container)" : "var(--text-body)",
         opacity: disabled ? "var(--state-disabled)" : 1,
       }}
     >

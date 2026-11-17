@@ -2,7 +2,7 @@
    H7). The reader's own posts join History like anything they see, so a card
    of their own stands there — @sol's salt maps — and its ⋮ raises the own
    post menu, `OWN_POST_MENU`'s rows: Save, Cite, Edit, Mark as sensitive,
-   Remove, the license closing it, and no Hide and no Report (the own menus'
+   Remove, Cited by, Opinions on this, the license closing it, and no Hide and no Report (the own menus'
    rule, `FeedPostMenuOwn`).
 
    The card hands `PostCard` the rows without the license, because the card

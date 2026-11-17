@@ -27,6 +27,10 @@
    `one-word` a 50-character unbroken name, broken inside the word, 20px on
    25px; `widest` 50 × W without a space, 10px on 13px — the widest legal
    name. Two lines are the hard cap: the size has no floor (jakob 2026-11-13).
+
+   THE PROFILE LANDS ON POSTS (jakob 2026-11-13, the android hand test): the
+   `tab` chip draws `posts`, the landing, and `everything`, the chronicle the
+   tab opens (`ProfileTabs`).
    REGISTERED under the `profile` prefix (design ⇄ impl seam 059/061): another
    person's page is the same surface as your own, named by the same body
    names. */
@@ -34,8 +38,9 @@ export const NODE = "profile";
 export const PROPS = {
   from: { editor: "enum", options: ["feed", "profile"], default: "feed" },
   name: { editor: "enum", options: ["sample", "two-lines", "fifty", "one-word", "widest"], default: "sample" },
+  ...TAB_CHIP,
 };
-export const VALS = `backLabel: this.props.from === "profile" ? "Back to the profile" : "Back to feed", displayName: this.props.name === "two-lines" ? "Maximiliana Wilhelmina Featherstonehaugh" : this.props.name === "fifty" ? "Maximiliana Wilhelmina Featherstonehaugh Okonkwoli" : this.props.name === "one-word" ? "MaximilianaWilhelminaFeatherstonehaughOkonkwoLiang" : this.props.name === "widest" ? "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW" : "Ada Okonkwo", nameSize: this.props.name === "fifty" ? "19px" : this.props.name === "one-word" ? "20px" : this.props.name === "widest" ? "10px" : "var(--text-title-large)", nameLineHeight: this.props.name === "fifty" ? "24px" : this.props.name === "one-word" ? "25px" : this.props.name === "widest" ? "13px" : "var(--text-title-large--line-height)"`;
+export const VALS = `backLabel: this.props.from === "profile" ? "Back to the profile" : "Back to feed", displayName: this.props.name === "two-lines" ? "Maximiliana Wilhelmina Featherstonehaugh" : this.props.name === "fifty" ? "Maximiliana Wilhelmina Featherstonehaugh Okonkwoli" : this.props.name === "one-word" ? "MaximilianaWilhelminaFeatherstonehaughOkonkwoLiang" : this.props.name === "widest" ? "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW" : "Ada Okonkwo", nameSize: this.props.name === "fifty" ? "19px" : this.props.name === "one-word" ? "20px" : this.props.name === "widest" ? "10px" : "var(--text-title-large)", nameLineHeight: this.props.name === "fifty" ? "24px" : this.props.name === "one-word" ? "25px" : this.props.name === "widest" ? "13px" : "var(--text-title-large--line-height)", ${TAB_VALS}`;
 export function Screen() {
-  return <ProfileOtherBody backLabel="{{backLabel}}" displayName="{{displayName}}" nameSize="{{nameSize}}" nameLineHeight="{{nameLineHeight}}" />;
+  return <ProfileOtherBody backLabel="{{backLabel}}" displayName="{{displayName}}" nameSize="{{nameSize}}" nameLineHeight="{{nameLineHeight}}" tab="chip" />;
 }

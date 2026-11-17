@@ -3,7 +3,8 @@
    with the one difference Saved's law makes: every card here is kept, so the
    first row reads `Unsave` (Saved.md), the card's own Save in its kept state.
    Saved has no row of its own: Unsave is how a thing leaves it
-   (`SavedUndo`). Then Cite, Hide @ada, License terms, Report at the tail.
+   (`SavedUndo`). Then Cite, Hide @ada, Cited by, Opinions on
+   this, License terms, Report at the tail.
 
    HIDING FROM HERE LEAVES THE CARDS WHERE THEY ARE: a hidden account's things
    and profile stay in Saved, the hidden list being the feed's.
