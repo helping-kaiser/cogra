@@ -66,6 +66,11 @@ function withMentions(text) {
   );
 }
 
+/* A comment's pictures are squares (jakob 2026-11-17: the comment's crop
+   frames each one square), so a picture stands square here whatever ratio
+   it is handed; a clip keeps the shape its placer hands it. */
+const squared = (media) => media.map((item) => (item.kind === "video" ? item : { ...item, ratio: "square" }));
+
 export function CommentCard({
   author,
   content,
@@ -283,18 +288,21 @@ export function CommentCard({
           full-bleed, and capped at a comment-scale height: the media joins the
           words, it must not turn the comment into a post. Square is the
           comment scale's shape (readme §13, the reel round): a comment's
-          pictures and clips fill it, display-cropped and centred, while the
-          bytes travel uncropped; at most four ride one comment. */}
+          picture IS the square its author framed in the comment's crop
+          (`ReplyCrop`, jakob 2026-11-17), one picture as much as four, so
+          every picture here stands square whatever shape it is handed
+          (`squared`); a clip is handed the square by its placer. At most
+          four ride one comment. */}
       {Array.isArray(media) && media.length > 0 && (onOpen ? (
         <div onClick={open} className="cg-door" data-node={node && "media"}>
-          <MediaGallery items={media} ratio={media.length > 1 ? "square" : undefined} maxHeight="220px" node={node && "media"} />
+          <MediaGallery items={squared(media)} ratio="square" maxHeight="220px" node={node && "media"} />
         </div>
       ) : node ? (
         <div data-node="media">
-          <MediaGallery items={media} ratio={media.length > 1 ? "square" : undefined} maxHeight="220px" node="media" />
+          <MediaGallery items={squared(media)} ratio="square" maxHeight="220px" node="media" />
         </div>
       ) : (
-        <MediaGallery items={media} ratio={media.length > 1 ? "square" : undefined} maxHeight="220px" />
+        <MediaGallery items={squared(media)} ratio="square" maxHeight="220px" />
       ))}
     </>
   );

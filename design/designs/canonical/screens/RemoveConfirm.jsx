@@ -16,7 +16,9 @@
    chip's name is `SeveranceConfirm`'s). `asking` is the dialog as raised;
    `failed` is the same dialog after a removal that got no answer — still up,
    `That didn't send. Try again.` in its `line` slot above the pair, `Remove`
-   reading `Retry`. The post beneath is not removed.
+   reading `Retry`. `refused` is the removal the server answered no (round
+   51, jakob 2026-11-17, impl 348): the same dialog, its line `That didn't go
+   through. Try again.`. The post beneath is not removed.
 
    REGISTERED under the `postDetail` prefix (seam 248), named as `RemoveMenu`
    is beneath, the dialog `dialog` as every confirm names it. 
@@ -26,8 +28,8 @@
    dialog and the removal goes on, its wait and its answer on the removed
    thing's own row. The copy is drawn unnamed, so no path moves. */
 export const NODE = "postDetail";
-export const PROPS = { answer: { editor: "enum", options: ["asking", "failed", "removing"], default: "asking" } };
-export const VALS = `askingShown: this.props.answer === "asking" ? "block" : "none", failedShown: this.props.answer === "failed" ? "block" : "none", removingShown: this.props.answer === "removing" ? "block" : "none"`;
+export const PROPS = { answer: { editor: "enum", options: ["asking", "failed", "refused", "removing"], default: "asking" } };
+export const VALS = `askingShown: this.props.answer === "asking" ? "block" : "none", failedShown: this.props.answer === "failed" ? "block" : "none", refusedShown: this.props.answer === "refused" ? "block" : "none", removingShown: this.props.answer === "removing" ? "block" : "none"`;
 export function Screen() {
   return (
     <>
@@ -40,6 +42,9 @@ export function Screen() {
       </div>
       <div style={{ display: "{{failedShown}}" }} data-node-chip="answer" data-node-key="failed">
         <RemoveDialog kind="post" failed node="dialog" />
+      </div>
+      <div style={{ display: "{{refusedShown}}" }} data-node-chip="answer" data-node-key="refused">
+        <RemoveDialog kind="post" refused node="dialog" />
       </div>
       <div style={{ display: "{{removingShown}}" }}>
         <RemoveDialog kind="post" removing />

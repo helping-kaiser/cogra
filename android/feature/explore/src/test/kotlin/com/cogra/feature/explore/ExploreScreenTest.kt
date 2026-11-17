@@ -11,6 +11,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -306,6 +307,10 @@ class ExploreScreenTest {
         )
         assertThat(top("explore.profilesLabel")).isLessThan(top("explore.result:1"))
         assertThat(top("explore.profilesDoor")).isLessThan(top("explore.result:4"))
+        // ExploreSearch.md:11 — the content stands under its own caption.
+        assertThat(top("explore.profilesDoor")).isLessThan(top("explore.contentLabel"))
+        assertThat(top("explore.contentLabel")).isLessThan(top("explore.result:4"))
+        compose.onNodeWithTag("explore.contentLabel").assertTextEquals("Posts and comments")
         compose.onNodeWithText("@saltorres", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag("explore.profilesDoor").performClick()
         assertThat(all).isEqualTo(1)

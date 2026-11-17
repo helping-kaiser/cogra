@@ -10,6 +10,12 @@ ALWAYS the picture outside the circle stays in view under a 45 % black
 
 ALWAYS Next is pinned in the foot
 
+ALWAYS the stage stands as large as the column allows, its 390 × 390 and the circle inside it being the figures at a 390 column, and never taller than the window leaves once the header, the zoom slider, Next and their gaps have their place
+
+ALWAYS a stage the window caps stays square and stands centred in the column, the circle and the picture scaling with it, and the blocks around it keep their sizes
+
+ALWAYS the stage never stands under 240 high, and under that the page scrolls under the pinned Next
+
 WHEN drag inside the crop -> the picture moves under the circle AND NEVER the circle moves
 
 WHEN pinch inside the crop -> the picture zooms under the circle AND the zoom slider follows AND NEVER the circle changes size

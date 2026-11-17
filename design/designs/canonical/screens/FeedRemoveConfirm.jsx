@@ -5,7 +5,9 @@
    still whole beneath it. A removal that gets no answer fails here as it does
    on the detail, and the same `answer` chip draws it here (round 27, seam
    252): the dialog stays, `That didn't send. Try again.` in its `line` above
-   the pair, `Remove` reading `Retry`, the card beneath not removed.
+   the pair, `Remove` reading `Retry`, the card beneath not removed; one the
+   server answered no reads `That didn't go through. Try again.` in the same
+   place (`refused`; round 51, jakob 2026-11-17, impl 348).
 
    REGISTERED under the `feed` prefix: the page as `Feed` names it, the dialog
    `dialog` as every confirm names it, its failed line `dialog.line` — the
@@ -23,8 +25,8 @@
    failure while it stands open keeps its words, `That didn't send. Try
    again.` (`failed`). The line is a drawn copy and carries no name. */
 export const NODE = "feed";
-export const PROPS = { answer: { editor: "enum", options: ["asking", "failed", "removing", "closedFailed"], default: "asking" } };
-export const VALS = `askingShown: this.props.answer === "asking" ? "block" : "none", failedShown: this.props.answer === "failed" ? "block" : "none", removingShown: this.props.answer === "removing" ? "block" : "none", closedFailedShown: this.props.answer === "closedFailed" ? "block" : "none"`;
+export const PROPS = { answer: { editor: "enum", options: ["asking", "failed", "refused", "removing", "closedFailed"], default: "asking" } };
+export const VALS = `askingShown: this.props.answer === "asking" ? "block" : "none", failedShown: this.props.answer === "failed" ? "block" : "none", refusedShown: this.props.answer === "refused" ? "block" : "none", removingShown: this.props.answer === "removing" ? "block" : "none", closedFailedShown: this.props.answer === "closedFailed" ? "block" : "none"`;
 const OWN_CARD_ROWS = OWN_POST_MENU.filter((row) => row !== LICENSE_ROW);
 export function Screen() {
   return (
@@ -44,6 +46,9 @@ export function Screen() {
       </div>
       <div style={{ display: "{{failedShown}}" }} data-node-chip="answer" data-node-key="failed">
         <RemoveDialog kind="post" failed node="dialog" />
+      </div>
+      <div style={{ display: "{{refusedShown}}" }} data-node-chip="answer" data-node-key="refused">
+        <RemoveDialog kind="post" refused node="dialog" />
       </div>
       <div style={{ display: "{{removingShown}}" }}>
         <RemoveDialog kind="post" removing />

@@ -4,6 +4,10 @@ WHEN one of the reply's picture uploads fails while the seal waits on it -> the 
 
 WHEN the reply's clip upload fails while the seal waits on it -> the gate line reads The video didn't upload. Signing waits for it. followed by Retry AND Sign comment is disabled
 
+WHEN the server refuses one of the reply's picture uploads while the seal waits on it -> the gate line reads One picture didn't upload. alone in the error ink AND NEVER Signing waits for it. stands beside it AND NEVER Retry stands AND Sign comment is disabled AND Back is the way out, to the composer, where Remove it stands
+
+WHEN the server refuses the reply's clip upload while the seal waits on it -> the gate line reads The video didn't upload. alone in the error ink AND NEVER Signing waits for it. stands beside it AND NEVER Retry stands AND Sign comment is disabled AND Back is the way out, to the composer, where Remove it stands
+
 ALWAYS the gate line's fact One picture didn't upload. wears the error ink and Signing waits for it. the quiet voice
 
 ALWAYS Sign comment is disabled and the gate line says why GIVEN the failed reading stands

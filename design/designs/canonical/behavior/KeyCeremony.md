@@ -28,6 +28,8 @@ WHEN press the header's back arrow GIVEN the ceremony opened from the key-elsewh
 
 WHEN press the header's back arrow GIVEN the ceremony opened from a key row in settings -> Settings opens AND nothing is made
 
+WHEN attaching the new key is refused because the application was approved meanwhile GIVEN the ceremony opened from the key-elsewhere card -> the ceremony ends AND the feed opens with the member's key-elsewhere card at its head, KeyElsewhere's where the account has a backup and KeyElsewhereNoBackup's where it has none AND NEVER the new key is attached AND NEVER a fault line or Retry stands
+
 WHEN the tab is closed or the app is killed before the ceremony ends -> nothing is made AND the next open shows the task card exactly as it was
 
 ALWAYS the pledge reads Everything you publish is signed with a key that is created on this browser and stays in your hands — CoGra never holds it and can never reissue it. on the web, and says in this app in the app

@@ -148,6 +148,7 @@ class ContentScreensTest {
                         onReveal = { _, _ -> },
                         onOpenActor = onOpenActor,
                         onOpenTopic = onOpenTopic,
+                        onOpenPost = {},
                         onReference = onCitePost,
                         onLicense = {},
                         onSignInOrJoin = {},
@@ -986,6 +987,7 @@ class ContentScreensTest {
                         onReveal = { _, _ -> },
                         onOpenActor = onOpenActor,
                         onOpenTopic = onOpenTopic,
+                        onOpenPost = {},
                         onReference = onReference,
                         onLicense = { licenseShown = it },
                         onSignInOrJoin = onSignInOrJoin,
@@ -1324,6 +1326,7 @@ class ContentScreensTest {
                 onReveal = { _, _ -> },
                 onOpenActor = {},
                 onOpenTopic = {},
+                onOpenPost = {},
                 onReference = {},
                 onLicense = {},
                 onSignInOrJoin = {},
@@ -2848,12 +2851,11 @@ class ContentScreensTest {
     }
 
     /**
-     * ONE SHEET AT A TIME: a comment's line is read inside the thread's own
-     * sheet, and the board draws no sheet over a sheet — so the comment's
-     * counts stay the plain fact they were.
+     * THE COUNT IS A DOOR IN THE THREAD TOO (TopicsLine.jsx:202-212; seam
+     * 352): a comment's tags and references come up stacked over the thread.
      */
     @Test
-    fun aCommentsCountsOpenNoSecondSheet() {
+    fun aCommentsCountsOpenItsSheetOverTheThread() {
         renderDetail(
             detailFixture(
                 loading = false,
@@ -2867,7 +2869,7 @@ class ContentScreensTest {
         )
         openComments()
         compose.onNodeWithTag("comment_c1_topics_counts", useUnmergedTree = true).performClick()
-        compose.onNodeWithTag("comment_c1_refs_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("comment_c1_refs_sheet").assertExists()
     }
 
     // -- What the composer is pinned to (graph.json `ReplyEntry` 5, 7) --

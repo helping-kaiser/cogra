@@ -22,7 +22,35 @@ export interface CoverRowProps {
    *  no cover chosen, no outline and nothing dimmed, because choosing a cover
    *  is always a willing act. */
   selected?: number | null;
+  /** A picture of the author's own, back from the cover's crop. It stands in
+   *  the dashed tile's place, outlined as chosen; `selected` is ignored while
+   *  it stands. A tap on it opens the picker again. */
+  own?: CoverFrame;
   caption?: string;
 }
 
 export declare function CoverRow(props: CoverRowProps): JSX.Element;
+
+/** The cover tile's spoken name: the tile is the door that changes the cover. */
+export declare const CHANGE_COVER_NAME: "Change the cover";
+
+/**
+ * The cover beside the clip: at the clip tile's height and the cover's own
+ * shape, wearing the `Cover` badge, the door named `Change the cover`. With no
+ * `src`, the dashed `Add a cover` door at the same size — the words on the tile,
+ * or beside it with `labelBeside` where the tile is too small for them.
+ */
+export interface CoverTileProps {
+  src?: string;
+  transform?: string;
+  width: number;
+  height: number;
+  progress?: number;
+  failed?: boolean;
+  addLabel?: string;
+  labelBeside?: boolean;
+  onPress?: () => void;
+  node?: string;
+}
+
+export declare function CoverTile(props: CoverTileProps): JSX.Element;

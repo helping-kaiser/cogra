@@ -42,6 +42,10 @@ ALWAYS a deep-linked comment's highlight is a step up the surface ladder and nev
 
 WHEN back returns from a screen a control in the sheet opened -> the comments sheet stands open over the post at the offset it was left AND every branch the reader expanded stands expanded
 
+WHEN tap a comment's tag chip -> that tag's page opens
+
+WHEN tap the counts on a comment's card -> the tags-and-references sheet opens over the thread
+
 WHEN the post wizard that Cite in a new post opened closes with its X -> the comments sheet stands open over the post as it was left
 
 WHEN tap the scrim, swipe the comments sheet down, press system Back or press Escape -> the comments sheet closes AND what it was opened over stands as it was
