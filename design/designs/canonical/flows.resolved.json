@@ -237,6 +237,7 @@
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "Profile",
+        "ProfileDeleted",
         "ProfileOther",
         "ProfileOtherHeld",
         "ProfileOtherHidden",
@@ -255,7 +256,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 41 boards → ReplyEntry",
+        "start · «comment count» on 42 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
@@ -290,6 +291,7 @@
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "Profile",
+        "ProfileDeleted",
         "ProfileOther",
         "ProfileOtherHeld",
         "ProfileOtherHidden",
@@ -581,6 +583,7 @@
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "Profile",
+        "ProfileDeleted",
         "ProfileOther",
         "ProfileOtherHeld",
         "ProfileOtherHidden",
@@ -596,7 +599,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «stance face» — to VouchBackPad on 33 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 34 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -621,6 +624,7 @@
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "Profile",
+        "ProfileDeleted",
         "ProfileOther",
         "ProfileOtherHeld",
         "ProfileOtherHidden",
@@ -2105,6 +2109,7 @@
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "Profile",
+        "ProfileDeleted",
         "ProfileOther",
         "ProfileOtherHeld",
         "ProfileOtherHidden",
@@ -2121,7 +2126,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «Feed score» — to FeedEntry on 46 boards → FeedEntry",
+        "start · «Feed score» — to FeedEntry on 47 boards → FeedEntry",
         "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
         "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
         "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",
@@ -2164,6 +2169,7 @@
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "Profile",
+        "ProfileDeleted",
         "ProfileOther",
         "ProfileOtherHeld",
         "ProfileOtherHidden",
@@ -6374,9 +6380,12 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "reply-to-a-post",
         "see-who-someone-stands-with",
         "see-who-stands-with-someone",
-        "take-a-stance-on-a-person"
+        "take-a-stance-on-a-person",
+        "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records"
       ],
       "endpoint": [
         "hide-a-deleted-account"
@@ -7683,8 +7692,6 @@
     "Join/10: the Privacy Policy page — the notice's door stands at the form's foot (ruling 76); the page it opens is design still owed",
     "Join/9: the Terms page — the door stands in the accept sentence (ruling 76); the page it opens is design still owed",
     "JoinErrors/8: the Terms page — the door stands in the accept sentence (ruling 76); the page it opens is design still owed",
-    "JoinErrors/9: the Privacy Policy page — the notice's door stands at the form's foot (ruling 76); the page it opens is design still owed",
-    "ReelMenu/11: what the stream shows once your own clip is removed — not ruled for the stream (round 49 question)",
-    "ReelMenu/3: what hiding the clip's author leaves on the stream — the host's aftermath is not ruled for the stream (round 49 question)"
+    "JoinErrors/9: the Privacy Policy page — the notice's door stands at the form's foot (ruling 76); the page it opens is design still owed"
   ]
 }
