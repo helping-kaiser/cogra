@@ -6219,7 +6219,7 @@ that did not load — `Reel`'s `fault` is the next clips' load, the clip on
 screen still playing — so the sentence is law only. Drawing it needs the
 failure's own words and controls (a line? a Retry?), which no ruling gives.
 
-### 231 · The stream's ⋮: what Hide and Remove leave on the stream · *design* · **filed 2026-11-13**
+### 231 · The stream's ⋮: what Hide and Remove leave on the stream · *design* · **filed 2026-11-13** · **closed 2026-11-17**
 
 Round 49 (M2). `ReelMenu` draws the clip's post menu over the stream, but each
 host rules its own aftermath and the stream has none: what the stream shows
@@ -6228,3 +6228,9 @@ a swipe?), after your own clip's `Remove` lands (the next clip takes the
 screen? a removal mark?), and whether the clip pauses while the sheet is up
 (the pad pauses it, the comments sheet stops it). The graph carries the two as
 gaps (`ReelMenu` 3 and 11).
+
+Closed by round 49, act 4 (jakob 2026-11-17): after Hide the person's clips
+leave the stream at once, the one on screen too, the next clip taking the
+screen; after your own Remove the stream stays and the removal mark stands in
+the clip's place (`ReelMenu`'s `whose` = `own-removed`); the clip pauses under
+the sheet. The two gaps are outcomes now.

@@ -24,7 +24,7 @@ ALWAYS reel.rail reads, top to bottom, reel.rail.author, reel.rail.stance, reel.
 
 ALWAYS reel.rail.menu is the post's ⋮, named More on this post as the card's is, the rail's lowest item, as the dots end every such list
 
-WHEN tap reel.rail.menu -> reel.menuSheet rises over the stream with the post's menu, the card's own rows AND NEVER the stream closes
+WHEN tap reel.rail.menu -> reel.menuSheet rises over the stream with the post's menu, the card's own rows AND the clip pauses, as under the opinion pad AND NEVER the stream closes
 
 ALWAYS reel.rail.score is the same figure the card wears, the one the latest fetch of the post found
 
