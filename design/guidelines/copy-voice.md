@@ -1376,10 +1376,12 @@ The rows, word by word:
   their twins (*drafted 2026-10-09 — their wording jakob's at review*) —
   over no body line, the pair `Report` · `Cancel` and the snackbar
   `Reported.` (**blessed**). It never connects to Report-a-problem. A
-  report the server refuses — the day's reports spent, or the thing gone —
-  answers as no answer does, the sheet staying and the shared snackbar
-  `That didn't send. Try again.` (item 95's line, the interim for FC-G15;
-  *new 2026-10-12 as a placement — the line itself blessed*).
+  report that fails keeps the sheet up in the rule's dialog shape (jakob
+  2026-11-17, round 51 act 2): the line above the pair — `That didn't
+  send. Try again.` with no answer, `That didn't go through. Try again.`
+  for a refusal (the day's reports spent, or the thing gone) — and
+  `Report` reading `Retry`; never the snackbar (`ReportConfirm`'s
+  `answer`).
 - `Save` while a thing is not kept, `Unsave` while it is — one word
   either way (jakob 2026-09-11). It is the FIRST row of every menu that
   has it, a post's, a comment's, a person's and your own post's alike,

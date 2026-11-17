@@ -822,7 +822,9 @@ Object.assign(FLOW_MARKERS, {
   // like the detail's, numbered as ReportConfirm and PostLicense number them.
   FeedReportConfirm: [
     { n: 1, find: ">Report</button>", tag: "button" },
-    { n: 2, find: ">Cancel</button>", tag: "button" },
+    { n: 2, find: ">Cancel</button>", tag: "button", all: true },
+    // Round 51 act 2: the `answer` chip's failed sheets, Report reading Retry — one act.
+    { n: 1, find: ">Retry</button>", tag: "button", all: true },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   FeedPostLicense: [{ n: 1, find: 'class="cg-scrim-in"', tag: "div" }],
@@ -830,7 +832,9 @@ Object.assign(FLOW_MARKERS, {
   // sheet's own pair and its scrim are all that carries numbers.
   ReportConfirm: [
     { n: 1, find: ">Report</button>", tag: "button" },
-    { n: 2, find: ">Cancel</button>", tag: "button" },
+    { n: 2, find: ">Cancel</button>", tag: "button", all: true },
+    // Round 51 act 2: the `answer` chip's failed sheets, Report reading Retry — one act.
+    { n: 1, find: ">Retry</button>", tag: "button", all: true },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   // TWO WASHES on this board — the thread's, and the menu's stacked over the

@@ -901,14 +901,31 @@ function LicenseSheet({ license, stacked = false, node }) {
    the detail and `FeedReportConfirm` over the feed (FC-G10), one sheet on
    two hosts, so the two cannot disagree. Board glue, not a master: the
    sheet, its title and the `Cancel`/`Report` pair, each
-   named under the placer's `reportSheet`. */
-function ReportPostSheet() {
+   named under the placer's `reportSheet`.
+
+   A FAILED REPORT KEEPS THE SHEET UP (round 51 act 2, jakob 2026-11-17, B6:
+   the rule's dialog shape, never the snackbar). `answer` draws it: the line
+   stands in the sheet above the pair, in the failure voice — `failed`, no
+   answer, `That didn't send. Try again.`; `refused`, an answered refusal
+   (the day's reports spent, the thing gone), `That didn't go through. Try
+   again.` — and `Report` itself reads `Retry`. `Cancel` keeps its place.
+   The failed copies are drawn unnamed beside the named sheet, so no path
+   moves. */
+const REPORT_FAULT_LINES = { failed: "That didn't send. Try again.", refused: "That didn't go through. Try again." };
+function ReportPostSheet({ answer } = {}) {
+  const line = REPORT_FAULT_LINES[answer];
+  const n = (segment) => (line ? undefined : segment);
   return (
-    <BottomSheet open ariaLabel="Report this post" node="reportSheet">
-      <SheetTitle node="title">Report this post?</SheetTitle>
+    <BottomSheet open ariaLabel="Report this post" node={n("reportSheet")}>
+      <SheetTitle node={n("title")}>Report this post?</SheetTitle>
+      {line && (
+        <div style={{ padding: "var(--space-2) var(--space-6) 0" }}>
+          <TransportError message={line} />
+        </div>
+      )}
       <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-2)", padding: "var(--space-2) var(--space-6) 0" }}>
-        <Button variant="text" node="cancel">Cancel</Button>
-        <Button node="report">Report</Button>
+        <Button variant="text" node={n("cancel")}>Cancel</Button>
+        <Button node={n("report")}>{line ? "Retry" : "Report"}</Button>
       </div>
     </BottomSheet>
   );

@@ -6371,7 +6371,7 @@ left untouched — or the draft card meets the reader first — is not written.
 
 Closed by round 51, act 2 (jakob 2026-11-17, B5 as recommended, his addition: opening the wizard from Cite or Mention "is just like another door to the wizard"): a kept draft stays as it was when a Cite or Mention composer is left untouched; the doors are written as doors (`ComposeDraft`). What happens when such a door opens over a kept draft is backlog 256.
 
-### 255 · The report sheet carries its failure on the snackbar · *design* · **filed 2026-11-17**
+### 255 · The report sheet carries its failure on the snackbar · *design* · **filed 2026-11-17** · **closed 2026-11-17**
 
 Round 51 (the one rule). `ReportConfirm` answers a refusal and no answer alike
 with the shared snackbar `That didn't send. Try again.` — the interim placement
@@ -6379,6 +6379,8 @@ of 2026-10-12 (copy-voice, `Report`). The rule puts a small sheet's failure in
 the sheet, its commitment reading `Retry`, the words by the answer, and
 `NetworkError` says a failure is never carried on the snackbar. Round 51 changed
 only the signing hosts and left it: (a) as drawn; (b) the rule's dialog shape.
+
+Closed by round 51, act 2 (jakob 2026-11-17, B6 as recommended): (b) — a failed report keeps its sheet up, the line above the pair in the answer's words, `Report` reading `Retry`, never the snackbar (`ReportConfirm` and `FeedReportConfirm`, `answer` chip).
 
 ### 256 · A Cite or Mention door opened over a kept draft · *design* · **filed 2026-11-17**
 
