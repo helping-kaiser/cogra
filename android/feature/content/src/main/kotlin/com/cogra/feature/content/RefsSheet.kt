@@ -71,6 +71,7 @@ import com.cogra.core.designsystem.twoPlaces
 import com.cogra.core.designsystem.twoPlacesUnsigned
 import com.cogra.core.designsystem.v2.atom.SectionLabel
 import com.cogra.core.designsystem.v2.atom.SheetTitle
+import com.cogra.core.designsystem.v2.atom.sheetContainerColor
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.ReferenceClaimView
 import com.cogra.domain.ReferenceContentKind
@@ -91,6 +92,8 @@ internal fun RefsSheet(
     onOpenActor: (String) -> Unit,
     onOpenPost: (String) -> Unit,
     testTagPrefix: String,
+    /** Over another sheet — a comment's tags and references, raised over the thread. */
+    stacked: Boolean = false,
 ) {
     // THE SHEET IS THE DOOR, NOT THE DESTINATION — `CograOverflowMenu`'s own
     // rule, which this sheet did not keep. Its opener remembers `refsOpen`
@@ -114,7 +117,11 @@ internal fun RefsSheet(
         // `--surface-dialog` is `surface-container-high` (design/tokens/semantic.css:9-12),
         // which the board draws and Material's own default does not: its
         // `surfaceContainerLow` reads a rung too dark, most of all in the dark theme.
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        containerColor = sheetContainerColor(
+            stacked,
+            MaterialTheme.colorScheme,
+            MaterialTheme.colorScheme.surfaceContainerHigh,
+        ),
         modifier = Modifier.testTag("${testTagPrefix}_refs_sheet"),
     ) {
         Column(Modifier.fillMaxWidth()) {
