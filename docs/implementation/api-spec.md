@@ -798,8 +798,9 @@ type Record {
   "The epoch in which the record landed — the graph's own clock;
    epoch ages read against the public epoch certificates."
   landingEpoch: Int!
-  "When the record landed: its epoch's attested boundary timestamp
-   (layer1-interface.md, the Host Contract). Wall-clock time for
+  "When the record landed: its epoch's asserted boundary timestamp
+   (layer1-interface.md, the Host Contract; checkable only for
+   consistency with the published duration bounds). Wall-clock time for
    display — the ages ladder reads it; `landingEpoch` and the causal
    key carry the order."
   landedAt: DateTime!

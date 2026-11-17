@@ -196,7 +196,7 @@ async fn the_chronicle_orders_by_the_key_of_record(pool: PgPool) {
         &pool,
         &EpochPackage {
             epoch: 1,
-            attested_at: chrono::Utc::now(),
+            asserted_at: chrono::Utc::now(),
             records,
             closure: Default::default(),
         },
@@ -265,7 +265,7 @@ async fn ingest_one_epoch(pool: &PgPool, records: Vec<PublishedRecord>) {
         pool,
         &EpochPackage {
             epoch: 1,
-            attested_at: chrono::Utc::now(),
+            asserted_at: chrono::Utc::now(),
             records,
             closure: Default::default(),
         },

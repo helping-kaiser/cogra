@@ -864,8 +864,9 @@ impl Record {
         self.0.epoch
     }
 
-    /// When the record landed: its epoch's attested boundary timestamp
-    /// (layer1-interface.md, the Host Contract). Wall-clock time for
+    /// When the record landed: its epoch's asserted boundary timestamp
+    /// (layer1-interface.md, the Host Contract; checkable only for
+    /// consistency with the published duration bounds). Wall-clock time for
     /// display; the key of record (`landingEpoch`, `position`) carries the
     /// order.
     async fn landed_at(&self, ctx: &Context<'_>) -> async_graphql::Result<DateTime<Utc>> {
@@ -877,7 +878,7 @@ impl Record {
                 tracing::error!(
                     epoch = self.0.epoch,
                     record = %self.0.record_id,
-                    "a mirrored record's epoch has no attested instant"
+                    "a mirrored record's epoch has no asserted instant"
                 );
                 async_graphql::Error::new("the record's landing instant is missing")
                     .extend_with(|_, e| e.set("code", "INTERNAL"))
@@ -5515,7 +5516,7 @@ async fn hydrate_vouched_in(
             tracing::error!(
                 epoch = row.epoch,
                 account = %row.account_id,
-                "a vouch record's epoch has no attested instant"
+                "a vouch record's epoch has no asserted instant"
             );
             async_graphql::Error::new("the vouch's landing instant is missing")
                 .extend_with(|_, e| e.set("code", "INTERNAL"))

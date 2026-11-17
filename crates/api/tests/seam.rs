@@ -93,11 +93,11 @@ async fn a_record_crosses_the_seam_into_the_mirror(pool: PgPool) {
 }
 
 /// X-SR3 across the seam: each ingested epoch carries the boundary
-/// timestamp its package attests, and an epoch the mirror took in before
+/// timestamp its package asserts, and an epoch the mirror took in before
 /// the package carried one is filled from the published sequence on the
 /// next pass — through the seam, never from the stand-in's tables.
 ///
-/// Every ingested epoch carries its attested instant, and a missing one is filled from the published sequence.
+/// Every ingested epoch carries its asserted instant, and a missing one is filled from the published sequence.
 /// ´claim:relay:epoch-instants-cross-the-seam´
 #[sqlx::test(migrations = "../../migrations")]
 async fn epoch_instants_cross_the_seam_and_missing_ones_are_filled(pool: PgPool) {
@@ -119,22 +119,22 @@ async fn epoch_instants_cross_the_seam_and_missing_ones_are_filled(pool: PgPool)
     api::ingest::ingest_pending(&boundary, &pool, 8)
         .await
         .expect("pass");
-    let attested: Vec<(i64, chrono::DateTime<chrono::Utc>)> = boundary
+    let asserted: Vec<(i64, chrono::DateTime<chrono::Utc>)> = boundary
         .epochs_since(0)
         .await
         .expect("published")
         .into_iter()
-        .map(|p| (p.epoch, p.attested_at))
+        .map(|p| (p.epoch, p.asserted_at))
         .collect();
-    assert_eq!(attested.len(), 2);
+    assert_eq!(asserted.len(), 2);
     assert_eq!(
-        attested.iter().map(|(epoch, _)| *epoch).collect::<Vec<_>>(),
+        asserted.iter().map(|(epoch, _)| *epoch).collect::<Vec<_>>(),
         vec![1, 2]
     );
     let mirrored = mirror::epoch_instants(&pool, &[1, 2])
         .await
         .expect("instants");
-    for (epoch, at) in &attested {
+    for (epoch, at) in &asserted {
         assert_eq!(mirrored[epoch], *at);
     }
 
@@ -161,7 +161,7 @@ async fn epoch_instants_cross_the_seam_and_missing_ones_are_filled(pool: PgPool)
     let refilled = mirror::epoch_instants(&pool, &[1, 2])
         .await
         .expect("instants");
-    for (epoch, at) in &attested {
+    for (epoch, at) in &asserted {
         assert_eq!(refilled[epoch], *at);
     }
 }
