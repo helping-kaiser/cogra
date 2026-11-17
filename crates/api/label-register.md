@@ -998,6 +998,7 @@ label.
 | `test:integration:the-key-stays-bound-once-funded`                                                             | the_key_stays_bound_once_funded                                                             |
 | `test:integration:the-landing-evaluation-is-idempotent-under-concurrent-ingest`                                | the_landing_evaluation_is_idempotent_under_concurrent_ingest                                |
 | `test:integration:the-landing-rebuilds-from-the-mirror`                                                        | the_landing_rebuilds_from_the_mirror                                                        |
+| `test:integration:the-landing-release-orders-and-dedups-the-carried-list`                                      | the_landing_release_orders_and_dedups_the_carried_list                                      |
 | `test:integration:the-link-confirms-signed-out`                                                                | the_link_confirms_signed_out                                                                |
 | `test:integration:the-link-sweep-closes-only-waiting-applications-and-counts-them`                             | the_link_sweep_closes_only_waiting_applications_and_counts_them                             |
 | `test:integration:the-listing-pages-by-keyset-in-landing-order`                                                | the_listing_pages_by_keyset_in_landing_order                                                |
