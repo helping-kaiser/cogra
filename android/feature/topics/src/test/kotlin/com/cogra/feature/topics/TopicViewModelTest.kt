@@ -49,7 +49,7 @@ class TopicViewModelTest {
         SeenTracker(RecordingViewHistoryRepository(), signedOut, scope, testSeenRecord(signedOut, scope))
     }
 
-    private fun viewModel() = TopicViewModel(topics, seenTracker)
+    private fun viewModel() = TopicViewModel(topics, seenTracker, webOrigin = "https://cogra.test")
 
     @Before
     fun setUp() {
@@ -104,6 +104,13 @@ class TopicViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(vm.state.value.transportFailed).isTrue()
+    }
+
+    // The stance row's share hands over the tag's own web address, the one a
+    // tag card's share hands over (`TagPage`'s row).
+    @Test
+    fun theShareHandsOverTheTagsOwnAddress() {
+        assertThat(viewModel().shareUrl(NAME)).isEqualTo("https://cogra.test/topics/rust")
     }
 
     private fun taggedPost(id: String) = TaggedContentView(

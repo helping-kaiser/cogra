@@ -31,6 +31,7 @@ import com.cogra.feature.content.FeedRoute
 import com.cogra.feature.content.HistoryDoors
 import com.cogra.feature.content.HistoryRoute
 import com.cogra.feature.content.HostedCardRoutes
+import com.cogra.feature.content.HostedPlacement
 import com.cogra.feature.content.POST_FROM_OWN_PROFILE
 import com.cogra.feature.content.PostDetailRoute
 import com.cogra.feature.content.SavedRoute
@@ -54,7 +55,10 @@ import com.cogra.feature.profile.SAVED_ORIGIN
 import com.cogra.feature.profile.topicOrigin
 import com.cogra.feature.stance.StanceControlRoute
 import com.cogra.feature.topics.TOPIC_FROM_HISTORY
+import com.cogra.feature.topics.TopicCards
+import com.cogra.feature.topics.TopicCardsHost
 import com.cogra.feature.topics.TopicRoute
+import com.cogra.feature.topics.topicFromTopic
 
 /** The Feed tab's root. */
 internal fun NavGraphBuilder.feedRoot(shell: ShellScope) {
@@ -282,9 +286,8 @@ private fun ShellScope.TopicDestination(entry: NavBackStackEntry) {
     TopicRoute(
         name = topic,
         from = route.from,
-        onOpenPost = { id -> navController.navigate(PostDetail(id)) },
-        onOpenActor = { handle -> navController.navigate(Profile(handle, from = topicOrigin(topic))) },
         onBack = { navController.navigateUp() },
+        cardsHost = topicCardsHost(entry, topic),
         // The page's one action, wired here because what a
         // signed-out tap does is the shell's to say — the
         // same guest gate the bar's slots raise. Nothing is
@@ -315,6 +318,61 @@ private fun ShellScope.TopicDestination(entry: NavBackStackEntry) {
         },
         deletionBand = deletionBand(node = null),
     )
+}
+
+/**
+ * THE TAG PAGE DRAWS THE FEED'S OWN CARDS (TagPage.md:15), hosted here for
+ * the profile's reason — the topic page never depends on the feed's module —
+ * and wired as the profile's are: every door lands in this tag's stack, a
+ * person and another tag naming this tag on the way back (ProfilePosts.md:67,
+ * TagPage.md:41), and a post card's count raises the thread over the page, its
+ * departure and return read as the feed reads them.
+ */
+@Composable
+private fun ShellScope.topicCardsHost(entry: NavBackStackEntry, topic: String): TopicCardsHost {
+    val thread = entry.threadReturn(navController)
+    val accountId by authState.accountId.collectAsStateWithLifecycle()
+    val doors = CardDoors(
+        onOpenPost = { id -> navController.navigate(PostDetail(id)) },
+        onOpenComment = { postId, commentId, aimReply ->
+            navController.navigate(PostDetail(postId, commentId = commentId, aimReply = aimReply))
+        },
+        onOpenActor = { handle -> navController.navigate(Profile(handle, from = topicOrigin(topic))) },
+        onOpenTopic = { name -> navController.navigate(Topic(name, from = topicFromTopic(topic))) },
+    )
+    val routes = HostedCardRoutes(
+        viewerId = accountId,
+        signedIn = signedIn,
+        onEditPost = { id -> navController.navigate(ComposePost(id)) },
+        onCitePost = { id -> openComposer(ComposePost(referenceTargetId = id)) },
+        onReply = { target -> navController.openReplyWizard(target) },
+        onEditComment = { commentId, parentTitle -> navController.navigate(EditComment(commentId, parentTitle)) },
+        onSignInOrJoin = { navController.navigate(Login) },
+        onRequireAccount = { requireJoin() }.takeIf { signedIn == false },
+        commentsReturn = thread.value,
+        onCommentsReturnConsumed = thread.onConsumed,
+        onCommentsDepart = thread.onDepart,
+    )
+    return { notify, content ->
+        CardListHost(
+            doors = doors,
+            routes = routes,
+            tag = "tagPage",
+            notify = notify,
+            placement = HostedPlacement.TagPage,
+        ) { hosted ->
+            content(
+                TopicCards(
+                    post = hosted.post,
+                    // A tagged comment offers no Reply and no replies line
+                    // (TagPage.md:17): the placement draws neither, so the
+                    // replies node is the card's own and no lock is handed.
+                    comment = { listed, node -> hosted.comment(listed, node, node, null) },
+                    covered = hosted.covered,
+                ),
+            )
+        }
+    }
 }
 
 @Composable
