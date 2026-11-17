@@ -74,6 +74,19 @@ const val TOPIC_FROM_HISTORY = "history"
 /** The `from` a search result opens a topic with (`Back to the search`, TagPage.md:35). */
 const val TOPIC_FROM_SEARCH = "search"
 
+/** Interim seam: the cards the shell hosts (not drawn yet). */
+class TopicCards(
+    val post: @Composable (post: com.cogra.domain.PostView, node: com.cogra.core.designsystem.DataNode) -> Unit,
+    val comment: @Composable (listed: com.cogra.domain.ProfileComment, node: com.cogra.core.designsystem.DataNode) -> Unit,
+    val covered: Boolean = false,
+)
+
+typealias TopicCardsHost = @Composable (notify: (String) -> Unit, content: @Composable (TopicCards) -> Unit) -> Unit
+
+val NoTopicCards: TopicCardsHost = { _, content -> content(TopicCards({ _, _ -> }, { _, _ -> })) }
+
+fun topicFromTopic(name: String): String = "#$name"
+
 /** The `from` a Your-topics row opens a topic with (`Back to Your topics`, TagPage.md:35). */
 const val TOPIC_FROM_YOUR_TOPICS = "yourTopics"
 
@@ -82,8 +95,8 @@ fun TopicRoute(
     name: String,
     /** Where the page was opened from; it names the way back (TagPage.md:35). */
     from: String? = null,
-    onOpenPost: (String) -> Unit,
-    onOpenActor: (String) -> Unit,
+    onOpenPost: (String) -> Unit = {},
+    onOpenActor: (String) -> Unit = {},
     onBack: () -> Unit,
     stanceControl: (@Composable () -> Unit)? = null,
     /** The deletion band, while the account's confirmed deletion is in its grace (`FeedDeleting.md:3`). */
@@ -110,7 +123,7 @@ fun TopicRoute(
 
 /** The back arrow's origin noun (TagPage.md:35); null is the plain `Back`. */
 @Composable
-private fun topicBack(from: String?): String? = when (from) {
+internal fun topicBack(from: String?): String? = when (from) {
     TOPIC_FROM_HISTORY -> stringResource(R.string.topics_back_history)
     TOPIC_FROM_SEARCH -> stringResource(R.string.topics_back_search)
     TOPIC_FROM_YOUR_TOPICS -> stringResource(R.string.topics_back_your_topics)
@@ -123,8 +136,8 @@ fun TopicScreen(
     name: String,
     state: TopicUiState,
     onRefresh: () -> Unit,
-    onOpenPost: (String) -> Unit,
-    onOpenActor: (String) -> Unit,
+    onOpenPost: (String) -> Unit = {},
+    onOpenActor: (String) -> Unit = {},
     onBack: () -> Unit,
     /**
      * The page's one action, drawn by the shell. Null while the auth
@@ -141,6 +154,8 @@ fun TopicScreen(
     deletionBand: @Composable () -> Unit = {},
     /** The back arrow's spoken name when it names an origin; null is the plain `Back`. */
     backDescription: String? = null,
+    onShare: () -> Unit = {},
+    cardsHost: TopicCardsHost = NoTopicCards,
 ) {
     // SEEN, AT THE LIST: a post or comment card fully in the viewport joins
     // the reader's History, as itself (History.md). The page's own title is
@@ -265,8 +280,8 @@ private fun TaggedContentView.listKey(): String = "$kind:$id"
 @Composable
 private fun TaggedContentCard(
     entry: TaggedContentView,
-    onOpenPost: (String) -> Unit,
-    onOpenActor: (String) -> Unit,
+    onOpenPost: (String) -> Unit = {},
+    onOpenActor: (String) -> Unit = {},
 ) {
     val clickable = entry.kind == TaggedContentKind.POST
     Card(

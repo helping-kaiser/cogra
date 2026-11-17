@@ -12,6 +12,7 @@ import com.cogra.core.designsystem.EdgeSighting
 import com.cogra.domain.HashtagView
 import com.cogra.domain.Outcome
 import com.cogra.domain.TaggedContentView
+import com.cogra.domain.di.WebOrigin
 import com.cogra.domain.history.SeenTracker
 import com.cogra.domain.repo.TopicRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,6 +36,7 @@ data class TopicUiState(
 class TopicViewModel @Inject constructor(
     private val topics: TopicRepository,
     private val seenTracker: SeenTracker,
+    @WebOrigin private val webOrigin: String,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TopicUiState())
@@ -49,6 +51,9 @@ class TopicViewModel @Inject constructor(
 
     /** The reading paused — the scroll rested or the reader left. */
     fun onSeenCheckpoint() = seenTracker.flush()
+
+    /** What the stance row's share hands over: the tag's own web address, as a tag card's share does. */
+    fun shareUrl(name: String): String = "$webOrigin/topics/$name"
 
     private var name: String? = null
     private var started = false

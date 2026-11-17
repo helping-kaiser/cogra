@@ -5,6 +5,13 @@
     <string name="topics_back_history">Back to History</string>
     <string name="topics_back_search">Back to the search</string>
     <string name="topics_back_your_topics">Back to Your tags</string>
+    <!-- From another tag's page, the way back names that tag (TagPage.md:41). -->
+    <string name="topics_back_topic">Back to #%1$s</string>
+    <!-- The stance row's share (`TagPage` board). -->
+    <string name="topics_share">Share #%1$s</string>
+    <!-- The claim above each row (`TaggedRow`): the act's word, and its one spoken reading. -->
+    <string name="topics_claim_tagged">Tagged</string>
+    <string name="topics_claim_spoken">Tagged: %1$s, %2$s</string>
     <string name="topics_not_found">This name can\'t be a tag.</string>
     <string name="topics_error_transport">Couldn\'t load this tag.</string>
     <string name="topics_retry">Try again</string>
