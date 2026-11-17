@@ -6329,24 +6329,26 @@ The same round's video half. The cover's mark had been built and drawn
 without ever being written down, which is how a treatment becomes a
 board's private habit; jakob ruled it as recommended.
 
-- **A cover rides the clip's own tile.** The chosen frame is inset in
-  the tile's **bottom-left corner** — a third of the tile's short side,
-  never under a **28px** floor, behind a hairline ring, carrying its own
-  framing rather than a miniature of the tile beneath it. **One
-  attachment is one tile**: a cover standing beside the clip would read
-  as a second thing the author picked, and they picked one thing. The
-  corner is the one the "Cover" badge already owns on a picture, so a
-  tray says *cover* in a single place whatever kind of body is in it.
-- **Each surface carries the cover its own way.** The **pick tray**
-  shows the inset, which is how a walk that can be walked backwards
-  tells the author what the step behind them settled. The **edit
-  stage** carries a *Cover* field section under *Video*, in both its
-  states: the door *Add a cover* where none is chosen, the face and
-  *Change the cover* where one is. The **compose details stage**
-  carries only the door, and only for a clip whose shape skipped the
-  frame picker; a clip that walked the cover step shows no cover
-  section at all — its face rides the tile's inset, and the step is
-  one Back away. A
+- **A cover stands beside the clip** (jakob 2026-11-17, round 52:
+  "the cover beeing full size and next to the video … this way we
+  also have a entrance gate for changing the cover"). Wherever a flow
+  shows the clip after a cover can exist, the cover is its own tile
+  (`CoverTile`) beside the clip's — at the clip tile's height and the
+  cover's own shape, wearing the *Cover* pill a post's first picture
+  wears — and the tile is the door that changes it, named *Change the
+  cover*. With no cover, the same place holds the dashed *Add a cover*
+  door, its words beside the tile where the tile is too small for them.
+- **Each surface opens its own way in.** The **pick tray** shows the
+  cover beside the clip once the cover step settled one, which is how a
+  walk that can be walked backwards tells the author what the step
+  behind them settled; its tile reopens the step. The **compose
+  details stage** always carries the tile: the chosen cover, its tap the
+  cover step again, or the dashed door for a clip that skipped the frame
+  picker or passed it without a pick. The **edits** carry it in the
+  *Video* field, the tile opening the picker and the cover's crop. The
+  **reply composer** still rides its chosen frame as the ringed inset on
+  the clip's tile, because two of its 220 squares do not fit the column
+  (backlog 260). A
   **reading surface** shows the cover as the card's still, and branches
   on nothing: whether that still was chosen or taken was settled while
   the post was written.
@@ -6739,15 +6741,15 @@ painted a frame.
   READING surfaces are handed — the chosen cover where one was
   chosen, the taken frame 1 where none was; the COMPOSE WIZARD's
   own tiles are a different rule and always wear the clip's first
-  frame, the chosen cover riding as the ringed inset only (the
-  video-cover round). **The rule holds at both scales** (jakob
+  frame, the chosen cover standing beside it as its own tile
+  (round 52). **The rule holds at both scales** (jakob
   2026-09-24, when the platforms' reply tiles diverged): the
   reply composer's clip tile is an authoring tile like the
-  tray's — frame 0 as its face, the chosen frame as the ringed
-  inset — because a divergence between the two composers would
-  be invisible until it confused, and the inline cover row
-  already shows the chosen frame at full prominence right below
-  it. No new boards; both rulings
+  tray's — frame 0 as its face — because a divergence between the
+  two composers would be invisible until it confused; its chosen
+  frame rides as the ringed inset until its cover's place is
+  ruled (backlog 260), the inline cover row showing it at full
+  prominence right below. No new boards; both rulings
   land as contracts to the implementation session.
 
 ### The compose last-picture ruling — 2026-09-23
@@ -12201,6 +12203,63 @@ and 19 as recommended), built on round 49 (60d9c51c0).
   profile seal's upload gate drawn, `uploading` and `upload-failed`, as
   the picture seal's; the picture seal's landing sentence. Backlog 230,
   240–243 closed.
+
+### Round 52, a comment's pictures cropped square, the crop fits the window, the cover beside the clip — 2026-11-17
+
+jakob's answers of 2026-11-17 to the hand test's eight decisions ("All as
+rec"), his 2, 3 and 4, built on rounds 48–50 merged (ecffb3ba9).
+
+- **A comment's pictures are cropped square** (2; his W2: "ofcourse all
+  media should be square in comments but why is there no crop step for
+  images?"). This replaces his ruling of 2026-08-31 that a comment's
+  pictures never crop, and the display-only centre cut of 2026-09-03.
+  `ReplyCrop` ("Reply · the crop") stands after the platform's picker for
+  a reply and for a comment edit's `+ Add pictures`: the cover crop's
+  square — the 390 × 488 stage, the frame 342 × 342 at 73 — the zoom to
+  10×, and the post crop's strip when more than one was picked, each
+  picture its own framing; no shape chips, no line. The upload starts at
+  its `Next`, and only the squares leave the device; adding pictures later
+  crops the new ones only; its back arrow returns the composer or the
+  edit as it was, the picks unused, named `Back a step` from the reply and
+  `Back to the edit` from an edit (its `opener` chip). Refused files are
+  judged when the picker hands them back, before the crop, on the media
+  row as before. The trays draw squares; `CommentCard` stands every
+  comment picture square, one as much as four — the master drew a single
+  one at its own ratio, which no board drew, so no board's markup changed.
+  The viewer shows the square whole.
+- **The crop stage fits the window** (3; his W22). On every crop, both
+  clients, the stage stands as large as the column allows and never
+  taller than the window leaves once every other block has its place —
+  replacing "the stage scales with the column". Capped, it keeps its
+  proportion, centred, the frame and the picture scaling with it; its
+  floor is 240 high, under which the page scrolls under the pinned `Next`
+  (the technical floor, told to jakob). `ComposeCropShort` draws a 672 ×
+  720 browser window with three pictures: the stage 313.28 × 392, every
+  block inside the window; the body is `ComposeCropBody`, shared with
+  `ComposeCrop`, whose board renders as before.
+- **A clip's cover stands beside the clip** (4; his W22: "the cover beeing
+  full size and next to the video … this way we also have a entrance gate
+  for changing the cover"). This replaces "one attachment is one tile"
+  (2026-09-15 / 24) and the cover mark he parked as C7. `CoverTile`: at
+  the clip tile's height and the cover's own shape, wearing the `Cover`
+  pill, the tile the door named `Change the cover`; with no cover the
+  dashed `Add a cover` door in its place, its words beside it where the
+  tile is too small. Drawn on the pick tray (114 × 64 beside the clip's
+  114 × 64), the details stage (a cover tile always, its `cover` chip;
+  76.8 × 96 dashed or 96 × 96 chosen beside the 54 × 96 clip), the post
+  edit (76.8 × 96) and the comment edit (56 × 56, words beside). The cover
+  step's strip takes a picture of the author's own in the dashed tile's
+  place, outlined (`CoverRow`'s `own`; the `cover` chips on `ComposeCover`
+  and `ComposeCoverNoFrames`); a tap on it re-picks, as the edits' door
+  does. A tall clip still skips the cover step. The reply composer's two
+  220 tiles do not fit the 342 column, so that host waits on jakob
+  (backlog 260) and keeps its inset; the edits' `cover` field paths gave
+  way to `video.cover` (removed: `postEdit.cover` and `commentEdit.cover`
+  with their `add`, `change`, `label`, `thumb`).
+- **Adjacent**: `Reel.md` and `ViewerVideo.md` end their cover sentence
+  ("…and its cover has loaded"); `AvatarCrop` and `CoverCrop` take an
+  `opener` chip so the boards speak the C8 back names; the
+  reply-with-pictures flow walks through the crop. Backlog 260–261 filed.
 ---
 
 ## 14. The canvases

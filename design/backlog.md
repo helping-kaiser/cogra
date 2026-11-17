@@ -6310,3 +6310,27 @@ exception.
 
 Closed by round 50, act 3 (jakob 2026-11-17, C5 as recommended): the sheet sizes to its
 content up to 88% (FeedFilterSheet's it), its foot 16px under the last section.
+
+### 260 · The reply composer: the clip and its cover do not fit side by side · *design* · **filed 2026-11-17**
+
+Round 52 (jakob 2026-11-17, decision 4: the cover beside the clip at the same
+height and its own shape). The reply composer's clip tile is the comment's
+square at 220 × 220 (`ReplyVideo`, `ReplyVideoFailed`); a comment's cover is
+square too, so two tiles need 220 + 8 + 220 = 448 against the 342 column.
+Options: (a) both tiles shrink to share the column, 167 × 167 each
+((342 − 8) ∕ 2); (b) the clip keeps its 220 and the cover stands beside it at
+what is left, 114 × 114, the same top, not the same height. Either way the
+frame row stays the chooser on this one-screen composer, and the cover tile
+shows its choice: what a tap on the tile does here (scroll to the row, or open
+the picker as on the edits) is part of the answer. Until then the host keeps
+the ringed inset (`MediaThumb`'s `coverSrc`, used nowhere else).
+
+### 261 · The post crop opened from an edit: whether the shape row stands · *design* · **filed 2026-11-17**
+
+Round 52 (the C8 back names on the crops' boards). Pictures added to a
+published post's edit pass the crop locked to the post's one shape
+(`EditCompose.md`, `ComposeCrop.md`). Whether the shape row stands there —
+dimmed at the locked shape, or gone as on the cover and comment crops — is not
+written, so `ComposeCrop` draws no `opener` chip yet (its arrow's name, `Back to
+the edit`, is law). Options: (a) the row goes, the frame at the post's shape;
+(b) the row stands, the post's shape selected, the others inert.
