@@ -37,6 +37,8 @@
     <!-- The results (ExploreSearch.md, ExplorePerson.md; copy-voice). -->
     <string name="explore_seam">Beyond your reach — newest first</string>
     <string name="explore_profiles">Profiles</string>
+    <string name="explore_tags_caption">Tags</string>
+    <string name="explore_content_caption">Posts and comments</string>
     <string name="explore_see_all_profiles">See all profiles</string>
     <string name="explore_sub_on">on %1$s</string>
     <string name="explore_sub_tagged_by">tagged by @%1$s</string>
