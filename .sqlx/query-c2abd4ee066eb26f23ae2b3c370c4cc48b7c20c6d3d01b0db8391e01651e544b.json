@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO mirror_epochs (epoch, attested_at) VALUES ($1, $2)",
+  "query": "INSERT INTO mirror_epochs (epoch, asserted_at) VALUES ($1, $2)",
   "describe": {
     "columns": [],
     "parameters": {
@@ -11,5 +11,5 @@
     },
     "nullable": []
   },
-  "hash": "2696d3392f45fcbcfd3c8543eae4b4f9b62776254a261edc1aa45e913ac0df4c"
+  "hash": "c2abd4ee066eb26f23ae2b3c370c4cc48b7c20c6d3d01b0db8391e01651e544b"
 }

@@ -37,19 +37,19 @@ fn closed_at(epoch: i64) -> chrono::DateTime<chrono::Utc> {
 fn package(epoch: i64, records: Vec<PublishedRecord>) -> EpochPackage {
     EpochPackage {
         epoch,
-        attested_at: closed_at(epoch),
+        asserted_at: closed_at(epoch),
         records,
         closure: Default::default(),
     }
 }
 
-/// The mirror keeps each epoch's attested boundary timestamp beside its
+/// The mirror keeps each epoch's asserted boundary timestamp beside its
 /// records, and a rebuild clears it with them (X-SR3).
 ///
-/// An ingested epoch carries its attested boundary timestamp, cleared with the mirror on a rebuild.
-/// ´claim:mirror:an-epoch-carries-its-attested-instant´
+/// An ingested epoch carries its asserted boundary timestamp, cleared with the mirror on a rebuild.
+/// ´claim:mirror:an-epoch-carries-its-asserted-instant´
 #[sqlx::test(migrations = "../../migrations")]
-async fn an_ingested_epoch_carries_its_attested_instant(pool: PgPool) {
+async fn an_ingested_epoch_carries_its_asserted_instant(pool: PgPool) {
     mirror::ingest_epoch(&pool, &package(1, vec![registration("alice", 1, 1)]))
         .await
         .expect("ingests");
@@ -242,7 +242,7 @@ async fn the_mirror_tables_refuse_a_numbering_without_an_order_of_record(pool: P
         .expect("1, 1 is fine");
     assert!(insert("b", 1, 1).execute(&pool).await.is_err(), "a repeat");
     assert!(
-        sqlx::query("INSERT INTO mirror_epochs (epoch, attested_at) VALUES (0, NOW())")
+        sqlx::query("INSERT INTO mirror_epochs (epoch, asserted_at) VALUES (0, NOW())")
             .execute(&pool)
             .await
             .is_err(),

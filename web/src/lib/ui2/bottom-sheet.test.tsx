@@ -1,5 +1,5 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
-import { useState } from "react";
+import { act, createEvent, fireEvent, render, screen } from "@testing-library/react";
+import { useState, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SHEET_OUT_MS } from "@/lib/ui/motion";
@@ -326,76 +326,203 @@ describe("BottomSheet", () => {
     expect(screen.getByTestId("bottom-sheet").className).toContain("backdrop:bg-scrim/50");
   });
 
-  // PULLING DOWN IS HOW A DRAWER IS DROPPED (design/readme.md: "pulling down
-  // already means dismiss").
-  describe("the pull that drops it", () => {
-    const pull = (from: number, to: number) => {
+  // THE DRAG IS M3's (design/readme.md §4, *Sheets*; BottomSheet.jsx): from
+  // the handle area, and from a list at its scroll-top; it dismisses past
+  // about 25 % of its height or on a downward fling, and otherwise snaps back.
+  describe("the drag that drops it", () => {
+    // A laid-out sheet 400px tall whose title row ends at y=460: the quarter
+    // that dismisses is 100px.
+    const SHEET_TOP = 400;
+    const layOut = (zoneBottom = SHEET_TOP + 60) => {
       const dialog = screen.getByTestId("bottom-sheet");
-      fireEvent.pointerDown(dialog, { pointerType: "touch", clientY: from });
-      fireEvent.pointerMove(dialog, { pointerType: "touch", clientY: to });
-      fireEvent.pointerUp(dialog, { pointerType: "touch", clientY: to });
+      vi.spyOn(dialog, "getBoundingClientRect").mockReturnValue({
+        top: SHEET_TOP, bottom: SHEET_TOP + 400, left: 0, right: 400, width: 400, height: 400, x: 0, y: SHEET_TOP,
+      } as DOMRect);
+      const zone = dialog.querySelector("h2") ?? dialog.querySelector("span[aria-hidden]");
+      if (zone) {
+        vi.spyOn(zone, "getBoundingClientRect").mockReturnValue({ bottom: zoneBottom } as DOMRect);
+      }
+      return dialog;
     };
+    /** One pointer event at `y`, stamped at `t` ms — the clock a fling is read on. */
+    const at = (
+      kind: "pointerDown" | "pointerMove" | "pointerUp" | "pointerCancel",
+      target: Element,
+      y: number,
+      t: number,
+      pointerType = "touch",
+    ) => {
+      const event = createEvent[kind](target, { pointerType, pointerId: 1, clientX: 50, clientY: y, button: 0 });
+      Object.defineProperty(event, "timeStamp", { value: t });
+      act(() => void fireEvent(target, event));
+    };
+    /** A slow drag by `travel` px in 10px steps 16ms apart, held still for `rest` ms, then released. */
+    const drag = (target: Element, from: number, travel: number, { rest = 200, pointerType = "touch" } = {}) => {
+      let t = 0;
+      at("pointerDown", target, from, t, pointerType);
+      const step = travel < 0 ? -10 : 10;
+      for (let y = from + step; Math.abs(y - from) <= Math.abs(travel); y += step) {
+        t += 16;
+        at("pointerMove", target, y, t, pointerType);
+      }
+      at("pointerUp", target, from + travel, t + rest, pointerType);
+    };
+    const sheet = (onClose: () => void, children: ReactNode = <p>A comment</p>, props = {}) => (
+      <BottomSheet open onClose={onClose} title="Comments" {...props}>
+        {children}
+      </BottomSheet>
+    );
 
-    it("drops when the pull passes the threshold", () => {
+    it("drops when a slow drag passes a quarter of the sheet's height", () => {
       const onClose = vi.fn();
-      render(
-        <BottomSheet open onClose={onClose} title="Comments">
-          <p>A comment</p>
-        </BottomSheet>,
-      );
-      pull(100, 100 + PULL_THRESHOLD);
-      expect(onClose).toHaveBeenCalled();
+      render(sheet(onClose));
+      drag(layOut(), 500, 110);
+      expect(onClose).toHaveBeenCalledTimes(1);
     });
 
-    it("stays for a pull that does not reach it", () => {
+    it("snaps back from a slow drag short of the quarter", () => {
       const onClose = vi.fn();
-      render(
-        <BottomSheet open onClose={onClose} title="Comments">
-          <p>A comment</p>
-        </BottomSheet>,
-      );
-      pull(100, 100 + PULL_THRESHOLD - 1);
+      render(sheet(onClose));
+      const dialog = layOut();
+      drag(dialog, 500, 90);
       expect(onClose).not.toHaveBeenCalled();
+      expect(dialog.style.translate).toBe("");
+    });
+
+    it("follows the pointer while it is held", () => {
+      render(sheet(vi.fn()));
+      const dialog = layOut();
+      at("pointerDown", dialog, 500, 0);
+      at("pointerMove", dialog, 540, 16);
+      expect(dialog.style.translate).toBe("0px 40px");
+      at("pointerMove", dialog, 520, 32);
+      expect(dialog.style.translate).toBe("0px 20px");
+    });
+
+    it("drops on a downward fling, however short", () => {
+      const onClose = vi.fn();
+      render(sheet(onClose));
+      const dialog = layOut();
+      at("pointerDown", dialog, 500, 0);
+      at("pointerMove", dialog, 520, 16);
+      at("pointerMove", dialog, 540, 32);
+      at("pointerUp", dialog, 540, 40);
+      expect(onClose).toHaveBeenCalledTimes(1);
     });
 
     it("stays for an upward drag, which is the reader scrolling in", () => {
       const onClose = vi.fn();
-      render(
-        <BottomSheet open onClose={onClose} title="Comments">
-          <p>A comment</p>
-        </BottomSheet>,
-      );
-      pull(200, 100);
+      render(sheet(onClose));
+      drag(layOut(), 600, -150);
       expect(onClose).not.toHaveBeenCalled();
     });
 
-    // A SCROLLED BODY IS BEING SCROLLED, NOT PULLED — which is what keeps an
+    it("drops by a mouse the same way it drops by a finger", () => {
+      const onClose = vi.fn();
+      render(sheet(onClose));
+      drag(layOut(), 500, 150, { pointerType: "mouse" });
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("drops from the handle zone even when the list under it is scrolled", () => {
+      const onClose = vi.fn();
+      render(sheet(onClose));
+      const dialog = layOut();
+      Object.defineProperty(screen.getByTestId("bottom-sheet-body"), "scrollTop", { value: 40, configurable: true });
+      drag(dialog, 430, 150);
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    // A SCROLLED LIST IS BEING SCROLLED, NOT PULLED — which is what keeps an
     // unfolded branch standing through a drag inside the thread.
     it("stays when the body is not at its own top", () => {
       const onClose = vi.fn();
-      render(
-        <BottomSheet open onClose={onClose} title="Comments">
-          <p>A comment</p>
-        </BottomSheet>,
-      );
+      render(sheet(onClose));
+      layOut();
       const body = screen.getByTestId("bottom-sheet-body");
       Object.defineProperty(body, "scrollTop", { value: 40, configurable: true });
-      pull(100, 100 + PULL_THRESHOLD * 2);
+      drag(screen.getByText("A comment"), 500, 200);
       expect(onClose).not.toHaveBeenCalled();
     });
 
-    it("ignores a mouse drag, which is a selection rather than a gesture", () => {
+    it("stays when an inner list the press started in is not at its top", () => {
       const onClose = vi.fn();
       render(
-        <BottomSheet open onClose={onClose} title="Comments">
-          <p>A comment</p>
-        </BottomSheet>,
+        sheet(
+          onClose,
+          <div data-testid="thread">
+            <p>A comment</p>
+          </div>,
+        ),
       );
-      const dialog = screen.getByTestId("bottom-sheet");
-      fireEvent.pointerDown(dialog, { pointerType: "mouse", clientY: 100 });
-      fireEvent.pointerMove(dialog, { pointerType: "mouse", clientY: 100 + PULL_THRESHOLD * 2 });
-      fireEvent.pointerUp(dialog, { pointerType: "mouse", clientY: 100 + PULL_THRESHOLD * 2 });
+      layOut();
+      Object.defineProperty(screen.getByTestId("thread"), "scrollTop", { value: 120, configurable: true });
+      drag(screen.getByText("A comment"), 500, 200);
       expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it("leaves a field its own pointer", () => {
+      const onClose = vi.fn();
+      render(sheet(onClose, <textarea aria-label="Reply" />));
+      layOut();
+      drag(screen.getByLabelText("Reply"), 500, 200);
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it("drags a pad's sheet only from its handle and title zone", () => {
+      const onClose = vi.fn();
+      render(sheet(onClose, <p>The square</p>, { dragFromHandle: true }));
+      const dialog = layOut();
+      drag(screen.getByText("The square"), 500, 200);
+      expect(onClose).not.toHaveBeenCalled();
+      drag(dialog, 430, 200);
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("is not a press on whatever the drag let go over", () => {
+      const onClose = vi.fn();
+      const onRow = vi.fn();
+      render(sheet(onClose, <button onClick={onRow}>Save</button>));
+      const dialog = layOut();
+      const row = screen.getByText("Save");
+      drag(row, 500, 60, { pointerType: "mouse" });
+      act(() => row.click());
+      expect(onRow).not.toHaveBeenCalled();
+      expect(onClose).not.toHaveBeenCalled();
+      // A press that never travelled is still a press.
+      at("pointerDown", row, 500, 1000, "mouse");
+      at("pointerUp", row, 502, 1050, "mouse");
+      act(() => row.click());
+      expect(onRow).toHaveBeenCalledTimes(1);
+      expect(dialog.style.translate).toBe("");
+    });
+
+    it("takes a downward touch from the browser, and leaves it an upward one", () => {
+      render(sheet(vi.fn()));
+      const dialog = layOut();
+      const touch = (y: number) => {
+        const event = new Event("touchmove", { cancelable: true, bubbles: true });
+        Object.defineProperty(event, "touches", { value: [{ clientX: 50, clientY: y }] });
+        dialog.dispatchEvent(event);
+        return event.defaultPrevented;
+      };
+      at("pointerDown", dialog, 500, 0);
+      expect(touch(505)).toBe(true);
+      at("pointerCancel", dialog, 505, 10);
+      at("pointerDown", dialog, 500, 20);
+      expect(touch(490)).toBe(false);
+    });
+
+    // The surface's own padding targets the dialog just as the scrim does: a
+    // tap on the strip over the grip is a press on the sheet, never the scrim.
+    it("drops on a press on the scrim, never on one on the sheet's own padding", () => {
+      const onClose = vi.fn();
+      render(sheet(onClose));
+      const dialog = layOut();
+      fireEvent.click(dialog, { clientX: 200, clientY: SHEET_TOP + 4 });
+      expect(onClose).not.toHaveBeenCalled();
+      fireEvent.click(dialog, { clientX: 200, clientY: SHEET_TOP - 50 });
+      expect(onClose).toHaveBeenCalledTimes(1);
     });
   });
 
