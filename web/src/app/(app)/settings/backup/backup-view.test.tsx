@@ -81,6 +81,26 @@ describe("the recovery-code screens", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(expected);
   });
 
+  // NetworkError.md:13 with copy-voice's form placement: a FORBIDDEN answer
+  // reads the not-through line above the submit, which stays the retry.
+  it("reads a FORBIDDEN create as That didn't go through.", async () => {
+    renderBackup({
+      seed: new Uint8Array(32),
+      keyOnDevice: true,
+      backup: fakeBackup({
+        enable: vi.fn(() =>
+          Promise.resolve({
+            kind: "refused" as const,
+            errors: [{ code: "FORBIDDEN" as const, message: "no actor key", field: null }],
+          }),
+        ),
+      }),
+    });
+    fireEvent.click(await screen.findByTestId("settings_backup_create"));
+    expect(await screen.findByRole("alert")).toHaveTextContent("That didn't go through. Try again.");
+    expect(screen.getByTestId("settings_backup_create")).toBeInTheDocument();
+  });
+
   it("points a keyless browser at restore", async () => {
     renderBackup();
     expect(await screen.findByTestId("settings_backup_no_actor")).toBeInTheDocument();
