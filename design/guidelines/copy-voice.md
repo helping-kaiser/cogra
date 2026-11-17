@@ -1305,9 +1305,10 @@ each menu's rows stand in one order:
   `Opinions on this` · `License terms`.
 - **A post's on a phone narrower than 360** — `Share this post` first,
   then another's rows as above.
-- **A comment's, another's** — `Save` · `Cite in a new post` · `Cited by`
-  · `Opinions on this` · `License terms` · `Report`, removed or not; no
-  Hide row.
+- **A comment's, another's** — `Save` · `Cite in a new post` · `Hide @ada`
+  · `Cited by` · `Opinions on this` · `License terms` · `Report`, removed
+  or not — the post's rows, row for row. Every host's ⋮ raises it — the
+  thread, the feed, History, Saved and a profile's Comments tab.
 - **A comment's, your own** — `Save` · `Cite in a new post` · `Edit` ·
   `Remove` · `Cited by` · `Opinions on this` · `License terms`; removed,
   less `Edit` and `Remove`.
@@ -3152,20 +3153,21 @@ Drawn on `ProfileOwnMenu`, `Saved`, `SavedEmpty`, `SavedUndo`,
 act and the place cannot drift apart. The pair of verbs is blessed and
 lives under *Menu rows*.
 
-**Hiding names its person.** `Hide @ada`, on the post menu and on the
-profile menu, because the handle is what a reader recognises and what
+**Hiding names its person.** `Hide @ada`, on the post menu, the comment
+menu and the profile menu, because the handle is what a reader recognises and what
 they will look for again in settings. The pair on the other side is
 `Hidden accounts` and `Unhide`.
 
 **On a hidden person's card the row turns.** Wherever a hidden person's
-post, profile card or profile still stands — History until its next load,
-Saved, the tag's page, a post or profile reached by a link or a search —
+post, comment, profile card or profile still stands — History until its
+next load, Saved, the tag's page, a thread, a profile's Comments tab, a
+post or profile reached by a link or a search —
 the hide row reads `Unhide @ada`: Settings' word in the row's own form, the
 handle after it (`Unhide this account` where the actor is redacted, as
 `Hide this account` is). It answers with Settings' snackbar, `@ada is
 unhidden.` with `Undo` (jakob
-2026-11-11, M1; round 41). **Drawn** on `HistoryPostMenu` (`author`
-hidden) and `HistoryProfileMenu`. (*`Unhide @ada` blessed (jakob
+2026-11-11, M1; round 41). **Drawn** on `HistoryPostMenu` and
+`HistoryCommentMenu` (`author` hidden) and `HistoryProfileMenu`. (*`Unhide @ada` blessed (jakob
 2026-11-11, round 41's first question); `Unhide this account` blessed
 (jakob 2026-11-12, the re-ask's twelfth).*)
 
@@ -3173,7 +3175,9 @@ hidden) and `HistoryProfileMenu`. (*`Unhide @ada` blessed (jakob
 `@ada is hidden.` with `Undo` beside it — hidden already says how far
 it reaches (jakob 2026-11-12). It lands wherever the tap was made, in the same words: over the feed
 (`FeedHidden`), over the post being read (`PostDetailHidden`) and over
-the person's profile (`ProfileOtherHidden`).
+the person's profile (`ProfileOtherHidden`), and over the open thread,
+where the hidden person's comments stay where they stand and the
+snackbar is the only answer (`CommentMenu`).
 A deleted account has no handle to spell, so hiding one answers `This
 account is hidden.`, with the same
 `Undo` (`ProfileDeletedMenu`; *blessed (jakob 2026-10-05)*).

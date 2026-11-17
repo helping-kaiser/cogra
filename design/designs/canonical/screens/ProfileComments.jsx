@@ -95,7 +95,7 @@ export function Screen() {
             replyOpacity="{{lockOpacity}}"
             target="“The long way home” — @ada"
             onOpenTarget={() => {}}
-            menuItems={COMMENT_CARD_MENU}
+            menuItems={readerCommentCardMenu("ada")}
             node="commentCard"
             id={ADA_COMMENT_ID}
           />
@@ -111,7 +111,7 @@ export function Screen() {
 
               target="“Salt maps of the coast road” — @sol"
               onOpenTarget={() => {}}
-              menuItems={COMMENT_CARD_MENU}
+              menuItems={readerCommentCardMenu("ada")}
               node="commentCard"
               id={ADA_SECOND_COMMENT_ID}
             />
@@ -124,7 +124,7 @@ export function Screen() {
               author={ADA}
               timestamp="4d"
               redacted={{ reason: "author", when: "2h" }}
-              menuItems={COMMENT_CARD_MENU}
+              menuItems={readerCommentCardMenu("ada")}
               onReply={() => {}}
 
               replyOpacity="{{lockOpacity}}"

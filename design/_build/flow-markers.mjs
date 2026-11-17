@@ -69,7 +69,9 @@ const ownPostMenuMarks = [
   { n: 7, find: ">Cite in a new post</button>", tag: "button" },
   ...postReadingMarks(8),
 ];
-const commentMenuMarks = (save) => [
+// The Hide row (round 51, jakob 2026-11-17, impl 349-1) arrived after the
+// rows were numbered, so it takes the next free number, 8.
+const commentMenuMarks = (save, hide) => [
   { n: 1, find: save, tag: "button" },
   { n: 2, find: ">Cite in a new post</button>", tag: "button" },
   { n: 3, find: ">License terms</button>", tag: "button" },
@@ -77,6 +79,7 @@ const commentMenuMarks = (save) => [
   { n: 5, find: ">Opinions on this</button>", tag: "button" },
   { n: 6, find: ">Cited by</button>", tag: "button" },
   { n: 7, find: ">Report</button>", tag: "button" },
+  { n: 8, find: hide, tag: "button" },
 ];
 const ownCommentMenuMarks = [
   { n: 1, find: ">Save</button>", tag: "button" },
@@ -754,14 +757,16 @@ Object.assign(FLOW_MARKERS, {
   ProfilePostsMenu: readerMenuMarks(">Save</button>", ">Hide @ada</button>"),
   HistoryPostMenuOwn: ownPostMenuMarks,
   ProfilePostsMenuOwn: ownPostMenuMarks,
-  HistoryCommentMenu: commentMenuMarks(">Save</button>"),
-  SavedCommentMenu: commentMenuMarks(">Unsave</button>"),
-  ProfileCommentsMenu: commentMenuMarks(">Save</button>"),
+  // Round 51: the `author` chip's hidden copy of the hide row at 9, as on
+  // `HistoryPostMenu`.
+  HistoryCommentMenu: [...commentMenuMarks(">Save</button>", ">Hide @tobias</button>"), { n: 9, find: ">Unhide @tobias</button>", tag: "button" }],
+  SavedCommentMenu: commentMenuMarks(">Unsave</button>", ">Hide @tobias</button>"),
+  ProfileCommentsMenu: commentMenuMarks(">Save</button>", ">Hide @ada</button>"),
   // A removed comment's menu on the profile (round 46, point C): the same rows.
-  ProfileCommentsRemovedMenu: commentMenuMarks(">Save</button>"),
+  ProfileCommentsRemovedMenu: commentMenuMarks(">Save</button>", ">Hide @ada</button>"),
   HistoryCommentMenuOwn: ownCommentMenuMarks,
   // Round 48 (seam 320-14): the feed's comment card menus and your own comment in Saved.
-  FeedCommentMenu: commentMenuMarks(">Save</button>"),
+  FeedCommentMenu: commentMenuMarks(">Save</button>", ">Hide @tobias</button>"),
   FeedCommentMenuOwn: ownCommentMenuMarks,
   SavedCommentMenuOwn: [{ n: 1, find: ">Unsave</button>", tag: "button" }, ...ownCommentMenuMarks.filter((m) => m.n !== 1)],
   ProfileCommentsMenuOwn: ownCommentMenuMarks,
@@ -837,6 +842,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Opinions on this</button>", tag: "button" },
     { n: 6, find: ">Cited by</button>", tag: "button" },
     { n: 7, find: ">Report</button>", tag: "button" },
+    { n: 8, find: ">Hide @tobias</button>", tag: "button" },
   ],
   // Your own comment's menu (the comment-removal round): CommentMenu's rows
   // keep their numbers — the badge is an identity, not a position — and

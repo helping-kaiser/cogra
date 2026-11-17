@@ -4,9 +4,21 @@ ALWAYS the comment's menu opens stacked over the thread GIVEN it was opened in t
 
 ALWAYS the comment's menu opens unstacked over its host GIVEN it was opened from a comment's ⋮ in a list, the profile's Comments tab, History or Saved, as the feed's post menu rises over the feed
 
-ALWAYS the comment's menu reads Save or Unsave, then Cite in a new post, then postDetail.menuSheet.citedBy, then Opinions on this, then License terms, then postDetail.menuSheet.report at the sheet tail
+ALWAYS the comment's menu reads Save or Unsave, then Cite in a new post, then Hide with the comment's author's handle, then postDetail.menuSheet.citedBy, then Opinions on this, then License terms, then postDetail.menuSheet.report at the sheet tail
 
-ALWAYS the comment's menu carries no Hide row
+ALWAYS the comment's menu carries Hide on someone else's comment only, a removed one included, and never on the reader's own
+
+WHEN tap postDetail.menuSheet.hide GIVEN the menu was opened in the thread -> the menu closes AND the thread stands as it was, the hidden person's comments standing where they stood AND postDetail.snackbar reads @ada is hidden. with Undo AND NEVER a confirm step appears
+
+WHEN tap Hide with the comment's author's handle GIVEN the menu was opened from a comment's ⋮ in a list -> the menu closes AND the host answers as after a hide from a post's menu there AND the snackbar reads @ada is hidden. with Undo AND NEVER a confirm step appears
+
+WHEN tap Hide with the comment's author's handle GIVEN the hide does not go through -> the hide reverts AND the target's row says so with Retry
+
+ALWAYS the hide row reads Unhide with the comment's author's handle GIVEN the author is already hidden, wherever their comment still stands — the thread, Saved, a profile's Comments tab, and History until its next load — and keeps its one name whatever it reads
+
+WHEN tap Unhide with the comment's author's handle -> the menu closes AND the reader stays where the menu was opened AND the author is unhidden AND the snackbar reads @ada is unhidden. with Undo AND NEVER a confirm step appears
+
+WHEN tap Unhide with the comment's author's handle GIVEN the unhide does not go through -> the unhide reverts AND the target's row says That didn't go through. with Retry
 
 ALWAYS the comment's menu's first row reads Unsave GIVEN the comment is kept
 
@@ -32,6 +44,6 @@ WHEN tap postDetail.menuSheet.report -> the menu closes AND postDetail.reportShe
 
 WHEN tap Report GIVEN the menu was opened from a comment's ⋮ in a list -> the menu closes AND the report confirm rises over the host, its title reading Report this comment? AND NEVER anything is sent yet
 
-WHEN a guest taps Save, Cite in a new post or Report on a comment's menu, on any host -> the guest gate opens AND NEVER postDetail.menuSheet.citedBy, Opinions on this or License terms raise it, a reading being open to a guest
+WHEN a guest taps Save, Cite in a new post, Hide or Report on a comment's menu, on any host -> the guest gate opens AND NEVER postDetail.menuSheet.citedBy, Opinions on this or License terms raise it, a reading being open to a guest
 
 WHEN tap the scrim, swipe the menu down, press system Back or press Escape -> the menu closes AND the surface it was opened on stands beneath it as it was
