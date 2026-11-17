@@ -51,7 +51,7 @@
 // badge answers to 48px through `cg-hit` without moving a pixel.
 
 import Link from "next/link";
-import { useCallback, useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode, type RefObject } from "react";
 
 import type { OpinionDirection } from "@/lib/profile/opinions-route";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
@@ -163,9 +163,9 @@ export function nameFitSize(lines: (size: number, lineHeight: number) => number)
 }
 
 /**
- * The fitted size of the name heading, as `[holdName, fit]`: hand `holdName`
- * to the heading's `ref`; `fit` is null while the name holds two lines at the
- * role's own size, else the size the rule gives it.
+ * The fitted size of the name heading, as `[nameRef, fit]`: hand `nameRef`
+ * to the heading, which always renders; `fit` is null while the name holds
+ * two lines at the role's own size, else the size the rule gives it.
  *
  * THE BROWSER COUNTS THE LINES. The heading is a block whose height is its
  * lines times its leading, so each candidate size is set on it and its height
@@ -175,12 +175,12 @@ export function nameFitSize(lines: (size: number, lineHeight: number) => number)
  * for React to render the result. The fit follows the line's width (MDN,
  * `ResizeObserver`) and the web font's arrival (MDN, `FontFaceSet.ready`).
  */
-function useNameFit(name: string): [holdName: (element: HTMLElement | null) => void, fit: NameFit | null] {
-  const [element, setElement] = useState<HTMLElement | null>(null);
+function useNameFit(name: string): [nameRef: RefObject<HTMLHeadingElement | null>, fit: NameFit | null] {
+  const nameRef = useRef<HTMLHeadingElement>(null);
   const [fit, setFit] = useState<NameFit | null>(null);
-  const holdName = useCallback((next: HTMLElement | null) => setElement(next), []);
 
   useMeasureEffect(() => {
+    const element = nameRef.current;
     if (element === null) return;
     const measure = () => {
       const { fontSize, lineHeight } = element.style;
@@ -219,9 +219,9 @@ function useNameFit(name: string): [holdName: (element: HTMLElement | null) => v
       live = false;
       observer?.disconnect();
     };
-  }, [element, name]);
+  }, [name]);
 
-  return [holdName, fit];
+  return [nameRef, fit];
 }
 
 /**
@@ -283,7 +283,7 @@ export function ProfileHeader({
     : displayName?.trim()
       ? displayName
       : handle;
-  const [holdName, nameFit] = useNameFit(name);
+  const [nameRef, nameFit] = useNameFit(name);
   return (
     <header
       {...testAttributes(node, "profile-identity")}
@@ -319,7 +319,7 @@ export function ProfileHeader({
         </div>
         <div className={`flex min-w-0 flex-col gap-0.5 self-end [grid-area:name] ${own ? UNDER_OWN_NAME : UNDER_OTHER_NAME}`}>
           <h1
-            ref={holdName}
+            ref={nameRef}
             {...testAttributes(part(node, "name"), "profile-display-name")}
             style={nameFit === null ? undefined : { fontSize: nameFit.size, lineHeight: `${nameFit.lineHeight}px` }}
             className={`m-0 text-title-large [overflow-wrap:break-word] [word-break:normal] ${redacted ? "text-on-surface-variant" : ""}`}
