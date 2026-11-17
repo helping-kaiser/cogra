@@ -174,6 +174,7 @@
     "FeedCover": "a feed whose posts carry clips, one before its first play and one the device will not autoplay — content and device, not a tap",
     "ViewerLandscape": "the viewer with the device turned — rotation, not a tap",
     "ReaderPostMenuNarrow": "the reader's menu on a phone too narrow to hold four actions, so the action row's queue has moved share into it — width, not a tap",
+    "ComposeCropShort": "the post's crop in a browser window 672 wide and 720 high, its stage capped by the window's height — the window, not a tap",
     "ReplyCited": "the reply's seal with a reference staged — the picker hands its pick back to the composer it was opened from, so this is a state of the seal, not a screen a tap navigates to",
     "ReplyCitedMany": "the same seal with three staged — the count and its door, reached the way the one-citation state is reached: by what the picker handed back, not by a tap of its own",
     "ComposeSealCited": "the post's seal when the details stage staged more than one citation — the author walks the same Next from the same stage, and what they staged there is what decides which state the seal is in; content, not a tap",
