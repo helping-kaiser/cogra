@@ -24,36 +24,26 @@ query Hashtag($name: String!, $limit: Int, $includePending: Boolean!) {
     taggedContent(limit: $limit, includePending: $includePending) {
       node {
         __typename
+        # THE TAG PAGE DRAWS THE FEED'S OWN CARDS (TagPage.md:15), so each
+        # node is read as those cards read it everywhere else: a post as the
+        # feed's window reads it, its comment count the same cost-free
+        # aggregate; a comment as a profile's comments view reads it — what
+        # it answers (the card's `On …` pointer) and its thread's post, where
+        # its doors land. No replies count: a tagged comment's card offers no
+        # view-replies line (:17).
         ... on Post {
-          id
-          title {
-            value
-            status
-          }
-          content {
-            value
-            status
-          }
-          author {
-            id
-            handle
-            displayName {
-              value
-            }
+          ...PostFields
+          commentCount: comments(first: 0, includePending: $includePending) {
+            totalCount
           }
         }
         ... on Comment {
-          id
-          content {
-            value
-            status
+          ...CommentFields
+          target {
+            ...CommentHeadFields
           }
-          author {
+          post {
             id
-            handle
-            displayName {
-              value
-            }
           }
         }
       }

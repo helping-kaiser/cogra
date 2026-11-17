@@ -37,6 +37,7 @@ import com.cogra.domain.ModerationState
 import com.cogra.domain.Outcome
 import com.cogra.domain.PostView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ProfileComment
 import com.cogra.domain.ProfileView
 import com.cogra.domain.ReferenceCandidateView
 import com.cogra.domain.ReferenceClaimView
@@ -47,6 +48,7 @@ import com.cogra.domain.RemovalAgent
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.TaggedContentKind
 import com.cogra.domain.TaggedContentView
+import com.cogra.domain.TaggedNode
 import com.cogra.domain.TopicClaimView
 import com.cogra.domain.UserError
 import com.cogra.domain.WriteState
@@ -71,6 +73,7 @@ import com.cogra.network.graphql.fragment.UserErrorFields
 import com.cogra.network.graphql.type.LicenseInput
 import com.cogra.network.graphql.type.RecordFamily
 import com.cogra.network.graphql.type.StagedWriteState
+import com.cogra.network.repo.toTarget
 import java.util.Base64
 
 /** The GraphQL errors array — transport tier, never a business outcome. */
@@ -331,28 +334,42 @@ internal fun HashtagQuery.TaggedContent.toDomain(): TaggedContentView? {
     val post = node.onPost
     val comment = node.onComment
     return when {
-        post != null -> TaggedContentView(
-            kind = TaggedContentKind.POST,
-            id = post.id,
-            title = post.title.value,
-            snippet = post.content.value,
-            authorHandle = post.author?.handle,
-            authorDisplayName = post.author?.displayName?.value,
-            relevance = relevance,
-            confidence = confidence,
-            pending = pending,
-        )
-        comment != null -> TaggedContentView(
-            kind = TaggedContentKind.COMMENT,
-            id = comment.id,
-            title = null,
-            snippet = comment.content.value,
-            authorHandle = comment.author?.handle,
-            authorDisplayName = comment.author?.displayName?.value,
-            relevance = relevance,
-            confidence = confidence,
-            pending = pending,
-        )
+        post != null -> {
+            val view = post.postFields.toDomain().copy(commentCount = post.commentCount.totalCount)
+            TaggedContentView(
+                kind = TaggedContentKind.POST,
+                id = view.id,
+                title = view.title.value,
+                snippet = view.content.value,
+                authorHandle = view.author?.handle,
+                authorDisplayName = view.author?.displayName,
+                relevance = relevance,
+                confidence = confidence,
+                pending = pending,
+                node = TaggedNode.Post(view),
+            )
+        }
+        comment != null -> {
+            val view = comment.commentFields.toDomain()
+            TaggedContentView(
+                kind = TaggedContentKind.COMMENT,
+                id = view.id,
+                title = null,
+                snippet = view.content.value,
+                authorHandle = view.author?.handle,
+                authorDisplayName = view.author?.displayName,
+                relevance = relevance,
+                confidence = confidence,
+                pending = pending,
+                node = TaggedNode.Comment(
+                    ProfileComment(
+                        comment = view,
+                        target = comment.target?.commentHeadFields?.toTarget(),
+                        threadPostId = comment.post?.id,
+                    ),
+                ),
+            )
+        }
         else -> null
     }
 }
