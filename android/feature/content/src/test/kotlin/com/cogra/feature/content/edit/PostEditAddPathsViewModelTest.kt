@@ -362,20 +362,50 @@ class PostEditAddPathsViewModelTest {
 
         vm.onPickCover("face.jpg")
         val crop = vm.state.value.cropping as EditCrop.Cover
-        // Locked to the clip's own shape.
-        assertThat(crop.ratio).isWithin(RATIO).of(9f / 16f)
+        // Locked to the clip's shape as it stands in a card: this 9:16 clip at 4:5 (CoverCrop.md:3).
+        assertThat(crop.ratio).isWithin(RATIO).of(4f / 5f)
         vm.onCoverCropDone()
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(vm.state.value.gallery.coverChosen).isTrue()
         assertThat(vm.state.value.recordStaged).isTrue()
-        assertThat(media.crops.single().targetRatio).isWithin(RATIO).of(9f / 16f)
+        // CoverCrop.md:5: the crop exports the frame's shape and only that shape.
+        assertThat(media.crops.single().targetRatio).isWithin(RATIO).of(4f / 5f)
         vm.onSign()
         media.land(0)
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(content.lastEditAttachments)
             .containsExactly(AttachmentClaim("v1", null, coverMediaId = "m-1", coverTaken = false))
+    }
+
+    /** CoverCrop.md:3: a clip no taller than 4:5 keeps its own ratio — wide a wide cover, square a square. */
+    @Test
+    fun aClipNoTallerThanFourFiveKeepsItsOwnShapeAsTheCoversFrame() = runTest(dispatcher) {
+        for (ratio in listOf(16f / 9f, 1f, 4f / 5f)) {
+            content.loadedAttachments = listOf(clip.copy(aspectRatio = ratio))
+            val vm = opened()
+
+            vm.onPickCover("face.jpg")
+
+            assertThat((vm.state.value.cropping as EditCrop.Cover).ratio).isWithin(RATIO).of(ratio)
+        }
+    }
+
+    /** CoverCrop.md: the header back arrow returns to the edit, and the picture goes unused. */
+    @Test
+    fun theCoverCropsBackArrowLeavesThePictureUnused() = runTest(dispatcher) {
+        content.loadedAttachments = listOf(clip)
+        val vm = opened()
+        vm.onPickCover("face.jpg")
+
+        vm.onCropBack()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.cropping).isNull()
+        assertThat(vm.state.value.gallery.newCover).isNull()
+        assertThat(vm.state.value.recordStaged).isFalse()
+        assertThat(media.sent).isEqualTo(0)
     }
 
     @Test
