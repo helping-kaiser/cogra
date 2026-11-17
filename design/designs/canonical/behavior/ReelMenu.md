@@ -32,7 +32,7 @@ WHEN tap reel.menuSheet.hide -> the sheet closes AND that person's clips leave t
 
 WHEN tap reel.menuSheet.remove -> the think-twice dialog opens over the stream
 
-WHEN the reader's own clip's removal is taken -> the stream stays on it AND reel.stage.removalMark, the author's removal mark at now, stands in the clip's place, centred on the stage clear of reel.rail AND reel.rail and reel.caption's handle stay AND reel.soundDisc and reel.seekLine go AND NEVER the next clip takes the screen by itself
+WHEN the reader's own clip's removal is taken -> the stream stays on it AND reel.stage.removalMark, Removed by its author at now, stands in the clip's place, centred on the stage clear of reel.rail AND reel.rail and reel.caption's handle stay AND reel.soundDisc and reel.seekLine go AND NEVER the next clip takes the screen by itself
 
 WHEN a guest taps Save, Cite in a new post, Hide or Report on reel.menuSheet -> the guest gate opens AND NEVER reel.menuSheet.citedBy, Opinions on this or License terms raise it, a reading being open to a guest
 

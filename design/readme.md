@@ -11992,18 +11992,16 @@ built on round 48's final tree (merged in, fe728bfd7).
   in the comment sheets' words, the sheets' `list` chip. The detail's
   count lines are unchanged. A post has two doors to each list, the count
   line on its detail and the row in its menu; a comment has the row.
-- **The reel's rail gains a ⋮** (M2): author · opinion · comments · share
-  · ⋮ · score. It is not an exit, so it stands above the score, which the
-  rail keeps last as its door out; it follows the acts with glyphs of
-  their own, named `More on this post` as the card's ⋮. It raises the
-  card's own rows over the stream: `ReelMenu` (new), its `whose` chip the
-  reader's menu on @mira's clip or the own menu on @sol's. Measured
-  (headless Chromium, 390 × 844): the rail's top at 330, 286px under the
-  sound disc; the ⋮ at 580–620, 16px above the score; the caption's right
-  edge 16px clear of the rail; the sheet in the app's theme over the
-  stream, its rows as the card's. What `Hide`
-  and your own `Remove` leave on the stream, and whether the clip pauses
-  under the sheet, are not ruled (backlog 231; two gaps in the graph).
+- **The reel's rail gains a ⋮** (M2), its LOWEST item (jakob 2026-11-17:
+  "three dots always sit at the end of these lists"): author · opinion ·
+  comments · share · score · ⋮, named `More on this post` as the card's ⋮.
+  It raises the card's own rows over the stream: `ReelMenu` (new), its
+  `whose` chip the reader's menu on @mira's clip, the own menu on @sol's,
+  and `own-removed`, your clip after its removal lands. Measured (headless
+  Chromium, 390 × 844): the rail's top at 330, 286px under the sound disc;
+  the score at 580–628 and the ⋮ 16px under it at 644–684; the caption's
+  right edge 16px clear of the rail; the sheet in the app's theme over the
+  stream, its rows as the card's.
 - **The narrow phone's share row leads and reads `Share this post`** (M3,
   M4): copy-voice's Save-first rule and the atom's note name the
   exception — a control moved off the card into the menu takes the first
@@ -12036,8 +12034,12 @@ built on round 48's final tree (merged in, fe728bfd7).
   keyed by the chip. `ProfileOtherHeld`, `EmptySignConfirm` and
   `SigningAfterClose` draw the landing; `ProfileMoreFailed` keeps
   Everything, its subject being the chronicle's failed page. A deleted
-  account's page (`ProfileDeleted`, `ProfileDeletedMenu`) keeps
-  Everything: what its Posts tab shows is not drawn anywhere.
+  account's page lands on Posts too (jakob 2026-11-17): `ProfileDeleted`
+  and `ProfileDeletedMenu` take the `tab` chip and a `contents` chip —
+  `kept`, the posts as cards under the redacted actor's chip (`PostCard`
+  hands `author.redacted` to `ActorChip`), `removed`, each post its
+  `Removed by its author` mark, swept content's mark; the chronicle on
+  Everything keeps its words.
 - **The seals register** (backlog 220, options a + c): the `state` value
   `tagRefused` reads `tag-refused` (a key is lowercase letters, digits, `-`
   and `_`); `ComposeSeal`'s card and foot are drawn once per value
@@ -12052,9 +12054,27 @@ built on round 48's final tree (merged in, fe728bfd7).
   Set.` alone, the hold in the pad's help; the profile and picture seals'
   write-rule notice carries its own "?" (`WriteRuleFailed`), law only;
   `CommentCard` keeps a guest's `Reply` and comment glyph at full strength,
-  as the drawn guest boards draw a guest's controls (told to jakob, not
-  separately ruled; no board draws a guest's thread — its foot's face is
-  open); copy-voice marks the answered-fault line *Copy-only*.
+  as the drawn guest boards draw a guest's controls; copy-voice marks the
+  answered-fault line *Copy-only*.
+- **jakob's answers of 2026-11-17** (act 4):
+  - The stream after `Hide` from its ⋮: the person's clips leave at once,
+    the one on screen too, and the next clip takes the screen — "for now
+    until we get some feedback against it".
+  - After your own `Remove` the stream stays and the removal mark stands
+    in the clip's place, the confirmation (`ReelMenu`'s `whose` =
+    `own-removed`); the clip pauses under the sheet. Backlog 231 closed.
+  - The comment edit names a removed post `Your comment on @ada's removed
+    post.` (`CommentEdit`'s `post` chip); the tag page's not-found keeps
+    the asked-for name, as drawn.
+  - A guest's thread is drawn (`ReplyEntry`'s `reader` = `guest`): the foot
+    wears the borrowed view's face, @mira's, and the foot and every `Reply`
+    stand at full strength — the dimmed look is the applicant's alone
+    (copy-voice, *The applicant lock, one rule*).
+  - Seam 338: `ComposeCrop`'s shape row is drawn once per `shape` value
+    because only the selected chip differs. Drawn once, it is
+    pixel-identical at all three values, but its key rule is registered
+    and the registry takes no change to it without the implementers'
+    agreement, so the row stays keyed by the selected shape for now.
 - **The gate**: against round 48's final tree (fe728bfd7), 209 → 212
   screens (`ReelMenu`, `ComposeSeal`, `ReplySeal`), 8126 → 8389 board
   paths, 2151 → 2229 distinct — 78 added, none gone, and no board lost a
