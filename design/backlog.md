@@ -6216,6 +6216,34 @@ settled; drawing them stays open.
 Round 50 read it: needs no ruling — each board is its law's rows drawn — but
 it is ten boards and a lane of its own; it stays open.
 
+Round 55 drew the eleven hosts whose law fixes rows, order and host:
+`SavedPostMenuOwn`, `TagPageMenuOwn`, `SavedProfileMenu`,
+`FeedProfileDeletedMenu`, `HistoryRemovedMenu`, `HistoryRemovedMenuOwn`,
+`SavedRemovedMenu`, `SavedRemovedMenuOwn`, `ProfilePostsRemovedMenuOwn`,
+`ProfileCommentsRemovedMenuOwn` and `HistoryCommentRemovedMenuOwn`. Three
+stay open, each on its host, never its rows:
+
+- **Another's removed comment over the thread** (`CommentRemoved.md:9`: the
+  reader's comment menu whole). The thread draws only the reader's own
+  comment removed (`CommentsThreadSheet`'s `removed`), so which comment
+  stands removed — and so whose handle the Hide row names — is undrawn.
+  Options: (a) @tobias's top comment removed, its two replies standing under
+  the mark (`CommentRemoved.md`: the replies stay readable), the sheet
+  stacked as `CommentMenu`'s, `Hide @tobias`; (b) @mira's veiled comment
+  removed, no branch under it. (a) also draws the branch rule on another's
+  mark.
+- **A removed post on another's live profile.** No sentence says whether it
+  keeps its place on the Posts tab as its mark or leaves it (only a deleted
+  account's swept posts are law, `ProfileDeleted.md:9`). Options: (a) it
+  stands as its mark, as in History and Saved; (b) it leaves the tab, as a
+  removed post leaves the feed when it is next derived.
+- **A removed post on a tag page.** `TagPage.md` is silent and the page has
+  no filter to keep it by. Options: (a) its tagged row stays, the card as its
+  mark under the claim; (b) the row leaves the page.
+
+The rows on each are already law (copy-voice, *Menu rows*); each answer is a
+board the round-55 way.
+
 ### 230 · A clip that cannot load has no drawn state · *design* · **filed 2026-11-13** · **closed 2026-11-17**
 
 Round 49 (jakob 2026-11-13, N7 and V1). The stream and the viewer never show
@@ -6428,3 +6456,12 @@ the edit`, is law). Options: (a) the row goes, the frame at the post's shape;
 Closed by round 52, act 3 (jakob 2026-11-17, "Yes, both"): (a) — the shape row is hidden on
 the edit's crop, the stage at the post's shape, drag and zoom unchanged; `ComposeCrop`'s
 `opener` chip (`post` · `edit`) draws it and names the arrow and the X.
+
+### 275 · A deleted account's posts: their menus on its page are law only · *design* · **filed 2026-11-17**
+
+Round 55 (backlog 223's law table). `ProfileDeleted`'s posts, kept or swept
+(its `contents` chip), carry a ⋮ whose rows are law — the reader's post menu
+whole, the Hide row reading `Hide this account` (`ProfileDeletedMenu.md`:
+"the same words every card the account authored shows"; `DELETED_POST`'s
+rows) — but no board draws either open. Needs no ruling: one board per
+state, `ProfileDeletedMenu`'s page beneath, the round-55 way.

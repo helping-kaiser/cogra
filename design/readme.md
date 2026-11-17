@@ -12394,6 +12394,45 @@ merged in (6f95dac35, then its acts 2 and 3, 55cd99081 and c126296b8).
   (`ComposeCrop`'s `opener` chip, `post` · `edit`, which also names the
   arrow and the X); the row is hidden, never left out, so its unkeyed paths
   stand. Backlog 260 and 261 closed.
+
+### Round 55, the menu hosts the sidecars named and no board drew — 2026-11-17
+
+No new ruling: round 36's one menu board per place a card's menu is raised,
+round 49's M1 (`Cited by` · `Opinions on this` before `License terms`) and
+copy-voice's *Menu rows* fix every row. Each host was proved against its
+law before it was drawn, round 48's way: the rows as the law states them,
+nothing reordered, the sheet over its host as its twin raises it.
+
+- **Drawn, eleven boards**: your own post in Saved (`SavedPostMenuOwn`,
+  Unsave first) and on a tag page (`TagPageMenuOwn` — the page lists the
+  author's own claims, so your tagged post stands on it; own menus carry no
+  Hide and no Report); the profile card in Saved (`SavedProfileMenu`,
+  `FeedProfileMenu`'s rows, Unsave first); a deleted account's feed card
+  (`FeedProfileDeletedMenu`: Save · `Hide this account` · Report, the
+  deleted account's menu less its share row); a removed post in History and
+  Saved, another's and your own (`HistoryRemovedMenu`,
+  `HistoryRemovedMenuOwn`, `SavedRemovedMenu`, `SavedRemovedMenuOwn`), and
+  your own on your own profile's Posts tab (`ProfilePostsRemovedMenuOwn`,
+  the mark standing until the tab is next derived); your own removed
+  comment on your own Comments tab and in History
+  (`ProfileCommentsRemovedMenuOwn`, `HistoryCommentRemovedMenuOwn`).
+- **A comment removed after it was seen wears its mark on its feed card**:
+  `CommentFeedCard` hands `CommentCard` its own `redacted`, so History draws
+  the mark the thread and the profile already draw, and your own card's ⋮
+  takes your removed comment's rows.
+- **Held, three hosts** (backlog 223, narrowed): another's removed comment
+  over the thread (no board draws which comment stands removed); a removed
+  post on another's live profile and on a tag page (no sentence says whether
+  it keeps its place). A deleted account's posts on its page have law-only
+  menus too (backlog 275).
+- **Adjacent**: `ProfileComments.md` names Hide among another's removed
+  comment's rows; `TagPageMenu.md`'s tap is another's post, and
+  `FeedPostMenuOwn.md` names the tag page among the own menu's hosts.
+  Unsave-and-undo names its first sheet; cite-a-post re-blessed at 35
+  origins, mention-someone at 4.
+- **The gate**: against `c84455977`, 214 → 225 screens, 8492 → 9031 board
+  paths, 2270 → 2285 distinct, nothing gone; the strings added are the
+  eleven titles.
 ---
 
 ## 14. The canvases
