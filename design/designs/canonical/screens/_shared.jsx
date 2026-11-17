@@ -2557,6 +2557,25 @@ function ComposeDetailsBody({
    the tag picker, or the same post in the reference picker, unstages its
    withdrawal rather than staging a second, cancelling record: one staged act
    per name (behavior/TagPicker.md, behavior/ReferencePicker.md). */
+/* A TAG THE SERVER REFUSES AT SIGN, ON AN EDIT (round 50, jakob 2026-11-17,
+   his 19 as recommended; impl's seam 336). The seals' blessed line (copy-voice,
+   *One staged act refused*): `This tag didn't land.` in the failure voice with
+   `Remove it`, under the chips, no reason and never Retry; `Sign the edit`
+   stays. `Remove it` unstages that pick, as the chip's × does. With more than
+   one tag on the row the refused chip wears the error ring — the picker
+   field's (`SearchBar`'s `error` outline) — so the reader sees which. The
+   `tag` chip's `refused` draws it on `EditCompose` and `CommentEdit`; the
+   ring rides a box-less wrapper, so at `landed` the row is drawn as before
+   (`{{tagRing}}`, `{{tagRefusedShown}}`). */
+const EDIT_TAG_RING = { display: "inline-flex", borderRadius: "var(--radius-full)", outline: "{{tagRing}}" };
+function editTagRefusedLine() {
+  return (
+    <div style={{ display: "{{tagRefusedShown}}" }}>
+      <UploadErrorLine message={SEAL_UNLANDED_TAG} onRemove={() => {}} node="refused" />
+    </div>
+  );
+}
+
 function WithdrawnLine({ name, node }) {
   return (
     <QuietNote node={node}>
@@ -2770,8 +2789,15 @@ function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes
             <FieldLabel node="label">Tags</FieldLabel>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
               <TopicRemovable topic="fieldnotes" onEdit={() => {}} node="tag" />
-              <TopicRemovable topic="saltmaps" onEdit={() => {}} node="tag" />
+              {holes ? (
+                <span style={EDIT_TAG_RING}>
+                  <TopicRemovable topic="saltmaps" onEdit={() => {}} node="tag" />
+                </span>
+              ) : (
+                <TopicRemovable topic="saltmaps" onEdit={() => {}} node="tag" />
+              )}
             </div>
+            {holes && editTagRefusedLine()}
             <InlineAction size="sm" selfStart node="add">+ Add a tag</InlineAction>
             {!unchanged && <WithdrawnLine name="#coastroad" node="withdrawn" />}
           </div>
@@ -2888,7 +2914,13 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
             <FieldLabel node="label">Tags</FieldLabel>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
               <TopicRemovable topic="glovebox" onEdit={() => {}} node="tag" />
+              {holes && (
+                <span style={{ ...EDIT_TAG_RING, display: "{{tagSecondShown}}" }}>
+                  <TopicRemovable topic="saltmaps" onEdit={() => {}} node="tag" />
+                </span>
+              )}
             </div>
+            {holes && editTagRefusedLine()}
             <InlineAction size="sm" selfStart node="add">+ Add a tag</InlineAction>
             <WithdrawnLine name="#coastroad" node="withdrawn" />
           </div>
@@ -6890,14 +6922,13 @@ function ReferencePickerBody({ v = REF_PICKER_HOLES }) {
       </div>
 
       <div style={{ display: v.filterShown }} data-node-chip="state" data-node-key="filter">
-        <BottomSheet open ariaLabel="What the search shows" node="filterSheet">
+        <BottomSheet open ariaLabel="What the search shows" foot={<FilterFoot node="foot" />} node="filterSheet">
           <SheetTitle node="title">What the search shows</SheetTitle>
           <FilterSection label="Kinds" node="kinds">
             {REF_PICKER_KINDS.map((kind) => (
               <Chip key={kind.value} label={kind.label} selected={false} node={`${kind.value}Chip`} />
             ))}
           </FilterSection>
-          <FilterFoot node="foot" />
         </BottomSheet>
       </div>
     </>

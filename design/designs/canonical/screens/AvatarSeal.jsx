@@ -9,8 +9,17 @@
    the seal and the change goes on. Its wait and its answer belong where it lands, the profile, by `SigningAfterClose`'s edit form — the profile's own head standing as it was with the row line under it; that placement is not drawn yet (backlog 165). */
 /* REGISTERED under the `avatarSeal` prefix (round 48, seam 323-11 and 323-6), `keptPicksSeal`'s names: `header`, the card `acts` (`ActsCard`'s `actRow` keyed by place, and `total`), the `note`, and the `foot` — its two copies keyed by the `state` chip's value. Names only: not a pixel moves. */
 export const NODE = "avatarSeal";
-export const PROPS = { state: { editor: "enum", options: ["rest", "signing"], default: "rest" } };
-export const VALS = `restFootShown: this.props.state === "signing" ? "none" : "flex", signFootShown: this.props.state === "signing" ? "flex" : "none"`;
+/* THE `state` CHIP'S `uploading` AND `upload-failed` (round 50; `uploading`
+   the running gate, `Uploading 0 of 1 — signing waits for the picture.`,
+   added in act 3 with the profile seal's). `upload-failed` (round 50, jakob 2026-11-17, his 9 —
+   the upload case, backlog 270: the upload starts after the crop). The new
+   picture did not reach CoGra while the seal waited on it: the gate's fault
+   reading, `ReplySealUploadFailed`'s words exactly — `One picture didn't
+   upload. Signing waits for it.` with `Retry` — over the foot, and `Sign the
+   change` disabled until `Retry` re-gates. No `Remove it` on a seal: one
+   stage back is the crop. */
+export const PROPS = { state: { editor: "enum", options: ["rest", "signing", "uploading", "upload-failed"], default: "rest" } };
+export const VALS = `restFootShown: this.props.state === "rest" ? "flex" : "none", signFootShown: this.props.state === "signing" ? "flex" : "none", failedFootShown: this.props.state === "upload-failed" ? "flex" : "none", uploadingFootShown: this.props.state === "uploading" ? "flex" : "none"`;
 
 export function Screen() {
   return (
@@ -37,6 +46,14 @@ export function Screen() {
         </div>
         <div style={{ display: "{{signFootShown}}", flexDirection: "column" }} data-node-chip="state" data-node-key="signing">
           <SealFooter signLabel="Sign the change" busy busyLabel="Signing the change…" node="foot" />
+        </div>
+        <div style={{ display: "{{uploadingFootShown}}", flexDirection: "column", gap: 16 }} data-node-chip="state" data-node-key="uploading">
+          <UploadStatusLine done={0} total={1} node="gate" />
+          <SealFooter signLabel="Sign the change" busyLabel="Signing the change…" node="foot" />
+        </div>
+        <div style={{ display: "{{failedFootShown}}", flexDirection: "column", gap: 16 }} data-node-chip="state" data-node-key="upload-failed">
+          <UploadStatusLine failed onRetry={() => {}} node="gate" />
+          <SealFooter signLabel="Sign the change" busyLabel="Signing the change…" disabled node="foot" />
         </div>
       </div>
     </>
