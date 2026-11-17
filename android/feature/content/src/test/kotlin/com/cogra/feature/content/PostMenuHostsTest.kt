@@ -39,6 +39,8 @@ import com.cogra.domain.references.CitingView
 import com.cogra.domain.saved.SavedCard
 import com.cogra.domain.saved.SavedEntry
 import com.cogra.domain.saved.SavedWrites
+import com.cogra.domain.stance.HeldOpinion
+import com.cogra.domain.stance.OpinionHolder
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.RecordingHiddenRepository
@@ -92,6 +94,16 @@ class PostMenuHostsTest {
     private val opened = mutableListOf<String>()
     private val asked = mutableListOf<String>()
 
+    /** The nodes whose opinions were read, and the people a row opened. */
+    private val opinionsFor = mutableListOf<String>()
+    private val people = mutableListOf<String>()
+    private val miraHolds = HeldOpinion(
+        holderId = "a-mira",
+        holder = OpinionHolder("mira-id", "mira", "Mira Voss", null, redacted = false),
+        pair = StancePair(0.9, 0.25),
+        severed = false,
+    )
+
     /** What cites a post: one comment, on the post it answers (CitedBy.md:15). */
     private val reads = InboundReads(
         citedBy = { id ->
@@ -105,6 +117,10 @@ class PostMenuHostsTest {
                     ),
                 ),
             )
+        },
+        opinionsOn = { id ->
+            opinionsFor += id
+            Outcome.Success(listOf(miraHolds))
         },
     )
 
@@ -206,7 +222,7 @@ class PostMenuHostsTest {
                     onRefresh = {},
                     onReveal = { _, _ -> },
                     onEdit = {},
-                    onOpenActor = {},
+                    onOpenActor = { people += it },
                     onOpenPost = { opened += it },
                     onOpenTopic = {},
                     onReference = {},
@@ -241,6 +257,7 @@ class PostMenuHostsTest {
             "history.menuSheet.cite",
             "history.menuSheet.hide",
             "history.menuSheet.citedBy",
+            "history.menuSheet.opinions",
             "history.menuSheet.license",
             "history.menuSheet.report",
         )
@@ -259,6 +276,7 @@ class PostMenuHostsTest {
             "history.menuSheet.markSensitive",
             "history.menuSheet.remove",
             "history.menuSheet.citedBy",
+            "history.menuSheet.opinions",
             "history.menuSheet.license",
         )
         compose.onNodeWithTag("history.menuSheet.hide").assertDoesNotExist()
@@ -311,7 +329,10 @@ class PostMenuHostsTest {
 
     // -- Saved --
 
-    /** SavedPostMenu.md:3, :5 — `saved.menuSheet`: Unsave, Cite, Hide, Cited by, License terms, Report. */
+    /**
+     * SavedPostMenu.md:3, :5 — `saved.menuSheet`: Unsave, Cite, Hide, Cited by,
+     * Opinions on this, License terms, Report.
+     */
     @Test
     fun savedsPostMenuRaisesItsSheetWithUnsaveFirst() {
         renderSaved(adaHidden = false)
@@ -323,6 +344,7 @@ class PostMenuHostsTest {
             "saved.menuSheet.cite",
             "saved.menuSheet.hide",
             "saved.menuSheet.citedBy",
+            "saved.menuSheet.opinions",
             "saved.menuSheet.license",
             "saved.menuSheet.report",
         )
@@ -370,6 +392,7 @@ class PostMenuHostsTest {
             "profile.menuSheet.cite",
             "profile.menuSheet.hide",
             "profile.menuSheet.citedBy",
+            "profile.menuSheet.opinions",
             "profile.menuSheet.license",
             "profile.menuSheet.report",
         )
@@ -388,6 +411,7 @@ class PostMenuHostsTest {
             "profile.menuSheet.markSensitive",
             "profile.menuSheet.remove",
             "profile.menuSheet.citedBy",
+            "profile.menuSheet.opinions",
             "profile.menuSheet.license",
         )
         compose.onNodeWithTag("profile.menuSheet.hide").assertDoesNotExist()
@@ -512,7 +536,12 @@ class PostMenuHostsTest {
     fun theDetailsCitedByRowOpensTheRegisteredSheetAndItsRowOpensThePost() {
         renderDetail(adaHidden = false)
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        assertRowsInOrder("postDetail.menuSheet.hide", "postDetail.menuSheet.citedBy", "postDetail.menuSheet.license")
+        assertRowsInOrder(
+            "postDetail.menuSheet.hide",
+            "postDetail.menuSheet.citedBy",
+            "postDetail.menuSheet.opinions",
+            "postDetail.menuSheet.license",
+        )
         assertCitedByOpens("postDetail.menuSheet.citedBy")
         compose.onNodeWithTag("postDetail.citedBySheet").assertExists()
         compose.onNodeWithTag("postDetail.citedBySheet.title", useUnmergedTree = true).assertTextEquals("Cited by")
@@ -530,5 +559,49 @@ class PostMenuHostsTest {
         compose.onNodeWithTag("postDetail.header.menu").performClick()
         assertCitedByOpens("postDetail.menuSheet.citedBy")
         assertThat(gated).isEqualTo(0)
+    }
+
+    // -- Opinions on this, on every host (PostOpinions.md:3, :5; ReaderPostMenu.md:33, :35) --
+
+    /**
+     * PostOpinions.md:3, :17 — over the detail, the registered sheet titled for the
+     * post; a holder's row opens their profile, the detail's own person door
+     * (`Back to the post`), and the sheet goes as it is followed.
+     */
+    @Test
+    fun theDetailsOpinionsRowOpensTheRegisteredSheetAndItsRowOpensThePerson() {
+        renderDetail(adaHidden = false)
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.opinions").performClick()
+        compose.waitForIdle()
+        assertThat(opinionsFor).containsExactly("p1")
+        compose.onNodeWithTag("postDetail.opinionsSheet.title", useUnmergedTree = true)
+            .assertTextEquals("Opinions on this post")
+        compose.onNodeWithTag("postDetail.opinionsSheet.opinion:mira-id").performClick()
+        compose.waitForIdle()
+        assertThat(people).containsExactly("mira")
+        compose.onNodeWithTag("postDetail.opinionsSheet").assertDoesNotExist()
+    }
+
+    /** HistoryPostMenuOwn.md:5 — the own menu carries it too, and it opens over History. */
+    @Test
+    fun historysOwnOpinionsRowOpensOverHistory() {
+        renderHistory(adaHidden = false, viewerId = ada.id)
+        compose.onNodeWithTag("history.card.menu").performClick()
+        compose.onNodeWithTag("history.menuSheet.opinions").performClick()
+        compose.waitForIdle()
+        assertThat(opinionsFor).containsExactly("p1")
+        compose.onNodeWithText("Mira Voss").assertExists()
+        compose.onNodeWithTag("history.card:p1").assertExists()
+    }
+
+    /** PostOpinions.md:5 — a profile's posts view: the sheet over the profile. */
+    @Test
+    fun aProfilePostsOpinionsRowOpensOverTheProfile() {
+        renderProfilePosts(adaHidden = false)
+        compose.onNodeWithTag("profile.posts.card.menu").performClick()
+        compose.onNodeWithTag("profile.menuSheet.opinions").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Opinions on this post").assertExists()
     }
 }

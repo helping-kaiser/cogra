@@ -44,6 +44,10 @@ class FeedMenuReportTest {
             citedFor += id
             Outcome.Success(emptyList())
         },
+        opinionsOn = { id ->
+            citedFor += id
+            Outcome.Success(emptyList())
+        },
     )
 
     private fun renderFeed(signedOut: Boolean = false) {
@@ -227,5 +231,20 @@ class FeedMenuReportTest {
         compose.waitForIdle()
         assertThat(citedFor).containsExactly("p1")
         compose.onNodeWithText("Nothing cites this yet").assertExists()
+    }
+
+    /** FeedPostMenu.md:5, PostOpinions.md:5, :25 — Opinions on this after Cited by, opening over the feed. */
+    @Test
+    fun the_feed_menus_opinions_opens_who_holds_one_over_the_feed() {
+        renderFeed()
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        val citedBy = compose.onNodeWithTag("feed.menuSheet.citedBy").fetchSemanticsNode().boundsInRoot.top
+        val opinions = compose.onNodeWithTag("feed.menuSheet.opinions").fetchSemanticsNode().boundsInRoot.top
+        val license = compose.onNodeWithTag("feed.menuSheet.license").fetchSemanticsNode().boundsInRoot.top
+        assertThat(listOf(citedBy, opinions, license)).isInStrictOrder()
+        compose.onNodeWithTag("feed.menuSheet.opinions").performClick()
+        compose.waitForIdle()
+        assertThat(citedFor).containsExactly("p1")
+        compose.onNodeWithText("No opinions yet").assertExists()
     }
 }

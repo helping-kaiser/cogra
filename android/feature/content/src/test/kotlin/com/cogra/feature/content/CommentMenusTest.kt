@@ -35,6 +35,8 @@ import com.cogra.domain.references.CitingView
 import com.cogra.domain.saved.CommentTarget
 import com.cogra.domain.saved.SavedCard
 import com.cogra.domain.saved.SavedEntry
+import com.cogra.domain.stance.HeldOpinion
+import com.cogra.domain.stance.OpinionHolder
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testModeratedField
@@ -80,10 +82,16 @@ class CommentMenusTest {
     private var citing: List<CitingArtifact<CitingView>> = emptyList()
     private val opened = mutableListOf<String>()
     private val readFor = mutableListOf<String>()
+    private var holding: List<HeldOpinion> = emptyList()
+    private val people = mutableListOf<String>()
     private val reads = InboundReads(
         citedBy = { id ->
             readFor += id
             Outcome.Success(citing)
+        },
+        opinionsOn = { id ->
+            readFor += id
+            Outcome.Success(holding)
         },
     )
     private val noDoors = CardDoors(
@@ -120,7 +128,7 @@ class CommentMenusTest {
                         onCommentSignedShown = {},
                         onLoadMoreReplies = {},
                         onReveal = { _, _ -> },
-                        onOpenActor = {},
+                        onOpenActor = { people += it },
                         onOpenTopic = {},
                         onReference = {},
                         onLicense = {},
@@ -494,5 +502,57 @@ class CommentMenusTest {
         compose.onNodeWithText("The wax-stick ones").performClick()
         compose.waitForIdle()
         assertThat(opened).containsExactly("p9")
+    }
+
+    // -- Opinions on this (CommentMenu.md:23; CommentOpinionsEmpty.md) --
+
+    /**
+     * CommentMenu.md:23, CommentOpinionsEmpty.md:3, :5, :7 — the thread's row raises
+     * the comment's opinions sheet stacked over the thread, titled for the
+     * comment, its empty line alone when nobody holds one.
+     */
+    @Test
+    fun theThreadsOpinionsRowRaisesTheCommentsSheetEmpty() {
+        renderThread()
+        compose.onNodeIn(threadCard("theirs"), threadMenu).performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.opinions").performClick()
+        compose.waitForIdle()
+        assertThat(readFor).containsExactly("theirs")
+        compose.onNodeWithTag(THREAD_OPINIONS_SHEET).assertExists()
+        compose.onNodeWithText("Opinions on this comment").assertExists()
+        compose.onNodeWithText("No opinions yet").assertExists()
+        compose.onNodeWithTag(threadCard("theirs")).assertExists()
+    }
+
+    /** CommentOpinionsEmpty.md:11 — held, the rows draw as the post's do; a row opens its holder. */
+    @Test
+    fun aHoldersRowOpensTheirProfileFromTheThread() {
+        holding = listOf(
+            HeldOpinion(
+                holderId = "a-ada",
+                holder = OpinionHolder("ada-id", "ada", "Ada Okonkwo", null, redacted = false),
+                pair = StancePair(0.7, 0.4),
+                severed = false,
+            ),
+        )
+        renderThread()
+        compose.onNodeIn(threadCard("mine"), threadMenu).performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.opinions").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Ada Okonkwo").performClick()
+        compose.waitForIdle()
+        assertThat(people).containsExactly("ada")
+        compose.onNodeWithTag(THREAD_OPINIONS_SHEET).assertDoesNotExist()
+    }
+
+    /** HistoryCommentMenu.md:9 — off the thread, the comment's opinions come up over History. */
+    @Test
+    fun historysCommentOpinionsRowOpensOverHistory() {
+        renderHistory(theirs)
+        compose.onNodeWithTag("history.commentCard.menu").performClick()
+        compose.onNodeWithTag("history.menuSheet.opinions").performClick()
+        compose.waitForIdle()
+        assertThat(readFor).containsExactly("theirs")
+        compose.onNodeWithText("No opinions yet").assertExists()
     }
 }
