@@ -31,7 +31,9 @@
    as the ringed inset in its corner — the post tray's own rule (readme §13,
    the stored first frame), because one attachment is one tile and the row
    already shows the chosen frame at full prominence. This board draws the
-   unpicked state; the inset idiom is ComposePickVideoCover's.
+   unpicked state; the inset is `MediaThumb`'s `coverSrc`. Round 52 stood the
+   cover beside the clip on every other host (`CoverTile`); here two 220
+   tiles do not fit the 342 column, and the host waits on jakob.
 
    THE ADD CONTROL IS GONE AND A LINE SAYS WHY (jakob 2026-09-03): "A video is
    the whole comment. Give it a cover below." An absent control explains

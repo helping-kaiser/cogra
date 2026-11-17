@@ -16,8 +16,12 @@ export interface MediaThumbProps {
   /** "cover" (default) for cropped pictures; "contain" shows the whole frame. */
   fit?: "cover" | "contain";
   radius?: string;
-  /** The "Cover" badge — the first picture; the badge travels with reorder. */
+  /** The "Cover" badge — a post's first picture, the badge travelling with
+   *  reorder; a clip's cover tile wears it too (`CoverTile`). */
   cover?: boolean;
+  /** The picture's framing inside the tile, the way `CoverRow`'s frames carry
+   *  it — a strip of frames is one picture shown several ways. */
+  transform?: string;
   /** A clip's chosen cover, drawn as the frame itself: an inset thumb in the
    *  same bottom-left corner, a third of the tile's short side (28px floor)
    *  with a hairline ring. A tile is a picture's or a clip's, never both. */

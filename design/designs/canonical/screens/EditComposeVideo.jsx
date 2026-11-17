@@ -14,9 +14,9 @@
    stored-still ruling every clip carries a still — this vertical clip's is
    its taken frame 1 — but a taken still is not a cover anyone picked, and
    chosen-vs-taken is a STORED AUTHORING FACT the edit reads, never a guess
-   from bytes. So the row is a door rather than a picture: "Add a cover",
-   where a clip whose face was chosen wears it and "Change the cover"
-   (CommentEditVideo draws that half, the same contract at the other scale).
+   from bytes. So the cover's tile is a door rather than a picture: "Add a
+   cover", where a clip whose face was chosen wears it and is named "Change
+   the cover" (the `upload` chip's `uploading` draws that half).
    An edit must never present a cover row presuming a choice exists — the
    field would then show a face nobody picked as if someone had, and every
    path out of it would be a change to something unset. The door is the
@@ -39,22 +39,26 @@
    2026-10-05) — and `Sign the edit` stays enabled; pressed, it reads
    `Signing the edit…` until the bytes land, a failed upload drops the held
    press, and the slow line counts from the press. The `upload` chip draws it:
-   the cover row then holds the chosen face and `Change the cover`, the field's
-   other half (`CommentEditVideo`), and the foot's count holds: A NEW FACE
+   the cover's tile then holds the chosen face, named `Change the cover`, and
+   the foot's count holds: A NEW FACE
    RIDES THE EDIT RECORD (seam 248, the contract's `coverMediaId` on the
    edit), so it stages the Edit record when nothing has yet, and adds nothing
    when the edit's record is already staged, as here.
 
-   THE COVER'S THUMB WEARS THE COVER'S SHAPE, NOT THE CLIP'S (round 50,
-   impl's seam 342). This clip is tall, and a tall clip's cover is cut at 4:5
-   (`CoverCrop`, jakob 2026-11-12 and 2026-11-13, N7), so the chosen face
-   stands 54 × 67.5 under the clip's own 54 × 96: the same width, the cover's
-   shape. The clip's tile keeps the clip's shape.
+   THE COVER STANDS BESIDE THE CLIP, AT THE COVER'S SHAPE (round 52, jakob
+   2026-11-17, decision 4; the shape since round 50, impl's seam 342). This
+   clip is tall, and a tall clip's cover is cut at 4:5 (`CoverCrop`, jakob
+   2026-11-12 and 2026-11-13, N7), so the cover's tile (`CoverTile`) stands
+   76.8 × 96 beside the clip's own 54 × 96: the same height, the cover's
+   shape. With no cover ever chosen it is the dashed `Add a cover` door;
+   with one, the face wearing the `Cover` pill, the tile itself the door
+   named `Change the cover`. Either opens the device's picker, then the
+   cover's crop.
 
    REGISTERED under the `postEdit` prefix (seam 248), `EditComposeBody`'s
-   names; the clip's block is `video`, the cover's `cover` (its door `add` and
-   `note` at rest, the chosen face `thumb` and `change` once one is chosen),
-   and the count's two readings are the `upload` chip's copies of `acts`. 
+   names; the clip's block is `video`, its tile `thumb` and the cover's tile
+   beside it `cover`, one per `upload` chip value, and the count's two
+   readings are the `upload` chip's copies of `acts`.
    THE `signing` CHIP DRAWS THE EDIT CLOSED ON (round 37, jakob 2026-11-11:
    Close on every edit). From the press on `Sign the edit` the act is done:
    past 200ms the commit reads `Signing the edit…`, and the header's X —
@@ -78,8 +82,18 @@ export function Screen() {
         <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="video">
             <FieldLabel node="label">Video</FieldLabel>
+            {/* THE COVER STANDS BESIDE THE CLIP (round 52, `CoverTile`): the
+                clip tile's 96 high, a tall clip's cover at 4:5, 76.8 × 96 —
+                the dashed `Add a cover` door while no cover was ever chosen,
+                the chosen face once one is, the tile its door. */}
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <MediaThumb src="clip-lakeside.jpg" alt="" width={54} height={96} fit="cover" video onRemove={() => {}} removeLabel="Remove this video" node="thumb" />
+              <div style={{ display: "{{doorShown}}" }} {...chipCopy("upload", "none")}>
+                <CoverTile width={76.8} height={96} node="cover" />
+              </div>
+              <div style={{ display: "{{coverShown}}" }} {...chipCopy("upload", "uploading")}>
+                <CoverTile src="post-photo.jpg" width={76.8} height={96} node="cover" />
+              </div>
             </div>
             <DescribeCounter subject="video" described={1} total={1} onDescribe={() => {}} node="describeRow" />
             {/* Where the picture edit's "+ Add" stands, a clip gets the quiet
@@ -88,19 +102,6 @@ export function Screen() {
                 second half — "Its cover comes next" — is the wizard's, and is
                 dropped here because the cover is on this screen, above. */}
             <QuietNote node="rule">A video is the whole post.</QuietNote>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="cover">
-            <FieldLabel node="label">Cover</FieldLabel>
-            <div style={{ display: "{{doorShown}}", flexDirection: "column", gap: 6 }}>
-              <InlineAction size="sm" selfStart node="add">
-                Add a cover
-              </InlineAction>
-            </div>
-            <div style={{ display: "{{coverShown}}", alignItems: "center", gap: 8 }}>
-              <MediaThumb src="post-photo.jpg" alt="" width={54} height={67.5} fit="cover" node="thumb" />
-              <Button variant="text" size="sm" node="change">Change the cover</Button>
-            </div>
           </div>
 
           <TextField label="Title" corner="Optional" cap={100} value="The long way home" node="title" />

@@ -7,11 +7,16 @@ import { Icon } from "../navigation/Icon.jsx";
    wear are the whole upload story:
 
    · `cover` — the "Cover" badge, bottom-left. The first picture is the cover;
-     the badge travels with reorder, never with a separate control.
-   · `coverSrc` — a CLIP's chosen cover, shown as the picture rather than the
-     word: the frame itself, inset in the same bottom-left corner the badge
-     owns, because a cover is a property of the clip and never a second thing
-     that was picked. A third of the tile's short side (28px at the least),
+     the badge travels with reorder, never with a separate control. A CLIP'S
+     COVER wears the same badge on a tile of its own beside the clip's
+     (`CoverTile`, round 52), so "Cover" is said one way for a post's first
+     picture and for a clip's face.
+   · `transform` — the picture's framing inside the tile, the way `CoverRow`'s
+     own tiles are framed; a cover tile carries the frame that was chosen.
+   · `coverSrc` — the inset the reply composer's clip tile still names (its
+     law waits on jakob after round 52; every other surface stands the cover
+     beside the clip, `CoverTile`): the frame itself, inset in the
+     bottom-left corner the badge owns. A third of the tile's short side (28px at the least),
      with a hairline ring, which is what keeps a small frame legible over
      whatever photograph it lands on. A tile is a picture's or a clip's, so
      the badge and the mark never meet. `coverTransform` frames what is inside
@@ -73,6 +78,7 @@ export function MediaThumb({
   fit = "cover",
   radius = "var(--radius-small)",
   cover = false,
+  transform,
   coverSrc,
   coverTransform,
   progress,
@@ -121,7 +127,9 @@ export function MediaThumb({
           style={
             fit === "contain"
               ? { maxWidth: "100%", maxHeight: "100%", display: "block", opacity: failed ? 0.5 : 1 }
-              : { width: "100%", height: "100%", objectFit: "cover", display: "block", opacity: failed ? 0.5 : 1 }
+              : transform
+                ? { width: "100%", height: "100%", objectFit: "cover", display: "block", opacity: failed ? 0.5 : 1, transform }
+                : { width: "100%", height: "100%", objectFit: "cover", display: "block", opacity: failed ? 0.5 : 1 }
           }
         />
       )}

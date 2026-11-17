@@ -1,5 +1,6 @@
 import React from "react";
 import { Icon } from "../navigation/Icon.jsx";
+import { MediaThumb } from "./MediaThumb.jsx";
 
 /* The video's face (item 17, the conformance round): the strip of frames cut
    from the clip, plus the one tile that is not a frame at all.
@@ -44,7 +45,14 @@ import { Icon } from "../navigation/Icon.jsx";
    THE ROW IS NOT ALWAYS THERE (same round). A vertical clip's default is no
    cover, so at comment scale the row gives way to an "Add a cover" door and
    appears when the door is opened; a horizontal or square clip wears it from
-   the start. The row draws the choosing, never the decision to choose. */
+   the start. The row draws the choosing, never the decision to choose.
+
+   A PICTURE OF YOUR OWN STANDS WHERE IT WAS ASKED FOR (round 52, jakob
+   2026-11-17, decision 4). Back from the cover's crop, the picture takes
+   the dashed tile's place in the strip — `own`, its framing the crop's —
+   outlined as chosen, the frames dimmed around it as around a chosen frame.
+   A tap on it opens the picker again, the way the edits' cover door does:
+   the picture is re-picked and re-cropped, never re-framed in place. */
 
 const TILE = {
   width: 56,
@@ -60,9 +68,13 @@ export function CoverRow({
   label = "Cover",
   frames = [],
   selected = null,
+  /* A picture of the author's own, back from the cover's crop: `{ src,
+     transform }`. It stands in the dashed tile's place, and it is the
+     chosen cover — `selected` is ignored while it stands. */
+  own,
   caption,
 }) {
-  const chosen = selected !== null && selected !== undefined;
+  const chosen = Boolean(own) || (selected !== null && selected !== undefined);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <span
@@ -81,7 +93,7 @@ export function CoverRow({
             key={frame.src ? `${frame.src}-${index}` : index}
             className="cg-cover-frame"
             style={
-              index === selected
+              index === selected && !own
                 ? { ...TILE, outline: "2px solid var(--primary)", outlineOffset: 1 }
                 : chosen
                   ? { ...TILE, opacity: 0.65 }
@@ -91,6 +103,11 @@ export function CoverRow({
             <img src={frame.src} alt="" style={frame.transform ? { ...FILL, transform: frame.transform } : FILL} />
           </div>
         ))}
+        {own ? (
+          <div className="cg-cover-own" style={{ ...TILE, outline: "2px solid var(--primary)", outlineOffset: 1 }}>
+            <img src={own.src} alt="" style={own.transform ? { ...FILL, transform: own.transform } : FILL} />
+          </div>
+        ) : (
         <div
           className="cg-cover-own"
           style={{
@@ -108,6 +125,7 @@ export function CoverRow({
         >
           <Icon name="image" size={20} />
         </div>
+        )}
       </div>
       {caption && (
         <p style={{ margin: 0, fontSize: "var(--text-label-small)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
@@ -115,5 +133,81 @@ export function CoverRow({
         </p>
       )}
     </div>
+  );
+}
+
+/* THE COVER BESIDE THE CLIP (round 52, jakob 2026-11-17, decision 4 — his
+   hand test's W22: "the cover beeing full size and next to the video … this
+   way we also have a entrance gate for changing the cover"). Wherever a flow
+   shows a clip after a cover can exist, the cover stands as its own tile
+   beside the clip's: at the clip tile's height and at the cover's own shape
+   — a tall clip's 4:5, a square's 1:1, a wide's 16:9 — wearing the `Cover`
+   pill a post's first picture wears (`MediaThumb`'s `cover`).
+
+   THE TILE IS THE DOOR. Pressed, it opens what changes the cover where it
+   stands — the cover step on a new post, the picker and the cover's crop on
+   an edit — and it is named for that, `Change the cover`, so the pill
+   names what it is and the name says what it does.
+
+   NO COVER YET, THE SAME PLACE HOLDS THE OTHER HALF: a dashed tile at the
+   same size, the add glyph on it, and the words `Add a cover` — on the tile
+   where it is wide enough to carry them, beside it as the door's own label
+   where it is not (`labelBeside`, which the placer sets from the tile it
+   measured). One control either way: the tile and its words are one press. */
+const ADD_WORDS = {
+  fontSize: "var(--text-label-small)",
+  fontWeight: "var(--text-label-small--font-weight)",
+  lineHeight: "var(--text-label-small--line-height)",
+  letterSpacing: "var(--text-label-small--letter-spacing)",
+  color: "var(--primary)",
+  whiteSpace: "nowrap",
+};
+
+export const CHANGE_COVER_NAME = "Change the cover";
+
+export function CoverTile({ src, transform, width, height, progress, failed = false, addLabel = "Add a cover", labelBeside = false, onPress, node }) {
+  if (src) {
+    return (
+      <button
+        type="button"
+        aria-label={CHANGE_COVER_NAME}
+        onClick={onPress}
+        className="cg-state cg-focus"
+        style={{ display: "inline-flex", flex: "none", padding: 0, border: 0, background: "none", borderRadius: "var(--radius-small)", cursor: "pointer" }}
+        data-node={node}
+      >
+        <MediaThumb src={src} transform={transform} width={width} height={height} cover progress={progress} failed={failed} />
+      </button>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={onPress}
+      className="cg-state cg-focus"
+      style={{ display: "inline-flex", alignItems: "center", gap: 8, flex: "none", padding: 0, border: 0, background: "none", borderRadius: "var(--radius-small)", cursor: "pointer", textAlign: "left" }}
+      data-node={node}
+    >
+      <span
+        style={{
+          width: `${width}px`,
+          height: `${height}px`,
+          borderRadius: "var(--radius-small)",
+          border: "1px dashed var(--border-field)",
+          boxSizing: "border-box",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 4,
+          color: "var(--text-secondary)",
+          flex: "none",
+        }}
+      >
+        <Icon name="add" size={20} />
+        {!labelBeside && <span style={ADD_WORDS}>{addLabel}</span>}
+      </span>
+      {labelBeside && <span style={ADD_WORDS}>{addLabel}</span>}
+    </button>
   );
 }

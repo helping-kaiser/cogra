@@ -2,11 +2,13 @@
 
 ALWAYS the clip itself never changes at an edit and is never swapped for another
 
-ALWAYS the cover field reads Add a cover GIVEN no cover was ever chosen, even when a taken still exists
+ALWAYS postEdit.video.cover stands beside postEdit.video.thumb at its 96 high and at the cover's own shape, a tall clip's 4:5, 76.8 × 96, a square clip's 1:1, a wide clip's 16:9, never the clip's own
 
-ALWAYS the cover field shows the chosen cover and Change the cover GIVEN a cover was chosen
+ALWAYS postEdit.video.cover is the dashed Add a cover door GIVEN no cover was ever chosen, even when a taken still exists
 
-ALWAYS the chosen cover's thumbnail wears the cover's shape, a tall clip's at 4:5, never the clip's own
+ALWAYS postEdit.video.cover shows the chosen cover wearing the Cover pill and is named Change the cover GIVEN a cover was chosen
+
+WHEN tap postEdit.video.cover GIVEN a cover was chosen -> the device's own picker opens AND NEVER the clip's frames are offered
 
 ALWAYS the line A video is the whole post. stands where an add control would
 
@@ -78,11 +80,11 @@ ALWAYS Sign the edit is disabled GIVEN the gate line shows its fault reading
 
 WHEN press Retry GIVEN the held press dropped -> the gate runs again AND NEVER signing proceeds until Sign the edit is pressed again
 
-WHEN the cover the edit set fails to upload -> the cover's thumbnail is marked AND the line One picture didn't upload. stands under the cover row with Retry and Remove it AND the gate line takes its fault reading
+WHEN the cover the edit set fails to upload -> postEdit.video.cover is marked AND the line One picture didn't upload. stands under the clip and its cover with Retry and Remove it AND the gate line takes its fault reading
 
-WHEN press Retry under the cover row -> the cover's upload tries again AND the gate runs again
+WHEN press Retry under the clip and its cover -> the cover's upload tries again AND the gate runs again
 
-WHEN press Remove it under the cover row -> the new cover leaves the batch AND the cover field reads as it stood before the edit, the chosen cover or Add a cover AND the gate line goes AND Sign the edit is enabled
+WHEN press Remove it under the clip and its cover -> the new cover leaves the batch AND postEdit.video.cover reads as it stood before the edit, the chosen cover or the Add a cover door AND the gate line goes AND Sign the edit is enabled
 
 WHEN the last upload lands GIVEN Sign the edit was not pressed -> the upload line goes AND Sign the edit stays as it was
 

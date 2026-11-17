@@ -4,7 +4,7 @@ ALWAYS the comment's clip is never swapped in an edit
 
 WHEN tap the clip's remove control -> the clip leaves whole, taking the comment's media with it AND the comment is its words
 
-WHEN a video is picked at the edit GIVEN the comment holds words alone on the edit's own state -> the clip takes the Video row AND starts uploading at once AND the cover row reads Add a cover with no picture AND NEVER a crop step opens
+WHEN a video is picked at the edit GIVEN the comment holds words alone on the edit's own state -> the clip takes the Video row AND starts uploading at once AND commentEdit.video.cover beside it is the dashed Add a cover door AND NEVER a crop step opens
 
 WHEN a clip is picked at the edit -> the clip rides the edit's own record, staged once AND NEVER a record of the clip's own is staged
 
@@ -12,7 +12,7 @@ ALWAYS the line Uploading N of M — signing waits for the video. stands above t
 
 ALWAYS the gate names what is still uploading GIVEN a clip picked in the edit and a new cover upload together: Uploading 0 of 2 — signing waits for the video. while the clip climbs, then Uploading 1 of 2 — signing waits for the cover. once the clip has landed, the two lines the gate already has
 
-ALWAYS no note stands under the cover row GIVEN a clip picked in the edit, with a cover or without one
+ALWAYS no note stands under the clip and its cover GIVEN a clip picked in the edit, with a cover or without one
 
 WHEN tap Add a cover GIVEN the clip was picked in the edit -> the platform's own picker opens AND NEVER the clip's frames are offered
 
@@ -30,11 +30,13 @@ WHEN tap the × of a tag picked in this same edit -> the pick is unstaged AND th
 
 WHEN tap Undo on a Withdrawn: line -> the withdrawal is unstaged AND the chip returns as it stood AND the line goes AND the footer counts the withdrawal's record off
 
-ALWAYS the cover row shows the cover and Change the cover GIVEN the comment's clip has a cover
+ALWAYS commentEdit.video.cover stands beside commentEdit.video.thumb at the comment's square, 56 × 56, the clip tile's height
 
-ALWAYS the cover row shows Add a cover and no picture GIVEN the comment's clip has no cover
+ALWAYS commentEdit.video.cover shows the cover wearing the Cover pill and is named Change the cover GIVEN the comment's clip has a cover
 
-WHEN tap Change the cover -> the platform's own picker opens AND NEVER the clip's frames are offered
+ALWAYS commentEdit.video.cover is the dashed tile with the add glyph and the words Add a cover stand beside it as the door's label GIVEN the comment's clip has no cover
+
+WHEN tap commentEdit.video.cover -> the platform's own picker opens AND NEVER the clip's frames are offered
 
 WHEN a picture comes back from the picker -> it passes through the cover's crop, locked to the comment's square, before it lands on the edit
 
@@ -72,11 +74,11 @@ ALWAYS Sign the edit is disabled GIVEN the gate line shows its fault reading
 
 WHEN press Retry GIVEN the held press dropped -> the gate runs again AND NEVER signing proceeds until Sign the edit is pressed again
 
-WHEN the cover the edit set fails to upload -> the cover's thumbnail is marked AND the line One picture didn't upload. stands under the cover row with Retry and Remove it AND the gate line takes its fault reading
+WHEN the cover the edit set fails to upload -> commentEdit.video.cover is marked AND the line One picture didn't upload. stands under the clip and its cover with Retry and Remove it AND the gate line takes its fault reading
 
-WHEN press Retry under the cover row -> the cover's upload tries again AND the gate runs again
+WHEN press Retry under the clip and its cover -> the cover's upload tries again AND the gate runs again
 
-WHEN press Remove it under the cover row -> the new cover leaves the batch AND the cover row reads as it stood before the edit, the cover it had or Add a cover AND the gate line goes AND Sign the edit is enabled
+WHEN press Remove it under the clip and its cover -> the new cover leaves the batch AND commentEdit.video.cover reads as it stood before the edit, the cover it had or the Add a cover door AND the gate line goes AND Sign the edit is enabled
 
 WHEN the last upload lands GIVEN Sign the edit was not pressed -> the upload line goes AND Sign the edit stays as it was
 
