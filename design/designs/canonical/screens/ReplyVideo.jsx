@@ -27,13 +27,23 @@
    cover takes none of its own: it is the video's face, not a second picture.
 
    THE TILE IS AN AUTHORING TILE, AT THIS SCALE TOO (jakob 2026-09-24): it
-   always wears the clip's frame 0, and a frame chosen in the row below rides
-   as the ringed inset in its corner — the post tray's own rule (readme §13,
-   the stored first frame), because one attachment is one tile and the row
-   already shows the chosen frame at full prominence. This board draws the
-   unpicked state; the inset is `MediaThumb`'s `coverSrc`. Round 52 stood the
-   cover beside the clip on every other host (`CoverTile`); here two 220
-   tiles do not fit the 342 column, and the host waits on jakob.
+   always wears the clip's frame 0.
+
+   THE COVER STANDS BESIDE THE CLIP HERE TOO (round 52 act 3, jakob
+   2026-11-17: option (a), "but why would the cover tap not open the cover
+   crop here aswell?" — "Yes, both"). Two of the comment's 220 squares do not
+   fit the 342 column, so both tiles share it, (342 − 8) ∕ 2 = 167 × 167
+   each: the clip, `contain`, and its cover (`CoverTile`) at the comment's
+   square, wearing the `Cover` pill. The cover tile is a door, named `Change
+   the cover`, as on the edits: the platform's picker, then the cover's crop
+   locked to the comment's square (`CoverCrop`, `opener` = reply), back to
+   the composer. With no cover the same place holds the dashed `Add a cover`
+   door, its words on the tile, the same route. The frame row below stays the
+   chooser for frames: a tapped frame becomes the cover's tile as it is,
+   never cropped. A picture of the author's own stands in the row's picture
+   tile's place, outlined (`CoverRow`'s `own`). The `cover` chip draws the
+   three: `none` (as the board stood), `frame` (the row's third frame
+   chosen) and `own`.
 
    THE ADD CONTROL IS GONE AND A LINE SAYS WHY (jakob 2026-09-03): "A video is
    the whole comment. Give it a cover below." An absent control explains
@@ -47,8 +57,11 @@
    comment carries one video.`, with `Remove it` alone, as every refusal
    (copy-voice, *Refused files*). There is no replace-the-first rule: the
    reader removes the clip they have to put another in its place. */
-export const PROPS = { batch: { editor: "enum", options: ["one", "two"], default: "one" } };
-export const VALS = `secondShown: this.props.batch === "two" ? "flex" : "none"`;
+export const PROPS = {
+  batch: { editor: "enum", options: ["one", "two"], default: "one" },
+  cover: { editor: "enum", options: ["none", "frame", "own"], default: "none" },
+};
+export const VALS = `secondShown: this.props.batch === "two" ? "flex" : "none", noneShown: this.props.cover === "none" ? "flex" : "none", frameShown: this.props.cover === "frame" ? "flex" : "none", ownShown: this.props.cover === "own" ? "flex" : "none"`;
 
 const CLIP_FRAMES = [
   { src: "comment-camera.jpg" },
@@ -75,17 +88,28 @@ export function Screen() {
 
           <WordsBody rows={REPLY_WORDS_ROWS} cap={REPLY_WORDS_CAP} paragraphs={["Eighteen seconds of the same headland, if the light comes through at all."]} />
 
-          <MediaThumb
-            src="comment-camera.jpg"
-            alt="A person holding a film camera up to the light."
-            width={220}
-            height={220}
-            fit="contain"
-            video
-            duration="0:18"
-            onRemove={() => {}}
-            removeLabel="Remove this video"
-          />
+          <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+            <MediaThumb
+              src="comment-camera.jpg"
+              alt="A person holding a film camera up to the light."
+              width={167}
+              height={167}
+              fit="contain"
+              video
+              duration="0:18"
+              onRemove={() => {}}
+              removeLabel="Remove this video"
+            />
+            <div style={{ display: "{{noneShown}}" }}>
+              <CoverTile width={167} height={167} />
+            </div>
+            <div style={{ display: "{{frameShown}}" }}>
+              <CoverTile src="comment-camera.jpg" transform="scale(1.5)" width={167} height={167} />
+            </div>
+            <div style={{ display: "{{ownShown}}" }}>
+              <CoverTile src="gallery-market.jpg" transform="scale(1.15)" width={167} height={167} />
+            </div>
+          </div>
 
           <div style={{ display: "{{secondShown}}", flexDirection: "column", gap: 10 }}>
             <RefusedFile src="clip-lakeside.jpg" video message="A comment carries one video." />
@@ -95,7 +119,15 @@ export function Screen() {
 
           <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} />
 
-          <CoverRow frames={CLIP_FRAMES} />
+          <div style={{ display: "{{noneShown}}", flexDirection: "column" }}>
+            <CoverRow frames={CLIP_FRAMES} />
+          </div>
+          <div style={{ display: "{{frameShown}}", flexDirection: "column" }}>
+            <CoverRow frames={CLIP_FRAMES} selected={2} />
+          </div>
+          <div style={{ display: "{{ownShown}}", flexDirection: "column" }}>
+            <CoverRow frames={CLIP_FRAMES} own={{ src: "gallery-market.jpg", transform: "scale(1.15)" }} />
+          </div>
 
           <div style={{ flex: 1 }} />
         </div>

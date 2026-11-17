@@ -4,6 +4,10 @@ ALWAYS a clip whose upload failed wears the failed badge, dimmed, with the fault
 
 ALWAYS the failed clip's tile carries no remove control of its own
 
+ALWAYS the failed clip's tile and the cover's tile stand side by side at 167 × 167 each, the cover's tile the dashed Add a cover door GIVEN no cover was chosen
+
+WHEN tap the dashed Add a cover tile -> the platform's own picker opens AND the picture comes back through the cover's crop, locked to the comment's square AND NEVER the clip's frames are offered
+
 ALWAYS the footer's uploading line is gone GIVEN the clip's upload failed
 
 ALWAYS Next is disabled GIVEN the clip's upload failed

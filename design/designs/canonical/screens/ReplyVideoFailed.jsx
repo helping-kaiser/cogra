@@ -51,15 +51,22 @@ export function Screen() {
 
         <WordsBody rows={REPLY_WORDS_ROWS} cap={REPLY_WORDS_CAP} paragraphs={["Eighteen seconds of the same headland, if the light comes through at all."]} />
 
-        <MediaThumb
-          src="comment-camera.jpg"
-          alt="A person holding a film camera up to the light."
-          width={200}
-          height={200}
-          fit="contain"
-          video
-          failed
-        />
+        {/* THE COVER STANDS BESIDE THE CLIP (round 52 act 3, `ReplyVideo`'s
+            pair): both tiles 167 × 167; this vertical clip has no cover, so
+            its tile is the dashed `Add a cover` door — the picker, then the
+            cover's crop locked to the comment's square. */}
+        <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+          <MediaThumb
+            src="comment-camera.jpg"
+            alt="A person holding a film camera up to the light."
+            width={167}
+            height={167}
+            fit="contain"
+            video
+            failed
+          />
+          <CoverTile width={167} height={167} />
+        </div>
 
         <UploadErrorLine message="That video didn't upload." onRetry={() => {}} onRemove={() => {}} />
 

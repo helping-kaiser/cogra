@@ -13,15 +13,6 @@ import { Icon } from "../navigation/Icon.jsx";
      picture and for a clip's face.
    · `transform` — the picture's framing inside the tile, the way `CoverRow`'s
      own tiles are framed; a cover tile carries the frame that was chosen.
-   · `coverSrc` — the inset the reply composer's clip tile still names (its
-     law waits on jakob after round 52; every other surface stands the cover
-     beside the clip, `CoverTile`): the frame itself, inset in the
-     bottom-left corner the badge owns. A third of the tile's short side (28px at the least),
-     with a hairline ring, which is what keeps a small frame legible over
-     whatever photograph it lands on. A tile is a picture's or a clip's, so
-     the badge and the mark never meet. `coverTransform` frames what is inside
-     it the way `CoverRow`'s own tiles are framed — a strip of frames is one
-     picture shown several ways, and the mark carries the way that was chosen.
    · `progress` — the upload ring on a scrim. Upload starts AFTER the crop:
      the crop happens on the device and only the cropped export is ever
      uploaded (jakob 2026-08-31 — the original frame can hold what the author
@@ -79,8 +70,6 @@ export function MediaThumb({
   radius = "var(--radius-small)",
   cover = false,
   transform,
-  coverSrc,
-  coverTransform,
   progress,
   failed = false,
   video = false,
@@ -99,9 +88,6 @@ export function MediaThumb({
      absence, and a play control drawn on nothing reads as chrome — the
      duration stays, because the clip's length is known either way. */
   const playable = video && src && !failed && typeof progress !== "number";
-  /* The cover mark scales with the tile so it reads the same on the tray's
-     114×64 and on a larger one, and never falls under its own floor. */
-  const coverMark = Math.max(28, Math.round(edge / 3));
   return (
     <div
       style={{
@@ -203,32 +189,6 @@ export function MediaThumb({
           }}
         >
           Cover
-        </span>
-      )}
-      {coverSrc && (
-        <span
-          style={{
-            position: "absolute",
-            left: "3px",
-            bottom: "3px",
-            width: `${coverMark}px`,
-            height: `${coverMark}px`,
-            display: "block",
-            overflow: "hidden",
-            borderRadius: "var(--radius-small)",
-            border: "1px solid var(--outline-variant)",
-            boxSizing: "border-box",
-          }}
-        >
-          <img
-            src={coverSrc}
-            alt="Cover"
-            style={
-              coverTransform
-                ? { width: "100%", height: "100%", objectFit: "cover", display: "block", transform: coverTransform }
-                : { width: "100%", height: "100%", objectFit: "cover", display: "block" }
-            }
-          />
         </span>
       )}
       {typeof progress === "number" && !failed && (

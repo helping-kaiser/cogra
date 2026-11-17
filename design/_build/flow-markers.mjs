@@ -606,10 +606,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: "if the light comes through at all.", tag: "p" },
     { n: 5, find: 'aria-label="Remove this video"', tag: "button" },
     { n: 6, find: ">Describe the video</button>", tag: "button" },
+    // The `cover` chip draws the row once per value (round 52 act 3).
     { n: 7, find: 'class="cg-cover-frame"', tag: "div", all: true },
-    { n: 8, find: 'class="cg-cover-own"', tag: "div" },
+    { n: 8, find: 'class="cg-cover-own"', tag: "div", all: true },
     // The `batch` chip's second clip, refused (round 27): its one way out.
     { n: 9, find: ">Remove it</button>", tag: "button" },
+    // The cover's tile beside the clip (round 52 act 3): the dashed door, or the chosen cover's.
+    { n: 10, find: ">Add a cover</span>", tag: "button" },
+    { n: 10, find: 'aria-label="Change the cover"', tag: "button", all: true },
   ],
   ReplyMediaErrors: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
@@ -1344,6 +1348,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Remove it</button>", tag: "button" },
     { n: 7, find: ">Describe the video</button>", tag: "button" },
     { n: 8, find: ">Add a cover</button>", tag: "button" },
+    // The dashed cover tile beside the clip (round 52 act 3).
+    { n: 9, find: ">Add a cover</span>", tag: "button" },
   ],
   CommentEditVideo: [
     { n: 14, find: "aria-label=\"#glovebox — set how it relates\"", tag: "button" },

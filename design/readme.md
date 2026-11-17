@@ -6351,9 +6351,10 @@ board's private habit; jakob ruled it as recommended.
   cover step again, or the dashed door for a clip that skipped the frame
   picker or passed it without a pick. The **edits** carry it in the
   *Video* field, the tile opening the picker and the cover's crop. The
-  **reply composer** still rides its chosen frame as the ringed inset on
-  the clip's tile, because two of its 220 squares do not fit the column
-  (backlog 260). A
+  **reply composer** shares its column between the two, 167 × 167 each
+  (jakob 2026-11-17), its tile opening the picker and the cover's crop
+  as on the edits, the frame row below the chooser for frames — a frame
+  is never cropped. A
   **reading surface** shows the cover as the card's still, and branches
   on nothing: whether that still was chosen or taken was settled while
   the post was written.
@@ -6752,9 +6753,8 @@ painted a frame.
   reply composer's clip tile is an authoring tile like the
   tray's — frame 0 as its face — because a divergence between the
   two composers would be invisible until it confused; its chosen
-  frame rides as the ringed inset until its cover's place is
-  ruled (backlog 260), the inline cover row showing it at full
-  prominence right below. No new boards; both rulings
+  cover stands beside it as its own tile, 167 × 167 each (round 52,
+  act 3). No new boards; both rulings
   land as contracts to the implementation session.
 
 ### The compose last-picture ruling — 2026-09-23
