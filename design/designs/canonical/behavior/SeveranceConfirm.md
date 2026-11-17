@@ -30,7 +30,9 @@ WHEN the signing has not answered 200ms after Walk it back -> Walk it back reads
 
 WHEN the signing is taken -> the dialog closes AND the pad beneath it closes AND the bundle goes to nothing AND the snackbar says the signing is still settling and ends You've walked this post back to nothing.
 
-WHEN the signing does not go through -> the dialog stays up with its pair AND the line That didn't send. Try again. stands above the pair AND Walk it back reads Retry AND nothing is walked back
+WHEN the signing does not go through GIVEN no answer reaches the device -> the dialog stays up with its pair AND the line That didn't send. Try again. stands above the pair AND Walk it back reads Retry AND nothing is walked back
+
+WHEN the signing does not go through GIVEN the server answers INTERNAL, FORBIDDEN, SIGNATURE_INVALID or a BAD_INPUT naming no field -> the dialog stays up with its pair AND the line That didn't go through. Try again. stands above the pair AND Walk it back reads Retry AND nothing is walked back
 
 WHEN the write rule refuses the walk-back -> the dialog stays up with its pair AND the line You can't sign right now. Nothing was signed or spent. stands where the fault line would AND Walk it back dims AND NEVER a Retry stands AND NEVER anything is staged, signed or spent
 

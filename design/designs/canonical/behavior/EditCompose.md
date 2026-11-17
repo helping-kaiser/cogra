@@ -68,6 +68,14 @@ WHEN the signing has not answered 5s after the press -> the line Still signing �
 
 WHEN the signing answers GIVEN the slow line stands under the acts footer -> the slow line goes
 
+WHEN the signing gets no answer GIVEN the edit stands open -> postEdit.fault reads That didn't send. Try again. in postEdit.sign's place AND postEdit.fault.retry stands under it, outlined, AND postEdit.acts stays above the line AND everything the reader chose stays as it was
+
+WHEN the signing is answered with a refusal GIVEN the edit stands open -> postEdit.fault reads That didn't go through. Try again. in postEdit.sign's place AND postEdit.fault.retry stands under it, outlined, AND postEdit.acts stays above the line AND everything the reader chose stays as it was
+
+WHEN press postEdit.fault.retry -> the same signing is asked again AND past 200ms the commit's slot reads Signing the edit… AND the header's X is named Close
+
+ALWAYS the header's arrow and X are the edit's way back GIVEN postEdit.fault stands, and no Back stands under the fault's Retry
+
 WHEN press Sign the edit GIVEN the count the signing prepared differs from the count the footer read -> the held press drops AND the footer reads the prepared count AND Sign the edit reads Sign the edit again AND the line The count changed while you were editing — check it, then sign again. stands under the acts footer AND NEVER anything is signed
 
 WHEN press Sign the edit again GIVEN the count line stands under the acts footer -> the count line goes

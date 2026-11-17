@@ -28,8 +28,8 @@
    dialog and the removal goes on, its wait and its answer on the removed
    thing's own row. The copy is drawn unnamed, so no path moves. */
 export const NODE = "postDetail";
-export const PROPS = { answer: { editor: "enum", options: ["asking", "failed", "removing"], default: "asking" } };
-export const VALS = `askingShown: this.props.answer === "asking" ? "block" : "none", failedShown: this.props.answer === "failed" ? "block" : "none", removingShown: this.props.answer === "removing" ? "block" : "none"`;
+export const PROPS = { answer: { editor: "enum", options: ["asking", "failed", "refused", "removing"], default: "asking" } };
+export const VALS = `askingShown: this.props.answer === "asking" ? "block" : "none", failedShown: this.props.answer === "failed" ? "block" : "none", refusedShown: this.props.answer === "refused" ? "block" : "none", removingShown: this.props.answer === "removing" ? "block" : "none"`;
 export function Screen() {
   return (
     <>
@@ -40,6 +40,11 @@ export function Screen() {
       </div>
       <div style={{ display: "{{failedShown}}" }} data-node-chip="answer" data-node-key="failed">
         <RemoveDialog kind="comment" overSheet failed node="dialog" />
+      </div>
+      {/* `refused` (round 51): the server answered no — the line reads
+          `That didn't go through. Try again.`, the rest as `failed`. */}
+      <div style={{ display: "{{refusedShown}}" }} data-node-chip="answer" data-node-key="refused">
+        <RemoveDialog kind="comment" overSheet refused node="dialog" />
       </div>
       <div style={{ display: "{{removingShown}}" }}>
         <RemoveDialog kind="comment" overSheet removing />

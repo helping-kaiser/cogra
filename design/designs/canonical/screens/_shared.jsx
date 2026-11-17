@@ -829,12 +829,15 @@ const REMOVE_CONFIRM_COPY = {
    on the base wash layer and the sheet one above it, so the dialog is the
    thing raised last. Over the post detail there is no sheet to clear.
 
-   `failed` IS THE REMOVAL THAT DID NOT GO THROUGH (seam 248, RM-G7; the
-   failure pack's grammar at dialog scale, `SeveranceConfirm`'s): the dialog
-   never closed — the act waits for its answer — so it stays up with its
-   pair, `That didn't send. Try again.` stands above it in the dialog's
-   `line` slot, and `Remove`'s own slot reads `Retry`, still a text button in
-   no colour. `Keep it` keeps its place: the way out is the way out it was.
+   `failed` IS THE REMOVAL THAT GOT NO ANSWER (seam 248, RM-G7; the failure
+   pack's grammar at dialog scale, `SeveranceConfirm`'s): the dialog never
+   closed — the act waits for its answer — so it stays up with its pair,
+   `That didn't send. Try again.` stands above it in the dialog's `line`
+   slot, and `Remove`'s own slot reads `Retry`, still a text button in no
+   colour. `Keep it` keeps its place: the way out is the way out it was.
+   `refused` IS THE REMOVAL THE SERVER ANSWERED NO (round 51, jakob
+   2026-11-17, impl 348: the words follow the answer, the shape the host):
+   the same dialog, its line `That didn't go through. Try again.`.
    One anatomy for both kinds, so the post and the comment fail alike. */
 /* `removing` IS THE REMOVAL IN FLIGHT (round 37, jakob 2026-11-11: the
    remove and reject dialogs take the same Close while they sign): past 200ms
@@ -842,17 +845,17 @@ const REMOVE_CONFIRM_COPY = {
    `Close` from the press itself — closes the dialog while the removal goes
    on, its wait and its answer on the removed thing's own row. A board draws
    it unnamed beside the named copies, so no path moves. */
-function RemoveDialog({ kind, overSheet = false, failed = false, removing = false, node }) {
+function RemoveDialog({ kind, overSheet = false, failed = false, refused = false, removing = false, node }) {
   const { title, body } = REMOVE_CONFIRM_COPY[kind];
   const dialog = (
     <DialogSurface
       onScrimPress={() => {}}
       title={title}
       body={[body, "This is immediate and permanent."]}
-      line={failed ? "That didn't send. Try again." : undefined}
+      line={failed ? "That didn't send. Try again." : refused ? "That didn't go through. Try again." : undefined}
       actions={
         <>
-          <Button variant="text" busy={removing} busyLabel="Removing…" node={node && "remove"}>{failed ? "Retry" : "Remove"}</Button>
+          <Button variant="text" busy={removing} busyLabel="Removing…" node={node && "remove"}>{failed || refused ? "Retry" : "Remove"}</Button>
           <Button node={node && "keep"}>{removing ? "Close" : "Keep it"}</Button>
         </>
       }
@@ -2733,6 +2736,35 @@ function editFootSign({ unchanged, faultHoles }) {
   );
 }
 
+/* THE EDIT'S FAULT, IN THE COMMIT'S PLACE (round 51; jakob 2026-11-17, impl
+   348: one rule for a refused or failed act). The edit is the seal's host
+   kind, so a signing that fails takes the seal's shape (`NetworkError`): the
+   line stands where `Sign the edit` stood, in its code's words — no answer
+   `That didn't send. Try again.`, an answered refusal `That didn't go
+   through. Try again.` — and an outlined `Retry` under it asks the same
+   signing again. Everything above the foot reads back unchanged, and the
+   acts count stays over the line: it is the edit's read-back of the batch,
+   the acts card's part on a seal. NO `Back` UNDER `Retry`: the seal draws
+   one because its foot's pair at rest is commit-and-back, and the fault
+   keeps the way back the surface had; an edit's foot at rest is the count
+   and the commit alone, its way back the header's arrow and X, which the
+   fault leaves where they are. The `fault` chip draws it on `EditCompose`
+   and `CommentEdit`, keyed by the answer. */
+const EDIT_FAULT_LINES = { unsent: "That didn't send. Try again.", refused: "That didn't go through. Try again." };
+
+function editFault() {
+  return Object.entries(EDIT_FAULT_LINES).map(([answer, line]) => (
+    <div key={answer} style={{ display: `{{fault${answer === "unsent" ? "Unsent" : "Refused"}Shown}}`, flexDirection: "column" }} {...chipCopy("fault", answer)}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-node="fault">
+        <TransportError message={line} />
+        <Button variant="outline" style={{ width: "100%" }} node="retry">
+          Retry
+        </Button>
+      </div>
+    </div>
+  ));
+}
+
 /* THE POST EDIT'S BACKING ROW (jakob 2026-10-16, PR-101). An edit is an
    ordinary-role Publish toward the post — the family that minted it — so it
    carries the same one free parameter, the author's backing, and the row
@@ -2845,6 +2877,7 @@ function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes
         <EditGate holes={holes} faultHoles={holes} done={1} total={2} />
         {editFootCount({ unchanged, faultHoles: holes })}
         {editFootSign({ unchanged, faultHoles: holes })}
+        {holes && editFault()}
       </div>
     </>
   );
@@ -2969,6 +3002,7 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
             <div style={{ display: "{{signBusyShown}}" }}>
               <Button style={{ width: "100%" }} busy busyLabel="Signing the edit…">Sign the edit</Button>
             </div>
+            {editFault()}
           </>
         ) : (
           <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>

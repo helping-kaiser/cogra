@@ -1184,7 +1184,9 @@ a quick answer never flashes a word.
   again (`Settings`' `kept`), a removal under the removed thing's card
   (`FeedRemoveConfirm`'s `closedFailed`) and a closed application on its
   row (jakob 2026-11-11, S3–S5, round 41). The dialogs' own failure while
-  they stand open keeps `That didn't send. Try again.`
+  they stand open keeps the in-place words: `That didn't send. Try again.`
+  with no answer, `That didn't go through. Try again.` for an answered
+  refusal (*One rule for a refused or failed act*).
 - `Changing handle…`, `That didn't go through.` with `Retry`, and `That
   handle is taken.` — the handle change's wait, failure and refusal on
   the Handle row after `Close`, the dialog's and the hidden-accounts
@@ -1529,14 +1531,37 @@ stands, and the rest of the surface stays readable.
   offered (`WriteRuleFailed`). A refusal that is our bug takes the same
   panel in its own words, with `Try again` (`SealFaultBug`).
 
+**One rule for a refused or failed act** (jakob 2026-11-17, impl 348, "all
+as rec"; impl 351). The WORDS follow the answer, the SHAPE follows the host.
+
+- The words: no answer at all — `That didn't send. Try again.`; an
+  answered refusal — `INTERNAL`, `FORBIDDEN`, `SIGNATURE_INVALID`, a
+  `BAD_INPUT` naming no field — `That didn't go through. Try again.`; a
+  signed act answered on a target's row — `That didn't sign.`
+  (`RowSigning`). A refusal the signer on the device makes itself, no
+  server answer at all, reads as an answered refusal: `That didn't go
+  through. Try again.` A code with words of its own keeps them in the same
+  shape (`EMAIL_NOT_VERIFIED`'s, below).
+- The shape: a seal or an edit screen — the line in the commit's place,
+  an outlined `Retry` under it (`NetworkError`; `EditCompose`'s and
+  `CommentEdit`'s `fault`); a dialog or a small sheet — the line in it, the
+  commitment itself reading `Retry` (`RemoveConfirm`'s `answer`); a card —
+  the line last on the card with `Retry` at its end, the copy fault's form
+  (`Invites`' copy fault and its `Revoke`): `That didn't go through.` with
+  `Retry`. What a card reads when no answer came is open (backlog 250).
+- What is not a fault keeps its own vehicle: the write rule's and the
+  budget's notices, a refused staged act's row, a field's own line, a
+  refused file's line with `Remove it` alone.
+
 Every line here is blessed (the failure pack's, the failure fixes' and
 the review fixes' lines, jakob 2026-10-01), all of them (the last flags cleared 2026-10-02).
 *Copy-only* marks a line no board draws yet.
 
 **No answer at all** (offline; not a code):
 
-- Seal, pad or dialog: `That didn't send. Try again.` **Drawn** on
-  `NetworkError` and `PadFailed`; `SeveranceConfirm` carries it, and the
+- Seal, edit, pad or dialog: `That didn't send. Try again.` **Drawn** on
+  `NetworkError`, `PadFailed`, the edits' `fault` and the remove dialogs'
+  `answer`; `SeveranceConfirm` carries it, and the
   alternates' dialog, its commit reading `Retry` (the alternates card;
   seam 245, ask 14). Its commit's wait reads `Signing…`. A form
   says the same line in SignInError's slot above its submit, the fields
@@ -1576,10 +1601,12 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   ink.
 - `INTERNAL`, `FORBIDDEN` — in place: `That didn't go through. Try
   again.` The house line says "can't reach the server", which is false
-  for a fault the server answered. *Copy-only* (`NetworkError.md`'s
-  line; the board draws the offline fault alone).
+  for a fault the server answered. **Drawn** on `EditCompose`'s and
+  `CommentEdit`'s `fault` (`refused`) and the remove dialogs' `answer`
+  (`refused`).
 - `EMAIL_NOT_VERIFIED` — in place: `Verify your email first — the link
-  is in your inbox.` The client gates acting on verification, so this
+  is in your inbox.`, with `Retry` like every in-place fault (jakob
+  2026-11-17, impl 351). The client gates acting on verification, so this
   is the rare case that slips past the gate. *Copy-only.*
 - `RATE_LIMITED` — in place, in SignInError's slot. Sign-in's login
   backoff says the drawn line, `Too many tries in a row. Wait a moment,

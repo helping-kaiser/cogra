@@ -577,6 +577,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 16, find: 'aria-label="Remove this citation: Post, Removed by its author"', tag: "button" },
     { n: 17, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
     { n: 18, find: 'aria-label="Undo withdrawing Tide tables and the third headland — @juno"', tag: "button" },
+    // The `fault` chip's two answers (round 51): one Retry, one act, the next free number.
+    { n: 20, find: ">Retry</button>", tag: "button", all: true },
   ],
   CommentEditActs: [
     { n: 1, find: ">Done</button>", tag: "button" },
@@ -2743,7 +2745,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 12, find: ">Sign the edit</button>", tag: "button", all: true },
     { n: 12, find: ">Signing the edit…</button>", tag: "button" },
     // A failed upload's two Retries — the row's and the gate's — are one act.
-    { n: 19, find: ">Retry</button>", tag: "button", all: true },
+    // The `fault` chip's two (round 51) stand after them, in the commit's
+    // place: the signing asked again, the next free number.
+    { n: 19, find: ">Retry</button>", tag: "button" },
+    { n: 19, find: ">Retry</button>", tag: "button", skip: 1 },
+    { n: 23, find: ">Retry</button>", tag: "button", skip: 2 },
+    { n: 23, find: ">Retry</button>", tag: "button", skip: 3 },
     { n: 20, find: ">Remove it</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
     { n: 15, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
