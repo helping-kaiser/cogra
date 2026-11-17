@@ -304,9 +304,10 @@ describe("the picker", () => {
 
   // Round 5: "shape-switch must allow re-framing any section at any ratio". The
   // measured rectangle carries the OLD shape, so keeping it would bake the old
-  // shape into the upload; dropping it makes the cropper measure a fresh one
-  // against the original picture. Where the reader had put each picture — the
-  // position and the zoom — is theirs and stays.
+  // shape into the upload. With no stage width to measure against it is
+  // dropped, and the cropper measures a fresh one against the original
+  // picture. Where the reader had put each picture — the position and the
+  // zoom — is theirs and stays.
   it("re-frames every picture against the original when the post's shape changes", () => {
     const framed = run(
       emptyWizard(),
@@ -363,9 +364,44 @@ describe("the picker", () => {
     expect(crop.zoom).toBe(1.2);
     expect(crop.x).toBe(10);
     expect(crop.y).toBe(-20);
-    expect(crop.area).toBeNull();
+    // Measured again, for the new shape, at the place it kept.
+    expect(crop.area).toEqual({ x: 103, y: 1432, width: 2664, height: 1395 });
     // Never measured, so there is no size to keep it at: it stays as it was.
     expect(framed.assets[0]!.crop).toEqual({ x: 0, y: 0, zoom: 1, area: null, areaPercent: null });
+  });
+
+  // W-CROP-OFFSTAGE-RESHAPE. The first picture stands on the stage; the second,
+  // framed earlier, is off it, so no cropper will measure it again before the
+  // upload. Its rectangle is re-measured here for the new shape at the place it
+  // kept — what the library measures for that framing on the 412 stage
+  // (react-easy-crop 6.2.4 `computeCroppedArea`) — so the upload is never the
+  // centred fallback.
+  it("re-measures a picture that is off the stage at its kept place under the new shape", () => {
+    const framed = run(
+      emptyWizard(),
+      picks(2),
+      {
+        type: "crop",
+        id: "a1",
+        crop: {
+          x: 10,
+          y: -20,
+          zoom: 1.2,
+          area: { x: 0, y: 250, width: 3000, height: 3750 },
+          areaPercent: { x: 0, y: 6.25, width: 100, height: 93.75 },
+        },
+      },
+      { type: "focus", index: 0 },
+      { type: "shape", shape: "wide", stageWidth: 412 },
+    );
+    expect(framed.focused).toBe(0);
+    const crop = framed.assets[1]!.crop;
+    expect(crop).toMatchObject({ x: 10, y: -20, zoom: 1.2 });
+    expect(crop.area).toEqual({ x: 103, y: 1432, width: 2664, height: 1395 });
+    expect(crop.areaPercent!.x).toBeCloseTo(3.4458, 3);
+    expect(crop.areaPercent!.y).toBeCloseTo(35.7988, 3);
+    expect(crop.areaPercent!.width).toBeCloseTo(88.7978, 3);
+    expect(crop.areaPercent!.height).toBeCloseTo(34.8683, 3);
   });
 
   it("leaves the framing untouched when the shape does not actually change", () => {

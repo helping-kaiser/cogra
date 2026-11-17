@@ -206,8 +206,24 @@ describe("reshape", () => {
     expect(square.y).toBeCloseTo(0, 9);
   });
 
-  it("drops the old shape's measured rectangle, always", () => {
-    const next = reshape(measured(LANDSCAPE), ratio.square, W);
+  it("measures the new shape's rectangle where the picture was kept, in both units", () => {
+    // The portrait at 1.5×, moved (20, −30), Tall → Square on the 390 stage:
+    // laid 549 × 732 under a 390 square frame — 10.84 % / 27.46 % in, 71.04 %
+    // across (react-easy-crop 6.2.4 `computeCroppedArea`).
+    const next = reshape(measured(PORTRAIT, { zoom: 1.5, x: 20, y: -30 }), ratio.square, W);
+    expect(next.area).toEqual({ x: 325, y: 1098, width: 2131, height: 2131 });
+    expect(next.areaPercent!.x).toBeCloseTo((59.5 / 549) * 100, 9);
+    expect(next.areaPercent!.y).toBeCloseTo((201 / 732) * 100, 9);
+    expect(next.areaPercent!.width).toBeCloseTo((390 / 549) * 100, 9);
+    expect(next.areaPercent!.height).toBeCloseTo((390 / 732) * 100, 9);
+    // The pair still reads back the source's own extent, to the library's
+    // whole-pixel rounding — so a second shape change measures again.
+    expect(sourceOf(next)!.width).toBeCloseTo(3000, 0);
+    expect(sourceOf(next)!.height).toBeCloseTo(4000, 0);
+  });
+
+  it("drops the old shape's rectangle where there is no stage to measure against", () => {
+    const next = reshape(measured(LANDSCAPE), ratio.square, null);
     expect(next.area).toBeNull();
     expect(next.areaPercent).toBeNull();
   });

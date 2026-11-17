@@ -5,6 +5,7 @@ import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { resetSeenQueueForTests } from "@/lib/history/seen-queue";
+import { heldPicture, releaseHeldPicture } from "@/lib/profile/held-picture";
 import { forgetAllProfileViews } from "@/lib/profile/profile-memory";
 import { readerState } from "@/lib/session/reader-state";
 import { createTokenStore } from "@/lib/session/token-store";
@@ -294,9 +295,10 @@ describe("ProfileScreen", () => {
     expect(screen.getByTestId(byNode("profile.identity.figures.stancesTaken.value"))).toHaveTextContent("7");
   });
 
-  // THE FIGURES ARE ONE DOOR ONTO THE OPINIONS PAGE (ProfileHeader.jsx
-  // `onCounts`; graph.json `the figures row` → ProfileStances; copy-voice,
-  // *The profile's figures, spoken*): never three, never inert.
+  // THE TWO OPINION FIGURES ARE TWO DOORS (ProfileOther.md:9 and 57-61,
+  // Profile.md:13 and 49-53; ProfileHeader.jsx `onCounts`; copy-voice, *The
+  // profile's figures, spoken*): each opens the opinions page on its own
+  // direction, the Posts figure is no door.
   describe("the figures row", () => {
     function figures(id: string) {
       return gqlLink.query("ProfileFigures", () =>
@@ -314,35 +316,41 @@ describe("ProfileScreen", () => {
       );
     }
 
-    it("opens someone's opinions page, named by its numbers and its purpose", async () => {
+    it("opens someone's opinions page on On from Opinions on, and on By from Opinions by", async () => {
       server.use(
         gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u2", "ada") } })),
         recordsHandler([]),
         figures("u2"),
       );
       renderWithProviders(<ProfileScreen handle="ada" />);
-      const door = await screen.findByRole("link", {
-        name: "12 Posts, 1,204 Opinions on them, 7 Opinions by them, opinions on and by @ada",
-      });
-      expect(door).toHaveAttribute("data-testid", "profile.identity.figures");
-      expect(door).toHaveAttribute("href", "/u/ada/opinions");
-      expect(door.className).toContain("cg-hit");
+      const on = await screen.findByRole("link", { name: "1,204 Opinions on them" });
+      expect(on).toHaveAttribute("data-testid", "profile.identity.figures.stancesOn");
+      expect(on).toHaveAttribute("href", "/u/ada/opinions");
+      const by = screen.getByRole("link", { name: "7 Opinions by them" });
+      expect(by).toHaveAttribute("data-testid", "profile.identity.figures.stancesTaken");
+      expect(by).toHaveAttribute("href", "/u/ada/opinions?tab=by");
+      expect(screen.getByTestId(byNode("profile.identity.figures")).tagName).toBe("DIV");
+      expect(screen.getByTestId(byNode("profile.identity.figures.posts")).closest("a")).toBeNull();
     });
 
-    it("carries the profile's own origin onto the page, so its way back holds", async () => {
+    it("carries the profile's own origin onto the page from either door, so its way back holds", async () => {
       server.use(
         gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u2", "ada") } })),
         recordsHandler([]),
         figures("u2"),
       );
       renderWithProviders(<ProfileScreen handle="ada" from="saved" />);
-      expect(await screen.findByTestId(byNode("profile.identity.figures"))).toHaveAttribute(
+      expect(await screen.findByTestId(byNode("profile.identity.figures.stancesOn"))).toHaveAttribute(
         "href",
         "/u/ada/opinions?from=saved",
       );
+      expect(screen.getByTestId(byNode("profile.identity.figures.stancesTaken"))).toHaveAttribute(
+        "href",
+        "/u/ada/opinions?tab=by&from=saved",
+      );
     });
 
-    it("opens your own opinions page from your own root, both directions", async () => {
+    it("opens your own opinions page from your own root on each direction", async () => {
       server.use(
         meHandler(),
         gqlLink.query("MyProfile", () => HttpResponse.json({ data: { me: profile("u1", "ada") } })),
@@ -350,10 +358,14 @@ describe("ProfileScreen", () => {
         figures("u1"),
       );
       renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
-      const door = await screen.findByRole("link", {
-        name: "12 Posts, 1,204 Opinions on you, 7 Opinions by you, your opinions, both directions",
-      });
-      expect(door).toHaveAttribute("href", "/profile/opinions");
+      expect(await screen.findByRole("link", { name: "1,204 Opinions on you" })).toHaveAttribute(
+        "href",
+        "/profile/opinions",
+      );
+      expect(screen.getByRole("link", { name: "7 Opinions by you" })).toHaveAttribute(
+        "href",
+        "/profile/opinions?tab=by",
+      );
     });
   });
 
@@ -977,6 +989,47 @@ describe("ProfileScreen", () => {
     expect(screen.getByTestId(byNode("profile.band.bell"))).toBeInTheDocument();
     // Your own page repeats the handle under the name (the band carries none).
     expect(screen.getByTestId(byNode("profile.identity.handle"))).toHaveTextContent("@ada");
+  });
+
+  // Profile.md:47 — the own avatar wears the change badge, the door to the
+  // picture's crop and its own seal (ProfileHeader.jsx `changeBadge`).
+  it("the own avatar's change badge picks a picture and opens the picture's own flow", async () => {
+    server.use(
+      meHandler(),
+      gqlLink.query("MyProfile", () => HttpResponse.json({ data: { me: profile("u1", "ada") } })),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
+    const badge = await screen.findByTestId(byNode("profile.identity.changeBadge"));
+    expect(badge).toHaveAccessibleName("Change your picture");
+    // On the avatar's corner, -2/-2 (ProfileHeader.jsx): inline, because
+    // `cg-state`'s unlayered `position: relative` beats an `absolute` utility.
+    expect(badge.style.position).toBe("absolute");
+    expect(badge.style.right).toBe("-2px");
+    expect(badge.style.bottom).toBe("-2px");
+    // The avatar is a picture, never a door: the badge is the only one.
+    expect(screen.getByTestId(byNode("profile.identity.avatar")).closest("button, a")).toBeNull();
+    const input = screen.getByTestId("profile-change-badge-input") as HTMLInputElement;
+    const opened = vi.spyOn(input, "click");
+    fireEvent.click(badge);
+    expect(opened).toHaveBeenCalledTimes(1);
+    push.mockClear();
+    const file = new File([new Uint8Array([1]) as BlobPart], "face.jpg", { type: "image/jpeg" });
+    fireEvent.change(input, { target: { files: [file] } });
+    expect(push).toHaveBeenCalledWith("/profile/picture");
+    expect(heldPicture()).toBe(file);
+    releaseHeldPicture();
+  });
+
+  it("draws no change badge on someone else's profile", async () => {
+    server.use(
+      gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u2", "ada") } })),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    await screen.findByTestId(byNode("profile.identity.name"));
+    expect(screen.queryByTestId(byNode("profile.identity.changeBadge"))).toBeNull();
+    expect(screen.queryByTestId("profile-change-badge-input")).toBeNull();
   });
 
   // A signed profile edit is served from its signature on, pending until it

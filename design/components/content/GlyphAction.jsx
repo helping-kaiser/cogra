@@ -14,9 +14,15 @@ import { Icon } from "../navigation/Icon.jsx";
    `text-secondary`, a 48px target grown by `cg-hit`, the same padding the
    share and the comment count wear — so a row of four reads as one row.
    GLYPH ONLY: the words live in the accessible name, which is what keeps the
-   row on one line. */
+   row on one line.
 
-export function GlyphAction({ glyph, label, onPress, node }) {
+   `opacity` CARRIES THE LOCKED LOOK where an act is locked for its reader
+   (the applicant lock, copy-voice): a tag card's compose glyph for an
+   applicant, at `var(--state-disabled)` and still tappable — its only
+   destination is an act. A glyph that opens something to READ (a comment
+   card's, which opens its thread) is never locked and passes none. */
+
+export function GlyphAction({ glyph, label, onPress, opacity, node }) {
   return (
     <button
       type="button"
@@ -32,6 +38,7 @@ export function GlyphAction({ glyph, label, onPress, node }) {
         padding: "6px 8px",
         color: "var(--text-secondary)",
         cursor: "pointer",
+        ...(opacity !== undefined ? { opacity } : null),
       }}
       data-node={node}
     >

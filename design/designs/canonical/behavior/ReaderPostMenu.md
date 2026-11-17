@@ -26,6 +26,8 @@ WHEN tap Unhide with the author's handle GIVEN the unhide does not go through ->
 
 WHEN tap Cite in a new post -> the post wizard opens fresh at its first stage AND the post rides along unseen until the details stage
 
+WHEN tap Cite in a new post GIVEN the reader is an applicant -> the menu closes AND the snackbar reads You can post once you're in. AND NEVER the wizard opens
+
 WHEN tap License terms -> the menu closes AND the post's terms come up in a sheet over the surface the menu was opened from
 
 WHEN tap postDetail.menuSheet.report -> the menu closes AND postDetail.reportSheet rises over the surface the menu was opened from, its postDetail.reportSheet.title reading Report this post? AND NEVER anything is sent yet
