@@ -2721,6 +2721,17 @@ function EditPickedRow({ faultHoles }) {
       <div style={{ display: "{{rowRefusedShown}}" }}>
         <UploadErrorLine onRemove={() => {}} />
       </div>
+      {/* `recrop-failed` (round 53 act 2, jakob 2026-11-17, B2 = (b)): the
+          first picture, which the post already carries, was re-framed in the
+          crop and its new cut-out did not upload. Its tile is marked; the
+          line offers `Retry · Undo`, never `Remove it` — `Undo` drops the
+          re-crop and the published picture stands. The gate and the commit
+          read as at `failed`. The line is a drawn copy and carries no name,
+          as the refused line. */}
+      <div style={{ display: "{{rowRecropShown}}" }} {...chipCopy("upload", "recrop-failed")}>{row([{ ...EDIT_PICTURES[0], failed: true }, EDIT_PICTURES[1]])}</div>
+      <div style={{ display: "{{rowRecropShown}}" }}>
+        <UploadErrorLine onRetry={() => {}} onUndo={() => {}} />
+      </div>
     </>
   );
 }
@@ -2975,9 +2986,42 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ display: shown("picturesShown") }}>
-                <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} onRemove={() => {}} node="thumb" nodeKey="1" />
+                {holes ? (
+                  <>
+                    <span style={{ display: "{{thumbRestShown}}" }}>
+                      <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} onRemove={() => {}} node="thumb" nodeKey="1" />
+                    </span>
+                    {/* The `upload` chip's `recrop-failed` (round 53 act 2):
+                        the comment's own picture, re-framed, its new square
+                        not uploaded — the tile marked, a drawn copy. */}
+                    <span style={{ display: "{{thumbRecropShown}}" }}>
+                      <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} failed onRemove={() => {}} />
+                    </span>
+                  </>
+                ) : (
+                  <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} onRemove={() => {}} node="thumb" nodeKey="1" />
+                )}
               </div>
               <InlineAction size="sm" node="add">{bodyChip ? "{{addLabel}}" : "+ Add pictures · 1 of 4"}</InlineAction>
+            </div>
+            {/* THE CROP DOOR (round 53 act 2, jakob 2026-11-17, B1 = (b)):
+                `Crop the pictures` directly above the describe door, in its
+                own pattern — the small inline action at the label-small
+                line — and by its rule: the same words for one picture as for
+                four, and no door when the comment holds words alone. It opens
+                `ReplyCrop` (`opener` = edit) with every picture of the
+                comment in the strip; the thumbnails stay what they are. */}
+            {holes && (
+              <div style={{ display: "{{thumbRecropShown}}" }}>
+                <UploadErrorLine onRetry={() => {}} onUndo={() => {}} />
+              </div>
+            )}
+            <div style={{ display: shown("picturesShown"), flexDirection: "column" }}>
+              <p style={{ margin: 0, fontSize: "var(--text-label-small)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)" }}>
+                <InlineAction size="sm" onClick={() => {}} style={{ fontSize: "inherit", lineHeight: "inherit" }} node="crop">
+                  Crop the pictures
+                </InlineAction>
+              </p>
             </div>
             <div style={{ display: shown("picturesShown"), flexDirection: "column" }}>
               <DescribeCounter described={1} total={1} onDescribe={() => {}} node="describeRow" />
@@ -3024,6 +3068,13 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
         {/* Five things: the edit, #glovebox added, #coastroad withdrawn, and the
             citation's withdrawal at its two counter-records (`CommentEditActs`). */}
         <EditGate holes={holes} done={0} total={1} />
+        {/* `recrop-failed`: the gate's fault reading and the commit disabled,
+            as the post edit's `failed` — drawn copies, carrying no name. */}
+        {holes && (
+          <div style={{ display: "{{thumbRecropShown}}" }}>
+            <UploadStatusLine failed onRetry={() => {}} />
+          </div>
+        )}
         <ActsFooter count={5} node="acts" />
         {holes ? (
           <>
@@ -3032,6 +3083,9 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
             </div>
             <div style={{ display: "{{signBusyShown}}" }}>
               <Button style={{ width: "100%" }} busy busyLabel="Signing the edit…">Sign the edit</Button>
+            </div>
+            <div style={{ display: "{{signRecropShown}}" }}>
+              <Button style={{ width: "100%" }} disabled>Sign the edit</Button>
             </div>
             {editFault()}
           </>
@@ -7071,13 +7125,35 @@ function ComposeCropFrame({ shape, height, stage }) {
 
 const COMPOSE_CROP_PICTURES = ["post-photo.jpg", "inviter.jpg"];
 
-/* THE `opener` HOLES (round 52 act 3, jakob 2026-11-17: "the shape buttons
-   are hidden on the edit's crop"). `ComposeCrop` passes `openerHoles`: its
-   `opener` chip names the arrow and the X by who opened the crop and, at
-   `edit`, hides the shape row — the crop is locked to the post's one shape.
-   The row is HIDDEN, never left out: it stays one unkeyed row in the
-   markup, so its paths stand in every state (round 49's rule). */
-const COMPOSE_CROP_OPENER_VALS = `backLabel: this.props.opener === "edit" ? "Back to the edit" : "Back a step", leaveLabel: this.props.opener === "edit" ? "Leave — the edit is discarded" : "Leave — your draft is kept", shapesShown: this.props.opener === "edit" ? "none" : "flex"`;
+/* THE `opener` HOLES (round 53, jakob 2026-11-17, option C: on a post's edit
+   the crop is the new post's crop). `ComposeCrop` passes `openerHoles`: its
+   `opener` chip names the arrow and the X by who opened the crop, and sets
+   the strip. The shape row, the stage, the zoom, the line and `Next` are the
+   same at both values. At `edit` the strip holds every picture of the post,
+   in the edit's order — the two it already carries, then the one just added
+   from `+ Add pictures` — and the new one is selected, on the stage. The
+   third thumb is HIDDEN at `post`, never left out, so its path stands in
+   every state (round 49's rule). */
+const COMPOSE_CROP_EDIT_PICTURES = ["post-photo.jpg", "inviter.jpg", "gallery-market.jpg"];
+const COMPOSE_CROP_OPENER_VALS = `backLabel: this.props.opener === "edit" ? "Back to the edit" : "Back a step", leaveLabel: this.props.opener === "edit" ? "Leave — the edit is discarded" : "Leave — your draft is kept", stagePostShown: this.props.opener === "edit" ? "none" : "block", stageEditShown: this.props.opener === "edit" ? "block" : "none", thumb1Outline: this.props.opener === "edit" ? "none" : "2px solid var(--primary)", thumb1Opacity: this.props.opener === "edit" ? "0.65" : "1", thumb3Shown: this.props.opener === "edit" ? "inline-flex" : "none"`;
+
+/* The strip at the `opener` chip: the first thumb selected at `post`, the
+   third (the picture just added) at `edit`, the second never. */
+function ComposeCropOpenerStrip() {
+  return (
+    <div style={{ display: "flex", gap: 8, alignItems: "center" }} data-node="pictures">
+      <span style={{ display: "inline-flex", flex: "none", borderRadius: "var(--radius-small)", outline: "{{thumb1Outline}}", outlineOffset: 1, opacity: "{{thumb1Opacity}}" }}>
+        <MediaThumb src={COMPOSE_CROP_EDIT_PICTURES[0]} node="thumb" nodeKey="1" />
+      </span>
+      <span style={{ display: "inline-flex", flex: "none", opacity: 0.65 }}>
+        <MediaThumb src={COMPOSE_CROP_EDIT_PICTURES[1]} node="thumb" nodeKey="2" />
+      </span>
+      <span style={{ display: "{{thumb3Shown}}", flex: "none", borderRadius: "var(--radius-small)", outline: "2px solid var(--primary)", outlineOffset: 1 }}>
+        <MediaThumb src={COMPOSE_CROP_EDIT_PICTURES[2]} node="thumb" nodeKey="3" />
+      </span>
+    </div>
+  );
+}
 
 function ComposeCropBody({ stage = { width: 390, height: 488 }, pictures = COMPOSE_CROP_PICTURES, openerHoles = false }) {
   const capped = stage.width < 390;
@@ -7093,7 +7169,7 @@ function ComposeCropBody({ stage = { width: 390, height: 488 }, pictures = COMPO
             setting re-selects its chips through `Chip`'s `selectedHoles`, so
             the row and its chips carry no key — one row, as the clients
             draw it. */}
-        <div style={{ display: openerHoles ? "{{shapesShown}}" : "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8 }}>
           <div style={{ display: "flex", gap: 8 }} data-node="shapes">
             <Chip label="Tall 4:5" selectedHoles={composeCropShapeHoles("tall")} onToggle={() => {}} node="tallChip" />
             <Chip label="Square 1:1" selectedHoles={composeCropShapeHoles("square")} onToggle={() => {}} node="squareChip" />
@@ -7118,8 +7194,17 @@ function ComposeCropBody({ stage = { width: 390, height: 488 }, pictures = COMPO
           <img
             src="post-photo.jpg"
             alt=""
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transform: "scale(1.15)", transformOrigin: "40% 60%" }}
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: openerHoles ? "{{stagePostShown}}" : "block", transform: "scale(1.15)", transformOrigin: "40% 60%" }}
           />
+          {/* At `edit` the stage holds the picture just added, at the same
+              zoom, the selected thumb's picture as at `post`. */}
+          {openerHoles && (
+            <img
+              src={COMPOSE_CROP_EDIT_PICTURES[2]}
+              alt=""
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "{{stageEditShown}}", transform: "scale(1.15)", transformOrigin: "40% 60%" }}
+            />
+          )}
           {COMPOSE_CROP_FRAMES.map((frame) => (
             <ComposeCropFrame key={frame.shape} {...frame} stage={stage} />
           ))}
@@ -7129,7 +7214,7 @@ function ComposeCropBody({ stage = { width: 390, height: 488 }, pictures = COMPO
 
         <QuietNote node="howTo">One shape for the whole post.</QuietNote>
 
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }} data-node="pictures">
+        {openerHoles ? <ComposeCropOpenerStrip /> : <div style={{ display: "flex", gap: 8, alignItems: "center" }} data-node="pictures">
           {pictures.map((src, index) =>
             index === 0 ? (
               <span key={src} style={{ display: "inline-flex", flex: "none", borderRadius: "var(--radius-small)", outline: "2px solid var(--primary)", outlineOffset: 1 }}>
@@ -7141,7 +7226,7 @@ function ComposeCropBody({ stage = { width: 390, height: 488 }, pictures = COMPO
               </span>
             )
           )}
-        </div>
+        </div>}
 
         <div style={{ flex: 1 }} />
 

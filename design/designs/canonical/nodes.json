@@ -1337,6 +1337,7 @@
         "commentEdit.header.title": [],
         "commentEdit.pictures": [],
         "commentEdit.pictures.add": [],
+        "commentEdit.pictures.crop": [],
         "commentEdit.pictures.describeRow": [],
         "commentEdit.pictures.describeRow.count": [],
         "commentEdit.pictures.describeRow.describe": [],
@@ -1460,6 +1461,7 @@
         "commentEdit.header.title": [],
         "commentEdit.pictures": [],
         "commentEdit.pictures.add": [],
+        "commentEdit.pictures.crop": [],
         "commentEdit.pictures.describeRow": [],
         "commentEdit.pictures.describeRow.count": [],
         "commentEdit.pictures.describeRow.describe": [],
@@ -2719,7 +2721,8 @@
         "composeCrop.pictures": [],
         "composeCrop.pictures.thumb": [
           "1",
-          "2"
+          "2",
+          "3"
         ],
         "composeCrop.shapes": [],
         "composeCrop.shapes.squareChip": [],
@@ -2927,14 +2930,6 @@
           "3"
         ],
         "composeDetails.pickedSheet.picture.makeCover": [
-          "2",
-          "3"
-        ],
-        "composeDetails.pickedSheet.picture.moveDown": [
-          "1",
-          "2"
-        ],
-        "composeDetails.pickedSheet.picture.moveUp": [
           "2",
           "3"
         ],
@@ -3423,13 +3418,15 @@
           "none",
           "uploading",
           "failed",
-          "refused"
+          "refused",
+          "recrop-failed"
         ],
         "postEdit.body.mediaRow.caption": [
           "none",
           "uploading",
           "failed",
-          "refused"
+          "refused",
+          "recrop-failed"
         ],
         "postEdit.body.mediaRow.thumb": [
           "none/1",
@@ -3439,7 +3436,9 @@
           "failed/1",
           "failed/2",
           "refused/1",
-          "refused/2"
+          "refused/2",
+          "recrop-failed/1",
+          "recrop-failed/2"
         ],
         "postEdit.body.rule": [],
         "postEdit.body.uploadError": [],
@@ -3689,6 +3688,10 @@
           "1",
           "2"
         ],
+        "postEdit.pickedSheet.picture.crop": [
+          "1",
+          "2"
+        ],
         "postEdit.pickedSheet.picture.describe": [
           "2"
         ],
@@ -3700,12 +3703,6 @@
           "2"
         ],
         "postEdit.pickedSheet.picture.makeCover": [
-          "2"
-        ],
-        "postEdit.pickedSheet.picture.moveDown": [
-          "1"
-        ],
-        "postEdit.pickedSheet.picture.moveUp": [
           "2"
         ],
         "postEdit.pickedSheet.picture.remove": [

@@ -585,6 +585,8 @@ Object.assign(FLOW_MARKERS, {
     // The add row's words are the `body` chip's hole (round 30).
     { n: 6, find: "{{addLabel}}", tag: "button" },
     { n: 7, find: ">Describe the pictures</button>", tag: "button" },
+    // The comment's crop door above the describe door (round 53 act 2).
+    { n: 21, find: ">Crop the pictures</button>", tag: "button" },
     { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
     // The `tag` chip's refused second tag (round 50): the same two controls
     // every tag chip carries, and the line's Remove it.
@@ -594,7 +596,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: "+ Add a tag", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
     { n: 11, find: "signing 5 things", tag: "button" },
-    { n: 12, find: ">Sign the edit</button>", tag: "button" },
+    // Every copy of the commit — at rest and the `recrop-failed` disabled one
+    // (round 53 act 2) — is the same act.
+    { n: 12, find: ">Sign the edit</button>", tag: "button", all: true },
     { n: 12, find: ">Signing the edit…</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
     { n: 15, find: "aria-label=\"Sunday at the tide market — @mira — set how it relates\"", tag: "button" },
@@ -604,8 +608,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 16, find: 'aria-label="Remove this citation: Post, Removed by its author"', tag: "button" },
     { n: 17, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
     { n: 18, find: 'aria-label="Undo withdrawing Tide tables and the third headland — @juno"', tag: "button" },
+    // Round 53 act 2: the `recrop-failed` line's Retry and the gate's come
+    // first in the markup, one act; the line's Undo after them.
+    { n: 22, find: ">Retry</button>", tag: "button" },
+    { n: 22, find: ">Retry</button>", tag: "button", skip: 1 },
+    { n: 23, find: ">Undo</button>", tag: "button" },
     // The `fault` chip's two answers (round 51): one Retry, one act, the next free number.
-    { n: 20, find: ">Retry</button>", tag: "button", all: true },
+    { n: 20, find: ">Retry</button>", tag: "button", skip: 2 },
+    { n: 20, find: ">Retry</button>", tag: "button", skip: 3 },
   ],
   CommentEditActs: [
     { n: 1, find: ">Done</button>", tag: "button" },
@@ -1318,8 +1328,6 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Done</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
     { n: 6, find: ">Make it the cover</button>", tag: "button", all: true },
-    { n: 7, find: ">Move up</button>", tag: "button", all: true },
-    { n: 8, find: ">Move down</button>", tag: "button", all: true },
   ],
   ComposePickedErrors: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
@@ -1400,8 +1408,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Retry</button>", tag: "button" },
     { n: 6, find: ">Remove it</button>", tag: "button" },
     { n: 7, find: ">Describe the video</button>", tag: "button" },
-    { n: 8, find: ">Add a cover</button>", tag: "button" },
-    // The dashed cover tile beside the clip (round 52 act 3).
+    // The dashed cover tile beside the clip (round 52 act 3) — a tall clip's
+    // one door to its cover row (round 53: the text door under `Cover` went).
     { n: 9, find: ">Add a cover</span>", tag: "button" },
   ],
   CommentEditVideo: [
@@ -1717,6 +1725,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'aria-label="Turn sound on"', tag: "button" },
     { n: 5, find: 'aria-label="Back ten seconds"', tag: "button" },
     { n: 5, find: 'aria-label="Forward ten seconds"', tag: "button" },
+    // A clip that cannot load (round 53, the reel's twin): its cover's Retry.
+    { n: 6, find: ">Retry</button>", tag: "button" },
   ],
   ViewerLandscape: [
     { n: 1, find: 'aria-label="Close"', tag: "button" },
@@ -2846,10 +2856,14 @@ Object.assign(FLOW_MARKERS, {
     // A failed upload's two Retries — the row's and the gate's — are one act.
     // The `fault` chip's two (round 51) stand after them, in the commit's
     // place: the signing asked again, the next free number.
+    // Round 53 act 2: the `recrop-failed` row line's Retry is the same act,
+    // standing second in the markup; its Undo is the next free number.
     { n: 19, find: ">Retry</button>", tag: "button" },
     { n: 19, find: ">Retry</button>", tag: "button", skip: 1 },
-    { n: 23, find: ">Retry</button>", tag: "button", skip: 2 },
+    { n: 19, find: ">Retry</button>", tag: "button", skip: 2 },
     { n: 23, find: ">Retry</button>", tag: "button", skip: 3 },
+    { n: 23, find: ">Retry</button>", tag: "button", skip: 4 },
+    { n: 24, find: ">Undo</button>", tag: "button" },
     { n: 20, find: ">Remove it</button>", tag: "button" },
     // Round 51 act 2: the `upload` chip's `refused` row line, the same act.
     { n: 20, find: ">Remove it</button>", tag: "button", skip: 1 },
@@ -2904,8 +2918,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Done</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
     { n: 6, find: ">Make it the cover</button>", tag: "button", all: true },
-    { n: 7, find: ">Move up</button>", tag: "button", all: true },
-    { n: 8, find: ">Move down</button>", tag: "button", all: true },
+    // Every picture's own crop door (round 53).
+    { n: 9, find: ">Crop</button>", tag: "button", all: true },
   ],
   // The words edit. Marker 4 is the growing body box, anchored on the field
   // border: it is the FIRST such border on the board, standing above the

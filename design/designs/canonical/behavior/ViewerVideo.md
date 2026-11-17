@@ -14,7 +14,7 @@ WHEN the viewer opens on a clip GIVEN the device suppresses autoplay -> the clip
 
 ALWAYS the clip's cover stands in the viewer, whole at its own 4:5, centred on the black, nothing cropped, GIVEN the clip itself cannot load and its cover has loaded
 
-WHEN the clip itself cannot load -> the outlined Retry stands alone on its cover AND NEVER a sentence stands with it
+WHEN the clip itself cannot load -> the outlined Retry stands alone on its cover AND NEVER a sentence stands with it AND NEVER the transport stands, the X staying the way out
 
 WHEN press Retry on the cover of a clip that cannot load -> the clip is asked for again AND it plays in the cover's place once it loads
 

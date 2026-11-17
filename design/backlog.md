@@ -6267,6 +6267,9 @@ Closed by round 50, act 3 (jakob 2026-11-17, C6 as recommended): the cover with 
 fault's outlined `Retry` alone, no sentence — drawn on `Reel`'s `state` chip,
 `unloaded`; the viewer carries it as law (`ViewerVideo` is not a chipped board).
 
+Drawn on the viewer by round 53: `ViewerVideo`'s `clip` chip, `unloaded`, the reel's twin
+(`MediaViewer`'s `unloadedHoles`), the transport gone with the clip, the X staying.
+
 ### 231 · The stream's ⋮: what Hide and Remove leave on the stream · *design* · **filed 2026-11-13** · **closed 2026-11-17**
 
 Round 49 (M2). `ReelMenu` draws the clip's post menu over the stream, but each
@@ -6456,6 +6459,57 @@ the edit`, is law). Options: (a) the row goes, the frame at the post's shape;
 Closed by round 52, act 3 (jakob 2026-11-17, "Yes, both"): (a) — the shape row is hidden on
 the edit's crop, the stage at the post's shape, drag and zoom unchanged; `ComposeCrop`'s
 `opener` chip (`post` · `edit`) draws it and names the arrow and the X.
+
+Replaced by round 53 (jakob 2026-11-17, option C, "yes C and all pictures"): the edit's crop is
+the new post's crop — the shape row live at the post's shape, every picture of the post in the
+strip, `Crop` on each picture in `EditPicked`; the `opener` chip keeps the names and the strip.
+
+### 262 · A re-framed picture whose upload fails: what `Remove it` takes out · *design* · **filed 2026-11-17** · **closed 2026-11-17**
+
+Round 53 (jakob 2026-11-17, option C). A picture the post already carries uploads again when
+the crop re-framed it or changed the post's shape. Its upload can fail or be refused like an
+added picture's, and `EditCompose.md` gives `One picture didn't upload.` with `Retry · Remove
+it` (`Remove it` alone on a refusal) for "a picture the edit took", where `Remove it` takes the
+picture out of the batch. For a re-framed picture that reading would delete a picture the
+post carries because its new framing failed. Options: (a) `Remove it` drops the picture from
+the post, as for an added one; (b) it drops the re-framing, the published cut-out standing as
+it was — the same words, a different act; (c) a re-framed picture's line reads its own door
+(new words, to be ruled). Until ruled the edits' failure sentences name the pictures the edit
+took, and the drawn fixture (both pictures added in the edit) is unaffected.
+
+Closed by round 53, act 2 (jakob 2026-11-17, (b), "as rec"): a re-framed picture whose upload
+fails offers `Retry · Undo`, a refused one `Undo` alone; `Undo` drops the re-crop and the
+published picture stands; a picture added in the edit keeps `Remove it`; the same on the
+comment's edit (`UploadErrorLine`'s `onUndo`; `EditCompose` and `CommentEdit` `upload` =
+`recrop-failed`).
+
+### 263 · Where the crop opened from the edit's picture sheet returns · *design* · **filed 2026-11-17**
+
+Round 53. `Crop` on a picture in `EditPicked` opens `ComposeCrop`; the ruling says the edit
+comes back on `Next` and on the back arrow. Drawn by `Describe`'s precedent from the same sheet
+(its sheet closes back to `EditPicked`, graph `ComposeDescribe` via 3 / 4): the edit comes
+back with the picture sheet over it, as the crop was opened from there (`ComposeCrop.md`,
+`EditPicked.md`, graph `ComposeCrop` via 1 / 3, `EditPicked` via 9). Option (b): the sheet is
+left and the bare edit comes back. To be confirmed.
+
+### 264 · The comment edit's door to re-crop a picture it holds · *design* · **filed 2026-11-17** · **closed 2026-11-17**
+
+Round 53, item 5 (jakob 2026-11-17, "Yes, same"): a comment's existing pictures can be
+re-cropped on its edit, through `ReplyCrop` (`opener` = `edit`). The law and the crop are
+drawn; the door is not. A comment edit's picture is a 56 thumb on `commentEdit.pictures` with
+its remove × alone — no sheet like the post's `EditPicked`, no per-picture action line;
+`Describe the pictures` (`DescribeCounter`) is the row's one door and opens one sheet for all.
+Options, drawn as scratch alternatives (not in the tree): (a) the thumbnail itself is the door,
+as `CoverTile` is on the edits (`Change the cover`), spoken by a new name such as `Crop picture
+1`, nothing visible changing; (b) a row-level door under the thumbnails, `DescribeCounter`'s
+twin, opening the crop on the first picture with the strip holding all — new words, such as
+`Crop the pictures`; (c) the post edit's pattern scaled down — `PickedRow` opening a
+`PickedSheet` with `Crop` per picture — a new sheet on this edit.
+
+Closed by round 53, act 2 (jakob 2026-11-17, (b), "as rec"): `Crop the pictures` stands directly
+above `Describe the pictures`, in its pattern and by its rule — the same words for one picture
+as for four, no door on a words comment — opening `ReplyCrop` with every picture of the
+comment, the first on the stage; the thumbnails keep their × alone (`commentEdit.pictures.crop`).
 
 ### 275 · A deleted account's posts: their menus on its page are law only · *design* · **filed 2026-11-17**
 
