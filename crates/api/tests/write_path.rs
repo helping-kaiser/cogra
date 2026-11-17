@@ -286,7 +286,7 @@ async fn prepare_forms_the_canonical_dependency_list(pool: PgPool) {
     let prepared = prepare::prepare(&rig.boundary, &rig.pool, GC, actor_id, gesture)
         .await
         .expect("prepares");
-    let canonical = vec![ten, nine, bob];
+    let canonical = vec![nine, ten, bob];
     assert_eq!(prepared.proposal.deps, canonical);
     let stored = staged::load(&rig.pool, prepared.id).await.expect("loads");
     assert_eq!(stored.proposal.deps, canonical);

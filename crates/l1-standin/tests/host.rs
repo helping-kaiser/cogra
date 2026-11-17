@@ -647,12 +647,12 @@ async fn seal_rejects_formation_failures(pool: PgPool) {
     assert!(host.close_epoch().await.expect("ok").records.is_empty());
 }
 
-/// Three foreign opinion identifiers in canonical order: the text bytes
-/// put sequence 10 before sequence 9.
+/// Three foreign opinion identifiers in canonical order: the sequence
+/// compares as a number, so 9 precedes 10.
 fn foreign_deps() -> Vec<ActId> {
     [
-        "act:elsewhere:10:opinion",
         "act:elsewhere:9:opinion",
+        "act:elsewhere:10:opinion",
         "act:other:0:opinion",
     ]
     .into_iter()
@@ -693,7 +693,8 @@ async fn a_self_dependent_act_is_refused_and_leaves_no_row(pool: PgPool) {
 }
 
 /// A dependency list out of canonical order is refused, even when it
-/// names the same acts a canonical one would.
+/// names the same acts a canonical one would — here in the order of the
+/// identifiers' text, sequence 10 before sequence 9.
 ///
 /// A dependency list that is not sorted by act identifier is refused at seal and leaves no row.
 /// ´claim:seal:an-unsorted-dependency-list-is-refused´
@@ -702,7 +703,7 @@ async fn an_unsorted_dependency_list_is_refused(pool: PgPool) {
     let host = standin(pool);
     let actor = funded_actor(&host, 3 * THETA).await;
     let mut deps = foreign_deps();
-    deps.reverse();
+    deps.swap(0, 1);
     assert!(matches!(
         refused_with(&host, &actor, deps).await,
         StandInError::Formation(_)

@@ -667,9 +667,9 @@ mod tests {
         assert_eq!(
             deps,
             vec![
-                id("act:alice:10:reference"),
                 citing,
                 id("act:alice:9:reference"),
+                id("act:alice:10:reference"),
             ]
         );
     }
