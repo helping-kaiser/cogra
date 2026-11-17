@@ -43,13 +43,21 @@ export function ResetForm() {
   const token = useSearchParams().get("token");
   // Keyed by the link it answered, so leaving to /reset finds the request.
   const [expiredFor, setExpiredFor] = useState<string | null>(null);
-  const [liveFor, setLiveFor] = useState<string | null>(null);
+  // The live link's account email, kept with the link it answered.
+  const [live, setLive] = useState<{ token: string; email: string | null } | null>(null);
   const held = token !== null && token !== "" ? token : null;
   if (held !== null && expiredFor === held) return <ResetExpired />;
-  if (held !== null && liveFor !== held) {
-    return <ResetCheck token={held} onAnswer={(live) => (live ? setLiveFor : setExpiredFor)(held)} />;
+  if (held !== null && live?.token !== held) {
+    return (
+      <ResetCheck
+        token={held}
+        onAnswer={(answer) =>
+          answer.live ? setLive({ token: held, email: answer.email }) : setExpiredFor(held)
+        }
+      />
+    );
   }
-  if (held !== null) return <ResetNew token={held} onExpired={() => setExpiredFor(held)} />;
+  if (held !== null) return <ResetNew token={held} email={live?.email ?? null} onExpired={() => setExpiredFor(held)} />;
   return <ResetRequest />;
 }
 
@@ -61,7 +69,9 @@ export function ResetForm() {
  * take back. A check that gets no answer opens the form: the press itself
  * still meets a spent link with RESET_TOKEN_INVALID and opens ResetExpired.
  */
-function ResetCheck({ token, onAnswer }: { token: string; onAnswer: (live: boolean) => void }) {
+type LinkAnswer = { live: false } | { live: true; email: string | null };
+
+function ResetCheck({ token, onAnswer }: { token: string; onAnswer: (answer: LinkAnswer) => void }) {
   const client = useApolloClient();
   // The answer lands through the newest callback, while the read runs once per
   // link (React docs, "Removing Effect Dependencies": an event read from a ref).
@@ -73,7 +83,8 @@ function ResetCheck({ token, onAnswer }: { token: string; onAnswer: (live: boole
     let cancelled = false;
     void checkPasswordResetLink(client, token.trim()).then((outcome) => {
       if (cancelled) return;
-      answer.current(!(outcome.kind === "success" && !outcome.value));
+      if (outcome.kind !== "success") answer.current({ live: true, email: null });
+      else answer.current(outcome.value === null ? { live: false } : { live: true, email: outcome.value });
     });
     return () => {
       cancelled = true;
@@ -157,7 +168,7 @@ function ResetRequest() {
 /** ResetNew's registered prefix (nodes.json `reset`, round 28). */
 const RESET_NEW: DataNode = { path: "reset" };
 
-function ResetNew({ token, onExpired }: { token: string; onExpired: () => void }) {
+function ResetNew({ token, email, onExpired }: { token: string; email: string | null; onExpired: () => void }) {
   const client = useApolloClient();
   const router = useRouter();
   const [password, setPassword] = useState("");
@@ -210,6 +221,21 @@ function ResetNew({ token, onExpired }: { token: string; onExpired: () => void }
       lead="Setting a new password signs out every device."
     >
       <form onSubmit={onConfirm} className="flex flex-col" noValidate>
+        {email !== null && (
+          // The account the new password is filed under (Chromium, "Create Amazing
+          // Password Forms": use hidden fields for implicit information). Never
+          // shown, focused or announced; the value never leaves this form's DOM.
+          <input
+            type="text"
+            name="username"
+            autoComplete="username"
+            value={email}
+            readOnly
+            hidden
+            tabIndex={-1}
+            aria-hidden="true"
+          />
+        )}
         <div className="mt-8">
           <FormPasswordField
             label="New password"
