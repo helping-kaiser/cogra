@@ -5,11 +5,20 @@
 import type { ErrorCode } from "@/__generated__/graphql";
 import type { UserError } from "@/lib/api/outcome";
 
+/**
+ * A FORBIDDEN refusal of the whole act: the line that takes the commit's
+ * place with `Retry` (NetworkError.md:13; copy-voice, *Faults by code*).
+ * Never the "can't reach the server" line: the server answered.
+ */
+export const NOT_THROUGH_LINE = "That didn't go through. Try again.";
+
 /** The tail arms of every refusal mapper. */
 export function fallbackMessage(code: ErrorCode): string {
   switch (code) {
     case "RATE_LIMITED":
       return "Too many attempts — wait a moment and try again.";
+    case "FORBIDDEN":
+      return NOT_THROUGH_LINE;
     default:
       return "Something went wrong. Try again.";
   }
@@ -29,11 +38,10 @@ export function writeRefusalMessage(code: ErrorCode): string {
   switch (code) {
     case "BAD_INPUT":
       return "Something in this wasn't accepted — check the details and try again.";
-    // Deliberately FORBIDDEN's sentence: the dedicated verified-gating
-    // copy is not yet ruled, and inventing it here is not this file's call.
     case "EMAIL_NOT_VERIFIED":
-    case "FORBIDDEN":
       return "You can't do that here.";
+    case "FORBIDDEN":
+      return NOT_THROUGH_LINE;
     case "NOT_FOUND":
       return "That isn't there any more.";
     case "WRITE_RULE_FAILED":

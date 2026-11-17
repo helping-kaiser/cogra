@@ -92,6 +92,7 @@ export function StanceAlternates({
   busy = false,
   slow = false,
   fault = null,
+  failedLine = "That didn't send. Try again.",
   onWriteRuleHelp = () => {},
   helpLabel = "How opinions work",
   zeroHelp = null,
@@ -119,6 +120,11 @@ export function StanceAlternates({
   slow?: boolean;
   /** What did not go through when `Sign it` was pressed. */
   fault?: "failed" | "writeRule" | null;
+  /**
+   * The failed fault's line: the no-answer line by default, the not-through
+   * line for the server's FORBIDDEN (NetworkError.md:13).
+   */
+  failedLine?: string;
   /** The write rule notice's own "?" (`Why signing waits`). */
   onWriteRuleHelp?: () => void;
   /** The pad's own `?` name (ruling A7). */
@@ -285,7 +291,7 @@ export function StanceAlternates({
           round 21). */}
       {keyNotice === null && fault === "failed" && (
         <div className="mt-4">
-          <TransportError testId="stance-alt-failed" message="That didn't send. Try again." />
+          <TransportError testId="stance-alt-failed" message={failedLine} />
         </div>
       )}
       {keyNotice === null && fault !== "writeRule" && (

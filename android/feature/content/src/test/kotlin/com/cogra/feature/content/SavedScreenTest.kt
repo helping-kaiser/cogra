@@ -260,7 +260,7 @@ class SavedScreenTest {
     fun `unsave from a card's menu takes the card and undo puts it back where it was`() {
         render(all)
         compose.onNodeIn("saved.commentCard:c1", "saved.commentCard.menu").performClick()
-        compose.onNodeWithTag("comment_menu_save_c1").performClick()
+        compose.onNodeWithTag("saved.menuSheet.save").performClick()
         compose.waitForIdle()
         assertThat(shown(commentCard)).isFalse()
         assertThat(shown(postCard)).isTrue()

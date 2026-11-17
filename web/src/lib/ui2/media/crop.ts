@@ -60,7 +60,7 @@ export type Crop = {
   readonly area: CropArea | null;
   /**
    * The same rectangle as a fraction of the picture, 0–100. Null alongside
-   * `area`, and dropped with it whenever the shape changes.
+   * `area`, and re-measured with it whenever the shape changes (`reshape`).
    */
   readonly areaPercent: CropArea | null;
 };
@@ -231,6 +231,48 @@ export function sourceOf(crop: Crop): Size | null {
 }
 
 /**
+ * What the frame shows for a framing, in both units — the rectangle the
+ * library reports through `onCropComplete` for it.
+ *
+ * react-easy-crop 6.2.4 `computeCroppedArea` at rotation 0 with the position
+ * restricted, line for line: the library does not export it, and a picture
+ * that is not on the stage has no cropper to ask. Its `aspect` is the frame's
+ * own (`getAspect()` takes the `cropSize`'s when one is given, as the frame
+ * always does). `picture` is the laid size at 1× (`fittedPicture`), `source`
+ * the picture's own pixels.
+ */
+export function measuredArea(
+  framing: { readonly x: number; readonly y: number; readonly zoom: number },
+  picture: Size,
+  frame: Size,
+  source: Size,
+): { area: CropArea; areaPercent: CropArea } {
+  const { x, y, zoom } = framing;
+  const limit = (max: number, value: number) => Math.min(max, Math.max(0, value));
+  const areaPercent = {
+    x: limit(100, (((picture.width - frame.width / zoom) / 2 - x / zoom) / picture.width) * 100),
+    y: limit(100, (((picture.height - frame.height / zoom) / 2 - y / zoom) / picture.height) * 100),
+    width: limit(100, ((frame.width / picture.width) * 100) / zoom),
+    height: limit(100, ((frame.height / picture.height) * 100) / zoom),
+  };
+  const aspect = frame.width / frame.height;
+  const widthInPixels = Math.round(limit(source.width, (areaPercent.width * source.width) / 100));
+  const heightInPixels = Math.round(limit(source.height, (areaPercent.height * source.height) / 100));
+  const size =
+    source.width >= source.height * aspect
+      ? { width: Math.round(heightInPixels * aspect), height: heightInPixels }
+      : { width: widthInPixels, height: Math.round(widthInPixels / aspect) };
+  return {
+    area: {
+      ...size,
+      x: Math.round(limit(source.width - size.width, (areaPercent.x * source.width) / 100)),
+      y: Math.round(limit(source.height - size.height, (areaPercent.y * source.height) / 100)),
+    },
+    areaPercent,
+  };
+}
+
+/**
  * The framing a picture keeps when the post's shape changes to ratio `to`:
  * the frame changes around the picture, never the picture (ComposeCrop.md:19-23).
  *
@@ -241,21 +283,28 @@ export function sourceOf(crop: Crop): Size | null {
  * it (never further, and never down), and the offset shifts just enough that
  * no edge of the picture comes inside the frame.
  *
- * The measured rectangle always goes: it is the old shape's (`area` above).
- * Without a measurement or a stage width there is nothing to measure the
- * bounds against; the zoom and offset stay, and the frame holds them to the
- * new bounds the moment the picture is on screen again.
+ * The old shape's measured rectangle is replaced by the new frame's
+ * (`measuredArea`) — the one the library reports once the picture is on the
+ * stage. Every picture of the post is re-shaped, and only one stands on the
+ * stage: the others are never measured again unless the reader visits them, so
+ * without this their upload would fall back to the centred rectangle, not the
+ * place they kept. Without a measurement or a stage width there is nothing to
+ * measure against; the rectangle goes, the zoom and offset stay, and the frame
+ * holds them to the new bounds the moment the picture is on screen again.
  */
 export function reshape(crop: Crop, to: number, stageWidth: number | null): Crop {
-  const kept: Crop = { ...crop, area: null, areaPercent: null };
   const source = sourceOf(crop);
-  if (source === null || stageWidth === null || !(stageWidth > 0)) return kept;
+  if (source === null || stageWidth === null || !(stageWidth > 0)) {
+    return { ...crop, area: null, areaPercent: null };
+  }
   const picture = fittedPicture(source, stageOf("post", stageWidth));
   const bounds = zoomBounds("post", picture, to, stageWidth);
+  const frame = frameOf("post", to, stageWidth);
   // The ceiling is the same under every post shape (`zoomBounds`), so holding
   // the zoom can only ever raise it here.
   const zoom = holdZoom(crop.zoom, bounds);
-  return { ...kept, zoom, ...holdOffset(crop, picture, frameOf("post", to, stageWidth), zoom) };
+  const held = { zoom, ...holdOffset(crop, picture, frame, zoom) };
+  return { ...held, ...measuredArea(held, picture, frame, source) };
 }
 
 /**

@@ -195,6 +195,18 @@ export const HELP_TOPICS = {
       "The signing is paid for, like your posts. The record that you changed it stays, like every signed action.",
     ],
   },
+  // The profile change's seal (ProfileEditSeal; copy-voice names it
+  // `Changing your profile`). Its panel is still owed on the help board
+  // (graph.json: "panel still owed"); until it is drawn it says what the
+  // picture's blessed "?" says of a profile change — word for word, the
+  // nearest drawn body (named in the PR as a gap for design).
+  changingYourProfile: {
+    title: "Changing your profile",
+    paragraphs: [
+      "Your profile is a public record, and changes to it are signed actions in your name.",
+      "The signing is paid for, like your posts. The record that you changed it stays, like every signed action.",
+    ],
+  },
   // The one-axis pad on your own post — the seal's and a post edit's
   // (copy-voice, *Your backing on your post*; blessed jakob 2026-10-16,
   // round 15). Its own topic, not the reply pad's: a reply signs an

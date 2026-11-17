@@ -617,7 +617,7 @@ fun PostDetailScreen(
         // The confirm rises where the menu stood, over this page; it says it
         // is up itself, so the detail clip stops beneath it.
         reportFor?.let { id ->
-            reportSheet(id, { reportFor = null }, notify)
+            reportSheet(ReportAsk(id, ReportKind.Post), { reportFor = null }, notify)
         }
     }
 }

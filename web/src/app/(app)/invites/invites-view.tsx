@@ -33,7 +33,7 @@ import { useApolloClient } from "@apollo/client/react";
 import { useRouter } from "next/navigation";
 
 import { fetchMe } from "@/lib/api/auth-api";
-import type { Outcome } from "@/lib/api/outcome";
+import { hasCode, type Outcome } from "@/lib/api/outcome";
 import {
   fetchInvites,
   rejectApplication,
@@ -118,11 +118,12 @@ import { StanceControl } from "@/lib/ui/stance-control";
 import { signedLine } from "@/lib/ui/stance-readout";
 import { ladderAge } from "@/lib/ui/timestamp";
 import { TransportError } from "@/lib/ui/transport-error";
+import { NOT_THROUGH_LINE } from "@/lib/ui/error-messages";
 import { AddressCard } from "@/lib/ui2/address-card";
 import { ContentRow } from "@/lib/ui2/content-row";
 import { SectionLabel } from "@/lib/ui2/section-label";
 
-import { CloseDialog } from "./close-dialog";
+import { CloseDialog, type CloseAnswer } from "./close-dialog";
 import { InviteSheet } from "./invite-sheet";
 import { PeopleLetIn } from "./people-let-in";
 
@@ -173,7 +174,7 @@ export function InvitesView({
   const [approving, setApproving] = useState<string | null>(null);
   const [closing, setClosing] = useState<Closing | null>(null);
   const [revoking, setRevoking] = useState<{ id: string; slow: boolean } | null>(null);
-  const [revokeFailed, setRevokeFailed] = useState(false);
+  const [revokeFault, setRevokeFault] = useState<"failed" | "notThrough" | null>(null);
   // The link whose copy did not go through: its card carries the line (Invites.md:59).
   const [copyFailed, setCopyFailed] = useState<string | null>(null);
   // What an ask link handed over on the way here: its snackbar, and the row
@@ -292,7 +293,7 @@ export function InvitesView({
 
   const onRevoke = async (link: InviteLinkView, index: number) => {
     if (revoking !== null) return;
-    setRevokeFailed(false);
+    setRevokeFault(null);
     setRevoking({ id: link.id, slow: false });
     const timer = setTimeout(
       () => setRevoking((current) => (current?.id === link.id ? { id: link.id, slow: true } : current)),
@@ -308,16 +309,16 @@ export function InvitesView({
     } else {
       // The card stays (:59).
       setRevoking(null);
-      setRevokeFailed(true);
+      setRevokeFault(hasCode(outcome, "FORBIDDEN") ? "notThrough" : "failed");
     }
   };
 
-  const commitClose = async (asked: Closing): Promise<boolean> => {
+  const commitClose = async (asked: Closing): Promise<CloseAnswer> => {
     const outcome =
       asked.kind === "one"
         ? await guard.run(() => rejectApplication(client, asked.application.id))
         : await guard.run(() => rejectLinkApplications(client, asked.group.linkId));
-    if (outcome.kind !== "success") return false;
+    if (outcome.kind !== "success") return hasCode(outcome, "FORBIDDEN") ? "notThrough" : "failed";
     // A kept approval's close drops the kept vouch; nothing is signed
     // (RejectConfirm.md:7, Invites.md:89).
     const closed = asked.kind === "one" ? [asked.application] : asked.group.rows;
@@ -329,7 +330,7 @@ export function InvitesView({
     focusAfter.current = { section: "application", index: indexOfApplication(first.id) };
     setClosing(null);
     await refresh();
-    return true;
+    return "taken";
   };
 
   const rowFor = (application: ApplicationView) => (
@@ -489,9 +490,12 @@ export function InvitesView({
               )}
             </>
           )}
-          {revokeFailed && (
+          {revokeFault !== null && (
             <div className="px-6 pt-2">
-              <TransportError testId="invites-revoke-failed" />
+              <TransportError
+                testId="invites-revoke-failed"
+                message={revokeFault === "notThrough" ? NOT_THROUGH_LINE : undefined}
+              />
             </div>
           )}
         </div>

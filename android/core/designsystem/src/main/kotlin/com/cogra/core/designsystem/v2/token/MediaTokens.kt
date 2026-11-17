@@ -95,11 +95,14 @@ object MediaOverlay {
      * itself is not a theme surface. */
     val BadgeInk = Color(0xFFFFFFFF)
 
-    /** The crop viewport's rule-of-thirds lines, and the avatar circle's rim. */
+    /** The post crop's rule-of-thirds lines — `rgba(255,255,255,0.55)` (ComposeCrop.jsx:55). */
     val CropRule = Color(0x8CFFFFFF)
 
-    /** What the avatar crop dims outside its circle — `rgba(0,0,0,0.45)`. */
+    /** What every crop dims outside its frame — `rgba(0,0,0,0.45)` (CropViewport.jsx, ComposeCrop.jsx). */
     val CropScrim = Color(0x73000000)
+
+    /** The cover's and the circle's frame edge — `1px solid rgba(255,255,255,0.7)` (CropViewport.jsx:100). */
+    val CropHairline = Color(0xB3FFFFFF)
 
     /** The unselected picker tile's ring. */
     val PickerRing = Color(0xFFFFFFFF)

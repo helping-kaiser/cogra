@@ -54,6 +54,7 @@ import { UnreachableConfirm } from "@/lib/ui2/compose/unreachable-confirm";
 import { AttachmentReadout, AttachmentStanding } from "@/lib/ui/attachment-readout";
 import { LicenseRows } from "@/lib/ui/license-rows";
 import { TransportError } from "@/lib/ui/transport-error";
+import { NOT_THROUGH_LINE } from "@/lib/ui/error-messages";
 import { bundleReadout, EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
@@ -353,9 +354,14 @@ export function SealStep({
             Keep the draft, restore later
           </PillButton>
         </>
-      ) : fault?.kind === "offline" ? (
+      ) : fault?.kind === "offline" || fault?.kind === "notThrough" ? (
+        // No answer, or the server's FORBIDDEN: the same foot, its own line
+        // (NetworkError.md:3, :13) — never the no-answer line for an answer.
         <div className="flex flex-col gap-2">
-          <TransportError testId="wizard-transport-error" message={OFFLINE_LINE} />
+          <TransportError
+            testId="wizard-transport-error"
+            message={fault.kind === "offline" ? OFFLINE_LINE : NOT_THROUGH_LINE}
+          />
           <PillButton testId="wizard-retry" variant="outlined" full onClick={onRetry}>
             Retry
           </PillButton>

@@ -27,7 +27,6 @@ import { PillButton } from "@/lib/ui2/pill-button";
 import { MonogramAvatar } from "@/lib/ui2/monogram-avatar";
 import { cropPreviewStyle } from "@/lib/ui2/media/crop-preview";
 import type { Crop } from "@/lib/ui2/media/crop";
-import { AVATAR_RATIO } from "@/lib/ui2/media/aspect";
 
 /** What the field is holding, before any of it has been uploaded. */
 export type ProfileMediaChoice =
@@ -36,8 +35,6 @@ export type ProfileMediaChoice =
   | { readonly kind: "picked"; readonly file: Blob; readonly crop: Crop };
 
 export const UNCHANGED: ProfileMediaChoice = { kind: "unchanged" };
-
-export const PROFILE_RATIOS = { avatar: AVATAR_RATIO } as const;
 
 /** The row's disc (ProfileEdit.jsx `MonogramAvatar size={64}`). */
 const DISC = 64;
@@ -62,25 +59,10 @@ export function ProfileMediaField({
 }) {
   const input = useRef<HTMLInputElement | null>(null);
 
-  // One object URL per PICKED FILE. Derived rather than stored in state — an
-  // effect that set it would render once with the old picture still showing.
-  const file = choice.kind === "picked" ? choice.file : null;
-  const preview = useMemo(() => (file === null ? null : URL.createObjectURL(file)), [file]);
-  useEffect(() => {
-    if (preview === null) return;
-    return () => URL.revokeObjectURL(preview);
-  }, [preview]);
-
-  const showing = choice.kind === "cleared" ? null : (preview ?? currentUrl);
-
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-4">
-        {choice.kind === "picked" && preview !== null ? (
-          <FramedDisc src={preview} crop={choice.crop} testId={`${testIdPrefix}-avatar-preview`} />
-        ) : (
-          <MonogramAvatar name={name} src={showing} size={DISC} testId={`${testIdPrefix}-avatar-preview`} />
-        )}
+        <PictureDisc name={name} currentUrl={currentUrl} choice={choice} testId={`${testIdPrefix}-avatar-preview`} />
         <PillButton
           testId={`${testIdPrefix}-avatar-choose`}
           variant="outlined"
@@ -126,6 +108,38 @@ export function ProfileMediaField({
         <p className="m-0 text-label-small text-on-surface-variant">Saving replaces it with your monogram.</p>
       )}
     </div>
+  );
+}
+
+/**
+ * The picture as the edit holds it, at the row's 64px: a fresh pick in its
+ * framing, the monogram once removed, else what the profile carries — the
+ * edit's row and the seal's head row draw the same disc.
+ */
+export function PictureDisc({
+  name,
+  currentUrl,
+  choice,
+  testId,
+}: {
+  name: string;
+  currentUrl: string | null;
+  choice: ProfileMediaChoice;
+  testId: string;
+}) {
+  // One object URL per PICKED FILE. Derived rather than stored in state — an
+  // effect that set it would render once with the old picture still showing.
+  const file = choice.kind === "picked" ? choice.file : null;
+  const preview = useMemo(() => (file === null ? null : URL.createObjectURL(file)), [file]);
+  useEffect(() => {
+    if (preview === null) return;
+    return () => URL.revokeObjectURL(preview);
+  }, [preview]);
+  if (choice.kind === "picked" && preview !== null) {
+    return <FramedDisc src={preview} crop={choice.crop} testId={testId} />;
+  }
+  return (
+    <MonogramAvatar name={name} src={choice.kind === "cleared" ? null : currentUrl} size={DISC} testId={testId} />
   );
 }
 

@@ -128,7 +128,10 @@ class CommentsViewModel @Inject constructor(
     fun start(id: String) {
         if (postId == id) return
         postId = id
-        _state.value = CommentsUiState(reveals = _state.value.reveals)
+        // The reveals and the lock are the READER's, not the thread's: both are
+        // collected once, so a fresh state here would lose them until the next
+        // change — an applicant's `Add a comment` then opened the composer.
+        _state.value = CommentsUiState(reveals = _state.value.reveals, commentLocked = _state.value.commentLocked)
         read()
     }
 
