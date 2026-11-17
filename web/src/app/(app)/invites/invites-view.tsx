@@ -33,7 +33,7 @@ import { useApolloClient } from "@apollo/client/react";
 import { useRouter } from "next/navigation";
 
 import { fetchMe } from "@/lib/api/auth-api";
-import { hasCode, type Outcome } from "@/lib/api/outcome";
+import type { Outcome } from "@/lib/api/outcome";
 import {
   fetchInvites,
   rejectApplication,
@@ -63,6 +63,7 @@ import {
   CLOSING_THEM,
   COPY_THE_LINK,
   CREATE_INVITE,
+  DIDNT_SEND,
   HOW_VOUCHING_WORKS,
   HOW_VOUCHING_WORKS_HELP,
   INVITES_EMPTY,
@@ -319,7 +320,7 @@ export function InvitesView({
       asked.kind === "one"
         ? await guard.run(() => rejectApplication(client, asked.application.id))
         : await guard.run(() => rejectLinkApplications(client, asked.group.linkId));
-    if (outcome.kind !== "success") return hasCode(outcome, "FORBIDDEN") ? "notThrough" : "failed";
+    if (outcome.kind !== "success") return { line: outcomeFaultLine(outcome) ?? DIDNT_SEND };
     // A kept approval's close drops the kept vouch; nothing is signed
     // (RejectConfirm.md:7, Invites.md:89).
     const closed = asked.kind === "one" ? [asked.application] : asked.group.rows;

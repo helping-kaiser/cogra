@@ -196,32 +196,20 @@ type Pending = {
  * fault of the whole act (`notThrough` — FORBIDDEN, INTERNAL,
  * SIGNATURE_INVALID, a fieldless BAD_INPUT — or `unverified`,
  * EMAIL_NOT_VERIFIED; NetworkError.md:13-19: an answer, so never the
- * no-answer line), or the write rule's notice. FORBIDDEN keeps a kind of its
- * own (`forbidden`) because the DIALOGS read only it as not through (#501):
- * which words any other answered refusal takes on a dialog is not written yet
- * (seam 352), so there they stay the no-answer line.
+ * no-answer line), or the write rule's notice.
  */
-type Fault = "failed" | "forbidden" | "notThrough" | "unverified" | "writeRule";
+type Fault = "failed" | "notThrough" | "unverified" | "writeRule";
 
 /** The faults that re-raise their surface with Retry. */
 const retries = (fault: Fault | null): boolean => fault !== null && fault !== "writeRule";
 
 /** The line a retrying fault says above its commit (copy-voice, *Faults by code*). */
 const retryLine = (fault: Fault | null): string =>
-  fault === "notThrough" || fault === "forbidden"
-    ? NOT_THROUGH_LINE
-    : fault === "unverified"
-      ? UNVERIFIED_LINE
-      : NO_ANSWER_LINE;
-
-/** A fault as a dialog reads it: only FORBIDDEN is said as not through there (#501, seam 352). */
-const asDialog = (fault: Fault | null): Fault | null =>
-  fault === "notThrough" || fault === "unverified" ? "failed" : fault;
+  fault === "notThrough" ? NOT_THROUGH_LINE : fault === "unverified" ? UNVERIFIED_LINE : NO_ANSWER_LINE;
 
 /** A refused commit's fault: the write rule's notice, an answered whole-act fault, else no answer. */
 function refusalFault(outcome: Outcome<unknown>): Fault {
   if (hasCode(outcome, "WRITE_RULE_FAILED")) return "writeRule";
-  if (hasCode(outcome, "FORBIDDEN")) return "forbidden";
   const line = outcomeFaultLine(outcome);
   return line === UNVERIFIED_LINE ? "unverified" : line === NOT_THROUGH_LINE ? "notThrough" : "failed";
 }
@@ -937,7 +925,7 @@ export function StanceControl({
       answerOf(await data.commit(seamTarget, asked.pick)),
     );
     if (answer.kind !== "taken") {
-      setEmptyFault(asDialog(answer.kind));
+      setEmptyFault(answer.kind);
       return;
     }
     setEmptyAsk(null);
@@ -970,7 +958,7 @@ export function StanceControl({
       // The dialog stays up and says so: a fault with Retry in the confirm's
       // slot, or the write rule's quiet line with the act dimmed and no
       // Retry (SeveranceConfirm.md, round 21).
-      setConfirmFault(asDialog(answer.kind));
+      setConfirmFault(answer.kind);
       return;
     }
     setConfirming(null);
@@ -1582,7 +1570,7 @@ export function StanceControl({
           busy={busy}
           slow={padSetting}
           fault={padFault === "writeRule" ? "writeRule" : retries(padFault) ? "failed" : null}
-          failedLine={retryLine(asDialog(padFault))}
+          failedLine={retryLine(padFault)}
           onWriteRuleHelp={() => setNoticeHelp(HELP_TOPICS.whySigningWaitsOnPad)}
           onCommit={() => void signPick(pick, "pad")}
           onCancel={closeAll}

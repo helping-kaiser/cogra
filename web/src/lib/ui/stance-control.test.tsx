@@ -2478,6 +2478,27 @@ describe("severance", () => {
     expect(screen.getByTestId("severance-proceed")).toHaveTextContent("Retry");
     expect(screen.getByTestId<HTMLDialogElement>("severance-confirm").open).toBe(true);
   });
+
+  // Seam 355: on a dialog too the words follow the answer.
+  it.each([
+    ["SIGNATURE_INVALID", "That didn't go through. Try again."],
+    ["EMAIL_NOT_VERIFIED", "Verify your email first — the link is in your inbox."],
+  ] as const)("says the %s answer's line in the walk-back's dialog, Walk it back reading Retry", async (code, line) => {
+    const data = mount({
+      seed: { "post-1": { records: [{ pDirected: 0.5, pInterest: 0.5 }] } },
+    });
+    await settle();
+    await openPad();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-sever`));
+    });
+    data.sever = createStubStanceData({ refuse: code }).sever;
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-proceed"));
+    });
+    expect(screen.getByTestId("severance-failed")).toHaveTextContent(line);
+    expect(screen.getByTestId("severance-proceed")).toHaveTextContent("Retry");
+  });
 });
 
 // THE EMPTY SIGN (EmptySignConfirm.md, PadStanding.md:71; jakob 2026-10-21,

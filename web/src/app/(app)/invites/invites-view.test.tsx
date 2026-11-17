@@ -1041,6 +1041,17 @@ describe("the closing dialogs (behavior/RejectConfirm.md, RejectAllConfirm.md)",
     expect(row("imke")).toBeInTheDocument();
   });
 
+  // Seam 355: the words follow the answer on a dialog too; its commitment reads Retry.
+  it.each(ANSWERED)("NetworkError.md a closing answered %s reads its line with Retry", async (code, text) => {
+    show();
+    server.use(gqlLink.mutation("RejectApplication", answering(code)));
+    await screen.findAllByTestId("invites.application");
+    fireEvent.click(within(row("imke")).getByTestId("invites.application.close"));
+    fireEvent.click(await screen.findByTestId("invites.dialog.close"));
+    expect(await screen.findByTestId("invites-dialog-failed")).toHaveTextContent(text);
+    expect(screen.getByTestId("invites.dialog.close")).toHaveTextContent("Retry");
+  });
+
   // NetworkError.md:13, :19 — the other answered faults on the revoke (a
   // card, not a dialog: Invites.md:99, :111), each in its own line.
   it.each(ANSWERED)("NetworkError.md a revoke answered %s reads its line, never the connection line", async (code, text) => {
