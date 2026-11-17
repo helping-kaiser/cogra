@@ -47,7 +47,8 @@ class SearchResultsTest {
             false,
             context(),
         )
-        assertThat(items.map { it::class.simpleName }).containsExactly("Row", "Seam", "Row", "Row").inOrder()
+        assertThat(items.map { it::class.simpleName })
+            .containsExactly("ContentLabel", "Row", "Seam", "Row", "Row").inOrder()
         assertThat(rows(items).map { it.value }).containsExactly(null, "2d", "18.09.2026").inOrder()
     }
 
@@ -118,6 +119,39 @@ class SearchResultsTest {
             context = context(),
         )
         assertThat(items.all { it is ResultItem.Row }).isTrue()
+    }
+
+    // ExploreSearch.md:11, ExplorePerson.md:11, :13 — every section under its
+    // caption: Profiles, Tags, Posts and comments, under either order.
+    @Test
+    fun `each section stands under its caption, under either order`() {
+        for (order in SearchOrder.entries) {
+            val items = layoutResults(
+                listOf(
+                    SearchHit(person("u1", "sal"), 1.0),
+                    SearchHit(tag("t1", "saltmaps"), 2.0),
+                    SearchHit(post("p1", "Salt maps"), 9.1),
+                    SearchHit(SearchNode.Comment("c1", "salt", now, "p1", "Salt maps"), null),
+                ),
+                emptySet(),
+                hasMorePeople = false,
+                context = context(order = order),
+            )
+            val drawn = items.map { it::class.simpleName }.filterNot { it == "Seam" }
+            assertThat(drawn)
+                .containsExactly("ProfilesLabel", "Row", "TagsLabel", "Row", "ContentLabel", "Row", "Row")
+                .inOrder()
+        }
+    }
+
+    // A section alone still wears its caption (ExploreSearch.md:11); only
+    // Profiles alone drops its own (ExplorePerson.md:21).
+    @Test
+    fun `a lone tags or content section keeps its caption`() {
+        val tags = layoutResults(listOf(SearchHit(tag("t1", "saltmaps"), 2.0)), setOf(FeedKind.TAG), false, context())
+        assertThat(tags.first()::class.simpleName).isEqualTo("TagsLabel")
+        val content = layoutResults(listOf(SearchHit(post("p1", "Salt"), 1.0)), setOf(FeedKind.POST), false, context())
+        assertThat(content.first()::class.simpleName).isEqualTo("ContentLabel")
     }
 
     @Test
