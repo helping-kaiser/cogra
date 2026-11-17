@@ -201,6 +201,7 @@ fun PostDetailRoute(
                     onOpenTopic = onOpenTopic,
                     onReference = onReference,
                     onSignInOrJoin = onSignInOrJoin,
+                    onOpenPost = onOpenPost,
                     onDepart = onCommentsDepart,
                     commentsReturn = commentsReturn,
                     onReturnConsumed = onCommentsReturnConsumed,
@@ -259,6 +260,7 @@ private fun DetailThread(
     onOpenTopic: (String) -> Unit,
     onReference: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
+    onOpenPost: (String) -> Unit,
     onDepart: (CommentsScroll) -> Unit,
     commentsReturn: CommentsReturn,
     onReturnConsumed: () -> Unit,
@@ -281,6 +283,7 @@ private fun DetailThread(
         onOpenTopic = onOpenTopic,
         onReference = onReference,
         onSignInOrJoin = onSignInOrJoin,
+        onOpenPost = onOpenPost,
         onDepart = onDepart,
         commentsReturn = commentsReturn,
         onReturnConsumed = onReturnConsumed,
@@ -407,6 +410,7 @@ fun PostDetailScreen(
     // comment's is the thread's, and rides the thread.
     var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
     var removeOpen by remember { mutableStateOf(false) }
+    var citedByOpen by remember { mutableStateOf(false) }
     // SAVED, not merely remembered: the composer and the comment editor are
     // their own destinations, so the thread is left and re-entered rather than
     // covered — and every way out of them comes back to it (`ReplyCompose` and
@@ -463,6 +467,7 @@ fun PostDetailScreen(
                                 onRemove = { removeOpen = true },
                                 // Over the page — never stacked.
                                 onLicense = { license -> licenseShown = license },
+                                onCitedBy = { citedByOpen = true },
                                 onShare = share,
                                 onReport = { id -> reportFor = id },
                                 node = header / "menu",
@@ -614,6 +619,15 @@ fun PostDetailScreen(
         // post stands as Removed here: back is the whole header, the mark in
         // the words' and pictures' place (Removed.md).
         if (removeOpen) DetailRemoveConfirm(post, onClose = { removeOpen = false })
+        // WHAT CITES THE POST, over the detail, the post still open beneath it (CitedBy.md:3).
+        if (citedByOpen && post != null) {
+            CitedBySheet(
+                nodeId = post.id,
+                onDismiss = { citedByOpen = false },
+                onOpenPost = onOpenPost,
+                node = CITED_BY_SHEET,
+            )
+        }
         // The confirm rises where the menu stood, over this page; it says it
         // is up itself, so the detail clip stops beneath it.
         reportFor?.let { id ->
@@ -656,6 +670,7 @@ private fun DetailMenu(
     onCite: (String) -> Unit,
     onRemove: () -> Unit,
     onLicense: (LicenseChoice) -> Unit,
+    onCitedBy: () -> Unit,
     onShare: (String) -> Unit,
     onReport: (String) -> Unit,
     node: DataNode,
@@ -684,6 +699,7 @@ private fun DetailMenu(
             onCite = { onCite(post.id) },
             onRemove = onRemove,
             onLicense = { onLicense(post.license) },
+            onCitedBy = onCitedBy,
             onShare = shareRow,
             testTagPrefix = "detail_menu",
             onReport = { onReport(post.id) },

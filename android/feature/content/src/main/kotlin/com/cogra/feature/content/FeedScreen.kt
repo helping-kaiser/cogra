@@ -1315,6 +1315,7 @@ internal val POST_MENU_ROWS = setOf(
     PostMenuRow.Save,
     PostMenuRow.Cite,
     PostMenuRow.Hide,
+    PostMenuRow.CitedBy,
     PostMenuRow.License,
     PostMenuRow.Report,
     PostMenuRow.Edit,
@@ -1323,9 +1324,9 @@ internal val POST_MENU_ROWS = setOf(
 )
 
 /**
- * The feed's comment card menu: `feed.menuSheet`, its registered rows. `Cited
- * by` and `Opinions on this` are not registered under the feed (seam 320-14),
- * so they keep their per-comment tags.
+ * The feed's comment card menu: `feed.menuSheet`, its registered rows
+ * (FeedCommentMenu, FeedCommentMenuOwn). `Opinions on this` keeps its
+ * per-comment tag until its sheet lands on this client.
  */
 internal val FEED_COMMENT_MENU = CommentMenuPlacement(
     sheet = FEED / "menuSheet",
@@ -1334,6 +1335,7 @@ internal val FEED_COMMENT_MENU = CommentMenuPlacement(
         CommentMenuRow.Cite,
         CommentMenuRow.Edit,
         CommentMenuRow.Remove,
+        CommentMenuRow.CitedBy,
         CommentMenuRow.License,
         CommentMenuRow.Report,
     ),
@@ -1401,6 +1403,7 @@ internal fun PostCard(
                 post = shown,
                 viewerId = viewerId,
                 onOpenActor = onOpenActor,
+                onOpenPost = onOpenPost,
                 onEdit = onEdit,
                 onCite = onCite,
                 onReport = onReport,
@@ -1500,6 +1503,8 @@ private fun CardMenuHeader(
     post: PostView,
     viewerId: String?,
     onOpenActor: (String) -> Unit,
+    /** A Cited by row's door: the post a citing artifact opens (CitedBy.md:15). */
+    onOpenPost: (String) -> Unit,
     onEdit: (String) -> Unit,
     onCite: (String) -> Unit,
     onReport: () -> Unit,
@@ -1509,8 +1514,10 @@ private fun CardMenuHeader(
 ) {
     var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
     var removeOpen by remember { mutableStateOf(false) }
+    var citedByOpen by remember { mutableStateOf(false) }
     CoversSurface(open = licenseShown != null, kind = CoverKind.Suspend)
     CoversSurface(open = removeOpen, kind = CoverKind.Suspend)
+    CoversSurface(open = citedByOpen, kind = CoverKind.Suspend)
     val menuSheet = placement.menuSheet
     val tag = "${placement.tag}_${post.id}"
     // A REMOVED POST HAS NO MENU LEFT (`Removed.jsx:5-6`): there is nothing
@@ -1544,6 +1551,7 @@ private fun CardMenuHeader(
                 onCite = { onCite(post.id) },
                 onRemove = { removeOpen = true },
                 onLicense = { licenseShown = post.license },
+                onCitedBy = { citedByOpen = true },
                 onShare = shareRow,
                 // The rows sit under the trigger's own tag, which
                 // `ContentCardHeader` derives the same way.
@@ -1568,6 +1576,15 @@ private fun CardMenuHeader(
         LicenseSheet(license = license, onDismiss = { licenseShown = null }, node = placement.licenseSheet)
     }
     if (removeOpen) CardRemoveConfirm(post, placement, tag, onClose = { removeOpen = false })
+    // WHAT CITES THE POST, over the host, the list still open beneath it (CitedBy.md:5).
+    if (citedByOpen) {
+        CitedBySheet(
+            nodeId = post.id,
+            onDismiss = { citedByOpen = false },
+            onOpenPost = onOpenPost,
+            testTag = "${tag}_cited_by_sheet",
+        )
+    }
 }
 
 /**

@@ -120,6 +120,8 @@ fun CommentsSheetRoute(
     /** The Reference affordance (D20): compose a post citing this node. */
     onReference: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
+    /** A comment's Cited by row: the post a citing artifact opens (CitedBy.md:15). */
+    onOpenPost: (String) -> Unit,
     /**
      * Called as the sheet gives way to a composer, carrying the reader's
      * place — the surface below keeps it until they come back.
@@ -211,6 +213,7 @@ fun CommentsSheetRoute(
         saved = rememberSavedWrites(),
         onRequireAccount = onRequireAccount,
         onLanded = viewModel.landing::done,
+        onOpenPost = onOpenPost,
     )
     licenseShown?.let { license ->
         // `CommentLicense` registers under `postDetail`, over the thread.
@@ -313,6 +316,8 @@ fun CommentsSheet(
     reportSheet: ReportSheetSlot = reportDoor(onRequireAccount, THREAD_REPORT_SHEET, POST_DETAIL / "reportSheet"),
     /** The list scrolled to a landing ([CommentsUiState.landingAt]). */
     onLanded: () -> Unit = {},
+    /** A Cited by row's door: the citing post, or the post a citing comment answers (CitedBy.md:15). */
+    onOpenPost: (String) -> Unit = {},
 ) {
     // The sheet's own host. A ModalBottomSheet is its own window, so a
     // host on the surface behind would render the confirmation for a
@@ -333,6 +338,9 @@ fun CommentsSheet(
     // WHICH CONFIRM STANDS OVER THE THREAD ([ThreadConfirm]): the menu closes and
     // it comes up over the thread, which stays where the reader opened the menu.
     var confirm by remember { mutableStateOf<ThreadConfirm?>(null) }
+    // WHICH COMMENT'S CITED BY IS UP (CommentCitedByEmpty.md:3): stacked over
+    // the thread, which stays open beneath its wash.
+    var citedBy by remember { mutableStateOf<String?>(null) }
     val depart: (() -> Unit) -> Unit = { go ->
         onDepart(
             CommentsScroll(
@@ -399,6 +407,7 @@ fun CommentsSheet(
                 onLicense = onLicense,
                 onRemoveComment = { comment -> confirm = ThreadConfirm.Remove(comment) },
                 onReportComment = { comment -> confirm = ThreadConfirm.Report(comment.id) },
+                onCitedBy = { comment -> citedBy = comment.id },
                 stanceControl = stanceControl,
             )
         }
@@ -409,7 +418,20 @@ fun CommentsSheet(
     // one comment gives way to its mark — the list is not re-read, so the
     // reader's place and every unfolded branch hold (CommentRemoved.md:19).
     ThreadConfirms(confirm, reportSheet, snackbar, onClose = { confirm = null })
+    citedBy?.let { id ->
+        CitedBySheet(
+            nodeId = id,
+            onDismiss = { citedBy = null },
+            // A row leaves the surface, so it leaves the thread's place behind.
+            onOpenPost = { post -> depart { onOpenPost(post) } },
+            stacked = true,
+            testTag = THREAD_CITED_BY_SHEET,
+        )
+    }
 }
+
+/** The comment's Cited by sheet over the thread: the design registers no node for it (CommentCitedByEmpty). */
+internal const val THREAD_CITED_BY_SHEET = "comment_cited_by_sheet"
 
 /**
  * The confirm over the thread: the think-twice dialog for the reader's own
@@ -578,6 +600,7 @@ private fun CommentsList(
     /** An own comment's Remove row: the think-twice dialog over the thread. */
     onRemoveComment: (CommentView) -> Unit,
     onReportComment: (CommentView) -> Unit,
+    onCitedBy: (CommentView) -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -632,6 +655,7 @@ private fun CommentsList(
                         onLicense = onLicense,
                         onRemoveComment = onRemoveComment,
                         onReportComment = onReportComment,
+                        onCitedBy = onCitedBy,
                         stanceControl = stanceControl,
                     )
                 }
@@ -742,10 +766,12 @@ private fun CommentsFoot(
  *
  * `Cited by` and `Opinions on this` STAND WHATEVER THE COUNT IS, which is
  * the difference between a menu row and a count line: a row that came and
- * went with a number would make the menu a different menu every time. Their
- * sheets are not built on this client yet, so the rows stand inert (the
+ * went with a number would make the menu a different menu every time.
+ * `Opinions on this` has no sheet on this client yet, so it stands inert (the
  * introduced-but-inert law, jakob 2026-09-14).
  *
+ * @param onCitedBy the `Cited by` row's door — what cites the comment, over the
+ *   surface the menu was opened on (CommentMenu.md:25).
  * @param own the reader wrote the comment: the own rows, Edit and Remove, and
  *   no Report.
  * @param onEdit the own menu's Edit — the comment's edit over the surface the
@@ -762,6 +788,7 @@ internal fun commentMenuRows(
     own: Boolean,
     onCite: () -> Unit,
     onLicense: () -> Unit,
+    onCitedBy: () -> Unit,
     onEdit: () -> Unit = {},
     onRemove: () -> Unit = {},
     onReport: (() -> Unit)? = null,
@@ -781,8 +808,8 @@ internal fun commentMenuRows(
         add(MenuRow(stringResource(R.string.content_menu_remove), tag(CommentMenuRow.Remove, "remove"), onRemove))
     }
     // The two readings stand whatever their counts and open for a guest
-    // (CommentMenu.md:25, :33); their sheets are not built on this client yet.
-    add(MenuRow(stringResource(R.string.content_menu_cited_by), tag(CommentMenuRow.CitedBy, "cited_by")) {})
+    // (CommentMenu.md:27, :35); the opinions sheet is not built on this client yet.
+    add(MenuRow(stringResource(R.string.content_menu_cited_by), tag(CommentMenuRow.CitedBy, "cited_by"), onCitedBy))
     add(MenuRow(stringResource(R.string.content_menu_opinions), tag(CommentMenuRow.Opinions, "opinions")) {})
     add(MenuRow(stringResource(R.string.content_menu_license), tag(CommentMenuRow.License, "license"), onLicense))
     if (!own) {
@@ -827,6 +854,7 @@ private fun CommentThread(
     onLicense: (LicenseChoice) -> Unit,
     onRemoveComment: (CommentView) -> Unit,
     onReportComment: (CommentView) -> Unit,
+    onCitedBy: (CommentView) -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
 ) {
     val indent = (minOf(depth, MAX_INDENT_DEPTH) * 12).dp
@@ -853,6 +881,7 @@ private fun CommentThread(
             onLicense = onLicense,
             onRemoveComment = onRemoveComment,
             onReportComment = onReportComment,
+            onCitedBy = onCitedBy,
             stanceControl = stanceControl,
         )
         CommentBranch(
@@ -871,6 +900,7 @@ private fun CommentThread(
             onLicense = onLicense,
             onRemoveComment = onRemoveComment,
             onReportComment = onReportComment,
+            onCitedBy = onCitedBy,
             stanceControl = stanceControl,
         )
     }
@@ -895,6 +925,7 @@ private fun CommentCard(
     onLicense: (LicenseChoice) -> Unit,
     onRemoveComment: (CommentView) -> Unit,
     onReportComment: (CommentView) -> Unit,
+    onCitedBy: (CommentView) -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
 ) {
     // Keyed by the comment's id, as a feed card by its post's: the board keys
@@ -932,6 +963,7 @@ private fun CommentCard(
                         own = isOwn(comment, viewerId),
                         onCite = { onReference(comment.id) },
                         onLicense = { onLicense(comment.license) },
+                        onCitedBy = { onCitedBy(comment) },
                         onEdit = { onEditComment(comment) },
                         onRemove = { onRemoveComment(comment) },
                         onReport = { onReportComment(comment) },
@@ -1101,6 +1133,7 @@ private fun CommentBranch(
     onLicense: (LicenseChoice) -> Unit,
     onRemoveComment: (CommentView) -> Unit,
     onReportComment: (CommentView) -> Unit,
+    onCitedBy: (CommentView) -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
 ) {
     val thread = state.replyThreads[comment.id]
@@ -1123,6 +1156,7 @@ private fun CommentBranch(
             onLicense = onLicense,
             onRemoveComment = onRemoveComment,
             onReportComment = onReportComment,
+            onCitedBy = onCitedBy,
             stanceControl = stanceControl,
         )
     }

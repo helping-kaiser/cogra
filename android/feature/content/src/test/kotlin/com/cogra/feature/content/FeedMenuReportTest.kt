@@ -8,6 +8,7 @@ import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.DataNode
@@ -37,6 +38,13 @@ class FeedMenuReportTest {
 
     private val reports = RecordingReportRepository()
     private var joinAsked = 0
+    private val citedFor = mutableListOf<String>()
+    private val reads = InboundReads(
+        citedBy = { id ->
+            citedFor += id
+            Outcome.Success(emptyList())
+        },
+    )
 
     private fun renderFeed(signedOut: Boolean = false) {
         val viewModel = ReportViewModel(reports)
@@ -56,7 +64,7 @@ class FeedMenuReportTest {
         val door = if (signedOut) guest else confirm
         compose.setContent {
             val snackbar = remember { SnackbarHostState() }
-            CompositionLocalProvider(LocalSnackbarHostState provides snackbar) {
+            CompositionLocalProvider(LocalSnackbarHostState provides snackbar, LocalInboundReads provides reads) {
                 FeedScreen(
                     state = FeedUiState(loading = false, posts = listOf(testPost("p1"))),
                     onRefresh = {},
@@ -202,5 +210,22 @@ class FeedMenuReportTest {
         assertThat(joinAsked).isEqualTo(1)
         compose.onAllNodesWithTag("feed.reportSheet").assertCountEquals(0)
         assertThat(reports.targets).isEmpty()
+    }
+
+    /**
+     * FeedPostMenu.md:5, CitedBy.md:5, :19 — Cited by stands before License terms,
+     * and opens over the feed; nothing citing the post, the empty line alone.
+     */
+    @Test
+    fun the_feed_menus_cited_by_opens_what_cites_the_post_over_the_feed() {
+        renderFeed()
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        val citedBy = compose.onNodeWithTag("feed.menuSheet.citedBy").fetchSemanticsNode().boundsInRoot.top
+        val license = compose.onNodeWithTag("feed.menuSheet.license").fetchSemanticsNode().boundsInRoot.top
+        assertThat(citedBy).isLessThan(license)
+        compose.onNodeWithTag("feed.menuSheet.citedBy").performClick()
+        compose.waitForIdle()
+        assertThat(citedFor).containsExactly("p1")
+        compose.onNodeWithText("Nothing cites this yet").assertExists()
     }
 }

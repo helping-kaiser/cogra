@@ -116,7 +116,8 @@ class CitedByRepositoryTest {
 
     @Test
     fun aRemovedCitingPostKeepsItsRowUnderItsMark() = runTest {
-        enqueue(page(listOf(record("r1", "sol", "p1", 0.4, 0.2, 1, post("p1", "Salt maps", removedBy = "AUTHOR"))), null))
+        val removed = post("p1", "Salt maps", removedBy = "AUTHOR")
+        enqueue(page(listOf(record("r1", "sol", "p1", 0.4, 0.2, 1, removed)), null))
 
         val row = (repo().citedBy("n1") as Outcome.Success).value.single()
 

@@ -10,6 +10,9 @@ internal enum class PostMenuRow(val nodeName: String) {
     Save("save"),
     Cite("cite"),
     Hide("hide"),
+
+    /** What cites the post (CitedBy.md:5; ReaderPostMenu.md:3). */
+    CitedBy("citedBy"),
     License("license"),
     Report("report"),
     Edit("edit"),

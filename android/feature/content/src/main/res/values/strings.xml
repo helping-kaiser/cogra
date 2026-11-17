@@ -212,6 +212,9 @@
     <string name="content_menu_opinions">Opinions on this</string>
     <string name="content_menu_license">License terms</string>
     <string name="content_menu_report">Report</string>
+    <!-- What cites this (CitedBy.md, CommentCitedByEmpty.md): one title on both doors. -->
+    <string name="content_cited_by_title">Cited by</string>
+    <string name="content_cited_by_empty">Nothing cites this yet</string>
     <!-- The comment feed card (`_shared.jsx` CommentFeedCard; FeedCommentShapes.md): the head
          row's door names what the comment answers, and the comment glyph is the reply. -->
     <string name="content_card_on">On %1$s</string>
