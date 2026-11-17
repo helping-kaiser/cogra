@@ -1171,8 +1171,10 @@ every sheet, pad and dialog — each modal (§4, *Sheets*):
 detail's pager is a focusable strip paged by ← and →, with the platform's
 scroll actions, its dots a visual readout only; the crops carry a
 visible zoom slider and pan by arrow keys (`CropZoom`, `CropViewport`);
-picture reordering offers `Make it the cover`, `Move up` and `Move
-down` (`PickedSheet`); the pad has its sliders and direct entry (§8).
+picture reordering offers `Make it the cover` drawn on every row but
+the cover, and the handle's ↑ / ↓ keys and its `Move up` / `Move down`
+screen-reader actions, nothing drawn (`PickedSheet`; jakob 2026-11-17);
+the pad has its sliders and direct entry (§8).
 The viewer is named by what it shows (`Picture 2 of 4`), takes focus on
 its X and hands it back to the frame that opened it, and pages without
 wrapping.

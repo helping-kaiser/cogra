@@ -10,19 +10,17 @@ ALWAYS every change made in the sheet applies the moment it is made, and none wa
 
 WHEN drag a picture by its handle to a new place -> the pictures take the new order AND the picture now first is the cover
 
-ALWAYS a picture's second line reads Describe or Described, then composeDetails.pickedSheet.picture.makeCover, composeDetails.pickedSheet.picture.moveUp and composeDetails.pickedSheet.picture.moveDown as small inline actions, each only where the move is possible
-
-ALWAYS the cover offers neither composeDetails.pickedSheet.picture.makeCover nor composeDetails.pickedSheet.picture.moveUp, and the last picture offers no composeDetails.pickedSheet.picture.moveDown
+ALWAYS a picture's second line reads Describe or Described, then composeDetails.pickedSheet.picture.makeCover as a small inline action on every picture but the cover
 
 WHEN tap composeDetails.pickedSheet.picture.makeCover -> the picture moves to the head of the list AND it is the cover AND every picture above it moves down one
-
-WHEN tap composeDetails.pickedSheet.picture.moveUp -> the picture trades places with the one above it AND the picture now first is the cover
-
-WHEN tap composeDetails.pickedSheet.picture.moveDown -> the picture trades places with the one below it AND the picture now first is the cover
 
 ALWAYS a picture's handle is focusable and named Reorder the cover or Reorder picture, then its place, as Reorder picture 2
 
 WHEN press the up or down arrow key GIVEN a picture's handle has focus -> the picture moves one place that way AND focus stays on its handle
+
+ALWAYS a picture's handle carries Move up and Move down as screen-reader actions and draws neither, the cover carrying no Move up and the last picture no Move down
+
+WHEN take a handle's Move up or Move down screen-reader action -> the picture moves one place that way AND the picture now first is the cover
 
 WHEN tap a picture's remove control GIVEN more than one picture is picked -> the picture leaves the batch
 

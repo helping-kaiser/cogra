@@ -817,10 +817,11 @@ recorded so the registry is whole.
   `A video is the whole post.`
   (`ComposePickVideoCover`).
 - **The picked sheet** (`ComposePicked`, `EditPicked`) — rows named
-  `Cover — shown first` and `Picture 2`, their acts `Make it the cover`
-  · `Move up` · `Move down`; the first row's name says the rule. On a
-  post's edit every row also carries `Crop`, after `Describe` and before
-  the moves, the crop screen's own title as its door (`EditPicked`; round
+  `Cover — shown first` and `Picture 2`, their drawn act `Make it the
+  cover`; the handle's screen-reader actions `Move up` · `Move down`,
+  never drawn (jakob 2026-11-17); the first row's name says the rule. On
+  a post's edit every row also carries `Crop`, after `Describe` and
+  before `Make it the cover`, the crop screen's own title as its door (`EditPicked`; round
   53, *new 2026-11-17, blessed (jakob 2026-11-17)*).
 - **The comment edit's crop door** (`CommentEdit`) — `Crop the pictures`,
   directly above `Describe the pictures` and in its pattern, the same

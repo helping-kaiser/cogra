@@ -1274,8 +1274,6 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Done</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
     { n: 6, find: ">Make it the cover</button>", tag: "button", all: true },
-    { n: 7, find: ">Move up</button>", tag: "button", all: true },
-    { n: 8, find: ">Move down</button>", tag: "button", all: true },
   ],
   ComposePickedErrors: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
@@ -2866,8 +2864,6 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Done</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
     { n: 6, find: ">Make it the cover</button>", tag: "button", all: true },
-    { n: 7, find: ">Move up</button>", tag: "button", all: true },
-    { n: 8, find: ">Move down</button>", tag: "button", all: true },
     // Every picture's own crop door (round 53).
     { n: 9, find: ">Crop</button>", tag: "button", all: true },
   ],

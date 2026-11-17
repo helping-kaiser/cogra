@@ -19,25 +19,25 @@ import { MediaThumb } from "./MediaThumb.jsx";
      `HapticFeedbackConstants.DRAG_START` (`LONG_PRESS` below API 34; readme
      §4, *Haptics*) — and nothing else in the reorder vibrates; the web gives
      none.
-   · THE DRAG HAS NON-DRAG TWINS (the K13 round, ruled; readme §10; drawn by
-     jakob's final brief, 2026-10-05). The row's second line carries, after
-     `Describe`, three small inline actions — `Make it the cover` · `Move up` ·
-     `Move down` — and each row offers only the moves it can make: the cover
-     neither becomes the cover nor moves up, the last row does not move down.
-     The same moves are TalkBack custom actions on Android. The handle is
-     focusable — named for its picture, `Reorder the cover` or `Reorder
-     picture 2` — and ↑ / ↓ move the focused row, focus riding along. The
-     footnote names the cover rule and nothing else, since the drag is no
-     longer the only way.
+   · THE DRAG HAS NON-DRAG TWINS (the K13 round, readme §10; jakob
+     2026-11-17, "as rec (b)"). Drawn: `Make it the cover`, a small inline
+     action on every row after the first — the tap twin, by which every order
+     is reachable by taps alone. Not drawn: the one-step moves live on the
+     handle. It is focusable, named for its picture — `Reorder the cover` or
+     `Reorder picture 2` — and ↑ / ↓ move the focused row, focus riding along;
+     it carries `Move up` and `Move down` as screen-reader actions (Android's
+     custom accessibility actions; on the web the arrow keys on the focused
+     handle are that path), each row only the moves it can make: the cover
+     does not move up, the last row does not move down.
    · REMOVE — the X on each row.
    · DESCRIBE — the per-picture entry into `DescribeSheet`; a described
      picture shows the quiet word "Described" instead of the link.
    · CROP — on a published post's edit only (round 53, jakob 2026-11-17,
      option C): `Crop` stands on every row, right after `Describe`, and opens
-     the post's crop on that picture. It comes before the moves because it
+     the post's crop on that picture. It comes before `Make it the cover` because it
      acts on the picture itself, as `Describe` does, and stands on every row,
-     while the moves after it are the drag's twins and come and go with the
-     row's place. The new post's sheets carry none: their crop is the
+     while `Make it the cover` after it is the drag's twin and comes and goes
+     with the row's place. The new post's sheets carry none: their crop is the
      wizard's own step, one Back away.
 
    Rows are 56px thumbs with a name ("Cover — shown first", "Picture 2") so a
@@ -46,7 +46,7 @@ import { MediaThumb } from "./MediaThumb.jsx";
 /* `node` is the data-node name its placer gives the sheet (seam 248): the
    sheet takes it, its `title`, one `picture` per row keyed by its place in the
    media, counted from 1 — `reorder`, `thumb`, `label`, `described` or
-   `describe`, `crop` where given, `makeCover`, `moveUp`, `moveDown`, `remove` — the `note` and
+   `describe`, `crop` where given, `makeCover`, `remove` — the `note` and
    `done`. Given none, it renders exactly as before. */
 export function PickedSheet({ open = false, onClose, items = [], onDone, inline = false, node }) {
   const part = (name) => node && name;
@@ -71,6 +71,10 @@ export function PickedSheet({ open = false, onClose, items = [], onDone, inline 
               type="button"
               aria-label={`Reorder ${index === 0 ? "the cover" : `picture ${index + 1}`}`}
               aria-keyshortcuts="ArrowUp ArrowDown"
+              onKeyDown={(event) => {
+                if (event.key === "ArrowUp" && index > 0 && item.onMoveUp) item.onMoveUp();
+                if (event.key === "ArrowDown" && index < items.length - 1 && item.onMoveDown) item.onMoveDown();
+              }}
               data-node={part("reorder")}
               className="cg-state cg-focus cg-hit"
               style={{
@@ -118,16 +122,6 @@ export function PickedSheet({ open = false, onClose, items = [], onDone, inline 
                 {index > 0 && (
                   <InlineAction size="sm" onClick={item.onMakeCover} node={part("makeCover")}>
                     Make it the cover
-                  </InlineAction>
-                )}
-                {index > 0 && (
-                  <InlineAction size="sm" onClick={item.onMoveUp} node={part("moveUp")}>
-                    Move up
-                  </InlineAction>
-                )}
-                {index < items.length - 1 && (
-                  <InlineAction size="sm" onClick={item.onMoveDown} node={part("moveDown")}>
-                    Move down
                   </InlineAction>
                 )}
               </span>
