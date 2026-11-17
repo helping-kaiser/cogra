@@ -90,7 +90,11 @@ WHEN press Sign the edit -> the header X is named Close from the press itself AN
 
 WHEN press the header back arrow, the header X or the system's Back GIVEN Sign the edit was pressed and has not answered -> the edit closes AND the edit goes on, its wait and its answer on the edited card as SigningAfterClose draws them AND NEVER the edit is cancelled
 
+WHEN the server refuses the cover the edit set at its upload -> the gate line reads One picture didn't upload. alone in the error ink AND NEVER Signing waits for it. stands beside it AND NEVER Retry stands on the gate AND Sign the edit is disabled until Remove it under the clip and its cover takes the cover out
+
 WHEN the server refuses the cover the edit set at its upload -> the line One picture didn't upload. stands under the clip and its cover with Remove it alone AND NEVER Retry stands under them, retrying being unable to change the answer
+
+WHEN the server refuses a clip picked in the edit at its upload -> the gate line reads The video didn't upload. alone in the error ink AND NEVER Signing waits for it. stands beside it AND NEVER Retry stands on the gate AND Sign the edit is disabled until Remove it under the clip takes the clip out
 
 WHEN the server refuses a clip picked in the edit at its upload -> the line That video didn't upload. stands under the clip with Remove it alone AND NEVER Retry stands under it, retrying being unable to change the answer
 

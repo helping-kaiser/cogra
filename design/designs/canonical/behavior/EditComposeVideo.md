@@ -100,6 +100,8 @@ WHEN press Sign the edit -> the header X is named Close from the press itself AN
 
 WHEN press the header back arrow, the header X or the system's Back GIVEN Sign the edit was pressed and has not answered -> the edit closes AND the edit goes on, its wait and its answer on the edited card as SigningAfterClose draws them AND NEVER the edit is cancelled
 
+WHEN the server refuses the cover the edit set at its upload -> the gate line reads One picture didn't upload. alone in the error ink AND NEVER Signing waits for it. stands beside it AND NEVER Retry stands on the gate AND Sign the edit is disabled until Remove it under the clip and its cover takes the cover out
+
 WHEN the server refuses the cover the edit set at its upload -> the line One picture didn't upload. stands under the clip and its cover with Remove it alone AND NEVER Retry stands under them, retrying being unable to change the answer
 
 WHEN the signing gets no answer GIVEN the edit stands open -> postEdit.fault reads That didn't send. Try again. in postEdit.sign's place AND postEdit.fault.retry stands under it, outlined, AND postEdit.acts stays above the line AND everything the reader chose stays as it was

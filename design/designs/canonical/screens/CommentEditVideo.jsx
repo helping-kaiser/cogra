@@ -80,7 +80,7 @@
    the first. No note stands under the clip and its cover. */
 export const NODE = "commentEdit";
 export const PROPS = {
-  clip: { editor: "enum", options: ["kept", "picked", "picked-cover", "failed", "second"], default: "kept" },
+  clip: { editor: "enum", options: ["kept", "picked", "picked-cover", "failed", "refused", "second"], default: "kept" },
   upload: { editor: "enum", options: ["none", "uploading"], default: "none" },
   signing: { editor: "enum", options: ["none", "signing"], default: "none" },
   fault: { editor: "enum", options: ["none", "unsent", "refused"], default: "none" },
@@ -93,7 +93,15 @@ export const PROPS = {
    count kept above, no `Back` (the header is the edit's way back). It
    overrides the foot's other states: a failed signing has no gate running
    and no wait. */
-export const VALS = `keptShown: this.props.clip === "kept" ? "flex" : "none", pickedShown: this.props.clip === "picked" ? "flex" : "none", bothShown: this.props.clip === "picked-cover" ? "flex" : "none", failedShown: this.props.clip === "failed" ? "flex" : "none", secondShown: this.props.clip === "second" ? "flex" : "none", signRestShown: this.props.signing === "signing" || this.props.clip === "failed" || this.props.fault !== "none" ? "none" : "block", signBusyShown: this.props.signing === "signing" && this.props.clip !== "failed" && this.props.fault === "none" ? "block" : "none", signFailedShown: this.props.clip === "failed" && this.props.fault === "none" ? "block" : "none", gateShown: this.props.clip === "kept" && this.props.upload === "uploading" ? "flex" : "none", gateLineShown: this.props.clip === "kept" && this.props.upload === "uploading" && this.props.fault === "none" ? "flex" : "none", gatePickedShown: this.props.clip === "picked" && this.props.fault === "none" ? "flex" : "none", gateBothShown: this.props.clip === "picked-cover" && this.props.fault === "none" ? "flex" : "none", gateSecondShown: this.props.clip === "second" && this.props.fault === "none" ? "flex" : "none", gateFailedShown: this.props.clip === "failed" && this.props.fault === "none" ? "flex" : "none", restShown: this.props.clip === "kept" && this.props.upload === "uploading" ? "none" : "flex", faultUnsentShown: this.props.fault === "unsent" ? "flex" : "none", faultRefusedShown: this.props.fault === "refused" ? "flex" : "none"`;
+/* THE `clip` CHIP'S `refused` (round 52, round 51 act 2's rule, jakob
+   2026-11-17, B3 — `EditCompose`'s `upload` = `refused` mirrored): the server
+   refused the clip picked in the edit at its upload — a refusal, not a
+   fault. The tile is marked; under it `That video didn't upload.` with
+   `Remove it` alone; the gate reads the fact alone, `The video didn't
+   upload.`, in the error ink (`UploadStatusLine`'s `refused`), no wait line
+   and no `Retry`; `Sign the edit` stays disabled until `Remove it` takes the
+   clip out. */
+export const VALS = `keptShown: this.props.clip === "kept" ? "flex" : "none", pickedShown: this.props.clip === "picked" ? "flex" : "none", bothShown: this.props.clip === "picked-cover" ? "flex" : "none", failedShown: this.props.clip === "failed" ? "flex" : "none", refusedShown: this.props.clip === "refused" ? "flex" : "none", secondShown: this.props.clip === "second" ? "flex" : "none", signRestShown: this.props.signing === "signing" || this.props.clip === "failed" || this.props.clip === "refused" || this.props.fault !== "none" ? "none" : "block", signBusyShown: this.props.signing === "signing" && this.props.clip !== "failed" && this.props.clip !== "refused" && this.props.fault === "none" ? "block" : "none", signFailedShown: this.props.clip === "failed" && this.props.fault === "none" ? "block" : "none", signRefusedShown: this.props.clip === "refused" && this.props.fault === "none" ? "block" : "none", gateRefusedShown: this.props.clip === "refused" && this.props.fault === "none" ? "flex" : "none", gateShown: this.props.clip === "kept" && this.props.upload === "uploading" ? "flex" : "none", gateLineShown: this.props.clip === "kept" && this.props.upload === "uploading" && this.props.fault === "none" ? "flex" : "none", gatePickedShown: this.props.clip === "picked" && this.props.fault === "none" ? "flex" : "none", gateBothShown: this.props.clip === "picked-cover" && this.props.fault === "none" ? "flex" : "none", gateSecondShown: this.props.clip === "second" && this.props.fault === "none" ? "flex" : "none", gateFailedShown: this.props.clip === "failed" && this.props.fault === "none" ? "flex" : "none", restShown: this.props.clip === "kept" && this.props.upload === "uploading" ? "none" : "flex", faultUnsentShown: this.props.fault === "unsent" ? "flex" : "none", faultRefusedShown: this.props.fault === "refused" ? "flex" : "none"`;
 
 /* The fault is round 51's `editFault` (`_shared.jsx`), the one helper every
    edit's foot draws it with. */
@@ -147,6 +155,14 @@ export function Screen() {
               <UploadErrorLine message="That video didn't upload." onRetry={() => {}} onRemove={() => {}} node="uploadError" />
               <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} node="describeRow" />
             </div>
+            <div style={{ display: "{{refusedShown}}", flexDirection: "column", gap: 6 }} {...chipCopy("clip", "refused")}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <MediaThumb src="clip-lakeside.jpg" alt="" size={56} fit="contain" video failed node="thumb" />
+                <CoverTile width={56} height={56} labelBeside node="cover" />
+              </div>
+              <UploadErrorLine message="That video didn't upload." onRemove={() => {}} node="uploadError" />
+              <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} node="describeRow" />
+            </div>
             <div style={{ display: "{{secondShown}}", flexDirection: "column", gap: 6 }} {...chipCopy("clip", "second")}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <MediaThumb src="clip-lakeside.jpg" alt="" size={56} fit="contain" video progress={0.55} onRemove={() => {}} removeLabel="Remove this video" node="thumb" />
@@ -196,6 +212,9 @@ export function Screen() {
         <div style={{ display: "{{gateFailedShown}}", flexDirection: "column" }} {...chipCopy("clip", "failed")}>
           <UploadStatusLine failed message="The video didn't upload." onRetry={() => {}} node="gate" />
         </div>
+        <div style={{ display: "{{gateRefusedShown}}", flexDirection: "column" }} {...chipCopy("clip", "refused")}>
+          <UploadStatusLine refused message="The video didn't upload." node="gate" />
+        </div>
         <div style={{ display: "{{restShown}}", flexDirection: "column" }} {...chipCopy("upload", "none")}>
           <ActsFooter count={3} node="acts" />
         </div>
@@ -209,6 +228,9 @@ export function Screen() {
           <Button style={{ width: "100%" }} busy busyLabel="Signing the edit…">Sign the edit</Button>
         </div>
         <div style={{ display: "{{signFailedShown}}" }} {...chipCopy("clip", "failed")}>
+          <Button style={{ width: "100%" }} disabled node="sign">Sign the edit</Button>
+        </div>
+        <div style={{ display: "{{signRefusedShown}}" }} {...chipCopy("clip", "refused")}>
           <Button style={{ width: "100%" }} disabled node="sign">Sign the edit</Button>
         </div>
         {editFault()}
