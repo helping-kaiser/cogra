@@ -75,7 +75,7 @@ export function Screen() {
       </div>
       <BottomNav active="search" slots={ALL_SLOTS} inline node="bottomBar" />
 
-      <BottomSheet open ariaLabel="What the search shows" node="filterSheet">
+      <BottomSheet open ariaLabel="What the search shows" foot={<FilterFoot node="foot" />} node="filterSheet">
         <div style={{ position: "absolute", top: "var(--space-1)", right: "var(--space-2)" }}>
           <HelpDot ariaLabel="How the filter works" node="help" />
         </div>
@@ -88,7 +88,6 @@ export function Screen() {
         <div style={{ display: "{{orderShown}}" }} data-node-chip="reader" data-node-key="member">
           <OrderSection order="ranked" seenToggle={false} node="order" />
         </div>
-        <FilterFoot node="foot" />
       </BottomSheet>
     </>
   );

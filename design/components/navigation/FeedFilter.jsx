@@ -536,22 +536,16 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
        filter opens taller so the whole control is present; it still scrolls
        on shorter screens. The sheet carries its own "?" (like the pads):
        the dialog explains the filter and names the settings default. */
-    <BottomSheet open={open} onClose={onClose} ariaLabel={ariaLabel} {...(foot ? { height: "88%" } : { maxHeight: "88%" })} node={node}>
+    <BottomSheet open={open} onClose={onClose} ariaLabel={ariaLabel} {...(foot ? { height: "88%" } : { maxHeight: "88%" })} foot={foot} node={node}>
       {lead ?? (
         <div style={{ position: "absolute", top: "var(--space-1)", right: "var(--space-2)" }}>
           <HelpDot ariaLabel="How the filter works" onOpen={onHelp} node={node && "help"} />
         </div>
       )}
-      {foot ? (
-        <>
-          {/* The last section keeps its own gap between itself and the
-              hairline below it. */}
-          <div style={{ flex: 1, minHeight: 0, overflowY: "auto", paddingBottom: "var(--space-4)" }}>{sections}</div>
-          {foot}
-        </>
-      ) : (
-        sections
-      )}
+      {/* The sheet's foot slot pins `foot` and scrolls the sections above it;
+          the last section's own 16px is the gap to the hairline
+          (`BottomSheet`). */}
+      {sections}
     </BottomSheet>
   );
 }

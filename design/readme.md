@@ -678,6 +678,14 @@ it (§10). Nothing beneath the scrim takes a tap — the sliver of feed
 above the filter sheet is visual only. The opinion pad is modal the same
 way. The comments sheet is modal over its scrim at a single detent.
 
+**A sheet's foot stands 16px under its content** (jakob 2026-11-17, his
+10). A sheet that ends on a commit row passes it as `BottomSheet`'s
+`foot`, pinned under everything else: the row's hairline, 10px, its
+controls, the surface's 24px. 16px stand between the last content and
+that hairline on every sheet; the content brings them, the slot adds
+none. Where the content scrolls it passes under the foot and, at the
+scroll's end, stands 16px above the hairline.
+
 **The drag is the platform's** — M3's modal bottom sheet. The sheet
 follows the finger from its handle area, and from a list at its
 scroll-top; it dismisses past about **25 %** of its height or on a

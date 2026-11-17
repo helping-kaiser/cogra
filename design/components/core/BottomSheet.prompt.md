@@ -12,6 +12,7 @@ const [open, setOpen] = React.useState(false);
 ```
 
 - **The heading's row is `SheetTitle`'s, never the board's.** When the line carries something besides the name — the screen's one "?", the switch the sheet exists for — it goes in `trailing`: `<SheetTitle trailing={<HelpDot ariaLabel="License" />}>License</SheetTitle>`. A close control is the one thing the slot never takes.
+- **A commit row is the `foot`, 16px under the content.** A sheet that ends on `Done` — a filter's `FilterFoot`, the default license's summary row — passes it as `foot={<FilterFoot />}`; the sheet pins it last and scrolls what stands above. 16px stand between the last content and the foot's hairline on every sheet: the content brings them (a `FilterSection` ends on its 16; a block that ends flush pads its last edge to 16), the slot adds none, and content that scrolls passes under the foot and ends 16px above it at the scroll's end.
 - **A sheet over a sheet is `stacked`.** The upper sheet takes the layer above, so the wash it already draws dims the sheet below instead of sliding under it, and its surface takes the next tonal rung: `<BottomSheet open stacked ariaLabel="Comment actions">`. The sheet below keeps its top edge, its handle and its title visible above the one in front — depth you can see beats depth you infer.
 - **It covers the bottom bar.** A sheet is a decision surface; a navigation bar peeking under it offers to leave mid-decision.
 - **Never open beside the opinion pad.** One parked surface at a time — the pad owns the same corner of the screen.
