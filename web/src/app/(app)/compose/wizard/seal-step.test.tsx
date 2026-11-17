@@ -633,6 +633,35 @@ describe("SealStep", () => {
       expect(screen.getByTestId("wizard-back")).toBeInTheDocument();
     });
 
+    // NetworkError.md:13: a FORBIDDEN answer is not a lost connection.
+    it("puts the not-through line, an outlined Retry and Back in the commit's place on a FORBIDDEN", () => {
+      const { onRetry } = renderStep({}, "none", true, 0.1, false, {
+        fault: { kind: "notThrough", line: "That didn't go through. Try again." },
+      });
+      const line = screen.getByTestId("wizard-transport-error");
+      expect(line).toHaveTextContent("That didn't go through. Try again.");
+      expect(line).not.toHaveTextContent(/didn't send|reach the server/);
+      expect(screen.queryByTestId("wizard-seal-bug")).toBeNull();
+      expect(screen.queryByTestId("wizard-sign")).toBeNull();
+      fireEvent.click(screen.getByTestId("wizard-retry"));
+      expect(onRetry).toHaveBeenCalledOnce();
+      expect(screen.getByTestId("wizard-back")).toBeInTheDocument();
+    });
+
+    // NetworkError.md:19 with seam 355: EMAIL_NOT_VERIFIED carries Retry like
+    // every in-place fault; Back stays.
+    it("puts Verify your email first and Back in the commit's place, with Retry", () => {
+      renderStep({}, "none", true, 0.1, false, {
+        fault: { kind: "notThrough", line: "Verify your email first — the link is in your inbox." },
+      });
+      expect(screen.getByTestId("wizard-transport-error")).toHaveTextContent(
+        "Verify your email first — the link is in your inbox.",
+      );
+      expect(screen.getByTestId("wizard-retry")).toHaveTextContent("Retry");
+      expect(screen.queryByTestId("wizard-sign")).toBeNull();
+      expect(screen.getByTestId("wizard-back")).toBeInTheDocument();
+    });
+
     it("says a never-landed citation on its own row, with Remove it, and keeps the commit", () => {
       const only = citation("p-1", "The long way home — @ada");
       const { onRemoveRefused } = renderStep({ references: [only] }, "none", true, 0.1, false, {

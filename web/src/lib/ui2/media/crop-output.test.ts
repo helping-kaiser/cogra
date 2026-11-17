@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { POST_SHAPES } from "./aspect";
-import { fittedPicture, frameOf, stageOf, zoomBounds, type CropArea, type CropKind, type Size } from "./crop";
+import { fittedPicture, frameOf, reshape, stageOf, zoomBounds, type CropArea, type CropKind, type Size } from "./crop";
 import { sourceRect } from "./encode-image";
 
 const limit = (max: number, value: number) => Math.min(max, Math.max(0, value));
@@ -112,6 +112,41 @@ describe("the crop's output at rest", () => {
           expect(Math.abs(after.y - centred.y)).toBeLessThanOrEqual(1);
         }
       });
+    }
+  }
+});
+
+// A SHAPE CHANGE MEASURES WHAT THE LIBRARY WOULD (W-CROP-OFFSTAGE-RESHAPE).
+// Only the picture on the stage has a cropper to measure it after a shape
+// change; every other picture uploads the rectangle `reshape` hands it. That
+// rectangle must be the library's own for the framing `reshape` kept — the
+// same rule the picture on the stage gets — for every picture and shape.
+describe("the crop's output after a shape change off the stage", () => {
+  const POST: readonly [string, number][] = [
+    ["Tall", POST_SHAPES.tall.ratio],
+    ["Square", POST_SHAPES.square.ratio],
+    ["Wide", POST_SHAPES.wide.ratio],
+  ];
+  for (const [what, source] of SOURCES) {
+    for (const [from, fromRatio] of POST) {
+      for (const [to, toRatio] of POST) {
+        if (from === to) continue;
+        it(`re-measures ${what} moved under ${from}, switched to ${to}, as the library would`, () => {
+          for (const width of [390, 412]) {
+            const kept = {
+              x: 15,
+              y: -25,
+              zoom: 2 * zoomBounds("post", fittedPicture(source, stageOf("post", width)), fromRatio, width).floor,
+              area: { x: 0, y: 0, ...source },
+              areaPercent: { x: 0, y: 0, width: 100, height: 100 },
+            };
+            const next = reshape(kept, toRatio, width);
+            const picture = fittedPicture(source, stageOf("post", width));
+            const frame = frameOf("post", toRatio, width);
+            expect(next.area).toEqual(cropAreaOf(next, next.zoom, picture, frame, source));
+          }
+        });
+      }
     }
   }
 });

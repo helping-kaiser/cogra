@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT c.email AS \"email!\" FROM auth_password_resets r\n         JOIN user_credentials c ON c.actor_id = r.user_id\n         WHERE r.token_hash = $1 AND r.used_at IS NULL AND r.expires_at > NOW()",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "email!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bytea"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "bd29c3bffbd51f73b657573d2ada12ad0f9e41770fdfb9212041f0ab7639aba5"
+}

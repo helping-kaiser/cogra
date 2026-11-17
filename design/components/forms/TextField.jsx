@@ -203,7 +203,7 @@ export function FieldSupport({ id, countId, hint, error, value, cap, used, node 
 
 /* THE LABEL ROW, ASSIGNED ONCE. `TextField` renders it over its own field, and
    the composer's captions over sections that are NOT fields — Pictures, Video,
-   Cover, Topics, References — render it over a tray or a list. Those captions
+   Cover, Tags, References — render it over a tray or a list. Those captions
    have always been dressed as field labels; assigning that anatomy here is what
    keeps them from drifting apart. A caption whose section IS a field belongs in
    `TextField`'s `label` and `corner` instead, and every one of them is written

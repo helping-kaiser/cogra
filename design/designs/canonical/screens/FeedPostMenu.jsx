@@ -7,7 +7,8 @@
 
    NOTHING ABOUT THE SHEET IS THIS BOARD'S OWN. The rows are
    `READER_POST_MENU`, the one atom the detail's board and the header's ⋮
-   read — Save, Cite, Hide @ada, License terms, Report at the tail (ruling
+   read — Save, Cite, Hide @ada, Cited by, Opinions on this, License terms,
+   Report at the tail (ruling
    75) — so the feed's sheet and the detail's cannot disagree. What differs
    is beneath: the feed stands under the wash exactly as `Feed` draws it,
    and the acts' aftermaths land on the feed's own boards — Hide on

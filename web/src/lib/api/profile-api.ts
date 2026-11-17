@@ -419,19 +419,39 @@ export async function prepareProfileUpdate(
     avatar?: MediaSelection;
   },
 ): Promise<Outcome<readonly StagedWriteView[]>> {
+  return prepare(client, {
+    displayName: fields.displayName,
+    bio: fields.bio,
+    websiteUrl: fields.websiteUrl,
+    avatarMediaId: mediaField(fields.avatar),
+  });
+}
+
+/**
+ * A change that stages the picture ALONE (the head's badge → `AvatarSeal`):
+ * every text field omitted, which the contract reads as untouched
+ * (`PrepareProfileUpdateInput`, api-spec.md "Content authoring") — so the
+ * payload carries the avatar and nothing else, and a bio or website the
+ * reader never saw on this screen can never be restated or cleared by it.
+ */
+export async function prepareAvatarChange(
+  client: ApolloClient,
+  avatar: Exclude<MediaSelection, "unchanged">,
+): Promise<Outcome<readonly StagedWriteView[]>> {
+  return prepare(client, { avatarMediaId: mediaField(avatar) });
+}
+
+function prepare(
+  client: ApolloClient,
+  input: {
+    displayName?: string;
+    bio?: string | null;
+    websiteUrl?: string | null;
+    avatarMediaId: string | null | undefined;
+  },
+): Promise<Outcome<readonly StagedWriteView[]>> {
   return payloadOutcome(
-    () =>
-      client.mutate({
-        mutation: PrepareProfileUpdateDocument,
-        variables: {
-          input: {
-            displayName: fields.displayName,
-            bio: fields.bio,
-            websiteUrl: fields.websiteUrl,
-            avatarMediaId: mediaField(fields.avatar),
-          },
-        },
-      }),
+    () => client.mutate({ mutation: PrepareProfileUpdateDocument, variables: { input } }),
     (data) => data.prepareProfileUpdate.userErrors,
     (data) => data.prepareProfileUpdate.writes?.map(stagedFromPrepared) ?? null,
   );

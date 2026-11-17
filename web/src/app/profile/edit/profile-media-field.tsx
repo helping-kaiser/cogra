@@ -27,7 +27,6 @@ import { PillButton } from "@/lib/ui2/pill-button";
 import { MonogramAvatar } from "@/lib/ui2/monogram-avatar";
 import { cropPreviewStyle } from "@/lib/ui2/media/crop-preview";
 import type { Crop } from "@/lib/ui2/media/crop";
-import { AVATAR_RATIO } from "@/lib/ui2/media/aspect";
 
 /** What the field is holding, before any of it has been uploaded. */
 export type ProfileMediaChoice =
@@ -36,8 +35,6 @@ export type ProfileMediaChoice =
   | { readonly kind: "picked"; readonly file: Blob; readonly crop: Crop };
 
 export const UNCHANGED: ProfileMediaChoice = { kind: "unchanged" };
-
-export const PROFILE_RATIOS = { avatar: AVATAR_RATIO } as const;
 
 /** The row's disc (ProfileEdit.jsx `MonogramAvatar size={64}`). */
 const DISC = 64;
