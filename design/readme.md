@@ -12470,6 +12470,38 @@ for a comment), built on rounds 48–52 merged (22945a993).
   1 added, none gone (`postEdit.pickedSheet.picture.crop`); 3 (board, path,
   key) strings added, none gone (its keys `1`, `2`, and `composeCrop`'s
   third `thumb`).
+- **Act 2, jakob's review (2026-11-17, PR #519: "as rec" on B1 and B2,
+  `Crop` "blessed", then "as rec (b)" on the moves)**:
+  - The dashed `Add a cover` tile stands its plus in its exact middle, the
+    words 4 under it (`CoverTile`; his "the '+' sign should be in the
+    middle of the square … and the words below it"): every host carrying
+    the words on the tile — `ReplyVideo`, `ReplyVideoFailed`,
+    `ComposeDetailsVideo`, `EditComposeVideo`; `labelBeside` hosts
+    unchanged. Measured: the glyph's centre on the tile's within 0.01 on
+    167 × 167 and 76.8 × 96 tiles.
+  - The comment edit re-crops by a text door, `Crop the pictures`,
+    directly above `Describe the pictures`, in its pattern and by its rule
+    (the same words for one picture as for four, none on a words comment);
+    it opens `ReplyCrop` with every picture of the comment, the first on
+    the stage (`commentEdit.pictures.crop`). Backlog 264 closed.
+  - A re-cropped picture whose upload fails offers `Retry · Undo`, a refused
+    one `Undo` alone; `Undo` drops the re-crop and the published picture
+    stands; a picture added in the edit keeps `Remove it`; the same on the
+    comment's edit (`UploadErrorLine`'s `onUndo`; `EditCompose` and
+    `CommentEdit` `upload` = `recrop-failed`). Backlog 262 closed.
+  - `Crop` on the picture sheet is blessed.
+  - The picture sheet draws `Make it the cover` alone as the drag's tap
+    twin; `Move up` and `Move down` are the handle's screen-reader actions
+    beside its ↑ / ↓ keys, nothing drawn (`PickedSheet`, both sheets). The
+    middle rows' actions stand on one line: `Describe · Crop · Make it the
+    cover` on `EditPicked`, `Describe · Make it the cover` on
+    `ComposePicked`.
+  - **The gate**: against act 1 (9acc9e3cc), 214 screens; 8493 → 8491
+    board paths, 2 added (`commentEdit.pictures.crop` on `CommentEdit` and
+    `CommentEditActs`), 4 gone — the ruled removal of
+    `composeDetails.pickedSheet.picture.moveUp` / `.moveDown` and
+    `postEdit.pickedSheet.picture.moveUp` / `.moveDown`; the `upload`
+    chip's `recrop-failed` copies of `postEdit.body.mediaRow` added.
 ---
 
 ## 14. The canvases
