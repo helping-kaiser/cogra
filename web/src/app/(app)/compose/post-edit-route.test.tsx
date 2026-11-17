@@ -948,8 +948,7 @@ describe("PostEditRoute — signing", () => {
     expect(await screen.findByTestId("post-edit-failed")).toHaveTextContent(line);
     expect(screen.queryByTestId("post-edit-refused")).toBeNull();
     expect(signer.signStaged).not.toHaveBeenCalled();
-    // NetworkError.md:19 draws no Retry for the unverified line (seam 350).
-    expect(screen.queryByTestId("post-edit-retry") !== null).toBe(code !== "EMAIL_NOT_VERIFIED");
+    expect(screen.getByTestId("post-edit-retry")).toHaveTextContent("Retry");
   });
 
   it("reads a BAD_INPUT naming no field as That didn't go through.", async () => {

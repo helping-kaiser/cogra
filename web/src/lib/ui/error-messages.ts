@@ -25,17 +25,6 @@ export const NO_ANSWER_LINE = "That didn't send. Try again.";
 /** EMAIL_NOT_VERIFIED, in the same place (NetworkError.md:19; copy-voice, *Faults by code*). */
 export const UNVERIFIED_LINE = "Verify your email first — the link is in your inbox.";
 
-/**
- * Whether a whole-act line stands with its own Retry. NetworkError.md:19 draws
- * EMAIL_NOT_VERIFIED's line taking the commit's place with no Retry, so a
- * surface whose Retry is a control of its own leaves it out; one whose commit
- * slot itself reads Retry keeps it (copy-voice's in-place vehicle — the two
- * files disagree, filed to design as seam 350).
- */
-export function lineOffersRetry(line: string): boolean {
-  return line !== UNVERIFIED_LINE;
-}
-
 /** The codes NetworkError.md reads as the not-through line, wherever they are anchored. */
 const NOT_THROUGH_CODES: ReadonlySet<ErrorCode> = new Set(["FORBIDDEN", "INTERNAL", "SIGNATURE_INVALID"]);
 

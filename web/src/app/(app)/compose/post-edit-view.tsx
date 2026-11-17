@@ -41,7 +41,6 @@ import { useId, useRef, type ReactNode } from "react";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
 import { TransportError } from "@/lib/ui/transport-error";
-import { lineOffersRetry } from "@/lib/ui/error-messages";
 import { HeaderBar } from "@/lib/ui2/header-bar";
 import { HelpDot } from "@/lib/ui2/help-dot";
 import { FactRow } from "@/lib/ui2/fact-row";
@@ -540,18 +539,16 @@ export function PostEditView({
         ) : fault !== null ? (
           <div className="flex flex-col gap-2">
             <TransportError testId="post-edit-failed" message={fault} />
-            {lineOffersRetry(fault) && (
-              <PillButton
-                testId="post-edit-retry"
-                variant="outlined"
-                full
-                onClick={() => {
-                  if (!signing) onSign();
-                }}
-              >
-                Retry
-              </PillButton>
-            )}
+            <PillButton
+              testId="post-edit-retry"
+              variant="outlined"
+              full
+              onClick={() => {
+                if (!signing) onSign();
+              }}
+            >
+              Retry
+            </PillButton>
           </div>
         ) : (
           <PillButton

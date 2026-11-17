@@ -224,9 +224,9 @@ describe("an answered fault on the change's seal", () => {
   });
 });
 
-// NetworkError.md:19 draws EMAIL_NOT_VERIFIED's line in the commit's place
-// with no Retry (seam 350): the line and Back, nothing re-sends.
-it("reads an EMAIL_NOT_VERIFIED signing as Verify your email first, with Back and no Retry", async () => {
+// NetworkError.md:19 with seam 355: EMAIL_NOT_VERIFIED carries Retry like every
+// in-place fault, Back under it.
+it("reads an EMAIL_NOT_VERIFIED signing as Verify your email first, with Retry and Back", async () => {
   draw({
     sign: async () =>
       outcomeOf([{ kind: "refused", id: "w0", errors: [{ code: "EMAIL_NOT_VERIFIED", message: "", field: null }] }]),
@@ -235,7 +235,7 @@ it("reads an EMAIL_NOT_VERIFIED signing as Verify your email first, with Back an
   expect(screen.getByTestId("profile-edit-seal-offline")).toHaveTextContent(
     "Verify your email first — the link is in your inbox.",
   );
-  expect(screen.queryByTestId("profile-edit-seal-retry")).not.toBeInTheDocument();
+  expect(screen.getByTestId("profile-edit-seal-retry")).toHaveTextContent("Retry");
   expect(screen.queryByTestId("profile-edit-seal-sign")).not.toBeInTheDocument();
   expect(screen.getByTestId("profile-edit-seal-back")).toHaveTextContent("Back");
 });

@@ -413,7 +413,7 @@ describe("CommentEditor — + Add pictures and the gate (CommentEdit)", () => {
     fireEvent.change(await screen.findByTestId("commentEdit.words.input"), { target: { value: "New words." } });
     fireEvent.click(save());
     expect(await screen.findByTestId("comment-edit-failed")).toHaveTextContent(line);
-    expect(screen.queryByTestId("comment-edit-retry") !== null).toBe(code !== "EMAIL_NOT_VERIFIED");
+    expect(screen.getByTestId("comment-edit-retry")).toHaveTextContent("Retry");
     expect(signer.signStaged).not.toHaveBeenCalled();
   });
 

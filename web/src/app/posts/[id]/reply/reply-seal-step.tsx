@@ -61,7 +61,6 @@ import { StancePad } from "@/lib/ui2/compose/stance-pad";
 import { UploadStatusLine } from "@/lib/ui2/compose/upload-notice";
 import { LicenseRows } from "@/lib/ui/license-rows";
 import { TransportError } from "@/lib/ui/transport-error";
-import { lineOffersRetry } from "@/lib/ui/error-messages";
 import type { SealFault } from "@/lib/compose/seal-fault";
 // The one sentence per noun a refused citation reads, shared with the post
 // seal and the comment edit rather than spelled a third time.
@@ -412,11 +411,9 @@ export function ReplySealStep({
             testId="reply-transport-error"
             message={fault.kind === "offline" ? REPLY_OFFLINE_LINE : fault.line}
           />
-          {(fault.kind === "offline" || lineOffersRetry(fault.line)) && (
-            <PillButton testId="reply-retry" variant="outlined" full onClick={onRetry}>
-              Retry
-            </PillButton>
-          )}
+          <PillButton testId="reply-retry" variant="outlined" full onClick={onRetry}>
+            Retry
+          </PillButton>
           <PillButton testId="reply-back" variant="text" full onClick={onBack}>
             Back
           </PillButton>

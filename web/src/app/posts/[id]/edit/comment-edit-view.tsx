@@ -67,7 +67,6 @@ import type { Crop } from "@/lib/ui2/media/crop";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
 import { TransportError } from "@/lib/ui/transport-error";
-import { lineOffersRetry } from "@/lib/ui/error-messages";
 import { licenseName, type License } from "@/lib/license";
 import {
   editActCount,
@@ -330,18 +329,16 @@ export function CommentEditView({
     commit = (
       <div className="flex flex-col gap-2">
         <TransportError testId="comment-edit-failed" message={failedLine} />
-        {lineOffersRetry(failedLine) && (
-          <PillButton
-            testId="comment-edit-retry"
-            variant="outlined"
-            full
-            onClick={() => {
-              if (!signing) onSign();
-            }}
-          >
-            Retry
-          </PillButton>
-        )}
+        <PillButton
+          testId="comment-edit-retry"
+          variant="outlined"
+          full
+          onClick={() => {
+            if (!signing) onSign();
+          }}
+        >
+          Retry
+        </PillButton>
       </div>
     );
   } else {

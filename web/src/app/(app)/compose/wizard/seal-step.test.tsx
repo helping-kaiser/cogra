@@ -648,16 +648,16 @@ describe("SealStep", () => {
       expect(screen.getByTestId("wizard-back")).toBeInTheDocument();
     });
 
-    // NetworkError.md:19 (seam 350): EMAIL_NOT_VERIFIED's line takes the
-    // commit's place with no Retry; Back stays.
-    it("puts Verify your email first and Back in the commit's place, with no Retry", () => {
+    // NetworkError.md:19 with seam 355: EMAIL_NOT_VERIFIED carries Retry like
+    // every in-place fault; Back stays.
+    it("puts Verify your email first and Back in the commit's place, with Retry", () => {
       renderStep({}, "none", true, 0.1, false, {
         fault: { kind: "notThrough", line: "Verify your email first — the link is in your inbox." },
       });
       expect(screen.getByTestId("wizard-transport-error")).toHaveTextContent(
         "Verify your email first — the link is in your inbox.",
       );
-      expect(screen.queryByTestId("wizard-retry")).toBeNull();
+      expect(screen.getByTestId("wizard-retry")).toHaveTextContent("Retry");
       expect(screen.queryByTestId("wizard-sign")).toBeNull();
       expect(screen.getByTestId("wizard-back")).toBeInTheDocument();
     });
