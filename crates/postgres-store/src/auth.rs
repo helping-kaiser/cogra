@@ -8,6 +8,8 @@
 //! about any record.
 
 use chrono::{DateTime, Utc};
+use common::l1::handshake::canonical_dep_list;
+use common::l1::identifier::ActId;
 use sqlx::{PgConnection, PgExecutor, PgPool};
 use uuid::Uuid;
 
@@ -1390,8 +1392,8 @@ pub enum Landing {
 /// releases the acts carried with the application as one batch (seam 099
 /// ruling 73): each gains the dependencies `[admission Registration,
 /// winning vouch]`, its list kept in the canonical order the host accepts
-/// (bytewise over the identifiers' text, duplicates collapsed —
-/// `common::l1::handshake::dependency_order`, which `COLLATE "C"` is), and
+/// (formed by `common::l1::handshake::canonical_dep_list`, the one
+/// definition of that order, which the database cannot sort by text), and
 /// moves to `awaiting_pre_sign` for the device to sign
 /// without a prompt, its GC window starting now. Nothing outside this
 /// transaction can ever release them, so the batch is released exactly
@@ -1464,28 +1466,33 @@ pub async fn evaluate_landing(
                 &registration,
             )
             .await?;
-            let released = sqlx::query!(
-                "UPDATE staged_writes
-                 SET state = 'awaiting_pre_sign',
-                     deps = ARRAY(
-                         SELECT DISTINCT d COLLATE \"C\" AS d
-                         FROM unnest(deps || ARRAY[$2, $3]::TEXT[]) AS u(d)
-                         ORDER BY d
-                     ),
-                     prepared_epoch = (SELECT last_epoch FROM mirror_epoch_cursor),
-                     updated_at = NOW()
-                 WHERE actor_id = $1 AND state = 'carried'",
+            let carried = sqlx::query!(
+                "SELECT id, deps FROM staged_writes
+                 WHERE actor_id = $1 AND state = 'carried'
+                 FOR UPDATE",
                 account_id,
-                registration,
-                edge.act_id,
             )
-            .execute(&mut *tx)
-            .await?
-            .rows_affected();
+            .fetch_all(&mut *tx)
+            .await?;
+            for write in &carried {
+                let deps = released_deps(&write.deps, &registration, &edge.act_id)?;
+                sqlx::query!(
+                    "UPDATE staged_writes
+                     SET state = 'awaiting_pre_sign',
+                         deps = $2,
+                         prepared_epoch = (SELECT last_epoch FROM mirror_epoch_cursor),
+                         updated_at = NOW()
+                     WHERE id = $1",
+                    write.id,
+                    &deps,
+                )
+                .execute(&mut *tx)
+                .await?;
+            }
             outcome = Landing::Landed {
                 application_id: edge.application_id,
                 voucher_id: edge.voucher_id,
-                released,
+                released: carried.len() as u64,
             };
         }
     }
@@ -1506,6 +1513,25 @@ pub async fn evaluate_landing(
         outcome = Landing::Recorded(recorded);
     }
     Ok(outcome)
+}
+
+/// A carried write's dependency list with the landing's two dependencies
+/// added, as the canonical list the host accepts.
+fn released_deps(
+    carried: &[String],
+    registration: &str,
+    vouch: &str,
+) -> Result<Vec<String>, sqlx::Error> {
+    let deps = carried
+        .iter()
+        .map(String::as_str)
+        .chain([registration, vouch])
+        .map(|d| ActId::parse(d).map_err(|e| sqlx::Error::Decode(Box::new(e))))
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(canonical_dep_list(deps)
+        .iter()
+        .map(ActId::to_string)
+        .collect())
 }
 
 /// The landing write: books `vouch` and its path landed — the path keeps

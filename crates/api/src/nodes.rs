@@ -296,7 +296,7 @@ mod tests {
                 &Some(nine.clone()),
             ],
         );
-        assert_eq!(deps, vec![ten, nine, carol]);
+        assert_eq!(deps, vec![nine, ten, carol]);
         assert!(common::l1::handshake::is_canonical_dep_list(&deps));
     }
 }

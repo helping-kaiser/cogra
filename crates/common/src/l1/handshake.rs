@@ -97,14 +97,18 @@ pub fn canonical_deps(deps: &[ActId]) -> Vec<u8> {
 }
 
 /// The order of a canonical dependency list. The Layer 1 specification
-/// (its definition "Act Dependency Projection") has the list sorted by act
-/// identifier with no duplicates and fixes no order on identifiers, so
-/// the order is the deployment's: this one orders bytewise over each
-/// identifier's canonical text form — the form
-/// [`canonical_deps`] encodes — so anyone holding the encoded list checks
-/// it without parsing an identifier.
+/// (its definition "Act Dependency Projection") has the list strictly
+/// increasing by act identifier, duplicate-free and self-free, and Layer 1
+/// orders identifiers componentwise: the author's address atom by bytes,
+/// then the author-local sequence as a number, then the family name by
+/// bytes. Sequence 9 therefore precedes sequence 10, which the
+/// identifiers' text forms would not.
 pub fn dependency_order(a: &ActId, b: &ActId) -> std::cmp::Ordering {
-    a.to_string().cmp(&b.to_string())
+    a.author
+        .as_bytes()
+        .cmp(b.author.as_bytes())
+        .then(a.seq.cmp(&b.seq))
+        .then_with(|| a.family.as_str().cmp(b.family.as_str()))
 }
 
 /// A dependency list in canonical order with every duplicate collapsed —
@@ -788,10 +792,10 @@ mod tests {
         assert_eq!(canonical_deps(&[]), vec![0x80]);
     }
 
-    /// A dependency list is canonical when it ascends strictly by the identifiers' text bytes, and forming one sorts and collapses duplicates.
-    /// ´claim:handshake:a-canonical-dependency-list-ascends-bytewise´
+    /// A dependency list is canonical when it ascends strictly componentwise, the sequence compared as a number, and forming one sorts and collapses duplicates.
+    /// ´claim:handshake:a-canonical-dependency-list-ascends-componentwise´
     #[test]
-    fn a_canonical_dependency_list_ascends_bytewise() {
+    fn a_canonical_dependency_list_ascends_componentwise() {
         let id = |s: &str| ActId::parse(s).expect("ok");
         let (nine, ten, bob) = (
             id("act:a:9:opinion"),
@@ -801,16 +805,43 @@ mod tests {
         assert!(is_canonical_dep_list(&[]));
         assert!(is_canonical_dep_list(std::slice::from_ref(&nine)));
         assert!(
-            is_canonical_dep_list(&[ten.clone(), nine.clone(), bob.clone()]),
-            "the text bytes order the list, not the sequence value"
+            is_canonical_dep_list(&[nine.clone(), ten.clone(), bob.clone()]),
+            "the sequence value orders the list, not its text"
         );
-        assert!(!is_canonical_dep_list(&[nine.clone(), ten.clone()]));
+        assert!(!is_canonical_dep_list(&[ten.clone(), nine.clone()]));
         assert!(!is_canonical_dep_list(&[ten.clone(), ten.clone()]));
         assert_eq!(
-            canonical_dep_list([bob.clone(), nine.clone(), ten.clone(), nine.clone()]),
-            vec![ten, nine, bob]
+            canonical_dep_list([bob.clone(), ten.clone(), nine.clone(), ten.clone()]),
+            vec![nine, ten, bob]
         );
         assert!(canonical_dep_list([]).is_empty());
+    }
+
+    /// Three identifiers on which the text bytes, the encoded bytes and the componentwise order all disagree: the canonical list takes the componentwise one.
+    /// ´claim:handshake:the-dependency-order-is-neither-text-nor-encoding-order´
+    #[test]
+    fn the_dependency_order_is_neither_text_nor_encoding_order() {
+        let id = |s: &str| ActId::parse(s).expect("ok");
+        let (nine, ten, other) = (
+            id("act:a:9:opinion"),
+            id("act:a:10:accept"),
+            id("act:b:0:ratify"),
+        );
+        let all = [other.clone(), ten.clone(), nine.clone()];
+        let componentwise = vec![nine, ten, other];
+
+        let mut by_text = all.to_vec();
+        by_text.sort_by_key(ActId::to_string);
+        let mut by_encoding = all.to_vec();
+        by_encoding.sort_by_key(|d| canonical_deps(std::slice::from_ref(d)));
+        assert_ne!(by_text, componentwise);
+        assert_ne!(by_encoding, componentwise);
+        assert_ne!(by_text, by_encoding);
+
+        assert_eq!(canonical_dep_list(all), componentwise);
+        assert!(is_canonical_dep_list(&componentwise));
+        assert!(!is_canonical_dep_list(&by_text));
+        assert!(!is_canonical_dep_list(&by_encoding));
     }
 
     fn package(epoch: i64, positions: &[i64]) -> EpochPackage {

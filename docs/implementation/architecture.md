@@ -284,8 +284,10 @@ steps:
 1. **Prepare** (backend). Validate the gesture against L2 policy
    and envelope conformance, pre-check the write rule (below),
    assemble the canonical proposal — act body, payload envelope,
-   dependency list in canonical order (sorted bytewise by act
-   identifier, duplicate-free) — and store it as a **staged write** (Postgres
+   dependency list in canonical order (strictly ascending by act
+   identifier in Layer 1's componentwise order — author by bytes,
+   then sequence as a number, then family by bytes — so
+   duplicate-free) — and store it as a **staged write** (Postgres
    row; payload bytes ride the row until confirm promotes them
    into carriage). Return the
    proposal to the client.
