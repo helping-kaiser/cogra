@@ -112,9 +112,10 @@ internal fun OpinionsSheetContent(
                         OpinionsOn.Comment -> R.string.content_opinions_title_comment
                     },
                 ),
+                // The node is the heading box, its `0 24 8` inside it (`SheetTitle.jsx`).
                 modifier = Modifier
-                    .padding(start = Space.x6, end = Space.x6, bottom = Space.x2)
-                    .dataNode(node?.div("title")),
+                    .dataNode(node?.div("title"))
+                    .padding(start = Space.x6, end = Space.x6, bottom = Space.x2),
             )
             when {
                 rows == null -> Unit
@@ -124,6 +125,7 @@ internal fun OpinionsSheetContent(
                     // PostOpinions.md:25, CommentOpinionsEmpty.md:7-9: the line alone, calm, never the error colour.
                     EmptyState(
                         testTag = "${testTag}_empty",
+                        modifier = Modifier.fillMaxWidth(),
                         title = stringResource(R.string.content_opinions_empty),
                         node = node?.div("empty")?.keyed("empty"),
                     )
