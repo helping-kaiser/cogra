@@ -309,7 +309,7 @@ describe("runUpload", () => {
     });
   });
 
-  it("marks an unreachable server retryable and an unreadable picture not", async () => {
+  it("marks an unreachable server retryable, and a picture whose read failed too", async () => {
     encodable();
     const unreachable = {
       mutate: vi.fn(async () => {
