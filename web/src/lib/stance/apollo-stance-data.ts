@@ -43,6 +43,7 @@ import {
   ProfileStanceDocument,
 } from "@/__generated__/graphql";
 import { failed, fetchOutcome, refused, success, viewerField, type Outcome } from "@/lib/api/outcome";
+import { DeviceRefusalError } from "@/lib/signing/device-refusal";
 import {
   prepareSeverance,
   prepareStance,
@@ -217,6 +218,12 @@ export function createApolloStanceData(deps: {
     // reaches it as one rather than as a generic failure.
     if (incomplete !== undefined && incomplete.kind === "refused") {
       return refused(incomplete.errors);
+    }
+    // A FAILED LEG KEEPS ITS CAUSE: an INTERNAL the server answered is read as
+    // an answer, never as no answer (NetworkError.md:13).
+    if (incomplete !== undefined && incomplete.kind === "failed") return failed(incomplete.cause);
+    if (incomplete !== undefined && incomplete.kind === "rejectedByDevice") {
+      return failed(new DeviceRefusalError(incomplete.reason));
     }
     if (incomplete !== undefined) {
       return failed(

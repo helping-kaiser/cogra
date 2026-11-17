@@ -442,7 +442,6 @@ private fun CoverCropBody(crop: EditCrop.Cover, onChanged: (CropSpec) -> Unit, t
         item = MediaItem(crop.asset.uri, crop.asset.sourceRatio ?: 0f, null),
         ratio = crop.ratio,
         state = state,
-        notes = listOf(CROP_HOW_TO_LINE, COVER_CROP_LINE),
         testTag = "${testTagPrefix}_cover_crop_view",
         node = COVER_CROP,
     )

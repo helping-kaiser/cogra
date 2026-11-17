@@ -40,7 +40,7 @@ import {
   prepareProfileUpdate,
   type MediaSelection,
 } from "@/lib/api/profile-api";
-import { firstRefusalMessage } from "@/lib/ui/error-messages";
+import { answeredFaultLine, firstRefusalMessage } from "@/lib/ui/error-messages";
 import { profileExpectation, type MediaLedger } from "@/lib/compose/payload-expectation";
 import { uploadProfilePicture } from "@/lib/profile/avatar-upload";
 import {
@@ -202,7 +202,11 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
     }
     if (prepared.kind === "failed") {
       setSubmitting(false);
-      setTransportFailed(true);
+      // An INTERNAL is an answer: the not-through line in the refusal's slot,
+      // never "can't reach the server" (NetworkError.md:13).
+      const answered = answeredFaultLine(prepared.cause);
+      if (answered !== null) setRefusedMessage(answered);
+      else setTransportFailed(true);
       return;
     }
     // One profile update on this device's own profile, its payload held to

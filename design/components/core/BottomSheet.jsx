@@ -118,7 +118,18 @@ export function useModalFocus(surfaceRef, active, onEscape) {
    title visible above this one. Its surface takes the next tonal rung,
    `surfaceContainerHighest`: elevation is tonal (`tokens/semantic.css`), and two
    surfaces at one rung claim one elevation. */
-export function BottomSheet({ open = false, onClose, ariaLabel, children, inline = false, maxHeight = "62%", height, tallest = false, stacked = false, node }) {
+/* THE FOOT IS A SLOT, AND ITS GAP IS STATED HERE (round 50, jakob 2026-11-17,
+   his 10 as recommended). A sheet that ends on a commit row — a filter's
+   `Reset` · `Done`, the default license's summary and `Done` — passes it as
+   `foot`, and the sheet pins it under everything else: the row draws its own
+   hairline and its 10px above its controls, and the surface's 24px stays
+   under it. **16px stand between the last content and the foot's hairline,
+   on every sheet.** The slot adds no space of its own: the content ends on
+   its 16 — a `FilterSection` closes on exactly that, and a block that ends
+   flush pads its last edge to it. Where the content is taller than the sheet
+   it scrolls and passes under the foot, and at the scroll's end it stands
+   16px above the hairline. */
+export function BottomSheet({ open = false, onClose, ariaLabel, children, foot, inline = false, maxHeight = "62%", height, tallest = false, stacked = false, node }) {
   const [shown, setShown] = React.useState(open);
   const [closing, setClosing] = React.useState(false);
 
@@ -180,7 +191,7 @@ export function BottomSheet({ open = false, onClose, ariaLabel, children, inline
                 ? { height: SHEET_CEILING, overflow: "hidden" }
                 : height
                   ? { height: `min(${height}, ${SHEET_CEILING})`, overflow: "hidden" }
-                  : { maxHeight: `min(${maxHeight}, ${SHEET_CEILING})`, overflowY: "auto" }),
+                  : { maxHeight: `min(${maxHeight}, ${SHEET_CEILING})`, overflowY: foot ? "hidden" : "auto" }),
             }),
       }}
       data-node={node}
@@ -190,7 +201,14 @@ export function BottomSheet({ open = false, onClose, ariaLabel, children, inline
         style={{ alignSelf: "center", height: "4px", width: "32px", flex: "none", borderRadius: "var(--radius-full)", background: "var(--border-hairline)", marginBottom: "var(--space-3)" }}
         data-node={node && "dragHandle"}
       />
-      {children}
+      {foot ? (
+        <>
+          <div style={{ flex: height || tallest ? "1 1 auto" : "0 1 auto", minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column" }}>{children}</div>
+          <div style={{ flex: "none" }}>{foot}</div>
+        </>
+      ) : (
+        children
+      )}
     </div>
   );
 
