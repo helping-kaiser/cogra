@@ -29,6 +29,9 @@ import com.cogra.domain.ProfileComment
 import com.cogra.domain.Removal
 import com.cogra.domain.RemovalAgent
 import com.cogra.domain.saved.CommentTarget
+import com.cogra.domain.testing.testMentionTarget
+import com.cogra.domain.testing.testReferenceClaim
+import com.cogra.domain.testing.testTopicClaim
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -228,6 +231,28 @@ class HostedCardsTest {
     fun aGuestsCardDrawsNoReply() {
         host(signedIn = false) { it.comment(comment(), cards, replies, null) }
         assertThat(shown("profile.comments.commentCard.actionRow.reply")).isFalse()
+    }
+
+    // TopicsLine.jsx:202-212, graph.json FeedKinds 27 — a comment's count is
+    // a door: the tags-and-references sheet over the host, its rows leaving
+    // through the host's doors (RefsSheet.md:9-15).
+    @Test
+    fun aCommentsCountOpensItsTagsAndReferences() {
+        val listed = comment().let {
+            it.copy(
+                comment = it.comment.copy(
+                    topics = listOf(testTopicClaim("saltmaps")),
+                    references = listOf(testReferenceClaim(testMentionTarget("mira"))),
+                ),
+            )
+        }
+        host { it.comment(listed, cards, replies, null) }
+        compose.onNodeWithTag("profile_comment_c1_refs_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("profile_comment_c1_topics_counts", useUnmergedTree = true).performClick()
+        compose.onNodeWithTag("profile_comment_c1_refs_sheet").assertExists()
+        compose.onNodeWithTag("profile_comment_c1_refs_reference_l1-user-mira").performClick()
+        compose.onNodeWithTag("profile_comment_c1_refs_sheet").assertDoesNotExist()
+        assertThat(opened).containsExactly("actor:mira")
     }
 
     // `CommentCard`'s line shape carries no score and no share.

@@ -111,6 +111,7 @@ class ThreadSheetLayersTest {
             onReveal = { _, _ -> },
             onOpenActor = {},
             onOpenTopic = {},
+            onOpenPost = {},
             onReference = {},
             onLicense = {},
             onSignInOrJoin = {},
