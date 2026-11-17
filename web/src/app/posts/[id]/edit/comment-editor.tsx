@@ -25,7 +25,7 @@ import { useApolloClient } from "@apollo/client/react";
 
 import type { CommentFieldsFragment } from "@/__generated__/graphql";
 import { fetchCommentSelfMark, prepareCommentEdit } from "@/lib/api/content-api";
-import { firstRefusalMessage } from "@/lib/ui/error-messages";
+import { firstRefusalMessage, NOT_THROUGH_LINE } from "@/lib/ui/error-messages";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import type { UserError } from "@/lib/api/outcome";
 import { fetchGraphIds, graphIdOf } from "@/lib/api/graph-ids-api";
@@ -152,6 +152,11 @@ function editingOf(comment: CommentFieldsFragment): Editing {
     license: comment.license ?? PUBLIC_DOMAIN,
     recordStaged: false,
   };
+}
+
+/** The server's FORBIDDEN refuses the whole edit, never one chip (NetworkError.md:13). */
+function forbiddenIn(errors: readonly UserError[]): boolean {
+  return errors.some((error) => error.code === "FORBIDDEN");
 }
 
 function writeRuleIn(errors: readonly UserError[]): boolean {
@@ -370,6 +375,7 @@ export function CommentEditor({
     const perReference: Record<number, string> = {};
     let general: string | null = null;
     let nextFault: SealFault | null = null;
+    let notThrough = false;
 
     // The L1 ids of the comment, the node it answers, and every cited node
     // the edit touches — read before anything is staged, so the batch is
@@ -431,6 +437,7 @@ export function CommentEditor({
       }
       if (prepared.kind === "refused") {
         if (writeRuleIn(prepared.errors)) nextFault = { kind: "writeRule" };
+        else if (forbiddenIn(prepared.errors)) notThrough = true;
         else general = firstRefusalMessage(prepared.errors, "The server refused this write.");
       } else {
         writes.push(...prepared.value.writes);
@@ -454,6 +461,10 @@ export function CommentEditor({
       if (prepared.kind === "refused") {
         if (writeRuleIn(prepared.errors)) {
           nextFault = { kind: "writeRule" };
+          continue;
+        }
+        if (forbiddenIn(prepared.errors)) {
+          notThrough = true;
           continue;
         }
         // A PRE-STAGING refusal is a field error, never the signing line
@@ -498,6 +509,10 @@ export function CommentEditor({
           nextFault = { kind: "writeRule" };
           continue;
         }
+        if (forbiddenIn(prepared.errors)) {
+          notThrough = true;
+          continue;
+        }
         // A cited post that never landed: its row says so, with Remove it
         // (CommentEdit.md; copy-voice, *One staged act refused*).
         const unlanded =
@@ -521,6 +536,11 @@ export function CommentEditor({
       }
     }
 
+    if (notThrough && nextFault?.kind !== "writeRule") {
+      end();
+      setRefusal(NOT_THROUGH_LINE);
+      return;
+    }
     if (nextFault !== null) {
       end();
       setFault(nextFault);
@@ -549,6 +569,12 @@ export function CommentEditor({
       return;
     }
     const refused = results.find((result) => result.kind === "refused");
+    if (refused !== undefined && refused.kind === "refused" && forbiddenIn(refused.errors)) {
+      // The server answered FORBIDDEN: the not-through line, never the bug
+      // notice and never the "can't reach the server" line (NetworkError.md:13).
+      setRefusal(NOT_THROUGH_LINE);
+      return;
+    }
     if (refused !== undefined && refused.kind === "refused") {
       // A refused act whose target landed is a bug the picking stage should
       // have blocked: the notice in the bug's own words (CommentEdit.md).

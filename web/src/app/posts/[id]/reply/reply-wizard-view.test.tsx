@@ -729,6 +729,30 @@ describe("the reply wizard", () => {
       await waitFor(() => expect(onSigned).toHaveBeenCalledWith("comment-9"));
     });
 
+    // NetworkError.md:13 — the server's FORBIDDEN at the prepare is an answer,
+    // never the no-answer line and never the bug notice.
+    it("NetworkError.md:13 a FORBIDDEN prepare reads That didn't go through. with Retry in Sign comment's place", async () => {
+      server.use(
+        gqlLink.mutation("PrepareComment", () =>
+          HttpResponse.json({
+            data: null,
+            errors: [{ message: "member account required", extensions: { code: "FORBIDDEN" } }],
+          }),
+        ),
+      );
+      const { onSigned } = draw();
+      await toSeal();
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      const line = await screen.findByTestId("reply-transport-error");
+      expect(line).toHaveTextContent("That didn't go through. Try again.");
+      expect(line).not.toHaveTextContent(/didn't send|reach the server/);
+      expect(screen.queryByTestId("reply-seal-bug")).toBeNull();
+      expect(screen.queryByTestId("reply-sign")).toBeNull();
+      server.use(prepareOk("comment-9"));
+      fireEvent.click(screen.getByTestId("reply-retry"));
+      await waitFor(() => expect(onSigned).toHaveBeenCalledWith("comment-9"));
+    });
+
     it("SealSigning.md: going a stage back and returning shows the plain commit again", async () => {
       server.use(gqlLink.mutation("PrepareComment", () => HttpResponse.error()));
       draw();

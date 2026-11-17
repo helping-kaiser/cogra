@@ -39,7 +39,7 @@ import { fetchKnownMedia } from "@/lib/api/media-api";
 import { editExpectation } from "@/lib/compose/intent";
 import { contentExpectation } from "@/lib/compose/payload-expectation";
 import { postEdit, type ExpectedWrite } from "@/lib/signing/intent";
-import { firstRefusalMessage } from "@/lib/ui/error-messages";
+import { firstRefusalMessage, NOT_THROUGH_LINE } from "@/lib/ui/error-messages";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthGuard } from "@/lib/session/runtime";
@@ -332,8 +332,12 @@ export function PostEditRoute({
     const perReference: Record<number, string> = {};
     let general: string | null = null;
     let writeRule = false;
+    // A FORBIDDEN answer refuses the whole edit, never one chip: the not-through
+    // line in the fault's slot (NetworkError.md:13).
+    let notThrough = false;
     const refused = (errors: Parameters<typeof firstRefusalMessage>[0]) => {
       if (errors.some((error) => error.code === "WRITE_RULE_FAILED")) writeRule = true;
+      if (errors.some((error) => error.code === "FORBIDDEN")) notThrough = true;
       return firstRefusalMessage(errors, "The server refused this write.");
     };
 
@@ -413,6 +417,11 @@ export function PostEditRoute({
       setWriteRuleRefused(true);
       return;
     }
+    if (notThrough) {
+      end();
+      setRefusal(NOT_THROUGH_LINE);
+      return;
+    }
     if (general !== null || Object.keys(perTag).length > 0 || Object.keys(perReference).length > 0) {
       end();
       setTagErrors(perTag);
@@ -433,6 +442,9 @@ export function PostEditRoute({
     if (results.every((result) => result.kind === "done")) {
       // The post opens with the edit settling.
       router.push(`/posts/${postId}`);
+    } else if (results.some((result) => result.kind === "refused" && result.errors.some((e) => e.code === "FORBIDDEN"))) {
+      // The server answered: never the "can't reach the server" line.
+      setRefusal(NOT_THROUGH_LINE);
     } else {
       setFailed(true);
     }

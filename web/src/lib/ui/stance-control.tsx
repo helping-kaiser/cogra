@@ -130,6 +130,7 @@ import {
   type BundleState,
 } from "@/lib/ui/stance-readout";
 import { TransportError } from "@/lib/ui/transport-error";
+import { NOT_THROUGH_LINE } from "@/lib/ui/error-messages";
 import { WriteRuleNotice } from "@/lib/ui/write-rule-notice";
 import { PairField } from "@/lib/ui2/compose/pair-field";
 import { useCoversSurface } from "@/lib/ui2/covering-layer";
@@ -185,8 +186,26 @@ type Pending = {
   severed: boolean;
 };
 
-/** What did not go through on a surface: a fault, or the write rule's notice. */
-type Fault = "failed" | "writeRule";
+/**
+ * What did not go through on a surface: no answer (`failed`), the server's
+ * FORBIDDEN (`notThrough`, NetworkError.md:13 — an answer, so never the
+ * no-answer line), or the write rule's notice.
+ */
+type Fault = "failed" | "notThrough" | "writeRule";
+
+/** The two faults that re-raise their surface with Retry. */
+const retries = (fault: Fault | null): boolean => fault === "failed" || fault === "notThrough";
+
+/** The line a retrying fault says above its commit (copy-voice, *Faults by code*). */
+const retryLine = (fault: Fault | null): string => (fault === "notThrough" ? NOT_THROUGH_LINE : NO_ANSWER_LINE);
+
+const NO_ANSWER_LINE = "That didn't send. Try again.";
+
+/** A refused commit's fault: the write rule's notice, FORBIDDEN's not-through, else the fault. */
+function refusalFault(outcome: Outcome<unknown>): Fault {
+  if (hasCode(outcome, "WRITE_RULE_FAILED")) return "writeRule";
+  return hasCode(outcome, "FORBIDDEN") ? "notThrough" : "failed";
+}
 
 /**
  * A PAD OPENED AS SOMETHING IN PARTICULAR — the vouch-back (VouchBackPad.md,
@@ -811,10 +830,12 @@ export function StanceControl({
     // re-raise: the target's row carries it, as a hold's would.
     if (origin === "pad" && openRef.current) setPadFault(fault);
     else
+      // The row draws no not-through form of its own (RowSigning.md), so a
+      // FORBIDDEN on a row reads as a hold's fault does.
       setRowLine(
-        fault === "failed"
-          ? { kind: "didntSign", onRetry: () => void signPick(sent, "row") }
-          : { kind: "writeRule" },
+        fault === "writeRule"
+          ? { kind: "writeRule" }
+          : { kind: "didntSign", onRetry: () => void signPick(sent, "row") },
       );
   };
 
@@ -824,7 +845,7 @@ export function StanceControl({
   ): { kind: "taken"; records: number } | { kind: Fault } =>
     outcome.kind === "success"
       ? { kind: "taken", records: outcome.value.records }
-      : { kind: hasCode(outcome, "WRITE_RULE_FAILED") ? "writeRule" : "failed" };
+      : { kind: refusalFault(outcome) };
 
   /**
    * Every commit route lands here: read where the pick puts the bundle,
@@ -859,7 +880,7 @@ export function StanceControl({
       if (committed.kind === "success") {
         return { kind: "taken" as const, landing, records: committed.value.records };
       }
-      return { kind: hasCode(committed, "WRITE_RULE_FAILED") ? ("writeRule" as const) : ("failed" as const) };
+      return { kind: refusalFault(committed) };
     });
     switch (answer.kind) {
       case "dropped":
@@ -1311,9 +1332,7 @@ export function StanceControl({
         {/* A SIGNING THAT DID NOT GO THROUGH says so above the commit row, in
             the failure voice, and Set's slot becomes the outlined Retry — the
             same commitment asked again. */}
-        {padFault === "failed" && (
-          <TransportError testId={`${testIdPrefix}-pad-failed`} message="That didn't send. Try again." />
-        )}
+        {retries(padFault) && <TransportError testId={`${testIdPrefix}-pad-failed`} message={retryLine(padFault)} />}
         {padFault !== "writeRule" && keyAbsent !== true && (
           // ONE ROW: the walk-away on the left, pushed away from the two
           // decisions on the right — a walk-away beside a commit is a misfire
@@ -1351,11 +1370,11 @@ export function StanceControl({
                 void signPick(pick, "pad");
               }}
               className={buttonClassName({
-                variant: padFault === "failed" ? "outline" : "primary",
+                variant: retries(padFault) ? "outline" : "primary",
                 size: "sm",
               })}
             >
-              {padSetting ? "Setting…" : padFault === "failed" ? "Retry" : "Set"}
+              {padSetting ? "Setting…" : retries(padFault) ? "Retry" : "Set"}
             </button>
           </div>
         )}
@@ -1543,7 +1562,8 @@ export function StanceControl({
           onPick={setPick}
           busy={busy}
           slow={padSetting}
-          fault={padFault}
+          fault={padFault === "writeRule" ? "writeRule" : retries(padFault) ? "failed" : null}
+          failedLine={retryLine(padFault)}
           onWriteRuleHelp={() => setNoticeHelp(HELP_TOPICS.whySigningWaitsOnPad)}
           onCommit={() => void signPick(pick, "pad")}
           onCancel={closeAll}
@@ -1592,7 +1612,8 @@ export function StanceControl({
           alreadySevered={confirming.alreadySevered}
           busy={inFlight === "confirm"}
           slow={inFlight === "confirm" && slow}
-          failed={confirmFault === "failed"}
+          failed={retries(confirmFault)}
+          failedLine={retryLine(confirmFault)}
           writeRule={confirmFault === "writeRule"}
           axes={axes}
           onCancel={() => {
@@ -1611,7 +1632,8 @@ export function StanceControl({
           vouchIn={vouchesIn}
           busy={inFlight === "empty"}
           slow={inFlight === "empty" && slow}
-          failed={emptyFault === "failed"}
+          failed={retries(emptyFault)}
+          failedLine={retryLine(emptyFault)}
           writeRule={emptyFault === "writeRule"}
           onCancel={() => {
             setEmptyAsk(null);

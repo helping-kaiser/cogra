@@ -19,6 +19,8 @@
 
 import { useSyncExternalStore } from "react";
 
+import { sealFaultOf } from "@/lib/compose/seal-fault";
+import type { WriteResult } from "@/lib/signing/write-signer";
 import { carrySnackbar } from "@/lib/ui/carried-snackbar";
 
 /** What one signing of a profile change came to. */
@@ -27,6 +29,22 @@ export type ProfileChangeOutcome =
   | { readonly kind: "offline" }
   | { readonly kind: "writeRule" }
   | { readonly kind: "bug" };
+
+/**
+ * What one signing came to, for the seals' states: every write taken is the
+ * change taken; a refusal reads by the failure pack (`sealFaultOf`: the write
+ * rule, else a bug); a device's own refusal of the bytes is a bug; no answer
+ * — a transport failure, a seal still out — is the fault line.
+ */
+export function outcomeOf(results: readonly WriteResult[]): ProfileChangeOutcome {
+  if (results.every((result) => result.kind === "done" || result.kind === "carried")) return { kind: "taken" };
+  const refused = results.flatMap((result) => (result.kind === "refused" ? result.errors : []));
+  if (refused.length > 0) {
+    return { kind: sealFaultOf(refused, []).kind === "writeRule" ? "writeRule" : "bug" };
+  }
+  if (results.some((result) => result.kind === "rejectedByDevice")) return { kind: "bug" };
+  return { kind: "offline" };
+}
 
 /** What the profile's head reads. */
 export type ProfileChangeState =

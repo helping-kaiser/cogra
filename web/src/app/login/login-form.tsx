@@ -1,7 +1,7 @@
 "use client";
 
 // SIGN IN (design/designs/canonical/screens/SignIn.jsx; behavior/SignIn.md,
-// SignInError.md, SignInLimited.md) on the task page's anatomy — Back to the
+// SignInError.md, SignInExpired.md, SignInLimited.md) on the task page's anatomy — Back to the
 // bare view, the welcome lead, the fields, the commit that waits, and the link
 // stack flush with the gutter (Android's LoginScreen/LoginViewModel). Success
 // only writes the token store (phase flips navigate: web.md "Routes") — the
@@ -22,11 +22,13 @@ import { useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import type { ErrorCode } from "@/__generated__/graphql";
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { fallbackMessage } from "@/lib/ui/error-messages";
 import { logIn, type LoginGrant } from "@/lib/api/auth-api";
 import type { DeviceLockEngine } from "@/lib/identity/device-lock";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { deviceLabel } from "@/lib/session/device-label";
+import { takeSessionEnded } from "@/lib/session/ended-session";
 import { afterSignIn } from "@/lib/session/held-link";
 import { useAuthPhase, useTokenStore } from "@/lib/session/provider";
 import { useDeviceLock } from "@/lib/session/runtime";
@@ -35,11 +37,14 @@ import { Checkbox } from "@/lib/ui2/checkbox";
 import { FormPasswordField, FormTextField } from "@/lib/ui2/form-fields";
 import { LinkRow, LinkStack } from "@/lib/ui2/link-stack";
 import { TaskPage } from "@/lib/ui2/task-page";
-import { WaitingCommit } from "@/lib/ui2/waiting-commit";
+import { useSlowAnswer, WaitingCommit } from "@/lib/ui2/waiting-commit";
 
 // Where `make web-apk` stages the Android debug APK (development.md
 // "Reaching the web dev server from the phone").
 const APK_HREF = "/downloads/app-debug.apk";
+
+/** The sign-in family's registered prefix — SignIn, SignInError, SignInExpired, SignInLimited (nodes.json `signIn`, round 28). */
+const SIGN_IN: DataNode = { path: "signIn" };
 
 /** SignIn.md:71 — the drawn line when no answer reaches the device. */
 const NO_ANSWER = "That didn't send. Try again.";
@@ -85,6 +90,18 @@ export function LoginForm({
   /** PR-62's dead lock, seen on an earlier press of this sign-in and not yet said. */
   const lockLost = useRef(false);
 
+  /** SignInExpired: this sign-in opened because the session ended mid-use. */
+  const [signedOut, setSignedOut] = useState(false);
+  useEffect(() => {
+    // THE RULE IS DISABLED DELIBERATELY: the mark lives in this tab's
+    // sessionStorage, which the server render cannot read, so it is read
+    // after hydration — React's documented pattern for content that differs
+    // between server and client (react.dev, hydrateRoot, "Handling different
+    // client and server content").
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (takeSessionEnded()) setSignedOut(true);
+  }, []);
+
   useEffect(() => {
     // A sign-in begun from the email change's signed-out landing goes back
     // to it, where the held link's side applies (`held-link.ts`).
@@ -92,6 +109,9 @@ export function LoginForm({
   }, [phase, router]);
 
   const canSubmit = email !== "" && password !== "" && !inProgress;
+  const fault = error !== null ? loginMessage(error) : transportFailed ? NO_ANSWER : null;
+  // SignIn.md: the ways out refuse a press from 200ms after the press until the answer.
+  const exitsHeld = useSlowAnswer(inProgress);
 
   /** Credentials changed: a session held for the old ones is not this sign-in's. */
   const dropHeld = () => {
@@ -151,9 +171,12 @@ export function LoginForm({
 
   return (
     <TaskPage
+      node={SIGN_IN}
       backHref="/feed"
       backLabel="Back"
+      backHeld={exitsHeld}
       title="Sign in to CoGra"
+      lead={signedOut ? "You've been signed out." : undefined}
     >
       <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-4" noValidate>
         <FormTextField
@@ -165,7 +188,7 @@ export function LoginForm({
             setEmail(value);
             dropHeld();
           }}
-          testId="login_email"
+          node={part(SIGN_IN, "email")}
         />
         <FormPasswordField
           label="Password"
@@ -175,25 +198,20 @@ export function LoginForm({
             dropHeld();
           }}
           autoComplete="current-password"
-          testId="login_password"
+          node={part(SIGN_IN, "password")}
         />
         <Checkbox
           label="Don't remember this account on this device"
           checked={dontRemember}
           onChange={setDontRemember}
-          testId="login_dont_remember"
+          node={part(SIGN_IN, "forget")}
         />
-        {/* THE ONE FAULT SLOT, right above Sign in (SignInError.jsx): the
-            refusal, the backoff and the no-answer line all stand here, each
-            until the next press. */}
-        {error !== null && (
-          <p role="alert" data-testid="login_error" className="m-0 text-body-medium text-error">
-            {loginMessage(error)}
-          </p>
-        )}
-        {transportFailed && (
-          <p role="alert" data-testid="login_transport_error" className="m-0 text-body-medium text-error">
-            {NO_ANSWER}
+        {/* THE ONE FAULT SLOT, right above Sign in (SignInError.jsx,
+            SignInLimited.jsx `fault`): the refusal, the backoff and the
+            no-answer line all stand here, each until the next press. */}
+        {fault !== null && (
+          <p role="alert" {...testAttributes(part(SIGN_IN, "fault"))} className="m-0 text-body-medium text-error">
+            {fault}
           </p>
         )}
         <WaitingCommit
@@ -202,22 +220,22 @@ export function LoginForm({
           reason="Waiting for your email and password"
           waiting={email === "" || password === ""}
           busy={inProgress}
-          testId="login_submit"
+          node={part(SIGN_IN, "commit")}
         />
       </form>
       <LinkStack>
-        <LinkRow href="/reset" testId="login_forgot">
+        <LinkRow href="/reset" node={part(SIGN_IN, "forgot")} held={exitsHeld}>
           Forgot password?
         </LinkRow>
-        <LinkRow href="/join" testId="login_join">
+        <LinkRow href="/join" node={part(SIGN_IN, "invite")} held={exitsHeld}>
           New here? Enter your invite
         </LinkRow>
-        <LinkRow href="/feed" testId="login_browse">
+        <LinkRow href="/feed" node={part(SIGN_IN, "browse")} held={exitsHeld}>
           Just looking? Browse the feed →
         </LinkRow>
         {/* A static file under public/, staged by `make web-apk` — a plain
             anchor, since it leaves the router entirely. */}
-        <LinkRow href={APK_HREF} download testId="login_android_apk">
+        <LinkRow href={APK_HREF} download node={part(SIGN_IN, "apk")} held={exitsHeld}>
           On Android? Download the app (APK)
         </LinkRow>
       </LinkStack>
