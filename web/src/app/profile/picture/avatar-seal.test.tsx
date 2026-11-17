@@ -5,7 +5,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import type { ProfileChangeOutcome } from "@/lib/profile/profile-change";
+import { outcomeOf, type ProfileChangeOutcome } from "@/lib/profile/profile-change";
 import { PUBLIC_RECORD_LINE } from "../change-seal";
 import { AvatarSeal } from "./avatar-seal";
 
@@ -51,5 +51,23 @@ describe("what the picture's seal reads back", () => {
     expect(handlers.onClosed).toHaveBeenCalledTimes(1);
     expect(handlers.onBack).not.toHaveBeenCalled();
     await act(async () => answer({ kind: "taken" }));
+  });
+});
+
+// NetworkError.md:13 — the picture's seal reads the server's FORBIDDEN as the
+// whole act not going through: the line and Retry in the commit's place, never
+// the bug notice (the failure pack's `outcomeOf` over a refused signing).
+describe("an answered fault on the picture's seal", () => {
+  it("reads a FORBIDDEN signing as That didn't go through. with Retry", async () => {
+    draw(async () =>
+      outcomeOf([{ kind: "refused", id: "w0", errors: [{ code: "FORBIDDEN", message: "", field: null }] }]),
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("avatar-seal-sign"));
+    });
+    expect(screen.getByTestId("avatar-seal-offline")).toHaveTextContent("That didn't go through. Try again.");
+    expect(screen.getByTestId("avatar-seal-retry")).toHaveTextContent("Retry");
+    expect(screen.getByTestId("avatar-seal-back")).toHaveTextContent("Back");
+    expect(screen.queryByTestId("avatar-seal-bug")).not.toBeInTheDocument();
   });
 });

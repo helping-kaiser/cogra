@@ -1,9 +1,14 @@
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import type { UserError } from "@/lib/api/outcome";
+import type { WriteResult } from "@/lib/signing/write-signer";
 import { CarriedSnackbar } from "@/lib/ui/carried-snackbar";
+import { NOT_THROUGH_LINE, UNVERIFIED_LINE } from "@/lib/ui/error-messages";
 import {
   closeProfileChangeSeal,
+  outcomeOf,
   PROFILE_SIGNED,
   signProfileChange,
   useProfileChange,
@@ -87,5 +92,48 @@ describe("a profile change and the seal that started it", () => {
       outcome = await signProfileChange(() => Promise.reject(new Error("socket")));
     });
     expect(outcome).toEqual({ kind: "offline" });
+  });
+});
+
+// NetworkError.md:3, :13-19 — what one signing came to, by code.
+describe("outcomeOf", () => {
+  const refusedWith = (code: UserError["code"], field: readonly string[] | null = null): WriteResult => ({
+    kind: "refused",
+    id: "w0",
+    errors: [{ code, message: "", field }],
+  });
+  const internal = new CombinedGraphQLErrors({ errors: [{ message: "no", extensions: { code: "INTERNAL" } }] });
+
+  it.each(["FORBIDDEN", "INTERNAL", "SIGNATURE_INVALID"] as const)("reads %s as not through", (code) => {
+    expect(outcomeOf([refusedWith(code)])).toEqual({ kind: "notThrough", line: NOT_THROUGH_LINE });
+  });
+
+  it("reads a BAD_INPUT naming no field as not through, one naming a field as the bug", () => {
+    expect(outcomeOf([refusedWith("BAD_INPUT")])).toEqual({ kind: "notThrough", line: NOT_THROUGH_LINE });
+    expect(outcomeOf([refusedWith("BAD_INPUT", ["bio"])])).toEqual({ kind: "bug" });
+  });
+
+  it("reads EMAIL_NOT_VERIFIED in its own line", () => {
+    expect(outcomeOf([refusedWith("EMAIL_NOT_VERIFIED")])).toEqual({ kind: "notThrough", line: UNVERIFIED_LINE });
+  });
+
+  it("keeps the write rule's notice and the no-answer line", () => {
+    expect(outcomeOf([refusedWith("WRITE_RULE_FAILED")])).toEqual({ kind: "writeRule" });
+    expect(outcomeOf([{ kind: "failed", id: "w0", cause: new Error("offline") }])).toEqual({ kind: "offline" });
+  });
+
+  it("reads an INTERNAL on a failed leg as an answer, not as no answer", () => {
+    expect(outcomeOf([{ kind: "failed", id: "w0", cause: internal }])).toEqual({
+      kind: "notThrough",
+      line: NOT_THROUGH_LINE,
+    });
+  });
+});
+
+// Seam 355: the device's own refusal reads not through, never the bug notice.
+it("reads a device's own refusal of the bytes as not through", () => {
+  expect(outcomeOf([{ kind: "rejectedByDevice", id: "w0", reason: "bad seal" }])).toEqual({
+    kind: "notThrough",
+    line: NOT_THROUGH_LINE,
   });
 });
