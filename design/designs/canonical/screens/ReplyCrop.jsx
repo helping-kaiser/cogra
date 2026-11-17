@@ -24,8 +24,8 @@
 
    THE `opener` CHIP NAMES THE TWO WAYS IN (jakob 2026-11-17, C8): from the
    reply composer the arrow is `Back a step` and the X `Leave — the reply is
-   discarded`; from a comment edit — its `+ Add pictures`, or a picture's own
-   crop door (round 53) — the arrow is `Back to the edit` and the X `Leave —
+   discarded`; from a comment edit — its `+ Add pictures`, or its `Crop the
+   pictures` door (round 53) — the arrow is `Back to the edit` and the X `Leave —
    the edit is discarded` — the X of the flow
    that opened the crop, asking first where that flow's X asks.
 
@@ -42,7 +42,8 @@ export const PROPS = {
    scale). At `edit` with `two`, the comment's own picture (the one
    `CommentEdit` holds) and the one just added from `+ Add pictures`, in the
    edit's order, the new one selected first and on the stage; at `edit` with
-   `one`, the comment's one picture opened from its own door, no strip. A
+   `one`, the comment's one picture opened from the edit's `Crop the
+   pictures` door (round 53 act 2), no strip. A
    picture the comment already holds is framed within its published square,
    tighter and never wider; one whose framing changed is a replacement in the
    signed edit, riding the edit's own record as an added picture does. The

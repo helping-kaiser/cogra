@@ -34,7 +34,13 @@ ALWAYS the comment edit's add row reads + Add pictures or a video GIVEN the comm
 
 ALWAYS whether the comment holds words alone is read on the edit's own state, so a comment whose pictures or clip were removed in this edit holds words alone and may take a video
 
-ALWAYS commentEdit.pictures holds commentEdit.pictures.add alone, with no commentEdit.pictures.label, no commentEdit.pictures.thumb and no commentEdit.pictures.describeRow, GIVEN the comment holds words alone
+ALWAYS commentEdit.pictures holds commentEdit.pictures.add alone, with no commentEdit.pictures.label, no commentEdit.pictures.thumb, no commentEdit.pictures.crop and no commentEdit.pictures.describeRow, GIVEN the comment holds words alone
+
+ALWAYS commentEdit.pictures.crop reads Crop the pictures and stands directly above commentEdit.pictures.describeRow, in the describe door's pattern, its words the same for one picture as for four, GIVEN the comment holds pictures
+
+WHEN tap commentEdit.pictures.crop -> the comment's square crop opens from the edit with every picture of the comment in its strip, the first picture in the crop viewport AND NEVER the picker opens
+
+ALWAYS a picture's thumbnail on commentEdit.pictures carries its remove control alone and opens no crop
 
 WHEN tap + Add pictures or a video -> the platform's own picker opens AND NEVER a pick stage opens
 

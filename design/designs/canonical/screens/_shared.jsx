@@ -2979,6 +2979,20 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
               </div>
               <InlineAction size="sm" node="add">{bodyChip ? "{{addLabel}}" : "+ Add pictures · 1 of 4"}</InlineAction>
             </div>
+            {/* THE CROP DOOR (round 53 act 2, jakob 2026-11-17, B1 = (b)):
+                `Crop the pictures` directly above the describe door, in its
+                own pattern — the small inline action at the label-small
+                line — and by its rule: the same words for one picture as for
+                four, and no door when the comment holds words alone. It opens
+                `ReplyCrop` (`opener` = edit) with every picture of the
+                comment in the strip; the thumbnails stay what they are. */}
+            <div style={{ display: shown("picturesShown"), flexDirection: "column" }}>
+              <p style={{ margin: 0, fontSize: "var(--text-label-small)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)" }}>
+                <InlineAction size="sm" onClick={() => {}} style={{ fontSize: "inherit", lineHeight: "inherit" }} node="crop">
+                  Crop the pictures
+                </InlineAction>
+              </p>
+            </div>
             <div style={{ display: shown("picturesShown"), flexDirection: "column" }}>
               <DescribeCounter described={1} total={1} onDescribe={() => {}} node="describeRow" />
             </div>

@@ -43,6 +43,13 @@
    "draw it"): its media block is the add row alone, `+ Add pictures or a
    video`, as the reply composer's words stage draws it.
 
+   THE PICTURES ARE RE-CROPPED BY A TEXT DOOR (round 53 act 2, jakob
+   2026-11-17, B1 = (b)): `Crop the pictures` directly above `Describe the
+   pictures`, in that door's pattern and by its rule — the same words for one
+   picture as for four, no door on a words comment — opening `ReplyCrop` with
+   every picture of the comment in the strip. The thumbnails keep their ×
+   alone.
+
    THE BODY IS `_shared.jsx`'s `CommentEditBody`, because the acts sheet stands
    on this edit and draws it whole.
 

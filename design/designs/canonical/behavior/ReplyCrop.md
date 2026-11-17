@@ -38,7 +38,7 @@ ALWAYS the strip holds every picture of the comment in the edit's order, the pic
 
 WHEN the crop is reached by adding pictures to a comment's edit -> the strip holds the comment's pictures and the new ones AND the first new picture takes the crop viewport
 
-WHEN the crop is opened from a picture's own crop door on a comment's edit -> that picture takes the crop viewport AND the strip holds every picture of the comment
+WHEN the crop is opened from Crop the pictures on a comment's edit -> the first picture takes the crop viewport AND the strip holds every picture of the comment
 
 ALWAYS a picture the comment already holds is framed within its published square, the only part of it that ever left the device, so it can be framed tighter and never wider
 

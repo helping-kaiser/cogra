@@ -558,6 +558,8 @@ Object.assign(FLOW_MARKERS, {
     // The add row's words are the `body` chip's hole (round 30).
     { n: 6, find: "{{addLabel}}", tag: "button" },
     { n: 7, find: ">Describe the pictures</button>", tag: "button" },
+    // The comment's crop door above the describe door (round 53 act 2).
+    { n: 21, find: ">Crop the pictures</button>", tag: "button" },
     { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
     // The `tag` chip's refused second tag (round 50): the same two controls
     // every tag chip carries, and the line's Remove it.
