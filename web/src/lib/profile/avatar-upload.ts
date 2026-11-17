@@ -29,7 +29,11 @@ export const UNREACHABLE_UPLOAD = "Couldn't reach the server.";
 
 /** What one picture's way up came to. */
 export type PictureUpload =
-  | { readonly kind: "uploaded"; readonly selection: MediaSelection; readonly ledger: MediaLedger }
+  | {
+      readonly kind: "uploaded";
+      readonly selection: Extract<MediaSelection, { readonly mediaId: string }>;
+      readonly ledger: MediaLedger;
+    }
   | { readonly kind: "problem"; readonly message: string };
 
 /**
