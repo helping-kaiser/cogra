@@ -65,7 +65,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -604,27 +606,9 @@ fun StanceControl(
     // pad over nothing signed carries three controls, over a standing four.
     // A VARIANT PAD CARRIES NO WALK IT BACK (VouchBackPad.md:11).
     val severable = rememberSeverableAtRest(state.standing != null && variant == null, state.busy)
-    val view = LocalView.current
-    val hold = rememberUpdatedState(onHoldDefault)
-    // THE HOLD'S WAIT TAKES NO ROOM (seam 355, jakob's A23): a signing this
-    // control's own hold started waits under the closed ring, never under a
-    // `Signing…` line that grows the card. Any other wait the row carries — a
-    // Set whose pad was cancelled, a Retry from the failure line — keeps its
-    // line, which stands where a line already stood or was asked for.
-    val heldSigning = remember { mutableStateOf(false) }
-    // THE HOLD COMMITS WITH THE PLATFORM'S ONE PULSE (readme §4, *Haptics*).
-    val holdWithPulse = remember(view) {
-        {
-            view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-            heldSigning.value = true
-            hold.value()
-        }
-    }
-    // The held signing is over once its wait ends, or once the pad opens.
-    LaunchedEffect(state.busy, state.pad) {
-        if (!state.busy || state.pad != StancePadMode.CLOSED) heldSigning.value = false
-    }
-    val holdWait = heldSigning.value && state.busy && state.pad == StancePadMode.CLOSED
+    val held = rememberHeldSigning(state, onHoldDefault)
+    val holdWithPulse = held.withPulse
+    val holdWait = held.waiting
 
     StanceConfirmation(state.confirmation, state.walkedBack, target, axes, zeroWords, onConfirmationShown)
     // THE PAD AND THE WALK-BACK DIALOG SAY THEY ARE UP, wherever the control
@@ -677,8 +661,6 @@ fun StanceControl(
             Box { considered() }
         } else {
             var holding by remember { mutableStateOf(false) }
-            val signingWords = stringResource(R.string.row_line_signing)
-            val spokenWait = rememberSlow(holdWait) && holdWait
             // The anchor and, beside it in no room at all, the hold's wait as it is
             // spoken: one child of the column, so the column's gap is not spent.
             Box {
@@ -717,7 +699,7 @@ fun StanceControl(
                                 true
                             }
                             onLongClick {
-                                heldSigning.value = true
+                                held.markHeld()
                                 onHoldDefault()
                                 true
                             }
@@ -742,19 +724,7 @@ fun StanceControl(
                     )
                     considered()
                 }
-                // `Signing…` IS STILL SPOKEN (seam 355): a zero-size polite live
-                // region beside the anchor, never inside it, so the face's own
-                // name stays its opinion.
-                if (spokenWait) {
-                    Box(
-                        Modifier
-                            .size(0.dp)
-                            .semantics {
-                                contentDescription = signingWords
-                                liveRegion = LiveRegionMode.Polite
-                            },
-                    )
-                }
+                SpokenHoldWait(holdWait)
             }
         }
 
@@ -789,6 +759,67 @@ fun StanceControl(
             )
         }
     }
+}
+
+/**
+ * THE HOLD'S WAIT TAKES NO ROOM (seam 355, jakob's A23): a signing this
+ * control's own hold started waits under the closed ring, never under a
+ * `Signing…` line that grows the card. Any other wait the row carries — a Set
+ * whose pad was cancelled, a Retry from the failure line — keeps its line,
+ * which stands where a line already stood or was asked for.
+ */
+@Stable
+private class HeldSigning(
+    private val marked: MutableState<Boolean>,
+    /** The hold, with the platform's one pulse (readme §4, *Haptics*). */
+    val withPulse: () -> Unit,
+    /** The hold's own signing is running and the pad is closed. */
+    val waiting: Boolean,
+) {
+    /** The hold reached by another way — the accessibility long-press. */
+    fun markHeld() {
+        marked.value = true
+    }
+}
+
+@Composable
+private fun rememberHeldSigning(state: StanceControlState, onHoldDefault: () -> Unit): HeldSigning {
+    val view = LocalView.current
+    val hold = rememberUpdatedState(onHoldDefault)
+    val marked = remember { mutableStateOf(false) }
+    val withPulse = remember(view) {
+        {
+            view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+            marked.value = true
+            hold.value()
+        }
+    }
+    val closed = state.pad == StancePadMode.CLOSED
+    // The held signing is over once its wait ends, or once the pad opens.
+    LaunchedEffect(state.busy, closed) {
+        if (!(state.busy && closed)) marked.value = false
+    }
+    return HeldSigning(marked, withPulse, waiting = marked.value && state.busy && closed)
+}
+
+/**
+ * `Signing…` IS STILL SPOKEN for the hold's wait (seam 355), past the same
+ * 200ms: a zero-size polite live region beside the anchor, never inside it,
+ * so the face's own spoken name stays its opinion.
+ */
+@Composable
+private fun SpokenHoldWait(waiting: Boolean) {
+    val slow = rememberSlow(waiting)
+    if (!(waiting && slow)) return
+    val words = stringResource(R.string.row_line_signing)
+    Box(
+        Modifier
+            .size(0.dp)
+            .semantics {
+                contentDescription = words
+                liveRegion = LiveRegionMode.Polite
+            },
+    )
 }
 
 /**
@@ -1577,10 +1608,7 @@ private fun StanceRestingFace(
                     modifier = Modifier.dataNode(anchor?.div("face")),
                 )
             }
-            when {
-                ringClosed -> HoldRing(closed = true, tag = "${testTagPrefix}_stance_ring")
-                holding -> HoldRing(closed = false, tag = "${testTagPrefix}_stance_ring")
-            }
+            if (holding || ringClosed) HoldRing(closed = ringClosed, tag = "${testTagPrefix}_stance_ring")
         }
         if (standing == null) {
             if (wide) {
@@ -1612,7 +1640,7 @@ private fun StanceRestingFace(
 @Composable
 private fun HoldRing(closed: Boolean, tag: String) {
     val timeout = LocalViewConfiguration.current.longPressTimeoutMillis.toFloat()
-    var progress by remember { mutableFloatStateOf(if (closed) 1f else 0f) }
+    var progress by remember { mutableFloatStateOf(0f) }
     LaunchedEffect(Unit) {
         val start = withFrameMillis { it }
         while (progress < 1f) {
@@ -1635,7 +1663,7 @@ private fun HoldRing(closed: Boolean, tag: String) {
         drawArc(
             color = ink,
             startAngle = -90f,
-            sweepAngle = 360f * progress,
+            sweepAngle = 360f * if (closed) 1f else progress,
             useCenter = false,
             topLeft = Offset(stroke / 2f, stroke / 2f),
             size = Size(size.width - stroke, size.height - stroke),
