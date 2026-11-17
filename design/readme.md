@@ -1645,7 +1645,14 @@ Instagram's model: one shape for the whole post — Tall 4:5, Square
 1:1, or Wide 1.91:1 — with drag-to-move and pinch-to-zoom framing
 per picture: the frame stands still at the shape and the picture moves
 and zooms under it, on a stage that keeps its 390 × 488 under every
-shape (round 44, one crop model on both clients). **The stage fits the
+shape (round 44, one crop model on both clients). **A post's edit opens
+the same crop** (jakob 2026-11-17, option C), from `+ Add pictures` and
+from `Crop` on a picture in the edit's picture sheet: the shape row live
+at the post's shape, every picture of the post in the strip, a shape
+change holding for all of them. A picture the post already carries is
+framed within its published cut-out, tighter and never wider, and one
+whose framing or shape changed is replaced in the signed edit, riding the
+edit's own record. **The stage fits the
 window** (jakob 2026-11-17), on every crop — the post's, the cover's, the
 profile picture's and the comment's — on both clients: it stands as large
 as the column allows and never taller than the window leaves once the
@@ -2178,8 +2185,9 @@ next to brands like Instagram):
 - **The picked row carries no "Crop" or "Edit" links** (jakob, same
   day: "none") — the whole row is the affordance and opens the Show
   all sheet; re-cropping is the crop step's job, one Back away in the
-  linear wizard. A second entrance to the same step is the two-menus
-  pattern the system refuses. The shortcut links the details and edit
+  linear wizard, and on a post's edit, which has no crop step behind it,
+  the Show all sheet's `Crop` on each picture (round 53). A second
+  entrance to the same step is the two-menus pattern the system refuses. The shortcut links the details and edit
   boards had carried since the compose section are deleted.
 - **Web picks through the browser** (round 3, from the implementation
   session's findings): browsers have no device-gallery API, so the web
@@ -12390,10 +12398,10 @@ merged in (6f95dac35, then its acts 2 and 3, 55cd99081 and c126296b8).
   the frame row stays the chooser for frames, a frame never cropped
   (`ReplyVideo`'s `cover` chip: `none` · `frame` · `own`). The inset is gone
   from the product, and `MediaThumb`'s `coverSrc` with it. The post crop
-  entered from an edit hides its shape row, the stage at the post's shape
-  (`ComposeCrop`'s `opener` chip, `post` · `edit`, which also names the
-  arrow and the X); the row is hidden, never left out, so its unkeyed paths
-  stand. Backlog 260 and 261 closed.
+  entered from an edit took an `opener` chip, `post` · `edit`, naming the
+  arrow and the X; its hidden shape row is replaced the same day by round
+  53's option C (the edit's crop is the new post's crop). Backlog 260 and
+  261 closed.
 ---
 
 ## 14. The canvases

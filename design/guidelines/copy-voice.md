@@ -809,7 +809,10 @@ recorded so the registry is whole.
   (`ComposePickVideoCover`).
 - **The picked sheet** (`ComposePicked`, `EditPicked`) — rows named
   `Cover — shown first` and `Picture 2`, their acts `Make it the cover`
-  · `Move up` · `Move down`; the first row's name says the rule.
+  · `Move up` · `Move down`; the first row's name says the rule. On a
+  post's edit every row also carries `Crop`, after `Describe` and before
+  the moves, the crop screen's own title as its door (`EditPicked`; round
+  53, *new 2026-11-17, to be blessed*).
 - **The crop's shapes** (`ComposeCrop`) — `Tall 4:5` · `Square 1:1` ·
   `Wide 1.91:1`.
 - **The frame picker** — the strip and the own-picture tile, no line
