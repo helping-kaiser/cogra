@@ -522,6 +522,48 @@ async fn a_diverged_substrate_act_is_refused(pool: PgPool) {
     assert!(matches!(err, BootstrapError::Diverged(_)), "got {err:?}");
 }
 
+/// Float equality calls 0.0 and -0.0 the same weight, but their canonical
+/// bytes differ, and the canonical bytes are what the act binds. The role
+/// Tag is the genesis act with zero weights; its stored `p_d` flips sign
+/// while its pre-commitment still matches the input.
+///
+/// A stored body that differs from the genesis input only in the sign of a zero weight is refused as divergence.
+/// ´claim:bootstrap:a-sign-flipped-zero-weight-is-divergence´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_stored_body_with_a_sign_flipped_zero_weight_is_refused(pool: PgPool) {
+    let host = standin(&pool);
+    keep_custody(&pool).await;
+    run(&host, &pool, input()).await.expect("first run");
+    let operator = address_of(&pool, "operator").await;
+    let publisher = address_of(&pool, genesis::PUBLISHER_HANDLE).await;
+    let moderator = address_of(&pool, genesis::MODERATOR_HANDLE).await;
+    let treasury = address_of(&pool, genesis::TREASURY_HANDLE).await;
+    let role_tag = format!("act:{publisher}:2:tag");
+
+    rewind_to_partial_genesis(
+        &pool,
+        &[
+            format!("act:{operator}:0:registration"),
+            format!("act:{publisher}:0:registration"),
+            format!("act:{moderator}:0:registration"),
+            format!("act:{treasury}:0:registration"),
+            format!("act:{publisher}:1:publish"),
+            role_tag.clone(),
+        ],
+    )
+    .await;
+    let flipped = sqlx::query("UPDATE l1_acts SET p_d = $2 WHERE act_id = $1 AND p_d = 0")
+        .bind(&role_tag)
+        .bind(-0.0_f64)
+        .execute(&pool)
+        .await
+        .expect("tamper");
+    assert_eq!(flipped.rows_affected(), 1);
+
+    let err = run(&host, &pool, input()).await.expect_err("diverged");
+    assert!(matches!(err, BootstrapError::Diverged(_)), "got {err:?}");
+}
+
 /// A different act holds the author-local sequence, so the identifier the
 /// genesis sequence needs does not exist and the seal conflicts. That too
 /// is refused truthfully rather than replayed.

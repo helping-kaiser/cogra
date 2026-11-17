@@ -574,7 +574,7 @@ async fn resume_act(
             "the act stored at {act_id} does not match the genesis input"
         ))
     };
-    if stored.body != proposal.body
+    if stored.body.canonical_bytes() != proposal.body.canonical_bytes()
         || stored.deps != proposal.deps
         || stored.pre_commitment.as_slice() != pre.pre_commitment().as_slice()
     {
