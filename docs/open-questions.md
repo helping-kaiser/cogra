@@ -36,7 +36,7 @@ within a phase, order is flexible.
 | 7. At the L1 swap | 3 | **Q56, Q58, Q61** | What the seam exposes of the burn realization (its computational inputs and audit evidence); the write rule's second gate on the surface — whether a W2a stamp-wall refusal needs its own reading once real stamps exist (on the stand-in W2a cannot fire, so one `WRITE_RULE_FAILED` reads the solvency words); and who in CoGra is the deployment that publishes the marker policy, with which finality-breach response. Deferred to the swap. |
 | 8. When everyone can tag anything | 1 | **Q59** | Semi-passable Types — whether a path may cross a Type along tag edges whose author the viewer reaches, at viewer-to-tagger strength. The sinks invariant stands until open tagging makes a topic's crowd worth routing through; stored so the option is not lost. |
 | 9. When a second party writes to Layer 1 | 1 | **Q63** | The payload mark of an act CoGra does not carry — a CoGra actor writing through a third-party Layer 2. It reads unmarked until then. |
-| — Parked | 1 | **Q62** | An authenticated carriage receipt beside the seal. None is issued now. |
+| — Parked | 2 | **Q62, Q64** | An authenticated carriage receipt beside the seal — none is issued now; and whether ingestion checks that the carried pair opens the witness — it checks nothing until a second carrier exists. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -840,3 +840,37 @@ decided only once a second party writes to Layer 1.
 ### Related
 
 Q62 (an authenticated carriage receipt).
+
+## Q64 — Whether ingestion checks that the carried pair opens the witness
+
+**Where it shows up:**
+[data-model.md "Act payload carriage"](implementation/data-model.md#act-payload-carriage)
+(ingestion promotes the content pair)
+**Status:** open (parked — ingestion checks nothing; revisited once a
+second carrier exists; jakob, 2026-11-17)
+
+### Context
+
+A record's witness is its content commitment: the host forms it over
+the act identifier, the pre-commitment, the content salt and the
+content pre-digest
+([layer1-interface.md §8.2](primitive/layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake),
+"Verified act"). CoGra's API forms the content pre-digest itself, from
+the staged payload and the device's content nonce, and the host
+commits to exactly that value, so the pair CoGra carries opens the
+witness by construction. Ingestion copies the content pair and the
+content salt from the staged row into `act_payloads`
+(`content::promote_staged_carriage`) and recomputes nothing. A
+mismatch would need the staged row to change between the seal and
+the landing.
+
+### The question
+
+Does ingestion recompute the witness from the carried pair and the
+content salt, and refuse to promote a pair that does not open it?
+This is revisited once a second carrier exists.
+
+### Related
+
+Q62 (an authenticated carriage receipt); Q63 (the payload mark of an
+act CoGra does not carry).
