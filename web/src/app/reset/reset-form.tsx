@@ -29,7 +29,7 @@ import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { FormPasswordField, FormTextField } from "@/lib/ui2/form-fields";
 import { QuietNote } from "@/lib/ui2/quiet-note";
 import { NO_ANSWER, NOT_THROUGH, RATE_LIMITED_LINE, TaskPage } from "@/lib/ui2/task-page";
-import { WaitingCommit } from "@/lib/ui2/waiting-commit";
+import { useSlowAnswer, WaitingCommit } from "@/lib/ui2/waiting-commit";
 
 const SIGN_IN_ONLY =
   "This restores your sign-in only. Your key stays wherever it is — restoring the key is its own step, with your recovery code.";
@@ -102,6 +102,8 @@ function ResetRequest() {
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
   const [fault, setFault] = useState<string | null>(null);
+  // Reset.md: the ways out refuse a press from 200ms after the press until the answer.
+  const held = useSlowAnswer(busy);
 
   const onRequest = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -131,6 +133,7 @@ function ResetRequest() {
       node={RESET}
       backHref="/login"
       backLabel="Back"
+      backHeld={held}
       title="Reset your password"
       lead="Resetting the password signs out every device."
     >
