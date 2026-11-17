@@ -38,17 +38,17 @@ WHEN press Set -> Cancel reads Close in the same place from the press itself, as
 
 WHEN the pad's signing has not answered 200ms after Set -> Set reads Setting… beside Close AND NEVER Set dims AND NEVER a spinner appears
 
-WHEN tap Close GIVEN Set is waiting on its signing -> the pad closes AND the act goes on AND the line under the target's face reads Signing… in the pending marker's quiet register AND the anchor refuses a second hold until the signing answers AND NEVER the face moves before the signature is taken
+WHEN tap Close GIVEN Set is waiting on its signing -> the pad closes AND the act goes on AND the ring stands closed around the target's face while it signs, as after a hold, Signing… spoken from a visually hidden status and never drawn, AND NEVER a line stands under the face for the wait AND the anchor refuses a second hold until the signing answers AND NEVER the face moves before the signature is taken
 
 WHEN press outside the pad, press the system's Back or press Escape GIVEN Set is waiting on its signing -> the pad closes as Close closes it AND the act goes on, carried by the target's row
 
 WHEN tap Close, press outside the pad, press the system's Back or press Escape GIVEN Set was pressed under 200ms ago -> the pad closes AND the act goes on, carried by the target's row AND NEVER the act is cancelled
 
-WHEN the signing is taken GIVEN the pad was closed while it signed -> the face on the target moves to the new opinion AND the line under it goes AND the snackbar confirms the signature
+WHEN the signing is taken GIVEN the pad was closed while it signed -> the ring goes AND the face on the target moves to the new opinion AND the snackbar confirms the signature
 
-WHEN the signing does not go through GIVEN the pad was closed while it signed -> the face stays where it was AND the line under it reads That didn't sign. in the failure voice followed by Retry AND NEVER the snackbar carries the failure
+WHEN the signing does not go through GIVEN the pad was closed while it signed -> the ring goes AND the face stays where it was AND the line under it reads That didn't sign. in the failure voice followed by Retry AND NEVER the snackbar carries the failure
 
-WHEN tap Retry on the row line GIVEN the pad was closed while it signed -> the same pick is signed again AND NEVER the hold's +0.10 / +0.10 is signed in its place
+WHEN tap Retry on the row line GIVEN the pad was closed while it signed -> the same pick is signed again AND the line goes AND the closed ring stands around the face while it signs AND NEVER the hold's +0.10 / +0.10 is signed in its place
 
 WHEN press Sign it GIVEN the reader's input is sliders or typed values -> Cancel reads Close in the same place from the press itself AND Sign it keeps its own label and refuses a second press
 

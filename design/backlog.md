@@ -6352,13 +6352,15 @@ posts only.
 
 Closed by round 51, act 2 (jakob 2026-11-17, B1 as recommended): a hidden person's comment cards leave the feed like their posts (`FeedHidden` and the feed menus' aftermath); the threads keep their comments, History, Saved and a profile their own rules.
 
-### 253 · A closed pad's `Signing…` line grows the card · *design* · **filed 2026-11-17**
+### 253 · A closed pad's `Signing…` line grows the card · *design* · **filed 2026-11-17** · **closed 2026-11-17**
 
 Round 51 (the hold's wait, jakob 2026-11-17, impl 354). A hold's wait is the
 closed ring and no line. A pad closed under `Set` (`PadFailed`'s `closed`,
 `SigningAfterClose`) still carries `Signing…` under the face, so the card grows
 by that line for the wait — the jump his A23 named, by another door. Not in the
 ruling; the question is whether the closed pad's wait takes the ring too.
+
+Closed by round 51, act 2 (jakob 2026-11-17, B4 as recommended): a pad or a dialog over it closed while it signs waits as a hold does — the closed ring, `Signing…` spoken only, no line; the failure keeps its line. One vehicle in the master (`StanceControl`'s `busy` with the pad closed draws as `held`). The other after-Close lines — a profile change under the head, an edit, a post or a reply where it lands, the kept picks' batch — are not this ruling.
 
 ### 254 · A Cite composer opened while a draft is kept · *design* · **filed 2026-11-17**
 

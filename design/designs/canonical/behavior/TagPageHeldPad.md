@@ -26,7 +26,7 @@ WHEN tap Cancel -> the pad closes AND nothing is staged AND the topic stays held
 
 WHEN press Set -> Cancel reads Close in the same place from the press itself, as PadFailed's pressed moment draws it AND Set reads Setting… beside it once 200ms pass without an answer, as PadFailed's setting moment draws it
 
-WHEN tap Close, press outside the pad, press the system's Back or press Escape GIVEN Set is waiting on its signing -> the pad closes AND the act goes on, its wait carried by the line under the target's face, as PadFailed's closed moment draws it AND NEVER the act is cancelled
+WHEN tap Close, press outside the pad, press the system's Back or press Escape GIVEN Set is waiting on its signing -> the pad closes AND the act goes on, its wait carried by the closed ring around the target's face, Signing… spoken from a visually hidden status and never drawn, as PadFailed's closed moment draws it AND NEVER a line stands under the face for the wait AND NEVER the act is cancelled
 
 WHEN tap Set GIVEN the pick nets the held bundle to (0, 0) -> the disconnect dialog opens with its cost AND NEVER the pick is refused
 

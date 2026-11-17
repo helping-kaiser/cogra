@@ -1158,10 +1158,10 @@ a quick answer never flashes a word.
   that filled during the hold stays closed around the face until the
   signature is taken, no line stands under it and the card never grows,
   and a visually hidden status says `Signing…` once the answer is 200ms
-  late. **Drawn** on `RowSigning` (the closed ring). As a line, quiet
-  under the face in the pending marker's register, it carries a pad's or
-  a dialog's act after `Close` shut it (jakob 2026-11-11). **Drawn** on
-  `PadFailed`'s `closed`.
+  late. **Drawn** on `RowSigning` (the closed ring). A pad's or a
+  dialog's act after `Close` shut it (jakob 2026-11-11) waits the same
+  way, the closed ring and the spoken status, no line (jakob 2026-11-17,
+  round 51 act 2). **Drawn** on `PadFailed`'s `closed`.
 - `Close` — the way out of a signing surface once its commit is
   pressed (jakob 2026-11-11): the pad, the alternates, the walk-back,
   the empty sign, the handle change, every seal and edit, and the
