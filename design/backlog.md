@@ -6182,6 +6182,32 @@ Round 50 read it: needs no ruling (a pixel-identical move of the pad into
 `StanceControl`, then names), but it is a stance-master lane of its own and
 stays open.
 
+Round 54 tried it: a `signing="keyAbsent"` state in `writeRule`'s grammar
+(the notice and `Keep it pending, restore later` where the landing line and
+the commit row stand), the board rendering `PostCard`'s open pad at inset 80
+on the pick +0.10 / +0.10. The pad's box, the field, the notice and the text
+button land exactly where the hand-built ones stand (43, 133.61, 304 ×
+630.39), and no other board's markup moves; but the master draws two things
+the hand-built pad does not (headless Chromium, 390 × 844, light and dark,
+7354 and 7351 pixels differing):
+
+- **The pad's own "?"** (`How opinions work`, its 32px ring in a 48px target
+  at the pad's top right). The hand-built pad has none; every master pad
+  carries it.
+- **The standing line's type.** With nothing standing the master's
+  `StanceStanding` says `🤷 No opinion on this post yet.` in body-small
+  (12px / 400 / 0.4px); the hand-built pad's `QuietNote` says it in
+  label-small (11px / 500 / 0.5px), 168 against 178 wide.
+
+Beneath those, sub-pixel residue of the master's fixed, layered pad: 1 to 10
+pixels each on the field's corners, the knob, the restore button's corners
+and the pad's bottom edge, and a one-level strip across the 15px between the
+pad and the bar, which the master's transparent outside-tap layer makes
+(gone with that layer removed). Which side wins on the "?" and the type is a
+drawing choice, so the pad stays hand-built. Moving it also moves
+`check-readouts`' pin on the board's hand-drawn readout. The attempt is kept
+as a patch in round 54's scratch folder.
+
 ### 222 · The feed's comment-card menu and your own comment's menu on Saved are undrawn · *design* · **filed 2026-11-13** · **closed 2026-11-13**
 
 Round 48 (seam 320-14). The clients draw `feed.menuSheet.citedBy` /

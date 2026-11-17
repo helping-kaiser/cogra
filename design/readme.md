@@ -12394,6 +12394,23 @@ merged in (6f95dac35, then its acts 2 and 3, 55cd99081 and c126296b8).
   (`ComposeCrop`'s `opener` chip, `post` · `edit`, which also names the
   arrow and the X); the row is hidden, never left out, so its unkeyed paths
   stand. Backlog 260 and 261 closed.
+
+### Round 54, `PadKeyAbsent`'s pad into `StanceControl` — 2026-11-17
+
+Backlog 221 as filed (round 48, seam 320-16) and as round 50 read it — a
+pixel-identical move of the hand-built pad into the master, then names —
+built on c84455977.
+
+- **Not moved.** A key-absent state in `writeRule`'s grammar puts the pad's
+  box, field, notice and text button exactly where the hand-built ones
+  stand, and moves no other board; but the master draws its own "?" in the
+  pad's corner, which the hand-built pad lacks, and says the empty
+  standing in body-small where the hand-built `QuietNote` uses
+  label-small. Which side wins is a drawing choice, so `PadKeyAbsent`
+  stays as drawn, unregistered. The measurements, the sub-pixel residue
+  under them and the attempt are in backlog 221, which stays open.
+- **The gate**: no source changed but the backlog and this record; the
+  boards, bundle and registry stand as at c84455977.
 ---
 
 ## 14. The canvases
