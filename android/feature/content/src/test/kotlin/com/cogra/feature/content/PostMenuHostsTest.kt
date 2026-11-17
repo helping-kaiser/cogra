@@ -17,6 +17,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -515,7 +517,8 @@ class PostMenuHostsTest {
         assertRowsInOrder("postDetail.menuSheet.hide", "postDetail.menuSheet.citedBy", "postDetail.menuSheet.license")
         assertCitedByOpens("postDetail.menuSheet.citedBy")
         compose.onNodeWithTag("postDetail.citedBySheet").assertExists()
-        compose.onNodeWithTag("postDetail.citedBySheet.title", useUnmergedTree = true).assertTextEquals("Cited by")
+        compose.onNodeWithTag("postDetail.citedBySheet.title", useUnmergedTree = true)
+            .assert(hasAnyDescendant(hasText("Cited by")))
         compose.onNodeWithTag("postDetail.citedBySheet.citation:1").performClick()
         compose.waitForIdle()
         assertThat(opened).containsExactly("p9")

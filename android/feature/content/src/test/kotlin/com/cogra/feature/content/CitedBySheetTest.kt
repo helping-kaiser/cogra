@@ -9,6 +9,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
@@ -53,7 +55,8 @@ class CitedBySheetTest {
     @Test
     fun theRowsStandAsTheFoldHandsThemKeyedByPlace() {
         render(rows)
-        compose.onNodeWithTag("postDetail.citedBySheet.title", useUnmergedTree = true).assertTextEquals("Cited by")
+        compose.onNodeWithTag("postDetail.citedBySheet.title", useUnmergedTree = true)
+            .assert(hasAnyDescendant(hasText("Cited by")))
         val tops = (1..3).map {
             compose.onNodeWithTag("postDetail.citedBySheet.citation:$it").fetchSemanticsNode().boundsInRoot.top
         }
