@@ -323,6 +323,40 @@ describe("the kept picks' seal", () => {
     expect((await listKeptPicks("u1")).length).toBe(3);
   });
 
+  it("reads a FORBIDDEN answer as That didn't go through. with Retry in the commit's slot, every pick kept", async () => {
+    // NetworkError.md:13 — never the no-answer line, never the bug notice.
+    await keepTheBoardsPicks();
+    mount({ refuse: "FORBIDDEN" });
+    await openSeal();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("keptPicksSeal.foot.sign"));
+    });
+    const line = await screen.findByTestId("keptPicksSeal.fault");
+    expect(line).toHaveTextContent("That didn't go through. Try again.");
+    expect(line).not.toHaveTextContent(/didn't send|reach the server/);
+    expect(screen.queryByTestId("keptPicksSeal.bug")).toBeNull();
+    expect(screen.getByTestId("keptPicksSeal.foot.sign")).toHaveTextContent("Retry");
+    expect((await listKeptPicks("u1")).length).toBe(3);
+  });
+
+  // NetworkError.md:15, :19 — the other answered whole-act faults, each its own line.
+  it.each([
+    ["SIGNATURE_INVALID", "That didn't go through. Try again."],
+    ["EMAIL_NOT_VERIFIED", "Verify your email first — the link is in your inbox."],
+  ] as const)("reads a %s answer in its own line with Retry in the commit's slot, every pick kept", async (code, text) => {
+    await keepTheBoardsPicks();
+    mount({ refuse: code });
+    await openSeal();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("keptPicksSeal.foot.sign"));
+    });
+    const line = await screen.findByTestId("keptPicksSeal.fault");
+    expect(line).toHaveTextContent(text);
+    expect(screen.queryByTestId("keptPicksSeal.bug")).toBeNull();
+    expect(screen.getByTestId("keptPicksSeal.foot.sign")).toHaveTextContent("Retry");
+    expect((await listKeptPicks("u1")).length).toBe(3);
+  });
+
   it("answers the write rule with the notice, its fact ending your picks are still kept., and Not now back to the review", async () => {
     // KeptPicksSeal.md:29-31; KeptPicksReview.md:23-25.
     await keepTheBoardsPicks();
@@ -345,7 +379,7 @@ describe("the kept picks' seal", () => {
   it("answers any other refusal with the bug notice: Try again in it, Report a problem and Not now under it", async () => {
     // KeptPicksSeal.md:33-35.
     await keepTheBoardsPicks();
-    mount({ refuse: "BAD_INPUT" });
+    mount({ refuse: "NOT_FOUND" });
     await openSeal();
     await act(async () => {
       fireEvent.click(screen.getByTestId("keptPicksSeal.foot.sign"));

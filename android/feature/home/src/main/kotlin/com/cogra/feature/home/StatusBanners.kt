@@ -82,8 +82,6 @@ fun StatusBannersRoute(
     )
     StatusBanners(
         state = state,
-        onTokenChange = viewModel::onTokenChange,
-        onVerify = viewModel::onVerify,
         onResendEmailChange = viewModel::onResendEmailChange,
         onResend = viewModel::onResend,
         onResumePending = viewModel::onResumePending,
@@ -202,8 +200,6 @@ fun KeyRestoreBanner(state: HomeUiState, onRestoreActor: () -> Unit, node: DataN
 @Composable
 fun StatusBanners(
     state: HomeUiState,
-    onTokenChange: (String) -> Unit,
-    onVerify: () -> Unit,
     onResendEmailChange: (String) -> Unit,
     onResend: () -> Unit,
     onResumePending: () -> Unit,
@@ -220,8 +216,6 @@ fun StatusBanners(
         if (state.applicant) {
             ApplicantStatus(
                 state = state,
-                onTokenChange = onTokenChange,
-                onVerify = onVerify,
                 onResendEmailChange = onResendEmailChange,
                 onResend = onResend,
                 onStartKeyCeremony = onStartKeyCeremony,
@@ -262,8 +256,6 @@ fun StatusBanners(
 @Composable
 private fun ApplicantStatus(
     state: HomeUiState,
-    onTokenChange: (String) -> Unit,
-    onVerify: () -> Unit,
     onResendEmailChange: (String) -> Unit,
     onResend: () -> Unit,
     onStartKeyCeremony: () -> Unit,
@@ -273,7 +265,7 @@ private fun ApplicantStatus(
         null -> CircularProgressIndicator(modifier = Modifier.testTag("home_status_loading"))
         is RegistrationProgress.AwaitingApproval -> {
             if (!progress.emailVerified) {
-                VerifyCard(state, onTokenChange, onVerify, onResendEmailChange, onResend)
+                VerifyCard(state, onResendEmailChange, onResend)
             }
             when {
                 // The two proofs are independent — both cards can show.
@@ -413,38 +405,18 @@ private fun RestoreCard(onRestoreActor: () -> Unit, node: DataNode?) {
 @Composable
 private fun VerifyCard(
     state: HomeUiState,
-    onTokenChange: (String) -> Unit,
-    onVerify: () -> Unit,
     onResendEmailChange: (String) -> Unit,
     onResend: () -> Unit,
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // The link the mail carries is opened on the web (`/verify`); the app
+            // takes no pasted token (jakob, round-3 answer 7). The title is the
+            // board's (`feed.verifyCard.title`).
             Text(
-                text = stringResource(R.string.home_verify_explainer),
+                text = stringResource(R.string.home_verify_title),
                 modifier = Modifier.testTag("home_verify"),
             )
-            OutlinedTextField(
-                value = state.verificationToken,
-                onValueChange = onTokenChange,
-                label = { Text(stringResource(R.string.home_verify_token)) },
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("verify_token"),
-            )
-            state.verifyError?.let {
-                ErrorLine(it.verifyMessage(), testTag = "verify_error")
-            }
-            Button(
-                onClick = onVerify,
-                enabled = state.verificationToken.isNotBlank() && !state.verifying,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("verify_submit"),
-            ) {
-                Text(stringResource(R.string.home_verify_submit))
-            }
             OutlinedTextField(
                 value = state.resendEmail,
                 onValueChange = onResendEmailChange,
@@ -469,11 +441,6 @@ private fun VerifyCard(
             }
         }
     }
-}
-
-private fun ErrorCode.verifyMessage(): Int = when (this) {
-    ErrorCode.RATE_LIMITED -> R.string.error_rate_limited
-    else -> R.string.home_verify_failed
 }
 
 private fun ErrorCode.resendMessage(): Int = when (this) {

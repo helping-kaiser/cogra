@@ -54,6 +54,10 @@ WHEN history.commentCard is tapped outside history.commentCard.target and its ow
 
 WHEN the comment glyph on a history.commentCard is tapped -> the post's comment section opens scrolled to that comment AND the reply composer opens aimed at that comment
 
+ALWAYS history.commentCard.actionRow.reply stands at full strength for an applicant as for anyone, the door to reading the thread
+
+WHEN history.commentCard.actionRow.reply is tapped GIVEN the reader is an applicant -> the post's comment section opens scrolled to that comment AND its Add a comment foot and every Reply wear the locked look, answering You can comment once you're in. AND NEVER the reply composer opens
+
 ALWAYS the comments sheet a History card raises is postDetail.threadSheet, the thread drawn once, one path wherever it is raised
 
 WHEN tap a portrait or square clip on history.card -> the stream opens on that clip, History's rows narrowed to their portrait and square clips in History's order, AND its back arrow reads Back to History
@@ -69,6 +73,10 @@ ALWAYS no history.tagCard.through stands GIVEN the tag reaches the reader throug
 WHEN a card's Feed score is tapped -> the score's trace opens AND its back arrow reads Back to History
 
 WHEN Tag a new post with it on a history.tagCard is tapped -> the post composer opens at its first stage AND the tag rides staged among the new post's tags
+
+ALWAYS Tag a new post with it on a history.tagCard wears the locked look, at the disabled opacity and still tappable GIVEN the reader is an applicant
+
+WHEN Tag a new post with it on a history.tagCard is tapped GIVEN the reader is an applicant -> the snackbar reads You can post once you're in. AND NEVER the composer opens
 
 WHEN a press-and-hold on a card's stance face signs -> the face refuses a second press-and-hold until the signing answers AND NEVER the face moves before the signature is taken
 
@@ -135,3 +143,5 @@ ALWAYS the back arrow reads Back to your profile
 ALWAYS history.card.actionRow.stance.pending and history.commentCard.actionRow.stance.pending read Waiting for your key under the kept pick's face GIVEN a pick is kept pending on the card's thing and the key is not on this device
 
 ALWAYS history.card.actionRow.stance.pending and history.commentCard.actionRow.stance.pending read Waiting for your review under the kept pick's face GIVEN the key is on this device and the kept picks' review was left unsigned
+
+ALWAYS history.searchField.input fills its row, whatever the query's length, and a board's width for it is its sample text's

@@ -6,6 +6,8 @@ ALWAYS the cover field reads Add a cover GIVEN no cover was ever chosen, even wh
 
 ALWAYS the cover field shows the chosen cover and Change the cover GIVEN a cover was chosen
 
+ALWAYS the chosen cover's thumbnail wears the cover's shape, a tall clip's at 4:5, never the clip's own
+
 ALWAYS the line A video is the whole post. stands where an add control would
 
 ALWAYS every change the edit makes signs together in one batch

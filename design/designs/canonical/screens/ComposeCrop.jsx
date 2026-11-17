@@ -29,7 +29,7 @@
 
    THE ZOOM IS ON SCREEN, AND THE PICTURE PANS BY KEY (the K13 round): the
    master's `CropZoom` under the stage, its thumb at this crop's 1.15× between
-   the fill (1×) and about 4×, on both platforms; the stage takes focus under
+   the fill (1×) and 10×, on both platforms; the stage takes focus under
    `CropViewport`'s name and its arrow keys move the picture, stopping where an
    edge of the picture meets the frame's — 1 % a press, 10 % with Shift (jakob
    2026-10-05). The line under the zoom says what the crop decides, `One shape
@@ -38,12 +38,17 @@
 
    REGISTERED under its own `composeCrop` prefix (seam 248): `header`, the
    `shapes` chips (`tallChip`, `squareChip`, `wideChip`, a filter's
-   `<value>Chip` naming — drawn once per `shape` value, its chip copies), the
+   `<value>Chip` naming — drawn once, the `shape` setting re-selecting it, so
+   unkeyed, round 49), the
    `viewport`, the `zoom` slider, the `howTo` line, the `pictures` strip with
    one `thumb` per picture keyed by its place, and `next`. */
 export const NODE = "composeCrop";
 export const PROPS = { shape: { editor: "enum", options: ["tall", "square", "wide"], default: "tall" } };
-export const VALS = `tallShown: this.props.shape === "tall" ? "flex" : "none", squareShown: this.props.shape === "square" ? "flex" : "none", wideShown: this.props.shape === "wide" ? "flex" : "none", tallFrame: this.props.shape === "tall" ? "block" : "none", squareFrame: this.props.shape === "square" ? "block" : "none", wideFrame: this.props.shape === "wide" ? "block" : "none"`;
+/* Each shape chip's selection, as `Chip`'s `selected` would draw it. */
+const SHAPE_SEL = (s) =>
+  `${s}Checked: this.props.shape === "${s}" ? "true" : "false", ${s}Border: this.props.shape === "${s}" ? "1px solid transparent" : "1px solid var(--border-field)", ${s}Background: this.props.shape === "${s}" ? "var(--secondary-container)" : "transparent", ${s}Color: this.props.shape === "${s}" ? "var(--on-secondary-container)" : "var(--text-body)"`;
+const shapeHoles = (s) => ({ checked: `{{${s}Checked}}`, border: `{{${s}Border}}`, background: `{{${s}Background}}`, color: `{{${s}Color}}` });
+export const VALS = `${SHAPE_SEL("tall")}, ${SHAPE_SEL("square")}, ${SHAPE_SEL("wide")}, tallFrame: this.props.shape === "tall" ? "block" : "none", squareFrame: this.props.shape === "square" ? "block" : "none", wideFrame: this.props.shape === "wide" ? "block" : "none"`;
 
 /* The frame per shape inside the 390 × 488 stage: full width, centred. */
 const CROP_FRAMES = [
@@ -82,25 +87,15 @@ export function Screen() {
     <>
       <WizardHeader title="Crop" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 16px", overflow: "hidden" }}>
-        <div style={{ display: "{{tallShown}}", gap: 8 }} {...chipCopy("shape", "tall")}>
+        {/* THE SHAPE ROW IS DRAWN ONCE (round 49, seam 338): the `shape`
+            setting re-selects its chips through `Chip`'s `selectedHoles`, so
+            the row and its chips carry no key — one row, as the clients
+            draw it. */}
+        <div style={{ display: "flex", gap: 8 }}>
           <div style={{ display: "flex", gap: 8 }} data-node="shapes">
-            <Chip label="Tall 4:5" selected onToggle={() => {}} node="tallChip" />
-            <Chip label="Square 1:1" onToggle={() => {}} node="squareChip" />
-            <Chip label="Wide 1.91:1" onToggle={() => {}} node="wideChip" />
-          </div>
-        </div>
-        <div style={{ display: "{{squareShown}}", gap: 8 }} {...chipCopy("shape", "square")}>
-          <div style={{ display: "flex", gap: 8 }} data-node="shapes">
-            <Chip label="Tall 4:5" onToggle={() => {}} node="tallChip" />
-            <Chip label="Square 1:1" selected onToggle={() => {}} node="squareChip" />
-            <Chip label="Wide 1.91:1" onToggle={() => {}} node="wideChip" />
-          </div>
-        </div>
-        <div style={{ display: "{{wideShown}}", gap: 8 }} {...chipCopy("shape", "wide")}>
-          <div style={{ display: "flex", gap: 8 }} data-node="shapes">
-            <Chip label="Tall 4:5" onToggle={() => {}} node="tallChip" />
-            <Chip label="Square 1:1" onToggle={() => {}} node="squareChip" />
-            <Chip label="Wide 1.91:1" selected onToggle={() => {}} node="wideChip" />
+            <Chip label="Tall 4:5" selectedHoles={shapeHoles("tall")} onToggle={() => {}} node="tallChip" />
+            <Chip label="Square 1:1" selectedHoles={shapeHoles("square")} onToggle={() => {}} node="squareChip" />
+            <Chip label="Wide 1.91:1" selectedHoles={shapeHoles("wide")} onToggle={() => {}} node="wideChip" />
           </div>
         </div>
 

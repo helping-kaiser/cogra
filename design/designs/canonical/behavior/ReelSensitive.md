@@ -24,7 +24,7 @@ WHEN tap reel.stage.veil GIVEN the device allows autoplay -> the clip and reel.c
 
 WHEN tap reel.caption.show GIVEN the device allows autoplay -> the clip and reel.caption unveil together AND the clip joins the stage's rotation AND it plays
 
-WHEN tap reel.stage.veil or reel.caption.show GIVEN the device suppresses autoplay -> the clip and reel.caption unveil together AND the clip stands paused on its cover with reel.playDisc, the card's own, in reel.soundDisc's corner AND NEVER it starts on its own
+WHEN tap reel.stage.veil or reel.caption.show GIVEN the device suppresses autoplay -> the clip and reel.caption unveil together AND the clip stands paused on its own frame, never its cover, with reel.playDisc, the card's own, in reel.soundDisc's corner AND NEVER it starts on its own
 
 WHEN swipe up on reel.stage -> the next clip in the same list takes the screen AND this one stays veiled
 
@@ -39,6 +39,8 @@ WHEN tap reel.rail.score -> the veiled clip squishes to the head of the post's d
 WHEN tap reel.rail.stance.anchor -> the same pad opens over the veiled clip
 
 WHEN tap reel.rail.comments -> the same comments sheet opens over the clip
+
+WHEN tap reel.rail.menu -> reel.menuSheet rises over the veiled clip with the post's menu, the card's own rows AND NEVER the clip unveils
 
 WHEN press reel.backDisc GIVEN the stream was opened from the feed it narrowed -> the stream closes on the feed it narrowed
 

@@ -1,6 +1,12 @@
 # TagPicker · `spec:design:behavior-tag-picker`
 
+ALWAYS the picker is the only place a tag's name is typed: every composer's and every edit's + Add a tag opens it, and no composer carries a typed tag field of its own
+
 ALWAYS the results' first row is the canonicalized typed name GIVEN the typed name is a legal tag name
+
+ALWAYS the picker offers no name to add and shows no refusal, tagPicker.rule standing under tagPicker.nameField as at rest, GIVEN tagPicker.nameField is empty or holds only the one leading # its canonical form strips, since a tag has no empty name
+
+WHEN press the keyboard's action key GIVEN tagPicker.nameField is empty or holds only the one leading # -> NEVER a tag is staged AND NEVER a refusal appears
 
 ALWAYS a staged tag stands only in the staged section, the first rows of the one scrolling list, above the results
 

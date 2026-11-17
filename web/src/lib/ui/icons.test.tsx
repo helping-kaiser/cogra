@@ -77,6 +77,8 @@ describe("icons", () => {
       "notifications",
       // The unset stance face in a host's ink (Icon.jsx `sentiment_neutral`).
       "sentiment_neutral",
+      // The own avatar's change badge (ProfileHeader.jsx `changeBadge`).
+      "photo_camera",
       // The own profile band's gear and the chronicle's Everything tab
       // (`_shared.jsx` `ProfileBand`, `CHRONICLE_TABS`).
       "settings",

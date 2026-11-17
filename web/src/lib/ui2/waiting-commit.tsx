@@ -2,10 +2,11 @@
 
 // THE COMMIT THAT WAITS (design/designs/canonical/screens/_shared.jsx
 // `WaitingCommit`; copy-voice *Commits that wait*). A form's commit stays
-// disabled until its fields hold something, and one quiet line right above it
-// says what it waits for; the first character in the last empty field wakes it
-// and the line goes. A wait that explains itself carries no line, the commit
-// disabled alone (`WaitingCommit` with no `reason`; ChangePassword, round 41).
+// disabled until its fields hold something, with nothing on screen about why:
+// what it waits for is the button's SPOKEN description alone, a visually
+// hidden span it names in `aria-describedby` (design 80fd29912, jakob
+// 2026-11-12). The first character in the last empty field wakes it and the
+// description goes. The description is no node — nothing of it is drawn.
 //
 // IN FLIGHT THE LABEL SAYS WHAT IS HAPPENING, LATE: past 200ms without an
 // answer the label swaps to its present participle (`Changing password…`),
@@ -72,7 +73,7 @@ export function WaitingCommit({
 }: {
   label: string;
   busyLabel: string;
-  /** What the commit waits for, said while `waiting`; omitted where the wait explains itself. */
+  /** What the commit waits for, spoken (never shown) while `waiting`. */
   reason?: string;
   waiting: boolean;
   busy?: boolean;
@@ -90,11 +91,7 @@ export function WaitingCommit({
   return (
     <div className="flex flex-col gap-2" {...testAttributes(node)}>
       {said && (
-        <span
-          id={`${id}-waits`}
-          className="text-center text-label-small text-on-surface-variant"
-          {...testAttributes(part(node, "reason"))}
-        >
+        <span id={`${id}-waits`} className="sr-only">
           {reason}
         </span>
       )}

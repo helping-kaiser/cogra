@@ -43,7 +43,7 @@
    be cited.` with `Remove it`, the commit staying (`SealFaultRow`);
    `bug`, `This shouldn't have happened` in the commit's place, `Try again` in
    it, then `Report a problem` and `Discard the reply` (`SealFaultBug`);
-   `tagRefused` (round 30, jakob 2026-11-11, Q7), the seal with one staged
+   `tag-refused` (round 30, jakob 2026-11-11, Q7), the seal with one staged
    tag, `#fieldnotes`, that never landed — the Tags row reads back as before
    and under it `This tag didn't land.` with `Remove it`, no reason given,
    the commit staying: the refused citation's row at the Tags row. 
@@ -52,12 +52,22 @@
    is done: past 200ms it reads `Signing comment…` over Back, which reads
    `Close` from the press itself; it, the arrow and the X close the seal and
    the reply goes on, its wait and its answer on the parent it answers,
-   where the new reply settles (`SigningAfterClose`). */
+   where the new reply settles (`SigningAfterClose`).
+
+   REGISTERED as `replySeal` (round 49, backlog 220): `header`, `summary`,
+   the card `card.acts`, the facts under `facts` (`toward`, `license`,
+   `sensitive`), the quiet `note` and the foot `footer`. The card is drawn
+   once per `state` value and, inside it, once per `tags` value — the
+   box-less `card` wrapper standing between the two chips' copies — and the
+   foot once per `state` value, one shown at a time; drawn so, the board is
+   pixel-identical to its earlier drawing at every combination. A key is
+   lowercase, so the value is `tag-refused`. */
+export const NODE = "replySeal";
 export const PROPS = {
   tags: { editor: "enum", options: ["none", "two", "seven"], default: "none" },
-  state: { editor: "enum", options: ["rest", "refused", "bug", "tagRefused", "signing"], default: "rest" },
+  state: { editor: "enum", options: ["rest", "refused", "bug", "tag-refused", "signing"], default: "rest" },
 };
-export const VALS = `none0Shown: this.props.tags === "none" && this.props.state !== "refused" && this.props.state !== "tagRefused" ? "flex" : "none", none1Shown: this.props.tags === "none" && this.props.state === "refused" ? "flex" : "none", two0Shown: this.props.tags === "two" && this.props.state !== "refused" && this.props.state !== "tagRefused" ? "flex" : "none", two1Shown: this.props.tags === "two" && this.props.state === "refused" ? "flex" : "none", seven0Shown: this.props.tags === "seven" && this.props.state !== "refused" && this.props.state !== "tagRefused" ? "flex" : "none", seven1Shown: this.props.tags === "seven" && this.props.state === "refused" ? "flex" : "none", signShown: this.props.state === "bug" || this.props.state === "signing" ? "none" : "flex", signingShown: this.props.state === "signing" ? "flex" : "none", bugShown: this.props.state === "bug" ? "flex" : "none", tagRefusedShown: this.props.state === "tagRefused" ? "flex" : "none"`;
+export const VALS = `stRest: this.props.state === "rest" ? "flex" : "none", stRefused: this.props.state === "refused" ? "flex" : "none", stBug: this.props.state === "bug" ? "flex" : "none", stTagRefused: this.props.state === "tag-refused" ? "flex" : "none", stSigning: this.props.state === "signing" ? "flex" : "none", tagsNone: this.props.tags === "none" ? "flex" : "none", tagsTwo: this.props.tags === "two" ? "flex" : "none", tagsSeven: this.props.tags === "seven" ? "flex" : "none"`;
 
 export function Screen() {
   return <ReplySealBody chipped />;

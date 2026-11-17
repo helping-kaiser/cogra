@@ -37,11 +37,13 @@ describe("round 28's named masters take their whole roles", () => {
     expectWholeRole(screen.getByTestId("s-signing-failed"), "body-medium");
   });
 
-  it("the waiting reason is label-small whole, weight 500 with it (WaitingCommit)", () => {
+  it("the waiting reason is spoken only, never drawn and never a node (WaitingCommit)", () => {
     render(
       <WaitingCommit label="Post" busyLabel="Posting…" reason="Waiting for a title" waiting node={{ path: "x.commit" }} />,
     );
-    expectWholeRole(screen.getByTestId("x.commit.reason"), "label-small");
+    expect(screen.getByText("Waiting for a title")).toHaveClass("sr-only");
+    expect(screen.getByTestId("x.commit.action")).toHaveAccessibleDescription("Waiting for a title");
+    expect(screen.queryByTestId("x.commit.reason")).not.toBeInTheDocument();
   });
 
   it("the password input is body-large whole, the text field's (PasswordField.jsx)", () => {

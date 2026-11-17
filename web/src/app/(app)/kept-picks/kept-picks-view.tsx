@@ -23,7 +23,9 @@
 // - THE SEAL WAITS LIKE EVERY SEAL: inert from the press, `Signing the
 //   picks…` past 200ms with the ways out refusing a press (never dimmed),
 //   the slow line past 5s, never a spinner. No answer: the fault line and
-//   Retry. The write rule: the notice, `Not now` back to the review. Any other
+//   Retry; a FORBIDDEN answer, the same foot with `That didn't go through.
+//   Try again.` (NetworkError.md:13). The write rule: the notice, `Not now`
+//   back to the review. Any other
 //   refusal: the bug notice, `Not now` back to the review. Nothing drops a pick
 //   but the reader's ×, or the batch landing.
 //
@@ -56,6 +58,7 @@ import {
   type StanceAxes,
 } from "@/lib/ui/stance-format";
 import { TransportError } from "@/lib/ui/transport-error";
+import { NOT_THROUGH_LINE, outcomeFaultLine, UNVERIFIED_LINE } from "@/lib/ui/error-messages";
 import { ActsCard, actsTotal, SLOW_SIGNING_LINE, type ActsRow } from "@/lib/ui2/compose/acts-card";
 import { StagedRow } from "@/lib/ui2/compose/staged-reference";
 import { HeaderBar } from "@/lib/ui2/header-bar";
@@ -112,11 +115,23 @@ function axesOf(target: StanceTarget): StanceAxes {
   return target.kind === "topic" ? AFFINITY_AXES : STANCE_AXES;
 }
 
-type SealFault = "offline" | "writeRule" | "bug";
+type SealFault = "offline" | "notThrough" | "unverified" | "writeRule" | "bug";
 
+/** An answered fault of the whole act reads its own line (NetworkError.md:13-19), never the no-answer one. */
 function faultOf(outcome: Outcome<StanceCommit>): SealFault {
   if (hasCode(outcome, "WRITE_RULE_FAILED")) return "writeRule";
+  const line = outcomeFaultLine(outcome);
+  if (line === UNVERIFIED_LINE) return "unverified";
+  if (line === NOT_THROUGH_LINE) return "notThrough";
   return outcome.kind === "refused" ? "bug" : "offline";
+}
+
+/** The line a fault with Retry in the commit's slot reads, if any. */
+function retryLineOf(fault: SealFault | null): string | null {
+  if (fault === "offline") return OFFLINE_LINE;
+  if (fault === "notThrough") return NOT_THROUGH_LINE;
+  if (fault === "unverified") return UNVERIFIED_LINE;
+  return null;
 }
 
 export function KeptPicksView() {
@@ -135,6 +150,7 @@ export function KeptPicksView() {
   const [announcement, setAnnouncement] = useState("");
   const [signing, setSigning] = useState(false);
   const [fault, setFault] = useState<SealFault | null>(null);
+  const retryLine = retryLineOf(fault);
   const [help, setHelp] = useState<HelpTopic | null>(null);
   /** The batch landed; the view is leaving and must not read its emptiness as a last drop. */
   const leaving = useRef(false);
@@ -432,17 +448,17 @@ export function KeptPicksView() {
           </>
         ) : (
           <div className="flex flex-col gap-2" {...testAttributes(part(SEAL, "foot"))}>
-            {fault === "offline" && <TransportError testId="keptPicksSeal.fault" message={OFFLINE_LINE} />}
+            {retryLine !== null && <TransportError testId="keptPicksSeal.fault" message={retryLine} />}
             {/* SealFooter: the commit names what it signs; inert from the
                 press, its participle past 200ms, never dimmed, no spinner. */}
             <PillButton
               testId="keptPicksSeal.sign"
               node={part(SEAL, "foot.sign")}
-              variant={fault === "offline" ? "outlined" : "filled"}
+              variant={retryLine !== null ? "outlined" : "filled"}
               full
               onClick={() => void onSign()}
             >
-              {swapped ? "Signing the picks…" : fault === "offline" ? "Retry" : "Sign the picks"}
+              {swapped ? "Signing the picks…" : retryLine !== null ? "Retry" : "Sign the picks"}
             </PillButton>
             <PillButton
               testId="keptPicksSeal.back"

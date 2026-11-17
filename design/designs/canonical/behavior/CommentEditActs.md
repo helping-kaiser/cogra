@@ -2,7 +2,7 @@
 
 ALWAYS the edit beneath the sheet stays inert while the sheet is up
 
-ALWAYS the acts sheet's title carries the batch's count
+ALWAYS commentEdit.actsSheet.title carries the batch's count
 
 ALWAYS the acts card lists every act in the batch, a withdrawal counted as an act
 
@@ -12,8 +12,8 @@ ALWAYS the sheet's title carries the ? that opens How signing works, the seals' 
 
 WHEN tap the sheet's ? -> How signing works opens over the sheet AND NEVER anything is signed
 
-WHEN tap Done -> the acts sheet closes onto the edit
+WHEN tap Done -> commentEdit.actsSheet closes onto the edit
 
-WHEN tap the scrim, swipe the acts sheet down, press system Back or press Escape -> the acts sheet closes onto the edit
+WHEN tap the scrim, swipe commentEdit.actsSheet down, press system Back or press Escape -> commentEdit.actsSheet closes onto the edit
 
 ALWAYS the acts card's last row carries no divider under it, a line separating and nothing following it in the card, and the card ends on that row
