@@ -131,10 +131,10 @@ internal fun CommentFeedCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            // IN THE LINE SHAPE THE WORDS ARE NO DOOR: the card is reached
-            // through its pointer, its Reply and its replies line
-            // (ProfileComments.md:23-27).
-            .then(if (line == null) Modifier.clickable(onClick = onOpenPlace) else Modifier)
+            // THE CARD'S OWN DOOR IN EITHER SHAPE: tapped outside its pointer
+            // or head row and its own controls, it opens the thread at this
+            // comment (FeedKinds.md; ProfileComments.md:43, ProfileCommentsOwn.md:15).
+            .clickable(onClick = onOpenPlace)
             .dataNode(card),
     ) {
         Column(
