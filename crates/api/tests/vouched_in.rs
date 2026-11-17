@@ -161,21 +161,13 @@ async fn vouch(rig: &WireRig, voucher: &Member, path: Uuid) -> Prepared {
 async fn sign(rig: &WireRig, key: &ActorKey, staged_id: Uuid) {
     let boundary = StandInBoundary(rig.standin.clone());
     let write = staged::load(&rig.pool, staged_id).await.expect("loads");
-    let pre = key.pre_sign(write.proposal.clone());
-    let sealed = api::relay::submit_pre_signed(
-        &boundary,
-        &rig.pool,
-        staged_id,
-        PreSignedParts {
-            author_pubkey: pre.author_pubkey.clone(),
-            nonce: pre.nonce.clone(),
-            pre_signature: pre.pre_signature.clone(),
-        },
-    )
-    .await
-    .expect("seals");
+    let pre = common::l1::proposal::PreSigned::sign(key, write.proposal.clone());
+    let sealed =
+        api::relay::submit_pre_signed(&boundary, &rig.pool, staged_id, PreSignedParts::from(&pre))
+            .await
+            .expect("seals");
     let host_key = rig.standin.host_public_key().await.expect("host key");
-    let witness = key.approve(&pre, &sealed, &host_key).expect("approves");
+    let witness = pre.approve(key, &sealed, &host_key).expect("approves");
     api::relay::submit_approval(&boundary, &rig.pool, staged_id, witness.approval_signature)
         .await
         .expect("relays");
@@ -238,7 +230,7 @@ fn handles(page: &Value) -> Vec<String> {
 /// `Record.landedAt` reads.
 async fn landed_at_of(rig: &WireRig, vouch: &Prepared) -> chrono::DateTime<chrono::Utc> {
     sqlx::query_scalar(
-        "SELECT e.attested_at FROM mirror_records m
+        "SELECT e.asserted_at FROM mirror_records m
          JOIN mirror_epochs e ON e.epoch = m.epoch WHERE m.record_id = $1",
     )
     .bind(vouch.proposal.body.act_id().to_string())

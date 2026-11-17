@@ -161,7 +161,6 @@ fn tag(author: &str, seq: u64, epoch: i64, position: i64) -> PublishedRecord {
         epoch,
         act_time: 100 - position,
         position,
-        payload_marked: false,
         payload_witness: vec![0; 32],
         legs: vec![
             PublishedLeg {
@@ -197,7 +196,7 @@ async fn the_chronicle_orders_by_the_key_of_record(pool: PgPool) {
         &pool,
         &EpochPackage {
             epoch: 1,
-            attested_at: chrono::Utc::now(),
+            asserted_at: chrono::Utc::now(),
             records,
             closure: Default::default(),
         },
@@ -244,7 +243,6 @@ fn record(
         epoch: 1,
         act_time: 100 - position,
         position,
-        payload_marked: false,
         payload_witness: vec![0; 32],
         legs,
     }
@@ -267,7 +265,7 @@ async fn ingest_one_epoch(pool: &PgPool, records: Vec<PublishedRecord>) {
         pool,
         &EpochPackage {
             epoch: 1,
-            attested_at: chrono::Utc::now(),
+            asserted_at: chrono::Utc::now(),
             records,
             closure: Default::default(),
         },

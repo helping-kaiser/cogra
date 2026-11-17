@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT author, seq, family, author_pubkey, middle, target, p_d, p_i,\n                settlement_ref, license, asserted_parents, deps, payload,\n                payload_len, nonce, pre_signature, pre_commitment,\n                content_salt, deps_salt, content_commitment, deps_commitment,\n                host_seal, status\n         FROM l1_acts WHERE act_id = $1",
+  "query": "SELECT author, seq, family, middle, target, p_d, p_i,\n                settlement_ref, license, asserted_parents, deps,\n                dependency_nonce, pre_signature, pre_commitment,\n                content_salt, deps_salt, content_commitment, deps_commitment,\n                host_seal, status\n         FROM l1_acts WHERE act_id = $1",
   "describe": {
     "columns": [
       {
@@ -20,101 +20,86 @@
       },
       {
         "ordinal": 3,
-        "name": "author_pubkey",
-        "type_info": "Bytea"
-      },
-      {
-        "ordinal": 4,
         "name": "middle",
         "type_info": "Text"
       },
       {
-        "ordinal": 5,
+        "ordinal": 4,
         "name": "target",
         "type_info": "Text"
       },
       {
-        "ordinal": 6,
+        "ordinal": 5,
         "name": "p_d",
         "type_info": "Float8"
       },
       {
-        "ordinal": 7,
+        "ordinal": 6,
         "name": "p_i",
         "type_info": "Float8"
       },
       {
-        "ordinal": 8,
+        "ordinal": 7,
         "name": "settlement_ref",
         "type_info": "Text"
       },
       {
-        "ordinal": 9,
+        "ordinal": 8,
         "name": "license",
         "type_info": "Text"
       },
       {
-        "ordinal": 10,
+        "ordinal": 9,
         "name": "asserted_parents",
         "type_info": "TextArray"
       },
       {
-        "ordinal": 11,
+        "ordinal": 10,
         "name": "deps",
         "type_info": "TextArray"
       },
       {
+        "ordinal": 11,
+        "name": "dependency_nonce",
+        "type_info": "Bytea"
+      },
+      {
         "ordinal": 12,
-        "name": "payload",
-        "type_info": "Bytea"
-      },
-      {
-        "ordinal": 13,
-        "name": "payload_len",
-        "type_info": "Int8"
-      },
-      {
-        "ordinal": 14,
-        "name": "nonce",
-        "type_info": "Bytea"
-      },
-      {
-        "ordinal": 15,
         "name": "pre_signature",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 16,
+        "ordinal": 13,
         "name": "pre_commitment",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 17,
+        "ordinal": 14,
         "name": "content_salt",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 18,
+        "ordinal": 15,
         "name": "deps_salt",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 19,
+        "ordinal": 16,
         "name": "content_commitment",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 20,
+        "ordinal": 17,
         "name": "deps_commitment",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 21,
+        "ordinal": 18,
         "name": "host_seal",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 22,
+        "ordinal": 19,
         "name": "status",
         "type_info": "Text"
       }
@@ -128,7 +113,6 @@
       false,
       false,
       false,
-      false,
       true,
       false,
       false,
@@ -137,9 +121,7 @@
       true,
       false,
       false,
-      true,
       false,
-      true,
       false,
       false,
       true,
@@ -150,5 +132,5 @@
       false
     ]
   },
-  "hash": "d1a022b91dd317ab9b466ad8fb0a1716207a58057c33c05558a8c93d1d6b223c"
+  "hash": "ba91a6eabb31a1479b7dd4ef3e4fd19ecb011d8010362606ad6b90c897e7a71f"
 }

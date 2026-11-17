@@ -15,6 +15,7 @@ pub mod fold;
 pub mod handshake;
 pub mod identifier;
 pub mod key_backup;
+pub mod proposal;
 pub mod wire;
 
 pub use census::{Domain, Family, FamilyKind, LegRole, LegSpec, Tier};

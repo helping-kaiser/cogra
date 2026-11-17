@@ -38,8 +38,8 @@ struct Rig {
 
 struct Signed {
     id: String,
-    pre: common::l1::handshake::PreSignedProposal,
-    act: common::l1::handshake::VerifiedAct,
+    pre: common::l1::proposal::PreSigned,
+    act: common::l1::proposal::SealedAct,
 }
 
 impl Rig {
@@ -162,7 +162,7 @@ impl Rig {
                     .expect("b64"),
             )
             .expect("decodes");
-            let pre = key.pre_sign(proposal);
+            let pre = common::l1::proposal::PreSigned::sign(key, proposal);
             let sealed = self
                 .gql(
                     Some(token),
@@ -173,11 +173,11 @@ impl Rig {
                      }",
                     json!({ "input": { "proposals": [{
                         "stagedWriteId": id,
-                        "signature": B64.encode(wire::encode_pre_commitment_of(&pre)),
+                        "signature": B64.encode(pre.pre_commitment_blob().encode()),
                     }]}}),
                 )
                 .await;
-            let act = wire::decode_verified_act(
+            let act = common::l1::proposal::SealedAct::decode(
                 &B64.decode(
                     sealed["submitProposals"]["stagedWrites"][0]["verifiedAct"]
                         .as_str()
@@ -194,8 +194,9 @@ impl Rig {
     async fn approve(&self, token: &str, key: &ActorKey, signed: &[Signed]) {
         let host_key = self.standin.host_public_key().await.expect("host key");
         for write in signed {
-            let witness = key
-                .approve(&write.pre, &write.act, &host_key)
+            let witness = write
+                .pre
+                .approve(key, &write.act, &host_key)
                 .expect("approves");
             let approved = self
                 .gql(
@@ -1281,6 +1282,23 @@ impl Rig {
             .await
             .expect("cursor")
             + 1;
+        for (seq, family, _) in &records {
+            if *family == Family::Publish {
+                sqlx::query(
+                    "INSERT INTO act_payloads (act_id, payload, content_nonce, content_salt)
+                     VALUES ($1, '\\x01', '\\x02', '\\x03')
+                     ON CONFLICT (act_id) DO NOTHING",
+                )
+                .bind(
+                    ActId::new(author, *seq, *family)
+                        .expect("act id")
+                        .to_string(),
+                )
+                .execute(&self.pool)
+                .await
+                .expect("a Publish is carried, so its record is payload-marked");
+            }
+        }
         let records = records
             .into_iter()
             .enumerate()
@@ -1291,7 +1309,6 @@ impl Rig {
                 epoch,
                 act_time: epoch * 100 + index as i64,
                 position: index as i64 + 1,
-                payload_marked: family == Family::Publish,
                 payload_witness: vec![0; 32],
                 legs: vec![PublishedLeg {
                     role: LegRole::Binary,
@@ -1307,7 +1324,7 @@ impl Rig {
             &self.pool,
             &EpochPackage {
                 epoch,
-                attested_at: chrono::DateTime::from_timestamp(1_850_000_000 + epoch * 60, 0)
+                asserted_at: chrono::DateTime::from_timestamp(1_850_000_000 + epoch * 60, 0)
                     .expect("instant"),
                 records,
                 closure: Default::default(),

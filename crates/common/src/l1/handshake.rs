@@ -7,6 +7,8 @@
 //! between CoGra and the substrate, in both directions. Bare section
 //! references below are that document's.
 
+use std::fmt;
+
 use super::census::{Family, LegRole};
 use super::crypto::{self, tags};
 use super::encoding::Encoder;
@@ -94,14 +96,58 @@ pub fn canonical_deps(deps: &[ActId]) -> Vec<u8> {
     e.finish()
 }
 
+/// The order of a canonical dependency list. The Layer 1 specification
+/// (its definition "Act Dependency Projection") has the list strictly
+/// increasing by act identifier, duplicate-free and self-free, and Layer 1
+/// orders identifiers componentwise: the author's address atom by bytes,
+/// then the author-local sequence as a number, then the family name by
+/// bytes. Sequence 9 therefore precedes sequence 10, which the
+/// identifiers' text forms would not.
+pub fn dependency_order(a: &ActId, b: &ActId) -> std::cmp::Ordering {
+    a.author
+        .as_bytes()
+        .cmp(b.author.as_bytes())
+        .then(a.seq.cmp(&b.seq))
+        .then_with(|| a.family.as_str().cmp(b.family.as_str()))
+}
+
+/// A dependency list in canonical order with every duplicate collapsed —
+/// the one way CoGra forms the list a device pre-signs.
+pub fn canonical_dep_list(deps: impl IntoIterator<Item = ActId>) -> Vec<ActId> {
+    let mut deps: Vec<ActId> = deps.into_iter().collect();
+    deps.sort_by(dependency_order);
+    deps.dedup();
+    deps
+}
+
+/// Whether a dependency list is strictly ascending under
+/// [`dependency_order`]: sorted and duplicate-free at once. The empty list
+/// is canonical.
+pub fn is_canonical_dep_list(deps: &[ActId]) -> bool {
+    deps.windows(2)
+        .all(|pair| dependency_order(&pair[0], &pair[1]).is_lt())
+}
+
 /// A proposal before signing: body plus the two removable projections.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct Proposal {
     pub body: StructuralBody,
     /// Payload bytes — canonical empty is the zero-length string (§8.4).
     pub payload: Vec<u8>,
     /// Declared dependencies (each naming a whole act).
     pub deps: Vec<ActId>,
+}
+
+/// The payload is what the content nonce conceals, so `Debug` shows its
+/// length and never its bytes.
+impl fmt::Debug for Proposal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Proposal")
+            .field("body", &self.body)
+            .field("payload", &format_args!("<{} bytes>", self.payload.len()))
+            .field("deps", &self.deps)
+            .finish()
+    }
 }
 
 /// The actor's signed pre-commitment over the canonical structural body
@@ -316,8 +362,6 @@ pub struct PublishedRecord {
     pub act_time: i64,
     /// The act's place in its epoch, numbered from [`FIRST_POSITION`].
     pub position: i64,
-    /// Non-empty payload committed under the witness.
-    pub payload_marked: bool,
     /// The content commitment — the payload witness.
     pub payload_witness: Vec<u8>,
     pub legs: Vec<PublishedLeg>,
@@ -338,15 +382,17 @@ pub struct PublishedLeg {
 
 /// One closed epoch as published through the seam: the ordered accepted
 /// act sequence 𝒬_k as records (§11.6 — the record projection of the
-/// final act sequence), with the boundary's attested timestamp and the
+/// final act sequence), with the boundary's asserted timestamp and the
 /// closure outputs the host computed for it.
 #[derive(Debug, Clone, PartialEq)]
 pub struct EpochPackage {
     /// The epoch, numbered from [`FIRST_EPOCH`].
     pub epoch: i64,
-    /// The attested boundary timestamp (the Host Contract's accepted-records
-    /// package): when the epoch closed, so when its records landed.
-    pub attested_at: chrono::DateTime<chrono::Utc>,
+    /// The host's asserted boundary timestamp (the Host Contract's
+    /// accepted-records package), checkable only for consistency with the
+    /// published duration bounds: when the epoch closed, so when its
+    /// records landed.
+    pub asserted_at: chrono::DateTime<chrono::Utc>,
     /// 𝒬_k in its published order; its length is the realized size.
     pub records: Vec<PublishedRecord>,
     pub closure: EpochClosure,
@@ -746,10 +792,62 @@ mod tests {
         assert_eq!(canonical_deps(&[]), vec![0x80]);
     }
 
+    /// A dependency list is canonical when it ascends strictly componentwise, the sequence compared as a number, and forming one sorts and collapses duplicates.
+    /// ´claim:handshake:a-canonical-dependency-list-ascends-componentwise´
+    #[test]
+    fn a_canonical_dependency_list_ascends_componentwise() {
+        let id = |s: &str| ActId::parse(s).expect("ok");
+        let (nine, ten, bob) = (
+            id("act:a:9:opinion"),
+            id("act:a:10:opinion"),
+            id("act:b:0:opinion"),
+        );
+        assert!(is_canonical_dep_list(&[]));
+        assert!(is_canonical_dep_list(std::slice::from_ref(&nine)));
+        assert!(
+            is_canonical_dep_list(&[nine.clone(), ten.clone(), bob.clone()]),
+            "the sequence value orders the list, not its text"
+        );
+        assert!(!is_canonical_dep_list(&[ten.clone(), nine.clone()]));
+        assert!(!is_canonical_dep_list(&[ten.clone(), ten.clone()]));
+        assert_eq!(
+            canonical_dep_list([bob.clone(), ten.clone(), nine.clone(), ten.clone()]),
+            vec![nine, ten, bob]
+        );
+        assert!(canonical_dep_list([]).is_empty());
+    }
+
+    /// Three identifiers on which the text bytes, the encoded bytes and the componentwise order all disagree: the canonical list takes the componentwise one.
+    /// ´claim:handshake:the-dependency-order-is-neither-text-nor-encoding-order´
+    #[test]
+    fn the_dependency_order_is_neither_text_nor_encoding_order() {
+        let id = |s: &str| ActId::parse(s).expect("ok");
+        let (nine, ten, other) = (
+            id("act:a:9:opinion"),
+            id("act:a:10:accept"),
+            id("act:b:0:ratify"),
+        );
+        let all = [other.clone(), ten.clone(), nine.clone()];
+        let componentwise = vec![nine, ten, other];
+
+        let mut by_text = all.to_vec();
+        by_text.sort_by_key(ActId::to_string);
+        let mut by_encoding = all.to_vec();
+        by_encoding.sort_by_key(|d| canonical_deps(std::slice::from_ref(d)));
+        assert_ne!(by_text, componentwise);
+        assert_ne!(by_encoding, componentwise);
+        assert_ne!(by_text, by_encoding);
+
+        assert_eq!(canonical_dep_list(all), componentwise);
+        assert!(is_canonical_dep_list(&componentwise));
+        assert!(!is_canonical_dep_list(&by_text));
+        assert!(!is_canonical_dep_list(&by_encoding));
+    }
+
     fn package(epoch: i64, positions: &[i64]) -> EpochPackage {
         EpochPackage {
             epoch,
-            attested_at: chrono::DateTime::from_timestamp(1_800_000_000, 0).expect("instant"),
+            asserted_at: chrono::DateTime::from_timestamp(1_800_000_000, 0).expect("instant"),
             records: positions
                 .iter()
                 .enumerate()
@@ -760,7 +858,6 @@ mod tests {
                     epoch,
                     act_time: 1,
                     position: *position,
-                    payload_marked: false,
                     payload_witness: vec![],
                     legs: vec![],
                 })

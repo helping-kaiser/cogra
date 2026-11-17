@@ -10,21 +10,24 @@ package com.cogra.domain.signing
 import com.cogra.crypto.ActorKey
 import com.cogra.crypto.PreSignedProposal
 import com.cogra.crypto.decodeProposal
-import com.cogra.crypto.decodeVerifiedAct
+import com.cogra.crypto.decodeSealedAct
 import com.cogra.crypto.encodePreCommitmentOf
 import java.util.Base64
 
 /** A pre-signed proposal and its wire-ready signature blob. */
 class PreSignedStep(
     val pre: PreSignedProposal,
-    /** The pre-commitment blob, base64 — the mutation's `signature` input. */
+    /**
+     * The pre-commitment blob `[2, content nonce, dependency nonce,
+     * pre-signature]`, base64 — the mutation's `signature` input.
+     */
     val signatureBase64: String,
 )
 
 /**
  * Step 2 — pre-sign: parse the canonical proposal and bind it under a
- * fresh private nonce. Throws [com.cogra.crypto.WireException] on a
- * malformed blob.
+ * fresh content nonce and a fresh dependency nonce. Throws
+ * [com.cogra.crypto.WireException] on a malformed blob.
  */
 fun preSignStep(key: ActorKey, canonicalProposal: ByteArray): PreSignedStep {
     val pre = key.preSign(decodeProposal(canonicalProposal))
@@ -32,9 +35,11 @@ fun preSignStep(key: ActorKey, canonicalProposal: ByteArray): PreSignedStep {
 }
 
 /**
- * Step 4 — approve: parse the sealed act, verify the host seal, the
- * exact returned body, and both commitment openings against [sent],
- * then sign the approval witness. Returns the witness signature,
+ * Step 4 — approve: parse the sealed act, verify the exact returned
+ * body, pre-commitment and pre-signature, the editions, the host seal,
+ * and both commitments recomputed from [sent] — the content commitment
+ * over this device's own content pre-digest — then sign the approval
+ * witness. Returns the witness signature,
  * base64. Throws [com.cogra.crypto.HandshakeException] when any
  * verification fails and [com.cogra.crypto.WireException] on a
  * malformed blob — the device refuses rather than signs.
@@ -45,6 +50,6 @@ fun approveStep(
     verifiedAct: ByteArray,
     hostPublicKey: ByteArray,
 ): String {
-    val witness = key.approve(sent, decodeVerifiedAct(verifiedAct), hostPublicKey)
+    val witness = key.approve(sent, decodeSealedAct(verifiedAct), hostPublicKey)
     return Base64.getEncoder().encodeToString(witness.approvalSignature)
 }

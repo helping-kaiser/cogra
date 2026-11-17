@@ -526,3 +526,19 @@ describe("CommentEdit opening", () => {
     expect(document.activeElement).toBe(screen.getByRole("heading", { name: "Edit comment" }));
   });
 });
+
+// W-REPLY-WIZARD-HSCROLL (jakob's hand test, 2026-11-17: "The reply edit wizard
+// scrolls left and right"). The fields scroll vertically under the pinned foot;
+// a control at a line's end — the Sensitive row's `Mark` — carries a 48px
+// target (`.cg-hit`) wider than its word, so the scroller has to hold the
+// gutter inside its own padding, as the seal steps' scrollers do, or the
+// target's overhang becomes sideways scroll. jsdom lays nothing out, so the
+// geometry is pinned by the box the scroller is: it runs to the screen's edges
+// and pads its fields back in, and the page measurement is the PR's evidence.
+describe("CommentEditView's scroller", () => {
+  it("holds the 24px gutter inside its own padding, so an end-of-line target stays inside it", () => {
+    draw();
+    const fields = screen.getByTestId("commentEdit.facts.sensitive.action").closest(".overflow-y-auto") as HTMLElement;
+    expect(fields.className.split(" ")).toEqual(expect.arrayContaining(["-mx-6", "px-6"]));
+  });
+});

@@ -1117,7 +1117,6 @@ async fn claim_pair(
         epoch,
         act_time: epoch,
         position: 1,
-        payload_marked: false,
         payload_witness: vec![0; 32],
         legs: vec![
             PublishedLeg {
@@ -1142,7 +1141,7 @@ async fn claim_pair(
         pool,
         &EpochPackage {
             epoch,
-            attested_at: chrono::Utc::now(),
+            asserted_at: chrono::Utc::now(),
             records: vec![record],
             closure: Default::default(),
         },

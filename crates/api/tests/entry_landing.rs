@@ -17,8 +17,9 @@ use chrono::{Duration, Utc};
 use common::l1::census::Family;
 use common::l1::client::ActorKey;
 use common::l1::encoding::Encoder;
-use common::l1::handshake::{Proposal, StructuralBody};
-use common::l1::identifier::NodeId;
+use common::l1::handshake::{Proposal, StructuralBody, canonical_dep_list};
+use common::l1::identifier::{ActId, NodeId};
+use common::l1::proposal::PreSigned;
 use l1_standin::{StandIn, StandInConfig};
 use postgres_store::staged::{self, PreSignedParts, StagedState};
 use postgres_store::{PgPool, auth as store, mirror};
@@ -223,21 +224,17 @@ impl Rig {
     /// The device's two signing legs over one staged write.
     async fn sign(&self, key: &ActorKey, staged_id: Uuid) {
         let write = staged::load(&self.pool, staged_id).await.expect("loads");
-        let pre = key.pre_sign(write.proposal.clone());
+        let pre = PreSigned::sign(key, write.proposal.clone());
         let sealed = api::relay::submit_pre_signed(
             &self.boundary,
             &self.pool,
             staged_id,
-            PreSignedParts {
-                author_pubkey: pre.author_pubkey.clone(),
-                nonce: pre.nonce.clone(),
-                pre_signature: pre.pre_signature.clone(),
-            },
+            PreSignedParts::from(&pre),
         )
         .await
         .expect("seals");
         let host_key = self.standin.host_public_key().await.expect("host key");
-        let witness = key.approve(&pre, &sealed, &host_key).expect("approves");
+        let witness = pre.approve(key, &sealed, &host_key).expect("approves");
         api::relay::submit_approval(
             &self.boundary,
             &self.pool,
@@ -302,25 +299,28 @@ impl Rig {
         payload.array(2);
         payload.uint(1);
         payload.text("ticker");
-        let pre = ticker.pre_sign(Proposal {
-            body: StructuralBody {
-                author: ticker.address(),
-                seq: 0,
-                family: Family::Registration,
-                middle: None,
-                target: NodeId::Prof(ticker.address()),
-                p_d: 1.0,
-                p_i: 1.0,
-                settlement_ref: None,
-                license: None,
-                asserted_parents: vec![],
+        let pre = PreSigned::sign(
+            &ticker,
+            Proposal {
+                body: StructuralBody {
+                    author: ticker.address(),
+                    seq: 0,
+                    family: Family::Registration,
+                    middle: None,
+                    target: NodeId::Prof(ticker.address()),
+                    p_d: 1.0,
+                    p_i: 1.0,
+                    settlement_ref: None,
+                    license: None,
+                    asserted_parents: vec![],
+                },
+                payload: payload.finish(),
+                deps: vec![],
             },
-            payload: payload.finish(),
-            deps: vec![],
-        });
-        let sealed = self.standin.seal(pre.clone()).await.expect("seals");
+        );
+        let sealed = self.standin.seal(pre.submission()).await.expect("seals");
         let host_key = self.standin.host_public_key().await.expect("host key");
-        let witness = ticker.approve(&pre, &sealed, &host_key).expect("approves");
+        let witness = pre.approve(&ticker, &sealed, &host_key).expect("approves");
         self.standin.approve(witness).await.expect("approval");
         self.standin.close_epoch().await.expect("closes");
         self.ingest_under(gc_after_epochs).await
@@ -1298,6 +1298,14 @@ async fn deps_of(rig: &Rig, id: Uuid) -> Vec<String> {
         .collect()
 }
 
+/// `ids` as the canonical dependency list, in text form.
+fn canonical<'a>(ids: impl IntoIterator<Item = &'a str>) -> Vec<String> {
+    canonical_dep_list(ids.into_iter().map(|d| ActId::parse(d).expect("act id")))
+        .iter()
+        .map(ToString::to_string)
+        .collect()
+}
+
 /// Lands `noa` through mira's vouch: the vouch decided, both signed, one
 /// close. Returns the Registration's and the vouch's act ids.
 async fn land_through_mira(rig: &Rig, mira: &Member, noa: &Applicant) -> (String, String) {
@@ -1373,17 +1381,13 @@ async fn an_applicant_carries_each_kind_once(pool: PgPool) {
     }
 
     let write = staged::load(&rig.pool, opinion[0]).await.expect("loads");
-    let pre = noa.key.pre_sign(write.proposal.clone());
+    let pre = PreSigned::sign(&noa.key, write.proposal.clone());
     assert!(
         api::relay::submit_pre_signed(
             &rig.boundary,
             &rig.pool,
             opinion[0],
-            PreSignedParts {
-                author_pubkey: pre.author_pubkey.clone(),
-                nonce: pre.nonce.clone(),
-                pre_signature: pre.pre_signature.clone(),
-            },
+            PreSignedParts::from(&pre),
         )
         .await
         .is_err(),
@@ -1514,9 +1518,13 @@ async fn the_carried_batch_signs_at_the_landing(pool: PgPool) {
         let write = staged::load(&rig.pool, *id).await.expect("loads");
         assert_eq!(write.state, StagedState::AwaitingPreSign);
         assert!(write.carried);
-        let mut expected = old;
-        expected.extend([registration.clone(), vouch.clone()]);
-        assert_eq!(deps_of(&rig, *id).await, expected);
+        let expected = canonical(
+            old.iter()
+                .chain([&registration, &vouch])
+                .map(String::as_str),
+        );
+        let deps = deps_of(&rig, *id).await;
+        assert_eq!(deps, expected, "the canonical list");
     }
     let on_graph: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM mirror_records WHERE author = $1")
         .bind(noa.key.address())
@@ -1536,6 +1544,35 @@ async fn the_carried_batch_signs_at_the_landing(pool: PgPool) {
             "the batch lands at the first close after the landing"
         );
     }
+}
+
+/// The release orders and de-duplicates whatever list the carried row
+/// holds, whatever the random addresses are. The row's list is set by
+/// hand, because prepare would already canonicalize it: one author that
+/// sorts after every hex address, its sequence 10 named twice and before
+/// its sequence 9 — the order the identifiers' text would keep.
+///
+/// The landing releases a carried list in the componentwise order and without duplicates, whatever order the row held.
+/// ´claim:onboarding:the-landing-release-orders-and-dedups-the-carried-list´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_landing_release_orders_and_dedups_the_carried_list(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let mira = rig.member("mira").await;
+    let noa = rig.applicant(mira.id, "noa").await;
+    let carried = carry(&rig, noa.account, PREPARE_POST, post_input("hello")).await;
+    let (nine, ten) = ("act:zz:9:opinion", "act:zz:10:opinion");
+    let set = sqlx::query("UPDATE staged_writes SET deps = $2 WHERE id = $1 AND state = 'carried'")
+        .bind(carried[0])
+        .bind(vec![ten, nine, ten])
+        .execute(&rig.pool)
+        .await
+        .expect("plant the list");
+    assert_eq!(set.rows_affected(), 1);
+
+    let (registration, vouch) = land_through_mira(&rig, &mira, &noa).await;
+    let mut expected = canonical([registration.as_str(), vouch.as_str()]);
+    expected.extend([nine.to_string(), ten.to_string()]);
+    assert_eq!(deps_of(&rig, carried[0]).await, expected);
 }
 
 /// Custody is the server's (seam 099 ruling 68): carried acts wait out any
@@ -1662,16 +1699,12 @@ async fn crate_post(rig: &Rig, author: &Member) -> api::content::PreparedContent
     let write = staged::load(&rig.pool, prepared.writes[0].id)
         .await
         .expect("loads");
-    let pre = author.key.pre_sign(write.proposal.clone());
+    let pre = PreSigned::sign(&author.key, write.proposal.clone());
     api::relay::submit_pre_signed(
         &rig.boundary,
         &rig.pool,
         write.id,
-        PreSignedParts {
-            author_pubkey: pre.author_pubkey.clone(),
-            nonce: pre.nonce.clone(),
-            pre_signature: pre.pre_signature.clone(),
-        },
+        PreSignedParts::from(&pre),
     )
     .await
     .expect("seals");
