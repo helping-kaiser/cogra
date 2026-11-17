@@ -81,6 +81,33 @@ const commentMenuMarks = (save, hide) => [
   { n: 7, find: ">Report</button>", tag: "button" },
   { n: 8, find: hide, tag: "button" },
 ];
+// The removed menus on their hosts (round 55): `FeedRemovedMenu`'s,
+// `FeedRemovedMenuOwn`'s and `CommentRemovedMenu`'s numbers, the first row's
+// words per board; one wash, the host's.
+const removedMenuMarks = (save) => [
+  { n: 1, find: save, tag: "button" },
+  { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+  { n: 3, find: ">Hide @ada</button>", tag: "button" },
+  { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  { n: 5, find: ">Report</button>", tag: "button" },
+  { n: 6, find: ">License terms</button>", tag: "button" },
+  ...postReadingMarks(7),
+];
+const ownRemovedMenuMarks = (save) => [
+  { n: 1, find: save, tag: "button" },
+  { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+  { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  { n: 5, find: ">License terms</button>", tag: "button" },
+  ...postReadingMarks(6),
+];
+const ownRemovedCommentMenuMarks = [
+  { n: 1, find: ">Save</button>", tag: "button" },
+  { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+  { n: 3, find: ">License terms</button>", tag: "button" },
+  { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  { n: 5, find: ">Opinions on this</button>", tag: "button" },
+  { n: 6, find: ">Cited by</button>", tag: "button" },
+];
 const ownCommentMenuMarks = [
   { n: 1, find: ">Save</button>", tag: "button" },
   { n: 2, find: ">Cite in a new post</button>", tag: "button" },
@@ -786,6 +813,31 @@ Object.assign(FLOW_MARKERS, {
   FeedCommentMenuOwn: ownCommentMenuMarks,
   SavedCommentMenuOwn: [{ n: 1, find: ">Unsave</button>", tag: "button" }, ...ownCommentMenuMarks.filter((m) => m.n !== 1)],
   ProfileCommentsMenuOwn: ownCommentMenuMarks,
+  // Round 55 (backlog 223): the menu hosts the sidecars named and no board
+  // drew, each numbered as its twin numbers the same sheet.
+  SavedPostMenuOwn: [{ n: 1, find: ">Unsave</button>", tag: "button" }, ...ownPostMenuMarks.filter((m) => m.n !== 1)],
+  TagPageMenuOwn: ownPostMenuMarks,
+  SavedProfileMenu: [
+    { n: 1, find: ">Unsave</button>", tag: "button" },
+    { n: 2, find: ">Mention in a new post</button>", tag: "button" },
+    { n: 3, find: ">Hide @mira</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 5, find: ">Report</button>", tag: "button" },
+  ],
+  // The deleted account's card: `FeedProfileMenu`'s numbers, Mention gone.
+  FeedProfileDeletedMenu: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 3, find: ">Hide this account</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 5, find: ">Report</button>", tag: "button" },
+  ],
+  HistoryRemovedMenu: removedMenuMarks(">Save</button>"),
+  SavedRemovedMenu: removedMenuMarks(">Unsave</button>"),
+  HistoryRemovedMenuOwn: ownRemovedMenuMarks(">Save</button>"),
+  SavedRemovedMenuOwn: ownRemovedMenuMarks(">Unsave</button>"),
+  ProfilePostsRemovedMenuOwn: ownRemovedMenuMarks(">Save</button>"),
+  HistoryCommentRemovedMenuOwn: ownRemovedCommentMenuMarks,
+  ProfileCommentsRemovedMenuOwn: ownRemovedCommentMenuMarks,
   // The profile card's menu (round 36, H2): `ProfileMenu`'s rows less Share,
   // Report at the tail.
   FeedProfileMenu: [
