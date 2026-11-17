@@ -12168,9 +12168,9 @@ and 19 as recommended), built on round 49 (60d9c51c0).
 - **A cover's thumb wears the cover's shape** (impl's seam 342): the post
   edit's chosen cover stands 54 × 67.5 under its tall clip's 54 × 96 —
   a cover takes the clip's shape, a tall clip's at 4:5 (`CoverCrop`).
-  The comment edit's cover already draws at 4:5; `CoverRow`'s square
-  frame candidates and the square cover mark on a wide clip's pick tile
-  are left as they are, open.
+  The comment edit's cover already draws at 4:5; the cover step's frame
+  strip and the pick's cover mark stay as they are (jakob 2026-11-17, C7)
+  — the cover flow as a whole is being looked at again (impl 349-4).
 - **Merged with round 49's tip** (ed3cfc74e): `CommentEdit` carries both
   chips, `post` and `tag`. Against ed3cfc74e, 21 board paths and 28
   (board, path, key) strings added, none gone; `composeCrop.shapes`
