@@ -379,6 +379,7 @@ describe("CommentEditor — + Add pictures and the gate (CommentEdit)", () => {
   });
 
   it("reads a write the server refuses FORBIDDEN as That didn't go through., never the bug notice", async () => {
+    prepared();
     const signer = fakeWriteSigner({
       signStaged: vi.fn((staged) =>
         Promise.resolve({
