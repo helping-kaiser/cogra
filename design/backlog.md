@@ -6309,7 +6309,7 @@ under it; (b) it keeps 88% and the rule names the pinned-height sheet as its
 exception.
 
 Closed by round 50, act 3 (jakob 2026-11-17, C5 as recommended): the sheet sizes to its
-content up to 88% (FeedFilterSheet's it), its foot 16px under the last section.
+content up to 88% (FeedFilterSheet's `fit`), its foot 16px under the last section.
 
 ### 250 · A card's fault line when no answer came · *design* · **filed 2026-11-17**
 
