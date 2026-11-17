@@ -233,6 +233,7 @@
     <string name="content_back_to_top">Back to top</string>
     <!-- Report — the confirm sheet (ReportConfirm.jsx; ruling 75). Report is the filled commit, Cancel the quiet way out. -->
     <string name="content_report_title_post">Report this post?</string>
+    <string name="content_report_title_comment">Report this comment?</string>
     <string name="content_report_body">It goes to the people who run CoGra for a look.</string>
     <string name="content_report_report">Report</string>
     <string name="content_report_cancel">Cancel</string>

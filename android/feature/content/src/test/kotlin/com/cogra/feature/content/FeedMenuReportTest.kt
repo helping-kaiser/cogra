@@ -42,9 +42,9 @@ class FeedMenuReportTest {
         val viewModel = ReportViewModel(reports)
         // The route's own door, but with the view model built here rather
         // than by Hilt; the guest's door is exactly the route's.
-        val confirm: ReportSheetSlot = { postId, onDismiss, notify ->
+        val confirm: ReportSheetSlot = { ask, onDismiss, notify ->
             ReportSheetRoute(
-                postId = postId,
+                ask = ask,
                 onDismiss = onDismiss,
                 notify = notify,
                 testTag = "feed_report_sheet",
@@ -175,7 +175,7 @@ class FeedMenuReportTest {
         var notified: String? = null
         compose.setContent {
             ReportSheetRoute(
-                postId = "p1",
+                ask = ReportAsk("p1", ReportKind.Post),
                 onDismiss = {},
                 notify = { notified = it },
                 testTag = "detail_report_sheet",

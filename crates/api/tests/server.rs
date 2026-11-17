@@ -1298,6 +1298,61 @@ async fn password_reset_link_check_reads_without_consuming(pool: PgPool) {
     );
 }
 
+fn reset_link(token: &str) -> String {
+    format!("{{ passwordResetLink(token: \"{token}\") {{ email }} }}")
+}
+
+/// The reset link's check names the account's login email while the link
+/// is live — the one account it resets, not another holding a live link
+/// too — and answers a used link, one past its time, a token nothing
+/// knows and an empty one with the same bare null, the very answers the
+/// Boolean check gives false for: a dead link learns nothing more.
+///
+/// A password-reset link's check names its account's email only while the link is live, and every dead link answers alike.
+/// ´claim:server:a-reset-link-check-names-the-email-only-while-live´
+#[sqlx::test(migrations = "../../migrations")]
+async fn password_reset_link_names_the_email_only_while_live(pool: PgPool) {
+    let fifteen = chrono::Utc::now() + chrono::Duration::minutes(15);
+    let live = seed_reset(&pool, "resetter", fifteen).await;
+    let other = seed_reset(&pool, "bystander", fifteen).await;
+    let data = gql(test_app(pool.clone()), reset_link(&live)).await;
+    assert_eq!(
+        data,
+        serde_json::json!({ "passwordResetLink": { "email": "resetter@example.com" } })
+    );
+    let data = gql(test_app(pool.clone()), reset_link(&other)).await;
+    assert_eq!(data["passwordResetLink"]["email"], "bystander@example.com");
+
+    let data = gql(
+        test_app(pool.clone()),
+        format!(
+            "mutation {{ confirmPasswordReset(input: {{ resetToken: \"{live}\", \
+             newPassword: \"a fresh strong password\" }}) {{ ok }} }}"
+        ),
+    )
+    .await;
+    assert_eq!(data["confirmPasswordReset"]["ok"], true, "{data}");
+    let stale = seed_reset(
+        &pool,
+        "late",
+        chrono::Utc::now() - chrono::Duration::minutes(1),
+    )
+    .await;
+
+    let dead = serde_json::json!({ "passwordResetLink": null });
+    for (token, what) in [
+        (live.as_str(), "a used link"),
+        (stale.as_str(), "a link past its time"),
+        ("no-such-token", "a token nothing knows"),
+        ("", "an empty token"),
+    ] {
+        let data = gql(test_app(pool.clone()), reset_link(token)).await;
+        assert_eq!(data, dead, "{what}");
+        let data = gql(test_app(pool.clone()), reset_check(token)).await;
+        assert_eq!(data["passwordResetLinkCheck"], false, "{what}");
+    }
+}
+
 /// (´claim:server:an-invite-link-reads-anonymously´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn invite_link_check_reads_expiry_as_unusable(pool: PgPool) {

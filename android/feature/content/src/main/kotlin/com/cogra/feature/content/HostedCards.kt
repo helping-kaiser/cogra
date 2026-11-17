@@ -28,6 +28,7 @@ import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.v2.media.CoveringLayers
 import com.cogra.core.designsystem.v2.media.LocalCoveringLayers
 import com.cogra.core.designsystem.v2.media.SurfaceCover
+import com.cogra.domain.CommentView
 import com.cogra.domain.PostView
 import com.cogra.domain.ProfileComment
 import com.cogra.domain.content.SensitiveMark
@@ -121,11 +122,12 @@ fun CardListHost(
         shareUrls = viewModel.shareUrls,
         onEditPost = routes.onEditPost,
         onCitePost = routes.onCitePost,
+        onEditComment = routes.onEditComment,
         onReveal = viewModel::onReveal,
         stanceControl = nodeStanceControl,
     )
     ProvideRemoval {
-        HostedCardsScope(doors, routes, hooks, revealed, tag, notify, content)
+        HostedCardsScope(doors, routes, hooks, revealed, tag, notify, rememberCommentReread(), content)
     }
 }
 
@@ -138,6 +140,8 @@ internal fun HostedCardsScope(
     revealed: Map<String, SensitiveMark>,
     tag: String,
     notify: (String) -> Unit,
+    /** One comment read afresh, for the card an edit signed off the thread settles ([EditReturn]). */
+    rereadComment: suspend (String) -> CommentView? = { null },
     content: @Composable (HostedCards) -> Unit,
 ) {
     val layers = remember { CoveringLayers() }
@@ -145,13 +149,16 @@ internal fun HostedCardsScope(
     // away and back; the post itself is the one whose count was tapped.
     var commentsFor by rememberSaveable { mutableStateOf<String?>(null) }
     var commentsPost by remember { mutableStateOf<PostView?>(null) }
-    var reportFor by remember { mutableStateOf<String?>(null) }
+    var reportFor by remember { mutableStateOf<ReportAsk?>(null) }
+    val returns = HostReturn(routes.commentsReturn, routes.onCommentsReturnConsumed, rereadComment)
+    val editReturn = rememberEditReturn(returns, threadOpen = commentsFor != null)
     val actions = CardActions(
         hooks = hooks,
         doors = doors,
         reveals = revealed,
         onOpenComments = { commentsFor = it },
         onReport = { reportFor = it },
+        editReturn = editReturn,
     )
     val cards = HostedCards(
         post = { post, node ->
@@ -179,13 +186,12 @@ internal fun HostedCardsScope(
                 onReply = routes.onReply,
                 onEditComment = routes.onEditComment,
                 onSignInOrJoin = routes.onSignInOrJoin,
-                commentsReturn = routes.commentsReturn,
-                onCommentsReturnConsumed = routes.onCommentsReturnConsumed,
+                returns = returns,
                 onCommentsDepart = routes.onCommentsDepart,
             )
         }
-        reportFor?.let { postId ->
-            reportDoor(routes.onRequireAccount, "${tag}_report_sheet")(postId, { reportFor = null }, notify)
+        reportFor?.let { ask ->
+            reportDoor(routes.onRequireAccount, "${tag}_report_sheet")(ask, { reportFor = null }, notify)
         }
     }
 }
@@ -211,7 +217,7 @@ private fun HostedPostCard(
         viewerId = actions.viewerId,
         onEdit = actions.onEditPost,
         onCite = actions.onCitePost,
-        onReport = { actions.onReport(post.id) },
+        onReport = { actions.onReport(ReportAsk(post.id, ReportKind.Post)) },
         revealed = actions.reveals.isRevealed(post.id, post.sensitiveMark()),
         onReveal = { actions.onReveal(post.id, post.sensitiveMark()) },
         stanceControl = actions.stanceControl,
@@ -225,6 +231,9 @@ private fun HostedPostCard(
  * under the profile's own sheet (seam 300: the added `profile.menuSheet.*` rows).
  */
 private val PROFILE_MENU_SHEET = DataNode("profile") / "menuSheet"
+
+/** The profile's comment card menus: `profile.menuSheet`, every row registered (ProfileCommentsMenu, -Own). */
+private val PROFILE_COMMENT_MENU = CommentMenuPlacement(PROFILE_MENU_SHEET, CommentMenuPlacement.ALL)
 
 /**
  * A hosted post card's place: the host's registered card, keyed by the
@@ -277,6 +286,7 @@ private fun HostedCommentCard(
             actions = actions,
             shape = CommentCardShape.Line(reply),
             authorHere = true,
+            menu = PROFILE_COMMENT_MENU,
             // THE POINTER OPENS THE THREAD THE COMMENT LIVES IN, landed on the
             // comment that answers it (ProfileComments.md:23).
             onOpenTarget = { openPlace() },

@@ -335,6 +335,26 @@ describe("Invites (behavior/Invites.md)", () => {
     expect(screen.getAllByTestId("invites.link")).toHaveLength(2);
   });
 
+  // NetworkError.md:13 — the server answered FORBIDDEN: never the "can't
+  // reach the server" line.
+  it(":59 a revoke the server refuses FORBIDDEN keeps the card and reads That didn't go through.", async () => {
+    show();
+    server.use(
+      gqlLink.mutation("RevokeInviteLink", () =>
+        HttpResponse.json({
+          data: null,
+          errors: [{ message: "member account required", extensions: { code: "FORBIDDEN" } }],
+        }),
+      ),
+    );
+    const cards = await screen.findAllByTestId("invites.link");
+    fireEvent.click(within(cards[0]).getByTestId("invites.link.action"));
+    const line = await screen.findByTestId("invites-revoke-failed");
+    expect(line).toHaveTextContent("That didn't go through. Try again.");
+    expect(line).not.toHaveTextContent(/reach the server/);
+    expect(screen.getAllByTestId("invites.link")).toHaveLength(2);
+  });
+
   it(":71-:75 an ask-link row heads Applications; kept with the key elsewhere it reads Waiting for your key", async () => {
     await keepPick("acct-1", { kind: "profile", id: "app-noor" }, { pDirected: 0.3, pInterest: 0.2 }, "approval");
     show({
@@ -720,6 +740,25 @@ describe("the create sheet (behavior/InviteNew.md, InviteExpiry.md, InviteCreate
     expect(within(sheet).getByRole("switch")).toHaveAttribute("aria-checked", "false");
   });
 
+  it("InviteNew.md:23 a create the server refuses FORBIDDEN reads That didn't go through. and keeps the choices", async () => {
+    show();
+    server.use(
+      gqlLink.mutation("CreateInviteLink", () =>
+        HttpResponse.json({
+          data: null,
+          errors: [{ message: "member account required", extensions: { code: "FORBIDDEN" } }],
+        }),
+      ),
+    );
+    const sheet = await openSheet();
+    fireEvent.click(within(sheet).getByRole("switch"));
+    fireEvent.click(within(sheet).getByTestId("invites.createSheet.create"));
+    const line = await within(sheet).findByTestId("invites-sheet-failed");
+    expect(line).toHaveTextContent("That didn't go through. Try again.");
+    expect(line).not.toHaveTextContent(/reach the server/);
+    expect(within(sheet).getByRole("switch")).toHaveAttribute("aria-checked", "false");
+  });
+
   it("InviteCreated.md:17 Share link with no platform sheet copies, with Link copied", async () => {
     const writeText = vi.fn(() => Promise.resolve());
     Object.assign(navigator, { clipboard: { writeText }, share: undefined });
@@ -961,6 +1000,24 @@ describe("the closing dialogs (behavior/RejectConfirm.md, RejectAllConfirm.md)",
     fireEvent.click(within(row("imke")).getByTestId("invites.application.close"));
     fireEvent.click(await screen.findByTestId("invites.dialog.close"));
     expect(await screen.findByTestId("invites-dialog-failed")).toHaveTextContent("That didn't send. Try again.");
+    expect(screen.getByTestId("invites.dialog.close")).toHaveTextContent("Retry");
+    expect(row("imke")).toBeInTheDocument();
+  });
+
+  it("NetworkError.md:13 a closing the server refuses FORBIDDEN reads That didn't go through. with Retry", async () => {
+    show();
+    server.use(
+      gqlLink.mutation("RejectApplication", () =>
+        HttpResponse.json({
+          data: null,
+          errors: [{ message: "member account required", extensions: { code: "FORBIDDEN" } }],
+        }),
+      ),
+    );
+    await screen.findAllByTestId("invites.application");
+    fireEvent.click(within(row("imke")).getByTestId("invites.application.close"));
+    fireEvent.click(await screen.findByTestId("invites.dialog.close"));
+    expect(await screen.findByTestId("invites-dialog-failed")).toHaveTextContent("That didn't go through. Try again.");
     expect(screen.getByTestId("invites.dialog.close")).toHaveTextContent("Retry");
     expect(row("imke")).toBeInTheDocument();
   });

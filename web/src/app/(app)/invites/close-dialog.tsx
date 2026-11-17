@@ -22,6 +22,13 @@ import { buttonClassName } from "@/lib/ui/button";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { DialogSurface } from "@/lib/ui2/dialog-surface";
 import { DIDNT_SEND, RETRY } from "@/lib/invites/queue";
+import { NOT_THROUGH_LINE } from "@/lib/ui/error-messages";
+
+/**
+ * What a closing answered: taken, no answer, or the server's FORBIDDEN —
+ * an answer, so its line is the not-through one (NetworkError.md:13).
+ */
+export type CloseAnswer = "taken" | "failed" | "notThrough";
 
 /** How long a closing may stay unanswered before it says it is still working. */
 export const CLOSING_AFTER_MS = 200;
@@ -42,14 +49,15 @@ export function CloseDialog({
   commitLabel: string;
   busyLabel: string;
   keepLabel: string;
-  /** The closing itself: true when it was taken. */
-  onCommit: () => Promise<boolean>;
+  /** The closing itself, and what it answered. */
+  onCommit: () => Promise<CloseAnswer>;
   /** Keep, the scrim, Back or Escape: nothing is closed. */
   onDismiss: () => void;
 }) {
   const [inFlight, setInFlight] = useState(false);
   const [slow, setSlow] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [fault, setFault] = useState<Exclude<CloseAnswer, "taken"> | null>(null);
+  const failed = fault !== null;
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(
     () => () => {
@@ -61,15 +69,15 @@ export function CloseDialog({
   const commit = async () => {
     if (inFlight) return;
     setInFlight(true);
-    setFailed(false);
+    setFault(null);
     timer.current = setTimeout(() => setSlow(true), CLOSING_AFTER_MS);
-    const taken = await onCommit();
+    const answer = await onCommit();
     if (timer.current !== null) clearTimeout(timer.current);
     timer.current = null;
     setSlow(false);
     setInFlight(false);
     // A closing taken unmounts this dialog through its caller.
-    if (!taken) setFailed(true);
+    if (answer !== "taken") setFault(answer);
   };
 
   return (
@@ -106,7 +114,7 @@ export function CloseDialog({
       {failed && (
         // The failure voice inside the dialog, never a snackbar (:23).
         <p role="alert" data-testid="invites-dialog-failed" className="m-0 mt-4 text-body-medium text-error">
-          {DIDNT_SEND}
+          {fault === "notThrough" ? NOT_THROUGH_LINE : DIDNT_SEND}
         </p>
       )}
     </DialogSurface>

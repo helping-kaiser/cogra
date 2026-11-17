@@ -975,6 +975,25 @@ fun ComposeWizardState.movedPick(from: Int, to: Int): ComposeWizardState {
 fun ComposeWizardState.withUpload(uri: String, upload: AssetUpload): ComposeWizardState =
     copy(picked = picked.withUpload(uri, upload))
 
+/**
+ * The picks [crops] frames differently from the framing their upload was
+ * started at — or finished with.
+ *
+ * A NEW FRAMING MAKES A SENT PICTURE THE WRONG PICTURE: a pick framed again
+ * after its upload started — back from the details stage, or re-shaped by a
+ * chip — has to be sent again when the crop is left, or the post publishes
+ * the framing the author moved away from (jakob's A1, 2026-11-13; the avatar
+ * flow's own rule, `AvatarFlowViewModel.onCropCommitted`).
+ */
+fun ComposeWizardState.reframedBy(crops: Map<String, CropSpec>): List<String> =
+    picked.filter { it.upload !is AssetUpload.Idle && this.crops[it.uri] != crops[it.uri] }.map { it.uri }
+
+/** The framings the crop stage reports, each re-framed pick's upload back to `Idle` so it is sent again. */
+fun ComposeWizardState.withCrops(crops: Map<String, CropSpec>): ComposeWizardState {
+    if (this.crops == crops) return this
+    return reframedBy(crops).fold(copy(crops = crops)) { next, uri -> next.withUpload(uri, AssetUpload.Idle) }
+}
+
 fun ComposeWizardState.withSourceRatio(uri: String, ratio: Float): ComposeWizardState =
     copy(picked = picked.withSourceRatio(uri, ratio))
 

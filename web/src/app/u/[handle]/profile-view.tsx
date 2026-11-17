@@ -87,6 +87,9 @@ import { opensVouchBackOn, VOUCHED_IN_PATH, vouchBackVariant } from "@/lib/vouch
 import { useComfortLine } from "@/lib/saved/comfort-line";
 import { useHostSnack } from "@/lib/saved/save-row";
 import { RowLine } from "@/lib/ui/row-line";
+import { useProfileChange, useProfileChangesLanded } from "@/lib/profile/profile-change";
+import { usePicturePick } from "@/app/profile/picture/use-picture-pick";
+import { useSlowAnswer } from "@/lib/ui2/waiting-commit";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { backFor, personOrigin } from "@/lib/ui/back-origin";
 import { opinionsHref } from "@/lib/profile/opinions-route";
@@ -353,6 +356,20 @@ export function ProfileScreen({
   }, [refresh, filter, releasePin]);
   usePullToRefresh({ host, onPull });
 
+  // A profile change taken after its seal closed: the head reads the profile
+  // again and shows the change (Profile.jsx's `change` chip: "Taken, the line
+  // goes, the head shows the change").
+  const landed = useProfileChangesLanded();
+  // The own avatar's change badge opens the picker, then the picture's crop
+  // and its own seal (Profile.md:47).
+  const picturePick = usePicturePick();
+  const landedSeen = useRef(landed);
+  useEffect(() => {
+    if (landed === landedSeen.current || handle !== null) return;
+    landedSeen.current = landed;
+    return refresh("keep");
+  }, [landed, handle, refresh]);
+
   const onFilter = (next: ChronicleFilter) => {
     if (next === filter || profile === null) return;
     // Off the view that was held, the profile's landing is the tab's own
@@ -569,11 +586,13 @@ export function ProfileScreen({
               website={profile.websiteUrl.value}
               redacted={deleted}
               figures={figures}
-              // THE FIGURES OPEN THE OPINIONS PAGE (graph.json `the figures row`),
-              // under this profile, carrying its own origin so the page lights
-              // the root this profile did and returns to it as it was opened.
-              figuresHref={opinionsHref(handle, "on", openedFrom)}
+              // EACH OPINION FIGURE OPENS THE OPINIONS PAGE ON ITS OWN
+              // DIRECTION (Profile.md:49-51, ProfileOther.md:57-59), under this
+              // profile, carrying its own origin so the page lights the root
+              // this profile did and returns to it as it was opened.
+              figuresHref={(direction) => opinionsHref(handle, direction, openedFrom)}
               own={own}
+              onAvatarChange={own ? picturePick.open : undefined}
               // The handle repeats only where the bar does not carry it: the
               // own root's band carries none.
               showHandle={handle === null}
@@ -674,6 +693,8 @@ export function ProfileScreen({
             {/* THE ROW LINE IN THE ACTIONS ROW (design digest item 46): a save or
                 unsave of this person that did not go through. */}
             {comfort !== null && <RowLine state={comfort} testId="profile-row-line" />}
+            {own && <ProfileChangeLine />}
+            {own && picturePick.input}
           </div>
           <TabBar
             tabs={CHRONICLE_TABS}
@@ -886,5 +907,28 @@ function ChronicleAct({
       node={node}
       testId={`chronicle-row-${row.id}`}
     />
+  );
+}
+
+/**
+ * The line under one's own head for a profile change whose seal was closed
+ * while it signed (ProfileEditSeal.md; Profile.jsx's `change` chip; backlog
+ * 165 closed by (a)): `Signing…` in the pending marker's quiet register once
+ * 200ms pass without an answer, then — if it did not sign — `That didn't
+ * sign.` in the failure voice with `Retry`, which asks the same change to
+ * sign again. Never the snackbar for the failure; nothing stands here
+ * otherwise. The board's head line pads 8 / 16 / 12.
+ */
+export function ProfileChangeLine() {
+  const change = useProfileChange();
+  const waited = useSlowAnswer(change?.kind === "signing");
+  if (change === null || (change.kind === "signing" && !waited)) return null;
+  return (
+    <div className="pb-3 pt-2">
+      <RowLine
+        state={change.kind === "signing" ? { kind: "signing" } : { kind: "didntSign", onRetry: change.retry }}
+        testId="profile-change-line"
+      />
+    </div>
   );
 }

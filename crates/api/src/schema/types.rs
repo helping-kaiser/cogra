@@ -2513,6 +2513,15 @@ impl EmailChangeLinkState {
     }
 }
 
+/// The anonymous view of a live password-reset link (the
+/// `passwordResetLink` query). Holding the token is holding the link.
+#[derive(SimpleObject)]
+pub struct PasswordResetLinkCheck {
+    /// The login email of the account the link resets — the username a
+    /// password manager files the new password under. Never in the link.
+    pub email: String,
+}
+
 /// The anonymous pre-submit view of an invite link — enough for the app
 /// to gate the registration form and key ceremony on a usable capability,
 /// and to show who is vouching. Holding the id is holding the link.
