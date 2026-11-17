@@ -385,6 +385,86 @@ describe("a comment's video", () => {
     expect(await screen.findByTestId("reply-seal")).toBeInTheDocument();
   });
 
+  // THE HAND TEST OF 2026-11-17: a cover picked from the device failed, and
+  // Retry never recovered it — every Retry read the same picked handle again —
+  // while removing it and picking the same picture again went up at once.
+  describe("a cover picked from the device", () => {
+    function countedUploads() {
+      const sent = { count: 0 };
+      server.use(
+        gqlLink.mutation("UploadMedia", () => {
+          sent.count += 1;
+          return HttpResponse.json({
+            data: {
+              uploadMedia: {
+                __typename: "UploadMediaPayload",
+                media: echoedMedia(`m${sent.count}`),
+                userErrors: [],
+              },
+            },
+          });
+        }),
+      );
+      return sent;
+    }
+
+    async function chooseCoverPicture(face: File) {
+      const input = screen.getByTestId("reply-cover-file-input");
+      Object.defineProperty(input, "files", { value: [face], configurable: true });
+      fireEvent.change(input);
+      await act(async () => {});
+    }
+
+    it("goes up, with its clip, after its picked handle stops reading", async () => {
+      const face = aPicture();
+      vi.stubGlobal(
+        "createImageBitmap",
+        vi.fn(async (source: Blob) => {
+          if (source === face) throw new DOMException("could not be read", "NotReadableError");
+          return { width: 1080, height: 1080, close: () => {} };
+        }),
+      );
+      const sent = countedUploads();
+      draw();
+      write("A clip with a face.");
+      await pickFiles([aVideo()]);
+      // The silent still and the clip go up first.
+      await waitFor(() => expect(sent.count).toBe(2));
+
+      await chooseCoverPicture(face);
+
+      // The chosen face and the clip again — and no fault line to retry.
+      await waitFor(() => expect(sent.count).toBe(4));
+      expect(screen.queryByTestId(/^reply-media-error-/)).toBeNull();
+    });
+
+    it("lands the pair on Retry when the cover's read failed once", async () => {
+      const reading = { fails: false };
+      vi.stubGlobal(
+        "createImageBitmap",
+        vi.fn(async () => {
+          if (reading.fails) throw new DOMException("could not be read", "NotReadableError");
+          return { width: 1080, height: 1080, close: () => {} };
+        }),
+      );
+      const sent = countedUploads();
+      draw();
+      write("A clip with a face.");
+      await pickFiles([aVideo()]);
+      await waitFor(() => expect(sent.count).toBe(2));
+
+      reading.fails = true;
+      await chooseCoverPicture(aPicture());
+      const line = await screen.findByTestId(/^reply-media-error-/);
+      expect(line).toHaveTextContent("The cover didn't upload.");
+
+      reading.fails = false;
+      fireEvent.click(screen.getByTestId(/^reply-media-retry-/));
+      await waitFor(() => expect(sent.count).toBe(4));
+      await waitFor(() => expect(screen.queryByTestId(/^reply-media-error-/)).toBeNull());
+    });
+  });
+
   // The feed-video rulings, 2026-09-23, sharpened 2026-09-24 ("FRAME 1 MEANS
   // FRAME 0, STRICTLY"): a clip that reaches upload with no chosen cover
   // gets its own frame 0 uploaded silently, through the same leg a chosen

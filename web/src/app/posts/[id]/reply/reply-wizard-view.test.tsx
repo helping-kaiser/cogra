@@ -307,6 +307,75 @@ describe("the reply wizard", () => {
     });
   });
 
+  // THE HAND TEST OF 2026-11-17: a failed upload that Retry never recovered,
+  // while removing the picture and adding it again went up at once. Retry
+  // must do what that re-add does.
+  describe("Retry after a failed read", () => {
+    function countedUploads() {
+      const sent = { count: 0 };
+      server.use(
+        gqlLink.mutation("UploadMedia", () => {
+          sent.count += 1;
+          return HttpResponse.json({
+            data: {
+              uploadMedia: {
+                __typename: "UploadMediaPayload",
+                media: echoedMedia(`m-${sent.count}`),
+                userErrors: [],
+              },
+            },
+          });
+        }),
+      );
+      return sent;
+    }
+
+    it("offers Retry on a picture whose read failed, and it lands", async () => {
+      const reading = { fails: true };
+      vi.stubGlobal(
+        "createImageBitmap",
+        vi.fn(async () => {
+          if (reading.fails) throw new DOMException("could not be read", "NotReadableError");
+          return { width: 1200, height: 1500, close: () => {} };
+        }),
+      );
+      const sent = countedUploads();
+      draw();
+      write("With a picture.");
+      await pick(["a.jpg"]);
+
+      const line = await screen.findByTestId(/^reply-media-error-/);
+      expect(sent.count).toBe(0);
+      reading.fails = false;
+      fireEvent.click(within(line).getByTestId(/^reply-media-retry-/));
+
+      await waitFor(() => expect(sent.count).toBe(1));
+      await waitFor(() => expect(screen.queryByTestId(/^reply-media-error-/)).toBeNull());
+    });
+
+    it("uploads a picture whose picked handle stops reading after the pick", async () => {
+      const picked: Blob[] = [];
+      vi.stubGlobal(
+        "createImageBitmap",
+        vi.fn(async (source: Blob) => {
+          if (picked.includes(source)) throw new DOMException("could not be read", "NotReadableError");
+          return { width: 1200, height: 1500, close: () => {} };
+        }),
+      );
+      const sent = countedUploads();
+      draw();
+      write("With a picture.");
+      const input = await screen.findByTestId("reply-media-input");
+      const file = new File([new Uint8Array([1, 2, 3]) as BlobPart], "a.jpg", { type: "image/jpeg" });
+      picked.push(file);
+      Object.defineProperty(input, "files", { value: [file], configurable: true });
+      fireEvent.change(input);
+
+      await waitFor(() => expect(sent.count).toBe(1));
+      expect(screen.queryByTestId(/^reply-media-error-/)).toBeNull();
+    });
+  });
+
   describe("the seal", () => {
     it("says what is answered and how long the answer is", async () => {
       draw();

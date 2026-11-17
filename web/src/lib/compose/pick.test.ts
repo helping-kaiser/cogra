@@ -168,6 +168,36 @@ describe("screenPick", () => {
     expect(new Set(refused.refusals.map((r) => r.id)).size).toBe(2);
   });
 
+  // The hand test of 2026-11-17: a picked picture whose handle stopped reading
+  // between the pick and the upload failed on every Retry, while the same
+  // picture picked afresh went up at once. The picture joins as its own bytes.
+  it("takes a picture as its own copy of the bytes, readable after the picked handle stops reading", async () => {
+    const bytes = new Uint8Array([7, 7, 7, 7, 7, 7, 7, 7]);
+    const picked = file("shot.jpg", "image/jpeg", bytes);
+    const outcome = await screenPick([picked], EMPTY);
+    const [held] = outcome.accepted;
+
+    // The handle goes stale, the way the File API's snapshot lets it.
+    const stale = () => Promise.reject(new DOMException("could not be read", "NotReadableError"));
+    Object.defineProperty(picked, "arrayBuffer", { value: stale });
+
+    expect(held).not.toBe(picked);
+    expect(held!.name).toBe("shot.jpg");
+    expect(held!.type).toBe("image/jpeg");
+    expect(new Uint8Array(await held!.arrayBuffer())).toEqual(bytes);
+  });
+
+  it("refuses in the unreadable line a picture whose handle reads nothing at the pick", async () => {
+    const picked = picture("gone.jpg");
+    const stale = () => Promise.reject(new DOMException("could not be read", "NotReadableError"));
+    Object.defineProperty(picked, "arrayBuffer", { value: stale });
+
+    const outcome = await screenPick([picked, picture("ok.jpg")], EMPTY);
+
+    expect(outcome.accepted.map((f) => f.name)).toEqual(["ok.jpg"]);
+    expect(outcome.refusals.map((r) => [r.name, r.reason])).toEqual([["gone.jpg", UNREADABLE]]);
+  });
+
   it("refuses an animated GIF in words and keeps converting a still one", async () => {
     // The silent flattening this replaces: a canvas holds one frame, so an
     // animation used to arrive as a still with nothing said.
