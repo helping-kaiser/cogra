@@ -6352,7 +6352,9 @@ board's private habit; jakob ruled it as recommended.
   cover's own shape, wearing the *Cover* pill a post's first picture
   wears — and the tile is the door that changes it, named *Change the
   cover*. With no cover, the same place holds the dashed *Add a cover*
-  door, its words beside the tile where the tile is too small for them.
+  door, a square at the clip tile's height (jakob 2026-11-18, round 56:
+  "have it squared at same hight as the video"), its words beside the
+  tile where the tile is too small for them.
 - **Each surface opens its own way in.** The **pick tray** shows the
   cover beside the clip once the cover step settled one, which is how a
   walk that can be walked backwards tells the author what the step

@@ -2,9 +2,9 @@
 
 ALWAYS the clip itself never changes at an edit and is never swapped for another
 
-ALWAYS postEdit.video.cover stands beside postEdit.video.thumb at its 96 high and at the cover's own shape, a tall clip's 4:5, 76.8 × 96, a square clip's 1:1, a wide clip's 16:9, never the clip's own
+ALWAYS postEdit.video.cover stands beside postEdit.video.thumb at its 96 high and, a cover chosen, at the cover's own shape, a tall clip's 4:5, 76.8 × 96, a square clip's 1:1, a wide clip's 16:9, never the clip's own
 
-ALWAYS postEdit.video.cover is the dashed Add a cover door GIVEN no cover was ever chosen, even when a taken still exists
+ALWAYS postEdit.video.cover is the dashed Add a cover door, a square at the clip tile's height, 96 × 96, GIVEN no cover was ever chosen, even when a taken still exists
 
 ALWAYS postEdit.video.cover shows the chosen cover wearing the Cover pill and is named Change the cover GIVEN a cover was chosen
 
