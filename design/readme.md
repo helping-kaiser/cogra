@@ -12561,6 +12561,36 @@ nothing reordered, the sheet over its host as its twin raises it.
 - **The gate**: against `c84455977`, 214 → 225 screens, 8492 → 9031 board
   paths, 2270 → 2285 distinct, nothing gone; the strings added are the
   eleven titles.
+
+### Round 56, the empty cover tile a square, the key-absent pad the shared pad — 2026-11-18
+
+jakob 2026-11-18, round 54–55's review: "make the small version of it a
+sqaure.. the current rectangle looks like we are just fitting to the text
+length.. … have it squared at same hight as the video", confirmed "tile as
+you read it"; and C1 "as rec" — the key-absent pad takes the shared pad's
+drawing.
+
+- **The empty `Add a cover` tile is a square at the clip tile's height**
+  (`CoverTile`): the door takes `height` on both sides, `width` being the
+  chosen cover's alone. `Details · a clip, no cover` and `Edit post · a
+  video body` go from 76.8 × 96 to 96 × 96, the plus at the tile's exact
+  centre (0, 0), the words 4 under it with 14.48 clear on each side; the
+  reply composer's (167 × 167) and the comment edit's (56 × 56, words
+  beside) were square and do not move. A chosen cover keeps its own shape
+  (round 52), so a tall clip's tile narrows to 76.8 × 96 when one is
+  picked; the chosen copies render pixel-identical to before.
+- **`PadKeyAbsent` renders `StanceControl`'s pad** in a new
+  `signing="keyAbsent"` state, `writeRule`'s grammar: the notice `Your key
+  isn't on this browser` over `Restore the key`, and `Keep it pending,
+  restore later` under it, where the landing line and the commit row stand.
+  The pad gains its "?" and says the empty standing line in the master's
+  body-small; its box, field, notice and both buttons stand where they
+  stood (43, 133.61, 304 × 630.39), and no other board's markup moves. The
+  board registers under `feed`, `PadStanding`'s names, with
+  `card.actionRow.stance.pad.restore` and `.keepPending` the two new
+  paths; `check-readouts` holds four hand-drawn pads. Backlog 221 closed.
+- **The gate**: against `72dc5b0be`, 225 → 226 screens, 9030 → 9089 board
+  paths, 2283 → 2285 distinct, nothing gone; no string added.
 ---
 
 ## 14. The canvases
