@@ -3751,7 +3751,7 @@ describe("PostView — references", () => {
         );
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
         await openComments();
-        expect(await screen.findByTestId("comment-c1-removed")).toBeInTheDocument();
+        expect(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.removalMark", "c1"))).toBeInTheDocument();
         expect(screen.queryByTestId("media-gallery-lead")).toBeNull();
       });
     });
