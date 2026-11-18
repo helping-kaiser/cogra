@@ -118,8 +118,9 @@ export interface StanceControlProps {
    * refusal, a notice and not a fault: on the row, the quiet line `You can't
    * sign right now.` with no Retry; in the pad, `NoticePanel` (with its own
    * "?") where the landing line and the commit row stood, and `Not now`.
-   * `"keyAbsent"` is the signing key not on this device, pad only, in the
-   * same grammar: the notice `Your key isn't on this browser` (its "?" the
+   * `"keyAbsent"` is the signing key not on this device, in the pad and in
+   * the alternates (which carry it as their own, seam 248), in the same
+   * grammar: the notice `Your key isn't on this browser` (its "?" the
    * `Your key` dialog) with `Restore the key` inside it, and `Keep it
    * pending, restore later` under it — the one way to keep the pick.
    * `"comfortFailed"` is not a signing: a read-side comfort (save, unsave,

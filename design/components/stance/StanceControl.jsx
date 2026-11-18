@@ -350,9 +350,10 @@ export function StanceControl({
      the row a quiet line with no Retry, and in the pad the notice panel
      standing where the landing line and the commit row would, in
      `PadKeyAbsent`'s shape. `"keyAbsent"` (the key-loss round; round 56)
-     is that shape itself, pad only: the signing key is not on this device,
-     and the notice says so over `Restore the key`, with `Keep it pending,
-     restore later` under it. `"comfortFailed"` is a read-side comfort's
+     is that shape itself: the signing key is not on this device, and the
+     notice says so over `Restore the key`, with `Keep it pending, restore
+     later` under it — in the pad here, in the alternates by their own
+     `keyAbsent` (seam 248). `"comfortFailed"` is a read-side comfort's
      revert (the failure pack), row only: the hold's vehicle, `That didn't go
      through.` with Retry. Additive — absent, the control renders exactly as
      before. */

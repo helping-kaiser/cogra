@@ -2303,18 +2303,19 @@ entry first". What stands:
   number without an edge, an edge without its number, an untagged
   semantic element on a wired page, a screen nothing reaches — and
   reports gaps without failing.
-- **`_build/check-readouts.mjs` is the gate's second half**: the five
+- **`_build/check-readouts.mjs` is the gate's second half**: the four
   pads that draw their own readout (`RefPair`, `TagPad`,
-  `TagPadCompose`, `PadKeyAbsent`, the shared `ReplyPadBody`) spell
+  `TagPadCompose`, the shared `ReplyPadBody`) spell
   face and pair as literals, because the formatters and the anchor
   lookups stay off the bundle's namespace. The check reads each pad's
   own `value` and asks the masters what it reads as —
   `formatStancePair` / `formatTagPair`, `nearestAnchor` /
   `nearestTagAnchor` — so a moved value, a hyphen
   where §3 rules U+2212, or a spoken reading left behind is a
-  failure. A sixth hand-spelled readout anywhere in `screens/` fails
+  failure. A fifth hand-spelled readout anywhere in `screens/` fails
   too: unchecked is not a state a literal gets to be in. The one-axis
-  pads read through `AttachmentStanding` and spell nothing.
+  pads read through `AttachmentStanding`, and the stance pad boards
+  render `StanceControl`'s own pad; neither spells anything.
 - **`_build/report-summaries.mjs` is the gate's third half** (items 60
   + 64): it enumerates the feed-filter trigger's reachable summary
   strings (`feedFilterSummary`, `FeedFilter.jsx`), measures each with
