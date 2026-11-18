@@ -3360,7 +3360,11 @@ const NESTED_LIST = { margin: 0, padding: 0, listStyle: "none" };
    `pick` DRAWS A KEPT PICK ON THE FIRST COMMENT (round 27, seam 252): given,
    @tobias's card stands in `PickCopies`, so the board's `pick` chip adds the
    stance control's `pending` line to `threadSheet.commentCard`. */
-function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, removed = false, footOpacity, replyOpacity, shown, pick = false, node }) {
+/* `removedOther` DRAWS ANOTHER'S COMMENT REMOVED (round 57; jakob 2026-11-18,
+   C2 (a)): @tobias's comment as its mark, removed by him, its two replies
+   unfolded under it and readable (`CommentRemoved.md`), as `removed` draws
+   @sol's own. */
+function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, removed = false, removedOther = false, footOpacity, replyOpacity, shown, pick = false, node }) {
   const card = node && "commentCard";
   /* A REPLY SENT AND CLOSED ON (round 37, `SigningAfterClose`): the branch
      opens as a landing opens it, and where the new card settles on its
@@ -3368,7 +3372,7 @@ function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, remov
      commit's own in-flight label in the pending marker's quiet register, or
      the failure line with Retry. Nothing is drawn as a card before its
      signature is taken. */
-  const expanded = landed || afterClose !== undefined;
+  const expanded = landed || afterClose !== undefined || removedOther;
   const closeLine = afterClose === undefined ? null : (
     <div style={{ padding: "var(--space-2) 0 0 var(--space-6)" }}>
       {afterClose === "failed" ? <SigningPending row message="Your comment didn't sign." onRetry={() => {}} /> : <PendingMarker label="Signing comment…" />}
@@ -3417,6 +3421,7 @@ function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, remov
       references={1}
       license={{ attribution: 0, provenance: 0 }}
       menuItems={readerCommentCardMenu("tobias")}
+      redacted={removedOther ? { reason: "author", when: "now" } : undefined}
     >
       {landed ? settledReply : closeLine}
     </CommentCard>
