@@ -3741,7 +3741,7 @@ describe("PostView — references", () => {
         square(await screen.findByTestId("media-gallery-lead"));
       });
 
-      it("a removed gallery keeps its mark in the square's place", async () => {
+      it("a removed comment keeps its mark, and no frame stands", async () => {
         server.use(
           ...threadFrom(() =>
             detail("u1", [
@@ -3751,8 +3751,8 @@ describe("PostView — references", () => {
         );
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
         await openComments();
-        await screen.findByTestId("post-comment-c1");
-        expect(within(screen.getByTestId("comment-media-c1")).getByTestId("removed-placeholder")).toBeInTheDocument();
+        expect(await screen.findByTestId("comment-c1-removed")).toBeInTheDocument();
+        expect(screen.queryByTestId("media-gallery-lead")).toBeNull();
       });
     });
   });
