@@ -347,7 +347,11 @@ steps:
    state advances. A staged write that never completes the
    handshake and lands is garbage-collected — staged payload
    included — after a bounded number of epochs (an operational
-   parameter, [data-model.md](data-model.md)).
+   parameter, [data-model.md](data-model.md)). The host can still
+   order an approved act later, so the collection moves an approved
+   write's content pair into carriage instead of dropping it, and
+   its late record promotes like any other
+   ([data-model.md "Staged writes"](data-model.md#staged-writes)).
 
 Staged content is served, not withheld. From the pre-commitment
 signature onward a staged write's display rows are readable by
