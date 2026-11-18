@@ -9,7 +9,7 @@
 //! the substrate except the reads the pre-check estimates from.
 
 use common::l1::census::Family;
-use common::l1::handshake::{Proposal, StructuralBody, canonical_dep_list};
+use common::l1::handshake::{Micro, Proposal, StructuralBody, canonical_dep_list};
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::staged;
 use postgres_store::{PgPool, hashtag as hashtag_store, mirror};
@@ -28,15 +28,15 @@ pub enum PrepareError {
     /// The write-rule pre-check failed — a normal, visible account state,
     /// never an auth fault (architecture.md "Write eligibility").
     #[error("write rule: balance {balance} is below the act price {theta}")]
-    WriteRule { balance: f64, theta: f64 },
+    WriteRule { balance: Micro, theta: Micro },
     /// The same rule, priced over a whole batch before any of it is
     /// staged (D19).
     #[error(
         "write rule: balance {balance} cannot carry this batch — {acts} acts at the act price {theta}"
     )]
     BatchWriteRule {
-        balance: f64,
-        theta: f64,
+        balance: Micro,
+        theta: Micro,
         acts: usize,
     },
     /// The account's signing budget cannot carry the batch — the third
@@ -95,7 +95,8 @@ pub struct Gesture {
 /// is not priced when it is staged — the applicant may hold no funds yet,
 /// and the act cannot become orderable before the landing, whose batch it
 /// joins — so the write rule's balance read answers "no constraint" here
-/// and only here. Every other read, the per-act formation checks, and the
+/// and only here: the largest amount the ledger can hold, which only a
+/// price the integers cannot represent exceeds. Every other read, the per-act formation checks, and the
 /// signing budget the staging spends are the real ones.
 pub(crate) struct Carrying<'a, B>(pub &'a B);
 
@@ -127,7 +128,7 @@ impl<B: L1Boundary> L1Boundary for Carrying<'_, B> {
     ) -> Result<common::l1::handshake::AccountBalance, BoundaryError> {
         let published = self.0.balance(address).await?;
         Ok(common::l1::handshake::AccountBalance {
-            balance: f64::INFINITY,
+            balance: Micro::MAX,
             ..published
         })
     }
@@ -136,7 +137,7 @@ impl<B: L1Boundary> L1Boundary for Carrying<'_, B> {
         self.0.host_public_key().await
     }
 
-    async fn current_theta(&self) -> Result<f64, BoundaryError> {
+    async fn current_theta(&self) -> Result<Micro, BoundaryError> {
         self.0.current_theta().await
     }
 
@@ -277,8 +278,12 @@ pub async fn check_batch_solvency<B: L1Boundary>(
 /// One act is the same question with `acts = 1`, so the per-act
 /// pre-check and the batch pre-check cannot disagree about the
 /// boundary case — a balance exactly equal to the price writes.
-fn affordable(balance: f64, theta: f64, acts: usize) -> bool {
-    balance >= theta * acts as f64
+///
+/// Decided on the ledger's integers, the way the close debits θ act by
+/// act (layer1-interface.md §13.2). A price the integers cannot hold
+/// exceeds every balance the ledger can, so it does not carry.
+fn affordable(balance: Micro, theta: Micro, acts: usize) -> bool {
+    theta.times(acts).is_some_and(|price| balance >= price)
 }
 
 /// Prepares one gesture: formation checks, the write-rule pre-check, seq
@@ -469,16 +474,29 @@ async fn prepare_under<B: L1Boundary>(
 #[cfg(test)]
 mod tests {
     use super::affordable;
+    use common::l1::handshake::Micro;
 
     /// A batch is priced as the sum of its acts, and a balance exactly equal to that price writes.
     /// ´claim:prepare:a-batch-is-priced-as-the-sum-of-its-acts´
     #[test]
     fn a_batch_is_priced_as_the_sum_of_its_acts() {
-        assert!(affordable(0.25, 0.05, 5), "five acts at 0.05 cost 0.25");
-        assert!(affordable(0.05, 0.05, 1), "the boundary case writes");
+        let theta = Micro(50_000);
         assert!(
-            !affordable(0.2, 0.05, 5),
+            affordable(Micro(250_000), theta, 5),
+            "five acts at 0.05 cost 0.25"
+        );
+        assert!(affordable(theta, theta, 1), "the boundary case writes");
+        assert!(
+            affordable(Micro(150_000), theta, 3),
+            "0.05 × 3 is exactly 0.15, though not in doubles"
+        );
+        assert!(
+            !affordable(Micro(200_000), theta, 5),
             "four acts' worth cannot carry five"
+        );
+        assert!(
+            !affordable(Micro::MAX, Micro(2), usize::MAX),
+            "a price the integers cannot hold carries no batch"
         );
     }
 
@@ -486,7 +504,12 @@ mod tests {
     /// ´claim:prepare:one-act-prices-like-the-per-act-rule´
     #[test]
     fn one_act_prices_like_the_per_act_rule() {
-        for (balance, theta) in [(1.0, 0.5), (0.5, 0.5), (0.49, 0.5), (0.0, 0.1)] {
+        for (balance, theta) in [
+            (Micro(1_000_000), Micro(500_000)),
+            (Micro(500_000), Micro(500_000)),
+            (Micro(499_999), Micro(500_000)),
+            (Micro::ZERO, Micro(100_000)),
+        ] {
             assert_eq!(
                 affordable(balance, theta, 1),
                 balance >= theta,

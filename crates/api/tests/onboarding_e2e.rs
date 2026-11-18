@@ -442,7 +442,7 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
         .balance(&joiner_key.address())
         .await
         .expect("balance");
-    assert!(funded.burned_total > 0.0);
+    assert!(funded.burned_total > common::l1::handshake::Micro::ZERO);
 
     rig.sign_prepared(&inviter_token, &inviter_key, opinion_writes)
         .await;

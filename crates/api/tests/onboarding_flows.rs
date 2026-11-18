@@ -689,10 +689,7 @@ async fn approval_guards_hold(pool: PgPool) {
         .realization_address
         .expect("attached");
     let balance = rig.standin.balance(&address).await.expect("balance");
-    assert_eq!(
-        (balance.burned_total * 1e6).round() as i64,
-        rig.cfg.admission_burn_micro
-    );
+    assert_eq!(balance.burned_total.0, rig.cfg.admission_burn_micro);
 }
 
 /// The approving mutation and the applicant's status poll both run
@@ -754,10 +751,7 @@ async fn concurrent_approval_and_poll_fund_the_burn_once(pool: PgPool) {
         .realization_address
         .expect("attached");
     let balance = rig.standin.balance(&address).await.expect("balance");
-    assert_eq!(
-        (balance.burned_total * 1e6).round() as i64,
-        rig.cfg.admission_burn_micro
-    );
+    assert_eq!(balance.burned_total.0, rig.cfg.admission_burn_micro);
     let burns: i64 =
         sqlx::query_scalar("SELECT COUNT(*) FROM l1_admission_burns WHERE address = $1")
             .bind(&address)
@@ -1144,7 +1138,7 @@ async fn a_concurrent_reject_and_approve_resolve_to_one(pool: PgPool) {
                 &refused[0].1,
                 OnboardingError::BadInput { message, .. } if message == "already rejected"
             ));
-            assert_eq!(burned, 0.0, "no burn on the rejected side");
+            assert_eq!(burned.0, 0, "no burn on the rejected side");
             assert_eq!(staged, 0, "nothing staged on the rejected side");
             assert!(
                 store::admission_funding(&rig.pool, &address)
@@ -1158,7 +1152,7 @@ async fn a_concurrent_reject_and_approve_resolve_to_one(pool: PgPool) {
                 rejected,
                 Err(OnboardingError::BadInput { ref message, .. }) if message == "already approved"
             ));
-            assert_eq!((burned * 1e6).round() as i64, rig.cfg.admission_burn_micro);
+            assert_eq!(burned.0, rig.cfg.admission_burn_micro);
             assert_eq!(staged, 1);
         }
     }
