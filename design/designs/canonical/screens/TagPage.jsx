@@ -102,17 +102,31 @@
    about what was asked (jakob 2026-11-17: "keep the asked for name"), `This tag doesn't exist.` as an `EmptyState` in the
    page's place, no Retry and no stance row — nothing about asking again
    makes a tag exist. A LEGAL name nobody has used is not this: it is a tag
-   nothing carries yet (`TagPageEmpty`). */
+   nothing carries yet (`TagPageEmpty`).
+
+   A REMOVED TAGGED POST FOLLOWS THE FEED'S SWITCH (round 57; jakob
+   2026-11-18, tag page (c): "one switch that already exists"; the `post`
+   chip's `removed`). While the feed's filter has `Also show → Removed` on,
+   a removed tagged post stands in its row as the feed's removed card
+   (`FeedRemoved`) under its claim; while it is off, the post is not listed —
+   from the page's next derivation, as the feed's own two sentences put it.
+   Nothing new stands on this page: the switch is the feed's. The drawn
+   state is the second row, @sol's salt maps, as `ProfilePosts`' and
+   `ProfileComments`' chips vary their second card; `TagPageRemovedMenu` and
+   `TagPageRemovedMenuOwn` draw the two menus. */
 
 export const FRAME = { width: 390, height: 1344 };
-export const PROPS = { load: { editor: "enum", options: ["loaded", "failed", "notFound"], default: "loaded" } };
-export const VALS = `loadedShown: this.props.load === "loaded" ? "contents" : "none", failedShown: this.props.load === "failed" ? "contents" : "none", notFoundShown: this.props.load === "notFound" ? "contents" : "none"`;
+export const PROPS = {
+  load: { editor: "enum", options: ["loaded", "failed", "notFound"], default: "loaded" },
+  post: { editor: "enum", options: ["live", "removed"], default: "live" },
+};
+export const VALS = `loadedShown: this.props.load === "loaded" ? "contents" : "none", failedShown: this.props.load === "failed" ? "contents" : "none", notFoundShown: this.props.load === "notFound" ? "contents" : "none", postLive: this.props.post === "removed" ? "none" : "contents", postRemoved: this.props.post === "removed" ? "contents" : "none"`;
 
 export function Screen() {
   return (
     <>
       <div style={{ display: "{{loadedShown}}" }}>
-        <TagPageBody />
+        <TagPageBody removed="hole" />
       </div>
       <div style={{ display: "{{failedShown}}" }}>
         <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" />
