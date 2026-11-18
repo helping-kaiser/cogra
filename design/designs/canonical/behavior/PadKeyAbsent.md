@@ -20,7 +20,7 @@ WHEN tap the notice's ? -> the dialog Your key opens with Your key lives where y
 
 ALWAYS the pad's Your key dialog says only what the notice does not, and never repeats that signing needs the key or that the recovery code restores it
 
-WHEN the alternates open GIVEN the signing key is not on this device -> the alternates carry the pad's key notice where the landing line and the action row were, Your key isn't on this browser over its two lines and Restore the key, with Keep it pending, restore later under it AND NEVER Sign it, Cancel or Walk it back stands
+WHEN the alternates open GIVEN the signing key is not on this device -> the alternates carry the pad's key notice where the landing line and the row of actions were, Your key isn't on this browser over its two lines and Restore the key, with Keep it pending, restore later under it AND NEVER Sign it, Cancel or Walk it back stands
 
 WHEN press Keep it pending, restore later in the alternates -> the alternates close AND the pick waits on this device as the pad keeps one AND NEVER anything is staged or signed
 
@@ -28,7 +28,7 @@ WHEN press outside the alternates or press the system's Back GIVEN the signing k
 
 WHEN press Restore the key -> the key's restore opens
 
-WHEN press Keep it pending, restore later -> the pad closes AND the pick waits on this device AND the target's anchor wears the kept pick's face with Waiting for your key under it AND NEVER anything is staged or signed
+WHEN press feed.card.actionRow.stance.pad.keepPending -> the pad closes AND the pick waits on this device AND feed.card.actionRow.stance.anchor wears the kept pick's face with Waiting for your key under it AND NEVER anything is staged or signed
 
 WHEN press outside the pad or press the system's Back -> the pad closes AND the pick is dropped, as a Cancel drops one AND NEVER the pick is kept
 
@@ -36,7 +36,7 @@ ALWAYS a pick is kept only by Keep it pending, restore later, never as the side 
 
 WHEN tap a kept pick's face GIVEN the key is still not on this device -> the pad opens again holding the kept pick
 
-WHEN press Keep it pending, restore later GIVEN a pick is already kept on the same target -> the new pick replaces the kept one
+WHEN press feed.card.actionRow.stance.pad.keepPending GIVEN a pick is already kept on the same target -> the new pick replaces the kept one
 
 ALWAYS a kept pick lives on this device only and survives a restart
 
