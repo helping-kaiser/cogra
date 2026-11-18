@@ -2011,6 +2011,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 11, find: ">The glovebox camera earns its keep", tag: "a" },
     { n: 11, find: ">Low tide is kinder to the rubbings", tag: "a" },
     { n: 17, find: ">On “", tag: "button", all: true },
+    // The `target` chip's hole (round 59): the second card's pointer, both copies.
+    { n: 17, find: ">On {{targetLine}}", tag: "button", all: true },
     ...nav(12),
     // The load chip's failed first page (round 45): its Retry.
     { n: 19, find: ">Retry</button>", tag: "button" },
