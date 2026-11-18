@@ -5206,7 +5206,13 @@ function TopicStanceRow({ name, bundle, stanceOpen, stanceDefaultPick, node }) {
    first row is the chip's because nothing else on the page points at it;
    @ada's tagged comment answers @sol's post. The claim above the row stands,
    as on every row. */
-function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, removed } = {}) {
+function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, removed, commentRemoved } = {}) {
+  /* @ada's tagged comment, live and removed (round 58; jakob 2026-11-18, C4
+     "as rec"): removed, `CommentCard`'s own mark in the words' place, as
+     `ProfileComments`' `removed` draws this same comment — its author, its
+     age, the removal's `2h` and its pointer kept, under its claim. */
+  const adaLive = <CommentCard attach author={ADA} content="Low tide is kinder to the rubbings than noon ever was." timestamp="4d" license={{ attribution: 0, provenance: 0 }} bundle={mkBundle(0.1, 0.1)} target="“Salt maps of the coast road” — @sol" onOpenTarget={() => {}} />;
+  const adaRemoved = <CommentCard attach author={ADA} timestamp="4d" redacted={{ reason: "author", when: "2h" }} bundle={mkBundle(0.1, 0.1)} target="“Salt maps of the coast road” — @sol" onOpenTarget={() => {}} />;
   const tobiasLive = <PostCard attach {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />;
   const tobiasRemoved = <PostCard attach id={TOBIAS_POST.id} author={TOBIAS} timestamp={TOBIAS_POST.timestamp} redacted={{ reason: "author", when: "now" }} score={TOBIAS_POST.score} comments={TOBIAS_POST.comments} bundle={mkBundle(0.1, 0.1)} menuItems={TOBIAS_POST.menuItems} />;
   return (
@@ -5232,16 +5238,12 @@ function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, rem
         </TaggedRow>
 
         <TaggedRow pair={{ pDirected: 0.4, pInterest: 0.9 }}>
-          <CommentCard
-            attach
-            author={ADA}
-            content="Low tide is kinder to the rubbings than noon ever was."
-            timestamp="4d"
-            license={{ attribution: 0, provenance: 0 }}
-            bundle={mkBundle(0.1, 0.1)}
-            target="“Salt maps of the coast road” — @sol"
-            onOpenTarget={() => {}}
-          />
+          {commentRemoved === "hole" ? (
+            <>
+              <div style={{ display: "{{commentLive}}" }}>{adaLive}</div>
+              <div style={{ display: "{{commentRemoved}}" }}>{adaRemoved}</div>
+            </>
+          ) : adaLive}
         </TaggedRow>
       </div>
     </>
