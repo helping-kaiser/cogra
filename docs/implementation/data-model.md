@@ -419,8 +419,9 @@ row `reduced` ("Redacting an act"), so the record lands reduced and
 marked, with no display row built. An approved act the GC reaped
 before its record landed has its full carriage row from the reap
 ("Staged writes"), so it too is marked from its first read. An act
-whose payload CoGra does not carry reads unmarked: an act sealed on the stand-in directly
-(the `l1-dev` CLI), and a CoGra actor's act written through another
+whose payload CoGra does not carry reads unmarked: an act sealed on
+the stand-in directly (the `l1-dev` CLI), and a CoGra actor's act
+written through another
 Layer 2 ([open-questions.md Q63](../open-questions.md#q63--the-payload-mark-of-an-act-cogra-does-not-carry)).
 
 ### Redacting an act
