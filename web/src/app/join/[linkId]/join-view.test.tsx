@@ -76,8 +76,11 @@ const refusal = (code: string, field: string[] | null) =>
 
 /** A read the other account left in the cache. */
 const OLD_READ = gql`
-  query OldRead {
-    probe
+  query JoinSwitchCacheProbe {
+    me {
+      id
+      handle
+    }
   }
 `;
 
@@ -344,7 +347,7 @@ describe("JoinView", () => {
     const { client } = renderWithProviders(<JoinView linkId={ID} />, { store });
     await screen.findByTestId("join.handle.input");
     // What the other account left in the cache must not be read as the new one.
-    client.cache.writeQuery({ query: OLD_READ, data: { probe: "the other account" } });
+    client.cache.writeQuery({ query: OLD_READ, data: { me: { __typename: "User", id: "u-old", handle: "old" } } });
     fillForm();
     createAccount();
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
