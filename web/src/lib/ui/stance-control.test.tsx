@@ -1928,7 +1928,8 @@ describe("where the pad blooms", () => {
     expect(pad.style.left).toBe("0px");
     expect(pad.style.right).toBe("0px");
     expect(pad.style.transform).toBe("");
-    expect(pad.style.bottom).toBe(`${PAD_PARK_INSET_PX}px`);
+    // The 16px count from the safe edge (pad-parking.ts: the inset rides every parking).
+    expect(pad.style.bottom).toBe(`calc(${PAD_PARK_INSET_PX}px + env(safe-area-inset-bottom, 0px))`);
     // Nothing is anchored, so nothing measured a target into a `top`.
     expect(pad.style.top).toBe("");
   };
