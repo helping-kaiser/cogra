@@ -433,6 +433,152 @@ async fn gc_expires_then_reaps_and_spares_landed_writes(pool: PgPool) {
     ));
 }
 
+/// Drives a staged write through the pre-commitment leg and the seal,
+/// and relays its approval when `approved`.
+async fn seal(pool: &PgPool, id: Uuid, p: &Proposal, nonce: u8, approved: bool) {
+    staged::record_pre_signed(pool, id, &pre_parts_with(vec![nonce; 32]))
+        .await
+        .expect("pre-signs");
+    let mut act = sealed_act(p);
+    act.act.pre_commitment = pre_parts_with(vec![nonce; 32])
+        .pre_signed(p)
+        .pre_commitment()
+        .to_vec();
+    staged::record_sealed(pool, id, &act).await.expect("seals");
+    if approved {
+        staged::record_relaying(pool, id).await.expect("relays");
+    }
+}
+
+/// The reap keeps custody of exactly the writes the host may still order:
+/// sealed, approved, with bytes. Their content pair moves into carriage and
+/// the row stays as the act's structure, out of every handshake reader's
+/// reach. A sealed write never approved, and an approved one with an
+/// empty payload, are deleted as before, with no carriage row.
+///
+/// The reap moves a sealed, approved write's content pair into carriage and deletes every other expired write.
+/// ´claim:staged:the-reap-keeps-custody-of-an-approved-act´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_reap_keeps_custody_of_an_approved_write_and_deletes_the_rest(pool: PgPool) {
+    let actor_id = actor(&pool, "alice", "alice").await;
+    let kept_p = proposal("alice", 0);
+    let kept = stage(&pool, actor_id, &kept_p, 0).await;
+    seal(&pool, kept, &kept_p, 21, true).await;
+    let unapproved_p = proposal("alice", 1);
+    let unapproved = stage(&pool, actor_id, &unapproved_p, 0).await;
+    seal(&pool, unapproved, &unapproved_p, 22, false).await;
+    let mut empty_p = proposal("alice", 2);
+    empty_p.payload = Vec::new();
+    let empty = stage(&pool, actor_id, &empty_p, 0).await;
+    seal(&pool, empty, &empty_p, 23, true).await;
+
+    assert_eq!(staged::expire_due(&pool, 8, 8).await.expect("gc"), 3);
+    assert_eq!(staged::reap_expired(&pool, 16, 8).await.expect("gc"), 3);
+
+    let carriage = postgres_store::content::act_payload(&pool, "act:alice:0:opinion")
+        .await
+        .expect("reads")
+        .expect("the approved write's pair is in carriage");
+    assert_eq!(carriage.payload.as_deref(), Some(&b"staged payload"[..]));
+    assert_eq!(carriage.content_nonce, Some(vec![21; 32]));
+    assert_eq!(carriage.content_salt, Some(vec![4; 32]));
+    assert!(!carriage.reduced);
+    for act in ["act:alice:1:opinion", "act:alice:2:opinion"] {
+        assert!(
+            postgres_store::content::act_payload(&pool, act)
+                .await
+                .expect("reads")
+                .is_none(),
+            "{act} keeps no carriage"
+        );
+    }
+
+    let rows: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM staged_writes")
+        .fetch_one(&pool)
+        .await
+        .expect("counts");
+    assert_eq!(rows, 1, "only the custodied row stays");
+    let (pubkey, dependency_nonce, host_seal, commitment): (
+        Option<Vec<u8>>,
+        Option<Vec<u8>>,
+        Option<Vec<u8>>,
+        Option<Vec<u8>>,
+    ) = sqlx::query_as(
+        "SELECT author_pubkey, dependency_nonce, host_seal, content_commitment
+         FROM staged_writes WHERE id = $1",
+    )
+    .bind(kept)
+    .fetch_one(&pool)
+    .await
+    .expect("reads");
+    assert_eq!((pubkey, dependency_nonce, host_seal), (None, None, None));
+    assert_eq!(commitment, Some(vec![6; 32]), "the witness stays");
+    assert!(matches!(
+        staged::load(&pool, kept).await,
+        Err(StagedError::NotFound(_))
+    ));
+    assert!(
+        staged::list_for_actor(&pool, actor_id)
+            .await
+            .expect("lists")
+            .is_empty()
+    );
+    assert_eq!(
+        staged::reap_expired(&pool, 32, 8).await.expect("gc"),
+        0,
+        "a custodied row is reaped once"
+    );
+}
+
+/// A record that lands after the reap reads marked, its staged row
+/// promotes, and its landing loads the structure and the pair it needs.
+///
+/// A record landing after the reap of its approved write reads marked and loads its pair from carriage.
+/// ´claim:staged:a-landing-past-the-reap-reads-marked-and-whole´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_record_landing_after_the_reap_promotes_from_custody(pool: PgPool) {
+    let actor_id = actor(&pool, "alice", "alice").await;
+    let p = proposal("alice", 0);
+    let id = stage(&pool, actor_id, &p, 0).await;
+    seal(&pool, id, &p, 21, true).await;
+    staged::expire_due(&pool, 8, 8).await.expect("gc");
+    staged::reap_expired(&pool, 16, 8).await.expect("gc");
+
+    mirror::ingest_epoch(
+        &pool,
+        &EpochPackage {
+            epoch: 1,
+            asserted_at: chrono::Utc::now(),
+            records: vec![published("alice", 0, Family::Opinion, 1, 1)],
+            closure: Default::default(),
+        },
+    )
+    .await
+    .expect("ingest");
+    let marked: bool = sqlx::query_scalar(
+        "SELECT payload_marked FROM mirror_records WHERE record_id = 'act:alice:0:opinion'",
+    )
+    .fetch_one(&pool)
+    .await
+    .expect("reads");
+    assert!(marked, "the record reads marked from its first read");
+
+    let promoted = staged::promote_landed(&pool, 1).await.expect("promotes");
+    assert_eq!(promoted.len(), 1);
+    assert_eq!(promoted[0].id, id);
+    match staged::load_promotable(&pool, id).await.expect("loads") {
+        staged::Promotable::Custodied(write) => {
+            assert_eq!(write.payload, b"staged payload");
+            assert_eq!(write.content_nonce, vec![21; 32]);
+            assert_eq!(write.content_salt, vec![4; 32]);
+            assert_eq!(write.body.act_id(), p.body.act_id());
+            assert_eq!(write.actor_id, actor_id);
+            assert!(write.pre_signed_at.is_some(), "the authoring instant stays");
+        }
+        other => panic!("expected the custodied write, got {other:?}"),
+    }
+}
+
 /// Expiring one write reaches only that write, and expiring an
 /// already-terminal one is refused.
 ///

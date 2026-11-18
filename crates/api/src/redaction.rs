@@ -227,6 +227,14 @@ pub async fn reduce_in(
 ) -> Result<Reduced, RedactionError> {
     let carriage = content_store::lock_act_payload(tx, r.act_id).await?;
     let copy = staged::lock_copy(tx, r.act_id).await?;
+    // The GC's custody move (`staged::reap_expired`) writes carriage under
+    // the staged row's lock. If it committed while this transaction waited
+    // for that lock, the first read saw no carriage row and the copy holds
+    // no pair. Reading again under the lock finds the moved pair.
+    let carriage = match carriage {
+        None if copy.is_some() => content_store::lock_act_payload(tx, r.act_id).await?,
+        carriage => carriage,
+    };
     if let Some(copy) = &copy
         && copy.state == staged::StagedState::Carried.as_str()
     {

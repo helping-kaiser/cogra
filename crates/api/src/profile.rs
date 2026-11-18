@@ -390,7 +390,10 @@ pub async fn land_promoted(
 /// ([`CograProfile::read_payload`]), as content's landing reads its payload.
 async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), ProfileError> {
     let staged_row = match staged::load_promotable(pool, write.id).await? {
-        staged::Promotable::Full(row) => *row,
+        staged::Promotable::Full(row) => row
+            .into_landing()
+            .ok_or_else(|| ProfileError::Internal("landed write without sealed parts".into()))?,
+        staged::Promotable::Custodied(row) => *row,
         staged::Promotable::Reaped(reaped) => {
             let mut tx = pool
                 .begin()
@@ -413,11 +416,9 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
             return Ok(());
         }
     };
-    let payload = &staged_row.proposal.payload;
-    let carried = staged_row
-        .carried_pair()
-        .ok_or_else(|| ProfileError::Internal("landed write without sealed parts".into()))?;
-    if staged_row.proposal.body.asserted_parents.is_empty() {
+    let payload = &staged_row.payload;
+    let carried = staged_row.carried_pair();
+    if staged_row.body.asserted_parents.is_empty() {
         if payload.is_empty() {
             return Ok(());
         }

@@ -1523,11 +1523,12 @@ pub async fn land_promoted(
 /// Promotes one landed content record into carriage and display rows.
 ///
 /// An expired write still carries its payload — expiry stops serving the
-/// content, the reap is what destroys it — so a record landing in that
-/// window promotes like any other, and the insert branches rebuild the
-/// display rows expiry took down, this time under the real landing order.
-/// Past the reap there is no row left to load and the promotion fails
-/// loudly.
+/// content — so a record landing in that window promotes like any other,
+/// and the insert branches rebuild the display rows expiry took down, this
+/// time under the real landing order. Past the reap, an approved write
+/// lands the same way from its structural row and the pair the GC moved
+/// into carriage ([`staged::reap_expired`]); any other write has no row
+/// left to load.
 ///
 /// Those insert branches are otherwise the uncommon path: the rows are
 /// normally already on screen from the pre-commitment, so landing only
@@ -1558,15 +1559,16 @@ async fn land_one(
     family: ContentFamily,
 ) -> Result<(), ContentError> {
     let staged_row = match staged::load_promotable(pool, write.id).await? {
-        staged::Promotable::Full(row) => *row,
+        staged::Promotable::Full(row) => row
+            .into_landing()
+            .ok_or_else(|| ContentError::Internal("landed write without sealed parts".into()))?,
+        staged::Promotable::Custodied(row) => *row,
         staged::Promotable::Reaped(reaped) => {
             return land_reduced(pool, write, family, &reaped).await;
         }
     };
-    let payload = &staged_row.proposal.payload;
-    let carried = staged_row
-        .carried_pair()
-        .ok_or_else(|| ContentError::Internal("landed write without sealed parts".into()))?;
+    let payload = &staged_row.payload;
+    let carried = staged_row.carried_pair();
     let content = CograContent::read_payload(payload)
         .map_err(|e| ContentError::Internal(format!("landed payload not admissible: {e}")))?
         .fields;
@@ -1574,7 +1576,7 @@ async fn land_one(
         .await?
         .ok_or_else(|| ContentError::Internal("promoted record missing from mirror".into()))?;
     let landing = meta.landing();
-    let body = &staged_row.proposal.body;
+    let body = &staged_row.body;
     let (target, is_genesis) = genesis_shape(body);
 
     let created_at = staged_row.pre_signed_at.ok_or_else(|| {
@@ -1593,15 +1595,7 @@ async fn land_one(
         .and_then(|carriage| carriage.reduced_at)
     {
         drop(tx);
-        let reaped = staged::ReapedWrite {
-            id: staged_row.id,
-            actor_id: staged_row.actor_id,
-            body: staged_row.proposal.body.clone(),
-            node_id: staged_row.node_id,
-            pre_signed_at: staged_row.pre_signed_at,
-            reaped_at: reduced_at,
-        };
-        return land_reduced(pool, write, family, &reaped).await;
+        return land_reduced(pool, write, family, &staged_row.reaped(reduced_at)).await;
     }
 
     let shape = match (family, is_genesis) {
