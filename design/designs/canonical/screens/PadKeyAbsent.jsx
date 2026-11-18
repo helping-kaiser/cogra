@@ -27,13 +27,21 @@
    this is that screen, one tap in. Its post carries no opinion, because the
    pad above it says in so many words that there is none yet.
 
-   THE SHELL IS DRAWN HERE, around the real `StancePad`, and the reason is the
-   thing the board exists to say. `StanceControl`'s open state always ends in
-   Cancel and Set; Set is the only thing on the pad that signs, and a board about
-   a signature that cannot be given must not draw it. No prop takes that row
-   away, and adding one would be deciding what the pad looks like when signing is
-   impossible. So the notice stands where the landing line and the actions
-   would.
+   THE PAD IS `StanceControl`'s OWN, in its `keyAbsent` state (round 56,
+   jakob 2026-11-18: the shared pad's drawing), rendered as `PadStanding`
+   renders it — `PostCard`'s open pad at inset 80 on the pick +0.10 / +0.10:
+   the pad's "?", the standing line, the pick's readout and the field, as on
+   every pad. Set is the only thing on the pad that signs, and a board about a
+   signature that cannot be given must not draw it, so the state takes the
+   commit row away with the landing line, `writeRule`'s grammar, and the
+   notice stands where they would.
+
+   REGISTERED under the `feed` prefix, named as `PadStanding` names the same
+   pad over the same feed: the band, its `filterTrigger`, the task card
+   `keyCard` and its `restore` as `KeyElsewhere` names them, the bottom bar,
+   and the post `card` keyed by its id, its open pad
+   `card.actionRow.stance.pad.*` — `StanceControl`'s anatomy, the notice's
+   two buttons `restore` and `keepPending`. The wash stays unnamed.
 
    ONLY THE TEXT BUTTON KEEPS (the key-loss round). `StanceControl`'s rule
    holds here unchanged: a press outside, or the system's Back, stages
@@ -72,77 +80,28 @@
      account's current credentials (jakob, confirmed by the implementation
      side's security check). An invalidation ends the session; it is not a
      remote wipe. */
+export const NODE = "feed";
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />} />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band" />
       <FeedList>
         <TaskCard
           tone="notice"
           title="Your key isn't on this browser"
           body="Restore it with your recovery code to post, vouch, and act. Until then, anything you sign waits as pending."
+          node="keyCard"
         >
           <div style={{ display: "flex" }}>
-            <Button variant="inverse" size="sm">Restore the key</Button>
+            <Button variant="inverse" size="sm" node="restore">Restore the key</Button>
           </div>
         </TaskCard>
-        <PostCard {...ADA_POST} />
+        <PostCard {...ADA_POST} stanceOpen stancePadInset={80} stanceDefaultPick={{ pDirected: 0.1, pInterest: 0.1 }} stanceSigning="keyAbsent" node="card" />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
 
       {/* The wash over the shell; the parked pad above it stays sharp. */}
       <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "var(--scrim-dialog)" }} />
-
-      {/* The shell is `StanceControl`'s open pad, geometry and all: 17rem
-          content-box plus the card padding, never border-box — a variant of
-          the pad must sit on the canvas at the pad's own width. */}
-      <div
-        style={{
-          position: "absolute",
-          left: "50%",
-          bottom: 80,
-          transform: "translateX(-50%)",
-          width: "17rem",
-          maxHeight: 684,
-          display: "flex",
-          flexDirection: "column",
-          gap: "var(--space-3)",
-          overflow: "hidden",
-          borderRadius: "var(--radius-extra-large)",
-          background: "var(--surface-dialog)",
-          color: "var(--on-surface)",
-          padding: "var(--card-padding)",
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <QuietNote>
-            <span aria-hidden="true">🤷</span> No opinion on this post yet.
-          </QuietNote>
-          {/* The pick's readout, above the field where a thumb cannot cover it. */}
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span aria-hidden="true" style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
-              Your pick
-            </span>
-            <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}>
-              <span style={{ fontSize: "var(--text-title-large)", letterSpacing: "var(--text-title-large--letter-spacing)", fontWeight: "var(--text-title-large--font-weight)", lineHeight: 1.2 }}>🙂</span>
-              <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", whiteSpace: "nowrap" }}>+0.10 / +0.10</span>
-            </span>
-            <span style={SR_ONLY}>
-              Nice, For or against +0.10, How much reaches you +0.10
-            </span>
-          </div>
-        </div>
-
-        <StancePad value={{ pDirected: 0.1, pInterest: 0.1 }} />
-
-        <NoticePanel title="Your key isn't on this browser" helpLabel="Your key">
-          <NoticeLine>Signing needs your key, which isn't in this browser — the write waits as pending.</NoticeLine>
-          <NoticeLine>Restore the key with your recovery code to finish.</NoticeLine>
-          <Button variant="inverse" style={{ width: "100%" }}>Restore the key</Button>
-        </NoticePanel>
-
-        <Button variant="text" style={{ width: "100%" }}>Keep it pending, restore later</Button>
-      </div>
     </>
   );
 }
