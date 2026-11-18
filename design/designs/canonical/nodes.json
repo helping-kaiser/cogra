@@ -2706,6 +2706,339 @@
         ]
       }
     },
+    "CommentRemovedOther": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.threadSheet.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "postDetail.card.opinions": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.threadSheet": [],
+        "postDetail.threadSheet.commentCard": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.reply": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.exact": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.face": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.avatar": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.handle": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.name": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.menu": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.removalMark": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.removalMark.line": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.removalMark.when": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.dragHandle": [],
+        "postDetail.threadSheet.foot": [],
+        "postDetail.threadSheet.foot.addComment": [],
+        "postDetail.threadSheet.title": []
+      }
+    },
+    "CommentRemovedOtherMenu": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.threadSheet.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "postDetail.card.opinions": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.menuSheet": [],
+        "postDetail.menuSheet.cite": [],
+        "postDetail.menuSheet.citedBy": [],
+        "postDetail.menuSheet.dragHandle": [],
+        "postDetail.menuSheet.hide": [],
+        "postDetail.menuSheet.license": [],
+        "postDetail.menuSheet.opinions": [],
+        "postDetail.menuSheet.report": [],
+        "postDetail.menuSheet.save": [],
+        "postDetail.threadSheet": [],
+        "postDetail.threadSheet.commentCard": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.reply": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.exact": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.face": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.avatar": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.handle": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.name": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.menu": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.removalMark": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.removalMark.line": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.removalMark.when": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.dragHandle": [],
+        "postDetail.threadSheet.foot": [],
+        "postDetail.threadSheet.foot.addComment": [],
+        "postDetail.threadSheet.title": []
+      }
+    },
     "ComposeCrop": {
       "prefix": "composeCrop",
       "keys": {
@@ -12637,6 +12970,15 @@
         "profile.comments.commentCard.menu": [
           "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
         ],
+        "profile.comments.commentCard.removalMark": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.removalMark.line": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.removalMark.when": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
         "profile.comments.commentCard.target": [
           "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
         ],
@@ -13166,6 +13508,212 @@
           "posts",
           "everything"
         ]
+      }
+    },
+    "ProfileDeletedPostMenu": {
+      "prefix": "profile",
+      "keys": {
+        "profile.posts.card": "the post's id, the lowercase UUID the wire carries (PostCard)"
+      },
+      "nodes": {
+        "profile.bottomBar": [],
+        "profile.bottomBar.composeSlot": [],
+        "profile.bottomBar.feedSlot": [],
+        "profile.bottomBar.profileSlot": [],
+        "profile.bottomBar.searchSlot": [],
+        "profile.bottomBar.walletSlot": [],
+        "profile.header": [],
+        "profile.header.back": [],
+        "profile.identity": [],
+        "profile.identity.actionRow": [],
+        "profile.identity.actionRow.menu": [],
+        "profile.identity.actionRow.stance": [],
+        "profile.identity.actionRow.stance.anchor": [],
+        "profile.identity.actionRow.stance.anchor.face": [],
+        "profile.identity.avatar": [],
+        "profile.identity.figures": [],
+        "profile.identity.figures.posts": [],
+        "profile.identity.figures.posts.label": [],
+        "profile.identity.figures.posts.value": [],
+        "profile.identity.figures.stancesOn": [],
+        "profile.identity.figures.stancesOn.label": [],
+        "profile.identity.figures.stancesOn.value": [],
+        "profile.identity.figures.stancesTaken": [],
+        "profile.identity.figures.stancesTaken.label": [],
+        "profile.identity.figures.stancesTaken.value": [],
+        "profile.identity.name": [],
+        "profile.identity.removalMark": [],
+        "profile.identity.removalMark.detail": [],
+        "profile.identity.removalMark.line": [],
+        "profile.identity.removalMark.when": [],
+        "profile.menuSheet": [],
+        "profile.menuSheet.cite": [],
+        "profile.menuSheet.citedBy": [],
+        "profile.menuSheet.dragHandle": [],
+        "profile.menuSheet.hide": [],
+        "profile.menuSheet.license": [],
+        "profile.menuSheet.opinions": [],
+        "profile.menuSheet.report": [],
+        "profile.menuSheet.save": [],
+        "profile.posts": [],
+        "profile.posts.card": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.comments": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.comments.count": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.score": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.score.value": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.share": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.stance": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.stance.anchor": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.face": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.authorChip": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.authorChip.avatar": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.authorChip.name": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.body": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.menu": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.timestamp": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.tabRow": [],
+        "profile.tabRow.commentsTab": [],
+        "profile.tabRow.everythingTab": [],
+        "profile.tabRow.postsTab": []
+      }
+    },
+    "ProfileDeletedRemovedMenu": {
+      "prefix": "profile",
+      "keys": {
+        "profile.posts.card": "the post's id, the lowercase UUID the wire carries (PostCard)"
+      },
+      "nodes": {
+        "profile.bottomBar": [],
+        "profile.bottomBar.composeSlot": [],
+        "profile.bottomBar.feedSlot": [],
+        "profile.bottomBar.profileSlot": [],
+        "profile.bottomBar.searchSlot": [],
+        "profile.bottomBar.walletSlot": [],
+        "profile.header": [],
+        "profile.header.back": [],
+        "profile.identity": [],
+        "profile.identity.actionRow": [],
+        "profile.identity.actionRow.menu": [],
+        "profile.identity.actionRow.stance": [],
+        "profile.identity.actionRow.stance.anchor": [],
+        "profile.identity.actionRow.stance.anchor.face": [],
+        "profile.identity.avatar": [],
+        "profile.identity.figures": [],
+        "profile.identity.figures.posts": [],
+        "profile.identity.figures.posts.label": [],
+        "profile.identity.figures.posts.value": [],
+        "profile.identity.figures.stancesOn": [],
+        "profile.identity.figures.stancesOn.label": [],
+        "profile.identity.figures.stancesOn.value": [],
+        "profile.identity.figures.stancesTaken": [],
+        "profile.identity.figures.stancesTaken.label": [],
+        "profile.identity.figures.stancesTaken.value": [],
+        "profile.identity.name": [],
+        "profile.identity.removalMark": [],
+        "profile.identity.removalMark.detail": [],
+        "profile.identity.removalMark.line": [],
+        "profile.identity.removalMark.when": [],
+        "profile.menuSheet": [],
+        "profile.menuSheet.cite": [],
+        "profile.menuSheet.citedBy": [],
+        "profile.menuSheet.dragHandle": [],
+        "profile.menuSheet.hide": [],
+        "profile.menuSheet.license": [],
+        "profile.menuSheet.opinions": [],
+        "profile.menuSheet.report": [],
+        "profile.menuSheet.save": [],
+        "profile.posts": [],
+        "profile.posts.card": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.comments": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.comments.count": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.score": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.score.value": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.share": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.stance": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.stance.anchor": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.face": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.authorChip": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.authorChip.avatar": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.authorChip.name": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.menu": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.removalMark": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.removalMark.line": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.removalMark.when": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.posts.card.timestamp": [
+          "d71c3a8e-5b29-4f60-9a14-2e8b7c05d913"
+        ],
+        "profile.tabRow": [],
+        "profile.tabRow.commentsTab": [],
+        "profile.tabRow.everythingTab": [],
+        "profile.tabRow.postsTab": []
       }
     },
     "ProfileEdit": {
@@ -14092,6 +14640,15 @@
         "profile.posts.card.opener": [
           "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
         ],
+        "profile.posts.card.removalMark": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
+        "profile.posts.card.removalMark.line": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
+        "profile.posts.card.removalMark.when": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
         "profile.posts.card.tagsLine": [
           "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
         ],
@@ -14492,6 +15049,15 @@
         "profile.posts.card.opener": [
           "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
         ],
+        "profile.posts.card.removalMark": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.removalMark.line": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.removalMark.when": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
         "profile.posts.card.tagsLine": [
           "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
         ],
@@ -14510,6 +15076,114 @@
         "profile.posts.loading": [],
         "profile.posts.moreFault": [],
         "profile.posts.moreFault.retry": [],
+        "profile.tabRow": [],
+        "profile.tabRow.commentsTab": [],
+        "profile.tabRow.everythingTab": [],
+        "profile.tabRow.postsTab": []
+      }
+    },
+    "ProfilePostsRemovedMenu": {
+      "prefix": "profile",
+      "keys": {
+        "profile.posts.card": "the post's id, the lowercase UUID the wire carries (PostCard)"
+      },
+      "nodes": {
+        "profile.bottomBar": [],
+        "profile.bottomBar.composeSlot": [],
+        "profile.bottomBar.feedSlot": [],
+        "profile.bottomBar.profileSlot": [],
+        "profile.bottomBar.searchSlot": [],
+        "profile.bottomBar.walletSlot": [],
+        "profile.header": [],
+        "profile.header.back": [],
+        "profile.header.title": [],
+        "profile.identity": [],
+        "profile.identity.actionRow": [],
+        "profile.identity.actionRow.menu": [],
+        "profile.identity.actionRow.message": [],
+        "profile.identity.actionRow.stance": [],
+        "profile.identity.actionRow.stance.anchor": [],
+        "profile.identity.actionRow.stance.anchor.face": [],
+        "profile.identity.avatar": [],
+        "profile.identity.bio": [],
+        "profile.identity.figures": [],
+        "profile.identity.figures.posts": [],
+        "profile.identity.figures.posts.label": [],
+        "profile.identity.figures.posts.value": [],
+        "profile.identity.figures.stancesOn": [],
+        "profile.identity.figures.stancesOn.label": [],
+        "profile.identity.figures.stancesOn.value": [],
+        "profile.identity.figures.stancesTaken": [],
+        "profile.identity.figures.stancesTaken.label": [],
+        "profile.identity.figures.stancesTaken.value": [],
+        "profile.identity.name": [],
+        "profile.menuSheet": [],
+        "profile.menuSheet.cite": [],
+        "profile.menuSheet.citedBy": [],
+        "profile.menuSheet.dragHandle": [],
+        "profile.menuSheet.hide": [],
+        "profile.menuSheet.license": [],
+        "profile.menuSheet.opinions": [],
+        "profile.menuSheet.report": [],
+        "profile.menuSheet.save": [],
+        "profile.posts": [],
+        "profile.posts.card": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
+        "profile.posts.card.actionRow": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
+        "profile.posts.card.actionRow.comments": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
+        "profile.posts.card.actionRow.comments.count": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
+        "profile.posts.card.actionRow.score": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
+        "profile.posts.card.actionRow.score.value": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
+        "profile.posts.card.actionRow.share": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
+        "profile.posts.card.actionRow.stance": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
+        "profile.posts.card.actionRow.stance.anchor": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.face": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
+        "profile.posts.card.authorChip": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
+        "profile.posts.card.authorChip.avatar": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
+        "profile.posts.card.authorChip.handle": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
+        "profile.posts.card.authorChip.name": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
+        "profile.posts.card.menu": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
+        "profile.posts.card.removalMark": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
+        "profile.posts.card.removalMark.line": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
+        "profile.posts.card.removalMark.when": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
+        "profile.posts.card.timestamp": [
+          "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a"
+        ],
         "profile.tabRow": [],
         "profile.tabRow.commentsTab": [],
         "profile.tabRow.everythingTab": [],
@@ -20199,6 +20873,34 @@
         "tagPage.menuSheet.markSensitive": [],
         "tagPage.menuSheet.opinions": [],
         "tagPage.menuSheet.remove": [],
+        "tagPage.menuSheet.save": []
+      }
+    },
+    "TagPageRemovedMenu": {
+      "prefix": "tagPage",
+      "keys": {},
+      "nodes": {
+        "tagPage.menuSheet": [],
+        "tagPage.menuSheet.cite": [],
+        "tagPage.menuSheet.citedBy": [],
+        "tagPage.menuSheet.dragHandle": [],
+        "tagPage.menuSheet.hide": [],
+        "tagPage.menuSheet.license": [],
+        "tagPage.menuSheet.opinions": [],
+        "tagPage.menuSheet.report": [],
+        "tagPage.menuSheet.save": []
+      }
+    },
+    "TagPageRemovedMenuOwn": {
+      "prefix": "tagPage",
+      "keys": {},
+      "nodes": {
+        "tagPage.menuSheet": [],
+        "tagPage.menuSheet.cite": [],
+        "tagPage.menuSheet.citedBy": [],
+        "tagPage.menuSheet.dragHandle": [],
+        "tagPage.menuSheet.license": [],
+        "tagPage.menuSheet.opinions": [],
         "tagPage.menuSheet.save": []
       }
     },

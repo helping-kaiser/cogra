@@ -190,6 +190,15 @@
       "page": "profile"
     },
     {
+      "file": "ProfilePostsRemovedMenu.dc.html",
+      "title": "Profile · the posts view, a removed post's menu",
+      "x": 9120,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "HistoryProfileMenu.dc.html",
       "title": "History · a hidden person's card, its menu",
       "x": 4800,
@@ -311,7 +320,7 @@
       "x": -6220,
       "y": 0,
       "w": 5800,
-      "h": 10072,
+      "h": 10111,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -391,6 +400,24 @@
       "file": "ProfileDeletedMenu.dc.html",
       "title": "Profile · a deleted account's menu",
       "x": 2880,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileDeletedPostMenu.dc.html",
+      "title": "Profile · a deleted account's post menu",
+      "x": 4320,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileDeletedRemovedMenu.dc.html",
+      "title": "Profile · a deleted account's swept post's menu",
+      "x": 4800,
       "y": 964,
       "w": 390,
       "h": 844,
