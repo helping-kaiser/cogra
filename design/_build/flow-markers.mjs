@@ -562,6 +562,21 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 9, find: ">· 1 reference</button>", tag: "button", all: true },
   ],
+  // Another's comment removed (round 57): CommentRemoved's numbers; its branch
+  // stands unfolded, so no View n replies line is drawn.
+  CommentRemovedOther: [
+    { n: 1, find: '<a href="/u/', tag: "a", all: true },
+    { n: 2, find: 'aria-label="More on this comment"', tag: "button", all: true },
+    { n: 3, find: '<a href="/t/', tag: "a", all: true },
+    { n: 4, find: 'aria-label="Your opinion on this comment', tag: "button", all: true },
+    { n: 4, find: 'aria-label="Give your opinion on this comment"', tag: "button", all: true },
+    { n: 4, find: ">Choose your opinion on this comment</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your opinion on this post</button>", tag: "button" },
+    { n: 5, find: ">Reply</button>", tag: "button", all: true },
+    { n: 7, find: ">Add a comment</span>", tag: "span" },
+    { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 9, find: ">· 1 reference</button>", tag: "button", all: true },
+  ],
   ReplyMedia: [
     { n: 1, find: '<a href="/u/', tag: "a", all: true },
     { n: 2, find: 'aria-label="More on this comment"', tag: "button", all: true },
@@ -848,6 +863,13 @@ Object.assign(FLOW_MARKERS, {
   ProfilePostsRemovedMenuOwn: ownRemovedMenuMarks(">Save</button>"),
   HistoryCommentRemovedMenuOwn: ownRemovedCommentMenuMarks,
   ProfileCommentsRemovedMenuOwn: ownRemovedCommentMenuMarks,
+  // Round 57 (backlog 223 and 275): each numbered as its host's twin numbers
+  // the same sheet.
+  ProfilePostsRemovedMenu: readerMenuMarks(">Save</button>", ">Hide @ada</button>"),
+  TagPageRemovedMenu: readerMenuMarks(">Save</button>", ">Hide @tobias</button>"),
+  TagPageRemovedMenuOwn: ownRemovedMenuMarks(">Save</button>"),
+  ProfileDeletedPostMenu: readerMenuMarks(">Save</button>", ">Hide this account</button>"),
+  ProfileDeletedRemovedMenu: readerMenuMarks(">Save</button>", ">Hide this account</button>"),
   // The profile card's menu (round 36, H2): `ProfileMenu`'s rows less Share,
   // Report at the tail.
   FeedProfileMenu: [
@@ -939,6 +961,17 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: ">Remove</button>", tag: "button" },
     // Edit (round 41, jakob 2026-11-11): a row in the menu, never on the card.
     { n: 8, find: ">Edit</button>", tag: "button" },
+  ],
+  // Another's removed comment's menu (round 57): CommentMenu's numbers, row for row.
+  CommentRemovedOtherMenu: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+    { n: 3, find: ">License terms</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div", all: true },
+    { n: 5, find: ">Opinions on this</button>", tag: "button" },
+    { n: 6, find: ">Cited by</button>", tag: "button" },
+    { n: 7, find: ">Report</button>", tag: "button" },
+    { n: 8, find: ">Hide @tobias</button>", tag: "button" },
   ],
   // Your removed comment's menu (round 46, jakob 2026-11-13, point C): CommentMenuOwn's numbers, Edit and Remove gone.
   CommentRemovedMenu: [

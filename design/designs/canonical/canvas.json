@@ -1343,6 +1343,15 @@
       "page": "profile"
     },
     {
+      "file": "ProfilePostsRemovedMenu.dc.html",
+      "title": "Profile · the posts view, a removed post's menu",
+      "x": 9120,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "HistoryProfileMenu.dc.html",
       "title": "History · a hidden person's card, its menu",
       "x": 4800,
@@ -2174,6 +2183,24 @@
       "file": "ProfileDeletedMenu.dc.html",
       "title": "Profile · a deleted account's menu",
       "x": 2880,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileDeletedPostMenu.dc.html",
+      "title": "Profile · a deleted account's post menu",
+      "x": 4320,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileDeletedRemovedMenu.dc.html",
+      "title": "Profile · a deleted account's swept post's menu",
+      "x": 4800,
       "y": 964,
       "w": 390,
       "h": 844,
@@ -3152,6 +3179,24 @@
       "page": "comments"
     },
     {
+      "file": "CommentRemovedOther.dc.html",
+      "title": "Comments · another's comment, removed by its author",
+      "x": 1920,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
+      "file": "CommentRemovedOtherMenu.dc.html",
+      "title": "Comments · another's comment, removed, its menu",
+      "x": 2400,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
       "file": "TagPageHidden.dc.html",
       "title": "A tag's page · someone just hidden",
       "x": 1920,
@@ -3173,6 +3218,24 @@
       "file": "TagPageMenuOwn.dc.html",
       "title": "A tag's page · your own post's menu",
       "x": 2880,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "TagPageRemovedMenu.dc.html",
+      "title": "A tag's page · a removed post's menu",
+      "x": 3360,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "TagPageRemovedMenuOwn.dc.html",
+      "title": "A tag's page · your removed post's menu",
+      "x": 3840,
       "y": 2120,
       "w": 390,
       "h": 844,
