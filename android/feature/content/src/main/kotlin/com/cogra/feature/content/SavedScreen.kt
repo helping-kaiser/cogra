@@ -117,6 +117,8 @@ private val SAVED_MENU_ROWS = setOf(
     PostMenuRow.Save,
     PostMenuRow.Cite,
     PostMenuRow.Hide,
+    PostMenuRow.CitedBy,
+    PostMenuRow.Opinions,
     PostMenuRow.License,
     PostMenuRow.Report,
 )
