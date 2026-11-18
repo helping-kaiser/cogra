@@ -47,7 +47,7 @@ describe("the parked pad", () => {
     expect(style.transform).toBeUndefined();
     // Measured from the bottom, which is what makes it the LOWER centre
     // on any viewport height without arithmetic.
-    expect(style.bottom).toBe(`${PAD_PARK_INSET_PX}px`);
+    expect(style.bottom).toBe(`calc(${PAD_PARK_INSET_PX}px + env(safe-area-inset-bottom, 0px))`);
     expect(style.top).toBeUndefined();
   });
 
@@ -58,13 +58,13 @@ describe("the parked pad", () => {
   it("moves the whole spot with the inset, and takes nothing else", () => {
     const style = parkedPadStyle(40);
 
-    expect(style.bottom).toBe("40px");
+    expect(style.bottom).toBe("calc(40px + env(safe-area-inset-bottom, 0px))");
     expect(style.left).toBe(0);
   });
 
   it("clears the bar and its safe area where a bar stands", () => {
     expect(PAD_ABOVE_BAR_INSET_PX).toBe(64 + PAD_PARK_INSET_PX);
-    expect(parkedPadStyle(PAD_ABOVE_BAR_INSET_PX, true).bottom).toBe(
+    expect(parkedPadStyle(PAD_ABOVE_BAR_INSET_PX).bottom).toBe(
       "calc(80px + env(safe-area-inset-bottom, 0px))",
     );
   });
