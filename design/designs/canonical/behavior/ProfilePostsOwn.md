@@ -6,6 +6,8 @@ ALWAYS the reader's own profile's Posts view keeps the own profile's head as the
 
 ALWAYS profile.posts lists the reader's own posts, each card the feed's own, fully live
 
+ALWAYS profile.identity.figures.posts counts every post the reader published, a removed one included, so the figure and the list agree
+
 ALWAYS the ⋮ on a card holds the own post menu, Edit among its rows, and carries no Hide and no Report row
 
 WHEN tap the ⋮ on profile.posts.card -> profile.menuSheet rises over the reader's own profile with the own post menu's rows

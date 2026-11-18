@@ -955,7 +955,8 @@ paper over:
   say which one it counts; one merged "followers" figure would describe
   a different product, where a link is one-way and carries no opinion.
   Each figure counts bundles, never records (jakob 2026-11-10): the
-  posts published, never their edits; `Opinions on them` the people who
+  posts published, never their edits, a removed post included (jakob
+  2026-11-18), so the figure and the Posts tab's list agree; `Opinions on them` the people who
   hold an opinion on the person; `Opinions by them` the people they hold
   an opinion on. One person's opinions toward one target are one
   bundle, counted once however often they were revised; a revision count

@@ -8,6 +8,8 @@ ALWAYS the figures read Posts, Opinions on them and Opinions by them, each label
 
 ALWAYS the two opinion figures are two doors and the Posts figure is no door, each door spoken as its figure's number and visible words and nothing more, as 6 Opinions on them and 6 Opinions by them
 
+ALWAYS profile.identity.figures.posts counts every post the person published, a removed one included, and never an edit, so the figure and the Posts tab's list agree
+
 ALWAYS the actions row reads the opinion on the person, worn wide, then Message sized by its word, then the ⋮ that closes the row
 
 ALWAYS the wide anchor wears the muted no-opinion face GIVEN the reader holds no opinion on the person

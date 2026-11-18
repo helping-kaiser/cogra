@@ -28,6 +28,8 @@ ALWAYS the actions row reads the opinion on the account, worn wide, then the ⋮
 
 ALWAYS the two opinion figures are two doors and the Posts figure is no door, each door spoken as its figure's number and visible words and nothing more, as on another's profile
 
+ALWAYS profile.identity.figures.posts counts every post the account published, a removed one included, and never an edit, so the figure and the Posts tab's list agree, its contents kept or removed
+
 ALWAYS the wide anchor's accessible name says this account and never a handle
 
 ALWAYS profile.bottomBar keeps lit the slot of the root the profile was opened from, profile.bottomBar.feedSlot from the feed
