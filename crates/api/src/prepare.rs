@@ -96,8 +96,9 @@ pub struct Gesture {
 /// and the act cannot become orderable before the landing, whose batch it
 /// joins — so the write rule's balance read answers "no constraint" here
 /// and only here: the largest amount the ledger can hold, which only a
-/// price the integers cannot represent exceeds. Every other read, the per-act formation checks, and the
-/// signing budget the staging spends are the real ones.
+/// price the integers cannot represent exceeds. Every other read, the
+/// per-act formation checks, and the signing budget the staging spends
+/// are the real ones.
 pub(crate) struct Carrying<'a, B>(pub &'a B);
 
 impl<B: L1Boundary> L1Boundary for Carrying<'_, B> {
