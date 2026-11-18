@@ -135,7 +135,7 @@ export function Screen() {
             <div style={{ display: "{{pickedShown}}", flexDirection: "column", gap: 6 }} {...chipCopy("clip", "picked")}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <MediaThumb src="clip-lakeside.jpg" alt="" size={56} fit="contain" video progress={0.55} onRemove={() => {}} removeLabel="Remove this video" node="thumb" />
-                <CoverTile width={56} height={56} labelBeside node="cover" />
+                <CoverTile height={56} labelBeside node="cover" />
               </div>
               <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} node="describeRow" />
             </div>
@@ -150,7 +150,7 @@ export function Screen() {
             <div style={{ display: "{{failedShown}}", flexDirection: "column", gap: 6 }} {...chipCopy("clip", "failed")}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <MediaThumb src="clip-lakeside.jpg" alt="" size={56} fit="contain" video failed node="thumb" />
-                <CoverTile width={56} height={56} labelBeside node="cover" />
+                <CoverTile height={56} labelBeside node="cover" />
               </div>
               <UploadErrorLine message="That video didn't upload." onRetry={() => {}} onRemove={() => {}} node="uploadError" />
               <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} node="describeRow" />
@@ -158,7 +158,7 @@ export function Screen() {
             <div style={{ display: "{{refusedShown}}", flexDirection: "column", gap: 6 }} {...chipCopy("clip", "refused")}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <MediaThumb src="clip-lakeside.jpg" alt="" size={56} fit="contain" video failed node="thumb" />
-                <CoverTile width={56} height={56} labelBeside node="cover" />
+                <CoverTile height={56} labelBeside node="cover" />
               </div>
               <UploadErrorLine message="That video didn't upload." onRemove={() => {}} node="uploadError" />
               <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} node="describeRow" />
@@ -166,7 +166,7 @@ export function Screen() {
             <div style={{ display: "{{secondShown}}", flexDirection: "column", gap: 6 }} {...chipCopy("clip", "second")}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <MediaThumb src="clip-lakeside.jpg" alt="" size={56} fit="contain" video progress={0.55} onRemove={() => {}} removeLabel="Remove this video" node="thumb" />
-                <CoverTile width={56} height={56} labelBeside node="cover" />
+                <CoverTile height={56} labelBeside node="cover" />
               </div>
               <RefusedFile src="comment-camera.jpg" video message="A comment carries one video." />
               <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} node="describeRow" />

@@ -81,6 +81,33 @@ const commentMenuMarks = (save, hide) => [
   { n: 7, find: ">Report</button>", tag: "button" },
   { n: 8, find: hide, tag: "button" },
 ];
+// The removed menus on their hosts (round 55): `FeedRemovedMenu`'s,
+// `FeedRemovedMenuOwn`'s and `CommentRemovedMenu`'s numbers, the first row's
+// words per board; one wash, the host's.
+const removedMenuMarks = (save) => [
+  { n: 1, find: save, tag: "button" },
+  { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+  { n: 3, find: ">Hide @ada</button>", tag: "button" },
+  { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  { n: 5, find: ">Report</button>", tag: "button" },
+  { n: 6, find: ">License terms</button>", tag: "button" },
+  ...postReadingMarks(7),
+];
+const ownRemovedMenuMarks = (save) => [
+  { n: 1, find: save, tag: "button" },
+  { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+  { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  { n: 5, find: ">License terms</button>", tag: "button" },
+  ...postReadingMarks(6),
+];
+const ownRemovedCommentMenuMarks = [
+  { n: 1, find: ">Save</button>", tag: "button" },
+  { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+  { n: 3, find: ">License terms</button>", tag: "button" },
+  { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  { n: 5, find: ">Opinions on this</button>", tag: "button" },
+  { n: 6, find: ">Cited by</button>", tag: "button" },
+];
 const ownCommentMenuMarks = [
   { n: 1, find: ">Save</button>", tag: "button" },
   { n: 2, find: ">Cite in a new post</button>", tag: "button" },
@@ -535,6 +562,20 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 9, find: ">· 1 reference</button>", tag: "button", all: true },
   ],
+  // Another's comment removed (round 57): CommentRemoved's numbers; its branch
+  // stands unfolded, so no View n replies line is drawn, and its tags and
+  // reference count went with its words, so 3 and 9 stand nowhere.
+  CommentRemovedOther: [
+    { n: 1, find: '<a href="/u/', tag: "a", all: true },
+    { n: 2, find: 'aria-label="More on this comment"', tag: "button", all: true },
+    { n: 4, find: 'aria-label="Your opinion on this comment', tag: "button", all: true },
+    { n: 4, find: 'aria-label="Give your opinion on this comment"', tag: "button", all: true },
+    { n: 4, find: ">Choose your opinion on this comment</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your opinion on this post</button>", tag: "button" },
+    { n: 5, find: ">Reply</button>", tag: "button", all: true },
+    { n: 7, find: ">Add a comment</span>", tag: "span" },
+    { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
   ReplyMedia: [
     { n: 1, find: '<a href="/u/', tag: "a", all: true },
     { n: 2, find: 'aria-label="More on this comment"', tag: "button", all: true },
@@ -796,6 +837,38 @@ Object.assign(FLOW_MARKERS, {
   FeedCommentMenuOwn: ownCommentMenuMarks,
   SavedCommentMenuOwn: [{ n: 1, find: ">Unsave</button>", tag: "button" }, ...ownCommentMenuMarks.filter((m) => m.n !== 1)],
   ProfileCommentsMenuOwn: ownCommentMenuMarks,
+  // Round 55 (backlog 223): the menu hosts the sidecars named and no board
+  // drew, each numbered as its twin numbers the same sheet.
+  SavedPostMenuOwn: [{ n: 1, find: ">Unsave</button>", tag: "button" }, ...ownPostMenuMarks.filter((m) => m.n !== 1)],
+  TagPageMenuOwn: ownPostMenuMarks,
+  SavedProfileMenu: [
+    { n: 1, find: ">Unsave</button>", tag: "button" },
+    { n: 2, find: ">Mention in a new post</button>", tag: "button" },
+    { n: 3, find: ">Hide @mira</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 5, find: ">Report</button>", tag: "button" },
+  ],
+  // The deleted account's card: `FeedProfileMenu`'s numbers, Mention gone.
+  FeedProfileDeletedMenu: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 3, find: ">Hide this account</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 5, find: ">Report</button>", tag: "button" },
+  ],
+  HistoryRemovedMenu: removedMenuMarks(">Save</button>"),
+  SavedRemovedMenu: removedMenuMarks(">Unsave</button>"),
+  HistoryRemovedMenuOwn: ownRemovedMenuMarks(">Save</button>"),
+  SavedRemovedMenuOwn: ownRemovedMenuMarks(">Unsave</button>"),
+  ProfilePostsRemovedMenuOwn: ownRemovedMenuMarks(">Save</button>"),
+  HistoryCommentRemovedMenuOwn: ownRemovedCommentMenuMarks,
+  ProfileCommentsRemovedMenuOwn: ownRemovedCommentMenuMarks,
+  // Round 57 (backlog 223 and 275): each numbered as its host's twin numbers
+  // the same sheet.
+  ProfilePostsRemovedMenu: readerMenuMarks(">Save</button>", ">Hide @ada</button>"),
+  TagPageRemovedMenu: readerMenuMarks(">Save</button>", ">Hide @tobias</button>"),
+  TagPageRemovedMenuOwn: ownRemovedMenuMarks(">Save</button>"),
+  ProfileDeletedPostMenu: readerMenuMarks(">Save</button>", ">Hide this account</button>"),
+  ProfileDeletedRemovedMenu: readerMenuMarks(">Save</button>", ">Hide this account</button>"),
   // The profile card's menu (round 36, H2): `ProfileMenu`'s rows less Share,
   // Report at the tail.
   FeedProfileMenu: [
@@ -887,6 +960,17 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: ">Remove</button>", tag: "button" },
     // Edit (round 41, jakob 2026-11-11): a row in the menu, never on the card.
     { n: 8, find: ">Edit</button>", tag: "button" },
+  ],
+  // Another's removed comment's menu (round 57): CommentMenu's numbers, row for row.
+  CommentRemovedOtherMenu: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+    { n: 3, find: ">License terms</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div", all: true },
+    { n: 5, find: ">Opinions on this</button>", tag: "button" },
+    { n: 6, find: ">Cited by</button>", tag: "button" },
+    { n: 7, find: ">Report</button>", tag: "button" },
+    { n: 8, find: ">Hide @tobias</button>", tag: "button" },
   ],
   // Your removed comment's menu (round 46, jakob 2026-11-13, point C): CommentMenuOwn's numbers, Edit and Remove gone.
   CommentRemovedMenu: [
@@ -1736,7 +1820,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 13, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
     { n: 13, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
     { n: 14, find: ">Feed score</span>", tag: "button", all: true },
-    { n: 16, find: 'aria-label="2 comments"', tag: "button" },
+    // Both copies of the `posts` chip's card (round 57).
+    { n: 16, find: 'aria-label="2 comments"', tag: "button", all: true },
     { n: 17, find: 'aria-label="Share this post"', tag: "button", all: true },
     ...nav(18),
     { n: 15, find: 'aria-label="Notifications"', tag: "button" },
@@ -3315,8 +3400,9 @@ const tagPageBody = ({ topicStance }) => [
   { n: 7, find: '<a href="/t/', tag: "a", all: true },
   { n: 8, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
   { n: 9, find: ">Feed score</span>", tag: "button", all: true },
+  // `all`: `TagPage`'s `post` chip draws the first row twice (round 57).
   { n: 10, find: 'aria-label="2 comments"', tag: "button" },
-  { n: 10, find: 'aria-label="1 comment"', tag: "button" },
+  { n: 10, find: 'aria-label="1 comment"', tag: "button", all: true },
   { n: 11, find: 'aria-label="Share this post"', tag: "button", all: true },
   { n: 11, find: 'aria-label="Share #saltmaps"', tag: "button" },
   { n: 12, find: ">On \u201c", tag: "button", all: true },
