@@ -563,11 +563,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: ">· 1 reference</button>", tag: "button", all: true },
   ],
   // Another's comment removed (round 57): CommentRemoved's numbers; its branch
-  // stands unfolded, so no View n replies line is drawn.
+  // stands unfolded, so no View n replies line is drawn, and its tags and
+  // reference count went with its words, so 3 and 9 stand nowhere.
   CommentRemovedOther: [
     { n: 1, find: '<a href="/u/', tag: "a", all: true },
     { n: 2, find: 'aria-label="More on this comment"', tag: "button", all: true },
-    { n: 3, find: '<a href="/t/', tag: "a", all: true },
     { n: 4, find: 'aria-label="Your opinion on this comment', tag: "button", all: true },
     { n: 4, find: 'aria-label="Give your opinion on this comment"', tag: "button", all: true },
     { n: 4, find: ">Choose your opinion on this comment</button>", tag: "button", all: true },
@@ -575,7 +575,6 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Reply</button>", tag: "button", all: true },
     { n: 7, find: ">Add a comment</span>", tag: "span" },
     { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
-    { n: 9, find: ">· 1 reference</button>", tag: "button", all: true },
   ],
   ReplyMedia: [
     { n: 1, find: '<a href="/u/', tag: "a", all: true },
@@ -1821,7 +1820,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 13, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
     { n: 13, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
     { n: 14, find: ">Feed score</span>", tag: "button", all: true },
-    { n: 16, find: 'aria-label="2 comments"', tag: "button" },
+    // Both copies of the `posts` chip's card (round 57).
+    { n: 16, find: 'aria-label="2 comments"', tag: "button", all: true },
     { n: 17, find: 'aria-label="Share this post"', tag: "button", all: true },
     ...nav(18),
     { n: 15, find: 'aria-label="Notifications"', tag: "button" },
@@ -3400,7 +3400,8 @@ const tagPageBody = ({ topicStance }) => [
   { n: 7, find: '<a href="/t/', tag: "a", all: true },
   { n: 8, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
   { n: 9, find: ">Feed score</span>", tag: "button", all: true },
-  { n: 10, find: 'aria-label="2 comments"', tag: "button" },
+  // `all`: `TagPage`'s `post` chip draws the second row twice (round 57).
+  { n: 10, find: 'aria-label="2 comments"', tag: "button", all: true },
   { n: 10, find: 'aria-label="1 comment"', tag: "button" },
   { n: 11, find: 'aria-label="Share this post"', tag: "button", all: true },
   { n: 11, find: 'aria-label="Share #saltmaps"', tag: "button" },
