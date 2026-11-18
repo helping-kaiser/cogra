@@ -3400,9 +3400,9 @@ const tagPageBody = ({ topicStance }) => [
   { n: 7, find: '<a href="/t/', tag: "a", all: true },
   { n: 8, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
   { n: 9, find: ">Feed score</span>", tag: "button", all: true },
-  // `all`: `TagPage`'s `post` chip draws the second row twice (round 57).
-  { n: 10, find: 'aria-label="2 comments"', tag: "button", all: true },
-  { n: 10, find: 'aria-label="1 comment"', tag: "button" },
+  // `all`: `TagPage`'s `post` chip draws the first row twice (round 57).
+  { n: 10, find: 'aria-label="2 comments"', tag: "button" },
+  { n: 10, find: 'aria-label="1 comment"', tag: "button", all: true },
   { n: 11, find: 'aria-label="Share this post"', tag: "button", all: true },
   { n: 11, find: 'aria-label="Share #saltmaps"', tag: "button" },
   { n: 12, find: ">On \u201c", tag: "button", all: true },

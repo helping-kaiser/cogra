@@ -111,8 +111,9 @@
    (`FeedRemoved`) under its claim; while it is off, the post is not listed —
    from the page's next derivation, as the feed's own two sentences put it.
    Nothing new stands on this page: the switch is the feed's. The drawn
-   state is the second row, @sol's salt maps, as `ProfilePosts`' and
-   `ProfileComments`' chips vary their second card; `TagPageRemovedMenu` and
+   state is the first row, @tobias's post, the one row nothing else on the
+   page points at (@ada's tagged comment answers @sol's post); the card is
+   the feed's removed card, its ⋮ the reader's. `TagPageRemovedMenu` and
    `TagPageRemovedMenuOwn` draw the two menus. */
 
 export const FRAME = { width: 390, height: 1344 };

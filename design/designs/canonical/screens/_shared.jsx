@@ -5168,32 +5168,34 @@ function TopicStanceRow({ name, bundle, stanceOpen, stanceDefaultPick, node }) {
 /* A REMOVED TAGGED POST (round 57; jakob 2026-11-18, tag page (c)) stands in
    its tagged row as the feed's removed card while the feed's filter has
    `Removed` on (`FeedRemoved`): `removed` names whose — `"tobias"` the first
-   row's, `"sol"` the second's — or `"hole"`, the second row drawn both ways
+   row's, `"sol"` the second's — or `"hole"`, the first row drawn both ways
    behind `TagPage`'s `post` chip (`{{postLive}}` / `{{postRemoved}}`). The
-   claim above the row stands, as on every row. */
+   first row is the chip's because nothing else on the page points at it;
+   @ada's tagged comment answers @sol's post. The claim above the row stands,
+   as on every row. */
 function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, removed } = {}) {
-  const solLive = <PostCard attach {...SOL_POST} bundle={mkBundle(0.1, 0.1)} />;
-  const solRemoved = <PostCard attach id={SOL_POST.id} author={SOL} timestamp={SOL_POST.timestamp} redacted={{ reason: "author", when: "now" }} score={SOL_POST.score} comments={SOL_POST.comments} bundle={mkBundle(0.1, 0.1)} menuItems={OWN_REMOVED_CARD_MENU} />;
+  const tobiasLive = <PostCard attach {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />;
+  const tobiasRemoved = <PostCard attach id={TOBIAS_POST.id} author={TOBIAS} timestamp={TOBIAS_POST.timestamp} redacted={{ reason: "author", when: "now" }} score={TOBIAS_POST.score} comments={TOBIAS_POST.comments} bundle={mkBundle(0.1, 0.1)} menuItems={TOBIAS_POST.menuItems} />;
   return (
     <>
       <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" node={named ? "header" : undefined} />
       <TopicStanceRow name="#saltmaps" bundle={bundle} stanceOpen={stanceOpen} stanceDefaultPick={stanceDefaultPick} node={named ? "actionRow" : undefined} />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "4px 0 0" }}>
         <TaggedRow pair={{ pDirected: 0.1, pInterest: 1 }} pending>
-          {removed === "tobias" ? (
-            <PostCard attach id={TOBIAS_POST.id} author={TOBIAS} timestamp={TOBIAS_POST.timestamp} redacted={{ reason: "author", when: "now" }} score={TOBIAS_POST.score} comments={TOBIAS_POST.comments} bundle={mkBundle(0.1, 0.1)} menuItems={TOBIAS_POST.menuItems} />
-          ) : (
-            <PostCard attach {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
-          )}
+          {removed === "tobias" ? tobiasRemoved : removed === "hole" ? (
+            <>
+              <div style={{ display: "{{postLive}}" }}>{tobiasLive}</div>
+              <div style={{ display: "{{postRemoved}}" }}>{tobiasRemoved}</div>
+            </>
+          ) : tobiasLive}
         </TaggedRow>
 
         <TaggedRow pair={{ pDirected: 0.55, pInterest: 1 }}>
-          {removed === "sol" ? solRemoved : removed === "hole" ? (
-            <>
-              <div style={{ display: "{{postLive}}" }}>{solLive}</div>
-              <div style={{ display: "{{postRemoved}}" }}>{solRemoved}</div>
-            </>
-          ) : solLive}
+          {removed === "sol" ? (
+            <PostCard attach id={SOL_POST.id} author={SOL} timestamp={SOL_POST.timestamp} redacted={{ reason: "author", when: "now" }} score={SOL_POST.score} comments={SOL_POST.comments} bundle={mkBundle(0.1, 0.1)} menuItems={OWN_REMOVED_CARD_MENU} />
+          ) : (
+            <PostCard attach {...SOL_POST} bundle={mkBundle(0.1, 0.1)} />
+          )}
         </TaggedRow>
 
         <TaggedRow pair={{ pDirected: 0.4, pInterest: 0.9 }}>
