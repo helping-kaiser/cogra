@@ -16,6 +16,10 @@ ALWAYS a tagged post stands as a post card and a tagged comment as a comment car
 
 ALWAYS a tagged comment's card offers no Reply and no view-replies line
 
+WHEN the tag page is next derived GIVEN the feed's filter has Removed on -> a removed tagged post stands in its row as the feed's removed card, Removed by its author with the removal's date, under its claim
+
+WHEN the tag page is next derived GIVEN the feed's filter keeps Removed off -> a removed tagged post is not listed AND NEVER the tag page carries a switch of its own
+
 ALWAYS every row carries the claim above it, its exact pair painting only in geek mode
 
 ALWAYS the tag page shows no count of people or of uses

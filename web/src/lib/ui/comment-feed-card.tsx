@@ -470,8 +470,9 @@ export function CommentFeedCard({
           </Link>
         ))}
       {/* A COMMENT IS WORDS FIRST and its pictures join them: inset at the
-          card's medium rung, square and filled, capped at comment scale
-          (FeedCommentShapes.md). The pictures take the words' door. */}
+          card's medium rung, a square at the column's whole width, filled,
+          with no height cap (jakob 2026-11-18). The pictures take the words'
+          door. */}
       {hasMedia(comment) && (
         <div
           onClick={wordsDoor === null ? undefined : () => router.push(wordsDoor)}
@@ -483,7 +484,6 @@ export function CommentFeedCard({
             radius="var(--radius-medium)"
             ratio={1}
             fit="cover"
-            maxHeight="220px"
             surface="reading"
             testId={`${testId}-media`}
             dataNode={part(node, "media")}

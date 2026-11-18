@@ -3680,6 +3680,81 @@ describe("PostView — references", () => {
       // otherwise fit whole inside the square with bars at the sides.
       expect(within(frame).getByAltText("a salt flat")).toHaveStyle({ objectFit: "cover" });
     });
+
+    // THE SQUARE STANDS WHOLE (jakob 2026-11-18, W48: "the image/clip should
+    // be square … why is there a cap on how high it can be?"): a comment's
+    // frame is a square at the column's width with no height cap — one
+    // picture, several, a clip — and the veil and the removed mark keep
+    // working over it.
+    describe("a_comments_media_is_a_square_at_the_columns_width_with_no_height_cap", () => {
+      const square = (frame: HTMLElement) => {
+        expect(frame.style.aspectRatio).toBe("1 / 1");
+        expect(frame.style.maxHeight).toBe("");
+      };
+
+      it("one picture", async () => {
+        server.use(...threadFrom(() => detail("u1", [{ id: "c1", body: "One", attachments: [picture("mc", "a salt flat")] }])));
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+        await openComments();
+        await screen.findByTestId("post-comment-c1");
+        square(screen.getByTestId("media-gallery-lead"));
+      });
+
+      it("several pictures, every page", async () => {
+        server.use(
+          ...threadFrom(() =>
+            detail("u1", [{ id: "c1", body: "Two", attachments: [picture("ma", "first"), picture("mb", "second")] }]),
+          ),
+        );
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+        await openComments();
+        await screen.findByTestId("post-comment-c1");
+        square(screen.getByTestId("media-gallery-page-0"));
+        square(screen.getByTestId("media-gallery-page-1"));
+      });
+
+      it("a clip, its poster inside the same square", async () => {
+        const tallClip = {
+          ...picture("mv", null),
+          url: "https://media.test/mv.mp4",
+          mimeType: "video/mp4",
+          options: { __typename: "MediaOptions", aspectRatio: "9:16", durationMs: 12_000 },
+        };
+        server.use(...threadFrom(() => detail("u1", [{ id: "c1", body: "Clip", attachments: [tallClip] }])));
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+        await openComments();
+        await screen.findByTestId("post-comment-c1");
+        square(screen.getByTestId("media-gallery-lead-frame"));
+      });
+
+      it("a sensitive comment, revealed, shows the same square", async () => {
+        server.use(
+          ...threadFrom(() =>
+            detail("u1", [
+              { id: "c1", body: "Marked", attachments: [picture("mc", "a salt flat")], attachmentsStatus: "SENSITIVE" },
+            ]),
+          ),
+        );
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+        await openComments();
+        fireEvent.click(await screen.findByTestId("comment-c1-veil-reveal"));
+        square(await screen.findByTestId("media-gallery-lead"));
+      });
+
+      it("a removed comment keeps its mark, and no frame stands", async () => {
+        server.use(
+          ...threadFrom(() =>
+            detail("u1", [
+              { id: "c1", body: "Gone", attachments: [picture("mc", null, "REDACTED")], attachmentsStatus: "REDACTED" },
+            ]),
+          ),
+        );
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+        await openComments();
+        expect(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.removalMark", "c1"))).toBeInTheDocument();
+        expect(screen.queryByTestId("media-gallery-lead")).toBeNull();
+      });
+    });
   });
 });
 

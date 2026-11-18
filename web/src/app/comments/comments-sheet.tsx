@@ -919,13 +919,15 @@ export function CommentsSheet({
                 // SQUARE IS THE COMMENT SCALE'S SHAPE (design/readme.md §"the
                 // media slice"): every attachment, picture or clip, alike —
                 // not only a video or a multi-picture set — takes the one
-                // frame, so a thread's rhythm never changes per comment.
+                // frame, so a thread's rhythm never changes per comment. The
+                // square runs the column's whole width with no height cap
+                // (jakob 2026-11-18, android's shape: "why is there a cap on
+                // how high it can be?").
                 ratio={1}
                 // ...AND FILLED, NEVER LETTERBOXED: an uncropped picture
                 // display-crops to the frame rather than fitting whole inside
                 // it, same as the video's own centre-crop.
                 fit="cover"
-                maxHeight="220px"
                 // One control, the sound; no transport bar and no duration
                 // pill on a surface meant for reading.
                 surface="reading"
