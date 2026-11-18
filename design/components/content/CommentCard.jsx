@@ -285,8 +285,9 @@ export function CommentCard({
       {opener}
       {/* A comment is words first and its pictures join them (readme §13) —
           below the words, INSET at the card's medium rung rather than
-          full-bleed, and capped at a comment-scale height: the media joins the
-          words, it must not turn the comment into a post. Square is the
+          full-bleed, a square at the column's width with no cap on its height
+          (jakob 2026-11-18, the hand test: "the image/clip should be square
+          .. why is there a cap on how high it can be?"). Square is the
           comment scale's shape (readme §13, the reel round): a comment's
           picture IS the square its author framed in the comment's crop
           (`ReplyCrop`, jakob 2026-11-17), one picture as much as four, so
@@ -295,14 +296,14 @@ export function CommentCard({
           four ride one comment. */}
       {Array.isArray(media) && media.length > 0 && (onOpen ? (
         <div onClick={open} className="cg-door" data-node={node && "media"}>
-          <MediaGallery items={squared(media)} ratio="square" maxHeight="220px" node={node && "media"} />
+          <MediaGallery items={squared(media)} ratio="square" node={node && "media"} />
         </div>
       ) : node ? (
         <div data-node="media">
-          <MediaGallery items={squared(media)} ratio="square" maxHeight="220px" node="media" />
+          <MediaGallery items={squared(media)} ratio="square" node="media" />
         </div>
       ) : (
-        <MediaGallery items={squared(media)} ratio="square" maxHeight="220px" />
+        <MediaGallery items={squared(media)} ratio="square" />
       ))}
     </>
   );
