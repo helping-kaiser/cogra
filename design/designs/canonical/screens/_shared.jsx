@@ -1436,8 +1436,19 @@ const DELETED_POST = {
 };
 const CONTENTS_CHIP = { contents: { editor: "enum", options: ["kept", "removed"], default: "kept" } };
 const CONTENTS_VALS = `contentsKept: this.props.contents === "removed" ? "none" : "contents", contentsRemoved: this.props.contents === "removed" ? "contents" : "none"`;
-function ProfileDeletedBody({ tab = "everything" } = {}) {
-  const posts = (
+/* The post menu a deleted account's card raises on its page (round 57,
+   backlog 275): the card's rows with the license the card appends, before
+   Report — the reader's post menu whole, Hide reading `Hide this account`. */
+const DELETED_POST_MENU = [...DELETED_POST.menuItems.filter((row) => row !== REPORT_ROW), LICENSE_ROW, REPORT_ROW];
+/* `contents` fixes the `contents` chip's state for a board drawing one state
+   alone (`ProfileDeletedPostMenu`, `ProfileDeletedRemovedMenu`); left as
+   `chip`, both copies stand behind the chip. */
+function ProfileDeletedBody({ tab = "everything", contents = "chip" } = {}) {
+  const posts = contents === "kept" ? (
+    <PostCard {...DELETED_POST} node="card" />
+  ) : contents === "removed" ? (
+    <PostCard id={DELETED_POST.id} author={DELETED_POST.author} timestamp="9d" redacted={{ reason: "author", when: "3d" }} score="3.20" comments={2} menuItems={DELETED_POST.menuItems} node="card" />
+  ) : (
     <>
       <div style={{ display: "{{contentsKept}}" }} data-node-chip="contents" data-node-key="kept">
         <PostCard {...DELETED_POST} node="card" />
