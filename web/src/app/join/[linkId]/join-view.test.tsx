@@ -2,6 +2,8 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { gql } from "@apollo/client";
+
 import type { RegisterMutationVariables } from "@/__generated__/graphql";
 import { createTokenStore } from "@/lib/session/token-store";
 import { gqlLink, startMswServer } from "@/test/msw";
@@ -71,6 +73,16 @@ const refusal = (code: string, field: string[] | null) =>
       },
     }),
   );
+
+/** A read the other account left in the cache. */
+const OLD_READ = gql`
+  query JoinSwitchCacheProbe {
+    me {
+      id
+      handle
+    }
+  }
+`;
 
 function signedInStore() {
   const store = createTokenStore();
@@ -263,29 +275,88 @@ describe("JoinView", () => {
     expect(screen.queryByText("That didn't send. Try again.")).not.toBeInTheDocument();
   });
 
-  it("offers a signed-in applicant neither the form nor the sign-in link", async () => {
-    server.use(usableCheck, meHandler("APPLICANT"));
-    renderWithProviders(<JoinView linkId={ID} />, { store: signedInStore() });
-    expect(await screen.findByTestId("join.title")).toBeInTheDocument();
-    expect(screen.queryByTestId("join.handle.input")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("join.signInDoor")).not.toBeInTheDocument();
+  // JOIN OVER THE SIGNED-IN STATE (Join.md:7, :21, :59, :87): an invite link
+  // ignores sign-in — an applicant, a member, a member whose account read
+  // never answered all get the same form, a layer over that account.
+  for (const [who, me] of [
+    ["an applicant", () => meHandler("APPLICANT")],
+    ["a member", () => meHandler("MEMBER")],
+    ["a reader whose account read never answers", () => gqlLink.query("Me", () => HttpResponse.error())],
+  ] as const) {
+    it(`a_live_invite_link_opened_while_signed_in_opens_join_as_a_layer — ${who}`, async () => {
+      server.use(usableCheck, me());
+      renderWithProviders(<JoinView linkId={ID} />, { store: signedInStore() });
+      expect(await screen.findByTestId("join.handle.input")).toBeInTheDocument();
+      expect(screen.getByTestId("join.commit.action")).toBeInTheDocument();
+      expect(screen.queryByText(/isn.t for you/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Invites page/)).not.toBeInTheDocument();
+    });
+  }
+
+  it("press_the_back_arrow_given_the_form_opened_over_the_signed_in_state_closes_onto_it", async () => {
+    server.use(usableCheck);
+    const store = signedInStore();
+    renderWithProviders(<JoinView linkId={ID} />, { store });
+    await screen.findByTestId("join.handle.input");
+    // The arrow links to the signed-in feed; nothing about the account moved.
+    expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute("href", "/feed");
+    expect(store.activeAccountId()).toBe("acct-1");
+    expect(store.refreshToken()).toBe("refresh-1");
   });
 
-  it("offers a member no action — the invite is for someone new", async () => {
-    server.use(usableCheck, meHandler("MEMBER"));
+  it("already_have_an_account_sign_in_stands_over_the_signed_in_state_and_opens_sign_in_over_the_layer", async () => {
+    server.use(usableCheck);
     renderWithProviders(<JoinView linkId={ID} />, { store: signedInStore() });
-    expect(await screen.findByTestId("join_member_note")).toBeInTheDocument();
-    expect(screen.getByTestId("join_member_invites")).toHaveAttribute("href", "/invites");
-    expect(screen.queryByTestId("join.handle.input")).not.toBeInTheDocument();
+    const door = await screen.findByTestId("join.signInDoor");
+    expect(door).toHaveAttribute("href", `/login?from=join&invite=${ID}`);
   });
 
-  it("offers no action while the account state is unknown", async () => {
-    server.use(usableCheck, gqlLink.query("Me", () => HttpResponse.error()));
-    renderWithProviders(<JoinView linkId={ID} />, { store: signedInStore() });
-    expect(await screen.findByTestId("join.title")).toBeInTheDocument();
-    expect(screen.queryByTestId("join_member_note")).not.toBeInTheDocument();
+  it("signed_out_the_sign_in_door_is_the_plain_sign_in", async () => {
+    server.use(usableCheck);
+    renderWithProviders(<JoinView linkId={ID} />);
+    expect(await screen.findByTestId("join.signInDoor")).toHaveAttribute("href", "/login");
   });
 
+  it("the_account_created_over_the_signed_in_state_switches_this_device_and_revokes_nothing", async () => {
+    let revoked = 0;
+    server.use(
+      usableCheck,
+      gqlLink.mutation("RevokeSession", () => {
+        revoked += 1;
+        return HttpResponse.error();
+      }),
+      gqlLink.mutation("Register", () =>
+        HttpResponse.json({
+          data: {
+            register: {
+              __typename: "RegisterPayload",
+              auth: {
+                __typename: "AuthSession",
+                accessToken: "access-2",
+                refreshToken: "refresh-2",
+                user: { __typename: "User", id: "acct-2" },
+              },
+              expiresAt: "2026-08-08T00:00:00Z",
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+    );
+    const store = signedInStore();
+    const { client } = renderWithProviders(<JoinView linkId={ID} />, { store });
+    await screen.findByTestId("join.handle.input");
+    // What the other account left in the cache must not be read as the new one.
+    client.cache.writeQuery({ query: OLD_READ, data: { me: { __typename: "User", id: "u-old", handle: "old" } } });
+    fillForm();
+    createAccount();
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
+    expect(store.activeAccountId()).toBe("acct-2");
+    expect(store.refreshToken()).toBe("refresh-2");
+    expect(store.accessToken()).toBe("access-2");
+    expect(client.cache.readQuery({ query: OLD_READ })).toBeNull();
+    expect(revoked).toBe(0);
+  });
 
   // Join.jsx / Join.md, line for line.
   describe("the form's anatomy (Join)", () => {

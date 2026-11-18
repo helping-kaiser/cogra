@@ -13,18 +13,25 @@
    The `load` chip draws the first page's wait and failure,
    `ProfileTabFirstPage`'s, as on `ProfileComments`.
 
+   YOUR REMOVED COMMENT KEEPS ITS PLACE (round 57; jakob 2026-11-18,
+   profiles (a), no toggle) — the `comments` chip's `removed`: @sol's comment
+   as its mark, drawn as `ProfileCommentsRemovedMenuOwn` draws it, its ⋮ your
+   own removed comment's rows; the card keyed by its id in both copies, as on
+   `ProfileComments`.
+
    REGISTERED under the `profile` prefix, told apart by board as
    `ProfileCommentsMenuOwn`. */
 export const NODE = "profile";
 export const PROPS = {
-  comments: { editor: "enum", options: ["some", "none"], default: "some" },
+  comments: { editor: "enum", options: ["some", "none", "removed"], default: "some" },
   load: { editor: "enum", options: ["loaded", "loading", "failed"], default: "loaded" },
 };
-export const VALS = `someShown: this.props.load === "loaded" && this.props.comments !== "none" ? "contents" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "block" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none"`;
+export const VALS = `someShown: this.props.load === "loaded" && this.props.comments !== "none" ? "contents" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "block" : "none", liveShown: this.props.comments === "removed" ? "none" : "contents", removedShown: this.props.comments === "removed" ? "contents" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none"`;
 export function Screen() {
   return (
     <ProfileTabTop own tab="comments">
       <div style={{ display: "{{someShown}}" }}>
+      <div style={{ display: "{{liveShown}}" }} data-node-chip="comments" data-node-key="some">
       <CommentCard
         author={SOL}
         content={SOL_OWN_COMMENT.content}
@@ -37,6 +44,20 @@ export function Screen() {
         node="commentCard"
         id={SOL_OWN_COMMENT.id}
       />
+      </div>
+      <div style={{ display: "{{removedShown}}" }} data-node-chip="comments" data-node-key="removed">
+        <CommentCard
+          author={SOL}
+          timestamp={SOL_OWN_COMMENT.timestamp}
+          redacted={{ reason: "author", when: "now" }}
+          onReply={() => {}}
+          target={`“${MIRA_GALLERY_POST.title}” — @mira`}
+          onOpenTarget={() => {}}
+          menuItems={OWN_REMOVED_COMMENT_CARD_MENU}
+          node="commentCard"
+          id={SOL_OWN_COMMENT.id}
+        />
+      </div>
       </div>
       <div style={{ display: "{{noneShown}}", padding: "0 16px" }}>
         <EmptyState title="Nothing here yet." node="empty" />

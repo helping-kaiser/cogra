@@ -497,3 +497,53 @@ describe("the sign-in screen (SignIn)", () => {
     );
   });
 });
+
+// SIGNIN OVER THE JOIN LAYER (SignIn.md:7-11; Join.md:33): opened from the
+// join form standing over a signed-in account, SignIn stands rather than
+// sending the signed-in visit away, and a sign-in taken here switches this
+// device exactly as Create account does.
+describe("LoginForm over the join layer", () => {
+  const LAYER = "/join/0198c9a2-1f6b-7c31-9d70-3a4f5b6c7d8e";
+
+  function signedInElsewhere() {
+    const store = createTokenStore();
+    store.save({ accessToken: "access-0", refreshToken: "refresh-0", accountId: "acct-0" });
+    return store;
+  }
+
+  it("tap_sign_in_on_join_given_join_opened_over_the_signed_in_state_opens_sign_in_over_the_layer", async () => {
+    renderWithProviders(<LoginForm joinLayer={LAYER} />, { store: signedInElsewhere() });
+    expect(screen.getByTestId("signIn.email.input")).toBeInTheDocument();
+    // Signed in, yet never sent on to the app.
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("press_the_back_arrow_given_sign_in_opened_from_the_join_layer_brings_the_layer_back", () => {
+    renderWithProviders(<LoginForm joinLayer={LAYER} />, { store: signedInElsewhere() });
+    expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute("href", LAYER);
+  });
+
+  it("the_sign_in_taken_over_the_join_layer_switches_this_device_and_opens_where_app_open_lands", async () => {
+    let revoked = 0;
+    server.use(
+      loginSuccess(),
+      gqlLink.mutation("RevokeSession", () => {
+        revoked += 1;
+        return HttpResponse.error();
+      }),
+    );
+    const store = signedInElsewhere();
+    renderWithProviders(<LoginForm joinLayer={LAYER} />, { store });
+    fillAndSubmit();
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
+    expect(store.activeAccountId()).toBe("acct-1");
+    expect(store.refreshToken()).toBe("refresh-1");
+    expect(revoked).toBe(0);
+  });
+
+  it("not_from_the_join_layer_the_arrow_links_to_the_bare_view", () => {
+    renderWithProviders(<LoginForm />);
+    expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute("href", "/feed");
+  });
+});

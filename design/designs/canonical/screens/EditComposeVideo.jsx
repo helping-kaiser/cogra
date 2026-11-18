@@ -50,8 +50,9 @@
    clip is tall, and a tall clip's cover is cut at 4:5 (`CoverCrop`, jakob
    2026-11-12 and 2026-11-13, N7), so the cover's tile (`CoverTile`) stands
    76.8 × 96 beside the clip's own 54 × 96: the same height, the cover's
-   shape. With no cover ever chosen it is the dashed `Add a cover` door;
-   with one, the face wearing the `Cover` pill, the tile itself the door
+   shape. With no cover ever chosen it is the dashed `Add a cover` door, a
+   square at the clip's height, 96 × 96 (round 56, jakob 2026-11-18); with
+   one, the face wearing the `Cover` pill, the tile itself the door
    named `Change the cover`. Either opens the device's picker, then the
    cover's crop.
 
@@ -94,13 +95,13 @@ export function Screen() {
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="video">
             <FieldLabel node="label">Video</FieldLabel>
             {/* THE COVER STANDS BESIDE THE CLIP (round 52, `CoverTile`): the
-                clip tile's 96 high, a tall clip's cover at 4:5, 76.8 × 96 —
-                the dashed `Add a cover` door while no cover was ever chosen,
-                the chosen face once one is, the tile its door. */}
+                clip tile's 96 high — the dashed `Add a cover` door, 96 × 96,
+                while no cover was ever chosen; the chosen face once one is,
+                a tall clip's cover at 4:5, 76.8 × 96, the tile its door. */}
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <MediaThumb src="clip-lakeside.jpg" alt="" width={54} height={96} fit="cover" video onRemove={() => {}} removeLabel="Remove this video" node="thumb" />
               <div style={{ display: "{{doorShown}}" }} {...chipCopy("upload", "none")}>
-                <CoverTile width={76.8} height={96} node="cover" />
+                <CoverTile height={96} node="cover" />
               </div>
               <div style={{ display: "{{coverShown}}" }} {...chipCopy("upload", "uploading")}>
                 <CoverTile src="post-photo.jpg" width={76.8} height={96} node="cover" />

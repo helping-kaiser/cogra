@@ -16,6 +16,11 @@
 // no signed-in render ever reads a locked slot. A leg that gets no answer
 // keeps the session and says the drawn no-answer line; the retry press runs
 // the leg again without a second login (SignIn.md:71).
+//
+// OVER THE JOIN LAYER (SignIn.md:7-11, :87): opened from the join form that
+// stands over a signed-in account, SignIn is a layer too — the signed-in visit
+// does not send it away, its arrow brings the form back, and a sign-in taken
+// here switches this device to that account exactly as Create account does.
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -63,10 +68,13 @@ function loginMessage(code: ErrorCode): string {
 }
 
 export function LoginForm({
+  joinLayer = null,
   identity = identityStore,
   notices = securityNotices,
   deviceLock,
 }: {
+  /** The join form's address when SignIn opened from it over the signed-in state. */
+  joinLayer?: string | null;
   /** Test injection. */
   identity?: IdentityStore;
   notices?: SecurityNotices;
@@ -105,8 +113,8 @@ export function LoginForm({
   useEffect(() => {
     // A sign-in begun from the email change's signed-out landing goes back
     // to it, where the held link's side applies (`held-link.ts`).
-    if (phase === "signedIn") router.replace(afterSignIn());
-  }, [phase, router]);
+    if (phase === "signedIn" && joinLayer === null) router.replace(afterSignIn());
+  }, [phase, router, joinLayer]);
 
   const canSubmit = email !== "" && password !== "" && !inProgress;
   const fault = error !== null ? loginMessage(error) : transportFailed ? NO_ANSWER : null;
@@ -162,17 +170,23 @@ export function LoginForm({
       lockLost.current = false;
       notices.postLockLost();
     }
+    // Over the join layer the signed-in phase does not flip, so the switch
+    // is done here: the cache read as the other account is emptied before
+    // this one renders, nothing is revoked, and the app opens where app-open
+    // lands (SignIn.md:11).
+    if (joinLayer !== null) await client.clearStore();
     store.save(grant.auth);
     // Recorded per account, after save() sets the active account custody
     // resolves by — always written, so an unchecked login clears an
     // earlier flag (auth.md "Sign-out").
     await identity.setEphemeral(dontRemember);
+    if (joinLayer !== null) router.replace("/");
   };
 
   return (
     <TaskPage
       node={SIGN_IN}
-      backHref="/feed"
+      backHref={joinLayer ?? "/feed"}
       backLabel="Back"
       backHeld={exitsHeld}
       title="Sign in to CoGra"
