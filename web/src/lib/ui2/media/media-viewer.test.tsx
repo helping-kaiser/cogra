@@ -65,10 +65,11 @@ describe("the surface", () => {
     const surface = screen.getByTestId("media-viewer");
     expect(surface).toHaveAttribute("role", "dialog");
     expect(surface).toHaveAttribute("aria-modal", "true");
-    // The visible viewport, not the layout one (screen-layer.ts).
+    // The shared full-screen layer (screen-layer.ts); its controls lift by
+    // the safe area themselves, and the layer padding moves no absolute child.
     expect(surface.className).toContain("fixed");
-    expect(surface.className).toContain("h-dvh");
-    expect(surface.className).not.toContain("inset-0");
+    expect(surface.className).toContain("inset-0");
+    expect(surface.className).toContain("pb-[env(safe-area-inset-bottom)]");
     expect(surface.style.background).toBe("rgb(0, 0, 0)");
   });
 

@@ -1,8 +1,7 @@
 // @vitest-environment node
-// The guard behind `screen-layer.ts`: no full-screen layer is laid out against
-// the layout viewport. jsdom has no viewport to measure, so the real-browser
-// half is the conformance harness's height probe (the lane report names it);
-// this half keeps the class from coming back in source.
+// The guard behind `screen-layer.ts`: every full-screen layer keeps its foot
+// above the system navigation bar. jsdom has no safe area to measure, so this
+// pins the declared rule and keeps a raw full-screen box from coming back.
 
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -17,15 +16,14 @@ function sourceFiles(): string[] {
 }
 
 describe("a layer that takes the whole screen", () => {
-  it("stands on the dynamic viewport's height, pinned to the top", () => {
-    expect(SCREEN_LAYER.split(" ").sort()).toEqual(["fixed", "h-dvh", "inset-x-0", "top-0"]);
+  it("a_full_screen_layer_pads_its_foot_by_the_bottom_safe_area_inset", () => {
+    expect(SCREEN_LAYER.split(" ").sort()).toEqual(["fixed", "inset-0", "pb-[env(safe-area-inset-bottom)]"]);
   });
 
-  it("a_full_screen_layer_is_never_sized_by_the_layout_viewport", () => {
-    // `fixed inset-0` is the layout viewport's box: on a phone with its
-    // address bar showing it reaches under the toolbar, and a foot at its
-    // bottom goes out of reach (jakob 2026-11-18, the comment editor). Only a
-    // scrim, which paints and holds nothing, may stand on it.
+  it("every_full_screen_layer_stands_on_the_shared_screen_layer", () => {
+    // A raw `fixed inset-0` layer would put its foot under an edge-to-edge
+    // Chrome's navigation bar (jakob 2026-11-18, the comment editor). Only a
+    // scrim, which paints and holds nothing, may stand on the raw box.
     const files = sourceFiles();
     expect(files.length, "scanned nothing — the walk is broken").toBeGreaterThan(20);
     const offenders = files.flatMap((file) =>
@@ -36,5 +34,11 @@ describe("a layer that takes the whole screen", () => {
         .map(({ at }) => at),
     );
     expect(offenders).toEqual([]);
+    const users = files.filter((file) => /\$\{SCREEN_LAYER\}/.test(readFileSync(file, "utf-8"))).map((f) => f.split("/src/")[1]);
+    expect(users.sort()).toEqual([
+      "app/posts/[id]/edit/comment-edit-view.tsx",
+      "app/posts/[id]/reply/reply-wizard-view.tsx",
+      "lib/ui2/media/media-viewer.tsx",
+    ]);
   });
 });
