@@ -328,8 +328,10 @@ export function KeptPicksView() {
           </p>
           <div className="flex-1" />
           {/* THE FOOT IS PINNED (ruling A2's wizard reading), as `Save` is on
-              the profile's edit: the commit leads to the seal. */}
-          <div className="sticky bottom-0 bg-surface pb-6 pt-2">
+              the profile's edit: the commit leads to the seal. Its 24px
+              count from the safe edge, so an edge-to-edge Chrome's
+              navigation bar never covers Sign them (screen-layer.ts). */}
+          <div className="sticky bottom-0 bg-surface pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-2">
             <PillButton testId="keptPicks.sign" node={part(REVIEW, "sign")} full onClick={() => setStage("seal")}>
               Sign them
             </PillButton>
