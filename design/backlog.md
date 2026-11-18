@@ -6232,7 +6232,7 @@ Closed by round 48, act 2: `FeedCommentMenu`, `FeedCommentMenuOwn` and
 `SavedCommentMenuOwn` draw the rows exactly as the law states them, nothing
 reordered; the four paths register. The other undrawn hosts are backlog 223.
 
-### 223 · The menu hosts the sidecars name but no board draws · *design* · **filed 2026-11-13**
+### 223 · The menu hosts the sidecars name but no board draws · *design* · **filed 2026-11-13** · **closed 2026-11-18**
 
 Round 48 (the menus audit of 2026-11-13, §3 item 11). Round 36's rule is one
 menu board per place a card's menu is raised; round 48 drew the feed's comment
@@ -6278,6 +6278,13 @@ stay open, each on its host, never its rows:
 
 The rows on each are already law (copy-voice, *Menu rows*); each answer is a
 board the round-55 way.
+
+Closed by round 57 (jakob 2026-11-18): another's removed comment over the
+thread is (a), `CommentRemovedOther` and `CommentRemovedOtherMenu`; a removed
+post keeps its place on every profile, own and anyone's (profiles (a)),
+`ProfilePosts`' `removed` and `ProfilePostsRemovedMenu`; the tag page follows
+the feed's `Removed` switch (tag page (c)), `TagPage`'s `post` chip,
+`TagPageRemovedMenu` and `TagPageRemovedMenuOwn`.
 
 ### 230 · A clip that cannot load has no drawn state · *design* · **filed 2026-11-13** · **closed 2026-11-17**
 
@@ -6518,7 +6525,7 @@ published picture stands; a picture added in the edit keeps `Remove it`; the sam
 comment's edit (`UploadErrorLine`'s `onUndo`; `EditCompose` and `CommentEdit` `upload` =
 `recrop-failed`).
 
-### 263 · Where the crop opened from the edit's picture sheet returns · *design* · **filed 2026-11-17**
+### 263 · Where the crop opened from the edit's picture sheet returns · *design* · **filed 2026-11-17** · **closed 2026-11-18**
 
 Round 53. `Crop` on a picture in `EditPicked` opens `ComposeCrop`; the ruling says the edit
 comes back on `Next` and on the back arrow. Drawn by `Describe`'s precedent from the same sheet
@@ -6526,6 +6533,9 @@ comes back on `Next` and on the back arrow. Drawn by `Describe`'s precedent from
 back with the picture sheet over it, as the crop was opened from there (`ComposeCrop.md`,
 `EditPicked.md`, graph `ComposeCrop` via 1 / 3, `EditPicked` via 9). Option (b): the sheet is
 left and the bare edit comes back. To be confirmed.
+
+Closed by round 57: told to jakob 2026-11-17 and again 2026-11-18, no objection — the crop
+opened from the picture sheet returns to the sheet, as drawn by `Describe`'s precedent.
 
 ### 264 · The comment edit's door to re-crop a picture it holds · *design* · **filed 2026-11-17** · **closed 2026-11-17**
 
@@ -6546,7 +6556,7 @@ above `Describe the pictures`, in its pattern and by its rule — the same words
 as for four, no door on a words comment — opening `ReplyCrop` with every picture of the
 comment, the first on the stage; the thumbnails keep their × alone (`commentEdit.pictures.crop`).
 
-### 275 · A deleted account's posts: their menus on its page are law only · *design* · **filed 2026-11-17**
+### 275 · A deleted account's posts: their menus on its page are law only · *design* · **filed 2026-11-17** · **closed 2026-11-18**
 
 Round 55 (backlog 223's law table). `ProfileDeleted`'s posts, kept or swept
 (its `contents` chip), carry a ⋮ whose rows are law — the reader's post menu
@@ -6554,3 +6564,53 @@ whole, the Hide row reading `Hide this account` (`ProfileDeletedMenu.md`:
 "the same words every card the account authored shows"; `DELETED_POST`'s
 rows) — but no board draws either open. Needs no ruling: one board per
 state, `ProfileDeletedMenu`'s page beneath, the round-55 way.
+
+Closed by round 57: `ProfileDeletedPostMenu` (kept) and `ProfileDeletedRemovedMenu` (swept),
+the page on Posts beneath, the rows `DELETED_POST_MENU`'s.
+
+### 280 · A removed post or comment in the Everything tab has no drawing · *design* · **filed 2026-11-18**
+
+Round 57. jakob ruled (2026-11-18, profiles (a)) that a profile keeps a removed post or comment
+in its place as its mark "on every tab". Posts and Comments draw it; the chronicle does not. The
+tree rules one case and draws none: `ProfileDeleted.md:25` — "every act still stands in the
+chronicle with its words gone" when an account's content was swept — while the board's
+chronicle keeps its words under `contents` = `removed` (readme §13, the round recording the
+`contents` chip: "the chronicle on Everything keeps its words"), so the sidecar and the drawing
+disagree. The app today keeps the row's verb (`Published a post`, `Commented`) and drops its
+second line (impl, seam 371 (c)). Options for a chronicle row whose post or comment was removed:
+(a) the row stands, its second line reading the mark's line, `Removed by its author`, in the
+quiet voice — the mark where the words were, as every other surface draws it; (b) the row
+stands with no second line, the verb alone (what the app does today); (c) the row's door opens
+the removed thing's detail, its mark there, with either (a) or (b) on the row. Either answer
+also settles `ProfileDeleted`'s swept chronicle.
+
+### 281 · What the profile's Posts figure counts once removed posts stand on the list · *design* · **filed 2026-11-18**
+
+Round 57. The tree says the Posts figure counts "the posts published, never their edits"
+(readme §7, `ProfileHeader`) and says nothing of a removed post. The app counts removed posts
+today and not pending ones (impl, seam 371 (f)), which agrees with the list since profiles (a).
+Nothing contradicts it; the tree is silent. Options: (a) write it as law — the figure counts
+every post the person published, a removed one included, the list and the figure agreeing; (b)
+the figure leaves removed posts out — the list and the figure then disagree by the marks.
+
+### 282 · A comment's pointer to a removed post, in a list · *design* · **filed 2026-11-18**
+
+Round 57. On `TagPageRemovedMenuOwn` the page beneath shows @sol's salt maps removed, and
+@ada's tagged comment below it still names the post by its title in its pointer (`“Salt maps of
+the coast road” — @sol`), the out-of-thread line shape `ProfileComments` draws. The feed's
+thread-shape head row has a drawing for a removed target (`FeedCommentShapes`, *answering a
+removed post*: `Removed by its author` in the title's place, an empty tile); the line shape has
+none. Options: (a) the line reads the removal mark's line in the title's place, `Removed by its
+author — @sol`, the thread shape's rule; (b) the line reads `On @sol's removed post`, the feed
+card's naming (copy-voice, *A comment's head row*). Until ruled the drawn pointer is the live
+one, an inconsistency on one board's page beneath its wash.
+
+### 283 · A removed tagged comment on the tag page · *design* · **filed 2026-11-18**
+
+Round 57. jakob's tag-page ruling names a removed tagged post; the page also lists tagged
+comments. Derived (impl, seam 371, point 4, to be confirmed by jakob): the switch holds for
+every removed row the page lists, a removed tagged comment following it exactly as a post
+does — the feed's filter treats its post and comment cards alike. The drawing would be
+`CommentCard`'s own mark (as `ProfileComments`' `removed`), under its claim. Not drawn:
+the ruling names posts. Options: (a) yes, every removed row; (b) comments stay listed whatever
+the switch holds.

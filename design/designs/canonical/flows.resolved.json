@@ -1974,6 +1974,7 @@
         "CommentMenu",
         "CommentMenuOwn",
         "CommentRemovedMenu",
+        "CommentRemovedOtherMenu",
         "FeedCommentMenu",
         "FeedCommentMenuOwn",
         "FeedPostMenu",
@@ -1991,8 +1992,11 @@
         "ProfileCommentsMenuOwn",
         "ProfileCommentsRemovedMenu",
         "ProfileCommentsRemovedMenuOwn",
+        "ProfileDeletedPostMenu",
+        "ProfileDeletedRemovedMenu",
         "ProfilePostsMenu",
         "ProfilePostsMenuOwn",
+        "ProfilePostsRemovedMenu",
         "ProfilePostsRemovedMenuOwn",
         "ReaderPostMenu",
         "ReaderPostMenuNarrow",
@@ -2005,10 +2009,12 @@
         "SavedRemovedMenu",
         "SavedRemovedMenuOwn",
         "TagPageMenu",
-        "TagPageMenuOwn"
+        "TagPageMenuOwn",
+        "TagPageRemovedMenu",
+        "TagPageRemovedMenuOwn"
       ],
       "steps": [
-        "start · «Cite in a new post» — to ComposePick on 35 boards → ComposePick",
+        "start · «Cite in a new post» — to ComposePick on 41 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -2020,6 +2026,7 @@
         "CommentMenu",
         "CommentMenuOwn",
         "CommentRemovedMenu",
+        "CommentRemovedOtherMenu",
         "FeedCommentMenu",
         "FeedCommentMenuOwn",
         "FeedPostMenu",
@@ -2037,8 +2044,11 @@
         "ProfileCommentsMenuOwn",
         "ProfileCommentsRemovedMenu",
         "ProfileCommentsRemovedMenuOwn",
+        "ProfileDeletedPostMenu",
+        "ProfileDeletedRemovedMenu",
         "ProfilePostsMenu",
         "ProfilePostsMenuOwn",
+        "ProfilePostsRemovedMenu",
         "ProfilePostsRemovedMenuOwn",
         "ReaderPostMenu",
         "ReaderPostMenuNarrow",
@@ -2051,7 +2061,9 @@
         "SavedRemovedMenu",
         "SavedRemovedMenuOwn",
         "TagPageMenu",
-        "TagPageMenuOwn"
+        "TagPageMenuOwn",
+        "TagPageRemovedMenu",
+        "TagPageRemovedMenuOwn"
       ]
     },
     {
@@ -4778,6 +4790,12 @@
       ],
       "endpoint": []
     },
+    "CommentRemovedOtherMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
     "ComposeBodyDiscard": {
       "flows": [
         "swap-the-pictures-for-words"
@@ -6443,6 +6461,18 @@
       ],
       "endpoint": []
     },
+    "ProfileDeletedPostMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "ProfileDeletedRemovedMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
     "ProfileEdit": {
       "flows": [
         "edit-avatar-via-edit-screen",
@@ -6618,6 +6648,12 @@
         "see-who-stands-with-someone",
         "take-a-stance-on-a-post",
         "trace-a-score-to-its-records"
+      ],
+      "endpoint": []
+    },
+    "ProfilePostsRemovedMenu": {
+      "flows": [
+        "cite-a-post"
       ],
       "endpoint": []
     },
@@ -7557,6 +7593,18 @@
       "endpoint": []
     },
     "TagPageMenuOwn": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "TagPageRemovedMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "TagPageRemovedMenuOwn": {
       "flows": [
         "cite-a-post"
       ],

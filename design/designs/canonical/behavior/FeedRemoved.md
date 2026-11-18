@@ -14,6 +14,7 @@ WHEN the feed is next derived on this device, by a refresh, a cold open or a cha
 
 WHEN the feed is next derived on this device GIVEN the feed's filter has Removed on -> the removed card keeps standing as its mark
 
-ALWAYS a card of the reader's own removed off the post detail, on the own profile's Posts and Comments tabs or as a comment card in the feed, stands as its mark in its place until that surface is next derived
+ALWAYS a comment card of the reader's own removed off the post detail in the feed stands as its mark in its place until the feed is next derived
 
+ALWAYS a removed post or comment keeps its place on a profile as its mark, the reader's own profile and anyone's, on every tab, whatever the feed's filter holds
 WHEN tap feed.card.actionRow.comments -> the thread opens with every response in it

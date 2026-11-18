@@ -1436,8 +1436,19 @@ const DELETED_POST = {
 };
 const CONTENTS_CHIP = { contents: { editor: "enum", options: ["kept", "removed"], default: "kept" } };
 const CONTENTS_VALS = `contentsKept: this.props.contents === "removed" ? "none" : "contents", contentsRemoved: this.props.contents === "removed" ? "contents" : "none"`;
-function ProfileDeletedBody({ tab = "everything" } = {}) {
-  const posts = (
+/* The post menu a deleted account's card raises on its page (round 57,
+   backlog 275): the card's rows with the license the card appends, before
+   Report — the reader's post menu whole, Hide reading `Hide this account`. */
+const DELETED_POST_MENU = [...DELETED_POST.menuItems.filter((row) => row !== REPORT_ROW), LICENSE_ROW, REPORT_ROW];
+/* `contents` fixes the `contents` chip's state for a board drawing one state
+   alone (`ProfileDeletedPostMenu`, `ProfileDeletedRemovedMenu`); left as
+   `chip`, both copies stand behind the chip. */
+function ProfileDeletedBody({ tab = "everything", contents = "chip" } = {}) {
+  const posts = contents === "kept" ? (
+    <PostCard {...DELETED_POST} node="card" />
+  ) : contents === "removed" ? (
+    <PostCard id={DELETED_POST.id} author={DELETED_POST.author} timestamp="9d" redacted={{ reason: "author", when: "3d" }} score="3.20" comments={2} menuItems={DELETED_POST.menuItems} node="card" />
+  ) : (
     <>
       <div style={{ display: "{{contentsKept}}" }} data-node-chip="contents" data-node-key="kept">
         <PostCard {...DELETED_POST} node="card" />
@@ -3360,7 +3371,11 @@ const NESTED_LIST = { margin: 0, padding: 0, listStyle: "none" };
    `pick` DRAWS A KEPT PICK ON THE FIRST COMMENT (round 27, seam 252): given,
    @tobias's card stands in `PickCopies`, so the board's `pick` chip adds the
    stance control's `pending` line to `threadSheet.commentCard`. */
-function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, removed = false, footOpacity, replyOpacity, shown, pick = false, node }) {
+/* `removedOther` DRAWS ANOTHER'S COMMENT REMOVED (round 57; jakob 2026-11-18,
+   C2 (a)): @tobias's comment as its mark, removed by him, its two replies
+   unfolded under it and readable (`CommentRemoved.md`), as `removed` draws
+   @sol's own. */
+function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, removed = false, removedOther = false, footOpacity, replyOpacity, shown, pick = false, node }) {
   const card = node && "commentCard";
   /* A REPLY SENT AND CLOSED ON (round 37, `SigningAfterClose`): the branch
      opens as a landing opens it, and where the new card settles on its
@@ -3368,7 +3383,7 @@ function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, remov
      commit's own in-flight label in the pending marker's quiet register, or
      the failure line with Retry. Nothing is drawn as a card before its
      signature is taken. */
-  const expanded = landed || afterClose !== undefined;
+  const expanded = landed || afterClose !== undefined || removedOther;
   const closeLine = afterClose === undefined ? null : (
     <div style={{ padding: "var(--space-2) 0 0 var(--space-6)" }}>
       {afterClose === "failed" ? <SigningPending row message="Your comment didn't sign." onRetry={() => {}} /> : <PendingMarker label="Signing comment…" />}
@@ -3417,6 +3432,7 @@ function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, remov
       references={1}
       license={{ attribution: 0, provenance: 0 }}
       menuItems={readerCommentCardMenu("tobias")}
+      redacted={removedOther ? { reason: "author", when: "now" } : undefined}
     >
       {landed ? settledReply : closeLine}
     </CommentCard>
@@ -5149,18 +5165,37 @@ function TopicStanceRow({ name, bundle, stanceOpen, stanceDefaultPick, node }) {
   );
 }
 
-function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false } = {}) {
+/* A REMOVED TAGGED POST (round 57; jakob 2026-11-18, tag page (c)) stands in
+   its tagged row as the feed's removed card while the feed's filter has
+   `Removed` on (`FeedRemoved`): `removed` names whose — `"tobias"` the first
+   row's, `"sol"` the second's — or `"hole"`, the first row drawn both ways
+   behind `TagPage`'s `post` chip (`{{postLive}}` / `{{postRemoved}}`). The
+   first row is the chip's because nothing else on the page points at it;
+   @ada's tagged comment answers @sol's post. The claim above the row stands,
+   as on every row. */
+function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, removed } = {}) {
+  const tobiasLive = <PostCard attach {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />;
+  const tobiasRemoved = <PostCard attach id={TOBIAS_POST.id} author={TOBIAS} timestamp={TOBIAS_POST.timestamp} redacted={{ reason: "author", when: "now" }} score={TOBIAS_POST.score} comments={TOBIAS_POST.comments} bundle={mkBundle(0.1, 0.1)} menuItems={TOBIAS_POST.menuItems} />;
   return (
     <>
       <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" node={named ? "header" : undefined} />
       <TopicStanceRow name="#saltmaps" bundle={bundle} stanceOpen={stanceOpen} stanceDefaultPick={stanceDefaultPick} node={named ? "actionRow" : undefined} />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "4px 0 0" }}>
         <TaggedRow pair={{ pDirected: 0.1, pInterest: 1 }} pending>
-          <PostCard attach {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
+          {removed === "tobias" ? tobiasRemoved : removed === "hole" ? (
+            <>
+              <div style={{ display: "{{postLive}}" }}>{tobiasLive}</div>
+              <div style={{ display: "{{postRemoved}}" }}>{tobiasRemoved}</div>
+            </>
+          ) : tobiasLive}
         </TaggedRow>
 
         <TaggedRow pair={{ pDirected: 0.55, pInterest: 1 }}>
-          <PostCard attach {...SOL_POST} bundle={mkBundle(0.1, 0.1)} />
+          {removed === "sol" ? (
+            <PostCard attach id={SOL_POST.id} author={SOL} timestamp={SOL_POST.timestamp} redacted={{ reason: "author", when: "now" }} score={SOL_POST.score} comments={SOL_POST.comments} bundle={mkBundle(0.1, 0.1)} menuItems={OWN_REMOVED_CARD_MENU} />
+          ) : (
+            <PostCard attach {...SOL_POST} bundle={mkBundle(0.1, 0.1)} />
+          )}
         </TaggedRow>
 
         <TaggedRow pair={{ pDirected: 0.4, pInterest: 0.9 }}>

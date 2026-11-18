@@ -1,7 +1,7 @@
 /* YOUR OWN PROFILE'S COMMENTS VIEW, YOUR REMOVED COMMENT'S MENU OPEN (round
-   55, backlog 223). A comment of your own removed on your own Comments tab
-   stands as its mark in its place until the tab is next derived
-   (`FeedRemoved.md`) — @sol's comment on @mira's gallery post — and its ⋮
+   55, backlog 223). A comment of your own removed keeps its place on your own
+   Comments tab as its mark (jakob 2026-11-18, profiles (a);
+   `ProfileCommentsOwn`'s `removed`) — @sol's comment on @mira's gallery post — and its ⋮
    raises `OWN_REMOVED_COMMENT_MENU`: Save, Cite in a new post, Cited by,
    Opinions on this, License terms, your own comment's menu less Edit and
    Remove (CommentRemoved.md), as `CommentRemovedMenu` over the thread.
