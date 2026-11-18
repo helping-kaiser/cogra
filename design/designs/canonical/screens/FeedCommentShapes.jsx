@@ -50,7 +50,7 @@
    its discs by `soundDisc` and `playDisc`. */
 export const NODE = "feed";
 
-export const FRAME = { width: 390, height: 3200 };
+export const FRAME = { width: 390, height: 3482 };
 
 const LONG_COMMENT =
   "Drove it twice this summer, once in each direction, and the second time I stopped at every lay-by between the tunnel mouth and the third headland. The light does something different on the way back — lower, warmer, and it catches the salt crust on the flats so the whole shore looks drawn in chalk. Worth the four hours, and worth doing backwards.";
