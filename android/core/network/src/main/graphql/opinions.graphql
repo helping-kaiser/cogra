@@ -41,6 +41,30 @@ fragment OpinionRecordFields on Record {
   position
 }
 
+# Everyone holding an opinion on a post or a comment (PostOpinions.md,
+# CommentOpinionsEmpty.md): the Opinion records aimed at the node, one row
+# per author — the same for every reader, the author included.
+query NodeOpinions($id: UUID!, $after: String) {
+  node(id: $id) {
+    id
+    incomingRecords(family: OPINION, first: 100, after: $after) {
+      edges {
+        node {
+          ...OpinionRecordFields
+          # Null where no account fronts the address.
+          author {
+            ...OpinionPersonFields
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
 # `On them`: the Opinion records aimed at a person's profile — the set the
 # `Opinions on them` figure counts — one row per author.
 query UserOpinionsOn($id: UUID!, $after: String) {

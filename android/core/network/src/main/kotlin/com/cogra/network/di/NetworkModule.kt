@@ -28,6 +28,8 @@ import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.repo.ReferenceRepository
+import com.cogra.domain.references.CitedByRepository
+import com.cogra.domain.stance.NodeOpinionsRepository
 import com.cogra.domain.repo.TopicRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.release.AnnouncedReleaseStore
@@ -67,6 +69,8 @@ import com.cogra.network.repo.SessionRepositoryImpl
 import com.cogra.network.repo.SettingsRepositoryImpl
 import com.cogra.network.repo.StanceRepositoryImpl
 import com.cogra.network.repo.ReferenceRepositoryImpl
+import com.cogra.network.repo.CitedByRepositoryImpl
+import com.cogra.network.repo.NodeOpinionsRepositoryImpl
 import com.cogra.network.repo.ReleaseRegistryImpl
 import com.cogra.network.repo.RemovalRepositoryImpl
 import com.cogra.network.repo.KeptPreviewRepositoryImpl
@@ -215,6 +219,12 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun referenceRepository(impl: ReferenceRepositoryImpl): ReferenceRepository
+
+    @Binds
+    abstract fun citedByRepository(impl: CitedByRepositoryImpl): CitedByRepository
+
+    @Binds
+    abstract fun nodeOpinionsRepository(impl: NodeOpinionsRepositoryImpl): NodeOpinionsRepository
 
     @Binds
     abstract fun mediaRepository(impl: MediaRepositoryImpl): MediaRepository
