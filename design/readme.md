@@ -12558,6 +12558,40 @@ nothing reordered, the sheet over its host as its twin raises it.
 - **The gate**: against `c84455977`, 214 → 225 screens, 8492 → 9031 board
   paths, 2270 → 2285 distinct, nothing gone; the strings added are the
   eleven titles.
+
+### Round 57, removed things on profiles and tag pages, another's removed comment in the thread — 2026-11-18
+
+- **Ruled** (jakob 2026-11-18, closing the discussion he opened that day):
+  profiles (a) — a profile keeps a removed post or comment in its place as
+  its mark, the reader's own and anyone's, on every tab, always, no toggle;
+  "yes same removed cards in profile" — the removed post's card there is
+  the feed's removed card; tag page (c) — a removed tagged post stands as
+  its mark while the feed's `Also show → Removed` is on and is not listed
+  while it is off, from the page's next derivation, no switch of its own;
+  C2 (a) — @tobias's comment stands removed in the thread, its two replies
+  under the mark.
+- **The law that moved**: `FeedRemoved.md`'s stand-until-derived rule keeps
+  only the feed's own comment card; the profile tabs take the ruled sentence
+  (`FeedRemoved.md`, `ProfilePosts.md`, `ProfilePostsOwn.md`,
+  `ProfileCommentsOwn.md`); the tag page's two sentences are `TagPage.md`'s.
+- **Drawn**: a removed post on another's Posts tab and on your own
+  (`ProfilePosts`' and `ProfilePostsOwn`'s `posts` = `removed`), your
+  removed comment on your own Comments tab (`ProfileCommentsOwn`'s
+  `comments` = `removed`), each `ProfileComments`' twin; the tag page's
+  removed post (`TagPage`'s `post` = `removed`, @tobias's row, the one
+  nothing else on the page points at); the menus over another's removed post
+  on a profile and on a tag page and over your own on a tag page
+  (`ProfilePostsRemovedMenu`, `TagPageRemovedMenu`, `TagPageRemovedMenuOwn`);
+  another's removed comment in the thread and its menu
+  (`CommentRemovedOther`, `CommentRemovedOtherMenu`, `Hide @tobias`); a
+  deleted account's post menus on its page, kept and swept
+  (`ProfileDeletedPostMenu`, `ProfileDeletedRemovedMenu`, `Hide this
+  account`). Backlog 223, 263 and 275 close.
+- **Held**: the Everything tab — the tree draws no removed chronicle row
+  and `ProfileDeleted.md`'s swept-chronicle sentence disagrees with its
+  board (backlog 280); what the Posts figure counts (backlog 281, silent);
+  a comment's line pointer to a removed post (backlog 282); a removed tagged
+  comment on the tag page (backlog 283, derived, not ruled).
 ---
 
 ## 14. The canvases
