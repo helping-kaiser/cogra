@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.LocalSnackbarHostState
@@ -24,12 +25,19 @@ import com.cogra.domain.ActorRef
 import com.cogra.domain.CommentView
 import com.cogra.domain.Landing
 import com.cogra.domain.ModerationState
+import com.cogra.domain.Outcome
 import com.cogra.domain.ProfileComment
 import com.cogra.domain.history.HistoryCard
 import com.cogra.domain.history.HistoryEntry
+import com.cogra.domain.references.CitingArtifact
+import com.cogra.domain.references.CitingKind
+import com.cogra.domain.references.CitingView
 import com.cogra.domain.saved.CommentTarget
 import com.cogra.domain.saved.SavedCard
 import com.cogra.domain.saved.SavedEntry
+import com.cogra.domain.stance.HeldOpinion
+import com.cogra.domain.stance.OpinionHolder
+import com.cogra.domain.stance.StancePair
 import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testModeratedField
 import com.cogra.feature.saved.SavedUiState
@@ -69,7 +77,29 @@ class CommentMenusTest {
         onDismiss()
     }
     private val edits = mutableListOf<Pair<String, String>>()
-    private val noDoors = CardDoors(onOpenPost = {}, onOpenComment = { _, _, _ -> }, onOpenActor = {}, onOpenTopic = {})
+
+    /** What cites the comments: nothing until a test says so; the posts a row opened; the nodes read. */
+    private var citing: List<CitingArtifact<CitingView>> = emptyList()
+    private val opened = mutableListOf<String>()
+    private val readFor = mutableListOf<String>()
+    private var holding: List<HeldOpinion> = emptyList()
+    private val people = mutableListOf<String>()
+    private val reads = InboundReads(
+        citedBy = { id ->
+            readFor += id
+            Outcome.Success(citing)
+        },
+        opinionsOn = { id ->
+            readFor += id
+            Outcome.Success(holding)
+        },
+    )
+    private val noDoors = CardDoors(
+        onOpenPost = { opened += it },
+        onOpenComment = { _, _, _ -> },
+        onOpenActor = {},
+        onOpenTopic = {},
+    )
     private val hooks = CardHooks(viewerId = reader, onEditComment = { id, title -> edits += id to title })
 
     /** Asserts [rows] stand in the sheet top to bottom, each under its registered node. */
@@ -84,28 +114,30 @@ class CommentMenusTest {
 
     private fun renderThread(onRequireAccount: (() -> Unit)? = null, report: ReportSheetSlot? = recordReport) {
         compose.setContent {
-            Column {
-                CommentsSheet(
-                    state = CommentsUiState(loading = false, comments = listOf(mine, theirs), total = 2),
-                    viewerId = reader,
-                    signedIn = onRequireAccount == null,
-                    onDismiss = {},
-                    onLoadMoreComments = {},
-                    onAddComment = {},
-                    onReplyTo = {},
-                    onEditComment = { threadEdits += it.id },
-                    onCommentSignedShown = {},
-                    onLoadMoreReplies = {},
-                    onReveal = { _, _ -> },
-                    onOpenActor = {},
-                    onOpenTopic = {},
-                    onOpenPost = {},
-                    onReference = {},
-                    onLicense = {},
-                    onSignInOrJoin = {},
-                    onRequireAccount = onRequireAccount,
-                    reportSheet = report ?: reportDoor(onRequireAccount, "comments_report_sheet"),
-                )
+            CompositionLocalProvider(LocalInboundReads provides reads) {
+                Column {
+                    CommentsSheet(
+                        state = CommentsUiState(loading = false, comments = listOf(mine, theirs), total = 2),
+                        viewerId = reader,
+                        signedIn = onRequireAccount == null,
+                        onDismiss = {},
+                        onLoadMoreComments = {},
+                        onAddComment = {},
+                        onReplyTo = {},
+                        onEditComment = { threadEdits += it.id },
+                        onCommentSignedShown = {},
+                        onLoadMoreReplies = {},
+                        onReveal = { _, _ -> },
+                        onOpenActor = { people += it },
+                        onOpenTopic = {},
+                        onOpenPost = { opened += it },
+                        onReference = {},
+                        onLicense = {},
+                        onSignInOrJoin = {},
+                        onRequireAccount = onRequireAccount,
+                        reportSheet = report ?: reportDoor(onRequireAccount, "comments_report_sheet"),
+                    )
+                }
             }
         }
         compose.waitForIdle()
@@ -226,7 +258,7 @@ class CommentMenusTest {
 
     private fun renderHistory(comment: CommentView) {
         compose.setContent {
-            CompositionLocalProvider(LocalSnackbarHostState provides host) {
+            CompositionLocalProvider(LocalSnackbarHostState provides host, LocalInboundReads provides reads) {
                 HistoryScreen(
                     state = HistoryUiState(
                         entries = listOf(HistoryEntry(HistoryCard.Comment(comment, onPost, "p1"), Instant.now())),
@@ -331,7 +363,7 @@ class CommentMenusTest {
     @Test
     fun savedsCommentMenuEndsWithReport() {
         compose.setContent {
-            CompositionLocalProvider(LocalSnackbarHostState provides host) {
+            CompositionLocalProvider(LocalSnackbarHostState provides host, LocalInboundReads provides reads) {
                 SavedScreen(
                     state = SavedUiState(
                         entries = listOf(SavedEntry(SavedCard.Comment(theirs, onPost, "p1", null), Instant.now())),
@@ -415,5 +447,112 @@ class CommentMenusTest {
         assertThat(rereads).containsExactly("mine")
         assertThat(consumed).isEqualTo(1)
         compose.onNodeWithTag("profile_comment_mine_pending", useUnmergedTree = true).assertExists()
+    }
+
+    // -- Cited by (CommentMenu.md:25; CommentCitedByEmpty.md; CitedBy.md:13, :15) --
+
+    /**
+     * CommentMenu.md:25, CommentCitedByEmpty.md:3, :5, :7 — the thread's Cited by row
+     * raises the comment's sheet stacked over the thread, titled `Cited by`, its
+     * empty line alone when nothing cites the comment; the thread stands beneath.
+     */
+    @Test
+    fun theThreadsCitedByRowRaisesTheCommentsSheetEmpty() {
+        renderThread()
+        compose.onNodeIn(threadCard("theirs"), threadMenu).performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.citedBy").performClick()
+        compose.waitForIdle()
+        assertThat(readFor).containsExactly("theirs")
+        compose.onNodeWithTag(THREAD_CITED_BY_SHEET).assertExists()
+        compose.onNodeWithText("Nothing cites this yet").assertExists()
+        compose.onNodeWithTag(threadCard("theirs")).assertExists()
+    }
+
+    /** CommentCitedByEmpty.md:11, CitedBy.md:15 — a citing post's row opens it, and the sheet goes. */
+    @Test
+    fun aCitingPostsRowOpensItFromTheThread() {
+        citing = listOf(
+            CitingArtifact("sol p7", CitingView(CitingKind.POST, "Salt maps", opensPost = "p7"), StancePair(0.4, 0.2)),
+        )
+        renderThread()
+        compose.onNodeIn(threadCard("mine"), threadMenu).performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.citedBy").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithTag("${THREAD_CITED_BY_SHEET}_row_1").performClick()
+        compose.waitForIdle()
+        assertThat(opened).containsExactly("p7")
+        compose.onNodeWithTag(THREAD_CITED_BY_SHEET).assertDoesNotExist()
+    }
+
+    /** HistoryCommentMenu.md:11 — off the thread, what cites the comment comes up over History. */
+    @Test
+    fun historysCommentCitedByRowOpensOverHistory() {
+        citing = listOf(
+            CitingArtifact(
+                "sol c9",
+                CitingView(CitingKind.COMMENT, "The wax-stick ones", opensPost = "p9"),
+                StancePair(0.1, 0.9),
+            ),
+        )
+        renderHistory(theirs)
+        compose.onNodeWithTag("history.commentCard.menu").performClick()
+        compose.onNodeWithTag("history.menuSheet.citedBy").performClick()
+        compose.waitForIdle()
+        assertThat(readFor).containsExactly("theirs")
+        compose.onNodeWithText("The wax-stick ones").performClick()
+        compose.waitForIdle()
+        assertThat(opened).containsExactly("p9")
+    }
+
+    // -- Opinions on this (CommentMenu.md:23; CommentOpinionsEmpty.md) --
+
+    /**
+     * CommentMenu.md:23, CommentOpinionsEmpty.md:3, :5, :7 — the thread's row raises
+     * the comment's opinions sheet stacked over the thread, titled for the
+     * comment, its empty line alone when nobody holds one.
+     */
+    @Test
+    fun theThreadsOpinionsRowRaisesTheCommentsSheetEmpty() {
+        renderThread()
+        compose.onNodeIn(threadCard("theirs"), threadMenu).performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.opinions").performClick()
+        compose.waitForIdle()
+        assertThat(readFor).containsExactly("theirs")
+        compose.onNodeWithTag(THREAD_OPINIONS_SHEET).assertExists()
+        compose.onNodeWithText("Opinions on this comment").assertExists()
+        compose.onNodeWithText("No opinions yet").assertExists()
+        compose.onNodeWithTag(threadCard("theirs")).assertExists()
+    }
+
+    /** CommentOpinionsEmpty.md:11 — held, the rows draw as the post's do; a row opens its holder. */
+    @Test
+    fun aHoldersRowOpensTheirProfileFromTheThread() {
+        holding = listOf(
+            HeldOpinion(
+                holderId = "a-ada",
+                holder = OpinionHolder("ada-id", "ada", "Ada Okonkwo", null, redacted = false),
+                pair = StancePair(0.7, 0.4),
+                severed = false,
+            ),
+        )
+        renderThread()
+        compose.onNodeIn(threadCard("mine"), threadMenu).performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.opinions").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Ada Okonkwo").performClick()
+        compose.waitForIdle()
+        assertThat(people).containsExactly("ada")
+        compose.onNodeWithTag(THREAD_OPINIONS_SHEET).assertDoesNotExist()
+    }
+
+    /** HistoryCommentMenu.md:9 — off the thread, the comment's opinions come up over History. */
+    @Test
+    fun historysCommentOpinionsRowOpensOverHistory() {
+        renderHistory(theirs)
+        compose.onNodeWithTag("history.commentCard.menu").performClick()
+        compose.onNodeWithTag("history.menuSheet.opinions").performClick()
+        compose.waitForIdle()
+        assertThat(readFor).containsExactly("theirs")
+        compose.onNodeWithText("No opinions yet").assertExists()
     }
 }
