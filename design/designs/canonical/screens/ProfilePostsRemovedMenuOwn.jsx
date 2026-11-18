@@ -1,7 +1,7 @@
 /* YOUR OWN PROFILE'S POSTS VIEW, YOUR REMOVED POST'S MENU OPEN (round 55,
-   backlog 223). A post of your own removed on your own profile's Posts tab
-   stands as its mark in its place until the tab is next derived
-   (`FeedRemoved.md`) — @sol's salt maps — and its ⋮ raises
+   backlog 223). A post of your own removed keeps its place on your own
+   profile's Posts tab as its mark (jakob 2026-11-18, profiles (a);
+   `ProfilePostsOwn`'s `removed`) — @sol's salt maps — and its ⋮ raises
    `OWN_REMOVED_POST_MENU`: Save, Cite in a new post, Cited by, Opinions on
    this, License terms, as `FeedRemovedMenuOwn`. The page beneath is
    `ProfilePostsMenuOwn`'s, the Posts tab lit.
