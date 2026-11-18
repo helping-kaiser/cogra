@@ -40,8 +40,9 @@
    THE CONTENT STAYS READABLE, and this fixture is the no-sweep case: the
    default deletion is identity-level, so the chronicle carries their real acts
    with their real words (`erasure.md` §2). The content-level opt-in is the
-   other reading of this same page — every act still listed, each one's words
-   gone instead.
+   other reading of this same page — every act still listed, each post's and
+   comment's act reading `Removed by its author` where its words were (round
+   58), the `contents` chip's `removed`.
 
    THE ACTIONS ROW KEEPS THE OPINION AND THE ⋮, AND LOSES THE MESSAGE. An
    opinion targets the ACTOR, and the actor is there — its content still ranks
@@ -71,8 +72,8 @@
    `removalMark`. */
 export const NODE = "profile";
 /* It lands on Posts, as every profile does (jakob 2026-11-17): the `tab` chip
-   draws the landing and the chronicle, the `contents` chip the Posts tab with
-   the contents kept or removed (`ProfileDeletedBody`). */
+   draws the landing and the chronicle, the `contents` chip both tabs with the
+   contents kept or removed (`ProfileDeletedBody`). */
 export const PROPS = { ...TAB_CHIP, ...CONTENTS_CHIP };
 export const VALS = `${TAB_VALS}, ${CONTENTS_VALS}`;
 export function Screen() {

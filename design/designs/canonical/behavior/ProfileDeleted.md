@@ -22,7 +22,7 @@ ALWAYS the mark never reads like a moderation verdict and never like a dead link
 
 ALWAYS the chronicle carries the account's acts with their own words GIVEN the deletion took the identity alone
 
-ALWAYS every act still stands in the chronicle with its words gone GIVEN the deletion took the content too
+ALWAYS each act of a post or a comment still stands in the chronicle, its disc, its verb and its age kept, profile.chronicle.act.second reading Removed by its author where its words were, and the opinion's act as it stands, GIVEN the deletion took the content too
 
 ALWAYS the actions row reads the opinion on the account, worn wide, then the ⋮, and carries no Message
 
@@ -63,6 +63,8 @@ WHEN tap profile.tabRow.postsTab GIVEN another tab is lit -> the account's posts
 WHEN tap profile.tabRow.commentsTab -> the account's comments stand below profile.tabRow as comment cards AND the header above stays as it was
 
 WHEN tap a chronicle card for a published post -> the post's detail opens AND its back arrow reads Back to the profile
+
+WHEN tap a chronicle card whose post or comment was removed -> it opens where the card opens for the act, the removed thing standing there as its mark
 
 WHEN tap profile.bottomBar.profileSlot -> the reader's own profile opens
 
