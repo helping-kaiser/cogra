@@ -15,7 +15,28 @@
    The ways out are a picture's: the X, a swipe down and Android's Back,
    everywhere, and a tap on the backdrop where one is visible — a wide screen.
    A tap on the clip is not one of them. */
+/* THE `clip` CHIP (round 53, round 50's law drawn by the reel's twin, `Reel`'s
+   `state` = `unloaded`): `playing` as the board stood; `unloaded`, the clip
+   itself cannot load, so its cover stands whole at its 4:5, centred on the
+   black, nothing cropped, with the read fault's outlined `Retry` alone on it —
+   no sentence, and no transport, as the reel's seek line goes. The X stays. */
+export const PROPS = {
+  clip: { editor: "enum", options: ["playing", "unloaded"], default: "playing" },
+};
+export const VALS = `clipShown: this.props.clip === "unloaded" ? "none" : "block", coverShown: this.props.clip === "unloaded" ? "flex" : "none", transportShown: this.props.clip === "unloaded" ? "none" : "contents"`;
+
 export function Screen() {
   const { media } = MIRA_CLIP_POST;
-  return <MediaViewer items={media} index={0} onClose={() => {}} elapsed="0:14" duration="0:41" progress={0.34} />;
+  return (
+    <MediaViewer
+      items={media}
+      index={0}
+      onClose={() => {}}
+      elapsed="0:14"
+      duration="0:41"
+      progress={0.34}
+      unloadedHoles={{ src: "clip-lakeside.jpg", clip: "{{clipShown}}", cover: "{{coverShown}}", transport: "{{transportShown}}" }}
+      onRetry={() => {}}
+    />
+  );
 }

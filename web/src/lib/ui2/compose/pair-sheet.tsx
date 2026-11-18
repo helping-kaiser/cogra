@@ -185,6 +185,8 @@ export function PairSheet({
       testId={testId}
       initialFocus={routeRef}
       maxHeight={maxHeight}
+      // The square is a pad: the sheet drags only from its handle and title.
+      dragFromHandle
     >
       <div className="flex flex-col gap-4 pb-1">
         <button

@@ -119,9 +119,9 @@
 @keyframes cg-nav-back-out { from { opacity: 1; transform: none } to { opacity: 0; transform: translateX(var(--nav-travel)) } }
 /* A SHEET THAT HAS ARRIVED STILL FOLLOWS THE FINGER. `both` fill-mode holds
    the last keyframe's `transform` after the animation, which an inline style
-   cannot outrank — so the resting transform reads a custom property instead,
-   and the pull-to-dismiss gesture writes `--cg-sheet-drag` on the sheet. */
-@keyframes cg-sheet-in { from { transform: translateY(100%) } to { transform: translateY(var(--cg-sheet-drag, 0px)) } }
+   cannot outrank — so the drag rides the separate `translate` property, which
+   composes with it (`sheet-drag.ts`), and eases home on a snap back. */
+@keyframes cg-sheet-in { from { transform: translateY(100%) } to { transform: none } }
 @keyframes cg-sheet-out { from { transform: none } to { transform: translateY(100%) } }
 @keyframes cg-dialog-in { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
 @keyframes cg-fade-in { from { opacity: 0 } to { opacity: 1 } }
@@ -133,6 +133,7 @@
 .cg-nav-back-out { animation: cg-nav-back-out var(--duration-nav-back) var(--ease-emphasized-accelerate) both }
 .cg-sheet-in { animation: cg-sheet-in var(--duration-sheet-in) var(--ease-emphasized-decelerate) both }
 .cg-sheet-out { animation: cg-sheet-out var(--duration-sheet-out) var(--ease-emphasized-accelerate) both }
+.cg-sheet-settle { transition: translate var(--duration-sheet-out) var(--ease-standard-decelerate) }
 .cg-dialog-in { animation: cg-dialog-in var(--duration-dialog-in) var(--ease-standard-decelerate) both }
 .cg-scrim-in { animation: cg-fade-in var(--duration-scrim) linear both }
 .cg-scrim-out { animation: cg-fade-out var(--duration-scrim) linear both }
@@ -174,6 +175,7 @@ dialog.cg-sheet-out::backdrop {
   .cg-nav-in, .cg-nav-out, .cg-nav-back-in, .cg-nav-back-out,
   .cg-sheet-in, .cg-sheet-out, .cg-dialog-in, .cg-scrim-in, .cg-scrim-out,
   .cg-reel-next, .cg-reel-previous { animation: none }
+  .cg-sheet-settle { transition: none }
   dialog.cg-dialog-in::backdrop, dialog.cg-sheet-in::backdrop, dialog.cg-sheet-out::backdrop { animation: none }
   ::view-transition-group(.cg-squish),
   ::view-transition-old(.cg-squish),

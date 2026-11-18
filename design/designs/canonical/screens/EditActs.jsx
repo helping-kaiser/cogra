@@ -23,7 +23,9 @@
      citation, possibly more than one.
    A video edit's new face is no row: it rides the `Edit` record (the
    contract's `coverMediaId`; seam 248), staging it when nothing else has
-   and adding nothing when it is already staged. A row is drawn only when its kind is in the batch; this edit's batch holds
+   and adding nothing when it is already staged. A picture added, removed or
+   re-framed in the post's crop (round 53) is the same: the post's new
+   content state, the `Edit` record, no row of its own. A row is drawn only when its kind is in the batch; this edit's batch holds
    four of them.
 
    A ROW'S COUNT IS THE RECORDS IT SIGNS, NEVER "1 PER REMOVAL" (jakob,

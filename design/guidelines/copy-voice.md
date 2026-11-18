@@ -728,6 +728,15 @@ upload.` — with no `Signing waits for it.`, which would wait for ever, and
 no `Retry`; the sign button stays disabled and `Back` is the way out, to
 the stage that holds `Remove it` (jakob 2026-11-17, round 51 act 2).
 
+**A re-crop that did not upload is undone, never removed.** A picture
+the post or the comment already carries, re-framed on its edit, whose
+new cut-out failed reads `One picture didn't upload.` with `Retry ·
+Undo`, and `Undo` alone when the server refused it: `Undo` drops the
+re-crop and the published picture stands — the word Edit profile's
+staged removal already uses for taking a staged change back (jakob
+2026-11-17, round 53 act 2, B2 = (b)). A picture added in the edit keeps
+`Remove it`.
+
 **The cover's own words** — the way to the crop a gallery picture goes
 through, from an edit:
 
@@ -808,8 +817,16 @@ recorded so the registry is whole.
   `A video is the whole post.`
   (`ComposePickVideoCover`).
 - **The picked sheet** (`ComposePicked`, `EditPicked`) — rows named
-  `Cover — shown first` and `Picture 2`, their acts `Make it the cover`
-  · `Move up` · `Move down`; the first row's name says the rule.
+  `Cover — shown first` and `Picture 2`, their drawn act `Make it the
+  cover`; the handle's screen-reader actions `Move up` · `Move down`,
+  never drawn (jakob 2026-11-17); the first row's name says the rule. On
+  a post's edit every row also carries `Crop`, after `Describe` and
+  before `Make it the cover`, the crop screen's own title as its door (`EditPicked`; round
+  53, *new 2026-11-17, blessed (jakob 2026-11-17)*).
+- **The comment edit's crop door** (`CommentEdit`) — `Crop the pictures`,
+  directly above `Describe the pictures` and in its pattern, the same
+  words for one picture as for four (round 53 act 2, jakob 2026-11-17,
+  B1 = (b), "as rec").
 - **The crop's shapes** (`ComposeCrop`) — `Tall 4:5` · `Square 1:1` ·
   `Wide 1.91:1`.
 - **The frame picker** — the strip and the own-picture tile, no line
