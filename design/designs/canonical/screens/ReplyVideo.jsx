@@ -105,7 +105,7 @@ export function Screen() {
               removeLabel="Remove this video"
             />
             <div style={{ display: "{{noneShown}}" }}>
-              <CoverTile width={167} height={167} />
+              <CoverTile height={167} />
             </div>
             <div style={{ display: "{{frameShown}}" }}>
               <CoverTile src="comment-camera.jpg" transform="scale(1.5)" width={167} height={167} />

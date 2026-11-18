@@ -6168,7 +6168,7 @@ registers as `composeSeal`, `ReplySeal` as `replySeal` with its box-less
 to its earlier drawing at every chip combination (3 and 15, headless
 Chromium).
 
-### 221 · `PadKeyAbsent`'s pad is hand-built, so it cannot register yet · *system* · **filed 2026-11-13**
+### 221 · `PadKeyAbsent`'s pad is hand-built, so it cannot register yet · *system* · **filed 2026-11-13** · **closed 2026-11-18**
 
 Round 48 (seam 320-16). `PadFailed`, `PadWriteRule` and `TagPageHeldPad`
 register (round 48); `PadKeyAbsent` draws its pad by hand beside the card,
@@ -6207,6 +6207,15 @@ pad and the bar, which the master's transparent outside-tap layer makes
 drawing choice, so the pad stays hand-built. Moving it also moves
 `check-readouts`' pin on the board's hand-drawn readout. The attempt is kept
 as a patch in round 54's scratch folder.
+
+Closed by round 56 (jakob 2026-11-18, C1 "as rec": the key-absent pad takes
+the shared pad's drawing): `StanceControl`'s `signing="keyAbsent"` draws the
+pad, its "?" and the empty standing line in body-small included; the box,
+field, notice and both buttons stand at round 54's numbers, the differences
+against the hand-built pad are those two and the same sub-pixel residue, and
+no other board's markup moves. The board registers under `feed`, adding
+`card.actionRow.stance.pad.restore` and `.keepPending`; `check-readouts`
+reads four hand-drawn pads.
 
 ### 222 · The feed's comment-card menu and your own comment's menu on Saved are undrawn · *design* · **filed 2026-11-13** · **closed 2026-11-13**
 

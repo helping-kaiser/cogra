@@ -2303,18 +2303,19 @@ entry first". What stands:
   number without an edge, an edge without its number, an untagged
   semantic element on a wired page, a screen nothing reaches — and
   reports gaps without failing.
-- **`_build/check-readouts.mjs` is the gate's second half**: the five
+- **`_build/check-readouts.mjs` is the gate's second half**: the four
   pads that draw their own readout (`RefPair`, `TagPad`,
-  `TagPadCompose`, `PadKeyAbsent`, the shared `ReplyPadBody`) spell
+  `TagPadCompose`, the shared `ReplyPadBody`) spell
   face and pair as literals, because the formatters and the anchor
   lookups stay off the bundle's namespace. The check reads each pad's
   own `value` and asks the masters what it reads as —
   `formatStancePair` / `formatTagPair`, `nearestAnchor` /
   `nearestTagAnchor` — so a moved value, a hyphen
   where §3 rules U+2212, or a spoken reading left behind is a
-  failure. A sixth hand-spelled readout anywhere in `screens/` fails
+  failure. A fifth hand-spelled readout anywhere in `screens/` fails
   too: unchecked is not a state a literal gets to be in. The one-axis
-  pads read through `AttachmentStanding` and spell nothing.
+  pads read through `AttachmentStanding`, and the stance pad boards
+  render `StanceControl`'s own pad; neither spells anything.
 - **`_build/report-summaries.mjs` is the gate's third half** (items 60
   + 64): it enumerates the feed-filter trigger's reachable summary
   strings (`feedFilterSummary`, `FeedFilter.jsx`), measures each with
@@ -6352,7 +6353,9 @@ board's private habit; jakob ruled it as recommended.
   cover's own shape, wearing the *Cover* pill a post's first picture
   wears — and the tile is the door that changes it, named *Change the
   cover*. With no cover, the same place holds the dashed *Add a cover*
-  door, its words beside the tile where the tile is too small for them.
+  door, a square at the clip tile's height (jakob 2026-11-18, round 56:
+  "have it squared at same hight as the video"), its words beside the
+  tile where the tile is too small for them.
 - **Each surface opens its own way in.** The **pick tray** shows the
   cover beside the clip once the cover step settled one, which is how a
   walk that can be walked backwards tells the author what the step
@@ -12558,6 +12561,36 @@ nothing reordered, the sheet over its host as its twin raises it.
 - **The gate**: against `c84455977`, 214 → 225 screens, 8492 → 9031 board
   paths, 2270 → 2285 distinct, nothing gone; the strings added are the
   eleven titles.
+
+### Round 56, the empty cover tile a square, the key-absent pad the shared pad — 2026-11-18
+
+jakob 2026-11-18, round 54–55's review: "make the small version of it a
+sqaure.. the current rectangle looks like we are just fitting to the text
+length.. … have it squared at same hight as the video", confirmed "tile as
+you read it"; and C1 "as rec" — the key-absent pad takes the shared pad's
+drawing.
+
+- **The empty `Add a cover` tile is a square at the clip tile's height**
+  (`CoverTile`): the door takes `height` on both sides, `width` being the
+  chosen cover's alone. `Details · a clip, no cover` and `Edit post · a
+  video body` go from 76.8 × 96 to 96 × 96, the plus at the tile's exact
+  centre (0, 0), the words 4 under it with 14.48 clear on each side; the
+  reply composer's (167 × 167) and the comment edit's (56 × 56, words
+  beside) were square and do not move. A chosen cover keeps its own shape
+  (round 52), so a tall clip's tile narrows to 76.8 × 96 when one is
+  picked; the chosen copies render pixel-identical to before.
+- **`PadKeyAbsent` renders `StanceControl`'s pad** in a new
+  `signing="keyAbsent"` state, `writeRule`'s grammar: the notice `Your key
+  isn't on this browser` over `Restore the key`, and `Keep it pending,
+  restore later` under it, where the landing line and the commit row stand.
+  The pad gains its "?" and says the empty standing line in the master's
+  body-small; its box, field, notice and both buttons stand where they
+  stood (43, 133.61, 304 × 630.39), and no other board's markup moves. The
+  board registers under `feed`, `PadStanding`'s names, with
+  `card.actionRow.stance.pad.restore` and `.keepPending` the two new
+  paths; `check-readouts` holds four hand-drawn pads. Backlog 221 closed.
+- **The gate**: against `72dc5b0be`, 225 → 226 screens, 9030 → 9089 board
+  paths, 2283 → 2285 distinct, nothing gone; no string added.
 
 ### Round 57, removed things on profiles and tag pages, another's removed comment in the thread — 2026-11-18
 
