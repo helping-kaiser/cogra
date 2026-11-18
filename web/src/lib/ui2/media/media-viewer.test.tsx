@@ -65,8 +65,10 @@ describe("the surface", () => {
     const surface = screen.getByTestId("media-viewer");
     expect(surface).toHaveAttribute("role", "dialog");
     expect(surface).toHaveAttribute("aria-modal", "true");
+    // The visible viewport, not the layout one (screen-layer.ts).
     expect(surface.className).toContain("fixed");
-    expect(surface.className).toContain("inset-0");
+    expect(surface.className).toContain("h-dvh");
+    expect(surface.className).not.toContain("inset-0");
     expect(surface.style.background).toBe("rgb(0, 0, 0)");
   });
 

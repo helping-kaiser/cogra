@@ -1,3 +1,4 @@
+// @vitest-environment node
 // The guard behind `screen-layer.ts`: no full-screen layer is laid out against
 // the layout viewport. jsdom has no viewport to measure, so the real-browser
 // half is the conformance harness's height probe (the lane report names it);
