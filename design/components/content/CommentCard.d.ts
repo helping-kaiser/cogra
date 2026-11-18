@@ -92,8 +92,11 @@ export interface CommentCardProps {
    * comment's author over its first words; the post's cover. `removed` is a
    * target whose payload went: the title's place reads the removal mark's
    * line in the system's voice, and the mark keeps its space empty.
+   * `titleQuiet` sets the title's voice apart from `removed` (which it
+   * follows when absent): a removed comment's `@tobias` is not quiet, a
+   * deleted account's `Deleted account` is.
    */
-  targetDetail?: { title: string; sub?: string; cover?: string; removed?: boolean };
+  targetDetail?: { title: string; sub?: string; cover?: string; removed?: boolean; titleQuiet?: boolean };
   /**
    * Folds the words at this many lines, with `More` under them opening them
    * in place — the caption's precedent. Offered on an estimate from the
