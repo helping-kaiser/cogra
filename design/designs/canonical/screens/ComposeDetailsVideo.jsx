@@ -18,8 +18,9 @@
    cover"). The clip's 54 × 96 tile has a second tile beside it at the same
    96 high and the cover's own shape — `CoverTile`. This board's clip is
    vertical, so it skipped the step and the same place holds the dashed `Add
-   a cover` door at a tall clip's 4:5, 76.8 × 96 — the default, as the board
-   stood. Once a cover is chosen through that door, the tile shows it,
+   a cover` door, a square at the clip's height, 96 × 96 (round 56, jakob
+   2026-11-18) — the default, as the board stood. Once a cover is chosen
+   through that door, the tile shows it,
    wearing the `Cover` pill, at the same 4:5, 76.8 × 96 (a tall clip's cover
    is cut at 4:5, `CoverCrop`), and it is the door back into the step, named
    `Change the cover`; the `cover` chip's `chosen` draws it. A square clip's
@@ -60,7 +61,7 @@ export function Screen() {
           <FieldLabel>Video</FieldLabel>
           <div style={{ display: "{{noneShown}}", alignItems: "center", gap: 8 }}>
             <MediaThumb src="clip-lakeside.jpg" alt="" width={54} height={96} video onRemove={() => {}} removeLabel="Remove this video" />
-            <CoverTile width={76.8} height={96} />
+            <CoverTile height={96} />
           </div>
           <div style={{ display: "{{chosenShown}}", alignItems: "center", gap: 8 }}>
             <MediaThumb src="clip-lakeside.jpg" alt="" width={54} height={96} video onRemove={() => {}} removeLabel="Remove this video" />
