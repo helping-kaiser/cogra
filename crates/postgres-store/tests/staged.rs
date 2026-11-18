@@ -498,19 +498,16 @@ async fn the_reap_keeps_custody_of_an_approved_write_and_deletes_the_rest(pool: 
         .await
         .expect("counts");
     assert_eq!(rows, 1, "only the custodied row stays");
-    let (pubkey, dependency_nonce, host_seal, commitment): (
-        Option<Vec<u8>>,
-        Option<Vec<u8>>,
-        Option<Vec<u8>>,
-        Option<Vec<u8>>,
-    ) = sqlx::query_as(
-        "SELECT author_pubkey, dependency_nonce, host_seal, content_commitment
+    type Bytes = Option<Vec<u8>>;
+    let (pubkey, dependency_nonce, host_seal, commitment): (Bytes, Bytes, Bytes, Bytes) =
+        sqlx::query_as(
+            "SELECT author_pubkey, dependency_nonce, host_seal, content_commitment
          FROM staged_writes WHERE id = $1",
-    )
-    .bind(kept)
-    .fetch_one(&pool)
-    .await
-    .expect("reads");
+        )
+        .bind(kept)
+        .fetch_one(&pool)
+        .await
+        .expect("reads");
     assert_eq!((pubkey, dependency_nonce, host_seal), (None, None, None));
     assert_eq!(commitment, Some(vec![6; 32]), "the witness stays");
     assert!(matches!(
