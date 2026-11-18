@@ -5286,7 +5286,11 @@ const commentTarget = (parent, kind) =>
           cover: parent.media?.[0]?.src,
         };
 
-function CommentFeedCard({ id, author, content, timestamp, parent, parentKind = "post", media, sensitive, topics = [], references = 0, score, bundle, own = false, stancePendingPick, stancePendingReview, node }) {
+/* A COMMENT REMOVED AFTER IT WAS SEEN OR SAVED keeps its place in History and
+   Saved and wears its removal mark (History.md, Saved.md): `redacted` hands
+   `CommentCard` its own mark, and your own comment's ⋮ takes your removed
+   comment's rows (`OWN_REMOVED_COMMENT_CARD_MENU`; round 55). */
+function CommentFeedCard({ id, author, content, timestamp, parent, parentKind = "post", media, sensitive, topics = [], references = 0, score, bundle, own = false, redacted, stancePendingPick, stancePendingReview, node }) {
   const target = commentTarget(parent, parentKind);
   return (
     <CommentCard
@@ -5294,6 +5298,7 @@ function CommentFeedCard({ id, author, content, timestamp, parent, parentKind = 
       author={author}
       content={content}
       timestamp={timestamp}
+      redacted={redacted}
       media={media}
       sensitive={sensitive}
       target={target.label}
@@ -5314,7 +5319,7 @@ function CommentFeedCard({ id, author, content, timestamp, parent, parentKind = 
       replyGlyph
       onShare={() => {}}
       license={{ attribution: 0, provenance: 0 }}
-      menuItems={own ? FEED_OWN_COMMENT_MENU : readerCommentCardMenu(author.handle)}
+      menuItems={own ? (redacted ? OWN_REMOVED_COMMENT_CARD_MENU : FEED_OWN_COMMENT_MENU) : readerCommentCardMenu(author.handle)}
       node={node}
     />
   );

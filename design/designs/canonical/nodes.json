@@ -6140,6 +6140,121 @@
         "feed.menuSheet.save": []
       }
     },
+    "FeedProfileDeletedMenu": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.comments": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.score": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.score.value": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.share": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.stance": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.authorChip": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.authorChip.avatar": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.authorChip.handle": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.authorChip.name": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.description": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.media": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.media.dots": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.media.frame": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/1",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/2"
+        ],
+        "feed.card.menu": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.opener": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.tagsLine": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.tagsLine.tag": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/fieldnotes",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/saltmaps"
+        ],
+        "feed.card.timestamp": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.card.title": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "feed.menuSheet": [],
+        "feed.menuSheet.dragHandle": [],
+        "feed.menuSheet.hide": [],
+        "feed.menuSheet.report": [],
+        "feed.menuSheet.save": [],
+        "feed.profileCard": [],
+        "feed.profileCard.actionRow": [],
+        "feed.profileCard.actionRow.score": [],
+        "feed.profileCard.actionRow.score.value": [],
+        "feed.profileCard.actionRow.share": [],
+        "feed.profileCard.actionRow.stance": [],
+        "feed.profileCard.actionRow.stance.anchor": [],
+        "feed.profileCard.actionRow.stance.anchor.face": [],
+        "feed.profileCard.avatar": [],
+        "feed.profileCard.menu": [],
+        "feed.profileCard.name": []
+      }
+    },
     "FeedProfileMenu": {
       "prefix": "feed",
       "keys": {
@@ -8155,6 +8270,171 @@
         "history.searchField.input": []
       }
     },
+    "HistoryCommentRemovedMenuOwn": {
+      "prefix": "history",
+      "keys": {
+        "history.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "history.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "history.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "history.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "history.day": "the divider's words, lowercased, each run of other characters one - (History's day dividers)"
+      },
+      "nodes": {
+        "history.bottomBar": [],
+        "history.bottomBar.composeSlot": [],
+        "history.bottomBar.feedSlot": [],
+        "history.bottomBar.profileSlot": [],
+        "history.bottomBar.searchSlot": [],
+        "history.bottomBar.walletSlot": [],
+        "history.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.stance.anchor.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "history.card.menu": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.opener": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "history.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.commentCard": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "history.commentCard.actionRow": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "history.commentCard.actionRow.reply": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "history.commentCard.actionRow.score": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "history.commentCard.actionRow.score.value": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "history.commentCard.actionRow.share": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "history.commentCard.actionRow.stance": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "history.commentCard.actionRow.stance.anchor": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "history.commentCard.actionRow.stance.anchor.face": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "history.commentCard.authorChip": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "history.commentCard.authorChip.avatar": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "history.commentCard.authorChip.handle": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "history.commentCard.authorChip.name": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "history.commentCard.menu": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "history.commentCard.removalMark": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "history.commentCard.removalMark.line": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "history.commentCard.removalMark.when": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "history.commentCard.target": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "history.day": [
+          "today"
+        ],
+        "history.filterTrigger": [],
+        "history.header": [],
+        "history.header.back": [],
+        "history.header.title": [],
+        "history.menuSheet": [],
+        "history.menuSheet.cite": [],
+        "history.menuSheet.citedBy": [],
+        "history.menuSheet.dragHandle": [],
+        "history.menuSheet.license": [],
+        "history.menuSheet.opinions": [],
+        "history.menuSheet.save": [],
+        "history.searchField": [],
+        "history.searchField.glyph": [],
+        "history.searchField.input": []
+      }
+    },
     "HistoryEmpty": {
       "prefix": "history",
       "keys": {},
@@ -8898,6 +9178,256 @@
         "history.profileCard.name": [
           "cdbd41fc-faec-4c16-9813-7f718b8a0989"
         ],
+        "history.searchField": [],
+        "history.searchField.glyph": [],
+        "history.searchField.input": []
+      }
+    },
+    "HistoryRemovedMenu": {
+      "prefix": "history",
+      "keys": {
+        "history.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "history.day": "the divider's words, lowercased, each run of other characters one - (History's day dividers)"
+      },
+      "nodes": {
+        "history.bottomBar": [],
+        "history.bottomBar.composeSlot": [],
+        "history.bottomBar.feedSlot": [],
+        "history.bottomBar.profileSlot": [],
+        "history.bottomBar.searchSlot": [],
+        "history.bottomBar.walletSlot": [],
+        "history.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "history.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "history.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "history.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "history.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "history.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "history.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "history.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "history.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "history.card.actionRow.stance.anchor.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "history.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "history.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "history.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "history.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "history.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "history.card.body": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "history.card.menu": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "history.card.removalMark": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.removalMark.line": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.removalMark.when": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "history.day": [
+          "today"
+        ],
+        "history.filterTrigger": [],
+        "history.header": [],
+        "history.header.back": [],
+        "history.header.title": [],
+        "history.menuSheet": [],
+        "history.menuSheet.cite": [],
+        "history.menuSheet.citedBy": [],
+        "history.menuSheet.dragHandle": [],
+        "history.menuSheet.hide": [],
+        "history.menuSheet.license": [],
+        "history.menuSheet.opinions": [],
+        "history.menuSheet.report": [],
+        "history.menuSheet.save": [],
+        "history.searchField": [],
+        "history.searchField.glyph": [],
+        "history.searchField.input": []
+      }
+    },
+    "HistoryRemovedMenuOwn": {
+      "prefix": "history",
+      "keys": {
+        "history.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "history.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "history.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "history.day": "the divider's words, lowercased, each run of other characters one - (History's day dividers)"
+      },
+      "nodes": {
+        "history.bottomBar": [],
+        "history.bottomBar.composeSlot": [],
+        "history.bottomBar.feedSlot": [],
+        "history.bottomBar.profileSlot": [],
+        "history.bottomBar.searchSlot": [],
+        "history.bottomBar.walletSlot": [],
+        "history.card": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.comments": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.comments.count": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.score": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.score.value": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.share": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.stance": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.stance.anchor": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.stance.anchor.exact": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.stance.anchor.face": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.authorChip": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.authorChip.avatar": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.authorChip.handle": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.authorChip.name": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "history.card.menu": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.opener": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.removalMark": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "history.card.removalMark.line": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "history.card.removalMark.when": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "history.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "history.card.timestamp": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.day": [
+          "today"
+        ],
+        "history.filterTrigger": [],
+        "history.header": [],
+        "history.header.back": [],
+        "history.header.title": [],
+        "history.menuSheet": [],
+        "history.menuSheet.cite": [],
+        "history.menuSheet.citedBy": [],
+        "history.menuSheet.dragHandle": [],
+        "history.menuSheet.license": [],
+        "history.menuSheet.opinions": [],
+        "history.menuSheet.save": [],
         "history.searchField": [],
         "history.searchField.glyph": [],
         "history.searchField.input": []
@@ -12239,6 +12769,105 @@
         "profile.tabRow.postsTab": []
       }
     },
+    "ProfileCommentsRemovedMenuOwn": {
+      "prefix": "profile",
+      "keys": {
+        "profile.comments.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
+      },
+      "nodes": {
+        "profile.band": [],
+        "profile.band.bell": [],
+        "profile.band.chats": [],
+        "profile.band.gear": [],
+        "profile.band.mark": [],
+        "profile.band.wordmark": [],
+        "profile.bottomBar": [],
+        "profile.bottomBar.composeSlot": [],
+        "profile.bottomBar.feedSlot": [],
+        "profile.bottomBar.profileSlot": [],
+        "profile.bottomBar.searchSlot": [],
+        "profile.bottomBar.walletSlot": [],
+        "profile.comments": [],
+        "profile.comments.commentCard": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.actionRow": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.actionRow.reply": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.actionRow.stance": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.actionRow.stance.anchor": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.actionRow.stance.anchor.face": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.authorChip": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.authorChip.avatar": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.authorChip.handle": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.authorChip.name": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.menu": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.removalMark": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.removalMark.line": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.removalMark.when": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.target": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.identity": [],
+        "profile.identity.actionRow": [],
+        "profile.identity.actionRow.edit": [],
+        "profile.identity.actionRow.invites": [],
+        "profile.identity.actionRow.invites.dot": [],
+        "profile.identity.actionRow.menu": [],
+        "profile.identity.avatar": [],
+        "profile.identity.bio": [],
+        "profile.identity.changeBadge": [],
+        "profile.identity.figures": [],
+        "profile.identity.figures.posts": [],
+        "profile.identity.figures.posts.label": [],
+        "profile.identity.figures.posts.value": [],
+        "profile.identity.figures.stancesOn": [],
+        "profile.identity.figures.stancesOn.label": [],
+        "profile.identity.figures.stancesOn.value": [],
+        "profile.identity.figures.stancesTaken": [],
+        "profile.identity.figures.stancesTaken.label": [],
+        "profile.identity.figures.stancesTaken.value": [],
+        "profile.identity.handle": [],
+        "profile.identity.name": [],
+        "profile.identity.website": [],
+        "profile.menuSheet": [],
+        "profile.menuSheet.cite": [],
+        "profile.menuSheet.citedBy": [],
+        "profile.menuSheet.dragHandle": [],
+        "profile.menuSheet.license": [],
+        "profile.menuSheet.opinions": [],
+        "profile.menuSheet.save": [],
+        "profile.tabRow": [],
+        "profile.tabRow.commentsTab": [],
+        "profile.tabRow.everythingTab": [],
+        "profile.tabRow.postsTab": []
+      }
+    },
     "ProfileDeleted": {
       "prefix": "profile",
       "keys": {
@@ -13881,6 +14510,120 @@
         "profile.posts.loading": [],
         "profile.posts.moreFault": [],
         "profile.posts.moreFault.retry": [],
+        "profile.tabRow": [],
+        "profile.tabRow.commentsTab": [],
+        "profile.tabRow.everythingTab": [],
+        "profile.tabRow.postsTab": []
+      }
+    },
+    "ProfilePostsRemovedMenuOwn": {
+      "prefix": "profile",
+      "keys": {
+        "profile.posts.card": "the post's id, the lowercase UUID the wire carries (PostCard)"
+      },
+      "nodes": {
+        "profile.band": [],
+        "profile.band.bell": [],
+        "profile.band.chats": [],
+        "profile.band.gear": [],
+        "profile.band.mark": [],
+        "profile.band.wordmark": [],
+        "profile.bottomBar": [],
+        "profile.bottomBar.composeSlot": [],
+        "profile.bottomBar.feedSlot": [],
+        "profile.bottomBar.profileSlot": [],
+        "profile.bottomBar.searchSlot": [],
+        "profile.bottomBar.walletSlot": [],
+        "profile.identity": [],
+        "profile.identity.actionRow": [],
+        "profile.identity.actionRow.edit": [],
+        "profile.identity.actionRow.invites": [],
+        "profile.identity.actionRow.invites.dot": [],
+        "profile.identity.actionRow.menu": [],
+        "profile.identity.avatar": [],
+        "profile.identity.bio": [],
+        "profile.identity.changeBadge": [],
+        "profile.identity.figures": [],
+        "profile.identity.figures.posts": [],
+        "profile.identity.figures.posts.label": [],
+        "profile.identity.figures.posts.value": [],
+        "profile.identity.figures.stancesOn": [],
+        "profile.identity.figures.stancesOn.label": [],
+        "profile.identity.figures.stancesOn.value": [],
+        "profile.identity.figures.stancesTaken": [],
+        "profile.identity.figures.stancesTaken.label": [],
+        "profile.identity.figures.stancesTaken.value": [],
+        "profile.identity.handle": [],
+        "profile.identity.name": [],
+        "profile.identity.website": [],
+        "profile.menuSheet": [],
+        "profile.menuSheet.cite": [],
+        "profile.menuSheet.citedBy": [],
+        "profile.menuSheet.dragHandle": [],
+        "profile.menuSheet.license": [],
+        "profile.menuSheet.opinions": [],
+        "profile.menuSheet.save": [],
+        "profile.posts": [],
+        "profile.posts.card": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.comments": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.comments.count": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.score": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.score.value": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.share": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.stance": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.stance.anchor": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.exact": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.face": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.authorChip": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.authorChip.avatar": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.authorChip.handle": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.authorChip.name": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.menu": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.removalMark": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.removalMark.line": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.removalMark.when": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.timestamp": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
         "profile.tabRow": [],
         "profile.tabRow.commentsTab": [],
         "profile.tabRow.everythingTab": [],
@@ -16690,6 +17433,499 @@
         "saved.searchField.input": []
       }
     },
+    "SavedPostMenuOwn": {
+      "prefix": "saved",
+      "keys": {
+        "saved.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "saved.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "saved.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "saved.bottomBar": [],
+        "saved.bottomBar.composeSlot": [],
+        "saved.bottomBar.feedSlot": [],
+        "saved.bottomBar.profileSlot": [],
+        "saved.bottomBar.searchSlot": [],
+        "saved.bottomBar.walletSlot": [],
+        "saved.card": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.actionRow": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.actionRow.comments": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.actionRow.comments.count": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.actionRow.score": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.actionRow.score.value": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.actionRow.share": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.actionRow.stance": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.actionRow.stance.anchor": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.actionRow.stance.anchor.exact": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.actionRow.stance.anchor.face": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.authorChip": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.authorChip.avatar": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.authorChip.handle": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.authorChip.name": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.description": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.media": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.media.dots": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.media.frame": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/1",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/2"
+        ],
+        "saved.card.menu": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.opener": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.tagsLine": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.tagsLine.tag": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/fieldnotes",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/saltmaps"
+        ],
+        "saved.card.timestamp": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.title": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.header": [],
+        "saved.header.back": [],
+        "saved.header.title": [],
+        "saved.menuSheet": [],
+        "saved.menuSheet.cite": [],
+        "saved.menuSheet.citedBy": [],
+        "saved.menuSheet.dragHandle": [],
+        "saved.menuSheet.edit": [],
+        "saved.menuSheet.license": [],
+        "saved.menuSheet.markSensitive": [],
+        "saved.menuSheet.opinions": [],
+        "saved.menuSheet.remove": [],
+        "saved.menuSheet.save": [],
+        "saved.searchField": [],
+        "saved.searchField.glyph": [],
+        "saved.searchField.input": []
+      }
+    },
+    "SavedProfileMenu": {
+      "prefix": "saved",
+      "keys": {
+        "saved.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "saved.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "saved.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "saved.profileCard": "the person's id, the lowercase UUID the wire carries (the profile feed card)"
+      },
+      "nodes": {
+        "saved.bottomBar": [],
+        "saved.bottomBar.composeSlot": [],
+        "saved.bottomBar.feedSlot": [],
+        "saved.bottomBar.profileSlot": [],
+        "saved.bottomBar.searchSlot": [],
+        "saved.bottomBar.walletSlot": [],
+        "saved.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.stance.anchor.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "saved.card.menu": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.opener": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "saved.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.header": [],
+        "saved.header.back": [],
+        "saved.header.title": [],
+        "saved.menuSheet": [],
+        "saved.menuSheet.dragHandle": [],
+        "saved.menuSheet.hide": [],
+        "saved.menuSheet.mention": [],
+        "saved.menuSheet.report": [],
+        "saved.menuSheet.save": [],
+        "saved.profileCard": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "saved.profileCard.actionRow": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "saved.profileCard.actionRow.score": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "saved.profileCard.actionRow.score.value": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "saved.profileCard.actionRow.share": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "saved.profileCard.actionRow.stance": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "saved.profileCard.actionRow.stance.anchor": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "saved.profileCard.actionRow.stance.anchor.face": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "saved.profileCard.avatar": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "saved.profileCard.bio": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "saved.profileCard.handle": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "saved.profileCard.menu": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "saved.profileCard.name": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "saved.searchField": [],
+        "saved.searchField.glyph": [],
+        "saved.searchField.input": []
+      }
+    },
+    "SavedRemovedMenu": {
+      "prefix": "saved",
+      "keys": {
+        "saved.card": "the post's id, the lowercase UUID the wire carries (PostCard)"
+      },
+      "nodes": {
+        "saved.bottomBar": [],
+        "saved.bottomBar.composeSlot": [],
+        "saved.bottomBar.feedSlot": [],
+        "saved.bottomBar.profileSlot": [],
+        "saved.bottomBar.searchSlot": [],
+        "saved.bottomBar.walletSlot": [],
+        "saved.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "saved.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "saved.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "saved.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "saved.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "saved.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "saved.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "saved.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "saved.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "saved.card.actionRow.stance.anchor.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "saved.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "saved.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "saved.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "saved.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "saved.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "saved.card.body": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "saved.card.menu": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "saved.card.removalMark": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.removalMark.line": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.removalMark.when": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "saved.header": [],
+        "saved.header.back": [],
+        "saved.header.title": [],
+        "saved.menuSheet": [],
+        "saved.menuSheet.cite": [],
+        "saved.menuSheet.citedBy": [],
+        "saved.menuSheet.dragHandle": [],
+        "saved.menuSheet.hide": [],
+        "saved.menuSheet.license": [],
+        "saved.menuSheet.opinions": [],
+        "saved.menuSheet.report": [],
+        "saved.menuSheet.save": [],
+        "saved.searchField": [],
+        "saved.searchField.glyph": [],
+        "saved.searchField.input": []
+      }
+    },
+    "SavedRemovedMenuOwn": {
+      "prefix": "saved",
+      "keys": {
+        "saved.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "saved.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "saved.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "saved.bottomBar": [],
+        "saved.bottomBar.composeSlot": [],
+        "saved.bottomBar.feedSlot": [],
+        "saved.bottomBar.profileSlot": [],
+        "saved.bottomBar.searchSlot": [],
+        "saved.bottomBar.walletSlot": [],
+        "saved.card": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.comments": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.comments.count": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.score": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.score.value": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.share": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.stance": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.stance.anchor": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.stance.anchor.exact": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.actionRow.stance.anchor.face": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.authorChip": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.authorChip.avatar": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.authorChip.handle": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.authorChip.name": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "saved.card.menu": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.opener": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.removalMark": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.removalMark.line": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.removalMark.when": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "saved.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "saved.card.timestamp": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "saved.header": [],
+        "saved.header.back": [],
+        "saved.header.title": [],
+        "saved.menuSheet": [],
+        "saved.menuSheet.cite": [],
+        "saved.menuSheet.citedBy": [],
+        "saved.menuSheet.dragHandle": [],
+        "saved.menuSheet.license": [],
+        "saved.menuSheet.opinions": [],
+        "saved.menuSheet.save": [],
+        "saved.searchField": [],
+        "saved.searchField.glyph": [],
+        "saved.searchField.input": []
+      }
+    },
     "SavedSearch": {
       "prefix": "saved",
       "keys": {
@@ -18947,6 +20183,22 @@
         "tagPage.menuSheet.license": [],
         "tagPage.menuSheet.opinions": [],
         "tagPage.menuSheet.report": [],
+        "tagPage.menuSheet.save": []
+      }
+    },
+    "TagPageMenuOwn": {
+      "prefix": "tagPage",
+      "keys": {},
+      "nodes": {
+        "tagPage.menuSheet": [],
+        "tagPage.menuSheet.cite": [],
+        "tagPage.menuSheet.citedBy": [],
+        "tagPage.menuSheet.dragHandle": [],
+        "tagPage.menuSheet.edit": [],
+        "tagPage.menuSheet.license": [],
+        "tagPage.menuSheet.markSensitive": [],
+        "tagPage.menuSheet.opinions": [],
+        "tagPage.menuSheet.remove": [],
         "tagPage.menuSheet.save": []
       }
     },

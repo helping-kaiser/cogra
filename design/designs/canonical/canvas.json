@@ -1262,6 +1262,87 @@
       "page": "profile"
     },
     {
+      "file": "SavedPostMenuOwn.dc.html",
+      "title": "Saved · your own post's menu",
+      "x": 5280,
+      "y": 6107,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SavedProfileMenu.dc.html",
+      "title": "Saved · the profile card's menu",
+      "x": 6720,
+      "y": 6107,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SavedRemovedMenu.dc.html",
+      "title": "Saved · a removed post's menu",
+      "x": 7200,
+      "y": 6107,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SavedRemovedMenuOwn.dc.html",
+      "title": "Saved · your removed post's menu",
+      "x": 7680,
+      "y": 6107,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "HistoryRemovedMenu.dc.html",
+      "title": "History · a removed post's menu",
+      "x": 8160,
+      "y": 6107,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "HistoryRemovedMenuOwn.dc.html",
+      "title": "History · your removed post's menu",
+      "x": 8640,
+      "y": 6107,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "HistoryCommentRemovedMenuOwn.dc.html",
+      "title": "History · your removed comment's menu",
+      "x": 9120,
+      "y": 6107,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfilePostsRemovedMenuOwn.dc.html",
+      "title": "Profile · your own posts view, your removed post's menu",
+      "x": 8160,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileCommentsRemovedMenuOwn.dc.html",
+      "title": "Profile · your own comments view, your removed comment's menu",
+      "x": 8640,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "HistoryProfileMenu.dc.html",
       "title": "History · a hidden person's card, its menu",
       "x": 4800,
@@ -1535,6 +1616,15 @@
       "file": "FeedSheetFormsOff.dc.html",
       "title": "Feed · the filter sheet, no kind with forms",
       "x": 14400,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "FeedProfileDeletedMenu.dc.html",
+      "title": "Feed · a deleted account's card, its menu",
+      "x": 14880,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -1938,10 +2028,10 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -9410,
+      "x": -9700,
       "y": 0,
-      "w": 8990,
-      "h": 5925,
+      "w": 9280,
+      "h": 6003,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -2001,10 +2091,10 @@
     },
     {
       "file": "MapProfile.dc.html",
-      "x": -5930,
+      "x": -6220,
       "y": 0,
-      "w": 5510,
-      "h": 9968,
+      "w": 5800,
+      "h": 10072,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -3074,6 +3164,15 @@
       "file": "TagPageMenu.dc.html",
       "title": "A tag's page · the post menu",
       "x": 2400,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "TagPageMenuOwn.dc.html",
+      "title": "A tag's page · your own post's menu",
+      "x": 2880,
       "y": 2120,
       "w": 390,
       "h": 844,
