@@ -1,8 +1,8 @@
 // Checks the hand-drawn pad readouts against the masters' own format contract
-// (backlog item 54.2): `RefPair`, `TagPad`, `TagPadCompose`, `PadKeyAbsent`
-// and the shared `ReplyPadBody` spell their face and their pair as literals,
+// (backlog item 54.2): `RefPair`, `TagPad`, `TagPadCompose` and the shared
+// `ReplyPadBody` spell their face and their pair as literals,
 // because `bundleReadout` and the formatters are master-side helpers the bundle
-// does not expose to screens. Five literals with no compiler
+// does not expose to screens. Four literals with no compiler
 // between them and the contract is exactly where drift lives: a pad value moves
 // and its readout does not, or a negative pair reaches a board written with an
 // ASCII hyphen where readme §3 rules U+2212.
@@ -68,7 +68,7 @@ const ds = loadMasters([
 
 const fails = [];
 
-// ---- the five hand-drawn readouts.
+// ---- the four hand-drawn readouts.
 // A site is named by its file and, where a file holds more than one component,
 // the function that draws it. Everything else about a site is READ, never
 // declared: which family it belongs to comes from the pad's own `ranges` prop,
@@ -77,13 +77,13 @@ const fails = [];
 // leaves the check's sight is the drift this check exists to catch.
 const SITES = [
   { file: "RefPair.jsx" },
-  { file: "PadKeyAbsent.jsx" },
   { file: "TagPad.jsx" },
   { file: "TagPadCompose.jsx" },
   { file: "_shared.jsx", region: "ReplyPadBody" },
   // The one-axis pads on one's own post (`ComposePad`, `EditPad`) read through
-  // the master `AttachmentStanding`, so nothing on them is a literal for this
-  // check to read.
+  // the master `AttachmentStanding`, and the stance pad boards (`PadStanding`,
+  // `PadFailed`, `PadWriteRule`, `PadKeyAbsent`) render `StanceControl`'s own
+  // pad, so nothing on them is a literal for this check to read.
 ];
 
 function regionOf(source, file, region) {
@@ -153,8 +153,8 @@ for (const site of SITES) {
   }
 }
 
-// ---- nothing hand-spells a number outside the five.
-// The table above is a list of sites, not of files, so a seventh hand-drawn
+// ---- nothing hand-spells a number outside the four.
+// The table above is a list of sites, not of files, so a fifth hand-drawn
 // readout would be checked by nobody — including one added to a file already
 // on the list, which is why this counts per file rather than asking whether the
 // file is declared at all. What it counts: a `cg-exact` span whose content is a

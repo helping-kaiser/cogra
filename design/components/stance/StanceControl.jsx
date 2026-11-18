@@ -182,6 +182,15 @@ const WRITE_RULE_TITLE = WRITE_RULE_WORDS.title;
 const WRITE_RULE_PAD_FACT = WRITE_RULE_WORDS.padFact;
 const WRITE_RULE_HELP = WRITE_RULE_WORDS.help;
 const WRITE_RULE_ROW = WRITE_RULE_WORDS.row;
+/* The key-absent notice's words at the pad's scale (`PadKeyAbsent`, the
+   key-loss round): `ComposeKeyAbsent`'s panel, its "?" the pad's own `Your
+   key` dialog. */
+const KEY_ABSENT_TITLE = "Your key isn't on this browser";
+const KEY_ABSENT_HELP = "Your key";
+const KEY_ABSENT_LINES = [
+  "Signing needs your key, which isn't in this browser — the write waits as pending.",
+  "Restore the key with your recovery code to finish.",
+];
 /* A comfort's revert, said on the row (copy-voice, *Faults by code*). */
 const COMFORT_FAILED_ROW = "That didn't go through.";
 /* The hold's spoken wait (round 51): the standard visually-hidden pattern,
@@ -340,7 +349,10 @@ export function StanceControl({
      117) is the write rule's refusal, which is a notice and not a fault: on
      the row a quiet line with no Retry, and in the pad the notice panel
      standing where the landing line and the commit row would, in
-     `PadKeyAbsent`'s shape. `"comfortFailed"` is a read-side comfort's
+     `PadKeyAbsent`'s shape. `"keyAbsent"` (the key-loss round; round 56)
+     is that shape itself, pad only: the signing key is not on this device,
+     and the notice says so over `Restore the key`, with `Keep it pending,
+     restore later` under it. `"comfortFailed"` is a read-side comfort's
      revert (the failure pack), row only: the hold's vehicle, `That didn't go
      through.` with Retry. Additive — absent, the control renders exactly as
      before. */
@@ -874,13 +886,13 @@ export function StanceControl({
               <>
                 <StancePad value={pick} onChange={setPick} fieldRef={fieldRef} axes={axes} held={knobHeld} node={node && "field"} />
                 {padNote}
-                {padSigning !== "writeRule" && (
+                {padSigning !== "writeRule" && padSigning !== "keyAbsent" && (
                   <StanceLandingLine landing={landing} names={axes} onExplainZero={() => setExplaining("zero")} borrowed={borrowed} node={node && "landing"} />
                 )}
               </>
             )}
             {/* THE WRITE RULE REFUSED SET (jakob 2026-10-01, backlog item 117):
-                `PadKeyAbsent`'s shape. The pad stays open at the pick — nothing
+                the key-absent state's shape. The pad stays open at the pick — nothing
                 the reader chose is lost from view — and the notice stands where
                 the landing line and the commit row would, carrying its own "?"
                 by the stopper exception. `Not now` is the way out
@@ -906,8 +918,30 @@ export function StanceControl({
                 `NetworkError`'s words, and Set's slot becomes the outlined
                 `Retry` — not a new commitment, the same one asked again. The
                 pick, the field and the way out are exactly as they were. */}
+            {/* THE KEY IS NOT ON THIS DEVICE (the key-loss round; round 56,
+                jakob 2026-11-18: the shared pad's drawing): the write rule's
+                grammar. The pick is still made — only the signing is out of
+                reach — so the notice stands where the landing line and the
+                commit row would, `Restore the key` inside it, and `Keep it
+                pending, restore later` under it is the one way to keep the
+                pick. A press outside or Back drops it, as a Cancel would. */}
+            {padSigning === "keyAbsent" && (
+              <>
+                <NoticePanel title={KEY_ABSENT_TITLE} helpLabel={KEY_ABSENT_HELP} onHelp={() => {}}>
+                  {KEY_ABSENT_LINES.map((line) => (
+                    <NoticeLine key={line}>{line}</NoticeLine>
+                  ))}
+                  <button type="button" className={BUTTON_CLASS} style={{ ...buttonStyle({ variant: "inverse" }), width: "100%" }} data-node={node && "restore"}>
+                    Restore the key
+                  </button>
+                </NoticePanel>
+                <button type="button" onClick={closeAll} className={BUTTON_CLASS} style={{ ...buttonStyle({ variant: "text" }), width: "100%" }} data-node={node && "keepPending"}>
+                  Keep it pending, restore later
+                </button>
+              </>
+            )}
             {padSigning === "failed" && <TransportError message="That didn't send. Try again." />}
-            {padSigning !== "writeRule" && (
+            {padSigning !== "writeRule" && padSigning !== "keyAbsent" && (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "var(--space-2)" }}>
               {!firstConnection && (bundle.records > 0 || bundle.severed === true) && (
                 <button

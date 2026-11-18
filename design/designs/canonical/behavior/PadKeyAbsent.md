@@ -4,7 +4,7 @@ WHEN tap a stance face GIVEN the signing key is not on this device -> the pad op
 
 WHEN press and hold a stance face GIVEN the signing key is not on this device -> the pad opens carrying the key notice, as a tap opens it AND NEVER anything is signed
 
-ALWAYS the pad still shows the standing line, the pick's readout and the field GIVEN the signing key is not on this device
+ALWAYS the pad still shows its own ?, How opinions work, the standing line, the pick's readout and the field, as every pad does, GIVEN the signing key is not on this device
 
 ALWAYS the notice Your key isn't on this browser stands where the landing line and the actions would, with Signing needs your key, which isn't in this browser — the write waits as pending. and Restore the key with your recovery code to finish. over Restore the key
 
