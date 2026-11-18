@@ -114,7 +114,13 @@ export function UploadStatusLine({ done, total, progress, media = "pictures", fa
 
 /* `node` names the line where its placer gives one (seam 248): `message`,
    `retry` and `remove` inside it. */
-export function UploadErrorLine({ message = "One picture didn't upload.", onRetry, onRemove, node }) {
+/* `onUndo` (round 53 act 2, jakob 2026-11-17, B2 = (b)): a picture the post
+   or the comment already carries, whose re-crop failed to upload, offers
+   `Undo` in `Remove it`'s place — it drops the re-crop alone, the published
+   picture standing as it was. Never both: there is nothing published to fall
+   back to for a picture added in the edit, and removing a published picture
+   because its new framing failed is not what the reader asked. */
+export function UploadErrorLine({ message = "One picture didn't upload.", onRetry, onRemove, onUndo, node }) {
   return (
     <p style={{ margin: 0, fontSize: "var(--text-label-small)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)" }} data-node={node}>
       <span style={{ color: "var(--error)" }} data-node={node && "message"}>{message}</span>{" "}
@@ -126,9 +132,15 @@ export function UploadErrorLine({ message = "One picture didn't upload.", onRetr
           <span style={{ color: "var(--text-secondary)" }}>·</span>{" "}
         </>
       )}
-      <InlineAction size="sm" onClick={onRemove} node={node && "remove"}>
-        Remove it
-      </InlineAction>
+      {onUndo ? (
+        <InlineAction size="sm" onClick={onUndo} node={node && "undo"}>
+          Undo
+        </InlineAction>
+      ) : (
+        <InlineAction size="sm" onClick={onRemove} node={node && "remove"}>
+          Remove it
+        </InlineAction>
+      )}
     </p>
   );
 }

@@ -81,9 +81,15 @@ function dragField(dx: number, dy: number, pointerType = "touch") {
 const expectedDrag = (base: StancePair, dx: number, dy: number, ranges: PadRanges) =>
   snapToRanges(rangedPairFrom(base, RECT, { dx, dy }, KNOB_TRAVEL_INSET_PX, ranges), ranges);
 
-/** A pull on the sheet's own surface — the swipe that drops a drawer. */
+/**
+ * A pull from the sheet's handle and title zone — the swipe that drops a
+ * drawer, and the only place a pad's sheet drags from. The title row is laid
+ * out ending at y=120, so the press at 100 lands in it.
+ */
 function swipeDown() {
   const dialog = sheet();
+  const title = dialog.querySelector("h2") ?? dialog.querySelector("[data-testid$='title']");
+  if (title) vi.spyOn(title, "getBoundingClientRect").mockReturnValue({ bottom: 120 } as DOMRect);
   fireEvent.pointerDown(dialog, { pointerType: "touch", clientY: 100 });
   fireEvent.pointerMove(dialog, { pointerType: "touch", clientY: 100 + PULL_THRESHOLD * 2 });
   fireEvent.pointerUp(dialog, { pointerType: "touch", clientY: 100 + PULL_THRESHOLD * 2 });

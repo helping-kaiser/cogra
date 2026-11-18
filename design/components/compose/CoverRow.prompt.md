@@ -21,6 +21,6 @@ The strip that picks a video's face — frames from the clip, or a picture of yo
 
 **A picture of your own stands where it was asked for.** Back from the crop, pass it as `own`: it takes the dashed tile's place, outlined as chosen, the frames dimmed around it. A tap on it opens the picker again — re-picked and re-cropped, never re-framed in place.
 
-**`CoverTile` is the cover beside the clip** wherever a flow shows the clip after a cover can exist: the clip tile's height, the cover's own shape, the `Cover` badge, and the door named `Change the cover`. With no cover, the dashed `Add a cover` door in the same place — the words beside the tile (`labelBeside`) where the tile is too small to carry them.
+**`CoverTile` is the cover beside the clip** wherever a flow shows the clip after a cover can exist: the clip tile's height, the cover's own shape, the `Cover` badge, and the door named `Change the cover`. With no cover, the dashed `Add a cover` door in the same place, the add glyph in the tile's exact middle and the words 4 px under it (round 53 act 2, jakob 2026-11-17) — or the words beside the tile (`labelBeside`) where the tile is too small to carry them.
 
 The row carries its own label and its own line because the three never appear apart. The comment composer inlines it beneath the clip; the post wizard gives it a stage.

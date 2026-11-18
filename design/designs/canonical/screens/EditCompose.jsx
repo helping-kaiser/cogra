@@ -9,9 +9,10 @@
    a post being composed with its answers already filled in.
 
    THE BODY EDITS LIKE A COMPOSER'S, because an edit carries complete state:
-   the row's manager reorders, recovers the cover, removes and describes, and
-   "+ Add pictures · 2 of 10" takes more. The two together are the whole of
-   what the ruling asked for — the body may end up a different KIND than the
+   the row's manager reorders, recovers the cover, removes, describes and
+   crops, and "+ Add pictures · 2 of 10" takes more, through the post's crop
+   with its shape row and every picture of the post in its strip (round 53).
+   The two together are the whole of what the ruling asked for — the body may end up a different KIND than the
    one that was published, and the manager is where that begins.
 
    THE LICENSE IS LOCKED, and the lock is a mark rather than an action: a
@@ -53,8 +54,10 @@
 
    THE FIXTURE'S STORY (jakob 2026-10-05, the 136 round's 5a): both pictures
    in the row were added in this edit. A picture the post already carried
-   never uploads again, so the gate counts the new ones alone, and `Uploading
-   1 of 2` is true of this row: the first has landed, the second is going up.
+   uploads again only when the crop re-framed it or changed the post's shape
+   (round 53, jakob 2026-11-17, option C), so the gate counts the new and the
+   re-framed ones alone, and `Uploading 1 of 2` is true of this row: the
+   first has landed, the second is going up.
 
    A FAILED UPLOAD MARKS ITS TILE TOO (jakob 2026-10-05, the 136 round's 2).
    The edit's media row is the compose media row, so it fails the compose way
@@ -112,12 +115,18 @@
 export const NODE = "postEdit";
 export const PROPS = {
   target: { editor: "enum", options: ["live", "removed"], default: "live" },
-  upload: { editor: "enum", options: ["none", "uploading", "failed", "refused"], default: "none" },
+  upload: { editor: "enum", options: ["none", "uploading", "failed", "refused", "recrop-failed"], default: "none" },
   signing: { editor: "enum", options: ["none", "slow"], default: "none" },
   tag: { editor: "enum", options: ["landed", "refused"], default: "landed" },
   fault: { editor: "enum", options: ["none", "unsent", "refused"], default: "none" },
 };
-export const VALS = `liveShown: this.props.target === "removed" ? "none" : "block", removedShown: this.props.target === "removed" ? "block" : "none", gateShown: this.props.upload === "uploading" && this.props.fault === "none" ? "block" : "none", rowShown: this.props.upload === "none" ? "block" : "none", rowUploadingShown: this.props.upload === "uploading" ? "block" : "none", rowFailedShown: this.props.upload === "failed" ? "block" : "none", errorShown: this.props.upload === "failed" ? "block" : "none", gateFailedShown: this.props.upload === "failed" && this.props.fault === "none" ? "block" : "none", footQuietShown: this.props.signing === "slow" && this.props.upload !== "failed" && this.props.upload !== "refused" && this.props.fault === "none" ? "none" : "flex", footSlowShown: this.props.signing === "slow" && this.props.upload !== "failed" && this.props.upload !== "refused" && this.props.fault === "none" ? "flex" : "none", signRestShown: this.props.signing !== "slow" && this.props.upload !== "failed" && this.props.upload !== "refused" && this.props.fault === "none" ? "block" : "none", signBusyShown: this.props.signing === "slow" && this.props.upload !== "failed" && this.props.upload !== "refused" && this.props.fault === "none" ? "block" : "none", signFailedShown: this.props.upload === "failed" && this.props.fault === "none" ? "block" : "none", rowRefusedShown: this.props.upload === "refused" ? "block" : "none", gateRefusedShown: this.props.upload === "refused" && this.props.fault === "none" ? "block" : "none", signRefusedShown: this.props.upload === "refused" && this.props.fault === "none" ? "block" : "none", faultUnsentShown: this.props.fault === "unsent" ? "flex" : "none", faultRefusedShown: this.props.fault === "refused" ? "flex" : "none", tagRing: this.props.tag === "refused" ? "1px solid var(--error)" : "none", tagRefusedShown: this.props.tag === "refused" ? "block" : "none"`;
+/* THE `upload` CHIP'S `recrop-failed` (round 53 act 2, jakob 2026-11-17,
+   B2 = (b)): the first picture, one the post already carries, was re-framed
+   in the crop and its new cut-out did not upload — its tile marked, `Retry ·
+   Undo` under the row in `Remove it`'s place, `Undo` dropping the re-crop
+   alone; the gate's fault reading and the disabled `Sign the edit` as at
+   `failed`. */
+export const VALS = `liveShown: this.props.target === "removed" ? "none" : "block", removedShown: this.props.target === "removed" ? "block" : "none", gateShown: this.props.upload === "uploading" && this.props.fault === "none" ? "block" : "none", rowShown: this.props.upload === "none" ? "block" : "none", rowUploadingShown: this.props.upload === "uploading" ? "block" : "none", rowFailedShown: this.props.upload === "failed" ? "block" : "none", errorShown: this.props.upload === "failed" ? "block" : "none", rowRecropShown: this.props.upload === "recrop-failed" ? "block" : "none", gateFailedShown: (this.props.upload === "failed" || this.props.upload === "recrop-failed") && this.props.fault === "none" ? "block" : "none", footQuietShown: this.props.signing === "slow" && this.props.upload !== "failed" && this.props.upload !== "recrop-failed" && this.props.upload !== "refused" && this.props.fault === "none" ? "none" : "flex", footSlowShown: this.props.signing === "slow" && this.props.upload !== "failed" && this.props.upload !== "recrop-failed" && this.props.upload !== "refused" && this.props.fault === "none" ? "flex" : "none", signRestShown: this.props.signing !== "slow" && this.props.upload !== "failed" && this.props.upload !== "recrop-failed" && this.props.upload !== "refused" && this.props.fault === "none" ? "block" : "none", signBusyShown: this.props.signing === "slow" && this.props.upload !== "failed" && this.props.upload !== "recrop-failed" && this.props.upload !== "refused" && this.props.fault === "none" ? "block" : "none", signFailedShown: (this.props.upload === "failed" || this.props.upload === "recrop-failed") && this.props.fault === "none" ? "block" : "none", rowRefusedShown: this.props.upload === "refused" ? "block" : "none", gateRefusedShown: this.props.upload === "refused" && this.props.fault === "none" ? "block" : "none", signRefusedShown: this.props.upload === "refused" && this.props.fault === "none" ? "block" : "none", faultUnsentShown: this.props.fault === "unsent" ? "flex" : "none", faultRefusedShown: this.props.fault === "refused" ? "flex" : "none", tagRing: this.props.tag === "refused" ? "1px solid var(--error)" : "none", tagRefusedShown: this.props.tag === "refused" ? "block" : "none"`;
 
 export function Screen() {
   return <EditComposeBody holes />;

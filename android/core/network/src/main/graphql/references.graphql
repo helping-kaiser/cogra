@@ -161,3 +161,88 @@ mutation PrepareReferenceWithdrawal($input: PrepareReferenceWithdrawalInput!) {
     }
   }
 }
+
+# WHAT CITES THIS — the inbound mirror of the references a node declares
+# (CitedBy.md, CommentCitedByEmpty.md). Read from the TERMINAL leg: a
+# Reference is a hyper act, Actor -> citing artifact -> target, so the
+# artifacts pointing AT this node are exactly the records whose terminal
+# leg lands on it; a node-anchored read would also match the A leg of the
+# node's own citations. The records, not the citations: the rows are the
+# client's fold over the whole set (`CitingFold.kt`), read 100 at a time.
+# Inbound records are display only — nothing read here reaches a feed.
+# web's twin is `web/src/lib/graphql/references.graphql` `CitingRecords`.
+query CitingRecords($id: UUID!, $after: String) {
+  records(terminal: $id, family: REFERENCE, first: 100, after: $after) {
+    edges {
+      node {
+        id
+        # The bundle key's other half, and the fold's inputs.
+        authorId
+        targetId
+        pDirected
+        pInterest
+        payloadMarked
+        # The key of record: which record in a bundle is newest.
+        landingEpoch
+        position
+        # The middle node of the hyper act: the artifact the citation was
+        # built into, which is what the row names. A removed one keeps its
+        # row, `removal` reading its mark.
+        target {
+          __typename
+          ... on Post {
+            id
+            title {
+              value
+              status
+            }
+            content {
+              value
+              status
+            }
+            # The row's tile: the first entry's picture, or a clip's poster.
+            attachments {
+              id
+              url
+              mimeType
+              status
+              coverMedia {
+                id
+                url
+                status
+              }
+            }
+            author {
+              id
+              handle
+            }
+            removal {
+              by
+            }
+          }
+          ... on Comment {
+            id
+            content {
+              value
+              status
+            }
+            removal {
+              by
+            }
+            # The thread a citing comment opens: the post it answers, one hop.
+            target {
+              __typename
+              ... on Post {
+                id
+              }
+            }
+          }
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

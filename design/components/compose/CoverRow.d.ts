@@ -37,8 +37,9 @@ export declare const CHANGE_COVER_NAME: "Change the cover";
 /**
  * The cover beside the clip: at the clip tile's height and the cover's own
  * shape, wearing the `Cover` badge, the door named `Change the cover`. With no
- * `src`, the dashed `Add a cover` door at the same size — the words on the tile,
- * or beside it with `labelBeside` where the tile is too small for them.
+ * `src`, the dashed `Add a cover` door at the same size, the add glyph in its
+ * exact middle — the words on the tile, 4 px under the glyph, or beside it with
+ * `labelBeside` where the tile is too small for them.
  */
 export interface CoverTileProps {
   src?: string;
