@@ -46,6 +46,8 @@ import { COMMENT_SETTLING, useOpenCommentEdit } from "@/lib/compose/comment-edit
 import { withRemoval, type Removal } from "@/lib/api/removal-api";
 import { fetchHeldOpinions, type HeldOpinionView } from "@/lib/api/opinions-api";
 import { fetchCitingArtifacts, type CitingArtifactView } from "@/lib/api/references-api";
+import { hideRow, hiddenPersonOf } from "@/lib/hidden/hide-row";
+import { useHiddenSet } from "@/lib/hidden/provider";
 import type { License } from "@/lib/license";
 import { useComfortLine } from "@/lib/saved/comfort-line";
 import { REMOVED_BY_AUTHOR, postTitle } from "@/lib/saved/row-content";
@@ -292,6 +294,7 @@ export function CommentFeedCard({
   const router = useRouter();
   const client = useApolloClient();
   const writes = useSavedWrites();
+  const hidden = useHiddenSet();
   const viewerId = useActiveAccountId();
   const phase = useAuthPhase();
   const applicant = useReaderIsApplicant();
@@ -453,6 +456,21 @@ export function CommentFeedCard({
       setReportAsked(true);
       setReportOpen(true);
     },
+    // HIDING THE COMMENT'S AUTHOR, the post menu's twin (CommentMenu.md:13-21):
+    // no confirm; the host answers as after a hide from a post's menu there —
+    // the feed's rows of theirs leave, History's at its next load, Saved and a
+    // profile keep the card — and its snackbar offers Undo. A failure stands
+    // on this card's row line (`useComfortLine`, keyed by the comment).
+    hide:
+      own || comment.author == null
+        ? undefined
+        : hideRow({
+            set: hidden,
+            person: hiddenPersonOf(comment.author),
+            origin: comment.id,
+            notify: onNotify,
+            onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
+          }),
     testIdPrefix: `${testId}-menu`,
     rowNode: sheetNodes?.row,
   });
