@@ -56,6 +56,7 @@ import {
   isVideoPost,
   shapeRatio,
   skipsCoverStep,
+  stageKeyboard,
   stepIndex,
   uploadsFailed,
   uploadsPending,
@@ -89,7 +90,7 @@ import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
 import { PickedSheet } from "@/lib/ui2/compose/picked-sheet";
 import { ReferencePicker } from "@/lib/ui2/compose/reference-picker";
 import { TagPicker } from "@/lib/ui2/compose/tag-picker";
-import { PINNED_FLOOR, PINNED_PAGE } from "@/lib/ui2/screen-layer";
+import { PINNED_FLOOR, PINNED_FLOOR_STILL, PINNED_PAGE } from "@/lib/ui2/screen-layer";
 import { SealStep, type SealSheet } from "./seal-step";
 
 /** A stable empty list, so the preview effect does not re-run on every render. */
@@ -992,7 +993,9 @@ export function ComposeWizard({
   }
 
   return (
-    <main className={`mx-auto flex ${PINNED_FLOOR} w-full max-w-2xl flex-col`}>
+    <main
+      className={`mx-auto flex ${stageKeyboard(state.step) === "rides" ? PINNED_FLOOR : PINNED_FLOOR_STILL} w-full max-w-2xl flex-col`}
+    >
       <HeaderBar
         title={HEADINGS[state.step]}
         onBack={() => {

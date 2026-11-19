@@ -67,7 +67,7 @@ export function CropStep({
   if (asset === undefined) return null;
 
   return (
-    <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 pb-4 pt-2">
+    <div className="flex flex-1 flex-col gap-3 overflow-y-auto *:shrink-0 px-6 pb-4 pt-2">
       {/* A named group of the master's switches (`Chip.jsx`) rather than a
           radiogroup: a radiogroup whose children are not radios lies to a
           screen reader about what it will find inside. */}

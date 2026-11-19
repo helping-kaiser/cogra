@@ -25,9 +25,25 @@
 // pinned stack rides directly above it and the fields scroll in what is left
 // (seam 381). With no keyboard the inset is 0 — `inset: 0` exactly.
 
+//
+// WHICH SURFACES RIDE (jakob's ruling, design → impl seam 388): with the
+// keyboard up the field being typed in comes first. A surface with ONE field
+// lets its pinned commit ride directly above the keyboard (the `*` constants
+// below); a surface with SEVERAL fields keeps its foot where it is, under the
+// keyboard, and the focused field takes the room (the `*_STILL` twins) — a
+// commit right above the keyboard on a page of fields invites an accidental
+// submit. Each consumer names its class and why (`keyboard-reach.test.ts`).
+// With no keyboard every twin is the same box as its riding constant.
+
+/** Which way a pinned surface meets the on-screen keyboard (seam 388). */
+export type KeyboardClass = "rides" | "stays";
+
 /** The geometry every full-screen layer stands on: the whole screen above the keyboard, its foot above the system navigation bar. */
 export const SCREEN_LAYER =
   "fixed inset-x-0 top-0 bottom-[var(--keyboard-inset,0px)] pb-[env(safe-area-inset-bottom)]";
+
+/** A full-screen layer of SEVERAL fields: the whole screen, the keyboard over its foot. */
+export const SCREEN_LAYER_STILL = "fixed inset-0 pb-[env(safe-area-inset-bottom)]";
 
 /**
  * A PAGE THAT PINS ITS FOOT (a stage, the profile edit, a picker): the screen's
@@ -43,3 +59,9 @@ export const PINNED_PAGE = "h-[calc(100dvh_-_var(--keyboard-inset,0px))]";
  * stage the foot still stands on the keyboard's top edge.
  */
 export const PINNED_FLOOR = "min-h-[calc(100dvh_-_var(--keyboard-inset,0px))]";
+
+/** A pinned page of SEVERAL fields: the screen's height; the keyboard covers its foot. */
+export const PINNED_PAGE_STILL = "h-dvh";
+
+/** A stage of SEVERAL fields whose foot follows its content: the screen's height as its floor. */
+export const PINNED_FLOOR_STILL = "min-h-dvh";

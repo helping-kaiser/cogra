@@ -292,7 +292,7 @@ export function SealStep({
   const note = slow ? SLOW_SIGNING_LINE : null;
 
   return (
-    <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 pb-6 pt-2">
+    <div className="flex flex-1 flex-col gap-4 overflow-y-auto *:shrink-0 px-6 pb-6 pt-2">
       <QuietNote testId="wizard-seal-note">
         {heading} — {bodyLine}.
       </QuietNote>
