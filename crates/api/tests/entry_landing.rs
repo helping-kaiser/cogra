@@ -1575,6 +1575,72 @@ async fn the_landing_release_orders_and_dedups_the_carried_list(pool: PgPool) {
     assert_eq!(deps_of(&rig, carried[0]).await, expected);
 }
 
+/// A carried list holding an identifier that does not parse has no
+/// componentwise order. Its row is still released, its list in byte order
+/// with duplicates collapsed, so its own handshake refuses it later; the
+/// landing completes and the rest of the batch is released in the
+/// canonical order. The list is set by hand: prepare writes only
+/// canonical identifiers.
+///
+/// One unparseable carried dependency fails only its own row, never the landing or the rest of the batch.
+/// ´claim:onboarding:an-unparseable-carried-dependency-fails-only-its-row´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_unparseable_carried_dependency_fails_only_its_row(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let mira = rig.member("mira").await;
+    let noa = rig.applicant(mira.id, "noa").await;
+    let bad = carry(&rig, noa.account, PREPARE_POST, post_input("hello")).await;
+    let good = carry(
+        &rig,
+        noa.account,
+        PREPARE_STANCE,
+        serde_json::json!({
+            "target": mira.id, "pDirected": 0.3, "pInterest": 0.2,
+        }),
+    )
+    .await;
+    let good_before = deps_of(&rig, good[0]).await;
+    let decided = rig
+        .vouch(&mira, rig.registration_path(noa.account).await)
+        .await;
+    rig.sign(&mira.key, decided.id).await;
+    let registration = rig
+        .sign_registration(&noa)
+        .await
+        .proposal
+        .body
+        .act_id()
+        .to_string();
+    let vouch = act(&decided);
+    let set = sqlx::query("UPDATE staged_writes SET deps = $2 WHERE id = $1 AND state = 'carried'")
+        .bind(bad[0])
+        .bind(vec!["not-an-act", "not-an-act"])
+        .execute(&rig.pool)
+        .await
+        .expect("plant the list");
+    assert_eq!(set.rows_affected(), 1);
+    rig.close().await;
+    assert_eq!(rig.state(noa.account).await, "member", "the landing stands");
+
+    let expected = canonical(
+        good_before
+            .iter()
+            .chain([&registration, &vouch])
+            .map(String::as_str),
+    );
+    assert_eq!(deps_of(&rig, good[0]).await, expected, "the canonical list");
+    let (state, deps): (String, Vec<String>) =
+        sqlx::query_as("SELECT state, deps FROM staged_writes WHERE id = $1")
+            .bind(bad[0])
+            .fetch_one(&rig.pool)
+            .await
+            .expect("the row");
+    assert_eq!(state, "awaiting_pre_sign");
+    let mut byte_order = vec!["not-an-act".to_string(), registration, vouch];
+    byte_order.sort();
+    assert_eq!(deps, byte_order);
+}
+
 /// Custody is the server's (seam 099 ruling 68): carried acts wait out any
 /// number of epochs uncollected, and the device that staged them is not
 /// needed — the author, on a new device with their key restored from its

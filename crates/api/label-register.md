@@ -532,6 +532,7 @@ label.
 | `test:integration:an-unopened-deletion-link-dies-after-its-ttl`                                                | an_unopened_deletion_link_dies_after_its_ttl                                                |
 | `test:integration:an-unparsable-argument-is-bad-input`                                                         | an_unparsable_argument_is_bad_input                                                         |
 | `test:integration:an-unparsable-line-is-logged`                                                                | an_unparsable_line_is_logged                                                                |
+| `test:integration:an-unparseable-carried-dependency-fails-only-its-row`                                        | an_unparseable_carried_dependency_fails_only_its_row                                        |
 | `test:integration:an-unpriced-connection-charges-the-default-page`                                             | an_unpriced_connection_charges_the_default_page                                             |
 | `test:integration:an-unqualified-read-gets-the-default-page`                                                   | an_unqualified_read_gets_the_default_page                                                   |
 | `test:integration:an-unreachable-corpus-is-an-error-not-a-hang`                                                | an_unreachable_corpus_is_an_error_not_a_hang                                                |
