@@ -608,7 +608,7 @@ describe("SavedScreen — the card menus' rows (SavedPostMenu.md, FeedProfileMen
     await screen.findByTestId("saved-list");
     fireEvent.click(commentMenu()[2]!);
     expect(screen.queryByRole("alertdialog")).toBeNull();
-    expect(await screen.findByText("@tobias is hidden.")).toBeInTheDocument();
+    expect(await screen.findByTestId("saved.snackbar.message")).toHaveTextContent("@tobias is hidden.");
     await waitFor(() => expect(log.hides).toEqual([{ actor: "u2", at: null }]));
     expect(cards()).toEqual(ALL);
     await waitFor(() => expect(commentMenu()[2]).toHaveTextContent(/^Unhide @tobias$/));

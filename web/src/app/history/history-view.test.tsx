@@ -1081,7 +1081,7 @@ describe("History — the comment menu (HistoryCommentMenu.md, round 41)", () =>
     fireEvent.click(screen.getByTestId(byNode("history.commentCard.menu", "c1")));
     await waitFor(() => expect(screen.getByTestId("history.menuSheet.hide")).toHaveTextContent("Unhide @tobias"));
     fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
-    expect(await screen.findByText("@tobias is unhidden.")).toBeInTheDocument();
+    expect(await screen.findByTestId("history.snackbar.message")).toHaveTextContent("@tobias is unhidden.");
     await waitFor(() => expect(log.unhides).toEqual(["u2"]));
     expect(cards()).toEqual(["history.commentCard:c1", "history.card:p1"]);
   });
