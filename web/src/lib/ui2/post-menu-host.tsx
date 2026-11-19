@@ -30,6 +30,7 @@ import { POST_LOCKED, useReaderIsApplicant } from "@/lib/session/reader-state";
 import { useAuthGuard } from "@/lib/session/runtime";
 import type { DataNode } from "@/lib/ui/data-node";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
+import { payloadIsRedacted } from "@/lib/ui/post-media";
 import { useNarrowShare } from "@/lib/ui/narrow-share";
 import { LINK_COPIED, shareLink } from "@/lib/ui/share";
 import { useShareCapable } from "@/lib/ui/share-button";
@@ -119,6 +120,7 @@ export function PostMenuHost({
       : postMenuItems({
           postId: post.id,
           own: viewerId !== null && post.author?.id === viewerId,
+          removed: payloadIsRedacted(post),
           handle: post.author?.handle ?? null,
           license: post.license,
           navigate: (route) => router.push(route),

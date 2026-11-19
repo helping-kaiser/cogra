@@ -600,6 +600,16 @@ describe("the feed filter", () => {
       expect(screen.getByTestId(byNode("feed.card.removalMark", "p2"))).toHaveTextContent("Removed by its author");
       expect(r.ranks).toHaveLength(1);
       expect(trigger()).toHaveTextContent(/^Posts · \+ removed$/);
+      // FeedRemovedMenu.md:3, :5 — the removed card's ⋮ raises the reader's
+      // post menu whole (less Cited by and Opinions on this, which no web post
+      // menu carries yet).
+      fireEvent.click(screen.getByTestId(byNode("feed.card.menu", "p2")));
+      const menu = screen.getAllByTestId("feed.menuSheet").find((d) => (d as HTMLDialogElement).open);
+      expect(
+        within(menu!)
+          .getAllByRole("button")
+          .map((row) => row.textContent),
+      ).toEqual(["Save", "Cite in a new post", expect.stringMatching(/^Hide /), "License terms", "Report"]);
     });
 
     it("sensitive_is_off_by_default_and_cuts_on_the_device", async () => {

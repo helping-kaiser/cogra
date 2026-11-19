@@ -419,12 +419,13 @@ export function PostCard({
               {stamp}
             </time>
           )}
-          {/* A REMOVED POST HAS NO MENU LEFT (`Removed.jsx:5-6`): there is
-              nothing of it to edit, cite or license, so the ⋮ is dropped
-              wholesale rather than a row at a time. The menu itself, and the
-              sheets its rows open, belong to the host the card stands on
-              (`PostMenuHost`, every host's one sheet). */}
-          {!detail && !redacted && onOpenMenu !== undefined && (
+          {/* A REMOVED POST KEEPS ITS ⋮ (FeedRemoved.md:9, ProfilePosts.md:11,
+              ProfilePostsOwn.md:13): the reader's menu whole, or the author's
+              less Edit, Mark as sensitive and Remove (`postMenuItems`'
+              `removed`). The menu itself, and the sheets its rows open, belong
+              to the host the card stands on (`PostMenuHost`, every host's one
+              sheet). */}
+          {!detail && onOpenMenu !== undefined && (
             <OverflowTrigger
               ariaLabel="More on this post"
               testId={`${testId}-menu`}
