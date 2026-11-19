@@ -3413,7 +3413,10 @@ sentences, all present tense of the act that happened:
 - `@mira mentioned you` — a citation whose target is you.
 - `@ada cited your post` — a citation whose target is something you
   wrote. *Cited*, the product's verb for a Reference, and the second
-  line says where: `in Sunday at the tide market`.
+  line says where: `in Sunday at the tide market`. A mention's and a
+  citation's piece, once removed, is named by kind and author, `in
+  @mira's removed post` (*Naming a removed or deleted thing*;
+  `Notifications`' `piece` chip).
 - `@rafa is ready for your approval` — an applicant staged through your
   invite who has finished both proofs. The person is the subject, not the
   application: *An application is ready* names the schema, and what the

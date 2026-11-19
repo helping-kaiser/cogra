@@ -3118,7 +3118,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: "> commented on your post</span>", tag: "button" },
     { n: 3, find: "> replied to your comment</span>", tag: "button" },
     { n: 4, find: "> gave an opinion on you</span>", tag: "button" },
-    { n: 5, find: "> mentioned you</span>", tag: "button" },
+    // `all`: the `piece` chip's removed copy (round 61) is the same door.
+    { n: 5, find: "> mentioned you</span>", tag: "button", all: true },
     { n: 6, find: "> cited your post</span>", tag: "button" },
     { n: 7, find: "> landed through your invite</span>", tag: "button" },
     { n: 8, find: "> approved your application</span>", tag: "button" },
