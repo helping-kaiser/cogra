@@ -19,20 +19,31 @@
    draw it, its ⋮ your own removed post's rows. The card is keyed by its id
    in both copies, as on `ProfilePosts`.
 
+   YOUR POST STILL SETTLING STANDS ON YOUR OWN PROFILE (round 60; jakob
+   2026-11-19, C3: "i think it should show on all profiles. the profile should
+   not lag behind just because sth is still settling") — the `posts` chip's
+   `settling`, `ProfilePosts`' twin: @sol's salt maps signed and not yet
+   landed, wearing `Still settling` as the feed's card does (FeedSheet.md),
+   its score slot bare and its age `now`, the card keyed by its id in every
+   copy, its ⋮ your own post's menu.
+
    REGISTERED under the `profile` prefix, told apart by board as
    `ProfilePostsMenuOwn`. */
 export const NODE = "profile";
 export const PROPS = {
-  posts: { editor: "enum", options: ["some", "none", "removed"], default: "some" },
+  posts: { editor: "enum", options: ["some", "none", "settling", "removed"], default: "some" },
   load: { editor: "enum", options: ["loaded", "loading", "failed"], default: "loaded" },
 };
-export const VALS = `someShown: this.props.load === "loaded" && this.props.posts !== "none" ? "contents" : "none", noneShown: this.props.load === "loaded" && this.props.posts === "none" ? "block" : "none", liveShown: this.props.posts === "removed" ? "none" : "contents", removedShown: this.props.posts === "removed" ? "contents" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none"`;
+export const VALS = `someShown: this.props.load === "loaded" && this.props.posts !== "none" ? "contents" : "none", noneShown: this.props.load === "loaded" && this.props.posts === "none" ? "block" : "none", liveShown: this.props.posts === "removed" || this.props.posts === "settling" ? "none" : "contents", settlingShown: this.props.posts === "settling" ? "contents" : "none", removedShown: this.props.posts === "removed" ? "contents" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none"`;
 export function Screen() {
   return (
     <ProfileTabTop own tab="posts">
       <div style={{ display: "{{someShown}}" }}>
         <div style={{ display: "{{liveShown}}" }} data-node-chip="posts" data-node-key="some">
           <PostCard {...SOL_POST} menuItems={OWN_POST_MENU.filter((row) => row !== LICENSE_ROW)} bundle={mkBundle(0.1, 1)} node="card" />
+        </div>
+        <div style={{ display: "{{settlingShown}}" }} data-node-chip="posts" data-node-key="settling">
+          <PostCard {...SOL_POST} timestamp="now" pending score={null} menuItems={OWN_POST_MENU.filter((row) => row !== LICENSE_ROW)} bundle={mkBundle(0.1, 1)} node="card" />
         </div>
         <div style={{ display: "{{removedShown}}" }} data-node-chip="posts" data-node-key="removed">
           <PostCard id={SOL_POST.id} author={SOL} timestamp="3d" redacted={{ reason: "author", when: "now" }} score="9.10" comments={2} bundle={mkBundle(0.1, 1)} menuItems={OWN_REMOVED_CARD_MENU} node="card" />
