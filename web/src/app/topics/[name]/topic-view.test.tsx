@@ -1,6 +1,6 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { writeCommittedFeedFilter } from "@/lib/feed/committed-filter";
 import { FEED_FILTER_DEFAULT } from "@/lib/feed/feed-filter";
@@ -453,6 +453,11 @@ describe("TopicView — a post card's menu (TagPageMenu.md)", () => {
         }),
       ),
     );
+    // The removed post stands on the tag page only while the feed's stored
+    // filter has Removed on (TagPage.md:19-21).
+    window.localStorage.clear();
+    writeCommittedFeedFilter("u1", { ...FEED_FILTER_DEFAULT, also: ["settling", "removed"] });
+    onTestFinished(() => window.localStorage.clear());
     renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
     fireEvent.click(await screen.findByTestId("topic-post-p1-menu"));
     expect(rows()).toEqual([
