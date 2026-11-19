@@ -5678,8 +5678,10 @@ function ProfileTabFirstPage({ top = 8, kind = "posts" }) {
 /* A PROFILE'S POSTS OR COMMENTS VIEW, ITS TOP VIEWPORT (round 36): the page
    `ProfilePosts` and `ProfileComments` draw — @ada's — or the reader's own,
    whose header is `ProfileOwnBody`'s; the tab row lit on `tab`, the list named
-   `posts` or `comments` as those boards name it, holding the cards handed in. */
-function ProfileTabTop({ own = false, tab, children }) {
+   `posts` or `comments` as those boards name it, holding the cards handed in.
+   `posts` is the Posts figure, which counts what the Posts list holds (readme
+   §7): a board whose list it empties hands the figure in with it. */
+function ProfileTabTop({ own = false, tab, posts, children }) {
   return (
     <>
       {own ? <ProfileBand node="band" /> : <PageHeader title="@ada" backHref="#" backLabel="Back to feed" node="header" />}
@@ -5692,7 +5694,7 @@ function ProfileTabTop({ own = false, tab, children }) {
               displayName="Sol Ferreira"
               bio="Field notes from the flats — salt, paper, and whatever the wind allows."
               website="solferreira.art"
-              posts={5}
+              posts={posts ?? 5}
               stancesOn={5}
               stancesTaken={5}
               own
@@ -5710,7 +5712,7 @@ function ProfileTabTop({ own = false, tab, children }) {
               displayName="Ada Okonkwo"
               avatarSrc="comment-camera.jpg"
               bio="A dozen tries at the third headland light and counting."
-              posts={12}
+              posts={posts ?? 12}
               stancesOn={6}
               stancesTaken={6}
               onCounts={() => {}}
