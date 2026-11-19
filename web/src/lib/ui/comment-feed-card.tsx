@@ -29,10 +29,18 @@
 // THE LINE SHAPE (`CommentCard`'s `targetShape="line"`, ProfileComments): where
 // a comment is listed away from its thread and nothing ranks it — a profile's
 // comments — the card leads with the one-line `On …` pointer instead of the
-// head row, its words stand whole and are no door, and its row is the
-// thread's own: the opinion, then the text `Reply`, with the collapsed
-// "View n replies" line under the card. Every door — the pointer, Reply and
-// the replies line — opens the thread the comment lives in.
+// head row, its words stand whole, and its row is the thread's own: the
+// opinion, then the text `Reply`, with the collapsed "View n replies" line
+// under the card. Every door — the pointer, Reply and the replies line — opens
+// the thread the comment lives in.
+//
+// IN BOTH SHAPES THE CARD IS THE DOOR TO THE COMMENT'S PLACE: a tap anywhere
+// outside what it answers and its own controls opens the post's comment
+// section scrolled to it (FeedKinds.md:27, History.md:53, Saved.md:31,
+// ProfileComments.md:49, ProfileCommentsOwn.md:17), a removed comment's card
+// as much as a live one's. The words and the pictures carry the door
+// (`cg-door`, `CommentCard.jsx`'s body), and the card's bare ground forwards
+// to the same place (`Card`'s `onOpen`).
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -360,9 +368,7 @@ export function CommentFeedCard({
   const clamped = !line && !unfolded;
   const [holdWords, folds] = useClampFold(clamped, words);
   const wordsClass = `text-body-medium ${clamped ? "line-clamp-2" : ""}`;
-  // In the line shape the words are no door: the card is reached through
-  // its pointer, its Reply and its replies line (ProfileComments.md:23-27).
-  const wordsDoor = line ? null : place;
+  const wordsDoor = place;
   const stamp = shortTimestamp(comment.createdAt);
   const handle = comment.author?.handle ?? null;
 
@@ -483,7 +489,7 @@ export function CommentFeedCard({
             {words}
           </p>
         ) : (
-          <Link href={wordsDoor} data-testid={`${testId}-link`} className="block">
+          <Link href={wordsDoor} data-testid={`${testId}-link`} className="cg-focus cg-door block">
             <p ref={holdWords} className={wordsClass}>
               {words}
             </p>
@@ -496,7 +502,7 @@ export function CommentFeedCard({
       {hasMedia(comment) && (
         <div
           onClick={wordsDoor === null ? undefined : () => router.push(wordsDoor)}
-          className={wordsDoor === null ? undefined : "cursor-pointer"}
+          className={wordsDoor === null ? undefined : "cg-door cursor-pointer"}
         >
           <PostMedia
             node={comment}
@@ -664,7 +670,12 @@ export function CommentFeedCard({
   );
 
   const card = (
-    <Card testId={testId} node={node}>
+    <Card
+      testId={testId}
+      node={node}
+      door={place !== null}
+      onOpen={place === null ? undefined : () => router.push(place)}
+    >
       {/* THE TARGET POINTER (`CommentCard`'s line shape; ProfileComments.md:5):
           one line, one tap to the thread — the target kind's glyph, then
           `On …` in the quiet ink, ellipsized. */}
