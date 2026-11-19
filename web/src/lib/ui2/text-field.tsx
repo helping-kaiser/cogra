@@ -121,10 +121,19 @@ function GrowingBox({
         disabled ? "opacity-[var(--state-disabled)]" : ""
       }`}
     >
+      {/* `anywhere`, NOT `break-word` (phone-fit sweep, 2026-11-18): the
+          one column is an `auto` track, sized from its items' min-content
+          (CSS Grid §6.6, a grid item's automatic minimum size). MDN
+          `overflow-wrap`: `break-word`'s soft wrap opportunities are not
+          considered for min-content, `anywhere`'s are — so under
+          `break-word` one long unbroken word set the replica's min-content
+          and widened the cell past the box, which then scrolled sideways.
+          The two values lay a line out identically, so the replica still
+          wraps where the textarea does and the height is unchanged. */}
       <span
         aria-hidden="true"
         data-testid="growing-box-replica"
-        className="col-start-1 row-start-1 invisible break-words whitespace-pre-wrap [font:inherit]"
+        className="col-start-1 row-start-1 invisible whitespace-pre-wrap [font:inherit] [overflow-wrap:anywhere]"
       >
         {`${value}\n`}
       </span>
