@@ -48,14 +48,23 @@ import { formatTagPair, SR_ONLY, tagReadout } from "../stance/StanceReadout.jsx"
    (`attach` on the card masters) — so flag and card fuse into one
    folder-tab silhouette instead of a rounded card with a sticker floating
    near its curve. A free-floating line between cards belonged to neither
-   neighbour. */
+   neighbour.
 
-export function TaggedRow({ pair, pending = false, children }) {
+   THE DATA-NODE NAME its placer gives the claim (design ⇄ impl seam 002;
+   round 60, seam 380 / 381), keyed by `nodeKey` — the tagged thing's id. It
+   names the flag alone, never the row around it, so the card under it keeps
+   its own path: the flag `node`, its glyph `glyph`, the exact pair `exact`
+   and the in-flight marker `pending`. Given none, the row renders exactly as
+   before. */
+
+export function TaggedRow({ pair, pending = false, node, nodeKey, children }) {
   const anchor = tagReadout(pair);
   const exact = formatTagPair(pair);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
       <div
+        data-node={node}
+        data-node-key={node && nodeKey}
         style={{
           display: "inline-flex",
           alignItems: "center",
@@ -71,11 +80,11 @@ export function TaggedRow({ pair, pending = false, children }) {
           color: "var(--text-secondary)",
         }}
       >
-        <span aria-hidden="true" style={{ fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: 1 }}>{anchor.emoji}</span>
+        <span aria-hidden="true" style={{ fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: 1 }} data-node={node && "glyph"}>{anchor.emoji}</span>
         <span aria-hidden="true">Tagged</span>
-        <span className="cg-exact" aria-hidden="true" style={{ whiteSpace: "nowrap" }}>{exact}</span>
+        <span className="cg-exact" aria-hidden="true" style={{ whiteSpace: "nowrap" }} data-node={node && "exact"}>{exact}</span>
         <span style={SR_ONLY}>{`Tagged: ${anchor.label}, ${exact}`}</span>
-        {pending && <PendingMarker />}
+        {pending && <PendingMarker node={node && "pending"} />}
       </div>
       {children}
     </div>

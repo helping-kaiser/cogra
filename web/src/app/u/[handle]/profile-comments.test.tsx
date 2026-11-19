@@ -19,6 +19,7 @@ import { forgetAllProfileViews } from "@/lib/profile/profile-memory";
 import { createTokenStore } from "@/lib/session/token-store";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { byNode } from "@/test/data-node";
+import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { answersComment, commentsPage, profileComment } from "@/test/profile-comment";
 import { renderWithProviders } from "@/test/providers";
@@ -420,7 +421,28 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     const rows = within(openProfileMenuSheet())
       .getAllByRole("button")
       .map((row) => row.textContent);
-    expect(rows).toEqual(["Save", "Cite in a new post", "Cited by", "Opinions on this", "License terms", "Report"]);
+    expect(rows).toEqual(["Save", "Cite in a new post", "Hide @ada", "Cited by", "Opinions on this", "License terms", "Report"]);
+  });
+
+  it("hide_on_a_removed_comment_keeps_the_reader_on_the_profile_its_mark_in_place", async () => {
+    // ProfileCommentsRemovedMenu.md:7 — the sheet closes, the reader stays,
+    // the removed comment's mark in its place, the snackbar names the author
+    // with Undo, and no confirm.
+    const log = hiddenLog();
+    server.use(meAs("u1", "pixel"), ...hiddenHandlers(log));
+    serveAda();
+    serveChronicle();
+    serveComments({ "": { comments: [profileComment("c2"), removedComment("c1")], next: null } });
+    renderWithProviders(<ProfileScreen handle="ada" />, { store: signedIn() });
+    await openCommentsTab();
+    fireEvent.click(screen.getByTestId(byNode("profile.comments.commentCard.menu", "c1")));
+    fireEvent.click(within(openProfileMenuSheet()).getByTestId("profile.menuSheet.hide"));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent("@ada is hidden.");
+    expect(screen.getByTestId("profile.snackbar.action")).toHaveTextContent("Undo");
+    await waitFor(() => expect(log.hides).toEqual([{ actor: "u-ada", at: null }]));
+    expect(cardIds()).toEqual(["c2", "c1"]);
+    expect(screen.getByTestId(byNode("profile.comments.commentCard.removalMark", "c1"))).toBeInTheDocument();
   });
 
   it("your_own_removed_comment_keeps_its_place_through_a_refresh_its_menu_less_edit_and_remove", async () => {

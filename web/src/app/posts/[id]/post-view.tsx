@@ -480,6 +480,12 @@ export function PostView({
         }}
         testId="post-menu"
         notify={notify}
+        // The menu's two readings open the very sheets the count lines raise
+        // (CitedBy.md:3, PostOpinions.md:3), reading the lists they count.
+        readings={{
+          openCitedBy: () => setCitedByOpen(true),
+          openOpinions: () => setOpinionsOpen(true),
+        }}
         // TAKEN, THE DETAIL STANDS AS REMOVED (RemoveConfirm.md:11): the post
         // wearing its mark lands at once — the freeze lands a redaction
         // whatever else changed — and the detail re-reads behind it, as the

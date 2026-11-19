@@ -88,6 +88,7 @@ export const KEY_RULES = {
   axis: "the axis's name as the terms print it, lowercased, each run of other characters one - (LicenseTerms)",
   block: "the kind of thing the block holds — post, comment, person or topic (FeedEntryKinds' blocks)",
   card: "the post's id, the lowercase UUID the wire carries (PostCard)",
+  claim: "the tagged thing's id, the lowercase UUID the wire carries — the post's or the comment's the claim stands above (TaggedRow, the tag page)",
   citation: "the citation's position in the list, newest first, counted from 1 (the cited-by sheet)",
   commentCard: "the comment's id, the lowercase UUID the wire carries (CommentCard)",
   dateline: "the release's version, lowercased, each run of other characters one - (What's new's datelines)",

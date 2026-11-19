@@ -2,6 +2,8 @@
 
 WHEN press Create my key or Make a new key GIVEN this browser lacks WebCrypto Ed25519 -> KeyCeremonyUnsupported opens AND nothing is minted
 
+WHEN press Restore the key, wherever it stands, GIVEN this browser lacks WebCrypto Ed25519 -> KeyCeremonyUnsupported opens in the restore's place AND nothing is restored AND NEVER the restore opens AND NEVER the recovery code is typed
+
 ALWAYS the notice This browser can't hold a key wears the key-absent register, never the error colour
 
 ALWAYS the screen offers no commitment and no "?"
@@ -15,5 +17,9 @@ WHEN press the header's back arrow GIVEN the screen opened from the applicant's 
 WHEN press the header's back arrow GIVEN the screen opened from the key-elsewhere card -> ApplicantKeyElsewhere opens with the attached key untouched
 
 WHEN press the header's back arrow GIVEN the screen opened from a key row in settings -> Settings opens AND nothing is made
+
+WHEN press the header's back arrow GIVEN the screen opened in the restore's place and the reader is a member -> KeyElsewhere opens AND nothing is restored
+
+WHEN press the header's back arrow GIVEN the screen opened in the restore's place and the reader is an applicant -> ApplicantKeyElsewhere opens AND nothing is restored
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

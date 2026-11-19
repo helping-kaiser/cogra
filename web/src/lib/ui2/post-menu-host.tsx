@@ -18,6 +18,8 @@ import { useRouter } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
 import type { PostView } from "@/lib/api/content-api";
+import { fetchHeldOpinions, type HeldOpinionView } from "@/lib/api/opinions-api";
+import { fetchCitingArtifacts, type CitingArtifactView } from "@/lib/api/references-api";
 import { withRemoval } from "@/lib/api/removal-api";
 import { sendReport } from "@/lib/api/report-api";
 import { hideRow, hiddenPersonOf } from "@/lib/hidden/hide-row";
@@ -34,7 +36,9 @@ import { payloadIsRedacted } from "@/lib/ui/post-media";
 import { useNarrowShare } from "@/lib/ui/narrow-share";
 import { LINK_COPIED, shareLink } from "@/lib/ui/share";
 import { useShareCapable } from "@/lib/ui/share-button";
+import { CitedBySheet } from "./cited-by-sheet";
 import { LicenseSheet } from "./license-sheet";
+import { OpinionsSheet } from "./opinions-sheet";
 import { MenuSheet } from "./overflow-menu";
 import { postMenuItems, type PostMenuRow } from "./post-menu";
 import { RemoveConfirm } from "./remove-confirm";
@@ -64,6 +68,25 @@ export type PostMenuHostNodes = {
   removeDialog?: DataNode;
 };
 
+/**
+ * THE TWO READINGS' SHEETS ARE ONE PAIR ON EVERY HOST (CitedBy.md:3-5,
+ * PostOpinions.md:3-5): `postDetail.citedBySheet` and `postDetail.opinionsSheet`,
+ * over the detail or over the list the card stands in. Each is mounted only
+ * while it is up, so the one registered node names one open sheet.
+ */
+const CITED_BY_SHEET: DataNode = { path: "postDetail.citedBySheet" };
+const OPINIONS_SHEET: DataNode = { path: "postDetail.opinionsSheet" };
+
+/**
+ * The detail's own doors into the two sheets its count lines raise: there the
+ * menu's rows open those very sheets, reading the lists the lines count, never
+ * a second copy (CitedBy.md:3, PostOpinions.md:3).
+ */
+export type PostReadings = {
+  openCitedBy: () => void;
+  openOpinions: () => void;
+};
+
 export function PostMenuHost({
   post,
   open,
@@ -72,6 +95,7 @@ export function PostMenuHost({
   testId,
   notify,
   onRemoved,
+  readings,
 }: {
   /** The post whose menu is up, or was last; null before any. */
   post: PostView | null;
@@ -89,6 +113,11 @@ export function PostMenuHost({
    * (RM-G9's build word on the hosts off the detail).
    */
   onRemoved: (removed: PostView) => void;
+  /**
+   * The host's own doors into the post's two readings — the detail's. Absent,
+   * the host raises its own pair over itself, read when asked.
+   */
+  readings?: PostReadings;
 }) {
   const router = useRouter();
   const client = useApolloClient();
@@ -112,6 +141,36 @@ export function PostMenuHost({
   const [reportOpen, setReportOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
+  // The two readings over a list, each null until raised and its rows null
+  // while the read is out — so the empty line never shows before the answer.
+  const [citedBy, setCitedBy] = useState<{
+    readonly node: string;
+    readonly artifacts: readonly CitingArtifactView[] | null;
+  } | null>(null);
+  const [opinions, setOpinions] = useState<{
+    readonly node: string;
+    readonly opinions: readonly HeldOpinionView[] | null;
+  } | null>(null);
+
+  const openCitedBy = (nodeId: string) => {
+    setCitedBy({ node: nodeId, artifacts: null });
+    void fetchCitingArtifacts(client, nodeId).then((outcome) => {
+      if (outcome.kind !== "success") return;
+      // Another card's row may have raised another post's list meanwhile.
+      setCitedBy((current) =>
+        current?.node === nodeId ? { node: nodeId, artifacts: outcome.value } : current,
+      );
+    });
+  };
+  const openOpinions = (nodeId: string) => {
+    setOpinions({ node: nodeId, opinions: null });
+    void fetchHeldOpinions(client, nodeId).then((outcome) => {
+      if (outcome.kind !== "success") return;
+      setOpinions((current) =>
+        current?.node === nodeId ? { node: nodeId, opinions: outcome.value } : current,
+      );
+    });
+  };
 
   const href = post === null ? null : `/posts/${post.id}`;
   const items =
@@ -130,6 +189,10 @@ export function PostMenuHost({
           },
           // RemoveMenu.md:19 — the sheet closes and the think-twice dialog opens.
           openRemove: () => setRemoving(post),
+          // ReaderPostMenu.md:31-33 — the menu closes (`MenuSheet` closes on
+          // any row) and the reading comes up over the same surface.
+          openCitedBy: readings?.openCitedBy ?? (() => openCitedBy(post.id)),
+          openOpinions: readings?.openOpinions ?? (() => openOpinions(post.id)),
           // A GUEST IS ASKED TO JOIN, never shown a sheet whose commit the
           // server would refuse (ReportConfirm.md:21).
           openReport: () => (phase === "signedOut" ? setJoinOpen(true) : setReportOpen(true)),
@@ -215,6 +278,25 @@ export function PostMenuHost({
           license={licenseShown}
           testId={`${testId}-license-sheet`}
           node={nodes.licenseSheet}
+        />
+      )}
+      {citedBy !== null && (
+        <CitedBySheet
+          open
+          onClose={() => setCitedBy(null)}
+          artifacts={citedBy.artifacts}
+          node={CITED_BY_SHEET}
+          testId={`${testId}-cited-by-sheet`}
+        />
+      )}
+      {opinions !== null && (
+        <OpinionsSheet
+          open
+          onClose={() => setOpinions(null)}
+          on="post"
+          opinions={opinions.opinions}
+          node={OPINIONS_SHEET}
+          testId={`${testId}-opinions-sheet`}
         />
       )}
       {/* THE THINK-TWICE DIALOG, over the surface the menu rose from. Mounted

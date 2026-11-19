@@ -24,6 +24,8 @@ ALWAYS the back arrow reads Back to the post from a post's composer or its edit,
 
 WHEN the picker opens -> referencePicker.searchField takes focus AND the keyboard rises
 
+WHEN the keyboard is up -> the picker's pinned button rides directly above the keyboard AND the list scrolls in what is left AND NEVER the button rides where it would leave the focused field fewer than three of its lines
+
 WHEN tap referencePicker.filterTrigger -> referencePicker.filterSheet rises over the picker AND it holds referencePicker.filterSheet.kinds and referencePicker.filterSheet.foot alone
 
 ALWAYS referencePicker.filterSheet.kinds holds the kinds a citation can point at: Posts, Comments and Profiles

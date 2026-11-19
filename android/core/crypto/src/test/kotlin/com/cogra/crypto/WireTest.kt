@@ -70,7 +70,7 @@ class WireTest {
             contentCommitment = ByteArray(32) { 6 },
             dependencyCommitment = ByteArray(32) { 7 },
             contentEdition = 2u,
-            dependencyEdition = 1u,
+            dependencyEdition = 2u,
         ),
         contentSalt = ByteArray(32) { 4 },
         dependencySalt = ByteArray(32) { 5 },
@@ -93,7 +93,7 @@ class WireTest {
         val decoded = decodeSealedAct(encodeSealedAct(sealed))
         assertThat(decoded.act.preCommitment).isEqualTo(sealed.act.preCommitment)
         assertThat(decoded.act.contentEdition).isEqualTo(2UL)
-        assertThat(decoded.act.dependencyEdition).isEqualTo(1UL)
+        assertThat(decoded.act.dependencyEdition).isEqualTo(2UL)
         val d = CborDecoder(encodeSealedAct(sealed))
         assertThat(d.array()).isEqualTo(11UL)
         assertThat(d.uint()).isEqualTo(2UL)

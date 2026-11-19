@@ -1,6 +1,8 @@
 # Restore · `spec:design:behavior-restore`
 
-WHEN press Restore the key on a key-absent card, the composer's seal, the key-absent pad, the backup settings or Your key -> Restore opens
+WHEN press Restore the key on a key-absent card, the applicant's landing, the composer's seal, the reply's notice or its seal, the key-absent pad, the backup settings or Your key GIVEN this browser has WebCrypto Ed25519 -> Restore opens
+
+WHEN press Restore the key GIVEN this browser lacks WebCrypto Ed25519 -> KeyCeremonyUnsupported opens in the restore's place AND NEVER Restore opens
 
 ALWAYS the header's arrow reads Back and is a link to the reader's own home, never history
 
