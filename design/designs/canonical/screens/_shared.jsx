@@ -5241,7 +5241,7 @@ function TopicStanceRow({ name, bundle, stanceOpen, stanceDefaultPick, node }) {
    each post `card` and the comment `commentCard`, keyed by their ids as on
    every host. A row the board draws both ways marks each copy as its chip's
    (`post`, `comment`), the card keeping its own key in both (ruling 39). */
-function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, removed, commentRemoved, ownComment } = {}) {
+function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, removed, commentRemoved, ownComment, scrolledBy = 0 } = {}) {
   /* @ada's tagged comment, live and removed (round 58; jakob 2026-11-18, C4
      "as rec"): removed, `CommentCard`'s own mark in the words' place, as
      `ProfileComments`' `removed` draws this same comment — its author, its
@@ -5265,10 +5265,8 @@ function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, rem
   const tobiasLive = <PostCard attach {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} node={card} />;
   const tobiasRemoved = <PostCard attach id={TOBIAS_POST.id} author={TOBIAS} timestamp={TOBIAS_POST.timestamp} redacted={{ reason: "author", when: "now" }} score={TOBIAS_POST.score} comments={TOBIAS_POST.comments} bundle={mkBundle(0.1, 0.1)} menuItems={TOBIAS_POST.menuItems} node={card} />;
   const commentId = ownComment ? SOL_OWN_COMMENT.id : ADA_TAGGED_COMMENT_ID;
-  return (
-    <>
-      <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" node={named ? "header" : undefined} />
-      <TopicStanceRow name="#saltmaps" bundle={bundle} stanceOpen={stanceOpen} stanceDefaultPick={stanceDefaultPick} node={named ? "actionRow" : undefined} />
+  const stanceRow = <TopicStanceRow name="#saltmaps" bundle={bundle} stanceOpen={stanceOpen} stanceDefaultPick={stanceDefaultPick} node={named ? "actionRow" : undefined} />;
+  const list = (
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "4px 0 0" }}>
         <TaggedRow pair={{ pDirected: 0.1, pInterest: 1 }} pending node={claim} nodeKey={TOBIAS_POST.id}>
           {removed === "tobias" ? tobiasRemoved : removed === "hole" ? (
@@ -5296,9 +5294,34 @@ function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, rem
           ) : commentRemoved === "ada" ? adaRemoved : adaLive}
         </TaggedRow>
       </div>
+  );
+  /* `scrolledBy` keeps the reader where they stood when they opened the
+     tagged comment's ⋮ (round 60), the thread's own device
+     (`REMOVED_COMMENT_SCROLL`, `CommentsSheet`'s `scrolledBy`): the page
+     scrolled under its header until the comment's row stands whole above
+     the sheet, the rows above it cut at the header's edge. */
+  return (
+    <>
+      <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" node={named ? "header" : undefined} />
+      {scrolledBy > 0 ? (
+        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <div aria-hidden="true" style={{ flex: "none", height: 0, marginTop: -scrolledBy }} />
+          {stanceRow}
+          {list}
+        </div>
+      ) : (
+        <>
+          {stanceRow}
+          {list}
+        </>
+      )}
     </>
   );
 }
+/* Where the tagged comment's row stands once the reader scrolled to it: its
+   flag 8px under the header (the row starts at 1010 on a page whose header
+   ends at 56). One number, so the four comment-menu boards agree. */
+const TAG_PAGE_COMMENT_SCROLL = 946;
 
 /* ── THE V1.0 FEED KINDS (the three-feed-cards round 2026-09-30; the
    anatomies ruled by jakob 2026-10-01) ─────────────────────────────────────

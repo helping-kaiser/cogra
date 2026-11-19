@@ -5,7 +5,10 @@
    tail — the rows copy-voice's *Menu rows* gives a comment on every host,
    a tag page among them. Over the page, unstacked: no thread is open
    beneath it, as `ProfileCommentsMenu` rises over the profile. Over
-   `TagPageBody` clipped at the phone's 844, as `TagPageMenu`.
+   `TagPageBody` clipped at the phone's 844, as `TagPageMenu`, the page
+   scrolled to the comment's row (`TAG_PAGE_COMMENT_SCROLL`, the thread's
+   `REMOVED_COMMENT_SCROLL` device) so the card whose ⋮ was pressed stands
+   whole above the sheet — the four comment-menu boards alike.
 
    REGISTERED under the `tagPage` prefix, `tagPage.menuSheet`, told apart
    from the post's menus by board; the page beneath stays unnamed, as on
@@ -15,7 +18,7 @@ export const FRAME = { width: 390, height: 844 };
 export function Screen() {
   return (
     <>
-      <TagPageBody />
+      <TagPageBody scrolledBy={TAG_PAGE_COMMENT_SCROLL} />
       <CardMenuSheet items={readerCommentMenu("ada")} ariaLabel="Comment actions" />
     </>
   );

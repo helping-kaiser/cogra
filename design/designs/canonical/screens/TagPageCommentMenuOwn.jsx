@@ -15,7 +15,7 @@ export const FRAME = { width: 390, height: 844 };
 export function Screen() {
   return (
     <>
-      <TagPageBody ownComment="live" />
+      <TagPageBody ownComment="live" scrolledBy={TAG_PAGE_COMMENT_SCROLL} />
       <CardMenuSheet items={OWN_COMMENT_MENU} ariaLabel="Comment actions" />
     </>
   );

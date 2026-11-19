@@ -15,7 +15,7 @@ export const FRAME = { width: 390, height: 844 };
 export function Screen() {
   return (
     <>
-      <TagPageBody commentRemoved="ada" />
+      <TagPageBody commentRemoved="ada" scrolledBy={TAG_PAGE_COMMENT_SCROLL} />
       <CardMenuSheet items={readerCommentMenu("ada")} ariaLabel="Comment actions" />
     </>
   );
