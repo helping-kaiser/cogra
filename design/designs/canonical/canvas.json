@@ -2040,7 +2040,7 @@
       "x": -9700,
       "y": 0,
       "w": 9280,
-      "h": 6107,
+      "h": 6224,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -3236,6 +3236,42 @@
       "file": "TagPageRemovedMenuOwn.dc.html",
       "title": "A tag's page · your removed post's menu",
       "x": 3840,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "TagPageCommentMenu.dc.html",
+      "title": "A tag's page · the comment menu",
+      "x": 4320,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "TagPageCommentMenuOwn.dc.html",
+      "title": "A tag's page · your own comment's menu",
+      "x": 4800,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "TagPageCommentRemovedMenu.dc.html",
+      "title": "A tag's page · a removed comment's menu",
+      "x": 5280,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "TagPageCommentRemovedMenuOwn.dc.html",
+      "title": "A tag's page · your removed comment's menu",
+      "x": 5760,
       "y": 2120,
       "w": 390,
       "h": 844,

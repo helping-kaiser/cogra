@@ -867,6 +867,12 @@ Object.assign(FLOW_MARKERS, {
   ProfilePostsRemovedMenu: readerMenuMarks(">Save</button>", ">Hide @ada</button>"),
   TagPageRemovedMenu: readerMenuMarks(">Save</button>", ">Hide @tobias</button>"),
   TagPageRemovedMenuOwn: ownRemovedMenuMarks(">Save</button>"),
+  // Round 60 (backlog 284): a tagged comment's four menus, each numbered as
+  // its profile twin numbers the same sheet.
+  TagPageCommentMenu: commentMenuMarks(">Save</button>", ">Hide @ada</button>"),
+  TagPageCommentMenuOwn: ownCommentMenuMarks,
+  TagPageCommentRemovedMenu: commentMenuMarks(">Save</button>", ">Hide @ada</button>"),
+  TagPageCommentRemovedMenuOwn: ownRemovedCommentMenuMarks,
   ProfileDeletedPostMenu: readerMenuMarks(">Save</button>", ">Hide this account</button>"),
   ProfileDeletedRemovedMenu: readerMenuMarks(">Save</button>", ">Hide this account</button>"),
   // The profile card's menu (round 36, H2): `ProfileMenu`'s rows less Share,
