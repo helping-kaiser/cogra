@@ -59,6 +59,7 @@ import { Icon } from "@/lib/ui/icons";
 import { useMeasureEffect } from "@/lib/ui/measure-effect";
 import { MonogramAvatar } from "@/lib/ui2/monogram-avatar";
 import { REDACTED_ACTOR_NAME } from "@/lib/ui2/content-row";
+import { WRITTEN } from "./written";
 
 /** `RedactedContent`'s `account` reason (SensitiveVeil.jsx), the mark in the bio's place. */
 export const ACCOUNT_REMOVAL_LINE = "Deleted by the person whose account it was";
@@ -386,7 +387,7 @@ export function ProfileHeader({
         </div>
       ) : (
         bio?.trim() && (
-          <p {...testAttributes(part(node, "bio"), "profile-bio")} className="m-0 text-body-medium">
+          <p {...testAttributes(part(node, "bio"), "profile-bio")} className={`m-0 text-body-medium ${WRITTEN}`}>
             {bio}
           </p>
         )

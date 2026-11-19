@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PostView } from "@/lib/api/content-api";
 import { fakeClampLayout } from "@/test/fake-clamp-layout";
 import { renderWithProviders } from "@/test/providers";
+import { expectWrapsLongWords } from "@/test/written";
 import { createTokenStore } from "@/lib/session/token-store";
 import { setAccountFilterLevel } from "@/lib/settings/sensitive-content";
 import { forgetReveals } from "@/lib/ui2/media/reveal";
@@ -189,6 +190,19 @@ describe("PostCard", () => {
     expect(screen.getByTestId("card-title").className).toContain("line-clamp-1");
     expect(screen.getByTestId("card-body").className).toContain("line-clamp-[18]");
     expect(screen.getByTestId("card-description").className).toContain("line-clamp-2");
+  });
+
+  // A WORD LONGER THAN THE LINE CONTINUES ON THE NEXT (jakob 2026-11-19;
+  // NamesLong.md:9): title, body and description wear the person-text rule on
+  // both surfaces, the clamps still clamping.
+  it("breaks an over-long word in its title, body and description, on the card and the read surface", () => {
+    const long = "W".repeat(90);
+    const node = post({ title: moderated(long), content: moderated(long), description: moderated(long) });
+    for (const variant of [undefined, "detail"] as const) {
+      const { unmount } = mount(node, variant ? { variant } : {});
+      for (const part of ["card-title", "card-body", "card-description"]) expectWrapsLongWords(screen.getByTestId(part));
+      unmount();
+    }
   });
 
   it("clamps nothing on the read surface and leads at headline-small", () => {

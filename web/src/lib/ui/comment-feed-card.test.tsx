@@ -5,6 +5,7 @@ import { fakeClampLayout } from "@/test/fake-clamp-layout";
 import { expectLineYieldsHandle, LONG_HANDLE } from "@/test/names";
 import { answersComment, profileComment } from "@/test/profile-comment";
 import { renderWithProviders } from "@/test/providers";
+import { expectWrapsLongWords } from "@/test/written";
 import { CommentFeedCard, type CommentFeedView } from "./comment-feed-card";
 
 const router = vi.hoisted(() => ({ push: vi.fn() }));
@@ -59,6 +60,17 @@ describe("CommentFeedCard's fold", () => {
   it("draws a profile's line shape whole, with no More", () => {
     mount("x".repeat(400), "line");
     expect(screen.queryByTestId("card-opener")).not.toBeInTheDocument();
+  });
+
+  // jakob's hand test 2026-11-19: a word longer than the line continues on the
+  // next instead of running off the card — clamped (the feed's thread shape)
+  // and whole (the profile's line shape) alike.
+  it("breaks an over-long word onto the next line in both shapes", () => {
+    for (const shape of ["thread", "line"] as const) {
+      const { unmount } = mount("x".repeat(120), shape);
+      expectWrapsLongWords(screen.getByText("x".repeat(120)));
+      unmount();
+    }
   });
 });
 

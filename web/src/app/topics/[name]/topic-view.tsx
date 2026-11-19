@@ -55,6 +55,7 @@ import { TransportError } from "@/lib/ui/transport-error";
 import { StageHost } from "@/lib/ui2/media/stage-host";
 import { menuSheetNodes } from "@/lib/ui2/overflow-menu";
 import { PostMenuHost } from "@/lib/ui2/post-menu-host";
+import { WRITTEN } from "@/lib/ui/written";
 
 export function TopicView({ name, from = null }: { name: string; from?: string | null }) {
   const client = useApolloClient();
@@ -184,7 +185,7 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
       {header}
-      <h1 className="text-headline-small" data-testid="topic-name">
+      <h1 className={`text-headline-small ${WRITTEN}`} data-testid="topic-name">
         #{hashtag.name.value}
       </h1>
       {/* Under the title, above anything belonging to a post. It NAMES
