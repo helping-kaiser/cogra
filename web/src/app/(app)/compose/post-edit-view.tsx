@@ -271,7 +271,11 @@ export function PostEditView({
   return (
     <main
       data-testid="post-edit"
-      className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col bg-surface text-on-surface"
+      // A STAGE PINS ITS FOOTER (design/readme.md, *Spacing and layout*: "so a
+      // growing field never walks the commitment out of reach"): the screen's
+      // height, not a floor under it, so a long body scrolls in the fields'
+      // own scroller and the stack keeps the foot — as the comment editor does.
+      className="mx-auto flex h-dvh w-full max-w-2xl flex-col bg-surface text-on-surface"
     >
       {/* While the signing holds the reader, the way out refuses a press and
           never dims (EditCompose.md: the back arrow and the ✕ refuse while it
@@ -288,7 +292,14 @@ export function PostEditView({
         focusTitle
       />
 
-      <div className="flex flex-1 flex-col gap-3.5 px-6 pb-4 pt-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-3.5 px-6 pb-4 pt-3">
+        {/* The fields scroll above the pinned stack. The gutter rides inside
+            the scroller's own padding, so a row's 48px target and its focus
+            ring stay whole (the comment editor's fields, the same shape). */}
+        <div
+          data-testid="post-edit-fields"
+          className="-mx-6 flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto px-6"
+        >
         {clip !== undefined ? (
           <ClipFields
             clip={clip}
@@ -487,6 +498,7 @@ export function PostEditView({
         {/* A media body stands at its own height and the foot keeps the
             screen's bottom; a words body takes the slack itself. */}
         {media && <div className="flex-1" />}
+        </div>
 
         {refusal && (
           <p role="alert" data-testid="post-edit-refused" className="m-0 text-body-medium text-error">

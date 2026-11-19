@@ -233,6 +233,23 @@ describe("PostEditRoute — the guard is the acts batch (EditComposeUnchanged)",
 
 // Round 15 (PR-101): the edit's record carries THE AUTHOR'S PICK — its own
 // attachment, 0.00 unless moved (PICK-IS-THE-EDGE; EditCompose.md, EditPad.md).
+describe("PostEditRoute — the stage pins its footer (design/readme.md, Spacing and layout)", () => {
+  it("the_fields_scroll_above_the_pinned_stack", async () => {
+    serve(editablePost());
+    draw();
+    const stage = await screen.findByTestId("post-edit");
+    // The screen's height, never a floor a long body could push past.
+    expect(stage.className.split(" ")).toContain("h-dvh");
+    expect(stage.className.split(" ")).not.toContain("min-h-dvh");
+    const fields = screen.getByTestId("post-edit-fields");
+    expect(fields.className.split(" ")).toEqual(expect.arrayContaining(["min-h-0", "flex-1", "overflow-y-auto"]));
+    // The body and the facts scroll; the stack stands outside the scroller.
+    expect(fields).toContainElement(screen.getByTestId("postEdit.body"));
+    expect(fields).not.toContainElement(footer());
+    expect(fields).not.toContainElement(sign());
+  });
+});
+
 describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
   beforeEach(() => push.mockClear());
 
