@@ -1103,6 +1103,9 @@ describe("the release that never commits", () => {
       document.body.appendChild(beneath);
     });
     afterEach(() => beneath.remove());
+    /** The gesture's tail as a browser dispatches it: a PointerEvent naming its pointer (Pointer Events 3). */
+    const tail = (type: "click" | "contextmenu", pointerId: number) =>
+      fireEvent(beneath, new PointerEvent(type, { bubbles: true, cancelable: true, pointerId }));
 
     it("never lets the tap that closed the pad open what lay beneath", async () => {
       mount();
@@ -1116,7 +1119,7 @@ describe("the release that never commits", () => {
       // The wash is gone, so the lift and the click are hit-tested afresh.
       await act(async () => {
         fireEvent.pointerUp(beneath, { pointerId: 3 });
-        fireEvent.click(beneath);
+        tail("click", 3);
       });
       expect(opened).toBe(0);
     });
@@ -1130,7 +1133,7 @@ describe("the release that never commits", () => {
         fireEvent.pointerDown(screen.getByTestId(`${PREFIX}-scrim`), { pointerId: 3 });
       });
       await act(async () => {
-        fireEvent.contextMenu(beneath);
+        tail("contextmenu", 3);
         fireEvent.pointerUp(beneath, { pointerId: 3 });
       });
       expect(opened).toBe(0);
@@ -1146,12 +1149,12 @@ describe("the release that never commits", () => {
       });
       await act(async () => {
         fireEvent.pointerUp(beneath, { pointerId: 3 });
-        fireEvent.click(beneath);
+        tail("click", 3);
       });
       await act(async () => {
         fireEvent.pointerDown(beneath, { pointerId: 4 });
         fireEvent.pointerUp(beneath, { pointerId: 4 });
-        fireEvent.click(beneath);
+        tail("click", 4);
       });
       expect(opened).toBe(1);
     });
@@ -1166,7 +1169,7 @@ describe("the release that never commits", () => {
       });
       await act(async () => {
         fireEvent.pointerUp(beneath, { pointerId: 3 });
-        fireEvent.click(beneath);
+        tail("click", 3);
       });
       expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
       expect(screen.queryByTestId(`${PREFIX}-kept`)).toBeNull();

@@ -22,13 +22,24 @@
 // THE CURE: the press that dismissed keeps the rest of its own gesture. A
 // capture listener on the window — the first stop of every dispatch — takes
 // that gesture's `pointerup`, `click`, `auxclick` and `contextmenu` before
-// anything beneath can hear them. It stands down the moment the gesture is
-// spent (its click taken), or when the next gesture or a key begins, so it can
-// never eat a press it does not own. Nothing here changes when or how the
-// surface closes; it only decides who hears the rest.
+// anything beneath can hear them. Nothing here changes when or how the surface
+// closes; it only decides who hears the rest.
+//
+// IT TAKES ONLY WHAT IS PROVABLY THE SAME GESTURE'S, so it never eats a press
+// it does not own. A `click`, `auxclick` or `contextmenu` is a PointerEvent
+// naming the pointer that made it (Pointer Events 3, § "The click, auxclick and
+// contextmenu events"); a keyboard's or a script's click names none of the
+// pressed pointers. So the tail is taken when it names the dismissing pointer
+// — or, in an engine whose click is still a plain MouseEvent, when it follows
+// that pointer's lift within a second. Anything else ends the watch and passes
+// untouched, as do the next press, a key, and the browser taking the pointer
+// for a pan (`pointercancel`: no click follows one).
 
 /** The events a dismissing press's gesture may still produce. */
-const TAIL = ["pointerup", "click", "auxclick", "contextmenu"] as const;
+const TAIL = ["pointerup", "pointercancel", "click", "auxclick", "contextmenu"] as const;
+
+/** How long after the lift a click without a pointer id still counts as the gesture's. */
+export const LEGACY_CLICK_WINDOW_MS = 1000;
 
 /**
  * Keeps the rest of the gesture `down` began to itself: call it from the
@@ -38,14 +49,35 @@ const TAIL = ["pointerup", "click", "auxclick", "contextmenu"] as const;
 export function swallowRestOfGesture(down: Pick<PointerEvent, "pointerId">): void {
   if (typeof window === "undefined") return;
   const pointerId = down.pointerId;
+  let liftedAt: number | null = null;
+
+  const ours = (event: Event): boolean => {
+    const id = (event as Partial<PointerEvent>).pointerId;
+    if (typeof id === "number") return id === pointerId;
+    return liftedAt !== null && Date.now() - liftedAt < LEGACY_CLICK_WINDOW_MS;
+  };
 
   const take = (event: Event) => {
-    // A later finger's lift is its own gesture's; only this pointer's is kept.
-    if (event.type === "pointerup" && (event as PointerEvent).pointerId !== pointerId) return;
+    if (event.type === "pointerup" || event.type === "pointercancel") {
+      // A later finger's lift is its own gesture's.
+      if ((event as PointerEvent).pointerId !== pointerId) return;
+      if (event.type === "pointercancel") {
+        stop();
+        return;
+      }
+      liftedAt = Date.now();
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
+    if (!ours(event)) {
+      stop();
+      return;
+    }
     event.preventDefault();
     event.stopImmediatePropagation();
     // The click (or a long press's context menu) is the gesture's last word.
-    if (event.type === "click" || event.type === "contextmenu") stop();
+    if (event.type !== "auxclick") stop();
   };
   // A new press or a key is a new gesture: nothing of it is ours.
   const release = () => stop();
