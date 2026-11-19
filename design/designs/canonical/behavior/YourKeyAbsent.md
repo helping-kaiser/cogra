@@ -14,6 +14,8 @@ ALWAYS the notice carries the no-backup sentence in place of its line and no Res
 
 WHEN press Restore the key -> Restore opens
 
+WHEN press Restore the key GIVEN a browser that cannot hold a key -> KeyCeremonyUnsupported opens in the restore's place AND NEVER the recovery code is typed
+
 WHEN the key is restored from here -> Your key comes back as its key-present board
 
 WHEN tap the notice's "?" -> HelpDialog opens with the Your key text

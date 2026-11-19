@@ -16,6 +16,8 @@ ALWAYS the card's body never asks for a recovery code GIVEN the account has no b
 
 WHEN tap Restore the key -> the restore opens
 
+WHEN tap Restore the key GIVEN a browser that cannot hold a key -> KeyCeremonyUnsupported opens in the restore's place AND NEVER the recovery code is typed
+
 WHEN the restore brings the key here -> the key card leaves
 
 WHEN tap Make a new key -> the key ceremony opens

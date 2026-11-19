@@ -14,6 +14,8 @@ WHEN tap the notice's "?" -> the Your key dialog opens over the screen
 
 WHEN tap Restore the key -> the restore screen opens
 
+WHEN tap Restore the key GIVEN a browser that cannot hold a key -> KeyCeremonyUnsupported opens in the restore's place AND NEVER the recovery code is typed
+
 ALWAYS the back arrow is the screen's one way out besides Restore the key
 
 WHEN press the header back arrow -> settings returns AND nothing has changed

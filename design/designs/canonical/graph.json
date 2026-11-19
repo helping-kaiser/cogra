@@ -352,7 +352,7 @@
     { "from": "ApplicantLanding", "via": 14, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "ProfileApplicant" }] },
     { "from": "ApplicantLanding", "via": 15, "kind": "nav", "label": "chats", "to": [{ "board": "ChatsComingSoon" }] },
     { "from": "ApplicantLanding", "via": 16, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
-    { "from": "ApplicantLanding", "via": 17, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore", "case": "the key-absent variant only — the key comes here from its backup, and the registration then lands from this device" }] },
+    { "from": "ApplicantLanding", "via": 17, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore", "case": "the key-absent variant only — the key comes here from its backup, and the registration then lands from this device" }, { "board": "KeyCeremonyUnsupported", "case": "a browser without WebCrypto Ed25519 — the screen stands in the restore's place, and the recovery code is never typed" }] },
     { "from": "ApplicantLanding", "via": 18, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
     { "from": "ApplicantLanding", "via": 19, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "ApplicantFellThrough", "via": 1, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
@@ -413,7 +413,7 @@
     { "from": "VouchedIn", "via": 1, "kind": "advance", "label": "Go to your feed", "to": [{ "board": "Feed" }] },
 
     { "from": "KeyElsewhere", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
-    { "from": "KeyElsewhere", "via": 2, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }] },
+    { "from": "KeyElsewhere", "via": 2, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }, { "board": "KeyCeremonyUnsupported", "case": "a browser without WebCrypto Ed25519 — the screen stands in the restore's place, and the recovery code is never typed" }] },
     { "from": "KeyElsewhere", "via": 3, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
     { "from": "KeyElsewhere", "via": 4, "kind": "detour", "label": "post overflow ⋮", "to": [{ "board": "ReaderPostMenu", "case": "the reader's sheet (master)" }] },
     { "from": "KeyElsewhere", "via": 5, "kind": "advance", "label": "post media", "to": [{ "board": "PostDetail", "case": "pictures — the post opens" }, { "board": "PostDetailVideo", "case": "a clip wider than tall — the post opens" }, { "board": "Reel", "case": "a portrait or square clip — the stream opens" }] },
@@ -488,7 +488,7 @@
     { "from": "KeyCeremony", "via": 2, "kind": "advance", "label": "Create my recovery code", "to": [{ "board": "KeyConfirm" }] },
     { "from": "KeyCeremony", "via": 3, "kind": "cancel", "label": "Not now", "to": [{ "board": "KeyDecline" }] },
     { "from": "KeyCeremonyUnsupported", "via": 2, "kind": "advance", "label": "Download the app (APK)", "to": [{ "terminal": "os", "case": "the browser downloads the APK — the login landing's own link" }] },
-    { "from": "KeyCeremonyUnsupported", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "ApplicantFeed", "case": "nothing was made — the task card stays until a browser or the app that can hold a key makes it" }, { "board": "ApplicantKeyElsewhere", "case": "opened from the key-elsewhere card — back to it, the attached key untouched" }, { "board": "Settings", "case": "opened from a key row in settings, before any key — back to it, nothing made" }] },
+    { "from": "KeyCeremonyUnsupported", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "ApplicantFeed", "case": "nothing was made — the task card stays until a browser or the app that can hold a key makes it" }, { "board": "ApplicantKeyElsewhere", "case": "opened from the key-elsewhere card — back to it, the attached key untouched" }, { "board": "Settings", "case": "opened from a key row in settings, before any key — back to it, nothing made" }, { "board": "KeyElsewhere", "case": "opened in the restore's place for a member — the restore's own way back, the member's home; nothing restored" }, { "board": "ApplicantKeyElsewhere", "case": "opened in the restore's place for an applicant — the restore's own way back, the applicant's home; nothing restored" }] },
 
     { "from": "KeyConfirm", "via": 1, "kind": "cancel", "label": "Cancel", "to": [{ "board": "KeyCeremony" }] },
     { "from": "KeyConfirm", "via": 2, "kind": "advance", "label": "Show my code", "to": [{ "board": "RecoveryCode" }] },
@@ -577,7 +577,7 @@
     { "from": "RestoreError", "via": 4, "kind": "advance", "label": "Restore the key", "to": [{ "terminal": "back", "case": "key restored — returns where restore began" }, { "board": "KeptPicksReview", "case": "key restored, with picks kept pending — the kept picks' review opens, the restore's snackbar riding in over it; they sign together, in one batch the reader looks over first" }, { "terminal": "self", "case": "still failing — the line updates in place" }, { "board": "RestoreLength", "case": "the code is the wrong length once folded — the one shape a reader can fix" }, { "terminal": "self", "case": "offline — the form answers in its own slot (E5): That didn't send. Try again. stands above Restore the key, what was entered stays, and Restore the key is the retry" }] },
 
     { "from": "RestoreLength", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "KeyElsewhere", "case": "the arrow is a link, not history — restore is reached signed in with the key absent, so up is that reader's own home" }, { "board": "ApplicantKeyElsewhere", "case": "an applicant — their own home is the applicant shell, carrying the same card" }] },
-    { "from": "ApplicantKeyElsewhere", "via": 1, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }] },
+    { "from": "ApplicantKeyElsewhere", "via": 1, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }, { "board": "KeyCeremonyUnsupported", "case": "a browser without WebCrypto Ed25519 — the screen stands in the restore's place, and the recovery code is never typed" }] },
     { "from": "ApplicantKeyElsewhere", "via": 2, "kind": "advance", "label": "Make a new key", "to": [{ "board": "KeyCeremony", "case": "the ceremony again — its end replaces the attached key" }, { "board": "KeyCeremonyUnsupported", "case": "a browser without WebCrypto Ed25519 — the ceremony says so before minting anything" }] },
     { "from": "RestoreLength", "via": 2, "kind": "advance", "label": "Recovery code field", "to": [{ "terminal": "self", "case": "typing — the marked field re-checks the length as the text changes, and the line goes once the code reads 26 characters (the input-error round's live re-check)" }] },
     { "from": "RestoreLength", "via": 3, "kind": "advance", "label": "Don't remember this account here", "to": [{ "terminal": "self", "case": "the checkbox flips" }] },
@@ -1436,12 +1436,12 @@
     { "from": "ReplySealComment", "via": 10, "kind": "back", "label": "Back", "to": [{ "board": "ReplyComposeComment", "case": "one stage back — the words" }] },
 
     { "from": "ReplyKeyAbsent", "via": 1, "kind": "detour", "label": "? — Your key", "to": [{ "board": "HelpDialog", "case": "the Your-key text" }] },
-    { "from": "ReplyKeyAbsent", "via": 2, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }] },
+    { "from": "ReplyKeyAbsent", "via": 2, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }, { "board": "KeyCeremonyUnsupported", "case": "a browser without WebCrypto Ed25519 — the screen stands in the restore's place, and the recovery code is never typed" }] },
     { "from": "ReplyKeyAbsent", "via": 3, "kind": "back", "label": "Not now", "to": [{ "terminal": "back", "case": "the notice closes — the thread as it was, nothing written, nothing kept" }] },
     { "from": "ReplyKeyAbsent", "via": 4, "kind": "back", "label": "scrim — press outside, or system Back", "to": [{ "terminal": "back", "case": "the notice closes — the thread as it was, nothing written, nothing kept" }] },
 
     { "from": "ReplySealKeyAbsent", "via": 1, "kind": "detour", "label": "? — Your key", "to": [{ "board": "HelpDialog", "case": "the Your-key text" }] },
-    { "from": "ReplySealKeyAbsent", "via": 2, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore", "case": "restored — back to this seal, the reply intact" }] },
+    { "from": "ReplySealKeyAbsent", "via": 2, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore", "case": "restored — back to this seal, the reply intact" }, { "board": "KeyCeremonyUnsupported", "case": "a browser without WebCrypto Ed25519 — the screen stands in the restore's place, and the recovery code is never typed" }] },
     { "from": "ReplySealKeyAbsent", "via": 3, "kind": "cancel", "label": "Discard the reply", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }] },
 
     { "from": "ReplySealUploading", "via": 1, "kind": "advance", "label": "Sign comment", "to": [{ "terminal": "self", "case": "enabled through the gate — pressed, it is inert at once and reads Signing comment… past 200ms, the ways out locked with it, and the press is held until the uploads land; never a second press — a failed upload drops it" }, { "board": "ReplySettled", "case": "uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent" }] },
@@ -1651,7 +1651,7 @@
     { "from": "ComposeKeyAbsent", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow for where the composer was opened from — draft kept" }] },
     { "from": "ComposeKeyAbsent", "via": 3, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense" }] },
     { "from": "ComposeKeyAbsent", "via": 4, "kind": "detour", "label": "? — Your key", "to": [{ "board": "HelpDialog", "case": "the Your-key text" }] },
-    { "from": "ComposeKeyAbsent", "via": 5, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }] },
+    { "from": "ComposeKeyAbsent", "via": 5, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }, { "board": "KeyCeremonyUnsupported", "case": "a browser without WebCrypto Ed25519 — the screen stands in the restore's place, and the recovery code is never typed" }] },
     { "from": "ComposeKeyAbsent", "via": 6, "kind": "cancel", "label": "Keep the draft, restore later", "to": [{ "terminal": "back", "case": "leaves — the draft stays on this device" }] },
     { "from": "ComposeKeyAbsent", "via": 7, "kind": "detour", "label": "? — Signed actions", "to": [{ "board": "HelpDialog", "case": "the Signed-actions text — the header's, beside the notice's by the stopper exception" }] },
 
@@ -2534,7 +2534,7 @@
     { "from": "PadWriteRule", "via": 4, "kind": "cancel", "label": "Not now", "to": [{ "terminal": "back", "case": "the pad closes — nothing signed or spent, the pick not kept, the standing opinion what it was" }] },
 
     { "from": "PadKeyAbsent", "via": 1, "kind": "detour", "label": "? — Your key", "to": [{ "board": "HelpDialog", "case": "the Your-key text" }] },
-    { "from": "PadKeyAbsent", "via": 2, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }] },
+    { "from": "PadKeyAbsent", "via": 2, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }, { "board": "KeyCeremonyUnsupported", "case": "a browser without WebCrypto Ed25519 — the screen stands in the restore's place, and the recovery code is never typed" }] },
     { "from": "PadKeyAbsent", "via": 3, "kind": "back", "label": "Keep it pending, restore later", "to": [{ "terminal": "back", "case": "kept — the pick waits on this device, and the post's anchor wears it (the PadPending plate)" }] },
     { "from": "PadKeyAbsent", "via": 4, "kind": "cancel", "label": "scrim — press outside, or system Back", "to": [{ "terminal": "back", "case": "nothing is kept — the pick is dropped, as StanceControl's outside press drops one" }] },
 
@@ -2914,11 +2914,11 @@
 
     { "from": "SettingsBackupKeyAbsent", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Settings", "case": "nothing is lost — no code has been made" }] },
     { "from": "SettingsBackupKeyAbsent", "via": 2, "kind": "detour", "label": "? — Your key", "to": [{ "board": "HelpDialog", "case": "the Your-key text" }] },
-    { "from": "SettingsBackupKeyAbsent", "via": 3, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }] },
+    { "from": "SettingsBackupKeyAbsent", "via": 3, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }, { "board": "KeyCeremonyUnsupported", "case": "a browser without WebCrypto Ed25519 — the screen stands in the restore's place, and the recovery code is never typed" }] },
 
     { "from": "YourKeyAbsent", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Settings" }] },
     { "from": "YourKeyAbsent", "via": 2, "kind": "detour", "label": "? — Your key", "to": [{ "board": "HelpDialog", "case": "the Your-key text" }] },
-    { "from": "YourKeyAbsent", "via": 3, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }] },
+    { "from": "YourKeyAbsent", "via": 3, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }, { "board": "KeyCeremonyUnsupported", "case": "a browser without WebCrypto Ed25519 — the screen stands in the restore's place, and the recovery code is never typed" }] },
 
     { "from": "SettingsLicense", "via": 1, "kind": "detour", "label": "? — License", "to": [{ "board": "HelpDialog", "case": "the License text" }] },
     { "from": "SettingsLicense", "via": 2, "kind": "advance", "label": "Credit options", "to": [{ "terminal": "self", "case": "one of three, staged until Done — it seeds the next post, never the last" }] },
