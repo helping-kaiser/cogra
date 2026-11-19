@@ -617,8 +617,9 @@ fun PostDetailScreen(
             )
         }
         // THE THINK-TWICE DIALOG over this page (RemoveMenu.md:19). Taken, the
-        // post stands as Removed here: back is the whole header, the mark in
-        // the words' and pictures' place (Removed.md).
+        // post stands as Removed here: the header keeps its ⋮, less Edit, Mark
+        // as sensitive and Remove, the mark in the words' and pictures' place
+        // (Removed.md:3, :11).
         if (removeOpen) DetailRemoveConfirm(post, onClose = { removeOpen = false })
         // A READING, over the detail, the post still open beneath it (CitedBy.md:3).
         val readings = postReadings(onOpenPost, onOpenActor, "detail", registered = true)
@@ -650,9 +651,9 @@ private fun DetailRemoveConfirm(post: PostView?, onClose: () -> Unit) {
  * ON A DETAIL SURFACE THE MENU LIVES UP HERE and the card's own dot yields
  * (`_shared.jsx:341-346`): two dots would be two menus for one post.
  *
- * A REMOVED POST HAS NO MENU LEFT — back is the whole header
- * (`Removed.jsx:5-6`). There is nothing of it to edit, cite or license, and
- * the skeleton that holds the thread's place is not a thing a reader keeps.
+ * A REMOVED POST KEEPS THE HEADER'S ⋮ (Removed.md:11, :13; RemovedOther.md:5,
+ * :7): the reader's post menu whole, the author's less Edit, Mark as
+ * sensitive and Remove — `postMenuRows`' `removed`, as on every card host.
  *
  * It lives in the top bar, over the plain page — never over the comments
  * thread — so it stays unstacked, unlike the comment's own menu.
@@ -673,7 +674,6 @@ private fun DetailMenu(
     saved: SavedHost?,
 ) {
     if (post == null) return
-    if (post.removed) return
     val own = viewerId != null && post.author?.id == viewerId
     // THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK (design/readme.md,
     // jakob 2026-09-17, sharpened 2026-09-22 — PR #794): the detail's own
@@ -706,6 +706,7 @@ private fun DetailMenu(
             rowNode = { row -> menuSheet / row.nodeName },
             saveRow = saved?.menuRow(post.id, post.viewerBookmarkedAt, "detail_menu_save"),
             hideRow = post.author?.let { saved?.hideRow(it.asHiddenPerson(), post.id, "detail_menu_hide") },
+            removed = post.removed,
         ),
         contentDescription = stringResource(R.string.content_menu_post),
         testTag = node.tag,
