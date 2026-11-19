@@ -100,7 +100,7 @@ export function ReplyComposeStep({
     <div
       data-testid="reply-compose"
       {...commentDropHandlers(onPick)}
-      className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 pb-6 pt-2"
+      className="flex flex-1 flex-col gap-4 overflow-y-auto *:shrink-0 px-6 pb-6 pt-2"
     >
       <ReplyTargetChip target={state.target} />
 
@@ -115,6 +115,9 @@ export function ReplyComposeStep({
           (`ReplyComposeStep.kt:79-95`): the words fill the column while they
           are the only thing in it, and take a tall natural height once a clip
           or a refusal needs the room below them. */}
+      {/* THE FIELD WINS WHEN ROOM IS SHORT (seam 388): filling, its floor is three
+          lines and its box; where the band cannot hold them, Next scrolls
+          under the keyboard instead. */}
       <textarea
         data-testid="reply-words"
         aria-label={`Your reply to ${state.target.label}`}
@@ -122,7 +125,7 @@ export function ReplyComposeStep({
         rows={4}
         onChange={(event) => onWords(event.target.value)}
         className={`${FIELD_BOX} resize-none ${
-          wordsFill ? "min-h-11 flex-1" : "min-h-32"
+          wordsFill ? "min-h-[calc(3lh+1.25rem+2px)] flex-1" : "min-h-32"
         }`}
         placeholder="Your reply"
       />

@@ -30,6 +30,7 @@
 //! the build if any copy of it drifts, in the crate or in the indexes.
 
 use common::envelope::SensitiveMark;
+use common::redact::ByteLen;
 use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
 
@@ -842,13 +843,27 @@ pub async fn reduce_act_payload(
 /// One act's carriage as stored: the content pair and the salt behind its
 /// content commitment — all three absent once the controller has reduced
 /// it (layers.md §5), never emptied.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct ActPayload {
     pub payload: Option<Vec<u8>>,
     pub content_nonce: Option<Vec<u8>>,
     pub content_salt: Option<Vec<u8>>,
     pub reduced: bool,
     pub reduced_at: Option<chrono::DateTime<chrono::Utc>>,
+}
+
+/// `Debug` shows the lengths of the payload and the content nonce, never
+/// their bytes.
+impl std::fmt::Debug for ActPayload {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ActPayload")
+            .field("payload", &ByteLen::of_opt(&self.payload))
+            .field("content_nonce", &ByteLen::of_opt(&self.content_nonce))
+            .field("content_salt", &self.content_salt)
+            .field("reduced", &self.reduced)
+            .field("reduced_at", &self.reduced_at)
+            .finish()
+    }
 }
 
 /// The carriage of one act, if any row holds it.

@@ -65,7 +65,7 @@ function sealedActOf(proposal: Proposal): SealedAct {
       contentCommitment: new Uint8Array(32).fill(8),
       depsCommitment: new Uint8Array(32).fill(9),
       contentEdition: 2n,
-      depsEdition: 1n,
+      depsEdition: 2n,
     }),
     contentSalt: new Uint8Array(32).fill(6),
     depsSalt: new Uint8Array(32).fill(7),
@@ -97,7 +97,7 @@ it("sealed acts round-trip", () => {
     expect(toHex(decoded.act.contentCommitment)).toBe(toHex(sealed.act.contentCommitment));
     expect(toHex(decoded.act.depsCommitment)).toBe(toHex(sealed.act.depsCommitment));
     expect(decoded.act.contentEdition).toBe(2n);
-    expect(decoded.act.depsEdition).toBe(1n);
+    expect(decoded.act.depsEdition).toBe(2n);
     expect(toHex(decoded.contentSalt)).toBe(toHex(sealed.contentSalt));
     expect(toHex(decoded.depsSalt)).toBe(toHex(sealed.depsSalt));
     expect(toHex(decoded.hostSeal)).toBe(toHex(sealed.hostSeal));

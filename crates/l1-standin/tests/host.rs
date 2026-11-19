@@ -15,7 +15,7 @@
 use common::l1::Family;
 use common::l1::census::LegRole;
 use common::l1::client::ActorKey;
-use common::l1::handshake::{ApprovalWitness, Proposal, PublishedRecord, StructuralBody};
+use common::l1::handshake::{ApprovalWitness, Micro, Proposal, PublishedRecord, StructuralBody};
 use common::l1::identifier::{ActId, NodeId};
 use common::l1::proposal::{self, PreSigned, SealedAct, Submission};
 use l1_standin::{StandIn, StandInConfig, StandInError};
@@ -28,9 +28,9 @@ use sqlx::PgPool;
 /// close, and every multi-close test would pay a moving price.
 const THETA: i64 = l1_standin::REFERENCE_THETA_MICRO;
 
-/// `acts` acts' worth of θ, in the units `balance` reports.
-fn priced(acts: i64) -> f64 {
-    (acts * THETA) as f64 / 1e6
+/// `acts` acts' worth of θ, in the micro-units `balance` reports.
+fn priced(acts: i64) -> Micro {
+    Micro(acts * THETA)
 }
 
 fn standin(pool: PgPool) -> StandIn {
@@ -155,8 +155,8 @@ async fn handshake_lands_a_record(pool: PgPool) {
 
     let balance = host.balance(&actor.address()).await.expect("balance");
     assert_eq!(balance.action_count, 1);
-    assert!((balance.balance - priced(2)).abs() < 1e-9);
-    assert!((balance.burned_total - priced(3)).abs() < 1e-9);
+    assert_eq!(balance.balance, priced(2));
+    assert_eq!(balance.burned_total, priced(3));
 
     let since = host.epochs_since(0).await.expect("epochs");
     assert_eq!(
@@ -171,8 +171,9 @@ async fn handshake_lands_a_record(pool: PgPool) {
 /// The host is handed only the submission — body, dependency list and
 /// nonce, content pre-digest, pre-commitment, pre-signature and key —
 /// and still seals, the device approves the seal from the pair it kept,
-/// and the act lands. The submission's own rendering shows the dependency
-/// nonce it carries and neither member of the pair it does not. The
+/// and the act lands. The submission's own rendering shows the length of
+/// the dependency nonce it carries, never its bytes, and neither member of
+/// the pair it does not carry. The
 /// record's witness is the content commitment over the content pre-digest
 /// (layer1-interface.md §8.2, "Verified act"), not over the payload bytes.
 ///
@@ -187,7 +188,8 @@ async fn a_submission_without_its_content_pair_seals_approves_and_lands(pool: Pg
     let pre = PreSigned::sign_with_nonces(&actor, proposal, run(0x10, 32), run(0x50, 32));
     let submission: Submission = pre.submission();
     let shown = format!("{submission:?}");
-    assert!(shown.contains(&format!("{:?}", pre.dependency_nonce)));
+    assert!(!shown.contains(&format!("{:?}", pre.dependency_nonce)));
+    assert!(shown.contains("dependency_nonce: <32 bytes>"));
     assert!(!shown.contains(&format!("{:?}", pre.content_nonce)));
     assert!(!shown.contains(&format!("{:?}", pre.proposal.payload)));
 
@@ -217,8 +219,9 @@ async fn a_submission_without_its_content_pair_seals_approves_and_lands(pool: Pg
     );
     assert_ne!(
         record.payload_witness,
-        common::l1::handshake::content_commitment(
-            &act_id,
+        common::l1::crypto::commitment(
+            proposal::domain_tags::COMMIT_CONTENT,
+            act_id.to_string().as_bytes(),
             &sealed.act.pre_commitment,
             &sealed.content_salt,
             &pre.proposal.payload
@@ -354,7 +357,7 @@ async fn each_close_charges_the_wall_in_force(pool: PgPool) {
         "the closure part round-trips through the ingest read"
     );
     let balance = host.balance(&alice.address()).await.expect("balance");
-    assert!((balance.balance - priced(3)).abs() < 1e-9);
+    assert_eq!(balance.balance, priced(3));
 }
 
 /// Which epoch's price is charged when: the close charges exactly what
@@ -432,8 +435,8 @@ async fn the_price_leads_by_one_boundary(pool: PgPool) {
     assert_eq!(host.current_theta().await.expect("θ"), THETA);
     let balance = host.balance(&alice.address()).await.expect("balance");
     assert_eq!(
-        (balance.balance * 1e6).round() as i64,
-        20 * THETA - 2 * THETA - 60_000,
+        balance.balance,
+        Micro(20 * THETA - 2 * THETA - 60_000),
         "epochs 1 and 2 debited the reference, epoch 3 the wall epoch 2 delivered; \
          rewriting a vintage afterwards moves no balance"
     );
@@ -900,29 +903,48 @@ async fn a_dependency_nonce_of_any_length_seals(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_one_nonce_pre_commitment_is_refused_and_leaves_no_row(pool: PgPool) {
     use common::l1::crypto::{self, tags};
+    use common::l1::handshake::{canonical_deps, pre_commitment_msg};
     let host = standin(pool.clone());
     let actor = funded_actor(&host, 3 * THETA).await;
-    let old = actor.pre_sign(registration(&actor));
-    let act_id = old.proposal.body.act_id();
+    let old = registration(&actor);
+    let act_id = old.body.act_id();
+    let id = act_id.to_string();
+    let nonce = vec![0x5a; crypto::SALT_LEN];
     let old_content_pre_digest = crypto::pre_digest(
         tags::PRE_DIGEST_CONTENT,
-        act_id.to_string().as_bytes(),
-        &old.nonce,
-        &old.proposal.payload,
+        id.as_bytes(),
+        &nonce,
+        &old.payload,
     );
+    let old_deps_pre_digest = crypto::pre_digest(
+        tags::PRE_DIGEST_DEPS,
+        id.as_bytes(),
+        &nonce,
+        &canonical_deps(&old.deps),
+    );
+    let old_pre_commitment = crypto::sha256_tagged(
+        tags::PRE_COMMITMENT,
+        &[&pre_commitment_msg(
+            &old.body,
+            &old_content_pre_digest,
+            &old_deps_pre_digest,
+        )],
+    );
+    let signing = ed25519_dalek::SigningKey::from_bytes(&actor.seed());
+    let old_pre_signature = crypto::sign_digest(&signing, &old_pre_commitment);
     let one_nonce = Submission::new(
-        old.proposal.body.clone(),
-        old.proposal.deps.clone(),
-        old.nonce.clone(),
+        old.body.clone(),
+        old.deps.clone(),
+        nonce,
         old_content_pre_digest,
-        old.pre_commitment(),
-        old.pre_signature.clone(),
-        old.author_pubkey.clone(),
+        old_pre_commitment,
+        old_pre_signature.clone(),
+        actor.public_key_bytes(),
     );
     assert!(crypto::verify_digest(
-        &crypto::verifying_key_from_bytes(&old.author_pubkey).expect("key"),
-        &old.pre_commitment(),
-        &old.pre_signature
+        &signing.verifying_key(),
+        &old_pre_commitment,
+        &old_pre_signature
     ));
     let refused = host.seal(one_nonce).await;
     assert!(
@@ -1047,10 +1069,7 @@ async fn a_burn_request_is_idempotent_by_its_key(pool: PgPool) {
         }
     );
     let balance = host.balance(&actor.address()).await.expect("balance");
-    assert!(
-        (balance.burned_total - priced(5)).abs() < 1e-9,
-        "credited once"
-    );
+    assert_eq!(balance.burned_total, priced(5), "credited once");
 
     assert!(matches!(
         host.request_admission_burn(&actor.address(), 6 * THETA, key)
@@ -1095,7 +1114,7 @@ async fn a_burn_settles_after_its_delay(pool: PgPool) {
             .await
             .expect("balance")
             .burned_total,
-        0.0
+        Micro::ZERO
     );
     submit(&host, &applicant, registration(&applicant)).await;
     let epoch_1 = host.close_epoch().await.expect("ok");
@@ -1288,7 +1307,7 @@ async fn hyper_acts_project_two_legs_at_one_key(pool: PgPool) {
     assert_eq!(t.tau, 0.0);
     let balance = host.balance(&publisher.address()).await.expect("ok");
     assert_eq!(balance.action_count, 1);
-    assert!((balance.balance - priced(9)).abs() < 1e-9);
+    assert_eq!(balance.balance, priced(9));
 }
 
 /// Bid/T is fresh-mint-only and rejects at formation (seal.rs) when

@@ -325,8 +325,8 @@ async fn prepare_surfaces_an_unfunded_author_as_a_write_rule_state(pool: PgPool)
 
     match prepare::prepare(&rig.boundary, &rig.pool, GC, id, rig.registration(&key)).await {
         Err(PrepareError::WriteRule { balance, theta }) => {
-            assert_eq!(balance, 0.0);
-            assert!(theta > 0.0);
+            assert_eq!(balance, common::l1::handshake::Micro::ZERO);
+            assert!(theta > common::l1::handshake::Micro::ZERO);
         }
         other => panic!("expected a write-rule refusal, got {other:?}"),
     }

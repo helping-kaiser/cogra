@@ -92,6 +92,8 @@ import { CommentEditor } from "@/app/posts/[id]/edit/comment-editor";
 import { StanceControl } from "@/lib/ui/stance-control";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
 import { RowLine } from "@/lib/ui/row-line";
+import { hideRow, hiddenPersonOf } from "@/lib/hidden/hide-row";
+import { useHiddenSet } from "@/lib/hidden/provider";
 import { useSavedWrites } from "@/lib/saved/provider";
 import { useHostSnack } from "@/lib/saved/save-row";
 import { REPORT_COMMENT_TITLE, commentMenuItems } from "@/lib/ui2/comment-menu";
@@ -254,6 +256,7 @@ export function CommentsSheet({
   const [commentSigned, setCommentSigned] = useState(false);
   const { snack: menuSnack, notify, dismiss: dismissMenuSnack } = useHostSnack();
   const writes = useSavedWrites();
+  const hidden = useHiddenSet();
   // A guest's Save is asked to join first (GuestGate.md:5).
   const [joinOpen, setJoinOpen] = useState(false);
   // THE LICENSE IS NEVER A STATE OF THE CARD (`ReaderPostMenu.jsx:27-29`): one
@@ -737,6 +740,20 @@ export function CommentsSheet({
         setReportAsked(true);
         setReporting(comment);
       },
+      // HIDE FROM THE THREAD (CommentMenu.md:11): the thread stands as it was,
+      // the hidden person's comments where they stood — nothing here reads the
+      // hidden set — and this snackbar, with Undo, is the only answer. A
+      // failure stands on the comment's own row line, keyed by the comment.
+      hide:
+        own || comment.author == null
+          ? undefined
+          : hideRow({
+              set: hidden,
+              person: hiddenPersonOf(comment.author),
+              origin: comment.id,
+              notify,
+              onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
+            }),
       testIdPrefix: "comment-menu",
       rowNode,
     });
@@ -1000,12 +1017,13 @@ export function CommentsSheet({
             )}
           </div>
           {/* THE ROW LINE under the face (RowSigning.md): a save or unsave of
-              this comment that did not go through. */}
-          {writes.failure(comment.id) !== null && (
+              this comment, or a hide of its author made from it, that did not
+              go through (CommentMenu.md:15, :21). */}
+          {(writes.failure(comment.id) ?? hidden.failure(comment.id)) !== null && (
             <RowLine
               state={{
                 kind: "didntGoThrough",
-                onRetry: () => writes.failure(comment.id)?.retry(),
+                onRetry: () => (writes.failure(comment.id) ?? hidden.failure(comment.id))?.retry(),
               }}
               testId={`comment-${comment.id}-row-line`}
             />

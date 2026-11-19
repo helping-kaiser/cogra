@@ -6,6 +6,8 @@ ALWAYS the key notice carries its own ? naming the key, beside the header's ?
 
 WHEN tap Restore the key -> the restore opens AND a restored key returns to this seal with the reply intact
 
+WHEN tap Restore the key GIVEN a browser that cannot hold a key -> KeyCeremonyUnsupported opens in the restore's place AND NEVER the recovery code is typed
+
 WHEN tap Discard the reply GIVEN something is written -> the discard dialog opens AND NEVER the reply is discarded unasked
 
 ALWAYS the reply's key notice offers no way to keep a draft

@@ -1475,7 +1475,7 @@ pub async fn evaluate_landing(
             .fetch_all(&mut *tx)
             .await?;
             for write in &carried {
-                let deps = released_deps(&write.deps, &registration, &edge.act_id)?;
+                let deps = released_deps(&write.deps, &registration, &edge.act_id);
                 sqlx::query!(
                     "UPDATE staged_writes
                      SET state = 'awaiting_pre_sign',
@@ -1516,22 +1516,28 @@ pub async fn evaluate_landing(
 }
 
 /// A carried write's dependency list with the landing's two dependencies
-/// added, as the canonical list the host accepts.
-fn released_deps(
-    carried: &[String],
-    registration: &str,
-    vouch: &str,
-) -> Result<Vec<String>, sqlx::Error> {
-    let deps = carried
-        .iter()
-        .map(String::as_str)
-        .chain([registration, vouch])
-        .map(|d| ActId::parse(d).map_err(|e| sqlx::Error::Decode(Box::new(e))))
-        .collect::<Result<Vec<_>, _>>()?;
-    Ok(canonical_dep_list(deps)
-        .iter()
-        .map(ActId::to_string)
-        .collect())
+/// added, as the canonical list the host accepts. A list holding an
+/// identifier that does not parse has no canonical order; it is released
+/// in byte order with duplicates collapsed, so that row's own handshake
+/// refuses it and the rest of the landing stands.
+fn released_deps(carried: &[String], registration: &str, vouch: &str) -> Vec<String> {
+    let all = || {
+        carried
+            .iter()
+            .map(String::as_str)
+            .chain([registration, vouch])
+    };
+    match all().map(ActId::parse).collect::<Result<Vec<_>, _>>() {
+        Ok(deps) => canonical_dep_list(deps)
+            .iter()
+            .map(ActId::to_string)
+            .collect(),
+        Err(_) => all()
+            .map(str::to_owned)
+            .collect::<std::collections::BTreeSet<_>>()
+            .into_iter()
+            .collect(),
+    }
 }
 
 /// The landing write: books `vouch` and its path landed — the path keeps

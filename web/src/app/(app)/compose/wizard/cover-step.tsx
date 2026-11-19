@@ -74,7 +74,7 @@ export function CoverStep({
   const [playing, setPlaying] = useState(false);
 
   return (
-    <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 pb-4 pt-4">
+    <div className="flex flex-1 flex-col gap-4 overflow-y-auto *:shrink-0 px-6 pb-4 pt-4">
       {/* NO POSTER HERE, deliberately: the element shows its own first frame,
           and which face is chosen is said by the outlined tile below rather
           than by a still laid over the clip the author is previewing. */}

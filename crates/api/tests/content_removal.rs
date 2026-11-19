@@ -410,9 +410,11 @@ async fn removing_a_carried_act_is_bad_input(pool: PgPool) {
         .expect("staged id")
         .parse()
         .expect("uuid");
-    postgres_store::staged::carry(&rig.pool, &[staged_id])
+    sqlx::query("UPDATE staged_writes SET state = 'carried', carried = TRUE WHERE id = $1")
+        .bind(staged_id)
+        .execute(&rig.pool)
         .await
-        .expect("carries");
+        .expect("plants the carried state: the carry holds back only an applicant's writes");
     let act: String = sqlx::query_scalar("SELECT act_id FROM staged_writes WHERE id = $1")
         .bind(staged_id)
         .fetch_one(&rig.pool)

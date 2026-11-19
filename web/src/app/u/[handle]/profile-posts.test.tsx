@@ -530,7 +530,7 @@ describe("ProfilePosts — a post card's menu (ProfilePostsMenu.md)", () => {
       .map((row) => [row.getAttribute("data-testid"), row.textContent]);
   }
 
-  it("the_reader_menu_reads_save_cite_hide_license_report_as_profile_menuSheet_rows", async () => {
+  it("the_reader_menu_reads_save_cite_hide_cited_by_opinions_license_report_as_profile_menuSheet_rows", async () => {
     // ProfilePostsMenu.md:3, :5, :7 (the hide row stands on the author's own profile).
     serveAda();
     serveChronicle();
@@ -542,12 +542,28 @@ describe("ProfilePosts — a post card's menu (ProfilePostsMenu.md)", () => {
       ["profile.menuSheet.save", "Save"],
       ["profile.menuSheet.cite", "Cite in a new post"],
       ["profile.menuSheet.hide", "Hide @ada"],
+      ["profile.menuSheet.citedBy", "Cited by"],
+      ["profile.menuSheet.opinions", "Opinions on this"],
       ["profile.menuSheet.license", "License terms"],
       ["profile.menuSheet.report", "Report"],
     ]);
   });
 
-  it("the_own_menu_reads_save_cite_edit_sensitive_remove_license_and_no_hide_or_report", async () => {
+  it("opinions_on_this_raises_the_posts_opinions_sheet_over_the_profile", async () => {
+    // ProfilePostsMenu.md:5 with PostOpinions.md:5 — over the host.
+    serveAda();
+    serveChronicle();
+    servePosts({ "": { posts: [adas("p1")], next: null } });
+    renderWithProviders(<ProfileScreen handle="ada" />, { store: signedIn() });
+    await openPostsTab();
+    fireEvent.click(screen.getByTestId(byNode("profile.posts.card.menu", "p1")));
+    fireEvent.click(screen.getByTestId("profile.menuSheet.opinions"));
+    const sheet = (await screen.findByTestId("postDetail.opinionsSheet")) as HTMLDialogElement;
+    expect(sheet.open).toBe(true);
+    expect(sheet).toHaveTextContent("Opinions on this post");
+  });
+
+  it("the_own_menu_reads_save_cite_edit_sensitive_remove_cited_by_opinions_license_and_no_hide_or_report", async () => {
     // ProfilePostsMenuOwn.md:3.
     serveOwn();
     serveChronicle();
@@ -561,6 +577,8 @@ describe("ProfilePosts — a post card's menu (ProfilePostsMenu.md)", () => {
       ["profile.menuSheet.edit", "Edit"],
       ["profile.menuSheet.markSensitive", "Mark as sensitive"],
       ["profile.menuSheet.remove", "Remove"],
+      ["profile.menuSheet.citedBy", "Cited by"],
+      ["profile.menuSheet.opinions", "Opinions on this"],
       ["profile.menuSheet.license", "License terms"],
     ]);
   });
@@ -619,8 +637,7 @@ describe("ProfilePosts — a removed post keeps its place (round 57)", () => {
   }
 
   it("a_removed_post_stands_on_anothers_profile_on_first_load_with_the_readers_menu_whole", async () => {
-    // ProfilePosts.md:9, :11, :13; ProfilePostsRemovedMenu.md:5 (less Cited by
-    // and Opinions on this, which no web post menu carries yet).
+    // ProfilePosts.md:9, :11, :13; ProfilePostsRemovedMenu.md:5.
     serveAda();
     serveChronicle();
     servePosts({ "": { posts: [adas("p2"), removed("p1")], next: null } });
@@ -633,6 +650,8 @@ describe("ProfilePosts — a removed post keeps its place (round 57)", () => {
       ["profile.menuSheet.save", "Save"],
       ["profile.menuSheet.cite", "Cite in a new post"],
       ["profile.menuSheet.hide", "Hide @ada"],
+      ["profile.menuSheet.citedBy", "Cited by"],
+      ["profile.menuSheet.opinions", "Opinions on this"],
       ["profile.menuSheet.license", "License terms"],
       ["profile.menuSheet.report", "Report"],
     ]);
@@ -663,6 +682,8 @@ describe("ProfilePosts — a removed post keeps its place (round 57)", () => {
     expect(openRows()).toEqual([
       ["profile.menuSheet.save", "Save"],
       ["profile.menuSheet.cite", "Cite in a new post"],
+      ["profile.menuSheet.citedBy", "Cited by"],
+      ["profile.menuSheet.opinions", "Opinions on this"],
       ["profile.menuSheet.license", "License terms"],
     ]);
     scroller.remove();
