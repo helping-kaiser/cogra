@@ -565,3 +565,98 @@ describe("ProfilePosts — a post card's menu (ProfilePostsMenu.md)", () => {
     ]);
   });
 });
+
+// A REMOVED POST ON A PROFILE (design round 57; ProfilePosts.md:9-13,
+// ProfilePostsOwn.md:13, FeedRemoved.md:19): it keeps its place as the feed's
+// removed card on every profile, from the tab's first read, whatever the
+// feed's filter holds — and the reader's own does not leave at a refresh.
+describe("ProfilePosts — a removed post keeps its place (round 57)", () => {
+  const removed = (id: string) =>
+    ({
+      ...adas(id),
+      title: { __typename: "ModeratedText", value: null, status: "REDACTED" },
+      description: { __typename: "ModeratedText", value: null, status: "REDACTED" },
+      attachments: [],
+      removal: { __typename: "Removal", at: new Date(Date.now() - 3 * 3_600_000).toISOString(), by: "AUTHOR" },
+    }) as PostView;
+
+  function openRows() {
+    const sheet = screen
+      .getAllByTestId("profile.menuSheet")
+      .find((dialog) => (dialog as HTMLDialogElement).open);
+    return within(sheet!)
+      .getAllByRole("button")
+      .map((row) => [row.getAttribute("data-testid"), row.textContent]);
+  }
+
+  function expectRemovedCard(id: string) {
+    expect(screen.getByTestId(byNode("profile.posts.card.removalMark.line", id))).toHaveTextContent(
+      /^Removed by its author$/,
+    );
+    // The removal's own moment, never the post's age (ProfilePosts.md:13).
+    expect(screen.getByTestId(byNode("profile.posts.card.removalMark.when", id))).toHaveTextContent(/^3h$/);
+    expect(screen.queryByTestId(byNode("profile.posts.card.title", id))).toBeNull();
+    expect(screen.queryByTestId(byNode("profile.posts.card.media", id))).toBeNull();
+    // ProfilePosts.md:11 — the chip, stance, score, comments count, share and ⋮ stay.
+    for (const kept of [
+      "authorChip",
+      "actionRow.stance",
+      "actionRow.score",
+      "actionRow.comments",
+      "actionRow.share",
+      "menu",
+    ]) {
+      expect(screen.getByTestId(byNode(`profile.posts.card.${kept}`, id))).toBeInTheDocument();
+    }
+  }
+
+  it("a_removed_post_stands_on_anothers_profile_on_first_load_with_the_readers_menu_whole", async () => {
+    // ProfilePosts.md:9, :11, :13; ProfilePostsRemovedMenu.md:5 (less Cited by
+    // and Opinions on this, which no web post menu carries yet).
+    serveAda();
+    serveChronicle();
+    servePosts({ "": { posts: [adas("p2"), removed("p1")], next: null } });
+    renderWithProviders(<ProfileScreen handle="ada" />, { store: signedIn() });
+    await openPostsTab();
+    expect(cardIds()).toEqual(["p2", "p1"]);
+    expectRemovedCard("p1");
+    fireEvent.click(screen.getByTestId(byNode("profile.posts.card.menu", "p1")));
+    expect(openRows()).toEqual([
+      ["profile.menuSheet.save", "Save"],
+      ["profile.menuSheet.cite", "Cite in a new post"],
+      ["profile.menuSheet.hide", "Hide @ada"],
+      ["profile.menuSheet.license", "License terms"],
+      ["profile.menuSheet.report", "Report"],
+    ]);
+  });
+
+  it("your_own_removed_post_stands_on_first_load_and_through_a_refresh_its_menu_less_edit_sensitive_remove", async () => {
+    // ProfilePostsOwn.md:13; ProfilePostsRemovedMenuOwn.md:5; FeedRemoved.md:13
+    // is the feed's own rule and never reaches the profile (:19).
+    serveOwn();
+    serveChronicle();
+    const reads = servePosts({ "": { posts: [removed("p1")], next: null } });
+    const scroller = document.createElement("div");
+    document.body.append(scroller);
+    renderWithProviders(
+      <ScrollHostProvider value={{ current: scroller }}>
+        <ProfileScreen handle={null} />
+      </ScrollHostProvider>,
+      { store: signedIn("u-ada") },
+    );
+    await openPostsTab();
+    expectRemovedCard("p1");
+    const { pullsAtTop } = await import("@/test/media-env");
+    const { PULL_THRESHOLD } = await import("@/lib/ui/pull-to-refresh");
+    pullsAtTop(scroller, PULL_THRESHOLD);
+    await waitFor(() => expect(reads.length).toBeGreaterThanOrEqual(2));
+    expectRemovedCard("p1");
+    fireEvent.click(screen.getByTestId(byNode("profile.posts.card.menu", "p1")));
+    expect(openRows()).toEqual([
+      ["profile.menuSheet.save", "Save"],
+      ["profile.menuSheet.cite", "Cite in a new post"],
+      ["profile.menuSheet.license", "License terms"],
+    ]);
+    scroller.remove();
+  });
+});
