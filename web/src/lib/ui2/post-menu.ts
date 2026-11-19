@@ -157,20 +157,22 @@ export function postMenuItems({
   );
   // A REMOVED POST HAS NOTHING LEFT TO EDIT, MARK OR REMOVE: the author's
   // menu keeps its reads and its Save and Cite (FeedRemovedMenuOwn.md:5).
-  if (own && !removed) {
-    rows.push(
-      row("edit", "edit", "Edit", () => navigate(`/compose?post=${postId}`)),
-      // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published post
-      // sensitive is always a signed action changing the post — an edit — so
-      // there is no standalone commit path and this row is a door into the
-      // edit flow rather than a sheet of its own. Edit is the general door;
-      // this is the intentioned one. When the edit surface's drawn Sensitive
-      // row lands (CW-46) the link can focus it.
-      row("markSensitive", "sensitive", "Mark as sensitive", () =>
-        navigate(`/compose?post=${postId}`),
-      ),
-      row("remove", "remove", "Remove", openRemove),
-    );
+  if (own) {
+    if (!removed) {
+      rows.push(
+        row("edit", "edit", "Edit", () => navigate(`/compose?post=${postId}`)),
+        // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published post
+        // sensitive is always a signed action changing the post — an edit — so
+        // there is no standalone commit path and this row is a door into the
+        // edit flow rather than a sheet of its own. Edit is the general door;
+        // this is the intentioned one. When the edit surface's drawn Sensitive
+        // row lands (CW-46) the link can focus it.
+        row("markSensitive", "sensitive", "Mark as sensitive", () =>
+          navigate(`/compose?post=${postId}`),
+        ),
+        row("remove", "remove", "Remove", openRemove),
+      );
+    }
   } else {
     // The handle is the thing a reader recognises, and the word they will
     // look for again under Hidden accounts (`ActorChip.jsx:67`). The row keeps

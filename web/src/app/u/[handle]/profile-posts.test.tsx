@@ -571,6 +571,14 @@ describe("ProfilePosts — a post card's menu (ProfilePostsMenu.md)", () => {
 // removed card on every profile, from the tab's first read, whatever the
 // feed's filter holds — and the reader's own does not leave at a refresh.
 describe("ProfilePosts — a removed post keeps its place (round 57)", () => {
+  // Share stands only where the browser has a share door (`useShareCapable`).
+  beforeEach(() => {
+    Object.defineProperty(navigator, "share", { value: vi.fn(), configurable: true });
+  });
+  afterEach(() => {
+    Reflect.deleteProperty(navigator, "share");
+  });
+
   const removed = (id: string) =>
     ({
       ...adas(id),
