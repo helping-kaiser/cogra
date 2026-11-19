@@ -6,6 +6,7 @@
 import { act, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { expectWrapsLongWords } from "@/test/written";
 import { ProfileHeader, nameFitSize } from "./profile-header";
 
 const IDENTITY = { path: "profile.identity" };
@@ -39,6 +40,17 @@ describe("ProfileHeader with a long handle and name", () => {
     expect(classes).toContain("[overflow-wrap:break-word]");
     expect(classes).not.toContain("[overflow-wrap:anywhere]");
     expect(classes.some((c) => c === "truncate" || c.startsWith("line-clamp") || c === "text-ellipsis")).toBe(false);
+  });
+
+  // jakob's hand test 2026-11-19: the bio's over-long word continues on the
+  // next line rather than running off the header.
+  it("breaks an over-long word in the bio onto the next line", () => {
+    render(
+      <ProfileHeader handle={HANDLE} displayName={NAME} bio={"B".repeat(120)} own>
+        <span />
+      </ProfileHeader>,
+    );
+    expectWrapsLongWords(screen.getByTestId("profile-bio"));
   });
 });
 

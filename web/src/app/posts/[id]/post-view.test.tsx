@@ -24,6 +24,7 @@ import { byNode } from "@/test/data-node";
 import { bookmarkHandlers, bookmarkLog } from "@/test/saved";
 import { citingRecord, citingRecords } from "@/test/inbound";
 import { CarriedSnackbar } from "@/lib/ui/carried-snackbar";
+import { expectWrapsLongWords } from "@/test/written";
 
 // The menu rows that go somewhere navigate rather than link, because a sheet
 // row is a button — so the router is what a citing or editing row is measured
@@ -370,6 +371,16 @@ describe("PostView", () => {
     expect(screen.getByTestId(byNode("postDetail.card.body"))).toHaveTextContent("The body");
     expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("First!");
     expect(screen.queryByTestId("post-no-comments")).not.toBeInTheDocument();
+  });
+
+  // jakob's hand test 2026-11-19: a comment's word longer than the card's line
+  // ran off the thread sheet; it continues on the next line.
+  it("breaks an over-long word in a thread comment onto the next line", async () => {
+    const long = "W".repeat(120);
+    server.use(...thread("u1", [{ id: "c1", body: long }]));
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
+    expectWrapsLongWords(await within(await screen.findByTestId("post-comment-c1")).findByText(long));
   });
 
   // ROUND 27 REGISTERS `stance.pending` on the detail and the thread: a pick

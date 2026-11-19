@@ -23,6 +23,7 @@
 // scrim and a plain `visibility` chip. A veiled post is not a failure.
 
 import { createContext, useContext, useState, type CSSProperties, type ReactNode } from "react";
+import { WRITTEN } from "@/lib/ui/written";
 
 /**
  * Whether the nearest enclosing `BodyVeil` currently veils this subtree.
@@ -189,7 +190,7 @@ export function BodyVeil({
           )}
         </div>
         {!revealed && named && (
-          <span data-testid={`${testId}-source`} className="text-label-small text-on-surface-variant [text-wrap:pretty]">
+          <span data-testid={`${testId}-source`} className={`text-label-small text-on-surface-variant [text-wrap:pretty] ${WRITTEN}`}>
             {sourceLine}
           </span>
         )}
@@ -222,7 +223,7 @@ export function BodyVeil({
               <VisibilityGlyph size={18} />
               <span className="text-label-medium">{label}</span>
             </span>
-            <span data-testid={`${testId}-source`} className="text-body-small [text-wrap:pretty]">
+            <span data-testid={`${testId}-source`} className={`text-body-small [text-wrap:pretty] ${WRITTEN}`}>
               {sourceLine}
             </span>
           </button>
@@ -270,7 +271,7 @@ export function BodyVeil({
           >
             <VisibilityGlyph />
             <span className="text-label-large">{label}</span>
-            <span data-testid={`${testId}-source`} className="text-body-small opacity-85 [text-wrap:pretty]">
+            <span data-testid={`${testId}-source`} className={`text-body-small opacity-85 [text-wrap:pretty] ${WRITTEN}`}>
               {sourceLine}
             </span>
           </span>

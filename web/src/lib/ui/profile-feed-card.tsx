@@ -36,6 +36,7 @@ import type { TraceOrigin } from "@/lib/score/trace-session";
 import { personCover } from "@/lib/score/cover";
 import { ShareButton } from "./share-button";
 import { StanceControl } from "./stance-control";
+import { WRITTEN } from "./written";
 
 type Moderated = { readonly value: string | null; readonly status: string } | null;
 
@@ -128,7 +129,7 @@ export function ProfileFeedCard({
       {bio !== null && (
         <p
           {...testAttributes(part(node, "bio"), `${testId}-bio`)}
-          className="line-clamp-2 text-body-medium text-on-surface-variant"
+          className={`line-clamp-2 text-body-medium text-on-surface-variant ${WRITTEN}`}
         >
           {bio}
         </p>
