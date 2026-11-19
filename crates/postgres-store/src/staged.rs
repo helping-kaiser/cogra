@@ -131,12 +131,25 @@ pub struct StagedWrite {
 /// over P (layer1-interface.md §8.2, "Proposal pre-commitment"). The
 /// content nonce stays on CoGra's side with the payload; the dependency
 /// nonce goes to the host with the dependency list.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct PreSignedParts {
     pub author_pubkey: Vec<u8>,
     pub content_nonce: Vec<u8>,
     pub dependency_nonce: Vec<u8>,
     pub pre_signature: Vec<u8>,
+}
+
+/// `Debug` shows each nonce's length and never its bytes.
+impl std::fmt::Debug for PreSignedParts {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use common::redact::ByteLen;
+        f.debug_struct("PreSignedParts")
+            .field("author_pubkey", &self.author_pubkey)
+            .field("content_nonce", &ByteLen::of(&self.content_nonce))
+            .field("dependency_nonce", &ByteLen::of(&self.dependency_nonce))
+            .field("pre_signature", &self.pre_signature)
+            .finish()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -1061,7 +1074,7 @@ struct StagedRows {
 /// The staged copy of an act's payload, as a redaction finds it: locked,
 /// so nothing promotes or relays it while the redaction archives and
 /// reaps it.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct StagedCopy {
     pub id: Uuid,
     pub state: String,
@@ -1072,6 +1085,23 @@ pub struct StagedCopy {
     pub content_nonce: Option<Vec<u8>>,
     pub content_salt: Option<Vec<u8>>,
     pub content_commitment: Option<Vec<u8>>,
+}
+
+/// `Debug` shows the lengths of the payload and the content nonce, never
+/// their bytes.
+impl std::fmt::Debug for StagedCopy {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use common::redact::ByteLen;
+        f.debug_struct("StagedCopy")
+            .field("id", &self.id)
+            .field("state", &self.state)
+            .field("carried", &self.carried)
+            .field("payload", &ByteLen::of_opt(&self.payload))
+            .field("content_nonce", &ByteLen::of_opt(&self.content_nonce))
+            .field("content_salt", &self.content_salt)
+            .field("content_commitment", &self.content_commitment)
+            .finish()
+    }
 }
 
 /// One staged act of a revision chain: the act, where its handshake

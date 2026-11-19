@@ -487,6 +487,20 @@ fn the_pre_commitment_blob_debug_output_omits_the_nonces() {
     assert!(shown.contains("<32 bytes>"));
 }
 
+/// The submission is what the host is handed, so a log line of it must not carry the dependency nonce.
+///
+/// The submission's Debug output shows the dependency nonce's length, never its bytes, and still shows the act.
+/// ´claim:proposal:the-submission-debug-output-omits-the-dependency-nonce´
+#[test]
+fn the_submission_debug_output_omits_the_dependency_nonce() {
+    let actor = ActorKey::from_seed([7u8; 32]);
+    let submission = pre_signed(&actor, b"hello").submission();
+    let shown = format!("{submission:?}");
+    assert!(!shown.contains("106, 106"));
+    assert!(shown.contains("<32 bytes>"));
+    assert!(shown.contains(&actor.address()));
+}
+
 /// The host refuses a key that parses but is not the body author's, even when the signature verifies under it.
 ///
 /// A submission pre-signed correctly by another actor's key for a body whose author is someone else is refused.

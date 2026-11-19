@@ -171,8 +171,9 @@ async fn handshake_lands_a_record(pool: PgPool) {
 /// The host is handed only the submission — body, dependency list and
 /// nonce, content pre-digest, pre-commitment, pre-signature and key —
 /// and still seals, the device approves the seal from the pair it kept,
-/// and the act lands. The submission's own rendering shows the dependency
-/// nonce it carries and neither member of the pair it does not. The
+/// and the act lands. The submission's own rendering shows the length of
+/// the dependency nonce it carries, never its bytes, and neither member of
+/// the pair it does not carry. The
 /// record's witness is the content commitment over the content pre-digest
 /// (layer1-interface.md §8.2, "Verified act"), not over the payload bytes.
 ///
@@ -187,7 +188,8 @@ async fn a_submission_without_its_content_pair_seals_approves_and_lands(pool: Pg
     let pre = PreSigned::sign_with_nonces(&actor, proposal, run(0x10, 32), run(0x50, 32));
     let submission: Submission = pre.submission();
     let shown = format!("{submission:?}");
-    assert!(shown.contains(&format!("{:?}", pre.dependency_nonce)));
+    assert!(!shown.contains(&format!("{:?}", pre.dependency_nonce)));
+    assert!(shown.contains("dependency_nonce: <32 bytes>"));
     assert!(!shown.contains(&format!("{:?}", pre.content_nonce)));
     assert!(!shown.contains(&format!("{:?}", pre.proposal.payload)));
 
