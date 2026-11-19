@@ -6661,7 +6661,7 @@ Closed by round 60 (jakob 2026-11-19, C2 "as rec" — (a)): copy-voice *Menu row
 among the comment rows' hosts; `TagPageCommentMenu`, `…Own`, `TagPageCommentRemovedMenu` and `…Own`
 draw the four menus over the page, each its profile twin's rows.
 
-### 285 · `MediaAttachment`'s `maxHeight` has no caller left · *system* · **filed 2026-11-18**
+### 285 · `MediaAttachment`'s `maxHeight` has no caller left · *system* · **filed 2026-11-18** · **closed 2026-11-19**
 
 Round 58, item 6 (jakob 2026-11-18, the hand test: a shown comment's media is a square at the
 column's width, no height cap). `CommentCard` was the one surface passing `maxHeight`
@@ -6678,6 +6678,10 @@ round 58 left as drawn (RULINGS 2026-11-18 ~18:00: the post-MVP chat boards not 
 two comments now name these callers. Options: (a) retire the prop AND drop both caps — the chat
 media and the card stand at their true shape (a drawing change, jakob's); (b) keep the prop for
 those two, as now; (c) retire it from the masters and draw each cap in its caller.
+
+Closed by round 61 as KEPT (jakob 2026-11-19, C "all fine" on round 60's told list, "the kept size
+setting" — (b)): the prop stays for its two callers, the post-MVP chat media and the sensitive
+veil's card; nothing to build.
 
 ### 287 · Does the Posts figure count a still-settling post? · *design* · **filed 2026-11-19**
 
