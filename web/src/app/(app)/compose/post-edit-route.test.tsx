@@ -17,6 +17,7 @@ import { gqlLink, startMswServer } from "@/test/msw";
 import { echoedMedia } from "@/test/media-echo";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
+import { PINNED_PAGE } from "@/lib/ui2/screen-layer";
 import { PostEditRoute } from "./post-edit-route";
 import { EDIT_LEAVE_LABEL } from "./post-edit-view";
 
@@ -239,8 +240,8 @@ describe("PostEditRoute — the stage pins its footer (design/readme.md, Spacing
     draw();
     const stage = await screen.findByTestId("post-edit");
     // The screen's height, never a floor a long body could push past.
-    expect(stage.className.split(" ")).toContain("h-dvh");
-    expect(stage.className.split(" ")).not.toContain("min-h-dvh");
+    expect(stage.className.split(" ")).toContain(PINNED_PAGE);
+    expect(stage.className).not.toMatch(/\bmin-h-/);
     const fields = screen.getByTestId("post-edit-fields");
     expect(fields.className.split(" ")).toEqual(expect.arrayContaining(["min-h-0", "flex-1", "overflow-y-auto"]));
     // The body and the facts scroll; the stack stands outside the scroller.

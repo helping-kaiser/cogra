@@ -56,6 +56,7 @@ import { ActsFooter, WithdrawnLine } from "@/lib/ui2/compose/edit-acts";
 import { EditWriteRuleNotice } from "@/lib/ui2/compose/edit-notices";
 import { useSlowAnswer } from "@/lib/ui2/waiting-commit";
 import { PICKABLE_VIDEO_TYPES } from "@/lib/ui2/media/video";
+import { PINNED_PAGE } from "@/lib/ui2/screen-layer";
 import { licenseName } from "@/lib/license";
 import {
   DESCRIPTION_MAX_CHARS,
@@ -275,7 +276,7 @@ export function PostEditView({
       // growing field never walks the commitment out of reach"): the screen's
       // height, not a floor under it, so a long body scrolls in the fields'
       // own scroller and the stack keeps the foot — as the comment editor does.
-      className="mx-auto flex h-dvh w-full max-w-2xl flex-col bg-surface text-on-surface"
+      className={`mx-auto flex ${PINNED_PAGE} w-full max-w-2xl flex-col bg-surface text-on-surface`}
     >
       {/* While the signing holds the reader, the way out refuses a press and
           never dims (EditCompose.md: the back arrow and the ✕ refuse while it

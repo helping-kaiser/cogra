@@ -19,5 +19,27 @@
 // fixed element fills exactly the visible height. A dynamic-viewport height
 // would add nothing there, so the box keeps the plain fixed inset.
 
-/** The geometry every full-screen layer stands on: the whole screen, its foot above the system navigation bar. */
-export const SCREEN_LAYER = "fixed inset-0 pb-[env(safe-area-inset-bottom)]";
+//
+// ITS BOTTOM EDGE IS THE KEYBOARD'S TOP (`keyboard-inset.ts`): with the
+// on-screen keyboard up the layer ends where the keyboard begins, so its
+// pinned stack rides directly above it and the fields scroll in what is left
+// (seam 381). With no keyboard the inset is 0 — `inset: 0` exactly.
+
+/** The geometry every full-screen layer stands on: the whole screen above the keyboard, its foot above the system navigation bar. */
+export const SCREEN_LAYER =
+  "fixed inset-x-0 top-0 bottom-[var(--keyboard-inset,0px)] pb-[env(safe-area-inset-bottom)]";
+
+/**
+ * A PAGE THAT PINS ITS FOOT (a stage, the profile edit, a picker): the screen's
+ * height less the keyboard, so its stack stands on the keyboard's top edge and
+ * the fields scroll above it. `100dvh` with no keyboard — the height these
+ * pages have always had.
+ */
+export const PINNED_PAGE = "h-[calc(100dvh_-_var(--keyboard-inset,0px))]";
+
+/**
+ * A STAGE WHOSE FOOT FOLLOWS ITS CONTENT ON A LONG PAGE (the compose wizard's
+ * stages): the floor under it is the screen less the keyboard, so on a short
+ * stage the foot still stands on the keyboard's top edge.
+ */
+export const PINNED_FLOOR = "min-h-[calc(100dvh_-_var(--keyboard-inset,0px))]";
