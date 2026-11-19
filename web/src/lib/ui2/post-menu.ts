@@ -16,6 +16,8 @@ export type PostMenuRow =
   | "save"
   | "cite"
   | "hide"
+  | "citedBy"
+  | "opinions"
   | "license"
   | "report"
   | "edit"
@@ -47,6 +49,14 @@ export type PostMenuContext = {
   navigate: (href: string) => void;
   openLicense: (license: License) => void;
   openRemove: () => void;
+  /**
+   * What cites the post, over the surface the menu was opened from
+   * (ReaderPostMenu.md:31, CitedBy.md:5). A reading: open to a guest and an
+   * applicant alike (FeedPostMenu.md:25).
+   */
+  openCitedBy: () => void;
+  /** The post's opinions sheet, over the same surface (ReaderPostMenu.md:33, PostOpinions.md:5). */
+  openOpinions: () => void;
   /**
    * The report row's door: the confirm sheet over the surface the menu was
    * opened from (ReportConfirm.md:3), or the join prompt for a guest (:21).
@@ -122,6 +132,8 @@ export function postMenuItems({
   navigate,
   openLicense,
   openRemove,
+  openCitedBy,
+  openOpinions,
   openReport,
   shareRow,
   save,
@@ -180,6 +192,15 @@ export function postMenuItems({
     const fallback = handle === null ? "Hide this account" : `Hide @${handle}`;
     rows.push(row("hide", "hide", hide?.label ?? fallback, hide?.onSelect ?? (() => {})));
   }
+  // THE TWO READINGS CLOSE THE ACTS, before the license, on every menu and
+  // whatever their counts — the post live or removed (ReaderPostMenu.md:35,
+  // RemoveMenu.md:27): the detail's count lines vanish at zero, so these rows
+  // are the one door that always stands. Inbound first, as the comment's menu
+  // has it (`comment-menu.ts`).
+  rows.push(
+    row("citedBy", "cited-by", "Cited by", openCitedBy),
+    row("opinions", "opinions", "Opinions on this", openOpinions),
+  );
   if (license !== null) {
     rows.push(row("license", "license", "License terms", () => openLicense(license)));
   }
