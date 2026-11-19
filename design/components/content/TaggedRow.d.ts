@@ -21,6 +21,10 @@ export interface TaggedRowProps {
   pending?: boolean;
   /** The content card this claim points at. */
   children?: React.ReactNode;
+  /** The data-node name of the claim (design ⇄ impl seam 002; renders as attributes only). Given one, it names the flag alone — never the row, so the card under it keeps its own path — and its parts: `glyph`, `exact` and `pending`. */
+  node?: string;
+  /** The claim's key, the tagged thing's id as the wire carries it. */
+  nodeKey?: string;
 }
 
 export declare function TaggedRow(props: TaggedRowProps): JSX.Element;

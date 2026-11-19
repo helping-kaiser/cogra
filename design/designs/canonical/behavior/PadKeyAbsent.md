@@ -28,6 +28,8 @@ WHEN press outside the alternates or press the system's Back GIVEN the signing k
 
 WHEN press Restore the key -> the key's restore opens
 
+WHEN press Restore the key GIVEN a browser that cannot hold a key -> KeyCeremonyUnsupported opens in the restore's place AND NEVER the recovery code is typed
+
 WHEN press feed.card.actionRow.stance.pad.keepPending -> the pad closes AND the pick waits on this device AND feed.card.actionRow.stance.anchor wears the kept pick's face with Waiting for your key under it AND NEVER anything is staged or signed
 
 WHEN press outside the pad or press the system's Back -> the pad closes AND the pick is dropped, as a Cancel drops one AND NEVER the pick is kept

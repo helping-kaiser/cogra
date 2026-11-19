@@ -17124,6 +17124,164 @@
         ]
       }
     },
+    "ReplyMedia": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.threadSheet.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "postDetail.threadSheet.commentCard.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "postDetail.card.opinions": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.threadSheet": [],
+        "postDetail.threadSheet.commentCard": [
+          "69155950-5cc8-4aef-9581-6f55ca1a0693",
+          "8c3e5a71-4d2b-4f9e-b6a0-2d7c9e1f4b36"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow": [
+          "69155950-5cc8-4aef-9581-6f55ca1a0693",
+          "8c3e5a71-4d2b-4f9e-b6a0-2d7c9e1f4b36"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.reply": [
+          "69155950-5cc8-4aef-9581-6f55ca1a0693",
+          "8c3e5a71-4d2b-4f9e-b6a0-2d7c9e1f4b36"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance": [
+          "69155950-5cc8-4aef-9581-6f55ca1a0693",
+          "8c3e5a71-4d2b-4f9e-b6a0-2d7c9e1f4b36"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor": [
+          "69155950-5cc8-4aef-9581-6f55ca1a0693",
+          "8c3e5a71-4d2b-4f9e-b6a0-2d7c9e1f4b36"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.exact": [
+          "69155950-5cc8-4aef-9581-6f55ca1a0693"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.face": [
+          "69155950-5cc8-4aef-9581-6f55ca1a0693",
+          "8c3e5a71-4d2b-4f9e-b6a0-2d7c9e1f4b36"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip": [
+          "69155950-5cc8-4aef-9581-6f55ca1a0693",
+          "8c3e5a71-4d2b-4f9e-b6a0-2d7c9e1f4b36"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.avatar": [
+          "69155950-5cc8-4aef-9581-6f55ca1a0693",
+          "8c3e5a71-4d2b-4f9e-b6a0-2d7c9e1f4b36"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.handle": [
+          "69155950-5cc8-4aef-9581-6f55ca1a0693",
+          "8c3e5a71-4d2b-4f9e-b6a0-2d7c9e1f4b36"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.name": [
+          "69155950-5cc8-4aef-9581-6f55ca1a0693",
+          "8c3e5a71-4d2b-4f9e-b6a0-2d7c9e1f4b36"
+        ],
+        "postDetail.threadSheet.commentCard.media": [
+          "69155950-5cc8-4aef-9581-6f55ca1a0693",
+          "8c3e5a71-4d2b-4f9e-b6a0-2d7c9e1f4b36"
+        ],
+        "postDetail.threadSheet.commentCard.media.dots": [
+          "8c3e5a71-4d2b-4f9e-b6a0-2d7c9e1f4b36"
+        ],
+        "postDetail.threadSheet.commentCard.media.frame": [
+          "69155950-5cc8-4aef-9581-6f55ca1a0693/1",
+          "8c3e5a71-4d2b-4f9e-b6a0-2d7c9e1f4b36/1",
+          "8c3e5a71-4d2b-4f9e-b6a0-2d7c9e1f4b36/2"
+        ],
+        "postDetail.threadSheet.commentCard.media.frame.soundDisc": [
+          "69155950-5cc8-4aef-9581-6f55ca1a0693/1"
+        ],
+        "postDetail.threadSheet.commentCard.menu": [
+          "69155950-5cc8-4aef-9581-6f55ca1a0693",
+          "8c3e5a71-4d2b-4f9e-b6a0-2d7c9e1f4b36"
+        ],
+        "postDetail.threadSheet.dragHandle": [],
+        "postDetail.threadSheet.foot": [],
+        "postDetail.threadSheet.foot.addComment": [],
+        "postDetail.threadSheet.title": []
+      }
+    },
     "ReplySeal": {
       "prefix": "replySeal",
       "keys": {
@@ -20950,9 +21108,262 @@
         "postEdit.title.label": []
       }
     },
-    "TagPageHeldPad": {
+    "TagPage": {
+      "prefix": "tagPage",
+      "keys": {
+        "tagPage.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "tagPage.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "tagPage.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "tagPage.claim": "the tagged thing's id, the lowercase UUID the wire carries — the post's or the comment's the claim stands above (TaggedRow, the tag page)",
+        "tagPage.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
+      },
+      "nodes": {
+        "tagPage.actionRow": [],
+        "tagPage.actionRow.share": [],
+        "tagPage.actionRow.stance": [],
+        "tagPage.actionRow.stance.anchor": [],
+        "tagPage.actionRow.stance.anchor.face": [],
+        "tagPage.card": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.actionRow": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.actionRow.comments": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.actionRow.comments.count": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.actionRow.score": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.actionRow.score.value": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.actionRow.share": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.actionRow.stance": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.actionRow.stance.anchor": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.actionRow.stance.anchor.exact": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.actionRow.stance.anchor.face": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.authorChip": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.authorChip.avatar": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.authorChip.handle": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.authorChip.name": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.body": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "tagPage.card.description": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.media": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.media.dots": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.media.frame": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/1",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/2"
+        ],
+        "tagPage.card.menu": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.opener": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.removalMark": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "tagPage.card.removalMark.line": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "tagPage.card.removalMark.when": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "tagPage.card.tagsLine": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.tagsLine.tag": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/fieldnotes",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/saltmaps"
+        ],
+        "tagPage.card.timestamp": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.title": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.claim": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.claim.exact": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.claim.glyph": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.claim.pending": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "tagPage.commentCard": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.actionRow": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.actionRow.stance": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.actionRow.stance.anchor": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.actionRow.stance.anchor.exact": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.actionRow.stance.anchor.face": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.authorChip": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.authorChip.avatar": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.authorChip.handle": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.authorChip.name": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.menu": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.removalMark": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.removalMark.line": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.removalMark.when": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.target": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.header": [],
+        "tagPage.header.back": [],
+        "tagPage.header.title": []
+      }
+    },
+    "TagPageCommentMenu": {
       "prefix": "tagPage",
       "keys": {},
+      "nodes": {
+        "tagPage.menuSheet": [],
+        "tagPage.menuSheet.cite": [],
+        "tagPage.menuSheet.citedBy": [],
+        "tagPage.menuSheet.dragHandle": [],
+        "tagPage.menuSheet.hide": [],
+        "tagPage.menuSheet.license": [],
+        "tagPage.menuSheet.opinions": [],
+        "tagPage.menuSheet.report": [],
+        "tagPage.menuSheet.save": []
+      }
+    },
+    "TagPageCommentMenuOwn": {
+      "prefix": "tagPage",
+      "keys": {},
+      "nodes": {
+        "tagPage.menuSheet": [],
+        "tagPage.menuSheet.cite": [],
+        "tagPage.menuSheet.citedBy": [],
+        "tagPage.menuSheet.dragHandle": [],
+        "tagPage.menuSheet.edit": [],
+        "tagPage.menuSheet.license": [],
+        "tagPage.menuSheet.opinions": [],
+        "tagPage.menuSheet.remove": [],
+        "tagPage.menuSheet.save": []
+      }
+    },
+    "TagPageCommentRemovedMenu": {
+      "prefix": "tagPage",
+      "keys": {},
+      "nodes": {
+        "tagPage.menuSheet": [],
+        "tagPage.menuSheet.cite": [],
+        "tagPage.menuSheet.citedBy": [],
+        "tagPage.menuSheet.dragHandle": [],
+        "tagPage.menuSheet.hide": [],
+        "tagPage.menuSheet.license": [],
+        "tagPage.menuSheet.opinions": [],
+        "tagPage.menuSheet.report": [],
+        "tagPage.menuSheet.save": []
+      }
+    },
+    "TagPageCommentRemovedMenuOwn": {
+      "prefix": "tagPage",
+      "keys": {},
+      "nodes": {
+        "tagPage.menuSheet": [],
+        "tagPage.menuSheet.cite": [],
+        "tagPage.menuSheet.citedBy": [],
+        "tagPage.menuSheet.dragHandle": [],
+        "tagPage.menuSheet.license": [],
+        "tagPage.menuSheet.opinions": [],
+        "tagPage.menuSheet.save": []
+      }
+    },
+    "TagPageHeldPad": {
+      "prefix": "tagPage",
+      "keys": {
+        "tagPage.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "tagPage.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "tagPage.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "tagPage.claim": "the tagged thing's id, the lowercase UUID the wire carries — the post's or the comment's the claim stands above (TaggedRow, the tag page)",
+        "tagPage.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
+      },
       "nodes": {
         "tagPage.actionRow": [],
         "tagPage.actionRow.share": [],
@@ -20987,6 +21398,157 @@
         "tagPage.actionRow.stance.pad.standing.pick.exact": [],
         "tagPage.actionRow.stance.pad.standing.pick.face": [],
         "tagPage.actionRow.stance.pad.standing.pick.label": [],
+        "tagPage.card": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.actionRow": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.actionRow.comments": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.actionRow.comments.count": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.actionRow.score": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.actionRow.score.value": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.actionRow.share": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.actionRow.stance": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.actionRow.stance.anchor": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.actionRow.stance.anchor.exact": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.actionRow.stance.anchor.face": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.authorChip": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.authorChip.avatar": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.authorChip.handle": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.authorChip.name": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.body": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "tagPage.card.description": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.media": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.media.dots": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.media.frame": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/1",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/2"
+        ],
+        "tagPage.card.menu": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.opener": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.tagsLine": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.tagsLine.tag": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/fieldnotes",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/saltmaps"
+        ],
+        "tagPage.card.timestamp": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.card.title": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "tagPage.claim": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.claim.exact": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.claim.glyph": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.claim.pending": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "tagPage.commentCard": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.actionRow": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.actionRow.stance": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.actionRow.stance.anchor": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.actionRow.stance.anchor.exact": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.actionRow.stance.anchor.face": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.authorChip": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.authorChip.avatar": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.authorChip.handle": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.authorChip.name": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.menu": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.target": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
         "tagPage.header": [],
         "tagPage.header.back": [],
         "tagPage.header.title": []

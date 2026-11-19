@@ -148,6 +148,8 @@ WHEN tap Discard the edit under the notice This shouldn't have happened -> the d
 
 WHEN the stage opens -> focus lands on the stage's heading AND NEVER the keyboard rises before a field is tapped
 
+WHEN the keyboard is up -> the stage's pinned foot stays at the bottom, under the keyboard, AND the words field takes the room and is brought into view AND the reader closes the keyboard to reach the commit AND NEVER the foot rides above the keyboard
+
 WHEN press Sign the edit -> the header X is named Close from the press itself AND NEVER the dialog Discard the changes? opens while it signs
 
 WHEN press the header back arrow, the header X or the system's Back GIVEN Sign the edit was pressed and has not answered -> the edit closes AND the edit goes on, its wait and its answer on the edited card as SigningAfterClose draws them AND NEVER the edit is cancelled
