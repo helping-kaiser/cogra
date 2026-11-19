@@ -431,8 +431,9 @@ class RemovalScreensTest {
     /**
      * WHEN the removal is taken -> the dialog closes AND the comment's words and
      * pictures give way to the mark in the comment's own place; a removed
-     * comment keeps its author and its time, carries no ⋮ and no Edit, keeps
-     * its opinion and its Reply, and its replies stay under it.
+     * comment keeps its author and its time, keeps its ⋮ less Edit and Remove
+     * (CommentRemoved.md:9), keeps its opinion and its Reply, and its replies
+     * stay under it.
      */
     @Test
     fun aTakenCommentRemovalSwapsTheOneNodeForItsMark() {
@@ -445,7 +446,7 @@ class RemovalScreensTest {
         compose.onNodeWithText(COMMENT_LINE).assertExists()
         compose.onNodeWithText("Comment c1").assertDoesNotExist()
         compose.onNodeIn(threadCard("c1"), threadPart("authorChip")).assertExists()
-        compose.onNodeIn(threadCard("c1"), threadPart("menu")).assertDoesNotExist()
+        compose.onNodeIn(threadCard("c1"), threadPart("menu")).assertExists()
         compose.onNodeIn(threadCard("c1"), threadPart("actionRow.edit")).assertDoesNotExist()
         compose.onNodeIn(threadCard("c1"), threadPart("actionRow.reply")).assertExists()
         compose.onNodeWithTag("stance_c1").assertExists()
@@ -455,6 +456,21 @@ class RemovalScreensTest {
         assertThat(compose.onNodeWithTag(threadCard("c1")).getUnclippedBoundsInRoot().top).isEqualTo(before)
         assertThat(repo.records).containsExactly("rec:c1")
         assertThat(repo.reads.single().second).isEqualTo("c1")
+    }
+
+    /** CommentRemovedMenu.md:3, :5 — the comment just removed raises its own menu less Edit and Remove. */
+    @Test
+    fun aCommentJustRemovedRaisesItsMenuLessEditAndRemove() {
+        openThread()
+        removeOwnComment()
+
+        compose.onNodeIn(threadCard("c1"), threadPart("menu")).performClick()
+        listOf("save", "cite", "citedBy", "opinions", "license").forEach {
+            compose.onNodeWithTag("postDetail.menuSheet.$it").assertExists()
+        }
+        listOf("edit", "remove", "report").forEach {
+            compose.onNodeWithTag("postDetail.menuSheet.$it").assertDoesNotExist()
+        }
     }
 
     /**
