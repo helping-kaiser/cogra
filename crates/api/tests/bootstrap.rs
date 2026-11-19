@@ -351,7 +351,10 @@ async fn crash_inside_the_l1_sequence_is_repaired(pool: PgPool) {
     );
     for address in [&operator, &publisher, &moderator, &treasury] {
         let balance = host.balance(address).await.expect("balance");
-        assert_eq!(balance.burned_total, 10.0);
+        assert_eq!(
+            balance.burned_total,
+            common::l1::handshake::Micro(10_000_000)
+        );
     }
 }
 

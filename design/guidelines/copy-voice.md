@@ -870,7 +870,9 @@ recorded so the registry is whole.
   every host the edit opens from (jakob 2026-11-13, N5); an untitled
   post takes its stand-in (*An untitled post*), and a removed one reads
   `Your comment on @ada's removed post.`, the comment card's own naming
-  (jakob 2026-11-17, **blessed**); and its sections `Words` and `Pictures` (`CommentEdit`; `Cover`
+  (jakob 2026-11-17, **blessed**), and a deleted account's `Your comment
+  on a deleted account's removed post.` by the same naming (*Naming a
+  removed or deleted thing*); and its sections `Words` and `Pictures` (`CommentEdit`; `Cover`
   on `CommentEditVideo`).
 
 ## Accessible names
@@ -1068,7 +1070,12 @@ boards already speak, recorded so the registry is whole:
   line's; `Comments`, the comment sheet's own name.
 - **A comment card's context** — the card names what it answers: `On
   "The long way home" — @ada`, `On @tobias's comment`, and over a
-  removed post `On @ada's removed post` (`FeedCommentShapes`, `History`).
+  removed post `On @ada's removed post` (`FeedCommentShapes`, `History`);
+  over a removed comment `On @tobias's removed comment`; over a deleted
+  account's thing still there `On "Three mornings on the wall…" — Deleted
+  account` · `On a deleted account's comment`; over a deleted account's
+  swept thing `On a deleted account's removed post` · `On a deleted
+  account's removed comment` (*Naming a removed or deleted thing*).
 - **The composer's rows** — a staged tag's × `Remove #saltmaps` and its
   row `#saltmaps — set how it relates`, a staged citation's row `The long
   way home — @ada — set how it relates`; a staged clip's or picture's ×
@@ -2700,8 +2707,10 @@ words. A record is one row, whatever gesture signed it.
   `Edited a comment`. The disc `chat_bubble`.
 - **An opinion** — `Gave an opinion`, the aside the target: `on @mira`,
   `on #saltmaps` for a topic, `on a post` · `on a comment` with the
-  post's title or the comment's words under it. The disc is the record's
-  own face; a revision is one more opinion given and reads the same, and
+  post's title or the comment's words under it — `Removed by its author`
+  in their place once the target was removed, and `on a deleted account`
+  for a person whose account is gone (*Naming a removed or deleted
+  thing*). The disc is the record's own face; a revision is one more opinion given and reads the same, and
   an empty sign is one too, wearing 🤷.
 - **A vouch** — the opinion that vouched someone in: `Vouched for`,
   the aside `@rafa`, the disc the record's face. A later opinion on the
@@ -3758,6 +3767,25 @@ tag, `TagPageEmpty`'s own first sentence.
 **A comment's head row, over a removed post**: `Removed by its author` in
 the title's place, the removal mark's own line in the system's voice, over
 the author's handle.
+
+**Naming a removed or deleted thing** (round 59; *new 2026-11-18, to be
+blessed*): a pointer
+never names a removed thing by its title or its words. It names it by its
+kind and its author — the author's handle while the author is there, `a
+deleted account` once the account is gone (`this account`'s lowercase
+voice, mid-sentence) — and a deleted account's thing still there keeps its
+title, `Deleted account` standing where the handle was, as on its author
+chip. The one-line pointers read `On @sol's removed post`, `On @tobias's
+removed comment`, `On a deleted account's comment`, `On a deleted
+account's removed post` · `…removed comment`, and `On "Salt maps of the
+coast road" — Deleted account`; the head row keeps its two lines, the
+mark's line where the title or words were and `Deleted account` where the
+handle was (`Removed by its author` over `Deleted account`; `@tobias` or
+`Deleted account` over `Removed by its author` for a comment). A
+chronicle aside on an account since deleted reads `on a deleted account`
+(`ProfileOther`'s `aside`). Drawn on `FeedCommentShapes` (`answering`),
+`ProfileComments` (`target`), `TagPageRemovedMenuOwn`'s page and
+`ProfileOther` (`aside`).
 
 **An untitled post** (jakob 2026-10-06): a words post is represented by
 its first line, the content itself, so a comment's head row shows its

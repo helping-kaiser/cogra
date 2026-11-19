@@ -28,6 +28,7 @@ import com.cogra.domain.Removal
 import com.cogra.domain.feed.FeedCard
 import com.cogra.domain.feed.FeedFilter
 import com.cogra.domain.feed.FeedForm
+import com.cogra.domain.removal.admitsRemoved
 import com.cogra.domain.removal.marked
 
 /** The form a body takes: a clip anywhere is video, pictures photos, none text. */
@@ -39,10 +40,10 @@ internal fun formOf(attachments: List<MediaAssetView>): FeedForm = when {
 
 /** Whether this filter admits the hydrated [card] (CD-4). */
 internal fun FeedFilter.admits(card: FeedCard): Boolean = when (card) {
-    is FeedCard.Post -> card.post.run {
+    is FeedCard.Post -> admitsRemoved(card.post) && card.post.run {
         admitsBody(removed, isSensitive(content, description, attachmentsStatus), attachments)
     }
-    is FeedCard.Comment -> card.comment.run {
+    is FeedCard.Comment -> admitsRemoved(card.comment) && card.comment.run {
         admitsBody(removed, isSensitive(content, null, attachmentsStatus), attachments)
     }
     is FeedCard.Person, is FeedCard.Tag -> true
@@ -50,8 +51,9 @@ internal fun FeedFilter.admits(card: FeedCard): Boolean = when (card) {
 
 private fun FeedFilter.admitsBody(removed: Boolean, sensitive: Boolean, attachments: List<MediaAssetView>): Boolean =
     when {
-        // A removed body has no form and no veil left to read: Removed alone decides it.
-        removed -> showRemoved
+        // A removed body has no form and no veil left to read: Removed alone
+        // decided it ([admitsRemoved], the cut the tag page shares).
+        removed -> true
         sensitive && !showSensitive -> false
         else -> formOf(attachments) in forms
     }

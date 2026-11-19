@@ -22,7 +22,7 @@ pub use census::{Domain, Family, FamilyKind, LegRole, LegSpec, Tier};
 pub use client::{ActorKey, ClientError};
 pub use fold::{BundleSum, NetStance};
 pub use handshake::{
-    AccountBalance, ApprovalWitness, EpochClosure, EpochPackage, Proposal, PublishedLeg,
+    AccountBalance, ApprovalWitness, EpochClosure, EpochPackage, Micro, Proposal, PublishedLeg,
     PublishedRecord, StructuralBody,
 };
 pub use identifier::{ActId, IdentifierError, NodeId};

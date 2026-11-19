@@ -15,7 +15,7 @@
 use common::l1::Family;
 use common::l1::census::LegRole;
 use common::l1::client::ActorKey;
-use common::l1::handshake::{ApprovalWitness, Proposal, PublishedRecord, StructuralBody};
+use common::l1::handshake::{ApprovalWitness, Micro, Proposal, PublishedRecord, StructuralBody};
 use common::l1::identifier::{ActId, NodeId};
 use common::l1::proposal::{self, PreSigned, SealedAct, Submission};
 use l1_standin::{StandIn, StandInConfig, StandInError};
@@ -28,9 +28,9 @@ use sqlx::PgPool;
 /// close, and every multi-close test would pay a moving price.
 const THETA: i64 = l1_standin::REFERENCE_THETA_MICRO;
 
-/// `acts` acts' worth of θ, in the units `balance` reports.
-fn priced(acts: i64) -> f64 {
-    (acts * THETA) as f64 / 1e6
+/// `acts` acts' worth of θ, in the micro-units `balance` reports.
+fn priced(acts: i64) -> Micro {
+    Micro(acts * THETA)
 }
 
 fn standin(pool: PgPool) -> StandIn {
@@ -155,8 +155,8 @@ async fn handshake_lands_a_record(pool: PgPool) {
 
     let balance = host.balance(&actor.address()).await.expect("balance");
     assert_eq!(balance.action_count, 1);
-    assert!((balance.balance - priced(2)).abs() < 1e-9);
-    assert!((balance.burned_total - priced(3)).abs() < 1e-9);
+    assert_eq!(balance.balance, priced(2));
+    assert_eq!(balance.burned_total, priced(3));
 
     let since = host.epochs_since(0).await.expect("epochs");
     assert_eq!(
@@ -357,7 +357,7 @@ async fn each_close_charges_the_wall_in_force(pool: PgPool) {
         "the closure part round-trips through the ingest read"
     );
     let balance = host.balance(&alice.address()).await.expect("balance");
-    assert!((balance.balance - priced(3)).abs() < 1e-9);
+    assert_eq!(balance.balance, priced(3));
 }
 
 /// Which epoch's price is charged when: the close charges exactly what
@@ -435,8 +435,8 @@ async fn the_price_leads_by_one_boundary(pool: PgPool) {
     assert_eq!(host.current_theta().await.expect("θ"), THETA);
     let balance = host.balance(&alice.address()).await.expect("balance");
     assert_eq!(
-        (balance.balance * 1e6).round() as i64,
-        20 * THETA - 2 * THETA - 60_000,
+        balance.balance,
+        Micro(20 * THETA - 2 * THETA - 60_000),
         "epochs 1 and 2 debited the reference, epoch 3 the wall epoch 2 delivered; \
          rewriting a vintage afterwards moves no balance"
     );
@@ -1069,10 +1069,7 @@ async fn a_burn_request_is_idempotent_by_its_key(pool: PgPool) {
         }
     );
     let balance = host.balance(&actor.address()).await.expect("balance");
-    assert!(
-        (balance.burned_total - priced(5)).abs() < 1e-9,
-        "credited once"
-    );
+    assert_eq!(balance.burned_total, priced(5), "credited once");
 
     assert!(matches!(
         host.request_admission_burn(&actor.address(), 6 * THETA, key)
@@ -1117,7 +1114,7 @@ async fn a_burn_settles_after_its_delay(pool: PgPool) {
             .await
             .expect("balance")
             .burned_total,
-        0.0
+        Micro::ZERO
     );
     submit(&host, &applicant, registration(&applicant)).await;
     let epoch_1 = host.close_epoch().await.expect("ok");
@@ -1310,7 +1307,7 @@ async fn hyper_acts_project_two_legs_at_one_key(pool: PgPool) {
     assert_eq!(t.tau, 0.0);
     let balance = host.balance(&publisher.address()).await.expect("ok");
     assert_eq!(balance.action_count, 1);
-    assert!((balance.balance - priced(9)).abs() < 1e-9);
+    assert_eq!(balance.balance, priced(9));
 }
 
 /// Bid/T is fresh-mint-only and rejects at formation (seal.rs) when

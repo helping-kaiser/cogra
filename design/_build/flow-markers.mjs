@@ -1848,6 +1848,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: "Salt maps of the coast road — rubbings", tag: "button" },
     { n: 9, find: "The third headland light is real", tag: "button" },
     { n: 9, find: "Three weekends of walking the same stretch", tag: "button" },
+    // The `chronicle` chip's removed act (round 58) opens as the live one does.
+    { n: 9, find: ">Removed by its author</span></span>", tag: "button" },
     ...nav(10),
     // The `change` chip's failed line under the head (round 41, S3): the next
     // free number after the bell's 15.
@@ -1899,6 +1901,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: "The glovebox camera earns its keep", tag: "button" },
     // The whole line, end and all: the landing's card description opens the same way (round 49).
     { n: 7, find: "Took the coast road instead of the tunnel. Four hours longer, worth every minute.</span", tag: "button" },
+    // The `chronicle` chip's removed act (round 58) opens as the live one does.
+    { n: 7, find: ">Removed by its author</span></span>", tag: "button" },
     ...nav(8),
     ...otherLandingCard(14),
   ],
@@ -2007,6 +2011,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 11, find: ">The glovebox camera earns its keep", tag: "a" },
     { n: 11, find: ">Low tide is kinder to the rubbings", tag: "a" },
     { n: 17, find: ">On “", tag: "button", all: true },
+    // The `target` chip's hole (round 59): the second card's pointer, both copies.
+    { n: 17, find: ">On {{targetLine}}", tag: "button", all: true },
     ...nav(12),
     // The load chip's failed first page (round 45): its Retry.
     { n: 19, find: ">Retry</button>", tag: "button" },
@@ -3243,6 +3249,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: "Three mornings on the wall, watching the tide come in over the flats.</span", tag: "button" },
     { n: 5, find: "The tunnel is faster", tag: "button" },
     { n: 5, find: "Low sun on the salt crust", tag: "button" },
+    // The `contents` chip's swept acts (round 58) open as the kept ones do.
+    { n: 5, find: ">Removed by its author</span></span>", tag: "button", all: true },
     ...nav(6),
     { n: 11, find: 'aria-label="More about this account"', tag: "button" },
     // The Posts landing's card, kept or removed (round 49, jakob 2026-11-17).
@@ -3392,7 +3400,8 @@ const tagPageBody = ({ topicStance }) => [
   { n: 1, find: 'aria-label="Back to Explore"', tag: "a" },
   { n: 2, find: ">Choose your opinion on #saltmaps</button>", tag: "button" },
   { n: 2, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
-  { n: 2, find: ">Choose your opinion on this comment</button>", tag: "button" },
+  // `all`: `TagPage`'s `comment` chip draws the comment row twice (round 58).
+  { n: 2, find: ">Choose your opinion on this comment</button>", tag: "button", all: true },
   { n: 3, find: '<a href="/u/', tag: "a", all: true },
   { n: 4, find: 'aria-label="More on this post"', tag: "button", all: true },
   { n: 5, find: ">More</button>", tag: "button", all: true },
@@ -3406,8 +3415,8 @@ const tagPageBody = ({ topicStance }) => [
   { n: 11, find: 'aria-label="Share this post"', tag: "button", all: true },
   { n: 11, find: 'aria-label="Share #saltmaps"', tag: "button" },
   { n: 12, find: ">On \u201c", tag: "button", all: true },
-  { n: 13, find: 'aria-label="More on this comment"', tag: "button" },
-  { n: 14, find: 'aria-label="Your opinion on this comment', tag: "button" },
+  { n: 13, find: 'aria-label="More on this comment"', tag: "button", all: true },
+  { n: 14, find: 'aria-label="Your opinion on this comment', tag: "button", all: true },
   { n: 15, find: topicStance, tag: "button" },
 ];
 
