@@ -99,7 +99,7 @@ import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
 import { unlandedCitationLine } from "@/app/(app)/compose/wizard/seal-step";
 import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
-import { SCREEN_LAYER } from "@/lib/ui2/screen-layer";
+import { SCREEN_LAYER, SCREEN_LAYER_STILL } from "@/lib/ui2/screen-layer";
 
 /** The registered comment edit (`commentEdit`), and the parts its blocks hang off. */
 const NODE: DataNode = { path: "commentEdit" };
@@ -374,7 +374,10 @@ export function CommentEditView({
       role="dialog"
       aria-modal="true"
       aria-label="Edit comment"
-      className={`${SCREEN_LAYER} z-40 flex flex-col bg-surface text-on-surface`}
+      // THE EDIT IS SEVERAL FIELDS, so its foot stays under the keyboard and the
+      // focused field takes the room; a picker over it is one search field with
+      // its Done, so the layer rides while the picker stands (seam 388).
+      className={`${picker !== null ? SCREEN_LAYER : SCREEN_LAYER_STILL} z-40 flex flex-col bg-surface text-on-surface`}
     >
       {cropping !== null ? (
         // CoverCrop over the comment edit: its back arrow gives the cover row

@@ -24,6 +24,7 @@ import type { License } from "@/lib/license";
 import { PUBLIC_DOMAIN } from "@/lib/license";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
+import type { KeyboardClass } from "@/lib/ui2/screen-layer";
 
 /**
  * The write side's cap; a whole-batch refusal, so the picker enforces it too.
@@ -869,4 +870,14 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       return previous === null ? state : { ...state, step: previous };
     }
   }
+}
+
+/**
+ * HOW A STAGE MEETS THE ON-SCREEN KEYBOARD (seam 388). The words stage holds
+ * one field, so its Next rides above the keyboard; the details stage holds
+ * several, so its foot stays under it and the focused field takes the room.
+ * The other stages hold no text field and never raise a keyboard.
+ */
+export function stageKeyboard(step: Step): KeyboardClass {
+  return step === "details" ? "stays" : "rides";
 }
