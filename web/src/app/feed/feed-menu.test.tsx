@@ -12,6 +12,7 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
+import { citingRecord, citingRecords, nodeOpinions, opinionRecord } from "@/test/inbound";
 import { byNode } from "@/test/data-node";
 import { CarriedSnackbar } from "@/lib/ui/carried-snackbar";
 import { FeedView } from "./feed-view";
@@ -207,7 +208,7 @@ describe("the feed's post menu", () => {
   });
 
   // FeedPostMenu.md:5
-  it("the_feed_menu_reads_save_cite_hide_license_then_report_at_the_tail", async () => {
+  it("the_feed_menu_reads_save_cite_hide_cited_by_opinions_license_then_report_at_the_tail", async () => {
     server.use(...rankedFeed([post("p1")]));
     renderWithProviders(<FeedView />, { store: signedInStore() });
     await openMenu();
@@ -219,9 +220,13 @@ describe("the feed's post menu", () => {
       "feed.menuSheet.save",
       "feed.menuSheet.cite",
       "feed.menuSheet.hide",
+      "feed.menuSheet.citedBy",
+      "feed.menuSheet.opinions",
       "feed.menuSheet.license",
       "feed.menuSheet.report",
     ]);
+    expect(screen.getByTestId("feed.menuSheet.citedBy")).toHaveTextContent("Cited by");
+    expect(screen.getByTestId("feed.menuSheet.opinions")).toHaveTextContent("Opinions on this");
     // :7 — the post is not kept, so the row reads Save.
     expect(screen.getByTestId("feed.menuSheet.save")).toHaveTextContent("Save");
     expect(screen.getByTestId("feed.menuSheet.hide")).toHaveTextContent("Hide @alice");
@@ -237,6 +242,99 @@ describe("the feed's post menu", () => {
     expect(screen.getByTestId("feed.menuSheet.edit")).toHaveTextContent("Edit");
     expect(screen.queryByTestId("feed.menuSheet.report")).not.toBeInTheDocument();
     expect(screen.queryByTestId("feed.menuSheet.hide")).not.toBeInTheDocument();
+  });
+
+  // FeedPostMenuOwn.md:5
+  it("the_authors_own_feed_menu_reads_save_cite_edit_sensitive_remove_cited_by_opinions_license", async () => {
+    server.use(...rankedFeed([post("p1", "acct-1")]));
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+    await openMenu();
+    const order = Array.from(
+      screen.getByTestId("feed-menu-sheet-body").querySelectorAll("[data-testid]"),
+      (node) => node.getAttribute("data-testid"),
+    );
+    expect(order).toEqual([
+      "feed.menuSheet.save",
+      "feed.menuSheet.cite",
+      "feed.menuSheet.edit",
+      "feed.menuSheet.markSensitive",
+      "feed.menuSheet.remove",
+      "feed.menuSheet.citedBy",
+      "feed.menuSheet.opinions",
+      "feed.menuSheet.license",
+    ]);
+  });
+
+  // ReaderPostMenu.md:31, CitedBy.md:5 — what cites the post comes up over
+  // the feed, the list still open beneath it.
+  it("cited_by_closes_the_menu_and_raises_what_cites_the_post_over_the_feed", async () => {
+    const reads: string[] = [];
+    server.use(
+      ...rankedFeed([post("p1"), post("p2")]),
+      citingRecords([citingRecord("bob", { kind: "post", id: "p9", title: "A reply post" }, 0.5, 0.5)], (id) =>
+        reads.push(id),
+      ),
+    );
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+    const menu = await openMenu();
+    fireEvent.click(screen.getByTestId("feed.menuSheet.citedBy"));
+    await waitFor(() => expect(menu.open).toBe(false));
+    const sheet = screen.getByTestId("postDetail.citedBySheet") as HTMLDialogElement;
+    expect(sheet.open).toBe(true);
+    expect(await screen.findByTestId(byNode("postDetail.citedBySheet.citation", "1"))).toHaveTextContent(
+      "A reply post",
+    );
+    expect(reads).toEqual(["p1"]);
+    // Over the feed: the cards stand beneath it.
+    expect(screen.getByTestId(byNode("feed.card", "p2"))).toBeInTheDocument();
+  });
+
+  // ReaderPostMenu.md:33, PostOpinions.md:5
+  it("opinions_closes_the_menu_and_raises_the_posts_opinions_over_the_feed", async () => {
+    const reads: string[] = [];
+    server.use(
+      ...rankedFeed([post("p1")]),
+      nodeOpinions([opinionRecord("bob", 0.4, 0.6)], (id) => reads.push(id)),
+    );
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+    const menu = await openMenu();
+    fireEvent.click(screen.getByTestId("feed.menuSheet.opinions"));
+    await waitFor(() => expect(menu.open).toBe(false));
+    const sheet = screen.getByTestId("postDetail.opinionsSheet") as HTMLDialogElement;
+    expect(sheet.open).toBe(true);
+    expect(sheet).toHaveTextContent("Opinions on this post");
+    expect(await screen.findByTestId(byNode("postDetail.opinionsSheet.opinion", "bob"))).toBeInTheDocument();
+    expect(reads).toEqual(["p1"]);
+  });
+
+  // ReaderPostMenu.md:35, CitedBy.md:19, PostOpinions.md:25 — the rows stand
+  // at zero, and the sheet then says so alone.
+  it("at_zero_cited_by_stands_and_its_sheet_reads_nothing_cites_this_yet", async () => {
+    server.use(...rankedFeed([post("p1")]));
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+    await openMenu();
+    fireEvent.click(screen.getByTestId("feed.menuSheet.citedBy"));
+    expect(await screen.findByTestId("postDetail.citedBySheet.empty")).toHaveTextContent(
+      "Nothing cites this yet",
+    );
+  });
+
+  it("at_zero_opinions_stands_and_its_sheet_reads_no_opinions_yet", async () => {
+    server.use(...rankedFeed([post("p1")]));
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+    await openMenu();
+    fireEvent.click(screen.getByTestId("feed.menuSheet.opinions"));
+    expect(await screen.findByTestId("postDetail.opinionsSheet.empty")).toHaveTextContent("No opinions yet");
+  });
+
+  // FeedPostMenu.md:25 — a reading is open to a guest: no join ask.
+  it("a_guests_cited_by_and_opinions_open_their_sheets_and_never_the_join_ask", async () => {
+    server.use(...rankedFeed([post("p1")]));
+    renderWithProviders(<FeedView />, { reader: null });
+    await openMenu();
+    fireEvent.click(screen.getByTestId("feed.menuSheet.opinions"));
+    expect(await screen.findByTestId("postDetail.opinionsSheet")).toBeInTheDocument();
+    expect(screen.queryByTestId("join-prompt")).not.toBeInTheDocument();
   });
 
   // FeedPostMenu.md:17
@@ -512,7 +610,7 @@ describe("the feed's post menu", () => {
       within(sheet!)
         .getAllByRole("button")
         .map((row) => row.textContent),
-    ).toEqual(["Save", "Cite in a new post", "License terms"]);
+    ).toEqual(["Save", "Cite in a new post", "Cited by", "Opinions on this", "License terms"]);
   });
 
   // FeedRemoveConfirm.md:13 — WHEN the removal does not go through ->
