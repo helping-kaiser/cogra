@@ -70,7 +70,7 @@ export function AvatarCrop({
         testId="avatar-crop-header"
         focusTitle
       />
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-6 pb-4 pt-2">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto *:shrink-0 px-6 pb-4 pt-2">
         <CropFrame src={src} shape="avatar" crop={crop} onChange={onCrop} zoomSlider testId="avatar-crop-frame" />
         <div className="flex-1" />
         {problem}
