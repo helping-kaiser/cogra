@@ -400,6 +400,26 @@ toward the bottom edge. The one stated exception is `ReportProblem`:
 the read-back of what travels stands between its field and `Send by
 email`, because the honesty comes before the press (jakob 2026-10-01).
 
+**With the keyboard up, the field being typed in comes first** (jakob
+2026-11-19: "the split as rec sounds best yes"). A stage or a sheet that
+holds **one field** — the words stages, the reply composer, a one-field
+sheet with its `Done`, a picker with its search field and `Done` — lets
+its pinned button ride directly above the keyboard, the field scrolling
+in what is left; where the riding button would leave the focused field
+fewer than three of its lines, the field wins and the button stays at
+the foot. A surface with **several fields** — the comment edit, the post
+edit, the profile edit, the composer's details step, the opinion pad's
+typed values — keeps its pinned foot at the bottom, under the keyboard:
+the focused field takes the room and is brought into view, and the
+reader closes the keyboard to reach the buttons. A search field with no
+commit of its own shrinks its surface to the visible band, so its
+results stand above the keyboard. Two reasons: the field typed in
+outranks the buttons, and buttons right above the keyboard on a page
+with several fields invite a submit before the other fields are filled.
+Chips and toggles are not fields the keyboard serves. A task page has no
+pinned foot, so nothing on it rides; a stage pins its footer on a long
+page and on a short one alike.
+
 **One design, both platforms, dark mode included** (jakob, 2026-09-17).
 Wherever Android and web can do the same thing, they look the same
 thing: no divergence in colour, spacing, treatment or dark-mode
