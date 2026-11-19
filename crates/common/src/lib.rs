@@ -6,5 +6,6 @@
 pub mod envelope;
 pub mod hashtag;
 pub mod l1;
+pub mod redact;
 
 pub use hashtag::{HASHTAG_NAMESPACE, HashtagNameError, hashtag_uuid};

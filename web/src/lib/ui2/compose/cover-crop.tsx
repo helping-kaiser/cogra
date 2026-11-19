@@ -43,7 +43,7 @@ export function CoverCrop({
   testIdPrefix: string;
 }) {
   return (
-    <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 pb-4 pt-2">
+    <div className="flex flex-1 flex-col gap-3 overflow-y-auto *:shrink-0 px-6 pb-4 pt-2">
       <CropFrame
         src={src}
         shape={{ ratio }}

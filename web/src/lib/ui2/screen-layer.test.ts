@@ -6,7 +6,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-import { SCREEN_LAYER } from "./screen-layer";
+import { SCREEN_LAYER, SCREEN_LAYER_STILL } from "./screen-layer";
 
 function sourceFiles(): string[] {
   const root = new URL("../../", import.meta.url).pathname;
@@ -18,6 +18,7 @@ function sourceFiles(): string[] {
 describe("a layer that takes the whole screen", () => {
   it("a_full_screen_layer_pads_its_foot_by_the_bottom_safe_area_inset", () => {
     expect(SCREEN_LAYER.split(" ")).toContain("pb-[env(safe-area-inset-bottom)]");
+    expect(SCREEN_LAYER_STILL.split(" ")).toContain("pb-[env(safe-area-inset-bottom)]");
   });
 
   it("a_full_screen_layer_ends_on_the_keyboards_top_edge", () => {
@@ -45,7 +46,10 @@ describe("a layer that takes the whole screen", () => {
         .map(({ at }) => at),
     );
     expect(offenders).toEqual([]);
-    const users = files.filter((file) => /\$\{SCREEN_LAYER\}/.test(readFileSync(file, "utf-8"))).map((f) => f.split("/src/")[1]);
+    const users = files
+      .filter((file) => !file.endsWith("/lib/ui2/screen-layer.ts"))
+      .filter((file) => /\bSCREEN_LAYER(_STILL)?\b/.test(readFileSync(file, "utf-8")))
+      .map((f) => f.split("/src/")[1]);
     expect(users.sort()).toEqual([
       "app/posts/[id]/edit/comment-edit-view.tsx",
       "app/posts/[id]/reply/reply-wizard-view.tsx",

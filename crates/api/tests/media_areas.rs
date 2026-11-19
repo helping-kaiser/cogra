@@ -207,9 +207,15 @@ impl Rig {
     }
 
     /// A post an applicant carries with their application, naming `media`.
+    /// The carried state is planted by hand: the carry itself holds back
+    /// only an applicant's writes, and the rig's actors have no application.
     async fn carried_post(&self, actor: Uuid, media: &[Uuid]) -> Uuid {
         let (id, _) = self.prepare_post(actor, "Waits.", media).await;
-        staged::carry(&self.pool, &[id]).await.expect("carries");
+        sqlx::query("UPDATE staged_writes SET state = 'carried', carried = TRUE WHERE id = $1")
+            .bind(id)
+            .execute(&self.pool)
+            .await
+            .expect("carries");
         id
     }
 

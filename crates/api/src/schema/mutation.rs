@@ -3673,7 +3673,7 @@ impl Mutation {
                     Ok(prepared) => prepared,
                     Err(e) => return Ok(stance_refusal(e)),
                 };
-                if let Err(e) = onboarding::close_carry(pool, lock, &[prepared.id]).await {
+                if let Err(e) = onboarding::close_carry(lock, &[prepared.id]).await {
                     return Ok(PreparePayload {
                         writes: None,
                         user_errors: vec![carry_refusal(e)?],
@@ -3995,7 +3995,7 @@ impl Mutation {
                     Err(e) => return Ok(PrepareContentPayload::from_error(e)),
                 };
                 let ids: Vec<Uuid> = prepared.writes.iter().map(|w| w.id).collect();
-                if let Err(e) = onboarding::close_carry(pool, lock, &ids).await {
+                if let Err(e) = onboarding::close_carry(lock, &ids).await {
                     return Ok(PrepareContentPayload::refused(vec![carry_refusal(e)?]));
                 }
                 return Ok(PrepareContentPayload::carried(prepared));

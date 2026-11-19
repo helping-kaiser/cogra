@@ -191,13 +191,16 @@ function WordsBody({
         </label>
         {/* The canvas gives the body the whole screen below the label — it is
             the post, not a field on a form. */}
+        {/* THE FIELD WINS WHEN ROOM IS SHORT (seam 388): its floor is three lines
+            and its box, so a band too short for them and Next lets Next fall
+            under the keyboard rather than the words give up lines. */}
         <textarea
           id={id}
           data-testid="wizard-words"
           value={words}
           onChange={(event) => onWords(event.target.value)}
           aria-invalid={shown ? true : undefined}
-          className={`flex-1 resize-none rounded-extra-small border p-3 text-body-large ${shown ? "border-error" : "border-outline"}`}
+          className={`min-h-[calc(3lh+1.5rem+2px)] flex-1 resize-none rounded-extra-small border p-3 text-body-large ${shown ? "border-error" : "border-outline"}`}
         />
         {/* The composer's growing body box is not a `TextField`, so it draws
             the same supporting-row geometry directly rather than its own

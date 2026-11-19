@@ -93,8 +93,7 @@ interface Vectors {
     samples: { msgUtf8: string; signatureHex: string; tagUtf8: string }[];
   };
   structuralBodies: BodyVector[];
-  /** The proposal envelope only: the one-nonce handshake fields of this group are not read. */
-  handshake: {
+  proposalEnvelope: {
     proposal: { body: BodyVector; deps: string[]; payloadHex: string };
     wireProposalHex: string;
   };
@@ -136,6 +135,12 @@ interface Vectors {
     | { case: string; what: "approve"; wireVerifiedActHex: string }
     | { case: string; what: "decodePreCommitment" | "decodeVerifiedAct"; hex: string; refusal: string }
   )[];
+  proposalHandshakeDeviceRefusals: {
+    case: string;
+    what: "approve" | "decodePreCommitment" | "decodeVerifiedAct";
+    hex: string;
+    refusal: string;
+  }[];
   keyBackup: {
     aesNonceHex: string;
     blobBase64: string;
@@ -253,9 +258,9 @@ it("structural body vectors match", () => {
 });
 
 it("the prepared-proposal envelope matches", () => {
-  // `canonicalProposal` keeps its one envelope; its vector rides in the
-  // `handshake` group, over the same proposal `proposalHandshake` signs.
-  const h = vectors.handshake;
+  // `canonicalProposal` keeps its one envelope, over the same proposal
+  // `proposalHandshake` signs.
+  const h = vectors.proposalEnvelope;
   const proposal = new Proposal(
     bodyOf(h.proposal.body),
     fromHex(h.proposal.payloadHex),
@@ -433,6 +438,29 @@ it("the device refuses every two-nonce refusal vector, for its stated reason", a
       }
       expect(thrown, r.case).toBeInstanceOf(WireError);
       expect((thrown as Error).message, r.case).toBe(`unsupported wire ${r.refusal}`);
+    }
+  }
+});
+
+it("the device refuses every device refusal vector, with the refusal it states", async () => {
+  const { h, actor, pre } = await proposalHandshakeFixture();
+  const hostKey = fromHex(h.host.publicKeyHex);
+  expect(vectors.proposalHandshakeDeviceRefusals.length).toBeGreaterThan(0);
+  for (const r of vectors.proposalHandshakeDeviceRefusals) {
+    if (r.what === "approve") {
+      const refused = actor.approve(pre, decodeVerifiedAct(fromHex(r.hex)), hostKey);
+      await expect(refused, r.case).rejects.toBeInstanceOf(HandshakeError);
+      await expect(refused, r.case).rejects.toThrow(r.refusal);
+    } else {
+      const decode = r.what === "decodePreCommitment" ? decodePreCommitment : decodeVerifiedAct;
+      let thrown: unknown;
+      try {
+        decode(fromHex(r.hex));
+      } catch (e) {
+        thrown = e;
+      }
+      expect(thrown, r.case).toBeInstanceOf(WireError);
+      expect((thrown as Error).message.startsWith(r.refusal), r.case).toBe(true);
     }
   }
 });
