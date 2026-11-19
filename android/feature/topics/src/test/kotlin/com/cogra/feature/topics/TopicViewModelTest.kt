@@ -1,14 +1,24 @@
 package com.cogra.feature.topics
 
+import com.cogra.domain.AuthTokens
+import com.cogra.domain.FieldStatus
 import com.cogra.domain.HashtagView
+import com.cogra.domain.ModeratedField
 import com.cogra.domain.Outcome
 import com.cogra.domain.TaggedContentKind
 import com.cogra.domain.TaggedContentView
+import com.cogra.domain.TaggedNode
+import com.cogra.domain.feed.CommittedFeedFilter
+import com.cogra.domain.feed.FeedFilter
+import com.cogra.domain.feed.ReaderDefaults
 import com.cogra.domain.history.SeenTracker
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.InMemoryCommittedFilterStore
+import com.cogra.domain.testing.InMemoryReaderDefaultStore
 import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.ThrowingTopicRepository
 import com.cogra.domain.testing.testHashtag
+import com.cogra.domain.testing.testPost
 import com.cogra.domain.testing.testSeenRecord
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.Dispatchers
@@ -49,7 +59,18 @@ class TopicViewModelTest {
         SeenTracker(RecordingViewHistoryRepository(), signedOut, scope, testSeenRecord(signedOut, scope))
     }
 
-    private fun viewModel() = TopicViewModel(topics, seenTracker, webOrigin = "https://cogra.test")
+    // The reader whose feed filter the page reads: signed in as u1.
+    private val session = FakeTokenStore().apply { tokens.value = AuthTokens("a", "r", "u1") }
+    private val defaults = InMemoryReaderDefaultStore()
+    private val committedFilters = InMemoryCommittedFilterStore()
+
+    private fun viewModel() = TopicViewModel(
+        topics,
+        seenTracker,
+        webOrigin = "https://cogra.test",
+        readerDefaults = ReaderDefaults(defaults, session),
+        committed = CommittedFeedFilter(committedFilters, session),
+    )
 
     @Before
     fun setUp() {
@@ -112,6 +133,78 @@ class TopicViewModelTest {
     fun theShareHandsOverTheTagsOwnAddress() {
         assertThat(viewModel().shareUrl(NAME)).isEqualTo("https://cogra.test/topics/rust")
     }
+
+    // -- The feed's Removed switch (TagPage.md:19-21) --
+
+    private val removedRow = taggedPost("p-removed", removed = true)
+    private val liveRow = taggedPost("p-live", removed = false)
+    private val comment = taggedComment("c1")
+
+    private fun derived(): List<String> {
+        val vm = viewModel()
+        vm.start(NAME)
+        dispatcher.scheduler.advanceUntilIdle()
+        return vm.state.value.content.map { it.id }
+    }
+
+    // TagPage.md:21 — with the feed's filter keeping Removed off (CoGra's own
+    // default), a removed tagged post is not listed; the rest stand.
+    @Test
+    fun aRemovedTaggedPostIsNotListedWithTheFeedsRemovedOff() = runTest(dispatcher) {
+        topics.contentOutcome = Outcome.Success(listOf(removedRow, liveRow, comment))
+        assertThat(derived()).containsExactly("p-live", "c1").inOrder()
+    }
+
+    // TagPage.md:19 — the filter a feed's Done committed on this device has
+    // Removed on: the removed tagged post stands in its row.
+    @Test
+    fun aRemovedTaggedPostStandsWithTheFeedsCommittedRemovedOn() = runTest(dispatcher) {
+        committedFilters.stored["u1"] = FeedFilter(showRemoved = true)
+        topics.contentOutcome = Outcome.Success(listOf(removedRow, liveRow, comment))
+        assertThat(derived()).containsExactly("p-removed", "p-live", "c1").inOrder()
+    }
+
+    // TagPage.md:19 — with nothing committed, the feed opens with the reader's
+    // saved default, and so does the page.
+    @Test
+    fun withNothingCommittedThePageReadsTheReadersSavedDefault() = runTest(dispatcher) {
+        defaults.saved.value = mapOf("u1" to FeedFilter(showRemoved = true))
+        topics.contentOutcome = Outcome.Success(listOf(removedRow))
+        assertThat(derived()).containsExactly("p-removed")
+    }
+
+    // The committed filter wins over the default, as the feed opens with it.
+    @Test
+    fun aCommittedRemovedOffWinsOverADefaultWithItOn() = runTest(dispatcher) {
+        defaults.saved.value = mapOf("u1" to FeedFilter(showRemoved = true))
+        committedFilters.stored["u1"] = FeedFilter(showRemoved = false)
+        topics.contentOutcome = Outcome.Success(listOf(removedRow))
+        assertThat(derived()).isEmpty()
+    }
+
+    // TagPage.md:19-21 "WHEN the tag page is next derived" — the switch is read
+    // at each derivation, never held from the first.
+    @Test
+    fun theSwitchIsReadEachTimeThePageIsDerived() = runTest(dispatcher) {
+        topics.contentOutcome = Outcome.Success(listOf(removedRow))
+        val vm = viewModel()
+        vm.start(NAME)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.content).isEmpty()
+
+        committedFilters.stored["u1"] = FeedFilter(showRemoved = true)
+        vm.refresh()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.content.map { it.id }).containsExactly("p-removed")
+    }
+
+    private fun taggedPost(id: String, removed: Boolean) = taggedPost(id).copy(
+        node = TaggedNode.Post(
+            testPost(id).let { post ->
+                if (removed) post.copy(content = ModeratedField(null, FieldStatus.REDACTED)) else post
+            },
+        ),
+    )
 
     private fun taggedPost(id: String) = TaggedContentView(
         kind = TaggedContentKind.POST,
