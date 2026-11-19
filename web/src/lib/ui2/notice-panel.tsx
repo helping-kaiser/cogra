@@ -10,12 +10,14 @@
 
 import type { ReactNode } from "react";
 
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { HelpDot } from "./help-dot";
 
 export function NoticePanel({
   title,
   help,
   testId,
+  node,
   corner = "medium",
   children,
 }: {
@@ -25,15 +27,19 @@ export function NoticePanel({
   /** The stopper exception's own "?" — named by its dialog. */
   help?: { label: string; onOpen: () => void; testId?: string };
   testId?: string;
+  /** The panel's node where a board places it (NoticePanel.jsx `node`): its title is the `title` part. */
+  node?: DataNode;
   children: ReactNode;
 }) {
   return (
     <div
-      data-testid={testId}
+      {...testAttributes(node, testId)}
       className={`flex flex-col gap-3 ${corner === "large" ? "rounded-large" : "rounded-medium"} bg-tertiary-container p-4 text-on-tertiary-container`}
     >
       <div className="flex items-center gap-2">
-        <h2 className="m-0 flex-1 text-title-medium">{title}</h2>
+        <h2 className="m-0 flex-1 text-title-medium" {...testAttributes(part(node, "title"))}>
+          {title}
+        </h2>
         {help && <HelpDot ariaLabel={help.label} onOpen={help.onOpen} testId={help.testId} variant="inverse" />}
       </div>
       {children}
@@ -41,7 +47,11 @@ export function NoticePanel({
   );
 }
 
-/** The panel's sentence — `body-medium` in the panel's own ink. */
-export function NoticeLine({ children }: { children: ReactNode }) {
-  return <p className="m-0 text-body-medium">{children}</p>;
+/** The panel's sentence — `body-medium` in the panel's own ink; `node` names it where a board places it. */
+export function NoticeLine({ children, node }: { children: ReactNode; node?: DataNode }) {
+  return (
+    <p className="m-0 text-body-medium" {...testAttributes(node)}>
+      {children}
+    </p>
+  );
 }
