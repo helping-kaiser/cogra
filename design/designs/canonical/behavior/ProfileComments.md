@@ -4,6 +4,12 @@ ALWAYS profile.comments lists the person's comments, each a profile.comments.com
 
 ALWAYS profile.comments.commentCard leads with profile.comments.commentCard.target, the pointer to what it answers
 
+ALWAYS profile.comments.commentCard.target reads On with the post's author's handle and removed post, as On @sol's removed post, and never the post's title GIVEN the post it answers was removed
+
+ALWAYS profile.comments.commentCard.target reads On with the post's title and Deleted account in the handle's place GIVEN the post it answers is a deleted account's and still there
+
+ALWAYS profile.comments.commentCard.target reads On a deleted account's removed post GIVEN the post it answers was a deleted account's and its content went with the account
+
 ALWAYS a removed comment keeps its place in the list, profile.comments.commentCard.removalMark.line reading Removed by its author where its words were, and nothing more under it
 
 ALWAYS a removed comment keeps profile.comments.commentCard.authorChip, its time and profile.comments.commentCard.target, and keeps profile.comments.commentCard.menu, the reader's comment menu whole — Save or Unsave, Cite in a new post, Hide with the comment's author's handle, Cited by, Opinions on this, License terms, then Report at the sheet tail — GIVEN the comment is someone else's

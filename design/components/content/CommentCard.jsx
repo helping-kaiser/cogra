@@ -400,7 +400,12 @@ export function CommentCard({
                 removal mark's line in the system's voice — `text-secondary`
                 at the body's weight, the register `Deleted account` takes —
                 over the author, who stays. The comment stays readable under
-                it; a node is never deleted, and neither is what answers it. */}
+                it; a node is never deleted, and neither is what answers it.
+                `titleQuiet` sets the title's voice apart from the mark (round
+                59): a removed COMMENT keeps its author's handle in the title's
+                place, the mark's line under it, so its title is not quiet; a
+                deleted account's `Deleted account` there is. Absent, it
+                follows `removed`. */}
             <button type="button" onClick={onOpenTarget} aria-label={`On ${target}`} data-node={node && "target"} className="cg-state cg-focus" style={{ ...TARGET_DOOR, display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
               <NodeMark kind={targetKind} src={targetDetail.cover} redacted={targetDetail.removed} onCard />
               <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
@@ -409,8 +414,8 @@ export function CommentCard({
                     fontSize: "var(--text-label-large)",
                     letterSpacing: "var(--text-label-large--letter-spacing)",
                     lineHeight: "var(--text-label-large--line-height)",
-                    fontWeight: targetDetail.removed ? 400 : "var(--text-label-large--font-weight)",
-                    ...(targetDetail.removed ? { color: "var(--text-secondary)" } : null),
+                    fontWeight: (targetDetail.titleQuiet ?? targetDetail.removed) ? 400 : "var(--text-label-large--font-weight)",
+                    ...((targetDetail.titleQuiet ?? targetDetail.removed) ? { color: "var(--text-secondary)" } : null),
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",

@@ -41,6 +41,15 @@
    `removalMark.when`, as the feed's card, the post and the thread's comment
    draw it — `2h`, the removal's own moment, never the comment's `4d`.
 
+   WHAT THE POINTER CALLS A REMOVED OR DELETED POST (round 59; the proposal
+   to jakob 2026-11-18, C3: "for sure not the actual title") — the `target`
+   chip, on the second comment's pointer to @sol's post: `live` `On “Salt
+   maps of the coast road” — @sol`; `removed` `On @sol's removed post`, the
+   feed card's own naming; `deleted` the post kept by a deleted account, `On
+   “Salt maps of the coast road” — Deleted account`; `swept` `On a deleted
+   account's removed post`. The title is never said once the post is
+   removed (`commentTarget`).
+
    THE FIRST PAGE'S OTHER MOMENTS (round 45) are the `load` chip,
    `ProfileTabFirstPage`'s, as on `ProfilePosts`.
 
@@ -56,8 +65,9 @@ export const PROPS = {
   comments: { editor: "enum", options: ["some", "none", "removed"], default: "some" },
   load: { editor: "enum", options: ["loaded", "loading", "failed"], default: "loaded" },
   reader: { editor: "enum", options: ["member", "applicant"], default: "member" },
+  target: { editor: "enum", options: ["live", "removed", "deleted", "swept"], default: "live" },
 };
-export const VALS = `someShown: this.props.load === "loaded" && this.props.comments !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "flex" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", secondLive: this.props.comments === "removed" ? "none" : "contents", secondRemoved: this.props.comments === "removed" ? "contents" : "none", lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none"`;
+export const VALS = `someShown: this.props.load === "loaded" && this.props.comments !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "flex" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", secondLive: this.props.comments === "removed" ? "none" : "contents", secondRemoved: this.props.comments === "removed" ? "contents" : "none", lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none", targetLine: this.props.target === "removed" ? "@sol's removed post" : this.props.target === "deleted" ? "“Salt maps of the coast road” — Deleted account" : this.props.target === "swept" ? "a deleted account's removed post" : "“Salt maps of the coast road” — @sol"`;
 
 export function Screen() {
   return (
@@ -109,7 +119,7 @@ export function Screen() {
               onOpen={() => {}}
               replyOpacity="{{lockOpacity}}"
 
-              target="“Salt maps of the coast road” — @sol"
+              target="{{targetLine}}"
               onOpenTarget={() => {}}
               menuItems={readerCommentCardMenu("ada")}
               node="commentCard"
@@ -129,7 +139,7 @@ export function Screen() {
 
               replyOpacity="{{lockOpacity}}"
 
-              target="“Salt maps of the coast road” — @sol"
+              target="{{targetLine}}"
               onOpenTarget={() => {}}
               node="commentCard"
               id={ADA_SECOND_COMMENT_ID}

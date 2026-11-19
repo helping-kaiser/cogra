@@ -52,6 +52,32 @@ export const NODE = "feed";
 
 export const FRAME = { width: 390, height: 3482 };
 
+/* WHAT THE REMOVED SHAPE ANSWERS (round 59, the proposal to jakob
+   2026-11-18, C3) — the `answering` chip, on the card answering a removed
+   post: `removed-post` as drawn (`Removed by its author` over `@ada`);
+   `removed-comment` — `@tobias` over `Removed by its author`, the empty
+   tile, spoken `On @tobias's removed comment`; `deleted-post` — a deleted
+   account's post still there, its first words over `Deleted account`;
+   `deleted-comment` — `Deleted account` over its first words, spoken `On a
+   deleted account's comment`; `swept-post` — `Removed by its author` over
+   `Deleted account`, spoken `On a deleted account's removed post`;
+   `swept-comment` — `Deleted account` over `Removed by its author`. Never
+   the removed thing's title or words (`commentTarget`). */
+const DELETED_COMMENT = { author: DELETED_POST.author, content: "The tunnel is faster; the coast road is the reason to drive at all." };
+const ANSWERING = [
+  ["removed-post", { author: ADA, removed: true }, "post"],
+  ["removed-comment", { author: TOBIAS, removed: true }, "comment"],
+  ["deleted-post", DELETED_POST, "post"],
+  ["deleted-comment", DELETED_COMMENT, "comment"],
+  ["swept-post", { author: DELETED_POST.author, removed: true }, "post"],
+  ["swept-comment", { author: DELETED_POST.author, removed: true }, "comment"],
+];
+const answeringHole = (value) => "answering" + value.split("-").map((part) => part[0].toUpperCase() + part.slice(1)).join("");
+export const PROPS = {
+  answering: { editor: "enum", options: ANSWERING.map(([value]) => value), default: "removed-post" },
+};
+export const VALS = ANSWERING.map(([value]) => `${answeringHole(value)}: this.props.answering === "${value}" ? "contents" : "none"`).join(", ");
+
 const LONG_COMMENT =
   "Drove it twice this summer, once in each direction, and the second time I stopped at every lay-by between the tunnel mouth and the third headland. The light does something different on the way back — lower, warmer, and it catches the salt crust on the flats so the whole shore looks drawn in chalk. Worth the four hours, and worth doing backwards.";
 
@@ -122,14 +148,19 @@ export function Screen() {
           parent={TOBIAS_POST}
           score="6.40"
         />
-        <CommentFeedCard
-          author={TOBIAS}
-          content="Kept the rubbing from that morning anyway — the salt held the line."
-          timestamp="6h"
-          parent={{ author: ADA, removed: true }}
-          topics={["saltmaps"]}
-          score="5.90"
-        />
+        {ANSWERING.map(([value, parent, parentKind]) => (
+          <div key={value} style={{ display: `{{${answeringHole(value)}}}` }}>
+            <CommentFeedCard
+              author={TOBIAS}
+              content="Kept the rubbing from that morning anyway — the salt held the line."
+              timestamp="6h"
+              parent={parent}
+              parentKind={parentKind}
+              topics={["saltmaps"]}
+              score="5.90"
+            />
+          </div>
+        ))}
         <CommentFeedCard
           author={SOL}
           content="The honey stand is half the reason I take the coast road at all."

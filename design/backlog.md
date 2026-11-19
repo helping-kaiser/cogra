@@ -6614,6 +6614,22 @@ author — @sol`, the thread shape's rule; (b) the line reads `On @sol's removed
 card's naming (copy-voice, *A comment's head row*). Until ruled the drawn pointer is the live
 one, an inconsistency on one board's page beneath its wash.
 
+Round 59 (jakob 2026-11-18, C3: "for sure not the actual title… figure sth out you can show me")
+draws a PROPOSAL on its own branch, `jakob/design/round59-removed-pointers`: a removed thing named
+by kind and author, `On @sol's removed post`, and `a deleted account's` for a deleted account's
+(copy-voice, *Naming a removed or deleted thing*). Open until he rules.
+
+### 286 · The pointers the round-59 proposal names but no board draws · *design* · **filed 2026-11-18**
+
+Round 59. If the proposal stands, its naming also reaches surfaces it did not draw: the comment
+edit's subtitle for a deleted account's target (`Your comment on a deleted account's removed
+post.`); the chronicle's opinion / tag / citation rows whose target was removed (`Removed by its
+author` under the verb); a post's references sheet and `Cited by` rows for a removed or deleted
+thing (`ReferenceRow`'s `removed`, seam 248); and notifications — the `in <title>` line of a
+mention or citation from a removed post (`in @mira's removed post`) and a deleted actor's row
+(`A deleted account cited your post`?). Each waits for jakob's word on round 59; the last is
+not in the proposal (an actor, not a pointer).
+
 ### 283 · A removed tagged comment on the tag page · *design* · **filed 2026-11-18** · **closed 2026-11-18**
 
 Round 57. jakob's tag-page ruling names a removed tagged post; the page also lists tagged
