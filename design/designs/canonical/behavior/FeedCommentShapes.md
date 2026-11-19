@@ -1,6 +1,6 @@
 # FeedCommentShapes · `spec:design:behavior-feed-comment-shapes`
 
-ALWAYS feed.commentCard's own pictures join its words inset, capped at a comment's height
+ALWAYS feed.commentCard's own pictures join its words inset, a square at the column's width with no cap on its height
 
 WHEN tap feed.commentCard's own pictures -> the post's comment section opens scrolled to that comment
 
