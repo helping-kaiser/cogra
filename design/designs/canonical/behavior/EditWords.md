@@ -62,6 +62,8 @@ WHEN tap Discard in the dialog Discard the changes? -> the changes are discarded
 
 WHEN the words stage opens -> the body takes focus with its caret at the end AND the keyboard rises
 
+WHEN the keyboard is up -> the stage's pinned foot stays at the bottom, under the keyboard, AND the focused field takes the room and is brought into view AND NEVER the foot rides above the keyboard
+
 WHEN the signing has not answered 200ms after a press of Sign the edit, held at the upload gate or not -> Sign the edit reads Signing the edit… in its own place AND NEVER a spinner appears
 
 WHEN press Sign the edit -> the header X is named Close from the press itself AND NEVER the dialog Discard the changes? opens while it signs

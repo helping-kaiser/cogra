@@ -18,6 +18,8 @@ WHEN the account lands, its registration and the approving vouch both confirmed 
 
 WHEN tap Restore the key GIVEN the key is on another device -> the restore opens
 
+WHEN tap Restore the key GIVEN the key is on another device and the browser cannot hold a key -> KeyCeremonyUnsupported opens in the restore's place AND NEVER the recovery code is typed
+
 WHEN the restore brings the key here -> the landing card reads its key-here body AND the registration lands from this device
 
 WHEN tap New post on the bar -> the snackbar reads You can post once you're in. AND NEVER the wizard opens
