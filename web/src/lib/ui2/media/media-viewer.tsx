@@ -64,6 +64,7 @@ import { PagerDots } from "./pager-dots";
 import { isVideoAsset } from "./media-tile";
 import { GESTURE_ZONE } from "./video-transport";
 import { VideoPlayer } from "./video-player";
+import { SCREEN_LAYER } from "@/lib/ui2/screen-layer";
 
 /** How far a drag has to travel before it is a gesture rather than a tap. */
 const SWIPE_THRESHOLD = 48;
@@ -198,7 +199,7 @@ export function MediaViewer({
       // via 3). The stage below stops the press, so only a tap on the ground
       // reaches this.
       onClick={onClose}
-      className="fixed inset-0 z-[60] overflow-hidden"
+      className={`${SCREEN_LAYER} z-[60] overflow-hidden`}
       style={{ background: "#000" }}
     >
       {/* THE STAGE. Absolutely inset, the frame fitted inside it — so what is

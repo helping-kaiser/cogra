@@ -9,6 +9,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { intersect } from "@/test/media-env";
+import { SCREEN_LAYER } from "@/lib/ui2/screen-layer";
 import { resetMuteForTests } from "./mute";
 import { resetVideoStageForTests } from "./video-stage";
 import { MediaViewer, type ViewerItem } from "./media-viewer";
@@ -65,8 +66,11 @@ describe("the surface", () => {
     const surface = screen.getByTestId("media-viewer");
     expect(surface).toHaveAttribute("role", "dialog");
     expect(surface).toHaveAttribute("aria-modal", "true");
-    expect(surface.className).toContain("fixed");
-    expect(surface.className).toContain("inset-0");
+    // The shared full-screen layer (screen-layer.ts); its controls lift by
+    // the safe area themselves, and the layer padding moves no absolute child.
+    // With no keyboard (none rises over the viewer) its bottom inset is 0:
+    // the whole screen.
+    for (const token of SCREEN_LAYER.split(" ")) expect(surface.className.split(" ")).toContain(token);
     expect(surface.style.background).toBe("rgb(0, 0, 0)");
   });
 

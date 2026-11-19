@@ -17,7 +17,7 @@ use chrono::{DateTime, Duration, Utc};
 use common::l1::census::Family;
 use common::l1::crypto;
 use common::l1::encoding::Encoder;
-use common::l1::handshake::{BurnSettlement, BurnTicket};
+use common::l1::handshake::{BurnSettlement, BurnTicket, Micro};
 use common::l1::identifier::NodeId;
 use postgres_store::{PgPool, auth as store, staged};
 use uuid::Uuid;
@@ -94,15 +94,15 @@ pub enum OnboardingError {
     #[error("verification token invalid or expired")]
     VerificationTokenInvalid,
     #[error("write rule: balance {balance} below the act price {theta}")]
-    WriteRule { balance: f64, theta: f64 },
+    WriteRule { balance: Micro, theta: Micro },
     /// The write rule priced over a whole batch (D19) — the same account
     /// state, quoted as the gesture the author authored.
     #[error(
         "write rule: balance {balance} cannot carry this batch — {acts} acts at the act price {theta}"
     )]
     BatchWriteRule {
-        balance: f64,
-        theta: f64,
+        balance: Micro,
+        theta: Micro,
         acts: usize,
     },
     /// The account's signing budget cannot carry the gesture right now —

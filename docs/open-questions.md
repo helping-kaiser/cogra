@@ -36,7 +36,7 @@ within a phase, order is flexible.
 | 7. At the L1 swap | 3 | **Q56, Q58, Q61** | What the seam exposes of the burn realization (its computational inputs and audit evidence); the write rule's second gate on the surface — whether a W2a stamp-wall refusal needs its own reading once real stamps exist (on the stand-in W2a cannot fire, so one `WRITE_RULE_FAILED` reads the solvency words); and who in CoGra is the deployment that publishes the marker policy, with which finality-breach response. Deferred to the swap. |
 | 8. When everyone can tag anything | 1 | **Q59** | Semi-passable Types — whether a path may cross a Type along tag edges whose author the viewer reaches, at viewer-to-tagger strength. The sinks invariant stands until open tagging makes a topic's crowd worth routing through; stored so the option is not lost. |
 | 9. When a second party writes to Layer 1 | 1 | **Q63** | The payload mark of an act CoGra does not carry — a CoGra actor writing through a third-party Layer 2. It reads unmarked until then. |
-| — Parked | 1 | **Q62** | An authenticated carriage receipt beside the seal. None is issued now. |
+| — Parked | 4 | **Q62, Q64, Q65, Q66** | An authenticated carriage receipt beside the seal — none is issued now; whether ingestion checks that the carried pair opens the witness — it checks nothing until a second carrier exists; four races in the seal leg, accepted as known gaps; and how a deferral's verdict reaches its author — asked of the L1 team, nothing built until the specification settles the duty's scope. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -840,3 +840,127 @@ decided only once a second party writes to Layer 1.
 ### Related
 
 Q62 (an authenticated carriage receipt).
+
+## Q64 — Whether ingestion checks that the carried pair opens the witness
+
+**Where it shows up:**
+[data-model.md "Act payload carriage"](implementation/data-model.md#act-payload-carriage)
+(ingestion promotes the content pair)
+**Status:** open (parked — ingestion checks nothing; revisited once a
+second carrier exists; jakob, 2026-11-17)
+
+### Context
+
+A record's witness is its content commitment: the host forms it over
+the act identifier, the pre-commitment, the content salt and the
+content pre-digest
+([layer1-interface.md §8.2](primitive/layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake),
+"Verified act"). CoGra's API forms the content pre-digest itself, from
+the staged payload and the device's content nonce, and the host
+commits to exactly that value, so the pair CoGra carries opens the
+witness by construction. Ingestion copies the content pair and the
+content salt from the staged row into `act_payloads`
+(`content::promote_staged_carriage`) and recomputes nothing. A
+mismatch would need the staged row to change between the seal and
+the landing.
+
+### The question
+
+Does ingestion recompute the witness from the carried pair and the
+content salt, and refuse to promote a pair that does not open it?
+This is revisited once a second carrier exists.
+
+### Related
+
+Q62 (an authenticated carriage receipt); Q63 (the payload mark of an
+act CoGra does not carry).
+
+## Q65 — Known gaps in the seal leg
+
+**Where it shows up:**
+[architecture.md "The write path"](implementation/architecture.md#the-write-path),
+[data-model.md "Staged writes"](implementation/data-model.md#staged-writes)
+**Status:** open (parked — known gaps, accepted; jakob, 2026-11-17)
+
+### Context
+
+The seal leg records the device's pre-commitment, stages the pending
+display rows, submits the proposal to the host and stores the sealed
+act, each in its own step; nothing holds the staged row across the
+call to the host (`relay::submit_pre_signed`). Four races follow.
+Each needs two operations on one write to meet within moments; none
+arises from normal use:
+
+1. **A redaction between the host's seal and storing it.** The
+   redaction reaps the staged payload while the host seals. Storing
+   the seal then fails, because a reaped row holds no content salt
+   (`staged_writes_reaped_conceals`), and a retry of the leg is
+   answered `NOT_FOUND`. The act is sealed at the host and never
+   approved, so it is never ordered; the write stays in `sealing`
+   until the staged-write GC expires it. Nothing is exposed: the
+   reaped row keeps no payload, content nonce or content salt.
+2. **The same signed proposal submitted twice at once** (two tabs, or
+   a resume beside the approval pad). Both submissions record the
+   same leg and both reach the host, which seals the first and
+   refuses the second as a conflict. The API then expires the write:
+   its pending content leaves the screen, the device is answered
+   `STAGED_WRITE_EXPIRED`, and the user redoes the write.
+3. **An account deletion racing a profile update.** The deletion
+   reads the account's Registration acts once, reduces them one by
+   one, and its close blanks every profile row still open. A profile
+   update that stages its pending row after the close is reached by
+   neither: the row stays visible until the GC expires the write.
+4. **A content removal racing an edit.** A content removal resolves
+   the display entity it removes before its transaction begins and
+   tombstones only an entity it found. A post or a revision staged
+   after that resolution has its staged payload reaped, but its
+   display row is not tombstoned: it stays readable as pending until
+   the GC expires the write, and stays as a landed version if its act
+   was approved before the reap.
+
+### The question
+
+Whether to close these windows, which means restructuring the seal
+step. They stay accepted gaps unless one turns out reachable in
+normal use, or its outcome turns out unrecoverable.
+
+### Related
+
+Q64 (the witness check at ingestion).
+
+## Q66 — Issuing a deferral's verdict to its author
+
+**Where it shows up:**
+[architecture.md "Write eligibility and account states"](implementation/architecture.md#write-eligibility-and-account-states)
+(the W1 pre-check)
+**Status:** open (parked — documented and asked of the L1 team;
+nothing is built until the specification settles the duty's scope;
+jakob, 2026-11-17)
+
+### Context
+
+Specification v0.34.0, unchanged in v0.34.1, gives the host a duty:
+it issues each verdict on which the rejection of a proposed set
+rests, FAIL and INDECISIVE included, as a whole certificate to the
+party the comparison measures, with the rejection and unasked; a bare
+rejection without the enclosure the host compared is forbidden. An
+own-balance comparison measures the author whose act it compares.
+
+At close the stand-in orders an approved act only when its author's
+balance pays θ. An act whose author cannot pay is left unwritten,
+stays approved for a later close, and nobody is told. The seam
+(`L1Boundary`) has no path from the host to an author for a verdict.
+The case is rare: prepare refuses an insolvent author before signing
+(`WRITE_RULE_FAILED`), so a deferral at close needs the balance to
+fall between prepare and close.
+
+### The question
+
+Is a deferral at close a rejection the duty covers, and if so, how
+does its verdict reach the author — what the certificate names, and
+by which channel? The L1 team has been asked; the duty's scope is
+under revision on their side.
+
+### Related
+
+Q58 (the write rule's second gate on the surface).

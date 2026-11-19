@@ -42,6 +42,7 @@ import { pillClassName, PillButton } from "@/lib/ui2/pill-button";
 import { QuietNote } from "@/lib/ui2/quiet-note";
 import { ActsCard, actsTotal, SLOW_SIGNING_LINE } from "@/lib/ui2/compose/acts-card";
 import { useSlowAnswer, useWaitedPast, SLOW_NETWORK_MS } from "@/lib/ui2/waiting-commit";
+import { PINNED_PAGE } from "@/lib/ui2/screen-layer";
 import { TransportError } from "@/lib/ui/transport-error";
 import { KEY_ABSENT_TITLE } from "@/lib/ui/key-absent-notice";
 import {
@@ -142,7 +143,7 @@ export function ChangeSeal({
   const rest = () => setFoot({ kind: "rest" });
 
   return (
-    <main data-testid={id} className="mx-auto flex h-dvh w-full max-w-2xl flex-col bg-surface text-on-surface">
+    <main data-testid={id} className={`mx-auto flex ${PINNED_PAGE} w-full max-w-2xl flex-col bg-surface text-on-surface`}>
       <HeaderBar
         title={SEAL_TITLE}
         backLabel={signing ? "Close" : "Back a step"}

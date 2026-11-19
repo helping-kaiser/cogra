@@ -543,6 +543,29 @@ describe("SavedScreen — the card menus' rows (SavedPostMenu.md, FeedProfileMen
     ]);
   });
 
+  it("a_removed_post_cards_menu_reads_unsave_cite_hide_license_report", async () => {
+    // SavedRemovedMenu.md:3, :5 — the reader's post menu whole with the post
+    // kept (less Cited by and Opinions on this, which no web post menu carries
+    // yet); removed comments' menus: `profile-comments.test.tsx`.
+    const removed = {
+      ...postNode("p1", null, SAVED[0]),
+      title: { __typename: "ModeratedText", value: null, status: "REDACTED" },
+      content: { __typename: "ModeratedText", value: null, status: "REDACTED" },
+      removal: { __typename: "Removal", at: at(1), by: "AUTHOR" },
+    };
+    serve([{ node: removed, bookmarkedAt: SAVED[0] }]);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    expect(screen.getByTestId(byNode("saved.card.removalMark", "p1"))).toHaveTextContent("Removed by its author");
+    expect(words(postMenu())).toEqual([
+      ["saved.menuSheet.save", "Unsave"],
+      ["saved.menuSheet.cite", "Cite in a new post"],
+      ["saved.menuSheet.hide", "Hide @ada"],
+      ["saved.menuSheet.license", "License terms"],
+      ["saved.menuSheet.report", "Report"],
+    ]);
+  });
+
   it("a_person_cards_menu_reads_unsave_mention_hide_report_the_same_rows_as_on_every_host", async () => {
     // FeedProfileMenu.md:5, :7 — Saved's first row reading Unsave.
     serve(THREE);

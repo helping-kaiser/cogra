@@ -89,6 +89,7 @@ import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
 import { PickedSheet } from "@/lib/ui2/compose/picked-sheet";
 import { ReferencePicker } from "@/lib/ui2/compose/reference-picker";
 import { TagPicker } from "@/lib/ui2/compose/tag-picker";
+import { PINNED_FLOOR, PINNED_PAGE } from "@/lib/ui2/screen-layer";
 import { SealStep, type SealSheet } from "./seal-step";
 
 /** A stable empty list, so the preview effect does not re-run on every render. */
@@ -958,7 +959,7 @@ export function ComposeWizard({
 
   if (!loaded) {
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col">
+      <main className={`mx-auto flex ${PINNED_FLOOR} w-full max-w-2xl flex-col`}>
         <HeaderBar title="New post" onBack={() => router.push("/feed")} backLabel="Back" />
         <p className="px-6">Loading…</p>
       </main>
@@ -972,7 +973,7 @@ export function ComposeWizard({
   // Back — has nothing left to apply.
   if (pickerOpen) {
     return (
-      <main className="mx-auto flex h-dvh w-full max-w-2xl flex-col">
+      <main className={`mx-auto flex ${PINNED_PAGE} w-full max-w-2xl flex-col`}>
         {picker === "tags" ? (
           <TagPicker
             tags={state.tags}
@@ -991,7 +992,7 @@ export function ComposeWizard({
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col">
+    <main className={`mx-auto flex ${PINNED_FLOOR} w-full max-w-2xl flex-col`}>
       <HeaderBar
         title={HEADINGS[state.step]}
         onBack={() => {

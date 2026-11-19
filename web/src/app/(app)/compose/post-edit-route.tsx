@@ -102,6 +102,7 @@ import { EDIT_LEAVE_LABEL, PostEditView } from "./post-edit-view";
 import { CropStep } from "./wizard/crop-step";
 import { ReferencePicker } from "@/lib/ui2/compose/reference-picker";
 import { TagPicker } from "@/lib/ui2/compose/tag-picker";
+import { PINNED_FLOOR, PINNED_PAGE } from "@/lib/ui2/screen-layer";
 
 /** How long a signing may go unanswered before the foot says the network is slow. */
 export const SLOW_SIGNING_MS = SLOW_NETWORK_MS;
@@ -567,7 +568,7 @@ export function PostEditRoute({
     cropping === null ? null : (
       <main
         data-testid={cropping.kind === "pictures" ? "post-edit-crop" : "post-edit-cover-crop"}
-        className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col bg-surface text-on-surface"
+        className={`mx-auto flex ${PINNED_FLOOR} w-full max-w-2xl flex-col bg-surface text-on-surface`}
       >
         <HeaderBar
           title={cropping.kind === "pictures" ? "Crop" : "The cover"}
@@ -639,7 +640,7 @@ export function PostEditRoute({
     picking === null ? null : (
       <main
         data-testid="post-edit-picker"
-        className="mx-auto flex h-dvh w-full max-w-2xl flex-col bg-surface text-on-surface"
+        className={`mx-auto flex ${PINNED_PAGE} w-full max-w-2xl flex-col bg-surface text-on-surface`}
       >
         {picking === "tags" ? (
           <TagPicker

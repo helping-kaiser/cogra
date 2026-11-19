@@ -54,6 +54,9 @@ import com.cogra.domain.invites.InvitesRepository
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.notifications.NotificationsRepository
+import com.cogra.domain.references.CitedByRepository
+import com.cogra.domain.references.CitingArtifact
+import com.cogra.domain.references.CitingView
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.release.AnnouncedReleaseStore
 import com.cogra.domain.release.ReleaseRegistry
@@ -71,6 +74,7 @@ import com.cogra.domain.removal.RemovalRepository
 import com.cogra.domain.stance.HeldOpinion
 import com.cogra.domain.stance.KeptPickStore
 import com.cogra.domain.stance.KeptPreviewRepository
+import com.cogra.domain.stance.NodeOpinionsRepository
 import com.cogra.domain.stance.OpinionDirection
 import com.cogra.domain.report.ReportRepository
 import com.cogra.domain.saved.SavedRepository
@@ -894,6 +898,20 @@ object FakeBindingsModule {
 
     @Provides
     fun keptPreviewRepository(fake: ScriptedKeptPreviewRepository): KeptPreviewRepository = fake
+
+    // Nothing cites anything, by default: a Cited by sheet opened in a nav
+    // test reads its empty line, and no read leaves the JVM.
+    @Provides
+    fun citedByRepository(): CitedByRepository = object : CitedByRepository {
+        override suspend fun citedBy(nodeId: String) = Outcome.Success(emptyList<CitingArtifact<CitingView>>())
+    }
+
+    // Nobody holds an opinion on anything, by default: an opinions sheet
+    // opened in a nav test reads its empty line.
+    @Provides
+    fun nodeOpinionsRepository(): NodeOpinionsRepository = object : NodeOpinionsRepository {
+        override suspend fun opinionsOn(nodeId: String) = Outcome.Success(emptyList<HeldOpinion>())
+    }
 
     // A member with nothing standing, by default: no band, and the row opens
     // the request screen. Tests script the grace or the applicant's path.

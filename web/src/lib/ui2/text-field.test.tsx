@@ -76,6 +76,20 @@ describe("TextField", () => {
     expect(screen.getByTestId("growing-box-replica").textContent).toBe("one\ntwo\nthree\nfour\n");
   });
 
+  // W-PHONEFIT-GROWINGBOX (phone-fit sweep, 2026-11-18): one long unbroken
+  // word widened the box past the screen (494 > 362 px at 412 wide) because
+  // `break-word` leaves min-content at the whole word and the box's one column
+  // is sized from it. jsdom measures nothing, so this pins the cure; the
+  // phone-fit sweep is the measuring proof.
+  it("lets a long unbroken word break inside the box's width", () => {
+    render(
+      <TextField label="Bio" multiline value={"x".repeat(80)} onChange={() => {}} testId="bio" />,
+    );
+    const replica = screen.getByTestId("growing-box-replica");
+    expect(replica.className).toContain("[overflow-wrap:anywhere]");
+    expect(replica.className).not.toContain("break-words");
+  });
+
   it("opens at the rows it was given, as its minimum", () => {
     render(
       <TextField label="What's in the picture" multiline rows={2} value="" onChange={() => {}} testId="alt" />,

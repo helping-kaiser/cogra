@@ -49,6 +49,7 @@ import com.cogra.domain.Removal
 import com.cogra.domain.RemovalAgent
 import com.cogra.domain.ageLadder
 import com.cogra.domain.content.SensitiveMark
+import com.cogra.domain.removal.payloadRemoved
 import com.cogra.feature.content.R
 import java.time.Instant
 
@@ -483,31 +484,20 @@ internal fun removalReason(removal: Removal?, moderation: ModerationState): Remo
     else -> RemovalReason.Author
 }
 
-/** Whether the post's whole payload is gone: its own mark, or every field it answers. */
+/** Whether the post's whole payload is gone: its own mark, or every field it answers ([payloadRemoved]). */
 internal val PostView.removed: Boolean
-    get() = removal != null || isRemoved(content, attachments, attachmentsStatus)
+    get() = payloadRemoved
 
 /** Whether the comment's whole payload is gone, as [PostView.removed]. */
 internal val CommentView.removed: Boolean
-    get() = removal != null || isRemoved(content, attachments, attachmentsStatus)
+    get() = payloadRemoved
 
-/**
- * Whether the whole body is gone.
- *
- * A words post is removed when its `content` is REDACTED; a media post
- * when its gallery is. UNKNOWN counts as removed on both: a state this
- * build cannot name is never rendered as if it were fine.
- */
+/** Whether the whole body is gone — the domain's one reading ([payloadRemoved]). */
 internal fun isRemoved(
     content: ModeratedField,
     attachments: List<MediaAssetView>,
     attachmentsStatus: FieldStatus,
-): Boolean {
-    val galleryGone = attachments.isNotEmpty() &&
-        (attachmentsStatus.hidden() || attachments.all { it.status.hidden() })
-    val wordsGone = attachments.isEmpty() && content.status.hidden()
-    return galleryGone || wordsGone
-}
+): Boolean = payloadRemoved(content, attachments, attachmentsStatus)
 
 /**
  * The node's sensitive state, as a reveal is remembered against.
