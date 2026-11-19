@@ -21,7 +21,7 @@ export interface ProfileHeaderProps {
    *  their place rather than the slot collapsing. */
   bio?: string | React.ReactNode;
   website?: string;
-  /** Leads the figures row. Already formatted. */
+  /** Leads the figures row: every post the person published, a removed one included, never an edit. Already formatted. */
   posts?: string | number;
   /** How many people have given an opinion on them. Already formatted. */
   stancesOn?: string | number;

@@ -135,20 +135,14 @@ class HostedPlacement internal constructor(
         /**
          * A tag's page (TagPage.md:15-17): each card stands under the claim
          * that put it there, attached to it (`TaggedRow`); its author is a door;
-         * a post's ⋮ raises `tagPage.menuSheet` with the reader's rows its board
-         * registers (TagPageMenu.md:5), the own rows keeping their tags; no
+         * a post's ⋮ raises `tagPage.menuSheet`, every row registered under it
+         * (TagPageMenu, -Own, -RemovedMenu, -RemovedMenuOwn in nodes.json); no
          * board draws a comment's menu here; and a tagged comment offers no
          * Reply and no view-replies line (:17).
          */
         val TagPage = HostedPlacement(
             menuSheet = DataNode("tagPage") / "menuSheet",
-            postMenuRows = setOf(
-                PostMenuRow.Save,
-                PostMenuRow.Cite,
-                PostMenuRow.Hide,
-                PostMenuRow.License,
-                PostMenuRow.Report,
-            ),
+            postMenuRows = POST_MENU_ROWS,
             commentMenu = null,
             authorHere = false,
             attach = true,

@@ -8,6 +8,8 @@ ALWAYS the figures read Posts, Opinions on them and Opinions by them, each label
 
 ALWAYS the two opinion figures are two doors and the Posts figure is no door, each door spoken as its figure's number and visible words and nothing more, as 6 Opinions on them and 6 Opinions by them
 
+ALWAYS profile.identity.figures.posts counts every post the person published, a removed one included, and never an edit, so the figure and profile.posts agree
+
 ALWAYS the actions row reads the opinion on the person, worn wide, then Message sized by its word, then the ⋮ that closes the row
 
 ALWAYS the wide anchor wears the muted no-opinion face GIVEN the reader holds no opinion on the person
@@ -23,6 +25,10 @@ WHEN tap profile.tabRow.everythingTab -> the person's chronicle stands below pro
 ALWAYS the chronicle stands one act to a card, newest first, each card leading with its act's disc, then its verb and snippet, its age on the trailing edge
 
 ALWAYS a chronicle card with no destination is the same card, inert
+
+ALWAYS profile.chronicle.act.aside reads on a deleted account where the target's handle would stand GIVEN the act's target is an account since deleted
+
+ALWAYS a chronicle card whose post or comment was removed keeps its place, its disc, its verb and its age, profile.chronicle.act.second reading Removed by its author where its words were, in the row's quiet second line, whatever the feed's filter holds
 
 WHEN tap the wide anchor -> the pad blooms at the lower centre of the viewport AND nothing is staged
 
@@ -69,6 +75,8 @@ WHEN tap profile.tabRow.postsTab GIVEN another tab is lit -> the person's posts 
 WHEN tap profile.tabRow.commentsTab -> the person's comments stand below profile.tabRow as comment cards AND the header above stays as it was
 
 WHEN tap a chronicle card for a published post -> the post's detail opens AND its back arrow reads Back to the profile
+
+WHEN tap a chronicle card whose post or comment was removed -> it opens where the card opens for the act, the removed thing standing there as its mark
 
 WHEN the chronicle is scrolled toward its end GIVEN more acts exist -> the next page arrives in place as the reader keeps going
 

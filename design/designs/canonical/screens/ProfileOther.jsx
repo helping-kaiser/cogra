@@ -31,6 +31,17 @@
    THE PROFILE LANDS ON POSTS (jakob 2026-11-13, the android hand test): the
    `tab` chip draws `posts`, the landing, and `everything`, the chronicle the
    tab opens (`ProfileTabs`).
+
+   A REMOVED POST ON EVERYTHING (round 58; jakob 2026-11-18, C1 "as rec") is
+   the `chronicle` chip's `removed`: the 5d post's act, removed as
+   `ProfilePosts`' `removed` draws its 5d post, its second line `Removed by
+   its author` where the words were, the card still the door to the post's
+   detail (`ChronicleAct`).
+
+   AN OPINION ON AN ACCOUNT SINCE DELETED (round 59, the proposal to jakob
+   2026-11-18) is the `aside` chip's `deleted`: the opinion's act names its
+   target `on a deleted account`, the pointers' own naming, the handle never
+   printed.
    REGISTERED under the `profile` prefix (design ⇄ impl seam 059/061): another
    person's page is the same surface as your own, named by the same body
    names. */
@@ -39,8 +50,10 @@ export const PROPS = {
   from: { editor: "enum", options: ["feed", "profile"], default: "feed" },
   name: { editor: "enum", options: ["sample", "two-lines", "fifty", "one-word", "widest"], default: "sample" },
   ...TAB_CHIP,
+  ...CHRONICLE_CHIP,
+  aside: { editor: "enum", options: ["handle", "deleted"], default: "handle" },
 };
-export const VALS = `backLabel: this.props.from === "profile" ? "Back to the profile" : "Back to feed", displayName: this.props.name === "two-lines" ? "Maximiliana Wilhelmina Featherstonehaugh" : this.props.name === "fifty" ? "Maximiliana Wilhelmina Featherstonehaugh Okonkwoli" : this.props.name === "one-word" ? "MaximilianaWilhelminaFeatherstonehaughOkonkwoLiang" : this.props.name === "widest" ? "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW" : "Ada Okonkwo", nameSize: this.props.name === "fifty" ? "19px" : this.props.name === "one-word" ? "20px" : this.props.name === "widest" ? "10px" : "var(--text-title-large)", nameLineHeight: this.props.name === "fifty" ? "24px" : this.props.name === "one-word" ? "25px" : this.props.name === "widest" ? "13px" : "var(--text-title-large--line-height)", ${TAB_VALS}`;
+export const VALS = `backLabel: this.props.from === "profile" ? "Back to the profile" : "Back to feed", displayName: this.props.name === "two-lines" ? "Maximiliana Wilhelmina Featherstonehaugh" : this.props.name === "fifty" ? "Maximiliana Wilhelmina Featherstonehaugh Okonkwoli" : this.props.name === "one-word" ? "MaximilianaWilhelminaFeatherstonehaughOkonkwoLiang" : this.props.name === "widest" ? "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW" : "Ada Okonkwo", nameSize: this.props.name === "fifty" ? "19px" : this.props.name === "one-word" ? "20px" : this.props.name === "widest" ? "10px" : "var(--text-title-large)", nameLineHeight: this.props.name === "fifty" ? "24px" : this.props.name === "one-word" ? "25px" : this.props.name === "widest" ? "13px" : "var(--text-title-large--line-height)", ${TAB_VALS}, ${CHRONICLE_VALS}, asideHandle: this.props.aside === "deleted" ? "none" : "contents", asideDeleted: this.props.aside === "deleted" ? "contents" : "none"`;
 export function Screen() {
-  return <ProfileOtherBody backLabel="{{backLabel}}" displayName="{{displayName}}" nameSize="{{nameSize}}" nameLineHeight="{{nameLineHeight}}" tab="chip" />;
+  return <ProfileOtherBody backLabel="{{backLabel}}" displayName="{{displayName}}" nameSize="{{nameSize}}" nameLineHeight="{{nameLineHeight}}" tab="chip" chronicle={CHRONICLE_REMOVED} aside />;
 }

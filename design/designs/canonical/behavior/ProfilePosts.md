@@ -10,6 +10,8 @@ ALWAYS a removed post keeps its place in the list as the feed's removed card, pr
 
 ALWAYS a removed post keeps profile.posts.card.authorChip, its stance, its score, its comments count, its share and profile.posts.card.menu, the reader's post menu whole — Save or Unsave, Cite in a new post, Hide with the author's handle, Cited by, Opinions on this, License terms, then Report at the sheet tail — GIVEN the post is someone else's
 
+ALWAYS profile.identity.figures.posts counts every post the person published, a removed one included, so the figure and the list agree
+
 ALWAYS profile.posts.card.removalMark.when reads the removal's own moment under the mark, in the one age vocabulary, never the post's age, GIVEN the post was removed
 
 ALWAYS profile.posts.empty below profile.tabRow reads Nothing here yet., the line alone, GIVEN the person has published no post
