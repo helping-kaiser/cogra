@@ -22,6 +22,7 @@ label.
 | `test:integration:a-published-record-carries-no-payload-mark`                             | a_published_record_carries_no_payload_mark                             |
 | `test:integration:a-sealed-or-approved-act-reads-back-whole-until-acceptance`             | a_sealed_or_approved_act_reads_back_whole_until_acceptance             |
 | `test:integration:a-self-dependent-act-is-refused-and-leaves-no-row`                      | a_self_dependent_act_is_refused_and_leaves_no_row                      |
+| `test:integration:a-stored-act-prints-only-the-nonce-length`                              | a_stored_act_prints_only_the_nonce_length                              |
 | `test:integration:a-stored-hyper-act-without-a-middle-is-refused`                         | a_stored_hyper_act_without_a_middle_is_refused                         |
 | `test:integration:a-submission-without-its-content-pair-seals-approves-and-lands`         | a_submission_without_its_content_pair_seals_approves_and_lands         |
 | `test:integration:acceptance-drops-the-content-salt-and-keeps-both-commitments`           | acceptance_drops_the_content_salt_and_keeps_both_commitments           |
