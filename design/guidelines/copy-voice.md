@@ -3781,8 +3781,8 @@ tag, `TagPageEmpty`'s own first sentence.
 the title's place, the removal mark's own line in the system's voice, over
 the author's handle.
 
-**Naming a removed or deleted thing** (round 59; *new 2026-11-18, to be
-blessed*): a pointer
+**Naming a removed or deleted thing** (round 59; *new 2026-11-18,
+blessed (jakob 2026-11-19)*): a pointer
 never names a removed thing by its title or its words. It names it by its
 kind and its author — the author's handle while the author is there, `a
 deleted account` once the account is gone (`this account`'s lowercase
@@ -3796,9 +3796,17 @@ mark's line where the title or words were and `Deleted account` where the
 handle was (`Removed by its author` over `Deleted account`; `@tobias` or
 `Deleted account` over `Removed by its author` for a comment). A
 chronicle aside on an account since deleted reads `on a deleted account`
-(`ProfileOther`'s `aside`). Drawn on `FeedCommentShapes` (`answering`),
-`ProfileComments` (`target`), `TagPageRemovedMenuOwn`'s page and
-`ProfileOther` (`aside`).
+(`ProfileOther`'s `aside`). The same naming reaches every line that
+names a target in words: the comment edit's line (*The comment edit*),
+the chronicle's opinion, tag and citation rows (`Removed by its author`
+where the title would stand), a reference or citing row (the mark in the
+name's place, the tile empty; a deleted account's row `Deleted account`
+with the reserved disc) and the notifications' `in …` line (`in @mira's
+removed post`). Drawn on `FeedCommentShapes` (`answering`),
+`ProfileComments` (`target`), `TagPageRemovedMenuOwn`'s page,
+`ProfileOther` (`aside`), `CommentEdit` (`post`), `Profile` (`act`),
+`RefsSheet` (`target`), `CitedBy` (`citing`) and `Notifications`
+(`piece`).
 
 **An untitled post** (jakob 2026-10-06): a words post is represented by
 its first line, the content itself, so a comment's head row shows its
