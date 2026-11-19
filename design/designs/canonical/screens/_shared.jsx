@@ -1355,7 +1355,37 @@ function ProfileTabs({ tab = "posts", posts, chronicle }) {
     </>
   );
 }
-function ProfileOwnBody({ tail = null, headLine = null, tab = "posts", chronicle = false }) {
+/* AN ACT WHOSE TARGET WAS REMOVED (round 61; the pointer rule blessed
+   2026-11-19, round 58's chronicle rule): an opinion, a tag or a citation on
+   a post keeps its verb, its aside and its disc, and its second line reads
+   `Removed by its author` where the post's title would stand — never the
+   title. A deleted account's post reads the same: kept, its title, as any
+   post's; swept, the mark. `Profile`'s `act` chip draws the three on the
+   third act — `opinion` the act as drawn, on @mira — each copy the act keyed
+   by its position. They stay inert, as the opinion's act is: where a tag's or
+   a citation's act opens is not drawn. */
+const ACT_CHIP = { act: { editor: "enum", options: ["opinion", "opinion-removed", "tag-removed", "citation-removed"], default: "opinion" } };
+const ACT_VALS = `actOpinion: this.props.act === "opinion" ? "contents" : "none", actOpinionRemoved: this.props.act === "opinion-removed" ? "contents" : "none", actTagRemoved: this.props.act === "tag-removed" ? "contents" : "none", actCitationRemoved: this.props.act === "citation-removed" ? "contents" : "none"`;
+function ChronicleTargetActs() {
+  const act = { variant: "chronicle", chevron: false, trailing: "5d", inert: true, node: "act", nodeKey: "3" };
+  return (
+    <>
+      <div style={{ display: "{{actOpinion}}" }} data-node-chip="act" data-node-key="opinion">
+        <ContentRow {...act} face={{ pDirected: 0.4, pInterest: 0.5 }} title="Gave an opinion" titleAside="on @mira" />
+      </div>
+      <div style={{ display: "{{actOpinionRemoved}}" }} data-node-chip="act" data-node-key="opinion-removed">
+        <ContentRow {...act} face={{ pDirected: 0.4, pInterest: 0.5 }} title="Gave an opinion" titleAside="on a post" second="Removed by its author" />
+      </div>
+      <div style={{ display: "{{actTagRemoved}}" }} data-node-chip="act" data-node-key="tag-removed">
+        <ContentRow {...act} letter="#" title="Tagged a post" titleAside="#saltmaps" second="Removed by its author" />
+      </div>
+      <div style={{ display: "{{actCitationRemoved}}" }} data-node-chip="act" data-node-key="citation-removed">
+        <ContentRow {...act} glyph="dynamic_feed" title="Cited a post" second="Removed by its author" />
+      </div>
+    </>
+  );
+}
+function ProfileOwnBody({ tail = null, headLine = null, tab = "posts", chronicle = false, act = false }) {
   return (
     <>
       <ProfileBand node="band" />
@@ -1392,7 +1422,7 @@ function ProfileOwnBody({ tail = null, headLine = null, tab = "posts", chronicle
             <ChronicleList node="chronicle">
               <ChronicleAct removed={chronicle} variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="3d" second="Salt maps of the coast road — rubbings from three weekends at low tide." onOpen={() => {}} node="act" nodeKey="1" />
               <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="4d" second="The third headland light is real — I have a print from 2019 that almost catches it." onOpen={() => {}} node="act" nodeKey="2" />
-              <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.4, pInterest: 0.5 }} title="Gave an opinion" titleAside="on @mira" trailing="5d" inert node="act" nodeKey="3" />
+              {act ? <ChronicleTargetActs /> : <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.4, pInterest: 0.5 }} title="Gave an opinion" titleAside="on @mira" trailing="5d" inert node="act" nodeKey="3" />}
               <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="7d" second="Three weekends of walking the same stretch at low tide." onOpen={() => {}} node="act" nodeKey="4" />
               <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated your profile" trailing="14d" inert node="act" nodeKey="5" />
               {tail}

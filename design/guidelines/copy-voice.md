@@ -2721,11 +2721,13 @@ words. A record is one row, whatever gesture signed it.
   opinion`, the aside the target as above, the disc 🤷 — never the
   counter-record's own face, which would read as an opinion against.
 - **A tag** — `Tagged a post` · `Tagged a comment`, the aside the tag
-  (`#saltmaps`), the title or words under it; one taken off `Un-tagged
+  (`#saltmaps`), the title or words under it — `Removed by its author` in
+  their place once the target was removed, as for an opinion; one taken off `Un-tagged
   a post` · `Un-tagged a comment` (`Un-tag`'s past). The disc the `#`
   monogram, as Explore's `Your tags` door wears it.
 - **A citation** — `Cited a post` · `Cited a comment`, the cited
-  thing's title or words under it, the disc that thing's own glyph; a
+  thing's title or words under it — `Removed by its author` in their
+  place once it was removed — the disc that thing's own glyph; a
   person cited `Mentioned`, the aside `@ada`, the disc their avatar; one
   taken back `Withdrew a citation`, the cited thing under it.
 - **The profile** — the first record, the account's own registration,

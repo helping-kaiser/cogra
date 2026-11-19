@@ -28,6 +28,8 @@ ALWAYS a chronicle card stands among the landed ones and reads Still settling un
 
 ALWAYS a chronicle card with no destination is the same card, inert
 
+ALWAYS profile.chronicle.act.second reads Removed by its author where the target's title or words would stand, and never the title, GIVEN the act is an opinion, a tag or a citation on a post or comment since removed, a deleted account's swept one included
+
 ALWAYS profile.chronicle.act.aside reads on a deleted account where the target's handle would stand GIVEN the act's target is an account since deleted
 
 ALWAYS a chronicle card whose post or comment was removed keeps its place, its disc, its verb and its age, profile.chronicle.act.second reading Removed by its author where its words were, in the row's quiet second line, whatever the feed's filter holds
