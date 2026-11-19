@@ -329,7 +329,23 @@ describe("the feed's post menu", () => {
 
   // FeedPostMenu.md:25 — a reading is open to a guest: no join ask.
   it("a_guests_cited_by_and_opinions_open_their_sheets_and_never_the_join_ask", async () => {
-    server.use(...rankedFeed([post("p1")]));
+    server.use(
+      ...rankedFeed([post("p1")]),
+      // A guest's feed reads through the borrowed vantage.
+      gqlLink.query("BorrowedView", () =>
+        HttpResponse.json({
+          data: {
+            borrowedView: {
+              __typename: "User",
+              id: "genesis-id",
+              handle: "genesis_mod",
+              displayName: { __typename: "ModeratedText", value: "Genesis Moderator" },
+              avatar: null,
+            },
+          },
+        }),
+      ),
+    );
     renderWithProviders(<FeedView />, { reader: null });
     await openMenu();
     fireEvent.click(screen.getByTestId("feed.menuSheet.opinions"));
