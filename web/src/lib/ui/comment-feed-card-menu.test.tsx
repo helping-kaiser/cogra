@@ -13,6 +13,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { COMMENT_SETTLING, CommentEditDoor, type CommentEditRequest } from "@/lib/compose/comment-edit-door";
 import { createTokenStore } from "@/lib/session/token-store";
 import { byNode } from "@/test/data-node";
+import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { answersComment, profileComment } from "@/test/profile-comment";
 import { renderWithProviders } from "@/test/providers";
@@ -133,15 +134,18 @@ beforeEach(() => {
 
 describe("the comment card's menu reads its host's rows", () => {
   // HistoryCommentMenu.md:5, SavedCommentMenu.md:5, ProfileCommentsMenu.md:5 —
-  // Save or Unsave, Cite, Cited by, Opinions on this, License terms, Report.
+  // Save or Unsave, Cite, Hide @ada, Cited by, Opinions on this, License
+  // terms, Report (round 51; ProfileCommentsMenu.md:7 keeps Hide on the
+  // author's own profile).
   it.each<Host>(["history", "saved", "profile"])(
-    "someone_elses_comment_on_%s_reads_save_cite_citedBy_opinions_license_report_as_its_menuSheet_rows",
+    "someone_elses_comment_on_%s_reads_save_cite_hide_citedBy_opinions_license_report_as_its_menuSheet_rows",
     async (host) => {
       mount({ host });
       const sheet = await openMenu(host);
       expect(rowIds(sheet)).toEqual([
         `${host}.menuSheet.save`,
         `${host}.menuSheet.cite`,
+        `${host}.menuSheet.hide`,
         `${host}.menuSheet.citedBy`,
         `${host}.menuSheet.opinions`,
         `${host}.menuSheet.license`,
@@ -150,16 +154,67 @@ describe("the comment card's menu reads its host's rows", () => {
       expect(within(sheet).getAllByRole("button").map((row) => row.textContent)).toEqual([
         "Save",
         "Cite in a new post",
+        "Hide @ada",
         "Cited by",
         "Opinions on this",
         "License terms",
         "Report",
       ]);
-      // CommentMenu.md:9 — no Hide row.
-      expect(within(sheet).queryByText(/^Hide/)).toBeNull();
       expect(sheet).toHaveAccessibleName("Comment actions");
     },
   );
+
+  // CommentMenu.md:13 — the hide, no confirm, its snackbar on the host.
+  it.each<Host>(["history", "saved", "profile"])(
+    "hide_on_%s_hides_the_author_with_no_confirm_and_the_hosts_snackbar_names_them",
+    async (host) => {
+      const log = hiddenLog();
+      server.use(...hiddenHandlers(log));
+      const notify = vi.fn();
+      mount({ host, notify });
+      const sheet = await openMenu(host);
+      fireEvent.click(within(sheet).getByTestId(`${host}.menuSheet.hide`));
+      expect(screen.queryByRole("alertdialog")).toBeNull();
+      expect(notify).toHaveBeenCalledWith("@ada is hidden.", expect.objectContaining({ label: "Undo" }), expect.anything());
+      await waitFor(() => expect(log.hides).toEqual([{ actor: "u-ada", at: null }]));
+    },
+  );
+
+  // CommentMenu.md:15 — a hide that does not go through reverts and the
+  // card's own row says so with Retry.
+  it("a_failed_hide_leaves_the_line_on_the_cards_row_with_retry", async () => {
+    const log = hiddenLog();
+    server.use(...hiddenHandlers(log, { failHide: true }));
+    mount({});
+    const sheet = await openMenu();
+    fireEvent.click(within(sheet).getByTestId("history.menuSheet.hide"));
+    expect(await screen.findByTestId("card-row-line")).toHaveTextContent("That didn't go through.");
+    fireEvent.click(screen.getByTestId("card-row-line-retry"));
+    await waitFor(() => expect(log.hides).toHaveLength(2));
+  });
+
+  // CommentMenu.md:47 — a guest's Hide raises the join gate; nothing is sent.
+  it("a_guests_hide_raises_the_join_gate_and_sends_nothing", async () => {
+    const log = hiddenLog();
+    server.use(...hiddenHandlers(log));
+    mount({ reader: null });
+    const sheet = await openMenu();
+    fireEvent.click(within(sheet).getByTestId("history.menuSheet.hide"));
+    expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
+    expect(log.hides).toEqual([]);
+  });
+
+  // CommentMenu.md:9 — someone else's REMOVED comment keeps Hide.
+  it("someone_elses_removed_comment_keeps_hide", async () => {
+    mount({
+      over: {
+        content: { __typename: "ModeratedText", value: null, status: "REDACTED" },
+        removal: { __typename: "Removal", at: "2026-11-18T10:00:00Z", by: "AUTHOR" },
+      },
+    });
+    const sheet = await openMenu();
+    expect(within(sheet).getByTestId("history.menuSheet.hide")).toHaveTextContent("Hide @ada");
+  });
 
   // HistoryCommentMenuOwn.md:5, ProfileCommentsMenuOwn.md:5 — Edit, then
   // Remove, after Cite; no Report row.
@@ -178,6 +233,8 @@ describe("the comment card's menu reads its host's rows", () => {
         `${host}.menuSheet.license`,
       ]);
       expect(within(sheet).queryByText("Report")).toBeNull();
+      // CommentMenu.md:9 — never Hide on the reader's own.
+      expect(within(sheet).queryByTestId(`${host}.menuSheet.hide`)).toBeNull();
     },
   );
 
