@@ -329,8 +329,10 @@ export function CommentCard({
       </div>
       {shown}
       {/* The same topics-and-citations line a post wears, one line —
-          a comment is content like any other and signs the same acts. */}
-      {!redacted && <TopicsLine topics={topics} references={references} onOpenReferences={onOpenReferences} />}
+          a comment is content like any other and signs the same acts. Named
+          as `PostCard` names its line (round 61, seam 380): `tagsLine`, its
+          chips `tag` keyed by the tag's name, its count `counts`. */}
+      {!redacted && <TopicsLine topics={topics} references={references} onOpenReferences={onOpenReferences} node={node && "tagsLine"} />}
     </>
   );
   return (
