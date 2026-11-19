@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE staged_writes s\n         SET state = 'carried', carried = TRUE, updated_at = NOW()\n         FROM user_credentials c\n         WHERE c.actor_id = $1 AND c.account_state = 'applicant'\n           AND s.actor_id = $1 AND s.id = ANY($2) AND s.state = 'awaiting_pre_sign'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "77ed0cdb83c4572aee5b9d6382625a1ed33930d00fd441c0297554154353b95f"
+}
