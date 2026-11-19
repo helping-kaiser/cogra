@@ -298,7 +298,10 @@ export function PostEditView({
             ring stay whole (the comment editor's fields, the same shape). */}
         <div
           data-testid="post-edit-fields"
-          className="-mx-6 flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto px-6"
+          // `*:shrink-0`: no field gives up height to fit; where the screen is
+          // short the scroller scrolls (measured at 360 × 640: shrinking rows
+          // painted the words over the title and the title under the tags).
+          className="-mx-6 flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto px-6 *:shrink-0"
         >
         {clip !== undefined ? (
           <ClipFields
@@ -351,8 +354,9 @@ export function PostEditView({
         ) : (
           // THE WORDS ARE THE BODY, AND THE BODY TAKES THE ROOM (EditWords:
           // `WordsBody` at flex 1, as the composer's words stage draws it) — the
-          // post, not a field on a form.
-          <div className="flex min-h-0 flex-1 flex-col gap-1.5" {...testAttributes(BODY)}>
+          // post, not a field on a form. No `min-h-0`: `flex-1` starts it from
+          // nothing, and inside the fields' scroller its floor is its content.
+          <div className="flex flex-1 flex-col gap-1.5" {...testAttributes(BODY)}>
             <WordsField words={state.words} onWords={onWords} />
             <Refusals refusals={refusals} onDismiss={onDismissRefusal} />
             <AddControl

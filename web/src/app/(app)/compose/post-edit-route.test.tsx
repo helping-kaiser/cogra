@@ -245,6 +245,10 @@ describe("PostEditRoute — the stage pins its footer (design/readme.md, Spacing
     expect(fields.className.split(" ")).toEqual(expect.arrayContaining(["min-h-0", "flex-1", "overflow-y-auto"]));
     // The body and the facts scroll; the stack stands outside the scroller.
     expect(fields).toContainElement(screen.getByTestId("postEdit.body"));
+    // Inside the scroller no row shrinks below its own content (measured at
+    // 360 × 640: shrinking rows overlapped the title and the tags).
+    expect(fields.className.split(" ")).toContain("*:shrink-0");
+    expect(screen.getByTestId("postEdit.body").className.split(" ")).not.toContain("min-h-0");
     expect(fields).not.toContainElement(footer());
     expect(fields).not.toContainElement(sign());
   });
