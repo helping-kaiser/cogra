@@ -32,16 +32,33 @@ export type ViewportReading = Pick<VisualViewport, "height" | "offsetTop" | "sca
 /**
  * How much of the layout viewport's bottom the keyboard covers, in CSS px.
  *
- * The visual viewport's height and offset are in visual (zoomed) pixels, so
- * they are scaled back before they are compared: a pinch zoom shrinks
- * `height` by its scale without any keyboard, and must read 0. The offset
- * counts too: where the browser has already panned the visual viewport to
- * show a field, the band it pans to is already in view and is not lifted a
- * second time. Rounded up, so a foot never sits a fraction under the edge.
+ * THE UNITS (CSSOM View, *The VisualViewport interface*; MDN
+ * "VisualViewport.height"): `height` and `offsetTop` are doubles in CSS
+ * pixels. A pinch zoom by `scale` shows `innerHeight / scale` CSS pixels, so
+ * `height × scale` is the visible band measured back at the page's own
+ * scale: `innerHeight` with no keyboard, `innerHeight` less the keyboard with
+ * one. Without the multiplication a pinch zoom would read as a keyboard. The
+ * offset is added so a band the browser has already panned into view (to
+ * show a field) is not lifted a second time. KNOWN LIMIT: with the keyboard
+ * up AND the page zoomed and panned, `offsetTop × scale` is not a layout
+ * length; the inset then reads short or 0. A layout-fixed box is magnified
+ * and panned with the page there anyway, so no inset could pin it to the
+ * screen's keyboard edge.
+ *
+ * UNDER ONE PIXEL IS ROUNDING, NOT A KEYBOARD. `innerHeight` is an integer
+ * (CSSOM View: `readonly attribute long innerHeight`); Chromium computes it
+ * as the frame's device-pixel height divided by the zoom factor and ROUNDED
+ * (`LocalDOMWindow::innerHeight` → `AdjustForAbsoluteZoom::AdjustInt` →
+ * `RoundForImpreciseConversion`), so it can stand up to half a pixel above
+ * the fractional visual height (measured: 786 against 786.29; elsewhere
+ * 787 against 786.6). There is no fractional layout-viewport height to read
+ * without reading layout, which the listener never does. So a gap under
+ * 1 px reads 0 — no phantom strip under every pinned layer — and from 1 px
+ * up it is rounded up, so a foot never sits a fraction under the edge.
  */
 export function keyboardInset(layoutHeight: number, viewport: ViewportReading): number {
-  const visibleBottom = (viewport.offsetTop + viewport.height) * viewport.scale;
-  return Math.max(0, Math.ceil(layoutHeight - visibleBottom));
+  const covered = layoutHeight - (viewport.offsetTop + viewport.height) * viewport.scale;
+  return covered < 1 ? 0 : Math.ceil(covered);
 }
 
 /**

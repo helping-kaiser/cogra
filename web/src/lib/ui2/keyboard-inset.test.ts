@@ -12,6 +12,16 @@ describe("keyboardInset", () => {
     expect(keyboardInset(786, { height: 786.3, offsetTop: 0, scale: 1 })).toBe(0);
   });
 
+  it("reads_0_where_the_rounded_innerHeight_stands_over_the_fractional_band", () => {
+    // Chromium rounds innerHeight; under one pixel is rounding, not a keyboard.
+    expect(keyboardInset(787, { height: 786.6, offsetTop: 0, scale: 1 })).toBe(0);
+    expect(keyboardInset(786, { height: 786.29, offsetTop: 0, scale: 1 })).toBe(0);
+  });
+
+  it("lifts_from_one_whole_pixel_up", () => {
+    expect(keyboardInset(786, { height: 785, offsetTop: 0, scale: 1 })).toBe(1);
+  });
+
   it("is_the_covered_band_with_the_keyboard_up", () => {
     expect(keyboardInset(786, { height: 474.3, offsetTop: 0, scale: 1 })).toBe(312);
   });
