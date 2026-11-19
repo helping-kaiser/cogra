@@ -24,7 +24,7 @@
 use std::future::Future;
 
 use common::l1::handshake::{
-    AccountBalance, ApprovalWitness, BurnSettlement, BurnTicket, EpochPackage,
+    AccountBalance, ApprovalWitness, BurnSettlement, BurnTicket, EpochPackage, Micro,
 };
 use common::l1::proposal::{SealedAct, Submission};
 use l1_standin::{StandIn, StandInError};
@@ -104,11 +104,12 @@ pub trait L1Boundary: Send + Sync {
     /// transparency — every host-added field checkable before approval).
     fn host_public_key(&self) -> impl Future<Output = Result<Vec<u8>, BoundaryError>> + Send;
 
-    /// The θ price the next act debits, in the units `balance` reports —
-    /// the published safety price the prepare pre-check reads
+    /// The θ price the next act debits, in the micro-units `balance`
+    /// reports — the published safety price the prepare pre-check reads
     /// (layer1-interface.md §11.8; substrate.md §6 "an L2 estimate from
-    /// the last published certificate").
-    fn current_theta(&self) -> impl Future<Output = Result<f64, BoundaryError>> + Send;
+    /// the last published certificate"). Exact, like the balance, so the
+    /// pre-check decides on integers (layer1-interface.md §13.2).
+    fn current_theta(&self) -> impl Future<Output = Result<Micro, BoundaryError>> + Send;
 
     /// The published per-act carriage bound M_payload the prepare
     /// pre-check and the relay's carriage checks read — consume-only, like
@@ -174,8 +175,8 @@ impl L1Boundary for StandInBoundary {
         Ok(self.0.host_public_key().await?)
     }
 
-    async fn current_theta(&self) -> Result<f64, BoundaryError> {
-        Ok(self.0.current_theta().await? as f64 / 1e6)
+    async fn current_theta(&self) -> Result<Micro, BoundaryError> {
+        Ok(Micro(self.0.current_theta().await?))
     }
 
     async fn max_payload_bytes(&self) -> Result<usize, BoundaryError> {
