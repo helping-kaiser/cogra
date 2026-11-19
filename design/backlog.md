@@ -6665,3 +6665,12 @@ column's width, no height cap). `CommentCard` was the one surface passing `maxHe
 pictures — passes its own bound here") and `MediaGallery`'s pass-through describe a caller that
 is gone. Options: (a) retire the prop and its comment; (b) keep it as an unused door. Not done
 by the lane: the brief kept the masters as they are.
+
+Round 60 (brief: option (a)) found two callers left, so the prop was NOT retired: the post-MVP
+chat bubble's media (`designs/postmvp/screens/_shared.jsx:1163`, `maxHeight="220px"`, every
+chat board with a picture) and the sensitive veil's component card
+(`components/honesty/sensitive.card.html:36`, `200px`). Retiring it moves both drawings, which
+round 58 left as drawn (RULINGS 2026-11-18 ~18:00: the post-MVP chat boards not covered). The
+two comments now name these callers. Options: (a) retire the prop AND drop both caps — the chat
+media and the card stand at their true shape (a drawing change, jakob's); (b) keep the prop for
+those two, as now; (c) retire it from the masters and draw each cap in its caller.

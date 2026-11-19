@@ -44,8 +44,9 @@ export interface MediaAttachmentProps {
   fit?: "contain" | "cover";
   /**
    * No default — a card tile stands at its true shape, full width. Only a
-   * surface that holds media below the shape's own scale passes a bound here;
-   * a comment's inset pictures are the one that does.
+   * surface that holds media below the shape's own scale passes a bound here:
+   * the post-MVP chat bubble's media and the sensitive veil's component card;
+   * no MVP board passes one.
    */
   maxHeight?: string;
   /**
