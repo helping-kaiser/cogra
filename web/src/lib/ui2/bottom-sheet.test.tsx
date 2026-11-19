@@ -7,6 +7,7 @@ import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import {
   BottomSheet,
   SHEET_CEILING,
+  SHEET_CEILING_RIDING,
   SHEET_CEILING_SLIVER_PX,
   SHEET_DEFAULT,
   SHEET_KEYBOARD_LIFT,
@@ -154,25 +155,43 @@ describe("BottomSheet", () => {
   // THE SLIVER IS THE DRAWN ONE (jakob's ruling, the sheets-and-video round,
   // 2026-09-22; `design/components/core/BottomSheet.jsx`'s `SHEET_CEILING`
   // is the same `calc(100% - 72px - env(safe-area-inset-top, 0px))`).
-  // The master's `100%` is the visible screen, so the keyboard's height comes
-  // off it (seam 381) — 0 with no keyboard, the drawn ceiling exactly.
+  // A riding sheet's `100%` is the band above the keyboard (seam 388) — 0
+  // with no keyboard, the drawn ceiling exactly.
   it("measures its ceiling from the top of the safe area", () => {
     expect(SHEET_CEILING_SLIVER_PX).toBe(72);
-    expect(SHEET_CEILING).toBe(
+    expect(SHEET_CEILING).toBe(`calc(100dvh - ${SHEET_CEILING_SLIVER_PX}px - env(safe-area-inset-top, 0px))`);
+    expect(SHEET_CEILING_RIDING).toBe(
       `calc(100dvh - ${SHEET_CEILING_SLIVER_PX}px - env(safe-area-inset-top, 0px) - var(--keyboard-inset, 0px))`,
     );
   });
 
-  // A pinned footer never walks out of reach (design/readme.md, Spacing and
-  // layout): with the keyboard up the whole sheet stands on its top edge.
-  it("stands_on_the_keyboards_top_edge", () => {
+  // ONE field → the sheet rides above the keyboard, its Done in reach
+  // (seam 388, point 1).
+  it("a_one_field_sheet_stands_on_the_keyboards_top_edge", () => {
     render(
-      <BottomSheet open onClose={() => {}} title="Mark as sensitive">
+      <BottomSheet open onClose={() => {}} title="Mark as sensitive" keyboard="rides">
         <p>Body</p>
       </BottomSheet>,
     );
-    expect(screen.getByTestId("bottom-sheet").style.marginBottom).toBe(SHEET_KEYBOARD_LIFT);
+    const sheet = screen.getByTestId("bottom-sheet");
+    expect(sheet.style.marginBottom).toBe(SHEET_KEYBOARD_LIFT);
     expect(SHEET_KEYBOARD_LIFT).toBe("var(--keyboard-inset, 0px)");
+    expect(sheet.style.maxHeight).toContain("var(--keyboard-inset, 0px)");
+  });
+
+  // SEVERAL fields, or none → the sheet keeps its place; the keyboard covers
+  // its foot (seam 388, point 2: a Done right above the keyboard on a sheet of
+  // several fields invites an accidental submit).
+  it("a_sheet_that_stays_never_reads_the_keyboard", () => {
+    render(
+      <BottomSheet open onClose={() => {}} title="Cited by">
+        <p>Body</p>
+      </BottomSheet>,
+    );
+    const sheet = screen.getByTestId("bottom-sheet");
+    expect(sheet.style.marginBottom).toBe("");
+    expect(sheet.style.maxHeight).not.toContain("keyboard-inset");
+    expect(screen.getByTestId("bottom-sheet-column").style.maxHeight).not.toContain("keyboard-inset");
   });
 
   // The column inside the surface is bounded by the same thing, less the

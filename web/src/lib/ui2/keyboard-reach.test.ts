@@ -9,7 +9,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-import { SHEET_CEILING, SHEET_KEYBOARD_LIFT } from "./bottom-sheet";
+import { SHEET_CEILING_RIDING, SHEET_KEYBOARD_LIFT } from "./bottom-sheet";
 import { KEYBOARD_INSET_VAR } from "./keyboard-inset";
 import { PINNED_FLOOR, PINNED_PAGE, SCREEN_LAYER } from "./screen-layer";
 
@@ -42,7 +42,7 @@ describe("a pinned foot with the on-screen keyboard up", () => {
     expect(SCREEN_LAYER).toContain(`bottom-[${inset}]`);
     expect(PINNED_PAGE).toMatch(/^h-\[calc\(100dvh_-_var\(--keyboard-inset,0px\)\)\]$/);
     expect(PINNED_FLOOR).toMatch(/^min-h-\[calc\(100dvh_-_var\(--keyboard-inset,0px\)\)\]$/);
-    expect(SHEET_CEILING).toContain(`var(${KEYBOARD_INSET_VAR}, 0px)`);
+    expect(SHEET_CEILING_RIDING).toContain(`var(${KEYBOARD_INSET_VAR}, 0px)`);
     expect(SHEET_KEYBOARD_LIFT).toBe(`var(${KEYBOARD_INSET_VAR}, 0px)`);
   });
 
