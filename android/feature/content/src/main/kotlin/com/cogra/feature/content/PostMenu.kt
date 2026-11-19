@@ -79,6 +79,12 @@ internal fun postMenuRows(
      * behaviour every menu shares). Null stands the row inert as `Hide`.
      */
     hideRow: MenuRow? = null,
+    /**
+     * The post was removed ([PostView.removed]): the author's own menu loses
+     * Edit, Mark as sensitive and Remove, and the reader's stays whole
+     * (FeedRemovedMenuOwn.md:5, FeedRemovedMenu.md:5) — on every host.
+     */
+    removed: Boolean = false,
 ): List<MenuRow> {
     fun tag(row: PostMenuRow, legacy: String): String = rowNode(row)?.tag ?: "${testTagPrefix}_$legacy"
     val save = stringResource(R.string.content_menu_save)
@@ -112,7 +118,7 @@ internal fun postMenuRows(
         // item 100): self-citation is a real authorial act, so the thumb
         // finds one row in one place on every menu that has it.
         add(MenuRow(cite, tag(PostMenuRow.Cite, "cite"), onCite))
-        if (own) {
+        if (own && !removed) {
             add(MenuRow(edit, tag(PostMenuRow.Edit, "edit"), onEdit))
             // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published
             // post sensitive is always a signed action changing the post — an
@@ -122,7 +128,7 @@ internal fun postMenuRows(
             // surface's drawn Sensitive row lands (CW-46) the link can focus it.
             add(MenuRow(sensitive, tag(PostMenuRow.MarkSensitive, "sensitive"), onEdit))
             add(MenuRow(remove, tag(PostMenuRow.Remove, "remove"), onRemove))
-        } else {
+        } else if (!own) {
             // THE ROW KEEPS ITS ONE NAME WHATEVER IT READS (ReaderPostMenu.md:21):
             // `Hide @ada` and `Unhide @ada` are one node.
             add(MenuRow(hideRow?.label ?: hide, tag(PostMenuRow.Hide, "hide"), hideRow?.onSelect ?: {}))
