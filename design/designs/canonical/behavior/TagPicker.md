@@ -38,6 +38,8 @@ ALWAYS the back arrow reads Back to the post from a post's composer or its edit,
 
 WHEN the picker opens -> tagPicker.nameField takes focus AND the keyboard rises
 
+WHEN the keyboard is up -> the picker's pinned button rides directly above the keyboard AND the list scrolls in what is left AND NEVER the button rides where it would leave the focused field fewer than three of its lines
+
 ALWAYS tagPicker.cap reads Up to 10 tags per post. in the fixed head under tagPicker.rule GIVEN the composer holds ten tags and was opened from a post's composer or its edit
 
 ALWAYS tagPicker.cap reads Up to 10 tags per comment. in the fixed head under tagPicker.rule GIVEN the composer holds ten tags and was opened from a reply's composer or a comment's edit

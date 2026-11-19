@@ -17,7 +17,7 @@ use chrono::{DateTime, Duration, Utc};
 use common::l1::census::Family;
 use common::l1::crypto;
 use common::l1::encoding::Encoder;
-use common::l1::handshake::{BurnSettlement, BurnTicket};
+use common::l1::handshake::{BurnSettlement, BurnTicket, Micro};
 use common::l1::identifier::NodeId;
 use postgres_store::{PgPool, auth as store, staged};
 use uuid::Uuid;
@@ -94,15 +94,15 @@ pub enum OnboardingError {
     #[error("verification token invalid or expired")]
     VerificationTokenInvalid,
     #[error("write rule: balance {balance} below the act price {theta}")]
-    WriteRule { balance: f64, theta: f64 },
+    WriteRule { balance: Micro, theta: Micro },
     /// The write rule priced over a whole batch (D19) — the same account
     /// state, quoted as the gesture the author authored.
     #[error(
         "write rule: balance {balance} cannot carry this batch — {acts} acts at the act price {theta}"
     )]
     BatchWriteRule {
-        balance: f64,
-        theta: f64,
+        balance: Micro,
+        theta: Micro,
         acts: usize,
     },
     /// The account's signing budget cannot carry the gesture right now —
@@ -1216,7 +1216,10 @@ pub enum CarryRefusal {
 /// its carry, so a staging and the landing that releases the batch never
 /// interleave: the landing either sees the act carried, or the staging
 /// sees a member and refuses.
-pub struct CarryLock(sqlx::Transaction<'static, sqlx::Postgres>);
+pub struct CarryLock {
+    lock: sqlx::Transaction<'static, sqlx::Postgres>,
+    account: Uuid,
+}
 
 /// Opens an applicant's carried staging of one act of `family` (auth.md
 /// "Application"; seam 099 rulings 68, 73): under the account lock, the
@@ -1256,19 +1259,17 @@ pub async fn open_carry(
     if carried.iter().any(|f| f == family.as_str()) {
         return Err(CarryRefusal::AlreadyCarried(family).into());
     }
-    Ok(CarryLock(lock))
+    Ok(CarryLock { lock, account })
 }
 
-/// Carries the writes the gated prepare staged, and releases the lock.
-pub async fn close_carry(
-    pool: &PgPool,
-    lock: CarryLock,
-    ids: &[Uuid],
-) -> Result<(), CarryOpenError> {
-    staged::carry(pool, ids)
+/// Carries the writes the gated prepare staged, inside the lock's own
+/// transaction, and releases the lock.
+pub async fn close_carry(carry: CarryLock, ids: &[Uuid]) -> Result<(), CarryOpenError> {
+    let CarryLock { mut lock, account } = carry;
+    staged::carry(&mut lock, account, ids)
         .await
         .map_err(|e| CarryOpenError::Internal(e.to_string()))?;
-    lock.0.commit().await?;
+    lock.commit().await?;
     Ok(())
 }
 

@@ -213,8 +213,9 @@ export function MediaAttachment({
   radius = "var(--radius-medium)",
   fit = "cover",
   /* No default: a card tile is its own shape at full width. A surface that
-     deliberately holds media to a smaller scale than the shape gives — a
-     comment's inset pictures — passes its own bound here. */
+     holds media to a smaller scale than the shape gives passes its own bound
+     here — the post-MVP chat bubble's media (220px) and the sensitive veil's
+     component card (200px); no MVP board passes one. */
   maxHeight,
   controls = "sound",
   resting = false,

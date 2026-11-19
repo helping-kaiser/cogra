@@ -4,7 +4,9 @@
    filter has `Removed` on, and its ⋮ raises `OWN_REMOVED_POST_MENU`: Save, Cite in a new
    post, Cited by, Opinions on this, License terms, your own post's menu less
    Edit, Mark as sensitive and Remove, as `FeedRemovedMenuOwn`. Over
-   `TagPageBody` clipped at the phone's 844, as `TagPageMenuOwn`.
+   `TagPageBody` clipped at the phone's 844, as `TagPageMenuOwn`. @ada's
+   tagged comment below it points at the removed post as `On @sol's removed
+   post` (round 59, the proposal: a pointer never says a removed title).
 
    REGISTERED under the `tagPage` prefix, `tagPage.menuSheet`, told apart by
    board. */

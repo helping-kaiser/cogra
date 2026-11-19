@@ -754,7 +754,7 @@
       "x": 480,
       "y": 0,
       "w": 390,
-      "h": 844,
+      "h": 1309,
       "page": "comments"
     },
     {
@@ -797,7 +797,7 @@
       "file": "ReplyCompose.dc.html",
       "title": "Reply · write",
       "x": 0,
-      "y": 1060,
+      "y": 1525,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -806,7 +806,7 @@
       "file": "ReplyPictures.dc.html",
       "title": "Reply · pictures attached",
       "x": 480,
-      "y": 1060,
+      "y": 1525,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -815,7 +815,7 @@
       "file": "ReplyCrop.dc.html",
       "title": "Reply · the crop",
       "x": 960,
-      "y": 1060,
+      "y": 1525,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -824,7 +824,7 @@
       "file": "ReplyPicturesWeb.dc.html",
       "title": "Reply · pictures on the web",
       "x": 1440,
-      "y": 1060,
+      "y": 1525,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -833,7 +833,7 @@
       "file": "ReplyVideo.dc.html",
       "title": "Reply · a video and its cover",
       "x": 1920,
-      "y": 1060,
+      "y": 1525,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -842,7 +842,7 @@
       "file": "ReplyMediaErrors.dc.html",
       "title": "Reply · files refused",
       "x": 2400,
-      "y": 1060,
+      "y": 1525,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -851,7 +851,7 @@
       "file": "ReplyPad.dc.html",
       "title": "Reply · the pad",
       "x": 2880,
-      "y": 1060,
+      "y": 1525,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -860,7 +860,7 @@
       "file": "ReplySeal.dc.html",
       "title": "Reply · what you sign",
       "x": 3360,
-      "y": 1060,
+      "y": 1525,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -869,7 +869,7 @@
       "file": "ReplyCited.dc.html",
       "title": "Reply · what you sign, a reference staged",
       "x": 3840,
-      "y": 1060,
+      "y": 1525,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -878,7 +878,7 @@
       "file": "ReplyCitedMany.dc.html",
       "title": "Reply · what you sign, three references staged",
       "x": 6240,
-      "y": 1060,
+      "y": 1525,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -887,7 +887,7 @@
       "file": "ReplyComposeComment.dc.html",
       "title": "Reply · write, answering a comment",
       "x": 6720,
-      "y": 1060,
+      "y": 1525,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -896,7 +896,7 @@
       "file": "ReplySealComment.dc.html",
       "title": "Reply · what you sign, answering a comment",
       "x": 7200,
-      "y": 1060,
+      "y": 1525,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -905,7 +905,7 @@
       "file": "ReplySealKeyAbsent.dc.html",
       "title": "Reply · what you sign, key absent",
       "x": 7680,
-      "y": 1060,
+      "y": 1525,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -914,7 +914,7 @@
       "file": "ReplySealUploading.dc.html",
       "title": "Reply · what you sign, waiting on uploads",
       "x": 8160,
-      "y": 1060,
+      "y": 1525,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -923,7 +923,7 @@
       "file": "ReplySealUploadFailed.dc.html",
       "title": "Reply · what you sign, an upload failed",
       "x": 8640,
-      "y": 1060,
+      "y": 1525,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -932,7 +932,7 @@
       "file": "DiscardConfirm.dc.html",
       "title": "Discard confirm · reply and edit",
       "x": 4320,
-      "y": 1060,
+      "y": 1525,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -941,7 +941,7 @@
       "file": "ReplyVideoFailed.dc.html",
       "title": "Reply · the clip didn't upload",
       "x": 4800,
-      "y": 1060,
+      "y": 1525,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -950,7 +950,7 @@
       "file": "CommentEditVideo.dc.html",
       "title": "Edit comment · a clip",
       "x": 5280,
-      "y": 1060,
+      "y": 1525,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -959,7 +959,7 @@
       "file": "ReplyPadHelp.dc.html",
       "title": "Reply · the pad's \"?\"",
       "x": 5760,
-      "y": 1060,
+      "y": 1525,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -1354,7 +1354,7 @@
     {
       "file": "HistoryProfileMenu.dc.html",
       "title": "History · a hidden person's card, its menu",
-      "x": 4800,
+      "x": 9600,
       "y": 6107,
       "w": 390,
       "h": 844,
@@ -1483,7 +1483,7 @@
       "x": 6240,
       "y": 1060,
       "w": 390,
-      "h": 2740,
+      "h": 3482,
       "page": "feed"
     },
     {
@@ -2040,7 +2040,7 @@
       "x": -9700,
       "y": 0,
       "w": 9280,
-      "h": 6107,
+      "h": 6224,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -2100,9 +2100,9 @@
     },
     {
       "file": "MapProfile.dc.html",
-      "x": -6220,
+      "x": -6510,
       "y": 0,
-      "w": 5800,
+      "w": 6090,
       "h": 10111,
       "page": "profile",
       "title": "Profile · flow map"
@@ -3146,7 +3146,7 @@
       "file": "CommentMenuOwn.dc.html",
       "title": "Comment · your own, the menu over the thread",
       "x": 0,
-      "y": 2120,
+      "y": 2585,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -3155,7 +3155,7 @@
       "file": "CommentRemoveConfirm.dc.html",
       "title": "Comment · remove, think twice",
       "x": 480,
-      "y": 2120,
+      "y": 2585,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -3164,7 +3164,7 @@
       "file": "CommentRemoved.dc.html",
       "title": "Comments · your comment, removed by you",
       "x": 960,
-      "y": 2120,
+      "y": 2585,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -3173,7 +3173,7 @@
       "file": "CommentRemovedMenu.dc.html",
       "title": "Comments · your comment, removed, its menu",
       "x": 1440,
-      "y": 2120,
+      "y": 2585,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -3182,7 +3182,7 @@
       "file": "CommentRemovedOther.dc.html",
       "title": "Comments · another's comment, removed by its author",
       "x": 1920,
-      "y": 2120,
+      "y": 2585,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -3191,7 +3191,7 @@
       "file": "CommentRemovedOtherMenu.dc.html",
       "title": "Comments · another's comment, removed, its menu",
       "x": 2400,
-      "y": 2120,
+      "y": 2585,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -3236,6 +3236,42 @@
       "file": "TagPageRemovedMenuOwn.dc.html",
       "title": "A tag's page · your removed post's menu",
       "x": 3840,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "TagPageCommentMenu.dc.html",
+      "title": "A tag's page · the comment menu",
+      "x": 4320,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "TagPageCommentMenuOwn.dc.html",
+      "title": "A tag's page · your own comment's menu",
+      "x": 4800,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "TagPageCommentRemovedMenu.dc.html",
+      "title": "A tag's page · a removed comment's menu",
+      "x": 5280,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "TagPageCommentRemovedMenuOwn.dc.html",
+      "title": "A tag's page · your removed comment's menu",
+      "x": 5760,
       "y": 2120,
       "w": 390,
       "h": 844,
@@ -3431,7 +3467,7 @@
     {
       "id": "sec-reply-composer",
       "x": -340,
-      "y": 1060,
+      "y": 1525,
       "w": 290,
       "text": "COMMENTS · The reply composer\n\nThe comment box in the thread is an ENTRY, not a composer: tapping it opens the same full-focus flow, pre-targeted, parent pinned. Two steps — words, then the seal. A comment is TEXT PLUS OPTIONAL MEDIA (comment.md; text required) — deliberately asymmetric to the post's words-XOR-media body, because an answer is words first; '+ Add pictures' rides the writing step, and COMMENTS HAVE NO PICK STAGE (ruled 2026-08-31): it opens the platform's own picker — Android's photo-picker sheet, the browser's file dialog on web — never the post wizard's grid; the web board adds the drop-anywhere path. Comment pictures never crop, so they upload at pick; descriptions ride the signed act (detached from the upload — no race, nothing gates) and are entered from the describe counter. A reply answers a post or a comment, and the composer and the seal are one surface each, only the lines that name the target differing (the reply pack, 2026-09-30): a post is quoted by its title and handle, a comment by its author's handle over its first words. The reply's stance on what it answers (+0.10 / +0.10 default) is DISCLOSED on the seal and adjustable on the full two-axis pad: 'Replying also signs an opinion on what it answers.' — an opinion, never 'your opinion'. KEY ABSENT meets the reader at the door, before a word is written; a key lost mid-write gets the seal's fallback — restore, or discard. Topics and citations can join a comment from its seal, each row raising the count. COMMENT VIDEO (jakob 2026-09-02): a comment's media grammar is the post's at comment caps — four pictures OR one video with its cover, never both kinds. Entry is unchanged (the platform picker; a video pick lands in the video state), there is still no pick stage and no crop, and the cover row is ComposeCover's inlined at comment scale, because the comment composer is one screen and has no stage to give it. Caps as facts: a picture 10 MiB (10 per post, 4 per comment), a video 100 MiB in a post and 50 MiB in a comment, a cover 10 MiB. A FILE THE SURFACE REFUSES — over its cap, or a format nothing here reads — is refused WHERE IT WAS OFFERED, a line in the composer's media row: never a dialog, never a snackbar. The line names the cap it broke, and that is the only place a cap is named. Its one way out is Remove it — never Retry, which cannot make a file smaller or a format readable. Round 2 (jakob, same day): A VIDEO TAKES ONE DESCRIPTION for the whole clip and its cover takes none — the counter reads 'Describe the video · 0 of 1 described' and opens the same describe sheet. THE ADD LABEL FOLLOWS THE STATE: empty reads '+ Add pictures or a video', with pictures '+ Add pictures · n of 4' (the video is out — the grammar is exclusive), with a video no add control at all. WEB TAKES THE VIDEO BOARD 1:1 (file dialog + the drop path; no web board, the avatar blessing's form) and the drop hint grows to 'pictures or a video'. SCREENS WRITE MB while the caps are enforced in MiB — 50 MiB is 52.4 MB, so the readable number under-promises and never refuses a file the product would take. Boards: write (words) · pictures attached · pictures on the web · a video and its cover · files refused · the pad · what you sign · both answering a comment · the seal with the key absent.",
       "page": "comments"
@@ -3439,7 +3475,7 @@
     {
       "id": "sec-comment-remove",
       "x": -340,
-      "y": 2120,
+      "y": 2585,
       "w": 290,
       "text": "COMMENTS · Removing your own comment\n\nIN V1.0 (jakob 2026-10-01): the erasure half at comment scale, drawn in the post's own idiom. Your own comment's ⋮ opens the reader's sheet with REMOVE joined as the last of the acts — after Save, Cite and Edit, before the two readings, the license closing it — Edit is a row of this menu, never a button on the card (round 41) — and no sensitive row (the mark rides the edit). Remove raises the post's think-twice dialog with the nouns swapped: the safe action filled, the removal a text button, no error colour. Removal takes the payload, never the record (comment.md §5): the comment keeps its place in the thread, its author and its time, and 'Removed by its author' stands where its words were. The replies beneath keep their parent and stay readable — removal never breaks a thread, and nothing disappears in silence. The removed comment keeps a menu, as a removed post does: Save, Cite, Cited by, Opinions on this, License terms (jakob 2026-11-13). Boards: your own comment's menu · remove, think twice · your comment, removed.",
       "page": "comments"

@@ -1,6 +1,6 @@
 # FeedCommentShapes · `spec:design:behavior-feed-comment-shapes`
 
-ALWAYS feed.commentCard's own pictures join its words inset, capped at a comment's height
+ALWAYS feed.commentCard's own pictures join its words inset, a square at the column's width with no cap on its height
 
 WHEN tap feed.commentCard's own pictures -> the post's comment section opens scrolled to that comment
 
@@ -19,6 +19,14 @@ ALWAYS feed.commentCard.target names a comment it answers by its author's handle
 ALWAYS feed.commentCard.target names an untitled post it answers by the post's first words in the title's place, over its author, with the text post's mark
 
 ALWAYS feed.commentCard.target reads Removed by its author in the title's place, in the system's voice, over the author, with an empty tile GIVEN the post it answers was removed by its author
+
+ALWAYS feed.commentCard.target reads the comment's author's handle over Removed by its author, in the system's voice, with an empty tile, and is spoken On @tobias's removed comment GIVEN the comment it answers was removed by its author
+
+ALWAYS feed.commentCard.target reads Deleted account, in the system's voice, where the author's handle would stand, the post's title or the comment's first words kept, and is spoken On a deleted account's comment for a comment GIVEN what it answers is a deleted account's and still there
+
+ALWAYS feed.commentCard.target reads Removed by its author over Deleted account for a post, Deleted account over Removed by its author for a comment, with an empty tile, and is spoken On a deleted account's removed post or On a deleted account's removed comment GIVEN what it answers was a deleted account's and its content went with the account
+
+ALWAYS feed.commentCard.target never names a removed post by its title nor a removed comment by its words, and never prints a deleted account's handle
 
 ALWAYS feed.commentCard stays readable GIVEN the post it answers was removed
 

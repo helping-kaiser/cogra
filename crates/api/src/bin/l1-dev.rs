@@ -213,7 +213,7 @@ async fn main() -> anyhow::Result<()> {
             let address = args.get(1).context("usage: balance <address>")?;
             let b = standin.balance(address).await?;
             println!(
-                "B_i {:.6}  b_i {:.6}  N_i {}",
+                "B_i {}  b_i {}  N_i {}",
                 b.burned_total, b.balance, b.action_count
             );
         }

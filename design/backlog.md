@@ -6568,7 +6568,7 @@ state, `ProfileDeletedMenu`'s page beneath, the round-55 way.
 Closed by round 57: `ProfileDeletedPostMenu` (kept) and `ProfileDeletedRemovedMenu` (swept),
 the page on Posts beneath, the rows `DELETED_POST_MENU`'s.
 
-### 280 · A removed post or comment in the Everything tab has no drawing · *design* · **filed 2026-11-18**
+### 280 · A removed post or comment in the Everything tab has no drawing · *design* · **filed 2026-11-18** · **closed 2026-11-18**
 
 Round 57. jakob ruled (2026-11-18, profiles (a)) that a profile keeps a removed post or comment
 in its place as its mark "on every tab". Posts and Comments draw it; the chronicle does not. The
@@ -6584,7 +6584,12 @@ stands with no second line, the verb alone (what the app does today); (c) the ro
 the removed thing's detail, its mark there, with either (a) or (b) on the row. Either answer
 also settles `ProfileDeleted`'s swept chronicle.
 
-### 281 · What the profile's Posts figure counts once removed posts stand on the list · *design* · **filed 2026-11-18**
+Closed by round 58 (jakob 2026-11-18, C1 "as rec" — (a) with (c)): the act keeps its card and
+its second line reads `Removed by its author`, the card still opening the removed thing, its
+mark there — `Profile`'s and `ProfileOther`'s `chronicle` = `removed`, and `ProfileDeleted`'s
+swept chronicle under `contents` = `removed`, its sidecar brought to the board.
+
+### 281 · What the profile's Posts figure counts once removed posts stand on the list · *design* · **filed 2026-11-18** · **closed 2026-11-18**
 
 Round 57. The tree says the Posts figure counts "the posts published, never their edits"
 (readme §7, `ProfileHeader`) and says nothing of a removed post. The app counts removed posts
@@ -6592,6 +6597,10 @@ today and not pending ones (impl, seam 371 (f)), which agrees with the list sinc
 Nothing contradicts it; the tree is silent. Options: (a) write it as law — the figure counts
 every post the person published, a removed one included, the list and the figure agreeing; (b)
 the figure leaves removed posts out — the list and the figure then disagree by the marks.
+
+Closed by round 58 (jakob 2026-11-18, C2: "yes ofcourse deleted posts count" — (a)): the figure
+counts every post the person published, a removed one included, never an edit (readme §7,
+`ProfileHeader`, the profile sidecars). Pending posts stay unspoken.
 
 ### 282 · A comment's pointer to a removed post, in a list · *design* · **filed 2026-11-18**
 
@@ -6605,7 +6614,23 @@ author — @sol`, the thread shape's rule; (b) the line reads `On @sol's removed
 card's naming (copy-voice, *A comment's head row*). Until ruled the drawn pointer is the live
 one, an inconsistency on one board's page beneath its wash.
 
-### 283 · A removed tagged comment on the tag page · *design* · **filed 2026-11-18**
+Round 59 (jakob 2026-11-18, C3: "for sure not the actual title… figure sth out you can show me")
+draws a PROPOSAL on its own branch, `jakob/design/round59-removed-pointers`: a removed thing named
+by kind and author, `On @sol's removed post`, and `a deleted account's` for a deleted account's
+(copy-voice, *Naming a removed or deleted thing*). Open until he rules.
+
+### 286 · The pointers the round-59 proposal names but no board draws · *design* · **filed 2026-11-18**
+
+Round 59. If the proposal stands, its naming also reaches surfaces it did not draw: the comment
+edit's subtitle for a deleted account's target (`Your comment on a deleted account's removed
+post.`); the chronicle's opinion / tag / citation rows whose target was removed (`Removed by its
+author` under the verb); a post's references sheet and `Cited by` rows for a removed or deleted
+thing (`ReferenceRow`'s `removed`, seam 248); and notifications — the `in <title>` line of a
+mention or citation from a removed post (`in @mira's removed post`) and a deleted actor's row
+(`A deleted account cited your post`?). Each waits for jakob's word on round 59; the last is
+not in the proposal (an actor, not a pointer).
+
+### 283 · A removed tagged comment on the tag page · *design* · **filed 2026-11-18** · **closed 2026-11-18**
 
 Round 57. jakob's tag-page ruling names a removed tagged post; the page also lists tagged
 comments. Derived (impl, seam 371, point 4, to be confirmed by jakob): the switch holds for
@@ -6614,3 +6639,114 @@ does — the feed's filter treats its post and comment cards alike. The drawing 
 `CommentCard`'s own mark (as `ProfileComments`' `removed`), under its claim. Not drawn:
 the ruling names posts. Options: (a) yes, every removed row; (b) comments stay listed whatever
 the switch holds.
+
+Closed by round 58 (jakob 2026-11-18, C4 "as rec" — (a)): `TagPage.md`'s two sentences hold for
+every removed row the page lists; `TagPage`'s `comment` = `removed` draws @ada's comment with
+`CommentCard`'s own mark under its claim. Its menus are backlog 284.
+
+### 284 · A tagged comment's ⋮ on the tag page: no host list names it · *design* · **filed 2026-11-18** · **closed 2026-11-19**
+
+Round 58. copy-voice *Menu rows* names the tag page among a post's menu hosts but not among a
+comment's ("the thread, the feed, History, Saved and a profile's Comments tab"), and no tag-page
+sidecar speaks of a comment's ⋮; the board draws the tagged comment's ⋮ with `License terms`
+alone (the card's own appended row, no `menuItems` handed). So the menus over another's and your
+own removed tagged comment — and the live ones — have no rows the law fixes; not drawn. Options:
+(a) the comment rows' host list gains the tag page, as the post rows' does, and four boards draw
+it (`TagPageCommentMenu`, `…Own`, and the removed pair) — the rows `CommentMenu`'s and
+`CommentMenuOwn`'s, removed or not; (b) a tagged comment's ⋮ on the tag page holds only
+`License terms`, as drawn — a doorway card. Recommendation (a): the page is a list of content
+cards, and every other list's comment card raises the whole menu.
+
+Closed by round 60 (jakob 2026-11-19, C2 "as rec" — (a)): copy-voice *Menu rows* names a tag page
+among the comment rows' hosts; `TagPageCommentMenu`, `…Own`, `TagPageCommentRemovedMenu` and `…Own`
+draw the four menus over the page, each its profile twin's rows.
+
+### 285 · `MediaAttachment`'s `maxHeight` has no caller left · *system* · **filed 2026-11-18**
+
+Round 58, item 6 (jakob 2026-11-18, the hand test: a shown comment's media is a square at the
+column's width, no height cap). `CommentCard` was the one surface passing `maxHeight`
+(`220px`); it passes none now, and the prop's comment in `MediaAttachment` ("a comment's inset
+pictures — passes its own bound here") and `MediaGallery`'s pass-through describe a caller that
+is gone. Options: (a) retire the prop and its comment; (b) keep it as an unused door. Not done
+by the lane: the brief kept the masters as they are.
+
+Round 60 (brief: option (a)) found two callers left, so the prop was NOT retired: the post-MVP
+chat bubble's media (`designs/postmvp/screens/_shared.jsx:1163`, `maxHeight="220px"`, every
+chat board with a picture) and the sensitive veil's component card
+(`components/honesty/sensitive.card.html:36`, `200px`). Retiring it moves both drawings, which
+round 58 left as drawn (RULINGS 2026-11-18 ~18:00: the post-MVP chat boards not covered). The
+two comments now name these callers. Options: (a) retire the prop AND drop both caps — the chat
+media and the card stand at their true shape (a drawing change, jakob's); (b) keep the prop for
+those two, as now; (c) retire it from the masters and draw each cap in its caller.
+
+### 287 · Does the Posts figure count a still-settling post? · *design* · **filed 2026-11-19**
+
+Round 60. A still-settling post now stands on every profile's Posts tab (jakob 2026-11-19, C3), and
+the figure's law says it counts every post published, a removed one included, "so the figure and
+the list agree" (readme §7 `ProfileHeader`, `ProfileHeader.jsx:50`, `ProfileHeader.prompt.md:22`,
+`Profile.md:15`, `ProfileOther.md:11`, `ProfileDeleted.md:31`, `ProfilePosts.md:13`,
+`ProfilePostsOwn.md:9`) — silent on settling, and its "agree" clause now implies the settling post
+counts. The app counts landed posts only (impl seam 371 (f)). Options: (a) the figure counts a
+settling post too, so figure and list agree; (b) the figure counts landed posts only and the "agree"
+clause names the exception.
+
+### 288 · A still-settling comment or act on the Comments and Everything tabs · *design* · **filed 2026-11-19**
+
+Round 60. "The profile should not lag behind" was ruled for the Posts tab. What the tree says
+today: Everything — `Profile.md:31` "a chronicle card reads Still settling GIVEN its act still
+pends" (the own profile; `ProfileOther.md` is silent); Comments — `ProfileComments.md` and
+`ProfileCommentsOwn.md` are silent on a new comment that has not landed, and
+`ProfileCommentsMenuOwn.md:17` lets an edited own comment settle in place wearing `Still settling`.
+Options: (a) every tab lists a still-settling thing, own and anyone's, wearing `Still settling`, as
+the Posts tab now does; (b) the Posts tab alone; (c) as (a) for the reader's own profile only.
+
+### 289 · The keyboard rule: three surfaces the board's field count does not settle · *design* · **filed 2026-11-19** · **closed 2026-11-19**
+
+Round 60, item 7 (jakob 2026-11-19, the split). Each pinned surface got its sentence from its
+board's count of text fields, except: `CommentEdit` — one text field (`Words`) beside pictures,
+tags and citations, which by the count rides, while the ruling's list names the comment edit
+among the several-fields surfaces; `ComposeDetailsWords` — a words post's details step holds only
+`Title`, one field, while the ruling names "the details step" (its media boards hold Title and
+Description, and `ComposeDetails.md` got the several-fields sentence GIVEN both stand); the
+opinion pad's typed values — number fields plus a commit, several fields by the ruling, with no
+board or sidecar of their own to carry the sentence (the readme paragraph alone carries it). Also:
+`EditWords` holds `Title` and the words, two fields, so it got the several-fields sentence though
+the brief listed it among the one-field stages. Options per surface: (a) the board's count, (b) the
+ruling's list.
+
+Closed by round 60 (jakob's approved text of 2026-11-19 names "comment edit, post edit, profile
+edit, the details step" as the surfaces whose buttons stay under the keyboard, and "the text
+post's words, the reply, a one-field sheet" as the ones whose button rides): a named surface keeps
+its named side, and the count of text fields decides only where the text names nothing.
+`CommentEdit` and `ComposeDetailsWords` keep their foot under the keyboard, `EditWords` too; the
+opinion pad's typed values stay in the readme paragraph alone (readme, *Spacing and layout*).
+
+### 290 · Another's profile figures fit at 390 by 0.6px · *system* · **filed 2026-11-19**
+
+Round 60. Measured on the rendered master: another's labels need 261.4px and the column beside the
+avatar is 262 at 390, so the constant had to take 16.375rem (262px) — the half-rem step (264) would
+move another's figures under at 390. A renderer whose text measures 0.6px wider spills there.
+Options: (a) leave it, the two clients mirroring the measured constant; (b) a figures gap or label
+decision that buys room (jakob's: it moves boards).
+
+### 292 · The pick tray's remove targets are still cut by the row · *system* · **filed 2026-11-19**
+
+Round 60. `MediaThumb`'s own clip is gone, and on `ReplyPictures` (88 tile) and `CommentEdit`
+(56 tile) a point 8px outside the tile's top-right corner now hits the remove button (it hit
+nothing at `b55f2fb31`). On `ComposePicked` (48 tiles, 8px apart) the same probe still misses:
+the row that holds the tiles scrolls sideways, and a sideways scroller clips its vertical overflow
+too, so the overhang above the row is cut there; and between tiles the next tile, painted later,
+takes the overlap. Options: (a) the row gains top padding equal to the overhang (moves the
+board); (b) leave the board's row clip as a drawing convenience and say so (the clients build
+the whole target); jakob's if it moves pixels.
+
+### 291 · A rate-limited upload has no words in the law · *design* · **filed 2026-11-19**
+
+Round 60 (impl seam 380, 4). copy-voice *Faults by code* names `RATE_LIMITED`'s hosts
+(`copy-voice.md:1657-1663`: sign-in, registration, the reset, the token confirms, the email change)
+and gives a form's line in SignInError's slot; an upload is not among them. The upload law
+(`copy-voice.md:706-729`) splits a fault that keeps `Retry` from a refusal "retrying cannot change";
+a rate limit passes, so the built reading — retryable, `One picture didn't upload.` with `Retry` —
+follows that sentence's reason, but no line names the code. Options: (a) write it: a rate-limited
+upload is the fault shape, keeping Retry; (b) a line of its own, `Too many tries. Wait a little,
+then try again.` beside Retry.

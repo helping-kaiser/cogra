@@ -602,15 +602,22 @@ describe("the feed filter", () => {
       expect(r.ranks).toHaveLength(1);
       expect(trigger()).toHaveTextContent(/^Posts · \+ removed$/);
       // FeedRemovedMenu.md:3, :5 — the removed card's ⋮ raises the reader's
-      // post menu whole (less Cited by and Opinions on this, which no web post
-      // menu carries yet).
+      // post menu whole.
       fireEvent.click(screen.getByTestId(byNode("feed.card.menu", "p2")));
       const menu = screen.getAllByTestId("feed.menuSheet").find((d) => (d as HTMLDialogElement).open);
       expect(
         within(menu!)
           .getAllByRole("button")
           .map((row) => row.textContent),
-      ).toEqual(["Save", "Cite in a new post", expect.stringMatching(/^Hide /), "License terms", "Report"]);
+      ).toEqual([
+        "Save",
+        "Cite in a new post",
+        expect.stringMatching(/^Hide /),
+        "Cited by",
+        "Opinions on this",
+        "License terms",
+        "Report",
+      ]);
     });
 
     it("sensitive_is_off_by_default_and_cuts_on_the_device", async () => {

@@ -12,6 +12,8 @@ ALWAYS nothing is staged on the server and nothing is signed GIVEN the signing k
 
 WHEN press Restore the key -> the key's restore opens
 
+WHEN press Restore the key GIVEN a browser that cannot hold a key -> KeyCeremonyUnsupported opens in the restore's place AND NEVER the recovery code is typed
+
 WHEN press Keep the draft, restore later -> the flow is left AND the draft stays on this device AND NEVER a dialog asks
 
 WHEN press the header back arrow -> the details stage comes back, one stage behind

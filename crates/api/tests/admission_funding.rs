@@ -23,7 +23,7 @@ use common::l1::census::Family;
 use common::l1::client::ActorKey;
 use common::l1::encoding::Encoder;
 use common::l1::handshake::{
-    AccountBalance, ApprovalWitness, BurnSettlement, BurnTicket, EpochPackage, Proposal,
+    AccountBalance, ApprovalWitness, BurnSettlement, BurnTicket, EpochPackage, Micro, Proposal,
     StructuralBody,
 };
 use common::l1::identifier::NodeId;
@@ -84,7 +84,7 @@ impl L1Boundary for Realization {
         self.inner.host_public_key().await
     }
 
-    async fn current_theta(&self) -> Result<f64, BoundaryError> {
+    async fn current_theta(&self) -> Result<Micro, BoundaryError> {
         self.inner.current_theta().await
     }
 
@@ -401,14 +401,12 @@ impl Rig {
     }
 
     async fn burned_micro(&self, address: &str) -> i64 {
-        (self
-            .standin
+        self.standin
             .balance(address)
             .await
             .expect("balance")
             .burned_total
-            * 1e6)
-            .round() as i64
+            .0
     }
 
     async fn funding(&self, address: &str) -> store::AdmissionFunding {

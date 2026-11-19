@@ -400,6 +400,29 @@ toward the bottom edge. The one stated exception is `ReportProblem`:
 the read-back of what travels stands between its field and `Send by
 email`, because the honesty comes before the press (jakob 2026-10-01).
 
+**With the keyboard up, the field being typed in comes first** (jakob
+2026-11-19: "the split as rec sounds best yes"). A stage or a sheet that
+holds **one field** — the new post's words stage, the reply composer, a
+one-field sheet with its `Done`, a picker with its search field and
+`Done` — lets its pinned button ride directly above the keyboard, the
+field scrolling in what is left; where the riding button would leave
+the focused field fewer than three of its lines, the field wins and the
+button stays at the foot. A surface with **more to fill in than the
+field being typed in** — the comment edit, the post edit's stages, the
+profile edit, the composer's details step in either form, the opinion
+pad's typed values — keeps its pinned foot at the bottom, under the
+keyboard: the focused field takes the room and is brought into view,
+and the reader closes the keyboard to reach the buttons. Where the
+ruling names a surface, its named side holds; the count of text fields
+decides the rest. A search field with no commit of its own shrinks its
+surface to the visible band, so its results stand above the keyboard.
+Two reasons: the field typed in outranks the buttons, and buttons right
+above the keyboard on a page with more to fill in invite a submit before
+the rest is filled. Chips and toggles are not fields the keyboard
+serves. A task page has no
+pinned foot, so nothing on it rides; a stage pins its footer on a long
+page and on a short one alike.
+
 **One design, both platforms, dark mode included** (jakob, 2026-09-17).
 Wherever Android and web can do the same thing, they look the same
 thing: no divergence in colour, spacing, treatment or dark-mode
@@ -955,7 +978,8 @@ paper over:
   say which one it counts; one merged "followers" figure would describe
   a different product, where a link is one-way and carries no opinion.
   Each figure counts bundles, never records (jakob 2026-11-10): the
-  posts published, never their edits; `Opinions on them` the people who
+  posts published, never their edits, a removed post included (jakob
+  2026-11-18), so the figure and the Posts tab's list agree; `Opinions on them` the people who
   hold an opinion on the person; `Opinions by them` the people they hold
   an opinion on. One person's opinions toward one target are one
   bundle, counted once however often they were revised; a revision count
@@ -12625,6 +12649,105 @@ drawing.
   board (backlog 280); what the Posts figure counts (backlog 281, silent);
   a comment's line pointer to a removed post (backlog 282); a removed tagged
   comment on the tag page (backlog 283, derived, not ruled).
+
+### Round 58, removed rows on the Everything tab and the tag page, the Posts figure, a comment's media square — 2026-11-18
+
+- **Ruled** (jakob 2026-11-18, rounds 55–57's review): C1 "as rec" — a
+  removed entry on the Everything tab reads `Removed by its author` on its
+  second line where the words were, and the row still opens the removed
+  thing's detail; C2 "yes ofcourse deleted posts count" — the Posts figure
+  counts removed posts; C4 "as rec" — a removed tagged comment follows the
+  feed's `Removed` switch as a removed post does. And from the hand test
+  (seam 373 / 375): "correct width but the image/clip should be square ..
+  why is there a cap on how high it can be?" — a shown comment's media is a
+  square at the column's width, no height cap.
+- **Drawn**: the `chronicle` chip's `removed` on `Profile` (the salt maps'
+  act, `ProfilePostsOwn`'s removed post) and `ProfileOther` (the 5d post,
+  `ProfilePosts`' removed one), the act's card, disc, verb and age kept
+  (`ChronicleAct`); `ProfileDeleted`'s swept chronicle under `contents` =
+  `removed`, each post's and comment's act reading the mark's line — the
+  same mark its swept post card wears — so the sidecar and the board agree;
+  `TagPage`'s `comment` = `removed`, @ada's tagged comment with
+  `CommentCard`'s own mark, `ProfileComments`' removed twin, under its
+  claim. `CommentCard` drops the 220 cap at its three galleries:
+  `FeedCommentShapes`' three frames go 314 × 220 → 314 × 314 and its tall
+  frame 3200 → 3482 to stay whole; `ReplyMedia`'s 326 × 220 → 326 × 326,
+  the sheet scrolling as before.
+- **The law that moved**: the chronicle's removed card and its door
+  (`Profile.md`, `ProfileOther.md`, `ProfileDeleted.md`); the figure
+  (readme §7, `ProfileHeader`, the profile sidecars); `TagPage.md`'s two
+  sentences, every removed row; `FeedCommentShapes`' pictures line.
+- **Held**: a tagged comment's ⋮ on the tag page — no host list names it,
+  so no menu board (backlog 284); `MediaAttachment`'s `maxHeight` has no
+  caller left (backlog 285); a pointer naming a removed thing (backlog 282,
+  round 59). `HistoryProfileMenu` moves off `Saved` to its row's first free
+  column. Backlog 280, 281 and 283 close.
+
+### Round 59, what a pointer calls a removed or deleted thing — a proposal, 2026-11-18
+
+- **Asked, not ruled** (jakob 2026-11-18, C3): "follow known paths.. but for
+  sure not the actual title.. it is either some generic "removed sth" wording
+  or the not generic one with handle. but then there is also the case for
+  account and content removed which would be sth like "removed post by
+  removed account". figure sth out you can show me". This round is that
+  proposal, AWAITING HIS WORD; backlog 282 stays open.
+- **The proposal**: a pointer names a removed thing by its kind and its
+  author, never its title or words — the handle while the author is there
+  (`On @sol's removed post`, the feed card's and the comment edit's blessed
+  naming), `a deleted account's` once the account is gone (`On a deleted
+  account's removed post`), a deleted account's kept thing keeping its title
+  with `Deleted account` where the handle was. The head row keeps its two
+  lines with the same two strings. Rejected: the generic `On a removed post`
+  and the mark's line on the one line, `On Removed by its author — @sol`.
+- **Drawn**: `FeedCommentShapes`' `answering` (six targets), `ProfileComments`'
+  `target` (four), `TagPageRemovedMenuOwn`'s page beneath (the case he saw),
+  `ProfileOther`'s `aside` (`on a deleted account`); `commentTarget` stops
+  printing a deleted account's handle; `CommentCard`'s head row gains
+  `titleQuiet`. Law: copy-voice *Naming a removed or deleted thing*, the
+  sidecars of the four boards. The surfaces it reaches undrawn are backlog
+  286.
+
+### Round 60, the tag page's comment menus, settling posts on every profile, Restore on a browser that cannot hold a key, the keyboard — 2026-11-19
+
+- **Ruled** (jakob 2026-11-19, rounds 58–59's review and impl's two): C2
+  "as rec" — a tagged comment's ⋮ raises the comment's whole menu; C3 "i
+  think it should show on all profiles. the profile should not lag behind
+  just because sth is still settling"; C4 "we can make the board taller in
+  the canvas for my inspection but we can't grow the bottom sheet"; impl 2
+  "as rec" — every door into Restore on a browser without WebCrypto
+  Ed25519 opens `KeyCeremonyUnsupported`; and the keyboard, "the split as
+  rec sounds best yes".
+- **Drawn**: the four menus of a tagged comment (`TagPageCommentMenu`,
+  `…Own`, `TagPageCommentRemovedMenu`, `…Own`), each its profile twin's
+  rows over the page, the reader's own comment @sol's, the page scrolled
+  to the comment's row (`TAG_PAGE_COMMENT_SCROLL`); `ProfilePostsOwn`'s
+  `posts` = `settling`, `ProfilePosts`' twin; `ReplyMedia` whole at 1309,
+  the comments page's two lower rows moved down 465 to keep clear.
+- **The law that moved**: copy-voice *Menu rows* (a tag page among the
+  comment rows' hosts), `TagPage.md`; `ProfilePostsOwn.md`;
+  `KeyCeremonyUnsupported.md`, `Restore.md` and the nine doors' sidecars
+  (the screen stands in the restore's place, its back the restore's own
+  two homes; the board unchanged, its arrow `Back` as the restore's);
+  *Spacing and layout*'s keyboard paragraph and one sentence in each
+  pinned stage's and sheet's sidecar — the button rides on the new post's
+  words stage, the reply composer, the sensitive and describe sheets and
+  the two pickers; the foot stays under the keyboard on the comment edit,
+  the post edit's stages (`EditWords`, `EditCompose`), the profile edit
+  and the details step in either form, the surfaces his approved text
+  names keeping their named side and the field count deciding the rest,
+  the opinion pad's typed values in the paragraph alone — a rule with no
+  drawing, so no board, chip or path; `FeedRemoved.md`'s own-menu
+  line gains its GIVEN.
+- **Registered**: the tag page's own nodes in android's names, the share
+  staying round 48's `tagPage.actionRow.share`; `ReplyMedia` under
+  `postDetail`, so a thread comment's media registers.
+- **Measured**: `ProfileHeader`'s constants 15.5rem (own, need 245.4) and
+  16.375rem (another's, need 261.4); `MediaThumb`'s remove target whole,
+  its tile's clip on an inner layer.
+- **Held**: `maxHeight` keeps two callers (backlog 285); the Posts
+  figure and settling (287); the other tabs (288); another's figures'
+  0.6px (290); a rate-limited upload's words (291); the pick tray's row
+  still clips its remove targets (292). Backlog 284 and 289 close.
 ---
 
 ## 14. The canvases
