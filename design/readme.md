@@ -12659,6 +12659,30 @@ drawing.
   caller left (backlog 285); a pointer naming a removed thing (backlog 282,
   round 59). `HistoryProfileMenu` moves off `Saved` to its row's first free
   column. Backlog 280, 281 and 283 close.
+
+### Round 59, what a pointer calls a removed or deleted thing — a proposal, 2026-11-18
+
+- **Asked, not ruled** (jakob 2026-11-18, C3): "follow known paths.. but for
+  sure not the actual title.. it is either some generic "removed sth" wording
+  or the not generic one with handle. but then there is also the case for
+  account and content removed which would be sth like "removed post by
+  removed account". figure sth out you can show me". This round is that
+  proposal, AWAITING HIS WORD; backlog 282 stays open.
+- **The proposal**: a pointer names a removed thing by its kind and its
+  author, never its title or words — the handle while the author is there
+  (`On @sol's removed post`, the feed card's and the comment edit's blessed
+  naming), `a deleted account's` once the account is gone (`On a deleted
+  account's removed post`), a deleted account's kept thing keeping its title
+  with `Deleted account` where the handle was. The head row keeps its two
+  lines with the same two strings. Rejected: the generic `On a removed post`
+  and the mark's line on the one line, `On Removed by its author — @sol`.
+- **Drawn**: `FeedCommentShapes`' `answering` (six targets), `ProfileComments`'
+  `target` (four), `TagPageRemovedMenuOwn`'s page beneath (the case he saw),
+  `ProfileOther`'s `aside` (`on a deleted account`); `commentTarget` stops
+  printing a deleted account's handle; `CommentCard`'s head row gains
+  `titleQuiet`. Law: copy-voice *Naming a removed or deleted thing*, the
+  sidecars of the four boards. The surfaces it reaches undrawn are backlog
+  286.
 ---
 
 ## 14. The canvases

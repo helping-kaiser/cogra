@@ -1394,7 +1394,7 @@ function ProfileOwnBody({ tail = null, headLine = null, tab = "posts", chronicle
 
    Named as `ProfileOwnBody` names its page, under the same `profile` prefix:
    `ProfileOther` and `ProfileMenu` register it. */
-function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "Ada Okonkwo", nameSize, nameLineHeight, tab = "posts", chronicle = false } = {}) {
+function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "Ada Okonkwo", nameSize, nameLineHeight, tab = "posts", chronicle = false, aside = false } = {}) {
   return (
     <>
       <PageHeader title="@ada" backHref="#" backLabel={backLabel} node="header" />
@@ -1426,7 +1426,21 @@ function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "A
             <ChronicleList node="chronicle">
               <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="2h" second="The long way home — the light does something at the third headland." onOpen={() => {}} node="act" nodeKey="1" />
               <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="1d" second="The glovebox camera earns its keep — this is the print from 2019." onOpen={() => {}} node="act" nodeKey="2" />
-              <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @tobias" trailing="2d" inert node="act" nodeKey="3" />
+              {aside ? (
+                <>
+                  <div style={{ display: "{{asideHandle}}" }} data-node-chip="aside" data-node-key="handle">
+                    <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @tobias" trailing="2d" inert node="act" nodeKey="3" />
+                  </div>
+                  {/* An opinion on an account since deleted (round 59, the
+                      proposal): the aside names it as the pointers do,
+                      `a deleted account`, the handle never printed. */}
+                  <div style={{ display: "{{asideDeleted}}" }} data-node-chip="aside" data-node-key="deleted">
+                    <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Gave an opinion" titleAside="on a deleted account" trailing="2d" inert node="act" nodeKey="3" />
+                  </div>
+                </>
+              ) : (
+                <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @tobias" trailing="2d" inert node="act" nodeKey="3" />
+              )}
               <ChronicleAct removed={chronicle} variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="5d" second="Took the coast road instead of the tunnel. Four hours longer, worth every minute." onOpen={() => {}} node="act" nodeKey="4" />
               <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated their profile" trailing="7d" inert node="act" nodeKey="5" />
             </ChronicleList>
@@ -5210,9 +5224,12 @@ function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, rem
   /* @ada's tagged comment, live and removed (round 58; jakob 2026-11-18, C4
      "as rec"): removed, `CommentCard`'s own mark in the words' place, as
      `ProfileComments`' `removed` draws this same comment — its author, its
-     age, the removal's `2h` and its pointer kept, under its claim. */
-  const adaLive = <CommentCard attach author={ADA} content="Low tide is kinder to the rubbings than noon ever was." timestamp="4d" license={{ attribution: 0, provenance: 0 }} bundle={mkBundle(0.1, 0.1)} target="“Salt maps of the coast road” — @sol" onOpenTarget={() => {}} />;
-  const adaRemoved = <CommentCard attach author={ADA} timestamp="4d" redacted={{ reason: "author", when: "2h" }} bundle={mkBundle(0.1, 0.1)} target="“Salt maps of the coast road” — @sol" onOpenTarget={() => {}} />;
+     age, the removal's `2h` and its pointer kept, under its claim. Its
+     pointer names @sol's post by its kind and author once that post is
+     removed (round 59, `commentTarget`'s rule): `On @sol's removed post`. */
+  const solTarget = removed === "sol" ? commentTarget({ author: SOL, removed: true }, "post").label : "“Salt maps of the coast road” — @sol";
+  const adaLive = <CommentCard attach author={ADA} content="Low tide is kinder to the rubbings than noon ever was." timestamp="4d" license={{ attribution: 0, provenance: 0 }} bundle={mkBundle(0.1, 0.1)} target={solTarget} onOpenTarget={() => {}} />;
+  const adaRemoved = <CommentCard attach author={ADA} timestamp="4d" redacted={{ reason: "author", when: "2h" }} bundle={mkBundle(0.1, 0.1)} target={solTarget} onOpenTarget={() => {}} />;
   const tobiasLive = <PostCard attach {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />;
   const tobiasRemoved = <PostCard attach id={TOBIAS_POST.id} author={TOBIAS} timestamp={TOBIAS_POST.timestamp} redacted={{ reason: "author", when: "now" }} score={TOBIAS_POST.score} comments={TOBIAS_POST.comments} bundle={mkBundle(0.1, 0.1)} menuItems={TOBIAS_POST.menuItems} />;
   return (
@@ -5343,18 +5360,34 @@ const FEED_OWN_COMMENT_MENU = OWN_COMMENT_CARD_MENU;
    drawn for a guest: no guest board shows a comment card. */
 const FEED_COMMENT_CLAMP_LINES = 2;
 const REMOVED_BY_AUTHOR = "Removed by its author";
-const commentTarget = (parent, kind) =>
-  kind === "comment"
-    ? { kind: "comment", label: `@${parent.author.handle}'s comment`, title: "@" + parent.author.handle, sub: parent.content }
-    : parent.removed
-      ? { kind: "post", label: `@${parent.author.handle}'s removed post`, title: REMOVED_BY_AUTHOR, sub: "@" + parent.author.handle, removed: true }
-      : {
-          kind: "post",
-          label: `“${parent.title ?? parent.content}” — @${parent.author.handle}`,
-          title: parent.title ?? parent.content,
-          sub: "@" + parent.author.handle,
-          cover: parent.media?.[0]?.src,
-        };
+/* WHAT A POINTER CALLS A REMOVED OR DELETED THING (round 59, the proposal
+   to jakob 2026-11-18, C3: "for sure not the actual title"). A removed thing
+   is named by its kind and its author, never by its title or words: the
+   author's handle while the author is there, `a deleted account` once the
+   account is gone (`DELETED_ACCOUNT_POSSESSIVE`). A deleted account's thing
+   still there keeps its title; only the handle goes, `Deleted account` (the
+   author chip's word) in its place. The head row keeps its two lines: the
+   mark's line where the title or the words were, the author — or `Deleted
+   account` — in the other. */
+const DELETED_ACCOUNT_POSSESSIVE = "a deleted account's";
+const commentTarget = (parent, kind) => {
+  const gone = Boolean(parent.author.redacted);
+  const whose = gone ? DELETED_ACCOUNT_POSSESSIVE : `@${parent.author.handle}'s`;
+  const author = gone ? REDACTED_ACTOR_NAME : "@" + parent.author.handle;
+  if (kind === "comment") {
+    return parent.removed
+      ? { kind: "comment", label: `${whose} removed comment`, title: author, sub: REMOVED_BY_AUTHOR, removed: true, titleQuiet: gone }
+      : { kind: "comment", label: `${whose} comment`, title: author, sub: parent.content, titleQuiet: gone };
+  }
+  if (parent.removed) return { kind: "post", label: `${whose} removed post`, title: REMOVED_BY_AUTHOR, sub: author, removed: true };
+  return {
+    kind: "post",
+    label: `“${parent.title ?? parent.content}” — ${author}`,
+    title: parent.title ?? parent.content,
+    sub: author,
+    cover: parent.media?.[0]?.src,
+  };
+};
 
 /* A COMMENT REMOVED AFTER IT WAS SEEN OR SAVED keeps its place in History and
    Saved and wears its removal mark (History.md, Saved.md): `redacted` hands
@@ -5374,7 +5407,7 @@ function CommentFeedCard({ id, author, content, timestamp, parent, parentKind = 
       target={target.label}
       targetKind={target.kind}
       targetShape="thread"
-      targetDetail={{ title: target.title, sub: target.sub, cover: target.cover, removed: target.removed }}
+      targetDetail={{ title: target.title, sub: target.sub, cover: target.cover, removed: target.removed, titleQuiet: target.titleQuiet }}
       clampLines={FEED_COMMENT_CLAMP_LINES}
       onOpenTarget={() => {}}
       onOpen={() => {}}
