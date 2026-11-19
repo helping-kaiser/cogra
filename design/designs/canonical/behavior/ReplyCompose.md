@@ -17,3 +17,5 @@ WHEN a picked video comes back from the picker -> the composer takes its video s
 WHEN a pick is over its cap or in a format nothing here reads -> the composer says why
 
 WHEN the reply composer opens -> the body takes focus AND the keyboard rises
+
+WHEN the keyboard is up -> the composer's pinned button rides directly above the keyboard AND the field scrolls in what is left AND NEVER the button rides where it would leave the focused field fewer than three of its lines
