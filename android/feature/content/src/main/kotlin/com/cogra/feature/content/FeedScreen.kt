@@ -1335,6 +1335,7 @@ internal val FEED_COMMENT_MENU = CommentMenuPlacement(
     rows = setOf(
         CommentMenuRow.Save,
         CommentMenuRow.Cite,
+        CommentMenuRow.Hide,
         CommentMenuRow.Edit,
         CommentMenuRow.Remove,
         CommentMenuRow.CitedBy,

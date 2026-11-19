@@ -133,6 +133,7 @@ private val SAVED_COMMENT_MENU = CommentMenuPlacement(
     rows = setOf(
         CommentMenuRow.Save,
         CommentMenuRow.Cite,
+        CommentMenuRow.Hide,
         CommentMenuRow.CitedBy,
         CommentMenuRow.Opinions,
         CommentMenuRow.License,
