@@ -79,26 +79,23 @@ internal fun postMenuRows(
      * behaviour every menu shares). Null stands the row inert as `Hide`.
      */
     hideRow: MenuRow? = null,
+    /**
+     * The post was removed ([PostView.removed]): the author's own menu loses
+     * Edit, Mark as sensitive and Remove, and the reader's stays whole
+     * (FeedRemovedMenuOwn.md:5, FeedRemovedMenu.md:5) — on every host.
+     */
+    removed: Boolean = false,
 ): List<MenuRow> {
     fun tag(row: PostMenuRow, legacy: String): String = rowNode(row)?.tag ?: "${testTagPrefix}_$legacy"
     val save = stringResource(R.string.content_menu_save)
     val cite = stringResource(R.string.content_menu_cite)
-    val edit = stringResource(R.string.content_edit)
-    val sensitive = stringResource(R.string.content_menu_sensitive)
-    val remove = stringResource(R.string.content_menu_remove)
     val citedBy = stringResource(R.string.content_menu_cited_by)
     val opinions = stringResource(R.string.content_menu_opinions)
     val licenseLabel = stringResource(R.string.content_menu_license)
     val report = stringResource(R.string.content_menu_report)
     val share = stringResource(R.string.content_menu_share)
-    // THE HIDE ROW NAMES ITS PERSON (`ActorChip.jsx:67`): the handle is
-    // what a reader recognises, and the word they will look for again
-    // under Hidden accounts. A redacted author has none.
-    val hide = if (handle == null) {
-        stringResource(R.string.content_menu_hide_account)
-    } else {
-        stringResource(R.string.content_menu_hide_actor, "@$handle")
-    }
+    val hide = hideLabel(handle)
+    val authorActs = authorActRows(own, removed, ::tag, onEdit, onRemove)
     return buildList {
         // SHARE LEADS THE SHEET, ahead of Save: every other row here is a menu
         // row by nature, and share is the one that was a one-tap control a
@@ -112,17 +109,8 @@ internal fun postMenuRows(
         // item 100): self-citation is a real authorial act, so the thumb
         // finds one row in one place on every menu that has it.
         add(MenuRow(cite, tag(PostMenuRow.Cite, "cite"), onCite))
-        if (own) {
-            add(MenuRow(edit, tag(PostMenuRow.Edit, "edit"), onEdit))
-            // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published
-            // post sensitive is always a signed action changing the post — an
-            // edit — so there is no standalone commit path and this row is a
-            // door into the edit flow rather than a sheet of its own. Edit is
-            // the general door; this is the intentioned one. When the edit
-            // surface's drawn Sensitive row lands (CW-46) the link can focus it.
-            add(MenuRow(sensitive, tag(PostMenuRow.MarkSensitive, "sensitive"), onEdit))
-            add(MenuRow(remove, tag(PostMenuRow.Remove, "remove"), onRemove))
-        } else {
+        addAll(authorActs)
+        if (!own) {
             // THE ROW KEEPS ITS ONE NAME WHATEVER IT READS (ReaderPostMenu.md:21):
             // `Hide @ada` and `Unhide @ada` are one node.
             add(MenuRow(hideRow?.label ?: hide, tag(PostMenuRow.Hide, "hide"), hideRow?.onSelect ?: {}))
@@ -138,4 +126,43 @@ internal fun postMenuRows(
             add(MenuRow(report, tag(PostMenuRow.Report, "report"), onReport ?: {}))
         }
     }
+}
+
+/**
+ * THE HIDE ROW NAMES ITS PERSON (`ActorChip.jsx:67`): the handle is what a
+ * reader recognises, and the word they will look for again under Hidden
+ * accounts. A redacted author has none.
+ */
+@Composable
+private fun hideLabel(handle: String?): String = if (handle == null) {
+    stringResource(R.string.content_menu_hide_account)
+} else {
+    stringResource(R.string.content_menu_hide_actor, "@$handle")
+}
+
+/**
+ * The author's own acts — Edit, Mark as sensitive, Remove — or none: a
+ * reader's menu carries none, and nor does the author's own removed post
+ * (FeedRemovedMenuOwn.md:5), which has nothing left to edit or remove.
+ */
+@Composable
+private fun authorActRows(
+    own: Boolean,
+    removed: Boolean,
+    tag: (PostMenuRow, String) -> String,
+    onEdit: () -> Unit,
+    onRemove: () -> Unit,
+): List<MenuRow> {
+    if (!own || removed) return emptyList()
+    return listOf(
+        MenuRow(stringResource(R.string.content_edit), tag(PostMenuRow.Edit, "edit"), onEdit),
+        // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published
+        // post sensitive is always a signed action changing the post — an
+        // edit — so there is no standalone commit path and this row is a
+        // door into the edit flow rather than a sheet of its own. Edit is
+        // the general door; this is the intentioned one. When the edit
+        // surface's drawn Sensitive row lands (CW-46) the link can focus it.
+        MenuRow(stringResource(R.string.content_menu_sensitive), tag(PostMenuRow.MarkSensitive, "sensitive"), onEdit),
+        MenuRow(stringResource(R.string.content_menu_remove), tag(PostMenuRow.Remove, "remove"), onRemove),
+    )
 }

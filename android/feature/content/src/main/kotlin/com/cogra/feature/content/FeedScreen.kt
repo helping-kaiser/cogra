@@ -1523,10 +1523,9 @@ private fun CardMenuHeader(
     CoversSurface(open = removeOpen, kind = CoverKind.Suspend)
     val menuSheet = placement.menuSheet
     val tag = "${placement.tag}_${post.id}"
-    // A REMOVED POST HAS NO MENU LEFT (`Removed.jsx:5-6`): there is nothing
-    // of it to edit, cite or license, so the ⋮ goes wholesale rather than a
-    // row at a time. An empty list draws no trigger.
-    val removed = post.removed
+    // A REMOVED POST KEEPS ITS ⋮ ON EVERY HOST (FeedRemoved.md:9,
+    // FeedRemovedMenu.md:5, FeedRemovedMenuOwn.md:5): the reader's menu
+    // whole, the author's less Edit, Mark as sensitive and Remove.
     val own = viewerId != null && post.author?.id == viewerId
     // THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK (design/readme.md,
     // jakob 2026-09-17, sharpened 2026-09-22 — PR #794): only the reader's
@@ -1543,35 +1542,32 @@ private fun CardMenuHeader(
         onOpenActor = onOpenActor,
         authorHere = placement.authorHere,
         testTagPrefix = tag,
-        menu = if (removed) {
-            emptyList()
-        } else {
-            postMenuRows(
-                own = own,
-                handle = post.author?.handle,
-                license = post.license,
-                onEdit = { onEdit(post.id) },
-                onCite = { onCite(post.id) },
-                onRemove = { removeOpen = true },
-                onLicense = { licenseShown = post.license },
-                onCitedBy = { reading = Reading.CitedBy },
-                onOpinions = { reading = Reading.Opinions },
-                onShare = shareRow,
-                // The rows sit under the trigger's own tag, which
-                // `ContentCardHeader` derives the same way.
-                testTagPrefix = "${tag}_menu",
-                onReport = onReport,
-                rowNode = { row -> menuSheet?.div(row.nodeName)?.takeIf { row in placement.menuRows } },
-                saveRow = LocalSavedHost.current?.menuRow(
-                    post.id,
-                    post.viewerBookmarkedAt,
-                    "${tag}_menu_save",
-                ),
-                hideRow = post.author?.let {
-                    LocalSavedHost.current?.hideRow(it.asHiddenPerson(), post.id, "${tag}_menu_hide")
-                },
-            )
-        },
+        menu = postMenuRows(
+            own = own,
+            handle = post.author?.handle,
+            license = post.license,
+            onEdit = { onEdit(post.id) },
+            onCite = { onCite(post.id) },
+            onRemove = { removeOpen = true },
+            onLicense = { licenseShown = post.license },
+            onCitedBy = { reading = Reading.CitedBy },
+            onOpinions = { reading = Reading.Opinions },
+            onShare = shareRow,
+            // The rows sit under the trigger's own tag, which
+            // `ContentCardHeader` derives the same way.
+            testTagPrefix = "${tag}_menu",
+            onReport = onReport,
+            rowNode = { row -> menuSheet?.div(row.nodeName)?.takeIf { row in placement.menuRows } },
+            saveRow = LocalSavedHost.current?.menuRow(
+                post.id,
+                post.viewerBookmarkedAt,
+                "${tag}_menu_save",
+            ),
+            hideRow = post.author?.let {
+                LocalSavedHost.current?.hideRow(it.asHiddenPerson(), post.id, "${tag}_menu_hide")
+            },
+            removed = post.removed,
+        ),
         menuContentDescription = stringResource(R.string.content_menu_post),
         menuSheetNode = menuSheet,
         node = node,
@@ -1588,7 +1584,7 @@ private fun CardMenuHeader(
  * THE OWN MENU OFF THE DETAIL (RM-G9; FeedRemoveConfirm on the feed): the same
  * confirm as the detail's, over the surface the menu was opened from. Taken,
  * the card stands as its mark in place — NEVER the post leaves without a mark
- * (RemoveConfirm.md:11) — and the menu goes with the payload.
+ * (RemoveConfirm.md:11) — its ⋮ kept, less Edit, Mark as sensitive and Remove.
  */
 @Composable
 private fun CardRemoveConfirm(post: PostView, placement: CardPlacement, tag: String, onClose: () -> Unit) {
