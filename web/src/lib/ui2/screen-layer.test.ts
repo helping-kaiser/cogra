@@ -17,7 +17,18 @@ function sourceFiles(): string[] {
 
 describe("a layer that takes the whole screen", () => {
   it("a_full_screen_layer_pads_its_foot_by_the_bottom_safe_area_inset", () => {
-    expect(SCREEN_LAYER.split(" ").sort()).toEqual(["fixed", "inset-0", "pb-[env(safe-area-inset-bottom)]"]);
+    expect(SCREEN_LAYER.split(" ")).toContain("pb-[env(safe-area-inset-bottom)]");
+  });
+
+  it("a_full_screen_layer_ends_on_the_keyboards_top_edge", () => {
+    // `inset: 0` with no keyboard; with one, the bottom edge is the keyboard's top.
+    expect(SCREEN_LAYER.split(" ").sort()).toEqual([
+      "bottom-[var(--keyboard-inset,0px)]",
+      "fixed",
+      "inset-x-0",
+      "pb-[env(safe-area-inset-bottom)]",
+      "top-0",
+    ]);
   });
 
   it("every_full_screen_layer_stands_on_the_shared_screen_layer", () => {
