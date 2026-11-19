@@ -104,6 +104,7 @@ import {
   useBarBeneath,
 } from "@/lib/ui/pad-parking";
 import { EmptySignConfirm } from "@/lib/ui/empty-sign-confirm";
+import { swallowRestOfGesture } from "@/lib/ui/outside-press";
 import { PendingMarker } from "@/lib/ui/pending-marker";
 import { RowLine, type RowLineState } from "@/lib/ui/row-line";
 import { SeveranceConfirm } from "@/lib/ui/severance-confirm";
@@ -1190,6 +1191,9 @@ export function StanceControl({
         aria-hidden="true"
         onPointerDown={(event) => {
           event.preventDefault();
+          // The press closes the pad and nothing else: the rest of its gesture
+          // never reaches what the wash was covering (`outside-press.ts`).
+          swallowRestOfGesture(event.nativeEvent);
           closeAll();
         }}
         className="cg-scrim-in fixed inset-0 z-40 touch-none bg-scrim/50"

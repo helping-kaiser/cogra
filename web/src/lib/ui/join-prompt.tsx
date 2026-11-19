@@ -11,6 +11,7 @@ import { useEffect, useRef } from "react";
 
 import { buttonClassName } from "@/lib/ui/button";
 import { useCoversSurface } from "@/lib/ui2/covering-layer";
+import { pressIsOnScrim } from "@/lib/ui2/sheet-drag";
 
 export function JoinPrompt({
   open,
@@ -33,6 +34,13 @@ export function JoinPrompt({
       ref={ref}
       data-testid="join-prompt"
       onClose={onClose}
+      // A TAP ON THE SCRIM CLOSES THE ASK (GuestGate.md:21) and the read stands
+      // where it was. The backdrop belongs to the dialog, so the whole tap is
+      // the dialog's: nothing beneath hears it. A press on the surface's own
+      // padding targets the dialog too, and is not one.
+      onClick={(event) => {
+        if (ref.current !== null && pressIsOnScrim(ref.current, event)) ref.current.close();
+      }}
       className="cg-dialog-in m-auto w-[min(90vw,20rem)] rounded-extra-large bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
     >
       <h2 className="text-headline-small">Join the conversation</h2>
