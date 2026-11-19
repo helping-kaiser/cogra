@@ -39,7 +39,7 @@ import { LOCKED_ROW, settingsRowStatus } from "@/lib/deletion/deletion-copy";
 import { useAccountDeletion } from "@/lib/deletion/deletion-status";
 import { sealedDraftStore, type SealedDraftStore } from "@/lib/compose/sealed-draft";
 import type { DeviceLockEngine } from "@/lib/identity/device-lock";
-import { KEY_CEREMONY_FROM_SETTINGS } from "@/lib/identity/key-custody-gate";
+import { KEY_CEREMONY_FROM_SETTINGS } from "@/lib/identity/key-custody-routes";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useHiddenSet } from "@/lib/hidden/provider";
 import { seenRecord } from "@/lib/history/seen-record";

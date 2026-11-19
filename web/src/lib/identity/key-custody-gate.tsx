@@ -29,32 +29,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { ed25519Available } from "@/lib/crypto/hashing";
 import { KeyCeremonyUnsupported } from "@/lib/ui/key-ceremony-unsupported";
 
-/** The two ceremony routes; every key-ceremony door opens one of them. */
-export const KEY_CEREMONY_ROUTE = "/key";
-export const RESTORE_ROUTE = "/restore";
-
-/**
- * The settings key rows' door to the ceremony: the `from` tells the refusal
- * where its back arrow goes (KeyCeremonyUnsupported.md: "from a key row in
- * settings -> Settings opens").
- */
-export const KEY_CEREMONY_FROM_SETTINGS = `${KEY_CEREMONY_ROUTE}?from=settings`;
-
-/**
- * The refusal's back arrow on the minting route: Settings when a settings row
- * opened it, else the reader's home — the applicant's feed, where the task
- * card and the key-elsewhere card both stand.
- */
-export function ceremonyBackHref(from: string | null): string {
-  return from === "settings" ? "/settings" : "/";
-}
-
-/**
- * The refusal's back arrow in the restore's place: the restore's own home
- * (Restore.md: a member's `KeyElsewhere`, an applicant's
- * `ApplicantKeyElsewhere`) — the feed at `/` in both cases.
- */
-export const RESTORE_BACK_HREF = "/";
+// The routes and their back targets live in `key-custody-routes.ts`, a plain
+// module the server pages can call into.
 
 /** Whether this browser can hold a CoGra key; `null` while the probe runs. */
 export function useCanHoldKey(probe: () => Promise<boolean> = ed25519Available): boolean | null {

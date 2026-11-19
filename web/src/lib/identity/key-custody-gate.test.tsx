@@ -1,7 +1,8 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ceremonyBackHref, KeyCustodyGate, RESTORE_BACK_HREF } from "./key-custody-gate";
+import { KeyCustodyGate } from "./key-custody-gate";
+import { ceremonyBackHref, RESTORE_BACK_HREF } from "./key-custody-routes";
 
 const never = () => new Promise<boolean>(() => {});
 

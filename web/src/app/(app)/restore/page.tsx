@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
-import { KeyCustodyGate, RESTORE_BACK_HREF } from "@/lib/identity/key-custody-gate";
+import { KeyCustodyGate } from "@/lib/identity/key-custody-gate";
+import { RESTORE_BACK_HREF } from "@/lib/identity/key-custody-routes";
 import { RestoreForm } from "./restore-form";
 
 export const metadata: Metadata = {

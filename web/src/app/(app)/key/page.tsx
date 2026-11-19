@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
-import { ceremonyBackHref, KeyCustodyGate } from "@/lib/identity/key-custody-gate";
+import { KeyCustodyGate } from "@/lib/identity/key-custody-gate";
+import { ceremonyBackHref } from "@/lib/identity/key-custody-routes";
 import { KeyCeremonyView } from "./key-ceremony-view";
 
 export const metadata: Metadata = {

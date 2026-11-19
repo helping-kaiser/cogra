@@ -116,6 +116,18 @@ describe("the key-custody guard", () => {
     }
   });
 
+  it("the server pages take only the gate component from the client module, and call the plain routes module", () => {
+    // A function exported from a "use client" module cannot be CALLED on the
+    // server — Next throws while rendering and the page goes blank (measured
+    // on this lane's first build). Components may cross; helpers may not.
+    expect(read("lib/identity/key-custody-gate.tsx")).toMatch(/^"use client";/);
+    expect(code("lib/identity/key-custody-routes.ts")).not.toMatch(/^\s*["']use client["']/);
+    for (const page of [KEY_PAGE, RESTORE_PAGE]) {
+      const fromGate = read(page).match(/import \{([^}]*)\} from "@\/lib\/identity\/key-custody-gate";/);
+      expect(fromGate?.[1].trim(), `${page} imports only KeyCustodyGate from the client module`).toBe("KeyCustodyGate");
+    }
+  });
+
   it("every door in the census opens a gated route", () => {
     for (const door of DOORS) {
       const src = code(door.file);
@@ -129,7 +141,14 @@ describe("the key-custody guard", () => {
     const drawn = files.filter((f) => DOOR_WORDS.test(code(f)) || GATED_ROUTE.test(code(f)));
     // the gate itself and the two gated routes (their pages and views) are the
     // ceremonies' own home, not doors to them
-    const home = new Set(["lib/identity/key-custody-gate.tsx", KEY_VIEW, RESTORE_VIEW, KEY_PAGE, RESTORE_PAGE]);
+    const home = new Set([
+      "lib/identity/key-custody-gate.tsx",
+      "lib/identity/key-custody-routes.ts",
+      KEY_VIEW,
+      RESTORE_VIEW,
+      KEY_PAGE,
+      RESTORE_PAGE,
+    ]);
     const outside = drawn.filter((f) => !census.has(f) && !home.has(f));
     expect(outside, "a file draws a ceremony door or names a ceremony route outside the census").toEqual([]);
   });
