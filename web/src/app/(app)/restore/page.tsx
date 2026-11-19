@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { KeyCustodyGate, RESTORE_BACK_HREF } from "@/lib/identity/key-custody-gate";
 import { RestoreForm } from "./restore-form";
 
 export const metadata: Metadata = {
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function RestorePage() {
-  return <RestoreForm />;
+  return (
+    <KeyCustodyGate backHref={RESTORE_BACK_HREF}>
+      <RestoreForm />
+    </KeyCustodyGate>
+  );
 }
