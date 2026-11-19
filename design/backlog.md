@@ -6700,7 +6700,7 @@ pends" (the own profile; `ProfileOther.md` is silent); Comments — `ProfileComm
 Options: (a) every tab lists a still-settling thing, own and anyone's, wearing `Still settling`, as
 the Posts tab now does; (b) the Posts tab alone; (c) as (a) for the reader's own profile only.
 
-### 289 · The keyboard rule: three surfaces the board's field count does not settle · *design* · **filed 2026-11-19**
+### 289 · The keyboard rule: three surfaces the board's field count does not settle · *design* · **filed 2026-11-19** · **closed 2026-11-19**
 
 Round 60, item 7 (jakob 2026-11-19, the split). Each pinned surface got its sentence from its
 board's count of text fields, except: `CommentEdit` — one text field (`Words`) beside pictures,
@@ -6713,6 +6713,13 @@ board or sidecar of their own to carry the sentence (the readme paragraph alone 
 `EditWords` holds `Title` and the words, two fields, so it got the several-fields sentence though
 the brief listed it among the one-field stages. Options per surface: (a) the board's count, (b) the
 ruling's list.
+
+Closed by round 60 (jakob's approved text of 2026-11-19 names "comment edit, post edit, profile
+edit, the details step" as the surfaces whose buttons stay under the keyboard, and "the text
+post's words, the reply, a one-field sheet" as the ones whose button rides): a named surface keeps
+its named side, and the count of text fields decides only where the text names nothing.
+`CommentEdit` and `ComposeDetailsWords` keep their foot under the keyboard, `EditWords` too; the
+opinion pad's typed values stay in the readme paragraph alone (readme, *Spacing and layout*).
 
 ### 290 · Another's profile figures fit at 390 by 0.6px · *system* · **filed 2026-11-19**
 
