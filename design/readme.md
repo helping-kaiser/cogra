@@ -12716,7 +12716,8 @@ drawing.
   rec sounds best yes".
 - **Drawn**: the four menus of a tagged comment (`TagPageCommentMenu`,
   `…Own`, `TagPageCommentRemovedMenu`, `…Own`), each its profile twin's
-  rows over the page, the reader's own comment @sol's; `ProfilePostsOwn`'s
+  rows over the page, the reader's own comment @sol's, the page scrolled
+  to the comment's row (`TAG_PAGE_COMMENT_SCROLL`); `ProfilePostsOwn`'s
   `posts` = `settling`, `ProfilePosts`' twin; `ReplyMedia` whole at 1309,
   the comments page's two lower rows moved down 465 to keep clear.
 - **The law that moved**: copy-voice *Menu rows* (a tag page among the
@@ -12737,7 +12738,8 @@ drawing.
 - **Held**: `maxHeight` keeps two callers (backlog 285); the Posts
   figure and settling (287); the other tabs (288); three surfaces the
   keyboard count does not settle (289); another's figures' 0.6px (290);
-  a rate-limited upload's words (291). Backlog 284 closes.
+  a rate-limited upload's words (291); the pick tray's row still clips
+  its remove targets (292). Backlog 284 closes.
 ---
 
 ## 14. The canvases

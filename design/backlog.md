@@ -6722,6 +6722,17 @@ move another's figures under at 390. A renderer whose text measures 0.6px wider 
 Options: (a) leave it, the two clients mirroring the measured constant; (b) a figures gap or label
 decision that buys room (jakob's: it moves boards).
 
+### 292 · The pick tray's remove targets are still cut by the row · *system* · **filed 2026-11-19**
+
+Round 60. `MediaThumb`'s own clip is gone, and on `ReplyPictures` (88 tile) and `CommentEdit`
+(56 tile) a point 8px outside the tile's top-right corner now hits the remove button (it hit
+nothing at `b55f2fb31`). On `ComposePicked` (48 tiles, 8px apart) the same probe still misses:
+the row that holds the tiles scrolls sideways, and a sideways scroller clips its vertical overflow
+too, so the overhang above the row is cut there; and between tiles the next tile, painted later,
+takes the overlap. Options: (a) the row gains top padding equal to the overhang (moves the
+board); (b) leave the board's row clip as a drawing convenience and say so (the clients build
+the whole target); jakob's if it moves pixels.
+
 ### 291 · A rate-limited upload has no words in the law · *design* · **filed 2026-11-19**
 
 Round 60 (impl seam 380, 4). copy-voice *Faults by code* names `RATE_LIMITED`'s hosts
