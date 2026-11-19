@@ -27,6 +27,7 @@ import { useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import type { ErrorCode } from "@/__generated__/graphql";
+import { APK_HREF, APK_LINE } from "@/lib/ui/apk-download";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { fallbackMessage } from "@/lib/ui/error-messages";
 import { logIn, type LoginGrant } from "@/lib/api/auth-api";
@@ -43,10 +44,6 @@ import { FormPasswordField, FormTextField } from "@/lib/ui2/form-fields";
 import { LinkRow, LinkStack } from "@/lib/ui2/link-stack";
 import { TaskPage } from "@/lib/ui2/task-page";
 import { useSlowAnswer, WaitingCommit } from "@/lib/ui2/waiting-commit";
-
-// Where `make web-apk` stages the Android debug APK (development.md
-// "Reaching the web dev server from the phone").
-const APK_HREF = "/downloads/app-debug.apk";
 
 /** The sign-in family's registered prefix — SignIn, SignInError, SignInExpired, SignInLimited (nodes.json `signIn`, round 28). */
 const SIGN_IN: DataNode = { path: "signIn" };
@@ -250,7 +247,7 @@ export function LoginForm({
         {/* A static file under public/, staged by `make web-apk` — a plain
             anchor, since it leaves the router entirely. */}
         <LinkRow href={APK_HREF} download node={part(SIGN_IN, "apk")} held={exitsHeld}>
-          On Android? Download the app (APK)
+          {APK_LINE}
         </LinkRow>
       </LinkStack>
     </TaskPage>

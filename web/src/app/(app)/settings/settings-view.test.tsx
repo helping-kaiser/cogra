@@ -398,7 +398,11 @@ describe("the settings page", () => {
     renderSettings({ keyOnDevice: false });
     expect(await screen.findByTestId("settings.backup.key.status")).toHaveTextContent("Not made yet");
     fireEvent.click(screen.getByTestId("settings.backup.recovery"));
-    expect(push).toHaveBeenCalledWith("/key");
+    // `from=settings` carries the way back to a refusal on a browser that
+    // cannot hold a key (KeyCeremonyUnsupported.md: "from a key row in settings").
+    expect(push).toHaveBeenCalledWith("/key?from=settings");
+    fireEvent.click(screen.getByTestId("settings.backup.key"));
+    expect(push).toHaveBeenLastCalledWith("/key?from=settings");
   });
 
   it("current_session_reads_this_browser and carries no Revoke", async () => {

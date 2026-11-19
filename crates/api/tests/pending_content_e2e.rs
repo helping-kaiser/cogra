@@ -1292,6 +1292,188 @@ async fn a_record_landing_after_expiry_but_before_the_reap_still_promotes(pool: 
     );
 }
 
+/// The same late landing, past the reap. The act is approved, so the reap
+/// moved its content pair into carriage and kept the row as the act's
+/// structure. The record lands marked, and its post comes back whole, at
+/// its real landing order.
+///
+/// An approved act ordered after the reap lands marked and whole, its display rows rebuilt from custody.
+/// ´claim:pending:a-landing-past-the-reap-lands-whole´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_record_landing_after_the_reap_lands_whole_from_custody(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let (post_id, act_id) = rig.approved_then_reaped(&token, &key).await;
+    assert_eq!(rig.carriage_state(&act_id).await.as_deref(), Some("full"));
+
+    rig.close_and_ingest().await;
+
+    assert!(rig.payload_marked(&act_id).await, "the record reads marked");
+    let edges = rig.listed(None, "first: 10").await;
+    assert_eq!(
+        edges.len(),
+        1,
+        "the landing past the reap promotes: {edges:?}"
+    );
+    let node = &edges[0]["node"];
+    assert_eq!(node["id"], post_id);
+    assert_eq!(node["title"]["value"], "Late lander");
+    assert_eq!(node["content"]["value"], "slow to order");
+    assert_eq!(node["landing"]["state"], "LANDED");
+    assert!(node["landing"]["epoch"].is_i64(), "{node}");
+}
+
+/// A redaction reaches a pair the reap moved into carriage before any
+/// record landed: the unit is archived with the witness the structural row
+/// kept, and the carriage row is reduced. The record that lands later
+/// reads marked and reduced, and no display row comes back.
+///
+/// A redaction reduces a custodied pair whose record has not landed, and the later landing reads reduced.
+/// ´claim:pending:a-redaction-reduces-a-custodied-pair´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_redaction_reduces_a_custodied_pair_before_its_record_lands(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor_id, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let (_, act_id) = rig.approved_then_reaped(&token, &key).await;
+
+    let done = api::redaction::redact_act(
+        &rig.pool,
+        &api::redaction::Redaction {
+            actor_id,
+            act_id: &act_id,
+            reason: "custody test",
+            redacted_by: &actor_id.to_string(),
+        },
+    )
+    .await
+    .expect("redacts");
+    assert!(done.reduced, "{done:?}");
+    assert!(done.archived.is_some(), "archived with the kept witness");
+    assert_eq!(
+        rig.carriage_state(&act_id).await.as_deref(),
+        Some("reduced")
+    );
+
+    rig.close_and_ingest().await;
+
+    assert!(rig.payload_marked(&act_id).await, "the record reads marked");
+    assert_eq!(
+        rig.carriage_state(&act_id).await.as_deref(),
+        Some("reduced")
+    );
+    assert!(
+        rig.listed(None, "first: 10").await.is_empty(),
+        "nothing the redaction removed comes back"
+    );
+}
+
+/// The custody move and a redaction of the same act meet: the redaction
+/// reads no carriage row, then waits on the staged row the GC holds, and
+/// the GC moves the pair into carriage and commits. The redaction still
+/// archives the unit and reduces the carriage row the move wrote.
+///
+/// A redaction that waited on the GC's custody move archives and reduces the pair the move wrote.
+/// ´claim:pending:a-redaction-behind-the-custody-move-finds-the-pair´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_redaction_waiting_on_the_custody_move_archives_and_reduces_it(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor_id, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let (_, act_id) = rig.approved_then_expired(&token, &key).await;
+
+    let mut gc = rig.pool.begin().await.expect("tx");
+    sqlx::query("SELECT 1 FROM staged_writes WHERE act_id = $1 FOR UPDATE")
+        .bind(&act_id)
+        .execute(&mut *gc)
+        .await
+        .expect("locks the staged row");
+    let pool = rig.pool.clone();
+    let act = act_id.clone();
+    let redaction = tokio::spawn(async move {
+        let by = actor_id.to_string();
+        api::redaction::redact_act(
+            &pool,
+            &api::redaction::Redaction {
+                actor_id,
+                act_id: &act,
+                reason: "custody race",
+                redacted_by: &by,
+            },
+        )
+        .await
+    });
+    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    assert!(
+        !redaction.is_finished(),
+        "the redaction waits on the staged row"
+    );
+    postgres_store::staged::reap_expired_in(&mut gc, FAR_FUTURE_EPOCH + GC, GC)
+        .await
+        .expect("reaps");
+    gc.commit().await.expect("commits");
+
+    let done = redaction.await.expect("joins").expect("redacts");
+    assert!(
+        done.archived.is_some(),
+        "the moved pair is archived: {done:?}"
+    );
+    assert!(done.reduced, "{done:?}");
+    assert_eq!(
+        rig.carriage_state(&act_id).await.as_deref(),
+        Some("reduced")
+    );
+}
+
+impl Rig {
+    /// A post approved at the host and not yet ordered, whose write the
+    /// GC then expires and reaps. Returns the post's id and its act.
+    async fn approved_then_reaped(&self, token: &str, key: &ActorKey) -> (String, String) {
+        let reaped = self.approved_then_expired(token, key).await;
+        postgres_store::staged::reap_expired(&self.pool, FAR_FUTURE_EPOCH + GC, GC)
+            .await
+            .expect("reaps");
+        reaped
+    }
+
+    /// A post approved at the host and not yet ordered, whose write the
+    /// GC then expires. Returns the post's id and its act.
+    async fn approved_then_expired(&self, token: &str, key: &ActorKey) -> (String, String) {
+        let prepared = self
+            .prepare_post(token, "Late lander", "slow to order")
+            .await;
+        let post_id = prepared["preparePost"]["node"]
+            .as_str()
+            .expect("node")
+            .to_string();
+        let signed = self
+            .pre_sign(token, key, &prepared["preparePost"]["writes"])
+            .await;
+        let act_id = signed[0].pre.proposal.body.act_id().to_string();
+        self.approve(token, key, &signed).await;
+        self.expire_everything().await;
+        assert!(self.listed(None, "first: 10").await.is_empty());
+        (post_id, act_id)
+    }
+
+    async fn carriage_state(&self, act_id: &str) -> Option<String> {
+        sqlx::query_scalar("SELECT payload_state FROM act_payloads WHERE act_id = $1")
+            .bind(act_id)
+            .fetch_optional(&self.pool)
+            .await
+            .expect("reads")
+    }
+
+    async fn payload_marked(&self, act_id: &str) -> bool {
+        sqlx::query_scalar("SELECT payload_marked FROM mirror_records WHERE record_id = $1")
+            .bind(act_id)
+            .fetch_one(&self.pool)
+            .await
+            .expect("the record landed")
+    }
+}
+
 /// An expired edit leaves the version that landed on screen.
 /// ´claim:pending:an-expired-edit-leaves-the-landed-version´
 #[sqlx::test(migrations = "../../migrations")]
