@@ -830,13 +830,13 @@ describe("PostView", () => {
     expect(screen.queryByTestId("post-menu-share")).not.toBeInTheDocument();
   });
 
-  // The comment's rows are `COMMENT_MENU` (`_shared.jsx:392`) — and the missing
-  // Hide row is RULED (jakob 2026-09-12): hiding names an actor, and its route
-  // is the commenter's own profile.
+  // The comment's rows (CommentMenu.md:7; round 51): someone else's comment
+  // carries Hide with its author's handle in the post menu's slot (jakob
+  // 2026-11-17, seam 355 349-1, replacing his 2026-09-12 ruling).
   // INBOUND BEFORE OPINIONS (`_shared.jsx:397-413`): `Cited by` sits between
   // the acts and the license, because it is a fact about the artifact where the
   // row under it is a fact about people.
-  it("gives a comment Save · Cite · Cited by · Opinions · License, and no Hide", async () => {
+  it("gives someone else's comment Save · Cite · Hide @bob · Cited by · Opinions · License", async () => {
     server.use(
       ...thread("u1", [{ id: "c1", body: "First!" }]),
     );
@@ -849,7 +849,95 @@ describe("PostView", () => {
     expect(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.citedBy")).toHaveTextContent("Cited by");
     expect(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.opinions")).toHaveTextContent("Opinions on this");
     expect(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.license")).toHaveTextContent("License terms");
-    expect(within(screen.getByTestId("comment-menu-c1-sheet-body")).queryByTestId("postDetail.menuSheet.hide")).not.toBeInTheDocument();
+    expect(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.hide")).toHaveTextContent(
+      "Hide @bob",
+    );
+  });
+
+  // CommentMenu.md:11 — Hide from the thread: the menu closes, the thread
+  // stands as it was with the hidden person's comments where they stood, and
+  // the snackbar reads `@bob is hidden.` with Undo; no confirm.
+  it("hide_from_the_thread_keeps_the_persons_comments_and_snackbars_with_undo_and_no_confirm", async () => {
+    const log = hiddenLog();
+    server.use(
+      ...thread("u1", [
+        { id: "c1", body: "Theirs" },
+        { id: "c2", body: "Theirs too" },
+      ]),
+      ...hiddenHandlers(log),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    await openComments();
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+    fireEvent.click(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.hide"));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent("@bob is hidden.");
+    expect(screen.getByTestId("comment-menu-snackbar-action")).toHaveTextContent("Undo");
+    await waitFor(() => expect(log.hides).toEqual([{ actor: "u2", at: null }]));
+    expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("Theirs");
+    expect(screen.getByTestId("post-comment-c2")).toHaveTextContent("Theirs too");
+    // Undo takes the hide back.
+    fireEvent.click(screen.getByTestId("comment-menu-snackbar-action"));
+    await waitFor(() => expect(log.unhides).toEqual(["u2"]));
+  });
+
+  // CommentMenu.md:15 — a hide that does not go through reverts and the
+  // comment's own row says so with Retry.
+  it("a_failed_hide_from_the_thread_reverts_and_the_comments_row_says_so_with_retry", async () => {
+    const log = hiddenLog();
+    server.use(...thread("u1", [{ id: "c1", body: "Theirs" }]), ...hiddenHandlers(log, { failHide: true }));
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    await openComments();
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+    fireEvent.click(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.hide"));
+    const line = await screen.findByTestId("comment-c1-row-line");
+    expect(line).toHaveTextContent("That didn't go through.");
+    expect(within(line).getByRole("button", { name: "Retry" })).toBeInTheDocument();
+    expect(log.hides).toHaveLength(1);
+    fireEvent.click(within(line).getByRole("button", { name: "Retry" }));
+    await waitFor(() => expect(log.hides).toHaveLength(2));
+  });
+
+  // CommentMenu.md:17, :19 — while the author is hidden the row reads Unhide
+  // with their handle; the tap unhides, the thread stands, Undo offered.
+  it("a_hidden_authors_comment_reads_unhide_and_the_tap_unhides_with_undo", async () => {
+    const log = hiddenLog();
+    server.use(
+      ...thread("u1", [{ id: "c1", body: "Theirs" }]),
+      ...hiddenHandlers(log, { entries: [{ id: "u2", handle: "bob", displayName: "Bob", hiddenAt: "2026-10-01T00:00:00Z" }] }),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    await waitFor(() => expect(log.reads).toBeGreaterThan(0));
+    await openComments();
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+    const hide = () => within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.hide");
+    await waitFor(() => expect(hide()).toHaveTextContent("Unhide @bob"));
+    fireEvent.click(hide());
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent("@bob is unhidden.");
+    await waitFor(() => expect(log.unhides).toEqual(["u2"]));
+    expect(screen.getByTestId("post-comment-c1")).toBeInTheDocument();
+  });
+
+  // CommentMenu.md:47 — a guest's Hide raises the join gate and sends nothing.
+  it("a_guests_hide_on_a_comment_raises_the_join_gate_and_sends_nothing", async () => {
+    const log = hiddenLog();
+    server.use(...thread("u1", [{ id: "c1", body: "Theirs" }]), ...hiddenHandlers(log));
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+    fireEvent.click(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.hide"));
+    expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
+    expect(log.hides).toEqual([]);
   });
 
   // A comment has no count line of its own, so its ⋮ row stands whatever the
@@ -1437,6 +1525,8 @@ describe("PostView", () => {
       ]);
       expect(openMenuSheet()).toHaveAccessibleName("Comment actions");
       expect(within(screen.getByTestId("comment-menu-c1-sheet-body")).queryByTestId("postDetail.menuSheet.report")).not.toBeInTheDocument();
+      // CommentMenu.md:9 — never Hide on the reader's own.
+      expect(within(screen.getByTestId("comment-menu-c1-sheet-body")).queryByTestId("postDetail.menuSheet.hide")).not.toBeInTheDocument();
     });
 
     it("gives someone else's comment no Remove", async () => {
@@ -1450,8 +1540,9 @@ describe("PostView", () => {
       expect(within(screen.getByTestId("comment-menu-c1-sheet-body")).queryByTestId("postDetail.menuSheet.remove")).not.toBeInTheDocument();
     });
 
-    // CommentMenu.md:7 — Save, Cite in a new post, Cited by, Opinions on this,
-    // License terms, then postDetail.menuSheet.report at the sheet's tail.
+    // CommentMenu.md:7 — Save, Cite in a new post, Hide with the author's
+    // handle, Cited by, Opinions on this, License terms, then
+    // postDetail.menuSheet.report at the sheet's tail.
     it("gives someone else's comment its rows as postDetail.menuSheet paths, Report at the tail", async () => {
       server.use(...thread("u1", [{ id: "c1", body: "Theirs", authorId: "u2" }]));
       renderWithProviders(<PostView postId="p1" />, {
@@ -1464,6 +1555,7 @@ describe("PostView", () => {
       expect(rows.map((row) => row.getAttribute("data-testid"))).toEqual([
         "postDetail.menuSheet.save",
         "postDetail.menuSheet.cite",
+        "postDetail.menuSheet.hide",
         "postDetail.menuSheet.citedBy",
         "postDetail.menuSheet.opinions",
         "postDetail.menuSheet.license",
@@ -1795,8 +1887,30 @@ describe("PostView", () => {
       });
 
       // CommentRemovedOther.md:11, CommentRemovedOtherMenu.md:3, :5 — the ⋮
-      // raises the reader's comment menu stacked over the thread: Save, Cite in
-      // a new post, Cited by, Opinions on this, License terms, Report at the tail.
+      // raises the reader's comment menu whole, stacked over the thread: Save,
+      // Cite in a new post, Hide @bob, Cited by, Opinions on this, License
+      // terms, Report at the tail.
+      // CommentRemovedOtherMenu.md:7 — Hide on another's removed comment: the
+      // thread stands, the mark in its place, and the snackbar names the author.
+      it("hide_on_anothers_removed_comment_keeps_its_mark_and_snackbars_with_undo", async () => {
+        const log = hiddenLog();
+        server.use(
+          ...thread("u1", [{ id: "c1", body: "Theirs", authorId: "u2", removal: gone() }]),
+          ...hiddenHandlers(log),
+        );
+        renderWithProviders(<PostView postId="p1" />, {
+          store: storeFor("acct-1"),
+          writeSigner: fakeWriteSigner(),
+        });
+        await openComments();
+        fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+        fireEvent.click(within(openMenuSheet()).getByTestId("postDetail.menuSheet.hide"));
+        expect(screen.queryByRole("alertdialog")).toBeNull();
+        expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent("@bob is hidden.");
+        await waitFor(() => expect(log.hides).toEqual([{ actor: "u2", at: null }]));
+        expect(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.removalMark", "c1"))).toBeInTheDocument();
+      });
+
       it("anothers_removed_comment_menu_reads_the_readers_comment_menu", async () => {
         server.use(...thread("u1", [{ id: "c1", body: "Theirs", authorId: "u2", removal: gone() }]));
         renderWithProviders(<PostView postId="p1" />, {
@@ -1808,6 +1922,7 @@ describe("PostView", () => {
         expect(threadRows("c1")).toEqual([
           ["postDetail.menuSheet.save", "Save"],
           ["postDetail.menuSheet.cite", "Cite in a new post"],
+          ["postDetail.menuSheet.hide", "Hide @bob"],
           ["postDetail.menuSheet.citedBy", "Cited by"],
           ["postDetail.menuSheet.opinions", "Opinions on this"],
           ["postDetail.menuSheet.license", "License terms"],

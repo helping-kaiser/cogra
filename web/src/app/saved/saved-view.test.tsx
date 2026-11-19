@@ -16,7 +16,7 @@ import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { byNode } from "@/test/data-node";
 import { settleFetches } from "@/test/fetch";
-import { hiddenPage } from "@/test/hidden";
+import { hiddenHandlers, hiddenLog, hiddenPage } from "@/test/hidden";
 import { intersect } from "@/test/media-env";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
@@ -585,6 +585,54 @@ describe("SavedScreen — the card menus' rows (SavedPostMenu.md, FeedProfileMen
       ["saved.menuSheet.license", "License terms"],
       ["saved.menuSheet.report", "Report"],
     ]);
+  });
+
+  it("a_comment_cards_menu_reads_unsave_cite_hide_cited_by_opinions_license_report", async () => {
+    // SavedCommentMenu.md:5.
+    serve(THREE);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    expect(words(commentMenu())).toEqual([
+      ["saved.menuSheet.save", "Unsave"],
+      ["saved.menuSheet.cite", "Cite in a new post"],
+      ["saved.menuSheet.hide", "Hide @tobias"],
+      ["saved.menuSheet.citedBy", "Cited by"],
+      ["saved.menuSheet.opinions", "Opinions on this"],
+      ["saved.menuSheet.license", "License terms"],
+      ["saved.menuSheet.report", "Report"],
+    ]);
+  });
+
+  it("your_own_comment_cards_menu_carries_no_hide_and_no_report", async () => {
+    // SavedCommentMenuOwn.md:5.
+    const mine = { ...commentNode("c1", SAVED[1]), author: author("me", "me", "Me") };
+    serve([{ node: mine, bookmarkedAt: SAVED[1] }]);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    expect(words(commentMenu()).map(([node]) => node)).toEqual([
+      "saved.menuSheet.save",
+      "saved.menuSheet.cite",
+      "saved.menuSheet.edit",
+      "saved.menuSheet.remove",
+      "saved.menuSheet.citedBy",
+      "saved.menuSheet.opinions",
+      "saved.menuSheet.license",
+    ]);
+  });
+
+  it("hide_on_a_comment_keeps_every_card_in_saved_and_snackbars_with_undo_and_no_confirm", async () => {
+    // SavedCommentMenu.md:7, then :9 — the row reads Unhide while the author is hidden.
+    const log = hiddenLog();
+    serve(THREE);
+    server.use(...hiddenHandlers(log));
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    fireEvent.click(commentMenu()[2]!);
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(await screen.findByTestId("saved.snackbar.message")).toHaveTextContent("@tobias is hidden.");
+    await waitFor(() => expect(log.hides).toEqual([{ actor: "u2", at: null }]));
+    expect(cards()).toEqual(ALL);
+    await waitFor(() => expect(commentMenu()[2]).toHaveTextContent(/^Unhide @tobias$/));
   });
 
   it("a_person_cards_menu_reads_unsave_mention_hide_report_the_same_rows_as_on_every_host", async () => {

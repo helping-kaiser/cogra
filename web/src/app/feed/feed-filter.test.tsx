@@ -14,6 +14,7 @@ import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
 import { byNode } from "@/test/data-node";
+import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { FEED_FILTER_DEFAULT } from "@/lib/feed/feed-filter";
 import { writeReaderDefault } from "@/lib/feed/reader-default";
 import { FeedView, SHOW_POSTS_AGAIN } from "./feed-view";
@@ -701,6 +702,56 @@ describe("the feed filter", () => {
       ]);
       fireEvent.click(screen.getByTestId("feed.menuSheet.report"));
       expect(await screen.findByTestId("feed-person-u3-menu-report-sheet")).toHaveAccessibleName("Report @mira?");
+    });
+
+    // FeedCommentMenu.md:5 — someone else's comment card: Save, Cite, Hide with
+    // the comment's author's handle, Cited by, Opinions on this, License terms,
+    // Report at the tail, as feed.menuSheet rows.
+    it("a comment card's menu reads save, cite, hide, cited by, opinions, license and report", async () => {
+      const r = reads();
+      server.use(...rankedFeed([post("p1"), comment("k1")], r));
+      writeReaderDefault("acct-1", { ...FEED_FILTER_DEFAULT, kinds: ["posts", "comments"] });
+      renderFeed();
+      fireEvent.click(await screen.findByTestId(byNode("feed.commentCard.menu", "k1")));
+      const sheet = screen.getAllByTestId("feed.menuSheet").find((d) => (d as HTMLDialogElement).open)!;
+      expect(
+        within(sheet)
+          .getAllByRole("button")
+          .map((row) => [row.getAttribute("data-testid"), row.textContent]),
+      ).toEqual([
+        ["feed.menuSheet.save", "Save"],
+        ["feed.menuSheet.cite", "Cite in a new post"],
+        ["feed.menuSheet.hide", "Hide @tobias"],
+        ["feed.menuSheet.citedBy", "Cited by"],
+        ["feed.menuSheet.opinions", "Opinions on this"],
+        ["feed.menuSheet.license", "License terms"],
+        ["feed.menuSheet.report", "Report"],
+      ]);
+    });
+
+    // FeedCommentMenu.md:7 (round 51 act 2, B1) — Hide from a comment card:
+    // that person's rows leave, their posts and comment cards alike, the card
+    // the hide was made from among them; the snackbar offers Undo, no confirm.
+    it("hide from a comment card takes every row of that person out and offers undo", async () => {
+      const r = reads();
+      const log = hiddenLog();
+      const theirs = post("p2", {
+        author: { __typename: "User", id: "u2", handle: "tobias", displayName: moderated("Tobias"), avatar: null },
+      });
+      server.use(...rankedFeed([post("p1"), comment("k1"), theirs], r), ...hiddenHandlers(log));
+      writeReaderDefault("acct-1", { ...FEED_FILTER_DEFAULT, kinds: ["posts", "comments"] });
+      renderFeed();
+      fireEvent.click(await screen.findByTestId(byNode("feed.commentCard.menu", "k1")));
+      fireEvent.click(screen.getByTestId("feed.menuSheet.hide"));
+      expect(screen.queryByRole("alertdialog")).toBeNull();
+      expect(screen.queryByTestId(byNode("feed.commentCard", "k1"))).toBeNull();
+      expect(screen.queryByTestId(byNode("feed.card", "p2"))).toBeNull();
+      expect(screen.getByTestId(byNode("feed.card", "p1"))).toBeInTheDocument();
+      expect(await screen.findByTestId("feed.snackbar")).toHaveTextContent("@tobias is hidden.");
+      await waitFor(() => expect(log.hides).toEqual([{ actor: "u2", at: null }]));
+      fireEvent.click(screen.getByTestId("feed.snackbar.action"));
+      expect(await screen.findByTestId(byNode("feed.commentCard", "k1"))).toBeInTheDocument();
+      await waitFor(() => expect(log.unhides).toEqual(["u2"]));
     });
 
     it("draws profile and tag cards once their kinds are let in", async () => {

@@ -1027,6 +1027,7 @@ describe("History — the comment menu (HistoryCommentMenu.md, round 41)", () =>
     expect(rows()).toEqual([
       ["history.menuSheet.save", "Save"],
       ["history.menuSheet.cite", "Cite in a new post"],
+      ["history.menuSheet.hide", "Hide @tobias"],
       ["history.menuSheet.citedBy", "Cited by"],
       ["history.menuSheet.opinions", "Opinions on this"],
       ["history.menuSheet.license", "License terms"],
@@ -1053,6 +1054,57 @@ describe("History — the comment menu (HistoryCommentMenu.md, round 41)", () =>
     fireEvent.click(screen.getByTestId("history.menuSheet.edit"));
     expect(await screen.findByTestId("comment-edit")).toBeInTheDocument();
     expect(screen.getByTestId("history-list")).toBeInTheDocument();
+    // HistoryCommentMenuOwn.md:5 — no Hide on the reader's own comment.
+    expect(screen.queryByTestId("history.menuSheet.hide")).not.toBeInTheDocument();
+  });
+
+  it("hide_on_a_comment_keeps_every_card_in_its_place_and_snackbars_with_undo_and_no_confirm", async () => {
+    // HistoryCommentMenu.md:7.
+    const log = hiddenLog();
+    serveHistory(() => page([COMMENT, POST]));
+    server.use(...hiddenHandlers(log));
+    render();
+    await screen.findByTestId("history-list");
+    fireEvent.click(screen.getByTestId(byNode("history.commentCard.menu", "c1")));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(screen.getByTestId("history.snackbar.message")).toHaveTextContent("@tobias is hidden.");
+    expect(screen.getByTestId("history.snackbar.action")).toHaveTextContent("Undo");
+    expect(cards()).toEqual(["history.commentCard:c1", "history.card:p1"]);
+    await waitFor(() => expect(log.hides).toEqual([{ actor: "u2", at: null }]));
+  });
+
+  it("a_hidden_authors_comment_reads_unhide_and_the_tap_unhides_with_history_standing", async () => {
+    // HistoryCommentMenu.md:9, :11.
+    // Hidden from this very History, so the comment still stands in it.
+    const log = hiddenLog();
+    serveHistory(() => page([COMMENT, POST]));
+    server.use(...hiddenHandlers(log));
+    render();
+    await screen.findByTestId("history-list");
+    fireEvent.click(screen.getByTestId(byNode("history.commentCard.menu", "c1")));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
+    await waitFor(() => expect(log.hides).toHaveLength(1));
+    fireEvent.click(screen.getByTestId(byNode("history.commentCard.menu", "c1")));
+    await waitFor(() => expect(screen.getByTestId("history.menuSheet.hide")).toHaveTextContent("Unhide @tobias"));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
+    expect(await screen.findByTestId("history.snackbar.message")).toHaveTextContent("@tobias is unhidden.");
+    await waitFor(() => expect(log.unhides).toEqual(["u2"]));
+    expect(cards()).toEqual(["history.commentCard:c1", "history.card:p1"]);
+  });
+
+  it("a_failed_hide_on_a_comment_reverts_and_its_card_says_so_with_retry", async () => {
+    // CommentMenu.md:15 on History's comment card.
+    const log = hiddenLog();
+    serveHistory(() => page([COMMENT, POST]));
+    server.use(...hiddenHandlers(log, { failHide: true }));
+    render();
+    await screen.findByTestId("history-list");
+    fireEvent.click(screen.getByTestId(byNode("history.commentCard.menu", "c1")));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
+    const line = await screen.findByTestId("history-comment-c1-row-line");
+    expect(line).toHaveTextContent("That didn't go through.");
+    expect(screen.getByTestId("history-comment-c1-row-line-retry")).toHaveTextContent("Retry");
   });
 });
 
