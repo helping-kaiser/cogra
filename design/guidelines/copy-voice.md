@@ -1353,7 +1353,8 @@ each menu's rows stand in one order:
 - **A comment's, another's** — `Save` · `Cite in a new post` · `Hide @ada`
   · `Cited by` · `Opinions on this` · `License terms` · `Report`, removed
   or not — the post's rows, row for row. Every host's ⋮ raises it — the
-  thread, the feed, History, Saved and a profile's Comments tab.
+  thread, the feed, History, Saved, a profile's Comments tab and a tag
+  page.
 - **A comment's, your own** — `Save` · `Cite in a new post` · `Edit` ·
   `Remove` · `Cited by` · `Opinions on this` · `License terms`; removed,
   less `Edit` and `Remove`.

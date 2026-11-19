@@ -1,10 +1,12 @@
 # ProfilePostsOwn · `spec:design:behavior-profile-posts-own`
 
-ALWAYS the reader's own profile's Posts view is where the own profile lands, from any door, its states — empty, loading, failed — the landing's own
+ALWAYS the reader's own profile's Posts view is where the own profile lands, from any door, its states — empty, settling, loading, failed — the landing's own
 
 ALWAYS the reader's own profile's Posts view keeps the own profile's head as the profile's own page draws it, the band, the header with Edit profile and Invites, and profile.tabRow.postsTab lit
 
 ALWAYS profile.posts lists the reader's own posts, each card the feed's own, fully live
+
+ALWAYS profile.posts lists a post the reader signed that is still settling among the landed ones, its card wearing Still settling and carrying no score, its score slot bare, as the feed's card does
 
 ALWAYS profile.identity.figures.posts counts every post the reader published, a removed one included, so the figure and the list agree
 

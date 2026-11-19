@@ -122,10 +122,25 @@
    post. On, @ada's tagged comment stands in its row under its claim with
    `CommentCard`'s own mark, `Removed by its author` and the removal's `2h`,
    in the words' place, as `ProfileComments`' `removed` draws the same
-   comment, its author, its age and its pointer kept. Its menus are not
-   drawn: copy-voice's comment rows name no tag page among their hosts
-   (backlog 284). */
+   comment, its author, its age and its pointer kept.
 
+   A TAGGED COMMENT'S ⋮ RAISES THE COMMENT'S WHOLE MENU (round 60; jakob
+   2026-11-19, C2 "as rec"): the reader's comment menu on another's, live or
+   removed, the own comment menu on your own and its removed rows once
+   removed (copy-voice, *Menu rows*, a tag page among the hosts) —
+   `TagPageCommentMenu`, `…Own`, `TagPageCommentRemovedMenu`, `…Own` draw
+   the four open.
+
+   REGISTERED under the `tagPage` prefix (round 60, seam 380 / 381): the
+   page's own nodes in android's names — the header, the topic's row
+   (`actionRow.stance`, `actionRow.share`, round 48's names, so the share is
+   `tagPage.actionRow.share`, not a top-level `share`), each row's `claim`
+   with its `glyph`, `exact` and `pending`, keyed by the tagged thing's id,
+   each post `card` (its removed copy's `card.removalMark`) and the comment
+   `commentCard`, keyed by their ids. The `post` and `comment` chips' copies
+   carry their chip's marker. The failed and not-found states stay unnamed. */
+
+export const NODE = "tagPage";
 export const FRAME = { width: 390, height: 1344 };
 export const PROPS = {
   load: { editor: "enum", options: ["loaded", "failed", "notFound"], default: "loaded" },
@@ -138,7 +153,7 @@ export function Screen() {
   return (
     <>
       <div style={{ display: "{{loadedShown}}" }}>
-        <TagPageBody removed="hole" commentRemoved="hole" />
+        <TagPageBody removed="hole" commentRemoved="hole" named />
       </div>
       <div style={{ display: "{{failedShown}}" }}>
         <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" />

@@ -84,11 +84,11 @@ import { StanceControl } from "../stance/StanceControl.jsx";
 
 /* The header's one stylesheet: the figures' second arrangement, under the
    avatar-and-name block, below each profile's measured fit (the header's
-   width under 96px of avatar and gap plus 15.5rem of another's labels, or
-   14.5rem of one's own). The name centres on the avatar there, and the
+   width under 96px of avatar and gap plus 16.375rem of another's labels, or
+   15.5rem of one's own). The name centres on the avatar there, and the
    figures keep the header's own 12px gap. */
 const UNDER = `{ .cg-profile-grid { grid-template-areas: "avatar name" "figures figures" !important } .cg-profile-name { align-self: center !important } .cg-profile-figures { margin-top: var(--space-3) !important } }`;
-const PROFILE_TOP_CSS = `@container cg-profile-other (width < calc(96px + 15.5rem)) ${UNDER} @container cg-profile-own (width < calc(96px + 14.5rem)) ${UNDER}`;
+const PROFILE_TOP_CSS = `@container cg-profile-other (width < calc(96px + 16.375rem)) ${UNDER} @container cg-profile-own (width < calc(96px + 15.5rem)) ${UNDER}`;
 
 /* EACH LINE SETS ITS ROLE WHOLE (round 27, seam 252; backlog 147's family,
    rounds 20/23/25): size, leading, tracking and weight, so a client
@@ -218,9 +218,14 @@ export function ProfileHeader({
     </>
   );
   /* THE FIGURES MOVE UNDER WHEN THEY DO NOT FIT (the K13 round; readme §4,
-     *Type*). Three labels that never wrap need about 243px for another's
-     profile and 228px for one's own at 1× — and the column beside the avatar
-     is 262px at 390, 232 at 360, 192 at 320, measured. So while the figures fit
+     *Type*). Three labels that never wrap need 261.4px for another's
+     profile (`Posts` 29.7, `Opinions on them` 96, `Opinions by them` 95.7,
+     two 20px gaps) and 245.4px for one's own (`Opinions on you` 88,
+     `Opinions by you` 87.7) at 1× — and the column beside the avatar is
+     262px at 390, 232 at 360, 192 at 320, measured (round 60). The own
+     constant takes the half-rem step above its need, 15.5rem (248); another's
+     takes the eighth, 16.375rem (262), because the half step (264) would
+     move another's figures under at 390, where they fit by 0.6px. So while the figures fit
      that column at their rendered size they stand under the name, and where
      they do not they move under the avatar-and-name block, the header's full
      width. One grid, two arrangements: the avatar spans the name's row and

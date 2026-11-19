@@ -33,3 +33,5 @@ WHEN tap Add pictures instead GIVEN the body holds words -> an ask to discard th
 WHEN tap Add pictures instead GIVEN the body is empty -> the pick step opens AND NEVER an ask opens
 
 WHEN the words stage opens -> the body takes focus with its caret at the end AND the keyboard rises
+
+WHEN the keyboard is up -> the stage's pinned button rides directly above the keyboard AND the field scrolls in what is left AND NEVER the button rides where it would leave the focused field fewer than three of its lines

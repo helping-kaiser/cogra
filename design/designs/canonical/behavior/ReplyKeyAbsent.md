@@ -13,3 +13,5 @@ ALWAYS the reply's door notice offers no way to keep a reply pending
 ALWAYS the notice carries the no-backup sentence in place of its line and no restore button, with Not now alone GIVEN the reader has no backup
 
 WHEN tap Restore the key -> the restore opens
+
+WHEN tap Restore the key GIVEN a browser that cannot hold a key -> KeyCeremonyUnsupported opens in the restore's place AND NEVER the recovery code is typed
