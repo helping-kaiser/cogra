@@ -341,6 +341,36 @@ class GoldenVectorsTest {
         }
     }
 
+    // Each case states the device's own refusal, so no reason is kept here.
+    @Test
+    fun theDeviceRefusesEveryDeviceRefusalVectorWithTheRefusalItStates() {
+        val f = handshakeFixture()
+        val cases = vectors.jsonObject.getValue("proposalHandshakeDeviceRefusals").jsonArray
+        assertThat(cases).isNotEmpty()
+        for (case in cases) {
+            val label = case.str("case")
+            val bytes = case.str("hex").hexToBytes()
+            val refusal = case.str("refusal")
+            when (val what = case.str("what")) {
+                "approve" -> {
+                    val thrown = assertThrows(label, HandshakeException::class.java) {
+                        f.actor.approve(f.pre, decodeSealedAct(bytes), f.hostPubkey)
+                    }
+                    assertWithMessage(label).that(thrown).hasMessageThat().startsWith(refusal)
+                }
+                "decodePreCommitment" -> {
+                    val thrown = assertThrows(label, WireException::class.java) { decodePreCommitment(bytes) }
+                    assertWithMessage(label).that(thrown).hasMessageThat().startsWith(refusal)
+                }
+                "decodeVerifiedAct" -> {
+                    val thrown = assertThrows(label, WireException::class.java) { decodeSealedAct(bytes) }
+                    assertWithMessage(label).that(thrown).hasMessageThat().startsWith(refusal)
+                }
+                else -> throw AssertionError("unknown refusal kind `$what`")
+            }
+        }
+    }
+
     @Test
     fun keyBackupVectorsMatch() {
         val kb = vectors.jsonObject.getValue("keyBackup")

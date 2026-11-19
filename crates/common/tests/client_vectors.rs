@@ -499,17 +499,18 @@ fn utf8(tag: &[u8]) -> String {
 /// run the way the device and the reference host perform it under two
 /// fixed nonces of distinct byte runs and the same fixed salts and host as
 /// `handshake`, every intermediate exported and the device's approval path
-/// made to accept the fixture. Returns the group and its refusals — sealed
+/// made to accept the fixture. Returns the group, its refusals — sealed
 /// acts the device must not approve, each validly resealed so only the
 /// device's own check catches it, plus the one-nonce wire frames its
-/// decoders refuse as their version.
+/// decoders refuse as their version — and the device refusals of
+/// [`device_refusals`].
 fn proposal_handshake_vectors(
     actor: &ActorKey,
     actor_signing: &SigningKey,
     host: &SigningKey,
     host_seed: &[u8; 32],
     proposal: &Proposal,
-) -> (Value, Value) {
+) -> (Value, Value, Value) {
     let content_nonce = seq_bytes(0x2A, crypto::SALT_LEN);
     let dependency_nonce = seq_bytes(0x6A, crypto::SALT_LEN);
     let act_id = proposal.body.act_id();
@@ -712,7 +713,133 @@ fn proposal_handshake_vectors(
         "hex": hx(&one_nonce_act),
     }));
 
-    (group, json!(cases))
+    let device = device_refusals(actor, &pre, &sealed, host, &wire_blob, &wire_sealed);
+    (group, json!(cases), device)
+}
+
+/// The device's refusals the two-nonce refusals leave out, each with the
+/// refusal the device states. An `approve` case is a sealed act the device
+/// decodes and must not approve: another body, another pre-signature, a
+/// seal by another key, the salts swapped after sealing (the seal does not
+/// cover them, so it still verifies), another dependency salt. A decode
+/// case is a frame of the current version the decoder refuses: trailing
+/// bytes after a whole frame, or a frame of the wrong arity.
+fn device_refusals(
+    actor: &ActorKey,
+    pre: &proposal::PreSigned,
+    sealed: &proposal::SealedAct,
+    host: &SigningKey,
+    wire_blob: &[u8],
+    wire_sealed: &[u8],
+) -> Value {
+    let reseal = |mut s: proposal::SealedAct| {
+        s.host_seal = crypto::sign(host, tags::HOST_SEAL, &s.act.seal_message());
+        s
+    };
+    let mut body = sealed.clone();
+    body.act.body.p_d = 0.5;
+    let mut pre_signature = sealed.clone();
+    pre_signature.act.pre_signature = vec![0x77; 64];
+    let mut foreign_seal = sealed.clone();
+    let other_host = SigningKey::from_bytes(&[0x99; 32]);
+    foreign_seal.host_seal = crypto::sign(
+        &other_host,
+        tags::HOST_SEAL,
+        &foreign_seal.act.seal_message(),
+    );
+    let mut swapped = sealed.clone();
+    std::mem::swap(&mut swapped.content_salt, &mut swapped.dependency_salt);
+    let mut dependency_salt = sealed.clone();
+    dependency_salt.dependency_salt = vec![0x33; crypto::SALT_LEN];
+    let different_act = "host returned a different act than was pre-signed";
+    let approve_cases = [
+        (
+            "a body other than the one pre-signed",
+            reseal(body),
+            different_act,
+        ),
+        (
+            "a pre-signature other than the one pre-signed",
+            reseal(pre_signature),
+            different_act,
+        ),
+        ("a seal by another key", foreign_seal, "invalid host seal"),
+        (
+            "the two salts swapped after sealing",
+            swapped,
+            "content commitment is not formed over this device's content pre-digest",
+        ),
+        (
+            "another dependency salt after sealing",
+            dependency_salt,
+            "dependency commitment does not open over the dependency list",
+        ),
+    ];
+    let host_key = host.verifying_key().to_bytes();
+    let mut out: Vec<Value> = approve_cases
+        .into_iter()
+        .map(|(case, s, refusal)| {
+            let refused = pre
+                .approve(actor, &s, &host_key)
+                .err()
+                .unwrap_or_else(|| panic!("the reference refuses {case}"));
+            assert_eq!(
+                refused.to_string(),
+                format!("authentication failure: {refusal}"),
+                "{case}"
+            );
+            json!({"case": case, "what": "approve", "refusal": refusal, "hex": hx(&s.encode())})
+        })
+        .collect();
+
+    let trailing = |frame: &[u8]| [frame, &[0x00]].concat();
+    let mut short_blob = Encoder::new();
+    short_blob
+        .array(3)
+        .uint(2)
+        .bytes(&pre.content_nonce)
+        .bytes(&pre.pre_signature);
+    let mut short_act = Encoder::new();
+    short_act.array(10).uint(2);
+    let decode_cases = [
+        (
+            "a sealed act with trailing bytes",
+            "decodeVerifiedAct",
+            trailing(wire_sealed),
+        ),
+        (
+            "a sealed act frame of the wrong arity",
+            "decodeVerifiedAct",
+            short_act.finish(),
+        ),
+        (
+            "a pre-commitment blob with trailing bytes",
+            "decodePreCommitment",
+            trailing(wire_blob),
+        ),
+        (
+            "a pre-commitment blob of the wrong arity",
+            "decodePreCommitment",
+            short_blob.finish(),
+        ),
+    ];
+    for (case, what, bytes) in decode_cases {
+        let refusal = if what == "decodeVerifiedAct" {
+            assert!(
+                proposal::SealedAct::decode(&bytes).is_err(),
+                "the reference refuses {case}"
+            );
+            "malformed verified act"
+        } else {
+            assert!(
+                proposal::PreCommitmentBlob::decode(&bytes).is_err(),
+                "the reference refuses {case}"
+            );
+            "malformed pre-commitment"
+        };
+        out.push(json!({"case": case, "what": what, "refusal": refusal, "hex": hx(&bytes)}));
+    }
+    json!(out)
 }
 
 /// Builds the whole vector document.
@@ -728,7 +855,8 @@ fn proposal_handshake_vectors(
 /// `proposalHandshake` and `proposalHandshakeRefusals` pin the handshake
 /// with one nonce per removable projection (layer1-interface.md §8.2);
 /// `proposalEnvelope` pins the prepared proposal's wire form over the same
-/// proposal. `version` names the shape of the document, and the number
+/// proposal; `proposalHandshakeDeviceRefusals` the rest of the device's
+/// refusals, each with the refusal it states. `version` names the shape of the document, and the number
 /// moves only once every client reads a new shape, which is what each
 /// client's own version assertion states.
 fn build_vectors() -> Value {
@@ -789,7 +917,7 @@ fn build_vectors() -> Value {
         proposal
     );
 
-    let (proposal_handshake, proposal_handshake_refusals) =
+    let (proposal_handshake, proposal_handshake_refusals, device_refusals) =
         proposal_handshake_vectors(&actor, &actor_signing, &host, &host_seed, &proposal);
 
     let code_bytes: [u8; 16] = seq_bytes(0x00, 16).try_into().expect("16 bytes");
@@ -858,6 +986,7 @@ fn build_vectors() -> Value {
         },
         "proposalHandshake": proposal_handshake,
         "proposalHandshakeRefusals": proposal_handshake_refusals,
+        "proposalHandshakeDeviceRefusals": device_refusals,
         "keyBackup": {
             "recoveryCodeBytesHex": hx(&code_bytes),
             "recoveryCodeDisplay": code.display(),
