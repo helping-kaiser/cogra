@@ -264,7 +264,6 @@ export function CommentFeedCard({
   shape = "thread",
   authorHere = false,
   reply = "open",
-  replyCount = 0,
   onRemoved,
 }: {
   comment: CommentFeedView;
@@ -281,8 +280,6 @@ export function CommentFeedCard({
   authorHere?: boolean;
   /** The line shape's text Reply, for this reader. */
   reply?: LineReply;
-  /** The line shape's collapsed branch: the "View n replies" line under the card. */
-  replyCount?: number;
   /**
    * The author's own Remove, taken from the card's ⋮: the host keeps the mark
    * too, so a view held for a return comes back wearing it.
@@ -810,23 +807,9 @@ export function CommentFeedCard({
       {comfort !== null && <RowLine state={comfort} testId={`${testId}-row-line`} />}
     </Card>
   );
-  if (!line) return card;
-  return (
-    <>
-      {card}
-      {/* THE COLLAPSED BRANCH, as the thread draws it: a short rule and the
-          count, indented under the card — its door the thread
-          (ProfileComments.md:27). */}
-      {replyCount > 0 && place !== null && (
-        <Link
-          href={place}
-          {...testAttributes(part(node, "viewReplies"), `${testId}-replies`)}
-          className="cg-state cg-focus cg-hit ml-7 flex items-center gap-3 self-start py-1 pl-0 pr-2 text-label-medium text-on-surface-variant"
-        >
-          <span aria-hidden="true" className="h-px w-6 bg-outline-variant" />
-          View {replyCount === 1 ? "1 reply" : `${replyCount} replies`}
-        </Link>
-      )}
-    </>
-  );
+  // NO VIEW-REPLIES LINE on any host of this card (ProfileComments.md:47,
+  // ProfileCommentsOwn.md:15, FeedKinds.md:25, History.md:41, Saved.md:19,
+  // TagPage.md:17): the collapsed branch is the thread's own line, and the
+  // card's door already opens the thread on this comment.
+  return card;
 }
