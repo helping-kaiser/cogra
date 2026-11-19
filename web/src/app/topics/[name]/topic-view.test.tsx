@@ -428,6 +428,39 @@ describe("TopicView — a post card's menu (TagPageMenu.md)", () => {
     ]);
   });
 
+  it("a_removed_posts_menu_rises_over_the_tag_page_reading_the_readers_menu_whole", async () => {
+    // TagPageRemovedMenu.md:3, :5 (less Cited by and Opinions on this, which
+    // no web post menu carries yet).
+    server.use(
+      gqlLink.query("HashtagDetail", () =>
+        HttpResponse.json({
+          data: hashtagDetail("rust", [
+            {
+              relevance: 0.1,
+              confidence: 1,
+              pending: false,
+              node: {
+                ...tobiasPost(),
+                title: { __typename: "ModeratedText", value: null, status: "REDACTED" },
+                content: { __typename: "ModeratedText", value: null, status: "REDACTED" },
+                removal: { __typename: "Removal", at: "2026-11-18T10:00:00Z", by: "AUTHOR" },
+              },
+            },
+          ]),
+        }),
+      ),
+    );
+    renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+    fireEvent.click(await screen.findByTestId("topic-post-p1-menu"));
+    expect(rows()).toEqual([
+      ["tagPage.menuSheet.save", "Save"],
+      ["tagPage.menuSheet.cite", "Cite in a new post"],
+      ["tagPage.menuSheet.hide", "Hide @tobias"],
+      ["tagPage.menuSheet.license", "License terms"],
+      ["tagPage.menuSheet.report", "Report"],
+    ]);
+  });
+
   it("hide_closes_the_sheet_leaves_every_row_in_place_and_snackbars_with_undo_and_no_confirm", async () => {
     // TagPageMenu.md:7.
     const log = hiddenLog();
