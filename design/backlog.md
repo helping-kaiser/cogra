@@ -6168,7 +6168,7 @@ registers as `composeSeal`, `ReplySeal` as `replySeal` with its box-less
 to its earlier drawing at every chip combination (3 and 15, headless
 Chromium).
 
-### 221 · `PadKeyAbsent`'s pad is hand-built, so it cannot register yet · *system* · **filed 2026-11-13**
+### 221 · `PadKeyAbsent`'s pad is hand-built, so it cannot register yet · *system* · **filed 2026-11-13** · **closed 2026-11-18**
 
 Round 48 (seam 320-16). `PadFailed`, `PadWriteRule` and `TagPageHeldPad`
 register (round 48); `PadKeyAbsent` draws its pad by hand beside the card,
@@ -6181,6 +6181,41 @@ redraw.
 Round 50 read it: needs no ruling (a pixel-identical move of the pad into
 `StanceControl`, then names), but it is a stance-master lane of its own and
 stays open.
+
+Round 54 tried it: a `signing="keyAbsent"` state in `writeRule`'s grammar
+(the notice and `Keep it pending, restore later` where the landing line and
+the commit row stand), the board rendering `PostCard`'s open pad at inset 80
+on the pick +0.10 / +0.10. The pad's box, the field, the notice and the text
+button land exactly where the hand-built ones stand (43, 133.61, 304 ×
+630.39), and no other board's markup moves; but the master draws two things
+the hand-built pad does not (headless Chromium, 390 × 844, light and dark,
+7354 and 7351 pixels differing):
+
+- **The pad's own "?"** (`How opinions work`, its 32px ring in a 48px target
+  at the pad's top right). The hand-built pad has none; every master pad
+  carries it.
+- **The standing line's type.** With nothing standing the master's
+  `StanceStanding` says `🤷 No opinion on this post yet.` in body-small
+  (12px / 400 / 0.4px); the hand-built pad's `QuietNote` says it in
+  label-small (11px / 500 / 0.5px), 168 against 178 wide.
+
+Beneath those, sub-pixel residue of the master's fixed, layered pad: 1 to 10
+pixels each on the field's corners, the knob, the restore button's corners
+and the pad's bottom edge, and a one-level strip across the 15px between the
+pad and the bar, which the master's transparent outside-tap layer makes
+(gone with that layer removed). Which side wins on the "?" and the type is a
+drawing choice, so the pad stays hand-built. Moving it also moves
+`check-readouts`' pin on the board's hand-drawn readout. The attempt is kept
+as a patch in round 54's scratch folder.
+
+Closed by round 56 (jakob 2026-11-18, C1 "as rec": the key-absent pad takes
+the shared pad's drawing): `StanceControl`'s `signing="keyAbsent"` draws the
+pad, its "?" and the empty standing line in body-small included; the box,
+field, notice and both buttons stand at round 54's numbers, the differences
+against the hand-built pad are those two and the same sub-pixel residue, and
+no other board's markup moves. The board registers under `feed`, adding
+`card.actionRow.stance.pad.restore` and `.keepPending`; `check-readouts`
+reads four hand-drawn pads.
 
 ### 222 · The feed's comment-card menu and your own comment's menu on Saved are undrawn · *design* · **filed 2026-11-13** · **closed 2026-11-13**
 
@@ -6197,7 +6232,7 @@ Closed by round 48, act 2: `FeedCommentMenu`, `FeedCommentMenuOwn` and
 `SavedCommentMenuOwn` draw the rows exactly as the law states them, nothing
 reordered; the four paths register. The other undrawn hosts are backlog 223.
 
-### 223 · The menu hosts the sidecars name but no board draws · *design* · **filed 2026-11-13**
+### 223 · The menu hosts the sidecars name but no board draws · *design* · **filed 2026-11-13** · **closed 2026-11-18**
 
 Round 48 (the menus audit of 2026-11-13, §3 item 11). Round 36's rule is one
 menu board per place a card's menu is raised; round 48 drew the feed's comment
@@ -6215,6 +6250,41 @@ settled; drawing them stays open.
 
 Round 50 read it: needs no ruling — each board is its law's rows drawn — but
 it is ten boards and a lane of its own; it stays open.
+
+Round 55 drew the eleven hosts whose law fixes rows, order and host:
+`SavedPostMenuOwn`, `TagPageMenuOwn`, `SavedProfileMenu`,
+`FeedProfileDeletedMenu`, `HistoryRemovedMenu`, `HistoryRemovedMenuOwn`,
+`SavedRemovedMenu`, `SavedRemovedMenuOwn`, `ProfilePostsRemovedMenuOwn`,
+`ProfileCommentsRemovedMenuOwn` and `HistoryCommentRemovedMenuOwn`. Three
+stay open, each on its host, never its rows:
+
+- **Another's removed comment over the thread** (`CommentRemoved.md:9`: the
+  reader's comment menu whole). The thread draws only the reader's own
+  comment removed (`CommentsThreadSheet`'s `removed`), so which comment
+  stands removed — and so whose handle the Hide row names — is undrawn.
+  Options: (a) @tobias's top comment removed, its two replies standing under
+  the mark (`CommentRemoved.md`: the replies stay readable), the sheet
+  stacked as `CommentMenu`'s, `Hide @tobias`; (b) @mira's veiled comment
+  removed, no branch under it. (a) also draws the branch rule on another's
+  mark.
+- **A removed post on another's live profile.** No sentence says whether it
+  keeps its place on the Posts tab as its mark or leaves it (only a deleted
+  account's swept posts are law, `ProfileDeleted.md:9`). Options: (a) it
+  stands as its mark, as in History and Saved; (b) it leaves the tab, as a
+  removed post leaves the feed when it is next derived.
+- **A removed post on a tag page.** `TagPage.md` is silent and the page has
+  no filter to keep it by. Options: (a) its tagged row stays, the card as its
+  mark under the claim; (b) the row leaves the page.
+
+The rows on each are already law (copy-voice, *Menu rows*); each answer is a
+board the round-55 way.
+
+Closed by round 57 (jakob 2026-11-18): another's removed comment over the
+thread is (a), `CommentRemovedOther` and `CommentRemovedOtherMenu`; a removed
+post keeps its place on every profile, own and anyone's (profiles (a)),
+`ProfilePosts`' `removed` and `ProfilePostsRemovedMenu`; the tag page follows
+the feed's `Removed` switch (tag page (c)), `TagPage`'s `post` chip,
+`TagPageRemovedMenu` and `TagPageRemovedMenuOwn`.
 
 ### 230 · A clip that cannot load has no drawn state · *design* · **filed 2026-11-13** · **closed 2026-11-17**
 
@@ -6455,7 +6525,7 @@ published picture stands; a picture added in the edit keeps `Remove it`; the sam
 comment's edit (`UploadErrorLine`'s `onUndo`; `EditCompose` and `CommentEdit` `upload` =
 `recrop-failed`).
 
-### 263 · Where the crop opened from the edit's picture sheet returns · *design* · **filed 2026-11-17**
+### 263 · Where the crop opened from the edit's picture sheet returns · *design* · **filed 2026-11-17** · **closed 2026-11-18**
 
 Round 53. `Crop` on a picture in `EditPicked` opens `ComposeCrop`; the ruling says the edit
 comes back on `Next` and on the back arrow. Drawn by `Describe`'s precedent from the same sheet
@@ -6463,6 +6533,9 @@ comes back on `Next` and on the back arrow. Drawn by `Describe`'s precedent from
 back with the picture sheet over it, as the crop was opened from there (`ComposeCrop.md`,
 `EditPicked.md`, graph `ComposeCrop` via 1 / 3, `EditPicked` via 9). Option (b): the sheet is
 left and the bare edit comes back. To be confirmed.
+
+Closed by round 57: told to jakob 2026-11-17 and again 2026-11-18, no objection — the crop
+opened from the picture sheet returns to the sheet, as drawn by `Describe`'s precedent.
 
 ### 264 · The comment edit's door to re-crop a picture it holds · *design* · **filed 2026-11-17** · **closed 2026-11-17**
 
@@ -6482,3 +6555,113 @@ Closed by round 53, act 2 (jakob 2026-11-17, (b), "as rec"): `Crop the pictures`
 above `Describe the pictures`, in its pattern and by its rule — the same words for one picture
 as for four, no door on a words comment — opening `ReplyCrop` with every picture of the
 comment, the first on the stage; the thumbnails keep their × alone (`commentEdit.pictures.crop`).
+
+### 275 · A deleted account's posts: their menus on its page are law only · *design* · **filed 2026-11-17** · **closed 2026-11-18**
+
+Round 55 (backlog 223's law table). `ProfileDeleted`'s posts, kept or swept
+(its `contents` chip), carry a ⋮ whose rows are law — the reader's post menu
+whole, the Hide row reading `Hide this account` (`ProfileDeletedMenu.md`:
+"the same words every card the account authored shows"; `DELETED_POST`'s
+rows) — but no board draws either open. Needs no ruling: one board per
+state, `ProfileDeletedMenu`'s page beneath, the round-55 way.
+
+Closed by round 57: `ProfileDeletedPostMenu` (kept) and `ProfileDeletedRemovedMenu` (swept),
+the page on Posts beneath, the rows `DELETED_POST_MENU`'s.
+
+### 280 · A removed post or comment in the Everything tab has no drawing · *design* · **filed 2026-11-18** · **closed 2026-11-18**
+
+Round 57. jakob ruled (2026-11-18, profiles (a)) that a profile keeps a removed post or comment
+in its place as its mark "on every tab". Posts and Comments draw it; the chronicle does not. The
+tree rules one case and draws none: `ProfileDeleted.md:25` — "every act still stands in the
+chronicle with its words gone" when an account's content was swept — while the board's
+chronicle keeps its words under `contents` = `removed` (readme §13, the round recording the
+`contents` chip: "the chronicle on Everything keeps its words"), so the sidecar and the drawing
+disagree. The app today keeps the row's verb (`Published a post`, `Commented`) and drops its
+second line (impl, seam 371 (c)). Options for a chronicle row whose post or comment was removed:
+(a) the row stands, its second line reading the mark's line, `Removed by its author`, in the
+quiet voice — the mark where the words were, as every other surface draws it; (b) the row
+stands with no second line, the verb alone (what the app does today); (c) the row's door opens
+the removed thing's detail, its mark there, with either (a) or (b) on the row. Either answer
+also settles `ProfileDeleted`'s swept chronicle.
+
+Closed by round 58 (jakob 2026-11-18, C1 "as rec" — (a) with (c)): the act keeps its card and
+its second line reads `Removed by its author`, the card still opening the removed thing, its
+mark there — `Profile`'s and `ProfileOther`'s `chronicle` = `removed`, and `ProfileDeleted`'s
+swept chronicle under `contents` = `removed`, its sidecar brought to the board.
+
+### 281 · What the profile's Posts figure counts once removed posts stand on the list · *design* · **filed 2026-11-18** · **closed 2026-11-18**
+
+Round 57. The tree says the Posts figure counts "the posts published, never their edits"
+(readme §7, `ProfileHeader`) and says nothing of a removed post. The app counts removed posts
+today and not pending ones (impl, seam 371 (f)), which agrees with the list since profiles (a).
+Nothing contradicts it; the tree is silent. Options: (a) write it as law — the figure counts
+every post the person published, a removed one included, the list and the figure agreeing; (b)
+the figure leaves removed posts out — the list and the figure then disagree by the marks.
+
+Closed by round 58 (jakob 2026-11-18, C2: "yes ofcourse deleted posts count" — (a)): the figure
+counts every post the person published, a removed one included, never an edit (readme §7,
+`ProfileHeader`, the profile sidecars). Pending posts stay unspoken.
+
+### 282 · A comment's pointer to a removed post, in a list · *design* · **filed 2026-11-18**
+
+Round 57. On `TagPageRemovedMenuOwn` the page beneath shows @sol's salt maps removed, and
+@ada's tagged comment below it still names the post by its title in its pointer (`“Salt maps of
+the coast road” — @sol`), the out-of-thread line shape `ProfileComments` draws. The feed's
+thread-shape head row has a drawing for a removed target (`FeedCommentShapes`, *answering a
+removed post*: `Removed by its author` in the title's place, an empty tile); the line shape has
+none. Options: (a) the line reads the removal mark's line in the title's place, `Removed by its
+author — @sol`, the thread shape's rule; (b) the line reads `On @sol's removed post`, the feed
+card's naming (copy-voice, *A comment's head row*). Until ruled the drawn pointer is the live
+one, an inconsistency on one board's page beneath its wash.
+
+Round 59 (jakob 2026-11-18, C3: "for sure not the actual title… figure sth out you can show me")
+draws a PROPOSAL on its own branch, `jakob/design/round59-removed-pointers`: a removed thing named
+by kind and author, `On @sol's removed post`, and `a deleted account's` for a deleted account's
+(copy-voice, *Naming a removed or deleted thing*). Open until he rules.
+
+### 286 · The pointers the round-59 proposal names but no board draws · *design* · **filed 2026-11-18**
+
+Round 59. If the proposal stands, its naming also reaches surfaces it did not draw: the comment
+edit's subtitle for a deleted account's target (`Your comment on a deleted account's removed
+post.`); the chronicle's opinion / tag / citation rows whose target was removed (`Removed by its
+author` under the verb); a post's references sheet and `Cited by` rows for a removed or deleted
+thing (`ReferenceRow`'s `removed`, seam 248); and notifications — the `in <title>` line of a
+mention or citation from a removed post (`in @mira's removed post`) and a deleted actor's row
+(`A deleted account cited your post`?). Each waits for jakob's word on round 59; the last is
+not in the proposal (an actor, not a pointer).
+
+### 283 · A removed tagged comment on the tag page · *design* · **filed 2026-11-18** · **closed 2026-11-18**
+
+Round 57. jakob's tag-page ruling names a removed tagged post; the page also lists tagged
+comments. Derived (impl, seam 371, point 4, to be confirmed by jakob): the switch holds for
+every removed row the page lists, a removed tagged comment following it exactly as a post
+does — the feed's filter treats its post and comment cards alike. The drawing would be
+`CommentCard`'s own mark (as `ProfileComments`' `removed`), under its claim. Not drawn:
+the ruling names posts. Options: (a) yes, every removed row; (b) comments stay listed whatever
+the switch holds.
+
+Closed by round 58 (jakob 2026-11-18, C4 "as rec" — (a)): `TagPage.md`'s two sentences hold for
+every removed row the page lists; `TagPage`'s `comment` = `removed` draws @ada's comment with
+`CommentCard`'s own mark under its claim. Its menus are backlog 284.
+
+### 284 · A tagged comment's ⋮ on the tag page: no host list names it · *design* · **filed 2026-11-18**
+
+Round 58. copy-voice *Menu rows* names the tag page among a post's menu hosts but not among a
+comment's ("the thread, the feed, History, Saved and a profile's Comments tab"), and no tag-page
+sidecar speaks of a comment's ⋮; the board draws the tagged comment's ⋮ with `License terms`
+alone (the card's own appended row, no `menuItems` handed). So the menus over another's and your
+own removed tagged comment — and the live ones — have no rows the law fixes; not drawn. Options:
+(a) the comment rows' host list gains the tag page, as the post rows' does, and four boards draw
+it (`TagPageCommentMenu`, `…Own`, and the removed pair) — the rows `CommentMenu`'s and
+`CommentMenuOwn`'s, removed or not; (b) a tagged comment's ⋮ on the tag page holds only
+`License terms`, as drawn — a doorway card. Recommendation (a): the page is a list of content
+cards, and every other list's comment card raises the whole menu.
+
+### 285 · `MediaAttachment`'s `maxHeight` has no caller left · *system* · **filed 2026-11-18**
+
+Round 58, item 6 (jakob 2026-11-18, the hand test: a shown comment's media is a square at the
+column's width, no height cap). `CommentCard` was the one surface passing `maxHeight`
+(`220px`); it passes none now, and the prop's comment in `MediaAttachment` ("a comment's inset
+pictures — passes its own bound here") and `MediaGallery`'s pass-through describe a caller that
+is gone. Options: (a) retire the prop and its comment; (b) keep it as an unused door. Not done
+by the lane: the brief kept the masters as they are.

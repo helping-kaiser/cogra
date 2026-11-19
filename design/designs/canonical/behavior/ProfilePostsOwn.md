@@ -6,9 +6,13 @@ ALWAYS the reader's own profile's Posts view keeps the own profile's head as the
 
 ALWAYS profile.posts lists the reader's own posts, each card the feed's own, fully live
 
+ALWAYS profile.identity.figures.posts counts every post the reader published, a removed one included, so the figure and the list agree
+
 ALWAYS the ⋮ on a card holds the own post menu, Edit among its rows, and carries no Hide and no Report row
 
 WHEN tap the ⋮ on profile.posts.card -> profile.menuSheet rises over the reader's own profile with the own post menu's rows
+
+ALWAYS a removed post of the reader's own keeps its place in the list as the feed's removed card, profile.posts.card.removalMark reading Removed by its author with the removal's date, whatever the feed's filter holds, its ⋮ your own post's menu less Edit, Mark as sensitive and Remove
 
 WHEN tap profile.tabRow.commentsTab -> the reader's own comments stand below profile.tabRow AND the head above stays as it was
 

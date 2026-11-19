@@ -7,7 +7,11 @@
    THE PROFILE LANDS ON POSTS (jakob 2026-11-13, the android hand test: "land
    on posts as the default (learned behavior from other socials)"): the `tab`
    chip draws `posts`, the landing, and `everything`, the chronicle the tab
-   opens (`ProfileTabs`). Sol has no
+   opens (`ProfileTabs`). YOUR REMOVED POST ON EVERYTHING (round 58; jakob
+   2026-11-18, C1 "as rec") is the `chronicle` chip's `removed`: the salt
+   maps' act, removed as `ProfilePostsOwn`'s `removed` draws the post, its
+   second line `Removed by its author` where the words were, the card still
+   the door to the post's detail (`ChronicleAct`). Sol has no
    picture: the monogram is the designed fallback, and the badge on it reads as
    "add one".
 
@@ -32,13 +36,15 @@ export const NODE = "profile";
 export const PROPS = {
   change: { editor: "enum", options: ["none", "signing", "failed"], default: "none" },
   ...TAB_CHIP,
+  ...CHRONICLE_CHIP,
 };
-export const VALS = `changeSigningShown: this.props.change === "signing" ? "block" : "none", changeFailedShown: this.props.change === "failed" ? "block" : "none", ${TAB_VALS}`;
+export const VALS = `changeSigningShown: this.props.change === "signing" ? "block" : "none", changeFailedShown: this.props.change === "failed" ? "block" : "none", ${TAB_VALS}, ${CHRONICLE_VALS}`;
 const HEAD_LINE = { padding: "var(--space-2) var(--space-4) var(--space-3)" };
 export function Screen() {
   return (
     <ProfileOwnBody
       tab="chip"
+      chronicle={CHRONICLE_REMOVED}
       headLine={
         <>
           <div style={{ display: "{{changeSigningShown}}", ...HEAD_LINE }}>

@@ -349,13 +349,15 @@ describe("PostCard", () => {
       expect(screen.queryByTestId("card-menu")).not.toBeInTheDocument();
     });
 
-    // A REMOVED POST HAS NO MENU AT ALL (`Removed.jsx:5-6`) — the ⋮ goes
-    // wholesale, not a row at a time.
-    it("drops the whole menu on a removed post", () => {
+    // A REMOVED POST KEEPS ITS ⋮ (FeedRemoved.md:9, ProfilePosts.md:11): the
+    // host's menu rises over it as over any card.
+    it("keeps the menu on a removed post", () => {
+      const onOpenMenu = vi.fn();
       mount(post({ content: moderated(null, "REDACTED"), description: moderated(null, "REDACTED") }), {
-        onOpenMenu: vi.fn(),
+        onOpenMenu,
       });
-      expect(screen.queryByTestId("card-menu")).not.toBeInTheDocument();
+      fireEvent.click(screen.getByTestId("card-menu"));
+      expect(onOpenMenu).toHaveBeenCalledTimes(1);
     });
   });
 

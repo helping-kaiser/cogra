@@ -1,6 +1,6 @@
 # TagPageMenu · `spec:design:behavior-tag-page-menu`
 
-WHEN tap a tagged post card's ⋮ on the tag's page -> tagPage.menuSheet rises over the tag's page AND the page stands unchanged beneath its wash
+WHEN tap a tagged post card's ⋮ on the tag's page GIVEN the post is someone else's -> tagPage.menuSheet rises over the tag's page AND the page stands unchanged beneath its wash
 
 ALWAYS tagPage.menuSheet reads Save or Unsave, then Cite in a new post, then Hide with the author's handle, then tagPage.menuSheet.citedBy, then Opinions on this, then License terms, then tagPage.menuSheet.report at the sheet tail, the reader's post menu's own rows
 

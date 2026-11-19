@@ -9,9 +9,12 @@
    feed's filter keeps `Removed` off by default (`FeedSheet`), so the next
    time this device derives the feed — a refresh, a cold open, a changed
    filter — the removed post is cut like any other removed post; a filter
-   with `Removed` on keeps showing its mark. The same holds on every host a
-   reader's own card is removed from off the detail: the own profile's Posts
-   and Comments tabs, and a comment card of their own in the feed.
+   with `Removed` on keeps showing its mark. The same holds for a comment card
+   of the reader's own removed in the feed. A tag's page follows the same
+   switch at its next derivation (jakob 2026-11-18, tag page (c)). A PROFILE
+   KEEPS IT (jakob 2026-11-18, profiles (a)): a removed post or comment keeps
+   its place on every profile, the reader's own and anyone's, on every tab,
+   whatever the filter holds, and the card there is this one.
 
    YOUR REMOVED POST KEEPS ITS MENU (jakob 2026-11-12, question 18): the ⋮
    holds `OWN_REMOVED_POST_MENU` — Save, Cite in a new post, Cited by,

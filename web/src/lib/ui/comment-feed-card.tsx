@@ -427,33 +427,35 @@ export function CommentFeedCard({
   const host = menuHostOf(node);
   const sheetNodes = host === undefined || !menuOpen ? undefined : menuSheetNodes(host);
 
-  const items = redacted
-    ? []
-    : commentMenuItems({
-        comment,
-        writes,
-        notify: onNotify,
-        // A GUEST IS ASKED TO JOIN before anything is kept, cited or reported
-        // (GuestGate.md:5) — the profile's Comments tab and the feed are read
-        // by guests.
-        onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
-        applicant,
-        navigate: (route) => router.push(route),
-        openCitedBy,
-        openOpinions,
-        openLicense: (license) => {
-          setLicenseShown(license);
-          setLicenseOpen(true);
-        },
-        openEdit,
-        openRemove: own ? () => setRemoving(true) : undefined,
-        openReport: () => {
-          setReportAsked(true);
-          setReportOpen(true);
-        },
-        testIdPrefix: `${testId}-menu`,
-        rowNode: sheetNodes?.row,
-      });
+  // A REMOVED COMMENT KEEPS ITS ⋮ (ProfileComments.md:9,
+  // ProfileCommentsOwn.md:11): the reader's menu whole, the author's less Edit
+  // and Remove (`commentMenuItems`' `removed`).
+  const items = commentMenuItems({
+    comment,
+    removed: redacted,
+    writes,
+    notify: onNotify,
+    // A GUEST IS ASKED TO JOIN before anything is kept, cited or reported
+    // (GuestGate.md:5) — the profile's Comments tab and the feed are read
+    // by guests.
+    onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
+    applicant,
+    navigate: (route) => router.push(route),
+    openCitedBy,
+    openOpinions,
+    openLicense: (license) => {
+      setLicenseShown(license);
+      setLicenseOpen(true);
+    },
+    openEdit,
+    openRemove: own ? () => setRemoving(true) : undefined,
+    openReport: () => {
+      setReportAsked(true);
+      setReportOpen(true);
+    },
+    testIdPrefix: `${testId}-menu`,
+    rowNode: sheetNodes?.row,
+  });
 
   const body = (
     <>
@@ -470,8 +472,9 @@ export function CommentFeedCard({
           </Link>
         ))}
       {/* A COMMENT IS WORDS FIRST and its pictures join them: inset at the
-          card's medium rung, square and filled, capped at comment scale
-          (FeedCommentShapes.md). The pictures take the words' door. */}
+          card's medium rung, a square at the column's whole width, filled,
+          with no height cap (jakob 2026-11-18). The pictures take the words'
+          door. */}
       {hasMedia(comment) && (
         <div
           onClick={wordsDoor === null ? undefined : () => router.push(wordsDoor)}
@@ -483,7 +486,6 @@ export function CommentFeedCard({
             radius="var(--radius-medium)"
             ratio={1}
             fit="cover"
-            maxHeight="220px"
             surface="reading"
             testId={`${testId}-media`}
             dataNode={part(node, "media")}
@@ -519,7 +521,7 @@ export function CommentFeedCard({
               {stamp}
             </time>
           )}
-          {/* A menu with no rows is no menu: a removed comment keeps none. */}
+          {/* A menu with no rows is no menu. */}
           {items.length > 0 && (
             <OverflowTrigger
               ariaLabel="More on this comment"

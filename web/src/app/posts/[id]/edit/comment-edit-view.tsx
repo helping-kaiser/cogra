@@ -99,6 +99,7 @@ import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
 import { unlandedCitationLine } from "@/app/(app)/compose/wizard/seal-step";
 import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { SCREEN_LAYER } from "@/lib/ui2/screen-layer";
 
 /** The registered comment edit (`commentEdit`), and the parts its blocks hang off. */
 const NODE: DataNode = { path: "commentEdit" };
@@ -373,7 +374,7 @@ export function CommentEditView({
       role="dialog"
       aria-modal="true"
       aria-label="Edit comment"
-      className="fixed inset-0 z-40 flex flex-col bg-surface text-on-surface"
+      className={`${SCREEN_LAYER} z-40 flex flex-col bg-surface text-on-surface`}
     >
       {cropping !== null ? (
         // CoverCrop over the comment edit: its back arrow gives the cover row

@@ -60,6 +60,7 @@ import { HeaderBar } from "@/lib/ui2/header-bar";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { TextField } from "@/lib/ui2/text-field";
 import { CENTERED, type Crop } from "@/lib/ui2/media/crop";
+import { PINNED_PAGE } from "@/lib/ui2/screen-layer";
 import { carrySnackbar } from "@/lib/ui/carried-snackbar";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
@@ -275,7 +276,7 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
   return (
     <main
       data-testid="profile-edit"
-      className="mx-auto flex h-dvh w-full max-w-2xl flex-col bg-surface text-on-surface"
+      className={`mx-auto flex ${PINNED_PAGE} w-full max-w-2xl flex-col bg-surface text-on-surface`}
     >
       <HeaderBar
         title="Edit profile"

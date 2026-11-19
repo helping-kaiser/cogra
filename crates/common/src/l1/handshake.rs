@@ -708,15 +708,56 @@ impl EpochPackage {
     }
 }
 
+/// An amount of the substrate's money in micro-units (10⁻⁶ of a unit) —
+/// the exact integers the ledger holds. Comparisons of these amounts are
+/// decided on the integers, never on a floating-point image of them
+/// (layer1-interface.md §13.2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+pub struct Micro(pub i64);
+
+impl Micro {
+    pub const ZERO: Micro = Micro(0);
+    /// The largest amount the ledger's integers can hold.
+    pub const MAX: Micro = Micro(i64::MAX);
+
+    /// The price of `count` acts at this per-act price, or `None` when it
+    /// is not representable — a price beyond every balance the ledger can
+    /// hold.
+    pub fn times(self, count: usize) -> Option<Micro> {
+        i64::try_from(count)
+            .ok()
+            .and_then(|n| self.0.checked_mul(n))
+            .map(Micro)
+    }
+}
+
+/// Whole units with the fraction trimmed of trailing zeros — `50186`
+/// micro-units shows as `0.050186`, `10_000_000` as `10`.
+impl std::fmt::Display for Micro {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        const PER_UNIT: u64 = 1_000_000;
+        let sign = if self.0 < 0 { "-" } else { "" };
+        let magnitude = self.0.unsigned_abs();
+        let (whole, fraction) = (magnitude / PER_UNIT, magnitude % PER_UNIT);
+        if fraction == 0 {
+            write!(f, "{sign}{whole}")
+        } else {
+            let digits = format!("{fraction:06}");
+            write!(f, "{sign}{whole}.{}", digits.trim_end_matches('0'))
+        }
+    }
+}
+
 /// The B_i surface as the stand-in honors it: numbers
-/// (roadmap.md "The stand-in and the swap").
-#[derive(Debug, Clone, PartialEq)]
+/// (roadmap.md "The stand-in and the swap"), in the ledger's exact
+/// micro-units.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AccountBalance {
     pub address: String,
     /// Committed burn total B_i (monotone).
-    pub burned_total: f64,
+    pub burned_total: Micro,
     /// Residual balance b_i after θ-debits.
-    pub balance: f64,
+    pub balance: Micro,
     /// Accepted-act count N_i.
     pub action_count: i64,
 }
@@ -755,6 +796,49 @@ mod tests {
             license: None,
             asserted_parents: vec![],
         }
+    }
+
+    /// An amount shows as the decimal units it holds — the same text the
+    /// double-precision image of the amount prints, so a message quoting
+    /// one reads as before, now read off the exact integer.
+    ///
+    /// A micro-unit amount shows as its exact decimal units, trailing zeros trimmed.
+    /// ´claim:handshake:an-amount-shows-as-its-exact-units´
+    #[test]
+    fn an_amount_shows_as_its_exact_units() {
+        for micro in [
+            0,
+            1,
+            50_186,
+            150_000,
+            752_789,
+            1_000_000,
+            10_000_000,
+            100_000_001,
+            -50_186,
+        ] {
+            assert_eq!(
+                Micro(micro).to_string(),
+                (micro as f64 / 1e6).to_string(),
+                "{micro} micro-units"
+            );
+        }
+        assert_eq!(Micro(i64::MIN).to_string(), "-9223372036854.775808");
+        assert_eq!(Micro::MAX.to_string(), "9223372036854.775807");
+    }
+
+    /// A batch price is the exact product, and a product the integers
+    /// cannot hold is no price at all rather than a wrapped one.
+    ///
+    /// A batch price is the exact product of the act price and the count, or none when it overflows.
+    /// ´claim:handshake:a-batch-price-is-exact-or-none´
+    #[test]
+    fn a_batch_price_is_exact_or_none() {
+        assert_eq!(Micro(50_186).times(15), Some(Micro(752_790)));
+        assert_eq!(Micro(50_186).times(0), Some(Micro::ZERO));
+        assert_eq!(Micro::MAX.times(1), Some(Micro::MAX));
+        assert_eq!(Micro::MAX.times(2), None);
+        assert_eq!(Micro(2).times(usize::MAX), None);
     }
 
     /// One body has one canonical encoding, and a change to any field produces another.

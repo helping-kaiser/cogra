@@ -378,6 +378,15 @@ describe("History — the seen-list as a feed (History.md)", () => {
     // moment (the evident path while Removed is unregistered).
     expect(screen.getByTestId(byNode("history.card.removalMark", "p9"))).toHaveTextContent("Removed by its author");
     expect(screen.getByTestId(byNode("history.card.removalMark.when", "p9"))).toHaveTextContent("18m");
+    // HistoryRemovedMenu.md:3, :5 — its ⋮ raises the reader's post menu whole
+    // (less Cited by and Opinions on this, which no web post menu carries yet).
+    fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p9")));
+    const sheet = screen.getAllByTestId("history.menuSheet").find((d) => (d as HTMLDialogElement).open);
+    expect(
+      within(sheet!)
+        .getAllByRole("button")
+        .map((row) => row.textContent),
+    ).toEqual(["Save", "Cite in a new post", expect.stringMatching(/^Hide @/), "License terms", "Report"]);
   });
 
   it("the_readers_own_removal_from_a_cards_menu_leaves_it_in_place_wearing_its_mark", async () => {
@@ -406,6 +415,15 @@ describe("History — the seen-list as a feed (History.md)", () => {
     fireEvent.click(await screen.findByTestId("history-menu-remove-confirm-remove"));
     expect(await screen.findByTestId(byNode("history.card.removalMark", "p5"))).toHaveTextContent("Removed by its author");
     expect(cards()).toEqual(["history.commentCard:c1", "history.card:p5", "history.card:p1"]);
+    // HistoryRemovedMenuOwn.md:5 — your own post's menu less Edit, Mark as
+    // sensitive and Remove.
+    fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p5")));
+    const sheet = screen.getAllByTestId("history.menuSheet").find((d) => (d as HTMLDialogElement).open);
+    expect(
+      within(sheet!)
+        .getAllByRole("button")
+        .map((row) => row.textContent),
+    ).toEqual(["Save", "Cite in a new post", "License terms"]);
   });
 
   it("a_hidden_accounts_posts_and_comments_stay_out_and_its_profile_card_stays", async () => {

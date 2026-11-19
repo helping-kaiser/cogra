@@ -24,16 +24,27 @@
    slot bare; the card keyed by its id in both copies, as `ProfileComments`'
    `removed` is.
 
+   A REMOVED POST KEEPS ITS PLACE (round 57; jakob 2026-11-18, profiles (a):
+   "removed posts should not vanish from profiles … (both others and mine)",
+   no toggle) — the `posts` chip's `removed`: the second post, removed by its
+   author, as the feed's removed card ("yes same removed cards in profile";
+   `FeedRemoved`): `Removed by its author` and the removal's own moment
+   (`2h`, never the post's `5d`), the author chip, the opinion, the score,
+   the comments count, the share and the ⋮, the reader's post menu whole
+   (`ProfilePostsRemovedMenu` draws it open). The tab draws it as
+   `ProfileComments` draws its removed comment, the card keyed by its id in
+   every copy.
+
    THE FIRST PAGE'S OTHER MOMENTS (round 45; jakob 2026-11-12, the re-ask's
    fourteenth and fifteenth) are the `load` chip, `ProfileTabFirstPage`'s:
    `loading` the chronicle's `Loading…` in the list's place, `failed`
    `ProfileMoreFailed`'s quiet row with `Retry` where the list would stand. */
 export const NODE = "profile";
 export const PROPS = {
-  posts: { editor: "enum", options: ["some", "none", "settling"], default: "some" },
+  posts: { editor: "enum", options: ["some", "none", "settling", "removed"], default: "some" },
   load: { editor: "enum", options: ["loaded", "loading", "failed"], default: "loaded" },
 };
-export const VALS = `someShown: this.props.load === "loaded" && this.props.posts !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.posts === "none" ? "block" : "none", secondLanded: this.props.posts === "settling" ? "none" : "contents", secondSettling: this.props.posts === "settling" ? "contents" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none"`;
+export const VALS = `someShown: this.props.load === "loaded" && this.props.posts !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.posts === "none" ? "block" : "none", secondLanded: this.props.posts === "settling" || this.props.posts === "removed" ? "none" : "contents", secondSettling: this.props.posts === "settling" ? "contents" : "none", secondRemoved: this.props.posts === "removed" ? "contents" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none"`;
 const ADA_SECOND_POST = {
   id: "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a",
   author: ADA,
@@ -81,6 +92,13 @@ export function Screen() {
                 (`ComposeLanded`, the thread's landed reply). */}
             <div style={{ display: "{{secondSettling}}" }} data-node-chip="posts" data-node-key="settling">
               <PostCard {...ADA_SECOND_POST} timestamp="now" pending score={null} node="card" />
+            </div>
+            {/* The same post removed by its author: the feed's removed card as
+                it is (`FeedRemoved`), the mark and its date in the words' and
+                pictures' place, the author, the opinion, the score, the
+                comments and the share kept, the ⋮ the reader's whole. */}
+            <div style={{ display: "{{secondRemoved}}" }} data-node-chip="posts" data-node-key="removed">
+              <PostCard id={ADA_SECOND_POST.id} author={ADA} timestamp={ADA_SECOND_POST.timestamp} redacted={{ reason: "author", when: "2h" }} score={ADA_SECOND_POST.score} comments={ADA_SECOND_POST.comments} menuItems={ADA_SECOND_POST.menuItems} node="card" />
             </div>
           </div>
           <div style={{ display: "{{noneShown}}", padding: "8px 16px 0" }}>

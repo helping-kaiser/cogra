@@ -4,11 +4,11 @@ ALWAYS the clip's tile wears the clip's frame 0 as its face
 
 ALWAYS the clip's tile is 54 by 96 whatever the clip's shape, a wide or square clip's frame filling it cropped to it
 
-ALWAYS the cover's tile stands beside the clip's at the clip tile's 96 high and at the cover's own shape, a tall clip's 4:5, a square clip's 1:1, a wide clip's 16:9
+ALWAYS the cover's tile stands beside the clip's at the clip tile's 96 high and, a cover chosen, at the cover's own shape, a tall clip's 4:5, a square clip's 1:1, a wide clip's 16:9
 
 ALWAYS the cover's tile shows the chosen cover wearing the Cover pill, and is named Change the cover, GIVEN a cover was chosen
 
-ALWAYS the cover's tile is the dashed Add a cover door, a tall clip's 76.8 × 96, GIVEN no cover was chosen, whether the clip skipped the cover step or passed it without a pick
+ALWAYS the cover's tile is the dashed Add a cover door, a square at the clip tile's height, 96 × 96, GIVEN no cover was chosen, whether the clip skipped the cover step or passed it without a pick
 
 WHEN tap the cover's tile GIVEN a cover was chosen -> the cover step opens with the chosen cover still chosen AND its Next comes back to this stage with the choice
 

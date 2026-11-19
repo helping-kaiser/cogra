@@ -149,11 +149,16 @@ export function CoverRow({
    an edit — and it is named for that, `Change the cover`, so the pill
    names what it is and the name says what it does.
 
-   NO COVER YET, THE SAME PLACE HOLDS THE OTHER HALF: a dashed tile at the
-   same size, the add glyph in its exact middle, and the words `Add a cover`
-   — on the tile, 4 under the glyph, where it is wide enough to carry them, beside it as the door's own label
-   where it is not (`labelBeside`, which the placer sets from the tile it
-   measured). One control either way: the tile and its words are one press. */
+   NO COVER YET, THE SAME PLACE HOLDS THE OTHER HALF: a dashed SQUARE at the
+   clip tile's height (round 56, jakob 2026-11-18: "have it squared at same
+   hight as the video") — the cover has no shape until one is chosen, so the
+   door takes `height` on both sides and `width` is the chosen cover's
+   alone; the tile changes width when a cover is picked. The add glyph in
+   its exact middle, and the words `Add a cover` — on the tile, 4 under the
+   glyph, where it is wide enough to carry them, beside it as the door's own
+   label where it is not (`labelBeside`, which the placer sets from the tile
+   it measured). One control either way: the tile and its words are one
+   press. */
 const ADD_WORDS = {
   fontSize: "var(--text-label-small)",
   fontWeight: "var(--text-label-small--font-weight)",
@@ -190,7 +195,7 @@ export function CoverTile({ src, transform, width, height, progress, failed = fa
     >
       <span
         style={{
-          width: `${width}px`,
+          width: `${height}px`,
           height: `${height}px`,
           borderRadius: "var(--radius-small)",
           border: "1px dashed var(--border-field)",

@@ -1096,6 +1096,7 @@ label.
 | `test:integration:the-vouch-back-ends-the-borrowing`                                                           | the_vouch_back_ends_the_borrowing                                                           |
 | `test:integration:the-vouch-opinion-landing-writes-the-ordinary-opinion-row`                                   | the_vouch_opinion_landing_writes_the_ordinary_opinion_row                                   |
 | `test:integration:the-widest-legitimate-request-fits-under-the-json-ceiling`                                   | the_widest_legitimate_request_fits_under_the_json_ceiling                                   |
+| `test:integration:the-write-rule-pre-check-is-exact-at-the-boundary`                                           | the_write_rule_pre_check_is_exact_at_the_boundary                                           |
 | `test:integration:three-saved-people-need-no-door`                                                             | three_saved_people_need_no_door                                                             |
 | `test:integration:three-seen-people-need-no-door`                                                              | three_seen_people_need_no_door                                                              |
 | `test:integration:token-confirmations-share-one-ip-budget`                                                     | token_confirmations_share_one_ip_budget                                                     |

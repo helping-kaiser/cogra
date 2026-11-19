@@ -1175,7 +1175,6 @@ export function StanceControl({
     rowSigning && slow && confirming === null ? { kind: "signing" } : rowLine;
 
   const inset = variant?.padInset ?? (barBeneath ? PAD_ABOVE_BAR_INSET_PX : PAD_PARK_INSET_PX);
-  const aboveBar = variant?.padInset !== undefined || barBeneath;
 
   const helpLines =
     explaining === "zero" ? unreachableHelp(axes, target.label) : (variant?.help ?? padHelp(axes));
@@ -1203,7 +1202,7 @@ export function StanceControl({
         tabIndex={-1}
         onKeyDown={trapTab}
         {...testAttributes(padNode, `${testIdPrefix}-pad`)}
-        style={parkedPadStyle(inset, aboveBar)}
+        style={parkedPadStyle(inset)}
         className="cg-dialog-in z-40 box-content flex w-[17rem] touch-none flex-col gap-3 overflow-y-auto rounded-extra-large bg-surface-container-high p-4 text-on-surface outline-none"
       >
         {/* The help affordance: a circled `?` in the pad's top-right corner,

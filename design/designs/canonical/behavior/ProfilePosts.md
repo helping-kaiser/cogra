@@ -6,6 +6,14 @@ ALWAYS the posts view is where another's profile lands, from any door, its state
 
 ALWAYS the posts view lists a post the person signed that is still settling among the landed ones, its card wearing Still settling and carrying no score, its score slot bare, as the feed's card does
 
+ALWAYS a removed post keeps its place in the list as the feed's removed card, profile.posts.card.removalMark.line reading Removed by its author where its words and pictures were, with the removal's date, and nothing more under it, whatever the feed's filter holds
+
+ALWAYS a removed post keeps profile.posts.card.authorChip, its stance, its score, its comments count, its share and profile.posts.card.menu, the reader's post menu whole — Save or Unsave, Cite in a new post, Hide with the author's handle, Cited by, Opinions on this, License terms, then Report at the sheet tail — GIVEN the post is someone else's
+
+ALWAYS profile.identity.figures.posts counts every post the person published, a removed one included, so the figure and the list agree
+
+ALWAYS profile.posts.card.removalMark.when reads the removal's own moment under the mark, in the one age vocabulary, never the post's age, GIVEN the post was removed
+
 ALWAYS profile.posts.empty below profile.tabRow reads Nothing here yet., the line alone, GIVEN the person has published no post
 
 WHEN the tab's first page has not arrived 200ms after it was asked for -> profile.posts.loading stands in the list's place, reading Loading… AND NEVER profile.posts.empty stands meanwhile AND NEVER a skeleton card or a spinner appears

@@ -33,7 +33,7 @@ use std::sync::Arc;
 use common::l1::StructuralBody;
 use common::l1::handshake::{
     AccountBalance, ApprovalWitness, BoundaryPolicy, BurnSettlement, BurnTicket, EMPTY_BOUNDARY,
-    EpochPackage,
+    EpochPackage, Micro,
 };
 use common::l1::identifier::ActId;
 use common::l1::proposal::{SealedAct, Submission};
@@ -419,8 +419,8 @@ impl StandIn {
             .unwrap_or((0, 0, 0));
         Ok(AccountBalance {
             address: address.to_string(),
-            burned_total: burned as f64 / 1e6,
-            balance: balance as f64 / 1e6,
+            burned_total: Micro(burned),
+            balance: Micro(balance),
             action_count: count,
         })
     }

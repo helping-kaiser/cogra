@@ -285,8 +285,9 @@ export function CommentCard({
       {opener}
       {/* A comment is words first and its pictures join them (readme §13) —
           below the words, INSET at the card's medium rung rather than
-          full-bleed, and capped at a comment-scale height: the media joins the
-          words, it must not turn the comment into a post. Square is the
+          full-bleed, a square at the column's width with no cap on its height
+          (jakob 2026-11-18, the hand test: "the image/clip should be square
+          .. why is there a cap on how high it can be?"). Square is the
           comment scale's shape (readme §13, the reel round): a comment's
           picture IS the square its author framed in the comment's crop
           (`ReplyCrop`, jakob 2026-11-17), one picture as much as four, so
@@ -295,14 +296,14 @@ export function CommentCard({
           four ride one comment. */}
       {Array.isArray(media) && media.length > 0 && (onOpen ? (
         <div onClick={open} className="cg-door" data-node={node && "media"}>
-          <MediaGallery items={squared(media)} ratio="square" maxHeight="220px" node={node && "media"} />
+          <MediaGallery items={squared(media)} ratio="square" node={node && "media"} />
         </div>
       ) : node ? (
         <div data-node="media">
-          <MediaGallery items={squared(media)} ratio="square" maxHeight="220px" node="media" />
+          <MediaGallery items={squared(media)} ratio="square" node="media" />
         </div>
       ) : (
-        <MediaGallery items={squared(media)} ratio="square" maxHeight="220px" />
+        <MediaGallery items={squared(media)} ratio="square" />
       ))}
     </>
   );
@@ -399,7 +400,12 @@ export function CommentCard({
                 removal mark's line in the system's voice — `text-secondary`
                 at the body's weight, the register `Deleted account` takes —
                 over the author, who stays. The comment stays readable under
-                it; a node is never deleted, and neither is what answers it. */}
+                it; a node is never deleted, and neither is what answers it.
+                `titleQuiet` sets the title's voice apart from the mark (round
+                59): a removed COMMENT keeps its author's handle in the title's
+                place, the mark's line under it, so its title is not quiet; a
+                deleted account's `Deleted account` there is. Absent, it
+                follows `removed`. */}
             <button type="button" onClick={onOpenTarget} aria-label={`On ${target}`} data-node={node && "target"} className="cg-state cg-focus" style={{ ...TARGET_DOOR, display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
               <NodeMark kind={targetKind} src={targetDetail.cover} redacted={targetDetail.removed} onCard />
               <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
@@ -408,8 +414,8 @@ export function CommentCard({
                     fontSize: "var(--text-label-large)",
                     letterSpacing: "var(--text-label-large--letter-spacing)",
                     lineHeight: "var(--text-label-large--line-height)",
-                    fontWeight: targetDetail.removed ? 400 : "var(--text-label-large--font-weight)",
-                    ...(targetDetail.removed ? { color: "var(--text-secondary)" } : null),
+                    fontWeight: (targetDetail.titleQuiet ?? targetDetail.removed) ? 400 : "var(--text-label-large--font-weight)",
+                    ...((targetDetail.titleQuiet ?? targetDetail.removed) ? { color: "var(--text-secondary)" } : null),
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",

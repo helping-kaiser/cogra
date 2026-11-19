@@ -376,6 +376,10 @@ Prepare pre-checks the two-gate write rule over the mirror's
 current state — W1 solvency, W2a the individual stamp wall, W2b
 the averaged door
 ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
+W1 is decided on the exact integers the ledger holds: the balance
+and θ cross the seam in micro-units, and a batch's price is their
+checked product, so a balance of exactly θ × acts writes
+([layer1-interface.md §13.2](../primitive/layer1-interface.md#132-replay-verification-and-verdict-certificates)).
 A failed check is a normal, visible account state, not an auth
 failure: authentication gates the *service*, write standing gates
 the *graph* ([auth.md](auth.md)). The product surfaces the state
