@@ -861,7 +861,9 @@ internal fun commentMenuRows(
     val saveTag = tag(CommentMenuRow.Save, "save")
     add(LocalSavedHost.current?.menuRow(comment.id, comment.viewerBookmarkedAt, saveTag) ?: MenuRow(save, saveTag) {})
     add(MenuRow(stringResource(R.string.content_menu_cite), tag(CommentMenuRow.Cite, "cite"), onCite))
-    if (own) {
+    // A REMOVED COMMENT KEEPS ITS ⋮, its own menu less Edit and Remove
+    // (ProfileCommentsRemovedMenuOwn.md:5); the reader's stays whole (ProfileComments.md:9).
+    if (own && !comment.removed) {
         add(MenuRow(stringResource(R.string.content_edit), tag(CommentMenuRow.Edit, "edit"), onEdit))
         add(MenuRow(stringResource(R.string.content_menu_remove), tag(CommentMenuRow.Remove, "remove"), onRemove))
     }

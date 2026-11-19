@@ -39,6 +39,8 @@ import com.cogra.domain.ModerationState
 import com.cogra.domain.Outcome
 import com.cogra.domain.PostView
 import com.cogra.domain.ProfileView
+import com.cogra.domain.Removal
+import com.cogra.domain.RemovalAgent
 import com.cogra.domain.TopicClaimView
 import com.cogra.domain.saved.CommentTarget
 import com.cogra.domain.saved.SavedCard
@@ -253,6 +255,20 @@ class SavedScreenTest {
         render(all)
         compose.onNodeWithTag("saved.card.menu").performClick()
         compose.onNodeWithTag("saved.menuSheet.save").assertIsDisplayed()
+        compose.onNodeWithText("Unsave").assertIsDisplayed()
+    }
+
+    // SavedRemovedMenu.md:3, :5 — another's removed post keeps its ⋮ in Saved:
+    // Unsave, Cite, Hide, Cited by, Opinions on this, License terms, Report.
+    @Test
+    fun `a removed post's card keeps the reader's menu whole with the post kept`() {
+        val view = (post.card as SavedCard.Post).post
+        val removed = view.copy(content = text(null), removal = Removal(now, RemovalAgent.AUTHOR))
+        render(listOf(SavedEntry(SavedCard.Post(removed), daysAgo(2))))
+        compose.onNodeIn(postCard, "saved.card.menu").performClick()
+        val rows = listOf("save", "cite", "hide", "citedBy", "opinions", "license", "report")
+        val tops = rows.map { compose.onNodeWithTag("saved.menuSheet.$it").fetchSemanticsNode().boundsInRoot.top }
+        assertThat(tops).isInStrictOrder()
         compose.onNodeWithText("Unsave").assertIsDisplayed()
     }
 
