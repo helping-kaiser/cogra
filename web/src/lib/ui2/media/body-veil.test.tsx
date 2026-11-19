@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { expectWrapsLongWords } from "@/test/written";
 import { BodyVeil, veilSourceLine } from "./body-veil";
 
 describe("BodyVeil", () => {
@@ -13,6 +14,21 @@ describe("BodyVeil", () => {
     // Present in the DOM, and reserving its space, while still veiled.
     expect(screen.getByText("The salt crust reaches the road by March.")).toBeInTheDocument();
     expect(screen.getByTestId("body-veil-reveal")).toBeInTheDocument();
+  });
+
+  // The author's reason is person-written: an over-long word in it continues
+  // on the next line on every face (jakob's hand test 2026-11-19).
+  it("breaks an over-long word in the source line on every face", () => {
+    const reason = "R".repeat(120);
+    for (const face of ["media", "text", "compact"] as const) {
+      const { unmount } = render(
+        <BodyVeil face={face} reason={reason}>
+          <p>Body</p>
+        </BodyVeil>,
+      );
+      expectWrapsLongWords(screen.getByTestId("body-veil-source"));
+      unmount();
+    }
   });
 
   it("reveals on its own when nothing else governs it", async () => {

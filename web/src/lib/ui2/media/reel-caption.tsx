@@ -24,6 +24,7 @@ import { useState, type ReactNode } from "react";
 
 import { useClampFold } from "@/lib/ui/clamp-fold";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { WRITTEN } from "@/lib/ui/written";
 
 /** The text veil's word (`SensitiveVeil kind="text"` `revealLabel`). */
 export const SHOW = "Show";
@@ -65,7 +66,7 @@ export function ReelCaption({
       {...testAttributes(part(node, "description"), `${testId}-description`)}
       // body-small whole (ReelCaption.jsx, round 28); `line-clamp-2` is the
       // drawn clamp's own four declarations, read by `clamp-fold.ts`.
-      className={`text-body-small ${open ? "" : "line-clamp-2"}`}
+      className={`text-body-small ${WRITTEN} ${open ? "" : "line-clamp-2"}`}
     >
       {words}
     </span>

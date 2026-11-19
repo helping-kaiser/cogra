@@ -13,6 +13,7 @@ import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
 import { stanceHandlers } from "@/test/stance";
 import { TopicView } from "./topic-view";
+import { expectWrapsLongWords } from "@/test/written";
 
 function signedInStore() {
   const store = createTokenStore();
@@ -148,6 +149,9 @@ describe("TopicView", () => {
     );
     renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
     expect(await screen.findByTestId("topic-name")).toHaveTextContent("#rust");
+    // A heading wraps (NamesLong.md:9) and a tag name is one word of up to 128
+    // characters: it continues on the next line (jakob 2026-11-19).
+    expectWrapsLongWords(screen.getByTestId("topic-name"));
     expect(screen.getByTestId("topic-post-p1")).toHaveTextContent("About Rust");
     expect(screen.getByTestId("topic-post-p1-link")).toHaveAttribute("href", "/posts/p1?from=tag%3Arust");
     // PostCard's own inventory rides along — the stance control included.

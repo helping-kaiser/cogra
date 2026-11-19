@@ -69,6 +69,7 @@ import { ShareButton } from "./share-button";
 import { StanceControl } from "./stance-control";
 import { shortTimestamp } from "./timestamp";
 import { TopicsLine } from "./topics-line";
+import { WRITTEN } from "./written";
 
 /* THE CLAMPS — the media law's drawn ones (title 1 line, body 18, description
    2; tmp_dev/2026-09-11-mvp-design-queue-rulings.md): the description is the
@@ -305,12 +306,12 @@ export function PostCard({
   // title never clamps and stands at `headline-small`.
   const heading =
     title === null ? null : detail ? (
-      <h1 className="text-headline-small" {...testAttributes(part(node, "title"), `${testId}-title`)}>
+      <h1 className={`text-headline-small ${WRITTEN}`} {...testAttributes(part(node, "title"), `${testId}-title`)}>
         {title}
       </h1>
     ) : (
       <h2
-        className="line-clamp-1 break-words text-title-medium"
+        className={`line-clamp-1 text-title-medium ${WRITTEN}`}
         {...testAttributes(part(node, "title"), `${testId}-title`)}
       >
         {title}
@@ -352,8 +353,8 @@ export function PostCard({
             {...testAttributes(part(node, "body"), `${testId}-body`)}
             className={
               detail
-                ? "whitespace-pre-wrap text-body-large"
-                : `text-body-medium ${open ? "" : "line-clamp-[18]"}`
+                ? `whitespace-pre-wrap text-body-large ${WRITTEN}`
+                : `text-body-medium ${WRITTEN} ${open ? "" : "line-clamp-[18]"}`
             }
           >
             {words}
@@ -367,7 +368,7 @@ export function PostCard({
           <p
             ref={holdDescription}
             {...testAttributes(part(node, "description"), `${testId}-description`)}
-            className={`text-body-medium text-on-surface-variant ${
+            className={`text-body-medium text-on-surface-variant ${WRITTEN} ${
               detail || open ? "" : "line-clamp-2"
             }`}
           >

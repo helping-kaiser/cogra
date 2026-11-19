@@ -104,6 +104,7 @@ import { ShareButton } from "./share-button";
 import { StanceControl } from "./stance-control";
 import { shortTimestamp } from "./timestamp";
 import { TopicsLine } from "./topics-line";
+import { WRITTEN } from "./written";
 
 /* A LONG COMMENT FOLDS AT TWO LINES under `More` (FeedCommentShapes.md:29,
    the caption's precedent); the card is still the door to its thread. The
@@ -364,7 +365,7 @@ export function CommentFeedCard({
   // off outside the feed).
   const clamped = !line && !unfolded;
   const [holdWords, folds] = useClampFold(clamped, words);
-  const wordsClass = `text-body-medium ${clamped ? "line-clamp-2" : ""}`;
+  const wordsClass = `text-body-medium ${WRITTEN} ${clamped ? "line-clamp-2" : ""}`;
   const wordsDoor = place;
   const stamp = shortTimestamp(comment.createdAt);
   const handle = comment.author?.handle ?? null;

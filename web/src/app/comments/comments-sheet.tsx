@@ -99,6 +99,7 @@ import { useHostSnack } from "@/lib/saved/save-row";
 import { REPORT_COMMENT_TITLE, commentMenuItems } from "@/lib/ui2/comment-menu";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
+import { WRITTEN } from "@/lib/ui/written";
 
 /** Any node of the thread tree — a comment or a nested reply. */
 type ThreadComment = CommentView | ReplyView;
@@ -923,7 +924,7 @@ export function CommentsSheet({
             nodeId={comment.id}
             signature={sensitiveSignature(comment)}
           >
-            <p className="text-body-medium">{comment.content.value}</p>
+            <p className={`text-body-medium ${WRITTEN}`}>{comment.content.value}</p>
             {/* A COMMENT IS WORDS FIRST and its pictures join them: below the
                 words, INSET at the card's medium rung rather than full-bleed
                 (they are an attachment, not the body), and capped at comment

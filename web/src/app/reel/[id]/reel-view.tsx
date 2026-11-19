@@ -83,6 +83,7 @@ import { StageHost } from "@/lib/ui2/media/stage-host";
 import { VideoPlayer } from "@/lib/ui2/media/video-player";
 import { CommentsSheet } from "@/app/comments/comments-sheet";
 import { detailRoot } from "@/app/shell";
+import { WRITTEN } from "@/lib/ui/written";
 
 /**
  * The stream's nodes, registered as `reel` (nodes.json, round 26 — `Reel` and
@@ -428,7 +429,7 @@ function Clip({
             <span className="flex flex-col items-center gap-2 text-center" style={{ padding: "0 76px", color: "#fff" }}>
               <VisibilityGlyph />
               <span className="text-label-large">{VEIL_LABEL}</span>
-              <span className="text-body-small" style={{ opacity: 0.85 }}>
+              <span className={`text-body-small ${WRITTEN}`} style={{ opacity: 0.85 }}>
                 {source}
               </span>
             </span>
