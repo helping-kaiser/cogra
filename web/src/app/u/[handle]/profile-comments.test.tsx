@@ -291,7 +291,7 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
-  it("the_pointer_reply_and_view_replies_open_the_thread_the_comment_lives_in", async () => {
+  it("the_pointer_and_reply_open_the_thread_the_comment_lives_in", async () => {
     // ProfileComments.md:23, :25, :27 — the thread over its post, landed on
     // the comment (a reply's pointer on the comment it answers), its back
     // arrow naming the profile; Reply aims the thread's composer at it.
@@ -317,14 +317,35 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
       expect(screen.getByTestId(byNode("profile.comments.commentCard.actionRow.reply", "c2"))).toHaveTextContent("Reply"),
     );
     expect(href("profile.comments.commentCard.actionRow.reply", "c2")).toBe("/posts/p1?comment=c2&from=u%3Aada&reply=1");
-    const line = screen.getByTestId(byNode("profile.comments.commentCard.viewReplies", "c2"));
-    expect(line).toHaveTextContent(/^View 2 replies$/);
-    expect(line).toHaveAttribute("href", "/posts/p1?comment=c2&from=u%3Aada");
-    expect(screen.getByTestId(byNode("profile.comments.commentCard.viewReplies", "c1"))).toHaveTextContent(/^View 1 reply$/);
-    // No replies, no line.
-    expect(screen.queryByTestId(byNode("profile.comments.commentCard.viewReplies", "c9"))).toBeNull();
-    // The line stands under the card, not in it.
-    expect(screen.getByTestId(byNode("profile.comments.commentCard", "c2")).contains(line)).toBe(false);
+  });
+
+  // ProfileComments.md:47, ProfileCommentsOwn.md:15 — a profile.comments.commentCard
+  // carries no view-replies line, on another's profile and on the reader's own,
+  // however many replies the comment has.
+  it("a_profile_comments_comment_card_carries_no_view_replies_line", async () => {
+    for (const own of [false, true]) {
+      if (own) serveOwn();
+      else {
+        server.use(meAs("u1", "pixel"));
+        serveAda();
+      }
+      serveChronicle();
+      serveComments({
+        "": {
+          comments: [profileComment("c2", replies(2)), profileComment("c1", { target: answersComment("c0", "sol"), ...replies(1) })],
+          next: null,
+        },
+      });
+      const { unmount } = renderWithProviders(<ProfileScreen handle={own ? null : "ada"} />, {
+        store: signedIn(own ? "u-ada" : "u1"),
+      });
+      await openCommentsTab();
+      await screen.findByTestId(byNode("profile.comments.commentCard", "c2"));
+      expect(screen.queryByText(/^View \d+ repl(y|ies)$/)).toBeNull();
+      expect(screen.queryByTestId(byNode("profile.comments.commentCard.viewReplies", "c2"))).toBeNull();
+      expect(screen.queryByTestId(byNode("profile.comments.commentCard.viewReplies", "c1"))).toBeNull();
+      unmount();
+    }
   });
 
   it("the_doors_name_your_profile_from_your_own_root", async () => {
