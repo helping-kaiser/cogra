@@ -8,7 +8,7 @@
 
 use common::l1::Family;
 use common::l1::client::ActorKey;
-use common::l1::handshake::{FIRST_EPOCH, Proposal, StructuralBody};
+use common::l1::handshake::{FIRST_EPOCH, Micro, Proposal, StructuralBody};
 use common::l1::identifier::{ActId, NodeId};
 use common::l1::proposal::{PreSigned, SealedAct, content_commitment, content_pre_digest};
 use l1_standin::StandIn;
@@ -177,11 +177,8 @@ const SEQ_PUBLISHER_ROLE_TAG: u64 = 2;
 /// so the B_i read already shows its own earlier credit; the admission
 /// flow, whose burn settles asynchronously across the seam, is guarded by
 /// its funding row instead (`onboarding::ensure_admission_staged`).
-///
-/// `burned_total` is an integer micro count divided by 1e6, so the
-/// comparison against zero is exact rather than approximate.
-pub fn never_burned(burned_total: f64) -> bool {
-    burned_total == 0.0
+pub fn never_burned(burned_total: Micro) -> bool {
+    burned_total == Micro::ZERO
 }
 
 /// The bootstrap's ingestion step. Ordinary ingestion treats a
