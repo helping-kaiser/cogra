@@ -28,7 +28,7 @@ WHEN tap profile.tabRow.everythingTab -> the chronicle stands below profile.tabR
 
 ALWAYS the chronicle stands one act to a card, newest first, each card leading with its act's disc, then its verb and snippet, its age on the trailing edge
 
-ALWAYS a chronicle card reads Still settling GIVEN its act still pends
+ALWAYS a chronicle card stands among the landed ones and reads Still settling under its age GIVEN its act still pends
 
 ALWAYS a chronicle card with no destination is the same card, inert
 

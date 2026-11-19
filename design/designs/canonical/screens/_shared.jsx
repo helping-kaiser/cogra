@@ -1172,10 +1172,25 @@ function ChronicleList({ children, node }) {
    `removed` draws the act one way: `false` live, `true` removed, or a chip —
    `{ chip, live, removed }`, the chip's name and the two values the board's
    VALS hand it — both copies behind the chip, the act keyed by its position
-   in each, as `ProfilePosts`' card is by its id. */
-const CHRONICLE_CHIP = { chronicle: { editor: "enum", options: ["some", "removed"], default: "some" } };
-const CHRONICLE_VALS = `chronicleLive: this.props.chronicle === "removed" ? "none" : "contents", chronicleRemoved: this.props.chronicle === "removed" ? "contents" : "none"`;
+   in each, as `ProfilePosts`' card is by its id.
+
+   A PENDING ACT ON THE EVERYTHING TAB (round 61; jakob 2026-11-19, B2 (a):
+   "the profile should not lag behind just because sth is still settling"),
+   on every profile: the act stands among the landed ones, its age `now`, and
+   `ContentRow`'s own `pending` marker reads `Still settling` under the age —
+   the chronicle's rule ("Still settling where an act pends", above), as
+   `ProfilePosts`' `settling` draws the post. The chip object's `settling`
+   pair draws that copy beside the live one; `removed` may be absent, so an
+   act carries only the copies its board draws. */
+const CHRONICLE_CHIP = { chronicle: { editor: "enum", options: ["some", "removed", "settling"], default: "some" } };
+const CHRONICLE_VALS = `chronicleLive: this.props.chronicle === "removed" ? "none" : "contents", chronicleRemoved: this.props.chronicle === "removed" ? "contents" : "none", chronicleSteady: this.props.chronicle === "some" ? "contents" : "none", chronicleUnsettled: this.props.chronicle === "settling" ? "none" : "contents", chronicleSettling: this.props.chronicle === "settling" ? "contents" : "none"`;
 const CHRONICLE_REMOVED = { chip: "chronicle", live: ["some", "{{chronicleLive}}"], removed: ["removed", "{{chronicleRemoved}}"] };
+/* The own chronicle's newest act carries both: removed (round 58) and
+   settling (round 61). Another's newest act carries the settling copy alone,
+   its 5d act the removed one — a pending act stands at the head, newest
+   first. */
+const CHRONICLE_OWN_FIRST = { chip: "chronicle", live: ["some", "{{chronicleSteady}}"], removed: ["removed", "{{chronicleRemoved}}"], settling: ["settling", "{{chronicleSettling}}"] };
+const CHRONICLE_SETTLING = { chip: "chronicle", live: ["some", "{{chronicleUnsettled}}"], settling: ["settling", "{{chronicleSettling}}"] };
 function ChronicleAct({ removed = false, second, ...row }) {
   if (removed === true) return <ContentRow {...row} second="Removed by its author" />;
   if (!removed) return <ContentRow {...row} second={second} />;
@@ -1184,9 +1199,16 @@ function ChronicleAct({ removed = false, second, ...row }) {
       <div style={{ display: removed.live[1] }} data-node-chip={removed.chip} data-node-key={removed.live[0]}>
         <ContentRow {...row} second={second} />
       </div>
-      <div style={{ display: removed.removed[1] }} data-node-chip={removed.chip} data-node-key={removed.removed[0]}>
-        <ContentRow {...row} second="Removed by its author" />
-      </div>
+      {removed.removed && (
+        <div style={{ display: removed.removed[1] }} data-node-chip={removed.chip} data-node-key={removed.removed[0]}>
+          <ContentRow {...row} second="Removed by its author" />
+        </div>
+      )}
+      {removed.settling && (
+        <div style={{ display: removed.settling[1] }} data-node-chip={removed.chip} data-node-key={removed.settling[0]}>
+          <ContentRow {...row} second={second} trailing="now" pending />
+        </div>
+      )}
     </>
   );
 }
@@ -1427,7 +1449,7 @@ function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "A
           posts={<PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />}
           chronicle={
             <ChronicleList node="chronicle">
-              <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="2h" second="The long way home — the light does something at the third headland." onOpen={() => {}} node="act" nodeKey="1" />
+              <ChronicleAct removed={chronicle ? CHRONICLE_SETTLING : false} variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="2h" second="The long way home — the light does something at the third headland." onOpen={() => {}} node="act" nodeKey="1" />
               <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="1d" second="The glovebox camera earns its keep — this is the print from 2019." onOpen={() => {}} node="act" nodeKey="2" />
               {aside ? (
                 <>
