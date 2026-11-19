@@ -729,6 +729,9 @@ export function CommentsSheet({
       // an Edit button (jakob on #423, seam 304).
       openEdit: own ? () => openEditor(comment, parentId) : undefined,
       openRemove: own ? () => setRemoving(comment) : undefined,
+      // A REMOVED COMMENT KEEPS ITS MENU (CommentRemoved.md:9): the own one
+      // less Edit and Remove, another's the reader's menu whole.
+      removed: payloadIsRedacted(comment),
       // SOMEONE ELSE'S: Report at the tail, its confirm stacked over the thread.
       openReport: () => {
         setReportAsked(true);
@@ -811,10 +814,10 @@ export function CommentsSheet({
     const unopened = thread === undefined && branch > 0;
     const isOwn = viewerId !== null && comment.author?.id === viewerId;
     const edited = comment.updatedAt > comment.createdAt;
-    // A REMOVED COMMENT (CommentRemoved.md): it keeps its author, its time and
-    // its place in the order, the mark where its words were; it has no menu
-    // left and no Edit — nothing of it is left to save, cite, license or edit —
-    // while Reply and the face stay, and its replies stay under it.
+    // A REMOVED COMMENT (CommentRemoved.md, CommentRemovedOther.md): it keeps
+    // its author, its time and its place in the order, the mark where its
+    // words were; it keeps its ⋮ (the own menu less Edit and Remove, or the
+    // reader's whole), Reply and the face, and its replies stay under it.
     const removed = payloadIsRedacted(comment);
     const card = node === undefined ? undefined : instance(node, "commentCard", comment.id);
     return (
@@ -863,9 +866,9 @@ export function CommentsSheet({
                   commenter's own profile, one tap away through their chip.
                   IT IS DRAWN STACKED ON PURPOSE (`CommentMenu.jsx:18-23`): the
                   thread already lives in a sheet, so this menu is a sheet on a
-                  sheet (design/readme.md:2364). A REMOVED COMMENT HAS NO MENU
-                  LEFT (`_shared.jsx`, `menuItems={removed ? [] : …}`). */}
-              {!removed && menuRowsOf(comment, isOwn, parentId).length > 0 && (
+                  sheet (design/readme.md:2364). A REMOVED COMMENT KEEPS IT
+                  (CommentRemoved.md:9, CommentRemovedOther.md:7). */}
+              {menuRowsOf(comment, isOwn, parentId).length > 0 && (
                 <OverflowTrigger
                   ariaLabel="More on this comment"
                   testId={`comment-menu-${comment.id}`}
