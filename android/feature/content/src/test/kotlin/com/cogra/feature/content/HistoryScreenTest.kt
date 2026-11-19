@@ -21,6 +21,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.cogra.domain.ActorRef
 import com.cogra.domain.ModerationState
+import com.cogra.domain.Removal
+import com.cogra.domain.RemovalAgent
 import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.history.HistoryCard
 import com.cogra.domain.history.HistoryEntry
@@ -149,6 +151,24 @@ class HistoryScreenTest {
         compose.onNodeWithTag("history.card:p1").assertIsDisplayed()
         compose.onNodeWithTag("history.profileCard:u-mira").assertIsDisplayed()
         compose.onNodeWithTag("history.tagCard:saltmaps").assertIsDisplayed()
+    }
+
+    // HistoryRemovedMenu.md:3, :5 — another's removed post keeps its ⋮ in
+    // History, the reader's post menu whole, Report at the sheet tail.
+    @Test
+    fun aRemovedPostsCardKeepsTheReadersMenuWhole() {
+        val removed = testPost("p1", author = ada).copy(
+            content = testModeratedField(null),
+            removal = Removal(now, RemovalAgent.AUTHOR),
+        )
+        render(whole(HistoryEntry(HistoryCard.Post(removed), today)))
+        compose.onNodeIn("history.card:p1", "history.card.menu").performClick()
+        val rows = listOf("save", "cite", "hide", "citedBy", "opinions", "license", "report")
+        val tops = rows.map { compose.onNodeWithTag("history.menuSheet.$it").fetchSemanticsNode().boundsInRoot.top }
+        assertThat(tops).isInStrictOrder()
+        listOf("edit", "markSensitive", "remove").forEach {
+            compose.onNodeWithTag("history.menuSheet.$it").assertDoesNotExist()
+        }
     }
 
     // History.md:25-27 — a quiet divider above the first thing of each day.

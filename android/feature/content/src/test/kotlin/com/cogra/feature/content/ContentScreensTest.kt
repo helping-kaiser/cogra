@@ -686,20 +686,46 @@ class ContentScreensTest {
         compose.onAllNodesWithTag("feed.menuSheet.cite").assertCountEquals(1)
     }
 
-    /** A REMOVED POST HAS NO MENU AT ALL (`Removed.jsx:5-6`). */
+    private fun renderRemovedFeedCard(viewerId: String) = renderFeed(
+        FeedUiState(
+            loading = false,
+            posts = listOf(testPost("p1").copy(content = ModeratedField(null, FieldStatus.REDACTED))),
+        ),
+        viewerId = viewerId,
+    )
+
+    private fun menuTops(rows: List<String>) =
+        rows.map { compose.onNodeWithTag("feed.menuSheet.$it").fetchSemanticsNode().boundsInRoot.top }
+
+    /**
+     * THE OWN REMOVED POST KEEPS ITS ⋮ (FeedRemoved.md:9, FeedRemovedMenuOwn.md:3,
+     * :5): Save, Cite, Cited by, Opinions on this, License terms — the own
+     * menu less Edit, Mark as sensitive and Remove.
+     */
     @Test
-    fun aRemovedCardDropsTheMenuWholesale() {
-        renderFeed(
-            FeedUiState(
-                loading = false,
-                posts = listOf(
-                    testPost("p1").copy(content = ModeratedField(null, FieldStatus.REDACTED)),
-                ),
-            ),
-            viewerId = "author-1",
-        )
-        compose.onNodeWithTag("feed.card:p1").assertExists()
-        compose.onNodeIn(feedCard("p1"), "feed.card.menu").assertDoesNotExist()
+    fun anOwnRemovedCardKeepsItsMenuLessEditSensitiveAndRemove() {
+        renderRemovedFeedCard(viewerId = "author-1")
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        assertThat(menuTops(listOf("save", "cite", "citedBy", "opinions", "license"))).isInStrictOrder()
+        listOf("edit", "markSensitive", "remove", "hide", "report").forEach {
+            compose.onNodeWithTag("feed.menuSheet.$it").assertDoesNotExist()
+        }
+    }
+
+    /**
+     * ANOTHER'S REMOVED POST: THE READER'S MENU WHOLE (FeedRemovedMenu.md:3, :5),
+     * Hide with the author's handle, Report at the sheet tail.
+     */
+    @Test
+    @Config(qualifiers = "w411dp-h891dp")
+    fun anothersRemovedCardKeepsTheReadersMenuWhole() {
+        renderRemovedFeedCard(viewerId = "someone-else")
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        val rows = listOf("save", "cite", "hide", "citedBy", "opinions", "license", "report")
+        assertThat(menuTops(rows)).isInStrictOrder()
+        listOf("edit", "markSensitive", "remove").forEach {
+            compose.onNodeWithTag("feed.menuSheet.$it").assertDoesNotExist()
+        }
     }
 
     // -- The post edit (EditCompose family) --
