@@ -7,8 +7,10 @@ import { answersComment, profileComment } from "@/test/profile-comment";
 import { renderWithProviders } from "@/test/providers";
 import { CommentFeedCard, type CommentFeedView } from "./comment-feed-card";
 
+const router = vi.hoisted(() => ({ push: vi.fn() }));
+
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useRouter: () => ({ push: router.push, replace: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
 }));
 
@@ -104,5 +106,88 @@ describe("CommentFeedCard's media", () => {
     expect(frame.style.aspectRatio).toBe("1 / 1");
     expect(frame.style.maxHeight).toBe("");
     expect(frame.style.maxWidth).toBe("");
+  });
+});
+
+// THE CARD IS THE DOOR TO THE COMMENT'S PLACE (jakob, 2026-11-19: "the whole
+// comment card (besides the other elements (actions and user)) should open").
+// FeedKinds.md:27, History.md:53, Saved.md:31, ProfileComments.md:49,
+// ProfileCommentsOwn.md:17 — "WHEN …commentCard is tapped outside
+// …commentCard.target and its own controls -> the post's comment section
+// opens scrolled to that comment"; ProfileComments.md:41 — the inert author
+// chip on the person's own page changes nothing.
+describe("CommentFeedCard's body door", () => {
+  const PLACE = "/posts/p1?comment=c1&from=u%3Asol";
+  beforeEach(() => router.push.mockClear());
+
+  function card(shape: "thread" | "line", over: Record<string, unknown> = {}, authorHere = false) {
+    const comment = profileComment("c1", over) as unknown as CommentFeedView;
+    renderWithProviders(
+      <CommentFeedCard
+        comment={comment}
+        shape={shape}
+        from="u:sol"
+        authorHere={authorHere}
+        testId="card"
+        node={{ path: "profile.comments.commentCard", key: "c1" }}
+        onNotify={() => {}}
+        onLinkCopied={() => {}}
+      />,
+    );
+    return screen.getByTestId("profile.comments.commentCard");
+  }
+
+  for (const shape of ["line", "thread"] as const) {
+    it(`opens the thread at the comment from its words (${shape} shape)`, () => {
+      card(shape, { content: moderated("A plain answer") });
+      expect(screen.getByTestId("card-link")).toHaveAttribute("href", PLACE);
+    });
+
+    it(`opens the thread at the comment from the card's bare ground (${shape} shape)`, () => {
+      const section = card(shape, { content: moderated("A plain answer") });
+      fireEvent.click(section);
+      expect(router.push).toHaveBeenCalledWith(PLACE);
+    });
+  }
+
+  it("opens a removed comment's thread from its mark", () => {
+    card("line", {
+      content: { __typename: "ModeratedText", value: null, status: "REDACTED" },
+      removal: { __typename: "Removal", at: new Date(Date.now() - 3_600_000).toISOString(), by: "AUTHOR" },
+    });
+    fireEvent.click(screen.getByTestId("profile.comments.commentCard.removalMark"));
+    expect(router.push).toHaveBeenCalledWith(PLACE);
+  });
+
+  it("keeps every control's own press: the ⋮, the opinion, Reply and the pointer never open the card", () => {
+    card("line", { content: moderated("A plain answer") });
+    fireEvent.click(screen.getByTestId("profile.comments.commentCard.menu"));
+    fireEvent.click(screen.getByTestId("profile.comments.commentCard.target"));
+    fireEvent.click(screen.getByTestId("profile.comments.commentCard.actionRow.reply"));
+    expect(router.push).not.toHaveBeenCalled();
+  });
+
+  it("leaves the inert author chip inert on the person's own page (ProfileComments.md:41)", () => {
+    card("line", { content: moderated("A plain answer") }, true);
+    fireEvent.click(screen.getByTestId("profile.comments.commentCard.authorChip"));
+    expect(router.push).not.toHaveBeenCalled();
+  });
+
+  it("opens nothing when the click ends a text selection", () => {
+    const section = card("line", { content: moderated("A plain answer") });
+    const words = screen.getByText("A plain answer");
+    const range = document.createRange();
+    range.selectNodeContents(words);
+    window.getSelection()?.removeAllRanges();
+    window.getSelection()?.addRange(range);
+    fireEvent.click(section);
+    window.getSelection()?.removeAllRanges();
+    expect(router.push).not.toHaveBeenCalled();
+  });
+
+  it("wears the door's pressed layer across the card (CommentCard.jsx: Card door)", () => {
+    const section = card("line", { content: moderated("A plain answer") });
+    expect(section).toHaveClass("cg-door-card");
+    expect(screen.getByTestId("card-link")).toHaveClass("cg-door");
   });
 });

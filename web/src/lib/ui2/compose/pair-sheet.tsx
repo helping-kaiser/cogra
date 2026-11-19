@@ -187,6 +187,9 @@ export function PairSheet({
       maxHeight={maxHeight}
       // The square is a pad: the sheet drags only from its handle and title.
       dragFromHandle
+      // TWO TYPED VALUES AND A Done (`Type exact values`): several fields, so the
+      // sheet stays and the keyboard covers its foot (seam 388, point 2).
+      keyboard="stays"
     >
       <div className="flex flex-col gap-4 pb-1">
         <button

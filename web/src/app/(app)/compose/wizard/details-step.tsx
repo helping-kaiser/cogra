@@ -127,7 +127,7 @@ export function DetailsStep({
   blocked: boolean;
 }) {
   return (
-    <div className="flex flex-1 flex-col gap-3.5 overflow-y-auto px-6 pb-4 pt-3">
+    <div className="flex flex-1 flex-col gap-3.5 overflow-y-auto *:shrink-0 px-6 pb-4 pt-3">
       {mode === "media" && (
         <BodyStrip
           assets={assets}

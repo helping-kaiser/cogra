@@ -56,6 +56,8 @@ export function SensitiveSheet({
       open={open}
       onClose={onClose}
       title="Mark as sensitive"
+      // ONE FIELD (the reason) AND ITS Done: the sheet rides above the keyboard (seam 388).
+      keyboard="rides"
       titleTrailing={
         <>
           <HelpDot ariaLabel="Sensitive" onOpen={onHelp} testId={`${testIdPrefix}-sensitive-help`} />

@@ -1084,6 +1084,99 @@ describe("the release that never commits", () => {
     expect(data.sent).toEqual([]);
   });
 
+  // A PRESS OUTSIDE ONLY EVER CLOSES (jakob, 2026-11-19; PadStanding.md:17):
+  // the wash leaves on the press, so the gesture's lift and click land on
+  // whatever it covered — here a picture's door — and must not open it.
+  describe("the press outside keeps the rest of its gesture", () => {
+    let beneath: HTMLButtonElement;
+    let opened: number;
+    beforeEach(() => {
+      opened = 0;
+      beneath = document.createElement("button");
+      beneath.dataset.testid = "beneath";
+      beneath.addEventListener("click", () => {
+        opened += 1;
+      });
+      beneath.addEventListener("contextmenu", () => {
+        opened += 1;
+      });
+      document.body.appendChild(beneath);
+    });
+    afterEach(() => beneath.remove());
+    /** The gesture's tail as a browser dispatches it: a PointerEvent naming its pointer (Pointer Events 3). */
+    const tail = (type: "click" | "contextmenu", pointerId: number) =>
+      fireEvent(beneath, new PointerEvent(type, { bubbles: true, cancelable: true, pointerId }));
+
+    it("never lets the tap that closed the pad open what lay beneath", async () => {
+      mount();
+      await settle();
+      await openPad();
+      await release();
+      await act(async () => {
+        fireEvent.pointerDown(screen.getByTestId(`${PREFIX}-scrim`), { pointerId: 3 });
+      });
+      expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+      // The wash is gone, so the lift and the click are hit-tested afresh.
+      await act(async () => {
+        fireEvent.pointerUp(beneath, { pointerId: 3 });
+        tail("click", 3);
+      });
+      expect(opened).toBe(0);
+    });
+
+    it("never lets a long press that closed the pad raise what lay beneath's menu", async () => {
+      mount();
+      await settle();
+      await openPad();
+      await release();
+      await act(async () => {
+        fireEvent.pointerDown(screen.getByTestId(`${PREFIX}-scrim`), { pointerId: 3 });
+      });
+      await act(async () => {
+        tail("contextmenu", 3);
+        fireEvent.pointerUp(beneath, { pointerId: 3 });
+      });
+      expect(opened).toBe(0);
+    });
+
+    it("hands the next tap back whole, so the surface beneath answers it", async () => {
+      mount();
+      await settle();
+      await openPad();
+      await release();
+      await act(async () => {
+        fireEvent.pointerDown(screen.getByTestId(`${PREFIX}-scrim`), { pointerId: 3 });
+      });
+      await act(async () => {
+        fireEvent.pointerUp(beneath, { pointerId: 3 });
+        tail("click", 3);
+      });
+      await act(async () => {
+        fireEvent.pointerDown(beneath, { pointerId: 4 });
+        fireEvent.pointerUp(beneath, { pointerId: 4 });
+        tail("click", 4);
+      });
+      expect(opened).toBe(1);
+    });
+
+    it("drops the key-absent pick on that press exactly as before (PadKeyAbsent.md:33)", async () => {
+      mount({ keyAbsent: true });
+      await settle();
+      await openPad();
+      await settle();
+      await act(async () => {
+        fireEvent.pointerDown(screen.getByTestId(`${PREFIX}-scrim`), { pointerId: 3 });
+      });
+      await act(async () => {
+        fireEvent.pointerUp(beneath, { pointerId: 3 });
+        tail("click", 3);
+      });
+      expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+      expect(screen.queryByTestId(`${PREFIX}-kept`)).toBeNull();
+      expect(opened).toBe(0);
+    });
+  });
+
   it("keeps the pad open on a lost pointer, so nothing is lost or signed", async () => {
     // A pointer the platform took away is not a decision. The pick
     // stands and the reader still has Set and Cancel in front of them.

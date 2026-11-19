@@ -88,6 +88,10 @@ export function ActorChip({
     return (
       <span
         {...testAttributes(node, testId)}
+        // Inert, and it stays inert inside a card that is a door
+        // (ProfileComments.md:41: on the person's own page a tap on it changes
+        // nothing) — `Card`'s bare-ground door passes it by.
+        data-own-press=""
         className="inline-flex min-h-6 min-w-0 items-center gap-2 rounded-full text-on-surface"
       >
         {parts}
