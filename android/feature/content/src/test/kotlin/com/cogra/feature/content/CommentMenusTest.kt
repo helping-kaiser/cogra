@@ -27,6 +27,8 @@ import com.cogra.domain.Landing
 import com.cogra.domain.ModerationState
 import com.cogra.domain.Outcome
 import com.cogra.domain.ProfileComment
+import com.cogra.domain.Removal
+import com.cogra.domain.RemovalAgent
 import com.cogra.domain.history.HistoryCard
 import com.cogra.domain.history.HistoryEntry
 import com.cogra.domain.references.CitingArtifact
@@ -112,12 +114,16 @@ class CommentMenusTest {
 
     private val threadEdits = mutableListOf<String>()
 
-    private fun renderThread(onRequireAccount: (() -> Unit)? = null, report: ReportSheetSlot? = recordReport) {
+    private fun renderThread(
+        onRequireAccount: (() -> Unit)? = null,
+        report: ReportSheetSlot? = recordReport,
+        comments: List<CommentView> = listOf(mine, theirs),
+    ) {
         compose.setContent {
             CompositionLocalProvider(LocalInboundReads provides reads) {
                 Column {
                     CommentsSheet(
-                        state = CommentsUiState(loading = false, comments = listOf(mine, theirs), total = 2),
+                        state = CommentsUiState(loading = false, comments = comments, total = comments.size),
                         viewerId = reader,
                         signedIn = onRequireAccount == null,
                         onDismiss = {},
@@ -178,6 +184,51 @@ class CommentMenusTest {
             "postDetail.menuSheet.license",
         )
         compose.onNodeWithTag("postDetail.menuSheet.report").assertDoesNotExist()
+    }
+
+    private val removal = Removal(Instant.now(), RemovalAgent.AUTHOR)
+
+    /**
+     * CommentRemoved.md:9, CommentRemovedMenu.md:3, :5 — the reader's own removed
+     * comment keeps its ⋮ in the thread: its own menu less Edit and Remove.
+     */
+    @Test
+    fun anOwnRemovedCommentInTheThreadKeepsItsMenuLessEditAndRemove() {
+        renderThread(comments = listOf(mine.copy(removal = removal), theirs))
+        compose.onNodeIn(threadCard("mine"), threadMenu).performClick()
+        compose.onNodeWithTag("postDetail.menuSheet").assertExists()
+        assertRowsInOrder(
+            "postDetail.menuSheet.save",
+            "postDetail.menuSheet.cite",
+            "postDetail.menuSheet.citedBy",
+            "postDetail.menuSheet.opinions",
+            "postDetail.menuSheet.license",
+        )
+        listOf("edit", "remove", "report").forEach {
+            compose.onNodeWithTag("postDetail.menuSheet.$it").assertDoesNotExist()
+        }
+    }
+
+    /**
+     * CommentRemovedOther.md:28, :32, CommentRemovedOtherMenu.md:3, :5 — someone
+     * else's removed comment keeps its ⋮ in the thread: the reader's comment
+     * menu whole, Report at the tail.
+     */
+    @Test
+    fun anothersRemovedCommentInTheThreadKeepsTheReadersMenuWhole() {
+        renderThread(comments = listOf(mine, theirs.copy(removal = removal)))
+        compose.onNodeIn(threadCard("theirs"), threadMenu).performClick()
+        compose.onNodeWithTag("postDetail.menuSheet").assertExists()
+        assertRowsInOrder(
+            "postDetail.menuSheet.save",
+            "postDetail.menuSheet.cite",
+            "postDetail.menuSheet.citedBy",
+            "postDetail.menuSheet.opinions",
+            "postDetail.menuSheet.license",
+            "postDetail.menuSheet.report",
+        )
+        compose.onNodeWithTag("postDetail.menuSheet.edit").assertDoesNotExist()
+        compose.onNodeWithTag("postDetail.menuSheet.remove").assertDoesNotExist()
     }
 
     /** CommentMenuOwn.md:11, :13 — no card carries Edit; the menu's Edit closes it and opens the edit. */

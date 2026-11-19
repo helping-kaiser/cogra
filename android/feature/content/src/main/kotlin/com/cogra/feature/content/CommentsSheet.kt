@@ -1048,28 +1048,24 @@ private fun CommentCard(
                 at = comment.createdAt,
                 onOpenActor = onOpenActor,
                 testTagPrefix = "comment_${comment.id}",
-                // A REMOVED COMMENT HAS NO MENU LEFT (CommentRemoved.md:9; the
-                // post's `Removed` rule): nothing on it is left to save, cite
-                // or read the terms of, so its ⋮ goes with the payload.
-                menu = if (comment.removed) {
-                    emptyList()
-                } else {
-                    commentMenuRows(
-                        comment = comment,
-                        own = isOwn(comment, viewerId),
-                        onCite = { onReference(comment.id) },
-                        onLicense = { onLicense(comment.license) },
-                        onCitedBy = { onCitedBy(comment) },
-                        onOpinions = { onOpinions(comment) },
-                        onEdit = { onEditComment(comment) },
-                        onRemove = { onRemoveComment(comment) },
-                        onReport = { onReportComment(comment) },
-                        // CommentMenu and CommentMenuOwn register the thread's
-                        // menu under the detail's prefix, whichever surface
-                        // raised the thread (`postDetail.menuSheet.*`).
-                        placement = THREAD_MENU,
-                    )
-                },
+                // A REMOVED COMMENT KEEPS ITS ⋮ (CommentRemoved.md:9,
+                // CommentRemovedOther.md:28): the reader's comment menu whole,
+                // the own one less Edit and Remove — `commentMenuRows` drops them.
+                menu = commentMenuRows(
+                    comment = comment,
+                    own = isOwn(comment, viewerId),
+                    onCite = { onReference(comment.id) },
+                    onLicense = { onLicense(comment.license) },
+                    onCitedBy = { onCitedBy(comment) },
+                    onOpinions = { onOpinions(comment) },
+                    onEdit = { onEditComment(comment) },
+                    onRemove = { onRemoveComment(comment) },
+                    onReport = { onReportComment(comment) },
+                    // CommentMenu and CommentMenuOwn register the thread's
+                    // menu under the detail's prefix, whichever surface
+                    // raised the thread (`postDetail.menuSheet.*`).
+                    placement = THREAD_MENU,
+                ),
                 menuSheetNode = POST_DETAIL / "menuSheet",
                 menuContentDescription = stringResource(R.string.content_menu_comment),
                 // IT IS DRAWN STACKED ON PURPOSE (`CommentMenu.jsx:18-23`):
