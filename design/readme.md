@@ -402,21 +402,24 @@ email`, because the honesty comes before the press (jakob 2026-10-01).
 
 **With the keyboard up, the field being typed in comes first** (jakob
 2026-11-19: "the split as rec sounds best yes"). A stage or a sheet that
-holds **one field** — the words stages, the reply composer, a one-field
-sheet with its `Done`, a picker with its search field and `Done` — lets
-its pinned button ride directly above the keyboard, the field scrolling
-in what is left; where the riding button would leave the focused field
-fewer than three of its lines, the field wins and the button stays at
-the foot. A surface with **several fields** — the comment edit, the post
-edit, the profile edit, the composer's details step, the opinion pad's
-typed values — keeps its pinned foot at the bottom, under the keyboard:
-the focused field takes the room and is brought into view, and the
-reader closes the keyboard to reach the buttons. A search field with no
-commit of its own shrinks its surface to the visible band, so its
-results stand above the keyboard. Two reasons: the field typed in
-outranks the buttons, and buttons right above the keyboard on a page
-with several fields invite a submit before the other fields are filled.
-Chips and toggles are not fields the keyboard serves. A task page has no
+holds **one field** — the new post's words stage, the reply composer, a
+one-field sheet with its `Done`, a picker with its search field and
+`Done` — lets its pinned button ride directly above the keyboard, the
+field scrolling in what is left; where the riding button would leave
+the focused field fewer than three of its lines, the field wins and the
+button stays at the foot. A surface with **more to fill in than the
+field being typed in** — the comment edit, the post edit's stages, the
+profile edit, the composer's details step in either form, the opinion
+pad's typed values — keeps its pinned foot at the bottom, under the
+keyboard: the focused field takes the room and is brought into view,
+and the reader closes the keyboard to reach the buttons. Where the
+ruling names a surface, its named side holds; the count of text fields
+decides the rest. A search field with no commit of its own shrinks its
+surface to the visible band, so its results stand above the keyboard.
+Two reasons: the field typed in outranks the buttons, and buttons right
+above the keyboard on a page with more to fill in invite a submit before
+the rest is filled. Chips and toggles are not fields the keyboard
+serves. A task page has no
 pinned foot, so nothing on it rides; a stage pins its footer on a long
 page and on a short one alike.
 
@@ -12726,8 +12729,14 @@ drawing.
   (the screen stands in the restore's place, its back the restore's own
   two homes; the board unchanged, its arrow `Back` as the restore's);
   *Spacing and layout*'s keyboard paragraph and one sentence in each
-  pinned stage's and sheet's sidecar by its board's field count — a rule
-  with no drawing, so no board, chip or path; `FeedRemoved.md`'s own-menu
+  pinned stage's and sheet's sidecar — the button rides on the new post's
+  words stage, the reply composer, the sensitive and describe sheets and
+  the two pickers; the foot stays under the keyboard on the comment edit,
+  the post edit's stages (`EditWords`, `EditCompose`), the profile edit
+  and the details step in either form, the surfaces his approved text
+  names keeping their named side and the field count deciding the rest,
+  the opinion pad's typed values in the paragraph alone — a rule with no
+  drawing, so no board, chip or path; `FeedRemoved.md`'s own-menu
   line gains its GIVEN.
 - **Registered**: the tag page's own nodes in android's names, the share
   staying round 48's `tagPage.actionRow.share`; `ReplyMedia` under
@@ -12736,10 +12745,9 @@ drawing.
   16.375rem (another's, need 261.4); `MediaThumb`'s remove target whole,
   its tile's clip on an inner layer.
 - **Held**: `maxHeight` keeps two callers (backlog 285); the Posts
-  figure and settling (287); the other tabs (288); three surfaces the
-  keyboard count does not settle (289); another's figures' 0.6px (290);
-  a rate-limited upload's words (291); the pick tray's row still clips
-  its remove targets (292). Backlog 284 closes.
+  figure and settling (287); the other tabs (288); another's figures'
+  0.6px (290); a rate-limited upload's words (291); the pick tray's row
+  still clips its remove targets (292). Backlog 284 and 289 close.
 ---
 
 ## 14. The canvases
