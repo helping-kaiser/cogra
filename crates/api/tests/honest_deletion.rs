@@ -1094,9 +1094,11 @@ async fn a_carried_act_is_refused_rather_than_redacted(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let (actor, _) = rig.funded_actor("ada").await;
     let (staged_id, act_id) = rig.prepare_post(actor, "Carried.", &[]).await;
-    staged::carry(&rig.pool, &[staged_id])
+    sqlx::query("UPDATE staged_writes SET state = 'carried', carried = TRUE WHERE id = $1")
+        .bind(staged_id)
+        .execute(&rig.pool)
         .await
-        .expect("carries");
+        .expect("plants the carried state: the carry holds back only an applicant's writes");
 
     let redacted_by = actor.to_string();
     let refused = redaction::redact_act(

@@ -39,6 +39,7 @@ label.
 | `test:integration:a-carried-act-toward-a-target-that-never-lands-defers`                                       | a_carried_act_toward_a_target_that_never_lands_defers                                       |
 | `test:integration:a-carried-application-write-is-never-a-candidate`                                            | a_carried_application_write_is_never_a_candidate                                            |
 | `test:integration:a-carried-posts-media-is-published-verified-before-its-gate-holds`                           | a_carried_posts_media_is_published_verified_before_its_gate_holds                           |
+| `test:integration:a-carry-after-the-landing-carries-nothing`                                                   | a_carry_after_the_landing_carries_nothing                                                   |
 | `test:integration:a-carve-out-link-at-the-confirm-answers-as-a-link`                                           | a_carve_out_link_at_the_confirm_answers_as_a_link                                           |
 | `test:integration:a-census-unknown-leg-ships-its-mark`                                                         | a_census_unknown_leg_ships_its_mark                                                         |
 | `test:integration:a-challenge-is-single-use`                                                                   | a_challenge_is_single_use                                                                   |

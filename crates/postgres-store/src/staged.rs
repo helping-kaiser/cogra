@@ -925,13 +925,31 @@ pub async fn release_held_approval(
 /// `awaiting_pre_sign` → `carried`. The prepare that made them ran as for
 /// any write; carrying is what holds them back from signing until the
 /// landing completes their dependencies.
-pub async fn carry(pool: &PgPool, ids: &[Uuid]) -> Result<u64, StagedError> {
+///
+/// The carry takes the account lock the landing takes
+/// ([`crate::auth::lock_account`]) in the caller's transaction, and carries
+/// only while the account is an applicant: a carry and the landing that
+/// releases the batch serialize, and a carry that comes after the landing
+/// carries nothing, where it would otherwise stay carried with nothing
+/// left to release it.
+pub async fn carry(
+    conn: &mut PgConnection,
+    account: Uuid,
+    ids: &[Uuid],
+) -> Result<u64, StagedError> {
+    if !crate::auth::lock_account(conn, account).await? {
+        return Ok(0);
+    }
     Ok(sqlx::query!(
-        "UPDATE staged_writes SET state = 'carried', carried = TRUE, updated_at = NOW()
-         WHERE id = ANY($1) AND state = 'awaiting_pre_sign'",
+        "UPDATE staged_writes s
+         SET state = 'carried', carried = TRUE, updated_at = NOW()
+         FROM user_credentials c
+         WHERE c.actor_id = $1 AND c.account_state = 'applicant'
+           AND s.actor_id = $1 AND s.id = ANY($2) AND s.state = 'awaiting_pre_sign'",
+        account,
         ids,
     )
-    .execute(pool)
+    .execute(&mut *conn)
     .await?
     .rows_affected())
 }

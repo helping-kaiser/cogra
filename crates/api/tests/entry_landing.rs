@@ -1641,6 +1641,68 @@ async fn an_unparseable_carried_dependency_fails_only_its_row(pool: PgPool) {
     assert_eq!(deps, byte_order);
 }
 
+/// The carry and the landing serialize on the account lock. A landing
+/// holds the lock — played here by a transaction that takes it and makes
+/// the account a member, as the landing does — while a prepared write is
+/// carried: the carry waits for the landing to commit, then finds a
+/// member and carries nothing, so no row is left carried with nothing
+/// left to release it. The write is put back to `awaiting_pre_sign` by
+/// hand, the state the prepare leaves it in before its carry.
+///
+/// A carry waits on the landing's lock and, after the landing, carries nothing.
+/// ´claim:onboarding:a-carry-after-the-landing-carries-nothing´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_carry_after_the_landing_carries_nothing(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let mira = rig.member("mira").await;
+    let noa = rig.applicant(mira.id, "noa").await;
+    let ids = carry(&rig, noa.account, PREPARE_POST, post_input("hello")).await;
+    sqlx::query(
+        "UPDATE staged_writes SET state = 'awaiting_pre_sign', carried = FALSE WHERE id = ANY($1)",
+    )
+    .bind(&ids)
+    .execute(&rig.pool)
+    .await
+    .expect("back to prepared");
+
+    let mut landing = rig.pool.begin().await.expect("begins");
+    assert!(
+        store::lock_account(&mut landing, noa.account)
+            .await
+            .expect("locks")
+    );
+    let carrier = {
+        let (pool, account, ids) = (rig.pool.clone(), noa.account, ids.clone());
+        tokio::spawn(async move {
+            let mut tx = pool.begin().await.expect("begins");
+            let carried = staged::carry(&mut tx, account, &ids)
+                .await
+                .expect("carries");
+            tx.commit().await.expect("commits");
+            carried
+        })
+    };
+    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    assert!(
+        !carrier.is_finished(),
+        "the carry waits on the landing's lock"
+    );
+    sqlx::query("UPDATE user_credentials SET account_state = 'member' WHERE actor_id = $1")
+        .bind(noa.account)
+        .execute(&mut *landing)
+        .await
+        .expect("lands");
+    landing.commit().await.expect("commits");
+
+    assert_eq!(carrier.await.expect("joins"), 0, "nothing is carried");
+    let state: String = sqlx::query_scalar("SELECT state FROM staged_writes WHERE id = $1")
+        .bind(ids[0])
+        .fetch_one(&rig.pool)
+        .await
+        .expect("the row");
+    assert_eq!(state, "awaiting_pre_sign", "no row is stranded carried");
+}
+
 /// Custody is the server's (seam 099 ruling 68): carried acts wait out any
 /// number of epochs uncollected, and the device that staged them is not
 /// needed — the author, on a new device with their key restored from its
