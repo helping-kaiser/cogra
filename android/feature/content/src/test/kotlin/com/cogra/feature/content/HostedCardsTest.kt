@@ -320,15 +320,15 @@ class HostedCardsTest {
     }
 
     // ProfileComments.md:9, ProfileCommentsRemovedMenu.md:3, :5 — another's
-    // removed comment: the reader's comment menu whole (its Hide row is an older
-    // bite: no android comment menu carries one yet).
+    // removed comment: the reader's comment menu whole, Hide with its author's
+    // handle after Cite.
     @Test
     fun anothersRemovedCommentKeepsTheReadersCommentMenu() {
         host { it.comment(comment(removal = removed), cards, replies, null) }
         assertMenu(
             "profile.comments.commentCard.menu",
             "profile.menuSheet",
-            listOf("save", "cite", "citedBy", "opinions", "license", "report"),
+            listOf("save", "cite", "hide", "citedBy", "opinions", "license", "report"),
             listOf("edit", "remove"),
         )
     }
@@ -342,7 +342,7 @@ class HostedCardsTest {
             "profile.comments.commentCard.menu",
             "profile.menuSheet",
             listOf("save", "cite", "citedBy", "opinions", "license"),
-            listOf("edit", "remove", "report"),
+            listOf("edit", "remove", "hide", "report"),
         )
     }
 

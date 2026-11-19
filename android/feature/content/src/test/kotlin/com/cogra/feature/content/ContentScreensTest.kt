@@ -1633,11 +1633,10 @@ class ContentScreensTest {
         assertThat(editing).isEqualTo("p1")
     }
 
-    // THE COMMENT'S ROWS (`_shared.jsx:392`), and the missing Hide row is
-    // RULED (jakob 2026-09-12): hiding names an actor, reached from the
-    // commenter's own profile.
+    // THE COMMENT'S ROWS (CommentMenu.md:7, :9): someone else's comment carries
+    // Hide with its author's handle, in the post menu's slot after Cite.
     @Test
-    fun aCommentCarriesSaveCiteCitedByOpinionsAndLicenseButNoHide() {
+    fun anothersCommentCarriesSaveCiteHideCitedByOpinionsAndLicense() {
         renderDetail(
             detailFixture(
                 loading = false,
@@ -1652,7 +1651,10 @@ class ContentScreensTest {
         compose.onNodeWithTag("postDetail.menuSheet.citedBy").assertExists()
         compose.onNodeWithTag("postDetail.menuSheet.opinions").assertExists()
         compose.onNodeWithTag("postDetail.menuSheet.license").assertExists()
-        compose.onNodeWithTag("postDetail.menuSheet.hide").assertDoesNotExist()
+        val cite = compose.onNodeWithTag("postDetail.menuSheet.cite").fetchSemanticsNode().boundsInRoot.top
+        val hide = compose.onNodeWithTag("postDetail.menuSheet.hide").fetchSemanticsNode().boundsInRoot.top
+        val citedBy = compose.onNodeWithTag("postDetail.menuSheet.citedBy").fetchSemanticsNode().boundsInRoot.top
+        assertThat(listOf(cite, hide, citedBy)).isInStrictOrder()
     }
 
     // IT IS DRAWN STACKED ON PURPOSE (`CommentMenu.jsx:18-23`): the thread

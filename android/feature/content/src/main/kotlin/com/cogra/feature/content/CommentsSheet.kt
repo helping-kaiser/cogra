@@ -76,11 +76,14 @@ import com.cogra.domain.CommentView
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
+import com.cogra.domain.hidden.HiddenSet
 import com.cogra.domain.removal.RemovalKind
 import com.cogra.domain.removal.marked
 import com.cogra.domain.saved.SavedWrites
 import com.cogra.feature.content.R
 import com.cogra.feature.saved.LocalSavedHost
+import com.cogra.feature.saved.asHiddenPerson
+import com.cogra.feature.saved.rememberHiddenSet
 import com.cogra.feature.saved.rememberSavedHost
 import com.cogra.feature.saved.rememberSavedWrites
 import kotlinx.coroutines.flow.Flow
@@ -216,6 +219,7 @@ fun CommentsSheetRoute(
         onSignInOrJoin = onSignInOrJoin,
         stanceControl = stanceControl,
         saved = rememberSavedWrites(),
+        hidden = rememberHiddenSet(),
         onRequireAccount = onRequireAccount,
         onLanded = viewModel.landing::done,
     )
@@ -320,6 +324,12 @@ fun CommentsSheet(
     stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit = { _, _, _ -> },
     /** The app's one Saved overlay, which the comments' menus save through; null stands their Save rows inert. */
     saved: SavedWrites? = null,
+    /**
+     * The reader's one hidden set, which the comments' Hide rows hide through;
+     * null stands them inert. Nothing in the thread reads it: the hidden
+     * person's comments stand where they stood (CommentMenu.md:11).
+     */
+    hidden: HiddenSet? = null,
     /** The guest gate a signed-out reader's Save opens; null when signed in. */
     onRequireAccount: (() -> Unit)? = null,
     /** The confirm a comment's Report raises, stacked over the thread; for a guest, the join prompt. */
@@ -331,7 +341,7 @@ fun CommentsSheet(
     // host on the surface behind would render the confirmation for a
     // comment that landed in THIS thread behind the thread it landed in.
     val snackbar = remember { SnackbarHostState() }
-    val savedHost = rememberSavedHost(saved, snackbar, null, onRequireAccount)
+    val savedHost = rememberSavedHost(saved, snackbar, null, onRequireAccount, hidden)
     AnnounceCommentSigned(state.commentSigned, snackbar, onCommentSignedShown)
     // AN APPLICANT'S TWO DOORS INTO THE COMPOSER ANSWER IN PLACE ([rememberCommentGuard]).
     val guard = rememberCommentGuard(state.commentLocked, snackbar)
@@ -804,9 +814,10 @@ private fun CommentsFoot(
 
 /**
  * THE COMMENT'S ROWS (CommentMenu.md:7, CommentMenuOwn.md:3) — another's:
- * Save · Cite in a new post · Cited by · Opinions on this · License terms ·
- * Report; the reader's own: Save · Cite in a new post · Edit · Remove · Cited
- * by · Opinions on this · License terms, and no Report (the own menus' rule).
+ * Save · Cite in a new post · Hide @ada · Cited by · Opinions on this · License
+ * terms · Report; the reader's own: Save · Cite in a new post · Edit · Remove ·
+ * Cited by · Opinions on this · License terms, and no Hide and no Report (the
+ * own menus' rule).
  *
  * EDIT IS A MENU ROW, NEVER A BUTTON ON THE CARD (jakob on #423, seam 304):
  * the menu's Edit is the one door to the comment's edit on every host
@@ -816,10 +827,9 @@ private fun CommentsFoot(
  * REPORT SITS AT THE TAIL of another's comment's menu, below the license, as on
  * every other-person menu (ruling 75).
  *
- * NO HIDE ROW, AND THE ABSENCE IS RULED (jakob 2026-09-12): hiding is an
- * act on an ACTOR, and the route to it is the commenter's own profile,
- * one tap away through their chip. A thread of many voices is not where
- * that decision belongs.
+ * HIDE STANDS IN THE POST MENU'S SLOT, after Cite, on someone else's comment
+ * only — a removed one included, its author still someone to hide
+ * (CommentMenu.md:7, :9; CommentRemovedOtherMenu.md:5).
  *
  * `Cited by` and `Opinions on this` STAND WHATEVER THE COUNT IS, which is
  * the difference between a menu row and a count line: a row that came and
@@ -867,6 +877,7 @@ internal fun commentMenuRows(
         add(MenuRow(stringResource(R.string.content_edit), tag(CommentMenuRow.Edit, "edit"), onEdit))
         add(MenuRow(stringResource(R.string.content_menu_remove), tag(CommentMenuRow.Remove, "remove"), onRemove))
     }
+    if (!own) add(commentHideRow(comment, tag(CommentMenuRow.Hide, "hide")))
     // The two readings stand whatever their counts and open for a guest
     // (CommentMenu.md:27, :35).
     add(MenuRow(stringResource(R.string.content_menu_cited_by), tag(CommentMenuRow.CitedBy, "cited_by"), onCitedBy))
@@ -875,6 +886,23 @@ internal fun commentMenuRows(
     if (!own) {
         add(MenuRow(stringResource(R.string.content_menu_report), tag(CommentMenuRow.Report, "report"), onReport ?: {}))
     }
+}
+
+/**
+ * THE HIDE ROW OF SOMEONE ELSE'S COMMENT, the post menu's twin
+ * (CommentMenu.md:11-21): `Hide @ada`, or `Unhide @ada` while the author is
+ * hidden, one node whatever it reads; no confirm; the host's snackbar with
+ * Undo; a failure on this comment's own row line, the gesture's origin being
+ * the comment; a guest's tap raises the gate (`SavedHost.hideRow`). Outside a
+ * host with a hidden set, or for an author the read did not carry, the row
+ * stands inert, as the post menu's does.
+ */
+@Composable
+private fun commentHideRow(comment: CommentView, tag: String): MenuRow {
+    val live = comment.author?.let { LocalSavedHost.current?.hideRow(it.asHiddenPerson(), comment.id, tag) }
+    val label = comment.author?.handle?.let { stringResource(R.string.content_menu_hide_actor, "@$it") }
+        ?: stringResource(R.string.content_menu_hide_account)
+    return live ?: MenuRow(label, tag) {}
 }
 
 /**
