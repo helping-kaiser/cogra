@@ -6,13 +6,13 @@ WHEN swipe a comment's pager -> it pages between the comment's pictures
 
 ALWAYS a comment's clip plays muted while it qualifies on screen, by the thread's stage law, in the comment pager's square frame GIVEN the device allows autoplay
 
-ALWAYS a comment's clip wears the sound disc and nothing else, with no play, no pause and no duration GIVEN the device allows autoplay or the clip is playing
+ALWAYS a comment's clip wears postDetail.threadSheet.commentCard.media.frame.soundDisc and nothing else, with no play, no pause and no duration GIVEN the device allows autoplay or the clip is playing
 
-ALWAYS a comment's clip wears the play disc in the sound disc's place and nothing else GIVEN the device suppresses autoplay and the clip is not playing
+ALWAYS a comment's clip wears the play disc in postDetail.threadSheet.commentCard.media.frame.soundDisc's place and nothing else GIVEN the device suppresses autoplay and the clip is not playing
 
 WHEN tap a comment clip's play disc -> the clip plays where it stands in the thread AND it becomes the stage's incumbent
 
-WHEN tap a comment clip's sound disc -> sound turns on or off for every clip on every surface together
+WHEN tap postDetail.threadSheet.commentCard.media.frame.soundDisc -> sound turns on or off for every clip on every surface together
 
 ALWAYS the reader's own comment's ⋮ holds the own comment menu, Edit among its rows
 

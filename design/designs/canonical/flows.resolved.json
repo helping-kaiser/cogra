@@ -542,7 +542,7 @@
         "YourKeyAbsent"
       ],
       "steps": [
-        "start · «Restore the key» on 9 boards → Restore",
+        "start · «Restore the key» — to Restore on 9 boards → Restore",
         "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
       ],
       "boards": [
@@ -2008,13 +2008,17 @@
         "SavedPostMenuOwn",
         "SavedRemovedMenu",
         "SavedRemovedMenuOwn",
+        "TagPageCommentMenu",
+        "TagPageCommentMenuOwn",
+        "TagPageCommentRemovedMenu",
+        "TagPageCommentRemovedMenuOwn",
         "TagPageMenu",
         "TagPageMenuOwn",
         "TagPageRemovedMenu",
         "TagPageRemovedMenuOwn"
       ],
       "steps": [
-        "start · «Cite in a new post» — to ComposePick on 41 boards → ComposePick",
+        "start · «Cite in a new post» — to ComposePick on 45 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -2060,6 +2064,10 @@
         "SavedPostMenuOwn",
         "SavedRemovedMenu",
         "SavedRemovedMenuOwn",
+        "TagPageCommentMenu",
+        "TagPageCommentMenuOwn",
+        "TagPageCommentRemovedMenu",
+        "TagPageCommentRemovedMenuOwn",
         "TagPageMenu",
         "TagPageMenuOwn",
         "TagPageRemovedMenu",
@@ -2545,6 +2553,38 @@
       "boards": [
         "ApplicantFeed",
         "KeyCeremonyUnsupported"
+      ]
+    },
+    {
+      "name": "restore-in-a-browser-that-cant-hold-a-key",
+      "description": "Restore the key in a browser that cannot hold one never opens the restore and never asks for the code: the same screen says so in its place and offers the app instead.",
+      "status": "resolved",
+      "startsOn": [
+        "ApplicantKeyElsewhere",
+        "ApplicantLanding",
+        "ComposeKeyAbsent",
+        "KeyElsewhere",
+        "PadKeyAbsent",
+        "ReplyKeyAbsent",
+        "ReplySealKeyAbsent",
+        "SettingsBackupKeyAbsent",
+        "YourKeyAbsent"
+      ],
+      "steps": [
+        "start · «Restore the key» — to KeyCeremonyUnsupported on 9 boards → KeyCeremonyUnsupported",
+        "end · KeyCeremonyUnsupported · 2 «Download the app (APK)» → os — the browser downloads the APK — the login landing's own link"
+      ],
+      "boards": [
+        "KeyCeremonyUnsupported",
+        "ApplicantKeyElsewhere",
+        "ApplicantLanding",
+        "ComposeKeyAbsent",
+        "KeyElsewhere",
+        "PadKeyAbsent",
+        "ReplyKeyAbsent",
+        "ReplySealKeyAbsent",
+        "SettingsBackupKeyAbsent",
+        "YourKeyAbsent"
       ]
     },
     {
@@ -4546,6 +4586,7 @@
     "ApplicantKeyElsewhere": {
       "flows": [
         "make-a-new-key-in-place-of-the-attached-one",
+        "restore-in-a-browser-that-cant-hold-a-key",
         "restore-your-key",
         "restore-your-key-as-an-applicant"
       ],
@@ -4558,6 +4599,7 @@
       "flows": [
         "follow-a-citation",
         "open-a-posts-pictures",
+        "restore-in-a-browser-that-cant-hold-a-key",
         "restore-your-key",
         "trace-a-score-to-its-records",
         "visit-an-author",
@@ -4969,6 +5011,7 @@
     "ComposeKeyAbsent": {
       "flows": [
         "publish-with-the-key-elsewhere",
+        "restore-in-a-browser-that-cant-hold-a-key",
         "restore-your-key"
       ],
       "endpoint": []
@@ -6049,10 +6092,12 @@
     },
     "KeyCeremonyUnsupported": {
       "flows": [
-        "meet-a-browser-that-cant-hold-a-key"
+        "meet-a-browser-that-cant-hold-a-key",
+        "restore-in-a-browser-that-cant-hold-a-key"
       ],
       "endpoint": [
-        "meet-a-browser-that-cant-hold-a-key"
+        "meet-a-browser-that-cant-hold-a-key",
+        "restore-in-a-browser-that-cant-hold-a-key"
       ]
     },
     "KeyConfirm": {
@@ -6081,6 +6126,7 @@
         "publish-words",
         "reply-to-a-post",
         "restore-after-a-mistyped-code",
+        "restore-in-a-browser-that-cant-hold-a-key",
         "restore-your-key",
         "sign-in-with-the-key-elsewhere",
         "sign-the-picks-kept-while-the-key-was-away",
@@ -6206,6 +6252,7 @@
     },
     "PadKeyAbsent": {
       "flows": [
+        "restore-in-a-browser-that-cant-hold-a-key",
         "restore-your-key",
         "take-a-stance-without-the-key"
       ],
@@ -6965,6 +7012,7 @@
     "ReplyKeyAbsent": {
       "flows": [
         "reply-at-the-door-without-the-key",
+        "restore-in-a-browser-that-cant-hold-a-key",
         "restore-your-key"
       ],
       "endpoint": []
@@ -7045,6 +7093,7 @@
     "ReplySealKeyAbsent": {
       "flows": [
         "reply-with-the-key-elsewhere",
+        "restore-in-a-browser-that-cant-hold-a-key",
         "restore-your-key"
       ],
       "endpoint": []
@@ -7395,6 +7444,7 @@
     },
     "SettingsBackupKeyAbsent": {
       "flows": [
+        "restore-in-a-browser-that-cant-hold-a-key",
         "restore-the-key-from-the-recovery-code-row",
         "restore-your-key"
       ],
@@ -7542,6 +7592,30 @@
       "endpoint": [
         "open-a-topic"
       ]
+    },
+    "TagPageCommentMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "TagPageCommentMenuOwn": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "TagPageCommentRemovedMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "TagPageCommentRemovedMenuOwn": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
     },
     "TagPageEmpty": {
       "flows": [
@@ -7806,6 +7880,7 @@
     },
     "YourKeyAbsent": {
       "flows": [
+        "restore-in-a-browser-that-cant-hold-a-key",
         "restore-the-key-from-the-your-key-row",
         "restore-your-key"
       ],

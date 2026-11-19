@@ -25,3 +25,5 @@ WHEN press Done -> the sheet closes AND the staged description becomes the pictu
 WHEN tap the scrim -> the sheet closes AND the picture's description is what it was before the sheet opened AND what was typed in What's in the picture is dropped AND NEVER anything staged in the sheet applies
 
 WHEN swipe the sheet down, press system Back or press Escape -> the sheet closes AND the picture's description is what it was before the sheet opened AND what was typed in What's in the picture is dropped AND NEVER anything staged in the sheet applies
+
+WHEN the keyboard is up -> the sheet's pinned button rides directly above the keyboard AND the field scrolls in what is left AND NEVER the button rides where it would leave the focused field fewer than three of its lines

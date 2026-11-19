@@ -168,7 +168,7 @@
     {
       "name": "restore-your-key",
       "description": "Restore the key, wherever the key-absent screens offer it, takes the recovery code and returns to whatever was waiting on it.",
-      "start": { "control": "Restore the key", "except": ["Restore", "RestoreError", "RestoreLength"] },
+      "start": { "control": "Restore the key", "to": "Restore", "except": ["Restore", "RestoreError", "RestoreLength"] },
       "end": { "board": "Restore", "via": 4, "case": "key restored — returns where restore began" }
     },
     {
@@ -674,6 +674,12 @@
       "end": { "board": "KeyCeremonyUnsupported", "via": 2 }
     },
     {
+      "name": "restore-in-a-browser-that-cant-hold-a-key",
+      "description": "Restore the key in a browser that cannot hold one never opens the restore and never asks for the code: the same screen says so in its place and offers the app instead.",
+      "start": { "control": "Restore the key", "to": "KeyCeremonyUnsupported", "except": ["Restore", "RestoreError", "RestoreLength"] },
+      "end": { "board": "KeyCeremonyUnsupported", "via": 2 }
+    },
+    {
       "name": "type-the-recovery-code-back-wrong",
       "description": "A typed-back code that diverges from the one shown is answered at once, on the typing, and the button never enables; typed right, the key is made and backed up and the ceremony returns where it began.",
       "start": { "board": "ApplicantFeed", "via": 3, "to": "KeyCeremony" },
@@ -706,7 +712,7 @@
     {
       "name": "restore-after-a-mistyped-code",
       "description": "A recovery code of the wrong length is the one shape the reader can fix, and the field says so; the right length that still doesn't check out says that instead, and the code that does restores the key where restore began.",
-      "start": { "board": "KeyElsewhere", "via": 2 },
+      "start": { "board": "KeyElsewhere", "via": 2, "to": "Restore" },
       "waypoints": [
         { "board": "Restore", "via": 4, "to": "RestoreLength" },
         { "board": "RestoreLength", "via": 4, "to": "RestoreError" }
@@ -716,7 +722,7 @@
     {
       "name": "sign-the-picks-kept-while-the-key-was-away",
       "description": "A key restored with picks kept pending opens their review, every pick in one batch the reader looks over first; Sign them reaches the standard seal, and one signature lands them all, still settling.",
-      "start": { "board": "KeyElsewhere", "via": 2 },
+      "start": { "board": "KeyElsewhere", "via": 2, "to": "Restore" },
       "waypoints": [
         { "board": "Restore", "via": 4, "to": "KeptPicksReview" },
         { "board": "KeptPicksReview", "via": 3 }

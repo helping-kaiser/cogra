@@ -88,6 +88,12 @@ export function MediaThumb({
      absence, and a play control drawn on nothing reads as chrome — the
      duration stays, because the clip's length is known either way. */
   const playable = video && src && !failed && typeof progress !== "number";
+  /* THE REMOVE TARGET IS WHOLE (seam 381, 6: "Touch targets never below
+     48px" is law, and a board's `overflow: hidden` is never the spec). The
+     tile's own clip — the picture and every badge on it, cut to its corners —
+     is an inner layer the size of the tile, and the X stands outside that
+     layer, so its 48px target may overhang the tile's corner while its glyph
+     stays where it is drawn. */
   return (
     <div
       style={{
@@ -95,16 +101,23 @@ export function MediaThumb({
         width: `${w}px`,
         height: `${h}px`,
         borderRadius: radius,
-        overflow: "hidden",
         flex: "none",
         background: "var(--surface-container-high)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
       }}
       data-node={node}
       data-node-key={nodeKey}
     >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          borderRadius: radius,
+          overflow: "hidden",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
       {src && (
         <img
           src={src}
@@ -230,6 +243,7 @@ export function MediaThumb({
           !
         </span>
       )}
+      </div>
       {onRemove && !failed && (
         <button
           type="button"

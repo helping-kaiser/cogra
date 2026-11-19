@@ -65,3 +65,5 @@ WHEN press composeDetails.header.back -> the crop comes back, one stage behind
 WHEN press composeDetails.header.leave -> the whole flow is left for where the composer was opened from AND the draft is kept AND NEVER a dialog asks
 
 WHEN the stage opens -> focus lands on the stage's heading AND NEVER the keyboard rises before a field is tapped
+
+WHEN the keyboard is up GIVEN the stage holds a Title and a Description -> the stage's pinned foot stays at the bottom, under the keyboard, AND the focused field takes the room and is brought into view AND NEVER the foot rides above the keyboard

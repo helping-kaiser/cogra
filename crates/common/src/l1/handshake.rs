@@ -150,28 +150,6 @@ impl fmt::Debug for Proposal {
     }
 }
 
-/// The actor's signed pre-commitment over the canonical structural body
-/// plus both pre-digests (§8.2).
-#[derive(Debug, Clone, PartialEq)]
-pub struct PreSignedProposal {
-    pub proposal: Proposal,
-    /// The actor's public key (32 bytes, Ed25519 interim realization).
-    pub author_pubkey: Vec<u8>,
-    /// The private nonce under the pre-digests. Travels with the proposal
-    /// to the host in the centralized phase so the host can validate the
-    /// pre-commitment against the exact bytes it will carry.
-    pub nonce: Vec<u8>,
-    pub pre_signature: Vec<u8>,
-}
-
-impl PreSignedProposal {
-    /// The pre-commitment the pre-signature covers, recomputed from the
-    /// proposal and the nonce it was formed under.
-    pub fn pre_commitment(&self) -> [u8; 32] {
-        pre_commitment(&self.proposal, &self.nonce)
-    }
-}
-
 /// The message the pre-commitment hashes: the canonical body and both
 /// pre-digests.
 pub fn pre_commitment_msg(
@@ -185,120 +163,6 @@ pub fn pre_commitment_msg(
     e.bytes(digest_content);
     e.bytes(digest_deps);
     e.finish()
-}
-
-/// The proposal pre-commitment (§8.2, "Proposal pre-commitment"): the
-/// tagged hash of the canonical body and both pre-digests, each pre-digest
-/// formed over the act identifier, the private nonce, and the projection's
-/// bytes. The pre-signature is the author's Ed25519 signature over exactly
-/// these 32 bytes, and both commitments bind them, so the value is named,
-/// carried in the verified act, and kept with the structural record.
-pub fn pre_commitment(proposal: &Proposal, nonce: &[u8]) -> [u8; 32] {
-    let act_id = proposal.body.act_id().to_string();
-    let digest_content = crypto::pre_digest(
-        tags::PRE_DIGEST_CONTENT,
-        act_id.as_bytes(),
-        nonce,
-        &proposal.payload,
-    );
-    let digest_deps = crypto::pre_digest(
-        tags::PRE_DIGEST_DEPS,
-        act_id.as_bytes(),
-        nonce,
-        &canonical_deps(&proposal.deps),
-    );
-    crypto::sha256_tagged(
-        tags::PRE_COMMITMENT,
-        &[&pre_commitment_msg(
-            &proposal.body,
-            &digest_content,
-            &digest_deps,
-        )],
-    )
-}
-
-/// The content commitment of an act — the payload witness — over the act
-/// identifier, the pre-commitment, the host's content salt, and the
-/// payload (§8.2, "Verified act").
-pub fn content_commitment(
-    act_id: &ActId,
-    pre_commitment: &[u8],
-    salt: &[u8],
-    payload: &[u8],
-) -> [u8; 32] {
-    crypto::commitment(
-        tags::COMMIT_CONTENT,
-        act_id.to_string().as_bytes(),
-        pre_commitment,
-        salt,
-        payload,
-    )
-}
-
-/// The dependency commitment of an act, over the act identifier, the
-/// pre-commitment, the host's dependency salt, and the canonical
-/// dependency list — the opening an ordering fraud proof re-derives
-/// (§8.2, "Ordering fraud proof").
-pub fn deps_commitment(
-    act_id: &ActId,
-    pre_commitment: &[u8],
-    salt: &[u8],
-    deps: &[ActId],
-) -> [u8; 32] {
-    crypto::commitment(
-        tags::COMMIT_DEPS,
-        act_id.to_string().as_bytes(),
-        pre_commitment,
-        salt,
-        &canonical_deps(deps),
-    )
-}
-
-/// The edition tags the stand-in seals under, for the content and the
-/// dependency projection alike. A device refuses a verified act carrying
-/// any other edition (§8.2, "Approval witness": correct editions).
-pub const EDITION: u64 = 1;
-
-/// The host-sealed verified act (§8.2): the exact proposal plus the named
-/// pre-commitment, host salts, the binding commitments and the edition
-/// tags, sealed by the host signature. No host order fields.
-#[derive(Debug, Clone, PartialEq)]
-pub struct VerifiedAct {
-    pub proposal: Proposal,
-    pub author_pubkey: Vec<u8>,
-    pub nonce: Vec<u8>,
-    pub pre_signature: Vec<u8>,
-    pub pre_commitment: Vec<u8>,
-    pub content_salt: Vec<u8>,
-    pub deps_salt: Vec<u8>,
-    pub content_commitment: Vec<u8>,
-    pub deps_commitment: Vec<u8>,
-    pub content_edition: u64,
-    pub deps_edition: u64,
-    pub host_seal: Vec<u8>,
-}
-
-impl VerifiedAct {
-    /// The encoded verified act — the message the host seal covers, and
-    /// with the seal the message the approval witness covers (§8.2 — no
-    /// epoch index, position, or logical time).
-    pub fn seal_msg(&self) -> Vec<u8> {
-        seal_message(&SealFrame {
-            body: &self.proposal.body,
-            pre_commitment: &self.pre_commitment,
-            pre_signature: &self.pre_signature,
-            content_commitment: &self.content_commitment,
-            deps_commitment: &self.deps_commitment,
-            content_edition: self.content_edition,
-            deps_edition: self.deps_edition,
-        })
-    }
-
-    /// The digest the author's approval witness signs: the encoded verified
-    /// act and its host seal, together.
-    pub fn approval_digest(&self) -> [u8; 32] {
-        approval_digest(&self.seal_msg(), &self.host_seal)
-    }
 }
 
 /// The parts of a verified act its encoding is formed from
@@ -708,15 +572,56 @@ impl EpochPackage {
     }
 }
 
+/// An amount of the substrate's money in micro-units (10⁻⁶ of a unit) —
+/// the exact integers the ledger holds. Comparisons of these amounts are
+/// decided on the integers, never on a floating-point image of them
+/// (layer1-interface.md §13.2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+pub struct Micro(pub i64);
+
+impl Micro {
+    pub const ZERO: Micro = Micro(0);
+    /// The largest amount the ledger's integers can hold.
+    pub const MAX: Micro = Micro(i64::MAX);
+
+    /// The price of `count` acts at this per-act price, or `None` when it
+    /// is not representable — a price beyond every balance the ledger can
+    /// hold.
+    pub fn times(self, count: usize) -> Option<Micro> {
+        i64::try_from(count)
+            .ok()
+            .and_then(|n| self.0.checked_mul(n))
+            .map(Micro)
+    }
+}
+
+/// Whole units with the fraction trimmed of trailing zeros — `50186`
+/// micro-units shows as `0.050186`, `10_000_000` as `10`.
+impl std::fmt::Display for Micro {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        const PER_UNIT: u64 = 1_000_000;
+        let sign = if self.0 < 0 { "-" } else { "" };
+        let magnitude = self.0.unsigned_abs();
+        let (whole, fraction) = (magnitude / PER_UNIT, magnitude % PER_UNIT);
+        if fraction == 0 {
+            write!(f, "{sign}{whole}")
+        } else {
+            let digits = format!("{fraction:06}");
+            write!(f, "{sign}{whole}.{}", digits.trim_end_matches('0'))
+        }
+    }
+}
+
 /// The B_i surface as the stand-in honors it: numbers
-/// (roadmap.md "The stand-in and the swap").
-#[derive(Debug, Clone, PartialEq)]
+/// (roadmap.md "The stand-in and the swap"), in the ledger's exact
+/// micro-units.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AccountBalance {
     pub address: String,
     /// Committed burn total B_i (monotone).
-    pub burned_total: f64,
+    pub burned_total: Micro,
     /// Residual balance b_i after θ-debits.
-    pub balance: f64,
+    pub balance: Micro,
     /// Accepted-act count N_i.
     pub action_count: i64,
 }
@@ -755,6 +660,49 @@ mod tests {
             license: None,
             asserted_parents: vec![],
         }
+    }
+
+    /// An amount shows as the decimal units it holds — the same text the
+    /// double-precision image of the amount prints, so a message quoting
+    /// one reads as before, now read off the exact integer.
+    ///
+    /// A micro-unit amount shows as its exact decimal units, trailing zeros trimmed.
+    /// ´claim:handshake:an-amount-shows-as-its-exact-units´
+    #[test]
+    fn an_amount_shows_as_its_exact_units() {
+        for micro in [
+            0,
+            1,
+            50_186,
+            150_000,
+            752_789,
+            1_000_000,
+            10_000_000,
+            100_000_001,
+            -50_186,
+        ] {
+            assert_eq!(
+                Micro(micro).to_string(),
+                (micro as f64 / 1e6).to_string(),
+                "{micro} micro-units"
+            );
+        }
+        assert_eq!(Micro(i64::MIN).to_string(), "-9223372036854.775808");
+        assert_eq!(Micro::MAX.to_string(), "9223372036854.775807");
+    }
+
+    /// A batch price is the exact product, and a product the integers
+    /// cannot hold is no price at all rather than a wrapped one.
+    ///
+    /// A batch price is the exact product of the act price and the count, or none when it overflows.
+    /// ´claim:handshake:a-batch-price-is-exact-or-none´
+    #[test]
+    fn a_batch_price_is_exact_or_none() {
+        assert_eq!(Micro(50_186).times(15), Some(Micro(752_790)));
+        assert_eq!(Micro(50_186).times(0), Some(Micro::ZERO));
+        assert_eq!(Micro::MAX.times(1), Some(Micro::MAX));
+        assert_eq!(Micro::MAX.times(2), None);
+        assert_eq!(Micro(2).times(usize::MAX), None);
     }
 
     /// One body has one canonical encoding, and a change to any field produces another.

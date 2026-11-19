@@ -12,6 +12,8 @@ ALWAYS the feed reads as it always does beneath feed.keyCard
 
 WHEN press feed.keyCard.restore -> Restore opens
 
+WHEN press feed.keyCard.restore GIVEN a browser that cannot hold a key -> KeyCeremonyUnsupported opens in the restore's place AND NEVER the recovery code is typed
+
 WHEN tap feed.card.actionRow.stance.anchor -> PadKeyAbsent opens AND NEVER anything signs
 
 WHEN press and hold feed.card.actionRow.stance.anchor -> PadKeyAbsent opens, as a tap does AND NEVER the modest opinion signs on the spot

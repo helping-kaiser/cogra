@@ -33,7 +33,7 @@ use std::sync::Arc;
 use common::l1::StructuralBody;
 use common::l1::handshake::{
     AccountBalance, ApprovalWitness, BoundaryPolicy, BurnSettlement, BurnTicket, EMPTY_BOUNDARY,
-    EpochPackage,
+    EpochPackage, Micro,
 };
 use common::l1::identifier::ActId;
 use common::l1::proposal::{SealedAct, Submission};
@@ -204,7 +204,7 @@ pub enum StandInError {
 /// nonce (layer1-interface.md §8.2, "Verified act"); a crash-recovering
 /// author rebuilds its pre-signed proposal from its own pair and the
 /// dependency nonce read back here.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct StoredAct {
     pub body: StructuralBody,
     pub deps: Vec<ActId>,
@@ -216,6 +216,24 @@ pub struct StoredAct {
     /// accepted, or once a redaction dropped the salt.
     pub sealed: Option<SealedAct>,
     pub approved: bool,
+}
+
+/// `Debug` shows the dependency nonce's length and never its bytes.
+impl std::fmt::Debug for StoredAct {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("StoredAct")
+            .field("body", &self.body)
+            .field("deps", &self.deps)
+            .field(
+                "dependency_nonce",
+                &common::redact::ByteLen::of(&self.dependency_nonce),
+            )
+            .field("pre_commitment", &self.pre_commitment)
+            .field("content_commitment", &self.content_commitment)
+            .field("sealed", &self.sealed)
+            .field("approved", &self.approved)
+            .finish()
+    }
 }
 
 /// The stand-in host. Cheap to clone; all state lives in Postgres so every
@@ -419,8 +437,8 @@ impl StandIn {
             .unwrap_or((0, 0, 0));
         Ok(AccountBalance {
             address: address.to_string(),
-            burned_total: burned as f64 / 1e6,
-            balance: balance as f64 / 1e6,
+            burned_total: Micro(burned),
+            balance: Micro(balance),
             action_count: count,
         })
     }
