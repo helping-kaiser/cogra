@@ -231,6 +231,9 @@ const MATEO = { id: "4919da08-40fc-47f5-8f62-bff07dd183f3", handle: "mateo", dis
    the feed draw the same comment, so it keys by the same id there. */
 const TOBIAS_COMMENT = "That stretch after the second bend is the reason I keep a camera in the glovebox.";
 const TOBIAS_COMMENT_ID = "8c7296e7-8e4b-45b1-9889-279e7a713f9c";
+/* @ada's comment on @sol's salt maps, tagged #saltmaps — the tag page's third
+   row and `ProfileComments`' second card, one comment, so one id. */
+const ADA_TAGGED_COMMENT_ID = "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f";
 
 /* Genesis content always declares a license, so every card has at least that
    menu entry — without one the dot vanishes, and it must not. Citing rides the
@@ -5220,7 +5223,25 @@ function TopicStanceRow({ name, bundle, stanceOpen, stanceDefaultPick, node }) {
    first row is the chip's because nothing else on the page points at it;
    @ada's tagged comment answers @sol's post. The claim above the row stands,
    as on every row. */
-function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, removed, commentRemoved } = {}) {
+/* A TAGGED COMMENT'S ⋮ RAISES THE COMMENT'S WHOLE MENU (round 60; jakob
+   2026-11-19, C2 "as rec"; copy-voice, *Menu rows*: a tag page among the
+   comment rows' hosts). @ada's comment hands the card the reader's comment
+   menu, live or removed (`readerCommentCardMenu`, Hide naming @ada, Report at
+   the tail); the card appends the license. `ownComment` puts the reader's
+   own comment in that row — @sol's, `SOL_OWN_COMMENT`, the card every
+   own-comment board draws — `"live"` with the own comment menu, `"removed"`
+   as its mark with the own removed comment's rows. The page lists the
+   author's own claims (TagPage.md), so the reader's own comment stands here
+   once they tag it, as their own post does (`TagPageMenuOwn`).
+
+   `named` REGISTERS THE PAGE'S OWN NODES (round 60, seam 380 / 381; android's
+   names): the header and the topic's row (`header`, `actionRow`, its
+   `stance` and `share` — round 48's names), each row's claim `claim`
+   (`TaggedRow`: `glyph`, `exact`, `pending`) keyed by the tagged thing's id,
+   each post `card` and the comment `commentCard`, keyed by their ids as on
+   every host. A row the board draws both ways marks each copy as its chip's
+   (`post`, `comment`), the card keeping its own key in both (ruling 39). */
+function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, removed, commentRemoved, ownComment } = {}) {
   /* @ada's tagged comment, live and removed (round 58; jakob 2026-11-18, C4
      "as rec"): removed, `CommentCard`'s own mark in the words' place, as
      `ProfileComments`' `removed` draws this same comment — its author, its
@@ -5228,39 +5249,51 @@ function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, rem
      pointer names @sol's post by its kind and author once that post is
      removed (round 59, `commentTarget`'s rule): `On @sol's removed post`. */
   const solTarget = removed === "sol" ? commentTarget({ author: SOL, removed: true }, "post").label : "“Salt maps of the coast road” — @sol";
-  const adaLive = <CommentCard attach author={ADA} content="Low tide is kinder to the rubbings than noon ever was." timestamp="4d" license={{ attribution: 0, provenance: 0 }} bundle={mkBundle(0.1, 0.1)} target={solTarget} onOpenTarget={() => {}} />;
-  const adaRemoved = <CommentCard attach author={ADA} timestamp="4d" redacted={{ reason: "author", when: "2h" }} bundle={mkBundle(0.1, 0.1)} target={solTarget} onOpenTarget={() => {}} />;
-  const tobiasLive = <PostCard attach {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />;
-  const tobiasRemoved = <PostCard attach id={TOBIAS_POST.id} author={TOBIAS} timestamp={TOBIAS_POST.timestamp} redacted={{ reason: "author", when: "now" }} score={TOBIAS_POST.score} comments={TOBIAS_POST.comments} bundle={mkBundle(0.1, 0.1)} menuItems={TOBIAS_POST.menuItems} />;
+  const card = named ? "card" : undefined;
+  const commentCard = named ? "commentCard" : undefined;
+  const claim = named ? "claim" : undefined;
+  const copy = (chip, value) => (named ? { "data-node-chip": chip, "data-node-key": value } : null);
+  const adaLive = <CommentCard attach id={ADA_TAGGED_COMMENT_ID} author={ADA} content="Low tide is kinder to the rubbings than noon ever was." timestamp="4d" license={{ attribution: 0, provenance: 0 }} bundle={mkBundle(0.1, 0.1)} target={solTarget} onOpenTarget={() => {}} menuItems={readerCommentCardMenu("ada")} node={commentCard} />;
+  const adaRemoved = <CommentCard attach id={ADA_TAGGED_COMMENT_ID} author={ADA} timestamp="4d" redacted={{ reason: "author", when: "2h" }} bundle={mkBundle(0.1, 0.1)} target={solTarget} onOpenTarget={() => {}} menuItems={readerCommentCardMenu("ada")} node={commentCard} />;
+  const solOwnTarget = `“${MIRA_GALLERY_POST.title}” — @mira`;
+  const solOwnComment =
+    ownComment === "removed" ? (
+      <CommentCard attach id={SOL_OWN_COMMENT.id} author={SOL} timestamp={SOL_OWN_COMMENT.timestamp} redacted={{ reason: "author", when: "now" }} target={solOwnTarget} onOpenTarget={() => {}} menuItems={OWN_REMOVED_COMMENT_CARD_MENU} node={commentCard} />
+    ) : (
+      <CommentCard attach id={SOL_OWN_COMMENT.id} author={SOL} content={SOL_OWN_COMMENT.content} timestamp={SOL_OWN_COMMENT.timestamp} license={{ attribution: 0, provenance: 0 }} target={solOwnTarget} onOpenTarget={() => {}} menuItems={OWN_COMMENT_CARD_MENU} node={commentCard} />
+    );
+  const tobiasLive = <PostCard attach {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} node={card} />;
+  const tobiasRemoved = <PostCard attach id={TOBIAS_POST.id} author={TOBIAS} timestamp={TOBIAS_POST.timestamp} redacted={{ reason: "author", when: "now" }} score={TOBIAS_POST.score} comments={TOBIAS_POST.comments} bundle={mkBundle(0.1, 0.1)} menuItems={TOBIAS_POST.menuItems} node={card} />;
+  const commentId = ownComment ? SOL_OWN_COMMENT.id : ADA_TAGGED_COMMENT_ID;
   return (
     <>
       <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" node={named ? "header" : undefined} />
       <TopicStanceRow name="#saltmaps" bundle={bundle} stanceOpen={stanceOpen} stanceDefaultPick={stanceDefaultPick} node={named ? "actionRow" : undefined} />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "4px 0 0" }}>
-        <TaggedRow pair={{ pDirected: 0.1, pInterest: 1 }} pending>
+        <TaggedRow pair={{ pDirected: 0.1, pInterest: 1 }} pending node={claim} nodeKey={TOBIAS_POST.id}>
           {removed === "tobias" ? tobiasRemoved : removed === "hole" ? (
             <>
-              <div style={{ display: "{{postLive}}" }}>{tobiasLive}</div>
-              <div style={{ display: "{{postRemoved}}" }}>{tobiasRemoved}</div>
+              <div style={{ display: "{{postLive}}" }} {...copy("post", "live")}>{tobiasLive}</div>
+              <div style={{ display: "{{postRemoved}}" }} {...copy("post", "removed")}>{tobiasRemoved}</div>
             </>
           ) : tobiasLive}
         </TaggedRow>
 
-        <TaggedRow pair={{ pDirected: 0.55, pInterest: 1 }}>
+        <TaggedRow pair={{ pDirected: 0.55, pInterest: 1 }} node={claim} nodeKey={SOL_POST.id}>
           {removed === "sol" ? (
-            <PostCard attach id={SOL_POST.id} author={SOL} timestamp={SOL_POST.timestamp} redacted={{ reason: "author", when: "now" }} score={SOL_POST.score} comments={SOL_POST.comments} bundle={mkBundle(0.1, 0.1)} menuItems={OWN_REMOVED_CARD_MENU} />
+            <PostCard attach id={SOL_POST.id} author={SOL} timestamp={SOL_POST.timestamp} redacted={{ reason: "author", when: "now" }} score={SOL_POST.score} comments={SOL_POST.comments} bundle={mkBundle(0.1, 0.1)} menuItems={OWN_REMOVED_CARD_MENU} node={card} />
           ) : (
-            <PostCard attach {...SOL_POST} bundle={mkBundle(0.1, 0.1)} />
+            <PostCard attach {...SOL_POST} bundle={mkBundle(0.1, 0.1)} node={card} />
           )}
         </TaggedRow>
 
-        <TaggedRow pair={{ pDirected: 0.4, pInterest: 0.9 }}>
-          {commentRemoved === "hole" ? (
+        <TaggedRow pair={{ pDirected: 0.4, pInterest: 0.9 }} node={claim} nodeKey={commentId}>
+          {ownComment ? solOwnComment : commentRemoved === "hole" ? (
             <>
-              <div style={{ display: "{{commentLive}}" }}>{adaLive}</div>
-              <div style={{ display: "{{commentRemoved}}" }}>{adaRemoved}</div>
+              <div style={{ display: "{{commentLive}}" }} {...copy("comment", "live")}>{adaLive}</div>
+              <div style={{ display: "{{commentRemoved}}" }} {...copy("comment", "removed")}>{adaRemoved}</div>
             </>
-          ) : adaLive}
+          ) : commentRemoved === "ada" ? adaRemoved : adaLive}
         </TaggedRow>
       </div>
     </>

@@ -16,6 +16,8 @@ ALWAYS a tagged post stands as a post card and a tagged comment as a comment car
 
 ALWAYS a tagged comment's card offers no Reply and no view-replies line
 
+ALWAYS a tagged comment's ⋮ holds the comment's whole menu, the reader's comment menu on someone else's, removed or not, and the own comment menu on the reader's own, less Edit and Remove once it was removed
+
 ALWAYS a tagged comment's pointer names a removed post it answers by its author's handle, as On @sol's removed post, and never by its title
 
 WHEN the tag page is next derived GIVEN the feed's filter has Removed on -> a removed tagged post stands in its row as the feed's removed card AND a removed tagged comment stands in its row as its comment card with the card's own mark in the words' place, each Removed by its author with the removal's date, under its claim
