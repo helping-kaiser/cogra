@@ -93,8 +93,7 @@ interface Vectors {
     samples: { msgUtf8: string; signatureHex: string; tagUtf8: string }[];
   };
   structuralBodies: BodyVector[];
-  /** The proposal envelope only: the one-nonce handshake fields of this group are not read. */
-  handshake: {
+  proposalEnvelope: {
     proposal: { body: BodyVector; deps: string[]; payloadHex: string };
     wireProposalHex: string;
   };
@@ -253,9 +252,9 @@ it("structural body vectors match", () => {
 });
 
 it("the prepared-proposal envelope matches", () => {
-  // `canonicalProposal` keeps its one envelope; its vector rides in the
-  // `handshake` group, over the same proposal `proposalHandshake` signs.
-  const h = vectors.handshake;
+  // `canonicalProposal` keeps its one envelope, over the same proposal
+  // `proposalHandshake` signs.
+  const h = vectors.proposalEnvelope;
   const proposal = new Proposal(
     bodyOf(h.proposal.body),
     fromHex(h.proposal.payloadHex),

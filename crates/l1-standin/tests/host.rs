@@ -217,8 +217,9 @@ async fn a_submission_without_its_content_pair_seals_approves_and_lands(pool: Pg
     );
     assert_ne!(
         record.payload_witness,
-        common::l1::handshake::content_commitment(
-            &act_id,
+        common::l1::crypto::commitment(
+            proposal::domain_tags::COMMIT_CONTENT,
+            act_id.to_string().as_bytes(),
             &sealed.act.pre_commitment,
             &sealed.content_salt,
             &pre.proposal.payload
@@ -900,29 +901,48 @@ async fn a_dependency_nonce_of_any_length_seals(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_one_nonce_pre_commitment_is_refused_and_leaves_no_row(pool: PgPool) {
     use common::l1::crypto::{self, tags};
+    use common::l1::handshake::{canonical_deps, pre_commitment_msg};
     let host = standin(pool.clone());
     let actor = funded_actor(&host, 3 * THETA).await;
-    let old = actor.pre_sign(registration(&actor));
-    let act_id = old.proposal.body.act_id();
+    let old = registration(&actor);
+    let act_id = old.body.act_id();
+    let id = act_id.to_string();
+    let nonce = vec![0x5a; crypto::SALT_LEN];
     let old_content_pre_digest = crypto::pre_digest(
         tags::PRE_DIGEST_CONTENT,
-        act_id.to_string().as_bytes(),
-        &old.nonce,
-        &old.proposal.payload,
+        id.as_bytes(),
+        &nonce,
+        &old.payload,
     );
+    let old_deps_pre_digest = crypto::pre_digest(
+        tags::PRE_DIGEST_DEPS,
+        id.as_bytes(),
+        &nonce,
+        &canonical_deps(&old.deps),
+    );
+    let old_pre_commitment = crypto::sha256_tagged(
+        tags::PRE_COMMITMENT,
+        &[&pre_commitment_msg(
+            &old.body,
+            &old_content_pre_digest,
+            &old_deps_pre_digest,
+        )],
+    );
+    let signing = ed25519_dalek::SigningKey::from_bytes(&actor.seed());
+    let old_pre_signature = crypto::sign_digest(&signing, &old_pre_commitment);
     let one_nonce = Submission::new(
-        old.proposal.body.clone(),
-        old.proposal.deps.clone(),
-        old.nonce.clone(),
+        old.body.clone(),
+        old.deps.clone(),
+        nonce,
         old_content_pre_digest,
-        old.pre_commitment(),
-        old.pre_signature.clone(),
-        old.author_pubkey.clone(),
+        old_pre_commitment,
+        old_pre_signature.clone(),
+        actor.public_key_bytes(),
     );
     assert!(crypto::verify_digest(
-        &crypto::verifying_key_from_bytes(&old.author_pubkey).expect("key"),
-        &old.pre_commitment(),
-        &old.pre_signature
+        &signing.verifying_key(),
+        &old_pre_commitment,
+        &old_pre_signature
     ));
     let refused = host.seal(one_nonce).await;
     assert!(

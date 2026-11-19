@@ -181,9 +181,6 @@ class GoldenVectorsTest {
         }
     }
 
-    // The one-nonce groups `handshake` and `handshakeRefusals` stay in the
-    // contract file for the reference's own history; this client speaks
-    // only the two-nonce handshake, so only its groups are read here.
     private class HandshakeFixture(val hs: JsonElement, val actor: ActorKey, val proposal: Proposal) {
         val host: ActorKey = ActorKey.fromSeed(hs.jsonObject.getValue("host").str("seedHex").hexToBytes())
         val hostPubkey: ByteArray = hs.jsonObject.getValue("host").str("publicKeyHex").hexToBytes()

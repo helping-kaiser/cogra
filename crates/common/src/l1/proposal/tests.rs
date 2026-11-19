@@ -6,10 +6,36 @@ use crate::l1::census::Family;
 use crate::l1::client::{ActorKey, ClientError};
 use crate::l1::encoding::Encoder;
 use crate::l1::identifier::NodeId;
-use crate::l1::wire::{self as wire_v1, WireError};
+use crate::l1::wire::WireError;
 
 const CONTENT_NONCE: [u8; crypto::SALT_LEN] = [0x2a; crypto::SALT_LEN];
 const DEPENDENCY_NONCE: [u8; crypto::SALT_LEN] = [0x6a; crypto::SALT_LEN];
+
+/// The pre-commitment formed under one nonce shared by both pre-digests and
+/// the earlier tags — the shape the two-nonce formulas must never accept.
+fn one_nonce_pre_commitment(proposal: &Proposal, nonce: &[u8]) -> [u8; 32] {
+    let act_id = proposal.body.act_id().to_string();
+    let content = crypto::pre_digest(
+        crypto::tags::PRE_DIGEST_CONTENT,
+        act_id.as_bytes(),
+        nonce,
+        &proposal.payload,
+    );
+    let deps = crypto::pre_digest(
+        crypto::tags::PRE_DIGEST_DEPS,
+        act_id.as_bytes(),
+        nonce,
+        &handshake::canonical_deps(&proposal.deps),
+    );
+    crypto::sha256_tagged(
+        crypto::tags::PRE_COMMITMENT,
+        &[&handshake::pre_commitment_msg(
+            &proposal.body,
+            &content,
+            &deps,
+        )],
+    )
+}
 
 fn proposal(author: &str, payload: &[u8]) -> Proposal {
     Proposal {
@@ -97,13 +123,13 @@ fn a_dependency_opening_holder_confirms_no_payload_guess() {
     }
 
     let shared = DEPENDENCY_NONCE.to_vec();
-    let old = handshake::pre_commitment(&pre.proposal, &shared);
+    let old = one_nonce_pre_commitment(&pre.proposal, &shared);
     let confirmed: Vec<&[u8]> = candidates
         .into_iter()
         .filter(|candidate| {
             let mut guess = pre.proposal.clone();
             guess.payload = candidate.to_vec();
-            handshake::pre_commitment(&guess, &shared) == old
+            one_nonce_pre_commitment(&guess, &shared) == old
         })
         .collect();
     assert_eq!(
@@ -152,7 +178,7 @@ fn a_one_nonce_pre_commitment_never_verifies() {
     let actor = ActorKey::from_seed([7u8; 32]);
     let nonce = vec![0x5a; crypto::SALT_LEN];
     let draft = proposal(&actor.address(), b"hello");
-    let old = handshake::pre_commitment(&draft, &nonce);
+    let old = one_nonce_pre_commitment(&draft, &nonce);
     let both = PreSigned::sign_with_nonces(&actor, draft, nonce.clone(), nonce);
     assert_ne!(both.pre_commitment(), old);
 
@@ -233,7 +259,12 @@ fn the_blob_round_trips_and_refuses_version_one() {
     );
     assert_eq!(blob.content_nonce, CONTENT_NONCE);
     assert_eq!(blob.dependency_nonce, DEPENDENCY_NONCE);
-    let v1 = wire_v1::encode_pre_commitment(&CONTENT_NONCE, &pre.pre_signature);
+    let mut v1 = Encoder::new();
+    v1.array(3)
+        .uint(1)
+        .bytes(&CONTENT_NONCE)
+        .bytes(&pre.pre_signature);
+    let v1 = v1.finish();
     assert!(matches!(
         PreCommitmentBlob::decode(&v1),
         Err(WireError::Version(1))
@@ -261,22 +292,29 @@ fn the_sealed_act_round_trips_and_refuses_version_one() {
     padded.push(0);
     assert!(SealedAct::decode(&padded).is_err());
 
-    let v1 = crate::l1::handshake::VerifiedAct {
-        proposal: proposal("a", b"x"),
-        author_pubkey: vec![1; 32],
-        nonce: vec![2; 32],
-        pre_signature: vec![3; 64],
-        pre_commitment: vec![9; 32],
-        content_salt: vec![4; 32],
-        deps_salt: vec![5; 32],
-        content_commitment: vec![6; 32],
-        deps_commitment: vec![7; 32],
-        content_edition: 1,
-        deps_edition: 1,
-        host_seal: vec![8; 64],
-    };
+    let one_nonce = proposal("a", b"x");
+    let mut v1 = Encoder::new();
+    v1.array(15)
+        .uint(1)
+        .bytes(&one_nonce.body.canonical_bytes())
+        .bytes(&one_nonce.payload)
+        .array(1)
+        .text(&one_nonce.deps[0].to_string());
+    for (fill, len) in [
+        (1, 32),
+        (2, 32),
+        (3, 64),
+        (9, 32),
+        (4, 32),
+        (5, 32),
+        (6, 32),
+        (7, 32),
+    ] {
+        v1.bytes(&vec![fill; len]);
+    }
+    v1.uint(1).uint(1).bytes(&[8; 64]);
     assert!(matches!(
-        SealedAct::decode(&wire_v1::encode_verified_act(&v1)),
+        SealedAct::decode(&v1.finish()),
         Err(WireError::Version(1))
     ));
 }
