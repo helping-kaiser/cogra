@@ -12749,6 +12749,48 @@ drawing.
   figure and settling (287); the other tabs (288); another's figures'
   0.6px (290); a rate-limited upload's words (291); the pick tray's row
   still clips its remove targets (292). Backlog 284 and 289 close.
+
+### Round 61, settling things on every profile tab, the pointer wording on its remaining surfaces — 2026-11-19
+
+- **Ruled** (jakob 2026-11-19, round 60's review): B1 "as rec" — the Posts
+  figure counts a still-settling post, figure and list agreeing; B2 "as
+  rec" — a still-settling comment or act shows on every tab of every
+  profile ("the profile should not lag behind just because sth is still
+  settling"); and, from the same day's review of rounds 58–59, B "sound
+  great blessed" — the pointer proposal taken as drawn, its words
+  blessed. Told and "all fine": a rate-limited upload keeps `Retry`; the
+  kept size setting (`maxHeight`, backlog 285).
+- **Drawn**: `ProfileComments`' and `ProfileCommentsOwn`'s `comments` =
+  `settling` (the thread's landed reply, `Still settling`, `now`);
+  `Profile`'s and `ProfileOther`'s `chronicle` = `settling` (the newest
+  act, `ContentRow`'s `pending`); the pointer rule's remaining surfaces —
+  `CommentEdit`'s `post` (`deleted`, `swept`), `Profile`'s `act` (an
+  opinion, a tag and a citation on a removed post, their second line the
+  mark), `RefsSheet`'s `target` (a removed post, a deleted account),
+  `CitedBy`'s `citing` (removed, swept) and `Notifications`' `piece` (`in
+  @mira's removed post`). The `posts` = `none` copies of `ProfilePosts`
+  and `ProfilePostsOwn` read the figure `0` over the empty list.
+- **The law that moved**: readme §7, `ProfileHeader` and the five profile
+  sidecars (the figure); `ProfileComments.md`, `ProfileCommentsOwn.md`,
+  `Profile.md`, `ProfileOther.md` (a settling thing in each list; an act on
+  a removed target); `CommentEdit.md`, `RefsSheet.md`, `CitedBy.md`,
+  `Notifications.md`; copy-voice *The comment edit*, *The chronicle's
+  verbs* (a tag's and a citation's removed target), the notifications'
+  `in …` line, *Naming a removed or deleted thing* (blessed, its surfaces
+  listed), and the upload's `RATE_LIMITED` on the fault side (*A clip that
+  didn't upload*, *Faults by code*). `ReferenceRow` gains `redacted` (the
+  empty tile; a deleted account's disc and name, the row still a door);
+  `MediaThumb`'s remove button stands one layer up, so a row's next tile
+  no longer takes its target's overhang.
+- **Registered** (impl seam 380): a comment's tags line, `…commentCard.
+  tagsLine` with its `tag` and `counts`, as the post's; `CommentCitedByEmpty`
+  and `CommentOpinionsEmpty` under `postDetail`, the sheets the post's own
+  (`citedBySheet`, `opinionsSheet`).
+- **Held**: a chronicle aside on a deleted account without `on` (backlog
+  293); a deleted account's notifications (294); a comment's references
+  sheet (295); where a tag's or a citation's act opens (296); a pending
+  thing's place in a list's order (297). Backlog 282, 285, 286, 287, 288,
+  291 and 292 close; 290 stays.
 ---
 
 ## 14. The canvases
