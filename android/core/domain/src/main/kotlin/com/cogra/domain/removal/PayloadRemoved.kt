@@ -19,7 +19,11 @@ import com.cogra.domain.feed.FeedFilter
  * when its gallery is. UNKNOWN counts as removed on both: a state this
  * build cannot name is never rendered as if it were fine.
  */
-fun payloadRemoved(content: ModeratedField, attachments: List<MediaAssetView>, attachmentsStatus: FieldStatus): Boolean {
+fun payloadRemoved(
+    content: ModeratedField,
+    attachments: List<MediaAssetView>,
+    attachmentsStatus: FieldStatus,
+): Boolean {
     val galleryGone = attachments.isNotEmpty() &&
         (attachmentsStatus.gone() || attachments.all { it.status.gone() })
     val wordsGone = attachments.isEmpty() && content.status.gone()
