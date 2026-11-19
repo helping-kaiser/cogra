@@ -83,3 +83,5 @@ ALWAYS a cap counts characters as Unicode scalar values
 WHEN tap the back arrow -> the profile comes back
 
 WHEN the stage opens -> focus lands on the stage's heading AND NEVER the keyboard rises before a field is tapped
+
+WHEN the keyboard is up -> the stage's pinned foot stays at the bottom, under the keyboard, AND the focused field takes the room and is brought into view AND NEVER the foot rides above the keyboard

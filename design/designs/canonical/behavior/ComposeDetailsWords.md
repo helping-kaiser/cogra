@@ -14,6 +14,8 @@ WHEN press Next GIVEN the title is empty -> NEVER Next refuses
 
 WHEN press Next -> the seal opens AND NEVER an upload holds the step
 
+WHEN the keyboard is up -> the stage's pinned foot stays at the bottom, under the keyboard, AND the title field takes the room and is brought into view AND the reader closes the keyboard to reach Next AND NEVER the foot rides above the keyboard
+
 WHEN tap a staged tag's remove control -> the tag leaves the post's staged tags on the spot AND NEVER a dialog asks
 
 WHEN tap a staged tag -> the tag's pair opens in a sheet over the stage
