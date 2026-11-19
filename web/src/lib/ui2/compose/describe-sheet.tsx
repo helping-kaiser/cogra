@@ -90,6 +90,8 @@ export function DescribeSheet({
       testId={testId}
       // DescribeSheet.jsx: the raised 88% class.
       maxHeight={SHEET_RAISED}
+      // ONE FIELD AND ITS Done: the sheet rides above the keyboard (seam 388).
+      keyboard="rides"
     >
       {/* `min-h-0` is what lets the field yield: the sheet stops at its
           ceiling, and the growing box is the one child in this column that
