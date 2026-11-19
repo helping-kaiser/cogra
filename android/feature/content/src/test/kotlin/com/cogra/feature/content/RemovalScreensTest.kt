@@ -472,7 +472,10 @@ class RemovalScreensTest {
 
     // ---- RM-G9 · the own menu off the detail -------------------------
 
-    /** A post removed from its feed card stands as its mark in place, its ⋮ gone with the payload. */
+    /**
+     * A post removed from its feed card stands as its mark in place, its ⋮
+     * kept less Remove (FeedRemoved.md:3, :9).
+     */
     @Test
     fun aFeedCardRemovedFromItsOwnMenuStandsAsItsMarkInPlace() {
         compose.setContent {
@@ -496,7 +499,10 @@ class RemovalScreensTest {
 
         compose.onNodeWithTag(feedCard("p1")).assertExists()
         compose.onNodeWithText(AUTHOR_MARK).assertExists()
-        compose.onNodeIn(feedCard("p1"), "feed.card.menu").assertDoesNotExist()
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.cite").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.remove").assertDoesNotExist()
+        compose.onNodeWithTag("feed.menuSheet.edit").assertDoesNotExist()
         // The card beside it is untouched.
         compose.onNodeWithText("Body p2").assertExists()
         assertThat(repo.records).containsExactly("rec:p1")

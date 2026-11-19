@@ -301,10 +301,9 @@ export function PostView({
     );
   }
 
-  // A REMOVED POST HAS NO MENU LEFT — back is the whole header (`Removed.jsx`),
-  // and the license rode the payload, so a redacted record has none to show.
-  // What survives is the skeleton the card draws: author, timestamp, thread
-  // position, and the stance a reader can still take.
+  // A REMOVED POST stands as its mark: what survives is the skeleton the card
+  // draws — author, timestamp, thread position, and the stance a reader can
+  // still take — and the header's menu (Removed.md:11, RemovedOther.md:5).
   const redacted = payloadIsRedacted(post);
   // THE DETAIL CLIP'S VEIL FACE (jakob 2026-09-24): the body veils as one and
   // revealing moves nothing, so this is the same `sensitive` the card's own
@@ -330,11 +329,11 @@ export function PostView({
     // header and the column ends 8px above the bar. No gap of its own between
     // the header and the post: PostDetail draws the card at y 48.
     <main className="mx-auto flex w-full max-w-2xl flex-col pb-2">
-      {/* A REMOVED POST HAS NO MENU LEFT — back is the whole header
-          (`Removed.jsx:5-6`). There is nothing of it to edit, cite or license,
-          and the skeleton that holds the thread's place is not a thing a reader
-          keeps. */}
-      {header(!redacted)}
+      {/* A REMOVED POST KEEPS THE HEADER'S ⋮ (Removed.md:11, RemovedOther.md:5):
+          the reader's post menu whole, or the author's less Edit, Mark as
+          sensitive and Remove — `postMenuItems`' `removed`, which the host
+          reads off the post. */}
+      {header(true)}
       {/* The page's own lines, in the gutter; empty, the slot is nothing at
           all to the layout. */}
       <div className="flex flex-col gap-4 px-6 py-4 empty:hidden">
@@ -466,10 +465,9 @@ export function PostView({
         node={{ path: "postDetail.threadSheet" }}
       />
       {/* THE POST'S MENU AND WHAT ITS ROWS RAISE, over this page
-          (ReaderPostMenu, ReportConfirm). A removed post has no menu left, so
-          nothing raises it. */}
+          (ReaderPostMenu, ReportConfirm), the removed post's among them. */}
       <PostMenuHost
-        post={redacted ? null : post}
+        post={post}
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
         nodes={{

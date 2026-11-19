@@ -69,7 +69,7 @@ export function Screen() {
             video
             failed
           />
-          <CoverTile width={167} height={167} />
+          <CoverTile height={167} />
         </div>
 
         <UploadErrorLine message="That video didn't upload." onRetry={() => {}} onRemove={() => {}} />

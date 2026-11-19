@@ -1,7 +1,10 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 
+import { writeCommittedFeedFilter } from "@/lib/feed/committed-filter";
+import { FEED_FILTER_DEFAULT } from "@/lib/feed/feed-filter";
+import { writeReaderDefault } from "@/lib/feed/reader-default";
 import { createTokenStore } from "@/lib/session/token-store";
 import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { intersectEach, whenObserved } from "@/test/media-env";
@@ -428,6 +431,44 @@ describe("TopicView — a post card's menu (TagPageMenu.md)", () => {
     ]);
   });
 
+  it("a_removed_posts_menu_rises_over_the_tag_page_reading_the_readers_menu_whole", async () => {
+    // TagPageRemovedMenu.md:3, :5 (less Cited by and Opinions on this, which
+    // no web post menu carries yet).
+    server.use(
+      gqlLink.query("HashtagDetail", () =>
+        HttpResponse.json({
+          data: hashtagDetail("rust", [
+            {
+              relevance: 0.1,
+              confidence: 1,
+              pending: false,
+              node: {
+                ...tobiasPost(),
+                title: { __typename: "ModeratedText", value: null, status: "REDACTED" },
+                content: { __typename: "ModeratedText", value: null, status: "REDACTED" },
+                removal: { __typename: "Removal", at: "2026-11-18T10:00:00Z", by: "AUTHOR" },
+              },
+            },
+          ]),
+        }),
+      ),
+    );
+    // The removed post stands on the tag page only while the feed's stored
+    // filter has Removed on (TagPage.md:19-21).
+    window.localStorage.clear();
+    writeCommittedFeedFilter("u1", { ...FEED_FILTER_DEFAULT, also: ["settling", "removed"] });
+    onTestFinished(() => window.localStorage.clear());
+    renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+    fireEvent.click(await screen.findByTestId("topic-post-p1-menu"));
+    expect(rows()).toEqual([
+      ["tagPage.menuSheet.save", "Save"],
+      ["tagPage.menuSheet.cite", "Cite in a new post"],
+      ["tagPage.menuSheet.hide", "Hide @tobias"],
+      ["tagPage.menuSheet.license", "License terms"],
+      ["tagPage.menuSheet.report", "Report"],
+    ]);
+  });
+
   it("hide_closes_the_sheet_leaves_every_row_in_place_and_snackbars_with_undo_and_no_confirm", async () => {
     // TagPageMenu.md:7.
     const log = hiddenLog();
@@ -551,5 +592,67 @@ describe("TopicView — what it opens keeps its origin's root", () => {
     );
     expect(screen.getByTestId("topic-comment-author-c1")).toHaveAttribute("href", `/u/bob?from=${token}`);
     expect(screen.getByTestId("topic-comment-post-c1")).toHaveAttribute("href", `/posts/p1?from=${token}`);
+  });
+});
+
+// THE TAG PAGE FOLLOWS THE FEED'S REMOVED SWITCH (design round 57;
+// TagPage.md:19-21): a removed tagged post is listed only while the feed's
+// stored filter has `Also show → Removed` on, as the feed's removed card; the
+// page carries no switch of its own.
+describe("TopicView — a removed tagged post follows the feed's Removed switch (TagPage.md:19-21)", () => {
+  const removedPost = () => ({
+    ...postNode("p1", "Gone"),
+    title: { __typename: "ModeratedText", value: null, status: "REDACTED" },
+    content: { __typename: "ModeratedText", value: null, status: "REDACTED" },
+    removal: { __typename: "Removal", at: "2026-11-18T10:00:00Z", by: "AUTHOR" },
+  });
+  const serveTag = () =>
+    server.use(
+      gqlLink.query("HashtagDetail", () =>
+        HttpResponse.json({
+          data: hashtagDetail("rust", [
+            { relevance: 0.1, confidence: 1, pending: false, node: removedPost() },
+            { relevance: 0.1, confidence: 1, pending: false, node: postNode("p2", "More Rust") },
+          ]),
+        }),
+      ),
+    );
+  const listed = () =>
+    within(screen.getByTestId("topic-content-list"))
+      .queryAllByTestId(/^topic-post-p\d$/)
+      .map((card) => card.getAttribute("data-testid"));
+
+  beforeEach(() => window.localStorage.clear());
+
+  it("with_removed_off_the_removed_tagged_post_is_not_listed", async () => {
+    // TagPage.md:21 — the feed's filter keeps Removed off (its default).
+    serveTag();
+    renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+    await screen.findByTestId("topic-post-p2");
+    expect(listed()).toEqual(["topic-post-p2"]);
+    // NEVER a switch of its own: no Removed control stands on the page.
+    expect(screen.queryByRole("switch")).toBeNull();
+    expect(screen.queryByText(/removed/i)).toBeNull();
+  });
+
+  it("with_removed_on_the_removed_tagged_post_stands_in_its_row_as_the_feeds_removed_card", async () => {
+    // TagPage.md:19 — the feed's filter, committed on this device, has Removed on.
+    writeCommittedFeedFilter("u1", { ...FEED_FILTER_DEFAULT, also: ["settling", "removed"] });
+    serveTag();
+    renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+    await screen.findByTestId("topic-post-p2");
+    expect(listed()).toEqual(["topic-post-p1", "topic-post-p2"]);
+    expect(screen.getByTestId("topic-post-p1-removed")).toHaveTextContent("Removed by its author");
+    expect(screen.getByTestId("topic-post-p1")).not.toHaveTextContent("Gone");
+  });
+
+  it("the_readers_saved_default_with_removed_on_admits_it_where_no_filter_is_committed", async () => {
+    // The feed opens with the saved default where none is committed
+    // (SettingsReading.md:33), so the tag page reads the same.
+    writeReaderDefault("u1", { ...FEED_FILTER_DEFAULT, also: ["settling", "removed"] });
+    serveTag();
+    renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+    await screen.findByTestId("topic-post-p2");
+    expect(listed()).toEqual(["topic-post-p1", "topic-post-p2"]);
   });
 });

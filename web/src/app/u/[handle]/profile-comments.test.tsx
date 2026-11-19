@@ -391,26 +391,68 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     expect(theirs.map((row) => row.textContent)).not.toContain("Remove");
   });
 
-  it("a_removed_comment_stands_as_its_mark_with_no_menu", async () => {
-    // CommentRemoved.md's mark, at comment scale; the node is never deleted.
+  const removedComment = (id: string) =>
+    profileComment(id, {
+      content: moderated(null, "REDACTED"),
+      removal: { __typename: "Removal", at: new Date(Date.now() - 3 * 3_600_000).toISOString(), by: "AUTHOR" },
+    });
+
+  it("a_removed_comment_keeps_its_place_as_its_mark_on_first_load_with_the_readers_menu", async () => {
+    // ProfileComments.md:7, :9, :21; FeedRemoved.md:19 — on another's
+    // profile, from the tab's first read: the mark in the words' place, dated
+    // by the removal, the chip, the time and the pointer kept, and the ⋮ the
+    // reader's comment menu (ProfileCommentsRemovedMenu.md:5).
+    server.use(meAs("u1", "pixel"));
     serveAda();
     serveChronicle();
-    serveComments({
-      "": {
-        comments: [
-          profileComment("c1", {
-            content: moderated(null, "REDACTED"),
-            removal: { __typename: "Removal", at: new Date().toISOString(), by: "AUTHOR" },
-          }),
-        ],
-        next: null,
-      },
-    });
-    renderWithProviders(<ProfileScreen handle="ada" />);
+    serveComments({ "": { comments: [profileComment("c2"), removedComment("c1")], next: null } });
+    renderWithProviders(<ProfileScreen handle="ada" />, { store: signedIn() });
     await openCommentsTab();
-    expect(screen.getByTestId(byNode("profile.comments.commentCard.removalMark", "c1"))).toBeInTheDocument();
-    expect(screen.queryByTestId(byNode("profile.comments.commentCard.menu", "c1"))).toBeNull();
+    expect(cardIds()).toEqual(["c2", "c1"]);
+    expect(screen.getByTestId(byNode("profile.comments.commentCard.removalMark.line", "c1"))).toHaveTextContent(
+      /^Removed by its author$/,
+    );
+    expect(screen.getByTestId(byNode("profile.comments.commentCard.removalMark.when", "c1"))).toHaveTextContent(/^3h$/);
+    expect(screen.getByTestId(byNode("profile.comments.commentCard", "c1"))).not.toHaveTextContent("Words of c1");
+    expect(screen.getByTestId(byNode("profile.comments.commentCard.authorChip", "c1"))).toBeInTheDocument();
     expect(screen.getByTestId(byNode("profile.comments.commentCard.target", "c1"))).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId(byNode("profile.comments.commentCard.menu", "c1")));
+    const rows = within(openProfileMenuSheet())
+      .getAllByRole("button")
+      .map((row) => row.textContent);
+    expect(rows).toEqual(["Save", "Cite in a new post", "Cited by", "Opinions on this", "License terms", "Report"]);
+  });
+
+  it("your_own_removed_comment_keeps_its_place_through_a_refresh_its_menu_less_edit_and_remove", async () => {
+    // ProfileCommentsOwn.md:11; ProfileCommentsRemovedMenuOwn.md:5; FeedRemoved.md:17
+    // (only the feed's own card leaves at the next derivation).
+    serveOwn();
+    const chronicle = serveChronicle();
+    const reads = serveComments({ "": { comments: [removedComment("c1")], next: null } });
+    const scroller = document.createElement("div");
+    document.body.append(scroller);
+    renderWithProviders(
+      <ScrollHostProvider value={{ current: scroller }}>
+        <ProfileScreen handle={null} />
+      </ScrollHostProvider>,
+      { store: signedIn("u-ada") },
+    );
+    await openCommentsTab();
+    expect(screen.getByTestId(byNode("profile.comments.commentCard.removalMark.line", "c1"))).toHaveTextContent(
+      /^Removed by its author$/,
+    );
+    const { pullsAtTop } = await import("@/test/media-env");
+    const { PULL_THRESHOLD } = await import("@/lib/ui/pull-to-refresh");
+    pullsAtTop(scroller, PULL_THRESHOLD);
+    await waitFor(() => expect(reads).toHaveLength(2));
+    expect(chronicle).toHaveLength(1);
+    expect(screen.getByTestId(byNode("profile.comments.commentCard.removalMark", "c1"))).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId(byNode("profile.comments.commentCard.menu", "c1")));
+    const rows = within(openProfileMenuSheet())
+      .getAllByRole("button")
+      .map((row) => row.textContent);
+    expect(rows).toEqual(["Save", "Cite in a new post", "Cited by", "Opinions on this", "License terms"]);
+    scroller.remove();
   });
 
   it("the_way_back_returns_to_the_comments_view_in_the_state_it_was_left", async () => {

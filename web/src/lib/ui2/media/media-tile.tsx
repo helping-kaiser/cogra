@@ -132,12 +132,12 @@ export function MediaTile({
   const reserved = ratio ?? (isVideo && !probedRatio ? PORTRAIT_CAP : tileRatio(sourceRatio));
   const objectFit = fit ?? fitFor();
   const alt = altText ?? "";
-  // AN EXPLICIT `ratio` NAMES A FIXED FRAME — the comment scale — and it is
-  // the master's frame exactly (`MediaAttachment.jsx`: `aspectRatio`,
-  // `width: 100%`, `maxHeight`; the built boards carry `aspect-ratio:1 / 1;
-  // width:100%;max-height:220px`). With a definite `width: 100%` the cap takes
-  // its bite out of the HEIGHT alone: the frame keeps the column's width and
-  // the media fills it. It is never narrowed to keep the ratio.
+  // AN EXPLICIT `ratio` NAMES A FIXED FRAME — the comment scale's square —
+  // at `width: 100%` (`MediaAttachment.jsx`: `aspectRatio`, `width: 100%`).
+  // A `maxHeight`, where a caller names one, takes its bite out of the HEIGHT
+  // alone: the frame keeps the column's width and is never narrowed to keep
+  // the ratio. A comment names none (jakob 2026-11-18: the square stands
+  // whole, as on android).
   //
   // THE DEFAULT FRAME CARRIES NO SUCH CAP. Its ratio comes from `tileRatio`,
   // already clamped at the 4:5 portrait bound, so nothing it reserves is
