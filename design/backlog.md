@@ -6644,7 +6644,7 @@ Closed by round 58 (jakob 2026-11-18, C4 "as rec" — (a)): `TagPage.md`'s two s
 every removed row the page lists; `TagPage`'s `comment` = `removed` draws @ada's comment with
 `CommentCard`'s own mark under its claim. Its menus are backlog 284.
 
-### 284 · A tagged comment's ⋮ on the tag page: no host list names it · *design* · **filed 2026-11-18**
+### 284 · A tagged comment's ⋮ on the tag page: no host list names it · *design* · **filed 2026-11-18** · **closed 2026-11-19**
 
 Round 58. copy-voice *Menu rows* names the tag page among a post's menu hosts but not among a
 comment's ("the thread, the feed, History, Saved and a profile's Comments tab"), and no tag-page
@@ -6656,6 +6656,10 @@ it (`TagPageCommentMenu`, `…Own`, and the removed pair) — the rows `CommentM
 `CommentMenuOwn`'s, removed or not; (b) a tagged comment's ⋮ on the tag page holds only
 `License terms`, as drawn — a doorway card. Recommendation (a): the page is a list of content
 cards, and every other list's comment card raises the whole menu.
+
+Closed by round 60 (jakob 2026-11-19, C2 "as rec" — (a)): copy-voice *Menu rows* names a tag page
+among the comment rows' hosts; `TagPageCommentMenu`, `…Own`, `TagPageCommentRemovedMenu` and `…Own`
+draw the four menus over the page, each its profile twin's rows.
 
 ### 285 · `MediaAttachment`'s `maxHeight` has no caller left · *system* · **filed 2026-11-18**
 
@@ -6674,3 +6678,57 @@ round 58 left as drawn (RULINGS 2026-11-18 ~18:00: the post-MVP chat boards not 
 two comments now name these callers. Options: (a) retire the prop AND drop both caps — the chat
 media and the card stand at their true shape (a drawing change, jakob's); (b) keep the prop for
 those two, as now; (c) retire it from the masters and draw each cap in its caller.
+
+### 287 · Does the Posts figure count a still-settling post? · *design* · **filed 2026-11-19**
+
+Round 60. A still-settling post now stands on every profile's Posts tab (jakob 2026-11-19, C3), and
+the figure's law says it counts every post published, a removed one included, "so the figure and
+the list agree" (readme §7 `ProfileHeader`, `ProfileHeader.jsx:50`, `ProfileHeader.prompt.md:22`,
+`Profile.md:15`, `ProfileOther.md:11`, `ProfileDeleted.md:31`, `ProfilePosts.md:13`,
+`ProfilePostsOwn.md:9`) — silent on settling, and its "agree" clause now implies the settling post
+counts. The app counts landed posts only (impl seam 371 (f)). Options: (a) the figure counts a
+settling post too, so figure and list agree; (b) the figure counts landed posts only and the "agree"
+clause names the exception.
+
+### 288 · A still-settling comment or act on the Comments and Everything tabs · *design* · **filed 2026-11-19**
+
+Round 60. "The profile should not lag behind" was ruled for the Posts tab. What the tree says
+today: Everything — `Profile.md:31` "a chronicle card reads Still settling GIVEN its act still
+pends" (the own profile; `ProfileOther.md` is silent); Comments — `ProfileComments.md` and
+`ProfileCommentsOwn.md` are silent on a new comment that has not landed, and
+`ProfileCommentsMenuOwn.md:17` lets an edited own comment settle in place wearing `Still settling`.
+Options: (a) every tab lists a still-settling thing, own and anyone's, wearing `Still settling`, as
+the Posts tab now does; (b) the Posts tab alone; (c) as (a) for the reader's own profile only.
+
+### 289 · The keyboard rule: three surfaces the board's field count does not settle · *design* · **filed 2026-11-19**
+
+Round 60, item 7 (jakob 2026-11-19, the split). Each pinned surface got its sentence from its
+board's count of text fields, except: `CommentEdit` — one text field (`Words`) beside pictures,
+tags and citations, which by the count rides, while the ruling's list names the comment edit
+among the several-fields surfaces; `ComposeDetailsWords` — a words post's details step holds only
+`Title`, one field, while the ruling names "the details step" (its media boards hold Title and
+Description, and `ComposeDetails.md` got the several-fields sentence GIVEN both stand); the
+opinion pad's typed values — number fields plus a commit, several fields by the ruling, with no
+board or sidecar of their own to carry the sentence (the readme paragraph alone carries it). Also:
+`EditWords` holds `Title` and the words, two fields, so it got the several-fields sentence though
+the brief listed it among the one-field stages. Options per surface: (a) the board's count, (b) the
+ruling's list.
+
+### 290 · Another's profile figures fit at 390 by 0.6px · *system* · **filed 2026-11-19**
+
+Round 60. Measured on the rendered master: another's labels need 261.4px and the column beside the
+avatar is 262 at 390, so the constant had to take 16.375rem (262px) — the half-rem step (264) would
+move another's figures under at 390. A renderer whose text measures 0.6px wider spills there.
+Options: (a) leave it, the two clients mirroring the measured constant; (b) a figures gap or label
+decision that buys room (jakob's: it moves boards).
+
+### 291 · A rate-limited upload has no words in the law · *design* · **filed 2026-11-19**
+
+Round 60 (impl seam 380, 4). copy-voice *Faults by code* names `RATE_LIMITED`'s hosts
+(`copy-voice.md:1657-1663`: sign-in, registration, the reset, the token confirms, the email change)
+and gives a form's line in SignInError's slot; an upload is not among them. The upload law
+(`copy-voice.md:706-729`) splits a fault that keeps `Retry` from a refusal "retrying cannot change";
+a rate limit passes, so the built reading — retryable, `One picture didn't upload.` with `Retry` —
+follows that sentence's reason, but no line names the code. Options: (a) write it: a rate-limited
+upload is the fault shape, keeping Retry; (b) a line of its own, `Too many tries. Wait a little,
+then try again.` beside Retry.

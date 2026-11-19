@@ -12703,6 +12703,41 @@ drawing.
   `titleQuiet`. Law: copy-voice *Naming a removed or deleted thing*, the
   sidecars of the four boards. The surfaces it reaches undrawn are backlog
   286.
+
+### Round 60, the tag page's comment menus, settling posts on every profile, Restore on a browser that cannot hold a key, the keyboard — 2026-11-19
+
+- **Ruled** (jakob 2026-11-19, rounds 58–59's review and impl's two): C2
+  "as rec" — a tagged comment's ⋮ raises the comment's whole menu; C3 "i
+  think it should show on all profiles. the profile should not lag behind
+  just because sth is still settling"; C4 "we can make the board taller in
+  the canvas for my inspection but we can't grow the bottom sheet"; impl 2
+  "as rec" — every door into Restore on a browser without WebCrypto
+  Ed25519 opens `KeyCeremonyUnsupported`; and the keyboard, "the split as
+  rec sounds best yes".
+- **Drawn**: the four menus of a tagged comment (`TagPageCommentMenu`,
+  `…Own`, `TagPageCommentRemovedMenu`, `…Own`), each its profile twin's
+  rows over the page, the reader's own comment @sol's; `ProfilePostsOwn`'s
+  `posts` = `settling`, `ProfilePosts`' twin; `ReplyMedia` whole at 1309,
+  the comments page's two lower rows moved down 465 to keep clear.
+- **The law that moved**: copy-voice *Menu rows* (a tag page among the
+  comment rows' hosts), `TagPage.md`; `ProfilePostsOwn.md`;
+  `KeyCeremonyUnsupported.md`, `Restore.md` and the nine doors' sidecars
+  (the screen stands in the restore's place, its back the restore's own
+  two homes; the board unchanged, its arrow `Back` as the restore's);
+  *Spacing and layout*'s keyboard paragraph and one sentence in each
+  pinned stage's and sheet's sidecar by its board's field count — a rule
+  with no drawing, so no board, chip or path; `FeedRemoved.md`'s own-menu
+  line gains its GIVEN.
+- **Registered**: the tag page's own nodes in android's names, the share
+  staying round 48's `tagPage.actionRow.share`; `ReplyMedia` under
+  `postDetail`, so a thread comment's media registers.
+- **Measured**: `ProfileHeader`'s constants 15.5rem (own, need 245.4) and
+  16.375rem (another's, need 261.4); `MediaThumb`'s remove target whole,
+  its tile's clip on an inner layer.
+- **Held**: `maxHeight` keeps two callers (backlog 285); the Posts
+  figure and settling (287); the other tabs (288); three surfaces the
+  keyboard count does not settle (289); another's figures' 0.6px (290);
+  a rate-limited upload's words (291). Backlog 284 closes.
 ---
 
 ## 14. The canvases
