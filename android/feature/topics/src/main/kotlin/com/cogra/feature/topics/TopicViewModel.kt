@@ -12,8 +12,13 @@ import com.cogra.core.designsystem.EdgeSighting
 import com.cogra.domain.HashtagView
 import com.cogra.domain.Outcome
 import com.cogra.domain.TaggedContentView
+import com.cogra.domain.TaggedNode
 import com.cogra.domain.di.WebOrigin
+import com.cogra.domain.feed.CommittedFeedFilter
+import com.cogra.domain.feed.FeedFilter
+import com.cogra.domain.feed.ReaderDefaults
 import com.cogra.domain.history.SeenTracker
+import com.cogra.domain.removal.admitsRemoved
 import com.cogra.domain.repo.TopicRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -37,6 +42,8 @@ class TopicViewModel @Inject constructor(
     private val topics: TopicRepository,
     private val seenTracker: SeenTracker,
     @WebOrigin private val webOrigin: String,
+    private val readerDefaults: ReaderDefaults,
+    private val committed: CommittedFeedFilter,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TopicUiState())
@@ -94,9 +101,23 @@ class TopicViewModel @Inject constructor(
         _state.update { it.copy(contentLoading = true) }
         viewModelScope.launch {
             when (val outcome = topics.taggedContent(n)) {
-                is Outcome.Success -> _state.update { it.copy(contentLoading = false, content = outcome.value) }
+                is Outcome.Success -> {
+                    // THE TAG PAGE FOLLOWS THE FEED'S REMOVED SWITCH (TagPage.md:19-21):
+                    // the filter the feed opens with — the one its Done committed on
+                    // this device, else the reader's saved default — read each time
+                    // the page is derived, so a removal taken from this page's own
+                    // menu stands as its mark until the next read. Only posts are cut:
+                    // a tagged comment's case is not ruled on main (round 58).
+                    val feedFilter = committed.now() ?: readerDefaults.now()
+                    val listed = outcome.value.filter { it.admittedBy(feedFilter) }
+                    _state.update { it.copy(contentLoading = false, content = listed) }
+                }
                 else -> _state.update { it.copy(contentLoading = false) }
             }
         }
     }
 }
+
+/** Whether the feed's [filter] lets this row stand: a removed post only with Also show → Removed on. */
+private fun TaggedContentView.admittedBy(filter: FeedFilter): Boolean =
+    (node as? TaggedNode.Post)?.let { filter.admitsRemoved(it.post) } ?: true
