@@ -2,13 +2,13 @@
 
 > **Provenance.** This document is a derived reference extracted from the
 > **PeerNetworks Layer 1** specification by the **Peer Team** (Peer Network,
-> v0.32.0), reproducing its binding surface for the purpose
+> v0.34.1), reproducing its binding surface for the purpose
 > of building CoGra as a Layer 2 on it. It is not the normative source —
 > the PeerNetworks paper is. Licensed under CC-BY-4.0; see
 > [LICENSE-DOCS](../../LICENSE-DOCS).
 
-**Derived file — hard facts only.** v0.32.0 ships as the flat source
-(`PeerNetwork_PeerNetwork_v0.32.0_flat.tex`). It carries the **Edition 4**
+**Derived file — hard facts only.** v0.34.1 ships as the flat source
+(`PeerNetwork_PeerNetwork_v0.34.1_flat.tex`). It carries the **Edition 4**
 act-ownership refoundation (authored acts, the admission handshake, the
 authoritative act order) and the **Edition 5** refoundation of standing as
 one conserved allocation operator. This reference draws two scopes from it:
@@ -29,8 +29,8 @@ one conserved allocation operator. This reference draws two scopes from it:
 Proofs and motivation prose are omitted.
 
 **Pinned anchor set.** This file's citation set is pinned under the spec's
-anchor-stability contract: 450 distinct anchor names,
-`anchor_set_hash = 2ad892124e020ab7058fd06746f100a450d9da0ab93e8f5383e3b2cb33f0c100`
+anchor-stability contract: 458 distinct anchor names,
+`anchor_set_hash = 1dce7dbbe886b1a25c9feafc152a9e664de1801bd8ada950a1c18980bb343a99`
 (sha256 over the sorted distinct anchor names joined by `\n`, no trailing
 newline). Once
 registered with the Peer Team, renaming any pinned label is a breaking
@@ -802,9 +802,9 @@ Stated independently of any mechanism that achieves them.
   folds, each act's fold cell and coefficient, its recipient resolution,
   and the base allocation matrix the published domain weights and profiles
   determine from them; **(iv) allocation and transport** — the tilt profile
-  shape, the accepted rung $t_k$ with the certificate verdict (pass, fail or
-  indecisive) of every rung of the published grid attempted above it, the
-  depth mass, the source emission fractions, and the conserved transport
+  shape, the accepted rung $t_k$ with each rung attempted above it, with its
+  stated enclosure and verdict under `post:deployment:replay-verification`,
+  the depth mass, the source emission fractions, and the conserved transport
   with the hop allocation matrices it composes; **(v) final standing and
   admission** — the declared rate hull box, the standing certificate
   $\mathcal{K}_k$, the fixed-point enclosure, the equilibrium
@@ -821,17 +821,36 @@ Stated independently of any mechanism that achieves them.
   contributing width and accepted rung, and the proposal and delivered led
   wall whose burn image is the threshold schedule
   (`def:epoch:wall-controller`), all under no-silent-change; **(vii)
-  reproducibility evidence** — formula editions, declared constants,
-  interval boxes, residual bounds, and reports sufficient for any
-  participant to rerun the calculation. Every binding value is reproducible from
-  the accepted records, final ledger, explicit public previous-wall state,
-  public formulas, and constants. Previous standing,
-  warm starts, and cached solver state are not package inputs. **No hashes,
-  roots, or source digests are normative.** A finite implementation must
+  verification evidence** — formula editions, declared constants,
+  interval boxes, residual bounds, and the stated enclosure and verdict for
+  every attempted rung, checked under `post:deployment:replay-verification`.
+  Every binding value is determined by, and checkable from, the accepted
+  records, final ledger, explicit public previous-wall state, public
+  formulas, constants and published attempted-rung evidence
+  (`post:deployment:replay-verification`, `def:epoch:tilt-backoff-grid`);
+  verification grants audit rights without override. Previous standing,
+  warm starts, cached path products and local solver state are not package
+  inputs: the host may use them to reduce work, but they may select only a
+  result supported by the published evidence. A loose enclosure may change
+  whether a rung is decided PASS or FAIL or remains INDECISIVE; the host
+  bears any lost tilt volume and answers for it in reputation. **No hashes,
+  roots, or source digests are normative.** A build declaration naming
+  source revisions by hash is a non-normative assertion; re-execution
+  establishes consistency with it. An inconsistency is attributable to the
+  host's declaration about the package only when the host binds the
+  declaration to that package — for instance by signing it with a digest
+  covering at least the package's normative content — so that a replaced or
+  transplanted declaration is refused before comparison; it never
+  invalidates a package whose evidence checks. A finite implementation must
   publish a standing enclosure narrow enough to decide every binding
-  threshold comparison — an enclosure straddling $\rho_\theta$ for an
-  author or $\rho_{\text{eff}}$ for the epoch stamp leaves the proposed set
-  uncertified. Misbehavior at the boundary is *evidence, not prevention*
+  threshold comparison of an accepted set — an enclosure straddling
+  $\rho_\theta$ for an author or $\rho_{\text{eff}}$ for the epoch stamp
+  leaves the proposed set uncertified. Refinement is the producer's option
+  before publication; when no refinement before publication decides the
+  comparison, the set is rejected, and no verdict of the rejected set is any
+  part of the accepted publication. The host issues each verdict on which
+  the rejection rests, whole, to the party the comparison measures
+  (`post:deployment:verdict-issuance`). Misbehavior at the boundary is *evidence, not prevention*
   (`post:graph:boundary-accountability`). The boundary timestamp is a host
   assertion: the closure cause and the asserted timestamp are checkable for
   mutual consistency with the published duration bounds, with no obligation
@@ -842,9 +861,10 @@ computation that can feed admission is specified by published formula over
 the public record and independently reproducible from records and constants
 alone. For standing, verification checks the completed ledger and
 accepted-act census, reproduces fold cells, base allocation and source
-emission, and evaluates the declared certificate at each attempted rung
-(`subsec:deployment:conserved-standing-reproducibility`). The published
-procedure accepts the greatest proved passing rung; independent replay
+emission, and checks each attempted rung's stated enclosure and verdict
+(`subsec:deployment:conserved-standing-reproducibility`,
+`post:deployment:replay-verification`). The accepted rung is the greatest
+attempted PASS under the published evidence; independent verification
 checks the conserved equilibrium through a certified residual enclosure
 (`def:epoch:tilt-backoff-grid`,
 `lem:dynamics:fixed-point-residual-enclosure`). The certificate is the
@@ -886,7 +906,7 @@ formation, package validity, or the epoch target;
 | $\gamma$ | $1/4$ (chartered activation exponent; **not** the reciprocal of $L_{\text{hop}}$) | `def:epoch:responsive-vouch-activation` |
 | $Q(1)$ | $\approx 0.6975$ (activation normalization of the deployed core) | `def:epoch:responsive-vouch-activation` |
 | $\kappa_{\text{self}}$, $\omega_D$ | unity (self-retention base and every published domain weight; reference values pending the calibration lock) | `tbl:epoch:standing-domain-weights` |
-| certificate screen $\mathcal{K}_k$ | a rung passes iff $m_\theta\,\mathcal{K}_k \le 1$; the accepted rung $t_k$ is the greatest rung the deployment's declared certification procedure proves passing — a rung it leaves INDECISIVE is passed over; the anchor $t_k = 0$ always certifies | `def:dynamics:conserved-standing-certificate`, `def:epoch:tilt-backoff-grid` |
+| certificate screen $\mathcal{K}_k$ | a rung passes iff $m_\theta\,\mathcal{K}_k \le 1$; the accepted rung $t_k$ is the greatest attempted rung whose stated enclosure proves PASS under `post:deployment:replay-verification` — a rung left INDECISIVE is passed over; the anchor $t_k = 0$ always certifies | `def:dynamics:conserved-standing-certificate`, `def:epoch:tilt-backoff-grid` |
 | $M_{\text{payload}}$ | deployment-calibrated; **per act, aggregate over a hyper-edge's projections**, stated in bytes of the deployment's declared payload encoding | `def:graph:act-payload-projection` |
 
 Canonical raw defaults and derived raw constants (terminal formulas,
@@ -1532,7 +1552,10 @@ residue in the structural record, one-way tombstoning. The dependency
 projection is the actor's finite canonical dependency list
 $\mathrm{deps}(q)$ — each element naming one authored act, never an
 individual leg, declaring that $q$'s key of record must exceed each
-member's (`cond:graph:authoritative-order-dependency-placement`); the
+member's (`cond:graph:authoritative-order-dependency-placement`). The
+encoding is sorted by act identifier, duplicate-free,
+self-dependency-free, bounded in count and byte length, and versioned; the
+canonical empty list is valid and distinct from a missing one. The
 declaration grants no inclusion right. States: full-empty /
 full / tombstoned (list and opening removed, the binding commitment residue
 remaining — the anchor a later opening reopens). Tombstoning changes no
@@ -3050,10 +3073,18 @@ exports more history than its present balance could pay for at today's action
 price (`thm:epoch:emission-export-bound`).
 
 **Tilt backoff (`def:epoch:tilt-backoff-grid`, `alg:epoch:tilt-backoff`).**
-The accepted strength $t_k$ is the greatest element of the published finite
-grid $\mathcal{G}_t$ (chartered depth $J_{\text{tilt}}$, terminating at zero)
-whose certificate the deployment's declared certification procedure proves
-passing. A lower accepted rung is a performance outcome with a passing
+The accepted strength $t_k$ is the greatest attempted rung of the published
+finite grid $\mathcal{G}_t$ (chartered depth $J_{\text{tilt}}$, terminating
+at zero) whose stated enclosure proves PASS under
+`post:deployment:replay-verification`. The anchor is no attempt: its
+certificate is zero and its evidence is exact. Each positive rung is
+attempted once, in descending order through the first PASS, or through the
+least positive rung if none passes, and its enclosure and verdict are
+published; a missing, repeated, out-of-order or below-acceptance attempt
+fails verification. A rung that cannot be evaluated has no stated sound
+enclosure and so no verdict: it is neither recorded INDECISIVE nor skipped,
+and no rung below it, the anchor included, is accepted for that proposed set
+under that record (`cond:deployment:canonical-replay`). A lower accepted rung is a performance outcome with a passing
 certificate, not an unsafe epoch. Backoff preserves the shape exactly — a lower rung
 is **the same signal at lower volume**, never a signal substitution — and
 each rung is independently certified rather than inferred from a higher one.
@@ -3065,11 +3096,11 @@ different axis (`rem:epoch:tilt-backoff-is-not-export-backoff`). A rung can
 fail two ways and the certificate must say which
 (`rem:epoch:certificate-failure-versus-indecisive-enclosure`): a
 *certificate failure* proves the fence does not hold and the graph moved; an
-*indecisive enclosure* proves nothing and is published as INDECISIVE, never
-as FAIL. A rung the declared procedure leaves indecisive is passed over; the
-procedure's precision and refinement policy is the deployment's published,
-versioned choice, and a more refined published procedure may accept a higher
-rung. Every accepted rung still carries a proved pass.
+*indecisive enclosure* proves neither side of the fence under
+`post:deployment:replay-verification`, is recorded as INDECISIVE, never as
+FAIL, and that rung is passed over. Every accepted rung has a proved PASS,
+and the anchor always certifies, so safety rests on no unproved rung. A
+loose enclosure can cost the host tilt volume, priced by reputation.
 
 **Raw signed double-cover service (`subsec:epoch:raw-signed-service`).** The
 double-cover traversal is a public raw-graph service for consumers
@@ -3323,8 +3354,9 @@ the marker, its lineage, and its fixed interpretation, not edge membership.
 Residual balances, standing, emission, and contributing width all use this
 one settled read and the writing epoch's debit vintage; the next controller
 price cannot replace that vintage. Any participant accepting the complete
-package, with the same published constants, compiler edition, and
-certificate procedure, reproduces every epoch-$k$ quantity. The epoch history
+package, with the same published constants, compiler edition, and published
+attempted-rung enclosures and verdicts, determines the same epoch-$k$ values
+(`prop:epoch:epoch-replay-determinism`). The epoch history
 is the recognized epoch-marker sequence of the admissible history, read past
 the settlement depth, with the empty initial boundary and pending markers
 distinguished by M5 (§1.2). Epochs number certificates from 1, and positions
@@ -3363,8 +3395,9 @@ memory, no below-wall branch**. It has no effect on standing.
  6: Read emission fractions 𝔢_u and contributing widths from 𝖠 + the ledger
                                                   (def:epoch:source-emission)
  7: For each rung t of 𝒢_t, greatest first: evaluate 𝒦_k over ℬ_k;
-    break when the declared procedure proves m_θ·𝒦_k ≤ 1;
-    record each rung above as FAILED or INDECISIVE  (alg:epoch:tilt-backoff)
+    break when its stated enclosure proves m_θ·𝒦_k ≤ 1 (PASS);
+    record each rung above with its enclosure and FAIL or INDECISIVE verdict
+                                                  (alg:epoch:tilt-backoff)
  8: Solve the unique equilibrium x* at the accepted rung t_k
                                     (thm:dynamics:certified-conserved-standing-uniqueness)
  9: Compute transport entries Π_ui and final standing α^(k)
@@ -3382,13 +3415,18 @@ the shared epoch package — its published marker policy with identity and
 fixed edition, the marker's lineage and acceptance evidence, $E_k$, the
 marker-defined burn state and increment, the prior completed state, the
 writing epoch's debit vintage, and the published constants — together with
-the projection-compiler version and the declared certificate procedure, the
-entire epoch-$k$ derivation — rates, fold cells, coefficients, the base
-matrix, emission fractions, the accepted rung, the transport, final standing,
-title, the raw Self-edge reading, activations, stamps, headroom, and the
+the projection-compiler version and the published attempted-rung enclosures
+and verdicts under `post:deployment:replay-verification`, the entire
+epoch-$k$ derivation — rates, fold cells, coefficients, the base matrix,
+emission fractions, the accepted rung, the transport, final standing, title,
+the raw Self-edge reading, activations, stamps, headroom, and the
 certificate — is deterministic: for these fixed inputs a function of the
 authoritative order $\mathcal{Q}_k$ (`lem:graph:ordered-replay-determinism`),
-invariant under every payload state.
+invariant under every payload state. The accepted rung $t_k$ follows from
+the published attempts under `def:epoch:tilt-backoff-grid` and
+`post:deployment:replay-verification`; other mathematical values follow from
+it and the remaining inputs. Published enclosures of evaluated objects may
+differ across builds.
 
 ### 11.7 The θ-debit ledger and the two-gate write rule
 
@@ -3466,9 +3504,9 @@ Price axis:
   - (X1) *derivability* — $\rho_\theta^{(k+1)}$ is a function of the epoch-$k$
     certificate and the published constants alone, replayable by any
     participant;
-  - (X2) *in-epoch certification* — the accepted rung is the greatest element
-    of $\mathcal{G}_t$ whose certificate the declared procedure proves passing
-    at the wall in force and on the epoch's own contributing width,
+  - (X2) *in-epoch certification* — the accepted rung is the greatest
+    attempted rung of $\mathcal{G}_t$ whose stated enclosure proves PASS under
+    `post:deployment:replay-verification` at the wall in force and on the epoch's own contributing width,
     $m_\theta\,\mathcal{K}_k \le 1$; the anchor always certifies, and
     higher-rung failures and indecisive enclosures stay distinct and
     published;
@@ -3601,7 +3639,9 @@ $[0.072857886,\ 0.072858002]$ ($\rho^* \approx 0.072857922$) and strictly
 below $3/37 \approx 0.081081081$, so either declaration gives
 $\rho_{\theta,\min} \ge \rho^* > 0$. Before its first epoch the deployment
 publicly declares $\rho_{\theta,\min} \in \{\rho^*, 3/37\}$ beside $\nu$ in
-its structural tier. The declaration is fixed for the deployment: changing
+its structural tier, according to the comparisons certified under its
+published arithmetic and comparison rules (`rem:epoch:floor-is-a-landmark`).
+The declaration is fixed for the deployment: changing
 it is a public structural change with regenerated evidence, never an epoch
 dial or host-policy choice, and any third value requires its own derivation.
 The floor is distinct from the wall in force, the policy floor, the effective
@@ -3805,7 +3845,7 @@ operator duties (both at the end of this section).
   record fields. For a hyper-edge leg, the record also contains its role
   and sibling identity, so complete-act identity is independently
   reconstructible.
-- **Independent Reproduction of Conserved Standing
+- **Independent Verification of Conserved Standing
   (`subsec:deployment:conserved-standing-reproducibility`).** Every binding
   input, intermediate value, validity verdict, and output of the conserved
   standing package (`def:network:conserved-standing-package`) is
@@ -3828,12 +3868,18 @@ operator duties (both at the end of this section).
   folds and recipient resolution to every accepted act → cell coefficients
   and domain profiles → assemble the base allocation matrix → recompute every
   emission fraction and the contributing width from the same completed
-  ledger and debit vintage → evaluate the certificate at each attempted rung
-  → iterate the conserved map at the accepted rung to the published residual
+  ledger and debit vintage → check each attempted rung under
+  `post:deployment:replay-verification` and its order under
+  `def:epoch:tilt-backoff-grid` → iterate the conserved map at the accepted rung to the published residual
   → derive final standing, projected activations, stamps, and W2 decisions.
   Projection completeness and dynamic safety are orthogonal checks
   (`rem:deployment:completeness-safety-orthogonal`); a valid package
-  requires both, and controller replay is a separate obligation.
+  requires both, and controller replay is a separate obligation. Any
+  participant verifies the binding standing package and checks its stated
+  enclosures and verdicts: opposing sound PASS and FAIL on the same question
+  identify an attributable discrepancy, as does a recomputed exact object
+  that differs from the published record; a finer reader deciding a
+  published INDECISIVE finds none.
 - **Canonical Standing Encoding
   (`subsec:deployment:canonical-standing-encoding`,
   `post:deployment:canonical-standing-publication`).** The host publishes
@@ -3841,21 +3887,32 @@ operator duties (both at the end of this section).
   ordering of Actors and of each row's support, a declared representation
   for every rational quantity, and a declared rounding disclosure for every
   inexact value — itself published and versioned under no-silent-change.
+  The published bytes are checked under this encoding and
+  `post:deployment:replay-verification`. Two honest participants checking
+  the same package must agree on exact objects and encoded bytes;
+  independently evaluated enclosure endpoints need not match bit for bit.
   The encoded fields include the floor declaration with its exact defining
   object and comparison procedure, the controller edition and reduced
   constants, the wall in force, the completed-epoch width and accepted rung,
   the proposal, and the delivered next wall with its burn image; the
   declaration prescribes no exact-real codec. The prior wall is explicit
   public controller state, not a prior standing-vector input, and the
-  in-force debit vintage stays distinct from the led output. The encoded
-  certificate verdict includes every attempted rung and whether it failed
-  or was indecisive. A recomputation either matches the published bits or
-  finds a discrepancy to attribute. The byte serialization is the
-  deployment's, published and versioned with its deterministic certification
-  and replay procedure (`cond:deployment:canonical-encoding`,
-  `cond:deployment:canonical-replay`, §13.1); the same procedure must
-  reproduce the same verdicts, including INDECISIVE. Publishing an encoding
-  badly is a deployment defect; not declaring one is a protocol defect.
+  in-force debit vintage stays distinct from the led output. Verification
+  checks the normative content — the items (i)–(viii) of
+  `def:network:conserved-standing-package` — under the
+  declared encoding and `post:deployment:replay-verification`; published
+  bits bind exact objects and encoded bytes, not a participant's
+  independently evaluated enclosure endpoints. A participant unable to check
+  decides nothing, and producer metadata outside that content neither
+  creates nor excuses a discrepancy. The encoded certificate evidence names
+  each attempted rung, its enclosure and verdict, so a reader distinguishes
+  proved FAIL from INDECISIVE without trusting the host's backoff summary.
+  The byte serialization is the deployment's, published and versioned under
+  `cond:deployment:canonical-encoding`, with attempted-rung enclosures and
+  verdicts published under `cond:deployment:canonical-replay` (§13.1).
+  Numerical enclosures may carry declared comparison allowances for values.
+  Publishing an encoding badly is a deployment defect; not declaring one is
+  a protocol defect.
 - **Formula Completeness (`subsec:deployment:completeness`).** The published
   material — protocol constants; edge-type specifications and census; tensor
   pipeline; path-view extraction; mask and tier rules; determinant sign and
@@ -3921,10 +3978,10 @@ and retains the material needed to replay that edition.
 | Condition | Duty |
 |---|---|
 | `cond:deployment:standing-parameters` | Publish the tilt profile and backoff grid, the depth mass and its deepest supported depth, the self-retention base, the domain weights, and each act family's normalized domain profile, with their defining formulas and admissibility evidence. |
-| `cond:deployment:wall-calibration` | Publish the numéraire, policy-floor schedule, structural floor declaration and its exact defining object, margin, controller edition, initialization, reduced constants, and arithmetic and comparison procedure. Evaluate both chartered floors against the declared economic and work criteria; neither is a default. Publish proposal and delivered wall separately, including the floor, deadband and step-cap order, preserve the debit vintage in force, and certify the charged value. A floor switch is a public structural change with regenerated evidence; a third floor needs its own derivation. |
+| `cond:deployment:wall-calibration` | Publish the numéraire, policy-floor schedule, structural floor declaration and its exact defining object, margin, controller edition, initialization, reduced constants, and arithmetic and comparison rules under `post:deployment:replay-verification`. For an evaluated binding-floor test whose enclosure straddles the floor, the producer may refine before publication; otherwise reject the proposed set under `post:network:host-contract`, keeping that verdict out of the accepted publication and issuing it under `post:deployment:verdict-issuance`; the controller terminates with a verdict or rejection. Evaluate both chartered floors against the declared economic and work criteria; neither is a default. Publish proposal and delivered wall separately, including the floor, deadband and step-cap order, preserve the debit vintage in force, and certify the charged value. A floor switch is a public structural change with regenerated evidence; a third floor needs its own derivation. |
 | `cond:deployment:boundary-policy` | Publish the epoch target size, minimum and maximum durations, policy-floor schedule, threshold announcement lead, candidate-set search policy and trial budget, validation timeout, solver availability target, and fallback, with a constant-change adaptation window during which cadence retargeting is frozen. |
 | `cond:deployment:canonical-encoding` | Publish and version one canonical encoding of the standing package, with round-trip evidence. |
-| `cond:deployment:canonical-replay` | Publish the deterministic certification procedure with its precision, refinement, equality handling, and stopping limits, and every attempted rung with its PASS, FAIL, or INDECISIVE verdict. |
+| `cond:deployment:canonical-replay` | Publish each attempted positive rung with its stated enclosure and verdict under `post:deployment:replay-verification`. Attempt positive rungs from greatest to least through the first PASS, or through the least positive rung if none passes; accept the greatest attempted PASS, with the exact anchor available. A missing, repeated, out-of-order or below-acceptance attempt fails verification. A record holds positive attempts only, and the anchor has no row; a record whose attempts end at the least positive rung without a PASS shows acceptance of the anchor. A rung that cannot be evaluated has no stated sound enclosure and therefore no verdict: it cannot be published as INDECISIVE and cannot be skipped, so no rung below it, the anchor included, is accepted for that proposed set under that record. Any sound enclosure of the rung, however loose, carries a verdict and lets the descent continue; without one, the producer's way on is another proposed set or the declared fallback of `cond:deployment:boundary-policy`. A participant unable to check reports that it could not verify, neither a discrepancy nor a confirmation. A voluntary build declaration names the implementation, source revisions, environment and store discipline; reproduction follows the record's order, and a participant unable to run it reports non-reproduction, neither a discrepancy nor a confirmation. At a binding threshold, refinement is the producer's option before publication; reject an unresolved proposed set under `post:network:host-contract` and issue its verdict under `post:deployment:verdict-issuance`. |
 
 **Centralized-phase monitoring (`post:deployment:centralized-monitoring`).**
 During the centralized phase the operator publishes reproducible
@@ -3934,7 +3991,7 @@ target never waives the floor, a passing certificate, exact standing, or X9.
 
 | Condition | Duty |
 |---|---|
-| `cond:deployment:certificate-monitoring` | Publish per accepted epoch the evaluated certificate, contributing width, accepted rung, enclosure radius, standing movement, transported mass by hop, and below-wall fraction, with fallback and rung frequencies that distinguish FAIL from INDECISIVE. |
+| `cond:deployment:certificate-monitoring` | Publish per accepted epoch the evaluated certificate, contributing width, accepted rung, enclosure radius, standing movement, transported mass by hop, and below-wall fraction, with fallback and rung frequencies that distinguish proved FAIL from INDECISIVE enclosures under `post:deployment:replay-verification`. For a fixed deployment and attempted set, the relative frequencies of proved FAIL and INDECISIVE can vary with the tightness of the producer's evaluation and are not deployment invariants. |
 | `cond:deployment:title-certificate-monitoring` | Recompute $\mathrm{owner}^{(k)}$ from the published partition at every boundary, compare it with the published certificate, and publish every disagreement with its evidence; a disagreement triggers the published review, not a rewrite of the certificate. |
 | `cond:deployment:emission-experience` | Publish the wall in force, the emission-fraction distribution, exported mass, and community sag and fading-Actor observations against a declared experience envelope, with the declared response; no response silently changes the source-emission rule. |
 | `cond:deployment:controller-performance` | Publish the controller's response model, hypotheses, tested range, and tracking, steady-error, settling, and chatter observations, and calibrate $a$, $r$, $d$ within the published edition; a failed target prompts review, not margin escalation or a new controller input. |
@@ -3954,6 +4011,222 @@ failed criterion is reported with its disposition.
 | `cond:deployment:boundary-search-evidence` | Publish boundary-search trial counts and elapsed-time envelopes with their hardware, arithmetic, residual target, and timeout/fallback settings, and show that any adopted exact reuse yields the same certified outputs as complete validation on the declared comparison inputs. |
 | `cond:deployment:terminal-regression` | For a standing-edition change, publish regression inputs and deltas for each terminal consumer that reads standing, with its declared tolerance and response to a failed criterion. |
 | `cond:deployment:complete-act-conformance` | Publish compiler/replay evidence covering parallel acts, complete-act identity, fold cells, recipient resolution, domain profiles, and base allocation, and reproduce the accepted-act census under projection completeness. |
+
+### 13.2 Replay verification and verdict certificates
+
+**Replay Verification (`post:deployment:replay-verification`).**
+
+- *Exact comparisons.* Comparisons of stated integer and rational values
+  and of exact endpoints of stated enclosures are decided exactly and always
+  terminate with a verdict. The enclosure discipline governs evaluated
+  quantities only. What is stated is exact: an integer or rational value,
+  the endpoints of a stated enclosure, or an exact object stated by its
+  definition.
+- *Stating.* Stating is a declared choice of the producer; deciding is not.
+  The published comparison procedure declares for each comparison, before
+  any proposal is judged under it, how each side is stated: as an exact
+  value, as an exact object by its definition, or as a sound enclosure. The
+  comparison record states which way each side was carried, and only a side
+  stated by enclosure can leave a comparison INDECISIVE. An evaluated
+  quantity owes no exact evaluation even where it is rational: inside a
+  declared enclosure route the effort spent is a choice of the producer, and
+  widening into a sound enclosure is always permitted and only costs
+  decisiveness. Widening never reaches data the accepted record already
+  states: record data are exact, are compared as stated, and are never
+  restated as enclosures. An exact object stated by its definition is
+  compared through a defining identity (`rem:epoch:floor-is-a-landmark`).
+- *At an exact threshold.* Where a value meets an exact threshold, an
+  at-most test decides PASS when a sound enclosure has that value as its
+  upper endpoint, an at-least test decides PASS when it has that value as
+  its lower endpoint, a less-than test decides FAIL when it has that value
+  as its lower endpoint, and a greater-than test decides FAIL when it has
+  that value as its upper endpoint. Equality decides PASS exactly when both
+  endpoints equal the value.
+- *Verdicts.* Each evaluated comparison in the record is published as a
+  stated sound enclosure — a closed interval with exact endpoints that
+  contains the exact value of the evaluated quantity — together with its
+  threshold and the verdict that the endpoints alone define. For a test that
+  a quantity is at most a threshold: PASS iff the upper endpoint is at most
+  the threshold; FAIL iff the lower endpoint is above the threshold;
+  INDECISIVE iff the lower endpoint is at most the threshold and the upper
+  endpoint is above it. Every other comparison is decided likewise: PASS
+  when every point of the enclosure satisfies it, FAIL when no point does,
+  INDECISIVE otherwise. A threshold that is itself evaluated is stated as a
+  sound enclosure in the same way, and the comparison is decided over every
+  pair of values the two enclosures admit; an exact threshold is the point
+  case. A reduction the standard declares, such as an enclosure of a
+  difference against zero, is part of the standard and resolves from the
+  certificate reference (`def:deployment:verdict-certificate`). Every
+  verdict carries its enclosure and threshold; an outcome without a stated
+  sound enclosure is not a verdict. A verdict asserts no precision, width
+  or effort beyond these endpoints.
+- *The rung test* (`def:epoch:tilt-backoff-grid`) is one instance, with
+  $m_\theta\,\mathcal{K}_k$ at the attempted rung as the quantity and one as
+  the threshold (`def:dynamics:conserved-standing-certificate`): PASS iff the
+  upper endpoint is at most one, FAIL iff the lower endpoint is above one,
+  INDECISIVE iff the lower endpoint is at most one and the upper endpoint is
+  above one.
+- *Refinement and rejection.* Refinement is the producer's option before
+  publication. At a rung, an INDECISIVE enclosure is published and the
+  descent continues. At a binding threshold, an INDECISIVE enclosure is a
+  verdict that decides nothing and authorizes nothing: a proposed set left
+  unresolved is rejected (`post:network:host-contract`), and no verdict of a
+  rejected set is any part of the accepted publication. Each verdict on
+  which a rejection rests, FAIL or INDECISIVE, is issued whole to the party
+  it measures; showing it further is the right of that party and the duty of
+  no one, within the scopes of `post:deployment:rejected-verdicts`.
+- *Representation.* How endpoints are represented belongs to the
+  deployment's published encoding (`cond:deployment:canonical-encoding`).
+- *Verification.* Verification recomputes every exact object and compares
+  it with the published object; the reader checks every stated enclosure for
+  soundness by its own sound evaluation at any refinement, then checks that
+  the verdict follows from its endpoints and threshold. No particular build,
+  declared procedure or witness is required. A finer reader may decide a
+  comparison the record leaves INDECISIVE without finding a discrepancy;
+  opposing sound PASS and FAIL for the same question are attributable
+  discrepancies, as is a recomputed exact object that differs from the
+  published one. A reader unable to check finds neither a discrepancy nor a
+  confirmation. A witness is an optional aid. Reproduction under a published
+  build declaration, with each store starting empty as declared, is a
+  voluntary test of the producer and never a precondition of package
+  acceptance.
+
+**Verdict certificates (`subsec:deployment:verdict-certificates`).**
+
+- **Verdict Certificate (`def:deployment:verdict-certificate`).** A triple
+  $C = (S, E, o)$ for one comparison. The *standard reference* $S$ resolves
+  in the public record to the standard of that comparison: its predicate (an
+  order relation or equality between a reduced quantity and its threshold),
+  the threshold, the reduction that forms the reduced quantity, and the
+  published comparison procedure. $S$ names the boundary whose thresholds
+  were in force at judgment and the procedure editions then in force, so the
+  standard is accepted content before any proposal is judged under it; it
+  fixes what is compared and how its sides are stated, never how a reader
+  evaluates them. The *enclosure* $E$ gives each side of the reduced
+  comparison as a closed interval with exact endpoints, lower at most upper:
+  a side stated exactly is the point interval of its value, and an evaluated
+  side is a sound enclosure stated by the route the procedure declares. The
+  *outcome* $o$ is PASS, FAIL or INDECISIVE. The certificate is valid when
+  $o = V(E, S)$, where $V$ is total: PASS when every pair of quantity and
+  threshold values that $E$ admits satisfies the predicate, FAIL when no such
+  pair does, INDECISIVE otherwise. Replay resolves $S$ in the public record,
+  recomputes $V$ and compares it with $o$; it needs the certificate and the
+  public record and nothing else. The outcome is derivable and is carried so
+  that replay is a check rather than an interpretation. The certificate
+  certifies the comparison only: binding $E$ to a proposal and its inputs is
+  the evidence layer above it, published with every accepted package and
+  absent from a bare certificate, so a certificate alone asserts no
+  acceptance.
+- **Stated Verdicts Replay Alike (`lem:deployment:stated-verdict-replay`).**
+  For a stated certificate $(S, E, o)$, every replayer that resolves $S$ in
+  the same public record computes the same outcome $V(E, S)$, so validity is
+  decided from the certificate and the public record alone. Replay checks
+  that the outcome follows from the enclosure and the standard; it does not
+  check that the enclosure is sound, which needs the inputs of the evaluated
+  quantity.
+- **Sound Verdicts Never Conflict (`lem:deployment:sound-verdict-agreement`).**
+  Two sound enclosures $E$, $F$ for the same comparison under the same
+  standard never decide opposite ways (one PASS, the other FAIL). Their
+  intersection is a sound enclosure and decides whatever either decides. A
+  sound enclosure contained in $E$ keeps any decision of $E$ and can move
+  INDECISIVE to PASS or FAIL; a sound enclosure containing $E$ never reverses
+  a decision of $E$ and can only keep it or move it to INDECISIVE. Where the
+  exact value of the reduced quantity equals an exact threshold, a sound
+  enclosure decides an order predicate exactly when the endpoint on which
+  that predicate turns equals the value: for an at-most test its upper
+  endpoint at the threshold proves PASS, for an at-least test its lower
+  endpoint proves PASS, for a less-than test its lower endpoint proves FAIL,
+  and for a greater-than test its upper endpoint proves FAIL. Equality
+  decides PASS exactly when both endpoints equal the value. An enclosure
+  holding the value in its interior is INDECISIVE, as is every sound
+  refinement that keeps the value in its interior; a sound refinement
+  bringing the deciding endpoint to the value decides the order test, while
+  a point refinement decides equality.
+- **Verdict Issuance (`post:deployment:verdict-issuance`).** The host
+  chooses each enclosure within the constraints that the paper and the
+  declared comparison procedure fix: soundness is required and tightness is
+  chosen. The host issues each verdict on which the rejection of a proposed
+  set rests, FAIL and INDECISIVE included, as a whole certificate under
+  `def:deployment:verdict-certificate` to the party the comparison measures,
+  with the rejection and unasked. A bare rejection, without the enclosure the
+  host compared, is forbidden. An own-balance or individual-safety
+  comparison measures the author whose act it compares. A comparison that
+  measures no single party, such as the epoch door, and the wall, floor and
+  controller comparisons of the deployment itself are issued to the
+  deployment itself; this self-issuance asks nothing beyond the evidence the
+  deployment already keeps (`cond:deployment:wall-calibration`,
+  `cond:deployment:boundary-search-evidence`). From the issued certificate
+  and the public record alone, the party measured can recompute the outcome
+  from the stated enclosure and the standard and obtains the outcome the
+  host stated; this fixes no representation. The reference names the record
+  state it resolves against, and an issued certificate binds the host as its
+  statement of that verdict, as `post:network:host-contract` binds it to the
+  published package. The certificate lets its holder check that the outcome
+  follows from the enclosure, not that the enclosure is sound. The party
+  measured is owed the certificate, not the evidence layer, whose inputs
+  include acts of other authors that the rejected set leaves unwritten. That
+  the issued enclosure is the one the host compared is conduct of the host,
+  priced by reputation, as is its choice of tightness: a finer sound
+  enclosure computed by anyone holding the inputs decides an INDECISIVE left
+  by parsimony, never contradicts the outcome, and leaves undecided only a
+  comparison whose value meets its threshold. Whether and which proposed
+  sets the host evaluates remains its discretion under
+  `post:epoch:final-act-sequence-closure`; the duty makes visible the
+  enclosure chosen at every comparison on which a rejection rests. Showing
+  an issued certificate further is the right of the party measured and the
+  duty of no one: the host can neither demand secrecy nor force publicity.
+- **Rejected Verdicts (`post:deployment:rejected-verdicts`).** Every verdict
+  of a judged proposed set falls in one of three cases. *Accepted*: the
+  whole certificate set and its evidence layer are published with the
+  accepted package (`post:network:host-contract`,
+  `cond:deployment:canonical-replay`), failed and INDECISIVE rung attempts
+  included where they are the evidence of the accepted value. *Rejected and
+  noted*: the verdict of a rejected set is shown by choice; a note carries a
+  valid certificate whole or does not exist, asserts no acceptance, decides
+  nothing for the rejected set, and by its presence or absence changes no
+  accepted record, verdict or rejection. *Rejected and private*: nothing is
+  shown and no certificate is owed to the public; the party measured holds
+  any certificate issued to it, and the standard is public regardless. The
+  verdicts of a rejected set live outside the accepted record: an issued
+  certificate with the party measured, and a note where its maker places it,
+  separately identified from every accepted package. The deployment may note
+  its own comparisons whole in its own publication beside its calibration
+  evidence (`post:deployment:calibration-evidence`); where the inputs are
+  public, as for those comparisons, any reader can refine a noted
+  INDECISIVE, and a finer decision can only sharpen it. A third party shown
+  a note can check that the outcome follows from the enclosure and that the
+  reference resolves; it cannot check soundness without the inputs, and it
+  learns nothing of acceptance or of other trials. Two bounds apply, each in
+  its own scope; both bind the accepted record, the host and the deployment,
+  and neither limits what a party measured shows of its own certificate:
+  no accepted record represents an unwritten act, and the host shows the
+  certificate of an author only as that author chooses
+  (`rem:epoch:consent-exposure`); no verdict of a rejected trial is gathered
+  into a demand ledger or a register of persons
+  (`rem:epoch:admission-statistics-quarantine`) — counts without persons,
+  such as those of `cond:deployment:certificate-monitoring` and
+  `cond:deployment:boundary-search-evidence`, are no such ledger.
+- **Stated Exactness and Chosen Imprecision
+  (`rem:deployment:stated-exactness`).** The requirement to decide exactly
+  attaches to the comparison of what is stated, never to the computation of
+  the quantity: a deployment may state a rational evaluated quantity by a
+  sound enclosure for cost alone, and comparing what it states remains a
+  bounded number of exact comparisons, however the endpoints were obtained.
+  Under two premises — every stated enclosure is sound, and every declared
+  reduction is an exact equivalence of the comparison — inexactness of every
+  kind (measured, represented, computed or chosen) can influence a verdict
+  only by leaving it INDECISIVE: it never makes two replays of a stated
+  certificate disagree and never turns PASS into FAIL. Replay checks neither
+  premise; soundness is checked by evaluation, which needs the inputs. An
+  exact object stated by its definition, such as the ridge $\rho^*$, is
+  exact without being rational and is decided by a defining identity or
+  through a sound enclosure. Realizations that state the same data reach the
+  same verdicts, and realizations that differ only in the enclosures they
+  produce can differ only between a decision and INDECISIVE. Where the paper
+  does not constrain an enclosure, its selection is discretion of the host;
+  the chosen width is visible in every certificate — at a rung in the
+  published attempts, at a binding threshold in the issued certificate
+  (`post:deployment:verdict-issuance`).
 
 ---
 
@@ -4042,7 +4315,7 @@ package's intermediate values are binding but not straddlers (§2).
 | $\mathfrak{e}_u$, $\mathfrak{E}$ | Source emission fraction $\min(1, \hat{r}_u/\rho_\theta)$ and its diagonal: history travels on the back of balance; a property of the source's pair, never of one relation. | `def:epoch:source-emission` |
 | $\boldsymbol{\Pi}(\boldsymbol{x})$, $\Pi_{ui}$, $\tilde{b}_i$, $\tilde{N}_i$ | Conserved transport — emission applied once to the depth-mass mixture of hop products — its entries, and the transported pair mass. Sole relational input to standing; every row sums to one. | `def:epoch:finite-depth-conserved-transport`, `post:epoch:standing-pair-mass-conservation` |
 | $\boldsymbol{x}^*$, $\mathcal{B}_k$ | The epoch's unique conserved equilibrium and the rate-hull box it is solved on, known before the solve begins. | `def:epoch:conserved-standing-equilibrium`, `prop:epoch:final-standing-hull` |
-| $\mathcal{K}_k$ | Conserved standing certificate; a rung passes iff $m_\theta\,\mathcal{K}_k \le 1$, the accepted rung is the greatest one the declared procedure proves passing, and the verdict distinguishes certificate failure from indecisive enclosure. | `def:dynamics:conserved-standing-certificate` |
+| $\mathcal{K}_k$ | Conserved standing certificate; a rung passes iff $m_\theta\,\mathcal{K}_k \le 1$, the accepted rung is the greatest attempted one whose stated enclosure proves PASS (`post:deployment:replay-verification`), and the verdict distinguishes certificate failure from indecisive enclosure. | `def:dynamics:conserved-standing-certificate` |
 | $\rho_{\text{act}}(q)$, $\rho_{\text{ep}}^{(k)}$ | Final act stamp (act-owned reduced final standing) and act-weighted epoch stamp. | `def:epoch:final-act-stamps` |
 | $W^+(v), W^-(v)$ | Raw double-cover output registers: the maximum positive- and negative-parity path products to $v$ over paths simple in the raw snapshot, summarizing the enumerated path prefixes (which, not the registers, are the extension state) — terminal raw-service outputs, read by no standing quantity. | `def:epoch:double-cover-bfs-state` |
 | $\mathrm{pos}(e)$ **(L1·verify)** | Audit position under the identity-key linearization; consumed by no formula. | `def:epoch:log-position` |

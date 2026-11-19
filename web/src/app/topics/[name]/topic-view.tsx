@@ -33,6 +33,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import type { PostView } from "@/lib/api/content-api";
+import { readCommittedFeedFilter } from "@/lib/feed/committed-filter";
+import { admitsRemoved } from "@/lib/feed/feed-predicates";
+import { readReaderDefault } from "@/lib/feed/reader-default";
+import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { fetchHashtagDetail, type HashtagDetail } from "@/lib/api/topics-api";
 import { useHostSnack } from "@/lib/saved/save-row";
 import { SEEN_ATTRIBUTE, useSeenTracker } from "@/lib/history/seen-tracker";
@@ -65,6 +69,12 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
   const [menuPost, setMenuPost] = useState<PostView | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // THE FEED'S FILTER, AS THE FEED OPENS WITH IT: the one committed in the
+  // feed on this device, else the reader's saved default (`feed-view.tsx`).
+  const phase = useAuthPhase();
+  const account = useActiveAccountId();
+  const reader = phase === "signedIn" ? account : null;
+
   const refresh = useCallback(() => {
     let cancelled = false;
     void fetchHashtagDetail(client, name).then((outcome) => {
@@ -79,13 +89,23 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
         setNotFound(true);
       } else {
         setNotFound(false);
-        setHashtag(outcome.value);
+        // THE TAG PAGE FOLLOWS THE FEED'S REMOVED SWITCH (TagPage.md:19-21):
+        // read when the page is derived, so a removal taken from this page's
+        // own menu stands as its mark until the next read. Only posts are
+        // cut — a tagged comment's case is not ruled on main.
+        const feedFilter = readCommittedFeedFilter(reader) ?? readReaderDefault(reader);
+        setHashtag({
+          ...outcome.value,
+          taggedContent: outcome.value.taggedContent.filter(
+            ({ node }) => node.__typename !== "Post" || admitsRemoved(feedFilter, node),
+          ),
+        });
       }
     });
     return () => {
       cancelled = true;
     };
-  }, [client, name]);
+  }, [client, name, reader]);
 
   useEffect(() => refresh(), [refresh]);
 

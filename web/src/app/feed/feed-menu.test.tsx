@@ -4,7 +4,7 @@
 // the confirm's commit — whose snackbar never claims a report that did not go
 // out.
 
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -504,8 +504,15 @@ describe("the feed's post menu", () => {
     const cards = screen.getAllByTestId(byNode("feed.card"));
     expect(cards[0]).toHaveAttribute("data-testid-key", "p1");
     expect(screen.getByTestId(byNode("feed.card", "p2"))).toHaveTextContent("body of p2");
-    // A removed post has no menu left.
-    expect(screen.queryByTestId(byNode("feed.card.menu", "p1"))).not.toBeInTheDocument();
+    // FeedRemoved.md:9 — the removed card keeps its ⋮, your own post's menu
+    // less Edit, Mark as sensitive and Remove (FeedRemovedMenuOwn.md:5).
+    fireEvent.click(screen.getByTestId(byNode("feed.card.menu", "p1")));
+    const sheet = screen.getAllByTestId("feed.menuSheet").find((d) => (d as HTMLDialogElement).open);
+    expect(
+      within(sheet!)
+        .getAllByRole("button")
+        .map((row) => row.textContent),
+    ).toEqual(["Save", "Cite in a new post", "License terms"]);
   });
 
   // FeedRemoveConfirm.md:13 — WHEN the removal does not go through ->

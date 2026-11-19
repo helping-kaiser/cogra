@@ -9,6 +9,7 @@ import {
   SHEET_CEILING,
   SHEET_CEILING_SLIVER_PX,
   SHEET_DEFAULT,
+  SHEET_KEYBOARD_LIFT,
   SHEET_RAISED,
   SheetItem,
 } from "./bottom-sheet";
@@ -153,11 +154,25 @@ describe("BottomSheet", () => {
   // THE SLIVER IS THE DRAWN ONE (jakob's ruling, the sheets-and-video round,
   // 2026-09-22; `design/components/core/BottomSheet.jsx`'s `SHEET_CEILING`
   // is the same `calc(100% - 72px - env(safe-area-inset-top, 0px))`).
+  // The master's `100%` is the visible screen, so the keyboard's height comes
+  // off it (seam 381) — 0 with no keyboard, the drawn ceiling exactly.
   it("measures its ceiling from the top of the safe area", () => {
     expect(SHEET_CEILING_SLIVER_PX).toBe(72);
     expect(SHEET_CEILING).toBe(
-      `calc(100dvh - ${SHEET_CEILING_SLIVER_PX}px - env(safe-area-inset-top, 0px))`,
+      `calc(100dvh - ${SHEET_CEILING_SLIVER_PX}px - env(safe-area-inset-top, 0px) - var(--keyboard-inset, 0px))`,
     );
+  });
+
+  // A pinned footer never walks out of reach (design/readme.md, Spacing and
+  // layout): with the keyboard up the whole sheet stands on its top edge.
+  it("stands_on_the_keyboards_top_edge", () => {
+    render(
+      <BottomSheet open onClose={() => {}} title="Mark as sensitive">
+        <p>Body</p>
+      </BottomSheet>,
+    );
+    expect(screen.getByTestId("bottom-sheet").style.marginBottom).toBe(SHEET_KEYBOARD_LIFT);
+    expect(SHEET_KEYBOARD_LIFT).toBe("var(--keyboard-inset, 0px)");
   });
 
   // The column inside the surface is bounded by the same thing, less the

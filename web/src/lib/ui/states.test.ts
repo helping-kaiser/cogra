@@ -36,6 +36,17 @@ describe("interaction states", () => {
 
   // The door card (design/tokens/states.css): the card lights whole while the
   // door inside it is hovered or pressed, at the same two opacities.
+  it("a_pressable_surfaces_position_yields_to_a_utility_on_the_same_element", () => {
+    // An unlayered `position: relative` outranks every Tailwind utility, so
+    // `absolute` on a `cg-state` control never took and the pad's "?" fell
+    // to its top-left (jakob 2026-11-18). Every rule that positions
+    // `.cg-state` itself must sit in the components layer.
+    const layered = /@layer components\s*\{\s*\.cg-state\s*\{[^}]*position:\s*relative;[^}]*\}\s*\}/;
+    expect(CSS).toMatch(layered);
+    const bare = CSS.replace(layered, "");
+    expect(bare).not.toMatch(/(^|\n)\.cg-state\s*\{[^}]*position/);
+  });
+
   it("lights a door card from the door inside it", () => {
     expect(CSS).toContain(".cg-door-card:has(.cg-door:hover)::after");
     expect(CSS).toContain(".cg-door-card:has(.cg-door:active)::after");

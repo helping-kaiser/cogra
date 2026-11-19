@@ -15,6 +15,7 @@ import { RegistrationProvider } from "@/lib/signing/provider";
 import { HiddenProvider } from "@/lib/hidden/provider";
 import { SavedProvider } from "@/lib/saved/provider";
 import { StanceDataProvider } from "@/lib/stance/provider";
+import { KeyboardInsetSync } from "@/lib/ui2/keyboard-inset-sync";
 
 import { AppShell } from "./shell";
 
@@ -68,6 +69,7 @@ export default function RootLayout({
             <AuthRuntimeProvider>
               <AccountPreferencesSync />
               <GeekModeSync />
+              <KeyboardInsetSync />
               <SeenRecordSync />
               <DeviceLockKeeper />
               <AccountDeletionProvider>
