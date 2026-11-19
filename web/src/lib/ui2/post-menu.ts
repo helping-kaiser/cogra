@@ -33,6 +33,12 @@ export type PostMenuContext = {
   postId: string;
   /** The viewer is the author — `OWN_POST_MENU` rather than `READER_POST_MENU`. */
   own: boolean;
+  /**
+   * The post was removed (`payloadIsRedacted`): the author's own menu loses
+   * Edit, Mark as sensitive and Remove, and the reader's stays whole
+   * (FeedRemovedMenuOwn.md:5, FeedRemovedMenu.md:5).
+   */
+  removed?: boolean;
   /** The author's handle, for the reader menu's hide row. */
   handle: string | null;
   /** Dropped from the rows when there is none: a redacted record has no license. */
@@ -110,6 +116,7 @@ export type PostMenuContext = {
 export function postMenuItems({
   postId,
   own,
+  removed = false,
   handle,
   license,
   navigate,
@@ -148,7 +155,9 @@ export function postMenuItems({
       onGuest ?? onApplicant ?? (() => navigate(`/compose?reference=${postId}`)),
     ),
   );
-  if (own) {
+  // A REMOVED POST HAS NOTHING LEFT TO EDIT, MARK OR REMOVE: the author's
+  // menu keeps its reads and its Save and Cite (FeedRemovedMenuOwn.md:5).
+  if (own && !removed) {
     rows.push(
       row("edit", "edit", "Edit", () => navigate(`/compose?post=${postId}`)),
       // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published post
