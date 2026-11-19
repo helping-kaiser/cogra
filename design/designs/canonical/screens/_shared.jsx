@@ -3056,6 +3056,16 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
               <div style={{ display: "{{postRemovedShown}}" }} data-node-chip="post" data-node-key="removed">
                 <QuietNote node="target">Your comment on @ada's removed post.</QuietNote>
               </div>
+              {/* A deleted account's post (round 61; the pointer rule blessed
+                  2026-11-19): kept, it keeps its title — its stand-in here —
+                  and the line, which prints no handle, reads as for any post;
+                  swept, it is named by kind and `a deleted account`. */}
+              <div style={{ display: "{{postDeletedShown}}" }} data-node-chip="post" data-node-key="deleted">
+                <QuietNote node="target">Your comment on "Three mornings on the wall…".</QuietNote>
+              </div>
+              <div style={{ display: "{{postSweptShown}}" }} data-node-chip="post" data-node-key="swept">
+                <QuietNote node="target">Your comment on a deleted account's removed post.</QuietNote>
+              </div>
             </>
           ) : (
             <QuietNote node="target">Your comment on "The long way home".</QuietNote>

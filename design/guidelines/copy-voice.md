@@ -870,9 +870,10 @@ recorded so the registry is whole.
   every host the edit opens from (jakob 2026-11-13, N5); an untitled
   post takes its stand-in (*An untitled post*), and a removed one reads
   `Your comment on @ada's removed post.`, the comment card's own naming
-  (jakob 2026-11-17, **blessed**), and a deleted account's `Your comment
-  on a deleted account's removed post.` by the same naming (*Naming a
-  removed or deleted thing*); and its sections `Words` and `Pictures` (`CommentEdit`; `Cover`
+  (jakob 2026-11-17, **blessed**); a deleted account's post still there
+  keeps its title, `Your comment on "Three mornings on the wall…".`, and a
+  swept one reads `Your comment on a deleted account's removed post.` by
+  the same naming (*Naming a removed or deleted thing*); and its sections `Words` and `Pictures` (`CommentEdit`; `Cover`
   on `CommentEditVideo`).
 
 ## Accessible names

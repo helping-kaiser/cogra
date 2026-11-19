@@ -78,8 +78,12 @@ export const PROPS = {
   body: { editor: "enum", options: ["pictures", "words"], default: "pictures" },
   signing: { editor: "enum", options: ["none", "signing"], default: "none" },
   /* THE `post` CHIP draws the line when the comment's post was removed
-     (jakob 2026-11-17): `Your comment on @ada's removed post.` */
-  post: { editor: "enum", options: ["live", "removed"], default: "live" },
+     (jakob 2026-11-17): `Your comment on @ada's removed post.`; and a
+     deleted account's (round 61, the pointer rule blessed 2026-11-19):
+     `deleted` the post kept, its title — the stand-in `"Three mornings on
+     the wall…"` — as for any post; `swept` `Your comment on a deleted
+     account's removed post.` */
+  post: { editor: "enum", options: ["live", "removed", "deleted", "swept"], default: "live" },
   tag: { editor: "enum", options: ["landed", "refused"], default: "landed" },
   /* THE `fault` CHIP (round 51, jakob 2026-11-17, impl 348): the signing
      failed while the edit stood open — `unsent` (no answer) or `refused`
@@ -87,7 +91,7 @@ export const PROPS = {
      outlined `Retry` under it, the count kept above (`editFault`). */
   fault: { editor: "enum", options: ["none", "unsent", "refused"], default: "none" },
 };
-export const VALS = `signRestShown: this.props.signing === "signing" || this.props.fault !== "none" || this.props.upload === "recrop-failed" ? "none" : "block", signBusyShown: this.props.signing === "signing" && this.props.fault === "none" && this.props.upload !== "recrop-failed" ? "block" : "none", signRecropShown: this.props.upload === "recrop-failed" && this.props.fault === "none" ? "block" : "none", thumbRestShown: this.props.upload === "recrop-failed" ? "none" : "contents", thumbRecropShown: this.props.upload === "recrop-failed" ? "block" : "none", faultUnsentShown: this.props.fault === "unsent" ? "flex" : "none", faultRefusedShown: this.props.fault === "refused" ? "flex" : "none", liveShown: this.props.target === "removed" ? "none" : "block", removedShown: this.props.target === "removed" ? "block" : "none", gateShown: this.props.upload === "uploading" && this.props.fault === "none" ? "block" : "none", picturesShown: this.props.body === "words" ? "none" : "flex", addLabel: this.props.body === "words" ? "+ Add pictures or a video" : "+ Add pictures · 1 of 4", postLiveShown: this.props.post === "removed" ? "none" : "block", postRemovedShown: this.props.post === "removed" ? "block" : "none", tagRing: this.props.tag === "refused" ? "1px solid var(--error)" : "none", tagRefusedShown: this.props.tag === "refused" ? "block" : "none", tagSecondShown: this.props.tag === "refused" ? "inline-flex" : "none"`;
+export const VALS = `signRestShown: this.props.signing === "signing" || this.props.fault !== "none" || this.props.upload === "recrop-failed" ? "none" : "block", signBusyShown: this.props.signing === "signing" && this.props.fault === "none" && this.props.upload !== "recrop-failed" ? "block" : "none", signRecropShown: this.props.upload === "recrop-failed" && this.props.fault === "none" ? "block" : "none", thumbRestShown: this.props.upload === "recrop-failed" ? "none" : "contents", thumbRecropShown: this.props.upload === "recrop-failed" ? "block" : "none", faultUnsentShown: this.props.fault === "unsent" ? "flex" : "none", faultRefusedShown: this.props.fault === "refused" ? "flex" : "none", liveShown: this.props.target === "removed" ? "none" : "block", removedShown: this.props.target === "removed" ? "block" : "none", gateShown: this.props.upload === "uploading" && this.props.fault === "none" ? "block" : "none", picturesShown: this.props.body === "words" ? "none" : "flex", addLabel: this.props.body === "words" ? "+ Add pictures or a video" : "+ Add pictures · 1 of 4", postLiveShown: this.props.post === "live" ? "block" : "none", postRemovedShown: this.props.post === "removed" ? "block" : "none", postDeletedShown: this.props.post === "deleted" ? "block" : "none", postSweptShown: this.props.post === "swept" ? "block" : "none", tagRing: this.props.tag === "refused" ? "1px solid var(--error)" : "none", tagRefusedShown: this.props.tag === "refused" ? "block" : "none", tagSecondShown: this.props.tag === "refused" ? "inline-flex" : "none"`;
 
 export function Screen() {
   return <CommentEditBody holes bodyChip />;
