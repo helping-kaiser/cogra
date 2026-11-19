@@ -955,7 +955,8 @@ paper over:
   say which one it counts; one merged "followers" figure would describe
   a different product, where a link is one-way and carries no opinion.
   Each figure counts bundles, never records (jakob 2026-11-10): the
-  posts published, never their edits; `Opinions on them` the people who
+  posts published, never their edits, a removed post included (jakob
+  2026-11-18), so the figure and the Posts tab's list agree; `Opinions on them` the people who
   hold an opinion on the person; `Opinions by them` the people they hold
   an opinion on. One person's opinions toward one target are one
   bundle, counted once however often they were revised; a revision count
@@ -12625,6 +12626,39 @@ drawing.
   board (backlog 280); what the Posts figure counts (backlog 281, silent);
   a comment's line pointer to a removed post (backlog 282); a removed tagged
   comment on the tag page (backlog 283, derived, not ruled).
+
+### Round 58, removed rows on the Everything tab and the tag page, the Posts figure, a comment's media square — 2026-11-18
+
+- **Ruled** (jakob 2026-11-18, rounds 55–57's review): C1 "as rec" — a
+  removed entry on the Everything tab reads `Removed by its author` on its
+  second line where the words were, and the row still opens the removed
+  thing's detail; C2 "yes ofcourse deleted posts count" — the Posts figure
+  counts removed posts; C4 "as rec" — a removed tagged comment follows the
+  feed's `Removed` switch as a removed post does. And from the hand test
+  (seam 373 / 375): "correct width but the image/clip should be square ..
+  why is there a cap on how high it can be?" — a shown comment's media is a
+  square at the column's width, no height cap.
+- **Drawn**: the `chronicle` chip's `removed` on `Profile` (the salt maps'
+  act, `ProfilePostsOwn`'s removed post) and `ProfileOther` (the 5d post,
+  `ProfilePosts`' removed one), the act's card, disc, verb and age kept
+  (`ChronicleAct`); `ProfileDeleted`'s swept chronicle under `contents` =
+  `removed`, each post's and comment's act reading the mark's line — the
+  same mark its swept post card wears — so the sidecar and the board agree;
+  `TagPage`'s `comment` = `removed`, @ada's tagged comment with
+  `CommentCard`'s own mark, `ProfileComments`' removed twin, under its
+  claim. `CommentCard` drops the 220 cap at its three galleries:
+  `FeedCommentShapes`' three frames go 314 × 220 → 314 × 314 and its tall
+  frame 3200 → 3482 to stay whole; `ReplyMedia`'s 326 × 220 → 326 × 326,
+  the sheet scrolling as before.
+- **The law that moved**: the chronicle's removed card and its door
+  (`Profile.md`, `ProfileOther.md`, `ProfileDeleted.md`); the figure
+  (readme §7, `ProfileHeader`, the profile sidecars); `TagPage.md`'s two
+  sentences, every removed row; `FeedCommentShapes`' pictures line.
+- **Held**: a tagged comment's ⋮ on the tag page — no host list names it,
+  so no menu board (backlog 284); `MediaAttachment`'s `maxHeight` has no
+  caller left (backlog 285); a pointer naming a removed thing (backlog 282,
+  round 59). `HistoryProfileMenu` moves off `Saved` to its row's first free
+  column. Backlog 280, 281 and 283 close.
 ---
 
 ## 14. The canvases

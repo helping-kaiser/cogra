@@ -114,20 +114,31 @@
    state is the first row, @tobias's post, the one row nothing else on the
    page points at (@ada's tagged comment answers @sol's post); the card is
    the feed's removed card, its ⋮ the reader's. `TagPageRemovedMenu` and
-   `TagPageRemovedMenuOwn` draw the two menus. */
+   `TagPageRemovedMenuOwn` draw the two menus.
+
+   A REMOVED TAGGED COMMENT FOLLOWS THE SAME SWITCH (round 58; jakob
+   2026-11-18, C4 "as rec"; the `comment` chip's `removed`): every removed row
+   the page lists is listed or not by the feed's `Removed`, the comment as the
+   post. On, @ada's tagged comment stands in its row under its claim with
+   `CommentCard`'s own mark, `Removed by its author` and the removal's `2h`,
+   in the words' place, as `ProfileComments`' `removed` draws the same
+   comment, its author, its age and its pointer kept. Its menus are not
+   drawn: copy-voice's comment rows name no tag page among their hosts
+   (backlog 284). */
 
 export const FRAME = { width: 390, height: 1344 };
 export const PROPS = {
   load: { editor: "enum", options: ["loaded", "failed", "notFound"], default: "loaded" },
   post: { editor: "enum", options: ["live", "removed"], default: "live" },
+  comment: { editor: "enum", options: ["live", "removed"], default: "live" },
 };
-export const VALS = `loadedShown: this.props.load === "loaded" ? "contents" : "none", failedShown: this.props.load === "failed" ? "contents" : "none", notFoundShown: this.props.load === "notFound" ? "contents" : "none", postLive: this.props.post === "removed" ? "none" : "contents", postRemoved: this.props.post === "removed" ? "contents" : "none"`;
+export const VALS = `loadedShown: this.props.load === "loaded" ? "contents" : "none", failedShown: this.props.load === "failed" ? "contents" : "none", notFoundShown: this.props.load === "notFound" ? "contents" : "none", postLive: this.props.post === "removed" ? "none" : "contents", postRemoved: this.props.post === "removed" ? "contents" : "none", commentLive: this.props.comment === "removed" ? "none" : "contents", commentRemoved: this.props.comment === "removed" ? "contents" : "none"`;
 
 export function Screen() {
   return (
     <>
       <div style={{ display: "{{loadedShown}}" }}>
-        <TagPageBody removed="hole" />
+        <TagPageBody removed="hole" commentRemoved="hole" />
       </div>
       <div style={{ display: "{{failedShown}}" }}>
         <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" />

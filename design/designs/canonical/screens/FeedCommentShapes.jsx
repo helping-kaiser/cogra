@@ -3,9 +3,9 @@
    `FeedShapes` holds the clip's three. `FeedKinds` draws the card at rest:
    a text comment answering a post with a picture.
 
-   · ITS OWN PICTURES. A comment's pictures join its words inset, capped at a
-     comment's height (readme §13), and in the feed they take the card's tap:
-     the comment's thread, scrolled to it.
+   · ITS OWN PICTURES. A comment's pictures join its words inset, a square at
+     the column's width with no cap on its height (jakob 2026-11-18), and in
+     the feed they take the card's tap: the comment's thread, scrolled to it.
    · ITS OWN CLIP (jakob 2026-10-02). A comment's clip plays as it does in
      its thread (`ReplyMedia`): muted autoplay in the comment scale's square,
      the sound disc and nothing else. It competes for the feed's one stage
@@ -50,7 +50,7 @@
    its discs by `soundDisc` and `playDisc`. */
 export const NODE = "feed";
 
-export const FRAME = { width: 390, height: 3200 };
+export const FRAME = { width: 390, height: 3482 };
 
 const LONG_COMMENT =
   "Drove it twice this summer, once in each direction, and the second time I stopped at every lay-by between the tunnel mouth and the third headland. The light does something different on the way back — lower, warmer, and it catches the salt crust on the flats so the whole shore looks drawn in chalk. Worth the four hours, and worth doing backwards.";
