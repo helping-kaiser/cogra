@@ -1175,9 +1175,9 @@ describe("PostView", () => {
       expect(screen.getByTestId(byNode("postDetail.card.removalMark.when"))).toHaveTextContent("now");
       // Removed.md:9 — never the platform's words.
       expect(mark).not.toHaveTextContent("Removed under the platform's rules");
-      // Removed.md:11 — the header carries the way back alone and no menu.
+      // Removed.md:11 — the header carries the way back and the menu.
       expect(screen.getByTestId(byNode("postDetail.header.back"))).toBeInTheDocument();
-      expect(screen.queryByTestId(byNode("postDetail.header.menu"))).not.toBeInTheDocument();
+      expect(screen.getByTestId(byNode("postDetail.header.menu"))).toBeInTheDocument();
       // The words are gone, and the cited-by line with them (`PostCard.jsx`).
       expect(screen.queryByTestId(byNode("postDetail.card.title"))).not.toBeInTheDocument();
       expect(screen.queryByTestId(byNode("postDetail.card.body"))).not.toBeInTheDocument();
@@ -1254,6 +1254,94 @@ describe("PostView", () => {
         "aria-label",
         "Back to Saved",
       );
+    });
+
+    // THE REMOVED DETAIL'S HEADER MENU — Removed.md:11/:13 (own) and
+    // RemovedOther.md:5/:7 (another's). The boards' Cited by and Opinions on
+    // this rows are not built on any web post menu yet (bite
+    // W-POSTMENU-CITEDBY-OPINIONS), so the rows read the menu less them.
+    describe("the removed detail's header menu", () => {
+      const removedPost = (authorId: string) =>
+        thread(authorId, [], undefined, false, [], [], {
+          content: null,
+          removal: { at: removedAt(), by: "AUTHOR" },
+        });
+      const rowsOfSheet = () =>
+        Array.from(
+          screen.getByTestId("post-menu-sheet-body").querySelectorAll("[data-testid]"),
+          (row) => [row.getAttribute("data-testid"), row.textContent],
+        );
+
+      // Removed.md:11 — Save, Cite in a new post, License terms: the own post's
+      // menu less Edit, Mark as sensitive and Remove; :13 the sheet rises over
+      // the detail AND NEVER Edit, Mark as sensitive or Remove stands.
+      it("the_authors_removed_post_menu_reads_save_cite_license_never_edit_sensitive_remove", async () => {
+        server.use(...removedPost("acct-1"));
+        renderWithProviders(<PostView postId="p1" />, {
+          store: storeFor("acct-1"),
+          writeSigner: fakeWriteSigner(),
+        });
+        await screen.findByTestId(byNode("postDetail.card.removalMark"));
+        fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
+        const sheet = screen.getByTestId(byNode("postDetail.menuSheet")) as HTMLDialogElement;
+        expect(sheet.open).toBe(true);
+        expect(sheet).toHaveAccessibleName("Post actions");
+        expect(rowsOfSheet()).toEqual([
+          ["postDetail.menuSheet.save", "Save"],
+          ["postDetail.menuSheet.cite", "Cite in a new post"],
+          ["postDetail.menuSheet.license", "License terms"],
+        ]);
+        expect(screen.queryByTestId("postDetail.menuSheet.edit")).toBeNull();
+        expect(screen.queryByTestId("postDetail.menuSheet.markSensitive")).toBeNull();
+        expect(screen.queryByTestId("postDetail.menuSheet.remove")).toBeNull();
+        // The post stands as its mark beneath the sheet.
+        expect(screen.getByTestId(byNode("postDetail.card.removalMark"))).toBeInTheDocument();
+      });
+
+      // RemovedOther.md:5, :7 — another's removed post: Save, Cite in a new
+      // post, Hide with the author's handle, License terms, Report at the tail.
+      it("anothers_removed_post_menu_reads_the_readers_menu_whole", async () => {
+        server.use(...removedPost("someone-else"));
+        renderWithProviders(<PostView postId="p1" />, {
+          store: storeFor("acct-1"),
+          writeSigner: fakeWriteSigner(),
+        });
+        await screen.findByTestId(byNode("postDetail.card.removalMark"));
+        fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
+        expect((screen.getByTestId(byNode("postDetail.menuSheet")) as HTMLDialogElement).open).toBe(true);
+        const rows = rowsOfSheet();
+        expect(rows.map(([id]) => id)).toEqual([
+          "postDetail.menuSheet.save",
+          "postDetail.menuSheet.cite",
+          "postDetail.menuSheet.hide",
+          "postDetail.menuSheet.license",
+          "postDetail.menuSheet.report",
+        ]);
+        expect(rows[2][1]).toMatch(/^Hide @/);
+        expect(rows[4][1]).toBe("Report");
+      });
+
+      // RemovedOther.md:7 — the reader's menu, a guest's included: its Save
+      // asks to join (GuestGate.md:5), its License terms opens (:7).
+      it("a_guests_removed_post_menu_asks_to_join_on_save_and_opens_the_license", async () => {
+        server.use(...removedPost("someone-else"));
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+        await screen.findByTestId(byNode("postDetail.card.removalMark"));
+        fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
+        expect(rowsOfSheet().map(([id]) => id)).toContain("postDetail.menuSheet.report");
+        fireEvent.click(screen.getByTestId("postDetail.menuSheet.save"));
+        expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
+      });
+
+      it("a_guests_removed_post_license_row_opens_the_terms", async () => {
+        server.use(...removedPost("someone-else"));
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+        await screen.findByTestId(byNode("postDetail.card.removalMark"));
+        fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
+        fireEvent.click(screen.getByTestId("postDetail.menuSheet.license"));
+        expect(await screen.findByTestId("postDetail.licenseSheet")).toBeInTheDocument();
+        expect(screen.queryByTestId("join-prompt")).toBeNull();
+      });
     });
 
     // RemoveConfirm.md:13 over the detail: nothing removed, the post whole.
@@ -3772,9 +3860,9 @@ describe("PostView — references", () => {
       expect(screen.queryByTestId(byNode("postDetail.card.media"))).not.toBeInTheDocument();
       // The license rode the payload, so a redacted record has none to show.
       expect(screen.queryByTestId("post-license-terms")).not.toBeInTheDocument();
-      // A REMOVED POST HAS NO MENU LEFT — back is the whole header
-      // (`Removed.jsx:5-6`): no ⋮, and so none of its rows.
-      expect(screen.queryByTestId(byNode("postDetail.header.menu"))).not.toBeInTheDocument();
+      // RemovedOther.md:5 — the header keeps its ⋮ (its rows: "the removed
+      // detail's header menu" below).
+      expect(screen.getByTestId(byNode("postDetail.header.menu"))).toBeInTheDocument();
       // What survives: the author, the timestamp, and the stance a reader can
       // still take, beside the count that proves nothing was quietly deleted.
       expect(screen.getByTestId(byNode("postDetail.card.authorChip"))).toBeInTheDocument();
