@@ -65,14 +65,3 @@ export const PINNED_PAGE_STILL = "h-dvh";
 
 /** A stage of SEVERAL fields whose foot follows its content: the screen's height as its floor. */
 export const PINNED_FLOOR_STILL = "min-h-dvh";
-
-/**
- * THE FIELD WINS WHEN ROOM IS SHORT (seam 388, point 1): a riding surface's
- * growing field never goes below three of its lines. It is a floor on the
- * box, not a measurement: where the band left above the keyboard cannot hold
- * the chrome, three lines and the commit, the column overflows and the commit
- * falls below the band — under the keyboard — while the field keeps its
- * lines. `lh` is the box's own line height (MDN, CSS `<length>`); the sum
- * after it is the box's padding and border, as each field spells them.
- */
-export const FIELD_FIRST_LINES = 3;

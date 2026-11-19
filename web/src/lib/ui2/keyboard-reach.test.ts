@@ -1,17 +1,29 @@
 // @vitest-environment node
-// The guard behind the pinned foot's reach with the on-screen keyboard up
-// (seam 381, on design/readme.md, *Spacing and layout*: a stage or a sheet
-// pins its footer "so a growing field never walks the commitment out of
-// reach"). jsdom has no keyboard, so this pins the declared geometry: every
-// pinned surface reads `--keyboard-inset` through the shared constants, and
-// no raw full-height box can come back beside them.
+// The guard behind which pinned surfaces meet the on-screen keyboard (jakob's
+// ruling, design → impl seam 388): with the keyboard up the field being typed
+// in comes first. ONE field → the pinned commit rides directly above the
+// keyboard; SEVERAL fields → the foot stays where it is, under the keyboard,
+// and the focused field takes the room — his reason: buttons right above the
+// keyboard on a page with several fields invite an accidental submit. jsdom
+// has no keyboard, so this pins the declared geometry: every consumer names
+// its class through the shared constants, with its reason here, and no raw
+// full-height box can come back beside them.
 
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-import { SHEET_CEILING_RIDING, SHEET_KEYBOARD_LIFT } from "./bottom-sheet";
+import { stageKeyboard } from "@/lib/compose/wizard";
+
+import { SHEET_CEILING, SHEET_CEILING_RIDING, SHEET_KEYBOARD_LIFT } from "./bottom-sheet";
 import { KEYBOARD_INSET_VAR } from "./keyboard-inset";
-import { PINNED_FLOOR, PINNED_PAGE, SCREEN_LAYER } from "./screen-layer";
+import {
+  PINNED_FLOOR,
+  PINNED_FLOOR_STILL,
+  PINNED_PAGE,
+  PINNED_PAGE_STILL,
+  SCREEN_LAYER,
+  SCREEN_LAYER_STILL,
+} from "./screen-layer";
 
 const root = new URL("../../", import.meta.url).pathname;
 
@@ -22,8 +34,53 @@ function sourceFiles(): string[] {
 }
 
 const relative = (file: string) => file.split("/src/")[1];
+const read = (path: string) => readFileSync(`${root}${path}`, "utf-8");
 const usersOf = (files: string[], name: string) =>
-  files.filter((file) => new RegExp(`\\$\\{${name}\\}`).test(readFileSync(file, "utf-8"))).map(relative).sort();
+  files
+    .filter((file) => !file.endsWith("/lib/ui2/screen-layer.ts"))
+    .filter((file) => new RegExp(`\\b${name}\\b`).test(readFileSync(file, "utf-8")))
+    .map(relative)
+    .sort();
+
+/**
+ * EVERY CONSUMER'S CLASS, AND WHY (seam 388). `rides`: one field with its
+ * commit. `stays`: several fields. `inert`: no text field — no keyboard rises
+ * there, so the riding geometry it keeps moves nothing.
+ */
+const CLASSES: Record<string, Record<string, string>> = {
+  SCREEN_LAYER: {
+    "app/posts/[id]/edit/comment-edit-view.tsx": "rides only while a picker (one search field, Done) stands over the edit",
+    "app/posts/[id]/reply/reply-wizard-view.tsx": "rides: the reply's words are one field; its pickers one search field",
+    "lib/ui2/media/media-viewer.tsx": "inert: no field",
+  },
+  SCREEN_LAYER_STILL: {
+    "app/posts/[id]/edit/comment-edit-view.tsx": "stays: the comment edit is several fields (point 2, named)",
+  },
+  PINNED_PAGE: {
+    "app/(app)/compose/post-edit-route.tsx": "rides: the edit's pickers, one search field and Done",
+    "app/(app)/compose/wizard/wizard-view.tsx": "rides: the composer's pickers, one search field and Done",
+    "app/profile/change-seal.tsx": "inert: no field",
+    "app/profile/edit/avatar-crop.tsx": "inert: no field",
+  },
+  PINNED_PAGE_STILL: {
+    "app/(app)/compose/post-edit-view.tsx": "stays: the post edit (EditCompose / EditWords) is several fields",
+    "app/profile/edit/profile-edit-screen.tsx": "stays: display name, bio, website",
+  },
+  PINNED_FLOOR: {
+    "app/(app)/compose/post-edit-route.tsx": "inert: the crop and the cover hold no field",
+    "app/(app)/compose/wizard/wizard-view.tsx": "rides: the words stage is one field (stageKeyboard)",
+  },
+  PINNED_FLOOR_STILL: {
+    "app/(app)/compose/wizard/wizard-view.tsx": "stays: the details stage is several fields (stageKeyboard)",
+  },
+};
+
+/** Every sheet that holds a text field names its class, and why. */
+const SHEET_CLASSES: Record<string, "rides" | "stays"> = {
+  "lib/ui2/compose/describe-sheet.tsx": "rides", // one field (alt text) and Done
+  "lib/ui2/compose/sensitive-sheet.tsx": "rides", // one field (the reason) and Done
+  "lib/ui2/compose/pair-sheet.tsx": "stays", // `Type exact values`: two number fields and Done
+};
 
 /**
  * Full-height boxes that may keep the plain viewport height, each with why: the
@@ -37,30 +94,61 @@ const PLAIN_HEIGHT_ALLOWED: Record<string, string> = {
 };
 
 describe("a pinned foot with the on-screen keyboard up", () => {
-  it("every_pinned_foot_reads_the_keyboard_inset", () => {
+  it("the_riding_geometry_reads_the_keyboard_inset_and_the_still_never_does", () => {
     const inset = `var(${KEYBOARD_INSET_VAR},0px)`;
     expect(SCREEN_LAYER).toContain(`bottom-[${inset}]`);
     expect(PINNED_PAGE).toMatch(/^h-\[calc\(100dvh_-_var\(--keyboard-inset,0px\)\)\]$/);
     expect(PINNED_FLOOR).toMatch(/^min-h-\[calc\(100dvh_-_var\(--keyboard-inset,0px\)\)\]$/);
     expect(SHEET_CEILING_RIDING).toContain(`var(${KEYBOARD_INSET_VAR}, 0px)`);
     expect(SHEET_KEYBOARD_LIFT).toBe(`var(${KEYBOARD_INSET_VAR}, 0px)`);
+    // The still twins are the same boxes with the inset at 0.
+    expect(SCREEN_LAYER_STILL).toBe("fixed inset-0 pb-[env(safe-area-inset-bottom)]");
+    expect(PINNED_PAGE_STILL).toBe("h-dvh");
+    expect(PINNED_FLOOR_STILL).toBe("min-h-dvh");
+    expect(SHEET_CEILING).not.toContain(KEYBOARD_INSET_VAR);
+    expect(SHEET_CEILING_RIDING.replace(` - var(${KEYBOARD_INSET_VAR}, 0px)`, "")).toBe(SHEET_CEILING);
   });
 
-  it("every_pinned_page_stands_on_the_shared_geometry", () => {
+  it("every_pinned_surface_names_its_keyboard_class", () => {
     const files = sourceFiles();
     expect(files.length, "scanned nothing — the walk is broken").toBeGreaterThan(20);
-    expect(usersOf(files, "PINNED_PAGE")).toEqual([
-      "app/(app)/compose/post-edit-route.tsx",
-      "app/(app)/compose/post-edit-view.tsx",
-      "app/(app)/compose/wizard/wizard-view.tsx",
-      "app/profile/change-seal.tsx",
-      "app/profile/edit/avatar-crop.tsx",
-      "app/profile/edit/profile-edit-screen.tsx",
-    ]);
-    expect(usersOf(files, "PINNED_FLOOR")).toEqual([
-      "app/(app)/compose/post-edit-route.tsx",
-      "app/(app)/compose/wizard/wizard-view.tsx",
-    ]);
+    for (const [name, users] of Object.entries(CLASSES)) {
+      expect(usersOf(files, name), name).toEqual(Object.keys(users).sort());
+    }
+  });
+
+  it("several_fields_stay_and_one_field_rides_on_the_compose_stages", () => {
+    expect(stageKeyboard("details")).toBe("stays");
+    expect(stageKeyboard("pick")).toBe("rides");
+  });
+
+  it("every_sheet_with_a_text_field_names_its_keyboard_class", () => {
+    const withField = sourceFiles()
+      .filter((file) => /<BottomSheet\b/.test(readFileSync(file, "utf-8")))
+      .filter((file) => /<TextField\b|<textarea\b|type="(text|number|search)"/.test(readFileSync(file, "utf-8")))
+      .map(relative)
+      .filter((file) => file !== "lib/ui2/gallery.tsx")
+      .sort();
+    expect(withField).toEqual(Object.keys(SHEET_CLASSES).sort());
+    for (const [file, kind] of Object.entries(SHEET_CLASSES)) {
+      expect(read(file), file).toContain(`keyboard="${kind}"`);
+    }
+  });
+
+  it("the_dialogs_of_several_fields_never_read_the_keyboard", () => {
+    // The opinion pad's typed values (number fields plus a commit, point 2)
+    // and the reference finder stand as centred dialogs that read no inset.
+    for (const file of ["lib/ui/stance-alternates.tsx", "lib/ui/reference-finder.tsx"]) {
+      expect(read(file), file).not.toMatch(/keyboard-inset|SCREEN_LAYER|PINNED_|SHEET_KEYBOARD_LIFT/);
+    }
+  });
+
+  it("a_riding_words_field_keeps_three_of_its_lines", () => {
+    // THE FIELD WINS (point 1): the floor holds three lines plus the box's own
+    // padding and border, so a band too short for them and the commit lets the
+    // commit fall under the keyboard instead of the field giving up lines.
+    expect(read("app/(app)/compose/wizard/pick-step.tsx")).toContain("min-h-[calc(3lh+1.5rem+2px)] flex-1");
+    expect(read("app/posts/[id]/reply/reply-compose-step.tsx")).toContain("min-h-[calc(3lh+1.25rem+2px)] flex-1");
   });
 
   it("no_raw_full_height_box_misses_the_keyboard", () => {
