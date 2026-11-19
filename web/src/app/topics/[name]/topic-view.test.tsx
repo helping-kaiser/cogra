@@ -426,14 +426,42 @@ describe("TopicView — a post card's menu (TagPageMenu.md)", () => {
       ["tagPage.menuSheet.save", "Save"],
       ["tagPage.menuSheet.cite", "Cite in a new post"],
       ["tagPage.menuSheet.hide", "Hide @tobias"],
+      ["tagPage.menuSheet.citedBy", "Cited by"],
+      ["tagPage.menuSheet.opinions", "Opinions on this"],
       ["tagPage.menuSheet.license", "License terms"],
       ["tagPage.menuSheet.report", "Report"],
     ]);
   });
 
+  it("the_own_posts_menu_on_the_tag_page_reads_save_cite_edit_sensitive_remove_cited_by_opinions_license", async () => {
+    // TagPageMenuOwn.md:5.
+    serveTag();
+    renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+    fireEvent.click(await screen.findByTestId("topic-post-p2-menu"));
+    expect(rows().map(([node]) => node)).toEqual([
+      "tagPage.menuSheet.save",
+      "tagPage.menuSheet.cite",
+      "tagPage.menuSheet.edit",
+      "tagPage.menuSheet.markSensitive",
+      "tagPage.menuSheet.remove",
+      "tagPage.menuSheet.citedBy",
+      "tagPage.menuSheet.opinions",
+      "tagPage.menuSheet.license",
+    ]);
+  });
+
+  it("cited_by_raises_what_cites_the_post_over_the_tag_page", async () => {
+    // TagPageMenu.md:5 with CitedBy.md:5 — over the host, the list beneath.
+    serveTag();
+    renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+    fireEvent.click(await screen.findByTestId("topic-post-p1-menu"));
+    fireEvent.click(screen.getByTestId("tagPage.menuSheet.citedBy"));
+    expect(((await screen.findByTestId("postDetail.citedBySheet")) as HTMLDialogElement).open).toBe(true);
+    expect(screen.getByTestId("topic-content-list")).toBeInTheDocument();
+  });
+
   it("a_removed_posts_menu_rises_over_the_tag_page_reading_the_readers_menu_whole", async () => {
-    // TagPageRemovedMenu.md:3, :5 (less Cited by and Opinions on this, which
-    // no web post menu carries yet).
+    // TagPageRemovedMenu.md:3, :5.
     server.use(
       gqlLink.query("HashtagDetail", () =>
         HttpResponse.json({
@@ -464,6 +492,8 @@ describe("TopicView — a post card's menu (TagPageMenu.md)", () => {
       ["tagPage.menuSheet.save", "Save"],
       ["tagPage.menuSheet.cite", "Cite in a new post"],
       ["tagPage.menuSheet.hide", "Hide @tobias"],
+      ["tagPage.menuSheet.citedBy", "Cited by"],
+      ["tagPage.menuSheet.opinions", "Opinions on this"],
       ["tagPage.menuSheet.license", "License terms"],
       ["tagPage.menuSheet.report", "Report"],
     ]);

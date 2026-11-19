@@ -529,7 +529,7 @@ describe("SavedScreen — the card menus' rows (SavedPostMenu.md, FeedProfileMen
       ),
     );
 
-  it("a_post_cards_menu_reads_unsave_cite_hide_license_report_as_saved_menuSheet_rows", async () => {
+  it("a_post_cards_menu_reads_unsave_cite_hide_cited_by_opinions_license_report_as_saved_menuSheet_rows", async () => {
     // SavedPostMenu.md:3, :5.
     serve(THREE);
     renderWithProviders(<SavedScreen />, { store: signedIn() });
@@ -538,15 +538,34 @@ describe("SavedScreen — the card menus' rows (SavedPostMenu.md, FeedProfileMen
       ["saved.menuSheet.save", "Unsave"],
       ["saved.menuSheet.cite", "Cite in a new post"],
       ["saved.menuSheet.hide", "Hide @ada"],
+      ["saved.menuSheet.citedBy", "Cited by"],
+      ["saved.menuSheet.opinions", "Opinions on this"],
       ["saved.menuSheet.license", "License terms"],
       ["saved.menuSheet.report", "Report"],
     ]);
   });
 
-  it("a_removed_post_cards_menu_reads_unsave_cite_hide_license_report", async () => {
+  it("your_own_post_cards_menu_reads_unsave_cite_edit_sensitive_remove_cited_by_opinions_license", async () => {
+    // SavedPostMenuOwn.md:5.
+    const mine = { ...postNode("p1", "Mine", SAVED[0]), author: author("me", "me", "Me") };
+    serve([{ node: mine, bookmarkedAt: SAVED[0] }]);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    expect(words(postMenu()).map(([node]) => node)).toEqual([
+      "saved.menuSheet.save",
+      "saved.menuSheet.cite",
+      "saved.menuSheet.edit",
+      "saved.menuSheet.markSensitive",
+      "saved.menuSheet.remove",
+      "saved.menuSheet.citedBy",
+      "saved.menuSheet.opinions",
+      "saved.menuSheet.license",
+    ]);
+  });
+
+  it("a_removed_post_cards_menu_reads_unsave_cite_hide_cited_by_opinions_license_report", async () => {
     // SavedRemovedMenu.md:3, :5 — the reader's post menu whole with the post
-    // kept (less Cited by and Opinions on this, which no web post menu carries
-    // yet); removed comments' menus: `profile-comments.test.tsx`.
+    // kept; removed comments' menus: `profile-comments.test.tsx`.
     const removed = {
       ...postNode("p1", null, SAVED[0]),
       title: { __typename: "ModeratedText", value: null, status: "REDACTED" },
@@ -561,6 +580,8 @@ describe("SavedScreen — the card menus' rows (SavedPostMenu.md, FeedProfileMen
       ["saved.menuSheet.save", "Unsave"],
       ["saved.menuSheet.cite", "Cite in a new post"],
       ["saved.menuSheet.hide", "Hide @ada"],
+      ["saved.menuSheet.citedBy", "Cited by"],
+      ["saved.menuSheet.opinions", "Opinions on this"],
       ["saved.menuSheet.license", "License terms"],
       ["saved.menuSheet.report", "Report"],
     ]);

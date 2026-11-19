@@ -643,6 +643,8 @@ describe("PostView", () => {
       "postDetail.menuSheet.edit",
       "postDetail.menuSheet.markSensitive",
       "postDetail.menuSheet.remove",
+      "postDetail.menuSheet.citedBy",
+      "postDetail.menuSheet.opinions",
       "postDetail.menuSheet.license",
     ]);
   });
@@ -676,9 +678,49 @@ describe("PostView", () => {
       "postDetail.menuSheet.save",
       "postDetail.menuSheet.cite",
       "postDetail.menuSheet.hide",
+      "postDetail.menuSheet.citedBy",
+      "postDetail.menuSheet.opinions",
       "postDetail.menuSheet.license",
       "postDetail.menuSheet.report",
     ]);
+  });
+
+  // ReaderPostMenu.md:31, CitedBy.md:3 — on the detail the menu's Cited by
+  // raises the sheet the count line raises, over the post.
+  it("the_detail_menus_cited_by_raises_the_count_lines_own_sheet_over_the_post", async () => {
+    server.use(
+      ...thread("someone-else", []),
+      citingRecords([citingRecord("bob", { kind: "post", id: "p9", title: "A reply post" }, 0.5, 0.5)]),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.citedBy"));
+    const sheets = screen.getAllByTestId("postDetail.citedBySheet");
+    expect(sheets).toHaveLength(1);
+    expect((sheets[0] as HTMLDialogElement).open).toBe(true);
+    expect(await screen.findByTestId(byNode("postDetail.citedBySheet.citation", "1"))).toHaveTextContent(
+      "A reply post",
+    );
+  });
+
+  // ReaderPostMenu.md:33, PostOpinions.md:3; RemoveMenu.md:25 on the own menu.
+  it("the_detail_menus_opinions_raises_the_posts_opinions_sheet_over_the_post", async () => {
+    server.use(...thread("acct-1", []));
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.opinions"));
+    const sheets = screen.getAllByTestId("postDetail.opinionsSheet");
+    expect(sheets).toHaveLength(1);
+    expect((sheets[0] as HTMLDialogElement).open).toBe(true);
+    expect(sheets[0]).toHaveTextContent("Opinions on this post");
+    // ReaderPostMenu.md:37 — the count lines keep their own rule: none at zero.
+    expect(await screen.findByTestId("postDetail.opinionsSheet.empty")).toHaveTextContent("No opinions yet");
   });
 
   // REPORT, CONFIRMED BEFORE IT GOES (ReportConfirm.md:3-11): the menu closes,
@@ -1275,7 +1317,7 @@ describe("PostView", () => {
       // Removed.md:11 — Save, Cite in a new post, License terms: the own post's
       // menu less Edit, Mark as sensitive and Remove; :13 the sheet rises over
       // the detail AND NEVER Edit, Mark as sensitive or Remove stands.
-      it("the_authors_removed_post_menu_reads_save_cite_license_never_edit_sensitive_remove", async () => {
+      it("the_authors_removed_post_menu_reads_save_cite_cited_by_opinions_license_never_edit_sensitive_remove", async () => {
         server.use(...removedPost("acct-1"));
         renderWithProviders(<PostView postId="p1" />, {
           store: storeFor("acct-1"),
@@ -1289,6 +1331,8 @@ describe("PostView", () => {
         expect(rowsOfSheet()).toEqual([
           ["postDetail.menuSheet.save", "Save"],
           ["postDetail.menuSheet.cite", "Cite in a new post"],
+          ["postDetail.menuSheet.citedBy", "Cited by"],
+          ["postDetail.menuSheet.opinions", "Opinions on this"],
           ["postDetail.menuSheet.license", "License terms"],
         ]);
         expect(screen.queryByTestId("postDetail.menuSheet.edit")).toBeNull();
@@ -1314,11 +1358,13 @@ describe("PostView", () => {
           "postDetail.menuSheet.save",
           "postDetail.menuSheet.cite",
           "postDetail.menuSheet.hide",
+          "postDetail.menuSheet.citedBy",
+          "postDetail.menuSheet.opinions",
           "postDetail.menuSheet.license",
           "postDetail.menuSheet.report",
         ]);
         expect(rows[2][1]).toMatch(/^Hide @/);
-        expect(rows[4][1]).toBe("Report");
+        expect(rows[6][1]).toBe("Report");
       });
 
       // RemovedOther.md:7 — the reader's menu, a guest's included: its Save
