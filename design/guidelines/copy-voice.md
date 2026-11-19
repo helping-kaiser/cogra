@@ -717,6 +717,10 @@ Retry (`UploadErrorLine` with both ways out):
   the line is drawn short because Retry stands beside it and the pair
   would say "try again" twice.
 
+  An upload answered `RATE_LIMITED` is this fault, never the refusal
+  below: a limit passes, so a later try can land, and the row keeps its
+  line with `Retry` (jakob 2026-11-19, told, "all fine").
+
 **A picture the server refuses at upload** — a refusal, not a fault
 (jakob 2026-11-17, impl 348-3): the server answered no, so retrying
 cannot change the answer, and the line keeps the refused files' one way
@@ -1662,7 +1666,9 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   registration, the reset and its link's check, the token confirms, and the email change's
   request and resend once the account's mail budget is spent (jakob
   2026-10-06) — says `Too many tries. Wait a little, then try again.`
-  (jakob 2026-10-05). The submit stays.
+  (jakob 2026-10-05). The submit stays. An upload's is on the row, the
+  upload's own fault: `One picture didn't upload.` or a clip's `That
+  video didn't upload.`, with `Retry` (*A clip that didn't upload*).
 - `NOT_FOUND` — the surface. For a profile: `This profile doesn't
   exist.` **Drawn** on `ProfileNotFound`. Posts and comments take the
   same construction: `This post doesn't exist.` and `This comment
