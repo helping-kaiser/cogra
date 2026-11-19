@@ -1614,10 +1614,10 @@ describe("PostView", () => {
       expect(mark).toHaveTextContent("now");
       const card = screen.getByTestId("post-comment-c1");
       expect(card).not.toHaveTextContent("Mine");
-      // :3 its author and its time; :9 no menu; the removed card loses Edit.
+      // :3 its author and its time; :9 its ⋮ kept; the removed card loses Edit.
       expect(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.authorChip", "c1"))).toBeInTheDocument();
       expect(screen.getByTestId("comment-c1-timestamp")).toBeInTheDocument();
-      expect(screen.queryByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1"))).not.toBeInTheDocument();
+      expect(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1"))).toBeInTheDocument();
       expect(screen.queryByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.edit", "c1"))).not.toBeInTheDocument();
       // :11 its opinion and its Reply.
       expect(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.stance.anchor", "c1"))).toBeInTheDocument();
@@ -1635,6 +1635,184 @@ describe("PostView", () => {
       // :19 the thread holds the reader's offset, and the sheet stays up.
       expect(scroller.scrollTop).toBe(440);
       expect((sheet as HTMLDialogElement).open).toBe(true);
+    });
+
+    // A REMOVED COMMENT IN THE THREAD KEEPS ITS ⋮ — CommentRemoved.md:9,
+    // CommentRemovedMenu.md (own) and CommentRemovedOther.md,
+    // CommentRemovedOtherMenu.md (another's, round 57 point 4). No web comment
+    // menu has `Hide @…` yet (bite W/A-COMMENT-MENU-HIDE), so another's rows
+    // read the reader's menu less it.
+    describe("a removed comment's menu in the thread", () => {
+      const gone = () => ({ at: removedAt(), by: "AUTHOR" });
+      const threadRows = (id: string) =>
+        Array.from(
+          screen.getByTestId(`comment-menu-${id}-sheet-body`).querySelectorAll("[data-testid]"),
+          (row) => [row.getAttribute("data-testid"), row.textContent],
+        );
+
+      // CommentRemovedMenu.md:3, :5 — the reader's own removed comment: the
+      // menu rises stacked over the thread, the thread unchanged beneath it,
+      // and reads Save, Cite in a new post, Cited by, Opinions on this, License
+      // terms — the own comment menu less Edit and Remove.
+      it("the_readers_own_removed_comment_menu_reads_save_cite_citedby_opinions_license", async () => {
+        server.use(...thread("u1", [{ id: "c1", body: "Mine", authorId: "acct-1", removal: gone() }]));
+        renderWithProviders(<PostView postId="p1" />, {
+          store: storeFor("acct-1"),
+          writeSigner: fakeWriteSigner(),
+        });
+        const sheet = await openComments();
+        expect(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.removalMark", "c1"))).toHaveTextContent(
+          "Removed by its author",
+        );
+        fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+        expect(openMenuSheet()).toHaveAccessibleName("Comment actions");
+        expect(threadRows("c1")).toEqual([
+          ["postDetail.menuSheet.save", "Save"],
+          ["postDetail.menuSheet.cite", "Cite in a new post"],
+          ["postDetail.menuSheet.citedBy", "Cited by"],
+          ["postDetail.menuSheet.opinions", "Opinions on this"],
+          ["postDetail.menuSheet.license", "License terms"],
+        ]);
+        expect((sheet as HTMLDialogElement).open).toBe(true);
+        expect(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.removalMark", "c1"))).toBeInTheDocument();
+      });
+
+      // CommentRemovedMenu.md:7 — its License terms brings up the terms over
+      // the thread, as any comment's do.
+      it("the_own_removed_comments_license_row_opens_the_terms_over_the_thread", async () => {
+        server.use(...thread("u1", [{ id: "c1", body: "Mine", authorId: "acct-1", removal: gone() }]));
+        renderWithProviders(<PostView postId="p1" />, {
+          store: storeFor("acct-1"),
+          writeSigner: fakeWriteSigner(),
+        });
+        const sheet = await openComments();
+        fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+        fireEvent.click(within(openMenuSheet()).getByTestId("postDetail.menuSheet.license"));
+        expect(await screen.findByTestId("postDetail.licenseSheet")).toBeInTheDocument();
+        expect((sheet as HTMLDialogElement).open).toBe(true);
+      });
+
+      // CommentRemovedOther.md:3, :5, :7, :9 — another's removed comment keeps
+      // its author, time and place, the mark where its words were, its chip,
+      // face, Reply and ⋮, and its replies unfolded under it and readable.
+      it("anothers_removed_comment_stands_as_its_mark_with_its_replies_under_it", async () => {
+        server.use(
+          ...thread("u1", [
+            { id: "c0", body: "Above" },
+            { id: "c1", body: "Theirs", authorId: "u2", replyCount: 1, removal: gone() },
+            { id: "c2", body: "Below" },
+          ]),
+          gqlLink.query("CommentReplies", () =>
+            HttpResponse.json({
+              data: {
+                comment: {
+                  __typename: "Comment",
+                  id: "c1",
+                  replies: {
+                    __typename: "CommentConnection",
+                    edges: [{ __typename: "CommentEdge", node: commentNode({ id: "c1a", body: "An answer" }) }],
+                    pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+                  },
+                },
+              },
+            }),
+          ),
+        );
+        renderWithProviders(<PostView postId="p1" />, {
+          store: storeFor("acct-1"),
+          writeSigner: fakeWriteSigner(),
+        });
+        await openComments();
+        const card = screen.getByTestId("post-comment-c1");
+        expect(card).not.toHaveTextContent("Theirs");
+        expect(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.removalMark.line", "c1"))).toHaveTextContent(
+          "Removed by its author",
+        );
+        expect(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.removalMark.when", "c1"))).toHaveTextContent(
+          "now",
+        );
+        expect(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.authorChip", "c1"))).toBeInTheDocument();
+        expect(screen.getByTestId("comment-c1-timestamp")).toBeInTheDocument();
+        expect(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.stance.anchor", "c1"))).toBeInTheDocument();
+        expect(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.reply", "c1"))).toBeInTheDocument();
+        expect(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1"))).toBeInTheDocument();
+        // Its place in the thread's order.
+        const order = Array.from(screen.getByTestId("comments-sheet-body").querySelectorAll('[data-testid^="post-comment-c"]'), (li) =>
+          li.getAttribute("data-testid"),
+        );
+        expect(order).toEqual(["post-comment-c0", "post-comment-c1", "post-comment-c2"]);
+        // :9 — its replies unfold under it and stay readable.
+        fireEvent.click(screen.getByTestId("replies-more-c1"));
+        const reply = await screen.findByTestId("post-comment-c1a");
+        expect(reply).toHaveTextContent("An answer");
+        expect(card).toContainElement(reply);
+      });
+
+      // CommentRemovedOther.md:11, CommentRemovedOtherMenu.md:3, :5 — the ⋮
+      // raises the reader's comment menu stacked over the thread: Save, Cite in
+      // a new post, Cited by, Opinions on this, License terms, Report at the tail.
+      it("anothers_removed_comment_menu_reads_the_readers_comment_menu", async () => {
+        server.use(...thread("u1", [{ id: "c1", body: "Theirs", authorId: "u2", removal: gone() }]));
+        renderWithProviders(<PostView postId="p1" />, {
+          store: storeFor("acct-1"),
+          writeSigner: fakeWriteSigner(),
+        });
+        const sheet = await openComments();
+        fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+        expect(threadRows("c1")).toEqual([
+          ["postDetail.menuSheet.save", "Save"],
+          ["postDetail.menuSheet.cite", "Cite in a new post"],
+          ["postDetail.menuSheet.citedBy", "Cited by"],
+          ["postDetail.menuSheet.opinions", "Opinions on this"],
+          ["postDetail.menuSheet.license", "License terms"],
+          ["postDetail.menuSheet.report", "Report"],
+        ]);
+        expect(screen.queryByTestId("postDetail.menuSheet.edit")).toBeNull();
+        expect(screen.queryByTestId("postDetail.menuSheet.remove")).toBeNull();
+        expect((sheet as HTMLDialogElement).open).toBe(true);
+      });
+
+      // CommentRemovedOtherMenu.md:11 — Report: the menu closes, the confirm
+      // rises over the thread AND NEVER anything is sent yet.
+      it("anothers_removed_comments_report_raises_the_confirm_and_sends_nothing", async () => {
+        server.use(...thread("u1", [{ id: "c1", body: "Theirs", authorId: "u2", removal: gone() }]));
+        renderWithProviders(<PostView postId="p1" />, {
+          store: storeFor("acct-1"),
+          writeSigner: fakeWriteSigner(),
+        });
+        await openComments();
+        fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+        fireEvent.click(within(openMenuSheet()).getByTestId("postDetail.menuSheet.report"));
+        const confirm = screen
+          .getAllByTestId("postDetail.reportSheet")
+          .find((d) => (d as HTMLDialogElement).open) as HTMLDialogElement;
+        expect(confirm).toBeDefined();
+        await waitFor(() =>
+          expect(screen.queryAllByTestId("postDetail.menuSheet").some((d) => (d as HTMLDialogElement).open)).toBe(false),
+        );
+      });
+
+      // CommentRemovedOtherMenu.md:13 — a guest's Save, Cite or Report opens
+      // the guest gate AND NEVER Cited by, Opinions on this or License terms
+      // raise it.
+      it.each(["save", "cite", "report"])("a_guests_%s_on_a_removed_comment_raises_the_join_ask", async (row) => {
+        server.use(...thread("u1", [{ id: "c1", body: "Theirs", authorId: "u2", removal: gone() }]));
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+        await openComments();
+        fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+        fireEvent.click(within(openMenuSheet()).getByTestId(`postDetail.menuSheet.${row}`));
+        expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
+      });
+
+      it("a_guests_license_on_a_removed_comment_opens_the_terms_never_the_join_ask", async () => {
+        server.use(...thread("u1", [{ id: "c1", body: "Theirs", authorId: "u2", removal: gone() }]));
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+        await openComments();
+        fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+        fireEvent.click(within(openMenuSheet()).getByTestId("postDetail.menuSheet.license"));
+        expect(await screen.findByTestId("postDetail.licenseSheet")).toBeInTheDocument();
+        expect(screen.queryByTestId("join-prompt")).toBeNull();
+      });
     });
 
     // CommentRemoveConfirm.md:13 / :15 — not through, or kept: the thread
