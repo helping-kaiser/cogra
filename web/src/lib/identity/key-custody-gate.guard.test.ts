@@ -127,9 +127,10 @@ describe("the key-custody guard", () => {
   it("no door stands outside the census — a new one must be routed through the gate and added here", () => {
     const census = new Set(DOORS.flatMap((d) => [d.file, d.routeIn ?? d.file]));
     const drawn = files.filter((f) => DOOR_WORDS.test(code(f)) || GATED_ROUTE.test(code(f)));
-    const outside = drawn.filter(
-      (f) => !census.has(f) && f !== "lib/identity/key-custody-gate.tsx" && f !== KEY_VIEW && f !== RESTORE_VIEW,
-    );
+    // the gate itself and the two gated routes (their pages and views) are the
+    // ceremonies' own home, not doors to them
+    const home = new Set(["lib/identity/key-custody-gate.tsx", KEY_VIEW, RESTORE_VIEW, KEY_PAGE, RESTORE_PAGE]);
+    const outside = drawn.filter((f) => !census.has(f) && !home.has(f));
     expect(outside, "a file draws a ceremony door or names a ceremony route outside the census").toEqual([]);
   });
 });

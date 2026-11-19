@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
@@ -6,9 +7,9 @@ import { describe, expect, it } from "vitest";
 import { KeyCeremonyUnsupported } from "./key-ceremony-unsupported";
 
 // The board and its sidecar, read from the tree (design/ is the law).
-const CANONICAL = new URL("../../../../design/designs/canonical/", import.meta.url);
-const BOARD = readFileSync(new URL("KeyCeremonyUnsupported.dc.html", CANONICAL), "utf8");
-const SIDECAR = readFileSync(new URL("behavior/KeyCeremonyUnsupported.md", CANONICAL), "utf8");
+const CANONICAL = join(process.cwd(), "..", "design", "designs", "canonical");
+const BOARD = readFileSync(join(CANONICAL, "KeyCeremonyUnsupported.dc.html"), "utf8");
+const SIDECAR = readFileSync(join(CANONICAL, "behavior", "KeyCeremonyUnsupported.md"), "utf8");
 const unescape = (s: string) => s.replace(/&#x27;/g, "'");
 
 describe("KeyCeremonyUnsupported", () => {
