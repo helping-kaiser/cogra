@@ -81,6 +81,7 @@ import {
 import { SLOW_NETWORK_MS, useSlowAnswer, useWaitedPast } from "@/lib/ui2/waiting-commit";
 import { ReplyComposeStep } from "./reply-compose-step";
 import { ReplySealStep, type ReplySheet } from "./reply-seal-step";
+import { SCREEN_LAYER } from "@/lib/ui2/screen-layer";
 
 /**
  * The leave label, as every reply board's `WizardHeader` spells it. Nothing is
@@ -614,7 +615,7 @@ export function ReplyWizard({
       role="dialog"
       aria-modal="true"
       aria-label={title}
-      className="fixed inset-0 z-40 flex flex-col bg-surface text-on-surface"
+      className={`${SCREEN_LAYER} z-40 flex flex-col bg-surface text-on-surface`}
     >
       {pickerOpen ? (
         // THE PICKER IS A TASK PAGE inside the reply's dialog, with its own

@@ -1,6 +1,7 @@
-// THE OPINIONS PAGE'S READ (ProfileStances; `opinions.graphql`): one direction
-// of a person's opinions, every record of the set, folded into one row per
-// person (`HeldOpinions.kt`). The web's twin is `web/src/lib/api/opinions-api.ts`.
+// THE OPINIONS READS (ProfileStances, PostOpinions; `opinions.graphql`): one
+// direction of a person's opinions, or everyone's on a post or a comment —
+// every record of the set, folded into one row per person (`HeldOpinions.kt`).
+// The web's twin is `web/src/lib/api/opinions-api.ts`.
 
 package com.cogra.network.repo
 
@@ -15,6 +16,7 @@ import com.cogra.domain.stance.OpinionHolder
 import com.cogra.domain.stance.OpinionRecord
 import com.cogra.domain.stance.foldHeldOpinions
 import com.cogra.network.fetch
+import com.cogra.network.graphql.NodeOpinionsQuery
 import com.cogra.network.graphql.UserOpinionsByQuery
 import com.cogra.network.graphql.UserOpinionsOnQuery
 import com.cogra.network.graphql.fragment.OpinionPersonFields
@@ -60,6 +62,43 @@ internal suspend fun readOpinions(
     }
     return Outcome.Success(foldHeldOpinions(records))
 }
+
+/**
+ * Everyone holding an opinion on a post or a comment (PostOpinions.md:7): the
+ * same whole-set read as a person's `On them`, anchored on the node — a row
+ * per author.
+ */
+internal suspend fun readNodeOpinions(client: ApolloClient, nodeId: String): Outcome<List<HeldOpinion>> {
+    val records = mutableListOf<OpinionRecord>()
+    var after: String? = null
+    var pages = 0
+    do {
+        val read = when (val fetched = nodePage(client, nodeId, after)) {
+            is Outcome.Success -> fetched.value
+            is Outcome.Refused -> return fetched
+            is Outcome.Failed -> return fetched
+        }
+        records += read?.records.orEmpty()
+        after = read?.next
+    } while (after != null && ++pages < MAX_OPINION_PAGES)
+    return Outcome.Success(foldHeldOpinions(records))
+}
+
+private suspend fun nodePage(client: ApolloClient, nodeId: String, after: String?): Outcome<OpinionPage?> =
+    client.query(NodeOpinionsQuery(nodeId, Optional.presentIfNotNull(after))).fetch().map { data ->
+        data.node?.incomingRecords?.let { connection ->
+            OpinionPage(
+                records = connection.edges.map { edge ->
+                    val node = edge.node
+                    node.opinionRecordFields.toRecord(
+                        holderId = node.opinionRecordFields.authorId,
+                        person = node.author?.opinionPersonFields,
+                    )
+                },
+                next = connection.pageInfo.endCursor.takeIf { connection.pageInfo.hasNextPage },
+            )
+        }
+    }
 
 /** `On them`: a row per author — the holder is who wrote the record. */
 private suspend fun onPage(client: ApolloClient, actorId: String, after: String?): Outcome<OpinionPage?> =

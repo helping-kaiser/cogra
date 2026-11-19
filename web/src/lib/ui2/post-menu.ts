@@ -33,6 +33,12 @@ export type PostMenuContext = {
   postId: string;
   /** The viewer is the author — `OWN_POST_MENU` rather than `READER_POST_MENU`. */
   own: boolean;
+  /**
+   * The post was removed (`payloadIsRedacted`): the author's own menu loses
+   * Edit, Mark as sensitive and Remove, and the reader's stays whole
+   * (FeedRemovedMenuOwn.md:5, FeedRemovedMenu.md:5).
+   */
+  removed?: boolean;
   /** The author's handle, for the reader menu's hide row. */
   handle: string | null;
   /** Dropped from the rows when there is none: a redacted record has no license. */
@@ -110,6 +116,7 @@ export type PostMenuContext = {
 export function postMenuItems({
   postId,
   own,
+  removed = false,
   handle,
   license,
   navigate,
@@ -148,20 +155,24 @@ export function postMenuItems({
       onGuest ?? onApplicant ?? (() => navigate(`/compose?reference=${postId}`)),
     ),
   );
+  // A REMOVED POST HAS NOTHING LEFT TO EDIT, MARK OR REMOVE: the author's
+  // menu keeps its reads and its Save and Cite (FeedRemovedMenuOwn.md:5).
   if (own) {
-    rows.push(
-      row("edit", "edit", "Edit", () => navigate(`/compose?post=${postId}`)),
-      // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published post
-      // sensitive is always a signed action changing the post — an edit — so
-      // there is no standalone commit path and this row is a door into the
-      // edit flow rather than a sheet of its own. Edit is the general door;
-      // this is the intentioned one. When the edit surface's drawn Sensitive
-      // row lands (CW-46) the link can focus it.
-      row("markSensitive", "sensitive", "Mark as sensitive", () =>
-        navigate(`/compose?post=${postId}`),
-      ),
-      row("remove", "remove", "Remove", openRemove),
-    );
+    if (!removed) {
+      rows.push(
+        row("edit", "edit", "Edit", () => navigate(`/compose?post=${postId}`)),
+        // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published post
+        // sensitive is always a signed action changing the post — an edit — so
+        // there is no standalone commit path and this row is a door into the
+        // edit flow rather than a sheet of its own. Edit is the general door;
+        // this is the intentioned one. When the edit surface's drawn Sensitive
+        // row lands (CW-46) the link can focus it.
+        row("markSensitive", "sensitive", "Mark as sensitive", () =>
+          navigate(`/compose?post=${postId}`),
+        ),
+        row("remove", "remove", "Remove", openRemove),
+      );
+    }
   } else {
     // The handle is the thing a reader recognises, and the word they will
     // look for again under Hidden accounts (`ActorChip.jsx:67`). The row keeps

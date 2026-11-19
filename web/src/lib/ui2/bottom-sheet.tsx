@@ -61,9 +61,22 @@ export const SHEET_CEILING_SLIVER_PX = 72;
  * generated, so the number would have to be written out a second time in a
  * literal, which is exactly the drift the constant exists to stop. The sheet
  * already carries a style for its drag offset; this rides beside it.
+ *
+ * THE MASTER'S `100%` IS THE VISIBLE SCREEN, so the on-screen keyboard comes
+ * off it: with the keyboard up the sheet stands on the keyboard's top edge
+ * (`SHEET_KEYBOARD_LIFT`) and its ceiling is measured in the band left above
+ * it (`keyboard-inset.ts`; seam 381). With no keyboard the inset is 0.
  */
 export const SHEET_CEILING =
-  `calc(100dvh - ${SHEET_CEILING_SLIVER_PX}px - env(safe-area-inset-top, 0px))`;
+  `calc(100dvh - ${SHEET_CEILING_SLIVER_PX}px - env(safe-area-inset-top, 0px) - var(--keyboard-inset, 0px))`;
+
+/**
+ * THE SHEET RIDES ABOVE THE KEYBOARD: a pinned footer or a last `Done` "never
+ * walks out of reach" (design/readme.md, *Spacing and layout*). The dialog's
+ * bottom margin is the keyboard's height, so the whole surface — field, Done
+ * and all — stands on the keyboard's top edge.
+ */
+export const SHEET_KEYBOARD_LIFT = "var(--keyboard-inset, 0px)";
 
 /**
  * THE RAISED CLASS (`BottomSheet.jsx`: "the raised 88% class stays what a sheet
@@ -371,6 +384,7 @@ export function BottomSheet({
           // stillness.
           translate: drag.offset === 0 ? undefined : `0px ${drag.offset}px`,
           ...sheetHeight(tallest, height, maxHeight),
+          marginBottom: SHEET_KEYBOARD_LIFT,
           paddingTop: SHEET_PAD_TOP,
           paddingRight: 0,
           paddingBottom: SHEET_PAD_BOTTOM,

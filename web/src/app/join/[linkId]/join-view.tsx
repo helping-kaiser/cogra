@@ -32,17 +32,14 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
-import type { AccountState, ErrorCode } from "@/__generated__/graphql";
-import { fetchMe } from "@/lib/api/auth-api";
+import type { ErrorCode } from "@/__generated__/graphql";
 import { checkInviteLink, register, type InviteCheck } from "@/lib/api/onboarding-api";
 import { extractInviteId } from "@/lib/onboarding/invite-input";
-import { joinBackHref, type JoinOrigin } from "@/lib/onboarding/join-origin";
+import { joinBackHref, signInOverJoinHref, type JoinOrigin } from "@/lib/onboarding/join-origin";
 import { emailValid, handleValid, passwordLength } from "@/lib/onboarding/registration-rules";
 import { mismatchAfterEdit, mismatchOnPress } from "@/lib/onboarding/repeat-password";
 import { deviceLabel } from "@/lib/session/device-label";
 import { useAuthPhase, useTokenStore } from "@/lib/session/provider";
-import { useAuthGuard } from "@/lib/session/runtime";
-import { LINK_ROW } from "@/lib/ui2/link-stack";
 import { FormPasswordField, FormTextField } from "@/lib/ui2/form-fields";
 import { HelpDot } from "@/lib/ui2/help-dot";
 import { MonogramAvatar } from "@/lib/ui2/monogram-avatar";
@@ -93,30 +90,9 @@ type CheckState =
 
 export function JoinView({ linkId, origin = "arrival" }: { linkId: string; origin?: JoinOrigin }) {
   const client = useApolloClient();
-  const guard = useAuthGuard();
   const phase = useAuthPhase();
 
   const inviteId = extractInviteId(linkId);
-
-  // Acting is gated on the live account state, client-side (api-spec.md
-  // "Errors are tiered": a FORBIDDEN from an ungated call is a client
-  // bug). Null while signed out, resolving, or unreachable — no action
-  // renders until the state is known.
-  const [accountState, setAccountState] = useState<AccountState | null>(null);
-  useEffect(() => {
-    if (phase !== "signedIn") return;
-    let cancelled = false;
-    void guard
-      .run(() => fetchMe(client))
-      .then((outcome) => {
-        if (!cancelled && outcome.kind === "success") {
-          setAccountState(outcome.value.accountState);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [phase, client, guard]);
 
   const [checkState, setCheckState] = useState<CheckState>({ status: "checking" });
   // Reset during render when the route param changes — the App Router
@@ -173,23 +149,20 @@ export function JoinView({ linkId, origin = "arrival" }: { linkId: string; origi
 
   return (
     <JoinPage inviteId={inviteId} inviter={inviterOf(check)} origin={origin} held={registering}>
-      {phase === "signedOut" && (
+      {/* AN INVITE LINK IGNORES SIGN-IN (Join.md:7, auth.md "Application"):
+          one person may hold several accounts, so a signed-in reader — an
+          applicant, a member, a key elsewhere alike — gets the same form,
+          a layer over the signed-in state. Only the hydration's first paint,
+          when the phase is not yet known, stands bare. */}
+      {phase !== "resolving" && (
         <ApplyForm
           inviteId={inviteId}
+          origin={origin}
+          overSignedIn={phase === "signedIn"}
           onSpent={() => setSpent(true)}
           busy={registering}
           onBusy={setRegistering}
         />
-      )}
-      {phase === "signedIn" && accountState === "MEMBER" && (
-        <div className="mt-8 flex flex-col gap-2">
-          <p data-testid="join_member_note" className="m-0 text-body-medium">
-            You&apos;re already a member, so this invite isn&apos;t for you — it brings someone new in.
-          </p>
-          <Link href="/invites" data-testid="join_member_invites" className={LINK_ROW}>
-            Invite someone from your own Invites page
-          </Link>
-        </div>
       )}
     </JoinPage>
   );
@@ -292,11 +265,16 @@ function refusalLine(
 
 function ApplyForm({
   inviteId,
+  origin,
+  overSignedIn,
   onSpent,
   busy,
   onBusy: setBusy,
 }: {
   inviteId: string;
+  origin: JoinOrigin;
+  /** The form stands as a layer over a signed-in account (Join.md:7). */
+  overSignedIn: boolean;
   onSpent: () => void;
   /** The registration is out — held by the page, whose exits hold with it. */
   busy: boolean;
@@ -363,6 +341,14 @@ function ApplyForm({
     switch (outcome.kind) {
       case "success":
         forgetTyped();
+        // THIS DEVICE SWITCHES TO THE NEW ACCOUNT (Join.md:59): its tokens
+        // replace the stored pair and nothing is revoked, so the other
+        // account's sessions stay valid wherever they are, and its key stays
+        // in its own slot (auth.md "Multi-account device custody"). The cache
+        // holds the reader the page was read as — the other account, or the
+        // guest — so it is emptied before the new account renders (Apollo's
+        // documented reset on a change of user: `clearStore`).
+        await client.clearStore();
         store.save(outcome.value);
         router.replace("/");
         return;
@@ -449,7 +435,7 @@ function ApplyForm({
           node={part(JOIN, "commit")}
         />
         <Link
-          href="/login"
+          href={overSignedIn ? signInOverJoinHref(inviteId, origin) : "/login"}
           aria-disabled={busy || undefined}
           onClick={busy ? (event) => event.preventDefault() : undefined}
           className={`${buttonClassName({ variant: "text" })} w-full`}

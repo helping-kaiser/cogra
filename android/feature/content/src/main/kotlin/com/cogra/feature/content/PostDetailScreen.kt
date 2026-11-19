@@ -410,6 +410,7 @@ fun PostDetailScreen(
     // comment's is the thread's, and rides the thread.
     var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
     var removeOpen by remember { mutableStateOf(false) }
+    var reading by remember { mutableStateOf<Reading?>(null) }
     // SAVED, not merely remembered: the composer and the comment editor are
     // their own destinations, so the thread is left and re-entered rather than
     // covered — and every way out of them comes back to it (`ReplyCompose` and
@@ -466,6 +467,8 @@ fun PostDetailScreen(
                                 onRemove = { removeOpen = true },
                                 // Over the page — never stacked.
                                 onLicense = { license -> licenseShown = license },
+                                onCitedBy = { reading = Reading.CitedBy },
+                                onOpinions = { reading = Reading.Opinions },
                                 onShare = share,
                                 onReport = { id -> reportFor = id },
                                 node = header / "menu",
@@ -617,6 +620,9 @@ fun PostDetailScreen(
         // post stands as Removed here: back is the whole header, the mark in
         // the words' and pictures' place (Removed.md).
         if (removeOpen) DetailRemoveConfirm(post, onClose = { removeOpen = false })
+        // A READING, over the detail, the post still open beneath it (CitedBy.md:3).
+        val readings = postReadings(onOpenPost, onOpenActor, "detail", registered = true)
+        ReadingSheet(reading, post?.id, readings) { reading = null }
         // The confirm rises where the menu stood, over this page; it says it
         // is up itself, so the detail clip stops beneath it.
         reportFor?.let { id ->
@@ -659,6 +665,8 @@ private fun DetailMenu(
     onCite: (String) -> Unit,
     onRemove: () -> Unit,
     onLicense: (LicenseChoice) -> Unit,
+    onCitedBy: () -> Unit,
+    onOpinions: () -> Unit,
     onShare: (String) -> Unit,
     onReport: (String) -> Unit,
     node: DataNode,
@@ -687,6 +695,8 @@ private fun DetailMenu(
             onCite = { onCite(post.id) },
             onRemove = onRemove,
             onLicense = { onLicense(post.license) },
+            onCitedBy = onCitedBy,
+            onOpinions = onOpinions,
             onShare = shareRow,
             testTagPrefix = "detail_menu",
             onReport = { onReport(post.id) },

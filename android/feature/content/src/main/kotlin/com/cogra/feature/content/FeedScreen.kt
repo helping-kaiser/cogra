@@ -1317,6 +1317,8 @@ internal val POST_MENU_ROWS = setOf(
     PostMenuRow.Save,
     PostMenuRow.Cite,
     PostMenuRow.Hide,
+    PostMenuRow.CitedBy,
+    PostMenuRow.Opinions,
     PostMenuRow.License,
     PostMenuRow.Report,
     PostMenuRow.Edit,
@@ -1325,9 +1327,8 @@ internal val POST_MENU_ROWS = setOf(
 )
 
 /**
- * The feed's comment card menu: `feed.menuSheet`, its registered rows. `Cited
- * by` and `Opinions on this` are not registered under the feed (seam 320-14),
- * so they keep their per-comment tags.
+ * The feed's comment card menu: `feed.menuSheet`, its registered rows
+ * (FeedCommentMenu, FeedCommentMenuOwn).
  */
 internal val FEED_COMMENT_MENU = CommentMenuPlacement(
     sheet = FEED / "menuSheet",
@@ -1336,6 +1337,8 @@ internal val FEED_COMMENT_MENU = CommentMenuPlacement(
         CommentMenuRow.Cite,
         CommentMenuRow.Edit,
         CommentMenuRow.Remove,
+        CommentMenuRow.CitedBy,
+        CommentMenuRow.Opinions,
         CommentMenuRow.License,
         CommentMenuRow.Report,
     ),
@@ -1404,6 +1407,7 @@ internal fun PostCard(
                 post = shown,
                 viewerId = viewerId,
                 onOpenActor = onOpenActor,
+                onOpenPost = onOpenPost,
                 onEdit = onEdit,
                 onCite = onCite,
                 onReport = onReport,
@@ -1503,6 +1507,8 @@ private fun CardMenuHeader(
     post: PostView,
     viewerId: String?,
     onOpenActor: (String) -> Unit,
+    /** A Cited by row's door: the post a citing artifact opens (CitedBy.md:15). */
+    onOpenPost: (String) -> Unit,
     onEdit: (String) -> Unit,
     onCite: (String) -> Unit,
     onReport: () -> Unit,
@@ -1512,14 +1518,14 @@ private fun CardMenuHeader(
 ) {
     var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
     var removeOpen by remember { mutableStateOf(false) }
+    var reading by remember { mutableStateOf<Reading?>(null) }
     CoversSurface(open = licenseShown != null, kind = CoverKind.Suspend)
     CoversSurface(open = removeOpen, kind = CoverKind.Suspend)
     val menuSheet = placement.menuSheet
     val tag = "${placement.tag}_${post.id}"
-    // A REMOVED POST HAS NO MENU LEFT (`Removed.jsx:5-6`): there is nothing
-    // of it to edit, cite or license, so the ⋮ goes wholesale rather than a
-    // row at a time. An empty list draws no trigger.
-    val removed = post.removed
+    // A REMOVED POST KEEPS ITS ⋮ ON EVERY HOST (FeedRemoved.md:9,
+    // FeedRemovedMenu.md:5, FeedRemovedMenuOwn.md:5): the reader's menu
+    // whole, the author's less Edit, Mark as sensitive and Remove.
     val own = viewerId != null && post.author?.id == viewerId
     // THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK (design/readme.md,
     // jakob 2026-09-17, sharpened 2026-09-22 — PR #794): only the reader's
@@ -1536,33 +1542,32 @@ private fun CardMenuHeader(
         onOpenActor = onOpenActor,
         authorHere = placement.authorHere,
         testTagPrefix = tag,
-        menu = if (removed) {
-            emptyList()
-        } else {
-            postMenuRows(
-                own = own,
-                handle = post.author?.handle,
-                license = post.license,
-                onEdit = { onEdit(post.id) },
-                onCite = { onCite(post.id) },
-                onRemove = { removeOpen = true },
-                onLicense = { licenseShown = post.license },
-                onShare = shareRow,
-                // The rows sit under the trigger's own tag, which
-                // `ContentCardHeader` derives the same way.
-                testTagPrefix = "${tag}_menu",
-                onReport = onReport,
-                rowNode = { row -> menuSheet?.div(row.nodeName)?.takeIf { row in placement.menuRows } },
-                saveRow = LocalSavedHost.current?.menuRow(
-                    post.id,
-                    post.viewerBookmarkedAt,
-                    "${tag}_menu_save",
-                ),
-                hideRow = post.author?.let {
-                    LocalSavedHost.current?.hideRow(it.asHiddenPerson(), post.id, "${tag}_menu_hide")
-                },
-            )
-        },
+        menu = postMenuRows(
+            own = own,
+            handle = post.author?.handle,
+            license = post.license,
+            onEdit = { onEdit(post.id) },
+            onCite = { onCite(post.id) },
+            onRemove = { removeOpen = true },
+            onLicense = { licenseShown = post.license },
+            onCitedBy = { reading = Reading.CitedBy },
+            onOpinions = { reading = Reading.Opinions },
+            onShare = shareRow,
+            // The rows sit under the trigger's own tag, which
+            // `ContentCardHeader` derives the same way.
+            testTagPrefix = "${tag}_menu",
+            onReport = onReport,
+            rowNode = { row -> menuSheet?.div(row.nodeName)?.takeIf { row in placement.menuRows } },
+            saveRow = LocalSavedHost.current?.menuRow(
+                post.id,
+                post.viewerBookmarkedAt,
+                "${tag}_menu_save",
+            ),
+            hideRow = post.author?.let {
+                LocalSavedHost.current?.hideRow(it.asHiddenPerson(), post.id, "${tag}_menu_hide")
+            },
+            removed = post.removed,
+        ),
         menuContentDescription = stringResource(R.string.content_menu_post),
         menuSheetNode = menuSheet,
         node = node,
@@ -1571,13 +1576,15 @@ private fun CardMenuHeader(
         LicenseSheet(license = license, onDismiss = { licenseShown = null }, node = placement.licenseSheet)
     }
     if (removeOpen) CardRemoveConfirm(post, placement, tag, onClose = { removeOpen = false })
+    // A READING, over the host, the list still open beneath it (CitedBy.md:5).
+    ReadingSheet(reading, post.id, postReadings(onOpenPost, onOpenActor, tag)) { reading = null }
 }
 
 /**
  * THE OWN MENU OFF THE DETAIL (RM-G9; FeedRemoveConfirm on the feed): the same
  * confirm as the detail's, over the surface the menu was opened from. Taken,
  * the card stands as its mark in place — NEVER the post leaves without a mark
- * (RemoveConfirm.md:11) — and the menu goes with the payload.
+ * (RemoveConfirm.md:11) — its ⋮ kept, less Edit, Mark as sensitive and Remove.
  */
 @Composable
 private fun CardRemoveConfirm(post: PostView, placement: CardPlacement, tag: String, onClose: () -> Unit) {

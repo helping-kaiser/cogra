@@ -264,10 +264,20 @@ dialog.cg-sheet-out::backdrop {
 }
 
 /* Any pressable surface. `isolation` keeps the overlay from escaping into a
-   parent stacking context. */
-.cg-state {
-  position: relative;
-  isolation: isolate;
+   parent stacking context.
+
+   IN THE COMPONENTS LAYER, so a utility on the same element wins: this file
+   is imported after `tailwindcss`, and an unlayered rule outranks every
+   layered one whatever its specificity — so an unlayered `position:
+   relative` silently beat `absolute`, `fixed` and `sr-only` on every
+   pressable surface (the pad's "?" fell into the pad's flow at its top-left,
+   jakob's hand test 2026-11-18). Tailwind's documented home for a class that
+   utilities must be able to override is `@layer components`. */
+@layer components {
+  .cg-state {
+    position: relative;
+    isolation: isolate;
+  }
 }
 
 .cg-state::after {

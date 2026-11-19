@@ -44,10 +44,19 @@ export function formOf(item: Bodied): FeedFormValue {
   return item.attachments.some((attachment) => attachment.mimeType.startsWith("video/")) ? "video" : "photos";
 }
 
+/**
+ * Whether `filter`'s `Also show → Removed` admits `item`: off, no removed post
+ * or comment stands. The tag page reads this one cut of the feed's filter and
+ * no other (TagPage.md:19-21).
+ */
+export function admitsRemoved(filter: FeedFilterValue, item: PredicateItem): boolean {
+  return !hasBody(item) || filter.also.includes("removed") || !payloadIsRedacted(item);
+}
+
 /** Whether `filter` admits the hydrated row `item`. */
 export function admitsItem(filter: FeedFilterValue, item: PredicateItem): boolean {
   if (!hasBody(item)) return true;
-  if (!filter.also.includes("removed") && payloadIsRedacted(item)) return false;
+  if (!admitsRemoved(filter, item)) return false;
   // A removed body has no form and no veil left to read: Removed alone decides it.
   if (payloadIsRedacted(item)) return true;
   if (!filter.also.includes("sensitive") && bodyIsSensitive(item)) return false;
