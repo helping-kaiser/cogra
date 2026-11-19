@@ -79,6 +79,31 @@ describe("a pinned foot with the on-screen keyboard up", () => {
     expect(offenders).toEqual([]);
   });
 
+  it("no_fields_scroller_lets_a_row_give_up_height", () => {
+    // A scrolling column whose rows may shrink lets a `min-h-0` row (a
+    // `TextField`) fall under its own content, which then paints over the
+    // rows below it — the comment editor's collapse in jakob's hand test,
+    // 2026-11-19. Where the box is short the column scrolls; no row shrinks.
+    const exempt: Record<string, string> = {
+      "app/shell.tsx": "the app's main: it holds one page, which sizes itself",
+      "lib/ui2/compose/picker-rows.tsx": "it holds one list, which is the scrolled content",
+      "lib/ui/stance-control.tsx": "the parked pad is content-sized: it is never shorter than its rows",
+      "lib/ui2/bottom-sheet.tsx":
+        "the sheet's body yields by design, so a growing field scrolls inside its own box (text-field.tsx, the growth law) down to its rows floor",
+    };
+    const offenders = sourceFiles()
+      .filter((file) => !(relative(file) in exempt))
+      .flatMap((file) =>
+        readFileSync(file, "utf-8")
+          .split("\n")
+          .map((line, index) => ({ line, at: `${relative(file)}:${index + 1}` }))
+          .filter(({ line }) => /className=.*\bflex-col\b.*\boverflow-y-auto\b|className=.*\boverflow-y-auto\b.*\bflex-col\b/.test(line))
+          .filter(({ line }) => !line.includes("*:shrink-0"))
+          .map(({ at }) => at),
+      );
+    expect(offenders).toEqual([]);
+  });
+
   it("the_inset_is_kept_once_for_the_whole_app", () => {
     const files = sourceFiles();
     const mounts = files.filter((file) => /<KeyboardInsetSync\s*\/>/.test(readFileSync(file, "utf-8"))).map(relative);

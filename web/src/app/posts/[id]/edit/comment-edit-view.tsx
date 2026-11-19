@@ -431,9 +431,12 @@ export function CommentEditView({
                 scroller's own padding; at the content edge a short word's
                 target (`Mark`) would reach 8px past it, and the form would
                 scroll sideways. */}
+            {/* NO ROW GIVES UP HEIGHT (`*:shrink-0`): a short layer scrolls
+                the column. A `min-h-0` row that shrinks paints its field over
+                the rows under it (jakob's hand test 2026-11-19, keyboard up). */}
             <div
               data-testid="comment-edit-fields"
-              className="-mx-6 flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto px-6"
+              className="-mx-6 flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto *:shrink-0 px-6"
             >
               <QuietNote testId="comment-edit-lede" node={part(NODE, "target")}>
                 Your comment on &ldquo;{targetLabel}&rdquo;.

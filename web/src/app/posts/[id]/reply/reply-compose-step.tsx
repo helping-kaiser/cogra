@@ -100,7 +100,7 @@ export function ReplyComposeStep({
     <div
       data-testid="reply-compose"
       {...commentDropHandlers(onPick)}
-      className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 pb-6 pt-2"
+      className="flex flex-1 flex-col gap-4 overflow-y-auto *:shrink-0 px-6 pb-6 pt-2"
     >
       <ReplyTargetChip target={state.target} />
 

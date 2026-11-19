@@ -301,7 +301,7 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
           onSubmit={(event) => void onSubmit(event)}
         >
           {/* The fields scroll under the pinned top; Save stays in the foot. */}
-          <div className="-mx-6 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6">
+          <div className="-mx-6 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto *:shrink-0 px-6">
             <ProfileMediaField
               name={displayName}
               currentUrl={avatarUrl}
