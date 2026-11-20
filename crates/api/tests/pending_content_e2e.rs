@@ -8,11 +8,11 @@
 
 use std::sync::Arc;
 
+use api::l1::{BoundaryError, L1Boundary};
 use axum::body::Body;
 use axum::http::Request;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
-use api::l1::{BoundaryError, L1Boundary};
 use common::l1::client::ActorKey;
 use common::l1::handshake::{
     AccountBalance, ApprovalWitness, BurnSettlement, BurnTicket, EpochPackage, Micro, Proposal,

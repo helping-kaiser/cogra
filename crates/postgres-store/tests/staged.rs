@@ -723,8 +723,12 @@ async fn a_refused_approval_send_is_deleted_at_the_reap(pool: PgPool) {
     let twice_p = proposal("alice", 1);
     let twice = stage(&pool, actor_id, &twice_p, 0).await;
     seal(&pool, twice, &twice_p, 22, false).await;
-    staged::mark_approval_sent(&pool, twice).await.expect("marks");
-    staged::mark_approval_sent(&pool, twice).await.expect("marks");
+    staged::mark_approval_sent(&pool, twice)
+        .await
+        .expect("marks");
+    staged::mark_approval_sent(&pool, twice)
+        .await
+        .expect("marks");
     staged::approval_refused(&pool, twice)
         .await
         .expect("settles");
@@ -832,7 +836,9 @@ async fn an_approved_write_a_redaction_reaped_keeps_its_row_at_the_reap(pool: Pg
     assert_eq!(promoted.len(), 1);
     assert_eq!(promoted[0].id, approved);
     assert!(matches!(
-        staged::load_promotable(&pool, approved).await.expect("loads"),
+        staged::load_promotable(&pool, approved)
+            .await
+            .expect("loads"),
         staged::Promotable::Reaped(_)
     ));
 }
