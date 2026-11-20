@@ -365,7 +365,14 @@ export function StanceControl({
   wide = false,
   overMedia = false,
   lineNode,
+  padNode: plainPadNode,
 }: {
+  /**
+   * The registered pad of a plain (non-variant) pad (`tagPage.actionRow.stance.pad`,
+   * TagPageHeldPad): the pad and the parts this control draws itself wear its
+   * paths, as a variant's `padNode` does. A variant's own wins.
+   */
+  padNode?: DataNode;
   /**
    * The registered node of the row line this control raises, where its board
    * names one (`reel.rail.stanceLine`, ReelRail.jsx: the face's line is the
@@ -1163,7 +1170,7 @@ export function StanceControl({
   // the place to leave one.
   const severable =
     variant === undefined && bundle !== null && bundle !== undefined && bundle.records > 0;
-  const padNode = variant?.padNode;
+  const padNode = variant?.padNode ?? plainPadNode;
 
   /** Whose in-flight state shows where: the pad's, the row's, the dialog's. */
   const padSetting = inFlight === "pad" && slow;
