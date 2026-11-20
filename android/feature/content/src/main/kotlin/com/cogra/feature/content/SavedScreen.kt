@@ -127,15 +127,17 @@ private val SAVED_MENU_ROWS = setOf(
 )
 
 /**
- * Saved's comment card menu: `saved.menuSheet` (SavedCommentMenu). An own
- * comment's Edit and Remove are not registered under Saved (seam 320-14), so
- * they keep their per-comment tags.
+ * Saved's comment card menu: `saved.menuSheet` (SavedCommentMenu,
+ * SavedCommentMenuOwn). The reader's rows and an own comment's Edit and Remove
+ * all stand under it.
  */
 private val SAVED_COMMENT_MENU = CommentMenuPlacement(
     sheet = SAVED / "menuSheet",
     rows = setOf(
         CommentMenuRow.Save,
         CommentMenuRow.Cite,
+        CommentMenuRow.Edit,
+        CommentMenuRow.Remove,
         CommentMenuRow.Hide,
         CommentMenuRow.CitedBy,
         CommentMenuRow.Opinions,
