@@ -64,7 +64,7 @@ fn body(
         middle,
         target,
         p_d: 1.0,
-        p_i: 0.5,
+        p_i: 1.0,
         settlement_ref: None,
         license: None,
         asserted_parents: vec![],
