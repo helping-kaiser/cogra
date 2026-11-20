@@ -953,6 +953,11 @@ export function CommentsSheet({
                 // pill on a surface meant for reading.
                 surface="reading"
                 testId={`comment-media-${comment.id}`}
+                // THE PICTURES' REGISTERED NAMES where the sheet is registered
+                // (ReplyMedia, round 60): `<card>.media`, each picture its
+                // `frame` keyed `<comment id>/<position>`, a clip's sound its
+                // frame's `soundDisc`, the gallery's `dots`.
+                dataNode={part(card, "media")}
               />
             )}
           </BodyRegion>
