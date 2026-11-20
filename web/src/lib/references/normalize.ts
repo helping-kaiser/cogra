@@ -16,7 +16,7 @@
 // reads as "handle" may also find titles; an unresolvable query answers
 // with an empty list rather than an error.
 
-import type { ReferenceTargetKind, ReferenceTargetView } from "./draft";
+import type { ReferenceTargetView } from "./draft";
 
 /** D7: the creation-batch cap, mirrored client-side (server is authoritative). */
 export const REFERENCE_BATCH_CAP = 10;
@@ -190,18 +190,4 @@ export function targetView(
  */
 export function untypedTargetView(targetId: string): ReferenceTargetView {
   return { kind: null, label: targetId, href: null };
-}
-
-/** The word for a target class, for labels a reader hears. */
-export function targetKindWord(kind: ReferenceTargetKind | null): string {
-  switch (kind) {
-    case "User":
-      return "mention";
-    case "Post":
-      return "post reference";
-    case "Comment":
-      return "comment reference";
-    default:
-      return "reference";
-  }
 }

@@ -5,7 +5,6 @@ import {
   queryShape,
   REFERENCE_BATCH_CAP,
   snippet,
-  targetKindWord,
   targetView,
   untypedTargetView,
 } from "./normalize";
@@ -177,18 +176,6 @@ describe("untypedTargetView", () => {
       label: "l1-record-7",
       href: null,
     });
-  });
-});
-
-describe("targetKindWord", () => {
-  it("calls a reference to a profile a mention (D20)", () => {
-    expect(targetKindWord("User")).toBe("mention");
-  });
-
-  it("never says cite or citation in a reader-facing word", () => {
-    for (const kind of ["User", "Post", "Comment", null] as const) {
-      expect(targetKindWord(kind)).not.toMatch(/cit/i);
-    }
   });
 });
 
