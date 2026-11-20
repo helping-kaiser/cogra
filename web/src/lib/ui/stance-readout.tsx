@@ -345,7 +345,10 @@ export function StanceStanding({
     >
       <ReadoutBlock
         parts={standingParts(bundle, targetLabel, axes)}
-        ids={readoutIds(part(node, "current"), `${testIdPrefix}-standing`, false)}
+        // A HELD STANDING NAMES ITS PARTS where the registry does
+        // (`tagPage.actionRow.stance.pad.standing.current.face`,
+        // TagPageHeldPad); a standing read as a sentence draws none of them.
+        ids={readoutIds(part(node, "current"), `${testIdPrefix}-standing`, true)}
       />
       {/* The pick's own readout — above the field, never under the knob,
           because a thumb on the control covers exactly where feedback would
