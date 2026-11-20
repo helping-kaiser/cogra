@@ -177,6 +177,7 @@ class TagPageCommentMenusTest {
 
     /** The scrim: Material's own dismiss, which Back, the swipe and Escape reach alike. */
     private fun dismissByScrim() {
+        compose.onNodeWithTag(sheet).assertExists()
         compose.onNodeWithContentDescription("Close sheet").performClick()
         compose.waitForIdle()
     }
