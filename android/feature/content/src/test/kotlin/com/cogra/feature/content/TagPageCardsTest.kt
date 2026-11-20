@@ -177,7 +177,11 @@ class TagPageCardsTest {
     private val standings = FeedStandings().apply {
         hold(
             reader = "reader",
-            ranking = FeedRanking(asOfEpoch = 2, entries = listOf(entry(SOL_POST, newestIndex = 0, score = 0.003))),
+            ranking = FeedRanking(
+                asOfEpoch = 2,
+                entries = listOf(entry(SOL_POST, newestIndex = 0, score = 0.003)),
+                settling = emptyList(),
+            ),
             viewer = "reader",
         )
     }
