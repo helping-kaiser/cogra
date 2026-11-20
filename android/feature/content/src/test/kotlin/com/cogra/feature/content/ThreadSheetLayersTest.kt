@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assertExists
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -69,10 +70,12 @@ class ThreadSheetLayersTest {
         signed = true
         // Polled frame by frame, well inside the snackbar's 4 s.
         compose.waitUntil(timeoutMillis = SNACKBAR_WAIT_MS) {
-            compose.onAllNodesWithTag(THREAD_SNACKBAR_TAG).fetchSemanticsNodes().isNotEmpty()
+            compose.onAllNodesWithTag(THREAD_SNACKBAR.tag).fetchSemanticsNodes().isNotEmpty()
         }
 
-        val bar = compose.onNodeWithTag(THREAD_SNACKBAR_TAG).getUnclippedBoundsInRoot()
+        // The plain comment-signed line wears the registered node and its message.
+        compose.onNodeWithTag("postDetail.snackbar.message", useUnmergedTree = true).assertExists()
+        val bar = compose.onNodeWithTag(THREAD_SNACKBAR.tag).getUnclippedBoundsInRoot()
         val sheet = compose.onNodeWithTag(THREAD_SHEET.tag).getUnclippedBoundsInRoot()
         val fieldAfter = compose.onNodeWithTag("detail_add_comment").getUnclippedBoundsInRoot()
         assertThat(fieldAfter).isEqualTo(fieldBefore)
