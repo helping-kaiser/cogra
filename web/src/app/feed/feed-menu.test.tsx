@@ -469,7 +469,7 @@ describe("the feed's post menu", () => {
     // The title, then the answers (seam 314: no body line).
     expect(screen.queryByTestId("feed.reportSheet.body")).toBeNull();
     await waitFor(() =>
-      expect((screen.getByTestId("feed.menuSheet") as HTMLDialogElement).open).toBe(false),
+      expect((screen.getByTestId("feed-menu-sheet") as HTMLDialogElement).open).toBe(false),
     );
     expect(report.targets).toEqual([]);
   });
