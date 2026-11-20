@@ -45,6 +45,7 @@ const LICENSED: Record<string, string> = {
   "lib/ui2/reference-row.tsx [line-height:1]": "ReferenceRow.jsx pair face: lineHeight 1",
   "lib/ui/stance-control.tsx [line-height:1]": "StanceControl.jsx resting face: lineHeight 1",
   "lib/ui/tagged-row.tsx [line-height:1]": "TaggedRow.jsx claim glyph: lineHeight 1",
+  "lib/ui/stance-readout.tsx [line-height:1.2]": "StanceReadout.jsx ReadoutBlock faces: lineHeight 1.2",
   "lib/ui/node-mark.tsx text-[length:var(--text-title-medium)]": "ReferenceRow.jsx NodeMark letter: title-medium size and weight",
   "lib/ui2/compose/topic-removable.tsx [letter-spacing:inherit]": "the chip's inner button reads the chip's own label-large",
   "lib/ui/node-mark.tsx fontWeight:": "ReferenceRow.jsx NodeMark letter: title-medium size and weight",

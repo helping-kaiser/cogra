@@ -283,12 +283,12 @@ function ReadoutBlock({
               aria-label={parts.head}
               aria-expanded={zeroShown}
               onClick={onExplainZero}
-              className="cg-state cg-focus cg-hit flex-none cursor-pointer border-0 bg-transparent p-0 text-title-medium"
+              className="cg-state cg-focus cg-hit flex-none cursor-pointer border-0 bg-transparent p-0 text-title-medium [line-height:1.2]"
             >
               <span aria-hidden="true">{parts.emoji}</span>
             </button>
           ) : (
-            <span aria-hidden="true" {...ids.face} className="flex-none text-title-medium">
+            <span aria-hidden="true" {...ids.face} className="flex-none text-title-medium [line-height:1.2]">
               {parts.emoji}
             </span>
           )}
@@ -298,7 +298,7 @@ function ReadoutBlock({
         </span>
       ) : (
         <span aria-hidden="true" className="inline-flex items-baseline gap-2">
-          <span {...ids.face} className={`${big ? "text-title-large" : "text-title-medium"}`}>
+          <span {...ids.face} className={`${big ? "text-title-large" : "text-title-medium"} [line-height:1.2]`}>
             {parts.emoji}
           </span>
           <span
