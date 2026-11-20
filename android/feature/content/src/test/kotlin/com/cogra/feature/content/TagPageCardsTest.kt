@@ -88,6 +88,18 @@ private val TAG_PAGE_REMOVED_CARDS = listOf("", ".line", ".when").flatMap { part
     listOf("tagPage.card.removalMark$part" to TOBIAS_POST, "tagPage.commentCard.removalMark$part" to ADA_COMMENT)
 }
 
+/**
+ * Rows this JVM census cannot see, named rather than dropped: the gallery is a
+ * pager that composes the page in view only, so the second frame stands once
+ * swiped to; the opener stands only where a clamp measured an overflow, which
+ * Robolectric does not lay out. The conformance harness (NATIVE graphics) is
+ * their oracle.
+ */
+private val NOT_ON_THE_JVM = setOf(
+    "tagPage.card.media.frame" to "$SOL_POST/2",
+    "tagPage.card.opener" to SOL_POST,
+)
+
 /** `TagPageHeldPad`'s card rows: the live board's, no removed copy. */
 private val HELD_PAD_CARDS = TAG_PAGE_LIVE_CARDS
 
@@ -277,7 +289,7 @@ class TagPageCardsTest {
     @Test
     fun theTagPageBoardsLiveCardsWearEveryRegisteredPart() {
         render(listOf(tobiasPost(removed = false), solPost), listOf(adaComment(removed = false)))
-        assertThat(missing(TAG_PAGE_LIVE_CARDS)).isEmpty()
+        assertThat(missing(TAG_PAGE_LIVE_CARDS - NOT_ON_THE_JVM)).isEmpty()
     }
 
     // TagPage's `post` and `comment` chips at `removed`: each mark in its card under its path.
@@ -291,7 +303,7 @@ class TagPageCardsTest {
     @Test
     fun theHeldPadBoardsCardsWearEveryRegisteredPart() {
         render(listOf(tobiasPost(removed = false), solPost), listOf(adaComment(removed = false)))
-        assertThat(missing(HELD_PAD_CARDS)).isEmpty()
+        assertThat(missing(HELD_PAD_CARDS - NOT_ON_THE_JVM)).isEmpty()
     }
 
     // -- TagPage.md --
