@@ -539,7 +539,10 @@ private fun ThreadReport(
     reportSheet(ReportAsk(commentId, ReportKind.Comment), onClose, notify)
 }
 
-/** The thread sheet's own snackbar IS the page's registered `postDetail.snackbar` (CommentMenu.md:11), every line of it. */
+/**
+ * The thread sheet's own snackbar IS the page's registered `postDetail.snackbar`
+ * (CommentMenu.md:11), every line of it.
+ */
 internal val THREAD_SNACKBAR = POST_DETAIL / "snackbar"
 
 private suspend fun SnackbarHostState.say(text: String) = showSnackbar(NodeSnackbarVisuals(text, THREAD_SNACKBAR))
