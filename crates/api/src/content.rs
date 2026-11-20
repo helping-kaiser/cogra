@@ -1525,10 +1525,10 @@ pub async fn land_promoted(
 /// An expired write still carries its payload — expiry stops serving the
 /// content — so a record landing in that window promotes like any other,
 /// and the insert branches rebuild the display rows expiry took down, this
-/// time under the real landing order. Past the reap, an approved write
-/// lands the same way from its structural row and the pair the GC moved
-/// into carriage ([`staged::reap_expired`]); any other write has no row
-/// left to load.
+/// time under the real landing order. Past the reap, a write whose
+/// approval was sent lands the same way from the row the GC kept and the
+/// pair it moved into carriage ([`staged::reap_expired`]), or reduced when
+/// a redaction emptied it first; any other write has no row left to load.
 ///
 /// Those insert branches are otherwise the uncommon path: the rows are
 /// normally already on screen from the pre-commitment, so landing only
