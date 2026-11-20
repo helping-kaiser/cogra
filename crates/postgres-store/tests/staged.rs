@@ -499,16 +499,13 @@ async fn the_reap_keeps_custody_of_an_approved_write_and_deletes_the_rest(pool: 
         .expect("counts");
     assert_eq!(rows, 1, "only the custodied row stays");
     type Bytes = Option<Vec<u8>>;
-    let (pubkey, dependency_nonce, host_seal, commitment): (Bytes, Bytes, Bytes, Bytes) =
-        sqlx::query_as(
-            "SELECT author_pubkey, dependency_nonce, host_seal, content_commitment
-         FROM staged_writes WHERE id = $1",
-        )
-        .bind(kept)
-        .fetch_one(&pool)
-        .await
-        .expect("reads");
-    assert_eq!((pubkey, dependency_nonce, host_seal), (None, None, None));
+    let (host_seal, commitment): (Bytes, Bytes) =
+        sqlx::query_as("SELECT host_seal, content_commitment FROM staged_writes WHERE id = $1")
+            .bind(kept)
+            .fetch_one(&pool)
+            .await
+            .expect("reads");
+    assert_eq!(host_seal, None);
     assert_eq!(commitment, Some(vec![6; 32]), "the witness stays");
     assert!(matches!(
         staged::load(&pool, kept).await,
@@ -574,6 +571,270 @@ async fn a_record_landing_after_the_reap_promotes_from_custody(pool: PgPool) {
         }
         other => panic!("expected the custodied write, got {other:?}"),
     }
+}
+
+/// What a kept row holds of its handshake, read straight off the table:
+/// the dependency opening (dependency nonce, dependency salt, dependency
+/// commitment), the rest of the pre-commitment leg (author key,
+/// pre-signature), the host seal, and whether the GC kept it.
+type KeptParts = (
+    Option<Vec<u8>>,
+    Option<Vec<u8>>,
+    Option<Vec<u8>>,
+    Option<Vec<u8>>,
+    Option<Vec<u8>>,
+    Option<Vec<u8>>,
+    bool,
+);
+
+async fn kept_parts(pool: &PgPool, id: Uuid) -> KeptParts {
+    sqlx::query_as(
+        "SELECT dependency_nonce, deps_salt, deps_commitment, author_pubkey, pre_signature,
+                host_seal, kept_at IS NOT NULL
+         FROM staged_writes WHERE id = $1",
+    )
+    .bind(id)
+    .fetch_one(pool)
+    .await
+    .expect("the row stays")
+}
+
+/// The opening the [`seal`] helper stores: dependency nonce, dependency
+/// salt, dependency commitment, author key and pre-signature, as kept.
+fn kept_opening() -> KeptParts {
+    (
+        Some(vec![9; 32]),
+        Some(vec![5; 32]),
+        Some(vec![7; 32]),
+        Some(vec![1; 32]),
+        Some(vec![3; 64]),
+        None,
+        true,
+    )
+}
+
+/// The ingested epoch-1 record of `act:alice:<seq>:opinion`, promoted.
+async fn land_late(pool: &PgPool, seq: u64) -> Vec<staged::PromotedWrite> {
+    mirror::ingest_epoch(
+        pool,
+        &EpochPackage {
+            epoch: 1,
+            asserted_at: chrono::Utc::now(),
+            records: vec![published("alice", seq, Family::Opinion, 1, 1)],
+            closure: Default::default(),
+        },
+    )
+    .await
+    .expect("ingest");
+    staged::promote_landed(pool, 1).await.expect("promotes")
+}
+
+/// A custodied row keeps the dependency opening an ordering fraud proof
+/// reads — the dependency nonce with the dependency salt and commitment —
+/// and the pre-commitment leg it belongs to, as a landed row and a
+/// redaction-reaped row keep them. Only the host seal leaves with the
+/// content pair.
+///
+/// The row the GC keeps holds the act's dependency opening whole.
+/// ´claim:staged:a-kept-row-keeps-the-dependency-opening´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_custodied_row_keeps_the_dependency_opening(pool: PgPool) {
+    let actor_id = actor(&pool, "alice", "alice").await;
+    let p = proposal("alice", 0);
+    let id = stage(&pool, actor_id, &p, 0).await;
+    seal(&pool, id, &p, 21, true).await;
+    staged::expire_due(&pool, 8, 8).await.expect("gc");
+    staged::reap_expired(&pool, 16, 8).await.expect("gc");
+
+    assert_eq!(kept_parts(&pool, id).await, kept_opening());
+    let deps: Vec<String> = sqlx::query_scalar("SELECT deps FROM staged_writes WHERE id = $1")
+        .bind(id)
+        .fetch_one(&pool)
+        .await
+        .expect("reads");
+    assert_eq!(deps, vec!["act:bob:0:registration".to_string()]);
+    assert!(
+        sqlx::query("UPDATE staged_writes SET deps_salt = NULL WHERE id = $1")
+            .bind(id)
+            .execute(&pool)
+            .await
+            .is_err(),
+        "a kept row holds its dependency opening whole"
+    );
+}
+
+/// The crash window of the approval relay: the send was recorded, and no
+/// answer was — no `approved_at`, the write still awaiting approval. The
+/// reap keeps custody as for an accepted approval, and a record landing
+/// afterwards promotes whole.
+///
+/// An approval sent with no answer recorded keeps custody at the reap, and its late landing promotes whole.
+/// ´claim:staged:a-sent-approval-keeps-custody´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_approval_sent_with_no_answer_keeps_custody(pool: PgPool) {
+    let actor_id = actor(&pool, "alice", "alice").await;
+    let p = proposal("alice", 0);
+    let id = stage(&pool, actor_id, &p, 0).await;
+    seal(&pool, id, &p, 21, false).await;
+    staged::mark_approval_sent(&pool, id).await.expect("marks");
+    let (state, approved): (String, bool) =
+        sqlx::query_as("SELECT state, approved_at IS NOT NULL FROM staged_writes WHERE id = $1")
+            .bind(id)
+            .fetch_one(&pool)
+            .await
+            .expect("reads");
+    assert_eq!((state.as_str(), approved), ("awaiting_approval", false));
+
+    staged::expire_due(&pool, 8, 8).await.expect("gc");
+    assert_eq!(staged::reap_expired(&pool, 16, 8).await.expect("gc"), 1);
+    assert_eq!(kept_parts(&pool, id).await, kept_opening());
+    let carriage = postgres_store::content::act_payload(&pool, "act:alice:0:opinion")
+        .await
+        .expect("reads")
+        .expect("the pair is in carriage");
+    assert_eq!(carriage.payload.as_deref(), Some(&b"staged payload"[..]));
+
+    let promoted = land_late(&pool, 0).await;
+    assert_eq!(promoted.len(), 1);
+    assert!(matches!(
+        staged::load_promotable(&pool, id).await.expect("loads"),
+        staged::Promotable::Custodied(_)
+    ));
+}
+
+/// A definite refusal takes the send's mark back: nothing is left the
+/// host could order, so the reap deletes the write. A second send still
+/// open keeps its own mark through the first one's refusal.
+///
+/// A refused approval send leaves no mark, and the reap deletes the write.
+/// ´claim:staged:a-refused-approval-is-deleted-at-the-reap´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_refused_approval_send_is_deleted_at_the_reap(pool: PgPool) {
+    let actor_id = actor(&pool, "alice", "alice").await;
+    let refused_p = proposal("alice", 0);
+    let refused = stage(&pool, actor_id, &refused_p, 0).await;
+    seal(&pool, refused, &refused_p, 21, false).await;
+    staged::mark_approval_sent(&pool, refused)
+        .await
+        .expect("marks");
+    staged::approval_refused(&pool, refused)
+        .await
+        .expect("settles");
+    let twice_p = proposal("alice", 1);
+    let twice = stage(&pool, actor_id, &twice_p, 0).await;
+    seal(&pool, twice, &twice_p, 22, false).await;
+    staged::mark_approval_sent(&pool, twice).await.expect("marks");
+    staged::mark_approval_sent(&pool, twice).await.expect("marks");
+    staged::approval_refused(&pool, twice)
+        .await
+        .expect("settles");
+
+    staged::expire_due(&pool, 8, 8).await.expect("gc");
+    assert_eq!(staged::reap_expired(&pool, 16, 8).await.expect("gc"), 2);
+    let left: Vec<Uuid> = sqlx::query_scalar("SELECT id FROM staged_writes")
+        .fetch_all(&pool)
+        .await
+        .expect("reads");
+    assert_eq!(left, vec![twice], "only the send still open is kept");
+    assert!(
+        postgres_store::content::act_payload(&pool, "act:alice:0:opinion")
+            .await
+            .expect("reads")
+            .is_none()
+    );
+}
+
+/// No approval was sent for a write sealed but never approved, nor for an
+/// admission approval held and never relayed: the host cannot order
+/// either, so the reap deletes both with no carriage row. The hold alone
+/// marks nothing.
+///
+/// A write whose approval was never sent is deleted at the reap.
+/// ´claim:staged:a-write-never-sent-is-deleted-at-the-reap´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_write_whose_approval_was_never_sent_is_deleted_at_the_reap(pool: PgPool) {
+    let actor_id = actor(&pool, "alice", "alice").await;
+    let sealed_p = proposal("alice", 0);
+    let sealed = stage(&pool, actor_id, &sealed_p, 0).await;
+    seal(&pool, sealed, &sealed_p, 21, false).await;
+    let held_p = proposal("alice", 1);
+    let held = stage(&pool, actor_id, &held_p, 0).await;
+    seal(&pool, held, &held_p, 22, false).await;
+    staged::hold_approval(&pool, held, &[0x5A; 64])
+        .await
+        .expect("holds");
+    let sends: Vec<i32> = sqlx::query_scalar("SELECT approval_sends_open FROM staged_writes")
+        .fetch_all(&pool)
+        .await
+        .expect("reads");
+    assert_eq!(sends, vec![0, 0], "a hold sends nothing");
+
+    staged::expire_due(&pool, 8, 8).await.expect("gc");
+    assert_eq!(staged::reap_expired(&pool, 16, 8).await.expect("gc"), 2);
+    let rows: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM staged_writes")
+        .fetch_one(&pool)
+        .await
+        .expect("counts");
+    assert_eq!(rows, 0);
+    for act in ["act:alice:0:opinion", "act:alice:1:opinion"] {
+        assert!(
+            postgres_store::content::act_payload(&pool, act)
+                .await
+                .expect("reads")
+                .is_none(),
+            "{act} keeps no carriage"
+        );
+    }
+}
+
+/// An approved write a redaction reaped before the GC keeps its row at the
+/// reap, as a custodied one does: the act's structure with the dependency
+/// opening, no host seal, out of every handshake reader's reach. A record
+/// landing later promotes it reduced. An unapproved redacted write is
+/// deleted.
+///
+/// An approved write a redaction reaped keeps its row at the GC, and its late landing promotes reduced.
+/// ´claim:staged:an-approved-redacted-write-keeps-its-row´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_approved_write_a_redaction_reaped_keeps_its_row_at_the_reap(pool: PgPool) {
+    let actor_id = actor(&pool, "alice", "alice").await;
+    let approved_p = proposal("alice", 0);
+    let approved = stage(&pool, actor_id, &approved_p, 0).await;
+    seal(&pool, approved, &approved_p, 21, true).await;
+    let unapproved_p = proposal("alice", 1);
+    let unapproved = stage(&pool, actor_id, &unapproved_p, 0).await;
+    seal(&pool, unapproved, &unapproved_p, 22, false).await;
+    let mut conn = pool.acquire().await.expect("conn");
+    for act in ["act:alice:0:opinion", "act:alice:1:opinion"] {
+        staged::reap_payload(&mut conn, act).await.expect("reaps");
+    }
+    drop(conn);
+
+    staged::expire_due(&pool, 8, 8).await.expect("gc");
+    assert_eq!(staged::reap_expired(&pool, 16, 8).await.expect("gc"), 2);
+    let left: Vec<Uuid> = sqlx::query_scalar("SELECT id FROM staged_writes")
+        .fetch_all(&pool)
+        .await
+        .expect("reads");
+    assert_eq!(left, vec![approved], "the unapproved write is deleted");
+    assert_eq!(kept_parts(&pool, approved).await, kept_opening());
+    assert!(matches!(
+        staged::load(&pool, approved).await,
+        Err(StagedError::NotFound(_))
+    ));
+    assert_eq!(
+        staged::reap_expired(&pool, 32, 8).await.expect("gc"),
+        0,
+        "a kept row is reaped once"
+    );
+
+    let promoted = land_late(&pool, 0).await;
+    assert_eq!(promoted.len(), 1);
+    assert_eq!(promoted[0].id, approved);
+    assert!(matches!(
+        staged::load_promotable(&pool, approved).await.expect("loads"),
+        staged::Promotable::Reaped(_)
+    ));
 }
 
 /// Expiring one write reaches only that write, and expiring an
