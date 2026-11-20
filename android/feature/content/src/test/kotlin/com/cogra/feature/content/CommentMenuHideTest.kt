@@ -193,6 +193,21 @@ class CommentMenuHideTest {
         assertThat(hiddenRepository.unhides).containsExactly(ada.id)
     }
 
+    /**
+     * CommentMenu.md:11 — the thread sheet's own snackbar IS `postDetail.snackbar`:
+     * the surface, its message and its Undo wear the registered nodes.
+     */
+    @Test
+    fun aHideFromTheThreadRaisesTheRegisteredPostDetailSnackbar() {
+        renderThread()
+        openThreadMenu("c1")
+        compose.onNodeWithTag("postDetail.menuSheet.hide").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithTag("postDetail.snackbar").assertExists()
+        compose.onNodeWithTag("postDetail.snackbar.message", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("postDetail.snackbar.action", useUnmergedTree = true).assertExists()
+    }
+
     /** CommentMenu.md:17, :19 — hidden, the row reads Unhide @ada and its tap unhides. */
     @Test
     fun theThreadsRowReadsUnhideWhileTheAuthorIsHidden() {
