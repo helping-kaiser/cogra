@@ -314,11 +314,10 @@ class TagPageCardsTest {
         render(emptyList(), listOf(adaComment(removed = false)))
         assertThat(shown("tagPage.commentCard.actionRow.reply")).isFalse()
         assertThat(shown("tagPage_comment_${ADA_COMMENT}_reply")).isFalse()
-        assertThat(
-            compose.onAllNodes(SemanticsMatcher("a replies line") { node ->
-                node.config.getOrNull(SemanticsProperties.TestTag)?.contains("viewReplies") == true
-            }, useUnmergedTree = true).fetchSemanticsNodes(),
-        ).isEmpty()
+        val repliesLine = SemanticsMatcher("a replies line") { node ->
+            node.config.getOrNull(SemanticsProperties.TestTag)?.contains("viewReplies") == true
+        }
+        assertThat(compose.onAllNodes(repliesLine, useUnmergedTree = true).fetchSemanticsNodes()).isEmpty()
     }
 
     // :21 — a tagged comment's pointer names a removed post it answers by its author's handle, never its title.

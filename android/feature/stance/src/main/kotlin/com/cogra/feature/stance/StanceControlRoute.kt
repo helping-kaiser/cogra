@@ -105,9 +105,7 @@ fun StanceControlRoute(
     // A guest has no bundle to read, and asking for one costs a refused
     // round trip plus the guard's wasted token refresh on every control
     // the page holds.
-    LaunchedEffect(target, onRequireAccount) {
-        if (onRequireAccount == null) viewModel.observe(target)
-    }
+    LaunchedEffect(target, onRequireAccount) { if (onRequireAccount == null) viewModel.observe(target) }
     // Leaving the screen dismisses the pad and stages nothing
     // (design.md §8.3). The pad is a popup — its own window, drawn over
     // whatever the app navigates to — and the holder outlives the
