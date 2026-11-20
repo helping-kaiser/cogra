@@ -182,8 +182,6 @@ async function openCommentsTab() {
 const cardIds = () =>
   screen.getAllByTestId(byNode("profile.comments.commentCard")).map((card) => card.getAttribute("data-testid-key"));
 
-const replies = (count: number) => ({ replies: { __typename: "CommentConnection", totalCount: count } });
-
 beforeEach(() => {
   window.localStorage.clear();
   push.mockReset();
@@ -301,8 +299,8 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     serveComments({
       "": {
         comments: [
-          profileComment("c2", replies(2)),
-          profileComment("c1", { target: answersComment("c0", "sol"), ...replies(1) }),
+          profileComment("c2"),
+          profileComment("c1", { target: answersComment("c0", "sol") }),
           profileComment("c9"),
         ],
         next: null,
@@ -332,7 +330,7 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
       serveChronicle();
       serveComments({
         "": {
-          comments: [profileComment("c2", replies(2)), profileComment("c1", { target: answersComment("c0", "sol"), ...replies(1) })],
+          comments: [profileComment("c2"), profileComment("c1", { target: answersComment("c0", "sol") })],
           next: null,
         },
       });
