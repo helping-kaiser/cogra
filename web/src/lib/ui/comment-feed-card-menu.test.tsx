@@ -408,6 +408,58 @@ describe("Edit on your own comment off the thread", () => {
     expect(screen.getByTestId("card-pending")).toBeInTheDocument();
     expect(routerPush).not.toHaveBeenCalled();
   });
+
+  // A HOST THAT READ THE CARD WITHOUT ITS FOLDS (the tag page's budget): the
+  // editor still starts from the comment whole, its topics and citations
+  // read first — never from a card that only lacks them.
+  it("an_edit_from_a_card_read_without_its_folds_reads_the_comment_whole_first", async () => {
+    const reads: string[] = [];
+    server.use(
+      gqlLink.query("CommentCard", ({ variables }) => {
+        reads.push(variables.id as string);
+        return HttpResponse.json({ data: { comment: profileComment("c1", { content: moderated("old words") }) } });
+      }),
+    );
+    const asked: CommentEditRequest[] = [];
+    mount({
+      reader: "u-ada",
+      over: { topics: undefined, references: undefined },
+      editor: (request) => {
+        asked.push(request);
+        return <div data-testid="stub-editor" />;
+      },
+    });
+    fireEvent.click(within(await openMenu()).getByTestId("history.menuSheet.edit"));
+    await screen.findByTestId("stub-editor");
+    expect(reads).toEqual(["c1"]);
+    expect(asked[0]!.comment.topics).toEqual([]);
+    expect(asked[0]!.comment.references).toEqual([]);
+  });
+
+  it("an_edit_whose_whole_read_gets_no_answer_opens_nothing_and_says_so", async () => {
+    server.use(gqlLink.query("CommentCard", () => HttpResponse.error()));
+    const notify = vi.fn();
+    mount({
+      reader: "u-ada",
+      notify,
+      over: { topics: undefined, references: undefined },
+      editor: () => <div data-testid="stub-editor" />,
+    });
+    fireEvent.click(within(await openMenu()).getByTestId("history.menuSheet.edit"));
+    await waitFor(() =>
+      expect(notify).toHaveBeenCalledWith("Can't reach the server. Check your connection and try again."),
+    );
+    expect(screen.queryByTestId("stub-editor")).toBeNull();
+  });
+});
+
+// CommentCard.jsx: `topics = []` — a card handed no topics draws no topics line.
+describe("a comment card read without its folds", () => {
+  it("draws_no_topics_line", async () => {
+    mount({ host: "profile", over: { topics: undefined, references: undefined } });
+    await screen.findByTestId(byNode("profile.comments.commentCard", "c1"));
+    expect(screen.queryByTestId("card-topics")).toBeNull();
+  });
 });
 
 describe("an applicant at the comment card's menu", () => {

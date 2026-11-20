@@ -65,6 +65,15 @@ export function profileComment(id: string, over: Record<string, unknown> = {}): 
   };
 }
 
+/**
+ * A tagged comment as the tag page reads it (`topics.graphql`): the card's
+ * own fields without the two folds and without the replies' count.
+ */
+export function taggedCommentWire(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
+  const DROPPED = new Set(["topics", "references", "replies"]);
+  return Object.fromEntries(Object.entries(profileComment(id, over)).filter(([key]) => !DROPPED.has(key)));
+}
+
 /** A page of the comments view, as the `ProfileComments` read serves it. */
 export function commentsPage(
   userId: string,
