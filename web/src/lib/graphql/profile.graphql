@@ -217,8 +217,7 @@ query ProfilePosts($id: UUID!, $after: String, $includePending: Boolean! = true)
 # newest first by landing. The Review's terminal is the comment, carrying
 # what its card draws: the thread's own fields, what it answers (the
 # pointer it leads with, `CommentCard`'s line shape), the thread's post
-# (where its doors land) and its replies' count (the "View n replies"
-# line, priced at `first: 0` as the thread prices it). A page of TEN, the
+# (where its doors land). A page of TEN, the
 # posts view's size and for its reason: every edge carries a whole card.
 # The page size is a literal so the client-operation guard prices the call
 # the device makes.
@@ -283,9 +282,6 @@ query ProfileComments($id: UUID!, $after: String, $includePending: Boolean! = tr
               }
               post {
                 id
-              }
-              replies(first: 0, includePending: $includePending) {
-                totalCount
               }
             }
           }

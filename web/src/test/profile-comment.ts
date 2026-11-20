@@ -1,6 +1,6 @@
 // A comment as the profile's comments view reads it (`ProfileComments`'s
-// terminal Comment: `CommentFields`, what it answers, the thread's post and
-// its replies' count), cast once — the wire shape a handler serves.
+// terminal Comment: `CommentFields`, what it answers and the thread's post),
+// cast once — the wire shape a handler serves.
 
 const moderated = (value: string | null, status = "NORMAL") => ({ __typename: "ModeratedText", value, status });
 
@@ -60,17 +60,16 @@ export function profileComment(id: string, over: Record<string, unknown> = {}): 
     viewerBookmarkedAt: null,
     target: answersPost("p1", "The long way home"),
     post: { __typename: "Post", id: "p1" },
-    replies: { __typename: "CommentConnection", totalCount: 0 },
     ...over,
   };
 }
 
 /**
  * A tagged comment as the tag page reads it (`topics.graphql`): the card's
- * own fields without the two folds and without the replies' count.
+ * own fields without the two folds.
  */
 export function taggedCommentWire(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
-  const DROPPED = new Set(["topics", "references", "replies"]);
+  const DROPPED = new Set(["topics", "references"]);
   return Object.fromEntries(Object.entries(profileComment(id, over)).filter(([key]) => !DROPPED.has(key)));
 }
 
