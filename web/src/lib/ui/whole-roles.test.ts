@@ -43,7 +43,6 @@ const LICENSED: Record<string, string> = {
   "lib/ui2/content-row.tsx [line-height:1]": "ContentRow.jsx face and letter discs: lineHeight 1",
   "lib/ui2/pair-readout.tsx [line-height:1]": "ReferenceRow.jsx pair face: lineHeight 1",
   "lib/ui2/reference-row.tsx [line-height:1]": "ReferenceRow.jsx pair face: lineHeight 1",
-  "lib/ui/stance-control.tsx text-[length:var(--text-title-large)]": "StanceControl.jsx resting face: title-large size, lineHeight 1",
   "lib/ui/stance-control.tsx [line-height:1]": "StanceControl.jsx resting face: lineHeight 1",
   "lib/ui/tagged-row.tsx [line-height:1]": "TaggedRow.jsx claim glyph: lineHeight 1",
   "lib/ui/node-mark.tsx text-[length:var(--text-title-medium)]": "ReferenceRow.jsx NodeMark letter: title-medium size and weight",
