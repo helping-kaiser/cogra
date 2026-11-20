@@ -16,6 +16,8 @@ ALWAYS a comment's and a reply's row carries the words that arrived as its secon
 
 ALWAYS a mention's and a citation's row reads in with the title of the piece that carries it as its second line
 
+ALWAYS a mention's and a citation's second line reads in, then the piece's author's handle, then 's removed post, as in @mira's removed post, and never the title GIVEN the piece was removed
+
 ALWAYS the opinion row wears the opinion's face where a picture would go, with no digits in either reading mode, and carries no second line
 
 ALWAYS the withdrawal row wears the walked-back face 🤷 where a picture would go, with no digits, and carries no second line

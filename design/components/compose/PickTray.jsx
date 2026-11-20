@@ -36,7 +36,12 @@ import { InlineAction } from "../core/Button.jsx";
    clipped at the band's edge (`clip`), never scrolled, and Show all is the
    way to the rest. A staged clip is one tile, so its caption
    always stands, both lines of it. The caller passes `caption` only where it
-   stands; the master never squeezes it into a column. */
+   stands; the master never squeezes it into a column.
+
+   THE CLIP IS SIDEWAYS ONLY (round 61, backlog 292): `overflow-x: clip`
+   cuts the tiles at the band's edge and leaves the row's height open, so a
+   tile's 48px remove target keeps the 13px it reaches above the row — an
+   `overflow: hidden` there clipped both axes and cut it. */
 
 const COUNT = {
   fontSize: "var(--text-label-small)",
@@ -59,7 +64,7 @@ export function PickTray({ count, onShowAll, showAllLabel = "Show all", caption,
       ) : (
         <span style={COUNT}>Picked · {count}</span>
       )}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, overflow: clip ? "hidden" : undefined }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, overflowX: clip ? "clip" : undefined }}>
         {children}
         {caption && (
           <span style={{ flex: 1, fontSize: "var(--text-label-small)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>

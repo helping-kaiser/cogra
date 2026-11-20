@@ -33,7 +33,18 @@
    V1.0 scope cut, 2026-09-25 — the contract's `ReferenceTarget` union, read
    as the ruling). So those are the rows, and each opens its own board: a
    person their profile, a post its detail, a comment its thread. The settling
-   citation rides the comment row, the section's last. */
+   citation rides the comment row, the section's last.
+
+   A REMOVED OR DELETED THING IS NEVER NAMED (round 61; the pointer rule
+   blessed 2026-11-19) — the `target` chip: `removed` the salt maps, removed by
+   its author, its row the removal mark in the name's place, the tile empty,
+   the row inert (`ReferenceRow`'s `removed`, seam 248; `StagedReference`'s
+   face); `deleted` Mira's account gone, the reserved disc and `Deleted
+   account` in the name's place, the row still the door to the account's
+   page. A deleted account's post still there keeps its title, as any post's
+   row — this row prints no author — and a swept one reads as `removed`. */
+export const PROPS = { target: { editor: "enum", options: ["live", "removed", "deleted"], default: "live" } };
+export const VALS = `personLive: this.props.target === "deleted" ? "none" : "contents", personDeleted: this.props.target === "deleted" ? "contents" : "none", postLive: this.props.target === "removed" ? "none" : "contents", postRemoved: this.props.target === "removed" ? "contents" : "none"`;
 export function Screen() {
   return (
     <>
@@ -50,8 +61,18 @@ export function Screen() {
           <ReferenceRow kind="topic" name="photography" pair={{ pDirected: 0.4, pInterest: 0.9 }} onOpen={() => {}} />
           <ReferenceRow kind="topic" name="coastroad" pair={{ pDirected: 0.1, pInterest: 1 }} pending onOpen={() => {}} />
           <SectionLabel>References</SectionLabel>
-          <ReferenceRow kind="person" name="Mira Voss" src="inviter.jpg" pair={{ pDirected: 0.1, pInterest: 0.1 }} onOpen={() => {}} />
-          <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" pair={{ pDirected: 0.55, pInterest: 0.2 }} onOpen={() => {}} />
+          <div style={{ display: "{{personLive}}" }}>
+            <ReferenceRow kind="person" name="Mira Voss" src="inviter.jpg" pair={{ pDirected: 0.1, pInterest: 0.1 }} onOpen={() => {}} />
+          </div>
+          <div style={{ display: "{{personDeleted}}" }}>
+            <ReferenceRow kind="person" name="Mira Voss" src="inviter.jpg" redacted pair={{ pDirected: 0.1, pInterest: 0.1 }} onOpen={() => {}} />
+          </div>
+          <div style={{ display: "{{postLive}}" }}>
+            <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" pair={{ pDirected: 0.55, pInterest: 0.2 }} onOpen={() => {}} />
+          </div>
+          <div style={{ display: "{{postRemoved}}" }}>
+            <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" removed="Removed by its author" redacted pair={{ pDirected: 0.55, pInterest: 0.2 }} />
+          </div>
           <ReferenceRow kind="post" name="Low tide at six tomorrow — anyone walking the flats?" pair={{ pDirected: 0.1, pInterest: 0.1 }} onOpen={() => {}} />
           <ReferenceRow kind="comment" name="That stretch after the second bend…" pair={{ pDirected: 0.1, pInterest: 0.1 }} pending onOpen={() => {}} />
         </div>

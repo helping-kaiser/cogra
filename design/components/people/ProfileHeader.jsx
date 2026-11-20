@@ -47,8 +47,9 @@ import { StanceControl } from "../stance/StanceControl.jsx";
    figures, each labelled, each plain — never one merged "followers" number,
    because there is no following here and borrowing the word would describe a
    different product. A Posts figure leads the row, inert, counting every post
-   the person published, a removed one included, never an edit — the figure
-   and the Posts tab's list agree (jakob 2026-11-18); each opinion figure
+   the person published, a removed one included (jakob 2026-11-18) and a
+   still-settling one included (jakob 2026-11-19), never an edit — the
+   figure and the Posts tab's list agree; each opinion figure
    is its own door to the opinions page, opened on the direction it counts
    (jakob 2026-11-11) — both directions separated there too, never merged.
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { Icon, NODE_GLYPHS } from "../navigation/Icon.jsx";
-import { MonogramAvatar, REDACTED_RING } from "../people/ActorChip.jsx";
+import { MonogramAvatar, REDACTED_ACTOR_NAME, REDACTED_RING } from "../people/ActorChip.jsx";
 import { PendingMarker } from "../honesty/PendingMarker.jsx";
 import { bundleReadout, formatStancePair, formatTagPair, SR_ONLY, tagReadout } from "../stance/StanceReadout.jsx";
 
@@ -134,8 +134,18 @@ export function NodeMark({ kind, name, src, onCard = false, redacted = false, si
    and its value, and its name's place reads the removal mark in the system's
    voice — `text-secondary` at the body's weight, the kept-picks rows' grammar
    — and the row opens nothing, because the name was the page's address. It
-   renders as a plain row, never a control: a door to nowhere is a lie. */
-export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, value, rank, trailing, pending = false, removed, onOpen, node, nodeKey }) {
+   renders as a plain row, never a control: a door to nowhere is a lie.
+
+   `redacted` IS A MARK WHOSE PAYLOAD OR OWNER WENT (round 61, the pointer
+   rule blessed 2026-11-19): `NodeMark`'s `redacted` — a removed post's tile
+   empty and ringed, as `StagedReference`'s removed face; a deleted account's
+   reserved disc, its name reading `Deleted account` in the system's voice,
+   as `StanceRow`'s and `ContentRow`'s `redacted`. It never closes the door
+   by itself: a deleted account's page still opens; `removed` is what makes
+   the row inert. */
+export function ReferenceRow({ kind = "post", name: nameGiven, sub, src, pair, pairFamily, value, rank, trailing, pending = false, removed, redacted = false, onOpen, node, nodeKey }) {
+  const name = redacted && kind === "person" ? REDACTED_ACTOR_NAME : nameGiven;
+  const quiet = removed || (redacted && kind === "person");
   const Row = removed ? "div" : "button";
   const rowProps = removed ? {} : { type: "button", onClick: onOpen, className: "cg-state cg-focus" };
   const tagFamily = pairFamily === undefined ? kind === "topic" : pairFamily === "tag";
@@ -178,7 +188,7 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, 
       data-node={node}
       data-node-key={node && nodeKey}
     >
-      <NodeMark kind={kind} name={name} src={src} node={node && "mark"} />
+      <NodeMark kind={kind} name={name} src={redacted ? undefined : src} redacted={redacted} node={node && "mark"} />
       <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
         <span
           style={{
@@ -189,7 +199,7 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, 
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
-            ...(removed ? { color: "var(--text-secondary)" } : null),
+            ...(quiet ? { color: "var(--text-secondary)" } : null),
           }}
           data-node={node && "name"}
         >

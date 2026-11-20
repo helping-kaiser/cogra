@@ -4,6 +4,8 @@ ALWAYS the reader's own profile's Comments view keeps the own profile's head as 
 
 ALWAYS profile.comments lists the reader's own comments, each a profile.comments.commentCard in reach of its thread
 
+ALWAYS profile.comments lists a comment the reader signed that is still settling among the landed ones, its card wearing Still settling, as the thread's landed reply does
+
 ALWAYS a comment's ⋮ holds the own comment menu, Edit among its rows and no Report row, and the card carries no Edit button
 
 WHEN tap the ⋮ on profile.comments.commentCard -> profile.menuSheet rises over the reader's own profile with the own comment menu's rows

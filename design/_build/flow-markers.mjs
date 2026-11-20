@@ -1851,7 +1851,8 @@ Object.assign(FLOW_MARKERS, {
   Profile: [
     ...ownProfile(),
     { n: 17, find: ' Opinions by you"', tag: "button" },
-    { n: 9, find: "Salt maps of the coast road — rubbings", tag: "button" },
+    // `all`: the `chronicle` chip's settling act (round 61) is the same door.
+    { n: 9, find: "Salt maps of the coast road — rubbings", tag: "button", all: true },
     { n: 9, find: "The third headland light is real", tag: "button" },
     { n: 9, find: "Three weekends of walking the same stretch", tag: "button" },
     // The `chronicle` chip's removed act (round 58) opens as the live one does.
@@ -1903,7 +1904,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: 'aria-label="Posts"', tag: "button", all: true },
     { n: 6, find: 'aria-label="Comments"', tag: "button", all: true },
     { n: 6, find: 'aria-label="Everything"', tag: "button", all: true },
-    { n: 7, find: "The long way home — the light does something", tag: "button" },
+    // `all`: the `chronicle` chip's settling act (round 61) is the same door.
+    { n: 7, find: "The long way home — the light does something", tag: "button", all: true },
     { n: 7, find: "The glovebox camera earns its keep", tag: "button" },
     // The whole line, end and all: the landing's card description opens the same way (round 49).
     { n: 7, find: "Took the coast road instead of the tunnel. Four hours longer, worth every minute.</span", tag: "button" },
@@ -2015,7 +2017,8 @@ Object.assign(FLOW_MARKERS, {
     // A list's comment card carries no replies' line (jakob 2026-11-13): via 11
     // is the card itself, the door to its thread.
     { n: 11, find: ">The glovebox camera earns its keep", tag: "a" },
-    { n: 11, find: ">Low tide is kinder to the rubbings", tag: "a" },
+    // `all`: the `comments` chip's settling copy (round 61) is the same door.
+    { n: 11, find: ">Low tide is kinder to the rubbings", tag: "a", all: true },
     { n: 17, find: ">On “", tag: "button", all: true },
     // The `target` chip's hole (round 59): the second card's pointer, both copies.
     { n: 17, find: ">On {{targetLine}}", tag: "button", all: true },
@@ -3115,7 +3118,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: "> commented on your post</span>", tag: "button" },
     { n: 3, find: "> replied to your comment</span>", tag: "button" },
     { n: 4, find: "> gave an opinion on you</span>", tag: "button" },
-    { n: 5, find: "> mentioned you</span>", tag: "button" },
+    // `all`: the `piece` chip's removed copy (round 61) is the same door.
+    { n: 5, find: "> mentioned you</span>", tag: "button", all: true },
     { n: 6, find: "> cited your post</span>", tag: "button" },
     { n: 7, find: "> landed through your invite</span>", tag: "button" },
     { n: 8, find: "> approved your application</span>", tag: "button" },

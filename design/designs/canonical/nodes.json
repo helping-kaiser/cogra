@@ -1299,6 +1299,179 @@
         "postDetail.header.menu": []
       }
     },
+    "CommentCitedByEmpty": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.threadSheet.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "postDetail.threadSheet.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.threadSheet.viewReplies": "the comment's id, the lowercase UUID the wire carries — the key of the card the line hangs under (CommentCard)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "postDetail.card.opinions": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.citedBySheet": [],
+        "postDetail.citedBySheet.dragHandle": [],
+        "postDetail.citedBySheet.empty": [],
+        "postDetail.citedBySheet.empty.title": [],
+        "postDetail.citedBySheet.title": [],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.threadSheet": [],
+        "postDetail.threadSheet.commentCard": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.reply": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.exact": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.face": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.avatar": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.handle": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.name": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.menu": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine.counts": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine.tag": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
+        ],
+        "postDetail.threadSheet.dragHandle": [],
+        "postDetail.threadSheet.foot": [],
+        "postDetail.threadSheet.foot.addComment": [],
+        "postDetail.threadSheet.title": [],
+        "postDetail.threadSheet.viewReplies": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ]
+      }
+    },
     "CommentEdit": {
       "prefix": "commentEdit",
       "keys": {
@@ -1397,7 +1570,9 @@
         "commentEdit.tags.withdrawn.undo": [],
         "commentEdit.target": [
           "live",
-          "removed"
+          "removed",
+          "deleted",
+          "swept"
         ],
         "commentEdit.words": [],
         "commentEdit.words.input": [],
@@ -1682,6 +1857,7 @@
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "postDetail.licenseSheet.terms.axis": "the axis's name as the terms print it, lowercased, each run of other characters one - (LicenseTerms)",
         "postDetail.threadSheet.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "postDetail.threadSheet.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "postDetail.threadSheet.viewReplies": "the comment's id, the lowercase UUID the wire carries — the key of the card the line hangs under (CommentCard)"
       },
       "nodes": {
@@ -1839,6 +2015,16 @@
           "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
+        "postDetail.threadSheet.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine.counts": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine.tag": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
+        ],
         "postDetail.threadSheet.dragHandle": [],
         "postDetail.threadSheet.foot": [],
         "postDetail.threadSheet.foot.addComment": [],
@@ -1855,6 +2041,7 @@
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "postDetail.threadSheet.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "postDetail.threadSheet.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "postDetail.threadSheet.viewReplies": "the comment's id, the lowercase UUID the wire carries — the key of the card the line hangs under (CommentCard)"
       },
       "nodes": {
@@ -2005,6 +2192,16 @@
           "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
+        "postDetail.threadSheet.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine.counts": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine.tag": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
+        ],
         "postDetail.threadSheet.dragHandle": [],
         "postDetail.threadSheet.foot": [],
         "postDetail.threadSheet.foot.addComment": [],
@@ -2021,6 +2218,7 @@
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "postDetail.threadSheet.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "postDetail.threadSheet.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "postDetail.threadSheet.viewReplies": "the comment's id, the lowercase UUID the wire carries — the key of the card the line hangs under (CommentCard)"
       },
       "nodes": {
@@ -2171,6 +2369,189 @@
           "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
+        "postDetail.threadSheet.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine.counts": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine.tag": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
+        ],
+        "postDetail.threadSheet.dragHandle": [],
+        "postDetail.threadSheet.foot": [],
+        "postDetail.threadSheet.foot.addComment": [],
+        "postDetail.threadSheet.title": [],
+        "postDetail.threadSheet.viewReplies": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ]
+      }
+    },
+    "CommentOpinionsEmpty": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.threadSheet.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "postDetail.threadSheet.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.threadSheet.viewReplies": "the comment's id, the lowercase UUID the wire carries — the key of the card the line hangs under (CommentCard)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "postDetail.card.opinions": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.opinionsSheet": [],
+        "postDetail.opinionsSheet.dragHandle": [],
+        "postDetail.opinionsSheet.empty": [],
+        "postDetail.opinionsSheet.empty.title": [],
+        "postDetail.opinionsSheet.title": [],
+        "postDetail.threadSheet": [],
+        "postDetail.threadSheet.commentCard": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.reply": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.exact": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.face": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.avatar": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.handle": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.name": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.menu": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine.counts": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine.tag": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
+        ],
         "postDetail.threadSheet.dragHandle": [],
         "postDetail.threadSheet.foot": [],
         "postDetail.threadSheet.foot.addComment": [],
@@ -2188,6 +2569,7 @@
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "postDetail.dialog": "the answer chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "postDetail.threadSheet.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "postDetail.threadSheet.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "postDetail.threadSheet.viewReplies": "the comment's id, the lowercase UUID the wire carries — the key of the card the line hangs under (CommentCard)"
       },
       "nodes": {
@@ -2358,6 +2740,16 @@
           "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
+        "postDetail.threadSheet.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine.counts": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine.tag": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
+        ],
         "postDetail.threadSheet.dragHandle": [],
         "postDetail.threadSheet.foot": [],
         "postDetail.threadSheet.foot.addComment": [],
@@ -2374,6 +2766,7 @@
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "postDetail.threadSheet.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "postDetail.threadSheet.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "postDetail.threadSheet.viewReplies": "the comment's id, the lowercase UUID the wire carries — the key of the card the line hangs under (CommentCard)"
       },
       "nodes": {
@@ -2524,6 +2917,16 @@
         "postDetail.threadSheet.commentCard.removalMark.when": [
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
+        "postDetail.threadSheet.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine.counts": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine.tag": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
+        ],
         "postDetail.threadSheet.dragHandle": [],
         "postDetail.threadSheet.foot": [],
         "postDetail.threadSheet.foot.addComment": [],
@@ -2540,6 +2943,7 @@
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "postDetail.threadSheet.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "postDetail.threadSheet.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "postDetail.threadSheet.viewReplies": "the comment's id, the lowercase UUID the wire carries — the key of the card the line hangs under (CommentCard)"
       },
       "nodes": {
@@ -2696,6 +3100,16 @@
         ],
         "postDetail.threadSheet.commentCard.removalMark.when": [
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine.counts": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine.tag": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
         ],
         "postDetail.threadSheet.dragHandle": [],
         "postDetail.threadSheet.foot": [],
@@ -4770,7 +5184,8 @@
         "feed.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
-        "feed.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
+        "feed.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "feed.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
       "nodes": {
         "feed.band": [],
@@ -4903,6 +5318,13 @@
         ],
         "feed.commentCard.menu": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "feed.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "feed.commentCard.tagsLine.tag": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
         ],
         "feed.commentCard.target": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
@@ -4924,7 +5346,8 @@
         "feed.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
-        "feed.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
+        "feed.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "feed.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
       "nodes": {
         "feed.band": [],
@@ -5057,6 +5480,12 @@
         ],
         "feed.commentCard.menu": [
           "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "feed.commentCard.tagsLine": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "feed.commentCard.tagsLine.tag": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58/tidemarket"
         ],
         "feed.commentCard.target": [
           "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
@@ -5702,6 +6131,7 @@
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "feed.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "feed.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "feed.profileCard": "the person's id, the lowercase UUID the wire carries (the profile feed card)",
         "feed.tagCard": "the tag's id, the lowercase UUID the wire carries (the tag feed card)"
       },
@@ -5836,6 +6266,16 @@
         ],
         "feed.commentCard.menu": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "feed.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "feed.commentCard.tagsLine.counts": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "feed.commentCard.tagsLine.tag": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
         ],
         "feed.commentCard.target": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
@@ -8025,6 +8465,7 @@
         "history.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "history.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "history.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "history.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "history.day": "the divider's words, lowercased, each run of other characters one - (History's day dividers)",
         "history.profileCard": "the person's id, the lowercase UUID the wire carries (the profile feed card)",
         "history.tagCard": "the tag's id, the lowercase UUID the wire carries (the tag feed card)"
@@ -8183,6 +8624,13 @@
         "history.commentCard.menu": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
         ],
+        "history.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "history.commentCard.tagsLine.tag": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
+        ],
         "history.commentCard.target": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
         ],
@@ -8294,6 +8742,7 @@
         "history.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "history.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "history.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "history.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "history.day": "the divider's words, lowercased, each run of other characters one - (History's day dividers)"
       },
       "nodes": {
@@ -8420,6 +8869,13 @@
         ],
         "history.commentCard.menu": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "history.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "history.commentCard.tagsLine.tag": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
         ],
         "history.commentCard.target": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
@@ -8452,6 +8908,7 @@
         "history.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "history.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "history.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "history.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "history.day": "the divider's words, lowercased, each run of other characters one - (History's day dividers)"
       },
       "nodes": {
@@ -8578,6 +9035,12 @@
         ],
         "history.commentCard.menu": [
           "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "history.commentCard.tagsLine": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "history.commentCard.tagsLine.tag": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58/tidemarket"
         ],
         "history.commentCard.target": [
           "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
@@ -8791,7 +9254,8 @@
         "history.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
         "history.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "history.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
-        "history.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
+        "history.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "history.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
       "nodes": {
         "history.bottomBar": [],
@@ -8918,6 +9382,13 @@
         "history.commentCard.menu": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
         ],
+        "history.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "history.commentCard.tagsLine.tag": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
+        ],
         "history.commentCard.target": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
         ],
@@ -8949,6 +9420,7 @@
         "history.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "history.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "history.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "history.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "history.day": "the divider's words, lowercased, each run of other characters one - (History's day dividers)"
       },
       "nodes": {
@@ -9075,6 +9547,13 @@
         ],
         "history.commentCard.menu": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "history.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "history.commentCard.tagsLine.tag": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
         ],
         "history.commentCard.target": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
@@ -12550,9 +13029,13 @@
           "4",
           "5"
         ],
+        "profile.chronicle.act.pending": [
+          "1"
+        ],
         "profile.chronicle.act.second": [
           "1",
           "2",
+          "3",
           "4"
         ],
         "profile.chronicle.act.title": [
@@ -14186,6 +14669,9 @@
           "3",
           "4",
           "5"
+        ],
+        "profile.chronicle.act.pending": [
+          "1"
         ],
         "profile.chronicle.act.second": [
           "1",
@@ -16969,6 +17455,7 @@
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "postDetail.threadSheet.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "postDetail.threadSheet.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "postDetail.threadSheet.viewReplies": "the comment's id, the lowercase UUID the wire carries — the key of the card the line hangs under (CommentCard)"
       },
       "nodes": {
@@ -17114,6 +17601,16 @@
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
           "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine.counts": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine.tag": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
         ],
         "postDetail.threadSheet.dragHandle": [],
         "postDetail.threadSheet.foot": [],
@@ -17764,6 +18261,7 @@
         "saved.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "saved.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "saved.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "saved.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "saved.profileCard": "the person's id, the lowercase UUID the wire carries (the profile feed card)"
       },
       "nodes": {
@@ -17920,6 +18418,13 @@
         "saved.commentCard.menu": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
         ],
+        "saved.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "saved.commentCard.tagsLine.tag": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
+        ],
         "saved.commentCard.target": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
         ],
@@ -17976,7 +18481,8 @@
         "saved.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
         "saved.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "saved.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
-        "saved.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
+        "saved.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "saved.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
       "nodes": {
         "saved.bottomBar": [],
@@ -18102,6 +18608,13 @@
         ],
         "saved.commentCard.menu": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "saved.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "saved.commentCard.tagsLine.tag": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
         ],
         "saved.commentCard.target": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
@@ -18129,7 +18642,8 @@
         "saved.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
         "saved.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "saved.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
-        "saved.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
+        "saved.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "saved.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
       "nodes": {
         "saved.bottomBar": [],
@@ -18255,6 +18769,12 @@
         ],
         "saved.commentCard.menu": [
           "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "saved.commentCard.tagsLine": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "saved.commentCard.tagsLine.tag": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58/tidemarket"
         ],
         "saved.commentCard.target": [
           "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
@@ -19061,6 +19581,7 @@
       "keys": {
         "saved.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
         "saved.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "saved.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "saved.profileCard": "the person's id, the lowercase UUID the wire carries (the profile feed card)"
       },
       "nodes": {
@@ -19165,6 +19686,13 @@
         ],
         "saved.commentCard.menu": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "saved.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "saved.commentCard.tagsLine.tag": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
         ],
         "saved.commentCard.target": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
