@@ -17,7 +17,7 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { byNode } from "@/test/data-node";
 import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { gqlLink, startMswServer } from "@/test/msw";
-import { answersPost, profileComment } from "@/test/profile-comment";
+import { answersPost, profileComment, taggedCommentWire } from "@/test/profile-comment";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
 import { bookmarkHandlers, bookmarkLog } from "@/test/saved";
@@ -43,7 +43,7 @@ type Removal = "author" | "proposal" | null;
 
 /** The board's tagged comment: @ada's (someone else's) or @sol's (the reader's own). */
 function taggedComment(whose: Whose, removed: Removal) {
-  const { topics: _t, references: _r, replies: _p, ...comment } = profileComment("c1", {
+  return taggedCommentWire("c1", {
     author: whose === "own" ? SOL : ADA,
     content: removed === null ? moderated("Low tide is kinder to the rubbings than noon ever was.") : moderated(null, "REDACTED"),
     removal:
@@ -53,7 +53,6 @@ function taggedComment(whose: Whose, removed: Removal) {
     target: answersPost("p1", "Salt maps of the coast road", "sol"),
     post: { __typename: "Post", id: "p1" },
   });
-  return comment;
 }
 
 function serveTag(whose: Whose, removed: Removal = null) {
@@ -100,7 +99,8 @@ const rows = (sheet: HTMLElement) =>
 /** The menu is closed: its sheet no longer wears the page's node, and the card's own sheet is shut. */
 async function menuClosed() {
   await waitFor(() => expect(screen.queryByTestId("tagPage.menuSheet")).toBeNull());
-  expect((screen.getByTestId("topic-comment-c1-menu-sheet") as HTMLDialogElement).open).toBe(false);
+  // The sheet's exit is drawn: the dialog closes once it has run.
+  await waitFor(() => expect((screen.getByTestId("topic-comment-c1-menu-sheet") as HTMLDialogElement).open).toBe(false));
 }
 
 /** The page beneath: the comment's row, its claim above it. */
