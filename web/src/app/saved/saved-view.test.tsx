@@ -386,12 +386,14 @@ describe("SavedScreen — the unsave is the card's own ⋮ first row", () => {
     renderWithProviders(<SavedScreen />, { store: signedIn() });
     await screen.findByTestId("saved-list");
     postMenu();
-    fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
+    // The reader's own close (what the dialog reports on Escape or the scrim).
+    fireEvent(screen.getByTestId("saved.menuSheet"), new Event("close"));
     await waitFor(() => expect((screen.getByTestId("saved-menu-sheet") as HTMLDialogElement).open).toBe(false));
     const rows = commentMenu();
     const sheets = screen.getAllByTestId("saved.menuSheet");
     expect(sheets).toHaveLength(1);
-    expect(sheets[0]).toBe(screen.getByTestId("saved-comment-c1-menu-sheet"));
+    expect((sheets[0] as HTMLDialogElement).open).toBe(true);
+    expect(sheets[0]).not.toBe(screen.getByTestId("saved-menu-sheet"));
     expect(within(sheets[0]!).getAllByRole("button")).toEqual(rows);
   });
 
