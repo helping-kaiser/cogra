@@ -73,51 +73,69 @@ class TopicViewModel @Inject constructor(
         refresh()
     }
 
+    /**
+     * THE PAGE IS ONE READ (TagPage.md:65-67): the name, then what carries it,
+     * in one sequence, so neither answer can land over the other's. A first
+     * read that gets no answer — either half — stands as the page's one fault;
+     * a page already drawn keeps what it drew.
+     */
     fun refresh() {
         val n = name ?: return
         viewModelScope.launch {
-            when (val outcome = topics.hashtag(n)) {
-                is Outcome.Success -> {
-                    val hashtag = outcome.value
-                    if (hashtag == null) {
-                        _state.update { it.copy(loading = false, notFound = true) }
-                    } else {
-                        _state.update {
-                            it.copy(loading = false, notFound = false, transportFailed = false, hashtag = hashtag)
-                        }
-                    }
-                }
-                is Outcome.Refused -> _state.update { it.copy(loading = false, notFound = true) }
-                is Outcome.Failed -> _state.update {
-                    it.copy(loading = false, transportFailed = it.hashtag == null)
-                }
-            }
+            if (readHashtag(n)) readContent(n)
         }
-        loadContent()
     }
 
-    private fun loadContent() {
-        val n = name ?: return
-        _state.update { it.copy(contentLoading = true) }
-        viewModelScope.launch {
-            when (val outcome = topics.taggedContent(n)) {
-                is Outcome.Success -> {
-                    // THE TAG PAGE FOLLOWS THE FEED'S REMOVED SWITCH (TagPage.md:19-21):
-                    // the filter the feed opens with — the one its Done committed on
-                    // this device, else the reader's saved default — read each time
-                    // the page is derived, so a removal taken from this page's own
-                    // menu stands as its mark until the next read. Only posts are cut:
-                    // a tagged comment's case is not ruled on main (round 58).
-                    val feedFilter = committed.now() ?: readerDefaults.now()
-                    val listed = outcome.value.filter { it.admittedBy(feedFilter) }
-                    _state.update { it.copy(contentLoading = false, content = listed) }
+    /** The name's own read; true when the page goes on to read what carries it. */
+    private suspend fun readHashtag(n: String): Boolean = when (val outcome = topics.hashtag(n)) {
+        is Outcome.Success -> {
+            val hashtag = outcome.value
+            if (hashtag == null) {
+                _state.update { it.copy(loading = false, notFound = true) }
+                false
+            } else {
+                _state.update {
+                    it.copy(loading = false, notFound = false, transportFailed = false, hashtag = hashtag)
                 }
-                else -> _state.update { it.copy(contentLoading = false) }
+                true
             }
+        }
+        is Outcome.Refused -> {
+            _state.update { it.copy(loading = false, notFound = true) }
+            false
+        }
+        is Outcome.Failed -> {
+            val firstRead = _state.value.hashtag == null
+            _state.update { it.copy(loading = false, transportFailed = firstRead) }
+            !firstRead
+        }
+    }
+
+    private suspend fun readContent(n: String) {
+        _state.update { it.copy(contentLoading = true) }
+        when (val outcome = topics.taggedContent(n)) {
+            is Outcome.Success -> {
+                // THE TAG PAGE FOLLOWS THE FEED'S REMOVED SWITCH (TagPage.md:23-25):
+                // the filter the feed opens with — the one its Done committed on
+                // this device, else the reader's saved default — read each time
+                // the page is derived, so a removal taken from this page's own
+                // menu stands as its mark until the next read. A removed post and
+                // a removed comment alike (round 58).
+                val feedFilter = committed.now() ?: readerDefaults.now()
+                val listed = outcome.value.filter { it.admittedBy(feedFilter) }
+                _state.update { it.copy(contentLoading = false, content = listed) }
+            }
+            // NO ANSWER IS NOT AN EMPTY TAG (TagPage.md:65, :73): a first read
+            // that found nothing stands as the fault, never as `Nothing carries
+            // this tag right now.`; rows already drawn stay.
+            else -> _state.update { it.copy(contentLoading = false, transportFailed = it.content.isEmpty()) }
         }
     }
 }
 
-/** Whether the feed's [filter] lets this row stand: a removed post only with Also show → Removed on. */
-private fun TaggedContentView.admittedBy(filter: FeedFilter): Boolean =
-    (node as? TaggedNode.Post)?.let { filter.admitsRemoved(it.post) } ?: true
+/** Whether the feed's [filter] lets this row stand: a removed post or comment only with Also show → Removed on. */
+private fun TaggedContentView.admittedBy(filter: FeedFilter): Boolean = when (val node = node) {
+    is TaggedNode.Post -> filter.admitsRemoved(node.post)
+    is TaggedNode.Comment -> filter.admitsRemoved(node.listed.comment)
+    null -> true
+}
