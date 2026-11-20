@@ -43,8 +43,16 @@ private fun digits(cents: Long): String {
 /** A card's figure from whole cents: plain, a negative wearing `−`, a zero none. */
 fun cardFigureOfCents(cents: Long): String = if (cents < 0) "$MINUS${digits(cents)}" else digits(cents)
 
-/** A card's figure from the ranker's exact score (`15.20`, `−0.50`). */
-fun cardFigure(score: Double): String = cardFigureOfCents(roundCents(score))
+/**
+ * A card's figure from the ranker's exact score (`15.20`, `−0.50`). A computed
+ * figure that is not zero never reads `0.00`, which is a severed one's alone:
+ * under 0.005 either way it reads `0.01` or `−0.01` (FeedKinds.md:19,
+ * TagPage.md:33).
+ */
+fun cardFigure(score: Double): String {
+    val cents = roundCents(score)
+    return cardFigureOfCents(if (cents == 0L && score != 0.0) (if (score < 0) -1L else 1L) else cents)
+}
 
 /** A signed figure — the trace's flag and every path's value: `+6.80`, `−0.50`, `0.00`. */
 fun signedOfCents(cents: Long): String = when {
