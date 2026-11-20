@@ -14,7 +14,7 @@ import { fakeClampLayout } from "@/test/fake-clamp-layout";
 import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { intersectEach, whenObserved } from "@/test/media-env";
 import { gqlLink, startMswServer } from "@/test/msw";
-import { answersPost, profileComment } from "@/test/profile-comment";
+import { answersPost, taggedCommentWire } from "@/test/profile-comment";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
 import { stanceHandlers } from "@/test/stance";
@@ -87,7 +87,7 @@ function postNode(id: string, title: string) {
  * own fields without the two folds, what it answers and its thread's post.
  */
 function taggedComment(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
-  const { topics: _topics, references: _references, replies: _replies, ...rest } = profileComment(id, {
+  return taggedCommentWire(id, {
     author: {
       __typename: "User",
       id: "u2",
@@ -100,7 +100,6 @@ function taggedComment(id: string, over: Record<string, unknown> = {}): Record<s
     post: { __typename: "Post", id: "p1" },
     ...over,
   });
-  return rest;
 }
 
 const REMOVED = { __typename: "Removal", at: "2026-11-18T10:00:00Z", by: "AUTHOR" };
@@ -735,9 +734,16 @@ describe("TopicView — the tag page's registered nodes (TagPage, TagPageHeldPad
   });
   // The board's three rows: @tobias's text post under a settling claim, @sol's
   // two-picture post with its caption and tags, @ada's tagged comment.
-  const textPost = () => ({ ...postNode("p-text", "unused"), title: moderated(null), content: moderated("Low tide at six") });
+  // The board's posts carry one and two comments, so each count is drawn.
+  const textPost = () => ({
+    ...postNode("p-text", "unused"),
+    title: moderated(null),
+    content: moderated("Low tide at six"),
+    comments: { __typename: "CommentConnection", totalCount: 1 },
+  });
   const galleryPost = () => ({
     ...postNode("p-gallery", "Salt maps of the coast road"),
+    comments: { __typename: "CommentConnection", totalCount: 2 },
     content: moderated(null),
     description: moderated("Rubbings from three weekends at low tide — paper against the salt crust, the side of a wax stick."),
     attachments: [picture(1), picture(2)],
