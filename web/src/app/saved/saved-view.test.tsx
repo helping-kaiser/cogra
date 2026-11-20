@@ -379,6 +379,24 @@ describe("SavedScreen — the unsave is the card's own ⋮ first row", () => {
     expect(personMenu()[0]).toHaveTextContent("Unsave");
   });
 
+  // ONE REGISTERED NODE NAMES ONE OPEN SHEET: a post's menu, opened and closed,
+  // no longer wears `saved.menuSheet` beside the comment's open one.
+  it("a_closed_post_menu_does_not_share_saved_menuSheet_with_the_comments_open_one", async () => {
+    serve(THREE);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    postMenu();
+    // The reader's own close (what the dialog reports on Escape or the scrim).
+    fireEvent(screen.getByTestId("saved.menuSheet"), new Event("close"));
+    await waitFor(() => expect((screen.getByTestId("saved-menu-sheet") as HTMLDialogElement).open).toBe(false));
+    const rows = commentMenu();
+    const sheets = screen.getAllByTestId("saved.menuSheet");
+    expect(sheets).toHaveLength(1);
+    expect((sheets[0] as HTMLDialogElement).open).toBe(true);
+    expect(sheets[0]).not.toBe(screen.getByTestId("saved-menu-sheet"));
+    expect(within(sheets[0]!).getAllByRole("button")).toEqual(rows);
+  });
+
   // ProfileMenu.md:17, on the profile card's own ⋮ (FeedProfileShapes.md).
   it("a_person_cards_mention_opens_the_composer_with_the_person_staged", async () => {
     push.mockClear();

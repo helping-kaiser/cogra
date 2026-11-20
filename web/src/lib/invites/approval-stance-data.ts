@@ -127,6 +127,8 @@ function approvalData(
     sever: async () => failed(new Error("an approval has nothing to walk back")),
     keyOnDevice: () => signer.hasKey?.() ?? Promise.resolve(true),
     keyBackedUp: () => deps.base.keyBackedUp(),
+    // Only a member approves, and a member's pad speaks in their own voice.
+    borrowedViewHandle: async () => null,
     // A kept approval never joins the kept picks' batch (Invites.md:63,
     // VouchAskPad.md:31): it signs only through its own pad, and the review,
     // which lists plain opinions, never asks this seam to preview or seal one.
