@@ -54,6 +54,18 @@ Conventions:
   by-product; `w̃`'s order-derived ingredient), the payload-marked
   flag (set from carriage — "Act payload carriage"), and the
   payload-witness reference.
+- **The replay floor.** Beside the payload witness — the content
+  commitment — each record keeps what its published record carries
+  so that authorship and formation verify from it alone: the
+  approved body in its canonical encoding, the author key, the
+  signed pre-commitment, the dependency commitment, the formation
+  edition each commitment names, the host seal and the approval
+  witness
+  ([layer1-interface.md §8.4](../primitive/layer1-interface.md#84-the-act-record-and-payload-carriage),
+  "Act envelope"). A record holds all of them or none: a record
+  mirrored before the package carried them holds none until the
+  next ingestion pass fills it from the published sequence, through
+  the seam. Ingestion verifies none of them.
 - **Indexes serve the standing query shapes:** by **author**
   (forward expansion — the feed's hop-by-hop frontier queries —
   and per-author bundle folds), by **target** (fold inputs,

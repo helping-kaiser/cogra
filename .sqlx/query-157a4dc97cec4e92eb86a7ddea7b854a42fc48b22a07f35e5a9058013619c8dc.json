@@ -1,0 +1,136 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT act_id, author, seq, family, middle, target, p_d, p_i,\n                  settlement_ref, license, asserted_parents,\n                  act_time AS \"act_time!\", position AS \"position!\",\n                  content_commitment, author_pubkey, pre_commitment, pre_signature,\n                  deps_commitment, host_seal, approval_signature AS \"approval_signature!\"\n           FROM l1_acts WHERE epoch = $1 AND status = 'accepted'\n           ORDER BY position",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "act_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "author",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "seq",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "family",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "middle",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "target",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "p_d",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 7,
+        "name": "p_i",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 8,
+        "name": "settlement_ref",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "license",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "asserted_parents",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 11,
+        "name": "act_time!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 12,
+        "name": "position!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 13,
+        "name": "content_commitment",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 14,
+        "name": "author_pubkey",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 15,
+        "name": "pre_commitment",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 16,
+        "name": "pre_signature",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 17,
+        "name": "deps_commitment",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 18,
+        "name": "host_seal",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 19,
+        "name": "approval_signature!",
+        "type_info": "Bytea"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "157a4dc97cec4e92eb86a7ddea7b854a42fc48b22a07f35e5a9058013619c8dc"
+}

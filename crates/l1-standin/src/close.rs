@@ -79,11 +79,11 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use common::l1::census::LegRole;
 use common::l1::handshake::{
-    BoundaryPolicy, ClosureCause, EpochClosure, EpochPackage, FIRST_POSITION, LedgerLine,
-    MarkerPolicy, PublishedLeg, PublishedRecord, Ratio, WallStep,
+    ActAuthentication, BoundaryPolicy, CaseDeclaration, ClosureCause, EpochClosure, EpochPackage,
+    FIRST_POSITION, LedgerLine, MarkerPolicy, PublishedLeg, PublishedRecord, Ratio, WallStep,
 };
 use common::l1::identifier::NodeId;
-use common::l1::proposal::dependency_commitment;
+use common::l1::proposal::{CONTENT_EDITION, DEPENDENCY_EDITION, dependency_commitment};
 use sqlx::PgConnection;
 
 use crate::seal::{projection_legs, stored_body};
@@ -99,11 +99,46 @@ pub(crate) struct Candidate {
     pub author: String,
     pub body: common::l1::StructuralBody,
     pub payload_witness: Vec<u8>,
+    pub sealed: SealedParts,
     /// Declared dependencies and causal parents together — every act this
     /// one must follow.
     pub prerequisites: Vec<String>,
     /// The causal parents alone, which form the dependent-set partition.
     pub parents: Vec<String>,
+}
+
+/// The stored parts of an accepted act's authentication beside its body
+/// and content commitment: what its published record carries so that
+/// authorship and formation verify from the record alone
+/// (layer1-interface.md §8.4, "Act envelope").
+#[derive(Debug, Clone, Default)]
+pub(crate) struct SealedParts {
+    pub author_pubkey: Vec<u8>,
+    pub pre_commitment: Vec<u8>,
+    pub pre_signature: Vec<u8>,
+    pub dependency_commitment: Vec<u8>,
+    pub host_seal: Vec<u8>,
+    pub approval_signature: Vec<u8>,
+}
+
+impl SealedParts {
+    /// The published authentication of the act these parts were sealed
+    /// for. Every act this host seals names the one content and one
+    /// dependency edition, so the editions are the constants, as the
+    /// stored header has them (`crate::seal`).
+    fn authentication(&self, body: &common::l1::StructuralBody) -> ActAuthentication {
+        ActAuthentication {
+            body: body.clone(),
+            author_pubkey: self.author_pubkey.clone(),
+            pre_commitment: self.pre_commitment.clone(),
+            pre_signature: self.pre_signature.clone(),
+            dependency_commitment: self.dependency_commitment.clone(),
+            content_edition: CONTENT_EDITION,
+            dependency_edition: DEPENDENCY_EDITION,
+            host_seal: self.host_seal.clone(),
+            approval_signature: self.approval_signature.clone(),
+        }
+    }
 }
 
 /// An act's causal parents (layer1-interface.md §8.2): its asserted
@@ -335,6 +370,7 @@ pub(crate) fn select_and_order(
             position,
             payload_witness: candidate.payload_witness.clone(),
             legs: published_legs,
+            authentication: candidate.sealed.authentication(&candidate.body),
         });
     }
 
@@ -428,11 +464,13 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, Stand
     let theta = DECLARATION.burn_image(wall_in_force).map_err(wall_fault)?;
 
     let rows = sqlx::query!(
-        "SELECT act_id, author, seq, family, middle, target, p_d, p_i,
-                settlement_ref, license, asserted_parents, deps,
-                pre_commitment, deps_salt, deps_commitment, content_commitment
-         FROM l1_acts WHERE status = 'approved'
-         ORDER BY approved_at, act_id",
+        r#"SELECT act_id, author, seq, family, middle, target, p_d, p_i,
+                  settlement_ref, license, asserted_parents, deps,
+                  pre_commitment, deps_salt, deps_commitment, content_commitment,
+                  author_pubkey, pre_signature, host_seal,
+                  approval_signature AS "approval_signature!"
+           FROM l1_acts WHERE status = 'approved'
+           ORDER BY approved_at, act_id"#,
     )
     .fetch_all(&mut *tx)
     .await?;
@@ -461,6 +499,14 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, Stand
             author: row.author.clone(),
             body,
             payload_witness: row.content_commitment.clone(),
+            sealed: SealedParts {
+                author_pubkey: row.author_pubkey.clone(),
+                pre_commitment: row.pre_commitment.clone(),
+                pre_signature: row.pre_signature.clone(),
+                dependency_commitment: row.deps_commitment.clone(),
+                host_seal: row.host_seal.clone(),
+                approval_signature: row.approval_signature.clone(),
+            },
             prerequisites,
             parents,
         });
@@ -661,6 +707,7 @@ fn closure_outputs(
             theta_next_micro: DECLARATION.burn_image(step.delivered).map_err(wall_fault)?,
         }),
         marker: DECLARATION.marker(),
+        case_declarations: DECLARATION.case_declarations(),
     })
 }
 
@@ -848,6 +895,21 @@ async fn persist(
     .execute(&mut **tx)
     .await?;
 
+    let (identities, editions): (Vec<String>, Vec<i32>) = closure
+        .case_declarations
+        .iter()
+        .map(|case| (case.identity.clone(), case.edition))
+        .unzip();
+    sqlx::query!(
+        "INSERT INTO l1_epoch_case_declarations (epoch, identity, edition)
+         SELECT $1, * FROM UNNEST($2::TEXT[], $3::INTEGER[])",
+        epoch,
+        &identities,
+        &editions,
+    )
+    .execute(&mut **tx)
+    .await?;
+
     Ok(asserted_at)
 }
 
@@ -922,6 +984,24 @@ pub(crate) async fn epochs_since(
         };
         packages.push(package);
     }
+    let epochs: Vec<i64> = packages.iter().map(|p| p.epoch).collect();
+    let mut cases: HashMap<i64, Vec<CaseDeclaration>> = HashMap::new();
+    for case in sqlx::query!(
+        r#"SELECT epoch, identity, edition FROM l1_epoch_case_declarations
+           WHERE epoch = ANY($1) ORDER BY epoch, identity COLLATE "C""#,
+        &epochs,
+    )
+    .fetch_all(&mut *conn)
+    .await?
+    {
+        cases.entry(case.epoch).or_default().push(CaseDeclaration {
+            identity: case.identity,
+            edition: case.edition,
+        });
+    }
+    for package in &mut packages {
+        package.closure.case_declarations = cases.remove(&package.epoch).unwrap_or_default();
+    }
     Ok(packages)
 }
 
@@ -941,9 +1021,11 @@ async fn load_epoch(
     asserted_at: chrono::DateTime<chrono::Utc>,
 ) -> Result<EpochPackage, StandInError> {
     let rows = sqlx::query!(
-        r#"SELECT act_id, author, family, act_time AS "act_time!",
-                  position AS "position!", content_commitment,
-                  asserted_parents, settlement_ref
+        r#"SELECT act_id, author, seq, family, middle, target, p_d, p_i,
+                  settlement_ref, license, asserted_parents,
+                  act_time AS "act_time!", position AS "position!",
+                  content_commitment, author_pubkey, pre_commitment, pre_signature,
+                  deps_commitment, host_seal, approval_signature AS "approval_signature!"
            FROM l1_acts WHERE epoch = $1 AND status = 'accepted'
            ORDER BY position"#,
         epoch,
@@ -1001,7 +1083,18 @@ async fn load_epoch(
 
     let mut records = Vec::with_capacity(rows.len());
     for row in rows {
+        let body = stored_body!(row).to_body()?;
+        let authentication = SealedParts {
+            author_pubkey: row.author_pubkey,
+            pre_commitment: row.pre_commitment,
+            pre_signature: row.pre_signature,
+            dependency_commitment: row.deps_commitment,
+            host_seal: row.host_seal,
+            approval_signature: row.approval_signature,
+        }
+        .authentication(&body);
         records.push(PublishedRecord {
+            authentication,
             act_id: common::l1::ActId::parse(&row.act_id)
                 .map_err(|e| StandInError::Formation(e.to_string()))?,
             legs: legs_by_act.remove(&row.act_id).unwrap_or_default(),
@@ -1053,6 +1146,7 @@ mod tests {
             author: author.to_string(),
             body,
             payload_witness: vec![],
+            sealed: SealedParts::default(),
             prerequisites: prerequisites.iter().map(|p| p.to_string()).collect(),
             parents: vec![],
         }
@@ -1313,6 +1407,7 @@ mod tests {
             author: "alice".to_string(),
             body,
             payload_witness: vec![],
+            sealed: SealedParts::default(),
             prerequisites: vec![],
             parents: vec![],
         };
@@ -1545,6 +1640,7 @@ mod tests {
                     author: AUTHORS[s.author].to_string(),
                     body,
                     payload_witness: vec![],
+                    sealed: SealedParts::default(),
                     prerequisites,
                     parents: vec![],
                 }

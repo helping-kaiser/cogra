@@ -222,10 +222,17 @@ interim wall controller (layer1-interface.md §11.8); with no standing
 solve its width input is the constant 1, so θ sits at the reference,
 50_186 µ — q(1) on the stand-in's micro-unit grid, rounded up. The
 deployment declares the structural floor 3/37, and its marker policy
-is the epoch close itself. Each epoch package carries, beside its
-records, the closure outputs the stand-in computes: the dependent-set
-partition, the closure cause, the final ledger with its debit vintage,
-the controller step and the marker policy. Epochs closed before the
+is the epoch close itself; it declares no verification case. Each
+accepted act is published at the replay floor: its record carries the
+approved body, the author key, the signed pre-commitment, both
+commitments with the formation edition each names, the host seal and
+the approval witness, so authorship and formation verify from the
+record alone — and never an opening (layer1-interface.md §8.4, "Act
+envelope"). Each epoch package carries, beside its records, the closure
+outputs the stand-in computes: the dependent-set partition, the closure
+cause, the final ledger with its debit vintage, the controller step,
+the marker policy, and the verification-case declarations in force —
+the empty set. Epochs closed before the
 controller keep the debit they were charged, and the next close
 charges the declared initialization.
 

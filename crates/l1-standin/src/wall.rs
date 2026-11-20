@@ -47,7 +47,7 @@
 //! [`WallError::UnsupportedWidth`], so a measured width arriving later
 //! cannot silently borrow the W = 1 value.
 
-use common::l1::handshake::{MarkerPolicy, Ratio};
+use common::l1::handshake::{CaseDeclaration, MarkerPolicy, Ratio};
 
 /// Walls are published as multiples of 1/`WALL_GRID` on the reduced axis.
 pub const WALL_GRID: i64 = 100_000;
@@ -141,6 +141,11 @@ pub struct Declaration {
     /// target and the clock, are operating values of the stand-in's
     /// config (`StandInConfig::boundary`), published with every package.
     pub min_epoch_duration_secs: i64,
+    /// The verification-case declarations in force, as (identity, edition):
+    /// none, since the deployment realizes no burn
+    /// (layer1-interface.md §11.6, the published epoch package binds the
+    /// set, empty or not).
+    pub case_declarations: &'static [(&'static str, i32)],
 }
 
 impl Declaration {
@@ -149,6 +154,21 @@ impl Declaration {
             identity: self.marker_identity.to_string(),
             edition: self.marker_edition,
         }
+    }
+
+    /// The verification-case declarations every package of this
+    /// deployment binds, ordered by identity.
+    pub fn case_declarations(&self) -> Vec<CaseDeclaration> {
+        let mut cases: Vec<CaseDeclaration> = self
+            .case_declarations
+            .iter()
+            .map(|(identity, edition)| CaseDeclaration {
+                identity: (*identity).to_string(),
+                edition: *edition,
+            })
+            .collect();
+        cases.sort();
+        cases
     }
 
     /// θ = ν·ρ, the burn image of a wall, in micro-units. A wall whose
@@ -283,6 +303,7 @@ pub const DECLARATION: Declaration = Declaration {
     marker_edition: 1,
     payload_encoding: "identity over the proposal's payload bytes",
     min_epoch_duration_secs: 0,
+    case_declarations: &[],
 };
 
 #[cfg(test)]

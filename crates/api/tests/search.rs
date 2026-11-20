@@ -17,7 +17,7 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use common::l1::Family;
 use common::l1::census::{LegRole, leg_params};
-use common::l1::handshake::{EpochPackage, PublishedLeg, PublishedRecord};
+use common::l1::handshake::{ActAuthentication, EpochPackage, PublishedLeg, PublishedRecord};
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::content::{self, LandingOrder};
 use postgres_store::{genesis, hashtag, mirror};
@@ -1112,6 +1112,9 @@ async fn claim_pair(
     let (t_pd, t_pi) = leg_params(LegRole::T, relevance, confidence);
     let record = PublishedRecord {
         act_id: ActId::new(&author, seq, Family::Tag).expect("act id"),
+        authentication: ActAuthentication::unverified(
+            &ActId::new(&author, seq, Family::Tag).expect("act id"),
+        ),
         author: author.clone(),
         family: Family::Tag,
         epoch,

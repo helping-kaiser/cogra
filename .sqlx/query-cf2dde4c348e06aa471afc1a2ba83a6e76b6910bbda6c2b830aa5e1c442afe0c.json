@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO l1_epoch_case_declarations (epoch, identity, edition)\n         SELECT $1, * FROM UNNEST($2::TEXT[], $3::INTEGER[])",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "TextArray",
+        "Int4Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cf2dde4c348e06aa471afc1a2ba83a6e76b6910bbda6c2b830aa5e1c442afe0c"
+}

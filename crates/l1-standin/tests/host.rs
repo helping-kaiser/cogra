@@ -232,8 +232,8 @@ async fn a_submission_without_its_content_pair_seals_approves_and_lands(pool: Pg
 }
 
 /// The published record names exactly its act, author, family, place in
-/// the order of record, witness and legs — the pattern below is
-/// exhaustive, so a payload mark on the type fails to compile — and the
+/// the order of record, witness, legs and authentication — the pattern
+/// below is exhaustive, so a payload mark on the type fails to compile — and the
 /// read-back package equals the published one. The host never sees a
 /// payload, so it publishes nothing about one beyond the witness.
 ///
@@ -258,7 +258,9 @@ async fn a_published_record_carries_no_payload_mark(pool: PgPool) {
             position,
             payload_witness,
             legs,
+            authentication,
         } = record;
+        assert_eq!(&authentication.body.act_id(), act_id);
         assert_eq!(&act_id.author, author);
         assert_eq!(act_id.family, *family);
         assert_eq!(*epoch, 1);
