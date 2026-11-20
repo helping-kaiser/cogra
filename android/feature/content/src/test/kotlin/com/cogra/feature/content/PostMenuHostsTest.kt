@@ -16,11 +16,15 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodes
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -70,6 +74,10 @@ class PostMenuHostsTest {
 
     @get:Rule
     val compose = createComposeRule()
+
+    private companion object {
+        val LEGACY_OWN_ROW = Regex("_(edit|sensitive|remove)$")
+    }
 
     private val ada = ActorRef("ada-id", "ada")
     private val adaHiddenAt: Instant = Instant.parse("2026-11-01T09:00:00Z")
@@ -156,7 +164,7 @@ class PostMenuHostsTest {
         }
     }
 
-    private fun renderSaved(adaHidden: Boolean) {
+    private fun renderSaved(adaHidden: Boolean, viewerId: String = "reader-id") {
         val store = hiddenSet(adaHidden)
         compose.setContent {
             CompositionLocalProvider(LocalSnackbarHostState provides host, LocalInboundReads provides reads) {
@@ -176,7 +184,7 @@ class PostMenuHostsTest {
                         onBack = {},
                         doors = noDoors,
                         hidden = store,
-                        hooks = CardHooks(viewerId = "reader-id"),
+                        hooks = CardHooks(viewerId = viewerId),
                     )
                     CograSnackbarHost(host)
                 }
@@ -351,6 +359,47 @@ class PostMenuHostsTest {
             "saved.menuSheet.license",
             "saved.menuSheet.report",
         )
+    }
+
+    /**
+     * SavedPostMenuOwn.md:5, :7-11 — the reader's own post: Unsave, Cite, Edit,
+     * Mark as sensitive, Remove, Cited by, Opinions, License under the registered
+     * `saved.menuSheet` nodes, no Hide, no Report, and no per-post legacy tag on
+     * the own rows. A post by someone else carries none of the three.
+     */
+    @Test
+    fun savedsOwnPostMenuRaisesTheOwnRowsUnderItsRegisteredNodes() {
+        renderSaved(adaHidden = false, viewerId = ada.id)
+        compose.onNodeWithTag("saved.card.menu").performClick()
+        assertRowsInOrder(
+            "saved.menuSheet.save",
+            "saved.menuSheet.cite",
+            "saved.menuSheet.edit",
+            "saved.menuSheet.markSensitive",
+            "saved.menuSheet.remove",
+            "saved.menuSheet.citedBy",
+            "saved.menuSheet.opinions",
+            "saved.menuSheet.license",
+        )
+        compose.onNodeWithTag("saved.menuSheet.hide").assertDoesNotExist()
+        compose.onNodeWithTag("saved.menuSheet.report").assertDoesNotExist()
+        compose.onAllNodes(hasLegacyOwnRowTag()).assertCountEquals(0)
+    }
+
+    @Test
+    fun savedsReaderPostMenuCarriesNoOwnRows() {
+        renderSaved(adaHidden = false)
+        compose.onNodeWithTag("saved.card.menu").performClick()
+        compose.onNodeWithTag("saved.menuSheet.edit").assertDoesNotExist()
+        compose.onNodeWithTag("saved.menuSheet.markSensitive").assertDoesNotExist()
+        compose.onNodeWithTag("saved.menuSheet.remove").assertDoesNotExist()
+        compose.onAllNodes(hasLegacyOwnRowTag()).assertCountEquals(0)
+    }
+
+    /** A per-post legacy tag of an own row: `<prefix>_edit`, `<prefix>_sensitive`, `<prefix>_remove`. */
+    private fun hasLegacyOwnRowTag() = SemanticsMatcher("has a legacy own-row test tag") { node ->
+        node.config.getOrNull(SemanticsProperties.TestTag)
+            ?.let { LEGACY_OWN_ROW.containsMatchIn(it) } == true
     }
 
     /** SavedPostMenu.md:19 — a hidden author's post still standing in Saved reads `Unhide @ada`. */
