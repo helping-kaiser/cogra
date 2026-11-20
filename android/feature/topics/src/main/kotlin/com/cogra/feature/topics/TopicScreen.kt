@@ -62,6 +62,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -99,6 +100,12 @@ import com.cogra.domain.PostView
 import com.cogra.domain.ProfileComment
 import com.cogra.domain.TaggedContentView
 import com.cogra.domain.TaggedNode
+import com.cogra.domain.hidden.HiddenSet
+import com.cogra.domain.saved.SavedWrites
+import com.cogra.feature.saved.LocalSavedHost
+import com.cogra.feature.saved.rememberHiddenSet
+import com.cogra.feature.saved.rememberSavedHost
+import com.cogra.feature.saved.rememberSavedWrites
 import kotlinx.coroutines.launch
 
 /** The `from` a History tag card opens a topic with (`Back to History`). */
@@ -158,6 +165,18 @@ class TopicCards(
  */
 typealias TopicCardsHost = @Composable (notify: (String) -> Unit, content: @Composable (TopicCards) -> Unit) -> Unit
 
+/**
+ * What the tag page's cards' menus write through (TagPageMenu.md:7,
+ * TagPageCommentMenu.md:7, TagPageCommentRemovedMenu.md:9): the app's Saved
+ * overlay and hidden set, and the guest gate their Save and Hide raise for one
+ * signed out. Nothing given stands the rows inert.
+ */
+class TopicMenuWrites(
+    val saved: SavedWrites? = null,
+    val hidden: HiddenSet? = null,
+    val onGuest: (() -> Unit)? = null,
+)
+
 /** No host: the rows draw their claims alone — for previews and the screen's own tests. */
 val NoTopicCards: TopicCardsHost = { _, content -> content(TopicCards({ _, _ -> }, { _, _ -> })) }
 
@@ -172,6 +191,8 @@ fun TopicRoute(
     deletionBand: @Composable () -> Unit = {},
     /** The feed's cards, hosted over the page by the shell (TagPage.md:15). */
     cardsHost: TopicCardsHost = NoTopicCards,
+    /** The guest gate the cards' Save and Hide raise; null when signed in. */
+    onRequireAccount: (() -> Unit)? = null,
     viewModel: TopicViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -190,6 +211,7 @@ fun TopicRoute(
         backDescription = topicBack(from),
         onShare = { context.shareTopic(viewModel.shareUrl(name)) },
         cardsHost = cardsHost,
+        menus = TopicMenuWrites(rememberSavedWrites(), rememberHiddenSet(), onRequireAccount),
     )
 }
 
@@ -242,6 +264,8 @@ fun TopicScreen(
     /** The stance row's share: the tag's own address, handed to the platform's sheet. */
     onShare: () -> Unit = {},
     cardsHost: TopicCardsHost = NoTopicCards,
+    /** What the cards' menus save and hide through, their words on this page's snackbar. */
+    menus: TopicMenuWrites = TopicMenuWrites(),
 ) {
     val listState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -249,6 +273,11 @@ fun TopicScreen(
     val notify: (String) -> Unit = { text ->
         scope.launch { snackbarHostState.showSnackbar(NodeSnackbarVisuals(text, TAG_PAGE / "snackbar")) }
     }
+    // THE MENUS' AFTERMATH READS ON THE PAGE'S OWN SNACKBAR (`tagPage.snackbar`,
+    // TagPageMenu.md:7, TagPageCommentMenu.md:7): `Saved.`, a hide's words, each
+    // with `Undo` — the menus under it save and hide through this host.
+    val snackbar = TAG_PAGE / "snackbar"
+    val savedHost = rememberSavedHost(menus.saved, snackbarHostState, snackbar, menus.onGuest, menus.hidden)
     Scaffold(
         // A registered surface: its tags reach UiAutomator as resource ids.
         modifier = Modifier.dataNodeSurface(),
@@ -273,13 +302,11 @@ fun TopicScreen(
                     // away from the page it acts on. The emptied page
                     // carries it too, holding nothing (TagPageEmpty.md:9).
                     StanceRow(name, stanceControl, onShare)
-                    cardsHost(notify) { cards ->
-                        TaggedList(
-                            state = state,
-                            listState = listState,
-                            cards = cards,
-                            seen = TopicSeen(onCardsSeen, onCardEdgesSeen, onSeenCheckpoint),
-                        )
+                    CompositionLocalProvider(LocalSavedHost provides savedHost) {
+                        cardsHost(notify) { cards ->
+                            val seen = TopicSeen(onCardsSeen, onCardEdgesSeen, onSeenCheckpoint)
+                            TaggedList(state = state, listState = listState, cards = cards, seen = seen)
+                        }
                     }
                 }
             }

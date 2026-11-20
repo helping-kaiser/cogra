@@ -29,14 +29,26 @@ import com.cogra.core.designsystem.LocalShowExactValues
 import com.cogra.core.designsystem.StanceAxes
 import com.cogra.core.designsystem.StanceControl
 import com.cogra.core.designsystem.StanceControlState
+import com.cogra.domain.AuthTokens
 import com.cogra.domain.ProfileComment
 import com.cogra.domain.TaggedContentKind
 import com.cogra.domain.TaggedContentView
 import com.cogra.domain.TaggedNode
+import com.cogra.domain.hidden.HiddenPerson
+import com.cogra.domain.hidden.HiddenSet
+import com.cogra.domain.saved.SavedWrites
+import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.RecordingHiddenRepository
+import com.cogra.domain.testing.RecordingSavedRepository
 import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testHashtag
 import com.cogra.domain.testing.testPost
+import com.cogra.feature.saved.LocalSavedHost
+import com.cogra.feature.saved.SavedHost
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -533,6 +545,34 @@ class TopicScreenTest {
         assertThat(shown("tagPage.actionRow")).isTrue()
         assertThat(shown("tagPage.actionRow.stance.anchor.face")).isTrue()
         assertThat(top("tagPage.actionRow").bottom).isAtMost(top("topic_content_empty").top)
+    }
+
+    // TagPageMenu.md:7, TagPageCommentMenu.md:7 — the cards' menus hide and
+    // save through the page's own host, their words on `tagPage.snackbar` with Undo.
+    @Test
+    fun theCardsMenusWriteThroughThePagesHostOnItsSnackbar() {
+        val tokens = FakeTokenStore().apply { tokens.value = AuthTokens("a", "r", "reader") }
+        val hiddenRepository = RecordingHiddenRepository()
+        val menus = TopicMenuWrites(
+            saved = SavedWrites(RecordingSavedRepository(), tokens, CoroutineScope(Dispatchers.Unconfined)),
+            hidden = HiddenSet(hiddenRepository, tokens, CoroutineScope(Dispatchers.Unconfined))
+                .also { runBlocking { it.refetch() } },
+        )
+        var hosted: SavedHost? = null
+        val reading: TopicCardsHost = { _, content ->
+            hosted = LocalSavedHost.current
+            content(TopicCards({ _, _ -> }, { _, _ -> }))
+        }
+        compose.setContent {
+            TopicScreen(name = "rust", state = board, onRefresh = {}, onBack = {}, cardsHost = reading, menus = menus)
+        }
+        compose.waitForIdle()
+        val hide = hosted?.hideAct(HiddenPerson("ada-id", "ada", null, null, redacted = false), "c1")
+        assertThat(hide).isNotNull()
+        compose.runOnIdle { hide?.invoke() }
+        compose.waitForIdle()
+        assertThat(hiddenRepository.hides.map { it.first }).containsExactly("ada-id")
+        compose.onNodeWithTag("tagPage.snackbar", useUnmergedTree = true).assertExists()
     }
 
     // :11, :13 — the face on the emptied page is the shell's control: its tap

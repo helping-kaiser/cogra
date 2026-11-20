@@ -297,6 +297,8 @@ private fun ShellScope.TopicDestination(entry: NavBackStackEntry) {
         from = route.from,
         onBack = { navController.navigateUp() },
         cardsHost = topicCardsHost(entry, topic),
+        // A guest's Save or Hide on a card's menu asks to join (TagPageMenu.md).
+        onRequireAccount = { requireJoin() }.takeIf { signedIn == false },
         // The page's one action, wired here because what a
         // signed-out tap does is the shell's to say — the
         // same guest gate the bar's slots raise. Nothing is
