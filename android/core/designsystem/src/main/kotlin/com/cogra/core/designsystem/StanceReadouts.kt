@@ -249,6 +249,9 @@ internal fun StanceStanding(
                     big = false,
                     testTag = currentTag,
                     exactTag = "${testTagPrefix}_stance_standing_pair",
+                    // A registered pad names the current standing's parts as
+                    // the pick's (`standing.current.label/face/exact`, TagPageHeldPad).
+                    node = node?.div("current"),
                 )
             }
         }
