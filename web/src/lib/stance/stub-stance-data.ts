@@ -101,6 +101,12 @@ export type StubStanceOptions = {
   readonly previews?: Readonly<Record<string, KeptTargetPreview>>;
   /** Fail every call, for the transport-fault branches. */
   readonly offline?: boolean;
+  /**
+   * The borrowed view's handle `Query.borrowedView` answers; null for a
+   * reader whose view is their own. Left out, the ladder's last rung: the
+   * genesis moderator's.
+   */
+  readonly borrowedView?: string | null;
 };
 
 export type StubStanceData = StanceData & {
@@ -207,6 +213,11 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
 
     async keyBackedUp(): Promise<boolean | null> {
       return options.noBackup !== true;
+    },
+
+    async borrowedViewHandle(): Promise<string | null> {
+      if (options.offline === true) return null;
+      return options.borrowedView === undefined ? "genesismod" : options.borrowedView;
     },
 
     async commitBatch(entries): Promise<Outcome<StanceCommit>> {

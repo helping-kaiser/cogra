@@ -9,6 +9,7 @@ import { writeCommittedFeedFilter } from "@/lib/feed/committed-filter";
 import { FEED_FILTER_DEFAULT } from "@/lib/feed/feed-filter";
 import { writeReaderDefault } from "@/lib/feed/reader-default";
 import { createTokenStore } from "@/lib/session/token-store";
+import { borrowedViewHandler } from "@/test/borrowed-view";
 import { byNode } from "@/test/data-node";
 import { fakeClampLayout } from "@/test/fake-clamp-layout";
 import { hiddenHandlers, hiddenLog } from "@/test/hidden";
@@ -261,6 +262,32 @@ describe("TopicView", () => {
     expect(screen.queryByTestId("topic-affinity-choose")).not.toBeInTheDocument();
     fireEvent.click(anchor);
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
+  });
+
+  // TagPage.md:55 — the topic's wide anchor's words beside the hollow face
+  // name the borrowed view, its handle ellipsized before `'s opinion`.
+  it("tagpage_md_55_a_guests_topic_anchor_words_name_the_borrowed_view", async () => {
+    server.use(borrowedViewHandler("genesismod"));
+    serve("rust", [row(postNode("p1", "About Rust"))]);
+    renderWithProviders(<TopicView name="rust" />, { store: guestStore(), writeSigner: fakeWriteSigner() });
+    const anchor = await screen.findByTestId("tagPage.actionRow.stance.anchor");
+    const words = await within(anchor).findByTestId("topic-affinity-words");
+    expect(words).toHaveTextContent("@genesismod's opinion");
+    expect(anchor).not.toHaveTextContent("Your opinion");
+    expect(screen.getByTestId("tagPage.actionRow.stance.anchor.face")).toHaveTextContent("🫥");
+    // The handle is what gives, never `'s opinion`.
+    expect(within(anchor).getByTestId("topic-affinity-words-handle").className).toContain("truncate");
+    expect(within(anchor).getByTestId("topic-affinity-words-suffix").className).toContain("flex-none");
+  });
+
+  // TagPage.md:57 — the accessible name keeps the borrowed view's full handle.
+  it("tagpage_md_57_a_guests_topic_anchor_name_keeps_the_full_handle", async () => {
+    server.use(borrowedViewHandler("genesismod"));
+    serve("rust", [row(postNode("p1", "About Rust"))]);
+    renderWithProviders(<TopicView name="rust" />, { store: guestStore(), writeSigner: fakeWriteSigner() });
+    const anchor = await screen.findByTestId("tagPage.actionRow.stance.anchor");
+    await within(anchor).findByTestId("topic-affinity-words");
+    expect(anchor).toHaveAccessibleName("@genesismod's stance on #rust");
   });
 
   // TagPageEmpty.md:9 — "ALWAYS the empty tag page carries the topic's own

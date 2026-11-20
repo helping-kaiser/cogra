@@ -9,6 +9,7 @@
 // own.
 
 import { HttpResponse } from "msw/http";
+import { borrowedViewHandler } from "./borrowed-view";
 import { gqlLink } from "./gql-link";
 
 export const QUIET_CHROME = [
@@ -40,4 +41,7 @@ export const QUIET_CHROME = [
       },
     }),
   ),
+  // A guest's wide anchor asks whose view it borrows (the vantage law); the
+  // answer that draws nothing is a view of one's own.
+  borrowedViewHandler(null),
 ];

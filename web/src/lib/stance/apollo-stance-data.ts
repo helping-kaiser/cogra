@@ -42,6 +42,7 @@ import {
   PostStanceDocument,
   ProfileStanceDocument,
 } from "@/__generated__/graphql";
+import { fetchBorrowedView } from "@/lib/api/auth-api";
 import { failed, fetchOutcome, refused, success, viewerField, type Outcome } from "@/lib/api/outcome";
 import { DeviceRefusalError } from "@/lib/signing/device-refusal";
 import {
@@ -287,6 +288,13 @@ export function createApolloStanceData(deps: {
       // Unknown is not "no backup": a read that did not answer keeps the
       // restore on offer, the way the notice reads when a backup exists.
       return outcome.kind === "success" ? outcome.value.keyBackupCreatedAt != null : null;
+    },
+
+    async borrowedViewHandle(): Promise<string | null> {
+      // The band's own read (auth-api.ts): a read that did not answer names
+      // nobody, so the anchor draws no name rather than guessing one.
+      const outcome = await guard.run(() => fetchBorrowedView(client));
+      return outcome.kind === "success" ? (outcome.value?.handle ?? null) : null;
     },
 
     async commitBatch(entries): Promise<Outcome<StanceCommit>> {
