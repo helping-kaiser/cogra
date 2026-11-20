@@ -4,7 +4,7 @@
 
 use common::l1::Family;
 use common::l1::census::LegRole;
-use common::l1::handshake::{EpochPackage, PublishedLeg, PublishedRecord};
+use common::l1::handshake::{ActAuthentication, EpochPackage, PublishedLeg, PublishedRecord};
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::mirror::{self, MirrorError};
 use sqlx::PgPool;
@@ -12,6 +12,9 @@ use sqlx::PgPool;
 fn registration(author: &str, epoch: i64, position: i64) -> PublishedRecord {
     PublishedRecord {
         act_id: ActId::new(author, 0, Family::Registration).expect("ok"),
+        authentication: ActAuthentication::unverified(
+            &ActId::new(author, 0, Family::Registration).expect("ok"),
+        ),
         author: author.to_string(),
         family: Family::Registration,
         epoch,

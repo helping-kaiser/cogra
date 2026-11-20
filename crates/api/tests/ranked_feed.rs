@@ -24,7 +24,7 @@ use api::ranker_pod::RankerConfig;
 use api::ratelimit::RateLimitConfig;
 use common::l1::Family;
 use common::l1::census::LegRole;
-use common::l1::handshake::{EpochPackage, PublishedLeg, PublishedRecord};
+use common::l1::handshake::{ActAuthentication, EpochPackage, PublishedLeg, PublishedRecord};
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::content::{self, LandingOrder};
 use postgres_store::{genesis, hashtag, mirror};
@@ -125,6 +125,7 @@ fn binary(handle: &str, seq: u64, family: Family, target: NodeId) -> PublishedRe
 fn record(handle: &str, seq: u64, family: Family, legs: Vec<PublishedLeg>) -> PublishedRecord {
     PublishedRecord {
         act_id: act(handle, seq, family),
+        authentication: ActAuthentication::unverified(&act(handle, seq, family)),
         author: atom(handle),
         family,
         epoch: 0,

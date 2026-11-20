@@ -213,7 +213,8 @@ pub struct ApprovalWitness {
 
 /// One published record of an epoch package — the self-sufficient edge
 /// record of §13, in the §8.4 field set the mirror stores (data-model.md
-/// "The record mirror").
+/// "The record mirror"): the act envelope of §8.4, "Act envelope", with
+/// the edge projections the host derived from it.
 #[derive(Debug, Clone, PartialEq)]
 pub struct PublishedRecord {
     pub act_id: ActId,
@@ -229,6 +230,89 @@ pub struct PublishedRecord {
     /// The content commitment — the payload witness.
     pub payload_witness: Vec<u8>,
     pub legs: Vec<PublishedLeg>,
+    pub authentication: ActAuthentication,
+}
+
+/// What an accepted act's record carries so that its authorship and its
+/// formation verify from the record alone, with no hidden opening (§8.2,
+/// "Proposal pre-commitment", "Verified act" and "Approval witness"; §8.4,
+/// "Act envelope"): the approved body, the signed pre-commitment, the
+/// dependency commitment beside the record's content commitment, the
+/// formation edition each commitment names, the host seal, and the
+/// author's approval witness. The openings — the content pair, both
+/// salts, the dependency list and its nonce — are never part of it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ActAuthentication {
+    /// The approved structural body the pre-commitment, the seal and the
+    /// approval all cover.
+    pub body: StructuralBody,
+    /// The key the author's address derives from, which every author
+    /// signature verifies under.
+    pub author_pubkey: Vec<u8>,
+    /// P, the proposal pre-commitment.
+    pub pre_commitment: Vec<u8>,
+    /// The author's signature over P.
+    pub pre_signature: Vec<u8>,
+    /// The dependency commitment C_d.
+    pub dependency_commitment: Vec<u8>,
+    /// The formation edition the content commitment names.
+    pub content_edition: u64,
+    /// The formation edition the dependency commitment names.
+    pub dependency_edition: u64,
+    /// The host verification seal over the encoded verified act.
+    pub host_seal: Vec<u8>,
+    /// The author's approval witness over the verified act and its seal.
+    pub approval_signature: Vec<u8>,
+}
+
+impl ActAuthentication {
+    /// An authentication no host publishes: the body of `act_id` toward
+    /// its author's own Actor node, with every signature and commitment
+    /// empty. For fixtures of consumers that read records without
+    /// verifying them, as [`EpochClosure::default`] is for consumers that
+    /// read no closure.
+    pub fn unverified(act_id: &ActId) -> Self {
+        ActAuthentication {
+            body: StructuralBody {
+                author: act_id.author.clone(),
+                seq: act_id.seq,
+                family: act_id.family,
+                middle: None,
+                target: NodeId::Addr(act_id.author.clone()),
+                p_d: 0.0,
+                p_i: 0.0,
+                settlement_ref: None,
+                license: None,
+                asserted_parents: Vec::new(),
+            },
+            author_pubkey: Vec::new(),
+            pre_commitment: Vec::new(),
+            pre_signature: Vec::new(),
+            dependency_commitment: Vec::new(),
+            content_edition: 0,
+            dependency_edition: 0,
+            host_seal: Vec::new(),
+            approval_signature: Vec::new(),
+        }
+    }
+}
+
+impl PublishedRecord {
+    /// The verified act this record publishes, as the parts its encoding
+    /// is formed from: the seal and the approval witness verify over
+    /// [`seal_message`] of this frame.
+    pub fn seal_frame(&self) -> SealFrame<'_> {
+        let auth = &self.authentication;
+        SealFrame {
+            body: &auth.body,
+            pre_commitment: &auth.pre_commitment,
+            pre_signature: &auth.pre_signature,
+            content_commitment: &self.payload_witness,
+            deps_commitment: &auth.dependency_commitment,
+            content_edition: auth.content_edition,
+            deps_edition: auth.dependency_edition,
+        }
+    }
 }
 
 /// One edge projection of a published record.
@@ -423,6 +507,16 @@ pub struct MarkerPolicy {
     pub edition: i32,
 }
 
+/// One verification-case declaration an epoch package binds, by identity
+/// and edition (§11.6, the published epoch package). Every declaration in
+/// force for the epoch is bound, and the empty set is bound when none is,
+/// so the package itself shows which declared cases apply to the epoch.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct CaseDeclaration {
+    pub identity: String,
+    pub edition: i32,
+}
+
 /// One author's line of the epoch's final ledger (§5 host contract (ii)):
 /// the accepted-act increment ΔN_i, the action count N_i and the residual
 /// balance b_i after this epoch's debits.
@@ -476,7 +570,8 @@ pub struct BoundaryPolicy {
 /// The closure outputs of one epoch beyond its records (§5 host contract
 /// (i), (ii) and (vi)): the dependent-set partition and closure cause, the
 /// boundary triple it closed under, the final ledger with the debit
-/// vintage, the wall controller's step, and the marker policy. The
+/// vintage, the wall controller's step, the marker policy, and the
+/// verification-case declarations in force. The
 /// deployment's fixed declarations — numéraire, floor, controller edition
 /// and constants — are published once per deployment, not here.
 ///
@@ -498,6 +593,9 @@ pub struct EpochClosure {
     /// `None` for an epoch closed before the host ran the controller.
     pub wall: Option<WallStep>,
     pub marker: MarkerPolicy,
+    /// Every verification-case declaration in force for the epoch, ordered
+    /// by identity — empty when none is.
+    pub case_declarations: Vec<CaseDeclaration>,
 }
 
 /// Boundary 0: the empty state before epoch 1 (§7.2, "Title Certificate").
@@ -799,19 +897,170 @@ mod tests {
             records: positions
                 .iter()
                 .enumerate()
-                .map(|(seq, position)| PublishedRecord {
-                    act_id: ActId::new("alice", seq as u64, Family::Opinion).expect("valid"),
-                    author: "alice".into(),
-                    family: Family::Opinion,
-                    epoch,
-                    act_time: 1,
-                    position: *position,
-                    payload_witness: vec![],
-                    legs: vec![],
+                .map(|(seq, position)| {
+                    let act_id = ActId::new("alice", seq as u64, Family::Opinion).expect("valid");
+                    PublishedRecord {
+                        authentication: ActAuthentication::unverified(&act_id),
+                        act_id,
+                        author: "alice".into(),
+                        family: Family::Opinion,
+                        epoch,
+                        act_time: 1,
+                        position: *position,
+                        payload_witness: vec![],
+                        legs: vec![],
+                    }
                 })
                 .collect(),
             closure: EpochClosure::default(),
         }
+    }
+
+    /// The package carries the replay floor and the Host Contract's inputs,
+    /// and nothing else — no verdict, certificate or diagnostic. Every
+    /// pattern below is exhaustive, so a field added to any part of the
+    /// package fails to compile here until it is named and classed; each
+    /// binding is named for what it is in the package:
+    ///
+    /// - the order of record and its asserted timestamp (epoch, positions,
+    ///   act times, boundary instant);
+    /// - per accepted act, the act envelope at the floor: act identifier,
+    ///   author and family, the approved body, both commitments with the
+    ///   formation edition each names, the signed pre-commitment, the host
+    ///   seal, the approval witness, and the author key they verify under;
+    ///   with the host-derived edge projections and maturities;
+    /// - the closure's Host Contract inputs: cause and boundary triple, the
+    ///   dependent-set partition, the final ledger and debit vintage, the
+    ///   wall controller's step, the marker policy and the verification-case
+    ///   declarations, both by identity and edition.
+    ///
+    /// The package's field set is exactly the replay floor's plus the Host Contract inputs.
+    /// ´claim:handshake:the-package-carries-the-floor-and-the-host-contract-inputs-only´
+    #[test]
+    fn the_package_carries_the_floor_and_the_host_contract_inputs_only() {
+        let mut package = package(1, &[1]);
+        package.closure.case_declarations = vec![CaseDeclaration {
+            identity: "case".into(),
+            edition: 1,
+        }];
+        package.closure.wall = Some(WallStep {
+            wall_in_force: Ratio::ONE,
+            width: Ratio::ONE,
+            accepted_rung: Ratio::ZERO,
+            proposal: Ratio::ONE,
+            delivered: Ratio::ONE,
+            theta_next_micro: 1,
+        });
+        let EpochPackage {
+            epoch: _order_epoch,
+            asserted_at: _boundary_instant,
+            records,
+            closure,
+        } = &package;
+        for record in records {
+            let PublishedRecord {
+                act_id: _envelope_act_id,
+                author: _envelope_author,
+                family: _envelope_family,
+                epoch: _finalization_epoch,
+                act_time: _act_time,
+                position: _order_position,
+                payload_witness: _content_commitment,
+                legs,
+                authentication,
+            } = record;
+            for leg in legs {
+                let PublishedLeg {
+                    role: _projection_role,
+                    source: _projection_source,
+                    target: _projection_target,
+                    p_d: _rendered_p_d,
+                    p_i: _rendered_p_i,
+                    tau: _host_cached_maturity,
+                } = leg;
+            }
+            let ActAuthentication {
+                body: _approved_body,
+                author_pubkey: _author_key,
+                pre_commitment: _pre_commitment,
+                pre_signature: _author_signature_over_it,
+                dependency_commitment: _dependency_commitment,
+                content_edition: _content_formation_edition,
+                dependency_edition: _dependency_formation_edition,
+                host_seal: _verification_seal,
+                approval_signature: _approval_witness,
+            } = authentication;
+        }
+        let EpochClosure {
+            cause: _closure_cause,
+            boundary,
+            dependent_sets: _dependent_set_partition,
+            ledger,
+            theta_charged_micro: _debit_vintage,
+            wall,
+            marker,
+            case_declarations,
+        } = closure;
+        let BoundaryPolicy {
+            target_acts: _target,
+            min_duration_secs: _minimum,
+            max_duration_secs: _maximum,
+        } = boundary;
+        for line in ledger {
+            let LedgerLine {
+                address: _ledger_author,
+                accepted_acts: _accepted_increment,
+                action_count: _action_count,
+                residual_balance_micro: _residual_balance,
+            } = line;
+        }
+        if let Some(WallStep {
+            wall_in_force: _wall_in_force,
+            width: _contributing_width,
+            accepted_rung: _accepted_rung,
+            proposal: _target_proposal,
+            delivered: _delivered_wall,
+            theta_next_micro: _next_price,
+        }) = wall
+        {}
+        let MarkerPolicy {
+            identity: _marker_identity,
+            edition: _marker_edition,
+        } = marker;
+        for case in case_declarations {
+            let CaseDeclaration {
+                identity: _case_identity,
+                edition: _case_edition,
+            } = case;
+        }
+    }
+
+    /// The default closure — what a consumer's fixture uses — binds the
+    /// empty set of verification-case declarations explicitly, and the
+    /// verified act a record publishes is formed from the record's own
+    /// commitments: its content commitment is the payload witness.
+    ///
+    /// A record's verified act is formed from its own fields, the payload witness as its content commitment.
+    /// ´claim:handshake:a-records-verified-act-is-formed-from-its-own-fields´
+    #[test]
+    fn a_records_verified_act_is_formed_from_its_own_fields() {
+        assert_eq!(EpochClosure::default().case_declarations, vec![]);
+        let mut record = package(1, &[1]).records.remove(0);
+        record.payload_witness = vec![7; 32];
+        record.authentication.dependency_commitment = vec![8; 32];
+        record.authentication.content_edition = 2;
+        record.authentication.dependency_edition = 3;
+        let frame = record.seal_frame();
+        assert_eq!(frame.content_commitment, &[7; 32]);
+        assert_eq!(frame.deps_commitment, &[8; 32]);
+        assert_eq!((frame.content_edition, frame.deps_edition), (2, 3));
+        assert_eq!(frame.body, &record.authentication.body);
+        let mut other = record.clone();
+        other.payload_witness = vec![9; 32];
+        assert_ne!(
+            seal_message(&record.seal_frame()),
+            seal_message(&other.seal_frame())
+        );
     }
 
     /// A ratio is held in lowest terms with a positive denominator, so
