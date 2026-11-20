@@ -183,7 +183,17 @@ fun CardListHost(
         stanceControl = nodeStanceControl,
     )
     ProvideRemoval {
-        HostedCardsScope(doors, routes, hooks, revealed, tag, notify, placement, rememberCommentReread(), content)
+        HostedCardsScope(
+            doors,
+            routes,
+            hooks,
+            revealed,
+            tag,
+            notify,
+            placement,
+            rememberCommentReread(),
+            content = content,
+        )
     }
 }
 
