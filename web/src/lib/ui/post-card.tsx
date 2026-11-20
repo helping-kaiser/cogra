@@ -162,8 +162,11 @@ export function PostCard({
   menuOpen = false,
   node,
   scoreOrigin,
+  attach = false,
 }: {
   post: PostView;
+  /** The card hangs under a row flag (`TaggedRow`) and squares its top-left corner (`Card`'s `attach`). */
+  attach?: boolean;
   /**
    * Where this card stands, for its score slot: the slot opens the trace and
    * this names the trace's back arrow (`Back to feed`, `Back to the post`,
@@ -391,7 +394,7 @@ export function PostCard({
   const textBlock = hasText ? <div className="flex flex-col gap-1">{bodyText}</div> : null;
 
   return (
-    <Card testId={testId} node={node} door={!detail && !redacted}>
+    <Card testId={testId} node={node} door={!detail && !redacted} attach={attach}>
       {/* AUTHOR, TIMESTAMP, AND THE ⋮ — the card's header line. ON A DETAIL
           SURFACE THE PAGE HEADER OWNS THE ONE OVERFLOW (`_shared.jsx:341-346`
           — the master hides the card's dot in `detail`): two dots would be two
