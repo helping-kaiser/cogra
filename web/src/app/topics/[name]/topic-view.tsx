@@ -275,13 +275,13 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
             const node = item.node;
             // EVERY ROW CARRIES THE CLAIM ABOVE IT (TagPage.md:27), keyed by
             // the tagged thing's id — the key rule `claim`.
-            const claim = (card: ReactNode) => (
+            const claim = (id: string, card: ReactNode) => (
               <TaggedRow
                 relevance={item.relevance}
                 confidence={item.confidence}
                 pending={item.pending}
-                node={{ path: `${NODE}.claim`, key: node.id }}
-                testId={`topic-claim-${node.id}`}
+                node={{ path: `${NODE}.claim`, key: id }}
+                testId={`topic-claim-${id}`}
               >
                 {card}
               </TaggedRow>
@@ -290,6 +290,7 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
               return (
                 <li key={node.id} {...{ [SEEN_ATTRIBUTE]: node.id }}>
                   {claim(
+                    node.id,
                     <PostCard
                       post={node}
                       href={`/posts/${node.id}${doorQuery}`}
@@ -317,6 +318,7 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
               return (
                 <li key={node.id} {...{ [SEEN_ATTRIBUTE]: node.id }}>
                   {claim(
+                    node.id,
                     <CommentFeedCard
                       comment={node}
                       shape="line"
