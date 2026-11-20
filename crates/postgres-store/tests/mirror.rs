@@ -297,3 +297,154 @@ async fn mirror_is_rebuildable_from_the_published_sequence(pool: PgPool) {
     .expect("rows");
     assert_eq!(before, after);
 }
+
+/// A record whose authentication bytes differ member by member, so a
+/// column read back can only match the member it came from.
+fn authenticated(author: &str, epoch: i64, seed: u8) -> PublishedRecord {
+    let mut record = registration(author, epoch, 1);
+    let bytes = |offset: u8, len: usize| vec![seed.wrapping_add(offset); len];
+    let auth = &mut record.authentication;
+    auth.body.target = NodeId::Prof(author.to_string());
+    auth.body.p_d = 1.0;
+    auth.body.p_i = 1.0;
+    auth.author_pubkey = bytes(1, 32);
+    auth.pre_commitment = bytes(2, 32);
+    auth.pre_signature = bytes(3, 64);
+    auth.dependency_commitment = bytes(4, 32);
+    auth.content_edition = 2;
+    auth.dependency_edition = 3;
+    auth.host_seal = bytes(5, 64);
+    auth.approval_signature = bytes(6, 64);
+    record
+}
+
+type FloorRow = (
+    Option<Vec<u8>>,
+    Option<Vec<u8>>,
+    Option<Vec<u8>>,
+    Option<Vec<u8>>,
+    Option<Vec<u8>>,
+    Option<i64>,
+    Option<i64>,
+    Option<Vec<u8>>,
+    Option<Vec<u8>>,
+);
+
+async fn floor_of(pool: &PgPool, record_id: &str) -> FloorRow {
+    sqlx::query_as(
+        "SELECT body, author_pubkey, pre_commitment, pre_signature, dependency_commitment,
+                content_edition, dependency_edition, host_seal, approval_signature
+         FROM mirror_records WHERE record_id = $1",
+    )
+    .bind(record_id)
+    .fetch_one(pool)
+    .await
+    .expect("the mirrored record")
+}
+
+/// The row the mirror should hold for a published record's floor.
+fn expected_floor(record: &PublishedRecord) -> FloorRow {
+    let auth = &record.authentication;
+    (
+        Some(auth.body.canonical_bytes()),
+        Some(auth.author_pubkey.clone()),
+        Some(auth.pre_commitment.clone()),
+        Some(auth.pre_signature.clone()),
+        Some(auth.dependency_commitment.clone()),
+        Some(auth.content_edition as i64),
+        Some(auth.dependency_edition as i64),
+        Some(auth.host_seal.clone()),
+        Some(auth.approval_signature.clone()),
+    )
+}
+
+/// Ingestion stores what the published record holds at the replay floor:
+/// the approved body in its canonical encoding, the author key, the signed
+/// pre-commitment, the dependency commitment, both formation editions, the
+/// host seal and the approval witness, each in its own column.
+///
+/// The mirror stores every replay-floor member a published record carries.
+/// ´claim:mirror:the-mirror-stores-the-published-replay-floor´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_mirror_stores_the_published_replay_floor(pool: PgPool) {
+    let record = authenticated("alice", 1, 10);
+    mirror::ingest_epoch(&pool, &package(1, vec![record.clone()]))
+        .await
+        .expect("ingests");
+    assert_eq!(
+        floor_of(&pool, &record.act_id.to_string()).await,
+        expected_floor(&record)
+    );
+    assert_eq!(
+        mirror::first_epoch_without_floor(&pool)
+            .await
+            .expect("probe"),
+        None
+    );
+}
+
+/// A record mirrored before the package carried its floor holds none of
+/// it; the repair finds its epoch, fills it from the published record,
+/// and leaves alone a record that already holds its floor even when it is
+/// handed different bytes. A record holding the floor in part is refused.
+///
+/// The floor repair fills exactly the mirrored records without a floor, from their published records.
+/// ´claim:mirror:the-floor-repair-fills-only-records-without-one´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_floor_repair_fills_only_records_without_one(pool: PgPool) {
+    let early = authenticated("alice", 1, 20);
+    let late = authenticated("bob", 2, 40);
+    mirror::ingest_epoch(&pool, &package(1, vec![early.clone()]))
+        .await
+        .expect("ingests");
+    mirror::ingest_epoch(&pool, &package(2, vec![late.clone()]))
+        .await
+        .expect("ingests");
+    sqlx::query(
+        "UPDATE mirror_records
+            SET body = NULL, author_pubkey = NULL, pre_commitment = NULL, pre_signature = NULL,
+                dependency_commitment = NULL, content_edition = NULL, dependency_edition = NULL,
+                host_seal = NULL, approval_signature = NULL
+          WHERE epoch = 1",
+    )
+    .execute(&pool)
+    .await
+    .expect("a record as an older mirror holds it");
+    assert_eq!(
+        mirror::first_epoch_without_floor(&pool)
+            .await
+            .expect("probe"),
+        Some(1)
+    );
+
+    let mut other_late = authenticated("bob", 2, 90);
+    other_late.authentication.content_edition = 7;
+    let filled = mirror::record_floor(&pool, &[early.clone(), other_late])
+        .await
+        .expect("fills");
+    assert_eq!(filled, 1);
+    assert_eq!(
+        floor_of(&pool, &early.act_id.to_string()).await,
+        expected_floor(&early)
+    );
+    assert_eq!(
+        floor_of(&pool, &late.act_id.to_string()).await,
+        expected_floor(&late),
+        "a record holding its floor keeps it"
+    );
+    assert_eq!(
+        mirror::first_epoch_without_floor(&pool)
+            .await
+            .expect("probe"),
+        None
+    );
+
+    let partial = sqlx::query("UPDATE mirror_records SET host_seal = NULL WHERE epoch = 2")
+        .execute(&pool)
+        .await
+        .expect_err("a floor in part is refused");
+    assert!(
+        partial.to_string().contains("mirror_records_floor_whole"),
+        "{partial}"
+    );
+}

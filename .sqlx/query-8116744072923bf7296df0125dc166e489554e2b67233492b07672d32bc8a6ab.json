@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO mirror_records\n             (record_id, family, author, epoch, act_time, position,\n              payload_marked, payload_witness,\n              body, author_pubkey, pre_commitment, pre_signature, dependency_commitment,\n              content_edition, dependency_edition, host_seal, approval_signature)\n         SELECT r.record_id, r.family, r.author, r.epoch, r.act_time, r.position,\n                EXISTS (SELECT 1 FROM act_payloads c WHERE c.act_id = r.record_id),\n                r.payload_witness,\n                r.body, r.author_pubkey, r.pre_commitment, r.pre_signature,\n                r.dependency_commitment, r.content_edition, r.dependency_edition,\n                r.host_seal, r.approval_signature\n         FROM unnest($1::text[], $2::text[], $3::text[], $4::bigint[],\n                     $5::bigint[], $6::bigint[], $7::bytea[],\n                     $8::bytea[], $9::bytea[], $10::bytea[], $11::bytea[], $12::bytea[],\n                     $13::bigint[], $14::bigint[], $15::bytea[], $16::bytea[])\n              AS r(record_id, family, author, epoch, act_time, position, payload_witness,\n                   body, author_pubkey, pre_commitment, pre_signature, dependency_commitment,\n                   content_edition, dependency_edition, host_seal, approval_signature)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "Int8Array",
+        "Int8Array",
+        "Int8Array",
+        "ByteaArray",
+        "ByteaArray",
+        "ByteaArray",
+        "ByteaArray",
+        "ByteaArray",
+        "ByteaArray",
+        "Int8Array",
+        "Int8Array",
+        "ByteaArray",
+        "ByteaArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8116744072923bf7296df0125dc166e489554e2b67233492b07672d32bc8a6ab"
+}
