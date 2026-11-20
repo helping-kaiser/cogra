@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH due AS (\n             SELECT id, act_id, payload, content_nonce, content_salt\n             FROM staged_writes\n             WHERE state = 'expired' AND expired_epoch + $2 <= $1\n               AND kept_at IS NULL\n               AND (approved_at IS NOT NULL OR approval_sends_open > 0)\n               AND length(payload) > 0\n               AND content_nonce IS NOT NULL AND content_salt IS NOT NULL\n             FOR UPDATE\n         ), carried AS (\n             INSERT INTO act_payloads (act_id, payload, content_nonce, content_salt)\n             SELECT act_id, payload, content_nonce, content_salt FROM due\n             ON CONFLICT (act_id) DO NOTHING\n         ), marked AS (\n             UPDATE mirror_records r SET payload_marked = TRUE\n             FROM due WHERE r.record_id = due.act_id AND NOT r.payload_marked\n         )\n         UPDATE staged_writes s\n         SET payload = NULL, content_nonce = NULL, content_salt = NULL, host_seal = NULL,\n             payload_custodied_at = NOW(), kept_at = NOW(), updated_at = NOW()\n         FROM due WHERE s.id = due.id",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "24e1d1d50d12ccf511e20a655756d2600ef3e3337ba0ba82d735139ce5b67fbf"
+}

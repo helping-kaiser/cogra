@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE staged_writes\n         SET host_seal = NULL, kept_at = NOW(), updated_at = NOW()\n         WHERE state = 'expired' AND expired_epoch + $2 <= $1\n           AND kept_at IS NULL\n           AND (approved_at IS NOT NULL OR approval_sends_open > 0)\n           AND payload_reaped_at IS NOT NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "dc5c67c7e4943dc9376c79a8851f66844c804c4f20c2af9229e0232b3f3a9681"
+}

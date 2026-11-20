@@ -330,12 +330,16 @@ pub async fn insert(
 
 /// Loads one staged write, reconstructed into seam types. A write a
 /// redaction reaped is refused as [`StagedError::Reaped`]: it has no
-/// proposal left to reconstruct. A write whose pair the GC moved into
-/// carriage is [`StagedError::NotFound`], as it was before custody: the
-/// reap ended the write, and the row it left is the act's structure for a
-/// late landing ([`reap_expired`]), nothing to sign, relay or list.
+/// proposal left to reconstruct. A row the GC kept is
+/// [`StagedError::NotFound`], the answer once the reap has ended the
+/// write: the row it left is the act's structure for a late landing
+/// ([`reap_expired`]), nothing to sign, relay or list.
 pub async fn load(pool: &PgPool, id: Uuid) -> Result<StagedWrite, StagedError> {
-    match load_promotable(pool, id).await? {
+    let (promotable, kept) = load_row(pool, id).await?;
+    if kept {
+        return Err(StagedError::NotFound(id));
+    }
+    match promotable {
         Promotable::Full(write) => Ok(*write),
         Promotable::Custodied(_) => Err(StagedError::NotFound(id)),
         Promotable::Reaped(_) => Err(StagedError::Reaped(id)),
@@ -430,9 +434,15 @@ pub struct ReapedWrite {
 /// Loads one staged write for its landing, which is the one reader a
 /// reaped write still answers: the record is ordered fact whatever became
 /// of the payload, so it has to land. A redaction-reaped write lands
-/// reduced. A GC-reaped write lands from its carriage row: whole while the
-/// row is full, reduced once a redaction reduced it.
+/// reduced, whether or not the GC has kept its row since. A custodied
+/// write lands from its carriage row: whole while the row is full,
+/// reduced once a redaction reduced it.
 pub async fn load_promotable(pool: &PgPool, id: Uuid) -> Result<Promotable, StagedError> {
+    Ok(load_row(pool, id).await?.0)
+}
+
+/// The row as its landing reads it, and whether the GC kept it.
+async fn load_row(pool: &PgPool, id: Uuid) -> Result<(Promotable, bool), StagedError> {
     let row = sqlx::query!(
         "SELECT id, actor_id, act_id, author, seq, family, middle,
                 target, p_d, p_i, settlement_ref, license, asserted_parents,
@@ -440,13 +450,15 @@ pub async fn load_promotable(pool: &PgPool, id: Uuid) -> Result<Promotable, Stag
                 dependency_nonce, pre_signature,
                 content_salt, deps_salt, content_commitment, deps_commitment,
                 host_seal, prepared_epoch, node_id, pre_signed_at, carried,
-                payload_reaped_at, payload_custodied_at
+                payload_reaped_at, payload_custodied_at,
+                kept_at IS NOT NULL AS \"kept!\"
          FROM staged_writes WHERE id = $1",
         id,
     )
     .fetch_optional(pool)
     .await?
     .ok_or(StagedError::NotFound(id))?;
+    let kept = row.kept;
 
     let corrupt = |what: &str| StagedError::Corrupt(id, what.to_string());
     let family = Family::parse(&row.family).ok_or_else(|| corrupt("family"))?;
@@ -482,14 +494,15 @@ pub async fn load_promotable(pool: &PgPool, id: Uuid) -> Result<Promotable, Stag
     let payload = match (row.payload, row.payload_reaped_at, row.payload_custodied_at) {
         (Some(payload), None, None) => payload,
         (None, Some(reaped_at), None) => {
-            return Ok(Promotable::Reaped(Box::new(ReapedWrite {
+            let reaped = ReapedWrite {
                 id: row.id,
                 actor_id: row.actor_id,
                 body,
                 node_id: row.node_id,
                 pre_signed_at: row.pre_signed_at,
                 reaped_at,
-            })));
+            };
+            return Ok((Promotable::Reaped(Box::new(reaped)), kept));
         }
         (None, None, Some(_)) => {
             let carriage = crate::content::act_payload(pool, &row.act_id)
@@ -505,7 +518,7 @@ pub async fn load_promotable(pool: &PgPool, id: Uuid) -> Result<Promotable, Stag
                 content_nonce: Vec::new(),
                 content_salt: Vec::new(),
             };
-            return Ok(match carriage {
+            let promotable = match carriage {
                 crate::content::ActPayload {
                     payload: Some(payload),
                     content_nonce: Some(content_nonce),
@@ -522,7 +535,8 @@ pub async fn load_promotable(pool: &PgPool, id: Uuid) -> Result<Promotable, Stag
                     ..
                 } => Promotable::Reaped(Box::new(custodied.reaped(reduced_at))),
                 _ => return Err(corrupt("custodied carriage")),
-            });
+            };
+            return Ok((promotable, kept));
         }
         _ => return Err(corrupt("payload")),
     };
@@ -571,7 +585,7 @@ pub async fn load_promotable(pool: &PgPool, id: Uuid) -> Result<Promotable, Stag
         (None, None, None, None, None) => None,
         _ => return Err(corrupt("seal leg")),
     };
-    Ok(Promotable::Full(Box::new(StagedWrite {
+    let write = StagedWrite {
         id: row.id,
         actor_id: row.actor_id,
         state: StagedState::parse(&row.state).ok_or_else(|| corrupt("state"))?,
@@ -582,7 +596,8 @@ pub async fn load_promotable(pool: &PgPool, id: Uuid) -> Result<Promotable, Stag
         pre_signed_at: row.pre_signed_at,
         pre_signed,
         sealed,
-    })))
+    };
+    Ok((Promotable::Full(Box::new(write)), kept))
 }
 
 /// Whether the actor has a live staged write of the family toward the
@@ -937,10 +952,11 @@ pub async fn revert_to_pre_sign(pool: &PgPool, id: Uuid) -> Result<(), StagedErr
 /// `notifications::write_approved`); any other write writes no row, and a
 /// retry writes nothing twice.
 ///
-/// The caller runs this once the host has accepted the approval, so the
-/// approval moment ([`mark_approved`]) is written first and on its own:
-/// it is the host's fact, and it stands even when the GC expired the
-/// write between the relay and this transition.
+/// The caller runs this once the host has accepted the approval it marked
+/// sent ([`mark_approval_sent`]), so the approval moment
+/// ([`mark_approved`]) is written first and on its own: it is the host's
+/// fact, and it stands even when the GC expired the write between the
+/// relay and this transition.
 pub async fn record_relaying(pool: &PgPool, id: Uuid) -> Result<(), StagedError> {
     mark_approved(pool, id).await?;
     let mut tx = pool.begin().await?;
@@ -1011,14 +1027,60 @@ pub async fn held_approvals_ready(pool: &PgPool) -> Result<Vec<HeldApproval>, St
     .collect())
 }
 
+/// Records that an approval is being sent to the host, in a committed
+/// write before the call: a crash, a transport error or a timeout after
+/// the host took the approval leaves the mark standing, and the GC keeps
+/// the write ([`reap_expired`]). The host's answer settles the send:
+/// [`record_relaying`] or [`release_held_approval`] when it accepted,
+/// [`approval_refused`] when it refused.
+///
+/// The mark is a count of open sends, so a refusal of one send never takes
+/// back another send of the same approval still in flight. Only a sealed
+/// write the GC has not kept is marked; any other is refused, and nothing
+/// is sent — a write the GC deleted can no longer be relayed.
+pub async fn mark_approval_sent(pool: &PgPool, id: Uuid) -> Result<(), StagedError> {
+    let marked = sqlx::query!(
+        "UPDATE staged_writes
+         SET approval_sends_open = approval_sends_open + 1, updated_at = NOW()
+         WHERE id = $1 AND kept_at IS NULL AND content_commitment IS NOT NULL",
+        id,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected();
+    if marked == 1 {
+        Ok(())
+    } else {
+        Err(StagedError::NotFound(id))
+    }
+}
+
+/// Takes one send's mark back: the host definitely refused the approval,
+/// so this send leaves nothing it could order.
+pub async fn approval_refused(pool: &PgPool, id: Uuid) -> Result<(), StagedError> {
+    sqlx::query!(
+        "UPDATE staged_writes
+         SET approval_sends_open = approval_sends_open - 1, updated_at = NOW()
+         WHERE id = $1 AND approval_sends_open > 0",
+        id,
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
 /// Records that the host accepted the write's approval: the first moment
-/// is kept, whatever state the write is in by now. The GC reads it when
-/// it reaps an expired write ([`reap_expired`]): an approved act can
-/// still be ordered, so its content pair is kept.
+/// is kept, whatever state the write is in by now, and the send that
+/// carried it is settled in the same statement, so no moment holds
+/// neither mark. The GC reads both when it reaps an expired write
+/// ([`reap_expired`]): an approved act can still be ordered, so its row
+/// is kept.
 async fn mark_approved(pool: &PgPool, id: Uuid) -> Result<(), StagedError> {
     sqlx::query!(
-        "UPDATE staged_writes SET approved_at = NOW()
-         WHERE id = $1 AND approved_at IS NULL",
+        "UPDATE staged_writes
+         SET approved_at = COALESCE(approved_at, NOW()),
+             approval_sends_open = GREATEST(approval_sends_open - 1, 0)
+         WHERE id = $1",
         id,
     )
     .execute(pool)
@@ -1029,6 +1091,8 @@ async fn mark_approved(pool: &PgPool, id: Uuid) -> Result<(), StagedError> {
 /// Clears a relayed hold — only the witness that was relayed, so a retry
 /// that replaced it in the meantime keeps its own. The host accepted the
 /// relayed witness, so the write is marked approved ([`mark_approved`]).
+/// A held witness is marked sent ([`mark_approval_sent`]) only when its
+/// relay calls the host; a hold alone sends nothing.
 pub async fn release_held_approval(
     pool: &PgPool,
     id: Uuid,
@@ -1106,10 +1170,10 @@ pub struct PromotedWrite {
 /// identifier — a record landing after its staged write expired still
 /// promotes, display rows and all (the mirror governs; late landing
 /// wins). The payload it needs is still on the expired row: expiry stops
-/// serving the content. Past the reap, an approved write's row is still
-/// there and its pair is in carriage ([`reap_expired`]), so it promotes
-/// whole; any other write has no row to match and its record stays
-/// unpromoted.
+/// serving the content. Past the reap, the row of a write whose approval
+/// was sent is still there ([`reap_expired`]): it promotes whole from its
+/// pair in carriage, or reduced when a redaction reaped it. Any other
+/// write has no row to match and its record stays unpromoted.
 pub async fn promote_landed(pool: &PgPool, epoch: i64) -> Result<Vec<PromotedWrite>, StagedError> {
     let rows = sqlx::query!(
         "UPDATE staged_writes
@@ -1393,26 +1457,36 @@ pub async fn reap_payload(conn: &mut PgConnection, act_id: &str) -> Result<u64, 
 ///
 /// The host can still hold an approved act and order it later. Its
 /// author may not be able to pay yet, or a dependency may be missing. So
-/// a sealed, approved write with a non-empty payload keeps custody. Its
-/// content pair (payload, content nonce, content salt) moves into
-/// carriage, and its row stays as the act's structure. What stays is what
-/// the act's late landing and its redaction read. The landing reads the
-/// body, the author's actor, the node and the authoring instant its
-/// display rows carry, and the dependency list its notifications read. The
-/// redaction reads the content commitment, its archive's witness while no
-/// record has landed. The rest leaves with the write, as a deleted row
-/// would: the pre-commitment leg with the dependency nonce, the
-/// dependency salt and commitment, and the host seal. Every other expired
-/// row is deleted. An empty payload gets no carriage row, so it keeps no
-/// custody.
+/// the reap keeps the row of every write whose approval was sent: accepted
+/// by the host (`approved_at`), or sent with no refusal back
+/// ([`mark_approval_sent`]). A kept row is the act's structure, and holds
+/// what the act's late landing, its redaction and an ordering fraud proof
+/// read. The landing reads the body, the author's actor, the node and the
+/// authoring instant its display rows carry, and the dependency list its
+/// notifications read. The redaction reads the content commitment, its
+/// archive's witness while no record has landed. The fraud proof reads the
+/// dependency opening: the list, the dependency nonce and the dependency
+/// salt, against the dependency commitment, all kept with the rest of the
+/// pre-commitment leg. The host seal leaves with the write.
 ///
-/// The move and the deletes are one transaction. The move locks each
-/// staged row `FOR UPDATE` before it writes carriage, the order a
+/// A kept write with a non-empty payload keeps custody of it: its content
+/// pair (payload, content nonce, content salt) moves into carriage. A kept
+/// write a redaction already reaped has no pair left; its reduced carriage
+/// row is the redaction's. Either way a late landing lands from the row,
+/// whole or reduced. Every other expired row is deleted: a write never
+/// sealed, sealed but never sent, a held approval never relayed, and an
+/// approved empty payload, which carries nothing a landing would need.
+///
+/// The keeps and the delete are one transaction. The custody move locks
+/// each staged row `FOR UPDATE` before it writes carriage, the order a
 /// redaction takes ([`lock_copy`]), so the two serialize on the staged row.
 /// A redaction that holds the row first reaps it, and then it no longer
-/// qualifies. One that comes second finds the pair in carriage. A record
-/// already in the mirror whose row is still expired is marked in the same
-/// statement, as a late carriage row always marks its record.
+/// qualifies for custody. One that comes second finds the pair in
+/// carriage. A record already in the mirror whose row is still expired is
+/// marked in the same statement, as a late carriage row always marks its
+/// record. The delete names what it deletes in its own condition, so a row
+/// a redaction or a send reaches between the statements is left for the
+/// next pass rather than deleted.
 pub async fn reap_expired(
     pool: &PgPool,
     current_epoch: i64,
@@ -1436,7 +1510,8 @@ pub async fn reap_expired_in(
              SELECT id, act_id, payload, content_nonce, content_salt
              FROM staged_writes
              WHERE state = 'expired' AND expired_epoch + $2 <= $1
-               AND approved_at IS NOT NULL
+               AND kept_at IS NULL
+               AND (approved_at IS NOT NULL OR approval_sends_open > 0)
                AND length(payload) > 0
                AND content_nonce IS NOT NULL AND content_salt IS NOT NULL
              FOR UPDATE
@@ -1449,11 +1524,22 @@ pub async fn reap_expired_in(
              FROM due WHERE r.record_id = due.act_id AND NOT r.payload_marked
          )
          UPDATE staged_writes s
-         SET payload = NULL, content_nonce = NULL, content_salt = NULL,
-             author_pubkey = NULL, dependency_nonce = NULL, pre_signature = NULL,
-             deps_salt = NULL, deps_commitment = NULL, host_seal = NULL,
-             payload_custodied_at = NOW(), updated_at = NOW()
+         SET payload = NULL, content_nonce = NULL, content_salt = NULL, host_seal = NULL,
+             payload_custodied_at = NOW(), kept_at = NOW(), updated_at = NOW()
          FROM due WHERE s.id = due.id",
+        current_epoch,
+        gc_after_epochs,
+    )
+    .execute(&mut *tx)
+    .await?
+    .rows_affected();
+    let kept_reaped = sqlx::query!(
+        "UPDATE staged_writes
+         SET host_seal = NULL, kept_at = NOW(), updated_at = NOW()
+         WHERE state = 'expired' AND expired_epoch + $2 <= $1
+           AND kept_at IS NULL
+           AND (approved_at IS NOT NULL OR approval_sends_open > 0)
+           AND payload_reaped_at IS NOT NULL",
         current_epoch,
         gc_after_epochs,
     )
@@ -1463,14 +1549,16 @@ pub async fn reap_expired_in(
     let deleted = sqlx::query!(
         "DELETE FROM staged_writes
          WHERE state = 'expired' AND expired_epoch + $2 <= $1
-           AND payload_custodied_at IS NULL",
+           AND kept_at IS NULL
+           AND NOT ((approved_at IS NOT NULL OR approval_sends_open > 0)
+                    AND (payload IS NULL OR length(payload) > 0))",
         current_epoch,
         gc_after_epochs,
     )
     .execute(&mut *tx)
     .await?
     .rows_affected();
-    Ok(custodied + deleted)
+    Ok(custodied + kept_reaped + deleted)
 }
 
 #[cfg(test)]

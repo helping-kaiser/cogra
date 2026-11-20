@@ -416,9 +416,10 @@ marks it in the same transaction (`content::mark_carried`), so a
 mirror rebuild reads the mark the live mirror holds. A redaction of
 an act that has been sealed but has not landed records its carriage
 row `reduced` ("Redacting an act"), so the record lands reduced and
-marked, with no display row built. An approved act the GC reaped
-before its record landed has its full carriage row from the reap
-("Staged writes"), so it too is marked from its first read. An act
+marked, with no display row built. An act whose approval was sent
+and whose write the GC reaped before its record landed has its full
+carriage row from the reap ("Staged writes"), so it too is marked
+from its first read. An act
 whose payload CoGra does not carry reads unmarked: an act sealed on
 the stand-in directly (the `l1-dev` CLI), and a CoGra actor's act
 written through another
@@ -619,15 +620,31 @@ row and its payload stay, invisible, until the **reap** — so a
 record that lands between the two still promotes, rebuilding the
 display rows under its real landing order. The host can still hold
 an approved act and order it later (its author cannot pay yet, or a
-dependency is missing), so the reap **keeps custody** of a sealed,
-approved write with a non-empty payload: in the reap's own
-transaction its content pair and salt move into `act_payloads`, and
-the row stays as the act's structure. A record landing after that
-reads marked and whole and promotes from the row and the carriage
-row; an act that never lands leaves a carriage row that a redaction
-reduces like any other. Every other expired row is deleted, and a
-record landing after its deletion has no staged row left to promote
-from; it stays in the mirror, unpromoted, and the failure is logged.
+dependency is missing), so the reap **keeps the row** of every write
+whose approval was sent: accepted by the host, or sent with no
+refusal back. The relay records each send on the row
+(`approval_sends_open`) in a committed write before it calls the
+host; the host's answer settles it — acceptance stamps
+`approved_at`, and a definite refusal (the witness does not verify,
+the act is unknown, or its formation or identifier is refused) takes
+the send back. A transport failure, a timeout or a crash leaves the
+send standing, so the reap keeps a write the host may have taken
+without the server hearing of it. A held admission approval is sent,
+and marked, only when its release calls the host.
+
+A kept row (`kept_at`) is the act's structure. A non-empty payload
+it still holds **stays in custody**: in the reap's own transaction
+its content pair and salt move into `act_payloads`. A record landing
+after that reads marked and whole and promotes from the row and the
+carriage row; an act that never lands leaves a carriage row that a
+redaction reduces like any other. A write a redaction reaped before
+the reap is kept the same way, its carriage row already reduced, so
+its late record promotes reduced, as a redacted act's landing does.
+Every other expired row is deleted — a write never sealed, sealed
+but never sent, a held approval never relayed, an approved empty
+payload — and a record landing after its deletion has no staged row
+left to promote from; it stays in the mirror, unpromoted, and the
+failure is logged.
 
 ```sql
 CREATE TABLE staged_writes (
@@ -658,6 +675,9 @@ CREATE TABLE staged_writes (
     payload          BYTEA,
     payload_reaped_at TIMESTAMPTZ,
     payload_custodied_at TIMESTAMPTZ,
+    -- When the GC kept the row as the act's structure: custodied,
+    -- or reaped by a redaction, with its approval sent.
+    kept_at          TIMESTAMPTZ,
 
     state          TEXT        NOT NULL DEFAULT 'awaiting_pre_sign'
         CHECK (state IN ('carried', 'awaiting_pre_sign', 'sealing',
@@ -693,6 +713,11 @@ CREATE TABLE staged_writes (
     -- When the host accepted the approval witness; kept through
     -- expiry, which overwrites the state, for the reap to read.
     approved_at    TIMESTAMPTZ,
+    -- Approval relays sent whose outcome is not known: raised before
+    -- the host is called, lowered by its answer, left raised by a
+    -- crash or a transport failure. A count, so one send's refusal
+    -- never takes back another send still in flight.
+    approval_sends_open INTEGER NOT NULL DEFAULT 0,
 
     -- The display rows this write owns while pending: node_id is the
     -- L2 UUID the payload envelope carries, recorded at prepare;
@@ -708,8 +733,21 @@ CREATE TABLE staged_writes (
         CHECK ((payload IS NULL) = (payload_reaped_at IS NOT NULL OR payload_custodied_at IS NOT NULL)),
     CONSTRAINT staged_writes_reaped_or_custodied_not_both
         CHECK (payload_reaped_at IS NULL OR payload_custodied_at IS NULL),
-    CONSTRAINT staged_writes_custodied_only_after_expiry
-        CHECK (payload_custodied_at IS NULL OR state IN ('expired', 'landed')),
+    CONSTRAINT staged_writes_custodied_is_kept
+        CHECK (payload_custodied_at IS NULL OR kept_at IS NOT NULL),
+    -- A kept row holds no payload and no host seal, keeps the
+    -- content commitment, and holds the dependency opening whole (a
+    -- row custodied before the opening was kept holds none of it).
+    CONSTRAINT staged_writes_kept_structure
+        CHECK (kept_at IS NULL
+               OR (state IN ('expired', 'landed')
+                   AND payload IS NULL
+                   AND host_seal IS NULL
+                   AND content_commitment IS NOT NULL
+                   AND (dependency_nonce IS NULL) = (deps_salt IS NULL)
+                   AND (deps_salt IS NULL) = (deps_commitment IS NULL))),
+    CONSTRAINT staged_writes_approval_sends_not_negative
+        CHECK (approval_sends_open >= 0),
     CONSTRAINT staged_writes_reaped_conceals
         CHECK (payload IS NOT NULL OR (content_nonce IS NULL AND content_salt IS NULL)),
     CONSTRAINT staged_writes_carried_never_reaped
@@ -729,21 +767,24 @@ Lifecycle rules, driven off the ingestion pass:
   marks the staged writes whose records landed. The mirror
   governs: a record landing after its staged write expired still
   promotes, and one landing after a redaction reaped its payload
-  lands reduced.
+  lands reduced, before the reap or past it.
 - **GC is two-phase and epoch-denominated.** A write that has not
   landed within `STAGED_WRITE_GC_EPOCHS` epochs of its
   preparation ([development.md](development.md)) is **expired** —
   its pending display rows dropped, state observable, so a device
   polling a lost handshake sees the terminal state rather than a
-  vanished id. One further window later the row is reaped: a
-  sealed, approved write with a non-empty payload moves its pair
-  into carriage and keeps the act's structure — the body, the
+  vanished id. One further window later the row is reaped: a write
+  whose approval was sent keeps the act's structure — the body, the
   dependency list, the actor, node and authoring instant a landing
-  builds display rows from, and the content commitment a redaction
-  archives under while no record has landed — and drops the
-  pre-commitment leg with the dependency nonce, the dependency salt
-  and commitment, and the host seal. Every other row is deleted. A
-  custodied row is no longer listed to its author or signable.
+  builds display rows from, the content commitment a redaction
+  archives under while no record has landed, and the dependency
+  opening an ordering fraud proof reads (the dependency nonce and
+  the dependency salt, against the dependency commitment) with the
+  rest of the pre-commitment leg, as a landed or redaction-reaped
+  row keeps it — and drops the host seal. Its non-empty payload
+  moves into carriage with the content nonce and salt. Every other
+  row is deleted. A kept row is no longer listed to its author or
+  signable.
 - **A redaction reaps every copy.** A landed row keeps the bytes
   its carriage was promoted from, so a redaction reaps it too
   ("Redacting an act"). A reaped row is no longer listed to its
