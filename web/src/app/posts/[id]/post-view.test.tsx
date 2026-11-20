@@ -4092,8 +4092,41 @@ describe("PostView — references", () => {
       await openComments();
 
       expect(await screen.findByTestId("post-comment-c1")).toHaveTextContent("Look at this");
-      expect(screen.getByTestId("comment-media-c1")).toBeInTheDocument();
+      expect(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.media", "c1"))).toBeInTheDocument();
       expect(screen.getByAltText("a salt flat")).toBeInTheDocument();
+    });
+
+    // ReplyMedia (round 60, seam 392 point 3): a thread comment's media
+    // registers under `postDetail` — the card's `media`, each picture its
+    // `frame` keyed `<comment id>/<position>`, a clip's sound its frame's
+    // `soundDisc`, a gallery's `dots`. The board draws @tobias's clip comment
+    // and @sol's two-picture comment; every media path it registers stands.
+    it("a_thread_comments_media_wears_ReplyMedias_registered_nodes", async () => {
+      const clip = {
+        ...picture("mv", null),
+        url: "https://media.test/mv.mp4",
+        mimeType: "video/mp4",
+        options: { __typename: "MediaOptions", aspectRatio: "9:16", durationMs: 12_000 },
+      };
+      server.use(
+        ...threadFrom(() =>
+          detail("u1", [
+            { id: "clip", body: "Listen", attachments: [clip] },
+            { id: "pair", body: "Two", attachments: [picture("ma", "first"), picture("mb", "second")] },
+          ]),
+        ),
+      );
+      renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+      await openComments();
+      await screen.findByTestId("post-comment-pair");
+      const keys = (path: string) => screen.queryAllByTestId(path).map((element) => element.getAttribute("data-testid-key"));
+      expect(keys("postDetail.threadSheet.commentCard.media")).toEqual(["clip", "pair"]);
+      expect(keys("postDetail.threadSheet.commentCard.media.frame")).toEqual(["clip/1", "pair/1", "pair/2"]);
+      expect(keys("postDetail.threadSheet.commentCard.media.frame.soundDisc")).toEqual(["clip/1"]);
+      expect(keys("postDetail.threadSheet.commentCard.media.dots")).toEqual(["pair"]);
+      // Each part inside its own card.
+      const pair = screen.getByTestId(byNode("postDetail.threadSheet.commentCard", "pair"));
+      expect(within(pair).getByTestId(byNode("postDetail.threadSheet.commentCard.media.dots", "pair"))).toBeInTheDocument();
     });
 
     // B4: design/readme.md states the rule for every comment attachment, not
@@ -4112,7 +4145,7 @@ describe("PostView — references", () => {
       await openComments();
 
       await screen.findByTestId("post-comment-c1");
-      const frame = screen.getByTestId("media-gallery-lead");
+      const frame = screen.getByTestId(byNode("postDetail.threadSheet.commentCard.media.frame", "c1/1"));
       expect(frame.style.aspectRatio).toBe("1 / 1");
       // Filled (`cover`), not letterboxed (`contain`) — a 9:16 source would
       // otherwise fit whole inside the square with bars at the sides.
@@ -4135,7 +4168,7 @@ describe("PostView — references", () => {
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
         await openComments();
         await screen.findByTestId("post-comment-c1");
-        square(screen.getByTestId("media-gallery-lead"));
+        square(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.media.frame", "c1/1")));
       });
 
       it("several pictures, every page", async () => {
@@ -4147,8 +4180,8 @@ describe("PostView — references", () => {
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
         await openComments();
         await screen.findByTestId("post-comment-c1");
-        square(screen.getByTestId("media-gallery-page-0"));
-        square(screen.getByTestId("media-gallery-page-1"));
+        square(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.media.frame", "c1/1")));
+        square(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.media.frame", "c1/2")));
       });
 
       it("a clip, its poster inside the same square", async () => {
@@ -4162,7 +4195,7 @@ describe("PostView — references", () => {
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
         await openComments();
         await screen.findByTestId("post-comment-c1");
-        square(screen.getByTestId("media-gallery-lead-frame"));
+        square(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.media.frame", "c1/1")));
       });
 
       it("a sensitive comment, revealed, shows the same square", async () => {
@@ -4176,7 +4209,7 @@ describe("PostView — references", () => {
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
         await openComments();
         fireEvent.click(await screen.findByTestId("comment-c1-veil-reveal"));
-        square(await screen.findByTestId("media-gallery-lead"));
+        square(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.media.frame", "c1/1")));
       });
 
       it("a removed comment keeps its mark, and no frame stands", async () => {
@@ -4190,7 +4223,7 @@ describe("PostView — references", () => {
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
         await openComments();
         expect(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.removalMark", "c1"))).toBeInTheDocument();
-        expect(screen.queryByTestId("media-gallery-lead")).toBeNull();
+        expect(screen.queryByTestId("postDetail.threadSheet.commentCard.media.frame")).toBeNull();
       });
     });
   });
