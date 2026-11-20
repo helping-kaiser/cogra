@@ -3,7 +3,7 @@
 // The reference section every referencing surface shares (D15, D18),
 // sibling to the tag section and built the same way: add-as-chip,
 // remove-before-send, and the two parameter sliders each reference
-// carries. It gains a FINDER rather than a text field, because a
+// carries. It opens a PICKER rather than a text field, because a
 // reference names a node and a node cannot be typed by name (D20).
 //
 // D15: a mention is authored through this structured picker, NEVER by
@@ -32,7 +32,6 @@ import { CITATION_FAMILY, PairSheet } from "@/lib/ui2/compose/pair-sheet";
 import { InlineAction } from "@/lib/ui2/inline-action";
 import { instance, part, testAttributes, type DataNode } from "./data-node";
 import { StagedReference } from "@/lib/ui2/compose/staged-reference";
-import { ReferenceFinder } from "./reference-finder";
 import { ReferenceParamSliders } from "./reference-param-sliders";
 
 export function ReferenceEntryField({
@@ -41,30 +40,22 @@ export function ReferenceEntryField({
   fieldErrors,
   cap = REFERENCE_BATCH_CAP,
   testIdPrefix,
-  finderDebounceMs,
   node,
   pairs = "inline",
   onOpenPicker,
   after,
-  scale = "post",
 }: {
-  /**
-   * What the batch is, for the cap's sentence: `Up to 10 citations per post.`
-   * or `per comment` from a reply (copy-voice, *The pickers at the batch's ten*).
-   */
-  scale?: "post" | "comment";
   /**
    * What the section holds under its own controls: the edit's `Withdrawn:`
    * lines, which the edit boards draw inside the section (`postEdit.references.withdrawn`).
    */
   after?: ReactNode;
   /**
-   * The composer's `+ Cite something` (ComposeDetails:
-   * "composeDetails.references.add"): given, the door opens the citation
-   * picker (`ReferencePicker`) the host draws, instead of the finder dialog.
-   * The edit surfaces keep the finder until their own boards are conformed.
+   * The `+ Cite something` door (ComposeDetails:
+   * "composeDetails.references.add"): opens the citation picker
+   * (`ReferencePicker`) the host draws.
    */
-  onOpenPicker?: () => void;
+  onOpenPicker: () => void;
   /**
    * The registered section node on a registered screen
    * (`composeDetails.references`): its `label`, each staged chip as its
@@ -87,10 +78,7 @@ export function ReferenceEntryField({
    */
   cap?: number | null;
   testIdPrefix: string;
-  /** Test injection, passed through to the finder's debounce. */
-  finderDebounceMs?: number;
 }) {
-  const [finding, setFinding] = useState(false);
   // Which chip has its pair open — its inline sliders, or its sheet; a chip
   // is tapped to adjust it.
   const [adjusting, setAdjusting] = useState<number | null>(null);
@@ -106,17 +94,6 @@ export function ReferenceEntryField({
       return;
     }
     setAdjusting(adjusting === index ? null : index);
-  };
-
-  const atCap = cap !== null && references.length >= cap;
-
-  const add = (candidate: ReferenceDraft) => {
-    // Referencing the same target twice is REFUSED rather than
-    // deduplicated, so the section never stages a second one.
-    if (references.some((reference) => reference.targetId === candidate.targetId)) return;
-    if (atCap) return;
-    onChange([...references, candidate]);
-    setFinding(false);
   };
 
   const removeAt = (index: number) => {
@@ -176,36 +153,17 @@ export function ReferenceEntryField({
       )}
       {/* The composers' own word and weight (`ComposeDetailsBody`, `EditCompose`,
           `ReplySeal`): a quiet "+ Cite something" under the staged rows,
-          opening the finder. */}
+          opening the citation picker. The picker carries the cap itself, so
+          its door stays open. */}
       <InlineAction
         testId={`${testIdPrefix}-reference-add`}
         node={part(node, "add")}
         size="sm"
-        onClick={onOpenPicker ?? (() => setFinding(true))}
-        // The picker carries the cap itself, so its door stays open.
-        disabled={onOpenPicker === undefined && atCap}
+        onClick={onOpenPicker}
       >
         + Cite something
       </InlineAction>
-      {atCap && onOpenPicker === undefined && (
-        <p
-          data-testid={`${testIdPrefix}-reference-cap`}
-          className="text-body-small text-on-surface-variant"
-        >
-          {/* A sentence counts citations; a label names references (copy-voice, seam 248). */}
-          Up to {cap} citations per {scale}.
-        </p>
-      )}
       {after}
-      {finding && (
-        <ReferenceFinder
-          onPick={add}
-          onClose={() => setFinding(false)}
-          alreadyDrafted={references.map((reference) => reference.targetId)}
-          testIdPrefix={testIdPrefix}
-          debounceMs={finderDebounceMs}
-        />
-      )}
       {sheetReference !== undefined && (
         <PairSheet
           open={adjusting !== null}

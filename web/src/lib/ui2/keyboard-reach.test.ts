@@ -137,8 +137,8 @@ describe("a pinned foot with the on-screen keyboard up", () => {
 
   it("the_dialogs_of_several_fields_never_read_the_keyboard", () => {
     // The opinion pad's typed values (number fields plus a commit, point 2)
-    // and the reference finder stand as centred dialogs that read no inset.
-    for (const file of ["lib/ui/stance-alternates.tsx", "lib/ui/reference-finder.tsx"]) {
+    // stand as a centred dialog that reads no inset.
+    for (const file of ["lib/ui/stance-alternates.tsx"]) {
       expect(read(file), file).not.toMatch(/keyboard-inset|SCREEN_LAYER|PINNED_|SHEET_KEYBOARD_LIFT/);
     }
   });
