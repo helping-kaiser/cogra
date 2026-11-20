@@ -75,6 +75,8 @@ fun StanceControlRoute(
     node: DataNode? = null,
     /** The pad opened as something in particular (the vouch-back); see [StancePadVariant]. */
     variant: StancePadVariant? = null,
+    /** A plain pad's registered node (`tagPage.actionRow.stance.pad`); see [StanceControl]. */
+    padNode: DataNode? = null,
     /**
      * The host is the opening gesture (the vouch card's `Vouch back`): the
      * pad opens with the route, no resting target is drawn, and
@@ -168,6 +170,7 @@ fun StanceControlRoute(
         wide = wide,
         node = node,
         variant = variant,
+        padNode = padNode,
         padOnly = padOnly,
         lineFaceInk = lineFaceInk,
         onConfirmEmptySign = { viewModel.onConfirmEmptySign(target) },
