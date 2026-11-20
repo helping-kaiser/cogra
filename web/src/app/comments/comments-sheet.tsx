@@ -1119,10 +1119,10 @@ export function CommentsSheet({
             />
             {/* THE COMMENT MENUS' AFTERMATH (CommentMenu.md, design digest item
                 54): `Saved.`, and `Removed from Saved.` with `Undo`. It reads
-                inside the thread, where the menu was opened; the page's own
-                The sheet's snackbar is the registered `postDetail.snackbar`,
-                hosted here because the page's own bar is beneath the sheet's
-                scrim; the signed line above wears the same node. */}
+                inside the thread, where the menu was opened. The sheet's
+                snackbar is the registered `postDetail.snackbar`, hosted here
+                because the page's own bar is beneath the sheet's scrim; the
+                signed line above wears the same node. */}
             <Snackbar
               testId="comment-menu-snackbar"
               node={{ path: "postDetail.snackbar" }}
