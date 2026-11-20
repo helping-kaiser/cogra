@@ -36,6 +36,7 @@ within a phase, order is flexible.
 | 7. At the L1 swap | 3 | **Q56, Q58, Q61** | What the seam exposes of the burn realization (its computational inputs and audit evidence); the write rule's second gate on the surface — whether a W2a stamp-wall refusal needs its own reading once real stamps exist (on the stand-in W2a cannot fire, so one `WRITE_RULE_FAILED` reads the solvency words); and who in CoGra is the deployment that publishes the marker policy, with which finality-breach response. Deferred to the swap. |
 | 8. When everyone can tag anything | 1 | **Q59** | Semi-passable Types — whether a path may cross a Type along tag edges whose author the viewer reaches, at viewer-to-tagger strength. The sinks invariant stands until open tagging makes a topic's crowd worth routing through; stored so the option is not lost. |
 | 9. When a second party writes to Layer 1 | 1 | **Q63** | The payload mark of an act CoGra does not carry — a CoGra actor writing through a third-party Layer 2. It reads unmarked until then. |
+| 10. At the next specification read | 1 | **Q67** | How long the GC keeps the row of an act that may still be ordered — for good, until Layer 1 names when the act can no longer be ordered, or a window of CoGra's own. It stays for good until the read. |
 | — Parked | 4 | **Q62, Q64, Q65, Q66** | An authenticated carriage receipt beside the seal — none is issued now; whether ingestion checks that the carried pair opens the witness — it checks nothing until a second carrier exists; four races in the seal leg, accepted as known gaps; and how a deferral's verdict reaches its author — asked of the L1 team, nothing built until the specification settles the duty's scope. |
 
 As questions resolve, their blocks disappear from below and their
@@ -964,3 +965,50 @@ under revision on their side.
 ### Related
 
 Q58 (the write rule's second gate on the surface).
+
+## Q67 — How long the GC keeps the row of an act that may still be ordered
+
+**Where it shows up:**
+[data-model.md "Staged writes"](implementation/data-model.md#staged-writes)
+(the reap),
+[architecture.md "The write path"](implementation/architecture.md#the-write-path)
+(step 5)
+**Status:** open (deferred — waits for the read of the next
+specification release; jakob, 2026-11-20)
+
+### Context
+
+A staged write that does not land is expired and, one window later,
+reaped. The reap keeps the row of every write whose approval was sent
+— accepted by the host, or sent with no refusal back — because the
+host may still order the act later. The row stays as the act's
+structure, with its dependency opening, and a non-empty payload it
+still held moves into carriage. A write a redaction already emptied
+is kept the same way.
+
+Such a row stays for good, like a landed act's row. For an act the
+host never orders, CoGra holds its structure, and its content unless
+a redaction reduced it, with no end date. The author sees it in no
+list. An account deletion and a redaction by act identifier reduce
+its carriage row; nothing else removes either row. The interface
+documents that only an approved verified act is eligible for host
+ordering
+([layer1-interface.md §8.2](primitive/layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake),
+"Approval witness"); it names no moment after which an approved act
+can no longer be ordered.
+
+### The question
+
+How long does the GC keep such a row? Three options are on the
+table:
+
+- **(a)** Keep it for good, as now.
+- **(b)** Remove the kept row and its carriage row once the act can
+  no longer be ordered. This needs Layer 1 to name that moment.
+- **(c)** Remove them after a further window of CoGra's own. An act
+  ordered after that window is a published record whose content
+  nobody holds, the case the kept row exists to prevent.
+
+### Related
+
+Q65 (known gaps in the seal leg).
