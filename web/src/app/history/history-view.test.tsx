@@ -1193,7 +1193,7 @@ describe("History — the post menu (HistoryPostMenu.md, round 36 + 41)", () => 
     fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
     expect(screen.queryByRole("alertdialog")).toBeNull();
     await waitFor(() =>
-      expect((screen.getByTestId("history.menuSheet") as HTMLDialogElement).open).toBe(false),
+      expect((screen.getByTestId("history-menu-sheet") as HTMLDialogElement).open).toBe(false),
     );
     expect(screen.getByTestId("history.snackbar.message")).toHaveTextContent(
       "@ada is unhidden.",

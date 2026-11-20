@@ -236,7 +236,7 @@ export function PostMenuHost({
           onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
           onApplicant: applicant ? () => notify(POST_LOCKED) : null,
           testIdPrefix: testId,
-          rowNode: nodes.row,
+          rowNode: open ? nodes.row : undefined,
         });
 
   // THE COMMIT SENDS THE MAIL (ruling 75). Gone through: the sheet closes and
@@ -260,7 +260,9 @@ export function PostMenuHost({
     <>
       {/* MOUNTED FROM THE FIRST ⋮ ON: a host whose page carries a menu of its
           own under the same registered node (the profile's `profile.menuSheet`)
-          holds one such sheet until a card's menu is asked for. */}
+          holds one such sheet until a card's menu is asked for. THE OPEN SHEET
+          WEARS THE NODES, as a comment card's does: one registered node names
+          one open sheet, so a closed one falls back to its own test id. */}
       {post !== null && (
         <MenuSheet
           open={open}
@@ -268,7 +270,7 @@ export function PostMenuHost({
           items={items}
           ariaLabel="Post actions"
           testId={`${testId}-sheet`}
-          node={nodes.sheet}
+          node={open ? nodes.sheet : undefined}
         />
       )}
       {licenseShown !== null && (

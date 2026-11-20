@@ -1309,7 +1309,7 @@ describe("PostView", () => {
       expect(dialog).toHaveAccessibleName("Remove this post?");
       expect(dialog).toHaveTextContent("This is immediate and permanent.");
       await waitFor(() =>
-        expect((screen.getByTestId(byNode("postDetail.menuSheet")) as HTMLDialogElement).open).toBe(false),
+        expect((screen.getByTestId("post-menu-sheet") as HTMLDialogElement).open).toBe(false),
       );
     });
 
