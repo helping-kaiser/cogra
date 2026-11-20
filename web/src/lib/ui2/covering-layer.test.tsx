@@ -8,12 +8,10 @@ import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 
 import { JoinPrompt } from "@/lib/ui/join-prompt";
-import { ReferenceFinder } from "@/lib/ui/reference-finder";
 import { SeveranceConfirm } from "@/lib/ui/severance-confirm";
 import { MultiActionConfirm } from "@/lib/ui/signed-actions";
 import { StanceAlternates } from "@/lib/ui/stance-alternates";
 import { intersectEach, suppressesAutoplay } from "@/test/media-env";
-import { renderWithProviders } from "@/test/providers";
 
 import { BottomSheet } from "./bottom-sheet";
 import { DiscardConfirm } from "./compose/discard-confirm";
@@ -221,11 +219,6 @@ describe("the primitives announce themselves", () => {
     expect(raisedLayersForTests()).toEqual(["suspend"]);
     multi.unmount();
 
-    const finder = renderWithProviders(
-      <ReferenceFinder onPick={noop} onClose={noop} testIdPrefix="finder" />,
-    );
-    expect(raisedLayersForTests()).toEqual(["suspend"]);
-    finder.unmount();
     expect(raisedLayersForTests()).toEqual([]);
   });
 

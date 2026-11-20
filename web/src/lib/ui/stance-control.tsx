@@ -274,12 +274,12 @@ export type PadVariant = {
    twelve o'clock at the press, filling over the 500ms. Under reduced motion
    it still fills: it is a reading of the time left (readme §4). */
 /**
- * THE RESTING FACE'S TYPE (`StanceControl.jsx`: `fontSize: var(--text-title-large),
- * lineHeight: 1`): the title-large SIZE only, set solid, its weight the
- * anchor's own — not the whole title-large role, whose 28px leading and 400
- * weight the master never asks for.
+ * THE RESTING FACE'S TYPE (`StanceControl.jsx`: the face takes title-large's
+ * size, tracking and weight, `lineHeight: 1`): the whole title-large role set
+ * solid — never the anchor button's label-large weight and tracking, which a
+ * size-only face would inherit.
  */
-const FACE_TYPE = "text-[length:var(--text-title-large)] [line-height:1]";
+const FACE_TYPE = "text-title-large [line-height:1]";
 
 /**
  * THE ANCHOR IN ITS MEDIA DRESS (`StanceControl.jsx` `OVER_MEDIA_ANCHOR`): the
@@ -365,7 +365,14 @@ export function StanceControl({
   wide = false,
   overMedia = false,
   lineNode,
+  padNode: plainPadNode,
 }: {
+  /**
+   * The registered pad of a plain (non-variant) pad (`tagPage.actionRow.stance.pad`,
+   * TagPageHeldPad): the pad and the parts this control draws itself wear its
+   * paths, as a variant's `padNode` does. A variant's own wins.
+   */
+  padNode?: DataNode;
   /**
    * The registered node of the row line this control raises, where its board
    * names one (`reel.rail.stanceLine`, ReelRail.jsx: the face's line is the
@@ -1163,7 +1170,7 @@ export function StanceControl({
   // the place to leave one.
   const severable =
     variant === undefined && bundle !== null && bundle !== undefined && bundle.records > 0;
-  const padNode = variant?.padNode;
+  const padNode = variant?.padNode ?? plainPadNode;
 
   /** Whose in-flight state shows where: the pad's, the row's, the dialog's. */
   const padSetting = inFlight === "pad" && slow;
