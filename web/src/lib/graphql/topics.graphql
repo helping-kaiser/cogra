@@ -35,14 +35,27 @@ query HashtagDetail($name: String!, $includePending: Boolean! = true) {
             totalCount
           }
         }
-        # A tagged comment draws a line, not a card: it opens the post
-        # carrying it, so the selection stops at what that line needs.
+        # A tagged comment stands as its card in the line shape
+        # (TagPage.md: tagPage.commentCard leading with the thread it
+        # answers): the comment's own fields, what it answers (the
+        # pointer's words), and its thread's post (where its doors land).
+        #
+        # THE COMMENT'S TWO FOLDS ARE LEFT OUT — `topics` and
+        # `references`, fifty rows each by the write-side cap. Priced at
+        # the list's default page, `CommentFields` whole would carry this
+        # read past the complexity ceiling, and the card on this page
+        # draws no topics line (TagPage.jsx hands the comment none). The
+        # own comment's Edit reads the comment whole when it opens.
         ... on Comment {
           id
           content {
             value
             status
           }
+          attachments {
+            ...MediaFields
+          }
+          attachmentsStatus
           author {
             id
             handle
@@ -59,11 +72,68 @@ query HashtagDetail($name: String!, $includePending: Boolean! = true) {
             state
           }
           moderationStatus
+          sensitiveSelfMark
+          sensitiveReason
+          removal {
+            at
+            by
+          }
+          genesisRecordId
+          license {
+            attribution
+            provenance
+          }
+          viewerBookmarkedAt
           target {
             __typename
             ... on Post {
               id
+              title {
+                value
+                status
+              }
+              content {
+                value
+                status
+              }
+              attachments {
+                url
+                status
+                mimeType
+                coverMedia {
+                  url
+                  status
+                }
+              }
+              author {
+                id
+                handle
+              }
+              moderationStatus
+              removal {
+                at
+                by
+              }
             }
+            ... on Comment {
+              id
+              content {
+                value
+                status
+              }
+              author {
+                id
+                handle
+              }
+              moderationStatus
+              removal {
+                at
+                by
+              }
+            }
+          }
+          post {
+            id
           }
         }
       }
