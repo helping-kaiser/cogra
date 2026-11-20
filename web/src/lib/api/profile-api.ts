@@ -172,9 +172,9 @@ export async function fetchProfilePosts(
 /**
  * A comment as the comments view's card draws it: the feed card's own view
  * of it (`CommentFeedView` — the thread's fields, what it answers, the
- * thread's post) and the count its "View n replies" line promises.
+ * thread's post).
  */
-export type ProfileCommentView = CommentFeedView & { readonly replyCount: number };
+export type ProfileCommentView = CommentFeedView;
 
 /**
  * THE COMMENTS VIEW'S PAGE (ProfileComments.md:3): the person's comments as
@@ -202,7 +202,7 @@ export async function fetchProfileComments(
     items: comments.edges.flatMap((edge) => {
       const comment = edge.node.terminal;
       return comment?.__typename === "Comment"
-        ? [{ ...comment, replyCount: comment.replies.totalCount }]
+        ? [comment]
         : [];
     }),
     endCursor: comments.pageInfo.endCursor ?? null,

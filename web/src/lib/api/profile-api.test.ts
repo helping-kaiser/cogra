@@ -222,7 +222,7 @@ describe("fetchProfileComments", () => {
         const page = commentsPage(
           "u-1",
           [
-            profileComment("c-2", { replies: { __typename: "CommentConnection", totalCount: 2 } }),
+            profileComment("c-2"),
             // A record whose comment CoGra does not carry draws no blank card.
             null,
             profileComment("c-1", { target: answersComment("c-0", "sol") }),
@@ -236,10 +236,7 @@ describe("fetchProfileComments", () => {
     expect(asked).toEqual({ id: "u-1", after: "k-0", includePending: true });
     expect(outcome.kind).toBe("success");
     if (outcome.kind !== "success") return;
-    expect(outcome.value.items.map((comment) => [comment.id, comment.replyCount])).toEqual([
-      ["c-2", 2],
-      ["c-1", 0],
-    ]);
+    expect(outcome.value.items.map((comment) => comment.id)).toEqual(["c-2", "c-1"]);
     expect(outcome.value.items[1]?.target?.__typename).toBe("Comment");
     expect(outcome.value.items[0]?.post?.id).toBe("p1");
     expect(outcome.value.endCursor).toBe("k-1");
@@ -264,7 +261,6 @@ describe("fetchProfileComments", () => {
     const comments = document.slice(document.indexOf("query ProfileComments"), document.indexOf("query ProfileFigures"));
     expect(comments).toContain("comments: outgoingRecords(family: REVIEW, genesis: true, first: 10, after: $after)");
     expect(comments).toContain("...CommentFields");
-    expect(comments).toContain("replies(first: 0, includePending: $includePending)");
   });
 });
 
