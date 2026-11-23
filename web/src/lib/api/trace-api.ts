@@ -109,23 +109,38 @@ function namedOf(row: TraceNodeRow): [string, Named, TraceCover] | null {
   }
 }
 
-/** One batch over the answer's distinct row ids (score-readout §7). */
+/**
+ * The most ids one `nodes` lookup carries: the server prices it per id, and
+ * a hundred of the slim selection stays far under the budget ceiling (the
+ * app's `MAX_NAMES` is the same number).
+ */
+export const TRACE_NODES_CHUNK = 100;
+
+/**
+ * The answer's distinct row ids (score-readout §7), read in chunks of at most
+ * `TRACE_NODES_CHUNK`, one after another — the app's own order, and a failed
+ * chunk then ends the read before any further request goes out. The maps
+ * fill in the server's row order, chunk by chunk.
+ */
 export async function fetchTraceNodes(
   client: ApolloClient,
   ids: readonly string[],
 ): Promise<Outcome<TraceNodes>> {
-  if (ids.length === 0) return success({ named: new Map(), covers: new Map() });
-  const fetched = await fetchOutcome(() =>
-    client.query({ query: TraceNodesDocument, variables: { ids: [...ids] }, fetchPolicy: "network-only" }),
-  );
-  if (fetched.kind !== "success") return fetched;
+  const distinct = [...new Set(ids)];
   const named = new Map<string, Named>();
   const covers = new Map<string, TraceCover>();
-  for (const row of fetched.value.nodes) {
-    const read = row === null ? null : namedOf(row);
-    if (read === null) continue;
-    named.set(read[0], read[1]);
-    covers.set(read[0], read[2]);
+  for (let from = 0; from < distinct.length; from += TRACE_NODES_CHUNK) {
+    const chunk = distinct.slice(from, from + TRACE_NODES_CHUNK);
+    const fetched = await fetchOutcome(() =>
+      client.query({ query: TraceNodesDocument, variables: { ids: chunk }, fetchPolicy: "network-only" }),
+    );
+    if (fetched.kind !== "success") return fetched;
+    for (const row of fetched.value.nodes) {
+      const read = row === null ? null : namedOf(row);
+      if (read === null) continue;
+      named.set(read[0], read[1]);
+      covers.set(read[0], read[2]);
+    }
   }
   return success({ named, covers });
 }
