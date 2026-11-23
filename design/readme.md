@@ -12798,6 +12798,60 @@ drawing.
   sheet (295); where a tag's or a citation's act opens (296); a pending
   thing's place in a list's order (297). Backlog 282, 285, 286, 287, 288,
   291 and 292 close; 290 stays.
+
+### Round 62, settling things in signing order, pointer doors, deleted-account words, long tags in lists, the registry's gaps — 2026-11-23
+
+- **Ruled** (jakob 2026-11-23, round 61's review): B1 — a still-settling
+  thing stands in signing order ("(a) is not a solution for if someone has
+  multiple settling contents"); the clock is the docs' (`api-spec.md:226-232`:
+  pending entries above every landed one, ordered among themselves by their
+  authoring instant — not Lamport time, which is assigned at landing).
+  B2–B5 as recommended: a tag's and a citation's chronicle act opens its
+  post; `Mentioned` / `Vouched for` `a deleted account`; `A deleted account
+  cited your post` with the empty disc; the comment's tags-and-references
+  sheet drawn over the thread and both sheets registered. D6: the comment
+  card's `On …` line is the door to the post, the rest of the card opens the
+  thread at the comment. E9, E10: the reel caption's title and a settings
+  row's value are one line, cut with "…". Told: no wrapping for tags in
+  lists.
+- **Drawn**: the profile tabs' `settling` with the settling item at the head,
+  and `settling-two` on `ProfilePosts`, `ProfilePostsOwn`,
+  `ProfileComments` and `ProfileCommentsOwn` (two settling items, `now` then
+  `3m`); `Profile`'s `act` tag and citation cards as doors; `ProfileOther`'s
+  `aside` = `mentioned-deleted` / `vouched-deleted`; `Notifications`' `actor`
+  = `deleted` (every kind); `CommentRefsSheet` (new, over the thread);
+  `Reel`'s `title` = `long`; `TagPage`'s `comment` = `pictures` / `clip` and
+  `reader` = `guest`, and `ProfileOther`'s `reader` = `guest` (the wide
+  anchor `@genesismod's opinion`).
+- **The law that moved**: the list order in `ProfilePosts.md`,
+  `ProfilePostsOwn.md`, `ProfileComments.md`, `ProfileCommentsOwn.md`,
+  `ReplyEntry.md`; the chronicle door in `Profile.md`, `ProfileOther.md`,
+  `ProfileDeleted.md`, `ProfileOtherHeld.md`; the pointer's one sentence on
+  `ProfileComments.md`, `ProfileCommentsOwn.md`, `FeedKinds.md`,
+  `TagPage.md` (as `History.md` and `Saved.md` had it); copy-voice *Naming a
+  removed or deleted thing*, *The chronicle's verbs* and the notifications'
+  deleted actor; *long names* case 2 (a settings value, the caption's title,
+  a tag in a list). Masters: `ContentRow` (an aside with no handle ends in
+  "…", `discRedacted`), `SettingsRow` (the value yields, the label keeps its
+  width), `ReelCaption` (one-line title), `Chip`'s `cut` (the filter sheet's
+  `One tag`), `StanceControl`'s `vantage` / `vantageHoles` and
+  `ProfileHeader`'s pass-through; the seal's Tags row folds when its chips
+  stop fitting (`1 tag` for one too long), Explore's recent row ends in "…".
+  `TagPageCommentMenuOwn.md`: Edit whose read gets no answer says the house
+  line in the page's snackbar.
+- **Registered**: `KeyCeremonyUnsupported` (the web's seven names),
+  `TagPageEmpty` (`tagPage.header`, `.actionRow`, `.empty`), `RefsSheet` and
+  `CommentRefsSheet` (`postDetail.refsSheet`, `.title`, `.tag`, `.reference`),
+  `tagPage.commentCard.media` and its parts, `ProfileOtherHeld` (its anchor's
+  `exact`).
+- **Measured** at 360 px with two 128-character tags (hyphens, none): the
+  chronicle aside 128 px wide and cut, its title whole; the recent row's
+  query 282 px, cut; the `One tag` chip 312 px inside the 360 sheet, cut;
+  every one one line. The seal's slot 181 px at 360 (211 px in the frame).
+- **Held**: the Everything tab's settling rows against the landed-only
+  chronicle (backlog 298); the tag places outside lists (299); a comment's
+  tag or citation act (300); a long settings value on a board (301). Backlog
+  293–297 close.
 ---
 
 ## 14. The canvases
