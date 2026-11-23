@@ -10,6 +10,10 @@ ALWAYS commentEdit.target names the post by its stand-in GIVEN the post has no t
 
 ALWAYS commentEdit.target reads Your comment on, then the post's author's handle, then 's removed post., as Your comment on @ada's removed post., GIVEN the post was removed, as the comment card names it
 
+ALWAYS commentEdit.target names the post by its title, or its stand-in, as for any post, and never by a handle GIVEN the post is a deleted account's and still there
+
+ALWAYS commentEdit.target reads Your comment on a deleted account's removed post. and never the post's title GIVEN the post was a deleted account's and its content went with the account
+
 ALWAYS the comment edit holds at most four pictures, each the square its author framed
 
 ALWAYS the footer reads the live count of the batch, You're signing N things

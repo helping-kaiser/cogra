@@ -19,17 +19,23 @@
    THE LINE MIRRORS `CommentOpinionsEmpty`'s, which is the product's own empty
    voice: calm, and naming the one thing that would fill it. It never scolds and
    it carries no `error` colour — a comment nobody has cited is not a fault, and
-   nothing is owed. */
+   nothing is owed.
+   REGISTERED under the `postDetail` prefix (round 61, seam 380), as
+   `CommentLicense` registers the sheet it stacks: the detail beneath as
+   `PostDetail` names it, the thread `threadSheet`, and the sheet the post's
+   own (`CitedBy`) — `citedBySheet`, its `title` and its `empty` — told apart
+   by board, the path naming the sheet and not the host it is raised over. */
+export const NODE = "postDetail";
 export function Screen() {
   return (
     <>
       <ThreadDetail />
-      <CommentsThreadSheet />
+      <CommentsThreadSheet node="threadSheet" />
 
-      <BottomSheet open stacked ariaLabel="Cited by" maxHeight="62%">
-        <SheetTitle>Cited by</SheetTitle>
+      <BottomSheet open stacked ariaLabel="Cited by" maxHeight="62%" node="citedBySheet">
+        <SheetTitle node="title">Cited by</SheetTitle>
         <div style={{ padding: "0 24px 8px" }}>
-          <EmptyState title="Nothing cites this yet" />
+          <EmptyState title="Nothing cites this yet" node="empty" />
         </div>
       </BottomSheet>
     </>

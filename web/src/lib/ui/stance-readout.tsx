@@ -283,12 +283,12 @@ function ReadoutBlock({
               aria-label={parts.head}
               aria-expanded={zeroShown}
               onClick={onExplainZero}
-              className="cg-state cg-focus cg-hit flex-none cursor-pointer border-0 bg-transparent p-0 text-title-medium"
+              className="cg-state cg-focus cg-hit flex-none cursor-pointer border-0 bg-transparent p-0 text-title-medium [line-height:1.2]"
             >
               <span aria-hidden="true">{parts.emoji}</span>
             </button>
           ) : (
-            <span aria-hidden="true" {...ids.face} className="flex-none text-title-medium">
+            <span aria-hidden="true" {...ids.face} className="flex-none text-title-medium [line-height:1.2]">
               {parts.emoji}
             </span>
           )}
@@ -298,7 +298,7 @@ function ReadoutBlock({
         </span>
       ) : (
         <span aria-hidden="true" className="inline-flex items-baseline gap-2">
-          <span {...ids.face} className={`${big ? "text-title-large" : "text-title-medium"}`}>
+          <span {...ids.face} className={`${big ? "text-title-large" : "text-title-medium"} [line-height:1.2]`}>
             {parts.emoji}
           </span>
           <span
@@ -345,7 +345,10 @@ export function StanceStanding({
     >
       <ReadoutBlock
         parts={standingParts(bundle, targetLabel, axes)}
-        ids={readoutIds(part(node, "current"), `${testIdPrefix}-standing`, false)}
+        // A HELD STANDING NAMES ITS PARTS where the registry does
+        // (`tagPage.actionRow.stance.pad.standing.current.face`,
+        // TagPageHeldPad); a standing read as a sentence draws none of them.
+        ids={readoutIds(part(node, "current"), `${testIdPrefix}-standing`, true)}
       />
       {/* The pick's own readout — above the field, never under the knob,
           because a thumb on the control covers exactly where feedback would

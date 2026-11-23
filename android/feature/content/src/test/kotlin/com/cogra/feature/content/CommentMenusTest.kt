@@ -446,6 +446,62 @@ class CommentMenusTest {
         assertThat(reports).containsExactly(ReportAsk("theirs", ReportKind.Comment))
     }
 
+    private fun renderSavedComment(comment: CommentView) {
+        compose.setContent {
+            CompositionLocalProvider(LocalSnackbarHostState provides host, LocalInboundReads provides reads) {
+                SavedScreen(
+                    state = SavedUiState(
+                        entries = listOf(SavedEntry(SavedCard.Comment(comment, onPost, "p1", null), Instant.now())),
+                        loading = false,
+                    ),
+                    writes = null,
+                    onRefresh = {},
+                    onLoadMore = {},
+                    onRetryMore = {},
+                    onSearch = {},
+                    onBack = {},
+                    doors = noDoors,
+                    hooks = hooks,
+                    reportSheet = recordReport,
+                )
+            }
+        }
+    }
+
+    /**
+     * SavedCommentMenuOwn.md:5 — the reader's own comment: Unsave, Cite, Edit,
+     * Remove, Cited by, Opinions, License under the registered `saved.menuSheet`
+     * nodes, no Hide, no Report, and no per-comment legacy tag on Edit or Remove.
+     */
+    @Test
+    fun savedsOwnCommentMenuRaisesEditAndRemoveUnderTheirRegisteredNodes() {
+        renderSavedComment(mine)
+        compose.onNodeWithTag("saved.commentCard.menu").performClick()
+        assertRowsInOrder(
+            "saved.menuSheet.save",
+            "saved.menuSheet.cite",
+            "saved.menuSheet.edit",
+            "saved.menuSheet.remove",
+            "saved.menuSheet.citedBy",
+            "saved.menuSheet.opinions",
+            "saved.menuSheet.license",
+        )
+        compose.onNodeWithTag("saved.menuSheet.hide").assertDoesNotExist()
+        compose.onNodeWithTag("saved.menuSheet.report").assertDoesNotExist()
+        compose.onNodeWithTag("comment_menu_edit_mine").assertDoesNotExist()
+        compose.onNodeWithTag("comment_menu_remove_mine").assertDoesNotExist()
+    }
+
+    @Test
+    fun savedsOthersCommentMenuCarriesNoEditOrRemove() {
+        renderSavedComment(theirs)
+        compose.onNodeWithTag("saved.commentCard.menu").performClick()
+        compose.onNodeWithTag("saved.menuSheet.edit").assertDoesNotExist()
+        compose.onNodeWithTag("saved.menuSheet.remove").assertDoesNotExist()
+        compose.onNodeWithTag("comment_menu_edit_theirs").assertDoesNotExist()
+        compose.onNodeWithTag("comment_menu_remove_theirs").assertDoesNotExist()
+    }
+
     /**
      * ProfileCommentsMenuOwn.md:5, :7, :17 — the own comment's menu on the own
      * profile is `profile.menuSheet` with Edit; signed, the profile comes back

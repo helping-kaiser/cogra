@@ -51,6 +51,7 @@ export function Card({
   node,
   door = false,
   onOpen,
+  attach = false,
 }: {
   children: ReactNode;
   testId?: string;
@@ -60,6 +61,12 @@ export function Card({
   door?: boolean;
   /** A click on the card's bare ground opens what its `cg-door` opens. */
   onOpen?: () => void;
+  /**
+   * The card hangs under a row flag (`TaggedRow`): its top-left corner squares
+   * so flag and card fuse into one folder-tab silhouette (`PostCard.jsx`,
+   * `CommentCard.jsx`: `borderTopLeftRadius: 0`).
+   */
+  attach?: boolean;
 }) {
   return (
     <section
@@ -71,7 +78,7 @@ export function Card({
               if (pressIsOnCardGround(event)) onOpen();
             }
       }
-      className={`${door ? "cg-door-card " : ""}${onOpen === undefined ? "" : "cursor-pointer "}flex flex-col gap-3 rounded-medium bg-surface-container-highest p-4`}
+      className={`${door ? "cg-door-card " : ""}${onOpen === undefined ? "" : "cursor-pointer "}flex flex-col gap-3 rounded-medium ${attach ? "rounded-tl-none " : ""}bg-surface-container-highest p-4`}
     >
       {children}
     </section>

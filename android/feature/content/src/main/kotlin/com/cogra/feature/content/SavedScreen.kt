@@ -112,10 +112,13 @@ import com.cogra.feature.saved.R as SavedR
 /** The registered prefix (`Saved`, `SavedUndo`, `SavedEmpty`, `SavedNone` in `nodes.json`). */
 private val SAVED = DataNode("saved")
 
-/** The rows SavedPostMenu registers under `saved.menuSheet`. */
+/** The rows SavedPostMenu and SavedPostMenuOwn register under `saved.menuSheet`. */
 private val SAVED_MENU_ROWS = setOf(
     PostMenuRow.Save,
     PostMenuRow.Cite,
+    PostMenuRow.Edit,
+    PostMenuRow.MarkSensitive,
+    PostMenuRow.Remove,
     PostMenuRow.Hide,
     PostMenuRow.CitedBy,
     PostMenuRow.Opinions,
@@ -124,15 +127,17 @@ private val SAVED_MENU_ROWS = setOf(
 )
 
 /**
- * Saved's comment card menu: `saved.menuSheet` (SavedCommentMenu). An own
- * comment's Edit and Remove are not registered under Saved (seam 320-14), so
- * they keep their per-comment tags.
+ * Saved's comment card menu: `saved.menuSheet` (SavedCommentMenu,
+ * SavedCommentMenuOwn). The reader's rows and an own comment's Edit and Remove
+ * all stand under it.
  */
 private val SAVED_COMMENT_MENU = CommentMenuPlacement(
     sheet = SAVED / "menuSheet",
     rows = setOf(
         CommentMenuRow.Save,
         CommentMenuRow.Cite,
+        CommentMenuRow.Edit,
+        CommentMenuRow.Remove,
         CommentMenuRow.Hide,
         CommentMenuRow.CitedBy,
         CommentMenuRow.Opinions,
@@ -144,10 +149,10 @@ private val SAVED_COMMENT_MENU = CommentMenuPlacement(
 /** Saved's post card: the feed's own, keyed by the post's id as the feed keys it. */
 private val SAVED_PLACEMENT = CardPlacement(
     card = SAVED / "card",
-    // THE CARD'S ⋮ RAISES `saved.menuSheet` (SavedPostMenu). Only the reader's
-    // rows are registered there — no board draws an own post's menu over Saved —
-    // so an own post's Edit, Mark as sensitive and Remove keep their tags, as
-    // do the terms, which no Saved board registers.
+    // THE CARD'S ⋮ RAISES `saved.menuSheet` (SavedPostMenu, SavedPostMenuOwn):
+    // the reader's rows and the own post's Edit, Mark as sensitive and Remove
+    // all stand under it. The terms keep their tag, which no Saved board
+    // registers.
     menuSheet = SAVED / "menuSheet",
     licenseSheet = null,
     tag = "saved",

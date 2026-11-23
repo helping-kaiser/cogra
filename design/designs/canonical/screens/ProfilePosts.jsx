@@ -8,7 +8,8 @@
 
    A PROFILE WITH NO POSTS (the `posts` chip at `none`): the list reads
    `Nothing here yet.`, the line alone — `ProfileComments`' empty tab, the
-   member's empty-chronicle line (seam 245, ask 11).
+   member's empty-chronicle line (seam 245, ask 11). The Posts figure reads
+   `0` over it: the figure counts what the list holds (readme §7).
 
    REGISTERED under the `profile` prefix (round 27, seam 252; the web's minted
    ids, kept). The posts view is a tab of the profile page, not a page of its
@@ -22,7 +23,10 @@
    `posts` chip's `settling`: the second post, signed and not yet landed,
    wearing `Still settling` as the feed's card does (FeedSheet.md), its score
    slot bare; the card keyed by its id in both copies, as `ProfileComments`'
-   `removed` is.
+   `removed` is. A STILL-SETTLING THING STANDS AT THE HEAD (round 62; jakob
+   2026-11-23, B1 "in signing order"): the settling post leads the list, above
+   every landed one; `settling-two` draws two, the newer signed first (`now`,
+   then `3m`), each taking its place in the order when it lands.
 
    A REMOVED POST KEEPS ITS PLACE (round 57; jakob 2026-11-18, profiles (a):
    "removed posts should not vanish from profiles … (both others and mine)",
@@ -41,10 +45,10 @@
    `ProfileMoreFailed`'s quiet row with `Retry` where the list would stand. */
 export const NODE = "profile";
 export const PROPS = {
-  posts: { editor: "enum", options: ["some", "none", "settling", "removed"], default: "some" },
+  posts: { editor: "enum", options: ["some", "none", "settling", "settling-two", "removed"], default: "some" },
   load: { editor: "enum", options: ["loaded", "loading", "failed"], default: "loaded" },
 };
-export const VALS = `someShown: this.props.load === "loaded" && this.props.posts !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.posts === "none" ? "block" : "none", secondLanded: this.props.posts === "settling" || this.props.posts === "removed" ? "none" : "contents", secondSettling: this.props.posts === "settling" ? "contents" : "none", secondRemoved: this.props.posts === "removed" ? "contents" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none"`;
+export const VALS = `someShown: this.props.load === "loaded" && this.props.posts !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.posts === "none" ? "block" : "none", secondLanded: this.props.posts === "settling" || this.props.posts === "settling-two" || this.props.posts === "removed" ? "none" : "contents", secondSettling: this.props.posts === "settling" || this.props.posts === "settling-two" ? "contents" : "none", firstLanded: this.props.posts === "settling-two" ? "none" : "contents", firstSettling: this.props.posts === "settling-two" ? "contents" : "none", secondRemoved: this.props.posts === "removed" ? "contents" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", postsFigure: this.props.posts === "none" ? "0" : "12"`;
 const ADA_SECOND_POST = {
   id: "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a",
   author: ADA,
@@ -68,7 +72,7 @@ export function Screen() {
             displayName="Ada Okonkwo"
             avatarSrc="comment-camera.jpg"
             bio="A dozen tries at the third headland light and counting."
-            posts={12}
+            posts="{{postsFigure}}"
             stancesOn={6}
             stancesTaken={6}
             onCounts={() => {}}
@@ -81,17 +85,23 @@ export function Screen() {
         <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="posts" tabs={CHRONICLE_TABS} node="tabRow" />
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }} data-node="posts">
           <div style={{ flex: 1, overflow: "hidden", display: "{{someShown}}", flexDirection: "column", gap: 8, padding: "8px 0 0 0" }}>
-            <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />
-            <div style={{ display: "{{secondLanded}}" }} data-node-chip="posts" data-node-key="some">
-              <PostCard {...ADA_SECOND_POST} node="card" />
-            </div>
-            {/* The same post still settling: the feed's settling row
-                (FeedSheet.md), `Still settling` worn under the words and the
-                score slot bare, the glyph with no figure (ruling 90). Its age
-                reads `now`, as every settling card the tree draws reads it
-                (`ComposeLanded`, the thread's landed reply). */}
+            {/* The second post still settling, at the head of the list: the
+                feed's settling row (FeedSheet.md), `Still settling` worn under
+                the words and the score slot bare, the glyph with no figure
+                (ruling 90). Its age reads `now`, the newest signed. */}
             <div style={{ display: "{{secondSettling}}" }} data-node-chip="posts" data-node-key="settling">
               <PostCard {...ADA_SECOND_POST} timestamp="now" pending score={null} node="card" />
+            </div>
+            <div style={{ display: "{{firstLanded}}" }} data-node-chip="posts" data-node-key="some">
+              <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />
+            </div>
+            {/* Two posts still settling (`settling-two`): the first post too,
+                signed before the second, so it stands under it, its age `3m`. */}
+            <div style={{ display: "{{firstSettling}}" }} data-node-chip="posts" data-node-key="settling-two">
+              <PostCard {...ADA_POST} timestamp="3m" pending score={null} node="card" />
+            </div>
+            <div style={{ display: "{{secondLanded}}" }} data-node-chip="posts" data-node-key="some">
+              <PostCard {...ADA_SECOND_POST} node="card" />
             </div>
             {/* The same post removed by its author: the feed's removed card as
                 it is (`FeedRemoved`), the mark and its date in the words' and

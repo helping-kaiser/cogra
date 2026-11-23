@@ -54,7 +54,12 @@ import com.cogra.feature.profile.ProfileStancesRoute
 import com.cogra.feature.profile.SAVED_ORIGIN
 import com.cogra.feature.profile.topicOrigin
 import com.cogra.feature.stance.StanceControlRoute
+import com.cogra.feature.topics.TOPIC_FROM_FEED
 import com.cogra.feature.topics.TOPIC_FROM_HISTORY
+import com.cogra.feature.topics.TOPIC_FROM_OWN_PROFILE
+import com.cogra.feature.topics.TOPIC_FROM_POST
+import com.cogra.feature.topics.TOPIC_FROM_PROFILE
+import com.cogra.feature.topics.TOPIC_FROM_SAVED
 import com.cogra.feature.topics.TopicCards
 import com.cogra.feature.topics.TopicCardsHost
 import com.cogra.feature.topics.TopicRoute
@@ -91,7 +96,11 @@ internal fun NavGraphBuilder.readDrillIns(shell: ShellScope) {
         val origin = TraceOrigin.Post(entry.toRoute<PostDetail>().postId)
         shell.ScoresOpenOver(origin) { shell.PostDetailDestination(entry) }
     }
-    composable<Topic> { entry -> shell.TopicDestination(entry) }
+    // A TAGGED CARD'S SCORE IS A DOOR TO ITS TRACE over the tag's page
+    // (TagPage.md:31-33), the arrow naming the tag.
+    composable<Topic> { entry ->
+        shell.ScoresOpenOver(TraceOrigin.Tag(entry.toRoute<Topic>().name)) { shell.TopicDestination(entry) }
+    }
     // A PROFILE'S CARDS WEAR THEIR SCORES TOO (ProfilePosts.md:39-41): each
     // opens its trace over the profile, the arrow naming it.
     composable<Profile> { entry ->
@@ -173,7 +182,7 @@ private fun ShellScope.FeedDestination(entry: NavBackStackEntry) {
         onOpenActor = { handle -> navController.navigate(Profile(handle, from = FEED_ORIGIN)) },
         onOpenCommentActor = { handle -> navController.navigate(Profile(handle, from = COMMENTS_ORIGIN)) },
         kindDoors = feedKindDoors(),
-        onOpenTopic = { name -> navController.navigate(Topic(name)) },
+        onOpenTopic = { name -> navController.navigate(Topic(name, from = TOPIC_FROM_FEED)) },
         // The card's ⋮ reaches the same two destinations the
         // detail's menu does: a feed card's rows are the post's
         // rows, so they cannot lead somewhere else.
@@ -264,7 +273,7 @@ private fun ShellScope.PostDetailDestination(entry: NavBackStackEntry) {
         // comment lands on the post carrying it, which has no
         // permalink of its own.
         onOpenPost = { id -> navController.navigate(PostDetail(id)) },
-        onOpenTopic = { name -> navController.navigate(Topic(name)) },
+        onOpenTopic = { name -> navController.navigate(Topic(name, from = TOPIC_FROM_POST)) },
         onReference = { id ->
             openComposer(ComposePost(referenceTargetId = id))
         },
@@ -288,6 +297,8 @@ private fun ShellScope.TopicDestination(entry: NavBackStackEntry) {
         from = route.from,
         onBack = { navController.navigateUp() },
         cardsHost = topicCardsHost(entry, topic),
+        // A guest's Save or Hide on a card's menu asks to join (TagPageMenu.md).
+        onRequireAccount = { requireJoin() }.takeIf { signedIn == false },
         // The page's one action, wired here because what a
         // signed-out tap does is the shell's to say — the
         // same guest gate the bar's slots raise. Nothing is
@@ -295,10 +306,14 @@ private fun ShellScope.TopicDestination(entry: NavBackStackEntry) {
         // readings differ, and guessing puts the wrong
         // action on the tap for a frame.
         stanceControl = signedIn?.let { signed ->
-            {
+            { node ->
                 StanceControlRoute(
                     target = StanceTarget.Topic(topic),
                     testTagPrefix = "topic_affinity",
+                    // Registered (round 48/60): the wide anchor, its open pad
+                    // `.pad` (TagPage, TagPageHeldPad).
+                    node = node,
+                    padNode = node / "pad",
                     axes = StanceAxes.Affinity,
                     // Disconnected, never severed (jakob's I2
                     // ruling, copy-voice.md "the topic
@@ -449,13 +464,15 @@ private fun ShellScope.ProfileDestination(entry: NavBackStackEntry) {
 private fun ShellScope.profileCardsHost(entry: NavBackStackEntry, postFrom: String): ProfileCardsHost {
     val thread = entry.threadReturn(navController)
     val accountId by authState.accountId.collectAsStateWithLifecycle()
+    // A card's tag names the profile on the way back, the reader's own or another's (TagPage.md:49).
+    val topicFrom = if (postFrom == POST_FROM_OWN_PROFILE) TOPIC_FROM_OWN_PROFILE else TOPIC_FROM_PROFILE
     val doors = CardDoors(
         onOpenPost = { id -> navController.navigate(PostDetail(id, from = postFrom)) },
         onOpenComment = { postId, commentId, aimReply ->
             navController.navigate(PostDetail(postId, from = postFrom, commentId = commentId, aimReply = aimReply))
         },
         onOpenActor = { handle -> navController.navigate(Profile(handle)) },
-        onOpenTopic = { name -> navController.navigate(Topic(name)) },
+        onOpenTopic = { name -> navController.navigate(Topic(name, from = topicFrom)) },
     )
     val routes = HostedCardRoutes(
         viewerId = accountId,
@@ -526,7 +543,7 @@ private fun ShellScope.SavedDestination(entry: NavBackStackEntry) {
                 )
             },
             onOpenActor = { handle -> navController.navigate(Profile(handle, from = SAVED_ORIGIN)) },
-            onOpenTopic = { name -> navController.navigate(Topic(name)) },
+            onOpenTopic = { name -> navController.navigate(Topic(name, from = TOPIC_FROM_SAVED)) },
         ),
         viewerId = accountId,
         signedIn = signedIn,

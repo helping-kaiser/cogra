@@ -5,6 +5,9 @@ import com.cogra.domain.FieldStatus
 import com.cogra.domain.HashtagView
 import com.cogra.domain.ModeratedField
 import com.cogra.domain.Outcome
+import com.cogra.domain.ProfileComment
+import com.cogra.domain.Removal
+import com.cogra.domain.RemovalAgent
 import com.cogra.domain.TaggedContentKind
 import com.cogra.domain.TaggedContentView
 import com.cogra.domain.TaggedNode
@@ -17,6 +20,7 @@ import com.cogra.domain.testing.InMemoryCommittedFilterStore
 import com.cogra.domain.testing.InMemoryReaderDefaultStore
 import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.ThrowingTopicRepository
+import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testHashtag
 import com.cogra.domain.testing.testPost
 import com.cogra.domain.testing.testSeenRecord
@@ -31,6 +35,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.time.Instant
 
 private const val NAME = "rust"
 
@@ -197,6 +202,71 @@ class TopicViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.content.map { it.id }).containsExactly("p-removed")
     }
+
+    // TagPage.md:25 — a removed tagged comment is cut as a removed post is,
+    // with the feed's filter keeping Removed off.
+    @Test
+    fun aRemovedTaggedCommentIsNotListedWithTheFeedsRemovedOff() = runTest(dispatcher) {
+        topics.contentOutcome = Outcome.Success(listOf(removedComment, liveRow))
+        assertThat(derived()).containsExactly("p-live")
+    }
+
+    // TagPage.md:23 — with Removed on, the removed tagged comment stands in its row.
+    @Test
+    fun aRemovedTaggedCommentStandsWithTheFeedsRemovedOn() = runTest(dispatcher) {
+        committedFilters.stored["u1"] = FeedFilter(showRemoved = true)
+        topics.contentOutcome = Outcome.Success(listOf(removedComment, liveRow))
+        assertThat(derived()).containsExactly("c-removed", "p-live").inOrder()
+    }
+
+    // TagPage.md:65, :73 — the first read of what carries the tag getting no
+    // answer is the page's fault, never the empty tag's line.
+    @Test
+    fun aFirstContentReadWithNoAnswerIsTheFault() = runTest(dispatcher) {
+        topics.contentOutcome = Outcome.Failed(IllegalStateException("no route to host"))
+        val vm = viewModel()
+        vm.start(NAME)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.transportFailed).isTrue()
+    }
+
+    // TagPage.md:67 — Retry reads the page again and it answers as the read does.
+    @Test
+    fun retryReadsThePageAgainAndAnswersAsTheReadDoes() = runTest(dispatcher) {
+        topics.contentOutcome = Outcome.Failed(IllegalStateException("no route to host"))
+        val vm = viewModel()
+        vm.start(NAME)
+        dispatcher.scheduler.advanceUntilIdle()
+        topics.contentOutcome = Outcome.Success(listOf(liveRow))
+        vm.refresh()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.transportFailed).isFalse()
+        assertThat(vm.state.value.content.map { it.id }).containsExactly("p-live")
+    }
+
+    // A later read that gets no answer keeps the rows the page already drew.
+    @Test
+    fun aLaterReadWithNoAnswerKeepsTheRows() = runTest(dispatcher) {
+        topics.contentOutcome = Outcome.Success(listOf(liveRow))
+        val vm = viewModel()
+        vm.start(NAME)
+        dispatcher.scheduler.advanceUntilIdle()
+        topics.contentOutcome = Outcome.Failed(IllegalStateException("no route to host"))
+        vm.refresh()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.transportFailed).isFalse()
+        assertThat(vm.state.value.content.map { it.id }).containsExactly("p-live")
+    }
+
+    private val removedComment = taggedComment("c-removed").copy(
+        node = TaggedNode.Comment(
+            ProfileComment(
+                comment = testComment("c-removed").copy(removal = Removal(Instant.now(), RemovalAgent.AUTHOR)),
+                target = null,
+                threadPostId = "p9",
+            ),
+        ),
+    )
 
     private fun taggedPost(id: String, removed: Boolean) = taggedPost(id).copy(
         node = TaggedNode.Post(

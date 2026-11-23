@@ -282,10 +282,12 @@ class CograNavGraphTest {
         waitForTag("feed.card.tagsLine.tag:rust")
 
         compose.onNodeWithTag("feed.card.tagsLine.tag:rust").performClick()
-        waitForTag("topic_title")
+        waitForTag("tagPage.header.title")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Topic>()).isTrue()
+        // TagPage.md:49 — from the feed, the arrow reads `Back to feed`.
+        compose.onNodeWithContentDescription("Back to feed").assertExists()
 
-        compose.onNodeWithTag("topic_back").performClick()
+        compose.onNodeWithTag("tagPage.header.back").performClick()
         waitForTag("feed.card:p1")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
     }
@@ -302,17 +304,16 @@ class CograNavGraphTest {
                 topics = listOf(com.cogra.domain.testing.testTopicClaim("rust")),
             ),
         )
-        // The row sits inside the populated branch, so the topic needs
-        // something tagged for it to stand at all.
         topics.content["rust"] = listOf(com.cogra.domain.testing.testTaggedContent("p1"))
         render()
         waitForTag("login_browse")
         compose.onNodeWithTag("login_browse").performScrollTo().performClick()
         waitForTag("feed.card.tagsLine.tag:rust")
         compose.onNodeWithTag("feed.card.tagsLine.tag:rust").performClick()
-        waitForTag("topic_stance_row")
+        // TagPage.md:59 — the registered row's face (`tagPage.actionRow.stance`).
+        waitForTag("tagPage.actionRow.stance.anchor")
 
-        compose.onNodeWithTag("topic_affinity_stance").performClick()
+        compose.onNodeWithTag("tagPage.actionRow.stance.anchor").performClick()
 
         waitForTag("join_prompt")
         // Asked, never bounced: the reader is still on the topic page.
@@ -350,6 +351,26 @@ class CograNavGraphTest {
                 ?.toRoute<Topic>()?.name == "fieldnotes"
         }
         compose.onNodeWithContentDescription("Back to #rust").assertExists()
+    }
+
+    // TagPage.md:31 — a tagged card wears its score as the feed's cards do,
+    // the slot a door to its trace over the tag page.
+    @Test
+    fun theTagPagesCardsWearTheirScore() {
+        val tagged = com.cogra.domain.testing.testPost("p1").copy(
+            topics = listOf(com.cogra.domain.testing.testTopicClaim("rust")),
+        )
+        content.listing = listOf(tagged)
+        topics.content["rust"] = listOf(
+            com.cogra.domain.testing.testTaggedContent("p1").copy(node = com.cogra.domain.TaggedNode.Post(tagged)),
+        )
+        render()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
+        waitForTag("feed.card.tagsLine.tag:rust")
+        compose.onNodeWithTag("feed.card.tagsLine.tag:rust").performClick()
+        waitForTag("tagPage.card:p1")
+        compose.onNodeWithTag("tagPage.card.actionRow.score", useUnmergedTree = true).assertExists()
     }
 
     // Backlog item 68, ruled 2026-09-14: chats moved down the release

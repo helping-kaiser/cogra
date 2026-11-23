@@ -2,7 +2,7 @@
 
 ALWAYS Notifications is one flat list, newest first, with no grouping
 
-ALWAYS every row is one actor doing one thing at one moment, written as a sentence with the actor's handle as its subject
+ALWAYS every row is one actor doing one thing at one moment, written as a sentence with the actor's handle as its subject, A deleted account in its place once the actor's account is gone
 
 ALWAYS a row notifies only an act someone else made that reached something of the reader's, and nothing the reader did themselves
 
@@ -10,11 +10,17 @@ ALWAYS an opinion on the reader's content never notifies, and only an opinion on
 
 ALWAYS the rows read @ada commented on your post, @tobias replied to your comment, @sol gave an opinion on you, @mira mentioned you, @ada cited your post, @rafa is ready for your approval, @juno landed through your invite, @mira approved your application, @kel closed your application and @sol walked back their opinion on you, one sentence per kind
 
+ALWAYS a row's sentence opens A deleted account in the actor's place, the rest of the sentence as it stands, as A deleted account cited your post, and the empty disc stands in the picture's place, a face staying as it is, GIVEN the actor's account was since deleted
+
+ALWAYS a mention's and a citation's second line reads in a deleted account's removed post GIVEN the piece was a deleted account's and its content went with the account
+
 ALWAYS an opinion on the reader's profile walked back to nothing notifies as its own row, @sol walked back their opinion on you, and the row the opinion left stands as it was
 
 ALWAYS a comment's and a reply's row carries the words that arrived as its second line
 
 ALWAYS a mention's and a citation's row reads in with the title of the piece that carries it as its second line
+
+ALWAYS a mention's and a citation's second line reads in, then the piece's author's handle, then 's removed post, as in @mira's removed post, and never the title GIVEN the piece was removed
 
 ALWAYS the opinion row wears the opinion's face where a picture would go, with no digits in either reading mode, and carries no second line
 

@@ -885,13 +885,13 @@ describe("PostView", () => {
     fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
     fireEvent.click(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.hide"));
     expect(screen.queryByRole("alertdialog")).toBeNull();
-    expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent("@bob is hidden.");
-    expect(screen.getByTestId("comment-menu-snackbar-action")).toHaveTextContent("Undo");
+    expect(await screen.findByTestId("postDetail.snackbar")).toHaveTextContent("@bob is hidden.");
+    expect(screen.getByTestId("postDetail.snackbar.action")).toHaveTextContent("Undo");
     await waitFor(() => expect(log.hides).toEqual([{ actor: "u2", at: null }]));
     expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("Theirs");
     expect(screen.getByTestId("post-comment-c2")).toHaveTextContent("Theirs too");
     // Undo takes the hide back.
-    fireEvent.click(screen.getByTestId("comment-menu-snackbar-action"));
+    fireEvent.click(screen.getByTestId("postDetail.snackbar.action"));
     await waitFor(() => expect(log.unhides).toEqual(["u2"]));
   });
 
@@ -934,7 +934,7 @@ describe("PostView", () => {
     await waitFor(() => expect(hide()).toHaveTextContent("Unhide @bob"));
     fireEvent.click(hide());
     expect(screen.queryByRole("alertdialog")).toBeNull();
-    expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent("@bob is unhidden.");
+    expect(await screen.findByTestId("postDetail.snackbar")).toHaveTextContent("@bob is unhidden.");
     await waitFor(() => expect(log.unhides).toEqual(["u2"]));
     expect(screen.getByTestId("post-comment-c1")).toBeInTheDocument();
   });
@@ -1142,8 +1142,47 @@ describe("PostView", () => {
     await openComments();
     fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
     fireEvent.click(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.save"));
-    expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent("Saved.");
+    expect(await screen.findByTestId("postDetail.snackbar")).toHaveTextContent("Saved.");
     await waitFor(() => expect(log.sets).toEqual([{ node: "c1", at: null }]));
+  });
+
+  // CommentMenu.md:11 — the thread sheet's own snackbar IS the registered
+  // `postDetail.snackbar`: its words are `.message`, its Undo is `.action`.
+  it("the_thread_sheets_hide_snackbar_wears_the_registered_node_with_its_action", async () => {
+    server.use(...thread("u1", [{ id: "c1", body: "Theirs" }]), ...hiddenHandlers(hiddenLog()));
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    await openComments();
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+    fireEvent.click(within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.hide"));
+    expect(await screen.findByTestId("postDetail.snackbar.message")).toHaveTextContent("@bob is hidden.");
+    expect(screen.getByTestId("postDetail.snackbar.action")).toHaveTextContent("Undo");
+    expect(screen.getByTestId("postDetail.snackbar")).toContainElement(screen.getByTestId("postDetail.snackbar.message"));
+  });
+
+  // CommentMenu.md:29 — Unsave closes the menu and `postDetail.snackbar` reads
+  // `Removed from Saved.` with Undo on `postDetail.snackbar.action`.
+  it("a_comments_unsave_snackbars_removed_from_saved_with_undo_on_the_node", async () => {
+    const log = bookmarkLog();
+    server.use(...thread("u1", [{ id: "c1", body: "First!" }]), ...bookmarkHandlers(log));
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    await openComments();
+    const saveRow = () => within(screen.getByTestId("comment-menu-c1-sheet-body")).getByTestId("postDetail.menuSheet.save");
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+    fireEvent.click(saveRow());
+    await waitFor(() => expect(log.sets).toHaveLength(1));
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
+    await waitFor(() => expect(saveRow()).toHaveTextContent("Unsave"));
+    fireEvent.click(saveRow());
+    await waitFor(() =>
+      expect(screen.getByTestId("postDetail.snackbar.message")).toHaveTextContent("Removed from Saved."),
+    );
+    expect(screen.getByTestId("postDetail.snackbar.action")).toHaveTextContent("Undo");
   });
 
   // LANDING ON A COMMENT (jakob 2026-10-01; Saved.md "tap a comment's row"):
@@ -1270,7 +1309,7 @@ describe("PostView", () => {
       expect(dialog).toHaveAccessibleName("Remove this post?");
       expect(dialog).toHaveTextContent("This is immediate and permanent.");
       await waitFor(() =>
-        expect((screen.getByTestId(byNode("postDetail.menuSheet")) as HTMLDialogElement).open).toBe(false),
+        expect((screen.getByTestId("post-menu-sheet") as HTMLDialogElement).open).toBe(false),
       );
     });
 
@@ -1635,7 +1674,7 @@ describe("PostView", () => {
         fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
         fireEvent.click(within(openMenuSheet()).getByTestId("postDetail.menuSheet.report"));
         fireEvent.click(within(openReport()).getByTestId("postDetail.reportSheet.report"));
-        expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent("Reported.");
+        expect(await screen.findByTestId("postDetail.snackbar")).toHaveTextContent("Reported.");
         expect(reports).toEqual(["c1"]);
       });
 
@@ -1651,7 +1690,7 @@ describe("PostView", () => {
         fireEvent.click(within(openMenuSheet()).getByTestId("postDetail.menuSheet.report"));
         const confirm = openReport();
         fireEvent.click(within(confirm).getByTestId("postDetail.reportSheet.report"));
-        expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent(
+        expect(await screen.findByTestId("postDetail.snackbar")).toHaveTextContent(
           "That didn't send. Try again.",
         );
         expect(confirm.open).toBe(true);
@@ -1683,7 +1722,7 @@ describe("PostView", () => {
         await openComments();
         fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
         fireEvent.click(within(openMenuSheet()).getByTestId("postDetail.menuSheet.cite"));
-        expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent(
+        expect(await screen.findByTestId("postDetail.snackbar")).toHaveTextContent(
           "You can post once you're in.",
         );
         expect(routerPush).not.toHaveBeenCalled();
@@ -1917,7 +1956,7 @@ describe("PostView", () => {
         fireEvent.click(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1")));
         fireEvent.click(within(openMenuSheet()).getByTestId("postDetail.menuSheet.hide"));
         expect(screen.queryByRole("alertdialog")).toBeNull();
-        expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent("@bob is hidden.");
+        expect(await screen.findByTestId("postDetail.snackbar")).toHaveTextContent("@bob is hidden.");
         await waitFor(() => expect(log.hides).toEqual([{ actor: "u2", at: null }]));
         expect(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.removalMark", "c1"))).toBeInTheDocument();
       });
@@ -2195,7 +2234,7 @@ describe("PostView", () => {
     });
     // The editor closes and the in-flight notice shows.
     expect(screen.queryByTestId("commentEdit.words.input")).not.toBeInTheDocument();
-    expect(screen.getByTestId("comment-signed")).toBeInTheDocument();
+    expect(screen.getByTestId("postDetail.snackbar")).toBeInTheDocument();
   });
 
   describe("leaving a comment edit (CommentEdit, DiscardConfirm): the edit keeps no draft", () => {
@@ -2282,7 +2321,7 @@ describe("PostView", () => {
       expect(screen.queryByTestId("comment-edit")).not.toBeInTheDocument();
       expect(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.menu", "c1"))).toBeInTheDocument();
       expect(screen.getByText("old words")).toBeInTheDocument();
-      expect(screen.queryByTestId("comment-signed")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("postDetail.snackbar")).not.toBeInTheDocument();
       expect(wasPrepared()).toBe(false);
       expect(signer.signStaged).not.toHaveBeenCalled();
       // Reopening starts from the comment, not from the discarded words.
@@ -2723,7 +2762,8 @@ describe("PostView", () => {
         ? await screen.findByTestId("comment-add")
         : await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.reply", "c1")),
     );
-    expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent("You can comment once you're in.");
+    expect(await screen.findByTestId("postDetail.snackbar")).toHaveTextContent("You can comment once you're in.");
+    expect(screen.getByTestId("postDetail.snackbar.message")).toHaveTextContent("You can comment once you're in.");
     expect(screen.queryByTestId("reply-wizard")).not.toBeInTheDocument();
   });
 
@@ -2891,7 +2931,8 @@ describe("PostView", () => {
       expect(await screen.findByTestId("post-comment-r1")).toHaveTextContent("Mine, settling");
       expect(screen.getByTestId("comment-pending-r1")).toBeInTheDocument();
       expect(screen.getByTestId("postDetail.threadSheet")).toBeVisible();
-      expect(screen.getByTestId("comment-signed")).toHaveTextContent("still settling");
+      expect(screen.getByTestId("postDetail.snackbar")).toHaveTextContent("still settling");
+      expect(screen.getByTestId("postDetail.snackbar.message")).toHaveTextContent("still settling");
       // ...and the reader is where they left off, not back at the top.
       await waitFor(() => expect(body.scrollTop).toBe(320));
     });
@@ -4092,8 +4133,41 @@ describe("PostView — references", () => {
       await openComments();
 
       expect(await screen.findByTestId("post-comment-c1")).toHaveTextContent("Look at this");
-      expect(screen.getByTestId("comment-media-c1")).toBeInTheDocument();
+      expect(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.media", "c1"))).toBeInTheDocument();
       expect(screen.getByAltText("a salt flat")).toBeInTheDocument();
+    });
+
+    // ReplyMedia (round 60, seam 392 point 3): a thread comment's media
+    // registers under `postDetail` — the card's `media`, each picture its
+    // `frame` keyed `<comment id>/<position>`, a clip's sound its frame's
+    // `soundDisc`, a gallery's `dots`. The board draws @tobias's clip comment
+    // and @sol's two-picture comment; every media path it registers stands.
+    it("a_thread_comments_media_wears_ReplyMedias_registered_nodes", async () => {
+      const clip = {
+        ...picture("mv", null),
+        url: "https://media.test/mv.mp4",
+        mimeType: "video/mp4",
+        options: { __typename: "MediaOptions", aspectRatio: "9:16", durationMs: 12_000 },
+      };
+      server.use(
+        ...threadFrom(() =>
+          detail("u1", [
+            { id: "clip", body: "Listen", attachments: [clip] },
+            { id: "pair", body: "Two", attachments: [picture("ma", "first"), picture("mb", "second")] },
+          ]),
+        ),
+      );
+      renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+      await openComments();
+      await screen.findByTestId("post-comment-pair");
+      const keys = (path: string) => screen.queryAllByTestId(path).map((element) => element.getAttribute("data-testid-key"));
+      expect(keys("postDetail.threadSheet.commentCard.media")).toEqual(["clip", "pair"]);
+      expect(keys("postDetail.threadSheet.commentCard.media.frame")).toEqual(["clip/1", "pair/1", "pair/2"]);
+      expect(keys("postDetail.threadSheet.commentCard.media.frame.soundDisc")).toEqual(["clip/1"]);
+      expect(keys("postDetail.threadSheet.commentCard.media.dots")).toEqual(["pair"]);
+      // Each part inside its own card.
+      const pair = screen.getByTestId(byNode("postDetail.threadSheet.commentCard", "pair"));
+      expect(within(pair).getByTestId(byNode("postDetail.threadSheet.commentCard.media.dots", "pair"))).toBeInTheDocument();
     });
 
     // B4: design/readme.md states the rule for every comment attachment, not
@@ -4112,7 +4186,7 @@ describe("PostView — references", () => {
       await openComments();
 
       await screen.findByTestId("post-comment-c1");
-      const frame = screen.getByTestId("media-gallery-lead");
+      const frame = screen.getByTestId(byNode("postDetail.threadSheet.commentCard.media.frame", "c1/1"));
       expect(frame.style.aspectRatio).toBe("1 / 1");
       // Filled (`cover`), not letterboxed (`contain`) — a 9:16 source would
       // otherwise fit whole inside the square with bars at the sides.
@@ -4135,7 +4209,7 @@ describe("PostView — references", () => {
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
         await openComments();
         await screen.findByTestId("post-comment-c1");
-        square(screen.getByTestId("media-gallery-lead"));
+        square(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.media.frame", "c1/1")));
       });
 
       it("several pictures, every page", async () => {
@@ -4147,8 +4221,8 @@ describe("PostView — references", () => {
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
         await openComments();
         await screen.findByTestId("post-comment-c1");
-        square(screen.getByTestId("media-gallery-page-0"));
-        square(screen.getByTestId("media-gallery-page-1"));
+        square(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.media.frame", "c1/1")));
+        square(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.media.frame", "c1/2")));
       });
 
       it("a clip, its poster inside the same square", async () => {
@@ -4162,7 +4236,7 @@ describe("PostView — references", () => {
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
         await openComments();
         await screen.findByTestId("post-comment-c1");
-        square(screen.getByTestId("media-gallery-lead-frame"));
+        square(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.media.frame", "c1/1")));
       });
 
       it("a sensitive comment, revealed, shows the same square", async () => {
@@ -4176,7 +4250,7 @@ describe("PostView — references", () => {
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
         await openComments();
         fireEvent.click(await screen.findByTestId("comment-c1-veil-reveal"));
-        square(await screen.findByTestId("media-gallery-lead"));
+        square(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.media.frame", "c1/1")));
       });
 
       it("a removed comment keeps its mark, and no frame stands", async () => {
@@ -4190,7 +4264,7 @@ describe("PostView — references", () => {
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
         await openComments();
         expect(await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.removalMark", "c1"))).toBeInTheDocument();
-        expect(screen.queryByTestId("media-gallery-lead")).toBeNull();
+        expect(screen.queryByTestId("postDetail.threadSheet.commentCard.media.frame")).toBeNull();
       });
     });
   });

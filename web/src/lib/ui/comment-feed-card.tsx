@@ -104,6 +104,7 @@ import { ShareButton } from "./share-button";
 import { StanceControl } from "./stance-control";
 import { shortTimestamp } from "./timestamp";
 import { TopicsLine } from "./topics-line";
+import { NO_REACH_LINE } from "./transport-error";
 import { WRITTEN } from "./written";
 
 /* A LONG COMMENT FOLDS AT TWO LINES under `More` (FeedCommentShapes.md:29,
@@ -162,11 +163,26 @@ export type CommentTargetView =
       readonly removal?: { readonly at: string; readonly by: string } | null;
     };
 
+/**
+ * The comment's own folds — its topics and its citations. A host may leave
+ * them out of its read, as the tag page does: two fold lists of fifty a row
+ * would price its list past the query budget (`list_cost` × `fold_cost`), and
+ * its card draws no topics line (TagPage.jsx: the comment is handed none).
+ */
+type CommentFolds = "topics" | "references";
+
 /** A comment as its feed card reads it: the thread's own fields, what it answers, its thread's post. */
-export type CommentFeedView = CommentFieldsFragment & {
-  readonly target?: CommentTargetView | null;
-  readonly post?: { readonly id: string } | null;
-};
+export type CommentFeedView = Omit<CommentFieldsFragment, CommentFolds> &
+  Partial<Pick<CommentFieldsFragment, CommentFolds>> & {
+    readonly target?: CommentTargetView | null;
+    readonly post?: { readonly id: string } | null;
+  };
+
+/** The comment whole, where its read carried both folds. */
+function wholeComment(comment: CommentFeedView): CommentFieldsFragment | null {
+  const { topics, references } = comment;
+  return topics === undefined || references === undefined ? null : { ...comment, topics, references };
+}
 
 function text(field: Moderated): string {
   return field === null || field === undefined || field.status === "REDACTED" ? "" : (field.value ?? "").trim();
@@ -266,8 +282,11 @@ export function CommentFeedCard({
   authorHere = false,
   reply = "open",
   onRemoved,
+  attach = false,
 }: {
   comment: CommentFeedView;
+  /** The card hangs under a row flag (`TaggedRow`) and squares its top-left corner (`Card`'s `attach`). */
+  attach?: boolean;
   /**
    * How the card names what it answers (`CommentCard`'s `targetShape`): the
    * feed's `thread` head row, or the `line` pointer of a comment listed away
@@ -321,7 +340,7 @@ export function CommentFeedCard({
   // AN EDIT SIGNED FROM THIS CARD'S MENU: the comment as it reads afresh,
   // laid over what the host served, so the card settles in place.
   const [reread, setReread] = useState<CommentFieldsFragment | null>(null);
-  const current = reread === null ? given : { ...given, ...reread };
+  const current: CommentFeedView = reread === null ? given : { ...given, ...reread };
   const comment = taken === null ? current : withRemoval(current, taken);
   const own = viewerId !== null && comment.author?.id === viewerId;
   const comfort = useComfortLine(comment.id);
@@ -390,29 +409,46 @@ export function CommentFeedCard({
   // it lives in is the card's `post`.
   const target = comment.target ?? null;
   const editThread = threadPost ?? (target?.__typename === "Post" ? target.id : null);
+  const openEditWith = (whole: CommentFieldsFragment) => {
+    if (openEditDoor === null || target === null || editThread === null) return;
+    openEditDoor({
+      comment: whole,
+      parentId: target.__typename === "Comment" ? target.id : null,
+      postId: editThread,
+      targetLabel: head?.kind === "post" ? head.title : (head?.label ?? "this post"),
+      onLeave: () => {},
+      onSigned: () =>
+        landSignedEdit({
+          settleInPlace: () => {
+            onNotify(COMMENT_SETTLING);
+            void fetchComment(client, comment.id).then((outcome) => {
+              if (outcome.kind === "success" && outcome.value !== null) setReread(outcome.value);
+            });
+          },
+          openThread: () => {
+            if (place !== null) router.push(place);
+          },
+        }),
+    });
+  };
+  // THE EDITOR STARTS FROM THE COMMENT WHOLE — its topics and citations are
+  // what it edits against. A host that read the card without its folds (the
+  // tag page) has the comment read whole first; a read that gets no answer
+  // opens nothing and says so on the host's snackbar.
   const openEdit =
     !own || openEditDoor === null || target === null || editThread === null
       ? undefined
-      : () =>
-          openEditDoor({
-            comment,
-            parentId: target.__typename === "Comment" ? target.id : null,
-            postId: editThread,
-            targetLabel: head?.kind === "post" ? head.title : (head?.label ?? "this post"),
-            onLeave: () => {},
-            onSigned: () =>
-              landSignedEdit({
-                settleInPlace: () => {
-                  onNotify(COMMENT_SETTLING);
-                  void fetchComment(client, comment.id).then((outcome) => {
-                    if (outcome.kind === "success" && outcome.value !== null) setReread(outcome.value);
-                  });
-                },
-                openThread: () => {
-                  if (place !== null) router.push(place);
-                },
-              }),
+      : () => {
+          const whole = wholeComment(comment);
+          if (whole !== null) {
+            openEditWith(whole);
+            return;
+          }
+          void fetchComment(client, comment.id).then((outcome) => {
+            if (outcome.kind === "success" && outcome.value !== null) openEditWith(outcome.value);
+            else onNotify(NO_REACH_LINE);
           });
+        };
 
   // THE COMMIT SENDS THE MAIL; refused or unanswered, the sheet stays and the
   // snackbar never claims a report that did not go out (ReportConfirm.md:13-17).
@@ -653,13 +689,15 @@ export function CommentFeedCard({
           {unfolded ? "Less" : "More"}
         </button>
       )}
-      {!redacted && (
+      {/* A host that read no folds hands the card no topics, and the card
+          draws no line for them (`CommentCard`'s `topics = []`). */}
+      {!redacted && comment.topics !== undefined && (
         <TopicsLine
           topics={comment.topics.map((claim) => ({
             name: claim.hashtag.name.value ?? "",
             pending: claim.pending,
           }))}
-          references={comment.references.length}
+          references={comment.references?.length ?? 0}
           testIdPrefix={testId}
           from={from}
         />
@@ -671,6 +709,7 @@ export function CommentFeedCard({
     <Card
       testId={testId}
       node={node}
+      attach={attach}
       door={place !== null}
       onOpen={place === null ? undefined : () => router.push(place)}
     >

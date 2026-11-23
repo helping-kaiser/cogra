@@ -953,6 +953,11 @@ export function CommentsSheet({
                 // pill on a surface meant for reading.
                 surface="reading"
                 testId={`comment-media-${comment.id}`}
+                // THE PICTURES' REGISTERED NAMES where the sheet is registered
+                // (ReplyMedia, round 60): `<card>.media`, each picture its
+                // `frame` keyed `<comment id>/<position>`, a clip's sound its
+                // frame's `soundDisc`, the gallery's `dots`.
+                dataNode={part(card, "media")}
               />
             )}
           </BodyRegion>
@@ -1108,16 +1113,19 @@ export function CommentsSheet({
                 it. */}
             <Snackbar
               testId="comment-signed"
+              node={{ path: "postDetail.snackbar" }}
               message={commentSigned ? COMMENT_SETTLING : null}
               onDismiss={dismissCommentSigned}
             />
             {/* THE COMMENT MENUS' AFTERMATH (CommentMenu.md, design digest item
                 54): `Saved.`, and `Removed from Saved.` with `Undo`. It reads
-                inside the thread, where the menu was opened; the page's own
-                `postDetail.snackbar` is beneath the sheet's scrim, so this one
-                carries no registered path until a stacked state is drawn. */}
+                inside the thread, where the menu was opened. The sheet's
+                snackbar is the registered `postDetail.snackbar`, hosted here
+                because the page's own bar is beneath the sheet's scrim; the
+                signed line above wears the same node. */}
             <Snackbar
               testId="comment-menu-snackbar"
+              node={{ path: "postDetail.snackbar" }}
               message={menuSnack?.message ?? null}
               action={menuSnack?.action}
               token={menuSnack?.token}

@@ -43,10 +43,25 @@
    from the menu's `Cited by` on a post nothing cites, or past a count line
    gone stale, it says so in the comment sheet's words
    (`CommentCitedByEmpty`), `Nothing cites this yet`, the line alone, as
-   `empty`. */
+   `empty`.
+   A REMOVED OR SWEPT CITING THING IS NEVER NAMED (round 61; the pointer rule
+   blessed 2026-11-19) — the `citing` chip: `removed` the fourth row's post
+   removed by its author, `swept` the third's, a deleted account's post whose
+   content went with the account; each row the removal mark in the name's
+   place, the tile empty, the row inert (`ReferenceRow`'s `removed`, seam
+   248), still counted and in its place. A deleted account's citing post
+   still there keeps its title, as `live` draws it — the row prints no
+   author. */
 export const NODE = "postDetail";
-export const PROPS = { list: { editor: "enum", options: ["rows", "empty"], default: "rows" } };
-export const VALS = `rowsShown: this.props.list === "empty" ? "none" : "flex", emptyShown: this.props.list === "empty" ? "block" : "none"`;
+export const PROPS = {
+  list: { editor: "enum", options: ["rows", "empty"], default: "rows" },
+  citing: { editor: "enum", options: ["live", "removed", "swept"], default: "live" },
+};
+export const VALS = `rowsShown: this.props.list === "empty" ? "none" : "flex", emptyShown: this.props.list === "empty" ? "block" : "none", removedLive: this.props.citing === "removed" ? "none" : "contents", removedShown: this.props.citing === "removed" ? "contents" : "none", sweptLive: this.props.citing === "swept" ? "none" : "contents", sweptShown: this.props.citing === "swept" ? "contents" : "none"`;
+/* Which rows the `citing` chip redraws, by place: the third, `Three mornings
+   on the wall`, a deleted account's post (`DELETED_POST`'s first words),
+   swept with the account; the fourth removed by its author. */
+const CITING_MARKED = { 2: "swept", 3: "removed" };
 export function Screen() {
   return (
     <>
@@ -59,9 +74,21 @@ export function Screen() {
       <BottomSheet open ariaLabel="Cited by" maxHeight="88%" node="citedBySheet">
         <SheetTitle node="title">Cited by</SheetTitle>
         <div style={{ display: "{{rowsShown}}", flexDirection: "column", overflow: "hidden" }}>
-          {CITING_ARTIFACTS.map((artifact, index) => (
-            <ReferenceRow key={artifact.name} {...artifact} onOpen={() => {}} node="citation" nodeKey={String(index + 1)} />
-          ))}
+          {CITING_ARTIFACTS.map((artifact, index) => {
+            const row = <ReferenceRow key={artifact.name} {...artifact} onOpen={() => {}} node="citation" nodeKey={String(index + 1)} />;
+            const marked = CITING_MARKED[index];
+            if (!marked) return row;
+            return (
+              <React.Fragment key={artifact.name}>
+                <div style={{ display: `{{${marked}Live}}` }} data-node-chip="citing" data-node-key="live">
+                  {row}
+                </div>
+                <div style={{ display: `{{${marked}Shown}}` }} data-node-chip="citing" data-node-key={marked}>
+                  <ReferenceRow {...artifact} removed="Removed by its author" redacted node="citation" nodeKey={String(index + 1)} />
+                </div>
+              </React.Fragment>
+            );
+          })}
         </div>
         <div style={{ display: "{{emptyShown}}", padding: "0 24px 8px" }} data-node-chip="list" data-node-key="empty">
           <EmptyState title="Nothing cites this yet" node="empty" />

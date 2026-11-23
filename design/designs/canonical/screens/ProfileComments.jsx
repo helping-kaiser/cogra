@@ -41,6 +41,15 @@
    `removalMark.when`, as the feed's card, the post and the thread's comment
    draw it — `2h`, the removal's own moment, never the comment's `4d`.
 
+   A COMMENT STILL SETTLING IN THE LIST (round 61; jakob 2026-11-19, B2 (a):
+   "the profile should not lag behind just because sth is still settling")
+   is the `comments` chip's `settling`: the second comment, signed and not
+   yet landed, at the head of the list (round 62; jakob 2026-11-23, B1 "in
+   signing order"), wearing `Still settling` as the thread's landed reply
+   does (`ReplySettled`), its age `now` — the card keyed by its id in every
+   copy, as `ProfilePosts`' `settling` is. `settling-two` draws two, the
+   newer signed first (`now`, then `3m`).
+
    WHAT THE POINTER CALLS A REMOVED OR DELETED POST (round 59; the proposal
    to jakob 2026-11-18, C3: "for sure not the actual title") — the `target`
    chip, on the second comment's pointer to @sol's post: `live` `On “Salt
@@ -62,12 +71,12 @@ export const NODE = "profile";
 const ADA_COMMENT_ID = "5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e";
 const ADA_SECOND_COMMENT_ID = "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f";
 export const PROPS = {
-  comments: { editor: "enum", options: ["some", "none", "removed"], default: "some" },
+  comments: { editor: "enum", options: ["some", "none", "removed", "settling", "settling-two"], default: "some" },
   load: { editor: "enum", options: ["loaded", "loading", "failed"], default: "loaded" },
   reader: { editor: "enum", options: ["member", "applicant"], default: "member" },
   target: { editor: "enum", options: ["live", "removed", "deleted", "swept"], default: "live" },
 };
-export const VALS = `someShown: this.props.load === "loaded" && this.props.comments !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "flex" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", secondLive: this.props.comments === "removed" ? "none" : "contents", secondRemoved: this.props.comments === "removed" ? "contents" : "none", lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none", targetLine: this.props.target === "removed" ? "@sol's removed post" : this.props.target === "deleted" ? "“Salt maps of the coast road” — Deleted account" : this.props.target === "swept" ? "a deleted account's removed post" : "“Salt maps of the coast road” — @sol"`;
+export const VALS = `someShown: this.props.load === "loaded" && this.props.comments !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "flex" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", secondLive: this.props.comments === "removed" || this.props.comments === "settling" || this.props.comments === "settling-two" ? "none" : "contents", secondRemoved: this.props.comments === "removed" ? "contents" : "none", secondSettling: this.props.comments === "settling" || this.props.comments === "settling-two" ? "contents" : "none", firstLive: this.props.comments === "settling-two" ? "none" : "contents", firstSettling: this.props.comments === "settling-two" ? "contents" : "none", lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none", targetLine: this.props.target === "removed" ? "@sol's removed post" : this.props.target === "deleted" ? "“Salt maps of the coast road” — Deleted account" : this.props.target === "swept" ? "a deleted account's removed post" : "“Salt maps of the coast road” — @sol"`;
 
 export function Screen() {
   return (
@@ -94,21 +103,64 @@ export function Screen() {
         <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="comments" tabs={CHRONICLE_TABS} node="tabRow" />
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }} data-node="comments">
         <div style={{ flex: 1, overflow: "hidden", display: "{{someShown}}", flexDirection: "column", gap: 8, padding: "8px 0 0" }}>
-          <CommentCard
-            author={ADA}
-            content="The glovebox camera earns its keep — this is the print from 2019 that almost catches it."
-            timestamp="1d"
-            license={{ attribution: 0, provenance: 0 }}
-            bundle={mkBundle(0.1, 0.1)}
-            onReply={() => {}}
-            onOpen={() => {}}
-            replyOpacity="{{lockOpacity}}"
-            target="“The long way home” — @ada"
-            onOpenTarget={() => {}}
-            menuItems={readerCommentCardMenu("ada")}
-            node="commentCard"
-            id={ADA_COMMENT_ID}
-          />
+          {/* The second comment still settling, at the head of the list: the
+              thread's landed reply (`ReplySettled`, `CommentsThreadSheet`'s
+              `landed`), `Still settling` worn under the words, its age `now`,
+              the newest signed. */}
+          <div style={{ display: "{{secondSettling}}" }} data-node-chip="comments" data-node-key="settling">
+            <CommentCard
+              author={ADA}
+              content="Low tide is kinder to the rubbings than noon ever was."
+              timestamp="now"
+              pending
+              license={{ attribution: 0, provenance: 0 }}
+              onReply={() => {}}
+              onOpen={() => {}}
+              replyOpacity="{{lockOpacity}}"
+              target="{{targetLine}}"
+              onOpenTarget={() => {}}
+              menuItems={readerCommentCardMenu("ada")}
+              node="commentCard"
+              id={ADA_SECOND_COMMENT_ID}
+            />
+          </div>
+          <div style={{ display: "{{firstLive}}" }} data-node-chip="comments" data-node-key="some">
+            <CommentCard
+              author={ADA}
+              content="The glovebox camera earns its keep — this is the print from 2019 that almost catches it."
+              timestamp="1d"
+              license={{ attribution: 0, provenance: 0 }}
+              bundle={mkBundle(0.1, 0.1)}
+              onReply={() => {}}
+              onOpen={() => {}}
+              replyOpacity="{{lockOpacity}}"
+              target="“The long way home” — @ada"
+              onOpenTarget={() => {}}
+              menuItems={readerCommentCardMenu("ada")}
+              node="commentCard"
+              id={ADA_COMMENT_ID}
+            />
+          </div>
+          {/* Two comments still settling (`settling-two`): the first comment
+              too, signed before the second, so it stands under it, its age
+              `3m`. */}
+          <div style={{ display: "{{firstSettling}}" }} data-node-chip="comments" data-node-key="settling-two">
+            <CommentCard
+              author={ADA}
+              content="The glovebox camera earns its keep — this is the print from 2019 that almost catches it."
+              timestamp="3m"
+              pending
+              license={{ attribution: 0, provenance: 0 }}
+              onReply={() => {}}
+              onOpen={() => {}}
+              replyOpacity="{{lockOpacity}}"
+              target="“The long way home” — @ada"
+              onOpenTarget={() => {}}
+              menuItems={readerCommentCardMenu("ada")}
+              node="commentCard"
+              id={ADA_COMMENT_ID}
+            />
+          </div>
           <div style={{ display: "{{secondLive}}" }} data-node-chip="comments" data-node-key="some">
             <CommentCard
               author={ADA}

@@ -274,12 +274,12 @@ export type PadVariant = {
    twelve o'clock at the press, filling over the 500ms. Under reduced motion
    it still fills: it is a reading of the time left (readme §4). */
 /**
- * THE RESTING FACE'S TYPE (`StanceControl.jsx`: `fontSize: var(--text-title-large),
- * lineHeight: 1`): the title-large SIZE only, set solid, its weight the
- * anchor's own — not the whole title-large role, whose 28px leading and 400
- * weight the master never asks for.
+ * THE RESTING FACE'S TYPE (`StanceControl.jsx`: the face takes title-large's
+ * size, tracking and weight, `lineHeight: 1`): the whole title-large role set
+ * solid — never the anchor button's label-large weight and tracking, which a
+ * size-only face would inherit.
  */
-const FACE_TYPE = "text-[length:var(--text-title-large)] [line-height:1]";
+const FACE_TYPE = "text-title-large [line-height:1]";
 
 /**
  * THE ANCHOR IN ITS MEDIA DRESS (`StanceControl.jsx` `OVER_MEDIA_ANCHOR`): the
@@ -365,7 +365,14 @@ export function StanceControl({
   wide = false,
   overMedia = false,
   lineNode,
+  padNode: plainPadNode,
 }: {
+  /**
+   * The registered pad of a plain (non-variant) pad (`tagPage.actionRow.stance.pad`,
+   * TagPageHeldPad): the pad and the parts this control draws itself wear its
+   * paths, as a variant's `padNode` does. A variant's own wins.
+   */
+  padNode?: DataNode;
   /**
    * The registered node of the row line this control raises, where its board
    * names one (`reel.rail.stanceLine`, ReelRail.jsx: the face's line is the
@@ -626,6 +633,26 @@ export function StanceControl({
   useEffect(() => {
     readBundle();
   }, [readBundle]);
+
+  // A GUEST'S WIDE ANCHOR SPEAKS THE VIEWPOINT'S NAME (stance-control.md, *A
+  // guest's view*: the vantage law; TagPage.md:55-57, ProfileOther.md:51-53):
+  // `@genesismod's opinion`, never `Your opinion`. Asked only where words are
+  // drawn — the wide anchor — and only of a guest: a signed-in reader's
+  // anchor is their own, whoever's view their feed still borrows.
+  const guestWords = wide && phase === "signedOut";
+  const [vantage, setVantage] = useState<{ handle: string | null } | null>(null);
+  useEffect(() => {
+    if (!guestWords) return undefined;
+    let live = true;
+    void data.borrowedViewHandle().then((handle) => {
+      if (live) setVantage({ handle });
+    });
+    return () => {
+      live = false;
+    };
+  }, [guestWords, data]);
+  /** The borrowed view's handle, once the read named one. */
+  const guestHandle = guestWords ? (vantage?.handle ?? null) : null;
 
   // Settling ends when the ordered read has caught up with the pending one.
   const settledRecords = bundle === null || bundle === undefined ? null : bundle.records;
@@ -1163,7 +1190,7 @@ export function StanceControl({
   // the place to leave one.
   const severable =
     variant === undefined && bundle !== null && bundle !== undefined && bundle.records > 0;
-  const padNode = variant?.padNode;
+  const padNode = variant?.padNode ?? plainPadNode;
 
   /** Whose in-flight state shows where: the pad's, the row's, the dialog's. */
   const padSetting = inFlight === "pad" && slow;
@@ -1414,7 +1441,11 @@ export function StanceControl({
             type="button"
             {...testAttributes(part(node, "anchor"), testIdPrefix)}
             aria-label={
-              restingFace === null || restingPair === null
+              // The guest's name keeps the full handle: the ellipsis below
+              // is print only (stance-control.md:108-119, TagPage.md:57).
+              guestHandle !== null && (restingFace === null || restingPair === null)
+                ? `@${guestHandle}'s stance on ${target.label}`
+                : restingFace === null || restingPair === null
                 ? `Give your opinion on ${target.label}`
                 : keptShown
                   ? `Your opinion on ${target.label}, waiting for your ${waitingForReview ? "review" : "key"}: ${restingFace.label}, ${formatStancePair(restingPair)}.`
@@ -1477,11 +1508,32 @@ export function StanceControl({
               )}
               {holding && <HoldRing testId={`${testIdPrefix}-hold-ring`} />}
             </span>
-            {wide && restingPair === null && (
+            {wide && restingPair === null && phase === "signedIn" && (
               // The wide anchor's words — only where there is no pair to show.
-              // Drawn, not spoken: the button's name already says it.
+              // Drawn, not spoken: the button's name already says it. Only
+              // once the reader is known to be signed in: the server render
+              // cannot tell, and a guest never reads `Your opinion`.
               <span aria-hidden="true" className="whitespace-nowrap" data-testid={`${testIdPrefix}-words`}>
                 Your opinion
+              </span>
+            )}
+            {restingPair === null && guestHandle !== null && (
+              // A guest's words name the borrowed view. A name that outgrows
+              // the anchor truncates its HANDLE, never its `'s opinion`, so
+              // the words always say whose view it is (`@genesismo…'s
+              // opinion`, jakob 2026-10-14). A read that named nobody draws
+              // the face alone: never `Your opinion` for a guest.
+              <span
+                aria-hidden="true"
+                className="flex min-w-0 whitespace-nowrap"
+                data-testid={`${testIdPrefix}-words`}
+              >
+                <span className="min-w-0 truncate" data-testid={`${testIdPrefix}-words-handle`}>
+                  @{guestHandle}
+                </span>
+                <span className="flex-none" data-testid={`${testIdPrefix}-words-suffix`}>
+                  &apos;s opinion
+                </span>
               </span>
             )}
             {restingPair !== null && (

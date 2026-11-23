@@ -188,9 +188,15 @@ export function SettingsRow({
   const isChoice = selected !== undefined;
   const showChevron = chevron ?? (!isSwitch && !isChoice && !action && !trailing && !inert);
   const named = { "data-node": node, "data-node-key": node && nodeKey };
+  /* A VALUE TOO LONG FOR THE ROW IS CUT, THE LABEL KEEPS ITS ROOM (round 62;
+     jakob 2026-11-23, E10 (a)): the value is a one-line place (the long-names
+     law, case 2) — it never wraps and ends in "…" — and beside a value the
+     label holds its whole width, so a long e-mail address yields and the word
+     naming it never does. */
+  const hasValue = value !== undefined;
   const words = (
-    <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-      <span style={{ ...LABEL_TYPE, color: action ? "var(--primary)" : undefined }} data-node={node && "label"}>
+    <span style={{ flex: 1, minWidth: hasValue ? "min-content" : 0, display: "flex", flexDirection: "column", gap: 2 }}>
+      <span style={{ ...LABEL_TYPE, ...(hasValue ? { minWidth: "max-content" } : null), color: action ? "var(--primary)" : undefined }} data-node={node && "label"}>
         {label}
       </span>
       {status && (
@@ -203,7 +209,7 @@ export function SettingsRow({
   const tail = (
     <>
       {value !== undefined && (
-        <span style={{ ...VALUE_TYPE, flex: "none" }} data-node={node && "value"}>
+        <span style={{ ...VALUE_TYPE, flex: "0 1 auto", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} data-node={node && "value"}>
           {value}
         </span>
       )}

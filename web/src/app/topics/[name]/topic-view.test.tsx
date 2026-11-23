@@ -1,19 +1,25 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
-import { beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { writeCommittedFeedFilter } from "@/lib/feed/committed-filter";
 import { FEED_FILTER_DEFAULT } from "@/lib/feed/feed-filter";
 import { writeReaderDefault } from "@/lib/feed/reader-default";
 import { createTokenStore } from "@/lib/session/token-store";
+import { borrowedViewHandler } from "@/test/borrowed-view";
+import { byNode } from "@/test/data-node";
+import { fakeClampLayout } from "@/test/fake-clamp-layout";
 import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { intersectEach, whenObserved } from "@/test/media-env";
 import { gqlLink, startMswServer } from "@/test/msw";
+import { answersPost, taggedCommentWire } from "@/test/profile-comment";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
 import { stanceHandlers } from "@/test/stance";
-import { TopicView } from "./topic-view";
-import { expectWrapsLongWords } from "@/test/written";
+import { TAG_EMPTY, TAG_NOT_FOUND, TAG_UNREACHABLE, TopicView } from "./topic-view";
 
 function signedInStore() {
   const store = createTokenStore();
@@ -41,8 +47,8 @@ vi.mock("next/navigation", () => ({
 
 const server = startMswServer(...stanceHandlers());
 
-function moderated(value: string | null) {
-  return { __typename: "ModeratedText", value, status: "NORMAL" };
+function moderated(value: string | null, status = "NORMAL") {
+  return { __typename: "ModeratedText", value, status };
 }
 
 function postNode(id: string, title: string) {
@@ -77,6 +83,28 @@ function postNode(id: string, title: string) {
   };
 }
 
+/**
+ * A tagged comment as the tag page reads it (`topics.graphql`): the card's
+ * own fields without the two folds, what it answers and its thread's post.
+ */
+function taggedComment(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
+  return taggedCommentWire(id, {
+    author: {
+      __typename: "User",
+      id: "u2",
+      handle: "bob",
+      displayName: { __typename: "ModeratedText", value: "Bob" },
+      avatar: null,
+    },
+    content: moderated("nice crate"),
+    target: answersPost("p1", "Salt maps of the coast road", "sol"),
+    post: { __typename: "Post", id: "p1" },
+    ...over,
+  });
+}
+
+const REMOVED = { __typename: "Removal", at: "2026-11-18T10:00:00Z", by: "AUTHOR" };
+
 function hashtagDetail(name: string, taggedContent: unknown[] = []) {
   return {
     hashtag: {
@@ -89,11 +117,26 @@ function hashtagDetail(name: string, taggedContent: unknown[] = []) {
   };
 }
 
+const row = (node: unknown, relevance = 0.1, confidence = 1, pending = false) => ({
+  relevance,
+  confidence,
+  pending,
+  node,
+});
+
+function serve(name: string, rows: unknown[]) {
+  server.use(gqlLink.query("HashtagDetail", () => HttpResponse.json({ data: hashtagDetail(name, rows) })));
+}
+
+/** The keys of the post cards on the page, in order. */
+const postCards = () =>
+  screen.queryAllByTestId("tagPage.card").map((card) => card.getAttribute("data-testid-key"));
+
 describe("TopicView", () => {
   // "ALWAYS at most one clip plays on the tag page, by the feed's stage law"
-  // (T01 TagPage.md:23): the tagged list stands on one stage, so the topmost
+  // (TagPage.md:35): the tagged list stands on one stage, so the topmost
   // qualifying clip plays (Feed.md:17) and a second one waits.
-  it("plays one clip on the tag page, the topmost that qualifies (T01 TagPage.md:23)", async () => {
+  it("plays one clip on the tag page, the topmost that qualifies (TagPage.md:35)", async () => {
     const clipNode = (id: string) => ({
       ...postNode(id, `Clip ${id}`),
       attachments: [
@@ -110,20 +153,11 @@ describe("TopicView", () => {
         },
       ],
     });
-    server.use(
-      gqlLink.query("HashtagDetail", () =>
-        HttpResponse.json({
-          data: hashtagDetail("rust", [
-            { relevance: 0.1, confidence: 1, pending: false, node: clipNode("p1") },
-            { relevance: 0.1, confidence: 1, pending: false, node: clipNode("p2") },
-          ]),
-        }),
-      ),
-    );
+    serve("rust", [row(clipNode("p1")), row(clipNode("p2"))]);
     renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
-    await screen.findByTestId("topic-post-p2");
+    await screen.findByTestId(byNode("tagPage.card", "p2"));
     const clipOf = (id: string) =>
-      screen.getByTestId(`topic-post-${id}-media`).querySelector("video") as HTMLVideoElement;
+      screen.getByTestId(byNode("tagPage.card.media", id)).querySelector("video") as HTMLVideoElement;
     // The stage watches its clips from a passive effect; report their places
     // only once it does (`whenObserved`).
     await whenObserved(clipOf("p1"), clipOf("p2"));
@@ -137,85 +171,73 @@ describe("TopicView", () => {
     expect(clipOf("p2").paused).toBe(true);
   });
 
-  it("renders the canonical name and the tagged posts, reusing PostCard", async () => {
-    server.use(
-      gqlLink.query("HashtagDetail", () =>
-        HttpResponse.json({
-          data: hashtagDetail("rust", [
-            { relevance: 0.1, confidence: 1, pending: false, node: postNode("p1", "About Rust") },
-          ]),
-        }),
-      ),
-    );
+  // TagPage.md:3 — "ALWAYS the tag page is titled by the tag, # and all"; a
+  // page title is a one-line place (NamesLong.md:3), cut with "…".
+  it("the_tag_page_is_titled_by_the_tag_hash_and_all_in_its_header", async () => {
+    serve("rust", [row(postNode("p1", "About Rust"))]);
     renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
-    expect(await screen.findByTestId("topic-name")).toHaveTextContent("#rust");
-    // A heading wraps (NamesLong.md:9) and a tag name is one word of up to 128
-    // characters: it continues on the next line (jakob 2026-11-19).
-    expectWrapsLongWords(screen.getByTestId("topic-name"));
-    expect(screen.getByTestId("topic-post-p1")).toHaveTextContent("About Rust");
-    expect(screen.getByTestId("topic-post-p1-link")).toHaveAttribute("href", "/posts/p1?from=tag%3Arust");
-    // PostCard's own inventory rides along — the stance control included.
-    expect(screen.getByTestId("topic-stance-p1")).toBeInTheDocument();
+    const title = await screen.findByTestId("tagPage.header.title");
+    expect(title).toHaveTextContent("#rust");
+    expect(screen.getByTestId("tagPage.header")).toContainElement(title);
+    expect(title).toHaveClass("truncate");
   });
 
-  // THE WORD "FOLLOW" IS NOT ON THE SCREEN, and will not be
-  // (copy-voice's ban, extended to topics 2026-09-14). Taking a position
-  // on a topic is the stance gesture at the stance's own price, so there
-  // is no toggle and no one-tap follow to find.
-  it("offers no follow gesture", async () => {
-    server.use(
-      gqlLink.query("HashtagDetail", () =>
-        HttpResponse.json({
-          data: hashtagDetail("rust", [
-            { relevance: 0.1, confidence: 1, pending: false, node: postNode("p1", "About Rust") },
-          ]),
-        }),
-      ),
-    );
+  // TagPage.md:7 — the header carries no control; the topic's row stands
+  // under the title, above every post.
+  it("the_header_carries_no_control_and_the_topics_row_stands_under_it_above_every_post", async () => {
+    serve("rust", [row(postNode("p1", "About Rust"))]);
     renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
-    await screen.findByTestId("topic-name");
+    const header = await screen.findByTestId("tagPage.header");
+    expect(within(header).queryAllByRole("button")).toHaveLength(0);
+    const actionRow = screen.getByTestId("tagPage.actionRow");
+    const card = screen.getByTestId(byNode("tagPage.card", "p1"));
+    expect(header.compareDocumentPosition(actionRow) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(actionRow.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("renders the tagged posts, reusing PostCard", async () => {
+    serve("rust", [row(postNode("p1", "About Rust"))]);
+    renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+    const card = await screen.findByTestId(byNode("tagPage.card", "p1"));
+    expect(card).toHaveTextContent("About Rust");
+    expect(screen.getByTestId("topic-post-p1-link")).toHaveAttribute("href", "/posts/p1?from=tag%3Arust");
+    // PostCard's own inventory rides along — the stance control included.
+    expect(screen.getByTestId(byNode("tagPage.card.actionRow.stance.anchor", "p1"))).toBeInTheDocument();
+  });
+
+  // TagPage.md:45: the word "follow" appears nowhere on the tag page.
+  it("offers no follow gesture", async () => {
+    serve("rust", [row(postNode("p1", "About Rust"))]);
+    renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+    await screen.findByTestId("tagPage.header");
     expect(screen.queryByTestId("topic-follow")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /follow/i })).not.toBeInTheDocument();
+    expect(document.body).not.toHaveTextContent(/follow/i);
   });
 
   // The row is the page's own gesture, and it names what it stances —
   // the tag itself, hash and all — because three stance controls stand
   // on this page and the accessible name is what says which is which.
-  it("carries an Affinity row toward the topic, named by the tag", async () => {
-    server.use(
-      gqlLink.query("HashtagDetail", () =>
-        HttpResponse.json({
-          data: hashtagDetail("rust", [
-            { relevance: 0.1, confidence: 1, pending: false, node: postNode("p1", "About Rust") },
-          ]),
-        }),
-      ),
-    );
+  it("carries an Affinity row toward the topic, named by the tag, its share beside it", async () => {
+    Object.assign(navigator, { clipboard: { writeText: vi.fn(async () => {}) } });
+    serve("rust", [row(postNode("p1", "About Rust"))]);
     renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
-    await screen.findByTestId("topic-name");
-    expect(await screen.findByTestId("topic-affinity")).toHaveAccessibleName(
+    expect(await screen.findByTestId("tagPage.actionRow.stance.anchor")).toHaveAccessibleName(
       "Give your opinion on #rust",
     );
+    expect(screen.getByTestId("tagPage.actionRow.share")).toHaveAccessibleName("Share #rust");
   });
 
   // THE SIX WORDS ARE THE FAMILY'S (jakob 2026-09-15). The control owns
   // the geometry; association asks how much you like it and attraction
   // how close you want to be — never the opinion's own question.
   it("asks the Affinity's own questions on the accessible route", async () => {
-    server.use(
-      gqlLink.query("HashtagDetail", () =>
-        HttpResponse.json({
-          data: hashtagDetail("rust", [
-            { relevance: 0.1, confidence: 1, pending: false, node: postNode("p1", "About Rust") },
-          ]),
-        }),
-      ),
-    );
+    serve("rust", [row(postNode("p1", "About Rust"))]);
     renderWithProviders(<TopicView name="rust" />, {
       store: signedInStore(),
       writeSigner: fakeWriteSigner(),
     });
-    await screen.findByTestId("topic-affinity");
+    await screen.findByTestId("tagPage.actionRow.stance.anchor");
     fireEvent.click(screen.getByTestId("topic-affinity-choose"));
     expect(await screen.findByTestId("stance-alternates")).toBeInTheDocument();
     expect(screen.getByLabelText("How much you like it", { exact: false })).toBeInTheDocument();
@@ -224,64 +246,92 @@ describe("TopicView", () => {
     expect(screen.queryByLabelText("How much reaches you", { exact: false })).not.toBeInTheDocument();
   });
 
-  // A GUEST IS NOT SPECIAL HERE (backlog item 81, ruled 2026-09-15):
-  // any reader who taps a tag reaches the page and sees what is tagged.
-  // The only thing they lack is an opinion of the topic, so the face
-  // wears the no-opinion 🫥 and the tap opens the join prompt — it never
-  // bounces them, and the accessible route is not on the page at all.
+  // A GUEST IS NOT SPECIAL HERE (backlog item 81, ruled 2026-09-15;
+  // TagPage.md:53, :59): any reader who taps a tag reaches the page and sees
+  // what is tagged. The face wears the no-opinion 🫥 and the tap opens the
+  // join prompt — it never bounces them.
   it("lets a guest read the page and gates the row at the join prompt", async () => {
-    server.use(
-      gqlLink.query("HashtagDetail", () =>
-        HttpResponse.json({
-          data: hashtagDetail("rust", [
-            { relevance: 0.1, confidence: 1, pending: false, node: postNode("p1", "About Rust") },
-          ]),
-        }),
-      ),
-    );
+    serve("rust", [row(postNode("p1", "About Rust"))]);
     renderWithProviders(<TopicView name="rust" />, {
       store: guestStore(),
       writeSigner: fakeWriteSigner(),
     });
-    expect(await screen.findByTestId("topic-post-p1")).toBeInTheDocument();
-    const row = await screen.findByTestId("topic-affinity");
-    expect(screen.getByTestId("topic-affinity-resting-face")).toHaveTextContent("🫥");
+    expect(await screen.findByTestId(byNode("tagPage.card", "p1"))).toBeInTheDocument();
+    const anchor = await screen.findByTestId("tagPage.actionRow.stance.anchor");
+    expect(screen.getByTestId("tagPage.actionRow.stance.anchor.face")).toHaveTextContent("🫥");
     expect(screen.queryByTestId("topic-affinity-choose")).not.toBeInTheDocument();
-    fireEvent.click(row);
+    fireEvent.click(anchor);
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
   });
 
-  // THE EMPTY PAGE WIRES NO FACE AT ALL (backlog item 81, ruled
-  // 2026-09-15) — `TagPageEmpty` draws the header and the empty copy,
-  // and nothing else.
-  it("wires no stance row on the empty page", async () => {
-    server.use(
-      gqlLink.query("HashtagDetail", () =>
-        HttpResponse.json({ data: hashtagDetail("nevertagged") }),
-      ),
-    );
+  // TagPage.md:55 — the topic's wide anchor's words beside the hollow face
+  // name the borrowed view, its handle ellipsized before `'s opinion`.
+  it("tagpage_md_55_a_guests_topic_anchor_words_name_the_borrowed_view", async () => {
+    server.use(borrowedViewHandler("genesismod"));
+    serve("rust", [row(postNode("p1", "About Rust"))]);
+    renderWithProviders(<TopicView name="rust" />, { store: guestStore(), writeSigner: fakeWriteSigner() });
+    const anchor = await screen.findByTestId("tagPage.actionRow.stance.anchor");
+    const words = await within(anchor).findByTestId("topic-affinity-words");
+    expect(words).toHaveTextContent("@genesismod's opinion");
+    expect(anchor).not.toHaveTextContent("Your opinion");
+    expect(screen.getByTestId("tagPage.actionRow.stance.anchor.face")).toHaveTextContent("🫥");
+    // The handle is what gives, never `'s opinion`.
+    expect(within(anchor).getByTestId("topic-affinity-words-handle").className).toContain("truncate");
+    expect(within(anchor).getByTestId("topic-affinity-words-suffix").className).toContain("flex-none");
+  });
+
+  // TagPage.md:57 — the accessible name keeps the borrowed view's full handle.
+  it("tagpage_md_57_a_guests_topic_anchor_name_keeps_the_full_handle", async () => {
+    server.use(borrowedViewHandler("genesismod"));
+    serve("rust", [row(postNode("p1", "About Rust"))]);
+    renderWithProviders(<TopicView name="rust" />, { store: guestStore(), writeSigner: fakeWriteSigner() });
+    const anchor = await screen.findByTestId("tagPage.actionRow.stance.anchor");
+    await within(anchor).findByTestId("topic-affinity-words");
+    expect(anchor).toHaveAccessibleName("@genesismod's stance on #rust");
+  });
+
+  // TagPageEmpty.md:9 — "ALWAYS the empty tag page carries the topic's own
+  // stance row, holding nothing".
+  it("the_empty_tag_page_carries_the_topics_own_stance_row_holding_nothing", async () => {
+    serve("nevertagged", []);
     renderWithProviders(<TopicView name="nevertagged" />, { writeSigner: fakeWriteSigner() });
     await screen.findByTestId("topic-empty");
-    expect(screen.queryByTestId("topic-affinity")).not.toBeInTheDocument();
+    expect(screen.getByTestId("tagPage.actionRow.stance.anchor")).toBeInTheDocument();
+    expect(screen.getByTestId("tagPage.actionRow.stance.anchor.face")).toHaveTextContent("🫥");
   });
 
-  it("shows the empty copy for a never-tagged but well-formed name (D4)", async () => {
-    server.use(
-      gqlLink.query("HashtagDetail", () => HttpResponse.json({ data: hashtagDetail("nevertagged") })),
-    );
+  // TagPage.md:73, TagPageEmpty.md:3-7 — a legal name nothing carries opens
+  // the page empty, never "doesn't exist", no action, no error colour.
+  it("a_legal_name_nothing_carries_opens_the_page_empty_never_this_tag_doesnt_exist", async () => {
+    serve("nevertagged", []);
     renderWithProviders(<TopicView name="nevertagged" />, { writeSigner: fakeWriteSigner() });
-    expect(await screen.findByTestId("topic-empty")).toBeInTheDocument();
+    const empty = await screen.findByTestId("topic-empty");
+    expect(empty).toHaveTextContent(TAG_EMPTY);
+    expect(TAG_EMPTY).toBe("Nothing carries this tag right now.");
+    expect(document.body).not.toHaveTextContent(TAG_NOT_FOUND);
+    expect(within(empty).queryAllByRole("button")).toHaveLength(0);
+    expect(empty.innerHTML).not.toContain("text-error");
   });
 
-  it("reports not-found for a substrate-illegal name", async () => {
-    server.use(
-      gqlLink.query("HashtagDetail", () => HttpResponse.json({ data: { hashtag: null } })),
-    );
-    renderWithProviders(<TopicView name="münchen" />, { writeSigner: fakeWriteSigner() });
-    expect(await screen.findByTestId("topic-not-found")).toBeInTheDocument();
+  // TagPage.md:69-71 — a name that cannot be a tag: the header keeps the name
+  // asked for, `This tag doesn't exist.` in the page's place, the answer no —
+  // never the failure voice, the error colour, a row, a card or a Retry.
+  it("a_name_that_cannot_be_a_tag_reads_this_tag_doesnt_exist_under_the_name_asked_for", async () => {
+    server.use(gqlLink.query("HashtagDetail", () => HttpResponse.json({ data: { hashtag: null } })));
+    renderWithProviders(<TopicView name="salt maps" />, { writeSigner: fakeWriteSigner() });
+    const answer = await screen.findByTestId("topic-not-found");
+    expect(answer).toHaveTextContent(TAG_NOT_FOUND);
+    expect(TAG_NOT_FOUND).toBe("This tag doesn't exist.");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("#salt maps");
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(answer.innerHTML).not.toContain("text-error");
+    expect(screen.queryByTestId("topic-retry")).toBeNull();
+    expect(screen.queryByTestId("tagPage.actionRow")).toBeNull();
   });
 
-  it("offers a retry on the nothing-loaded transport error and heals from it", async () => {
+  // TagPage.md:65-67 — the first read gets no answer: the header stands, the
+  // house line's noun form over an outlined Retry; Retry reads again.
+  it("the_first_read_getting_no_answer_stands_the_header_over_the_line_and_retry_and_heals", async () => {
     let calls = 0;
     server.use(
       gqlLink.query("HashtagDetail", () => {
@@ -290,98 +340,140 @@ describe("TopicView", () => {
       }),
     );
     renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
-    expect(await screen.findByTestId("topic-transport-error")).toBeInTheDocument();
+    expect(await screen.findByTestId("topic-transport-error")).toHaveTextContent(TAG_UNREACHABLE);
+    expect(TAG_UNREACHABLE).toBe("Can't reach the server — this tag can't load right now.");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("#rust");
+    expect(screen.queryByTestId("tagPage.actionRow")).toBeNull();
+    expect(screen.queryByTestId("tagPage.card")).toBeNull();
     fireEvent.click(screen.getByTestId("topic-retry"));
-    expect(await screen.findByTestId("topic-name")).toHaveTextContent("#rust");
+    expect(await screen.findByTestId("tagPage.header.title")).toHaveTextContent("#rust");
     expect(screen.queryByTestId("topic-transport-error")).not.toBeInTheDocument();
   });
 
-  // TagPage.md:37: "ALWAYS the back arrow reads Back to Explore and leads to
+  // TagPage.md:51: "ALWAYS the back arrow reads Back to Explore and leads to
   // Explore GIVEN the page was entered with no history behind it".
   it("backs to Explore when entered with no origin behind it", async () => {
-    server.use(
-      gqlLink.query("HashtagDetail", () => HttpResponse.json({ data: hashtagDetail("rust") })),
-    );
+    serve("rust", []);
     renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
-    await screen.findByTestId("topic-name");
-    const back = screen.getByTestId("topic-back");
+    const back = await screen.findByTestId("tagPage.header.back");
     expect(back).toHaveAttribute("href", "/explore");
     expect(back).toHaveAttribute("aria-label", "Back to Explore");
   });
 
-  // TagPage.md:35: "… Back to feed from the feed in any of its states".
+  // TagPage.md:49: "… Back to feed from the feed in any of its states".
   it("backs to the feed when opened from the feed", async () => {
-    server.use(
-      gqlLink.query("HashtagDetail", () => HttpResponse.json({ data: hashtagDetail("rust") })),
-    );
+    serve("rust", []);
     renderWithProviders(<TopicView name="rust" from="feed" />, { writeSigner: fakeWriteSigner() });
-    await screen.findByTestId("topic-name");
-    const back = screen.getByTestId("topic-back");
+    const back = await screen.findByTestId("tagPage.header.back");
     expect(back).toHaveAttribute("href", "/feed");
     expect(back).toHaveAttribute("aria-label", "Back to feed");
   });
 
-  // TagPage.md:35: "… Back to the post from a post's tags-and-references sheet".
+  // TagPage.md:49: "… Back to the post from a post's tags-and-references sheet".
   it("backs to the post, opened as it was, when opened from its sheet", async () => {
-    server.use(
-      gqlLink.query("HashtagDetail", () => HttpResponse.json({ data: hashtagDetail("rust") })),
-    );
+    serve("rust", []);
     renderWithProviders(<TopicView name="rust" from="post:p1:saved" />, { writeSigner: fakeWriteSigner() });
-    await screen.findByTestId("topic-name");
-    const back = screen.getByTestId("topic-back");
+    const back = await screen.findByTestId("tagPage.header.back");
     expect(back).toHaveAttribute("href", "/posts/p1?from=saved");
     expect(back).toHaveAttribute("aria-label", "Back to the post");
   });
 
   // History.md:57: a History tag card's page reads Back to History.
   it("backs to History when opened from a History card", async () => {
-    server.use(
-      gqlLink.query("HashtagDetail", () => HttpResponse.json({ data: hashtagDetail("rust") })),
-    );
+    serve("rust", []);
     renderWithProviders(<TopicView name="rust" from="history" />, { writeSigner: fakeWriteSigner() });
-    await screen.findByTestId("topic-name");
-    const back = screen.getByTestId("topic-back");
+    const back = await screen.findByTestId("tagPage.header.back");
     expect(back).toHaveAttribute("href", "/history");
     expect(back).toHaveAttribute("aria-label", "Back to History");
   });
 
-  it("renders a tagged comment with a link to its parent post", async () => {
-    server.use(
-      gqlLink.query("HashtagDetail", () =>
-        HttpResponse.json({
-          data: hashtagDetail("rust", [
-            {
-              relevance: 0.1,
-              confidence: 1,
-              pending: false,
-              node: {
-                __typename: "Comment",
-                id: "c1",
-                content: moderated("nice crate"),
-                author: {
-                  __typename: "User",
-                  id: "u2",
-                  handle: "bob",
-                  displayName: { __typename: "ModeratedText", value: "Bob" },
-                  avatar: null,
-                },
-                createdAt: "2026-08-12T10:05:00Z",
-                updatedAt: "2026-08-12T10:05:00Z",
-                landing: { __typename: "Landing", state: "LANDED" },
-                moderationStatus: "NORMAL",
-                // No removal: the node stands (api-spec.md `Post.removal`).
-                removal: null,
-                genesisRecordId: "rec-genesis",
-                target: { __typename: "Post", id: "p1" },
-              },
-            },
-          ]),
+  // The back arrow of the two pages that answer no keeps its legacy id —
+  // "The failed and not-found states stay unnamed" (TagPage.jsx).
+  it("the_failed_page_wears_no_registered_header", async () => {
+    server.use(gqlLink.query("HashtagDetail", () => HttpResponse.error()));
+    renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+    await screen.findByTestId("topic-transport-error");
+    expect(screen.getByTestId("topic-back")).toHaveAttribute("aria-label", "Back to Explore");
+    expect(screen.queryByTestId("tagPage.header")).toBeNull();
+  });
+});
+
+// EVERY ROW IS ITS CLAIM, THEN ITS CARD (TagPage.md:15-27; TaggedRow.jsx).
+describe("TopicView — the rows", () => {
+  // TagPage.md:27 — "ALWAYS every row carries the claim above it, its exact
+  // pair painting only in geek mode", keyed by the tagged thing's id.
+  it("every_row_carries_the_claim_above_it_keyed_by_the_tagged_things_id", async () => {
+    serve("rust", [row(postNode("p1", "About Rust"), 0.55, 1), row(taggedComment("c1"), 0.4, 0.9, true)]);
+    renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+    const postClaim = await screen.findByTestId(byNode("tagPage.claim", "p1"));
+    const commentClaim = screen.getByTestId(byNode("tagPage.claim", "c1"));
+    expect(postClaim.compareDocumentPosition(screen.getByTestId(byNode("tagPage.card", "p1")))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(commentClaim.compareDocumentPosition(screen.getByTestId(byNode("tagPage.commentCard", "c1")))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(screen.getByTestId(byNode("tagPage.claim.glyph", "p1"))).toHaveTextContent("🔗");
+    expect(screen.getByTestId(byNode("tagPage.claim.exact", "p1"))).toHaveTextContent("+0.55 / 1.00");
+    expect(screen.getByTestId(byNode("tagPage.claim.exact", "p1"))).toHaveClass("cg-exact");
+    expect(screen.getByTestId(byNode("tagPage.claim.pending", "c1"))).toHaveTextContent("Still settling");
+    expect(screen.queryByTestId(byNode("tagPage.claim.pending", "p1"))).toBeNull();
+    // The card fuses with the flag: its top-left corner squares (`attach`).
+    expect(screen.getByTestId(byNode("tagPage.card", "p1"))).toHaveClass("rounded-tl-none");
+    expect(screen.getByTestId(byNode("tagPage.commentCard", "c1"))).toHaveClass("rounded-tl-none");
+  });
+
+  // TagPage.md:15 — a tagged comment stands as tagPage.commentCard leading
+  // with the thread it answers.
+  it("a_tagged_comment_stands_as_tagPage_commentCard_leading_with_the_thread_it_answers", async () => {
+    serve("rust", [row(taggedComment("c1"))]);
+    renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+    const card = await screen.findByTestId(byNode("tagPage.commentCard", "c1"));
+    const target = within(card).getByTestId(byNode("tagPage.commentCard.target", "c1"));
+    expect(target).toHaveTextContent("On “Salt maps of the coast road” — @sol");
+    expect(card.firstElementChild).toBe(target);
+    expect(card).toHaveTextContent("nice crate");
+    expect(within(card).getByTestId(byNode("tagPage.commentCard.authorChip", "c1"))).toHaveTextContent("@bob");
+    expect(within(card).getByTestId(byNode("tagPage.commentCard.actionRow.stance.anchor", "c1"))).toBeInTheDocument();
+  });
+
+  // TagPage.md:17 — no Reply and no view-replies line.
+  it("a_tagged_comments_card_offers_no_reply_and_no_view_replies_line", async () => {
+    serve("rust", [row(taggedComment("c1"))]);
+    renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+    const card = await screen.findByTestId(byNode("tagPage.commentCard", "c1"));
+    expect(within(card).queryByRole("link", { name: /reply/i })).toBeNull();
+    expect(within(card).queryByRole("button", { name: /reply/i })).toBeNull();
+    expect(screen.queryByText(/view \d+ repl/i)).toBeNull();
+  });
+
+  // TagPage.md:21 — the pointer names a removed post it answers by its
+  // author's handle, never by its title.
+  it("a_tagged_comments_pointer_names_a_removed_post_by_its_authors_handle", async () => {
+    serve("rust", [
+      row(
+        taggedComment("c1", {
+          target: { ...answersPost("p1", "Salt maps of the coast road", "sol"), removal: REMOVED },
         }),
       ),
-    );
+    ]);
     renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
-    expect(await screen.findByTestId("topic-comment-c1")).toHaveTextContent("nice crate");
-    expect(screen.getByTestId("topic-comment-post-c1")).toHaveAttribute("href", "/posts/p1?from=tag%3Arust");
+    const target = await screen.findByTestId(byNode("tagPage.commentCard.target", "c1"));
+    expect(target).toHaveTextContent("On @sol's removed post");
+    expect(target).not.toHaveTextContent("Salt maps");
+  });
+
+  // TagPage.md:15, the doors: the pointer opens the thread the comment lives
+  // in, the chip the author — each carrying the page and its origin.
+  it("a_tagged_comments_doors_carry_the_page", async () => {
+    serve("rust", [row(taggedComment("c1"))]);
+    renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+    const target = await screen.findByTestId(byNode("tagPage.commentCard.target", "c1"));
+    expect(target).toHaveAttribute("href", "/posts/p1?comment=c1&from=tag%3Arust");
+    expect(screen.getByTestId(byNode("tagPage.commentCard.authorChip", "c1"))).toHaveAttribute(
+      "href",
+      "/u/bob?from=tag%3Arust",
+    );
   });
 });
 
@@ -400,31 +492,18 @@ describe("TopicView — a post card's menu (TagPageMenu.md)", () => {
       avatar: null,
     },
   });
-  const serveTag = () =>
-    server.use(
-      gqlLink.query("HashtagDetail", () =>
-        HttpResponse.json({
-          data: hashtagDetail("rust", [
-            { relevance: 0.1, confidence: 1, pending: false, node: tobiasPost() },
-            { relevance: 0.1, confidence: 1, pending: false, node: { ...postNode("p2", "More Rust"), id: "p2" } },
-          ]),
-        }),
-      ),
-    );
+  const serveTag = () => serve("rust", [row(tobiasPost()), row({ ...postNode("p2", "More Rust"), id: "p2" })]);
   const rows = () =>
     within(screen.getByTestId("tagPage.menuSheet"))
       .getAllByRole("button")
-      .map((row) => [row.getAttribute("data-testid"), row.textContent]);
-  const listed = () =>
-    within(screen.getByTestId("topic-content-list"))
-      .getAllByTestId(/^topic-post-p\d$/)
-      .map((card) => card.getAttribute("data-testid"));
+      .map((sheetRow) => [sheetRow.getAttribute("data-testid"), sheetRow.textContent]);
+  const menuOf = (id: string) => screen.findByTestId(byNode("tagPage.card.menu", id));
 
   it("the_menu_rises_over_the_tag_page_reading_save_cite_hide_license_report", async () => {
     // TagPageMenu.md:3, :5.
     serveTag();
     renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
-    fireEvent.click(await screen.findByTestId("topic-post-p1-menu"));
+    fireEvent.click(await menuOf("p1"));
     expect((screen.getByTestId("tagPage.menuSheet") as HTMLDialogElement).open).toBe(true);
     expect(rows()).toEqual([
       ["tagPage.menuSheet.save", "Save"],
@@ -441,7 +520,7 @@ describe("TopicView — a post card's menu (TagPageMenu.md)", () => {
     // TagPageMenuOwn.md:5.
     serveTag();
     renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
-    fireEvent.click(await screen.findByTestId("topic-post-p2-menu"));
+    fireEvent.click(await menuOf("p2"));
     expect(rows().map(([node]) => node)).toEqual([
       "tagPage.menuSheet.save",
       "tagPage.menuSheet.cite",
@@ -458,7 +537,7 @@ describe("TopicView — a post card's menu (TagPageMenu.md)", () => {
     // TagPageMenu.md:5 with CitedBy.md:5 — over the host, the list beneath.
     serveTag();
     renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
-    fireEvent.click(await screen.findByTestId("topic-post-p1-menu"));
+    fireEvent.click(await menuOf("p1"));
     fireEvent.click(screen.getByTestId("tagPage.menuSheet.citedBy"));
     expect(((await screen.findByTestId("postDetail.citedBySheet")) as HTMLDialogElement).open).toBe(true);
     expect(screen.getByTestId("topic-content-list")).toBeInTheDocument();
@@ -466,32 +545,21 @@ describe("TopicView — a post card's menu (TagPageMenu.md)", () => {
 
   it("a_removed_posts_menu_rises_over_the_tag_page_reading_the_readers_menu_whole", async () => {
     // TagPageRemovedMenu.md:3, :5.
-    server.use(
-      gqlLink.query("HashtagDetail", () =>
-        HttpResponse.json({
-          data: hashtagDetail("rust", [
-            {
-              relevance: 0.1,
-              confidence: 1,
-              pending: false,
-              node: {
-                ...tobiasPost(),
-                title: { __typename: "ModeratedText", value: null, status: "REDACTED" },
-                content: { __typename: "ModeratedText", value: null, status: "REDACTED" },
-                removal: { __typename: "Removal", at: "2026-11-18T10:00:00Z", by: "AUTHOR" },
-              },
-            },
-          ]),
-        }),
-      ),
-    );
+    serve("rust", [
+      row({
+        ...tobiasPost(),
+        title: moderated(null, "REDACTED"),
+        content: moderated(null, "REDACTED"),
+        removal: REMOVED,
+      }),
+    ]);
     // The removed post stands on the tag page only while the feed's stored
-    // filter has Removed on (TagPage.md:19-21).
+    // filter has Removed on (TagPage.md:23-25).
     window.localStorage.clear();
     writeCommittedFeedFilter("u1", { ...FEED_FILTER_DEFAULT, also: ["settling", "removed"] });
     onTestFinished(() => window.localStorage.clear());
     renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
-    fireEvent.click(await screen.findByTestId("topic-post-p1-menu"));
+    fireEvent.click(await menuOf("p1"));
     expect(rows()).toEqual([
       ["tagPage.menuSheet.save", "Save"],
       ["tagPage.menuSheet.cite", "Cite in a new post"],
@@ -509,14 +577,12 @@ describe("TopicView — a post card's menu (TagPageMenu.md)", () => {
     serveTag();
     server.use(...hiddenHandlers(log));
     renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
-    fireEvent.click(await screen.findByTestId("topic-post-p1-menu"));
+    fireEvent.click(await menuOf("p1"));
     fireEvent.click(screen.getByTestId("tagPage.menuSheet.hide"));
     expect(screen.queryByRole("alertdialog")).toBeNull();
-    expect(screen.getByTestId("tagPage.snackbar.message")).toHaveTextContent(
-      "@tobias is hidden.",
-    );
+    expect(screen.getByTestId("tagPage.snackbar.message")).toHaveTextContent("@tobias is hidden.");
     expect(screen.getByTestId("tagPage.snackbar.action")).toHaveTextContent("Undo");
-    expect(listed()).toEqual(["topic-post-p1", "topic-post-p2"]);
+    expect(postCards()).toEqual(["p1", "p2"]);
     await waitFor(() => expect(log.hides).toEqual([{ actor: "t1", at: null }]));
   });
 
@@ -531,13 +597,11 @@ describe("TopicView — a post card's menu (TagPageMenu.md)", () => {
     );
     renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
     await waitFor(() => expect(log.reads).toBe(1));
-    fireEvent.click(await screen.findByTestId("topic-post-p1-menu"));
+    fireEvent.click(await menuOf("p1"));
     await waitFor(() => expect(screen.getByTestId("tagPage.menuSheet.hide")).toHaveTextContent(/^Unhide @tobias$/));
     fireEvent.click(screen.getByTestId("tagPage.menuSheet.hide"));
-    expect(screen.getByTestId("tagPage.snackbar.message")).toHaveTextContent(
-      "@tobias is unhidden.",
-    );
-    expect(listed()).toEqual(["topic-post-p1", "topic-post-p2"]);
+    expect(screen.getByTestId("tagPage.snackbar.message")).toHaveTextContent("@tobias is unhidden.");
+    expect(postCards()).toEqual(["p1", "p2"]);
     await waitFor(() => expect(log.unhides).toEqual(["t1"]));
   });
 
@@ -552,7 +616,7 @@ describe("TopicView — a post card's menu (TagPageMenu.md)", () => {
       }),
     );
     renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
-    fireEvent.click(await screen.findByTestId("topic-post-p1-menu"));
+    fireEvent.click(await menuOf("p1"));
     fireEvent.click(screen.getByTestId("tagPage.menuSheet.report"));
     const confirm = await screen.findByTestId("topic-menu-report-sheet");
     expect(confirm).toHaveAccessibleName("Report this post?");
@@ -564,7 +628,7 @@ describe("TopicView — a post card's menu (TagPageMenu.md)", () => {
     serveTag();
     push.mockClear();
     renderWithProviders(<TopicView name="rust" />, { store: guestStore(), writeSigner: fakeWriteSigner() });
-    fireEvent.click(await screen.findByTestId("topic-post-p1-menu"));
+    fireEvent.click(await menuOf("p1"));
     fireEvent.click(screen.getByTestId("tagPage.menuSheet.cite"));
     expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
     expect(push).not.toHaveBeenCalled();
@@ -573,111 +637,82 @@ describe("TopicView — a post card's menu (TagPageMenu.md)", () => {
 
 // EVERY DOOR OUT OF THE TAG PAGE CARRIES IT AND THE ORIGIN IT WAS OPENED WITH
 // (jakob 2026-11-10, "grandfathering style"; BottomNav.prompt.md: the
-// originating root stays lit on a drill-in): the post, a comment's post, the
+// originating root stays lit on a drill-in): the post, a comment's thread, the
 // author's profile and the score's trace read `Back to #rust` and keep lit the
 // root the page was opened from — Explore's here, the profile's in the chain.
 describe("TopicView — what it opens keeps its origin's root", () => {
-  const comment = {
-    relevance: 0.1,
-    confidence: 1,
-    pending: false,
-    node: {
-      __typename: "Comment",
-      id: "c1",
-      content: moderated("nice crate"),
-      author: {
-        __typename: "User",
-        id: "u2",
-        handle: "bob",
-        displayName: { __typename: "ModeratedText", value: "Bob" },
-        avatar: null,
-      },
-      createdAt: "2026-08-12T10:05:00Z",
-      updatedAt: "2026-08-12T10:05:00Z",
-      landing: { __typename: "Landing", state: "LANDED" },
-      moderationStatus: "NORMAL",
-      removal: null,
-      genesisRecordId: "rec-genesis",
-      target: { __typename: "Post", id: "p1" },
-    },
-  };
-
   it.each([
     ["search", "tag%3Arust%2Fsearch"],
     ["u:ada/saved", "tag%3Arust%2Fu%3Aada%2Fsaved"],
   ])("the_doors_out_of_a_tag_page_opened_from_%s_carry_it", async (from, token) => {
-    server.use(
-      gqlLink.query("HashtagDetail", () =>
-        HttpResponse.json({
-          data: hashtagDetail("rust", [
-            { relevance: 0.1, confidence: 1, pending: false, node: postNode("p1", "About Rust") },
-            comment,
-          ]),
-        }),
-      ),
-    );
+    serve("rust", [row(postNode("p1", "About Rust")), row(taggedComment("c1"))]);
     renderWithProviders(<TopicView name="rust" from={from} />, { writeSigner: fakeWriteSigner() });
-    await screen.findByTestId("topic-post-p1");
+    await screen.findByTestId(byNode("tagPage.card", "p1"));
     expect(screen.getByTestId("topic-post-p1-link")).toHaveAttribute("href", `/posts/p1?from=${token}`);
-    expect(screen.getByTestId("topic-author-p1")).toHaveAttribute("href", `/u/alice?from=${token}`);
-    expect(screen.getByTestId("topic-post-p1-score")).toHaveAttribute(
+    expect(screen.getByTestId(byNode("tagPage.card.authorChip", "p1"))).toHaveAttribute("href", `/u/alice?from=${token}`);
+    expect(screen.getByTestId(byNode("tagPage.card.actionRow.score", "p1"))).toHaveAttribute(
       "href",
       expect.stringContaining(`?from=${token}&`),
     );
-    expect(screen.getByTestId("topic-comment-author-c1")).toHaveAttribute("href", `/u/bob?from=${token}`);
-    expect(screen.getByTestId("topic-comment-post-c1")).toHaveAttribute("href", `/posts/p1?from=${token}`);
+    expect(screen.getByTestId(byNode("tagPage.commentCard.authorChip", "c1"))).toHaveAttribute(
+      "href",
+      `/u/bob?from=${token}`,
+    );
+    expect(screen.getByTestId(byNode("tagPage.commentCard.target", "c1"))).toHaveAttribute(
+      "href",
+      `/posts/p1?comment=c1&from=${token}`,
+    );
   });
 });
 
-// THE TAG PAGE FOLLOWS THE FEED'S REMOVED SWITCH (design round 57;
-// TagPage.md:19-21): a removed tagged post is listed only while the feed's
-// stored filter has `Also show → Removed` on, as the feed's removed card; the
-// page carries no switch of its own.
-describe("TopicView — a removed tagged post follows the feed's Removed switch (TagPage.md:19-21)", () => {
+// THE TAG PAGE FOLLOWS THE FEED'S REMOVED SWITCH (design rounds 57 + 58;
+// TagPage.md:23-25): a removed tagged post or comment is listed only while the
+// feed's stored filter has `Also show → Removed` on — the post as the feed's
+// removed card, the comment as its card with its mark in the words' place —
+// and the page carries no switch of its own.
+describe("TopicView — a removed tagged post or comment follows the feed's Removed switch (TagPage.md:23-25)", () => {
   const removedPost = () => ({
     ...postNode("p1", "Gone"),
-    title: { __typename: "ModeratedText", value: null, status: "REDACTED" },
-    content: { __typename: "ModeratedText", value: null, status: "REDACTED" },
-    removal: { __typename: "Removal", at: "2026-11-18T10:00:00Z", by: "AUTHOR" },
+    title: moderated(null, "REDACTED"),
+    content: moderated(null, "REDACTED"),
+    removal: REMOVED,
   });
-  const serveTag = () =>
-    server.use(
-      gqlLink.query("HashtagDetail", () =>
-        HttpResponse.json({
-          data: hashtagDetail("rust", [
-            { relevance: 0.1, confidence: 1, pending: false, node: removedPost() },
-            { relevance: 0.1, confidence: 1, pending: false, node: postNode("p2", "More Rust") },
-          ]),
-        }),
-      ),
-    );
-  const listed = () =>
-    within(screen.getByTestId("topic-content-list"))
-      .queryAllByTestId(/^topic-post-p\d$/)
-      .map((card) => card.getAttribute("data-testid"));
+  const removedComment = () => taggedComment("c1", { content: moderated(null, "REDACTED"), removal: REMOVED });
+  const serveTag = () => serve("rust", [row(removedPost()), row(postNode("p2", "More Rust")), row(removedComment())]);
 
   beforeEach(() => window.localStorage.clear());
 
-  it("with_removed_off_the_removed_tagged_post_is_not_listed", async () => {
-    // TagPage.md:21 — the feed's filter keeps Removed off (its default).
+  it("with_removed_off_a_removed_tagged_post_or_comment_is_not_listed_and_the_page_carries_no_switch", async () => {
+    // TagPage.md:25 — the feed's filter keeps Removed off (its default).
     serveTag();
     renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
-    await screen.findByTestId("topic-post-p2");
-    expect(listed()).toEqual(["topic-post-p2"]);
+    await screen.findByTestId(byNode("tagPage.card", "p2"));
+    expect(postCards()).toEqual(["p2"]);
+    expect(screen.queryByTestId("tagPage.commentCard")).toBeNull();
     // NEVER a switch of its own: no Removed control stands on the page.
     expect(screen.queryByRole("switch")).toBeNull();
     expect(screen.queryByText(/removed/i)).toBeNull();
   });
 
-  it("with_removed_on_the_removed_tagged_post_stands_in_its_row_as_the_feeds_removed_card", async () => {
-    // TagPage.md:19 — the feed's filter, committed on this device, has Removed on.
+  it("with_removed_on_a_removed_tagged_post_stands_as_the_feeds_removed_card_and_a_comment_with_its_mark", async () => {
+    // TagPage.md:23 — the feed's filter, committed on this device, has Removed on.
     writeCommittedFeedFilter("u1", { ...FEED_FILTER_DEFAULT, also: ["settling", "removed"] });
     serveTag();
     renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
-    await screen.findByTestId("topic-post-p2");
-    expect(listed()).toEqual(["topic-post-p1", "topic-post-p2"]);
-    expect(screen.getByTestId("topic-post-p1-removed")).toHaveTextContent("Removed by its author");
-    expect(screen.getByTestId("topic-post-p1")).not.toHaveTextContent("Gone");
+    await screen.findByTestId(byNode("tagPage.card", "p2"));
+    expect(postCards()).toEqual(["p1", "p2"]);
+    expect(screen.getByTestId(byNode("tagPage.card.removalMark", "p1"))).toHaveTextContent("Removed by its author");
+    expect(screen.getByTestId(byNode("tagPage.card", "p1"))).not.toHaveTextContent("Gone");
+    // The comment under its claim, the mark in the words' place, its author,
+    // its age and its pointer kept.
+    const comment = screen.getByTestId(byNode("tagPage.commentCard", "c1"));
+    expect(within(comment).getByTestId(byNode("tagPage.commentCard.removalMark", "c1"))).toHaveTextContent(
+      "Removed by its author",
+    );
+    expect(comment).not.toHaveTextContent("nice crate");
+    expect(within(comment).getByTestId(byNode("tagPage.commentCard.authorChip", "c1"))).toHaveTextContent("@bob");
+    expect(within(comment).getByTestId(byNode("tagPage.commentCard.target", "c1"))).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("tagPage.claim", "c1"))).toBeInTheDocument();
   });
 
   it("the_readers_saved_default_with_removed_on_admits_it_where_no_filter_is_committed", async () => {
@@ -686,7 +721,152 @@ describe("TopicView — a removed tagged post follows the feed's Removed switch 
     writeReaderDefault("u1", { ...FEED_FILTER_DEFAULT, also: ["settling", "removed"] });
     serveTag();
     renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
-    await screen.findByTestId("topic-post-p2");
-    expect(listed()).toEqual(["topic-post-p1", "topic-post-p2"]);
+    await screen.findByTestId(byNode("tagPage.card", "p2"));
+    expect(postCards()).toEqual(["p1", "p2"]);
+    expect(screen.getByTestId(byNode("tagPage.commentCard", "c1"))).toBeInTheDocument();
+  });
+});
+
+// THE REGISTERED NODES (round 60, seam 380 / 381; nodes.json `TagPage`,
+// `TagPageHeldPad`): a census, not a hand-picked few — every path the
+// registry gives the two boards stands on the rendered page in the state the
+// board draws it, the share staying round 48's `tagPage.actionRow.share`.
+describe("TopicView — the tag page's registered nodes (TagPage, TagPageHeldPad)", () => {
+  const CANONICAL = join(process.cwd(), "..", "design", "designs", "canonical");
+  const REGISTRY = JSON.parse(readFileSync(join(CANONICAL, "nodes.json"), "utf8")) as {
+    screens: Record<string, { nodes: Record<string, string[]> }>;
+  };
+  const registered = (board: string) => Object.keys(REGISTRY.screens[board]!.nodes).filter((path) => path !== "tagPage");
+
+  let layout: ReturnType<typeof fakeClampLayout>;
+  beforeEach(() => {
+    window.localStorage.clear();
+    // The share renders where this browser can share (`useShareCapable`).
+    Object.assign(navigator, { clipboard: { writeText: vi.fn(async () => {}) } });
+    // A caption past its two lines folds under `More` (`clamp-fold.ts`).
+    layout = fakeClampLayout(40);
+  });
+  afterEach(() => layout.restore());
+
+  const picture = (n: number) => ({
+    __typename: "MediaAttachment",
+    id: `m${n}`,
+    url: `https://media.test/${n}.jpg`,
+    altText: null,
+    status: "NORMAL",
+    mimeType: "image/jpeg",
+    options: { __typename: "MediaOptions", aspectRatio: "1:1", durationMs: null },
+    coverMedia: null,
+    coverTaken: false,
+  });
+  // The board's three rows: @tobias's text post under a settling claim, @sol's
+  // two-picture post with its caption and tags, @ada's tagged comment.
+  // The board's posts carry one and two comments, so each count is drawn.
+  const textPost = () => ({
+    ...postNode("p-text", "unused"),
+    title: moderated(null),
+    content: moderated("Low tide at six"),
+    comments: { __typename: "CommentConnection", totalCount: 1 },
+  });
+  const galleryPost = () => ({
+    ...postNode("p-gallery", "Salt maps of the coast road"),
+    comments: { __typename: "CommentConnection", totalCount: 2 },
+    content: moderated(null),
+    description: moderated("Rubbings from three weekends at low tide — paper against the salt crust, the side of a wax stick."),
+    attachments: [picture(1), picture(2)],
+    topics: [
+      {
+        __typename: "TopicClaim",
+        hashtag: { __typename: "Hashtag", id: "h1", name: moderated("fieldnotes") },
+        relevance: 0.4,
+        confidence: 0.9,
+        pending: false,
+      },
+      {
+        __typename: "TopicClaim",
+        hashtag: { __typename: "Hashtag", id: "h2", name: moderated("rust") },
+        relevance: 0.4,
+        confidence: 0.9,
+        pending: false,
+      },
+    ],
+  });
+  const liveRows = () => [row(textPost(), 0.1, 1, true), row(galleryPost(), 0.55, 1), row(taggedComment("c1"), 0.4, 0.9)];
+  const removedRows = () => [
+    row({ ...textPost(), content: moderated(null, "REDACTED"), removal: REMOVED }, 0.1, 1, true),
+    row(taggedComment("c1", { content: moderated(null, "REDACTED"), removal: REMOVED }), 0.4, 0.9),
+  ];
+  const rendered = () =>
+    new Set([...document.querySelectorAll("[data-testid^='tagPage.']")].map((element) => element.getAttribute("data-testid")));
+
+  // The board's cards wear an opinion (`mkBundle(0.1, 0.1)`), so each anchor
+  // draws its exact pair beside the face.
+  const NICE = { pDirected: 0.1, pInterest: 0.1 };
+  const cardStances = { "p-text": NICE, "p-gallery": NICE, c1: NICE };
+
+  async function census(rows: unknown[], removedOn = false): Promise<Set<string | null>> {
+    if (removedOn) writeCommittedFeedFilter("u1", { ...FEED_FILTER_DEFAULT, also: ["settling", "removed"] });
+    server.use(...stanceHandlers(cardStances));
+    serve("rust", rows);
+    const view = renderWithProviders(<TopicView name="rust" />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    await screen.findByTestId("tagPage.header");
+    await screen.findAllByTestId("tagPage.claim");
+    const seen = rendered();
+    view.unmount();
+    return seen;
+  }
+
+  it("every_path_the_registry_gives_TagPage_stands_on_the_page", async () => {
+    const live = await census(liveRows());
+    const removed = await census(removedRows(), true);
+    const missing = registered("TagPage").filter((path) => !live.has(path) && !removed.has(path));
+    expect(missing).toEqual([]);
+  });
+
+  it("every_path_the_registry_gives_TagPageHeldPad_stands_with_the_held_topics_pad_open", async () => {
+    server.use(...stanceHandlers({ ...cardStances, rust: { pDirected: 0.6, pInterest: 0.35, recordCount: 2 } }));
+    serve("rust", liveRows());
+    renderWithProviders(<TopicView name="rust" />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+    await screen.findAllByTestId("tagPage.claim");
+    await waitFor(() => expect(screen.getByTestId("tagPage.actionRow.stance.anchor.exact")).toBeInTheDocument());
+    fireEvent.click(screen.getByTestId("tagPage.actionRow.stance.anchor"));
+    const pad = await screen.findByTestId("tagPage.actionRow.stance.pad");
+    // A pick on the field, so the landing line reads what it would come to.
+    const square = within(pad).getByTestId("tagPage.actionRow.stance.pad.field.square");
+    fireEvent.pointerDown(square, { clientX: 10, clientY: 10, pointerId: 1 });
+    fireEvent.pointerMove(square, { clientX: 20, clientY: 20, pointerId: 1 });
+    fireEvent.pointerUp(square, { clientX: 20, clientY: 20, pointerId: 1 });
+    const seen = rendered();
+    const missing = registered("TagPageHeldPad").filter((path) => !seen.has(path));
+    expect(missing).toEqual([]);
+  });
+
+  it("the_share_stays_tagPage_actionRow_share_and_the_header_stays_tagPage_header", async () => {
+    serve("rust", liveRows());
+    renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+    const header = await screen.findByTestId("tagPage.header");
+    expect(within(header).getByTestId("tagPage.header.back")).toBeInTheDocument();
+    expect(within(header).getByTestId("tagPage.header.title")).toBeInTheDocument();
+    const actionRow = screen.getByTestId("tagPage.actionRow");
+    expect(within(actionRow).getByTestId("tagPage.actionRow.share")).toBeInTheDocument();
+    expect(within(actionRow).getByTestId("tagPage.actionRow.stance")).toBeInTheDocument();
+    expect(screen.queryByTestId("tagPage.share")).toBeNull();
+    // The registry still holds both (append-only).
+    expect(registered("TagPage")).toEqual(expect.arrayContaining(["tagPage.actionRow.share", "tagPage.header"]));
+  });
+
+  it("a_claim_is_keyed_by_the_tagged_things_id_and_every_card_by_its_own", async () => {
+    serve("rust", liveRows());
+    renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+    await screen.findAllByTestId("tagPage.claim");
+    const keys = (path: string) => screen.queryAllByTestId(path).map((element) => element.getAttribute("data-testid-key"));
+    expect(keys("tagPage.claim")).toEqual(["p-text", "p-gallery", "c1"]);
+    expect(keys("tagPage.card")).toEqual(["p-text", "p-gallery"]);
+    expect(keys("tagPage.commentCard")).toEqual(["c1"]);
+    expect(keys("tagPage.card.media.frame")).toEqual(["p-gallery/1", "p-gallery/2"]);
+    expect(keys("tagPage.card.tagsLine.tag")).toEqual(["p-gallery/fieldnotes", "p-gallery/rust"]);
   });
 });

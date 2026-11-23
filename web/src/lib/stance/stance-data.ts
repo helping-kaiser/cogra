@@ -193,6 +193,14 @@ export interface StanceData {
   keyBackedUp(): Promise<boolean | null>;
 
   /**
+   * The handle of the view this reader borrows (`Query.borrowedView`), or
+   * null when their view is their own or the read did not answer. A guest's
+   * wide anchor speaks it (stance-control.md, *A guest's view*: the vantage
+   * law) — a name from the contract's ladder, never a guess.
+   */
+  borrowedViewHandle(): Promise<string | null>;
+
+  /**
    * The kept picks, signed together (KeptPicksSeal.md): each pick prepared
    * toward its own target, then the whole staged set checked against the
    * picks as the seal read them back and signed in one pass — never a pick

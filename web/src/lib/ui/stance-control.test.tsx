@@ -22,6 +22,7 @@ import { declared } from "@/test/css";
 import { byNode } from "@/test/data-node";
 import { renderWithProviders } from "@/test/providers";
 import { CarriedSnackbar } from "./carried-snackbar";
+import { SHIELD_TEST_ID } from "./outside-press";
 import type { DataNode } from "./data-node";
 import { PAD_PARK_INSET_PX, PadParkingProvider } from "./pad-parking";
 import { NO_STANDING_LABEL, SEVERED_LABEL } from "./stance-readout";
@@ -442,6 +443,91 @@ describe("the stance control at rest", () => {
     await settle();
     expect(screen.queryByTestId(`${PREFIX}-words`)).toBeNull();
     expect(screen.getByTestId(`${PREFIX}-resting-exact`)).toHaveTextContent("+0.55 / +0.20");
+  });
+
+  // THE VANTAGE LAW (stance-control.md, *A guest's view*, jakob 2026-10-13/14;
+  // readme §13; TagPage.md:55-57, ProfileOther.md:51-53).
+  describe("a guest's wide anchor names the borrowed view", () => {
+    const words = () => screen.getByTestId(`${PREFIX}-words`);
+    const guestWide = async (options: StubStanceOptions = {}) => {
+      renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} wide />, {
+        stanceData: createStubStanceData(options),
+      });
+      await settle();
+    };
+
+    it("stance_control_md_116_a_guest_reads_the_viewpoints_name_never_your_opinion", async () => {
+      await guestWide({ borrowedView: "genesismod" });
+      expect(words()).toHaveTextContent("@genesismod's opinion");
+      expect(control()).not.toHaveTextContent("Your opinion");
+      // Beside the hollow face.
+      expect(screen.getByTestId(`${PREFIX}-resting-face`)).toHaveTextContent("🫥");
+    });
+
+    it("stance_control_md_116_the_name_comes_from_the_borrowed_view_never_a_fixed_one", async () => {
+      await guestWide({ borrowedView: "mira" });
+      expect(words()).toHaveTextContent("@mira's opinion");
+      expect(control()).toHaveAccessibleName("@mira's stance on this post");
+    });
+
+    it("stance_control_md_116_the_handle_truncates_before_its_s_opinion_which_stays_whole", async () => {
+      await guestWide({ borrowedView: "genesismod" });
+      const handle = screen.getByTestId(`${PREFIX}-words-handle`);
+      const suffix = screen.getByTestId(`${PREFIX}-words-suffix`);
+      expect(handle).toHaveTextContent(/^@genesismod$/);
+      expect(suffix).toHaveTextContent(/^'s opinion$/);
+      // The handle is the one part that gives: it shrinks and ellipsizes…
+      expect(handle.className).toContain("truncate");
+      expect(handle.className).toContain("min-w-0");
+      // …and the suffix never does, so the words always name whose view it is.
+      expect(suffix.className).toContain("flex-none");
+      expect(words().className).toContain("min-w-0");
+      // The row stays one line.
+      expect(words().className).toContain("whitespace-nowrap");
+    });
+
+    it("stance_control_md_118_the_ellipsis_is_print_only_the_accessible_name_keeps_the_full_handle", async () => {
+      const long = "genesismoderator_of_the_whole_graph";
+      await guestWide({ borrowedView: long });
+      expect(control()).toHaveAccessibleName(`@${long}'s stance on this post`);
+      // Drawn, never a second name.
+      expect(words()).toHaveAttribute("aria-hidden", "true");
+    });
+
+    it("a_read_that_names_nobody_draws_the_face_alone_never_your_opinion", async () => {
+      await guestWide({ borrowedView: null });
+      expect(screen.queryByTestId(`${PREFIX}-words`)).toBeNull();
+      expect(control()).not.toHaveTextContent("Your opinion");
+    });
+
+    it("a_server_render_draws_no_words_until_the_reader_is_known", async () => {
+      renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} wide />, {
+        stanceData: createStubStanceData({ borrowedView: "genesismod" }),
+        hydrate: true,
+      });
+      // The first commit reads the session's server snapshot (`resolving`).
+      expect(screen.queryByText("Your opinion")).toBeNull();
+      await settle();
+      expect(words()).toHaveTextContent("@genesismod's opinion");
+    });
+
+    it("a_signed_in_readers_wide_anchor_keeps_your_opinion_whoever_their_feed_borrows", async () => {
+      renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} wide />, {
+        store: signedInStore(),
+        stanceData: createStubStanceData({ borrowedView: "genesismod" }),
+      });
+      await settle();
+      expect(words()).toHaveTextContent(/^Your opinion$/);
+      expect(control()).toHaveAccessibleName("Give your opinion on this post");
+    });
+
+    it("a_guests_narrow_anchor_draws_no_words", async () => {
+      renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} />, {
+        stanceData: createStubStanceData({ borrowedView: "genesismod" }),
+      });
+      await settle();
+      expect(screen.queryByTestId(`${PREFIX}-words`)).toBeNull();
+    });
   });
 
   it("keeps the standing it has when a re-read faults", async () => {
@@ -1121,6 +1207,30 @@ describe("the release that never commits", () => {
         fireEvent.pointerUp(beneath, { pointerId: 3 });
         tail("click", 3);
       });
+      expect(opened).toBe(0);
+    });
+
+    // NOTHING BENEATH LIGHTS FROM THAT PRESS (jakob, 2026-11-23: the share
+    // button beneath lit as if pressed and stayed lit). A touch browser moves
+    // `:hover` to whatever it hit-tests at the tap, so the wash's place is held
+    // by a transparent shield until the gesture's click (`outside-press.ts`).
+    it("holds the wash's place until the gesture's click, so the tap lights nothing beneath", async () => {
+      mount();
+      await settle();
+      await openPad();
+      await release();
+      await act(async () => {
+        fireEvent.pointerDown(screen.getByTestId(`${PREFIX}-scrim`), { pointerId: 3 });
+      });
+      expect(screen.queryByTestId(`${PREFIX}-scrim`)).toBeNull();
+      const shield = screen.getByTestId(SHIELD_TEST_ID);
+      // The wash's own parent (the portal into the body), so its stacking.
+      expect(shield.parentElement).toBe(document.body);
+      await act(async () => {
+        fireEvent.pointerUp(shield, { pointerId: 3 });
+        fireEvent(shield, new PointerEvent("click", { bubbles: true, cancelable: true, pointerId: 3 }));
+      });
+      expect(screen.queryByTestId(SHIELD_TEST_ID)).toBeNull();
       expect(opened).toBe(0);
     });
 

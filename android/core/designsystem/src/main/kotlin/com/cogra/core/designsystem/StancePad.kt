@@ -564,6 +564,12 @@ fun StanceControl(
     /** The pad opened as something in particular; see [StancePadVariant]. */
     variant: StancePadVariant? = null,
     /**
+     * The registered pad of a plain pad (`tagPage.actionRow.stance.pad`,
+     * TagPageHeldPad): the pad and the parts it draws itself wear its paths,
+     * as a variant's [StancePadVariant.padNode] does. A variant's own wins.
+     */
+    padNode: DataNode? = null,
+    /**
      * A host that IS the opening gesture — the vouch card's `Vouch back`
      * (VouchBack.md:31) — draws no resting target of its own: only the pad,
      * whose open state the holder already carries.
@@ -635,6 +641,7 @@ fun StanceControl(
             targetLabel = targetLabel,
             severable = severable,
             variant = variant,
+            padNode = variant?.padNode ?: padNode,
             onKeepPending = onKeepPending,
         )
         if (state.pad == StancePadMode.ALTERNATES) {
@@ -1016,6 +1023,7 @@ private fun StancePadWindow(
     targetLabel: String?,
     severable: Boolean,
     variant: StancePadVariant?,
+    padNode: DataNode?,
     onKeepPending: () -> Unit,
 ) {
     val open = state.pad == StancePadMode.STICKY
@@ -1075,6 +1083,7 @@ private fun StancePadWindow(
                     targetLabel = targetLabel,
                     severable = severable,
                     variant = variant,
+                    padNode = padNode,
                     onKeepPending = onKeepPending,
                 )
             }
@@ -1099,9 +1108,10 @@ private fun StancePadCard(
     targetLabel: String?,
     severable: Boolean,
     variant: StancePadVariant?,
+    /** The registered pad: the variant's, else the plain pad's own. */
+    padNode: DataNode?,
     onKeepPending: () -> Unit,
 ) {
-    val padNode = variant?.padNode
     val helpLabel = variant?.title ?: stringResource(R.string.stance_explain)
     val padName = variant?.title ?: stringResource(R.string.stance_pad_name, targetWords(targetLabel))
     var explaining by rememberSaveable { mutableStateOf<Explaining?>(null) }
@@ -1139,6 +1149,7 @@ private fun StancePadCard(
                     zeroWords = zeroWords,
                     targetLabel = targetLabel,
                     variant = variant,
+                    padNode = padNode,
                 )
                 PadFoot(
                     state = state,
@@ -1181,8 +1192,8 @@ private fun PadBody(
     zeroWords: StanceZeroWords,
     targetLabel: String?,
     variant: StancePadVariant?,
+    padNode: DataNode?,
 ) {
-    val padNode = variant?.padNode
     val back = stringResource(R.string.stance_explain_back)
     val backTag = padNode?.div("back")?.tag ?: "${testTagPrefix}_stance_explain_back"
     StanceStanding(

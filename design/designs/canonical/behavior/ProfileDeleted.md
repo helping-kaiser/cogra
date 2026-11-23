@@ -28,7 +28,7 @@ ALWAYS the actions row reads the opinion on the account, worn wide, then the ⋮
 
 ALWAYS the two opinion figures are two doors and the Posts figure is no door, each door spoken as its figure's number and visible words and nothing more, as on another's profile
 
-ALWAYS profile.identity.figures.posts counts every post the account published, a removed one included, and never an edit, so the figure and profile.posts agree, its contents kept or removed
+ALWAYS profile.identity.figures.posts counts every post the account published, a removed one and a still-settling one included, and never an edit, so the figure and profile.posts agree, its contents kept or removed
 
 ALWAYS the wide anchor's accessible name says this account and never a handle
 
@@ -65,6 +65,8 @@ WHEN tap profile.tabRow.postsTab GIVEN another tab is lit -> the account's posts
 WHEN tap profile.tabRow.commentsTab -> the account's comments stand below profile.tabRow as comment cards AND the header above stays as it was
 
 WHEN tap a chronicle card for a published post -> the post's detail opens AND its back arrow reads Back to the profile
+
+WHEN tap a chronicle card for a tag or a citation of a post -> the tagged or cited post's detail opens AND its back arrow reads Back to the profile
 
 WHEN tap a chronicle card whose post or comment was removed -> it opens where the card opens for the act, the removed thing standing there as its mark
 

@@ -973,7 +973,9 @@ const OWN_PROFILE_MENU = [
   { label: "Share your profile", onSelect: () => {}, node: "share" },
 ];
 
-/* A device-local recent query — a quiet row, never a record (readme §13).
+/* A device-local recent query — a quiet row, never a record (readme §13), on
+   one line: a query too long for it, a 128-character tag among them, ends in
+   "…" (round 62; jakob 2026-11-23, no wrapping for tags in lists).
    Named by its placer (design ⇄ impl seam 062/063): `Explore` registers each
    row as `recent`, keyed by its query's words, with its `glyph` and `query`. */
 function RecentRow({ text, node, nodeKey }) {
@@ -1001,7 +1003,7 @@ function RecentRow({ text, node, nodeKey }) {
       <span style={{ display: "inline-flex", color: "var(--text-secondary)" }} data-node={node && "glyph"}>
         <Icon name="search" size={18} />
       </span>
-      <span style={{ fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node && "query"}>
+      <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node && "query"}>
         {text}
       </span>
     </button>
@@ -1172,10 +1174,25 @@ function ChronicleList({ children, node }) {
    `removed` draws the act one way: `false` live, `true` removed, or a chip —
    `{ chip, live, removed }`, the chip's name and the two values the board's
    VALS hand it — both copies behind the chip, the act keyed by its position
-   in each, as `ProfilePosts`' card is by its id. */
-const CHRONICLE_CHIP = { chronicle: { editor: "enum", options: ["some", "removed"], default: "some" } };
-const CHRONICLE_VALS = `chronicleLive: this.props.chronicle === "removed" ? "none" : "contents", chronicleRemoved: this.props.chronicle === "removed" ? "contents" : "none"`;
+   in each, as `ProfilePosts`' card is by its id.
+
+   A PENDING ACT ON THE EVERYTHING TAB (round 61; jakob 2026-11-19, B2 (a):
+   "the profile should not lag behind just because sth is still settling"),
+   on every profile: the act stands among the landed ones, its age `now`, and
+   `ContentRow`'s own `pending` marker reads `Still settling` under the age —
+   the chronicle's rule ("Still settling where an act pends", above), as
+   `ProfilePosts`' `settling` draws the post. The chip object's `settling`
+   pair draws that copy beside the live one; `removed` may be absent, so an
+   act carries only the copies its board draws. */
+const CHRONICLE_CHIP = { chronicle: { editor: "enum", options: ["some", "removed", "settling"], default: "some" } };
+const CHRONICLE_VALS = `chronicleLive: this.props.chronicle === "removed" ? "none" : "contents", chronicleRemoved: this.props.chronicle === "removed" ? "contents" : "none", chronicleSteady: this.props.chronicle === "some" ? "contents" : "none", chronicleUnsettled: this.props.chronicle === "settling" ? "none" : "contents", chronicleSettling: this.props.chronicle === "settling" ? "contents" : "none"`;
 const CHRONICLE_REMOVED = { chip: "chronicle", live: ["some", "{{chronicleLive}}"], removed: ["removed", "{{chronicleRemoved}}"] };
+/* The own chronicle's newest act carries both: removed (round 58) and
+   settling (round 61). Another's newest act carries the settling copy alone,
+   its 5d act the removed one — a pending act stands at the head, newest
+   first. */
+const CHRONICLE_OWN_FIRST = { chip: "chronicle", live: ["some", "{{chronicleSteady}}"], removed: ["removed", "{{chronicleRemoved}}"], settling: ["settling", "{{chronicleSettling}}"] };
+const CHRONICLE_SETTLING = { chip: "chronicle", live: ["some", "{{chronicleUnsettled}}"], settling: ["settling", "{{chronicleSettling}}"] };
 function ChronicleAct({ removed = false, second, ...row }) {
   if (removed === true) return <ContentRow {...row} second="Removed by its author" />;
   if (!removed) return <ContentRow {...row} second={second} />;
@@ -1184,9 +1201,16 @@ function ChronicleAct({ removed = false, second, ...row }) {
       <div style={{ display: removed.live[1] }} data-node-chip={removed.chip} data-node-key={removed.live[0]}>
         <ContentRow {...row} second={second} />
       </div>
-      <div style={{ display: removed.removed[1] }} data-node-chip={removed.chip} data-node-key={removed.removed[0]}>
-        <ContentRow {...row} second="Removed by its author" />
-      </div>
+      {removed.removed && (
+        <div style={{ display: removed.removed[1] }} data-node-chip={removed.chip} data-node-key={removed.removed[0]}>
+          <ContentRow {...row} second="Removed by its author" />
+        </div>
+      )}
+      {removed.settling && (
+        <div style={{ display: removed.settling[1] }} data-node-chip={removed.chip} data-node-key={removed.settling[0]}>
+          <ContentRow {...row} second={second} trailing="now" pending />
+        </div>
+      )}
     </>
   );
 }
@@ -1333,7 +1357,39 @@ function ProfileTabs({ tab = "posts", posts, chronicle }) {
     </>
   );
 }
-function ProfileOwnBody({ tail = null, headLine = null, tab = "posts", chronicle = false }) {
+/* AN ACT WHOSE TARGET WAS REMOVED (round 61; the pointer rule blessed
+   2026-11-19, round 58's chronicle rule): an opinion, a tag or a citation on
+   a post keeps its verb, its aside and its disc, and its second line reads
+   `Removed by its author` where the post's title would stand — never the
+   title. A deleted account's post reads the same: kept, its title, as any
+   post's; swept, the mark. `Profile`'s `act` chip draws the three on the
+   third act — `opinion` the act as drawn, on @mira — each copy the act keyed
+   by its position. The opinion's act stays inert; a tag's or a citation's
+   act opens the tagged or cited post, its mark there once removed (round 62;
+   jakob 2026-11-23, B2 (a)), as `Published a post` opens its post — a card
+   with somewhere to go is a button. */
+const ACT_CHIP = { act: { editor: "enum", options: ["opinion", "opinion-removed", "tag-removed", "citation-removed"], default: "opinion" } };
+const ACT_VALS = `actOpinion: this.props.act === "opinion" ? "contents" : "none", actOpinionRemoved: this.props.act === "opinion-removed" ? "contents" : "none", actTagRemoved: this.props.act === "tag-removed" ? "contents" : "none", actCitationRemoved: this.props.act === "citation-removed" ? "contents" : "none"`;
+function ChronicleTargetActs() {
+  const act = { variant: "chronicle", chevron: false, trailing: "5d", inert: true, node: "act", nodeKey: "3" };
+  return (
+    <>
+      <div style={{ display: "{{actOpinion}}" }} data-node-chip="act" data-node-key="opinion">
+        <ContentRow {...act} face={{ pDirected: 0.4, pInterest: 0.5 }} title="Gave an opinion" titleAside="on @mira" />
+      </div>
+      <div style={{ display: "{{actOpinionRemoved}}" }} data-node-chip="act" data-node-key="opinion-removed">
+        <ContentRow {...act} face={{ pDirected: 0.4, pInterest: 0.5 }} title="Gave an opinion" titleAside="on a post" second="Removed by its author" />
+      </div>
+      <div style={{ display: "{{actTagRemoved}}" }} data-node-chip="act" data-node-key="tag-removed">
+        <ContentRow {...act} inert={false} onOpen={() => {}} letter="#" title="Tagged a post" titleAside="#saltmaps" second="Removed by its author" />
+      </div>
+      <div style={{ display: "{{actCitationRemoved}}" }} data-node-chip="act" data-node-key="citation-removed">
+        <ContentRow {...act} inert={false} onOpen={() => {}} glyph="dynamic_feed" title="Cited a post" second="Removed by its author" />
+      </div>
+    </>
+  );
+}
+function ProfileOwnBody({ tail = null, headLine = null, tab = "posts", chronicle = false, act = false }) {
   return (
     <>
       <ProfileBand node="band" />
@@ -1370,7 +1426,7 @@ function ProfileOwnBody({ tail = null, headLine = null, tab = "posts", chronicle
             <ChronicleList node="chronicle">
               <ChronicleAct removed={chronicle} variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="3d" second="Salt maps of the coast road — rubbings from three weekends at low tide." onOpen={() => {}} node="act" nodeKey="1" />
               <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="4d" second="The third headland light is real — I have a print from 2019 that almost catches it." onOpen={() => {}} node="act" nodeKey="2" />
-              <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.4, pInterest: 0.5 }} title="Gave an opinion" titleAside="on @mira" trailing="5d" inert node="act" nodeKey="3" />
+              {act ? <ChronicleTargetActs /> : <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.4, pInterest: 0.5 }} title="Gave an opinion" titleAside="on @mira" trailing="5d" inert node="act" nodeKey="3" />}
               <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="7d" second="Three weekends of walking the same stretch at low tide." onOpen={() => {}} node="act" nodeKey="4" />
               <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated your profile" trailing="14d" inert node="act" nodeKey="5" />
               {tail}
@@ -1397,7 +1453,7 @@ function ProfileOwnBody({ tail = null, headLine = null, tab = "posts", chronicle
 
    Named as `ProfileOwnBody` names its page, under the same `profile` prefix:
    `ProfileOther` and `ProfileMenu` register it. */
-function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "Ada Okonkwo", nameSize, nameLineHeight, tab = "posts", chronicle = false, aside = false } = {}) {
+function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "Ada Okonkwo", nameSize, nameLineHeight, tab = "posts", chronicle = false, aside = false, vantageHoles } = {}) {
   return (
     <>
       <PageHeader title="@ada" backHref="#" backLabel={backLabel} node="header" />
@@ -1415,6 +1471,8 @@ function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "A
             stancesOn={6}
             stancesTaken={6}
             bundle={bundle}
+            vantage={vantageHoles ? GUEST_VANTAGE : undefined}
+            vantageHoles={vantageHoles}
             onCounts={() => {}}
             onCommit={() => {}}
             onMessage={() => {}}
@@ -1427,7 +1485,7 @@ function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "A
           posts={<PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />}
           chronicle={
             <ChronicleList node="chronicle">
-              <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="2h" second="The long way home — the light does something at the third headland." onOpen={() => {}} node="act" nodeKey="1" />
+              <ChronicleAct removed={chronicle ? CHRONICLE_SETTLING : false} variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="2h" second="The long way home — the light does something at the third headland." onOpen={() => {}} node="act" nodeKey="1" />
               <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="1d" second="The glovebox camera earns its keep — this is the print from 2019." onOpen={() => {}} node="act" nodeKey="2" />
               {aside ? (
                 <>
@@ -1439,6 +1497,17 @@ function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "A
                       `a deleted account`, the handle never printed. */}
                   <div style={{ display: "{{asideDeleted}}" }} data-node-chip="aside" data-node-key="deleted">
                     <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Gave an opinion" titleAside="on a deleted account" trailing="2d" inert node="act" nodeKey="3" />
+                  </div>
+                  {/* The two verbs that take the person bare (round 62; jakob
+                      2026-11-23, B3 (a)): the fragment alone, no `on`. The
+                      mention's disc is the person's picture, so the reserved
+                      disc stands in it (`ContentRow`'s `discRedacted`); the
+                      vouch's is the record's face, as the opinion's. */}
+                  <div style={{ display: "{{asideMentioned}}" }} data-node-chip="aside" data-node-key="mentioned-deleted">
+                    <ContentRow variant="chronicle" chevron={false} discRedacted title="Mentioned" titleAside="a deleted account" trailing="2d" inert node="act" nodeKey="3" />
+                  </div>
+                  <div style={{ display: "{{asideVouched}}" }} data-node-chip="aside" data-node-key="vouched-deleted">
+                    <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Vouched for" titleAside="a deleted account" trailing="2d" inert node="act" nodeKey="3" />
                   </div>
                 </>
               ) : (
@@ -1812,7 +1881,7 @@ const citedOneRow = (fault) => ({
    would serve one of them badly. */
 const tagsRow = (count) => ({
   label: "Tags",
-  value: `${count} tags`,
+  value: count === 1 ? "1 tag" : `${count} tags`,
   count: String(count),
   countNoun: "tag",
   onOpen: () => {},
@@ -1830,6 +1899,23 @@ const SEAL_TAGS_MANY = ["fieldnotes", "coastroad", "saltmaps", "tidal", "estuary
    where the drawing stops being readable. */
 const TAGS_ROW_HOLDS = 2;
 
+/* THE ROW COUNTS WHEN THE CHIPS STOP FITTING (readme, the seal's Tags row;
+   round 62): at most two chips, and only while they fit the value slot whole —
+   a readout chip is never cut, so one tag too long for the slot (a name up to
+   128 characters) folds the row to `1 tag`, as a card's tags line falls to
+   its words. A static drawing cannot measure, so the board judges fit on the
+   strings, measured (round 62, `ComposeSeal`: 181px at 360, so 211px in the
+   390 frame); a readout chip costs 16px of padding and at most 6.5px a character
+   (`#fieldnotes` 78px, `#coastroad` 78px), 6px between two. The clients run
+   the same fold measured. */
+const SEAL_TAGS_SLOT_PX = 211;
+const SEAL_TAG_CHAR_PX = 6.5;
+const SEAL_TAG_PILL_PX = 16;
+const SEAL_TAG_GAP_PX = 6;
+const sealTagsFit = (tags) =>
+  tags.length <= TAGS_ROW_HOLDS &&
+  tags.reduce((width, tag, index) => width + (index ? SEAL_TAG_GAP_PX : 0) + SEAL_TAG_PILL_PX + (tag.length + 1) * SEAL_TAG_CHAR_PX, 0) <= SEAL_TAGS_SLOT_PX;
+
 /* THE TAGS ROW IN EITHER READING, for a staged set: the chips while they fit,
    the count and its door past that. ONE FACTORY FOR BOTH SEALS, `citedRow`'s
    reason — the reply seal reads its staged tags as the post seal does (seam
@@ -1840,7 +1926,7 @@ const TAGS_ROW_HOLDS = 2;
    the unlanded citation's row (`citedOneRow`'s `fault`), at the Tags row. */
 const SEAL_UNLANDED_TAG = "This tag didn't land.";
 const sealTagsRow = (tags, fault) =>
-  tags.length > TAGS_ROW_HOLDS
+  !sealTagsFit(tags)
     ? tagsRow(tags.length)
     : {
         label: "Tags",
@@ -3033,6 +3119,16 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
               </div>
               <div style={{ display: "{{postRemovedShown}}" }} data-node-chip="post" data-node-key="removed">
                 <QuietNote node="target">Your comment on @ada's removed post.</QuietNote>
+              </div>
+              {/* A deleted account's post (round 61; the pointer rule blessed
+                  2026-11-19): kept, it keeps its title — its stand-in here —
+                  and the line, which prints no handle, reads as for any post;
+                  swept, it is named by kind and `a deleted account`. */}
+              <div style={{ display: "{{postDeletedShown}}" }} data-node-chip="post" data-node-key="deleted">
+                <QuietNote node="target">Your comment on "Three mornings on the wall…".</QuietNote>
+              </div>
+              <div style={{ display: "{{postSweptShown}}" }} data-node-chip="post" data-node-key="swept">
+                <QuietNote node="target">Your comment on a deleted account's removed post.</QuietNote>
               </div>
             </>
           ) : (
@@ -5195,12 +5291,24 @@ const AFFINITY_AXES = {
    48, seam 320-16): `actionRow`, the wide anchor `stance` — `StanceControl`'s
    anatomy, its open pad `stance.pad.*` — and `share`, as the profile's head
    names its row (`profile.identity.actionRow.stance`). */
-function TopicStanceRow({ name, bundle, stanceOpen, stanceDefaultPick, node }) {
+/* A GUEST'S BORROWED VIEW ON THE WIDE ANCHOR (round 62, seam 404.3): the
+   `reader` chip a page draws a guest with, `ReplyEntry`'s grammar. Its `guest`
+   names the borrowed view in the topic's or the person's wide anchor —
+   `@genesismod's opinion` (TagPage.md, ProfileOther.md), the handle cut
+   first — through `StanceControl`'s `vantageHoles`, so the anchor's paths
+   stay one; the faces stay as drawn (the hollow face where no stance is). */
+const GUEST_VANTAGE = "genesismod";
+const READER_CHIP = { reader: { editor: "enum", options: ["member", "guest"], default: "member" } };
+const READER_VALS = `readerMember: this.props.reader === "guest" ? "none" : "inline", readerGuest: this.props.reader === "guest" ? "flex" : "none"`;
+const READER_HOLES = { guest: "{{readerGuest}}", member: "{{readerMember}}" };
+function TopicStanceRow({ name, bundle, stanceOpen, stanceDefaultPick, vantageHoles, node }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", padding: "4px 16px 8px" }} data-node={node}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <StanceControl
           wide
+          vantage={vantageHoles ? GUEST_VANTAGE : undefined}
+          vantageHoles={vantageHoles}
           targetLabel={name}
           axes={AFFINITY_AXES}
           bundle={bundle}
@@ -5241,7 +5349,16 @@ function TopicStanceRow({ name, bundle, stanceOpen, stanceDefaultPick, node }) {
    each post `card` and the comment `commentCard`, keyed by their ids as on
    every host. A row the board draws both ways marks each copy as its chip's
    (`post`, `comment`), the card keeping its own key in both (ruling 39). */
-function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, removed, commentRemoved, ownComment, scrolledBy = 0 } = {}) {
+/* A comment's media as the thread draws it (`ReplyMedia`): two pictures, and a
+   clip. Spelled once, so the tag page's tagged comment wears the same. */
+const REPLY_MEDIA_CLIP = [
+  { kind: "video", src: "comment-clip.mp4", poster: "comment-camera.jpg", ratio: "square", fit: "cover", alt: "A film camera panning across the headland at low light." },
+];
+const REPLY_MEDIA_PICTURES = [
+  { src: "gallery-market.jpg", ratio: "4 / 3", fit: "cover", alt: "Crates of strawberries on a market stand." },
+  { src: "gallery-honey.jpg", ratio: "1 / 1", fit: "cover", alt: "A jar of honey in low sun." },
+];
+function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, removed, commentRemoved, ownComment, scrolledBy = 0, vantageHoles } = {}) {
   /* @ada's tagged comment, live and removed (round 58; jakob 2026-11-18, C4
      "as rec"): removed, `CommentCard`'s own mark in the words' place, as
      `ProfileComments`' `removed` draws this same comment — its author, its
@@ -5255,6 +5372,13 @@ function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, rem
   const copy = (chip, value) => (named ? { "data-node-chip": chip, "data-node-key": value } : null);
   const adaLive = <CommentCard attach id={ADA_TAGGED_COMMENT_ID} author={ADA} content="Low tide is kinder to the rubbings than noon ever was." timestamp="4d" license={{ attribution: 0, provenance: 0 }} bundle={mkBundle(0.1, 0.1)} target={solTarget} onOpenTarget={() => {}} menuItems={readerCommentCardMenu("ada")} node={commentCard} />;
   const adaRemoved = <CommentCard attach id={ADA_TAGGED_COMMENT_ID} author={ADA} timestamp="4d" redacted={{ reason: "author", when: "2h" }} bundle={mkBundle(0.1, 0.1)} target={solTarget} onOpenTarget={() => {}} menuItems={readerCommentCardMenu("ada")} node={commentCard} />;
+  /* @ada's tagged comment with pictures and with a clip (round 62, seam
+     403.1): the comment card as the thread draws a comment's media
+     (`ReplyMedia`'s two pictures and its clip), so the tag page registers
+     `commentCard.media` and its parts by the thread's names. */
+  const adaMedia = (media) => <CommentCard attach id={ADA_TAGGED_COMMENT_ID} author={ADA} content="Low tide is kinder to the rubbings than noon ever was." timestamp="4d" media={media} license={{ attribution: 0, provenance: 0 }} bundle={mkBundle(0.1, 0.1)} target={solTarget} onOpenTarget={() => {}} menuItems={readerCommentCardMenu("ada")} node={commentCard} />;
+  const adaPictures = adaMedia(REPLY_MEDIA_PICTURES);
+  const adaClip = adaMedia(REPLY_MEDIA_CLIP);
   const solOwnTarget = `“${MIRA_GALLERY_POST.title}” — @mira`;
   const solOwnComment =
     ownComment === "removed" ? (
@@ -5265,7 +5389,7 @@ function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, rem
   const tobiasLive = <PostCard attach {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} node={card} />;
   const tobiasRemoved = <PostCard attach id={TOBIAS_POST.id} author={TOBIAS} timestamp={TOBIAS_POST.timestamp} redacted={{ reason: "author", when: "now" }} score={TOBIAS_POST.score} comments={TOBIAS_POST.comments} bundle={mkBundle(0.1, 0.1)} menuItems={TOBIAS_POST.menuItems} node={card} />;
   const commentId = ownComment ? SOL_OWN_COMMENT.id : ADA_TAGGED_COMMENT_ID;
-  const stanceRow = <TopicStanceRow name="#saltmaps" bundle={bundle} stanceOpen={stanceOpen} stanceDefaultPick={stanceDefaultPick} node={named ? "actionRow" : undefined} />;
+  const stanceRow = <TopicStanceRow name="#saltmaps" bundle={bundle} stanceOpen={stanceOpen} stanceDefaultPick={stanceDefaultPick} vantageHoles={vantageHoles} node={named ? "actionRow" : undefined} />;
   const list = (
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "4px 0 0" }}>
         <TaggedRow pair={{ pDirected: 0.1, pInterest: 1 }} pending node={claim} nodeKey={TOBIAS_POST.id}>
@@ -5290,6 +5414,8 @@ function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, rem
             <>
               <div style={{ display: "{{commentLive}}" }} {...copy("comment", "live")}>{adaLive}</div>
               <div style={{ display: "{{commentRemoved}}" }} {...copy("comment", "removed")}>{adaRemoved}</div>
+              <div style={{ display: "{{commentPictures}}" }} {...copy("comment", "pictures")}>{adaPictures}</div>
+              <div style={{ display: "{{commentClip}}" }} {...copy("comment", "clip")}>{adaClip}</div>
             </>
           ) : commentRemoved === "ada" ? adaRemoved : adaLive}
         </TaggedRow>
@@ -5678,8 +5804,10 @@ function ProfileTabFirstPage({ top = 8, kind = "posts" }) {
 /* A PROFILE'S POSTS OR COMMENTS VIEW, ITS TOP VIEWPORT (round 36): the page
    `ProfilePosts` and `ProfileComments` draw — @ada's — or the reader's own,
    whose header is `ProfileOwnBody`'s; the tab row lit on `tab`, the list named
-   `posts` or `comments` as those boards name it, holding the cards handed in. */
-function ProfileTabTop({ own = false, tab, children }) {
+   `posts` or `comments` as those boards name it, holding the cards handed in.
+   `posts` is the Posts figure, which counts what the Posts list holds (readme
+   §7): a board whose list it empties hands the figure in with it. */
+function ProfileTabTop({ own = false, tab, posts, children }) {
   return (
     <>
       {own ? <ProfileBand node="band" /> : <PageHeader title="@ada" backHref="#" backLabel="Back to feed" node="header" />}
@@ -5692,7 +5820,7 @@ function ProfileTabTop({ own = false, tab, children }) {
               displayName="Sol Ferreira"
               bio="Field notes from the flats — salt, paper, and whatever the wind allows."
               website="solferreira.art"
-              posts={5}
+              posts={posts ?? 5}
               stancesOn={5}
               stancesTaken={5}
               own
@@ -5710,7 +5838,7 @@ function ProfileTabTop({ own = false, tab, children }) {
               displayName="Ada Okonkwo"
               avatarSrc="comment-camera.jpg"
               bio="A dozen tries at the third headland light and counting."
-              posts={12}
+              posts={posts ?? 12}
               stancesOn={6}
               stancesTaken={6}
               onCounts={() => {}}
