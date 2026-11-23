@@ -104,7 +104,6 @@ import { ShareButton } from "./share-button";
 import { StanceControl } from "./stance-control";
 import { shortTimestamp } from "./timestamp";
 import { TopicsLine } from "./topics-line";
-import { NO_REACH_LINE } from "./transport-error";
 import { WRITTEN } from "./written";
 
 /* A LONG COMMENT FOLDS AT TWO LINES under `More` (FeedCommentShapes.md:29,
@@ -164,25 +163,15 @@ export type CommentTargetView =
     };
 
 /**
- * The comment's own folds — its topics and its citations. A host may leave
- * them out of its read, as the tag page does: two fold lists of fifty a row
- * would price its list past the query budget (`list_cost` × `fold_cost`), and
- * its card draws no topics line (TagPage.jsx: the comment is handed none).
+ * A comment as its feed card reads it: the comment whole (`CommentFields`, its
+ * topics and citations included, which its tags line draws and its Edit starts
+ * from), what it answers, its thread's post. Every host reads it so — the tag
+ * page too, through its own `TaggedComments` read.
  */
-type CommentFolds = "topics" | "references";
-
-/** A comment as its feed card reads it: the thread's own fields, what it answers, its thread's post. */
-export type CommentFeedView = Omit<CommentFieldsFragment, CommentFolds> &
-  Partial<Pick<CommentFieldsFragment, CommentFolds>> & {
-    readonly target?: CommentTargetView | null;
-    readonly post?: { readonly id: string } | null;
-  };
-
-/** The comment whole, where its read carried both folds. */
-function wholeComment(comment: CommentFeedView): CommentFieldsFragment | null {
-  const { topics, references } = comment;
-  return topics === undefined || references === undefined ? null : { ...comment, topics, references };
-}
+export type CommentFeedView = CommentFieldsFragment & {
+  readonly target?: CommentTargetView | null;
+  readonly post?: { readonly id: string } | null;
+};
 
 function text(field: Moderated): string {
   return field === null || field === undefined || field.status === "REDACTED" ? "" : (field.value ?? "").trim();
@@ -432,23 +421,11 @@ export function CommentFeedCard({
     });
   };
   // THE EDITOR STARTS FROM THE COMMENT WHOLE — its topics and citations are
-  // what it edits against. A host that read the card without its folds (the
-  // tag page) has the comment read whole first; a read that gets no answer
-  // opens nothing and says so on the host's snackbar.
+  // what it edits against — and every host hands the card the comment whole.
   const openEdit =
     !own || openEditDoor === null || target === null || editThread === null
       ? undefined
-      : () => {
-          const whole = wholeComment(comment);
-          if (whole !== null) {
-            openEditWith(whole);
-            return;
-          }
-          void fetchComment(client, comment.id).then((outcome) => {
-            if (outcome.kind === "success" && outcome.value !== null) openEditWith(outcome.value);
-            else onNotify(NO_REACH_LINE);
-          });
-        };
+      : () => openEditWith(comment);
 
   // THE COMMIT SENDS THE MAIL; refused or unanswered, the sheet stays and the
   // snackbar never claims a report that did not go out (ReportConfirm.md:13-17).
@@ -689,16 +666,18 @@ export function CommentFeedCard({
           {unfolded ? "Less" : "More"}
         </button>
       )}
-      {/* A host that read no folds hands the card no topics, and the card
-          draws no line for them (`CommentCard`'s `topics = []`). */}
-      {!redacted && comment.topics !== undefined && (
+      {/* THE ONE LINE A COMMENT CARD WEARS (`CommentCard.jsx`): two chips,
+          then the counts. It wears its host's registered node
+          (`feed.commentCard.tagsLine`, `tagPage.commentCard.tagsLine`). */}
+      {!redacted && (
         <TopicsLine
           topics={comment.topics.map((claim) => ({
             name: claim.hashtag.name.value ?? "",
             pending: claim.pending,
           }))}
-          references={comment.references?.length ?? 0}
+          references={comment.references.length}
           testIdPrefix={testId}
+          node={part(node, "tagsLine")}
           from={from}
         />
       )}

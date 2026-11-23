@@ -2721,7 +2721,8 @@ words. A record is one row, whatever gesture signed it.
   thing*). The disc is the record's own face; a revision is one more opinion given and reads the same, and
   an empty sign is one too, wearing 🤷.
 - **A vouch** — the opinion that vouched someone in: `Vouched for`,
-  the aside `@rafa`, the disc the record's face. A later opinion on the
+  the aside `@rafa` — `a deleted account` once that account is gone — the
+  disc the record's face. A later opinion on the
   same person is `Gave an opinion`.
 - **A walk-back** — every record a walk-back signs: `Walked back an
   opinion`, the aside the target as above, the disc 🤷 — never the
@@ -2734,7 +2735,8 @@ words. A record is one row, whatever gesture signed it.
 - **A citation** — `Cited a post` · `Cited a comment`, the cited
   thing's title or words under it — `Removed by its author` in their
   place once it was removed — the disc that thing's own glyph; a
-  person cited `Mentioned`, the aside `@ada`, the disc their avatar; one
+  person cited `Mentioned`, the aside `@ada` — `a deleted account` once
+  that account is gone — the disc their avatar; one
   taken back `Withdrew a citation`, the cited thing under it.
 - **The profile** — the first record, the account's own registration,
   `Joined`; every later one `Updated your profile` · `Updated their
@@ -3444,6 +3446,14 @@ sentences, all present tense of the act that happened:
   readout for a bundle walked back to zero, the opinion row's sibling —
   🫥 keeps meaning only *no opinion yet*.
 
+**A deleted account's row opens `A deleted account`** (jakob 2026-11-23,
+B4 (a); *new 2026-11-23*): the fragment capitalised at the sentence's head
+in the actor's place, the rest of each sentence as it stands, the empty
+disc in the picture's place and a face kept — `A deleted account cited
+your post`, and the same for every kind (`Notifications`' `actor` chip). A
+mention's piece that went with the account reads `in a deleted account's
+removed post` (*Naming a removed or deleted thing*).
+
 **The second line is what arrived, or where it is.** The comment's and
 the reply's own words for the two that carry words; `in <title>` for the
 mention and the citation, the saved comment row's `on <title>`
@@ -3796,7 +3806,9 @@ mark's line where the title or words were and `Deleted account` where the
 handle was (`Removed by its author` over `Deleted account`; `@tobias` or
 `Deleted account` over `Removed by its author` for a comment). A
 chronicle aside on an account since deleted reads `on a deleted account`
-(`ProfileOther`'s `aside`). The same naming reaches every line that
+(`ProfileOther`'s `aside`); where the verb takes the person bare, the aside
+is the fragment alone, `Mentioned` `a deleted account` and `Vouched for` `a
+deleted account` (jakob 2026-11-23, B3 (a)). The same naming reaches every line that
 names a target in words: the comment edit's line (*The comment edit*),
 the chronicle's opinion, tag and citation rows (`Removed by its author`
 where the title would stand), a reference or citing row (the mark in the
