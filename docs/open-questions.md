@@ -125,16 +125,17 @@ model that our docs nowhere pin down:
 Neither blocks documenting the resolved design; both gate its
 implementation.
 
-**Edition-4 status (PN v0.23.2-dev):** L1 now specifies a
-mandatory act-authentication handshake — author pre-commitment,
-host-sealed verified act, author approval witness — but expressly
-declares signature schemes, key management, and algorithm
-migration deployment concerns, and says nothing about rotation
+**What Layer 1 states.** The closure states properties of act
+authentication — each recorded proposal and approval signature
+verifies under the public key the record maps to it — and relates no
+key to the Actor. Signature schemes, key management and algorithm
+migration are deployment concerns, and so, unless an author-authority
+case is declared, is which keys may speak for an Actor
 (``post:graph:act-authentication-requirements``,
 ``rem:graph:authentication-realization-out-of-scope``;
 [layer1-interface.md §8.2](primitive/layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake)).
-Both questions stay open, now aimed at that postulate's
-realization rather than at silence.
+Both questions stay open, aimed at the deployment's realization of
+that postulate.
 
 **Interim realization (stand-in only).** The L1 stand-in's
 handshake runs on Ed25519 signatures, SHA-256 salted hash
