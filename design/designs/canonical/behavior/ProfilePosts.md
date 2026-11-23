@@ -8,6 +8,8 @@ ALWAYS the posts view lists a post the person signed that is still settling at t
 
 ALWAYS a removed post keeps its place in the list as the feed's removed card, profile.posts.card.removalMark.line reading Removed by its author where its words and pictures were, with the removal's date, and nothing more under it, whatever the feed's filter holds
 
+ALWAYS a post removed before it lands wears both marks, profile.posts.card.removalMark in the content's place and Still settling over profile.posts.card.actionRow, its score slot bare, at the head of the list among the settling posts, GIVEN the post is still settling
+
 ALWAYS a removed post keeps profile.posts.card.authorChip, its stance, its score, its comments count, its share and profile.posts.card.menu, the reader's post menu whole — Save or Unsave, Cite in a new post, Hide with the author's handle, Cited by, Opinions on this, License terms, then Report at the sheet tail — GIVEN the post is someone else's
 
 ALWAYS profile.identity.figures.posts counts every post the person published, a removed one and a still-settling one included, and never an edit, so the figure and the list agree

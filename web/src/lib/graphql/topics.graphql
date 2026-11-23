@@ -35,107 +35,82 @@ query HashtagDetail($name: String!, $includePending: Boolean! = true) {
             totalCount
           }
         }
-        # A tagged comment stands as its card in the line shape
-        # (TagPage.md: tagPage.commentCard leading with the thread it
-        # answers): the comment's own fields, what it answers (the
-        # pointer's words), and its thread's post (where its doors land).
-        #
-        # THE COMMENT'S TWO FOLDS ARE LEFT OUT — `topics` and
-        # `references`, fifty rows each by the write-side cap. Priced at
-        # the list's default page, `CommentFields` whole would carry this
-        # read past the complexity ceiling, and the card on this page
-        # draws no topics line (TagPage.jsx hands the comment none). The
-        # own comment's Edit reads the comment whole when it opens.
+        # A TAGGED COMMENT IS ONLY NAMED HERE; ITS CARD IS `TaggedComments`
+        # BELOW. The list is a union, and the static price sums every branch
+        # for every row although each row is one kind — so a post's card and
+        # a comment's card in one document would charge the page's twenty
+        # rows twice. Read apart, as the app reads them, each card is priced
+        # once, for the rows that are its kind.
+        ... on Comment {
+          id
+        }
+      }
+    }
+  }
+}
+
+# The tag page's comment cards (TagPage.md: tagPage.commentCard leading with
+# the thread it answers), over exactly the comment ids `HashtagDetail` named:
+# the comment whole — its tags line and its references count, as the feed's
+# comment card draws them, and the own comment's Edit starting from it —
+# what it answers (the pointer's words), and its thread's post (where its
+# doors land). Priced per id (`nodes`: `ids.len()` × the card), never for a
+# row that is a post.
+query TaggedComments($ids: [UUID!]!, $includePending: Boolean! = true) {
+  nodes(ids: $ids) {
+    __typename
+    ... on Comment {
+      ...CommentFields
+      target {
+        __typename
+        ... on Post {
+          id
+          title {
+            value
+            status
+          }
+          content {
+            value
+            status
+          }
+          attachments {
+            url
+            status
+            mimeType
+            coverMedia {
+              url
+              status
+            }
+          }
+          author {
+            id
+            handle
+          }
+          moderationStatus
+          removal {
+            at
+            by
+          }
+        }
         ... on Comment {
           id
           content {
             value
             status
           }
-          attachments {
-            ...MediaFields
-          }
-          attachmentsStatus
           author {
             id
             handle
-            displayName {
-              value
-            }
-            avatar {
-              url
-            }
-          }
-          createdAt
-          updatedAt
-          landing {
-            state
           }
           moderationStatus
-          sensitiveSelfMark
-          sensitiveReason
           removal {
             at
             by
           }
-          genesisRecordId
-          license {
-            attribution
-            provenance
-          }
-          viewerBookmarkedAt
-          target {
-            __typename
-            ... on Post {
-              id
-              title {
-                value
-                status
-              }
-              content {
-                value
-                status
-              }
-              attachments {
-                url
-                status
-                mimeType
-                coverMedia {
-                  url
-                  status
-                }
-              }
-              author {
-                id
-                handle
-              }
-              moderationStatus
-              removal {
-                at
-                by
-              }
-            }
-            ... on Comment {
-              id
-              content {
-                value
-                status
-              }
-              author {
-                id
-                handle
-              }
-              moderationStatus
-              removal {
-                at
-                by
-              }
-            }
-          }
-          post {
-            id
-          }
         }
+      }
+      post {
+        id
       }
     }
   }

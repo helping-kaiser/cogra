@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CHANGE_COVER_NAME","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CoverTile","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CROP_ZOOM_MIN","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_MAX","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_PAN_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropZoom","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"GlyphAction","sourcePath":"components/content/GlyphAction.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_SUMMARY","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FIELD_KINDS","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"DetailClip","sourcePath":"components/media/DetailClip.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelPlate","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailScore","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE_SIGN","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedPeopleRows","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterFoot","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_RING","sourcePath":"components/people/ActorChip.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"UNHIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"NameInText","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"EMPTY_SIGN_WORDS","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"EmptySignConfirm","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_FIELD_HEIGHT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_DETENT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AttachmentPad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"WRITE_RULE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_WITHDRAWN_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_LANDING_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SETTLE_MS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"CURRENT_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BACKING_AFTER_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BORROWED_KEPT_LINE","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"8025e1ea9a4d","components/compose/ActsFooter.jsx":"3fb19573d483","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"e0df45cbfc45","components/compose/CropViewport.jsx":"d4bd47849636","components/compose/DescribeSheet.jsx":"ead574ef5e67","components/compose/MediaThumb.jsx":"d3ada860f896","components/compose/PickPrompt.jsx":"0421be0cfaa4","components/compose/PickTray.jsx":"9ff316eb77a5","components/compose/PickedRow.jsx":"b1212a429566","components/compose/PickedSheet.jsx":"b2ce3de58e4f","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"7b60d0e194f1","components/compose/StagedReference.jsx":"2d9e849083b5","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"fbb646ecfc48","components/compose/UploadNotice.jsx":"5c7c6b24b039","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"cd195992c464","components/content/CommentCard.jsx":"45833aad0281","components/content/GlyphAction.jsx":"745850320ac1","components/content/OverflowMenu.jsx":"ee04b6702101","components/content/PostCard.jsx":"42b059231922","components/content/ReferenceRow.jsx":"f128e6bd3f5e","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"f2a4d37440d5","components/content/TopicsLine.jsx":"8bab72cbe7be","components/core/BottomSheet.jsx":"53c440dc4ace","components/core/Button.jsx":"a8359b22860b","components/core/Card.jsx":"aad4dcc1a89a","components/core/Chip.jsx":"47f409cc5a01","components/core/ContentRow.jsx":"b29d28867e37","components/core/FactRow.jsx":"7196fc76f42d","components/core/HelpDot.jsx":"e6633ace8617","components/core/JoinPrompt.jsx":"ac03f38b4939","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"92067c4e71ba","components/core/QuotedRow.jsx":"0f48f27cde18","components/core/SectionLabel.jsx":"596e97d7ab5d","components/core/SettingsRow.jsx":"dddf9d79285c","components/core/Snackbar.jsx":"eaf33cd3329f","components/forms/Checkbox.jsx":"3180057f58c7","components/forms/LicenseChooser.jsx":"10c89ad52c01","components/forms/PasswordField.jsx":"afed26cbc07c","components/forms/RecoveryCode.jsx":"34a651073c95","components/forms/SearchBar.jsx":"9fe2b8d63528","components/forms/TextField.jsx":"e8101b30e26e","components/honesty/NoticePanel.jsx":"c3b0521519c4","components/honesty/PendingMarker.jsx":"f7be64bd7cbd","components/honesty/SensitiveVeil.jsx":"537105aac115","components/honesty/TransportError.jsx":"acbff9ddcc19","components/media/DetailClip.jsx":"f125292ccbf5","components/media/MediaAttachment.jsx":"947bee212693","components/media/MediaViewer.jsx":"295ec141132a","components/media/ReelCaption.jsx":"2f6480c10d81","components/media/ReelRail.jsx":"7d2c7682b3d7","components/media/VideoControls.jsx":"cf8d7e6bf12a","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"d032ff0d8012","components/navigation/BottomNav.jsx":"f78daac8f6e5","components/navigation/CograBand.jsx":"561da982a156","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"fbefb06fed14","components/navigation/FeedFilter.jsx":"2b2ab1c5b9dc","components/navigation/Icon.jsx":"d3d56ec1f2af","components/navigation/OrderSection.jsx":"7a1451d8c6eb","components/navigation/PageHeader.jsx":"cca3f47af811","components/navigation/SegmentedFilter.jsx":"2ed79a7fda3f","components/navigation/TabBar.jsx":"05778c8415f3","components/people/ActorChip.jsx":"aa51b62e9b79","components/people/ProfileHeader.jsx":"72990d151965","components/people/StanceRow.jsx":"600d1f20b059","components/proposed/ExplainableNumber.jsx":"8f40fa8530e8","components/stance/EmptySignConfirm.jsx":"05f4eb334b04","components/stance/SeveranceConfirm.jsx":"e7fc86215414","components/stance/StanceAlternates.jsx":"c0f8d00e4237","components/stance/StanceControl.jsx":"d4042a9b7dca","components/stance/StancePad.jsx":"ffb7a2b6ab15","components/stance/StanceReadout.jsx":"6ba270306254","components/stance/StanceSlider.jsx":"a432f68b7a15","components/states/ComingSoonCard.jsx":"68d6b017a75e","components/states/EmptyState.jsx":"ee17e47230be","components/wallet/EarnedChart.jsx":"35896e97b452","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"df9591e83c28","components/wallet/WalletBalance.jsx":"5c0847c535ef","components/wallet/WashCard.jsx":"75438d50d294","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"attachmentLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"licenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nameFitSize","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"nameInLine","sourcePath":"components/people/ActorChip.jsx"},{"name":"nameInText","sourcePath":"components/people/ActorChip.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"sensitiveSourceLine","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"snapAttachment","sourcePath":"components/stance/StancePad.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagUnreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"triggerName","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"unreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"unreachableHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"useModalFocus","sourcePath":"components/core/BottomSheet.jsx"},{"name":"useSettled","sourcePath":"components/stance/StanceReadout.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CHANGE_COVER_NAME","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CoverTile","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CROP_ZOOM_MIN","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_MAX","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_PAN_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropZoom","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"GlyphAction","sourcePath":"components/content/GlyphAction.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_SUMMARY","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FIELD_KINDS","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"DetailClip","sourcePath":"components/media/DetailClip.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelPlate","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailScore","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE_SIGN","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedPeopleRows","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterFoot","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_RING","sourcePath":"components/people/ActorChip.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"UNHIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"NameInText","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"EMPTY_SIGN_WORDS","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"EmptySignConfirm","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"ANCHOR_NAME","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_FIELD_HEIGHT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_DETENT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AttachmentPad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"WRITE_RULE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_WITHDRAWN_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_LANDING_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SETTLE_MS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"CURRENT_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BACKING_AFTER_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BORROWED_KEPT_LINE","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"8025e1ea9a4d","components/compose/ActsFooter.jsx":"3fb19573d483","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"e0df45cbfc45","components/compose/CropViewport.jsx":"d4bd47849636","components/compose/DescribeSheet.jsx":"ead574ef5e67","components/compose/MediaThumb.jsx":"d3ada860f896","components/compose/PickPrompt.jsx":"0421be0cfaa4","components/compose/PickTray.jsx":"9ff316eb77a5","components/compose/PickedRow.jsx":"b1212a429566","components/compose/PickedSheet.jsx":"b2ce3de58e4f","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"7b60d0e194f1","components/compose/StagedReference.jsx":"2d9e849083b5","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"4dcf190b9870","components/compose/UploadNotice.jsx":"5c7c6b24b039","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"cd195992c464","components/content/CommentCard.jsx":"1181ef7e0de4","components/content/GlyphAction.jsx":"745850320ac1","components/content/OverflowMenu.jsx":"ee04b6702101","components/content/PostCard.jsx":"1bea927547ad","components/content/ReferenceRow.jsx":"f128e6bd3f5e","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"f2a4d37440d5","components/content/TopicsLine.jsx":"8bab72cbe7be","components/core/BottomSheet.jsx":"adf723d42f4f","components/core/Button.jsx":"a8359b22860b","components/core/Card.jsx":"aad4dcc1a89a","components/core/Chip.jsx":"47f409cc5a01","components/core/ContentRow.jsx":"b29d28867e37","components/core/FactRow.jsx":"7196fc76f42d","components/core/HelpDot.jsx":"e6633ace8617","components/core/JoinPrompt.jsx":"ac03f38b4939","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"92067c4e71ba","components/core/QuotedRow.jsx":"0f48f27cde18","components/core/SectionLabel.jsx":"596e97d7ab5d","components/core/SettingsRow.jsx":"dddf9d79285c","components/core/Snackbar.jsx":"eaf33cd3329f","components/forms/Checkbox.jsx":"3180057f58c7","components/forms/LicenseChooser.jsx":"10c89ad52c01","components/forms/PasswordField.jsx":"afed26cbc07c","components/forms/RecoveryCode.jsx":"34a651073c95","components/forms/SearchBar.jsx":"9fe2b8d63528","components/forms/TextField.jsx":"e8101b30e26e","components/honesty/NoticePanel.jsx":"c3b0521519c4","components/honesty/PendingMarker.jsx":"f7be64bd7cbd","components/honesty/SensitiveVeil.jsx":"537105aac115","components/honesty/TransportError.jsx":"acbff9ddcc19","components/media/DetailClip.jsx":"f125292ccbf5","components/media/MediaAttachment.jsx":"947bee212693","components/media/MediaViewer.jsx":"295ec141132a","components/media/ReelCaption.jsx":"2f6480c10d81","components/media/ReelRail.jsx":"7d2c7682b3d7","components/media/VideoControls.jsx":"cf8d7e6bf12a","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"d032ff0d8012","components/navigation/BottomNav.jsx":"bea24019f095","components/navigation/CograBand.jsx":"561da982a156","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"fbefb06fed14","components/navigation/FeedFilter.jsx":"2b2ab1c5b9dc","components/navigation/Icon.jsx":"d3d56ec1f2af","components/navigation/OrderSection.jsx":"7a1451d8c6eb","components/navigation/PageHeader.jsx":"f18d983bac07","components/navigation/SegmentedFilter.jsx":"2ed79a7fda3f","components/navigation/TabBar.jsx":"05778c8415f3","components/people/ActorChip.jsx":"f68d6aae8a62","components/people/ProfileHeader.jsx":"72990d151965","components/people/StanceRow.jsx":"600d1f20b059","components/proposed/ExplainableNumber.jsx":"8f40fa8530e8","components/stance/EmptySignConfirm.jsx":"05f4eb334b04","components/stance/SeveranceConfirm.jsx":"e7fc86215414","components/stance/StanceAlternates.jsx":"c0f8d00e4237","components/stance/StanceControl.jsx":"25759e0889bc","components/stance/StancePad.jsx":"ffb7a2b6ab15","components/stance/StanceReadout.jsx":"a5bc1989aa89","components/stance/StanceSlider.jsx":"a432f68b7a15","components/states/ComingSoonCard.jsx":"68d6b017a75e","components/states/EmptyState.jsx":"ee17e47230be","components/wallet/EarnedChart.jsx":"35896e97b452","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"df9591e83c28","components/wallet/WalletBalance.jsx":"5c0847c535ef","components/wallet/WashCard.jsx":"75438d50d294","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"anchorName","sourcePath":"components/stance/StanceControl.jsx"},{"name":"attachmentFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"attachmentLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"licenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nameFitSize","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"nameInLine","sourcePath":"components/people/ActorChip.jsx"},{"name":"nameInText","sourcePath":"components/people/ActorChip.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"sensitiveSourceLine","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"snapAttachment","sourcePath":"components/stance/StancePad.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagUnreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"triggerName","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"unreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"unreachableHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"useModalFocus","sourcePath":"components/core/BottomSheet.jsx"},{"name":"useSettled","sourcePath":"components/stance/StanceReadout.jsx"}]} */
 
 (() => {
 
@@ -264,8 +264,393 @@ __ds_scope.InlineAction = InlineAction;
 __ds_scope.Button = Button;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/Button.jsx", error: String((e && e.message) || e) }); }
 
+// components/people/ActorChip.jsx
+try { (() => {
+/* The actor chip / row and its avatar (readme §7): the compact
+   person-or-group reference every author attribution renders as, opening the
+   actor's profile. A Collective looks like a person but reads as a shared
+   identity.
+
+   MEDIA AVATARS (backlog item 5). A photo, where the person has set one, in the
+   same circle at the same two sizes. The monogram — the first grapheme of the
+   display name, in `secondaryContainer` on `onSecondaryContainer` — is not a gap
+   waiting for a photo: it is the DESIGNED fallback, and it is what a person
+   without one keeps. A broken image falls back to it silently; a torn-photo glyph
+   would tell the reader about a fetch they cannot do anything about.
+
+   The avatar is decorative either way: the adjacent text names the actor, so the
+   photo carries no alt text and never becomes the only way to tell two people
+   apart.
+
+   THE REDACTED ACTOR (`redacted`, the review-fix round; `erasure.md` §2–3).
+   When an account is deleted the ACTOR STAYS — it is still the author of
+   everything it signed, still carries the standing others vouched into it,
+   still routes — and only the identity payloads go: display name, handle,
+   avatar. So every place that draws an actor keeps drawing one; it draws it
+   WITHOUT A NAME. That is what `redacted` is, and it is assigned here because
+   the treatment has to follow the actor everywhere it appears — a chip on a
+   post, a row in a list, the header of their own page — and a treatment spelled
+   per surface is a treatment that drifts.
+
+   THE DISC KEEPS ITS SPACE AND FILLS WITH NOTHING. A monogram is the first
+   letter of a name and there is no name to take one from; inventing a glyph
+   would be inventing imagery where there is no source (readme §4). So the disc
+   is the reserved surface — the same one a redaction mark and an unloaded tile
+   use — which says a space was kept rather than lost.
+
+   THE KEPT SPACE WEARS A RING, ONE TREATMENT ON EVERY SURFACE (jakob
+   2026-11-11: it "must work on all surfaces we have so we dont need different
+   colors for different screens"). The reserved fill alone is the sheet's own
+   tone (1.00:1 there) and at most 1.28:1 against any surface, so the disc
+   keeps that fill and gains a 1px solid ring in `--border-field`, which
+   clears 3:1 against every surface in both themes (readme §13, round 31).
+   The ring is drawn inside the disc's box: a deleted account's disc measures
+   what a live one does at every size. `NodeMark`'s removed tile takes the
+   same ring (`REDACTED_RING`).
+
+   THE NAME SLOT SPEAKS IN THE SYSTEM'S VOICE, NOT THE PERSON'S. `Deleted
+   account` in `text-secondary`, because it is the product saying what happened
+   and not somebody's chosen name; drawn at full strength it would read as an
+   account actually called that. The handle goes altogether: it was redacted at
+   execution and the stored form is a uniqueness device, so printing anything
+   there would be inventing a handle the reader could try to reach. */
+
+/* The kept space's ring, assigned once (above): every mark whose payload went
+   wears it, inside its own box. */
+const REDACTED_RING = {
+  border: "1px solid var(--border-field)",
+  boxSizing: "border-box"
+};
+
+/* The word in the name's place, assigned once. The moderation variant is
+   proposed and unblessed (guidelines/copy-voice.md, awaiting blessing) — the
+   two must stay distinguishable, because collapsing them lets a verdict hide
+   behind a person's own decision (`erasure.md` §7, and `RedactedContent`'s two
+   reasons). */
+const REDACTED_ACTOR_NAME = "Deleted account";
+
+/* THE HIDE ROW NAMES ITS PERSON, AND A REDACTED ONE HAS NO NAME TO PUT THERE
+   (jakob 2026-09-11). Every menu that offers hiding spells the handle —
+   `Hide @ada`, the word a reader scans for — and on a deleted author's post,
+   comment or profile there is no handle left to spell; the stored form is a
+   uniqueness device, so printing anything there would invent a handle the
+   reader could try to reach.
+
+   THE ROW ITSELF STAYS. Hiding is a read-side comfort about an ACTOR, and the
+   actor is still there, still signing, still ranking into the reader's feed —
+   so the act is exactly as useful as it was and only its wording gives way:
+   `Hide this account`, the system saying what the tap does when it cannot say
+   whose.
+
+   IT IS COMPOSED HERE, beside the name it stands in for, because every menu
+   that carries the row builds its label from an actor and a fallback spelled
+   per menu is a fallback that drifts — the same reason `redacted` itself is
+   assigned on this master. Menus take their label from here; no board and no
+   client writes the words twice. */
+const HIDE_ACTOR_LABEL = (handle, redacted = false) => redacted || !handle ? "Hide this account" : `Hide ${handle}`;
+
+/* THE SAME ROW FOR A PERSON ALREADY HIDDEN (round 41; jakob 2026-11-11, M1:
+   "the unhide should be visible whenever we land on a card of a hidden
+   account"). Wherever a hidden person's card or post still stands — History
+   until its next load, Saved, the tag page, a post or profile reached by a
+   link — the hide row reads Settings · hidden accounts' word, `Unhide`, in
+   the row's own form: the handle after it, the redacted fallback after it. */
+const UNHIDE_ACTOR_LABEL = (handle, redacted = false) => redacted || !handle ? "Unhide this account" : `Unhide ${handle}`;
+
+/* THE LETTER'S ROLE FOLLOWS THE DISC'S SIZE, ONE RULE (round 35, jakob
+   2026-11-11, T12; backlog 152). 24px takes label-small; 32px label-medium,
+   the named `md` size's role, and a numeric 32 takes the same; 64px and every
+   numeric size from 56px up headline-small; any other numeric size
+   label-large. THE WEIGHT IS THE DISC'S OWN: every letter stands at 500
+   whatever its role says, the large discs' headline-small included (jakob,
+   round 32: "all fine"), so a monogram reads at one weight at every size. */
+function MonogramAvatar({
+  name,
+  size = "sm",
+  src,
+  redacted = false,
+  node
+}) {
+  const [failed, setFailed] = React.useState(false);
+  const initial = redacted ? null : (name ?? "").trim().charAt(0).toUpperCase() || "?";
+  const role = typeof size === "number" ? size >= 56 ? "headline-small" : size === 32 ? "label-medium" : "label-large" : null;
+  const box = typeof size === "number" ? {
+    height: `${size}px`,
+    width: `${size}px`,
+    fontSize: `var(--text-${role})`,
+    lineHeight: `var(--text-${role}--line-height)`,
+    letterSpacing: `var(--text-${role}--letter-spacing)`,
+    fontWeight: `var(--text-${role}--font-weight)`
+  } : size === "lg" ? {
+    height: "64px",
+    width: "64px",
+    fontSize: "var(--text-headline-small)",
+    lineHeight: "var(--text-headline-small--line-height)",
+    letterSpacing: "var(--text-headline-small--letter-spacing)",
+    fontWeight: "var(--text-headline-small--font-weight)"
+  } : size === "md" ? {
+    height: "32px",
+    width: "32px",
+    fontSize: "var(--text-label-medium)",
+    lineHeight: "var(--text-label-medium--line-height)",
+    letterSpacing: "var(--text-label-medium--letter-spacing)",
+    fontWeight: "var(--text-label-medium--font-weight)"
+  } : {
+    height: "24px",
+    width: "24px",
+    fontSize: "var(--text-label-small)",
+    lineHeight: "var(--text-label-small--line-height)",
+    letterSpacing: "var(--text-label-small--letter-spacing)",
+    fontWeight: "var(--text-label-small--font-weight)"
+  };
+  return /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      ...box,
+      display: "flex",
+      flexShrink: 0,
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+      borderRadius: "var(--radius-full)",
+      background: redacted ? "var(--surface-container-high)" : "var(--secondary-container)",
+      ...(redacted ? REDACTED_RING : null),
+      color: "var(--on-secondary-container)",
+      fontWeight: 500
+    },
+    "data-node": node
+  }, src && !failed && !redacted ? /*#__PURE__*/React.createElement("img", {
+    src: src,
+    alt: "",
+    onError: () => setFailed(true),
+    style: {
+      height: "100%",
+      width: "100%",
+      objectFit: "cover",
+      display: "block"
+    }
+  }) : initial);
+}
+
+/* THE ROW NEVER WRAPS AND NEVER CROWDS (jakob's ruling, 2026-09-23). A name
+   too long for the room ELLIPSIZES; the handle is the identity and stays
+   whole until it alone cannot fit, and only then ellipsizes too. The chip
+   yields (`minWidth: 0`) and whatever stands beside it — timestamp, ⋮ —
+   keeps its full width and the row's gap as the hard floor. The two-stage
+   yield is flexbox's own arithmetic: the name's `flexShrink: 999` absorbs
+   the squeeze ahead of the handle's 1, so the handle gives way only after
+   the name is spent. Every list row and card reads this one law from here —
+   no board and no client re-decides it. */
+function ActorChip({
+  handle,
+  displayName,
+  href,
+  onClick,
+  avatarSrc,
+  redacted = false,
+  node
+}) {
+  const name = redacted ? REDACTED_ACTOR_NAME : displayName && displayName.trim() ? displayName : handle;
+  const clip = {
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    minWidth: 0
+  };
+  return /*#__PURE__*/React.createElement("a", {
+    href: href ?? `/u/${handle}`,
+    onClick: onClick,
+    className: "cg-state cg-focus",
+    style: {
+      display: "inline-flex",
+      minHeight: "24px",
+      minWidth: 0,
+      alignItems: "center",
+      gap: "var(--space-2)",
+      color: "var(--on-surface)",
+      textDecoration: "none",
+      borderRadius: "var(--radius-full)"
+    },
+    "data-node": node
+  }, /*#__PURE__*/React.createElement(MonogramAvatar, {
+    name: name,
+    src: avatarSrc,
+    redacted: redacted,
+    node: node && "avatar"
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...clip,
+      flexShrink: 999,
+      fontSize: "var(--text-label-large)",
+      lineHeight: "var(--text-label-large--line-height)",
+      letterSpacing: "var(--text-label-large--letter-spacing)",
+      fontWeight: "var(--text-label-large--font-weight)",
+      color: redacted ? "var(--text-secondary)" : undefined
+    },
+    "data-node": node && "name"
+  }, name), !redacted && /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...clip,
+      flexShrink: 1,
+      fontSize: "var(--text-label-medium)",
+      lineHeight: "var(--text-label-medium--line-height)",
+      letterSpacing: "var(--text-label-medium--letter-spacing)",
+      fontWeight: "var(--text-label-medium--font-weight)",
+      color: "var(--text-secondary)"
+    },
+    "data-node": node && "handle"
+  }, "@", handle));
+}
+
+/* A NAME INSIDE A ONE-LINE PLACE (jakob 2026-11-11, round 40). A page title, a
+   menu row, a row's title and its aside never wrap; where a handle stands in
+   their words — `@ada commented on your post`, `Hide @ada`, `on @mira` — the
+   HANDLE is what is cut with "…", and the words around it keep their room
+   first: `@mmmmmmmm… commented on your post`. The chip's own arithmetic at line
+   scale: the words are `flex: none`, the handle the one part that yields
+   (`minWidth: 0` and the clip). Every one-line master clips its own line at
+   the end ("…", the why-line's way — `Through @ada`) and passes its text
+   through `nameInLine`: where the handle ENDS the line (`Hide @ada`, `Unhide @ada`, `on
+   @mira`, a title that is only `@ada`) the end clip already cuts the handle
+   and keeps the words, so the text returns untouched; only words AFTER the
+   handle split the line, so a line that fits draws exactly what it drew. The
+   first handle is the one that yields. */
+/* A NAME INSIDE TEXT THAT WRAPS — `nameInLine`'s wrapping-text twin (jakob
+   2026-11-11, round 40: "i really dislike when a handle or name wraps an lives
+   in multiple lines"). The sentence wraps at its spaces and is never cut as a
+   whole; a handle, or a person's name passed in `names`, is ONE UNIT that never
+   stands on two lines: it moves whole to the next line when the rest of the
+   current one cannot hold it, and a unit longer than a full line is cut at its
+   end with "…", as a one-line place cuts it. Punctuation right after it — `?`,
+   `.`, `,`, `'s` — rides with it, whole and never swallowed by the cut: the
+   unit is [the name: yields, clipped][its punctuation: never shrinks], kept on
+   one line. Every wrapping master passes its text through `nameInText`; text
+   naming nobody returns untouched. A screen reader hears the unit as one
+   string — the name and its punctuation with no space between (round 48;
+   `UNIT_SPOKEN` below).
+
+   A TAG IS THE SAME ONE UNIT (jakob 2026-11-23, point 4: "everywhere the tag
+   is one-line at most"): `#saltmaps` in a snackbar, a dialog, the withdrawn
+   line, a pad's sentence moves whole to the next line and is cut past a full
+   line, as a handle is — never broken at its hyphens or anywhere inside. A
+   name may hold dots, so a dot that ends it is the sentence's, riding as
+   punctuation. The tag's own page is the one place its name wraps. */
+const HANDLE_IN_TEXT = /(?<![\w@])@[A-Za-z0-9_]+|(?<![\w#&])#[A-Za-z0-9_-](?:[A-Za-z0-9._-]*[A-Za-z0-9_-])?/g;
+const UNIT_TAIL = /^(?:['’]s\b|[?.,!:;)’]+)/;
+const UNIT = {
+  display: "inline-flex",
+  maxWidth: "100%",
+  verticalAlign: "top",
+  whiteSpace: "nowrap"
+};
+/* THE UNIT IS SPOKEN AS ONE STRING (round 48, seam 320-13). The drawn unit's
+   two parts are flex items, and a flex item is its own box to a screen
+   reader, which then reads a space before the mark ("…haugh ?"). So the drawn
+   unit is hidden from assistive tech and the name with its punctuation, as
+   one text node, is spoken in its place from a visually hidden twin — the
+   standard visually-hidden pattern every other SR_ONLY here uses. */
+const UNIT_SPOKEN = {
+  position: "absolute",
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: "hidden",
+  clip: "rect(0 0 0 0)",
+  whiteSpace: "nowrap",
+  border: 0
+};
+const escapeName = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+function nameInText(text, names = []) {
+  if (Array.isArray(text)) return text.map((part, index) => /*#__PURE__*/React.createElement(React.Fragment, {
+    key: index
+  }, nameInText(part, names)));
+  if (typeof text !== "string") return text;
+  const pattern = names.length ? new RegExp(`${HANDLE_IN_TEXT.source}|${names.map(escapeName).join("|")}`, "g") : new RegExp(HANDLE_IN_TEXT.source, "g");
+  const out = [];
+  let last = 0;
+  for (let found = pattern.exec(text); found; found = pattern.exec(text)) {
+    const end = found.index + found[0].length;
+    const tail = UNIT_TAIL.exec(text.slice(end))?.[0] ?? "";
+    out.push(text.slice(last, found.index));
+    out.push(/*#__PURE__*/React.createElement(React.Fragment, {
+      key: found.index
+    }, /*#__PURE__*/React.createElement("span", {
+      style: UNIT_SPOKEN
+    }, found[0] + tail), /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true",
+      style: UNIT,
+      "data-name-unit": ""
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        minWidth: 0,
+        overflow: "hidden",
+        textOverflow: "ellipsis"
+      }
+    }, found[0]), tail && /*#__PURE__*/React.createElement("span", {
+      style: {
+        flex: "none"
+      }
+    }, tail))));
+    last = end + tail.length;
+  }
+  if (!out.length) return text;
+  out.push(text.slice(last));
+  return out;
+}
+/* The same, as an element, for the screens: `<NameInText text={…} />`. */
+function NameInText({
+  text,
+  names
+}) {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, nameInText(text, names));
+}
+const HANDLE_IN_LINE = /(?<![\w@])@[A-Za-z0-9_]+/;
+const LINE_WORDS = {
+  flex: "none",
+  whiteSpace: "pre"
+};
+function nameInLine(text) {
+  if (typeof text !== "string") return text;
+  const found = HANDLE_IN_LINE.exec(text);
+  if (!found) return text;
+  const before = text.slice(0, found.index);
+  const after = text.slice(found.index + found[0].length);
+  if (!after.trim()) return text;
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "flex",
+      minWidth: 0,
+      whiteSpace: "nowrap"
+    },
+    "data-name-line": ""
+  }, before && /*#__PURE__*/React.createElement("span", {
+    style: LINE_WORDS
+  }, before), /*#__PURE__*/React.createElement("span", {
+    style: {
+      minWidth: 0,
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap"
+    }
+  }, found[0]), after && /*#__PURE__*/React.createElement("span", {
+    style: LINE_WORDS
+  }, after));
+}
+__ds_scope.REDACTED_RING = REDACTED_RING;
+__ds_scope.REDACTED_ACTOR_NAME = REDACTED_ACTOR_NAME;
+__ds_scope.HIDE_ACTOR_LABEL = HIDE_ACTOR_LABEL;
+__ds_scope.UNHIDE_ACTOR_LABEL = UNHIDE_ACTOR_LABEL;
+__ds_scope.MonogramAvatar = MonogramAvatar;
+__ds_scope.ActorChip = ActorChip;
+__ds_scope.nameInText = nameInText;
+__ds_scope.NameInText = NameInText;
+__ds_scope.nameInLine = nameInLine;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/people/ActorChip.jsx", error: String((e && e.message) || e) }); }
+
 // components/stance/StanceReadout.jsx
 try { (() => {
+const { nameInText } = __ds_scope;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* The stance readout — the numbers and the faces (guidelines/stance-control.md:
    *Two numbers, never one*, *The gesture*, *The emoji readout*).
@@ -1313,7 +1698,7 @@ function ReadoutBlock({
       "data-node": node
     }, /*#__PURE__*/React.createElement("span", {
       "aria-hidden": "true"
-    }, sentence), /*#__PURE__*/React.createElement("span", {
+    }, nameInText(sentence)), /*#__PURE__*/React.createElement("span", {
       style: SR_ONLY
     }, said));
   }
@@ -1633,7 +2018,10 @@ function StanceLandingLine({
 function HelpLine({
   line
 }) {
-  if (typeof line === "string") return line;
+  /* A tag or a handle in the line is one unit (`nameInText`; jakob
+     2026-11-23, point 4: `#saltmaps stays on Your tags` never breaks inside
+     the name). */
+  if (typeof line === "string") return nameInText(line);
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
     "aria-hidden": "true"
   }, line.text, line.face, /*#__PURE__*/React.createElement("span", {
@@ -2728,383 +3116,6 @@ function Caret() {
 __ds_scope.Caret = Caret;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/Caret.jsx", error: String((e && e.message) || e) }); }
 
-// components/people/ActorChip.jsx
-try { (() => {
-/* The actor chip / row and its avatar (readme §7): the compact
-   person-or-group reference every author attribution renders as, opening the
-   actor's profile. A Collective looks like a person but reads as a shared
-   identity.
-
-   MEDIA AVATARS (backlog item 5). A photo, where the person has set one, in the
-   same circle at the same two sizes. The monogram — the first grapheme of the
-   display name, in `secondaryContainer` on `onSecondaryContainer` — is not a gap
-   waiting for a photo: it is the DESIGNED fallback, and it is what a person
-   without one keeps. A broken image falls back to it silently; a torn-photo glyph
-   would tell the reader about a fetch they cannot do anything about.
-
-   The avatar is decorative either way: the adjacent text names the actor, so the
-   photo carries no alt text and never becomes the only way to tell two people
-   apart.
-
-   THE REDACTED ACTOR (`redacted`, the review-fix round; `erasure.md` §2–3).
-   When an account is deleted the ACTOR STAYS — it is still the author of
-   everything it signed, still carries the standing others vouched into it,
-   still routes — and only the identity payloads go: display name, handle,
-   avatar. So every place that draws an actor keeps drawing one; it draws it
-   WITHOUT A NAME. That is what `redacted` is, and it is assigned here because
-   the treatment has to follow the actor everywhere it appears — a chip on a
-   post, a row in a list, the header of their own page — and a treatment spelled
-   per surface is a treatment that drifts.
-
-   THE DISC KEEPS ITS SPACE AND FILLS WITH NOTHING. A monogram is the first
-   letter of a name and there is no name to take one from; inventing a glyph
-   would be inventing imagery where there is no source (readme §4). So the disc
-   is the reserved surface — the same one a redaction mark and an unloaded tile
-   use — which says a space was kept rather than lost.
-
-   THE KEPT SPACE WEARS A RING, ONE TREATMENT ON EVERY SURFACE (jakob
-   2026-11-11: it "must work on all surfaces we have so we dont need different
-   colors for different screens"). The reserved fill alone is the sheet's own
-   tone (1.00:1 there) and at most 1.28:1 against any surface, so the disc
-   keeps that fill and gains a 1px solid ring in `--border-field`, which
-   clears 3:1 against every surface in both themes (readme §13, round 31).
-   The ring is drawn inside the disc's box: a deleted account's disc measures
-   what a live one does at every size. `NodeMark`'s removed tile takes the
-   same ring (`REDACTED_RING`).
-
-   THE NAME SLOT SPEAKS IN THE SYSTEM'S VOICE, NOT THE PERSON'S. `Deleted
-   account` in `text-secondary`, because it is the product saying what happened
-   and not somebody's chosen name; drawn at full strength it would read as an
-   account actually called that. The handle goes altogether: it was redacted at
-   execution and the stored form is a uniqueness device, so printing anything
-   there would be inventing a handle the reader could try to reach. */
-
-/* The kept space's ring, assigned once (above): every mark whose payload went
-   wears it, inside its own box. */
-const REDACTED_RING = {
-  border: "1px solid var(--border-field)",
-  boxSizing: "border-box"
-};
-
-/* The word in the name's place, assigned once. The moderation variant is
-   proposed and unblessed (guidelines/copy-voice.md, awaiting blessing) — the
-   two must stay distinguishable, because collapsing them lets a verdict hide
-   behind a person's own decision (`erasure.md` §7, and `RedactedContent`'s two
-   reasons). */
-const REDACTED_ACTOR_NAME = "Deleted account";
-
-/* THE HIDE ROW NAMES ITS PERSON, AND A REDACTED ONE HAS NO NAME TO PUT THERE
-   (jakob 2026-09-11). Every menu that offers hiding spells the handle —
-   `Hide @ada`, the word a reader scans for — and on a deleted author's post,
-   comment or profile there is no handle left to spell; the stored form is a
-   uniqueness device, so printing anything there would invent a handle the
-   reader could try to reach.
-
-   THE ROW ITSELF STAYS. Hiding is a read-side comfort about an ACTOR, and the
-   actor is still there, still signing, still ranking into the reader's feed —
-   so the act is exactly as useful as it was and only its wording gives way:
-   `Hide this account`, the system saying what the tap does when it cannot say
-   whose.
-
-   IT IS COMPOSED HERE, beside the name it stands in for, because every menu
-   that carries the row builds its label from an actor and a fallback spelled
-   per menu is a fallback that drifts — the same reason `redacted` itself is
-   assigned on this master. Menus take their label from here; no board and no
-   client writes the words twice. */
-const HIDE_ACTOR_LABEL = (handle, redacted = false) => redacted || !handle ? "Hide this account" : `Hide ${handle}`;
-
-/* THE SAME ROW FOR A PERSON ALREADY HIDDEN (round 41; jakob 2026-11-11, M1:
-   "the unhide should be visible whenever we land on a card of a hidden
-   account"). Wherever a hidden person's card or post still stands — History
-   until its next load, Saved, the tag page, a post or profile reached by a
-   link — the hide row reads Settings · hidden accounts' word, `Unhide`, in
-   the row's own form: the handle after it, the redacted fallback after it. */
-const UNHIDE_ACTOR_LABEL = (handle, redacted = false) => redacted || !handle ? "Unhide this account" : `Unhide ${handle}`;
-
-/* THE LETTER'S ROLE FOLLOWS THE DISC'S SIZE, ONE RULE (round 35, jakob
-   2026-11-11, T12; backlog 152). 24px takes label-small; 32px label-medium,
-   the named `md` size's role, and a numeric 32 takes the same; 64px and every
-   numeric size from 56px up headline-small; any other numeric size
-   label-large. THE WEIGHT IS THE DISC'S OWN: every letter stands at 500
-   whatever its role says, the large discs' headline-small included (jakob,
-   round 32: "all fine"), so a monogram reads at one weight at every size. */
-function MonogramAvatar({
-  name,
-  size = "sm",
-  src,
-  redacted = false,
-  node
-}) {
-  const [failed, setFailed] = React.useState(false);
-  const initial = redacted ? null : (name ?? "").trim().charAt(0).toUpperCase() || "?";
-  const role = typeof size === "number" ? size >= 56 ? "headline-small" : size === 32 ? "label-medium" : "label-large" : null;
-  const box = typeof size === "number" ? {
-    height: `${size}px`,
-    width: `${size}px`,
-    fontSize: `var(--text-${role})`,
-    lineHeight: `var(--text-${role}--line-height)`,
-    letterSpacing: `var(--text-${role}--letter-spacing)`,
-    fontWeight: `var(--text-${role}--font-weight)`
-  } : size === "lg" ? {
-    height: "64px",
-    width: "64px",
-    fontSize: "var(--text-headline-small)",
-    lineHeight: "var(--text-headline-small--line-height)",
-    letterSpacing: "var(--text-headline-small--letter-spacing)",
-    fontWeight: "var(--text-headline-small--font-weight)"
-  } : size === "md" ? {
-    height: "32px",
-    width: "32px",
-    fontSize: "var(--text-label-medium)",
-    lineHeight: "var(--text-label-medium--line-height)",
-    letterSpacing: "var(--text-label-medium--letter-spacing)",
-    fontWeight: "var(--text-label-medium--font-weight)"
-  } : {
-    height: "24px",
-    width: "24px",
-    fontSize: "var(--text-label-small)",
-    lineHeight: "var(--text-label-small--line-height)",
-    letterSpacing: "var(--text-label-small--letter-spacing)",
-    fontWeight: "var(--text-label-small--font-weight)"
-  };
-  return /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true",
-    style: {
-      ...box,
-      display: "flex",
-      flexShrink: 0,
-      alignItems: "center",
-      justifyContent: "center",
-      overflow: "hidden",
-      borderRadius: "var(--radius-full)",
-      background: redacted ? "var(--surface-container-high)" : "var(--secondary-container)",
-      ...(redacted ? REDACTED_RING : null),
-      color: "var(--on-secondary-container)",
-      fontWeight: 500
-    },
-    "data-node": node
-  }, src && !failed && !redacted ? /*#__PURE__*/React.createElement("img", {
-    src: src,
-    alt: "",
-    onError: () => setFailed(true),
-    style: {
-      height: "100%",
-      width: "100%",
-      objectFit: "cover",
-      display: "block"
-    }
-  }) : initial);
-}
-
-/* THE ROW NEVER WRAPS AND NEVER CROWDS (jakob's ruling, 2026-09-23). A name
-   too long for the room ELLIPSIZES; the handle is the identity and stays
-   whole until it alone cannot fit, and only then ellipsizes too. The chip
-   yields (`minWidth: 0`) and whatever stands beside it — timestamp, ⋮ —
-   keeps its full width and the row's gap as the hard floor. The two-stage
-   yield is flexbox's own arithmetic: the name's `flexShrink: 999` absorbs
-   the squeeze ahead of the handle's 1, so the handle gives way only after
-   the name is spent. Every list row and card reads this one law from here —
-   no board and no client re-decides it. */
-function ActorChip({
-  handle,
-  displayName,
-  href,
-  onClick,
-  avatarSrc,
-  redacted = false,
-  node
-}) {
-  const name = redacted ? REDACTED_ACTOR_NAME : displayName && displayName.trim() ? displayName : handle;
-  const clip = {
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    minWidth: 0
-  };
-  return /*#__PURE__*/React.createElement("a", {
-    href: href ?? `/u/${handle}`,
-    onClick: onClick,
-    className: "cg-state cg-focus",
-    style: {
-      display: "inline-flex",
-      minHeight: "24px",
-      minWidth: 0,
-      alignItems: "center",
-      gap: "var(--space-2)",
-      color: "var(--on-surface)",
-      textDecoration: "none",
-      borderRadius: "var(--radius-full)"
-    },
-    "data-node": node
-  }, /*#__PURE__*/React.createElement(MonogramAvatar, {
-    name: name,
-    src: avatarSrc,
-    redacted: redacted,
-    node: node && "avatar"
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      ...clip,
-      flexShrink: 999,
-      fontSize: "var(--text-label-large)",
-      lineHeight: "var(--text-label-large--line-height)",
-      letterSpacing: "var(--text-label-large--letter-spacing)",
-      fontWeight: "var(--text-label-large--font-weight)",
-      color: redacted ? "var(--text-secondary)" : undefined
-    },
-    "data-node": node && "name"
-  }, name), !redacted && /*#__PURE__*/React.createElement("span", {
-    style: {
-      ...clip,
-      flexShrink: 1,
-      fontSize: "var(--text-label-medium)",
-      lineHeight: "var(--text-label-medium--line-height)",
-      letterSpacing: "var(--text-label-medium--letter-spacing)",
-      fontWeight: "var(--text-label-medium--font-weight)",
-      color: "var(--text-secondary)"
-    },
-    "data-node": node && "handle"
-  }, "@", handle));
-}
-
-/* A NAME INSIDE A ONE-LINE PLACE (jakob 2026-11-11, round 40). A page title, a
-   menu row, a row's title and its aside never wrap; where a handle stands in
-   their words — `@ada commented on your post`, `Hide @ada`, `on @mira` — the
-   HANDLE is what is cut with "…", and the words around it keep their room
-   first: `@mmmmmmmm… commented on your post`. The chip's own arithmetic at line
-   scale: the words are `flex: none`, the handle the one part that yields
-   (`minWidth: 0` and the clip). Every one-line master clips its own line at
-   the end ("…", the why-line's way — `Through @ada`) and passes its text
-   through `nameInLine`: where the handle ENDS the line (`Hide @ada`, `Unhide @ada`, `on
-   @mira`, a title that is only `@ada`) the end clip already cuts the handle
-   and keeps the words, so the text returns untouched; only words AFTER the
-   handle split the line, so a line that fits draws exactly what it drew. The
-   first handle is the one that yields. */
-/* A NAME INSIDE TEXT THAT WRAPS — `nameInLine`'s wrapping-text twin (jakob
-   2026-11-11, round 40: "i really dislike when a handle or name wraps an lives
-   in multiple lines"). The sentence wraps at its spaces and is never cut as a
-   whole; a handle, or a person's name passed in `names`, is ONE UNIT that never
-   stands on two lines: it moves whole to the next line when the rest of the
-   current one cannot hold it, and a unit longer than a full line is cut at its
-   end with "…", as a one-line place cuts it. Punctuation right after it — `?`,
-   `.`, `,`, `'s` — rides with it, whole and never swallowed by the cut: the
-   unit is [the name: yields, clipped][its punctuation: never shrinks], kept on
-   one line. Every wrapping master passes its text through `nameInText`; text
-   naming nobody returns untouched. A screen reader hears the unit as one
-   string — the name and its punctuation with no space between (round 48;
-   `UNIT_SPOKEN` below). */
-const HANDLE_IN_TEXT = /(?<![\w@])@[A-Za-z0-9_]+/g;
-const UNIT_TAIL = /^(?:['’]s\b|[?.,!:;)’]+)/;
-const UNIT = {
-  display: "inline-flex",
-  maxWidth: "100%",
-  verticalAlign: "top",
-  whiteSpace: "nowrap"
-};
-/* THE UNIT IS SPOKEN AS ONE STRING (round 48, seam 320-13). The drawn unit's
-   two parts are flex items, and a flex item is its own box to a screen
-   reader, which then reads a space before the mark ("…haugh ?"). So the drawn
-   unit is hidden from assistive tech and the name with its punctuation, as
-   one text node, is spoken in its place from a visually hidden twin — the
-   standard visually-hidden pattern every other SR_ONLY here uses. */
-const UNIT_SPOKEN = {
-  position: "absolute",
-  width: 1,
-  height: 1,
-  padding: 0,
-  margin: -1,
-  overflow: "hidden",
-  clip: "rect(0 0 0 0)",
-  whiteSpace: "nowrap",
-  border: 0
-};
-const escapeName = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-function nameInText(text, names = []) {
-  if (Array.isArray(text)) return text.map((part, index) => /*#__PURE__*/React.createElement(React.Fragment, {
-    key: index
-  }, nameInText(part, names)));
-  if (typeof text !== "string") return text;
-  const pattern = names.length ? new RegExp(`${HANDLE_IN_TEXT.source}|${names.map(escapeName).join("|")}`, "g") : new RegExp(HANDLE_IN_TEXT.source, "g");
-  const out = [];
-  let last = 0;
-  for (let found = pattern.exec(text); found; found = pattern.exec(text)) {
-    const end = found.index + found[0].length;
-    const tail = UNIT_TAIL.exec(text.slice(end))?.[0] ?? "";
-    out.push(text.slice(last, found.index));
-    out.push(/*#__PURE__*/React.createElement(React.Fragment, {
-      key: found.index
-    }, /*#__PURE__*/React.createElement("span", {
-      style: UNIT_SPOKEN
-    }, found[0] + tail), /*#__PURE__*/React.createElement("span", {
-      "aria-hidden": "true",
-      style: UNIT,
-      "data-name-unit": ""
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        minWidth: 0,
-        overflow: "hidden",
-        textOverflow: "ellipsis"
-      }
-    }, found[0]), tail && /*#__PURE__*/React.createElement("span", {
-      style: {
-        flex: "none"
-      }
-    }, tail))));
-    last = end + tail.length;
-  }
-  if (!out.length) return text;
-  out.push(text.slice(last));
-  return out;
-}
-/* The same, as an element, for the screens: `<NameInText text={…} />`. */
-function NameInText({
-  text,
-  names
-}) {
-  return /*#__PURE__*/React.createElement(React.Fragment, null, nameInText(text, names));
-}
-const HANDLE_IN_LINE = /(?<![\w@])@[A-Za-z0-9_]+/;
-const LINE_WORDS = {
-  flex: "none",
-  whiteSpace: "pre"
-};
-function nameInLine(text) {
-  if (typeof text !== "string") return text;
-  const found = HANDLE_IN_LINE.exec(text);
-  if (!found) return text;
-  const before = text.slice(0, found.index);
-  const after = text.slice(found.index + found[0].length);
-  if (!after.trim()) return text;
-  return /*#__PURE__*/React.createElement("span", {
-    style: {
-      display: "flex",
-      minWidth: 0,
-      whiteSpace: "nowrap"
-    },
-    "data-name-line": ""
-  }, before && /*#__PURE__*/React.createElement("span", {
-    style: LINE_WORDS
-  }, before), /*#__PURE__*/React.createElement("span", {
-    style: {
-      minWidth: 0,
-      overflow: "hidden",
-      textOverflow: "ellipsis",
-      whiteSpace: "nowrap"
-    }
-  }, found[0]), after && /*#__PURE__*/React.createElement("span", {
-    style: LINE_WORDS
-  }, after));
-}
-__ds_scope.REDACTED_RING = REDACTED_RING;
-__ds_scope.REDACTED_ACTOR_NAME = REDACTED_ACTOR_NAME;
-__ds_scope.HIDE_ACTOR_LABEL = HIDE_ACTOR_LABEL;
-__ds_scope.UNHIDE_ACTOR_LABEL = UNHIDE_ACTOR_LABEL;
-__ds_scope.MonogramAvatar = MonogramAvatar;
-__ds_scope.ActorChip = ActorChip;
-__ds_scope.nameInText = nameInText;
-__ds_scope.NameInText = NameInText;
-__ds_scope.nameInLine = nameInLine;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/people/ActorChip.jsx", error: String((e && e.message) || e) }); }
-
 // components/core/BottomSheet.jsx
 try { (() => {
 const { nameInLine } = __ds_scope;
@@ -3405,17 +3416,29 @@ function SheetItem({
    `trailing` is the slot for what the heading line carries besides its name — the
    screen's one "?", or the switch the sheet exists for. It is the heading's own
    row, so a sheet that needs one stops assembling a heading by hand; a close
-   control is still the one thing it never takes. */
+   control is still the one thing it never takes.
+
+   `cut` keeps a heading that IS a name on one line, ended with "…" where the
+   name outgrows it — the tag pad's `#saltmaps` (jakob 2026-11-23, point 4: a
+   tag is one line everywhere but its own page; the long-names law's case 2).
+   A name that fits draws exactly as before. */
 function SheetTitle({
   children,
   trailing,
+  cut = false,
   node
 }) {
   const heading = {
     fontSize: "var(--text-title-medium)",
     letterSpacing: "var(--text-title-medium--letter-spacing)",
     lineHeight: "var(--text-title-medium--line-height)",
-    fontWeight: "var(--text-title-medium--font-weight)"
+    fontWeight: "var(--text-title-medium--font-weight)",
+    ...(cut ? {
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      minWidth: 0
+    } : null)
   };
   if (!trailing) {
     return /*#__PURE__*/React.createElement("h2", {
@@ -6296,6 +6319,18 @@ const PAIR = {
   letterSpacing: "var(--text-label-small--letter-spacing)",
   opacity: 0.75
 };
+
+/* A TAG IS ONE LINE (jakob 2026-11-23, point 4: "everywhere the tag is
+   one-line at most"): the pill never grows past its row and never wraps its
+   name; a name too long for the row — a 128-character tag — is the part cut,
+   ending in "…", while the pair and the × keep their room (the long-names
+   law's case 2). A name that fits draws exactly as before. */
+const NAME = {
+  minWidth: 0,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap"
+};
 function TopicRemovable({
   topic,
   pair,
@@ -6308,6 +6343,8 @@ function TopicRemovable({
       display: "inline-flex",
       alignItems: "center",
       gap: 6,
+      maxWidth: "100%",
+      minWidth: 0,
       /* A true height, padding inside it (seam 245, ask 2): without
          border-box the 32 measured the content alone and drew 40. */
       boxSizing: "border-box",
@@ -6339,12 +6376,23 @@ function TopicRemovable({
       color: "inherit",
       font: "inherit",
       letterSpacing: "inherit",
-      cursor: "pointer"
+      cursor: "pointer",
+      minWidth: 0
     }
-  }, "#", topic, pair && /*#__PURE__*/React.createElement("span", {
-    style: PAIR
-  }, pair)) : /*#__PURE__*/React.createElement(React.Fragment, null, "#", topic, pair && /*#__PURE__*/React.createElement("span", {
-    style: PAIR
+  }, /*#__PURE__*/React.createElement("span", {
+    style: NAME
+  }, "#", topic), pair && /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...PAIR,
+      flex: "none"
+    }
+  }, pair)) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    style: NAME
+  }, "#", topic), pair && /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...PAIR,
+      flex: "none"
+    }
   }, pair)), /*#__PURE__*/React.createElement("button", {
     type: "button",
     "aria-label": `Remove #${topic}`,
@@ -6510,10 +6558,13 @@ function PageHeader({
   action,
   node
 }) {
-  /* Only a title that names a handle yields its room to the action: a plain
-     title keeps its whole width, as it always has (the seals' "What you sign"
-     beside the widest trailing group). */
-  const namesSomeone = typeof title === "string" && /(?<![\w@])@[A-Za-z0-9_]/.test(title);
+  /* Only a title that names a handle or a tag yields its room to the action:
+     a plain title keeps its whole width, as it always has (the seals' "What
+     you sign" beside the widest trailing group). A tag's page is titled by the
+     tag (`#saltmaps`), and a 128-character name is cut here on one line with
+     "…" like any name in a one-line place (jakob 2026-11-23, point 3 (b)); the
+     tag page stands the whole name under the header (`TagPage`). */
+  const namesSomeone = typeof title === "string" && (/(?<![\w@])@[A-Za-z0-9_]/.test(title) || /(?<![\w#])#\S/.test(title));
   return /*#__PURE__*/React.createElement("header", {
     style: {
       display: "flex",
@@ -9315,6 +9366,47 @@ function severanceCost(bundle) {
   const reach = Math.max(Math.abs(bundle.rawSum.pDirected), Math.abs(bundle.rawSum.pInterest));
   return Math.max(1, Math.ceil(Math.round(reach * 100) / 100));
 }
+
+/* What the anchor rests on: the pair it shows (none while nothing stands) and
+   the face that reads it. A resting (0, 0) is walked back only when the
+   bundle says so; otherwise — an empty sign's standing, or a kept pick — it
+   says nothing. */
+function restingOf(bundle, pendingPick, axes) {
+  const restingPair = pendingPick ?? (bundle.records === 0 && !bundle.severed ? null : bundle.current);
+  const restingZero = !pendingPick && bundle.severed ? severanceWords(axes).zero : EMPTY_PICK_LABEL;
+  return {
+    restingPair,
+    restingFace: restingPair === null ? null : bundleReadout(restingPair, restingZero)
+  };
+}
+
+/* THE ANCHOR'S ACCESSIBLE NAME, exported so a board that draws one anchor for
+   two readers (`vantageHoles.label`) speaks exactly what the anchor would.
+   A GUEST'S ANCHOR IS SPOKEN AS THE BORROWED VIEW'S OPINION (jakob
+   2026-11-23, point 8 (a); stance-control, *A guest's view*):
+   `@genesis_mod's opinion on this post`, the view's handle whole, and where
+   the view holds one, its reading after it as a member's anchor reads its
+   own — read-only, so never the press-and-hold hint. */
+function anchorName({
+  targetLabel = "this post",
+  bundle = EMPTY_BUNDLE,
+  pendingPick,
+  pendingReview,
+  axes = STANCE_AXES,
+  vantage
+}) {
+  const {
+    restingPair,
+    restingFace
+  } = restingOf(bundle, pendingPick, axes);
+  if (vantage) return restingFace === null ? `@${vantage}'s opinion on ${targetLabel}` : `@${vantage}'s opinion on ${targetLabel}: ${restingFace.label}, ${formatStancePair(restingPair)}.`;
+  if (restingFace === null) return `Give your opinion on ${targetLabel}`;
+  if (pendingPick) return `Your opinion on ${targetLabel}, waiting for your ${pendingReview ? "review" : "key"}: ${restingFace.label}, ${formatStancePair(restingPair)}.`;
+  return `Your opinion on ${targetLabel}: ${restingFace.label}, ${formatStancePair(restingPair)}. Press and hold to add a positive one.`;
+}
+/* The same, under the name a screen can reach (only capitalized exports reach
+   a board's namespace). */
+const ANCHOR_NAME = anchorName;
 function parkedPadStyle(inset = 16) {
   return {
     position: "fixed",
@@ -9340,13 +9432,19 @@ function parkedPadStyle(inset = 16) {
    unchanged — the variant restyles the anchor and nothing else.
 
    `vantage` (round 62, seam 404.3) is the borrowed view's handle for a guest:
-   the wide anchor's words read `@genesismod's opinion` in `Your opinion`'s
+   the wide anchor's words read `@genesis_mod's opinion` in `Your opinion`'s
    place (stance-control.md, the guest's viewpoint; `TagPage.md`,
    `ProfileOther.md`), the handle the part cut before `'s opinion`, which stays
    whole (`nameInLine`, the long-names law's case 2).
    `vantageHoles` — `{ guest, member }`, each a `{{hole}}` the board's VALS
    fills with a display value — draws both words for a board whose `reader`
-   chip re-selects the reader.
+   chip re-selects the reader. Its `label` is the anchor's accessible name as
+   a hole (`anchorName` gives each reader's), and on an anchor whose member
+   holds an opinion where the borrowed view holds none (round 63; jakob
+   2026-11-23, point 7), `held` and `hollow` — display holes — draw the held
+   face and its exact pair for the member and the hollow face for the guest
+   inside the one `face`, so the anchor's paths stay one. Given `vantage`
+   alone, a narrow anchor is a guest's: its spoken name is the view's.
 
    `axes` (the topic round, 2026-09-14) NAMES THE FOUR POLES, for the reason
    `StancePad` already takes them as a prop: this control is not the stance
@@ -9642,11 +9740,10 @@ function StanceControl({
       commitChecked(TAP_DEFAULT);
     }, LONG_PRESS_MS);
   };
-  const restingPair = pendingPick ?? (bundle.records === 0 && !bundle.severed ? null : bundle.current);
-  /* A resting (0, 0) is walked back only when the bundle says so; otherwise —
-     an empty sign's standing, or a kept pick — it says nothing. */
-  const restingZero = !pendingPick && bundle.severed ? severanceWords(axes).zero : EMPTY_PICK_LABEL;
-  const restingFace = restingPair === null ? null : bundleReadout(restingPair, restingZero);
+  const {
+    restingPair,
+    restingFace
+  } = restingOf(bundle, pendingPick, axes);
   /* Whose state `signing` is: the surface that sent the act. A dialog raised
      over the pad — the walk-back, the empty sign — sends its own, so the
      signing is the dialog's while one is up; the pad's while it is open
@@ -9707,7 +9804,20 @@ function StanceControl({
     }
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    "aria-label": restingFace === null ? `Give your opinion on ${targetLabel}` : pendingPick ? `Your opinion on ${targetLabel}, waiting for your ${pendingReview ? "review" : "key"}: ${restingFace.label}, ${formatStancePair(restingPair)}.` : `Your opinion on ${targetLabel}: ${restingFace.label}, ${formatStancePair(restingPair)}. Press and hold to add a positive one.`,
+    "aria-label": vantageHoles ? vantageHoles.label ?? anchorName({
+      targetLabel,
+      bundle,
+      pendingPick,
+      pendingReview,
+      axes
+    }) : anchorName({
+      targetLabel,
+      bundle,
+      pendingPick,
+      pendingReview,
+      axes,
+      vantage
+    }),
     onClick: anchorBusy ? undefined : onTap,
     onPointerDown: anchorBusy ? undefined : onPointerDown,
     "aria-busy": anchorBusy || undefined,
@@ -9784,7 +9894,17 @@ function StanceControl({
       filter: restingFace === null ? "grayscale(1)" : "none"
     },
     "data-node": node && "face"
-  }, restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji)), wide && restingPair === null && (
+  }, restingFace !== null && vantageHoles?.held ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: vantageHoles.held
+    }
+  }, restingFace.emoji), /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: vantageHoles.hollow,
+      opacity: "var(--opacity-resting-face)",
+      filter: "grayscale(1)"
+    }
+  }, RESTING_FACE_EMOJI)) : restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji)), wide && restingPair === null && (
   /* The wide anchor's words — only where there is no pair to show; a
      guest's name the borrowed view's opinion (`vantage`). */
   vantageHoles ?
@@ -9835,7 +9955,10 @@ function StanceControl({
       letterSpacing: "var(--text-body-small--letter-spacing)",
       fontWeight: "var(--text-body-small--font-weight)",
       color: "var(--text-secondary)",
-      whiteSpace: "nowrap"
+      whiteSpace: "nowrap",
+      ...(vantageHoles?.held ? {
+        display: vantageHoles.held
+      } : null)
     },
     "data-node": node && "exact"
   }, formatStancePair(restingPair))), signedIn && /*#__PURE__*/React.createElement("button", {
@@ -10150,6 +10273,8 @@ function StanceControl({
   }));
 }
 __ds_scope.LONG_PRESS_MS = LONG_PRESS_MS;
+__ds_scope.anchorName = anchorName;
+__ds_scope.ANCHOR_NAME = ANCHOR_NAME;
 __ds_scope.StanceControl = StanceControl;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/stance/StanceControl.jsx", error: String((e && e.message) || e) }); }
 
@@ -12507,6 +12632,10 @@ function CommentCard({
      (round 27, seam 252). Additive: absent, the card renders as before. */
   stancePendingPick,
   stancePendingReview,
+  /* A GUEST'S BORROWED VIEW (round 63), `PostCard`'s pass-throughs to
+     `StanceControl`'s `vantage` and `vantageHoles`. */
+  stanceVantage,
+  stanceVantageHoles,
   onReply,
   attach = false,
   targetLabel = "this comment",
@@ -12805,7 +12934,7 @@ function CommentCard({
     onClick: onOpenTarget,
     "aria-label": `On ${target}`,
     "data-node": node && "target",
-    className: "cg-state cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       ...TARGET_DOOR,
       display: "flex",
@@ -12876,6 +13005,8 @@ function CommentCard({
     onCommit: onCommit,
     pendingPick: stancePendingPick,
     pendingReview: stancePendingReview,
+    vantage: stanceVantage,
+    vantageHoles: stanceVantageHoles,
     node: node && "stance"
   }), score !== undefined && /*#__PURE__*/React.createElement(ExplainableNumber, {
     glyph: "graph",
@@ -13324,6 +13455,11 @@ function PostCard({
      — the shell's fact, as `signedIn` is). */
   stanceExplaining,
   stanceBorrowed,
+  /* A GUEST'S BORROWED VIEW (round 63): forwarded to `StanceControl`'s
+     `vantage` and `vantageHoles` — the face is the view's own, read-only,
+     and the anchor is spoken as the view's opinion. */
+  stanceVantage,
+  stanceVantageHoles,
   /* AN APPLICANT'S ANCHOR IS LOCKED, NOT GONE (PR-103, round 16): forwarded
      to `StanceControl`'s `anchorOpacity`, the shell's fact about its reader
      as `signedIn` is. */
@@ -13713,6 +13849,8 @@ function PostCard({
     knobHeld: stanceKnobHeld,
     defaultExplaining: stanceExplaining,
     borrowed: stanceBorrowed,
+    vantage: stanceVantage,
+    vantageHoles: stanceVantageHoles,
     anchorOpacity: stanceOpacity
   }, stanceAxes ? {
     axes: stanceAxes
@@ -16401,11 +16539,14 @@ function BottomNav({
     letterSpacing: "var(--text-label-medium--letter-spacing)",
     fontWeight: "var(--text-label-medium--font-weight)",
     textDecoration: "none",
-    // Text scale is never capped (readme §4 *Type*, K13.4): above 1.3× a
-    // label may wrap to a second line, and the bar grows past its 64px
-    // minimum to hold it — a label is never shortened to an ellipsis.
-    whiteSpace: "normal",
-    overflowWrap: "break-word",
+    // THE WORDS DROP ABOVE 1.3× (readme §4 *Type*; jakob 2026-11-23, (c)):
+    // text scale is never capped, and where the reader's size passes 1.3×
+    // the word under each icon is not drawn — the icons stand alone, the
+    // bar keeps its 64px, and a word never wraps and is never cut. Each
+    // slot keeps its word as its accessible name (`aria-label`), so what a
+    // screen reader hears is the same at every size. At 1×, as drawn, every
+    // word stands on one line.
+    whiteSpace: "nowrap",
     textAlign: "center"
   };
   const tone = selected => selected ? "var(--on-surface)" : "var(--text-secondary)";
@@ -16464,6 +16605,7 @@ function BottomNav({
       key: slot,
       type: "button",
       "aria-current": selected ? "page" : undefined,
+      "aria-label": LABELS[slot],
       onClick: () => onSelect && onSelect(slot),
       className: "cg-state cg-focus",
       style: {
@@ -16473,7 +16615,9 @@ function BottomNav({
       "data-node": slotNode
     }, /*#__PURE__*/React.createElement(Icon, {
       name: glyph
-    }), LABELS[slot]);
+    }), /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true"
+    }, LABELS[slot]));
   }));
 }
 __ds_scope.ALL_SLOTS = ALL_SLOTS;
@@ -19446,6 +19590,8 @@ __ds_ns.SeveranceConfirm = __ds_scope.SeveranceConfirm;
 __ds_ns.StanceAlternates = __ds_scope.StanceAlternates;
 
 __ds_ns.LONG_PRESS_MS = __ds_scope.LONG_PRESS_MS;
+
+__ds_ns.ANCHOR_NAME = __ds_scope.ANCHOR_NAME;
 
 __ds_ns.StanceControl = __ds_scope.StanceControl;
 

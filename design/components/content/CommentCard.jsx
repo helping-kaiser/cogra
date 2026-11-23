@@ -100,6 +100,10 @@ export function CommentCard({
      (round 27, seam 252). Additive: absent, the card renders as before. */
   stancePendingPick,
   stancePendingReview,
+  /* A GUEST'S BORROWED VIEW (round 63), `PostCard`'s pass-throughs to
+     `StanceControl`'s `vantage` and `vantageHoles`. */
+  stanceVantage,
+  stanceVantageHoles,
   onReply,
   attach = false,
   targetLabel = "this comment",
@@ -408,7 +412,7 @@ export function CommentCard({
                 place, the mark's line under it, so its title is not quiet; a
                 deleted account's `Deleted account` there is. Absent, it
                 follows `removed`. */}
-            <button type="button" onClick={onOpenTarget} aria-label={`On ${target}`} data-node={node && "target"} className="cg-state cg-focus" style={{ ...TARGET_DOOR, display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
+            <button type="button" onClick={onOpenTarget} aria-label={`On ${target}`} data-node={node && "target"} className="cg-state cg-focus cg-hit" style={{ ...TARGET_DOOR, display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
               <NodeMark kind={targetKind} src={targetDetail.cover} redacted={targetDetail.removed} onCard />
               <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
                 <span
@@ -449,7 +453,7 @@ export function CommentCard({
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", columnGap: "var(--space-2)", rowGap: "var(--space-1)", width: "100%" }} data-node={node && "actionRow"}>
           {/* Owned by the shell — see PostCard. Named as PostCard names its
               row (seam 248): `stance`, `score`, `reply`, `share`. */}
-          {showStance && <StanceControl targetLabel={targetLabel} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} pendingPick={stancePendingPick} pendingReview={stancePendingReview} node={node && "stance"} />}
+          {showStance && <StanceControl targetLabel={targetLabel} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} pendingPick={stancePendingPick} pendingReview={stancePendingReview} vantage={stanceVantage} vantageHoles={stanceVantageHoles} node={node && "stance"} />}
           {score !== undefined && (
             <ExplainableNumber glyph="graph" label="Feed score" value={score} onOpenDetail={onOpenScore ?? (() => {})} node={node && "score"} />
           )}

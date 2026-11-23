@@ -146,8 +146,25 @@
    the frame's `soundDisc` and the `dots` register by the thread's names.
 
    A GUEST'S TAG PAGE (round 62, seam 404.3) is the `reader` chip's `guest`:
-   the topic's wide anchor reads `@genesismod's opinion` beside the hollow
+   the topic's wide anchor reads `@genesis_mod's opinion` beside the hollow
    face (`READER_CHIP`, `StanceControl`'s `vantage`), the rest as drawn. */
+
+/* THE FULL NAME (round 63; jakob 2026-11-23, point 3 (b): "only on the tags
+   page itself we show the full tags name when it is too long"): the `name`
+   chip's `long` and `long-hyphens` title the page with a 128-character tag,
+   the longest a name may be (hashtag.md: the L1 identifier atom), without a
+   hyphen and with them — the length refusal's own name (`TagPickerRefused`)
+   at 128. The header cuts it on one line with "…"; the full name stands under
+   the header as a wrapping heading (`TagFullName`, registered `name`), above
+   the topic's row. `short` is `#saltmaps`, which fits, so no heading stands.
+   The topic's spoken names keep `#saltmaps`.
+
+   A GUEST'S FACES ARE THE BORROWED VIEW'S (round 63; jakob 2026-11-23,
+   point 7 "build it"): on the `reader` chip's `guest` the view holds one
+   opinion on the page — @tobias's post, the face the member's fixture draws —
+   and none on the topic, @sol's post or @ada's comment, which wear the hollow
+   face; every anchor is spoken `@genesis_mod's opinion on …` (point 8 (a)). */
+const LONG_NAME = "salt_maps_of_the_coast_road_and_the_third_headland_light_and_the_third_headland_light_and_the_third_headland_light_and_the_third";
 
 export const NODE = "tagPage";
 export const FRAME = { width: 390, height: 1344 };
@@ -155,18 +172,24 @@ export const PROPS = {
   load: { editor: "enum", options: ["loaded", "failed", "notFound"], default: "loaded" },
   post: { editor: "enum", options: ["live", "removed"], default: "live" },
   comment: { editor: "enum", options: ["live", "removed", "pictures", "clip"], default: "live" },
+  name: { editor: "enum", options: ["short", "long", "long-hyphens"], default: "short" },
   ...READER_CHIP,
 };
-export const VALS = `loadedShown: this.props.load === "loaded" ? "contents" : "none", failedShown: this.props.load === "failed" ? "contents" : "none", notFoundShown: this.props.load === "notFound" ? "contents" : "none", postLive: this.props.post === "removed" ? "none" : "contents", postRemoved: this.props.post === "removed" ? "contents" : "none", commentLive: this.props.comment === "live" ? "contents" : "none", commentRemoved: this.props.comment === "removed" ? "contents" : "none", commentPictures: this.props.comment === "pictures" ? "contents" : "none", commentClip: this.props.comment === "clip" ? "contents" : "none", ${READER_VALS}`;
+export const VALS = `loadedShown: this.props.load === "loaded" ? "contents" : "none", failedShown: this.props.load === "failed" ? "contents" : "none", notFoundShown: this.props.load === "notFound" ? "contents" : "none", postLive: this.props.post === "removed" ? "none" : "contents", postRemoved: this.props.post === "removed" ? "contents" : "none", commentLive: this.props.comment === "live" ? "contents" : "none", commentRemoved: this.props.comment === "removed" ? "contents" : "none", commentPictures: this.props.comment === "pictures" ? "contents" : "none", commentClip: this.props.comment === "clip" ? "contents" : "none", tagName: this.props.name === "long" ? ${JSON.stringify(LONG_NAME)} : this.props.name === "long-hyphens" ? ${JSON.stringify(LONG_NAME.replaceAll("_", "-"))} : "saltmaps", tagHeading: this.props.name === "short" ? "none" : "block", ${READER_VALS}, ${readerNames([
+  ["readerTopicName", "#saltmaps", undefined, undefined],
+  ["readerTobiasName", "this post", mkBundle(0.1, 0.1), mkBundle(0.1, 0.1)],
+  ["readerSolName", "this post", mkBundle(0.1, 0.1), undefined],
+  ["readerAdaName", "this comment", mkBundle(0.1, 0.1), undefined],
+])}`;
 
 export function Screen() {
   return (
     <>
       <div style={{ display: "{{loadedShown}}" }}>
-        <TagPageBody removed="hole" commentRemoved="hole" named vantageHoles={READER_HOLES} />
+        <TagPageBody removed="hole" commentRemoved="hole" named vantageHoles={READER_HOLES} title="#{{tagName}}" heading="{{tagHeading}}" />
       </div>
       <div style={{ display: "{{failedShown}}" }}>
-        <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" />
+        <PageHeader title="#{{tagName}}" backHref="#" backLabel="Back to Explore" />
         <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-3)", padding: "16px 24px" }}>
           <TransportError message="Can't reach the server — this tag can't load right now." />
           <Button variant="outline" size="sm" selfStart>

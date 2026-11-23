@@ -71,12 +71,12 @@ export const NODE = "profile";
 const ADA_COMMENT_ID = "5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e";
 const ADA_SECOND_COMMENT_ID = "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f";
 export const PROPS = {
-  comments: { editor: "enum", options: ["some", "none", "removed", "settling", "settling-two"], default: "some" },
+  comments: { editor: "enum", options: ["some", "none", "removed", "settling", "settling-two", "pictures", "clip"], default: "some" },
   load: { editor: "enum", options: ["loaded", "loading", "failed"], default: "loaded" },
   reader: { editor: "enum", options: ["member", "applicant"], default: "member" },
   target: { editor: "enum", options: ["live", "removed", "deleted", "swept"], default: "live" },
 };
-export const VALS = `someShown: this.props.load === "loaded" && this.props.comments !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "flex" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", secondLive: this.props.comments === "removed" || this.props.comments === "settling" || this.props.comments === "settling-two" ? "none" : "contents", secondRemoved: this.props.comments === "removed" ? "contents" : "none", secondSettling: this.props.comments === "settling" || this.props.comments === "settling-two" ? "contents" : "none", firstLive: this.props.comments === "settling-two" ? "none" : "contents", firstSettling: this.props.comments === "settling-two" ? "contents" : "none", lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none", targetLine: this.props.target === "removed" ? "@sol's removed post" : this.props.target === "deleted" ? "“Salt maps of the coast road” — Deleted account" : this.props.target === "swept" ? "a deleted account's removed post" : "“Salt maps of the coast road” — @sol"`;
+export const VALS = `someShown: this.props.load === "loaded" && this.props.comments !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "flex" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", secondLive: this.props.comments === "removed" || this.props.comments === "settling" || this.props.comments === "settling-two" || this.props.comments === "pictures" || this.props.comments === "clip" ? "none" : "contents", secondPictures: this.props.comments === "pictures" ? "contents" : "none", secondClip: this.props.comments === "clip" ? "contents" : "none", secondRemoved: this.props.comments === "removed" ? "contents" : "none", secondSettling: this.props.comments === "settling" || this.props.comments === "settling-two" ? "contents" : "none", firstLive: this.props.comments === "settling-two" ? "none" : "contents", firstSettling: this.props.comments === "settling-two" ? "contents" : "none", lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none", targetLine: this.props.target === "removed" ? "@sol's removed post" : this.props.target === "deleted" ? "“Salt maps of the coast road” — Deleted account" : this.props.target === "swept" ? "a deleted account's removed post" : "“Salt maps of the coast road” — @sol"`;
 
 export function Screen() {
   return (
@@ -119,6 +119,7 @@ export function Screen() {
               replyOpacity="{{lockOpacity}}"
               target="{{targetLine}}"
               onOpenTarget={() => {}}
+              {...TAGGED_COMMENT_LINE}
               menuItems={readerCommentCardMenu("ada")}
               node="commentCard"
               id={ADA_SECOND_COMMENT_ID}
@@ -173,11 +174,36 @@ export function Screen() {
 
               target="{{targetLine}}"
               onOpenTarget={() => {}}
+              {...TAGGED_COMMENT_LINE}
               menuItems={readerCommentCardMenu("ada")}
               node="commentCard"
               id={ADA_SECOND_COMMENT_ID}
             />
           </div>
+          {/* The same comment with the thread's two pictures and with its clip
+              (round 64, seam 424; `TagPage`'s `comment` = `pictures` / `clip`,
+              `REPLY_MEDIA_*`): the one comment card draws its media on every
+              host, so `commentCard.media` and its parts register here too. */}
+          {[["pictures", "secondPictures", REPLY_MEDIA_PICTURES], ["clip", "secondClip", REPLY_MEDIA_CLIP]].map(([value, hole, media]) => (
+            <div key={value} style={{ display: `{{${hole}}}` }} data-node-chip="comments" data-node-key={value}>
+              <CommentCard
+                author={ADA}
+                content="Low tide is kinder to the rubbings than noon ever was."
+                timestamp="4d"
+                media={media}
+                license={{ attribution: 0, provenance: 0 }}
+                onReply={() => {}}
+                onOpen={() => {}}
+                replyOpacity="{{lockOpacity}}"
+                target="{{targetLine}}"
+                onOpenTarget={() => {}}
+                {...TAGGED_COMMENT_LINE}
+                menuItems={readerCommentCardMenu("ada")}
+                node="commentCard"
+                id={ADA_SECOND_COMMENT_ID}
+              />
+            </div>
+          ))}
           {/* The same comment removed by its author: the thread's removed
               comment (`CommentRemoved`), the mark in the words' place, author,
               age, reply and pointer kept, the license gone with the payload. */}

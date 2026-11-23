@@ -48,7 +48,11 @@ ALWAYS sensitive content in History keeps its veil, as on the feed
 
 ALWAYS History offers no way to clear the list and no way to remove one thing from it
 
-WHEN history.commentCard.target is tapped -> the post it answers opens AND its back arrow reads Back to History
+WHEN tap history.commentCard.tagsLine.counts -> the comment's tags-and-references sheet rises over History, as a feed card's count opens it
+
+WHEN history.commentCard.target is tapped GIVEN it names a post -> the post it answers opens AND its back arrow reads Back to History
+
+WHEN history.commentCard.target is tapped GIVEN it names a comment -> the post's comment section opens scrolled to the comment it names
 
 WHEN history.commentCard is tapped outside history.commentCard.target and its own controls -> the post's comment section opens scrolled to that comment AND the post's back arrow beneath the thread reads Back to History
 
@@ -96,7 +100,9 @@ WHEN scroll settles at History's hard top GIVEN a qualifying clip exists and the
 
 WHEN an overscroll bounce settles back at History's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in History's order
 
-ALWAYS a veiled clip has no playback and no sound-disc presence
+ALWAYS a veiled clip has no playback
+
+ALWAYS history.commentCard.media.frame.soundDisc is absent GIVEN history.commentCard.media.frame's clip is veiled
 
 ALWAYS history.searchField reads Search your history at rest
 

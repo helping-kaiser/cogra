@@ -85,11 +85,16 @@ const DESTINATIONS: Record<NavSlot, string> = {
 /** The slots a reader without an account may take: the reads (Feed, Explore) and the Wallet's door. */
 const OPEN_TO_GUESTS: readonly NavSlot[] = ["feed", "search", "wallet"];
 
-// TEXT SCALE IS NEVER CAPPED (`BottomNav.jsx`; readme §4 *Type*, K13.4): above
-// 1.3× a label may wrap to a second line, and the bar grows past its 64px
-// minimum to hold it — a label is never shortened to an ellipsis.
+// ABOVE 1.3× THE WORDS DROP (jakob 2026-11-23, seam 411 (c); round 63's
+// `BottomNav.jsx`): text scale is never capped, and where the reader's size
+// passes 1.3× the word under each icon is not drawn — the icons stand alone,
+// the bar keeps its 1× height, a word never wraps and is never cut. The
+// comparison is CSS (`tokens-2.css`, `--cg-text-past-bar`): `cg-bar-slot`,
+// `cg-bar-word` and `cg-bar-compose` are what it reaches. Every slot carries
+// its word as its accessible name (`aria-label`), so the name never rides on
+// the drawn word alone; the drawn word is `aria-hidden`.
 const ITEM =
-  "cg-state cg-focus flex min-w-0 flex-1 flex-col items-center gap-1 whitespace-normal break-words rounded-medium px-0.5 py-2 text-center text-label-medium";
+  "cg-state cg-focus cg-bar-slot flex min-w-0 flex-1 flex-col items-center gap-1 whitespace-normal break-words rounded-medium px-0.5 py-2 text-center text-label-medium";
 
 export function BottomNav({
   active,
@@ -144,7 +149,7 @@ export function BottomNav({
           slot === "compose" ? (
             <span
               aria-hidden
-              className="flex size-10 items-center justify-center rounded-full bg-primary-container text-on-primary-container"
+              className="cg-bar-compose flex size-10 items-center justify-center rounded-full bg-primary-container text-on-primary-container"
             >
               <Icon name="add" />
             </span>
@@ -159,7 +164,9 @@ export function BottomNav({
                     : (GLYPHS[slot] ?? "person_outline")
                 }
               />
-              {LABELS[slot]}
+              <span aria-hidden="true" className="cg-bar-word">
+                {LABELS[slot]}
+              </span>
             </>
           );
 
@@ -190,7 +197,7 @@ export function BottomNav({
               key={slot}
               type="button"
               {...ids}
-              aria-label={slot === "compose" ? LABELS.compose : undefined}
+              aria-label={LABELS[slot]}
               onClick={() => setPrompting(true)}
               className={`${ITEM} ${slot === "compose" ? "" : tone(false)}`}
             >
@@ -217,7 +224,7 @@ export function BottomNav({
                 : undefined
             }
             {...ids}
-            aria-label={slot === "compose" ? LABELS.compose : undefined}
+            aria-label={LABELS[slot]}
             aria-current={selected ? "page" : undefined}
             className={`${ITEM} ${slot === "compose" ? "" : tone(selected)}`}
           >
