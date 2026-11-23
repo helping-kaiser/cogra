@@ -3039,9 +3039,10 @@ denominator), non-decreasing in $B_i$ at fixed $N_i$ — a destruction amount
 raises the gross frame once the deployment's marker policy accepts it.
 Published per-actor scalars;
 derivable from the primitive's public record, the committed act count, and
-the published $\theta$-debit schedule without graph traversal. The frame is
-verified by recompute-and-verify-provenance, never scan-and-total
-(`rem:comparator:auditability`).
+the published $\theta$-debit schedule without graph traversal. The
+frame's provenance property is assumed at the seam, not re-established by
+network replay (`rem:comparator:auditability`); external provenance
+publication is a courtesy audit standard (§1.1).
 
 **Funding is a Layer-2 freedom (`rem:gates:guild-funding`).** The
 deployment's marker policy determines whether a destruction amount is
