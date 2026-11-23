@@ -432,7 +432,7 @@ describe("Edit on your own comment off the thread", () => {
     await screen.findByTestId("stub-editor");
     expect(reads).toBe(0);
     expect(asked[0]!.comment.topics).toEqual([]);
-    expect(asked[0]!.comment.references).toEqual([]);
+    expect(asked[0]!.comment.referenceCount).toBe(0);
   });
 });
 

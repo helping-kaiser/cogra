@@ -142,13 +142,17 @@ class ProfileRepositoryTest {
         assertThat(page[2].act).isEqualTo(RecordAct.ORDINARY)
     }
 
-    // ProfileHeader's figures (Q35, ruled 2026-11-10): Posts a `totalCount`,
-    // the opinion figures `bundleCount`s over unmarked records, each `first: 0`.
+    // ProfileHeader's figures (Q35, ruled 2026-11-10): the opinion figures
+    // `bundleCount`s over unmarked records, each `first: 0`. Posts is the
+    // count of the Posts view's own listing — `User.posts`, settling and
+    // removed posts counted, never an edit — so the figure and the list agree
+    // (ProfilePosts.md:15, ProfilePostsOwn.md:11), never the mirror's
+    // landed-only count of Publish records.
     @Test
-    fun theFiguresCountPostsAndTheBundlesOfOpinions() = runTest {
+    fun theFiguresCountThePostsListingAndTheBundlesOfOpinions() = runTest {
         enqueue(
             """{"data":{"user":{"__typename":"User","id":"u1",
-               "posts":{"__typename":"RecordConnection","totalCount":5},
+               "posts":{"__typename":"PostConnection","totalCount":5},
                "opinionsOn":{"__typename":"RecordConnection","bundleCount":9},
                "opinionsBy":{"__typename":"RecordConnection","bundleCount":null}}}}""",
         )
@@ -158,7 +162,8 @@ class ProfileRepositoryTest {
         // A count the server did not serve stays unknown, never a false zero.
         assertThat(figures.opinionsBy).isNull()
         val sent = server.takeRequest().body.readUtf8()
-        assertThat(sent).containsMatch("genesis:\\s*true")
+        assertThat(sent).containsMatch("posts\\(first:\\s*0\\)")
+        assertThat(sent).doesNotContain("family: PUBLISH")
         assertThat(sent).containsMatch("toKind:\\s*USER")
         assertThat(sent).containsMatch("payloadMarked:\\s*false")
         assertThat(sent).contains("bundleCount")
@@ -246,46 +251,133 @@ class ProfileRepositoryTest {
         assertThat(server.takeRequest().body.readUtf8()).containsMatch("toKind:\\s*USER")
     }
 
-    // THE POSTS VIEW'S READ (ProfilePosts.md:3): the person's genesis Publish
-    // records, a page at a time; a record whose target CoGra does not carry
-    // as a post is skipped, never a blank card.
+    // -- The Posts and Comments views (ProfilePosts.md, ProfileComments.md) --
+
+    private val removedJson = """{"__typename":"Removal","at":"2026-11-20T09:00:00Z","by":"AUTHOR"}"""
+
+    private fun landingJson(state: String, epoch: Int?) =
+        """{"__typename":"Landing","state":"$state","epoch":${epoch ?: "null"}}"""
+
+    /** A post as `PostFields` reads it, with the card's comment count. */
+    private fun postJson(id: String, state: String = "LANDED", epoch: Int? = 7, removed: Boolean = false) = """
+        {"__typename":"Post","id":"$id",
+         "title":{"__typename":"ModeratedText","value":"Post $id","status":"NORMAL"},
+         "description":{"__typename":"ModeratedText","value":null,"status":"NORMAL"},
+         "content":{"__typename":"ModeratedText","value":${if (removed) "null" else "\"body\""},"status":"NORMAL"},
+         "attachments":[],
+         "attachmentsStatus":"NORMAL",
+         "author":{"__typename":"User","id":"u2","handle":"ada",
+           "displayName":{"__typename":"ModeratedText","value":"Ada"},"avatar":null},
+         "createdAt":"2026-11-12T10:00:00+00:00",
+         "updatedAt":"2026-11-12T10:00:00+00:00",
+         "landing":${landingJson(state, epoch)},
+         "moderationStatus":"NORMAL",
+         "removal":${if (removed) removedJson else "null"},"genesisRecordId":"rec:$id",
+         "license":{"__typename":"License","attribution":0.5,"provenance":1.0},
+         "topics":[],
+         "references":[],
+         "commentCount":{"__typename":"CommentConnection","totalCount":3}}
+    """.trimIndent()
+
+    /** A comment as the comment card reads it: its fields, its pointer, its post, its replies' count. */
+    private fun commentJson(id: String, state: String = "LANDED", epoch: Int? = 7, removed: Boolean = false) = """
+        {"__typename":"Comment","id":"$id",
+         "content":{"__typename":"ModeratedText","value":${if (removed) "null" else "\"a reply\""},"status":"NORMAL"},
+         "attachments":[],
+         "attachmentsStatus":"NORMAL",
+         "author":{"__typename":"User","id":"u2","handle":"ada",
+           "displayName":{"__typename":"ModeratedText","value":"Ada"},"avatar":null},
+         "createdAt":"2026-11-12T10:05:00+00:00",
+         "updatedAt":"2026-11-12T10:05:00+00:00",
+         "landing":${landingJson(state, epoch)},
+         "moderationStatus":"NORMAL",
+         "removal":${if (removed) removedJson else "null"},"genesisRecordId":"rec:$id",
+         "sensitiveSelfMark":false,"sensitiveReason":null,
+         "license":{"__typename":"License","attribution":1.0,"provenance":0.0},
+         "topics":[],
+         "references":[],
+         "target":{"__typename":"Post","id":"p9",
+           "title":{"__typename":"ModeratedText","value":"Salt maps","status":"NORMAL"},
+           "content":{"__typename":"ModeratedText","value":"words","status":"NORMAL"},
+           "attachments":[],
+           "author":{"__typename":"User","id":"u3","handle":"sol"},
+           "moderationStatus":"NORMAL",
+           "removal":null},
+         "post":{"__typename":"Post","id":"p9"},
+         "replies":{"__typename":"CommentConnection","totalCount":2}}
+    """.trimIndent()
+
+    private fun listing(field: String, connection: String, nodes: List<String>, next: String?): String {
+        val edge = connection.removeSuffix("Connection") + "Edge"
+        val edges = nodes.joinToString(",") { "{\"__typename\":\"$edge\",\"node\":$it}" }
+        return """{"data":{"user":{"__typename":"User","id":"u2","$field":{"__typename":"$connection",
+           "edges":[$edges],
+           "pageInfo":{"__typename":"PageInfo","hasNextPage":${next != null},"endCursor":${quoted(next)}}}}}}"""
+    }
+
+    // THE POSTS VIEW'S READ (ProfilePosts.md:3, :7, :9; ProfilePostsOwn.md:9):
+    // `User.posts`, whose edge node IS the post — a still-settling post at the
+    // head wearing its PENDING landing, a removed one in its place — in the
+    // listing's own order, a page at a time on its cursor.
     @Test
-    fun thePostsViewSkipsARecordWithNoPostAndPagesOnItsCursor() = runTest {
+    fun thePostsViewReadsTheListingSettlingFirstARemovedPostKeptAndPagesOnItsCursor() = runTest {
         enqueue(
-            """{"data":{"user":{"__typename":"User","id":"u2","posts":{"__typename":"RecordConnection",
-               "edges":[{"__typename":"RecordEdge","node":{"__typename":"Record","id":"r1","target":null}},
-                        {"__typename":"RecordEdge","node":{"__typename":"Record","id":"r2",
-                          "target":{"__typename":"User"}}}],
-               "pageInfo":{"__typename":"PageInfo","hasNextPage":true,"endCursor":"c2"}}}}}""",
+            listing(
+                "posts",
+                "PostConnection",
+                listOf(
+                    postJson("p3", state = "PENDING", epoch = null),
+                    postJson("p2", removed = true),
+                    postJson("p1"),
+                ),
+                next = "c2",
+            ),
         )
 
         val page = (repo().profilePosts("u2", after = "c1") as Outcome.Success).value
 
-        assertThat(page.items).isEmpty()
+        assertThat(page.items.map { it.id }).containsExactly("p3", "p2", "p1").inOrder()
+        assertThat(page.items[0].landing.isPending).isTrue()
+        assertThat(page.items[1].landing.isPending).isFalse()
+        assertThat(page.items[1].removal).isNotNull()
+        assertThat(page.items[2].commentCount).isEqualTo(3)
         assertThat(page.hasNextPage).isTrue()
         assertThat(page.endCursor).isEqualTo("c2")
         val sent = server.takeRequest().body.readUtf8()
         assertThat(sent).containsMatch("\"after\"\\s*:\\s*\"c1\"")
-        assertThat(sent).containsMatch("family:\\s*PUBLISH,\\s*toKind:\\s*POST,\\s*genesis:\\s*true")
+        assertThat(sent).containsMatch("posts\\(first:\\s*10,\\s*after:\\s*\\\$after\\)")
+        assertThat(sent).doesNotContain("outgoingRecords")
     }
 
-    // THE COMMENTS VIEW'S READ (ProfileComments.md:3): each comment's own
-    // genesis Review, its terminal the comment; anything else is skipped.
+    // THE COMMENTS VIEW'S READ (ProfileComments.md:3, :5; ProfileCommentsOwn.md:7):
+    // `User.comments`, whose edge node IS the comment — a still-settling one at
+    // the head, its pointer, thread post and replies' count read — and a
+    // person the server does not know reads empty.
     @Test
-    fun theCommentsViewSkipsARecordWithNoCommentAndAnUnknownPersonReadsEmpty() = runTest {
+    fun theCommentsViewReadsTheListingSettlingFirstAndAnUnknownPersonReadsEmpty() = runTest {
         enqueue(
-            """{"data":{"user":{"__typename":"User","id":"u2","comments":{"__typename":"RecordConnection",
-               "edges":[{"__typename":"RecordEdge","node":{"__typename":"Record","id":"r1",
-                 "terminal":{"__typename":"Post"}}}],
-               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}}""",
+            listing(
+                "comments",
+                "CommentConnection",
+                listOf(commentJson("c2", state = "PENDING", epoch = null), commentJson("c1", removed = true)),
+                next = null,
+            ),
         )
         enqueue("""{"data":{"user":null}}""")
 
         val page = (repo().profileComments("u2", after = null) as Outcome.Success).value
         val unknown = (repo().profileComments("nobody", after = null) as Outcome.Success).value
 
-        assertThat(page.items).isEmpty()
-        assertThat(server.takeRequest().body.readUtf8()).containsMatch("family:\\s*REVIEW,\\s*genesis:\\s*true")
+        assertThat(page.items.map { it.comment.id }).containsExactly("c2", "c1").inOrder()
+        assertThat(page.items[0].comment.landing.isPending).isTrue()
+        assertThat(page.items[0].comment.replyCount).isEqualTo(2)
+        assertThat(page.items[0].threadPostId).isEqualTo("p9")
+        assertThat(page.items[0].target).isNotNull()
+        assertThat(page.items[1].comment.removal).isNotNull()
+        assertThat(page.hasNextPage).isFalse()
+        val sent = server.takeRequest().body.readUtf8()
+        assertThat(sent).containsMatch("comments\\(first:\\s*10,\\s*after:\\s*\\\$after\\)")
+        assertThat(sent).doesNotContain("outgoingRecords")
         assertThat(unknown.items).isEmpty()
         assertThat(unknown.hasNextPage).isFalse()
     }

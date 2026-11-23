@@ -56,7 +56,7 @@ function post(id: string, authorId = "u1") {
     genesisRecordId: "rec-genesis",
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
-    references: [],
+    referenceCount: 0,
   };
 }
 

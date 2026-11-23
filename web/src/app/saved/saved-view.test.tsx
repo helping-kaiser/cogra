@@ -88,7 +88,7 @@ function postNode(id: string, title: string | null, savedAt: string, writtenDays
     genesisRecordId: "rec-genesis",
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: tags.map(topic),
-    references: [],
+    referenceCount: 0,
     viewerBookmarkedAt: savedAt,
     comments: { __typename: "CommentConnection", totalCount: 0 },
   };
@@ -113,7 +113,7 @@ function commentNode(id: string, savedAt: string, tags: string[] = []) {
     genesisRecordId: "rec-genesis",
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: tags.map(topic),
-    references: [],
+    referenceCount: 0,
     viewerBookmarkedAt: savedAt,
     target: {
       __typename: "Post",

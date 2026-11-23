@@ -274,7 +274,7 @@ describe("TagPageCommentMenuOwn — the reader's own tagged comment", () => {
     expect(asked[0]).toMatchObject({ postId: "p1", parentId: null, targetLabel: "Salt maps of the coast road" });
     expect(asked[0]!.comment.id).toBe("c1");
     expect(asked[0]!.comment.topics).toEqual([]);
-    expect(asked[0]!.comment.references).toEqual([]);
+    expect(asked[0]!.comment.referenceCount).toBe(0);
     expect(reads).toBe(0);
     pageStands();
   });

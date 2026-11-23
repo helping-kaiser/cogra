@@ -55,6 +55,50 @@ query HashtagStance($name: String!, $pick: StancePickInput, $includePending: Boo
   }
 }
 
+# A GUEST'S FACES WEAR THE BORROWED VIEW'S OWN STANCE (FeedBare.md:7,
+# TagPage.md:73, GuestGate.md:11): `borrowedStance`, read-only, null where
+# that view holds none and for any session. Its own four reads rather than a
+# field on the four above: a guest's request never asks `viewerStance` or a
+# `targetGraphId`, so nothing an act could be signed toward rides it, and a
+# member's reads stay as they were. Never in a card fragment (the price of
+# the card pages, seam 428).
+
+query PostBorrowedStance($id: UUID!) {
+  post(id: $id) {
+    id
+    borrowedStance {
+      ...BorrowedStanceFields
+    }
+  }
+}
+
+query CommentBorrowedStance($id: UUID!) {
+  comment(id: $id) {
+    id
+    borrowedStance {
+      ...BorrowedStanceFields
+    }
+  }
+}
+
+query ProfileBorrowedStance($id: UUID!) {
+  user(id: $id) {
+    id
+    borrowedStance {
+      ...BorrowedStanceFields
+    }
+  }
+}
+
+query HashtagBorrowedStance($name: String!) {
+  hashtag(name: $name) {
+    id
+    borrowedStance {
+      ...BorrowedStanceFields
+    }
+  }
+}
+
 # Stages the counter-records that net the bundle to (0, 0) — each its
 # own priced act, so the batch length is the gesture's cost. Refused
 # when the bundle already nets there (api-spec.md "The generic

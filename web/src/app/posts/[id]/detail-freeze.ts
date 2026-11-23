@@ -29,11 +29,19 @@
 /** A string-valued status, as every moderated field and attachment wears one. */
 const REDACTED = "REDACTED";
 
-/** What the rule reads of a post: the version stamp and the two claim sets. */
+/**
+ * What the rule reads of a post: the version stamp and the two claim sets.
+ *
+ * THE CITATIONS ARE A SET WHERE THE PAINT HELD ONE, AND A COUNT WHERE IT DID
+ * NOT. The detail's own read carries the list; a post painted off the feed's
+ * cache carries only `referenceCount`, which is all its card drew — the list
+ * was never on screen, so the count is what the hold compares.
+ */
 export type Versioned = {
   readonly updatedAt: unknown;
   readonly topics: readonly { readonly hashtag: { readonly id: string } }[];
-  readonly references: readonly { readonly targetId: string }[];
+  readonly referenceCount: number;
+  readonly references?: readonly { readonly targetId: string }[];
 };
 
 /** What the page holds: the post on screen, and a newer one the line offers. */
@@ -88,11 +96,22 @@ export function isNewerVersion(painted: Versioned, fresh: Versioned): boolean {
       painted.topics.map((topic) => topic.hashtag.id),
       fresh.topics.map((topic) => topic.hashtag.id),
     ) ||
-    !sameSet(
+    !sameCitations(painted, fresh)
+  );
+}
+
+function sameCitations(painted: Versioned, fresh: Versioned): boolean {
+  if (painted.references !== undefined && fresh.references !== undefined) {
+    return sameSet(
       painted.references.map((reference) => reference.targetId),
       fresh.references.map((reference) => reference.targetId),
-    )
-  );
+    );
+  }
+  return citationCount(painted) === citationCount(fresh);
+}
+
+function citationCount(post: Versioned): number {
+  return post.references?.length ?? post.referenceCount;
 }
 
 function sameSet(a: readonly string[], b: readonly string[]): boolean {

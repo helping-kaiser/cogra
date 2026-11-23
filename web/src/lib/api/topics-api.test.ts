@@ -90,7 +90,7 @@ describe("fetchHashtagDetail", () => {
     const rows = outcome.value?.taggedContent ?? [];
     expect(rows.map(({ node }) => node.id)).toEqual(["c1", "c3"]);
     const first = rows[0]!.node;
-    expect(first.__typename === "Comment" && first.references).toEqual([]);
+    expect(first.__typename === "Comment" && first.referenceCount).toBe(0);
   });
 
   it("fails when the comment cards' read gets no answer", async () => {
