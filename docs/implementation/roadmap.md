@@ -212,7 +212,10 @@ coordinate. The gates' call-sites are real; the real substrate brings
 the real stamps at the swap.
 
 Everywhere else the stand-in follows the contract's rule with its
-numbers. Epochs number from 1, and the acts of each epoch from 1. An
+numbers, and adds one rule of CoGra's own: it seals only under the
+key the author's address derives from — the stand-in's address
+convention, where the contract relates no key to the author
+([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)). Epochs number from 1, and the acts of each epoch from 1. An
 epoch closes on the stand-in's clock, whether or not anything is
 orderable, and never early when its act budget fills; each package
 publishes its boundary triple — the act budget as target size, a
