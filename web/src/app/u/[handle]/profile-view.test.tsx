@@ -275,7 +275,7 @@ describe("ProfileScreen", () => {
             user: {
               __typename: "User",
               id: "u2",
-              posts: { __typename: "RecordConnection", totalCount: 12 },
+              posts: { __typename: "PostConnection", totalCount: 12 },
               opinionsOn: { __typename: "RecordConnection", bundleCount: 1204 },
               opinionsBy: { __typename: "RecordConnection", bundleCount: 7 },
             },
@@ -308,7 +308,7 @@ describe("ProfileScreen", () => {
             user: {
               __typename: "User",
               id,
-              posts: { __typename: "RecordConnection", totalCount: 12 },
+              posts: { __typename: "PostConnection", totalCount: 12 },
               opinionsOn: { __typename: "RecordConnection", bundleCount: 1204 },
               opinionsBy: { __typename: "RecordConnection", bundleCount: 7 },
             },
