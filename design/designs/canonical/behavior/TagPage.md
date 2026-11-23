@@ -34,7 +34,15 @@ ALWAYS tagPage.commentCard carries tagPage.commentCard.tagsLine, its tags as tag
 
 WHEN tap tagPage.commentCard.tagsLine.counts -> the comment's tags-and-references sheet rises over the tag page, as a feed card's count opens it
 
-WHEN tap tagPage.commentCard.tagsLine.tag -> that tag's page opens
+WHEN tap tagPage.commentCard.tagsLine.tag GIVEN it names another tag -> that tag's page opens
+
+WHEN tap tagPage.card.tagsLine.tag GIVEN it names another tag -> that tag's page opens
+
+WHEN tap tagPage.card.tagsLine.tag or tagPage.commentCard.tagsLine.tag GIVEN it names the page's own tag -> NEVER anything changes, the page already being open
+
+WHEN tap a tag row in a tags-and-references sheet opened from the tag page GIVEN it names the page's own tag -> NEVER anything changes, the sheet staying up over the page it was opened from
+
+WHEN tap a tag row in a tags-and-references sheet opened from the tag page GIVEN it names another tag -> that tag's page opens
 
 ALWAYS a tagged comment's ⋮ holds the comment's whole menu, the reader's comment menu on someone else's, removed or not, and the own comment menu on the reader's own, less Edit and Remove once it was removed
 
