@@ -53,10 +53,10 @@ import kotlinx.coroutines.launch
  * [onRequireAccount] is the guest gate: non-null means the reader is
  * signed out, and every gesture that would stage a priced act raises it
  * instead — ask, never bounce (design.md §6). It defaults to the shell's
- * own ([LocalGuestGate]), so a card host need not thread it. The FACE is not gated,
- * because a signed-out reader has no bundle and so wears the same
- * no-standing affordance a signed-in reader with nothing said wears;
- * what a guest must not reach is the signing, not the page.
+ * own ([LocalGuestGate]), so a card host need not thread it. The FACE is
+ * not gated: a guest's face wears the borrowed view's own stance, read-only,
+ * and the hollow face where that view holds none (FeedBare.md:7,
+ * GuestGate.md:11); what a guest must not reach is the signing, not the page.
  */
 @Composable
 fun StanceControlRoute(
@@ -103,11 +103,20 @@ fun StanceControlRoute(
     viewModel: StanceViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val guest by viewModel.guest.collectAsStateWithLifecycle()
     KeptEffects(target, variant, state.reviewFrom, viewModel)
-    // A guest has no bundle to read, and asking for one costs a refused
-    // round trip plus the guard's wasted token refresh on every control
-    // the page holds.
-    LaunchedEffect(target, onRequireAccount) { if (onRequireAccount == null) viewModel.observe(target) }
+    // A GUEST'S OPINION FACE IS LENT (FeedBare.md:7): the borrowed view's own,
+    // never a vouch-back's or an approval's pad — those are the reader's own
+    // acts, never the view's.
+    val lends = onRequireAccount != null && variant == null && !padOnly
+    // A guest has no bundle to read — asking costs a refused round trip and
+    // the guard's wasted refresh per control — so they read the view's.
+    LaunchedEffect(target, onRequireAccount) {
+        when {
+            onRequireAccount == null -> viewModel.observe(target)
+            lends -> viewModel.observeAsGuest(target)
+        }
+    }
     // Leaving the screen dismisses the pad and stages nothing
     // (design.md §8.3). The pad is a popup — its own window, drawn over
     // whatever the app navigates to — and the holder outlives the
@@ -135,14 +144,18 @@ fun StanceControlRoute(
     if (onTaken != null) TakenEffect(entry.taken, target, viewModel, onTaken)
     // AN APPLICANT'S FACE IS LOCKED, NOT GONE ([rememberGate]); a [variant]'s pad stays open.
     val gate = rememberGate(onRequireAccount, locked = state.applicant && variant == null)
-    val controlState = entry.toControlState(
-        coaching = state.coachingTarget == target,
-        inputMode = state.inputMode,
-        borrowed = state.borrowed,
-        keyAbsent = state.keyAbsent,
-        kept = state.kept.keptFor(target, entry.family),
-        settling = target in state.settling,
-    )
+    val controlState = if (lends) {
+        guest.toControlState(target)
+    } else {
+        entry.toControlState(
+            coaching = state.coachingTarget == target,
+            inputMode = state.inputMode,
+            borrowed = state.borrowed,
+            keyAbsent = state.keyAbsent,
+            kept = state.kept.keptFor(target, entry.family),
+            settling = target in state.settling,
+        )
+    }
     StanceControl(
         state = if (onTaken != null) controlState.copy(confirmation = null) else controlState,
         // Every gesture that ENTERS the ceremony, so a guest meets the
@@ -289,6 +302,23 @@ internal fun TargetStance.toControlState(
     },
     settling = settling && kept == null,
 )
+
+/**
+ * A GUEST'S RESTING FACE (FeedBare.md:7, :9): the borrowed view's own stance
+ * through the same readout a member's own uses — read-only, so nothing else
+ * of a member's control rides it (no pad, no kept pick, no landing). Until
+ * the view is named the face stays hollow and speaks as today's: a held face
+ * nobody owns would read as the reader's own.
+ */
+internal fun GuestFaces.toControlState(target: StanceTarget): StanceControlState {
+    val handle = vantage ?: return StanceControlState()
+    val face = faces[target]
+    return StanceControlState(
+        standing = face?.resting?.toPoint(),
+        severed = face?.severed == true,
+        vantage = handle,
+    )
+}
 
 internal fun StancePair.toPoint() = StancePoint(pDirected, pInterest)
 
