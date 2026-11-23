@@ -20,11 +20,17 @@
    notice carries that same link in the same words, underlined in the panel's
    own ink: it leaves the app for the browser's download, which is a link's
    job, not a button's. Both are replaced together when CoGra is served from
-   a real host. */
+   a real host.
+
+   REGISTERED under the `keyCeremonyUnsupported` prefix (round 62, seams 396 /
+   397 — the names the web stamped, kept): `header` and its `back`, the
+   heading `title`, the `notice` with its `title`, its `body` and its
+   `download`. */
+export const NODE = "keyCeremonyUnsupported";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back" />
+      <PageHeader backHref="#" backLabel="Back" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
@@ -34,15 +40,17 @@ export function Screen() {
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           Your key
         </h1>
         <div style={{ height: 16 }} />
-        <NoticePanel title="This browser can't hold a key" corner="large">
-          <NoticeLine>Open CoGra in a current Chrome, Firefox or Safari, or in the Android app.</NoticeLine>
+        <NoticePanel title="This browser can't hold a key" corner="large" node="notice">
+          <NoticeLine node="body">Open CoGra in a current Chrome, Firefox or Safari, or in the Android app.</NoticeLine>
           <a
             href="/downloads/app-debug.apk"
             download
+            data-node="download"
             className="cg-state cg-focus"
             style={{ alignSelf: "flex-start", fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", color: "inherit", textDecoration: "underline" }}
           >
