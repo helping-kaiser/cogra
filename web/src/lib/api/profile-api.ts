@@ -142,7 +142,7 @@ export async function fetchProfileFigures(
  * THE POSTS VIEW'S PAGE (ProfilePosts.md:3): the person's posts as the feed
  * card draws them (`User.posts`), the still-settling ones at the head
  * (ProfilePosts.md:7), then the landed ones newest first — the connection the
- * `Posts` figure counts, so the list and the figure agree (:15). Ten a page,
+ * `Posts` figure counts, so the list and the figure agree (:15). Twenty a page,
  * the document's own literal (`profile.graphql`).
  */
 export async function fetchProfilePosts(
@@ -178,7 +178,7 @@ export type ProfileCommentView = CommentFeedView;
  * THE COMMENTS VIEW'S PAGE (ProfileComments.md:3): the person's comments as
  * their cards draw them (`User.comments`), whatever they answer, never an
  * edit — the still-settling ones at the head (ProfileComments.md:5), then the
- * landed ones newest first. Ten a page, the document's own literal
+ * landed ones newest first. Twenty a page, the document's own literal
  * (`profile.graphql`).
  */
 export async function fetchProfileComments(

@@ -215,10 +215,10 @@ describe("fetchProfilePosts", () => {
   // The figure and the list are one connection, read from the document the
   // client sends: the Posts count can never disagree with the cards it counts
   // (ProfilePosts.md:15). Still-settling posts ride it (ProfilePosts.md:7).
-  it("asks for the connection the Posts figure counts, ten to a page, each node a whole card", () => {
+  it("asks for the connection the Posts figure counts, twenty to a page, each node a whole card", () => {
     const document = readFileSync(join(process.cwd(), "src", "lib", "graphql", "profile.graphql"), "utf-8");
     const posts = document.slice(document.indexOf("query ProfilePosts"), document.indexOf("query ProfileComments"));
-    expect(posts).toContain("posts(first: 10, after: $after) {");
+    expect(posts).toContain("posts(first: 20, after: $after) {");
     expect(posts).not.toContain("outgoingRecords");
     expect(posts).not.toContain("includePending: false");
     expect(posts).toMatch(/node \{\s+\.\.\.FeedPost\s+\}/);
@@ -269,10 +269,10 @@ describe("fetchProfileComments", () => {
   // Every comment the person made, once, whatever it answers, never an edit —
   // the still-settling ones included (ProfileComments.md:5) — off the
   // person's own comment listing, each node a whole card.
-  it("asks for the person's comment listing, any parent, ten to a page, each node a whole card", () => {
+  it("asks for the person's comment listing, any parent, twenty to a page, each node a whole card", () => {
     const document = readFileSync(join(process.cwd(), "src", "lib", "graphql", "profile.graphql"), "utf-8");
     const comments = document.slice(document.indexOf("query ProfileComments"), document.indexOf("query ProfileFigures"));
-    expect(comments).toContain("comments(first: 10, after: $after) {");
+    expect(comments).toContain("comments(first: 20, after: $after) {");
     expect(comments).not.toContain("outgoingRecords");
     expect(comments).not.toContain("includePending: false");
     expect(comments).toMatch(/node \{\s+\.\.\.CommentFields/);
