@@ -1,0 +1,48 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT l.target                                 AS \"target!\",\n                  SUM(l.p_d::text::numeric)::text          AS \"p_d!\",\n                  SUM(l.p_i::text::numeric)::text          AS \"p_i!\",\n                  COUNT(*)::bigint                         AS \"records!\",\n                  (ARRAY_AGG(NOT (l.p_d = 0 AND l.p_i = 0)\n                             ORDER BY r.epoch DESC, r.position DESC))[1] AS \"newest_says!\"\n           FROM mirror_record_legs l\n           JOIN mirror_records r ON r.record_id = l.record_id\n           JOIN UNNEST($2::text[], $3::text[]) AS k(family, target)\n             ON k.family = l.family AND k.target = l.target\n           WHERE l.leg = 'binary' AND l.source = $1\n             AND NOT r.payload_marked\n             AND NOT l.census_unknown\n           GROUP BY l.target",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "target!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "p_d!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "p_i!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "records!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "newest_says!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "TextArray",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "17c40b2e9adbb2888c5425a50ea51714505be04a58a68ff6bbac4c11ee5c74a2"
+}

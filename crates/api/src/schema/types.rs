@@ -197,6 +197,43 @@ impl StanceBundle {
     }
 }
 
+/// The borrowed view's own landed stance toward one node, as a
+/// sessionless reader sees it (`design/guidelines/stance-control.md`
+/// "A guest's view"; api-spec.md "The generic stance"). The same fold as
+/// [`StanceBundle`], served read-only: no node to bind an act to, no
+/// severance cost, no projection — nothing a gesture could start from.
+pub struct BorrowedStance(common::l1::fold::Standing);
+
+#[Object]
+impl BorrowedStance {
+    /// The folded valence as it stands.
+    async fn p_directed(&self) -> Dimension {
+        Dimension(self.0.sum.fold().p_d)
+    }
+
+    /// The folded connection as it stands.
+    async fn p_interest(&self) -> Dimension {
+        Dimension(self.0.sum.fold().p_i)
+    }
+
+    /// How many landed records the bundle folds, an empty sign's `(0, 0)`
+    /// included.
+    async fn record_count(&self) -> i32 {
+        self.0.sum.records.try_into().unwrap_or(i32::MAX)
+    }
+
+    /// Either axis at zero — the bundle carries nothing on it.
+    async fn inert(&self) -> bool {
+        self.0.sum.fold().is_inert()
+    }
+
+    /// Walked back to nothing: the bundle nets to `(0, 0)` and its newest
+    /// record said something — `StanceBundle.severed`'s reading.
+    async fn severed(&self) -> bool {
+        self.0.is_severed()
+    }
+}
+
 /// The author's own Publish bundle toward their post: the sum of every
 /// Publish-family record they wrote toward it — the genesis record and
 /// each edit — before and after the clip. A post's creator authors this
@@ -352,6 +389,29 @@ pub(crate) async fn viewer_stance(
         | Err(crate::stance::StanceError::Internal(_)) => Ok(None),
         Err(e) => Err(e.into()),
     }
+}
+
+/// Resolves the `borrowedStance` field shared by every stance-able node:
+/// the borrowed view's landed bundle toward `node`, for a request with no
+/// session — the vantage `Query.borrowedView` answers it, the Genesis
+/// Moderator. Null with a session, for a node with no graph identifier
+/// yet, and where the borrowed view holds no landed record toward it.
+///
+/// Batched through [`crate::loaders::GuestStanceLoader`], so a page of
+/// faces costs two reads whatever its size.
+pub(crate) async fn borrowed_stance(
+    ctx: &Context<'_>,
+    node: Option<NodeId>,
+) -> async_graphql::Result<Option<BorrowedStance>> {
+    if !matches!(ctx.data_opt::<Option<Viewer>>(), None | Some(None)) {
+        return Ok(None);
+    }
+    let Some(node) = node else {
+        return Ok(None);
+    };
+    let loader =
+        ctx.data::<async_graphql::dataloader::DataLoader<crate::loaders::GuestStanceLoader>>()?;
+    Ok(loader.load_one(node.to_string()).await?.map(BorrowedStance))
 }
 
 /// Resolves the `viewerBookmarkedAt` field shared by every saveable node:
@@ -2158,6 +2218,18 @@ impl User {
         viewer_stance(ctx, self.identity.id, pick, include_pending).await
     }
 
+    /// The borrowed view's own landed stance toward this person's
+    /// Profile, for a request with no session — read-only, what a guest's
+    /// face wears. Null with a session, for an account with no Profile
+    /// on the graph, and where the borrowed view holds none.
+    async fn borrowed_stance(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<BorrowedStance>> {
+        let node = self.identity.realization_address.clone().map(NodeId::Prof);
+        borrowed_stance(ctx, node).await
+    }
+
     /// Whether the viewer's reciprocal Opinion toward invitedBy exists —
     /// confirmed in the record mirror (latched on the landed application
     /// row) or in flight as one of the viewer's staged writes. Drives
@@ -3487,6 +3559,16 @@ impl PostType {
         viewer_stance(ctx, self.0.id, pick, include_pending).await
     }
 
+    /// The borrowed view's own landed stance toward this post, for a
+    /// request with no session — read-only, what a guest's face wears.
+    /// Null with a session, and where the borrowed view holds none.
+    async fn borrowed_stance(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<BorrowedStance>> {
+        borrowed_stance(ctx, NodeId::parse(&self.0.l1_node_id).ok()).await
+    }
+
     /// The viewer's own Publish bundle toward this post — the raw sum of
     /// the records they authored it with, and the clip of that sum.
     /// Answers only the post's creator; null for every other viewer and
@@ -3830,6 +3912,16 @@ impl CommentType {
         viewer_stance(ctx, self.0.id, pick, include_pending).await
     }
 
+    /// The borrowed view's own landed stance toward this comment, for a
+    /// request with no session — read-only, what a guest's face wears.
+    /// Null with a session, and where the borrowed view holds none.
+    async fn borrowed_stance(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<BorrowedStance>> {
+        borrowed_stance(ctx, NodeId::parse(&self.0.l1_node_id).ok()).await
+    }
+
     /// When the viewer saved this comment; null when not kept, or with no
     /// session. What the comment menus' Save / Unsave row reads.
     async fn viewer_bookmarked_at(
@@ -3952,6 +4044,17 @@ impl HashtagType {
             | Err(crate::stance::StanceError::Internal(_)) => Ok(None),
             Err(e) => Err(e.into()),
         }
+    }
+
+    /// The borrowed view's own landed Affinity bundle toward this topic,
+    /// for a request with no session — read-only, what a guest's follow
+    /// face wears. Null with a session, and where the borrowed view holds
+    /// none.
+    async fn borrowed_stance(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<BorrowedStance>> {
+        borrowed_stance(ctx, NodeId::name(&self.name).ok()).await
     }
 }
 
