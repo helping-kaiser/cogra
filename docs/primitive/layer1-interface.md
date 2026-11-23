@@ -2075,7 +2075,8 @@ parameters $p_d, p_i$ and domain label $D$ with mask $\mathbf{a}_D$ and
 routing tier per projection; derived parity $\epsilon(e)$ per projection;
 public protocol references (settlement references, license qualifiers) and
 asserted causal parents; the **payload commitment** and the **dependency
-commitment**; handshake signatures and the approval witness. The record is
+commitment**; handshake signatures and the approval witness, with the
+record's map from those signatures to public keys. The record is
 sufficient to recompute the sentiment slice, path-view determinant,
 determinant sign, damped weight, and both commitment verifications
 (`subsec:deployment:sufficiency`).
@@ -2084,86 +2085,146 @@ determinant sign, damped weight, and both commitment verifications
 of an accepted act has exactly these fields: act identifier, author, and
 family; structural body; public protocol references and causal parents;
 payload and dependency commitments; admission handshake and approval
-witness; finalization epoch and act time. The payload and content nonce
-(the content pair), the salts, and the dependency opening travel beside the
-envelope and are not part of it. Its
-serialization, carriage, and transport are deployment concerns.
+witness; finalization epoch and act time. The payload and the author's
+content blinding value (the pair), the host's blinding values, and the
+dependency opening travel beside the envelope and are not part of it. Its
+serialization, carriage, and transport are deployment concerns. The
+admission handshake and approval witness carry the record's map from their
+signatures to public keys and the public inputs those signatures'
+well-formedness checks need; these are evidence within those fields, not a
+replacement for the author field (`post:graph:act-authentication-requirements`).
 
-**Act payload projection (`def:graph:act-payload-projection`).** **Every
-authored act carries a payload projection**: a byte string the network
-never reads, bounded **per act** by
+**Act payload projection (`def:graph:act-payload-projection`).** An
+authored act has **one content commitment to an optional payload object**
+$Y_q$, whose bytes the network never reads. Every carried content pair of
+an act is bounded **per act**, aggregate over the act, by
 $\mathrm{len}(\mathrm{encode}(Y_q)) \le M_{\text{payload}}$, where encode
 is the deployment's declared payload encoding, so $M_{\text{payload}}$ is
-stated in that encoding's bytes. For a hyper-edge
-act the payload may be a structured, role-addressed object
-$(Y^{\text{act}}, Y^A, Y^T)$ — but this is *one* act payload under one
-commitment and one lifecycle; the role labels are schema fields, never
-payloads attached to edge projections, and the bound is **aggregate**: a
-two-projection hyper-edge carries no more payload than a binary act while
-paying one action and one debit. The canonical empty payload is the
-zero-length byte string; the commitment component is present on every act
-without exception. The payload is removable; the structural record is not.
-
-**Payload controller (`def:graph:act-payload-controller`).** The payload
-controller of an act is its **author** — there is no separate A-leg or
-T-leg controller; the initiating author owns the one act payload. The
-payload is removable at the request of its controller **or of any
-legitimate entity**, under the carriage-custody split below. Derived raw
-edges carry no payload projection; there is nothing to control.
-
-**Payload state (`def:graph:act-payload-state`).** Three states:
-**full-empty** (canonical zero-length bytes, private value present),
-**full**, **reduced**. State moves toward reduced only. Payload state
-belongs to the projection wherever its content pair is held: a pair held
-only by its author is full until its custodian removes it, and absence of
-the pair at the host is neither an empty payload nor a reduction. A
-requested publication state constrains how the projection may move, not
-where it is held; making a full projection available is the duty of
-whichever layer accepts its carriage, and Layer 1 promises no availability
-for a pair that no layer carries.
+stated in that encoding's bytes. A hyper-edge may use a role-addressed
+object $(Y^{\text{act}}, Y^A, Y^T)$ when its application needs distinct
+fields, but those fields share one commitment and allowance; its two edge
+projections carry no separate payload allowances. The canonical empty
+payload is the zero-length byte string, distinct from an unavailable
+opening; the commitment component remains present on every act. The
+structural record admits no payload datum in an act or edge-projection
+identity key, and for fixed accepted history and replay inputs, later
+opening availability changes neither settlement-reference resolution nor
+title recognition. $M_{\text{payload}}$ enters no scoring, attribution,
+transport or capacity formula.
 
 **Separable, Concealing Act Commitment
 (`post:graph:separable-act-projections`).** The append mechanism's
-commitment to every act factors into a **structural** part (over the act's
-irrevocable record) and a **content** part (over the payload), the act
-commitment reproducible from the two together. The structural part
-verifies whether or not the payload is held. The content part is
-**binding** (no second payload is consistent with it — removal erases,
-never rewrites) and **concealing** (alone, it reveals nothing recoverable
-about the payload — formed over the payload together with a private value
-held beside the payload in carriage, never in the structural record,
-removed atomically with it). An act presents in two projections: **full**
-and **reduced**; the structural record is invariant across the transition.
+commitment to every act factors into a **structural** part over its
+immutable record and a **content** part over the payload object; the act
+commitment is reproducible from both. The structural part verifies
+independently of whether an opening is held. The content commitment is
+**binding** (no second payload is consistent with it) and **concealing** on
+the declared cryptographic premise: the commitment alone reveals nothing
+recoverable about the payload, because its formation uses a private value
+outside the structural record. An empty payload is committed by the same
+formation, and the structural record and commitment remain unchanged when
+an opening later becomes unavailable.
 
-**Removable-projection invariance
-(`prop:graph:removable-projection-invariance`).** Tombstoning or removing
-either removable projection — payload or dependency opening — changes
-neither the edge projections nor any identifier, incidence, role,
-parameter rendering, act time, standing quantity, title quantity, or raw
-graph quantity: $\boldsymbol{\Psi}_e$, $\boldsymbol{\Psi}_e^{[P]}$,
-$\epsilon(e)$, $\tilde{w}(e)$, the CAN base value $v(e)$, $\Pi_{ui}$, $\alpha_i$,
-settlement recognition, $\mathrm{owner}^{(k)}$, and every gate are
-identical across all payload states of every act. Removal is
-scoring-neutral: the reduced projection carries the entire Layer-1 closure
-surface; epoch replay is bit-identical across full and reduced
-(`rem:graph:act-payload-removal-neutrality`).
+**Glosses (`gloss:graph:commitment`, `gloss:graph:opening`,
+`gloss:graph:blinding-value`)** *(courtesy)*. A *commitment* binds its
+content and conceals it under the declared premise. An *opening* is the
+committed content together with the blinding values required to recompute
+its commitment for checking; it reveals the complete content and supplies
+no selective-disclosure property. A *blinding value* is a secret meant to
+carry high entropy, mixed into commitment formation beside its content: the
+author supplies one within each projection pre-digest, and the host
+supplies another at each commitment layer; the author's value shares the
+confidentiality boundary of the content in its pre-digest, and the host's
+are generated and carried separately from the author's content pair.
+
+**Opening-Availability Invariance
+(`prop:graph:removable-projection-invariance`).** Given the same accepted
+sequence, structural record and replay inputs, later availability of a
+payload or dependency opening changes neither the edge projections nor
+edge-projection identity, incidence, role, parameter rendering, act time,
+standing, title or raw graph quantities: $\boldsymbol{\Psi}_e$,
+$\boldsymbol{\Psi}_e^{[P]}$, $\epsilon(e)$, $\tilde{w}(e)$, the CAN base
+value $v(e)$, $\Pi_{ui}$, $\alpha_i$, settlement recognition,
+$\mathrm{owner}^{(k)}$, and every gate have the same values for those fixed
+inputs. Admission may require an authenticated dependency opening and may
+omit a proposed act without one; an observer lacking required replay
+evidence may be unable to verify an unchanged value. Opening availability
+is scoring-neutral (`rem:graph:act-payload-removal-neutrality`): standing,
+transport, relevance, settlement recognition and the reputation conjunction
+read only the accepted structural record, and an observer without an
+opening needed for a particular verification cannot infer a different
+value from that absence.
+
+**Erasure floor (`rem:graph:erasure-floor`).** An edge committed to content
+retains a binding, concealing residue even when its opening is unavailable;
+a deployment requiring zero residue must keep content wholly outside that
+commitment, making its content projection vacuous.
+
+**Payload controller (`def:graph:act-payload-controller`)** *(courtesy)*.
+The payload controller of an act is its **author**, the entity entitled to
+request removal of the act's payload projection — there is no separate
+A-leg or T-leg controller; the initiating author owns the one act payload.
+Derived raw edges carry no payload projection; there is nothing to control.
+
+**Payload state (`def:graph:act-payload-state`)** *(courtesy)*. Payload
+state is a holder's observation of a content pair: **full-empty** has
+verified zero-length bytes and the author's content blinding value,
+**full** has other verified bytes and that value, and **reduced** has
+neither while the structural commitment remains. Holdings can change when
+an independently retained opening arrives or a holder removes its copy;
+only destruction of information that no holder retains is irreversible.
+Payload state belongs to the projection wherever its content pair is held:
+a pair held only by its author is full until that holder removes it, and
+absence of the pair at the host is neither an empty payload nor a
+reduction. Requested publication intent governs only an addressed party's
+response, not the act's structural state or proof that an opening is
+available elsewhere. The layer accepting a carriage request is responsible
+for its own service; Layer 1 promises no availability for a pair that no
+layer carries.
+
+**Canonical Erasure Default (`def:graph:canonical-erasure-default`)**
+*(courtesy; a Layer-2 default)*. The default selects the structural
+revision head before consulting any opening or carriage instruction; a
+guild may publish a replacement under the grant. The recipient renders an
+act's head as **absent** when an authenticated forget request from its
+authorized controller is active for that head and recipient; an active
+forget request never falls through to an earlier revision, and only a later
+authenticated serve request from the same authorized controller permits
+that head to be rendered again. Without an active forget request, a
+verified empty opening renders **authored emptiness**, while an unavailable
+opening renders **unavailable**; neither absence of bytes nor an unverified
+claim is treated as authored emptiness or a forget request. A recipient
+that does not know the forget-request history reports it as **unknown**.
+Full-empty is not forgotten. A chain-wide forget request applies only to
+acts in the named lineage controlled by the requester and never suppresses
+another author's act; the standard promises deletion only of opening
+material held by a party that acknowledges the forget request.
 
 **Payload size is not act cost
-(`rem:graph:payload-size-not-act-cost`).** One authored **act** consumes
-one action credit — a hyper-edge, both projections, is one act —
-regardless of payload length; $M_{\text{payload}}$ is a carriage bound,
-never an action-denomination rule.
+(`rem:graph:payload-size-not-act-cost`)** *(courtesy)*. One authored
+**act** consumes one action credit — a hyper-edge, both projections, is
+one act — regardless of payload length: payload bytes, length, schema, and
+state enter neither the action count nor W1/W2a/W2b nor any gate;
+$M_{\text{payload}}$ is a carriage bound, never an action-denomination
+rule.
 
-**Custody across phases (`rem:graph:act-payload-custody-phases`):** the
-content commitment (*witness*) is invariant across phases; only carriage
-migrates. Centralized carriage: the host tracks the optional content pair
-and its opening material, removable on request with both pair members
-removed atomically. Decentralized carriage: Layer 1 tracks only the
-witness; the pair and its opening material are a terminal carriage
-obligation. Carriage custody may precede append decentralization: a
-centralized-phase deployment may use decentralized carriage. The structural
-record and the witness are identical in all four combinations of append and
-carriage custody; the phase split binds only who operates append.
+**Custody across phases (`rem:graph:act-payload-custody-phases`)**
+*(courtesy)*. The content commitment witness is invariant across phases;
+only carriage custody varies. Centralized carriage may place the optional
+content pair of payload and the author's content blinding value with the
+host, removable on request with both pair members removed atomically.
+Decentralized carriage leaves the witness in Layer 1 while another layer
+accepts custody of the pair and its opening material. Carriage custody may
+precede append decentralization: a centralized-phase deployment may use
+decentralized carriage. The structural record and the witness are
+identical in all four combinations of append and carriage custody; the
+phase split binds only who operates append, and append custody never
+determines who carries an optional opening. Concealment depends on the
+quality of private values that the network cannot audit: the host supplies
+its blinding values, while the author's content blinding value comes from
+the author or carriage layer under its declared generation rule
+(`subsec:deployment:concealment-entropy`). Authorship of payload bytes lies
+outside what the record establishes about the act's recorded author.
 
 ### 8.5 The stored sentiment slice
 
