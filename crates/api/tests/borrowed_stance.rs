@@ -291,7 +291,7 @@ const TARGETS: [&str; 6] = [
 /// holds no landed record, its act still in flight included.
 ///
 /// Without a session every stance-able node answers the borrowed view's own landed bundle, and null where it holds none.
-/// ´claim:borrowed-stance:a-guest-reads-the-lenders-own-landed-bundle´
+/// ´claim:borrowed:a-guest-reads-the-lenders-own-landed-bundle´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_guest_reads_the_lenders_own_landed_bundle(pool: PgPool) {
     let _serial = serial().await;
@@ -336,7 +336,7 @@ async fn a_guest_reads_the_lenders_own_landed_bundle(pool: PgPool) {
 /// stays null, so nothing a client keys its own bundle on changes.
 ///
 /// A request with a session reads no borrowed stance, and a guest still reads no viewer stance.
-/// ´claim:borrowed-stance:a-session-reads-no-borrowed-stance´
+/// ´claim:borrowed:a-session-reads-no-borrowed-stance´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_session_reads_no_borrowed_stance(pool: PgPool) {
     let _serial = serial().await;
@@ -358,7 +358,7 @@ async fn a_session_reads_no_borrowed_stance(pool: PgPool) {
 /// and nothing is staged by the reads or the refusals.
 ///
 /// A guest's stance and severance prepares are refused unauthenticated and stage nothing.
-/// ´claim:borrowed-stance:a-guest-still-cannot-act´
+/// ´claim:borrowed:a-guest-still-cannot-act´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_guest_still_cannot_act(pool: PgPool) {
     let _serial = serial().await;
@@ -395,7 +395,7 @@ async fn a_guest_still_cannot_act(pool: PgPool) {
 /// however many cards the page holds.
 ///
 /// A page of borrowed faces at one depth costs one grouped bundle read, whatever its size.
-/// ´claim:borrowed-stance:a-page-of-faces-is-one-batch´
+/// ´claim:borrowed:a-page-of-faces-is-one-batch´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_page_of_faces_is_one_batch(pool: PgPool) {
     let _serial = serial().await;
