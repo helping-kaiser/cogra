@@ -2,7 +2,7 @@
 
 ALWAYS profile.comments lists the person's comments, each a profile.comments.commentCard in reach of its thread
 
-ALWAYS profile.comments lists a comment the person signed that is still settling among the landed ones, its card wearing Still settling, as the thread's landed reply does
+ALWAYS profile.comments lists a comment the person signed that is still settling at the head of the list, above every landed one, the settling comments newest signed first among themselves, its card wearing Still settling, as the thread's landed reply does, and it takes its place in the list's order when it lands
 
 ALWAYS profile.comments.commentCard leads with profile.comments.commentCard.target, the pointer to what it answers
 
