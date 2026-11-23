@@ -167,8 +167,7 @@
    `middle` the long name cut to 85 characters at its word `light`, two
    lines at 17px on 22px (16px at 360, 18px at 412); `long` and
    `long-hyphens` at the floor, 12px on 15px, three lines (three at 360, two
-   at 412) — no 128-character name needs a fourth. */
-const MIDDLE_NAME = "salt_maps_of_the_coast_road_and_the_third_headland_light_and_the_third_headland_light";
+   at 412) — no 128-character name needs a fourth.
 
    A GUEST'S FACES ARE THE BORROWED VIEW'S (round 63; jakob 2026-11-23,
    point 7 "build it"): on the `reader` chip's `guest` the view holds one
@@ -176,6 +175,7 @@ const MIDDLE_NAME = "salt_maps_of_the_coast_road_and_the_third_headland_light_an
    and none on the topic, @sol's post or @ada's comment, which wear the hollow
    face; every anchor is spoken `@genesis_mod's opinion on …` (point 8 (a)). */
 const LONG_NAME = "salt_maps_of_the_coast_road_and_the_third_headland_light_and_the_third_headland_light_and_the_third_headland_light_and_the_third";
+const MIDDLE_NAME = LONG_NAME.slice(0, 85);
 
 export const NODE = "tagPage";
 export const FRAME = { width: 390, height: 1344 };
