@@ -16,7 +16,7 @@ import { fakeLineLayout } from "@/test/fake-line-layout";
 import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { intersectEach, whenObserved } from "@/test/media-env";
 import { gqlLink, startMswServer } from "@/test/msw";
-import { answersPost, taggedCommentWire } from "@/test/profile-comment";
+import { answersComment, answersPost, taggedCommentWire } from "@/test/profile-comment";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
 import { stanceHandlers } from "@/test/stance";
@@ -591,13 +591,24 @@ describe("TopicView — the rows", () => {
     expect(target).not.toHaveTextContent("Salt maps");
   });
 
-  // TagPage.md:15, the doors: the pointer opens the thread the comment lives
-  // in, the chip the author — each carrying the page and its origin.
+  // THE POINTER DOOR (TagPage.md:23, :25; jakob 2026-11-23, seams 405 and
+  // 417): the pointer naming a post opens the post itself, no comment section
+  // opened; a reply's pointer opens the thread at the comment it names; the
+  // rest of the card the thread at the card's own comment; the chip the
+  // author — each carrying the page and its origin.
   it("a_tagged_comments_doors_carry_the_page", async () => {
-    serve("rust", [row(taggedComment("c1"))]);
+    serve("rust", [
+      row(taggedComment("c1")),
+      row(taggedComment("c2", { target: answersComment("c0", "sol") })),
+    ]);
     renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
     const target = await screen.findByTestId(byNode("tagPage.commentCard.target", "c1"));
-    expect(target).toHaveAttribute("href", "/posts/p1?comment=c1&from=tag%3Arust");
+    expect(target).toHaveAttribute("href", "/posts/p1?from=tag%3Arust");
+    expect(screen.getByTestId(byNode("tagPage.commentCard.target", "c2"))).toHaveAttribute(
+      "href",
+      "/posts/p1?comment=c0&from=tag%3Arust",
+    );
+    expect(screen.getByTestId("topic-comment-c1-link")).toHaveAttribute("href", "/posts/p1?comment=c1&from=tag%3Arust");
     expect(screen.getByTestId(byNode("tagPage.commentCard.authorChip", "c1"))).toHaveAttribute(
       "href",
       "/u/bob?from=tag%3Arust",
@@ -788,7 +799,7 @@ describe("TopicView — what it opens keeps its origin's root", () => {
     );
     expect(screen.getByTestId(byNode("tagPage.commentCard.target", "c1"))).toHaveAttribute(
       "href",
-      `/posts/p1?comment=c1&from=${token}`,
+      `/posts/p1?from=${token}`,
     );
   });
 });

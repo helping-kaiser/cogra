@@ -206,7 +206,7 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     expect(screen.getByTestId(byNode("profile.comments.commentCard.menu", "c2"))).toBeInTheDocument();
     expect(screen.getByTestId(byNode("profile.comments.commentCard.target", "c2"))).toHaveAttribute(
       "href",
-      "/posts/p1?comment=c2&from=u%3Aada",
+      "/posts/p1?from=u%3Aada",
     );
     // Never a chronicle entry.
     expect(within(list).queryByTestId(byNode("profile.chronicle.act", "1"))).toBeNull();
@@ -289,10 +289,12 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
-  it("the_pointer_and_reply_open_the_thread_the_comment_lives_in", async () => {
-    // ProfileComments.md:23, :25, :27 — the thread over its post, landed on
-    // the comment (a reply's pointer on the comment it answers), its back
-    // arrow naming the profile; Reply aims the thread's composer at it.
+  it("the_pointer_opens_what_it_names_and_reply_opens_the_thread", async () => {
+    // THE POINTER DOOR (ProfileComments.md:45; jakob 2026-11-23, seams 405 and
+    // 417): a pointer naming a post opens the post itself, no comment section
+    // opened; a reply's pointer opens the thread at the comment it names. Each
+    // back arrow names the profile; Reply aims the thread's composer at the
+    // comment (:25, :27).
     server.use(meAs("u1", "pixel"));
     serveAda();
     serveChronicle();
@@ -309,7 +311,7 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     renderWithProviders(<ProfileScreen handle="ada" />, { store: signedIn() });
     await openCommentsTab();
     const href = (path: string, key: string) => screen.getByTestId(byNode(path, key)).getAttribute("href");
-    expect(href("profile.comments.commentCard.target", "c2")).toBe("/posts/p1?comment=c2&from=u%3Aada");
+    expect(href("profile.comments.commentCard.target", "c2")).toBe("/posts/p1?from=u%3Aada");
     expect(href("profile.comments.commentCard.target", "c1")).toBe("/posts/p1?comment=c0&from=u%3Aada");
     await waitFor(() =>
       expect(screen.getByTestId(byNode("profile.comments.commentCard.actionRow.reply", "c2"))).toHaveTextContent("Reply"),
@@ -355,7 +357,7 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     await openCommentsTab();
     expect(screen.getByTestId(byNode("profile.comments.commentCard.target", "c1"))).toHaveAttribute(
       "href",
-      "/posts/p1?comment=c1&from=profile",
+      "/posts/p1?from=profile",
     );
   });
 
