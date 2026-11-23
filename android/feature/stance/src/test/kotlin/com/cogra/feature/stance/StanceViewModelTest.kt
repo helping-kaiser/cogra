@@ -19,6 +19,7 @@ import com.cogra.domain.stance.StanceSignals
 import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.stance.localLanding
+import com.cogra.domain.testing.FakeBorrowedStanceRepository
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.InMemoryKeptPickStore
 import com.cogra.domain.testing.SealingWriteRepository
@@ -169,6 +170,7 @@ class StanceViewModelTest {
         account,
         kept,
         standing,
+        FakeBorrowedStanceRepository(),
     )
 
     private fun entry(vm: StanceViewModel) = vm.state.value.targets.getValue(TARGET)

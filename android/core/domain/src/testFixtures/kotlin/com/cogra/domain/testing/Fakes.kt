@@ -82,6 +82,7 @@ import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.repo.AccountRepository
+import com.cogra.domain.repo.BorrowedStanceRepository
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.DeviceLockRepository
 import com.cogra.domain.repo.IssuedLock
@@ -102,6 +103,7 @@ import com.cogra.domain.signing.ExpectedNetting
 import com.cogra.domain.signing.NodeExpectation
 import com.cogra.domain.signing.Parents
 import com.cogra.domain.signing.stanceRecord
+import com.cogra.domain.stance.BorrowedStance
 import com.cogra.domain.stance.HeldOpinion
 import com.cogra.domain.stance.OpinionDirection
 import com.cogra.domain.stance.SeveranceQuote
@@ -797,6 +799,22 @@ open class ThrowingStanceRepository : StanceRepository {
             is StanceTarget.Topic -> "name:${target.name}"
         },
     )
+}
+
+/**
+ * A guest's borrowed faces, scripted: [faces] answers per target, everything
+ * else is the hollow face. Answers rather than throws — every guest face asks
+ * it, and a test about something else need not script it. Records [asked].
+ */
+class FakeBorrowedStanceRepository(
+    var faces: Map<StanceTarget, BorrowedStance?> = emptyMap(),
+) : BorrowedStanceRepository {
+    val asked = mutableListOf<StanceTarget>()
+
+    override suspend fun borrowedStance(target: StanceTarget): Outcome<BorrowedStance?> {
+        asked += target
+        return Outcome.Success(faces[target])
+    }
 }
 
 /**

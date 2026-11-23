@@ -321,6 +321,29 @@ class CograNavGraphTest {
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Topic>()).isTrue()
     }
 
+    // FeedBare.md:27 — WHEN tap a stance face GIVEN signed out -> the guest
+    // gate rises AND NEVER the pad opens; FeedBare.md:9 — the card's anchor
+    // speaks as the borrowed view's. The card's face is a leaf no host threads
+    // a gate to: the shell provides it (`LocalGuestGate`).
+    @Test
+    fun aGuestTapOnAFeedCardsFaceRaisesTheGateAndSpeaksTheBorrowedView() {
+        content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
+        render()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
+        waitForTag("feed.card.actionRow.stance.anchor")
+        compose.waitUntil(timeoutMillis = 30_000) {
+            compose.onAllNodes(hasContentDescription("@genesis_mod's opinion on this post"))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+
+        compose.onNodeWithTag("feed.card.actionRow.stance.anchor").performClick()
+
+        waitForTag("join_prompt")
+        assertThat(compose.onAllNodesWithTag("feed_post_p1_stance_pad").fetchSemanticsNodes()).isEmpty()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+    }
+
     // TagPage.md:15, :41 — the tag page draws the feed's own post card under
     // the claim that put it there, wired by the shell: a tag chip on that card
     // opens the other tag's page, whose arrow names this tag on the way back.
