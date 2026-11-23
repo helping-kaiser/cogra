@@ -8,7 +8,8 @@
 // on a connector rule, the way a reply hangs under what it answers.
 //
 // THE DOUBLE DOOR (jakob 2026-11-23, seam 405). The pointer — the head row, or
-// the line shape's `On …` line — opens the post it names, at its top. The rest
+// the line shape's `On …` line — opens what it names: a post at its top, a
+// reply's comment in its thread. The rest
 // of the card opens the comment's own place — the post's comment section,
 // scrolled to this comment. Things with their own meaning keep it: the author
 // chip, the chips, the row.
@@ -116,7 +117,7 @@ internal fun CommentFeedCard(
     testTagPrefix: String,
     revealed: Boolean,
     onReveal: () -> Unit,
-    /** The pointer's door, in either shape: the post it names ([pointedPost]). */
+    /** The pointer's door, in either shape: what it names ([openPointer]). */
     onOpenTarget: () -> Unit,
     /** The card's own door: the thread, landed on this comment. */
     onOpenPlace: () -> Unit,
@@ -440,7 +441,7 @@ private fun ComfortLine(node: String, testTag: String) {
 }
 
 /**
- * THE HEAD ROW — its own door, to the post it names. A removed target keeps its
+ * THE HEAD ROW — its own door, to what it names. A removed target keeps its
  * row: its tile keeps its space empty and the title's place reads the removal
  * line in the system's voice, over the author, who stays.
  */

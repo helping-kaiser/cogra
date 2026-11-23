@@ -1,8 +1,9 @@
 // THE COMMENT CARD'S TWO DOORS, ON EVERY HOST THAT DRAWS IT (jakob 2026-11-23,
 // seam 405: "the line is the door to the post the rest of the card opens the
 // thread of comments scrolled to the comment"). The pointer — the line shape's
-// `On …` line, the feed shape's head row — opens THE POST it names, at its top,
-// the thread closed; the rest of the card opens the thread at the comment.
+// `On …` line, the feed shape's head row — opens what it names: a post itself,
+// at its top, the thread closed; a reply's comment in its thread. The rest of
+// the card opens the thread at the comment.
 //
 // Run once per host (Robolectric's parameterized runner), each host rendered as
 // its screen renders it. [CommentCardHostCensusTest] keeps [CommentCardHost]
@@ -205,13 +206,15 @@ class CommentPointerDoorTest(private val host: CommentCardHost) {
         assertOpened("post:p1")
     }
 
-    // (1) A reply's pointer, `On @sol's comment`, stands in p1's thread: it opens
-    // that post, never the thread at the comment it answers.
+    // A reply's pointer, `On @sol's comment`, names a comment, and the pointer is
+    // "its own door, to what it names" (CommentCard.jsx:397): the thread opens
+    // at that comment — c0, never the reply itself (the orchestrator's reading,
+    // flagged to jakob).
     @Test
-    fun aRepliesPointerOpensItsThreadsPost() {
+    fun aRepliesPointerOpensTheThreadAtTheCommentItNames() {
         render(onComment)
         pointer().performClick()
-        assertOpened("post:p1")
+        assertOpened("comment:p1/c0")
     }
 
     // (4) No pointer is ruled inert: a removed post's pointer still opens it, as

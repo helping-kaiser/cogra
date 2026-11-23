@@ -174,6 +174,17 @@ class HostedCardsTest {
         assertThat(opened).containsExactly("post:p9")
     }
 
+    // A reply's pointer names the comment it answers, and opens the thread at
+    // it — never at the reply itself (CommentCard.jsx:397, "to what it names").
+    @Test
+    fun aRepliesPointerOpensTheThreadAtTheCommentItAnswers() {
+        val reply = comment().copy(target = CommentTarget.Comment("c0", text("Where was this?"), "sol"))
+        host { it.comment(reply, cards, replies, null) }
+        compose.onNodeWithText("On @sol's comment").assertIsDisplayed()
+        compose.onNodeIn("profile.comments.commentCard:c1", "profile.comments.commentCard.target").performClick()
+        assertThat(opened).containsExactly("comment:p9/c0")
+    }
+
     // ProfileComments.md:35, :39 — Reply opens the thread aimed at the
     // comment; the author chip is inert.
     @Test

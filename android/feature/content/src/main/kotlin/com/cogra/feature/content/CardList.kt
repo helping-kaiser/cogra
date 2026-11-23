@@ -129,7 +129,7 @@ internal fun ListThread(
     )
 }
 
-/** A listed comment as the comment feed card: its pointer opens the post it names, the rest its thread. */
+/** A listed comment as the comment feed card: its pointer opens what it names ([openPointer]), the rest its thread. */
 @Composable
 internal fun ListCommentCard(
     /** The comment as the list read it; a removal since stands as its mark. */
@@ -167,7 +167,7 @@ internal fun ListCommentCard(
         testTagPrefix = testTagPrefix,
         revealed = actions.reveals.isRevealed(comment.id, comment.sensitiveMark()),
         onReveal = { actions.onReveal(comment.id, comment.sensitiveMark()) },
-        onOpenTarget = { pointedPost(target, threadPostId)?.let(doors.onOpenPost) },
+        onOpenTarget = { openPointer(target, threadPostId, doors) },
         onOpenPlace = { threadPostId?.let { doors.onOpenComment(it, comment.id, false) } },
         onReply = onReply ?: {
             threadPostId?.let { doors.onOpenComment(it, comment.id, true) }
@@ -207,17 +207,21 @@ internal fun ListCommentCard(
 }
 
 /**
- * THE POINTER IS THE DOOR TO THE POST IT NAMES, on every host (jakob
- * 2026-11-23, seam 405: "the line is the door to the post the rest of the card
- * opens the thread of comments scrolled to the comment"): the post itself, at
- * its top, never its comment section. A reply's pointer stands in its thread's
- * post. The door lives here, in the one card every host draws, so no host can
- * wire it otherwise (`CommentCardHostCensusTest`).
+ * THE POINTER IS THE DOOR TO WHAT IT NAMES, on every host. A post's line opens
+ * the post itself, at its top, never its comment section (jakob 2026-11-23,
+ * seam 405: "the line is the door to the post the rest of the card opens the
+ * thread of comments scrolled to the comment"). A reply's line names the
+ * comment it answers and opens the thread at that comment (`CommentCard.jsx`:
+ * the head row is "its own door, to what it names"). The door lives here, in
+ * the one card every host draws, so no host can wire it otherwise
+ * (`CommentCardHostCensusTest`).
  */
-internal fun pointedPost(target: CommentTarget?, threadPostId: String?): String? = when (target) {
-    is CommentTarget.Post -> target.id
-    is CommentTarget.Comment -> threadPostId
-    null -> null
+internal fun openPointer(target: CommentTarget?, threadPostId: String?, doors: CardDoors) {
+    when (target) {
+        is CommentTarget.Post -> doors.onOpenPost(target.id)
+        is CommentTarget.Comment -> threadPostId?.let { doors.onOpenComment(it, target.id, false) }
+        null -> Unit
+    }
 }
 
 /**

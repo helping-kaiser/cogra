@@ -333,7 +333,7 @@ private fun cardPlacement(node: DataNode, tag: String, placement: HostedPlacemen
 
 /**
  * A listed comment as the comment card's line shape: its pointer the door to
- * the post it names ([pointedPost]); the card and the replies line on the
+ * what it names ([openPointer]); the card and the replies line on the
  * comment's own place in its thread, Reply with the composer aimed at it — an
  * applicant's answered in the snackbar — and a guest's drawing none. Where the
  * host keeps no thread doors (a tag's page, TagPage.md:17) the card offers no
