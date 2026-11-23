@@ -12984,10 +12984,20 @@ drawing.
 - **Ruled**: backlog 305 (b) — a `comment` chip on `History` and `Saved`
   draws @ada's tag-page media comment in @tobias's place, the `pick`
   copies hidden; ruling 39 stands as written.
-- **Held**: the drawing. On both boards the comment is the feed's card,
-  and its row wears a score (`History.md`, `Saved.md`); the tree gives
-  @ada's comment none, since `TagPage` and `ProfileComments` draw it as a
-  list card. Backlog 306 asks which figure; 305 stays open.
+- **Drawn**: `History` and `Saved` `comment` = `pictures` / `clip` (default
+  `none`) — @ada's comment as the feed's card, answering @sol's post, with
+  `REPLY_MEDIA_*`, `#saltmaps · 1 reference`, and the place's figure
+  `12.40` as its score (the fixture, backlog 306); the @tobias card's
+  `pick` copies stand only at `none` (`PickCopies`' `hole`,
+  `CommentMediaCopies`).
+- **Registered** (seam 424): `history.commentCard.media`, `.media.dots`,
+  `.media.frame` (`<id>/1`, `<id>/2`), `.media.frame.soundDisc` (`<id>/1`),
+  and the same under `saved`. Nothing gone; no string added.
+- **The law that moved**: `History.md` and `Saved.md` — the veiled clip's
+  sentence splits in two, `ALWAYS a veiled clip has no playback` and the
+  disc named, `Feed.md`'s form: `ALWAYS history.commentCard.media.frame.
+  soundDisc is absent GIVEN history.commentCard.media.frame's clip is
+  veiled` (the same for `saved`). Backlog 305 and 306 close.
 - **Found**: round 64's unexplained differences on `CommentCitedByEmpty`
   (15 px) and `SeveranceConfirm` (7 px) are the harness — antialiased
   rounded edges (the avatar and the veil under the sheet's scrim, the
