@@ -77,14 +77,18 @@ class HostedCardsTest {
         removal = removal,
     )
 
-    private fun comment(removal: Removal? = null, replies: Int = 2) = ProfileComment(
+    private fun comment(
+        removal: Removal? = null,
+        replies: Int = 2,
+        landing: Landing = Landing.landed(2),
+    ) = ProfileComment(
         comment = CommentView(
             id = "c1",
             content = text(if (removal == null) "The glovebox camera earns its keep." else null),
             author = ada,
             createdAt = now.minusSeconds(86_400),
             updatedAt = now.minusSeconds(86_400),
-            landing = Landing.landed(2),
+            landing = landing,
             license = LicenseChoice.PublicDomain,
             replyCount = replies,
             removal = removal,
@@ -165,6 +169,33 @@ class HostedCardsTest {
     fun aStillSettlingPostWearsItsMarker() {
         host { it.post(post(landing = Landing.Pending), posts) }
         assertThat(shown("profile_post_pending_p1")).isTrue()
+    }
+
+    // ProfilePosts.md:11, ProfilePostsOwn.md:19 — a post removed before it
+    // lands wears both marks: the removal mark in the content's place and
+    // `Still settling`.
+    @Test
+    fun aPostRemovedBeforeItLandsWearsBothMarks() {
+        host { it.post(post(landing = Landing.Pending, removal = Removal(now, RemovalAgent.AUTHOR)), posts) }
+        assertThat(shown("profile.posts.card.removalMark")).isTrue()
+        compose.onNodeWithTag("profile_post_pending_p1", useUnmergedTree = true).assertTextEquals("Still settling")
+    }
+
+    // ProfileComments.md:5, ProfileCommentsOwn.md:7 — a still-settling comment
+    // wears `Still settling`, as the thread's landed reply does; a landed one
+    // wears none.
+    @Test
+    fun aStillSettlingCommentWearsItsMarker() {
+        host {
+            it.comment(comment(landing = Landing.Pending), cards, replies, null)
+        }
+        compose.onNodeWithTag("profile_comment_c1_pending", useUnmergedTree = true).assertTextEquals("Still settling")
+    }
+
+    @Test
+    fun aLandedCommentWearsNoSettlingMarker() {
+        host { it.comment(comment(), cards, replies, null) }
+        assertThat(shown("profile_comment_c1_pending")).isFalse()
     }
 
     // ProfileComments.md:7 — the card leads with its pointer to what it
