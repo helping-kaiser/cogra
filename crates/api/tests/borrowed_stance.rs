@@ -123,10 +123,33 @@ impl World {
         let lender = rig.log_in("gm@example.com").await;
         let ada = rig.log_in("ada@example.com").await;
 
-        let post = landed(&rig, &ada, &ada_key, PREPARE_POST, "preparePost", post_input()).await;
-        let untouched =
-            landed(&rig, &ada, &ada_key, PREPARE_POST, "preparePost", post_input()).await;
-        let pending = landed(&rig, &ada, &ada_key, PREPARE_POST, "preparePost", post_input()).await;
+        let post = landed(
+            &rig,
+            &ada,
+            &ada_key,
+            PREPARE_POST,
+            "preparePost",
+            post_input(),
+        )
+        .await;
+        let untouched = landed(
+            &rig,
+            &ada,
+            &ada_key,
+            PREPARE_POST,
+            "preparePost",
+            post_input(),
+        )
+        .await;
+        let pending = landed(
+            &rig,
+            &ada,
+            &ada_key,
+            PREPARE_POST,
+            "preparePost",
+            post_input(),
+        )
+        .await;
         let comment = landed(
             &rig,
             &ada,
@@ -154,12 +177,24 @@ impl World {
             pending,
             comment,
         };
-        world.stance(json!({ "target": world.post }), 0.6, 0.4, true).await;
-        world.stance(json!({ "target": world.comment }), 0.3, -0.2, true).await;
-        world.stance(json!({ "target": world.ada_id }), 0.5, 0.5, true).await;
-        world.stance(json!({ "target": world.ada_id }), -0.5, -0.5, true).await;
-        world.stance(json!({ "topicName": "rust" }), 0.2, 0.8, true).await;
-        world.stance(json!({ "target": world.pending }), 0.7, 0.7, false).await;
+        world
+            .stance(json!({ "target": world.post }), 0.6, 0.4, true)
+            .await;
+        world
+            .stance(json!({ "target": world.comment }), 0.3, -0.2, true)
+            .await;
+        world
+            .stance(json!({ "target": world.ada_id }), 0.5, 0.5, true)
+            .await;
+        world
+            .stance(json!({ "target": world.ada_id }), -0.5, -0.5, true)
+            .await;
+        world
+            .stance(json!({ "topicName": "rust" }), 0.2, 0.8, true)
+            .await;
+        world
+            .stance(json!({ "target": world.pending }), 0.7, 0.7, false)
+            .await;
         world
     }
 
@@ -174,7 +209,11 @@ impl World {
             .rig
             .gql(Some(token), PREPARE_STANCE, json!({ "input": input }))
             .await;
-        assert_eq!(prepared["prepareStance"]["userErrors"], json!([]), "{prepared}");
+        assert_eq!(
+            prepared["prepareStance"]["userErrors"],
+            json!([]),
+            "{prepared}"
+        );
         self.rig
             .sign_prepared(token, key, &prepared["prepareStance"]["writes"])
             .await;
@@ -227,14 +266,24 @@ async fn landed(
     field: &str,
     input: Value,
 ) -> String {
-    let prepared = rig.gql(Some(token), mutation, json!({ "input": input })).await;
+    let prepared = rig
+        .gql(Some(token), mutation, json!({ "input": input }))
+        .await;
     assert_eq!(prepared[field]["userErrors"], json!([]), "{prepared}");
-    rig.sign_prepared(token, key, &prepared[field]["writes"]).await;
+    rig.sign_prepared(token, key, &prepared[field]["writes"])
+        .await;
     rig.close_and_ingest().await;
     prepared[field]["node"].as_str().expect("node").to_string()
 }
 
-const TARGETS: [&str; 6] = ["post", "untouched", "pending", "comment", "profile", "topic"];
+const TARGETS: [&str; 6] = [
+    "post",
+    "untouched",
+    "pending",
+    "comment",
+    "profile",
+    "topic",
+];
 
 /// A guest's face on every stance-able node is exactly what the lender's
 /// own session reads of its landed bundle there — the walk-back severed,
@@ -262,12 +311,24 @@ async fn a_guest_reads_the_lenders_own_landed_bundle(pool: PgPool) {
     }
     assert_eq!(guest["post"]["f"]["pDirected"], 0.6);
     assert_eq!(guest["comment"]["f"]["pInterest"], -0.2);
-    assert_eq!(guest["profile"]["f"]["severed"], true, "the walk-back reads severed");
-    assert_eq!(guest["topic"]["f"]["pInterest"], 0.8, "the follow is an Affinity");
+    assert_eq!(
+        guest["profile"]["f"]["severed"], true,
+        "the walk-back reads severed"
+    );
+    assert_eq!(
+        guest["topic"]["f"]["pInterest"], 0.8,
+        "the follow is an Affinity"
+    );
     assert!(guest["untouched"]["f"].is_null(), "the hollow face");
-    assert!(guest["pending"]["f"].is_null(), "an act in flight is its author's read alone");
+    assert!(
+        guest["pending"]["f"].is_null(),
+        "an act in flight is its author's read alone"
+    );
     let in_flight = world.faces(Some(&world.lender.0), "viewerStance").await;
-    assert_eq!(in_flight["pending"]["f"]["recordCount"], 1, "the lender sees it in flight");
+    assert_eq!(
+        in_flight["pending"]["f"]["recordCount"], 1,
+        "the lender sees it in flight"
+    );
 }
 
 /// The field is a guest's only: a signed-in request — the lender's own
@@ -311,7 +372,10 @@ async fn a_guest_still_cannot_act(pool: PgPool) {
     let before = staged().await;
     world.faces(None, "borrowedStance").await;
     for (mutation, input) in [
-        (PREPARE_STANCE, json!({ "target": world.post, "pDirected": 0.6, "pInterest": 0.4 })),
+        (
+            PREPARE_STANCE,
+            json!({ "target": world.post, "pDirected": 0.6, "pInterest": 0.4 }),
+        ),
         (PREPARE_SEVERANCE, json!({ "target": world.post })),
     ] {
         let refused = world

@@ -289,9 +289,17 @@ async fn the_batched_landed_read_equals_the_single_read(pool: PgPool) {
 
     for person in ["bob", "cy", "dee"] {
         let single = read_standing(&pool, person, BundleView::Landed).await;
-        assert_eq!(batch.get(&format!("prof:{person}")), Some(&single), "{person}");
+        assert_eq!(
+            batch.get(&format!("prof:{person}")),
+            Some(&single),
+            "{person}"
+        );
     }
-    assert_eq!(batch[&"prof:cy".to_string()].sum.records, 2, "the act in flight is not counted");
+    assert_eq!(
+        batch[&"prof:cy".to_string()].sum.records,
+        2,
+        "the act in flight is not counted"
+    );
     assert!(batch[&"prof:bob".to_string()].is_severed());
     assert!(batch[&"prof:dee".to_string()].says_nothing());
     assert!(!batch.contains_key("prof:eve"), "only an act in flight");
