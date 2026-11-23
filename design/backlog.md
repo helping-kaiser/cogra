@@ -6964,3 +6964,9 @@ Lindgren) as the same view. Round 63 speaks `FeedBare`'s anchors as `@noa's opin
 the board's own band. Options: (a) one handle for the genesis moderator on every guest board
 (`genesismod`, the band re-fixtured); (b) keep each board's own. Also not drawn: `Main` (an invite
 link's issuer, `@mira`) draws no borrowed opinion either; the law (`Main.md:11`) holds the same.
+
+Closed by round 64 (jakob 2026-11-23, B2 = (a), "genesis_mod"): the genesis moderator's view is
+`@genesis_mod` on every guest board — `TagPage`, `ProfileOther` and `FeedBare`, whose band and anchors
+now name it (`GUEST_VANTAGE`; the band's display name the tree's `Genesis Moderator`). On a profile
+the wide anchor cuts `@genesis…'s opinion` (390 px) and `@ge…'s opinion` (360 px), as it cut the
+old handle; on a tag page it stands whole (158 px). `Main` stays the issuer's view.

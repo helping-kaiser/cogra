@@ -164,9 +164,9 @@ export const FLOW_MARKERS = {
     filter,
     ...guestBand,
     // The borrowed view's faces (round 63): each anchor is spoken as the
-    // view's opinion, `@noa's opinion on this post`, held or hollow.
+    // view's opinion, `@genesis_mod's opinion on this post`, held or hollow.
     ...post({ author: 4, menu: 5, media: 6, more: 7, topic: 8, refs: 9, stance: 10, score: 11, comments: 12 }).filter((m) => m.n !== 10),
-    { n: 10, find: 'aria-label="@noa&#x27;s opinion on this post', tag: "button", all: true },
+    { n: 10, find: 'aria-label="@genesis_mod&#x27;s opinion on this post', tag: "button", all: true },
     secondComments(12),
     ...nav(13),
   ],

@@ -252,7 +252,7 @@ function restingOf(bundle, pendingPick, axes) {
    two readers (`vantageHoles.label`) speaks exactly what the anchor would.
    A GUEST'S ANCHOR IS SPOKEN AS THE BORROWED VIEW'S OPINION (jakob
    2026-11-23, point 8 (a); stance-control, *A guest's view*):
-   `@genesismod's opinion on this post`, the view's handle whole, and where
+   `@genesis_mod's opinion on this post`, the view's handle whole, and where
    the view holds one, its reading after it as a member's anchor reads its
    own — read-only, so never the press-and-hold hint. */
 export function anchorName({ targetLabel = "this post", bundle = EMPTY_BUNDLE, pendingPick, pendingReview, axes = STANCE_AXES, vantage }) {
@@ -291,7 +291,7 @@ function parkedPadStyle(inset = 16) {
    unchanged — the variant restyles the anchor and nothing else.
 
    `vantage` (round 62, seam 404.3) is the borrowed view's handle for a guest:
-   the wide anchor's words read `@genesismod's opinion` in `Your opinion`'s
+   the wide anchor's words read `@genesis_mod's opinion` in `Your opinion`'s
    place (stance-control.md, the guest's viewpoint; `TagPage.md`,
    `ProfileOther.md`), the handle the part cut before `'s opinion`, which stays
    whole (`nameInLine`, the long-names law's case 2).
