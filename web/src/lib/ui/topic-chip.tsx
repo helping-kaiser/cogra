@@ -30,6 +30,7 @@ export function TopicChip({
   selectLabel,
   expanded,
   capped = false,
+  here = false,
   testId,
   node,
   removeNode,
@@ -53,6 +54,14 @@ export function TopicChip({
    * the only thing this shape adds is the promise never to wrap or shrink.
    */
   capped?: boolean;
+  /**
+   * The chip stands on its own tag's page, where its door would open the page
+   * it is on (jakob, hand test 2026-11-23: "if i am on the tags page of "wood"
+   * clicking "wood" chips does nothing"). It is then the same pill, inert, as
+   * `ActorChip`'s `here` is on the person's own profile: no link, no state
+   * layer, nothing to focus, and a card's door passes it by. `capped` only.
+   */
+  here?: boolean;
   /** Names the chip, and is what its controls' own ids derive from. */
   testId?: string;
   /** The registered node the chip is; it then names the chip instead of `testId`. */
@@ -74,9 +83,10 @@ export function TopicChip({
     return (
       <span
         {...testAttributes(node, testId)}
+        data-own-press={here ? "" : undefined}
         className="relative inline-flex h-8 box-content flex-none items-center whitespace-nowrap rounded-full border border-outline-variant bg-surface-container-highest px-3 text-label-large text-on-surface"
       >
-        {href !== undefined ? (
+        {href !== undefined && !here ? (
           <Link
             href={href}
             data-testid={testId !== undefined ? `${testId}-link` : undefined}
