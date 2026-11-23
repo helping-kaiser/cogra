@@ -772,7 +772,11 @@ column at its 42rem.
 **An avatar is the actor's picture where they have one**, and a
 **monogram circle** in `secondaryContainer`/`onSecondaryContainer`
 where they do not — the *designed* placeholder, not a gap waiting to
-be filled, and where a picture fails to load it is what shows.
+be filled, and where a picture fails to load it is what shows. **A
+system account wears the CoGra mark** (jakob 2026-11-23, "logo split
+ofcourse"): The Publisher `@publisher`, The Moderator `@moderator` and
+The Treasury `@treasury` wear the mark in the disc, by rule; an account
+a person holds wears its own picture, whoever holds it.
 
 **Photography exists as mock material** (`assets/photos/`, ten real
 photographs at true ratios — food, people, animals, scenery). It is
