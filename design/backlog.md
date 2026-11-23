@@ -7035,3 +7035,19 @@ the harness: a board names its images bare (`post-photo.jpg`), the canvas runtim
 a proof cannot see a picture change. Options: (a) the proof re-renders a differing board once before
 it reports a difference; (b) serve Figtree to the harness locally; (c) both, and the harness's base
 at `img/`. Recommendation (c).
+
+### 308 · How the CoGra mark sits in a 24–40 px avatar disc · *design* · **filed 2026-11-23**
+
+Round 66, item 3 (jakob 2026-11-23, "logo split ofcourse"). The rule is written (readme §4,
+*Imagery*: the three `system` accounts wear the mark; a person's account its own picture), but the
+brand guideline draws the mark two ways only — standing alone (`primary` letter, `primaryContainer`
+pick; `brand-mark.html`) and as the rounded-square tile at 96/48/32 px (`primaryContainer` ground,
+`onPrimaryContainer` ink, `surface` pick; `brand-tile.html`) — and no disc. So `FeedBare`'s band
+still draws the sample `@genesis_mod` with the monogram `G`, the one place the tree draws that
+account (no guest board draws the view's disc elsewhere, and `ExploreSearch` draws no genesis
+result). Options, shot at 24 / 32 / 40 px light and dark (dev-state
+`2026-11-23-design-round62/r66/shots/item3-mark-options-*.png`): (a) the tile (`icon.svg`) clipped
+round — the mark inside the circle the Android adaptive icon keeps clear of any launcher mask; (b)
+the mark alone on the monogram's own `secondaryContainer` disc, at the tile's scale (0.84) — low
+contrast in dark; (c) the mark alone on `surface` with the field hairline, at the tile's scale.
+Recommendation (a): the brand's own small-size form, legible at 24 px in both themes.
