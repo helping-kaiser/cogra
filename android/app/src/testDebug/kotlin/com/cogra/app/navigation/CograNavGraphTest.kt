@@ -13,6 +13,7 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertContentDescriptionEquals
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasContentDescription
@@ -351,6 +352,41 @@ class CograNavGraphTest {
                 ?.toRoute<Topic>()?.name == "fieldnotes"
         }
         compose.onNodeWithContentDescription("Back to #rust").assertExists()
+    }
+
+    // jakob 2026-11-23: on a tag's own page its chip does nothing — as a
+    // person's own name does nothing on their profile (ProfilePosts.md:25) —
+    // so no second page of the same tag stacks, and one Back leaves; the tap
+    // never falls through to the card's door either.
+    @Test
+    fun onATagsPageItsOwnChipIsInertAndOneBackLeaves() {
+        val tagged = com.cogra.domain.testing.testPost("p1").copy(
+            topics = listOf(
+                com.cogra.domain.testing.testTopicClaim("rust"),
+                com.cogra.domain.testing.testTopicClaim("fieldnotes"),
+            ),
+        )
+        content.listing = listOf(tagged)
+        topics.content["rust"] = listOf(
+            com.cogra.domain.testing.testTaggedContent("p1").copy(node = com.cogra.domain.TaggedNode.Post(tagged)),
+        )
+        render()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
+        waitForTag("feed.card.tagsLine.tag:rust")
+        compose.onNodeWithTag("feed.card.tagsLine.tag:rust").performClick()
+        waitForTag("tagPage.card:p1")
+
+        compose.onNodeWithTag("tagPage.card.tagsLine.tag:rust").performClick()
+        compose.waitForIdle()
+
+        assertThat(navController.currentBackStack.value.count { it.destination.hasRoute<Topic>() }).isEqualTo(1)
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Topic>()).isTrue()
+        compose.onNodeWithTag("tagPage.card.tagsLine.tag:rust").assertHasNoClickAction()
+
+        compose.runOnIdle { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        waitForTag("feed.card:p1")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
     }
 
     // TagPage.md:31 — a tagged card wears its score as the feed's cards do,
