@@ -97,6 +97,7 @@ internal fun TopicsLine(
     val countsStyle = MaterialTheme.typography.bodySmall
     val density = LocalDensity.current
     val lineLabel = stringResource(R.string.content_topics_line_label)
+    val tagHere = LocalTagHere.current
 
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
         val budget = with(density) { maxWidth.toPx() }
@@ -126,12 +127,11 @@ internal fun TopicsLine(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             names.take(shown).forEach { name ->
-                TopicChip(
+                LineChip(
                     name = name,
-                    onClick = { onOpenTopic(name) },
-                    // Inert inside the line that is itself the opener: a chip
-                    // sitting in a control must not be a second one.
-                    inert = onOpen != null,
+                    insideOpener = onOpen != null,
+                    here = name == tagHere,
+                    onOpenTopic = onOpenTopic,
                     testTag = node?.div("tag")?.keyed(name)?.tag ?: "${testTagPrefix}_topic_$name",
                 )
             }
@@ -140,6 +140,30 @@ internal fun TopicsLine(
             }
         }
     }
+}
+
+/**
+ * One chip of the line. Inert inside the line that is itself the opener — a
+ * chip sitting in a control must not be a second one — and inert on its own
+ * tag's page ([here], [LocalTagHere]), where it is already open: there it
+ * still takes its tap, so the press never falls through to the card's door.
+ */
+@Composable
+private fun LineChip(
+    name: String,
+    insideOpener: Boolean,
+    here: Boolean,
+    onOpenTopic: (String) -> Unit,
+    testTag: String,
+) {
+    val ownPage = here && !insideOpener
+    TopicChip(
+        name = name,
+        onClick = { onOpenTopic(name) },
+        modifier = if (ownPage) Modifier.swallowTaps() else Modifier,
+        inert = insideOpener || ownPage,
+        testTag = testTag,
+    )
 }
 
 /**

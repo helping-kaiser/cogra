@@ -375,6 +375,8 @@ private fun ShellScope.topicCardsHost(entry: NavBackStackEntry, topic: String): 
             tag = "tagPage",
             notify = notify,
             placement = HostedPlacement.TagPage,
+            // This tag's own chips and rows are already open (jakob 2026-11-23).
+            tagHere = topic,
         ) { hosted ->
             content(
                 TopicCards(
