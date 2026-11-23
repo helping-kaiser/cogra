@@ -233,7 +233,8 @@ Because every slice builds against the contract, the real substrate's
 arrival is a **swap, not a slice**: when L1 is available, the
 stand-in is replaced behind the seam and no slice reopens. The swap
 is event-driven — it happens when L1 ships, wherever the slice plan
-stands.
+stands. [l1-swap.md](l1-swap.md) prepares it: the seam, what changes
+area by area, the order of work, and what is still open.
 
 ## The MVP milestone
 
