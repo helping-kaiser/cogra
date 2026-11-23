@@ -228,12 +228,17 @@ internal fun TopicRemovable(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
+        // A TAG IS ONE LINE (`TopicRemovable.jsx`, jakob 2026-11-23): a name too
+        // long for the row is the part cut, ending in "…"; the × is measured
+        // first and keeps its room. A name that fits draws exactly as before.
         Text(
             text = "#$name",
             style = MaterialTheme.typography.labelLarge,
             color = ink,
             maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier
+                .weight(1f, fill = false)
                 .then(if (testTag != null) Modifier.testTag("${testTag}_open") else Modifier)
                 .hitTarget(
                     interactive = Modifier
