@@ -2,13 +2,13 @@
 
 > **Provenance.** This document is a derived reference extracted from the
 > **PeerNetworks Layer 1** specification by the **Peer Team** (Peer Network,
-> v0.34.1), reproducing its binding surface for the purpose
+> v0.36.0), reproducing its binding surface for the purpose
 > of building CoGra as a Layer 2 on it. It is not the normative source —
 > the PeerNetworks paper is. Licensed under CC-BY-4.0; see
 > [LICENSE-DOCS](../../LICENSE-DOCS).
 
-**Derived file — hard facts only.** v0.34.1 ships as the flat source
-(`PeerNetwork_PeerNetwork_v0.34.1_flat.tex`). It carries the **Edition 4**
+**Derived file — hard facts only.** v0.36.0 ships as the flat source
+(`PeerNetwork_PeerNetwork_v0.36.0_flat.tex`). It carries the **Edition 4**
 act-ownership refoundation (authored acts, the admission handshake, the
 authoritative act order) and the **Edition 5** refoundation of standing as
 one conserved allocation operator. This reference draws two scopes from it:
@@ -37,10 +37,57 @@ registered with the Peer Team, renaming any pinned label is a breaking
 change on their side. Recompute and re-register the hash whenever a
 citation is added or removed.
 
+**Material classes (`def:network:material-classification`).** Every
+labeled statement is **closure** material unless its exact label is
+classified as oracle, courtesy or mathematics; silence, area, kind,
+read-site and chapter title never remove a statement from the closure.
+Closure material is the specification proper: its requirements are exactly
+those the standard replay checks on the published record alone with a
+binding result on the epoch, and its other statements give the definitions,
+results, reasons and open questions those checks rest on, imposing no
+requirement of their own; the published epoch's replay floor is the data
+that makes those checks possible (`post:deployment:replay-floor-scope`,
+§13.3). **Oracle** material holds statements whose checks are deterministic
+projections of a declared second party's published rules and data, binding
+at pin under that declared case; a closure statement depends on oracle
+material only inside an explicit declared-case conditional. Every other
+requirement is **courtesy** material, and its check does not bind the epoch
+by construction: a rule normative within a courtesy standard binds a
+realization that explicitly claims that standard and edition, and failure
+falsifies that claim, not the epoch's closure validity. Adopting a courtesy
+standard is optional and is never an admission requirement. Mathematics is a
+separate explicit class for statements solely about abstract mathematical
+objects; v0.36.0 classifies no label into it. A statement's class and a
+value's tag (§3) are separate metadata. A child label has the closure
+default unless itself excepted; an unlabeled paragraph inherits its nearest
+labeled owner's class. Neither closure nor oracle material depends on
+courtesy material, while courtesy material may cite either.
+
+*How this file shows the class.* As the specification badges each labeled
+statement, this file marks each courtesy or oracle statement it reproduces
+with *(courtesy)* or *(oracle)* beside its anchor; every unmarked statement
+is closure. The courtesy anchors cited here are
+`def:graph:act-dependency-tombstone`, `def:graph:act-payload-controller`,
+`def:graph:act-payload-state`, `rem:graph:act-payload-custody-phases`,
+`rem:graph:payload-size-not-act-cost`,
+`subsec:deployment:concealment-entropy`,
+`subsec:deployment:realization-obligations`,
+`post:deployment:verdict-issuance`,
+`cond:deployment:cadence-maturity`,
+`cond:deployment:complete-act-conformance`,
+`cond:deployment:controller-performance`,
+`cond:deployment:emission-experience`,
+`cond:deployment:parameter-comparisons`,
+`cond:deployment:payload-cache-envelope`,
+`cond:deployment:standing-work` and
+`cond:deployment:terminal-regression`.
+
 Purpose: the normative reference for rebasing CoGra as a Layer 2 on this
-substrate. Everything in this file is binding on a Layer 2 exactly as stated;
-anything not in the feedback closure below is a Layer 2's to reimplement
-(`post:transport:guild-grant`).
+substrate. Its closure statements bind every epoch exactly as stated; its
+courtesy statements bind only a realization that claims their standard and
+edition, and its oracle statements only under a declared case its epoch
+package binds. Anything not in the feedback closure below is a Layer 2's to
+reimplement (`post:transport:guild-grant`).
 
 ---
 
