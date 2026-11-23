@@ -1219,7 +1219,10 @@ fn count_key(artifact: &str, author: &str, with_pending: bool) -> store_refs::Re
 
 /// What the batched count says for one key — a key with nothing standing
 /// is absent from the batch's answer and counts zero.
-fn count_for(counts: &[(store_refs::ReferenceCountKey, u32)], key: &store_refs::ReferenceCountKey) -> usize {
+fn count_for(
+    counts: &[(store_refs::ReferenceCountKey, u32)],
+    key: &store_refs::ReferenceCountKey,
+) -> usize {
     counts
         .iter()
         .find(|(k, _)| k == key)
@@ -1259,7 +1262,11 @@ async fn the_batched_count_is_the_length_of_each_artifacts_list(pool: PgPool) {
         assert_eq!(count_for(&counts, key), listed, "{}", key.artifact);
         seen.push(listed);
     }
-    assert_eq!(seen, vec![2, 0, 0, 0], "kept and half; marked, foreign and empty");
+    assert_eq!(
+        seen,
+        vec![2, 0, 0, 0],
+        "kept and half; marked, foreign and empty"
+    );
 }
 
 /// The pending half counts exactly where the list's does: the author's own
@@ -1298,7 +1305,11 @@ async fn the_count_takes_the_pending_view_the_list_takes(pool: PgPool) {
     let before = store_refs::reference_counts(&rig.pool, &[pending.clone(), landed.clone()])
         .await
         .expect("counts");
-    assert_eq!(count_for(&before, &pending), 1, "in flight, the author's view");
+    assert_eq!(
+        count_for(&before, &pending),
+        1,
+        "in flight, the author's view"
+    );
     assert_eq!(count_for(&before, &landed), 0, "not landed yet");
 
     rig.close_and_ingest().await;
@@ -1342,7 +1353,17 @@ impl Loader<store_refs::ReferenceCountKey> for CountingReferenceCountLoader {
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_page_of_counts_reaches_the_count_as_one_batch(pool: PgPool) {
     for i in 0..8 {
-        seed_reference(&pool, &format!("r{i}"), "alice", &format!("art-{i}"), "tgt", 0.5, 0.5, false).await;
+        seed_reference(
+            &pool,
+            &format!("r{i}"),
+            "alice",
+            &format!("art-{i}"),
+            "tgt",
+            0.5,
+            0.5,
+            false,
+        )
+        .await;
     }
     let batches = Arc::new(Mutex::new(Vec::new()));
     let loader = Arc::new(
@@ -1368,7 +1389,11 @@ async fn a_page_of_counts_reaches_the_count_as_one_batch(pool: PgPool) {
     }
 
     assert_eq!(total, 8, "one standing citation per card");
-    assert_eq!(batches.lock().expect("lock").clone(), vec![8], "one batch for the page");
+    assert_eq!(
+        batches.lock().expect("lock").clone(),
+        vec![8],
+        "one batch for the page"
+    );
 }
 
 /// The production loader answers over the same call: a card with a

@@ -2363,34 +2363,87 @@ async fn the_reference_count_is_the_length_of_the_reference_list(pool: PgPool) {
         .await;
 
     let pending = rig
-        .cite_from(&token, &carrier, &other, json!({ "relevance": 0.1, "support": 0.1 }))
+        .cite_from(
+            &token,
+            &carrier,
+            &other,
+            json!({ "relevance": 0.1, "support": 0.1 }),
+        )
         .await;
     rig.pre_sign(&token, &key, &pending["prepareReference"]["writes"])
         .await;
 
-    let posts =[&carrier, &withdrawn, &cites_removed, &removed_carrier, &cited];
+    let posts = [
+        &carrier,
+        &withdrawn,
+        &cites_removed,
+        &removed_carrier,
+        &cited,
+    ];
     for viewer in [Some(token.as_str()), Some(stranger.as_str()), None] {
         for include_pending in [true, false] {
             for post in posts {
                 let (listed, counted) = rig
                     .list_and_count(viewer, POST_COUNT_AND_LIST, "post", post, include_pending)
                     .await;
-                assert_eq!(counted as usize, listed, "post {post}, pending {include_pending}");
+                assert_eq!(
+                    counted as usize, listed,
+                    "post {post}, pending {include_pending}"
+                );
             }
             let (listed, counted) = rig
-                .list_and_count(viewer, COMMENT_COUNT_AND_LIST, "comment", &comment_id, include_pending)
+                .list_and_count(
+                    viewer,
+                    COMMENT_COUNT_AND_LIST,
+                    "comment",
+                    &comment_id,
+                    include_pending,
+                )
                 .await;
-            assert_eq!(counted as usize, listed, "comment, pending {include_pending}");
+            assert_eq!(
+                counted as usize, listed,
+                "comment, pending {include_pending}"
+            );
         }
     }
 
     let expected = [
-        (Some(token.as_str()), &carrier, true, 2, "landed plus the author's pending"),
+        (
+            Some(token.as_str()),
+            &carrier,
+            true,
+            2,
+            "landed plus the author's pending",
+        ),
         (Some(token.as_str()), &carrier, false, 1, "landed only"),
-        (Some(stranger.as_str()), &carrier, true, 1, "a stranger never counts it"),
-        (Some(token.as_str()), &withdrawn, true, 0, "a netted bundle counts nothing"),
-        (Some(token.as_str()), &cites_removed, true, 1, "a removed target's citation stands"),
-        (Some(token.as_str()), &cited, true, 0, "a post citing nothing"),
+        (
+            Some(stranger.as_str()),
+            &carrier,
+            true,
+            1,
+            "a stranger never counts it",
+        ),
+        (
+            Some(token.as_str()),
+            &withdrawn,
+            true,
+            0,
+            "a netted bundle counts nothing",
+        ),
+        (
+            Some(token.as_str()),
+            &cites_removed,
+            true,
+            1,
+            "a removed target's citation stands",
+        ),
+        (
+            Some(token.as_str()),
+            &cited,
+            true,
+            0,
+            "a post citing nothing",
+        ),
     ];
     for (viewer, post, include_pending, count, why) in expected {
         let (_, counted) = rig
@@ -2399,7 +2452,13 @@ async fn the_reference_count_is_the_length_of_the_reference_list(pool: PgPool) {
         assert_eq!(counted, count, "{why}");
     }
     let (_, counted) = rig
-        .list_and_count(Some(&token), COMMENT_COUNT_AND_LIST, "comment", &comment_id, true)
+        .list_and_count(
+            Some(&token),
+            COMMENT_COUNT_AND_LIST,
+            "comment",
+            &comment_id,
+            true,
+        )
         .await;
     assert_eq!(counted, 1, "a comment counts its own citation");
 
