@@ -221,7 +221,11 @@ async fn a_settling_post_stands_on_every_profiles_posts_view(pool: PgPool) {
     settling_post(&rig, &other, "not hers either").await;
     let settling = settling_post(&rig, &author, "settling").await;
 
-    for viewer in [None, Some(other.token.as_str()), Some(author.token.as_str())] {
+    for viewer in [
+        None,
+        Some(other.token.as_str()),
+        Some(author.token.as_str()),
+    ] {
         let read = rig
             .gql(viewer, PROFILE_POSTS, json!({ "id": author.id }))
             .await;
@@ -292,7 +296,11 @@ async fn a_settling_comment_stands_on_every_profiles_comments_view(pool: PgPool)
     let reply = settling_comment(&rig, &author, &landed).await;
     settling_comment(&rig, &other, &host).await;
 
-    for viewer in [None, Some(other.token.as_str()), Some(author.token.as_str())] {
+    for viewer in [
+        None,
+        Some(other.token.as_str()),
+        Some(author.token.as_str()),
+    ] {
         let read = rig
             .gql(viewer, PROFILE_COMMENTS, json!({ "id": author.id }))
             .await;
