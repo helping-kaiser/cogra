@@ -1027,9 +1027,10 @@ $\mathrm{clip}_{[-1,1]}$ in `def:epoch:net-stance`, not a calibrated value.
 interval) and the positive unit-cost projection $c_{\mathrm{u}}$ (R10) —
 are read as constants and re-derived nowhere. Settlement depth and the
 assumed provenance, cost and operator properties add no computational
-inputs (`def:comparator:burn-interface`); the publication of their audit
-evidence is courtesy (`rem:comparator:burn-realization-audit-evidence`,
-§1.1). A realization's own fees, splits, phase
+inputs (`def:comparator:burn-interface`). The realization publishes the
+settlement depth with its finality assumptions under R4(e); publication of
+the provenance, cost and operator audit evidence is courtesy
+(`rem:comparator:burn-realization-audit-evidence`, §1.1). A realization's own fees, splits, phase
 leads, and any ceiling derived from them are its design; the network
 neither names nor recomputes them (`rem:comparator:surface-readings`).
 $c_{\mathrm{u}}$ turns a burn-amount quantity into an amount-proportional
@@ -1067,14 +1068,15 @@ proposed act sequence $\mathcal{Q}_k$ — no prefix of $\mathcal{Q}_k$
 carries a normative standing value (`post:epoch:final-act-sequence-closure`,
 `def:epoch:proposed-final-act-state`).
 
-A record by actor $i$ is writable in epoch $k$ iff all three sub-gates hold
+A record whose act's recorded author is actor $i$ is writable in epoch $k$
+iff all three sub-gates hold
 (`post:epoch:final-act-sequence-write-rule`,
 `subsec:epoch:participation-gates`):
 
 1. **W1 — solvency (debited):** $b_i \geq \theta^{(k)}$ — evaluated
    continuously on the live pair; on write the balance debits $\theta^{(k)}$
-   (`post:epoch:act-debit`). Capacity **is** the balance; only the actor's
-   own balance pays the actor's $\theta$.
+   (`post:epoch:act-debit`). Capacity **is** the balance; only the recorded
+   author's own balance pays its $\theta$.
 2. **W2a — safety (individual, never averaged):** the act's final stamp
    $\rho_{\text{act}}(q) = \hat{\alpha}_i^{(k)} \geq \rho_\theta$ (the
    wall). The stamp is the reduced **final** standing of the completed set,
