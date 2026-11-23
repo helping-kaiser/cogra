@@ -7018,6 +7018,9 @@ it` pill's rim (x 325–328, rows 552–557, and x 237 row 573). Round 64's read
 review overlay's badge rim" came from `diffbox.mjs`, which keeps the flow badges; with them stripped,
 as the proof renders, the wobble is the pill's own rim. Over 100 serial renders never wobbled;
 `--num-raster-threads=1` does not stop it. Separately, about one render in fifty loses Figtree (the
-Google Fonts fetch errors) and the whole board draws in the fallback face. Options: (a) the proof
-re-renders a differing board once before it reports a difference; (b) serve Figtree to the harness
-locally; (c) both. Recommendation (c).
+Google Fonts fetch errors) and the whole board draws in the fallback face. And no picture paints in
+the harness: a board names its images bare (`post-photo.jpg`), the canvas runtime finds them in
+`img/`, and the harness's `<base>` is the board's folder, so every image is broken on both sides and
+a proof cannot see a picture change. Options: (a) the proof re-renders a differing board once before
+it reports a difference; (b) serve Figtree to the harness locally; (c) both, and the harness's base
+at `img/`. Recommendation (c).

@@ -12995,8 +12995,9 @@ drawing.
   fifteen under load, on `152cddc34` as on round 64's tip, and never in
   over 100 serial renders. The 14 px "badge rim" were the flow badge,
   which `diffbox.mjs` keeps and the proof strips. About one render in
-  fifty loses the Google Fonts fetch and draws the fallback face. Filed
-  as backlog 307; no board changes.
+  fifty loses the Google Fonts fetch and draws the fallback face, and no
+  picture paints in the harness (a board's bare image names miss `img/`).
+  Filed as backlog 307; no board changes.
 ---
 
 ## 14. The canvases
