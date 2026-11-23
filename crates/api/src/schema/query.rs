@@ -19,12 +19,12 @@ use uuid::Uuid;
 use super::ranked_search::{self, ReadOrder};
 use super::types::{
     Actor, AskLinkCheck, CommentType, DEFAULT_PAGE_SIZE, EmailChangeLinkCheck,
-    EmailChangeLinkState, HashtagType, InviteLinkCheck, KeysetConnection, MediaAttachmentType,
-    Node, NodeKind, PasswordResetLinkCheck, PostType, Record, RecordConnection, RecordFamily,
+    EmailChangeLinkState, HashtagType, InviteLinkCheck, MediaAttachmentType, Node, NodeKind,
+    PasswordResetLinkCheck, PostConnection, PostType, Record, RecordConnection, RecordFamily,
     RecordId, ReferenceCandidate, ReferenceTarget, SearchConnection, SearchConnectionFields,
     SearchEdgeFields, SearchResult, StagedWriteType, User, borrowed_vantage, connection_cost,
-    content_cursor, content_cursor_key, keyset_connection, keyset_page, list_cost, list_limit,
-    record_connection, resolve_reference_target, validate_page_args, viewer_address,
+    keyset_page, list_cost, list_limit, posts_connection, record_connection,
+    resolve_reference_target, validate_page_args, viewer_address,
 };
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
@@ -767,23 +767,9 @@ impl Query {
         first: Option<i32>,
         last: Option<i32>,
         #[graphql(default = true)] include_pending: bool,
-    ) -> async_graphql::Result<KeysetConnection<PostType>> {
-        let pool = ctx.data::<PgPool>()?;
+    ) -> async_graphql::Result<PostConnection> {
         let page = keyset_page(first, after, last, before)?;
-        let rows = content_store::list_posts(
-            pool,
-            content_cursor(page.cursor),
-            page.backward,
-            page.limit + 1,
-            include_pending,
-        )
-        .await?;
-        Ok(keyset_connection(
-            rows,
-            &page,
-            |p| content_cursor_key(p.sort_key(), p.id),
-            PostType,
-        ))
+        posts_connection(ctx, None, page, include_pending).await
     }
 
     /// The governed network parameters, from the operational carrier —

@@ -6943,6 +6943,13 @@ and if so what the card reads. Options: (a) both marks, the removal's in the con
 `Still settling` under the age, as impl lists it; (b) the removal waits for the post to land, so the
 case never stands.
 
+Closed by round 64 (jakob 2026-11-23, B4 = (a)): both marks — the removal's mark in the content's
+place and `Still settling` where every settling card wears it, over the action row (`PostCard`'s own
+place for it; "under the age" above was the lane's gloss, not the master's), its score slot bare
+(readme §9; `ProfilePosts.md`, `ProfilePostsOwn.md`). Drawn: `ProfilePostsOwn` chip `posts` =
+`settling-removed`. (1), the hidden account's own profile, needs nothing: the list rules carry no
+exception.
+
 ### 303 · Where a failed attach of the applicant's own key stands · *design* · **filed 2026-11-23**
 
 Round 63, item 7 (jakob 2026-11-23, point 5 (a)): the law is written (`ApplicantFeed.md` — the house
@@ -6964,3 +6971,23 @@ Lindgren) as the same view. Round 63 speaks `FeedBare`'s anchors as `@noa's opin
 the board's own band. Options: (a) one handle for the genesis moderator on every guest board
 (`genesismod`, the band re-fixtured); (b) keep each board's own. Also not drawn: `Main` (an invite
 link's issuer, `@mira`) draws no borrowed opinion either; the law (`Main.md:11`) holds the same.
+
+Closed by round 64 (jakob 2026-11-23, B2 = (a), "genesis_mod"): the genesis moderator's view is
+`@genesis_mod` on every guest board — `TagPage`, `ProfileOther` and `FeedBare`, whose band and anchors
+now name it (`GUEST_VANTAGE`; the band's display name the tree's `Genesis Moderator`). On a profile
+the wide anchor cuts `@genesis…'s opinion` (390 px) and `@ge…'s opinion` (360 px), as it cut the
+old handle; on a tag page it stands whole (158 px). `Main` stays the issuer's view.
+
+### 305 · A comment's media on History and Saved — the registry's one-chip rule · *design* · **filed 2026-11-23**
+
+Round 64, item 5 (impl seam 424). `profile.comments.commentCard.media…` is registered (`ProfileComments`
+chip `comments` = `pictures` / `clip`); `history` and `saved` are not. Their one comment card, @tobias's
+(`TOBIAS_COMMENT_ID`), is already drawn three times by the `pick` chip (`PickCopies`), and the chip-copy
+law (`node-paths.mjs`, ruling 39) lets a keyed instance repeat under ONE chip only, with no chip copy
+nested in another's. Options: (a) the boards' `pick` chip takes `pictures` and `clip` too, a chip naming
+two kinds of state; (b) a `comment` chip that draws @ada's tagged comment (`ADA_TAGGED_COMMENT_ID`, the
+tag page's and the profile's media comment) in @tobias's place, the pick copies hidden — a different
+comment on the board; (c) widen ruling 39 so a keyed instance may repeat under each of two chips whose
+copies never show together — a build-law change, his. Until ruled impl knows the card emits
+`history.commentCard.media`, `.media.frame` (`<id>/<n>`), `.media.frame.soundDisc`, `.media.dots`
+(the same on `saved`) and registers none.

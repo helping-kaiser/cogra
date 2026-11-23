@@ -507,7 +507,12 @@
   pointer-events: none;
 }
 
-.cg-state:hover::after { opacity: var(--state-hover) }
+/* Hover only where the primary input can hover (jakob 2026-11-23, readme §4):
+   on touch a control is lit only while the finger is on it — press — and
+   nothing stays lit once it lifts. */
+@media (hover: hover) {
+  .cg-state:hover::after { opacity: var(--state-hover) }
+}
 .cg-state:active::after { opacity: var(--state-press) }
 .cg-state:disabled::after, .cg-state[aria-disabled="true"]::after { opacity: 0 }
 
@@ -526,7 +531,9 @@
   transition: opacity var(--duration-short-2) var(--ease-standard);
   pointer-events: none;
 }
-.cg-door-card:has(.cg-door:hover)::after { opacity: var(--state-hover) }
+@media (hover: hover) {
+  .cg-door-card:has(.cg-door:hover)::after { opacity: var(--state-hover) }
+}
 .cg-door-card:has(.cg-door:active)::after { opacity: var(--state-press) }
 
 /* The focus indicator is `onSurface` rather than `primary`: a primary ring
@@ -609,7 +616,9 @@ body {
 }
 
 a { color: var(--primary); text-decoration-color: color-mix(in srgb, var(--primary) 40%, transparent) }
-a:hover { color: color-mix(in srgb, var(--primary) 84%, var(--on-surface)); text-decoration-color: currentColor }
+@media (hover: hover) {
+  a:hover { color: color-mix(in srgb, var(--primary) 84%, var(--on-surface)); text-decoration-color: currentColor }
+}
 
 code, kbd, samp, pre { font-family: var(--font-mono) }
 
@@ -1109,7 +1118,12 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
   pointer-events: none;
 }
 
-.cg-state:hover::after { opacity: var(--state-hover) }
+/* Hover only where the primary input can hover (jakob 2026-11-23, readme §4):
+   on touch a control is lit only while the finger is on it — press — and
+   nothing stays lit once it lifts. */
+@media (hover: hover) {
+  .cg-state:hover::after { opacity: var(--state-hover) }
+}
 .cg-state:active::after { opacity: var(--state-press) }
 .cg-state:disabled::after, .cg-state[aria-disabled="true"]::after { opacity: 0 }
 
@@ -1128,7 +1142,9 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
   transition: opacity var(--duration-short-2) var(--ease-standard);
   pointer-events: none;
 }
-.cg-door-card:has(.cg-door:hover)::after { opacity: var(--state-hover) }
+@media (hover: hover) {
+  .cg-door-card:has(.cg-door:hover)::after { opacity: var(--state-hover) }
+}
 .cg-door-card:has(.cg-door:active)::after { opacity: var(--state-press) }
 
 /* The focus indicator is `onSurface` rather than `primary`: a primary ring
@@ -1211,7 +1227,9 @@ body {
 }
 
 a { color: var(--primary); text-decoration-color: color-mix(in srgb, var(--primary) 40%, transparent) }
-a:hover { color: color-mix(in srgb, var(--primary) 84%, var(--on-surface)); text-decoration-color: currentColor }
+@media (hover: hover) {
+  a:hover { color: color-mix(in srgb, var(--primary) 84%, var(--on-surface)); text-decoration-color: currentColor }
+}
 
 code, kbd, samp, pre { font-family: var(--font-mono) }
 

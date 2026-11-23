@@ -905,6 +905,10 @@ enum PayloadState { FULL REDUCED }
 type PostConnection {
   edges: [PostEdge!]!
   pageInfo: PageInfo!
+  "How many posts the listing holds, across every page — one per
+   post, never an edit, a removed post included — under the filter
+   that served the edges."
+  totalCount: Int!
 }
 type PostEdge {
   cursor: String!
@@ -917,6 +921,9 @@ type PostEdge {
 type CommentConnection {
   edges: [CommentEdge!]!
   pageInfo: PageInfo!
+  "How many entries the list holds, across every page, under the
+   filter that served the edges."
+  totalCount: Int!
 }
 type CommentEdge {
   cursor: String!
@@ -979,9 +986,9 @@ GENESIS records (`true`) or the rest (`false`), so a count and the
 rows it counts never disagree. The profile's figures count bundles,
 never records ([open-questions.md Q35](../open-questions.md)): one
 person's opinions toward one target are one, however often revised.
-`Posts` is `outgoingRecords(family: PUBLISH, toKind: POST, genesis:
-true)`'s `totalCount` — one genesis per post, so its records are its
-bundles. `Opinions on them` is `incomingRecords(family: OPINION,
+`Posts` is `User.posts`' `totalCount` — every post the person
+published, a still-settling one and a removed one included, never an
+edit: exactly the rows the Posts view lists. `Opinions on them` is `incomingRecords(family: OPINION,
 payloadMarked: false)`'s `bundleCount` — the people holding an
 opinion on the person — and `Opinions by them` is
 `outgoingRecords(family: OPINION, toKind: USER, payloadMarked:
@@ -1249,6 +1256,14 @@ type User implements Node & Actor {
   "When the viewer saved this person; null when not kept, or with no
    session. What the profile menus' Save / Unsave row reads."
   viewerBookmarkedAt: DateTime
+  "The person's posts — the profile's Posts view and its Posts
+   figure: the post listing's own order narrowed to them, pending
+   entries first, a removed post included, never an edit."
+  posts(first: Int, after: String, last: Int, before: String, includePending: Boolean! = true): PostConnection!
+  "The person's comments — the profile's Comments view — whatever
+   they answer, in the thread read's newest-first order: pending
+   entries first, a removed comment included, never an edit."
+  comments(first: Int, after: String, last: Int, before: String, includePending: Boolean! = true): CommentConnection!
 
   # Private viewer state — each field resolves only when the authenticated
   # viewer is this User; null otherwise (see "Private viewer state" below).

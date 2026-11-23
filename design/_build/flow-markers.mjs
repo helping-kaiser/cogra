@@ -164,9 +164,9 @@ export const FLOW_MARKERS = {
     filter,
     ...guestBand,
     // The borrowed view's faces (round 63): each anchor is spoken as the
-    // view's opinion, `@noa's opinion on this post`, held or hollow.
+    // view's opinion, `@genesis_mod's opinion on this post`, held or hollow.
     ...post({ author: 4, menu: 5, media: 6, more: 7, topic: 8, refs: 9, stance: 10, score: 11, comments: 12 }).filter((m) => m.n !== 10),
-    { n: 10, find: 'aria-label="@noa&#x27;s opinion on this post', tag: "button", all: true },
+    { n: 10, find: 'aria-label="@genesis_mod&#x27;s opinion on this post', tag: "button", all: true },
     secondComments(12),
     ...nav(13),
   ],
@@ -2042,6 +2042,9 @@ Object.assign(FLOW_MARKERS, {
     // count, the next free numbers; `all`, its settling copy too.
     { n: 20, find: '<a href="/t/', tag: "a", all: true },
     { n: 21, find: ">· 1 reference</button>", tag: "button", all: true },
+    // The `comments` chip's clip (round 64, seam 424): its sound, as
+    // `TagPage`'s 17, the next free number.
+    { n: 22, find: 'aria-label="Turn sound on"', tag: "button" },
   ],
   ProfileEdit: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
@@ -2256,6 +2259,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 15, find: 'aria-label="1 comment"', tag: "button" },
     { n: 16, find: ">Undo</button>", tag: "button" },
     ...nav(17),
+    // The @tobias comment's count (round 64), as `Saved`'s 8: the next free number.
+    { n: 22, find: ">· 1 reference<", tag: "button" },
   ],
   /* Saved searched to people (round 14, sectioned search): the arrow, the
      field, then the people section top-down — each card's own controls one
@@ -2354,7 +2359,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 13, find: 'aria-label="More on this post"', tag: "button", all: true },
     { n: 14, find: ">More</button>", tag: "button" },
     { n: 15, find: "aspect-ratio:1.91 / 1", tag: "div" },
-    { n: 16, find: ">· 1 reference<", tag: "button" },
+    // `all` (round 64): the @tobias comment's count is the same door.
+    { n: 16, find: ">· 1 reference<", tag: "button", all: true },
     { n: 17, find: 'aria-label="3 comments"', tag: "button" },
     { n: 18, find: ">Undo</button>", tag: "button" },
     ...nav(19),
