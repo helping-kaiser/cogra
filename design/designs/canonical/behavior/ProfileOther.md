@@ -80,6 +80,8 @@ WHEN tap profile.tabRow.commentsTab -> the person's comments stand below profile
 
 WHEN tap a chronicle card for a published post -> the post's detail opens AND its back arrow reads Back to the profile
 
+WHEN tap a chronicle card for a tag or a citation of a post -> the tagged or cited post's detail opens AND its back arrow reads Back to the profile
+
 WHEN tap a chronicle card whose post or comment was removed -> it opens where the card opens for the act, the removed thing standing there as its mark
 
 WHEN the chronicle is scrolled toward its end GIVEN more acts exist -> the next page arrives in place as the reader keeps going

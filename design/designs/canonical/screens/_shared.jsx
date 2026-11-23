@@ -1362,8 +1362,10 @@ function ProfileTabs({ tab = "posts", posts, chronicle }) {
    title. A deleted account's post reads the same: kept, its title, as any
    post's; swept, the mark. `Profile`'s `act` chip draws the three on the
    third act — `opinion` the act as drawn, on @mira — each copy the act keyed
-   by its position. They stay inert, as the opinion's act is: where a tag's or
-   a citation's act opens is not drawn. */
+   by its position. The opinion's act stays inert; a tag's or a citation's
+   act opens the tagged or cited post, its mark there once removed (round 62;
+   jakob 2026-11-23, B2 (a)), as `Published a post` opens its post — a card
+   with somewhere to go is a button. */
 const ACT_CHIP = { act: { editor: "enum", options: ["opinion", "opinion-removed", "tag-removed", "citation-removed"], default: "opinion" } };
 const ACT_VALS = `actOpinion: this.props.act === "opinion" ? "contents" : "none", actOpinionRemoved: this.props.act === "opinion-removed" ? "contents" : "none", actTagRemoved: this.props.act === "tag-removed" ? "contents" : "none", actCitationRemoved: this.props.act === "citation-removed" ? "contents" : "none"`;
 function ChronicleTargetActs() {
@@ -1377,10 +1379,10 @@ function ChronicleTargetActs() {
         <ContentRow {...act} face={{ pDirected: 0.4, pInterest: 0.5 }} title="Gave an opinion" titleAside="on a post" second="Removed by its author" />
       </div>
       <div style={{ display: "{{actTagRemoved}}" }} data-node-chip="act" data-node-key="tag-removed">
-        <ContentRow {...act} letter="#" title="Tagged a post" titleAside="#saltmaps" second="Removed by its author" />
+        <ContentRow {...act} inert={false} onOpen={() => {}} letter="#" title="Tagged a post" titleAside="#saltmaps" second="Removed by its author" />
       </div>
       <div style={{ display: "{{actCitationRemoved}}" }} data-node-chip="act" data-node-key="citation-removed">
-        <ContentRow {...act} glyph="dynamic_feed" title="Cited a post" second="Removed by its author" />
+        <ContentRow {...act} inert={false} onOpen={() => {}} glyph="dynamic_feed" title="Cited a post" second="Removed by its author" />
       </div>
     </>
   );
