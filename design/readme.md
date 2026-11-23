@@ -8100,7 +8100,13 @@ jakob's rulings closing the day's rounds, executed in one lane.
      handle is the line's one shrinking part (`nameInLine`, beside
      `ActorChip`). `PageHeader`, `SheetItem`, `OverflowMenu`'s popover
      (Material's 280dp maximum), `ContentRow` and `ProfileHeader`'s handle
-     line carry it.
+     line carry it, and `SettingsRow`'s value, cut while its label keeps
+     its whole width (jakob 2026-11-23, E10). A TAG IN A LIST never wraps
+     (jakob 2026-11-23: no wrapping for tags in lists): a 128-character
+     name is a case-2 line — the chronicle's aside, Explore's recent row
+     and the filter sheet's `One tag` chip end in "…", the words around it
+     keeping their room — and the seal's Tags row falls to its count when
+     a chip would not fit whole.
   3. *Text that wraps* — headings, card titles and bodies, dialog titles
      and bodies, snackbars, notices, the borrowed-view band: the sentence
      wraps at its spaces and is never cut as a whole, and A HANDLE OR A
@@ -8119,7 +8125,8 @@ jakob's rulings closing the day's rounds, executed in one lane.
      client draws the unit in parts, the parts are hidden from assistive
      tech and the whole string is spoken once in their place (round 48).
      The one-line law's lines also carry `StanceRow`'s name and handle,
-     `ReelCaption`'s handle and the person card's lead (round 48).
+     `ReelCaption`'s handle and title (round 48; the title jakob
+     2026-11-23, E9) and the person card's lead (round 48).
 - **The comment card's ⋮ is the comment's menu** (`CommentMenu`, or
   `CommentMenuOwn` on your own), never the post card's.
 - **The score hangs on the thing it scores.** At the top of the trace
@@ -12791,6 +12798,60 @@ drawing.
   sheet (295); where a tag's or a citation's act opens (296); a pending
   thing's place in a list's order (297). Backlog 282, 285, 286, 287, 288,
   291 and 292 close; 290 stays.
+
+### Round 62, settling things in signing order, pointer doors, deleted-account words, long tags in lists, the registry's gaps — 2026-11-23
+
+- **Ruled** (jakob 2026-11-23, round 61's review): B1 — a still-settling
+  thing stands in signing order ("(a) is not a solution for if someone has
+  multiple settling contents"); the clock is the docs' (`api-spec.md:226-232`:
+  pending entries above every landed one, ordered among themselves by their
+  authoring instant — not Lamport time, which is assigned at landing).
+  B2–B5 as recommended: a tag's and a citation's chronicle act opens its
+  post; `Mentioned` / `Vouched for` `a deleted account`; `A deleted account
+  cited your post` with the empty disc; the comment's tags-and-references
+  sheet drawn over the thread and both sheets registered. D6: the comment
+  card's `On …` line is the door to the post, the rest of the card opens the
+  thread at the comment. E9, E10: the reel caption's title and a settings
+  row's value are one line, cut with "…". Told: no wrapping for tags in
+  lists.
+- **Drawn**: the profile tabs' `settling` with the settling item at the head,
+  and `settling-two` on `ProfilePosts`, `ProfilePostsOwn`,
+  `ProfileComments` and `ProfileCommentsOwn` (two settling items, `now` then
+  `3m`); `Profile`'s `act` tag and citation cards as doors; `ProfileOther`'s
+  `aside` = `mentioned-deleted` / `vouched-deleted`; `Notifications`' `actor`
+  = `deleted` (every kind); `CommentRefsSheet` (new, over the thread);
+  `Reel`'s `title` = `long`; `TagPage`'s `comment` = `pictures` / `clip` and
+  `reader` = `guest`, and `ProfileOther`'s `reader` = `guest` (the wide
+  anchor `@genesismod's opinion`).
+- **The law that moved**: the list order in `ProfilePosts.md`,
+  `ProfilePostsOwn.md`, `ProfileComments.md`, `ProfileCommentsOwn.md`,
+  `ReplyEntry.md`; the chronicle door in `Profile.md`, `ProfileOther.md`,
+  `ProfileDeleted.md`, `ProfileOtherHeld.md`; the pointer's one sentence on
+  `ProfileComments.md`, `ProfileCommentsOwn.md`, `FeedKinds.md`,
+  `TagPage.md` (as `History.md` and `Saved.md` had it); copy-voice *Naming a
+  removed or deleted thing*, *The chronicle's verbs* and the notifications'
+  deleted actor; *long names* case 2 (a settings value, the caption's title,
+  a tag in a list). Masters: `ContentRow` (an aside with no handle ends in
+  "…", `discRedacted`), `SettingsRow` (the value yields, the label keeps its
+  width), `ReelCaption` (one-line title), `Chip`'s `cut` (the filter sheet's
+  `One tag`), `StanceControl`'s `vantage` / `vantageHoles` and
+  `ProfileHeader`'s pass-through; the seal's Tags row folds when its chips
+  stop fitting (`1 tag` for one too long), Explore's recent row ends in "…".
+  `TagPageCommentMenuOwn.md`: Edit whose read gets no answer says the house
+  line in the page's snackbar.
+- **Registered**: `KeyCeremonyUnsupported` (the web's seven names),
+  `TagPageEmpty` (`tagPage.header`, `.actionRow`, `.empty`), `RefsSheet` and
+  `CommentRefsSheet` (`postDetail.refsSheet`, `.title`, `.tag`, `.reference`),
+  `tagPage.commentCard.media` and its parts, `ProfileOtherHeld` (its anchor's
+  `exact`).
+- **Measured** at 360 px with two 128-character tags (hyphens, none): the
+  chronicle aside 128 px wide and cut, its title whole; the recent row's
+  query 282 px, cut; the `One tag` chip 312 px inside the 360 sheet, cut;
+  every one one line. The seal's slot 181 px at 360 (211 px in the frame).
+- **Held**: the Everything tab's settling rows against the landed-only
+  chronicle (backlog 298); the tag places outside lists (299); a comment's
+  tag or citation act (300); a long settings value on a board (301). Backlog
+  293–297 close.
 ---
 
 ## 14. The canvases

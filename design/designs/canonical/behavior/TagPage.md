@@ -20,6 +20,10 @@ ALWAYS a tagged comment's ⋮ holds the comment's whole menu, the reader's comme
 
 ALWAYS a tagged comment's pointer names a removed post it answers by its author's handle, as On @sol's removed post, and never by its title
 
+WHEN tagPage.commentCard.target is tapped -> the post it answers opens AND its back arrow reads Back to #saltmaps
+
+WHEN tagPage.commentCard is tapped outside tagPage.commentCard.target and its own controls -> the post's comment section opens scrolled to that comment
+
 WHEN the tag page is next derived GIVEN the feed's filter has Removed on -> a removed tagged post stands in its row as the feed's removed card AND a removed tagged comment stands in its row as tagPage.commentCard with tagPage.commentCard.removalMark in the words' place, each Removed by its author with the removal's date, under its claim
 
 WHEN the tag page is next derived GIVEN the feed's filter keeps Removed off -> a removed tagged post or comment is not listed AND NEVER the tag page carries a switch of its own
