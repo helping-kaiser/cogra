@@ -499,6 +499,31 @@ type BookmarkEdge {
 	cursor: String!
 }
 
+type BorrowedStance {
+	"""
+	The folded valence as it stands.
+	"""
+	pDirected: Dimension!
+	"""
+	The folded connection as it stands.
+	"""
+	pInterest: Dimension!
+	"""
+	How many landed records the bundle folds, an empty sign's `(0, 0)`
+	included.
+	"""
+	recordCount: Int!
+	"""
+	Either axis at zero — the bundle carries nothing on it.
+	"""
+	inert: Boolean!
+	"""
+	Walked back to nothing: the bundle nets to `(0, 0)` and its newest
+	record said something — `StanceBundle.severed`'s reading.
+	"""
+	severed: Boolean!
+}
+
 """
 The account after the cancel — its address unchanged and no change
 pending.
@@ -652,6 +677,12 @@ type Comment implements Node {
 	only what has landed on L1.
 	"""
 	viewerStance(pick: StancePickInput, includePending: Boolean! = true): StanceBundle
+	"""
+	The borrowed view's own landed stance toward this comment, for a
+	request with no session — read-only, what a guest's face wears.
+	Null with a session, and where the borrowed view holds none.
+	"""
+	borrowedStance: BorrowedStance
 	"""
 	When the viewer saved this comment; null when not kept, or with no
 	session. What the comment menus' Save / Unsave row reads.
@@ -1161,6 +1192,13 @@ type Hashtag {
 	it. Null for a viewer with no bundle to read.
 	"""
 	viewerStance(pick: StancePickInput, includePending: Boolean! = true): StanceBundle
+	"""
+	The borrowed view's own landed Affinity bundle toward this topic,
+	for a request with no session — read-only, what a guest's follow
+	face wears. Null with a session, and where the borrowed view holds
+	none.
+	"""
+	borrowedStance: BorrowedStance
 }
 
 """
@@ -2791,6 +2829,12 @@ type Post implements Node {
 	only what has landed on L1.
 	"""
 	viewerStance(pick: StancePickInput, includePending: Boolean! = true): StanceBundle
+	"""
+	The borrowed view's own landed stance toward this post, for a
+	request with no session — read-only, what a guest's face wears.
+	Null with a session, and where the borrowed view holds none.
+	"""
+	borrowedStance: BorrowedStance
 	"""
 	The viewer's own Publish bundle toward this post — the raw sum of
 	the records they authored it with, and the clip of that sum.
@@ -5105,6 +5149,13 @@ type User implements Node & Actor {
 	only what has landed on L1.
 	"""
 	viewerStance(pick: StancePickInput, includePending: Boolean! = true): StanceBundle
+	"""
+	The borrowed view's own landed stance toward this person's
+	Profile, for a request with no session — read-only, what a guest's
+	face wears. Null with a session, for an account with no Profile
+	on the graph, and where the borrowed view holds none.
+	"""
+	borrowedStance: BorrowedStance
 	"""
 	Whether the viewer's reciprocal Opinion toward invitedBy exists —
 	confirmed in the record mirror (latched on the landed application
