@@ -14,6 +14,8 @@ package com.cogra.app.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -42,6 +44,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.cogra.app.R
 import com.cogra.core.designsystem.DataNode
@@ -162,10 +165,13 @@ private fun DestinationSlot(
                 contentDescription = if (wordsShown) null else name,
             )
         },
+        // Dropped, the word leaves its place empty at the line it takes at
+        // 1.0× — the bar's own label style, `labelMedium` (M3's short bar
+        // token) — so the bar holds today's height and the glyph its place.
         label = if (wordsShown) {
             { Text(name) }
         } else {
-            null
+            { Spacer(Modifier.height(heldWordLine())) }
         },
         modifier = Modifier.testTag(testTag),
         colors = barItemColors(),
@@ -185,6 +191,10 @@ private const val BAR_WORDS_MAX_FONT_SCALE = 1.3f
  * preference as Compose carries it from `Configuration.fontScale`.
  */
 private fun barWordsShown(fontScale: Float): Boolean = fontScale <= BAR_WORDS_MAX_FONT_SCALE
+
+/** The word's line at 1.0× text size: its sp height read as dp, as a 1.0× density reads it. */
+@Composable
+private fun heldWordLine(): Dp = MaterialTheme.typography.labelMedium.lineHeight.value.dp
 
 /**
  * The slots' colours by the master (`BottomNav.jsx`: `tone(selected)`):
