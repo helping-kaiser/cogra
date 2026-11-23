@@ -12,7 +12,9 @@ WHEN tap the ⋮ on profile.comments.commentCard -> profile.menuSheet rises over
 
 ALWAYS a removed comment of the reader's own keeps its place in the list, profile.comments.commentCard.removalMark.line reading Removed by its author where its words were, with the removal's date, and nothing more under it, whatever the feed's filter holds, its ⋮ the own comment menu less Edit and Remove
 
-WHEN profile.comments.commentCard.target is tapped -> the post it answers opens AND its back arrow reads Back to your profile
+WHEN profile.comments.commentCard.target is tapped GIVEN it names a post -> the post it answers opens AND its back arrow reads Back to your profile
+
+WHEN profile.comments.commentCard.target is tapped GIVEN it names a comment -> the post's comment section opens scrolled to the comment it names
 
 ALWAYS a profile.comments.commentCard carries no view-replies line
 

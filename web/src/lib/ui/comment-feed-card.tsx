@@ -7,7 +7,9 @@
 // answered thing's mark, its title, its author — and the comment hung under
 // it on a connector rule, the way a reply hangs under what it answers.
 //
-// THE DOUBLE DOOR. The head row opens what it names. The rest of the card
+// THE DOUBLE DOOR. The head row opens what it names — a post itself, at its
+// top with its comment section closed; a comment in its thread, landed on it
+// (jakob 2026-11-23, seams 405 and 417). The rest of the card
 // opens the comment's own place — the post's comment section, scrolled to
 // this comment. Things with their own meaning keep it: the author chip, the
 // chips, the row.
@@ -31,8 +33,8 @@
 // comments — the card leads with the one-line `On …` pointer instead of the
 // head row, its words stand whole, and its row is the thread's own: the
 // opinion, then the text `Reply`, with the collapsed "View n replies" line
-// under the card. Every door — the pointer, Reply and the replies line — opens
-// the thread the comment lives in.
+// under the card. The pointer is the head row's door, to what it names; Reply
+// opens the thread the comment lives in.
 //
 // IN BOTH SHAPES THE CARD IS THE DOOR TO THE COMMENT'S PLACE: a tap anywhere
 // outside what it answers and its own controls opens the post's comment
@@ -353,6 +355,11 @@ export function CommentFeedCard({
   const place =
     threadPost === null ? null : `/posts/${threadPost}?comment=${comment.id}&from=${origin}`;
   const head = comment.target ? headRowOf(comment.target) : null;
+  // THE POINTER OPENS WHAT IT NAMES, in both shapes and on every host (jakob
+  // 2026-11-23, seams 405 and 417; FeedKinds.md:27, TagPage.md:23,
+  // ProfileComments.md:45): a post is opened itself, at its top, its comment
+  // section closed — a removed post's as much, its detail shows the mark; a
+  // comment is opened in its thread, landed on it.
   const headHref =
     comment.target === null || comment.target === undefined
       ? null
@@ -360,12 +367,7 @@ export function CommentFeedCard({
         ? threadPost === null
           ? null
           : `/posts/${threadPost}?comment=${comment.target.id}&from=${origin}`
-        : line
-          // THE POINTER OPENS THE THREAD THE COMMENT LIVES IN
-          // (ProfileComments.md:23; graph.json: "the post, its thread open"),
-          // landed on the comment that answers it.
-          ? place
-          : `/posts/${comment.target.id}?from=${origin}`;
+        : `/posts/${comment.target.id}?from=${origin}`;
 
   const redacted = payloadIsRedacted(comment);
   const words = redacted ? "" : (comment.content.value ?? "");
@@ -693,11 +695,16 @@ export function CommentFeedCard({
       onOpen={place === null ? undefined : () => router.push(place)}
     >
       {/* THE TARGET POINTER (`CommentCard`'s line shape; ProfileComments.md:5):
-          one line, one tap to the thread — the target kind's glyph, then
-          `On …` in the quiet ink, ellipsized. */}
+          one line, one tap to what it names — the target kind's glyph, then
+          `On …` in the quiet ink, ellipsized. Its own link beside the card's
+          others, never inside one (`Card`'s redundant-click pattern). */}
       {line && head !== null && headHref !== null && (
         <Link
           href={headHref}
+          // Named as it reads, as the head row is: the cut line's parts are
+          // flex items, which accessible-name rules may join without their
+          // space.
+          aria-label={`On ${head.label}`}
           {...testAttributes(part(node, "target"), `${testId}-target`)}
           className="cg-state cg-focus cg-hit flex max-w-full items-center gap-2 rounded-small text-left text-on-surface-variant"
         >
@@ -718,7 +725,8 @@ export function CommentFeedCard({
           <Link
             href={headHref}
             aria-label={`On ${head.label}`}
-            data-testid={`${testId}-head`}
+            // The master's `data-node="target"` in both shapes (CommentCard.jsx).
+            {...testAttributes(part(node, "target"), `${testId}-head`)}
             className="cg-state cg-focus flex items-center gap-3 rounded-small"
           >
             <NodeMark kind={head.kind} src={head.cover} redacted={head.removed} testId={`${testId}-head-mark`} />

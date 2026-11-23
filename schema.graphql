@@ -700,7 +700,7 @@ type CommentConnection {
 	"""
 	edges: [CommentEdge!]!
 	"""
-	How many entries this thread holds in total, across every page —
+	How many entries this list holds in total, across every page —
 	the count behind a "view n replies" affordance, independent of
 	the cursor. Counted under the same filter that served the edges:
 	by default pending entries beside landed ones,
@@ -2860,6 +2860,14 @@ type PostConnection {
 	A list of edges.
 	"""
 	edges: [PostEdge!]!
+	"""
+	How many posts this listing holds in total, across every page,
+	independent of the cursor — one per post, never an edit, a removed
+	post included. Counted under the same filter that served the
+	edges: by default pending entries beside landed ones,
+	`includePending: false` only what has landed on L1.
+	"""
+	totalCount: Int!
 }
 
 """
@@ -4971,6 +4979,23 @@ type User implements Node & Actor {
 	as outgoingRecords; fromKind selects the source kind.
 	"""
 	incomingRecords(family: RecordFamily, fromKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, genesis: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
+	"""
+	The person's posts — the profile's Posts view and its `Posts`
+	figure: every post they published, newest-first in the post
+	listing's own order — pending entries first, then landed ones in
+	landing order — a removed post included, never an edit.
+	`totalCount` counts exactly what the pages serve.
+	`includePending: false` serves only what has landed on L1.
+	"""
+	posts(after: String, before: String, first: Int, last: Int, includePending: Boolean! = true): PostConnection!
+	"""
+	The person's comments — the profile's Comments view: every comment
+	they made, whatever it answers, newest-first in the thread read's
+	own order — pending entries first, then landed ones in landing
+	order — a removed comment included, never an edit.
+	`includePending: false` serves only what has landed on L1.
+	"""
+	comments(after: String, before: String, first: Int, last: Int, includePending: Boolean! = true): CommentConnection!
 	"""
 	The account's name in the one actor namespace: 3–30 characters of
 	[a-z0-9_], case-folded.

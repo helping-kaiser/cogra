@@ -1582,6 +1582,45 @@ impl User {
         .await
     }
 
+    /// The person's posts — the profile's Posts view and its `Posts`
+    /// figure: every post they published, newest-first in the post
+    /// listing's own order — pending entries first, then landed ones in
+    /// landing order — a removed post included, never an edit.
+    /// `totalCount` counts exactly what the pages serve.
+    /// `includePending: false` serves only what has landed on L1.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    async fn posts(
+        &self,
+        ctx: &Context<'_>,
+        after: Option<String>,
+        before: Option<String>,
+        first: Option<i32>,
+        last: Option<i32>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<PostConnection> {
+        let page = keyset_page(first, after, last, before)?;
+        posts_connection(ctx, Some(self.identity.id), page, include_pending).await
+    }
+
+    /// The person's comments — the profile's Comments view: every comment
+    /// they made, whatever it answers, newest-first in the thread read's
+    /// own order — pending entries first, then landed ones in landing
+    /// order — a removed comment included, never an edit.
+    /// `includePending: false` serves only what has landed on L1.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    async fn comments(
+        &self,
+        ctx: &Context<'_>,
+        after: Option<String>,
+        before: Option<String>,
+        first: Option<i32>,
+        last: Option<i32>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<CommentConnection> {
+        let page = keyset_page(first, after, last, before)?;
+        authored_comments_connection(ctx, self.identity.id, page, include_pending).await
+    }
+
     /// The account's name in the one actor namespace: 3–30 characters of
     /// [a-z0-9_], case-folded.
     async fn handle(&self) -> String {
@@ -5917,13 +5956,22 @@ pub type CommentConnection = KeysetConnectionWith<CommentType, CommentConnection
 /// [`i32::MAX`]: GraphQL's `Int` is 32-bit, no thread is that deep, and
 /// saturating beats failing the read.
 pub struct CommentConnectionFields {
-    target: Uuid,
+    scope: CommentScope,
     include_pending: bool,
+}
+
+/// Whose comments a comment connection lists: one target's direct
+/// children (a thread), or one person's comments (a profile's Comments
+/// view).
+#[derive(Debug, Clone, Copy)]
+enum CommentScope {
+    Thread(Uuid),
+    Author(Uuid),
 }
 
 #[Object]
 impl CommentConnectionFields {
-    /// How many entries this thread holds in total, across every page —
+    /// How many entries this list holds in total, across every page —
     /// the count behind a "view n replies" affordance, independent of
     /// the cursor. Counted under the same filter that served the edges:
     /// by default pending entries beside landed ones,
@@ -5931,14 +5979,127 @@ impl CommentConnectionFields {
     #[graphql(complexity = 0)]
     async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<i32> {
         let pool = ctx.data::<PgPool>()?;
-        let total = postgres_store::content::count_comments_for_target(
-            pool,
-            self.target,
-            self.include_pending,
-        )
-        .await?;
+        let total = match self.scope {
+            CommentScope::Thread(target) => {
+                postgres_store::content::count_comments_for_target(
+                    pool,
+                    target,
+                    self.include_pending,
+                )
+                .await?
+            }
+            CommentScope::Author(author) => {
+                postgres_store::content::count_comments_by_author(
+                    pool,
+                    author,
+                    self.include_pending,
+                )
+                .await?
+            }
+        };
         Ok(i32::try_from(total).unwrap_or(i32::MAX))
     }
+}
+
+/// A post listing: the post page plus the listing's own count.
+pub type PostConnection = KeysetConnectionWith<PostType, PostConnectionFields>;
+
+/// `PostConnection`'s connection-level fields: the listing's coordinates,
+/// so the count runs only when asked and under the walk's own filter —
+/// priced at zero for [`CommentConnectionFields`]' reason.
+pub struct PostConnectionFields {
+    author: Option<Uuid>,
+    include_pending: bool,
+}
+
+#[Object]
+impl PostConnectionFields {
+    /// How many posts this listing holds in total, across every page,
+    /// independent of the cursor — one per post, never an edit, a removed
+    /// post included. Counted under the same filter that served the
+    /// edges: by default pending entries beside landed ones,
+    /// `includePending: false` only what has landed on L1.
+    #[graphql(complexity = 0)]
+    async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<i32> {
+        let pool = ctx.data::<PgPool>()?;
+        let total =
+            postgres_store::content::count_posts(pool, self.author, self.include_pending).await?;
+        Ok(i32::try_from(total).unwrap_or(i32::MAX))
+    }
+}
+
+/// A page of the post listing — every post (`author` None) or one
+/// person's — in the listing's two cursor namespaces.
+pub(crate) async fn posts_connection(
+    ctx: &Context<'_>,
+    author: Option<Uuid>,
+    page: KeysetPage,
+    include_pending: bool,
+) -> async_graphql::Result<PostConnection> {
+    let pool = ctx.data::<PgPool>()?;
+    let cursor = content_cursor(page.cursor);
+    let rows = match author {
+        None => {
+            postgres_store::content::list_posts(
+                pool,
+                cursor,
+                page.backward,
+                page.limit + 1,
+                include_pending,
+            )
+            .await?
+        }
+        Some(author) => {
+            postgres_store::content::list_posts_by_author(
+                pool,
+                author,
+                cursor,
+                page.backward,
+                page.limit + 1,
+                include_pending,
+            )
+            .await?
+        }
+    };
+    Ok(keyset_connection_with(
+        rows,
+        &page,
+        |p| content_cursor_key(p.sort_key(), p.id),
+        PostType,
+        PostConnectionFields {
+            author,
+            include_pending,
+        },
+    ))
+}
+
+/// A page of one person's comments, newest-first, pending entries ahead.
+async fn authored_comments_connection(
+    ctx: &Context<'_>,
+    author: Uuid,
+    page: KeysetPage,
+    include_pending: bool,
+) -> async_graphql::Result<CommentConnection> {
+    let pool = ctx.data::<PgPool>()?;
+    let rows = postgres_store::content::comments_by_author(
+        pool,
+        author,
+        content_cursor(page.cursor),
+        page.backward,
+        page.limit + 1,
+        include_pending,
+    )
+    .await?;
+    Ok(keyset_connection_with(
+        rows,
+        &page,
+        |c| content_cursor_key(c.sort_key(), c.id),
+        CommentType,
+        CommentConnectionFields {
+            scope: CommentScope::Author(author),
+            include_pending,
+        },
+    ))
 }
 
 /// A keyset cursor: the landing-order key, plus — on content
@@ -6205,7 +6366,7 @@ async fn comments_connection(
         |c| content_cursor_key(c.sort_key(), c.id),
         CommentType,
         CommentConnectionFields {
-            target: thread.target,
+            scope: CommentScope::Thread(thread.target),
             include_pending: thread.include_pending,
         },
     ))

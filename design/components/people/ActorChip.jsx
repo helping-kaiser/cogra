@@ -213,8 +213,15 @@ export function ActorChip({ handle, displayName, href, onClick, avatarSrc, redac
    one line. Every wrapping master passes its text through `nameInText`; text
    naming nobody returns untouched. A screen reader hears the unit as one
    string — the name and its punctuation with no space between (round 48;
-   `UNIT_SPOKEN` below). */
-const HANDLE_IN_TEXT = /(?<![\w@])@[A-Za-z0-9_]+/g;
+   `UNIT_SPOKEN` below).
+
+   A TAG IS THE SAME ONE UNIT (jakob 2026-11-23, point 4: "everywhere the tag
+   is one-line at most"): `#saltmaps` in a snackbar, a dialog, the withdrawn
+   line, a pad's sentence moves whole to the next line and is cut past a full
+   line, as a handle is — never broken at its hyphens or anywhere inside. A
+   name may hold dots, so a dot that ends it is the sentence's, riding as
+   punctuation. The tag's own page is the one place its name wraps. */
+const HANDLE_IN_TEXT = /(?<![\w@])@[A-Za-z0-9_]+|(?<![\w#&])#[A-Za-z0-9_-](?:[A-Za-z0-9._-]*[A-Za-z0-9_-])?/g;
 const UNIT_TAIL = /^(?:['’]s\b|[?.,!:;)’]+)/;
 const UNIT = { display: "inline-flex", maxWidth: "100%", verticalAlign: "top", whiteSpace: "nowrap" };
 /* THE UNIT IS SPOKEN AS ONE STRING (round 48, seam 320-13). The drawn unit's

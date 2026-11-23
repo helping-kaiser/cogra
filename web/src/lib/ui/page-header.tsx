@@ -26,7 +26,7 @@
 // through it, full-width under the header rather than inset like a card.
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 
 import { DeletionBandSlot } from "@/lib/deletion/deletion-status";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
@@ -44,6 +44,7 @@ export function PageHeader({
   node,
   deletionBand,
   inGutter = false,
+  titleRef,
 }: {
   /** The host pads this header by the 24px screen gutter (`px-6`); the band bleeds through it. */
   inGutter?: boolean;
@@ -81,6 +82,11 @@ export function PageHeader({
    */
   backHeld?: boolean;
   action?: ReactNode;
+  /**
+   * The title's element, for a host that asks whether its one line cuts the
+   * title (`useLineCut`) — the tag page's full-name heading (TagPage.md).
+   */
+  titleRef?: Ref<HTMLHeadingElement>;
 }) {
   return (
     <div>
@@ -105,7 +111,11 @@ export function PageHeader({
             // 40): a title too long for the band is cut with "…", and a handle
             // standing in its words is the part cut, the words kept
             // (`nameInLine`).
-            <h1 className="min-w-0 truncate whitespace-nowrap text-title-large" {...testAttributes(part(node, "title"))}>
+            <h1
+              ref={titleRef}
+              className="min-w-0 truncate whitespace-nowrap text-title-large"
+              {...testAttributes(part(node, "title"))}
+            >
               {nameInLine(title)}
             </h1>
           )}
