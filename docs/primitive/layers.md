@@ -70,9 +70,9 @@ How history is *presented* — edit timelines, current-vs-past
 views — is CoGra display logic derived from the bundle, never
 separately stored state.
 
-The one one-way transition a record supports is **payload
-reduction** — the deletion mechanism (§5). The structural record
-is invariant across it.
+The one one-way transition CoGra applies to a record is **payload
+reduction** — CoGra's deletion mechanism (§5). The structural
+record is invariant across it.
 
 ---
 
@@ -185,13 +185,16 @@ This section covers redaction only.
 
 ### Payload removal — the redaction mechanism
 
-Every L1 record carries a payload projection — the content bytes —
-and presents in two projections, **full** and **reduced**
+Every L1 record carries a content commitment to an optional payload
+— the content bytes, which Layer 1 never reads
 ([layer1-interface.md §8.4](layer1-interface.md#84-the-act-record-and-payload-carriage)).
-Redaction is **payload removal**: the payload, the private value
-beside it — its content nonce — and the content salt are removed
-from carriage together, and the record drops to its reduced
-projection. Three L1 facts fix the mechanism's shape:
+Whether a record presents **full** or **reduced** is the observation
+of whoever holds its content pair — for the records CoGra carries,
+CoGra's carriage. Redaction is **payload removal**: the payload, the
+private value beside it — its content nonce — and the content salt
+are removed from carriage together, and the record drops to its
+reduced projection. Two L1 facts and one CoGra carrier rule fix the
+mechanism's shape:
 
 - **Removal erases, never rewrites.** The content commitment is
   binding — no second payload is consistent with it — so a record
@@ -199,22 +202,24 @@ projection. Three L1 facts fix the mechanism's shape:
   (``post:graph:separable-act-projections``). Redaction granularity
   is therefore **the record**: there is no partial rewrite, no
   per-field marker, no edited-down version.
-- **The transition is monotone.** Payload state moves toward
-  reduced only: a record enters carriage **full** or **full-empty**
-  (the canonical zero-length payload, private value present) and
-  can only drop to **reduced** (``def:graph:act-payload-state``).
-  Redaction is irreversible by construction; restoring content
-  means authoring a new record.
-- **Removal is scoring-neutral.** The reduced projection carries
-  the entire L1 closure surface — standing, title, weights, and
-  epoch replay are bit-identical across full and reduced
+- **The transition is monotone — CoGra's carrier rule.** CoGra's
+  carriage moves payload state toward reduced only: a record enters
+  carriage **full** or **full-empty** (the canonical zero-length
+  payload, private value present) and can only drop to **reduced**.
+  The state names follow ``def:graph:act-payload-state``, a
+  courtesy definition. Redaction is irreversible in CoGra's
+  carriage; restoring content means authoring a new record.
+- **Removal is scoring-neutral.** Later availability of an opening
+  changes no L1 closure value — standing, title, weights, and epoch
+  replay are the same with or without the content pair
   (``prop:graph:removable-projection-invariance``). Redaction never
   changes what a record *does*; it changes what it *shows*.
 
-**Who removes.** L1 places removal authority with the act's
-author — a hyper-edge carries one act payload, owned by its
-initiating author; there is no per-leg controller
-(``def:graph:act-payload-controller``). CoGra runs centralized
+**Who removes.** CoGra places removal authority with the act's
+author, after the courtesy definition
+``def:graph:act-payload-controller`` — a hyper-edge carries one act
+payload, owned by its initiating author; there is no per-leg
+controller. CoGra runs centralized
 append with decentralized carriage, one of the four combinations of
 ``rem:graph:act-payload-custody-phases``: Layer 1 tracks only the
 witness, and the content pair — the payload and its content nonce —
@@ -224,10 +229,10 @@ under its published policy — the authorization paths below. CoGra
 exposes no other removal path.
 
 **The visible mark.** The invariant "never erase silently" is
-carried by the pair the substrate leaves behind: the **immutable
-structural record** — author, endpoints, time, witness, all
-permanent and public — plus the **monotone reduced-only payload
-state**. Anyone can see that a record existed, who authored it,
+carried by a pair: the **immutable structural record** the
+substrate keeps — author, endpoints, time, witness, all permanent
+and public — plus the **monotone reduced-only payload state**
+CoGra's carriage records. Anyone can see that a record existed, who authored it,
 and that its content was removed and can never be quietly
 replaced.
 
