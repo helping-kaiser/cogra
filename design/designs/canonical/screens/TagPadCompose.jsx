@@ -27,7 +27,8 @@
 
    THE SURFACE BENEATH IS DRAWN WHOLE (`ComposeDetailsBody`), the overlay rule
    from 2026-09-08: a sheet covers the surface the reader came from, and that
-   surface is the real one, not a shortened stand-in of it. */
+   surface is the real one, not a shortened stand-in of it. It takes
+   `TagPad`'s raised height class too (jakob 2026-11-23, B3). */
 
 /* The four poles, named for the record family that fills the slots — and the
    two questions, which only the non-drag route's tracks say aloud. */
@@ -45,7 +46,7 @@ export function Screen() {
     <>
       <ComposeDetailsBody />
 
-      <BottomSheet open ariaLabel="#coastroad">
+      <BottomSheet open ariaLabel="#coastroad" maxHeight="88%">
         <SheetTitle cut>#coastroad</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "0 24px 4px" }}>
           <button type="button" className="cg-sr-focusable cg-state cg-focus cg-hit" style={{ fontFamily: "var(--font-sans)" }}>
