@@ -261,6 +261,51 @@ async fn a_row_says_whether_it_walked_the_bundle_back(pool: PgPool) {
     );
 }
 
+/// The batched landed read answers each target exactly as the single
+/// read's landed view does — sums, count and newest record — leaves out
+/// what is still in flight, and omits a target the author never stanced
+/// or names under another family.
+///
+/// The batched landed standings equal the single landed read per target and omit empty bundles and pending acts.
+/// ´claim:stance:the-batched-landed-read-equals-the-single-read´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_batched_landed_read_equals_the_single_read(pool: PgPool) {
+    land(&pool, 1, 1, "bob", (0.5, 0.5)).await;
+    land(&pool, 2, 2, "bob", (-0.5, -0.5)).await;
+    land(&pool, 3, 3, "cy", (0.3, -0.2)).await;
+    land(&pool, 4, 4, "cy", (0.1, 0.4)).await;
+    land(&pool, 5, 5, "dee", (0.0, 0.0)).await;
+    stage(&pool, 6, "cy", (0.2, 0.2)).await;
+    stage(&pool, 7, "eve", (0.2, 0.2)).await;
+
+    let targets: Vec<(Family, String)> = ["bob", "cy", "dee", "eve", "nobody"]
+        .iter()
+        .map(|person| (Family::Opinion, format!("prof:{person}")))
+        .chain([(Family::Affinity, "prof:cy".to_string())])
+        .collect();
+    let batch = stance::landed_standings(&pool, AUTHOR, &targets)
+        .await
+        .expect("batch");
+
+    for person in ["bob", "cy", "dee"] {
+        let single = read_standing(&pool, person, BundleView::Landed).await;
+        assert_eq!(batch.get(&format!("prof:{person}")), Some(&single), "{person}");
+    }
+    assert_eq!(batch[&"prof:cy".to_string()].sum.records, 2, "the act in flight is not counted");
+    assert!(batch[&"prof:bob".to_string()].is_severed());
+    assert!(batch[&"prof:dee".to_string()].says_nothing());
+    assert!(!batch.contains_key("prof:eve"), "only an act in flight");
+    assert!(!batch.contains_key("prof:nobody"), "never stanced");
+    assert_eq!(batch.len(), 3, "the Affinity key folds no Opinion record");
+    assert!(
+        stance::landed_standings(&pool, "zed", &targets)
+            .await
+            .expect("batch")
+            .is_empty(),
+        "another author's records are not this author's bundle"
+    );
+}
+
 /// Off-grid values authored before the grid was enforced are held to their
 /// last digit: they sum exactly, agree with the fold, and walk back
 /// exactly — never rounded onto the grid on the way.
