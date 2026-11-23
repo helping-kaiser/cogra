@@ -35,6 +35,7 @@ import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceSignals
 import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.stance.StanceTarget
+import com.cogra.domain.testing.FakeBorrowedStanceRepository
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.InMemoryKeptPickStore
 import com.cogra.domain.testing.SealingWriteRepository
@@ -63,16 +64,11 @@ class StanceGuestFaceTest {
     private val identity = FakeIdentityStore().apply { seed = actor.seed() }
     private val writes = SealingWriteRepository(actor)
     private val kept = InMemoryKeptPickStore()
+    private val borrowed = FakeBorrowedStanceRepository(mapOf(HELD to LENT))
 
     /** Every member-seam call is recorded; a guest's control must make none. */
     private val stances = object : ThrowingStanceRepository() {
         val memberCalls = mutableListOf<String>()
-        val borrowedAsked = mutableListOf<StanceTarget>()
-
-        override suspend fun borrowedStance(target: StanceTarget): Outcome<BorrowedStance?> {
-            borrowedAsked += target
-            return Outcome.Success(if (target == HELD) LENT else null)
-        }
 
         override suspend fun standing(target: StanceTarget, includePending: Boolean): Outcome<StanceStanding> {
             memberCalls += "standing"
@@ -126,6 +122,7 @@ class StanceGuestFaceTest {
         account,
         kept,
         ReaderStanding(),
+        borrowed,
     )
 
     private var gated = 0
@@ -202,7 +199,7 @@ class StanceGuestFaceTest {
             StanceControlRoute(target = HELD, testTagPrefix = TAG, viewModel = model())
         }
         compose.waitForIdle()
-        assertThat(stances.borrowedAsked).isEmpty()
+        assertThat(borrowed.asked).isEmpty()
         assertThat(stances.memberCalls).contains("standing")
         face().assertContentDescriptionEquals("Give your opinion on this post")
     }
@@ -244,6 +241,6 @@ class StanceGuestFaceTest {
             }
         }
         compose.waitForIdle()
-        assertThat(stances.borrowedAsked).isEmpty()
+        assertThat(borrowed.asked).isEmpty()
     }
 }

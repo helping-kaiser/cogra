@@ -27,6 +27,7 @@ import com.cogra.domain.AccountState
 import com.cogra.domain.Outcome
 import com.cogra.domain.ReaderStanding
 import com.cogra.domain.repo.AccountRepository
+import com.cogra.domain.repo.BorrowedStanceRepository
 import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.NoActorKeyException
@@ -234,6 +235,8 @@ class StanceViewModel @Inject constructor(
     private val keptPicks: KeptPickStore,
     /** The reader's own account state: an applicant's faces are locked. */
     private val standing: ReaderStanding,
+    /** A guest's faces: the borrowed view's own stance, display only ([GuestFaces]). */
+    private val borrowed: BorrowedStanceRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StanceUiState())
@@ -410,7 +413,7 @@ class StanceViewModel @Inject constructor(
                 // is a guest's no longer: it is dropped, never shown.
                 if (lender != null && !ownView) _guest.update { it.copy(vantage = lender.handle) }
             }
-            val read = stances.borrowedStance(target)
+            val read = borrowed.borrowedStance(target)
             if (read is Outcome.Success && !ownView) {
                 _guest.update { it.copy(faces = it.faces + (target to read.value)) }
             }

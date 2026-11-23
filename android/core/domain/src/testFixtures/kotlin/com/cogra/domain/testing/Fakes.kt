@@ -82,6 +82,7 @@ import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.repo.AccountRepository
+import com.cogra.domain.repo.BorrowedStanceRepository
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.DeviceLockRepository
 import com.cogra.domain.repo.IssuedLock
@@ -798,13 +799,22 @@ open class ThrowingStanceRepository : StanceRepository {
             is StanceTarget.Topic -> "name:${target.name}"
         },
     )
+}
 
-    /**
-     * Answers rather than throws, for [targetGraphId]'s reason: every guest
-     * face asks it, and a test about something else need not script it. The
-     * borrowed view holds nothing — the hollow face.
-     */
-    override suspend fun borrowedStance(target: StanceTarget): Outcome<BorrowedStance?> = Outcome.Success(null)
+/**
+ * A guest's borrowed faces, scripted: [faces] answers per target, everything
+ * else is the hollow face. Answers rather than throws — every guest face asks
+ * it, and a test about something else need not script it. Records [asked].
+ */
+class FakeBorrowedStanceRepository(
+    var faces: Map<StanceTarget, BorrowedStance?> = emptyMap(),
+) : BorrowedStanceRepository {
+    val asked = mutableListOf<StanceTarget>()
+
+    override suspend fun borrowedStance(target: StanceTarget): Outcome<BorrowedStance?> {
+        asked += target
+        return Outcome.Success(faces[target])
+    }
 }
 
 /**

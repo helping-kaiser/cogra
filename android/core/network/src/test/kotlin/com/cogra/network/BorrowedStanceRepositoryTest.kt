@@ -21,6 +21,7 @@ import com.cogra.network.auth.AuthGuard
 import com.cogra.network.auth.BearerInterceptor
 import com.cogra.network.auth.SessionGate
 import com.cogra.network.auth.SessionRefresher
+import com.cogra.network.repo.BorrowedStanceRepositoryImpl
 import com.cogra.network.repo.StanceRepositoryImpl
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
@@ -53,16 +54,21 @@ class BorrowedStanceRepositoryTest {
         server.shutdown()
     }
 
-    /** The production shape, as SessionGateTest wires it. */
-    private fun repo(): StanceRepositoryImpl {
-        val refresher = SessionRefresher(tokens, EndLocalSession(FakeLockCustodyStore(), tokens), Provider { client })
+    private lateinit var refresher: SessionRefresher
+
+    /** The production shape, as SessionGateTest wires it: gate → interceptor → client. */
+    private fun repo(): BorrowedStanceRepositoryImpl {
+        refresher = SessionRefresher(tokens, EndLocalSession(FakeLockCustodyStore(), tokens), Provider { client })
         val gate = SessionGate(tokens, Provider { refresher })
         client = ApolloClient.Builder()
             .serverUrl(server.url("/graphql").toString())
             .addHttpInterceptor(BearerInterceptor(gate))
             .build()
-        return StanceRepositoryImpl(client, AuthGuard(tokens, refresher), ThrowingWriteRepository())
+        return BorrowedStanceRepositoryImpl(client)
     }
+
+    /** The member's own seam, on the same client. */
+    private fun member() = StanceRepositoryImpl(client, AuthGuard(tokens, refresher), ThrowingWriteRepository())
 
     private fun enqueue(json: String) {
         server.enqueue(MockResponse().setBody(json).addHeader("Content-Type", "application/json"))
@@ -211,7 +217,7 @@ class BorrowedStanceRepositoryTest {
         )
 
         repo.borrowedStance(StanceTarget.Node("p1"))
-        val graphId = repo.targetGraphId(StanceTarget.Node("p1"))
+        val graphId = member().targetGraphId(StanceTarget.Node("p1"))
 
         assertThat(graphId).isEqualTo(Outcome.Success(GRAPH_ID))
         server.takeRequest()
