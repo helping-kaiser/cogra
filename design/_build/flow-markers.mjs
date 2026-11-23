@@ -12,11 +12,13 @@
 // instead of silently shedding a badge.
 
 const nav = (base) => [
-  { n: base, find: ">Feed</button>", tag: "button" },
-  { n: base + 1, find: ">Explore</button>", tag: "button" },
+  // Each slot's accessible name is its word (round 63: the word is dropped
+  // above 1.3×, the name never is).
+  { n: base, find: 'aria-label="Feed"', tag: "button" },
+  { n: base + 1, find: 'aria-label="Explore"', tag: "button" },
   { n: base + 2, find: 'aria-label="New post"', tag: "button" },
-  { n: base + 3, find: ">Wallet</button>", tag: "button" },
-  { n: base + 4, find: ">Profile</button>", tag: "button" },
+  { n: base + 3, find: 'aria-label="Wallet"', tag: "button" },
+  { n: base + 4, find: 'aria-label="Profile"', tag: "button" },
 ];
 
 // The shared per-post anatomy; `at` maps slot -> number for the board.
@@ -161,7 +163,10 @@ export const FLOW_MARKERS = {
   FeedBare: [
     filter,
     ...guestBand,
-    ...post({ author: 4, menu: 5, media: 6, more: 7, topic: 8, refs: 9, stance: 10, score: 11, comments: 12 }),
+    // The borrowed view's faces (round 63): each anchor is spoken as the
+    // view's opinion, `@noa's opinion on this post`, held or hollow.
+    ...post({ author: 4, menu: 5, media: 6, more: 7, topic: 8, refs: 9, stance: 10, score: 11, comments: 12 }).filter((m) => m.n !== 10),
+    { n: 10, find: 'aria-label="@noa&#x27;s opinion on this post', tag: "button", all: true },
     secondComments(12),
     ...nav(13),
   ],
@@ -1902,7 +1907,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
     { n: 3, find: ' Opinions on them"', tag: "button" },
     { n: 13, find: ' Opinions by them"', tag: "button" },
-    { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
+    // The `reader` chip (round 63): the anchor's spoken name is a hole.
+    { n: 4, find: 'aria-label="{{readerPersonName}}"', tag: "button" },
     { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
     { n: 5, find: ">Message</button>", tag: "button" },
     { n: 6, find: 'aria-label="Posts"', tag: "button", all: true },
@@ -1916,7 +1922,8 @@ Object.assign(FLOW_MARKERS, {
     // The `chronicle` chip's removed act (round 58) opens as the live one does.
     { n: 7, find: ">Removed by its author</span></span>", tag: "button" },
     ...nav(8),
-    ...otherLandingCard(14),
+    ...otherLandingCard(14).filter((m) => !m.find.startsWith('aria-label="Your opinion on this post')),
+    { n: 19, find: 'aria-label="{{readerPostName}}"', tag: "button" },
   ],
   // The page a moment after Hide @ada (ruling 65): `ProfileOther`'s numbers,
   // to the number, and the snackbar's Undo as the next free one.
@@ -3453,13 +3460,21 @@ const tagPageBody = ({ topicStance }) => [
   { n: 13, find: 'aria-label="More on this comment"', tag: "button", all: true },
   { n: 14, find: 'aria-label="Your opinion on this comment', tag: "button", all: true },
   { n: 15, find: topicStance, tag: "button" },
+  // The tagged comment's tags line (round 63): its count, the door to the
+  // comment's tags-and-references sheet — after `TagPage`'s 16 and 17.
+  { n: 18, find: ">· 1 reference</button>", tag: "button", all: true },
 ];
 
 Object.assign(FLOW_MARKERS, {
   // The `load` chip's `failed` copy (round 48) repeats the header's back and adds Retry.
   TagPage: [
     { n: 1, find: 'aria-label="Back to Explore"', tag: "a", all: true },
-    ...tagPageBody({ topicStance: 'aria-label="Give your opinion on #saltmaps"' }).filter((m) => m.n !== 1),
+    // The `reader` chip (round 63): each anchor's spoken name is a hole, the
+    // member's or the borrowed view's (`ANCHOR_NAME`), so its find is the hole.
+    ...tagPageBody({ topicStance: 'aria-label="{{readerTopicName}}"' }).filter((m) => m.n !== 1 && m.n !== 14),
+    { n: 8, find: 'aria-label="{{readerTobiasName}}"', tag: "button" },
+    { n: 8, find: 'aria-label="{{readerSolName}}"', tag: "button" },
+    { n: 14, find: 'aria-label="{{readerAdaName}}"', tag: "button", all: true },
     { n: 16, find: ">Retry</button>", tag: "button" },
     // The `comment` chip's clip (round 62): its sound, the next free number.
     { n: 17, find: 'aria-label="Turn sound on"', tag: "button" },

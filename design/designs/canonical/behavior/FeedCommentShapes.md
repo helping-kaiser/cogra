@@ -30,7 +30,9 @@ ALWAYS feed.commentCard.target never names a removed post by its title nor a rem
 
 ALWAYS feed.commentCard stays readable GIVEN the post it answers was removed
 
-WHEN feed.commentCard.target is tapped -> the post it answers opens AND its back arrow reads Back to feed
+WHEN feed.commentCard.target is tapped GIVEN it names a post -> the post it answers opens AND its back arrow reads Back to feed
+
+WHEN feed.commentCard.target is tapped GIVEN it names a comment -> the post's comment section opens scrolled to the comment it names
 
 WHEN feed.commentCard is tapped outside feed.commentCard.target and its own controls -> the post's comment section opens scrolled to that comment
 
