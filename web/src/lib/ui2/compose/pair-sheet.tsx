@@ -198,7 +198,14 @@ export function PairSheet({
           data-testid={`${testId}-exact-route`}
           aria-pressed={exactRoute}
           onClick={() => setExactRoute((shown) => !shown)}
-          className={`sr-only focus:not-sr-only ${buttonClassName({ variant: "text", size: "sm" })}`}
+          // HIDDEN UNTIL FOCUS IS SHOWN, NOT MERELY TAKEN: the boards' class is
+          // `cg-sr-focusable`, drawn on `:focus-visible`. Focus lands here on
+          // every open, so `:focus` drew the route on a TAP's open too — 56px
+          // the board never draws, pushing `Done` under the 62% cap and off a
+          // short phone (jakob's hand test, 2026-11-23). A keyboard's open
+          // still shows it: the browser's focus-visible heuristic follows the
+          // last input (HTML, § "The :focus-visible pseudo-class"; MDN).
+          className={`sr-only focus-visible:not-sr-only ${buttonClassName({ variant: "text", size: "sm" })}`}
         >
           Set exact values for {title}
         </button>
@@ -220,7 +227,9 @@ export function PairSheet({
             <span data-testid={`${testId}-face`} className="text-title-large">
               {family.face(pick)}
             </span>
-            <span data-testid={`${testId}-exact`} className="whitespace-nowrap text-body-small">
+            {/* The number is geek mode's to paint (`cg-exact`, readme §13), as
+                the boards draw it; the spoken twin below always carries it. */}
+            <span data-testid={`${testId}-exact`} className="cg-exact whitespace-nowrap text-body-small">
               {family.exact(pick)}
             </span>
           </span>
