@@ -12978,6 +12978,36 @@ drawing.
   505 and 479 px are under both caps.
 - **Held**: a comment's media on `History` and `Saved` (backlog 305 — the
   registry's one-chip rule). Backlog 302 and 304 close.
+
+### Round 65, a comment's media on History and Saved, the harness's two renders — 2026-11-23
+
+- **Ruled**: backlog 305 (b) — a `comment` chip on `History` and `Saved`
+  draws @ada's tag-page media comment in @tobias's place, the `pick`
+  copies hidden; ruling 39 stands as written.
+- **Drawn**: `History` and `Saved` `comment` = `pictures` / `clip` (default
+  `none`) — @ada's comment as the feed's card, answering @sol's post, with
+  `REPLY_MEDIA_*`, `#saltmaps · 1 reference`, and the place's figure
+  `12.40` as its score (the fixture, backlog 306); the @tobias card's
+  `pick` copies stand only at `none` (`PickCopies`' `hole`,
+  `CommentMediaCopies`).
+- **Registered** (seam 424): `history.commentCard.media`, `.media.dots`,
+  `.media.frame` (`<id>/1`, `<id>/2`), `.media.frame.soundDisc` (`<id>/1`),
+  and the same under `saved`. Nothing gone; no string added.
+- **The law that moved**: `History.md` and `Saved.md` — the veiled clip's
+  sentence splits in two, `ALWAYS a veiled clip has no playback` and the
+  disc named, `Feed.md`'s form: `ALWAYS history.commentCard.media.frame.
+  soundDisc is absent GIVEN history.commentCard.media.frame's clip is
+  veiled` (the same for `saved`). Backlog 305 and 306 close.
+- **Found**: round 64's unexplained differences on `CommentCitedByEmpty`
+  (15 px) and `SeveranceConfirm` (7 px) are the harness — antialiased
+  rounded edges (the avatar and the veil under the sheet's scrim, the
+  `Keep it` pill's rim) render a few levels apart in about one render in
+  fifteen under load, on `152cddc34` as on round 64's tip, and never in
+  over 100 serial renders. The 14 px "badge rim" were the flow badge,
+  which `diffbox.mjs` keeps and the proof strips. About one render in
+  fifty loses the Google Fonts fetch and draws the fallback face, and no
+  picture paints in the harness (a board's bare image names miss `img/`).
+  Filed as backlog 307; no board changes.
 ---
 
 ## 14. The canvases
