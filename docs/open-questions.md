@@ -1161,7 +1161,8 @@ Q71 (what ingestion verifies).
 ("Courtesy Handshake", "Requested Publication Intent"),
 [data-model.md "Redacting an act"](implementation/data-model.md#redacting-an-act)
 **Status:** open (deferred — to the preparation of the real Layer 1
-swap; asked of the L1 team 2026-11-23)
+swap; whether the network's host claims the standard is undecided,
+the L1 team 2026-11-23)
 
 ### Context
 
@@ -1188,14 +1189,20 @@ Does CoGra claim the courtesy handshake standard at the swap?
 
 - **No.** CoGra realizes the closure properties with its own
   transcript, claims no courtesy edition, and documents its removal
-  and its rendering as its own rules.
+  and its rendering as its own rules. The text prescribes no form or
+  place for the statement that a realization claims no edition.
 - **Yes, with the API as the addressed carrier.** A new body edition
-  with the extension on the server and both clients, receipts, and
-  removal as signed forget requests from the clients; the rendering
+  with the extension on the server and both clients; removal as
+  forget requests, signed or under equivalent attributable
+  authentication, received at a declared authenticated carriage
+  endpoint and each accepted value answered with an authenticated
+  receipt (``def:graph:requested-publication-intent``); the rendering
   default follows.
 - **The transcript, not the intent.** The network's transcript and
-  tags, with no intent vocabulary — if the network's host accepts a
-  body with no extension.
+  tags, with no intent vocabulary. A body with no extension is a valid
+  act; under an intent edition such a body establishes no intent until
+  its controller sends an explicit authenticated intent message
+  (``def:graph:requested-publication-intent``).
 
 ### Related
 
@@ -1231,7 +1238,10 @@ package enters the mirror, and what does it do on a failure?
   anyone can audit it from the public record.
 - **The record checks.** Signatures under their recorded keys, seals,
   commitment formation, the case set — refusing or flagging a package
-  that fails.
+  that fails. Without a declared case, these checks relate no key to
+  the stated Actor (``def:deployment:published-epoch-replay-floor``),
+  so none refuses an act whose key does not give its author's
+  address.
 - **A full replay.** CoGra replays the package, standing included,
   before mirroring it.
 
@@ -1262,6 +1272,13 @@ bound and the governed recency half-life
 ([feed-ranking.md §5.3](primitive/feed-ranking.md#53-recency)). Layer 1
 records are permanent and the network's genesis is its own first
 package. The tests run against the stand-in.
+
+A body the network takes over without an intent vocabulary
+establishes no intent under a courtesy edition until its controller
+sends an explicit authenticated intent message, or a vendor adapter
+interprets it under an explicit edition-specific interpretation and
+controller authorization; an adapter cannot rewrite the historical
+signature (``def:graph:requested-publication-intent``).
 
 ### The question
 
