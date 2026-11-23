@@ -69,11 +69,16 @@
    THE `pick` CHIP DRAWS A KEPT PICK on the first comment card and the first
    post card (round 27, seam 252; `PickCopies`): `key` and `review` add the
    stance control's `pending` line to `commentCard` and `card` as the feed's
-   `PadPending` and `PadPendingReview` draw it. */
+   `PadPending` and `PadPendingReview` draw it.
+
+   THE `comment` CHIP DRAWS A COMMENT'S MEDIA (round 65, seam 424;
+   `CommentMediaCopies`): `pictures` and `clip` stand @ada's tag-page comment
+   in the first comment card's place, with the thread's two pictures and with
+   its clip, and register `commentCard.media` and its parts. */
 export const NODE = "history";
 export const FRAME = { width: 390, height: 1720 };
-export const PROPS = PICK_CHIP;
-export const VALS = PICK_VALS;
+export const PROPS = { ...PICK_CHIP, ...COMMENT_MEDIA_CHIP };
+export const VALS = `${PICK_VALS}, ${COMMENT_MEDIA_VALS}`;
 
 export function Screen() {
   return (
@@ -90,6 +95,7 @@ export function Screen() {
           Today
         </HistoryDayDivider>
         <PickCopies
+          hole="commentPick"
           draw={(pick) => (
             <CommentFeedCard
               id={TOBIAS_COMMENT_ID}
@@ -105,6 +111,7 @@ export function Screen() {
             />
           )}
         />
+        <CommentMediaCopies score="12.40" />
         <PickCopies draw={(pick) => <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} {...pick} node="card" />} />
         <HistoryDayDivider node="day" nodeKey="yesterday">
           Yesterday
