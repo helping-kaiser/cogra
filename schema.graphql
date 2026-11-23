@@ -646,6 +646,12 @@ type Comment implements Node {
 	"""
 	references(includePending: Boolean! = true): [ReferenceClaim!]!
 	"""
+	How many rows `references` serves under the same `includePending`
+	for the same viewer — the same count `Post.referenceCount` reads.
+	Priced as one field.
+	"""
+	referenceCount(includePending: Boolean! = true): Int!
+	"""
 	The viewer's own stance bundle toward this comment, and — with
 	`pick` — where a candidate stance would land it. Null for a
 	viewer with no bundle to read. `includePending: false` folds
@@ -2784,6 +2790,12 @@ type Post implements Node {
 	content.
 	"""
 	references(includePending: Boolean! = true): [ReferenceClaim!]!
+	"""
+	How many rows `references` serves under the same `includePending`
+	for the same viewer — the number a card prints, without the rows or
+	their targets. Priced as one field.
+	"""
+	referenceCount(includePending: Boolean! = true): Int!
 	"""
 	The viewer's own stance bundle toward this post, and — with
 	`pick` — where a candidate stance would land it. Null for a
