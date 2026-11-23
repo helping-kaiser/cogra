@@ -22,6 +22,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.EmptySignPrompt
 import com.cogra.core.designsystem.KeptFace
+import com.cogra.core.designsystem.LocalGuestGate
 import com.cogra.core.designsystem.LocalOnOpenKeptPicks
 import com.cogra.core.designsystem.LocalSnackbarHostState
 import com.cogra.core.designsystem.SeverancePrompt
@@ -51,7 +52,8 @@ import kotlinx.coroutines.launch
  *
  * [onRequireAccount] is the guest gate: non-null means the reader is
  * signed out, and every gesture that would stage a priced act raises it
- * instead — ask, never bounce (design.md §6). The FACE is not gated,
+ * instead — ask, never bounce (design.md §6). It defaults to the shell's
+ * own ([LocalGuestGate]), so a card host need not thread it. The FACE is not gated,
  * because a signed-out reader has no bundle and so wears the same
  * no-standing affordance a signed-in reader with nothing said wears;
  * what a guest must not reach is the signing, not the page.
@@ -70,7 +72,7 @@ fun StanceControlRoute(
     zeroWords: StanceZeroWords = StanceZeroWords.Severed,
     targetLabel: String? = null,
     wide: Boolean = false,
-    onRequireAccount: (() -> Unit)? = null,
+    onRequireAccount: (() -> Unit)? = LocalGuestGate.current,
     /** The control's data-node on a registered screen; see [StanceControl]. */
     node: DataNode? = null,
     /** The pad opened as something in particular (the vouch-back); see [StancePadVariant]. */

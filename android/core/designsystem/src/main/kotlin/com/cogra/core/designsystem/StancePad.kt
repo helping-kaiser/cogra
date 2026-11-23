@@ -349,6 +349,16 @@ val LocalOnRestoreKey = compositionLocalOf<(() -> Unit)?> { null }
 val LocalOnOpenKeptPicks = compositionLocalOf<(() -> Unit)?> { null }
 
 /**
+ * THE GUEST GATE, while the reader is signed out — the shell's join ask
+ * (GuestGate.md:3), provided beside [LocalOnRestoreKey] for the same reason:
+ * a stance face is a leaf inside a card inside a list, and whether the reader
+ * has a session is the shell's to know. Null for a reader with a session, and
+ * while the session is still being read. A face that finds it raises the gate
+ * on its tap and hold and wears the borrowed view's stance (FeedBare.md:7, :27).
+ */
+val LocalGuestGate = compositionLocalOf<(() -> Unit)?> { null }
+
+/**
  * A PAD OPENED AS SOMETHING IN PARTICULAR — the vouch-back
  * (`VouchBackPad.md`; the master's own additive props in
  * `StanceControl.jsx`: `helpLabel`, `help`, `padNote`, `padInset`). Off by
