@@ -112,6 +112,10 @@ export interface PostCardProps {
   stanceExplaining?: false | "help" | "zero";
   /** Forwarded to `StanceControl`'s `borrowed`: the reader still borrows a view, so an unreachable or severed landing warns that the pick keeps it. */
   stanceBorrowed?: boolean;
+  /** A guest's borrowed view: pass-through to `StanceControl`'s `vantage`. */
+  stanceVantage?: string;
+  /** Pass-through to `StanceControl`'s `vantageHoles`, for a board that re-selects the reader. */
+  stanceVantageHoles?: { label?: string; held?: string; hollow?: string };
   /** Forwarded to `StanceControl`'s `anchorOpacity`: the locked look on an applicant's anchor (auth.md), `var(--state-disabled)`, still tappable. */
   stanceOpacity?: string | number;
   /**

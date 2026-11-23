@@ -12,6 +12,7 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { borrowedViewHandler } from "@/test/borrowed-view";
 import { byNode } from "@/test/data-node";
 import { fakeClampLayout } from "@/test/fake-clamp-layout";
+import { fakeLineLayout } from "@/test/fake-line-layout";
 import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { intersectEach, whenObserved } from "@/test/media-env";
 import { gqlLink, startMswServer } from "@/test/msw";
@@ -329,6 +330,63 @@ describe("TopicView", () => {
     expect(answer.innerHTML).not.toContain("text-error");
     expect(screen.queryByTestId("topic-retry")).toBeNull();
     expect(screen.queryByTestId("tagPage.actionRow")).toBeNull();
+  });
+
+  // THE FULL NAME (TagPage.md:5-11, round 63; jakob 2026-11-23): the header's
+  // title keeps one line; where that line cuts the name, the whole name stands
+  // under the header, print only, above the topic's row. The cut is the title's
+  // measured overflow (`fakeLineLayout` stands in for the browser's widths).
+  describe("the tag's full name", () => {
+    const LONG = "salt_maps_of_the_coast_road_and_the_third_headland_light";
+    let lines: ReturnType<typeof fakeLineLayout>;
+    beforeEach(() => {
+      lines = fakeLineLayout(332);
+    });
+    afterEach(() => lines.restore());
+
+    it("a_name_the_headers_line_cuts_stands_whole_under_the_header_print_only_above_the_topics_row", async () => {
+      serve(LONG, []);
+      renderWithProviders(<TopicView name={LONG} />, { writeSigner: fakeWriteSigner() });
+      const heading = await screen.findByTestId("tagPage.name");
+      expect(heading).toHaveTextContent(`#${LONG}`);
+      expect(heading).toHaveAttribute("aria-hidden", "true");
+      expect(heading.className).toContain("text-title-large");
+      expect(heading.className).toContain("break-words");
+      // the header's title speaks the whole name; it is the page's one heading
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(`#${LONG}`);
+      expect(screen.getByTestId("tagPage.header.title")).toHaveTextContent(`#${LONG}`);
+      expect(screen.getAllByRole("heading")).toHaveLength(1);
+      // under the header, above the topic's row
+      const row = screen.getByTestId("tagPage.actionRow");
+      const header = screen.getByTestId("tagPage.header");
+      expect(header.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(heading.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it("a_name_that_fits_the_headers_line_is_never_printed_twice", async () => {
+      serve("rust", []);
+      renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+      await screen.findByTestId("tagPage.actionRow");
+      expect(screen.queryByTestId("tagPage.name")).toBeNull();
+    });
+
+    it("the_heading_follows_the_line_a_wider_screen_fits_the_name_and_a_narrower_cuts_it_again", async () => {
+      serve(LONG, []);
+      renderWithProviders(<TopicView name={LONG} />, { writeSigner: fakeWriteSigner() });
+      await screen.findByTestId("tagPage.name");
+      lines.resize(2000);
+      expect(screen.queryByTestId("tagPage.name")).toBeNull();
+      lines.resize(332);
+      expect(screen.getByTestId("tagPage.name")).toBeInTheDocument();
+    });
+
+    it("the_not_found_header_cuts_and_no_full_name_stands", async () => {
+      server.use(gqlLink.query("HashtagDetail", () => HttpResponse.json({ data: { hashtag: null } })));
+      renderWithProviders(<TopicView name={`${LONG} x`} />, { writeSigner: fakeWriteSigner() });
+      await screen.findByTestId("topic-not-found");
+      expect(screen.getByRole("heading", { level: 1 }).className).toContain("truncate");
+      expect(screen.queryByTestId("tagPage.name")).toBeNull();
+    });
   });
 
   // TagPage.md:65-67 — the first read gets no answer: the header stands, the
@@ -872,7 +930,37 @@ describe("TopicView — the tag page's registered nodes (TagPage, TagPageHeldPad
       },
     ],
   });
-  const liveRows = () => [row(textPost(), 0.1, 1, true), row(galleryPost(), 0.55, 1), row(taggedComment("c1"), 0.4, 0.9)];
+  // @ada's comment carries #saltmaps and one reference, as the board's does
+  // (round 63 `TAGGED_COMMENT_LINE`), so its tags line is drawn.
+  const adaLine = () => ({
+    topics: [
+      {
+        __typename: "TopicClaim",
+        hashtag: { __typename: "Hashtag", id: "h3", name: moderated("saltmaps") },
+        relevance: 0.4,
+        confidence: 0.9,
+        pending: false,
+      },
+    ],
+    references: [
+      {
+        __typename: "ReferenceClaim",
+        targetId: "r1",
+        relevance: 0.5,
+        support: 0.5,
+        withdrawalCost: 1,
+        rawRelevance: 0.5,
+        rawSupport: 0.5,
+        pending: false,
+        target: null,
+      },
+    ],
+  });
+  const liveRows = () => [
+    row(textPost(), 0.1, 1, true),
+    row(galleryPost(), 0.55, 1),
+    row(taggedComment("c1", adaLine()), 0.4, 0.9),
+  ];
   const removedRows = () => [
     row({ ...textPost(), content: moderated(null, "REDACTED"), removal: REMOVED }, 0.1, 1, true),
     row(taggedComment("c1", { content: moderated(null, "REDACTED"), removal: REMOVED }), 0.4, 0.9),
@@ -897,11 +985,11 @@ describe("TopicView — the tag page's registered nodes (TagPage, TagPageHeldPad
   const NICE = { pDirected: 0.1, pInterest: 0.1 };
   const cardStances = { "p-text": NICE, "p-gallery": NICE, c1: NICE, "c-pictures": NICE, "c-clip": NICE };
 
-  async function census(rows: unknown[], removedOn = false): Promise<Set<string | null>> {
+  async function census(rows: unknown[], removedOn = false, name = "rust"): Promise<Set<string | null>> {
     if (removedOn) writeCommittedFeedFilter("u1", { ...FEED_FILTER_DEFAULT, also: ["settling", "removed"] });
     server.use(...stanceHandlers(cardStances));
-    serve("rust", rows);
-    const view = renderWithProviders(<TopicView name="rust" />, {
+    serve(name, rows);
+    const view = renderWithProviders(<TopicView name={name} />, {
       store: signedInStore(),
       writeSigner: fakeWriteSigner(),
     });
@@ -924,7 +1012,16 @@ describe("TopicView — the tag page's registered nodes (TagPage, TagPageHeldPad
     const live = await census(liveRows());
     const media = await census(mediaRows());
     const removed = await census(removedRows(), true);
-    const missing = registered("TagPage").filter((path) => !live.has(path) && !media.has(path) && !removed.has(path));
+    // The `name` chip's `long` (round 63): a name the header's line cuts, so
+    // the full-name heading stands — measured against stand-in widths.
+    const lines = fakeLineLayout(332);
+    const longName = await census(liveRows(), false, "salt_maps_of_the_coast_road_and_the_third_headland_light").finally(() =>
+      lines.restore(),
+    );
+    expect(longName.has("tagPage.name")).toBe(true);
+    const missing = registered("TagPage").filter(
+      (path) => !live.has(path) && !media.has(path) && !removed.has(path) && !longName.has(path),
+    );
     expect(missing).toEqual([]);
   });
 

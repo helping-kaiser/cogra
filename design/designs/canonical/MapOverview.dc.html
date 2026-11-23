@@ -507,7 +507,12 @@
   pointer-events: none;
 }
 
-.cg-state:hover::after { opacity: var(--state-hover) }
+/* Hover only where the primary input can hover (jakob 2026-11-23, readme §4):
+   on touch a control is lit only while the finger is on it — press — and
+   nothing stays lit once it lifts. */
+@media (hover: hover) {
+  .cg-state:hover::after { opacity: var(--state-hover) }
+}
 .cg-state:active::after { opacity: var(--state-press) }
 .cg-state:disabled::after, .cg-state[aria-disabled="true"]::after { opacity: 0 }
 
@@ -526,7 +531,9 @@
   transition: opacity var(--duration-short-2) var(--ease-standard);
   pointer-events: none;
 }
-.cg-door-card:has(.cg-door:hover)::after { opacity: var(--state-hover) }
+@media (hover: hover) {
+  .cg-door-card:has(.cg-door:hover)::after { opacity: var(--state-hover) }
+}
 .cg-door-card:has(.cg-door:active)::after { opacity: var(--state-press) }
 
 /* The focus indicator is `onSurface` rather than `primary`: a primary ring
@@ -609,7 +616,9 @@ body {
 }
 
 a { color: var(--primary); text-decoration-color: color-mix(in srgb, var(--primary) 40%, transparent) }
-a:hover { color: color-mix(in srgb, var(--primary) 84%, var(--on-surface)); text-decoration-color: currentColor }
+@media (hover: hover) {
+  a:hover { color: color-mix(in srgb, var(--primary) 84%, var(--on-surface)); text-decoration-color: currentColor }
+}
 
 code, kbd, samp, pre { font-family: var(--font-mono) }
 
@@ -1109,7 +1118,12 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
   pointer-events: none;
 }
 
-.cg-state:hover::after { opacity: var(--state-hover) }
+/* Hover only where the primary input can hover (jakob 2026-11-23, readme §4):
+   on touch a control is lit only while the finger is on it — press — and
+   nothing stays lit once it lifts. */
+@media (hover: hover) {
+  .cg-state:hover::after { opacity: var(--state-hover) }
+}
 .cg-state:active::after { opacity: var(--state-press) }
 .cg-state:disabled::after, .cg-state[aria-disabled="true"]::after { opacity: 0 }
 
@@ -1128,7 +1142,9 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
   transition: opacity var(--duration-short-2) var(--ease-standard);
   pointer-events: none;
 }
-.cg-door-card:has(.cg-door:hover)::after { opacity: var(--state-hover) }
+@media (hover: hover) {
+  .cg-door-card:has(.cg-door:hover)::after { opacity: var(--state-hover) }
+}
 .cg-door-card:has(.cg-door:active)::after { opacity: var(--state-press) }
 
 /* The focus indicator is `onSurface` rather than `primary`: a primary ring
@@ -1211,7 +1227,9 @@ body {
 }
 
 a { color: var(--primary); text-decoration-color: color-mix(in srgb, var(--primary) 40%, transparent) }
-a:hover { color: color-mix(in srgb, var(--primary) 84%, var(--on-surface)); text-decoration-color: currentColor }
+@media (hover: hover) {
+  a:hover { color: color-mix(in srgb, var(--primary) 84%, var(--on-surface)); text-decoration-color: currentColor }
+}
 
 code, kbd, samp, pre { font-family: var(--font-mono) }
 
@@ -1243,8 +1261,8 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 </div>
 <div style="position:absolute;left:980px;top:80px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Feed &amp; Search<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
-<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">68 boards · 595 edges · <span style="color:inherit;">0 gaps</span></div>
-<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 78</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 27</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Profile × 77</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 61</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 52</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 30</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 29</div>
+<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">68 boards · 598 edges · <span style="color:inherit;">0 gaps</span></div>
+<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 81</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 27</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Profile × 77</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 61</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 52</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 30</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 29</div>
 </div>
 <div style="position:absolute;left:20px;top:290px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Money &amp; Wallet<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
@@ -1258,8 +1276,8 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 </div>
 <div style="position:absolute;left:660px;top:290px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Profile<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
-<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">106 boards · 849 edges · <span style="color:inherit;">0 gaps</span></div>
-<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 95</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 168</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 74</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 71</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 12</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 51</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 25</div>
+<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">106 boards · 853 edges · <span style="color:inherit;">0 gaps</span></div>
+<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 97</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 169</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 74</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 71</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 12</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 51</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 25</div>
 </div>
 <div style="position:absolute;left:980px;top:290px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Patterns &amp; reference<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>

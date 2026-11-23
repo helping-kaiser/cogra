@@ -291,8 +291,18 @@ dialog.cg-sheet-out::backdrop {
   pointer-events: none;
 }
 
-.cg-state:hover::after {
-  opacity: var(--state-hover);
+/* HOVER BELONGS TO A CURSOR (jakob, 2026-11-23: "if the finger is there we
+   hover once it is gone we don't anymore"). A touch browser leaves `:hover` on
+   the element it last tapped until the next tap lands elsewhere, so an ungated
+   hover layer stayed lit after the finger lifted. Only an input that can hover
+   gets it (Media Queries Level 4, § hover; MDN "hover") — the same gate
+   Tailwind's `hover:` variant compiles to. A finger's feedback is the press
+   layer below, which stands while the finger is down. Kept here, before the
+   press and disabled rules, so they still win in the cascade. */
+@media (hover: hover) {
+  .cg-state:hover::after {
+    opacity: var(--state-hover);
+  }
 }
 
 /* Press is never a scale-down and never a shadow change: the direction is
@@ -327,8 +337,11 @@ dialog.cg-sheet-out::backdrop {
   pointer-events: none;
 }
 
-.cg-door-card:has(.cg-door:hover)::after {
-  opacity: var(--state-hover);
+/* The same gate as `.cg-state`'s hover: a card is never left lit by a tap. */
+@media (hover: hover) {
+  .cg-door-card:has(.cg-door:hover)::after {
+    opacity: var(--state-hover);
+  }
 }
 
 .cg-door-card:has(.cg-door:active)::after {

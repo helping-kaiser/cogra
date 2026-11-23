@@ -66,6 +66,10 @@ export interface CommentCardProps {
    * to `StanceControl`'s `pendingReview`.
    */
   stancePendingReview?: boolean;
+  /** A guest's borrowed view: pass-through to `StanceControl`'s `vantage`. */
+  stanceVantage?: string;
+  /** Pass-through to `StanceControl`'s `vantageHoles`, for a board that re-selects the reader. */
+  stanceVantageHoles?: { label?: string; held?: string; hollow?: string };
   onReply?: () => void;
   targetLabel?: string;
   /**
@@ -76,7 +80,15 @@ export interface CommentCardProps {
   target?: string;
   /** The target's kind, naming the glyph (`NODE_GLYPHS`). Defaults to `"post"`. */
   targetKind?: string;
-  /** Opens the target. Shown only when both `target` and this are set. */
+  /**
+   * The pointer's door, in either shape — the door to what it names, apart
+   * from the card's own door (`onOpen`, the thread at this comment). A
+   * pointer naming a post opens the post itself, at its top, its thread
+   * closed; a removed post or a deleted account's post still opens, its
+   * detail showing the mark. A pointer naming a comment (a reply's, `On
+   * @sol's comment`) opens the thread at the comment it names. Shown only
+   * when both `target` and this are set.
+   */
   onOpenTarget?: () => void;
   /**
    * How the card names what it answers: `"line"` (default — the one-line

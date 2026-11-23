@@ -30,6 +30,14 @@ ALWAYS feed.commentCard.target never names a removed post by its title nor a rem
 
 ALWAYS feed.commentCard stays readable GIVEN the post it answers was removed
 
+WHEN feed.commentCard.target is tapped GIVEN it names a post -> the post it answers opens AND its back arrow reads Back to feed
+
+WHEN feed.commentCard.target is tapped GIVEN it names a comment -> the post's comment section opens scrolled to the comment it names
+
+WHEN feed.commentCard is tapped outside feed.commentCard.target and its own controls -> the post's comment section opens scrolled to that comment
+
+WHEN feed.commentCard.target is tapped GIVEN the post it answers was removed or is a deleted account's -> the post opens AND its detail shows the mark in the content's place
+
 ALWAYS the compact veil takes a veiled feed.commentCard's words and feed.commentCard.target stays readable
 
 ALWAYS feed.commentCard's menu is the reader's own comment menu, Edit among its rows, GIVEN the comment is the reader's own, and nothing else on the card changes

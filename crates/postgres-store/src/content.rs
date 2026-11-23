@@ -1080,16 +1080,70 @@ pub async fn list_posts(
     limit: i64,
     include_pending: bool,
 ) -> Result<Vec<Post>, ContentError> {
+    posts_walk(pool, None, cursor, backward, limit, include_pending).await
+}
+
+/// One person's posts (a profile's Posts view): [`list_posts`] narrowed to
+/// one author, in the same order and the same two cursor namespaces —
+/// pending entries ahead of the landed ones (api-spec.md "Pagination").
+pub async fn list_posts_by_author(
+    pool: &PgPool,
+    author: Uuid,
+    cursor: Option<ContentCursor>,
+    backward: bool,
+    limit: i64,
+    include_pending: bool,
+) -> Result<Vec<Post>, ContentError> {
+    posts_walk(pool, Some(author), cursor, backward, limit, include_pending).await
+}
+
+/// The post walk both listings share; `author` None is every post.
+async fn posts_walk(
+    pool: &PgPool,
+    author: Option<Uuid>,
+    cursor: Option<ContentCursor>,
+    backward: bool,
+    limit: i64,
+    include_pending: bool,
+) -> Result<Vec<Post>, ContentError> {
     let cursor = resolve_post_cursor(pool, cursor).await?;
     merge_walk(
         cursor,
         backward,
         limit,
         include_pending,
-        |c, back, n| list_posts_landed(pool, c, back, n, include_pending),
-        |c, back, n| list_posts_pending(pool, c, back, n),
+        |c, back, n| list_posts_landed(pool, author, c, back, n, include_pending),
+        |c, back, n| list_posts_pending(pool, author, c, back, n),
     )
     .await
+}
+
+/// How many posts the post listing serves under the same filter,
+/// cursor-independent — one per post, never an edit, a removed one
+/// included (its tombstone is a version). `author` None counts every post.
+///
+/// The filter restates the walk's branch for branch, as
+/// [`count_comments_for_target`] does for the thread, so the count can
+/// never disagree with the edges beside it.
+pub async fn count_posts(
+    pool: &PgPool,
+    author: Option<Uuid>,
+    include_pending: bool,
+) -> Result<i64, ContentError> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT COUNT(*)::bigint AS "total!"
+           FROM posts p
+           WHERE ($1::uuid IS NULL OR p.author_id = $1)
+             AND ($2 OR p.landed_epoch IS NOT NULL)
+             AND EXISTS (
+                 SELECT 1 FROM post_versions v
+                 WHERE v.post_id = p.id AND ($2 OR NOT v.pending)
+             )"#,
+        author,
+        include_pending,
+    )
+    .fetch_one(pool)
+    .await?)
 }
 
 /// The two-branch walk both listings share. The namespaces never
@@ -1215,6 +1269,7 @@ async fn resolve_comment_cursor(
 /// LANDED with its epoch because the text on screen is ordered fact.
 async fn list_posts_landed(
     pool: &PgPool,
+    author: Option<Uuid>,
     cursor: Option<LandingOrder>,
     backward: bool,
     limit: i64,
@@ -1250,6 +1305,7 @@ async fn list_posts_landed(
                        LIMIT 1
                    ) v ON TRUE
                    WHERE p.landed_epoch IS NOT NULL
+                     AND ($5::uuid IS NULL OR p.author_id = $5)
                      AND ($1::bigint IS NULL
                           OR (p.landed_epoch, p.position) > ($1, $2))
                    ORDER BY p.landed_epoch ASC, p.position ASC
@@ -1260,6 +1316,7 @@ async fn list_posts_landed(
             cp,
             limit,
             include_pending,
+            author,
         )
         .fetch_all(pool)
         .await?
@@ -1288,6 +1345,7 @@ async fn list_posts_landed(
                    LIMIT 1
                ) v ON TRUE
                WHERE p.landed_epoch IS NOT NULL
+                 AND ($5::uuid IS NULL OR p.author_id = $5)
                  AND ($1::bigint IS NULL
                       OR (p.landed_epoch, p.position) < ($1, $2))
                ORDER BY p.landed_epoch DESC, p.position DESC
@@ -1296,6 +1354,7 @@ async fn list_posts_landed(
             cp,
             limit,
             include_pending,
+            author,
         )
         .fetch_all(pool)
         .await?
@@ -1311,6 +1370,7 @@ async fn list_posts_landed(
 /// (`None`) keysets on the instant alone.
 async fn list_posts_pending(
     pool: &PgPool,
+    author: Option<Uuid>,
     cursor: (Option<Timestamp>, Option<Uuid>),
     backward: bool,
     limit: i64,
@@ -1341,6 +1401,7 @@ async fn list_posts_pending(
                        LIMIT 1
                    ) v ON TRUE
                    WHERE p.landed_epoch IS NULL
+                     AND ($4::uuid IS NULL OR p.author_id = $4)
                      AND ($1::timestamptz IS NULL
                           OR ($2::uuid IS NULL AND p.created_at > $1)
                           OR ($2 IS NOT NULL AND (p.created_at, p.id) > ($1, $2)))
@@ -1351,6 +1412,7 @@ async fn list_posts_pending(
             at,
             after_id,
             limit,
+            author,
         )
         .fetch_all(pool)
         .await?
@@ -1378,6 +1440,7 @@ async fn list_posts_pending(
                    LIMIT 1
                ) v ON TRUE
                WHERE p.landed_epoch IS NULL
+                 AND ($4::uuid IS NULL OR p.author_id = $4)
                  AND ($1::timestamptz IS NULL
                       OR ($2::uuid IS NULL AND p.created_at < $1)
                       OR ($2 IS NOT NULL AND (p.created_at, p.id) < ($1, $2)))
@@ -1386,6 +1449,7 @@ async fn list_posts_pending(
             at,
             after_id,
             limit,
+            author,
         )
         .fetch_all(pool)
         .await?
@@ -1796,6 +1860,244 @@ pub async fn count_comments_for_target(
                  WHERE v.comment_id = c.id AND ($2 OR NOT v.pending)
              )"#,
         target_id,
+        include_pending,
+    )
+    .fetch_one(pool)
+    .await?)
+}
+
+/// One person's comments (a profile's Comments view), whatever they
+/// answer: newest-first in the thread read's own two namespaces —
+/// pending entries ahead of the landed ones, which follow in landing
+/// order (api-spec.md "Pagination"). `backward` serves `last`/`before`;
+/// results always come back newest-first.
+///
+/// Its own statements rather than the thread read's with an optional
+/// target: a parameter that may be NULL in the thread's `WHERE` would cost
+/// the thread its index under a generic plan, the reason `merge_walk`
+/// already gives for writing each direction out.
+pub async fn comments_by_author(
+    pool: &PgPool,
+    author: Uuid,
+    cursor: Option<ContentCursor>,
+    backward: bool,
+    limit: i64,
+    include_pending: bool,
+) -> Result<Vec<Comment>, ContentError> {
+    let cursor = resolve_comment_cursor(pool, cursor).await?;
+    merge_walk(
+        cursor,
+        backward,
+        limit,
+        include_pending,
+        |c, back, n| comments_by_author_landed(pool, author, c, back, n, include_pending),
+        |c, back, n| comments_by_author_pending(pool, author, c, back, n),
+    )
+    .await
+}
+
+/// The landed branch of [`comments_by_author`]; `include_pending` gates
+/// the version lateral as it does in [`comments_landed`].
+async fn comments_by_author_landed(
+    pool: &PgPool,
+    author: Uuid,
+    cursor: Option<LandingOrder>,
+    backward: bool,
+    limit: i64,
+    include_pending: bool,
+) -> Result<Vec<Comment>, ContentError> {
+    let (ce, cp) = match cursor {
+        Some(c) => (Some(c.landed_epoch), Some(c.position)),
+        None => (None, None),
+    };
+    let rows = if backward {
+        sqlx::query_as!(
+            CommentRow,
+            r#"SELECT * FROM (
+                   SELECT c.id, c.target_id, c.target_type, c.author_id,
+                          c.l1_node_id, c.license, c.landed_epoch,
+                          c.position, c.created_at,
+                          v.content AS "content!", v.redaction_reason,
+                          v.sensitive AS "sensitive!", v.sensitive_reason,
+                          v.pending AS "version_pending!",
+                          v.created_at AS "version_created_at!",
+                          v.version_id AS "version_id!"
+                   FROM comments c
+                   JOIN LATERAL (
+                       SELECT content, redaction_reason, sensitive,
+                              sensitive_reason, pending, created_at, version_id
+                       FROM comment_versions
+                       WHERE comment_id = c.id AND ($5 OR NOT pending)
+                       ORDER BY pending DESC,
+                                landed_epoch DESC NULLS LAST,
+                                position DESC NULLS LAST,
+                                created_at DESC, version_id DESC
+                       LIMIT 1
+                   ) v ON TRUE
+                   WHERE c.author_id = $4
+                     AND c.landed_epoch IS NOT NULL
+                     AND ($1::bigint IS NULL
+                          OR (c.landed_epoch, c.position) > ($1, $2))
+                   ORDER BY c.landed_epoch ASC, c.position ASC
+                   LIMIT $3
+               ) page
+               ORDER BY landed_epoch DESC, position DESC"#,
+            ce,
+            cp,
+            limit,
+            author,
+            include_pending,
+        )
+        .fetch_all(pool)
+        .await?
+    } else {
+        sqlx::query_as!(
+            CommentRow,
+            r#"SELECT c.id, c.target_id, c.target_type, c.author_id,
+                      c.l1_node_id, c.license, c.landed_epoch,
+                      c.position, c.created_at,
+                      v.content AS "content!", v.redaction_reason,
+                      v.sensitive AS "sensitive!", v.sensitive_reason,
+                      v.pending AS "version_pending!",
+                      v.created_at AS "version_created_at!",
+                      v.version_id AS "version_id!"
+               FROM comments c
+               JOIN LATERAL (
+                   SELECT content, redaction_reason, sensitive,
+                          sensitive_reason, pending, created_at, version_id
+                   FROM comment_versions
+                   WHERE comment_id = c.id AND ($5 OR NOT pending)
+                   ORDER BY pending DESC,
+                            landed_epoch DESC NULLS LAST,
+                            position DESC NULLS LAST,
+                            created_at DESC, version_id DESC
+                   LIMIT 1
+               ) v ON TRUE
+               WHERE c.author_id = $4
+                 AND c.landed_epoch IS NOT NULL
+                 AND ($1::bigint IS NULL
+                      OR (c.landed_epoch, c.position) < ($1, $2))
+               ORDER BY c.landed_epoch DESC, c.position DESC
+               LIMIT $3"#,
+            ce,
+            cp,
+            limit,
+            author,
+            include_pending,
+        )
+        .fetch_all(pool)
+        .await?
+    };
+    Ok(rows.into_iter().map(comment_from_row).collect())
+}
+
+/// The pending branch of [`comments_by_author`]; the `(instant, id)`
+/// keyset of [`comments_pending`].
+async fn comments_by_author_pending(
+    pool: &PgPool,
+    author: Uuid,
+    cursor: (Option<Timestamp>, Option<Uuid>),
+    backward: bool,
+    limit: i64,
+) -> Result<Vec<Comment>, ContentError> {
+    let (at, after_id) = cursor;
+    let rows = if backward {
+        sqlx::query_as!(
+            CommentRow,
+            r#"SELECT * FROM (
+                   SELECT c.id, c.target_id, c.target_type, c.author_id,
+                          c.l1_node_id, c.license, c.landed_epoch,
+                          c.position, c.created_at,
+                          v.content AS "content!", v.redaction_reason,
+                          v.sensitive AS "sensitive!", v.sensitive_reason,
+                          v.pending AS "version_pending!",
+                          v.created_at AS "version_created_at!",
+                          v.version_id AS "version_id!"
+                   FROM comments c
+                   JOIN LATERAL (
+                       SELECT content, redaction_reason, sensitive,
+                              sensitive_reason, pending, created_at, version_id
+                       FROM comment_versions WHERE comment_id = c.id
+                       ORDER BY pending DESC,
+                                landed_epoch DESC NULLS LAST,
+                                position DESC NULLS LAST,
+                                created_at DESC, version_id DESC
+                       LIMIT 1
+                   ) v ON TRUE
+                   WHERE c.author_id = $4
+                     AND c.landed_epoch IS NULL
+                     AND ($1::timestamptz IS NULL
+                          OR ($2::uuid IS NULL AND c.created_at > $1)
+                          OR ($2 IS NOT NULL AND (c.created_at, c.id) > ($1, $2)))
+                   ORDER BY c.created_at ASC, c.id ASC
+                   LIMIT $3
+               ) page
+               ORDER BY created_at DESC, id DESC"#,
+            at,
+            after_id,
+            limit,
+            author,
+        )
+        .fetch_all(pool)
+        .await?
+    } else {
+        sqlx::query_as!(
+            CommentRow,
+            r#"SELECT c.id, c.target_id, c.target_type, c.author_id,
+                      c.l1_node_id, c.license, c.landed_epoch,
+                      c.position, c.created_at,
+                      v.content AS "content!", v.redaction_reason,
+                      v.sensitive AS "sensitive!", v.sensitive_reason,
+                      v.pending AS "version_pending!",
+                      v.created_at AS "version_created_at!",
+                      v.version_id AS "version_id!"
+               FROM comments c
+               JOIN LATERAL (
+                   SELECT content, redaction_reason, sensitive,
+                          sensitive_reason, pending, created_at, version_id
+                   FROM comment_versions WHERE comment_id = c.id
+                   ORDER BY pending DESC,
+                            landed_epoch DESC NULLS LAST,
+                            position DESC NULLS LAST,
+                            created_at DESC, version_id DESC
+                   LIMIT 1
+               ) v ON TRUE
+               WHERE c.author_id = $4
+                 AND c.landed_epoch IS NULL
+                 AND ($1::timestamptz IS NULL
+                      OR ($2::uuid IS NULL AND c.created_at < $1)
+                      OR ($2 IS NOT NULL AND (c.created_at, c.id) < ($1, $2)))
+               ORDER BY c.created_at DESC, c.id DESC
+               LIMIT $3"#,
+            at,
+            after_id,
+            limit,
+            author,
+        )
+        .fetch_all(pool)
+        .await?
+    };
+    Ok(rows.into_iter().map(comment_from_row).collect())
+}
+
+/// How many comments [`comments_by_author`] serves under the same filter,
+/// cursor-independent; the filter restates the walk as
+/// [`count_comments_for_target`] does.
+pub async fn count_comments_by_author(
+    pool: &PgPool,
+    author: Uuid,
+    include_pending: bool,
+) -> Result<i64, ContentError> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT COUNT(*)::bigint AS "total!"
+           FROM comments c
+           WHERE c.author_id = $1
+             AND ($2 OR c.landed_epoch IS NOT NULL)
+             AND EXISTS (
+                 SELECT 1 FROM comment_versions v
+                 WHERE v.comment_id = c.id AND ($2 OR NOT v.pending)
+             )"#,
+        author,
         include_pending,
     )
     .fetch_one(pool)
