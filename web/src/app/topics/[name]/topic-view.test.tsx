@@ -12,13 +12,15 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { borrowedViewHandler } from "@/test/borrowed-view";
 import { byNode } from "@/test/data-node";
 import { fakeClampLayout } from "@/test/fake-clamp-layout";
+import { fakeLineLayout } from "@/test/fake-line-layout";
 import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { intersectEach, whenObserved } from "@/test/media-env";
 import { gqlLink, startMswServer } from "@/test/msw";
-import { answersPost, taggedCommentWire } from "@/test/profile-comment";
+import { answersComment, answersPost, taggedCommentWire } from "@/test/profile-comment";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
 import { stanceHandlers } from "@/test/stance";
+import { tagPageHandlers, type TaggedCommentsLog } from "@/test/tag-page";
 import { TAG_EMPTY, TAG_NOT_FOUND, TAG_UNREACHABLE, TopicView } from "./topic-view";
 
 function signedInStore() {
@@ -84,8 +86,8 @@ function postNode(id: string, title: string) {
 }
 
 /**
- * A tagged comment as the tag page reads it (`topics.graphql`): the card's
- * own fields without the two folds, what it answers and its thread's post.
+ * A tagged comment as the tag page reads it (`topics.graphql` `TaggedComments`):
+ * the comment whole, what it answers and its thread's post.
  */
 function taggedComment(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
   return taggedCommentWire(id, {
@@ -124,8 +126,9 @@ const row = (node: unknown, relevance = 0.1, confidence = 1, pending = false) =>
   node,
 });
 
-function serve(name: string, rows: unknown[]) {
-  server.use(gqlLink.query("HashtagDetail", () => HttpResponse.json({ data: hashtagDetail(name, rows) })));
+/** The page's two reads, the comments named by the first and carried whole by the second. */
+function serve(name: string, rows: unknown[], log?: TaggedCommentsLog) {
+  server.use(...tagPageHandlers(hashtagDetail(name, rows).hashtag, log));
 }
 
 /** The keys of the post cards on the page, in order. */
@@ -329,6 +332,63 @@ describe("TopicView", () => {
     expect(screen.queryByTestId("tagPage.actionRow")).toBeNull();
   });
 
+  // THE FULL NAME (TagPage.md:5-11, round 63; jakob 2026-11-23): the header's
+  // title keeps one line; where that line cuts the name, the whole name stands
+  // under the header, print only, above the topic's row. The cut is the title's
+  // measured overflow (`fakeLineLayout` stands in for the browser's widths).
+  describe("the tag's full name", () => {
+    const LONG = "salt_maps_of_the_coast_road_and_the_third_headland_light";
+    let lines: ReturnType<typeof fakeLineLayout>;
+    beforeEach(() => {
+      lines = fakeLineLayout(332);
+    });
+    afterEach(() => lines.restore());
+
+    it("a_name_the_headers_line_cuts_stands_whole_under_the_header_print_only_above_the_topics_row", async () => {
+      serve(LONG, []);
+      renderWithProviders(<TopicView name={LONG} />, { writeSigner: fakeWriteSigner() });
+      const heading = await screen.findByTestId("tagPage.name");
+      expect(heading).toHaveTextContent(`#${LONG}`);
+      expect(heading).toHaveAttribute("aria-hidden", "true");
+      expect(heading.className).toContain("text-title-large");
+      expect(heading.className).toContain("break-words");
+      // the header's title speaks the whole name; it is the page's one heading
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(`#${LONG}`);
+      expect(screen.getByTestId("tagPage.header.title")).toHaveTextContent(`#${LONG}`);
+      expect(screen.getAllByRole("heading")).toHaveLength(1);
+      // under the header, above the topic's row
+      const row = screen.getByTestId("tagPage.actionRow");
+      const header = screen.getByTestId("tagPage.header");
+      expect(header.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(heading.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it("a_name_that_fits_the_headers_line_is_never_printed_twice", async () => {
+      serve("rust", []);
+      renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+      await screen.findByTestId("tagPage.actionRow");
+      expect(screen.queryByTestId("tagPage.name")).toBeNull();
+    });
+
+    it("the_heading_follows_the_line_a_wider_screen_fits_the_name_and_a_narrower_cuts_it_again", async () => {
+      serve(LONG, []);
+      renderWithProviders(<TopicView name={LONG} />, { writeSigner: fakeWriteSigner() });
+      await screen.findByTestId("tagPage.name");
+      lines.resize(2000);
+      expect(screen.queryByTestId("tagPage.name")).toBeNull();
+      lines.resize(332);
+      expect(screen.getByTestId("tagPage.name")).toBeInTheDocument();
+    });
+
+    it("the_not_found_header_cuts_and_no_full_name_stands", async () => {
+      server.use(gqlLink.query("HashtagDetail", () => HttpResponse.json({ data: { hashtag: null } })));
+      renderWithProviders(<TopicView name={`${LONG} x`} />, { writeSigner: fakeWriteSigner() });
+      await screen.findByTestId("topic-not-found");
+      expect(screen.getByRole("heading", { level: 1 }).className).toContain("truncate");
+      expect(screen.queryByTestId("tagPage.name")).toBeNull();
+    });
+  });
+
   // TagPage.md:65-67 — the first read gets no answer: the header stands, the
   // house line's noun form over an outlined Retry; Retry reads again.
   it("the_first_read_getting_no_answer_stands_the_header_over_the_line_and_retry_and_heals", async () => {
@@ -437,6 +497,74 @@ describe("TopicView — the rows", () => {
     expect(within(card).getByTestId(byNode("tagPage.commentCard.actionRow.stance.anchor", "c1"))).toBeInTheDocument();
   });
 
+  // Seam 411 (jakob, 2026-11-23): the tagged comment's card carries its tags
+  // line, and the line does there what it does on the feed's comment card —
+  // two chips, then the counts, its references included. One card, one
+  // behaviour.
+  it("a_tagged_comments_card_carries_its_tags_line_two_chips_then_the_counts_its_references_included", async () => {
+    const tag = (name: string) => ({
+      __typename: "TopicClaim",
+      hashtag: { __typename: "Hashtag", id: `ht-${name}`, name: moderated(name) },
+      relevance: 0.4,
+      confidence: 0.9,
+      pending: false,
+    });
+    const citation = (id: string) => ({
+      __typename: "ReferenceClaim",
+      targetId: id,
+      relevance: 0.5,
+      support: 0.5,
+      withdrawalCost: 1,
+      rawRelevance: 0.5,
+      rawSupport: 0.5,
+      pending: false,
+      target: null,
+    });
+    const log: TaggedCommentsLog = { asked: [] };
+    serve(
+      "rust",
+      [
+        row(postNode("p1", "About Rust")),
+        row(
+          taggedComment("c1", {
+            topics: [tag("rust"), tag("wasm"), tag("axum")],
+            references: [citation("r1"), citation("r2")],
+          }),
+        ),
+      ],
+      log,
+    );
+    renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+    const line = await screen.findByTestId(byNode("tagPage.commentCard.tagsLine", "c1"));
+    expect(within(line).getByTestId(byNode("tagPage.commentCard.tagsLine.tag", "c1/rust"))).toBeInTheDocument();
+    expect(within(line).getByTestId(byNode("tagPage.commentCard.tagsLine.tag", "c1/wasm"))).toBeInTheDocument();
+    expect(within(line).queryByTestId(byNode("tagPage.commentCard.tagsLine.tag", "c1/axum"))).toBeNull();
+    expect(within(line).getByTestId(byNode("tagPage.commentCard.tagsLine.counts", "c1"))).toHaveTextContent(
+      "· 1 tag · 2 references",
+    );
+    // The comment cards are read apart, over exactly the comment ids the list named.
+    expect(log.asked).toEqual([["c1"]]);
+  });
+
+  // A page that tags no comment sends no second read (`fetchHashtagDetail`).
+  it("a_page_with_no_tagged_comment_sends_no_comment_read", async () => {
+    const log: TaggedCommentsLog = { asked: [] };
+    serve("rust", [row(postNode("p1", "About Rust"))], log);
+    renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+    await screen.findByTestId(byNode("tagPage.card", "p1"));
+    expect(log.asked).toEqual([]);
+  });
+
+  // TagPage.md:65 — the page's read is both reads: the comment cards' read
+  // getting no answer is the page's read getting none.
+  it("the_comment_cards_read_getting_no_answer_stands_the_failure_line_and_retry", async () => {
+    serve("rust", [row(taggedComment("c1"))]);
+    server.use(gqlLink.query("TaggedComments", () => HttpResponse.error()));
+    renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+    expect(await screen.findByTestId("topic-transport-error")).toHaveTextContent(TAG_UNREACHABLE);
+    expect(screen.queryByTestId(byNode("tagPage.commentCard", "c1"))).toBeNull();
+  });
+
   // TagPage.md:17 — no Reply and no view-replies line.
   it("a_tagged_comments_card_offers_no_reply_and_no_view_replies_line", async () => {
     serve("rust", [row(taggedComment("c1"))]);
@@ -463,13 +591,24 @@ describe("TopicView — the rows", () => {
     expect(target).not.toHaveTextContent("Salt maps");
   });
 
-  // TagPage.md:15, the doors: the pointer opens the thread the comment lives
-  // in, the chip the author — each carrying the page and its origin.
+  // THE POINTER DOOR (TagPage.md:23, :25; jakob 2026-11-23, seams 405 and
+  // 417): the pointer naming a post opens the post itself, no comment section
+  // opened; a reply's pointer opens the thread at the comment it names; the
+  // rest of the card the thread at the card's own comment; the chip the
+  // author — each carrying the page and its origin.
   it("a_tagged_comments_doors_carry_the_page", async () => {
-    serve("rust", [row(taggedComment("c1"))]);
+    serve("rust", [
+      row(taggedComment("c1")),
+      row(taggedComment("c2", { target: answersComment("c0", "sol") })),
+    ]);
     renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
     const target = await screen.findByTestId(byNode("tagPage.commentCard.target", "c1"));
-    expect(target).toHaveAttribute("href", "/posts/p1?comment=c1&from=tag%3Arust");
+    expect(target).toHaveAttribute("href", "/posts/p1?from=tag%3Arust");
+    expect(screen.getByTestId(byNode("tagPage.commentCard.target", "c2"))).toHaveAttribute(
+      "href",
+      "/posts/p1?comment=c0&from=tag%3Arust",
+    );
+    expect(screen.getByTestId("topic-comment-c1-link")).toHaveAttribute("href", "/posts/p1?comment=c1&from=tag%3Arust");
     expect(screen.getByTestId(byNode("tagPage.commentCard.authorChip", "c1"))).toHaveAttribute(
       "href",
       "/u/bob?from=tag%3Arust",
@@ -660,7 +799,7 @@ describe("TopicView — what it opens keeps its origin's root", () => {
     );
     expect(screen.getByTestId(byNode("tagPage.commentCard.target", "c1"))).toHaveAttribute(
       "href",
-      `/posts/p1?comment=c1&from=${token}`,
+      `/posts/p1?from=${token}`,
     );
   });
 });
@@ -791,7 +930,37 @@ describe("TopicView — the tag page's registered nodes (TagPage, TagPageHeldPad
       },
     ],
   });
-  const liveRows = () => [row(textPost(), 0.1, 1, true), row(galleryPost(), 0.55, 1), row(taggedComment("c1"), 0.4, 0.9)];
+  // @ada's comment carries #saltmaps and one reference, as the board's does
+  // (round 63 `TAGGED_COMMENT_LINE`), so its tags line is drawn.
+  const adaLine = () => ({
+    topics: [
+      {
+        __typename: "TopicClaim",
+        hashtag: { __typename: "Hashtag", id: "h3", name: moderated("saltmaps") },
+        relevance: 0.4,
+        confidence: 0.9,
+        pending: false,
+      },
+    ],
+    references: [
+      {
+        __typename: "ReferenceClaim",
+        targetId: "r1",
+        relevance: 0.5,
+        support: 0.5,
+        withdrawalCost: 1,
+        rawRelevance: 0.5,
+        rawSupport: 0.5,
+        pending: false,
+        target: null,
+      },
+    ],
+  });
+  const liveRows = () => [
+    row(textPost(), 0.1, 1, true),
+    row(galleryPost(), 0.55, 1),
+    row(taggedComment("c1", adaLine()), 0.4, 0.9),
+  ];
   const removedRows = () => [
     row({ ...textPost(), content: moderated(null, "REDACTED"), removal: REMOVED }, 0.1, 1, true),
     row(taggedComment("c1", { content: moderated(null, "REDACTED"), removal: REMOVED }), 0.4, 0.9),
@@ -816,11 +985,11 @@ describe("TopicView — the tag page's registered nodes (TagPage, TagPageHeldPad
   const NICE = { pDirected: 0.1, pInterest: 0.1 };
   const cardStances = { "p-text": NICE, "p-gallery": NICE, c1: NICE, "c-pictures": NICE, "c-clip": NICE };
 
-  async function census(rows: unknown[], removedOn = false): Promise<Set<string | null>> {
+  async function census(rows: unknown[], removedOn = false, name = "rust"): Promise<Set<string | null>> {
     if (removedOn) writeCommittedFeedFilter("u1", { ...FEED_FILTER_DEFAULT, also: ["settling", "removed"] });
     server.use(...stanceHandlers(cardStances));
-    serve("rust", rows);
-    const view = renderWithProviders(<TopicView name="rust" />, {
+    serve(name, rows);
+    const view = renderWithProviders(<TopicView name={name} />, {
       store: signedInStore(),
       writeSigner: fakeWriteSigner(),
     });
@@ -843,7 +1012,16 @@ describe("TopicView — the tag page's registered nodes (TagPage, TagPageHeldPad
     const live = await census(liveRows());
     const media = await census(mediaRows());
     const removed = await census(removedRows(), true);
-    const missing = registered("TagPage").filter((path) => !live.has(path) && !media.has(path) && !removed.has(path));
+    // The `name` chip's `long` (round 63): a name the header's line cuts, so
+    // the full-name heading stands — measured against stand-in widths.
+    const lines = fakeLineLayout(332);
+    const longName = await census(liveRows(), false, "salt_maps_of_the_coast_road_and_the_third_headland_light").finally(() =>
+      lines.restore(),
+    );
+    expect(longName.has("tagPage.name")).toBe(true);
+    const missing = registered("TagPage").filter(
+      (path) => !live.has(path) && !media.has(path) && !removed.has(path) && !longName.has(path),
+    );
     expect(missing).toEqual([]);
   });
 

@@ -49,6 +49,7 @@ import { backFor, EXPLORE_COLD, tagOrigin, tagPageHref } from "@/lib/ui/back-ori
 import { Button } from "@/lib/ui/button";
 import { CommentFeedCard } from "@/lib/ui/comment-feed-card";
 import { EmptyState } from "@/lib/ui/empty-state";
+import { useLineCut } from "@/lib/ui/line-cut";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PostCard } from "@/lib/ui/post-card";
 import { useScrollHost } from "@/lib/ui/scroll-host";
@@ -155,6 +156,15 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
   // pages that answer no (TagPage.jsx: "keep the asked for name"). Only the
   // loaded page wears the registered header: "The failed and not-found
   // states stay unnamed."
+  //
+  // THE FULL NAME (TagPage.md:5-11; jakob 2026-11-23, "only on the tags page
+  // itself we show the full tags name when it is too long"): the header's
+  // title keeps its one line, cut with "…", and where that line cuts the name
+  // the whole name stands under the header as a wrapping heading. "Too long"
+  // is the title's own measured cut (`useLineCut`), never a count of
+  // characters; only the loaded page measures, so the failed and not-found
+  // headers cut and print nothing more (TagPage.md:91).
+  const [holdTitle, titleCut] = useLineCut(hashtag?.name.value ?? null);
   const header = (title: string, named: boolean) => (
     <PageHeader
       title={title}
@@ -163,6 +173,7 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
       backLabel={back.label}
       backTestId="topic-back"
       node={named ? { path: `${NODE}.header` } : undefined}
+      titleRef={named ? holdTitle : undefined}
     />
   );
   const asked = `#${name}`;
@@ -231,6 +242,19 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col pb-6">
       {header(`#${tagName ?? ""}`, true)}
+      {/* PRINT ONLY (TagPage.jsx `TagFullName`): the header's title already
+          speaks the whole name, so the heading is hidden from the
+          accessibility tree; title-large, wrapping at its hyphens and
+          breaking inside a run that has none (`overflow-wrap: break-word`). */}
+      {tagName !== null && titleCut && (
+        <p
+          aria-hidden="true"
+          data-testid={`${NODE}.name`}
+          className="m-0 px-4 pt-1 text-title-large break-words"
+        >
+          #{tagName}
+        </p>
+      )}
       {/* THE TOPIC'S ROW (`TopicStanceRow`): under the title, above anything
           belonging to a post — the wide anchor, then the tag's share. It
           NAMES WHAT IT STANCES — the tag itself, hash and all — because
