@@ -2231,6 +2231,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 17, find: 'aria-label="More about @mira"', tag: "button" },
     { n: 18, find: ">Runs the stand by the sea wall", tag: "a" },
     ...nav(19),
+    // The `comment` chip (round 65, seam 424): @ada's comment in the comment
+    // card's place, its door and reply the comment's 15 and 16, both copies;
+    // its clip's sound, as `ProfileComments`' 22, the next free number.
+    { n: 15, find: ">Low tide is kinder to the rubbings", tag: "a", all: true },
+    { n: 16, find: 'aria-label="Reply to @ada"', tag: "button", all: true },
+    { n: 24, find: 'aria-label="Turn sound on"', tag: "button" },
   ],
   /* Saved a moment after an unsave: the top viewport of the same page with
      the post that went gone — the field, the comment, the person and the
@@ -2335,6 +2341,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 21, find: ">Choose your opinion on #saltmaps</button>", tag: "button" },
     { n: 22, find: 'aria-label="Tag a new post with it"', tag: "button" },
     ...nav(23),
+    // The `comment` chip (round 65, seam 424): @ada's comment in the first
+    // comment card's place, its door and reply the comment's 7 and 10, both
+    // copies; its clip's sound, as `ProfileComments`' 22, the next free number.
+    { n: 7, find: ">Low tide is kinder to the rubbings", tag: "a", all: true },
+    { n: 10, find: 'aria-label="Reply to @ada"', tag: "button", all: true },
+    { n: 28, find: 'aria-label="Turn sound on"', tag: "button" },
   ],
   /* History a moment after a hide (item 83): the top viewport of the same
      page — the header trio, the day divider, the comment card and the post

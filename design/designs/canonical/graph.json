@@ -2041,6 +2041,7 @@
     { "from": "Saved", "via": 21, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "Saved", "via": 22, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletComingSoon" }] },
     { "from": "Saved", "via": 23, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
+    { "from": "Saved", "via": 24, "kind": "advance", "label": "video sound", "to": [{ "terminal": "self", "case": "@ada's comment's clip (round 65, the comment chip's clip) — the one control a video wears, the sticky decision every video shares" }] },
 
     { "from": "SavedUndo", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Profile", "case": "back where the menu was" }, { "board": "ProfileApplicant", "case": "applicant days" }] },
     { "from": "SavedUndo", "via": 2, "kind": "advance", "label": "search field", "to": [{ "terminal": "self", "case": "typing narrows Saved to what matches, newest first by when each thing was saved still" }, { "board": "SavedSearch", "case": "a query that reaches saved people — the people section first, at most three, then the content" }, { "board": "SavedNone", "case": "nothing saved carries the query" }] },
@@ -2125,6 +2126,7 @@
     { "from": "History", "via": 25, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "History", "via": 26, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletComingSoon" }] },
     { "from": "History", "via": 27, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
+    { "from": "History", "via": 28, "kind": "advance", "label": "video sound", "to": [{ "terminal": "self", "case": "@ada's comment's clip (round 65, the comment chip's clip) — the one control a video wears, the sticky decision every video shares" }] },
     { "from": "HistoryHidden", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Profile", "case": "back where the menu was" }, { "board": "ProfileApplicant", "case": "applicant days" }] },
     { "from": "HistoryHidden", "via": 2, "kind": "advance", "label": "search field", "to": [{ "terminal": "self", "case": "typing narrows the history to what matches, by the time the reader first saw each thing, newest first still" }, { "board": "HistorySearch", "case": "a query that reaches people seen — the people section first, at most three, then the content" }, { "board": "HistoryNone", "case": "nothing seen carries the query (the cause chip at search)" }] },
     { "from": "HistoryHidden", "via": 3, "kind": "advance", "label": "Everything (filter trigger)", "to": [{ "board": "HistoryFilter" }] },

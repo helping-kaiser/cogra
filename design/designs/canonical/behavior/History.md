@@ -100,7 +100,9 @@ WHEN scroll settles at History's hard top GIVEN a qualifying clip exists and the
 
 WHEN an overscroll bounce settles back at History's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in History's order
 
-ALWAYS a veiled clip has no playback and no sound-disc presence
+ALWAYS a veiled clip has no playback
+
+ALWAYS history.commentCard.media.frame.soundDisc is absent GIVEN history.commentCard.media.frame's clip is veiled
 
 ALWAYS history.searchField reads Search your history at rest
 
