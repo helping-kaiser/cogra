@@ -83,17 +83,13 @@ import type { SealFault } from "@/lib/compose/seal-fault";
 import { useWaitedPast, SLOW_ANSWER_MS, SLOW_NETWORK_MS } from "@/lib/ui2/waiting-commit";
 import type { ReferenceClaimNode } from "@/lib/references/claims";
 import { useReferencesOnOpen } from "@/lib/references/use-references-on-open";
-import { Button } from "@/lib/ui/button";
-import { TransportError } from "@/lib/ui/transport-error";
-import { HeaderBar } from "@/lib/ui2/header-bar";
-import { SCREEN_LAYER_STILL } from "@/lib/ui2/screen-layer";
 import { CENTERED } from "@/lib/ui2/media/crop";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
 import { DiscardConfirm } from "@/lib/ui2/compose/discard-confirm";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { ReferencePicker } from "@/lib/ui2/compose/reference-picker";
 import { TagPicker } from "@/lib/ui2/compose/tag-picker";
-import { COMMENT_EDIT_LEAVE_LABEL, CommentEditView } from "./comment-edit-view";
+import { CommentEditView, CommentEditWaiting } from "./comment-edit-view";
 
 /** The comment pager's square — the window a comment clip's face is cut to (CoverCrop.md). */
 const COMMENT_COVER_RATIO = 1;
@@ -204,38 +200,7 @@ export function CommentEditor(props: CommentEditorProps) {
   if (cited.references !== null) {
     return <LoadedCommentEditor {...props} comment={{ ...comment, references: cited.references }} />;
   }
-  return (
-    <div
-      data-testid="comment-edit"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Edit comment"
-      className={`${SCREEN_LAYER_STILL} z-40 flex flex-col bg-surface text-on-surface`}
-    >
-      <HeaderBar
-        title="Edit comment"
-        backLabel="Back to the thread"
-        onBack={onLeave}
-        onLeave={onLeave}
-        leaveLabel={COMMENT_EDIT_LEAVE_LABEL}
-      />
-      <div className="flex flex-col gap-3 px-6 pb-4 pt-3">
-        {late && (
-          <p role="status" aria-live="polite" data-testid="comment-edit-loading">
-            Loading…
-          </p>
-        )}
-        {cited.failed && (
-          <div className="flex items-center gap-3">
-            <TransportError testId="comment-edit-load-failed" />
-            <Button testId="comment-edit-load-retry" variant="outline" size="sm" onClick={cited.retry}>
-              Retry
-            </Button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  return <CommentEditWaiting late={late} failed={cited.failed} onRetry={cited.retry} onLeave={onLeave} />;
 }
 
 function LoadedCommentEditor({
