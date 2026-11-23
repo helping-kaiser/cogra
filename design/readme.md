@@ -8100,7 +8100,13 @@ jakob's rulings closing the day's rounds, executed in one lane.
      handle is the line's one shrinking part (`nameInLine`, beside
      `ActorChip`). `PageHeader`, `SheetItem`, `OverflowMenu`'s popover
      (Material's 280dp maximum), `ContentRow` and `ProfileHeader`'s handle
-     line carry it.
+     line carry it, and `SettingsRow`'s value, cut while its label keeps
+     its whole width (jakob 2026-11-23, E10). A TAG IN A LIST never wraps
+     (jakob 2026-11-23: no wrapping for tags in lists): a 128-character
+     name is a case-2 line — the chronicle's aside, Explore's recent row
+     and the filter sheet's `One tag` chip end in "…", the words around it
+     keeping their room — and the seal's Tags row falls to its count when
+     a chip would not fit whole.
   3. *Text that wraps* — headings, card titles and bodies, dialog titles
      and bodies, snackbars, notices, the borrowed-view band: the sentence
      wraps at its spaces and is never cut as a whole, and A HANDLE OR A
@@ -8119,7 +8125,8 @@ jakob's rulings closing the day's rounds, executed in one lane.
      client draws the unit in parts, the parts are hidden from assistive
      tech and the whole string is spoken once in their place (round 48).
      The one-line law's lines also carry `StanceRow`'s name and handle,
-     `ReelCaption`'s handle and the person card's lead (round 48).
+     `ReelCaption`'s handle and title (round 48; the title jakob
+     2026-11-23, E9) and the person card's lead (round 48).
 - **The comment card's ⋮ is the comment's menu** (`CommentMenu`, or
   `CommentMenuOwn` on your own), never the post card's.
 - **The score hangs on the thing it scores.** At the top of the trace
