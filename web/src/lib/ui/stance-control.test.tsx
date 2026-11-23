@@ -3801,6 +3801,15 @@ describe("a guest's face wears the borrowed view's stance", () => {
     expect(await listKeptPicks("u1")).toEqual([]);
   });
 
+  it("a_guests_vouching_face_borrows_nothing_and_keeps_its_own_name", async () => {
+    const data = createStubStanceData({ borrowed: { "post-1": HELD } });
+    renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} vouchesIn />, { stanceData: data });
+    await settle();
+    expect(data.borrowedReads).toEqual([]);
+    expect(face()).toHaveTextContent("🫥");
+    expect(control()).toHaveAccessibleName("Give your opinion on this post");
+  });
+
   it("a_signed_in_member_with_no_stance_never_sees_the_borrowed_face", async () => {
     const store = createTokenStore();
     renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} />, {

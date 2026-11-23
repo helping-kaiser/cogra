@@ -641,11 +641,12 @@ export function StanceControl({
   // narrow, is `@genesis_mod's opinion on …`, and the wide one draws
   // `@genesis_mod's opinion` where `Your opinion` would stand. Only a guest's:
   // a signed-in reader's anchor is their own, whoever's view their feed still
-  // borrows ("only a nobody borrows stances", seam 430.1).
-  const guest = phase === "signedOut";
+  // borrows ("only a nobody borrows stances", seam 430.1). Only an opinion's
+  // anchor: a vouch or an approval is the reader's own act, never the view's.
+  const lends = phase === "signedOut" && family === "opinion" && padOnly === undefined;
   const [vantage, setVantage] = useState<{ handle: string | null } | null>(null);
   useEffect(() => {
-    if (!guest) return undefined;
+    if (!lends) return undefined;
     let live = true;
     void data.borrowedViewHandle().then((handle) => {
       if (live) setVantage({ handle });
@@ -653,17 +654,15 @@ export function StanceControl({
     return () => {
       live = false;
     };
-  }, [guest, data]);
+  }, [lends, data]);
   /** The borrowed view's handle, once the read named one. */
-  const guestHandle = guest ? (vantage?.handle ?? null) : null;
+  const guestHandle = lends ? (vantage?.handle ?? null) : null;
 
   // A GUEST'S FACE WEARS THE BORROWED VIEW'S OWN STANCE (FeedBare.md:7,
   // TagPage.md:73, GuestGate.md:11): read-only, at the member's anchor
   // geometry, the hollow face where that view holds none. DISPLAY ONLY — it
   // lives in this state and nowhere else: never the bundle the pad, the
-  // landing or the walk-back read, never a kept pick, never a node id. Only
-  // an opinion's face borrows: a vouch or an approval is the reader's own act.
-  const lends = guest && family === "opinion" && padOnly === undefined;
+  // landing or the walk-back read, never a kept pick, never a node id.
   const [lent, setLent] = useState<{ value: BorrowedStance | null } | null>(null);
   useEffect(() => {
     if (!lends) return undefined;
