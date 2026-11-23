@@ -180,8 +180,9 @@ private fun TagRow(
         pending = claim.pending,
         reading = reading,
         // `RefsSheet` 1: a tag row goes to the tag's page, the one destination
-        // a chip's tap already has on every other surface.
-        onOpen = { onOpenTopic(name) },
+        // a chip's tap already has on every other surface — a plain row over
+        // that tag's own page, which is already open ([LocalTagHere]).
+        onOpen = if (name == LocalTagHere.current) null else ({ onOpenTopic(name) }),
         testTag = "${testTagPrefix}_refs_topic_$name",
     )
 }

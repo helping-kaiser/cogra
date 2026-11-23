@@ -6,12 +6,16 @@
 // primaryContainer, the one loud surface per screen (design.md §2.4).
 // The short navigation bar (64dp) is the compact M3 default — the
 // classic 80dp NavigationBar reads oversized next to the bars popular
-// apps carry (design.md §6).
+// apps carry (design.md §6). Above 1.3× text size the slots' words drop
+// and the glyphs stand alone, so the bar never grows (jakob's ruling of
+// 2026-11-23, which replaces readme §4's "may wrap to a second line").
 
 package com.cogra.app.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -37,8 +41,10 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.cogra.app.R
 import com.cogra.core.designsystem.DataNode
@@ -146,15 +152,49 @@ private fun DestinationSlot(
     testTag: String,
     selectedGlyph: ImageVector = glyph,
 ) {
+    val name = stringResource(slot.label)
+    val wordsShown = barWordsShown(LocalDensity.current.fontScale)
     ShortNavigationBarItem(
         selected = selected,
         onClick = onClick,
-        icon = { Icon(if (selected) selectedGlyph else glyph, contentDescription = null) },
-        label = { Text(stringResource(slot.label)) },
+        // Shown, the word under the glyph names the slot; dropped, the glyph
+        // carries the same name, so TalkBack reads the slot alike either way.
+        icon = {
+            Icon(
+                if (selected) selectedGlyph else glyph,
+                contentDescription = if (wordsShown) null else name,
+            )
+        },
+        // Dropped, the word leaves its place empty at the line it takes at
+        // 1.0× — the bar's own label style, `labelMedium` (M3's short bar
+        // token) — so the bar holds today's height and the glyph its place.
+        label = if (wordsShown) {
+            { Text(name) }
+        } else {
+            { Spacer(Modifier.height(heldWordLine())) }
+        },
         modifier = Modifier.testTag(testTag),
         colors = barItemColors(),
     )
 }
+
+/**
+ * The text size above which the slots' words drop and the glyphs stand
+ * alone (jakob 2026-11-23: the bar never grows, a word never wraps and is
+ * never cut).
+ */
+private const val BAR_WORDS_MAX_FONT_SCALE = 1.3f
+
+/**
+ * Whether the slots wear their words at the reader's text size. The size is
+ * [androidx.compose.ui.unit.Density.fontScale] — the user's font-size
+ * preference as Compose carries it from `Configuration.fontScale`.
+ */
+private fun barWordsShown(fontScale: Float): Boolean = fontScale <= BAR_WORDS_MAX_FONT_SCALE
+
+/** The word's line at 1.0× text size: its sp height read as dp, as a 1.0× density reads it. */
+@Composable
+private fun heldWordLine(): Dp = MaterialTheme.typography.labelMedium.lineHeight.value.dp
 
 /**
  * The slots' colours by the master (`BottomNav.jsx`: `tone(selected)`):

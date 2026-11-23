@@ -1748,6 +1748,10 @@ type Hashtag {
   "The viewer's own Affinity bundle toward this topic — the follow
    control's read, and with `pick` where a candidate would land it."
   viewerStance(pick: StancePickInput, includePending: Boolean! = true): StanceBundle
+  "The borrowed view's landed Affinity bundle toward this topic, for
+   a request with no session — read-only, what a guest's follow face
+   wears; null with a session and where it holds none."
+  borrowedStance: BorrowedStance
 }
 
 "One node currently tagged with a topic."
@@ -3947,6 +3951,17 @@ type StanceBundle {
   "Where the supplied pick lands the bundle; null without one."
   projected: StanceProjection
 }
+
+"The borrowed view's own landed bundle toward one node, as a
+ sessionless reader's face wears it — StanceBundle's readings,
+ read-only."
+type BorrowedStance {
+  pDirected: Dimension!
+  pInterest: Dimension!
+  recordCount: Int!
+  inert: Boolean!
+  severed: Boolean!
+}
 ```
 
 **Both sides of the fold are served.** The clip is the read rule,
@@ -3988,6 +4003,23 @@ reader chooses the **L1 view** — only what has landed — or the
 from the pre-commitment onward. Severance computes its batch
 against the L2 view, so severing and refetching reads `(0, 0)` at
 once rather than an epoch later.
+
+**The borrowed view's stance.** `borrowedStance: BorrowedStance`
+sits beside `viewerStance` on every stance-able node and serves a
+request with no session what its stance faces wear
+([stance-control.md "A guest's view"](../../design/guidelines/stance-control.md#a-guests-view)):
+the landed bundle of the borrowed view — the account
+`Query.borrowedView` names for that request, the Genesis
+Moderator — toward the node, as `{ pDirected, pInterest,
+recordCount, inert, severed }`, the readings that account's own
+`viewerStance(includePending: false)` gives. It is read-only by
+shape: no `targetGraphId`, `severanceCost` or `projected`, nothing
+a gesture starts from. It is null with a session, and null where
+the borrowed view holds no landed record toward the node — the
+hollow face. Only the landed half is served, because an act in
+flight is its own author's read. A sessionless `viewerStance`
+stays null. The faces at one depth of a document share one batch:
+the vantage and one grouped bundle read, whatever the page's size.
 
 **The author's Publish bundle.** `Post.viewerBacking(includePending:
 Boolean! = true): BackingBundle` serves the sum of the Publish

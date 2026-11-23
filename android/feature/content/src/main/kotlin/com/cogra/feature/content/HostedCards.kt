@@ -167,6 +167,8 @@ fun CardListHost(
     tag: String,
     notify: (String) -> Unit,
     placement: HostedPlacement = HostedPlacement.Profile,
+    /** The tag whose own page hosts the cards: its chips and rows open nothing ([LocalTagHere]). */
+    tagHere: String? = null,
     viewModel: HostedCardsViewModel = hiltViewModel(),
     content: @Composable (HostedCards) -> Unit,
 ) {
@@ -192,6 +194,7 @@ fun CardListHost(
             notify,
             placement,
             rememberCommentReread(),
+            tagHere = tagHere,
             content = content,
         )
     }
@@ -211,6 +214,8 @@ internal fun HostedCardsScope(
     rereadComment: suspend (String) -> CommentView? = { null },
     /** The report row's door over the host — the confirm, or a guest's join prompt — as History's and Saved's. */
     reportSheet: ReportSheetSlot = reportDoor(routes.onRequireAccount, "${tag}_report_sheet"),
+    /** The tag whose own page hosts the cards, over the cards and every sheet they raise. */
+    tagHere: String? = null,
     content: @Composable (HostedCards) -> Unit,
 ) {
     val layers = remember { CoveringLayers() }
@@ -241,7 +246,7 @@ internal fun HostedCardsScope(
         },
         covered = commentsFor != null || reportFor != null || layers.cover == SurfaceCover.Suspended,
     )
-    CompositionLocalProvider(LocalCoveringLayers provides layers) {
+    CompositionLocalProvider(LocalCoveringLayers provides layers, LocalTagHere provides tagHere) {
         content(cards)
         commentsFor?.let { postId ->
             ListThread(
