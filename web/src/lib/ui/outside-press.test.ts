@@ -201,6 +201,42 @@ describe("the shield over the wash's place", () => {
     expect(shield()).toBeNull();
   });
 
+  // EVERY LISTENER ADDED IS REMOVED, WITH THE SAME CAPTURE FLAG: a removal
+  // matches only a listener registered with the same `capture` (DOM Standard,
+  // § EventTarget removeEventListener), so a mismatched pair leaks for the
+  // page's lifetime and arms a timer on every later lift.
+  it("leaves no window listener and arms no timer once the gesture has ended", () => {
+    vi.useFakeTimers();
+    type Entry = { type: string; listener: unknown; capture: boolean };
+    const live: Entry[] = [];
+    const captureOf = (options?: boolean | AddEventListenerOptions | EventListenerOptions) =>
+      typeof options === "boolean" ? options : options?.capture === true;
+    const realAdd = window.addEventListener.bind(window);
+    const realRemove = window.removeEventListener.bind(window);
+    const add = vi.spyOn(window, "addEventListener").mockImplementation((type, listener, options) => {
+      live.push({ type, listener, capture: captureOf(options) });
+      realAdd(type, listener, options);
+    });
+    const remove = vi.spyOn(window, "removeEventListener").mockImplementation((type, listener, options) => {
+      const at = live.findIndex((e) => e.type === type && e.listener === listener && e.capture === captureOf(options));
+      if (at >= 0) live.splice(at, 1);
+      realRemove(type, listener, options);
+    });
+    try {
+      dismiss();
+      window.dispatchEvent(pointer("pointerup", 1));
+      document.body.dispatchEvent(pointer("click", 1));
+      expect(shield()).toBeNull();
+      expect(live).toEqual([]);
+      // A later, unrelated lift starts nothing.
+      window.dispatchEvent(pointer("pointerup", 1));
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      add.mockRestore();
+      remove.mockRestore();
+    }
+  });
+
   it("ignores another finger's lift and a script's click while the press is down", () => {
     vi.useFakeTimers();
     dismiss();

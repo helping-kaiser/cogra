@@ -54,8 +54,16 @@
 // a pan, the next press or key, or — when no click follows the lift (a drag) —
 // shortly after it.
 
+/**
+ * Every listener here sits in the window's capture phase, and its removal
+ * names the same flag: a removal matches only a listener added with the same
+ * `capture` (DOM Standard, § EventTarget removeEventListener), so one constant
+ * serves both halves of every pair.
+ */
+const CAPTURE = true;
+
 /** The events a dismissing press's gesture may still produce. */
-const TAIL = ["pointerup", "pointercancel", "click", "auxclick", "contextmenu"] as const;
+const TAIL =["pointerup", "pointercancel", "click", "auxclick", "contextmenu"] as const;
 
 /** How long after the lift a click without a pointer id still counts as the gesture's. */
 export const LEGACY_CLICK_WINDOW_MS = 1000;
@@ -134,16 +142,16 @@ export function swallowRestOfGesture(
   const release = () => stop();
 
   function stop() {
-    for (const type of TAIL) window.removeEventListener(type, take, true);
-    window.removeEventListener("pointerdown", release, true);
-    window.removeEventListener("keydown", release, true);
+    for (const type of TAIL) window.removeEventListener(type, take, CAPTURE);
+    window.removeEventListener("pointerdown", release, CAPTURE);
+    window.removeEventListener("keydown", release, CAPTURE);
   }
 
-  for (const type of TAIL) window.addEventListener(type, take, true);
+  for (const type of TAIL) window.addEventListener(type, take, CAPTURE);
   // Added while this very `pointerdown` is dispatching: its capture phase at
   // the window has already run, so the press that called this never trips it.
-  window.addEventListener("pointerdown", release, true);
-  window.addEventListener("keydown", release, true);
+  window.addEventListener("pointerdown", release, CAPTURE);
+  window.addEventListener("keydown", release, CAPTURE);
 }
 
 /**
@@ -172,15 +180,15 @@ function holdWashPlace(wash: EventTarget | null | undefined, pointerId: number):
   function drop() {
     if (timer !== null) clearTimeout(timer);
     timer = null;
-    for (const type of END) window.removeEventListener(type, onEnd);
-    window.removeEventListener("pointerdown", onNext, true);
-    window.removeEventListener("keydown", onNext, true);
+    for (const type of END) window.removeEventListener(type, onEnd, CAPTURE);
+    window.removeEventListener("pointerdown", onNext, CAPTURE);
+    window.removeEventListener("keydown", onNext, CAPTURE);
     lower();
   }
 
   // Capture on the window, and added before the swallow's own listeners: its
   // `stopImmediatePropagation` would silence any window listener added later.
-  for (const type of END) window.addEventListener(type, onEnd, true);
-  window.addEventListener("pointerdown", onNext, true);
-  window.addEventListener("keydown", onNext, true);
+  for (const type of END) window.addEventListener(type, onEnd, CAPTURE);
+  window.addEventListener("pointerdown", onNext, CAPTURE);
+  window.addEventListener("keydown", onNext, CAPTURE);
 }
