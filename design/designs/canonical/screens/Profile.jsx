@@ -11,8 +11,10 @@
    2026-11-18, C1 "as rec") is the `chronicle` chip's `removed`: the salt
    maps' act, removed as `ProfilePostsOwn`'s `removed` draws the post, its
    second line `Removed by its author` where the words were, the card still
-   the door to the post's detail (`ChronicleAct`). YOUR ACT STILL SETTLING
-   (round 61; jakob 2026-11-19, B2 (a)) is the same chip's `settling`: the
+   the door to the post's detail (`ChronicleAct`). YOUR POST STILL SETTLING
+   (round 61; jakob 2026-11-19, B2 (a); the tab shows a still-settling post
+   or comment, every other act once landed, 2026-11-23, point 6 (a)) is the
+   same chip's `settling`: the
    salt maps' act signed and not yet landed, at the head, its age `now` and
    `Still settling` under it, as `ProfilePostsOwn`'s `settling` draws the
    post. AN ACT WHOSE TARGET WAS REMOVED (round 61; the pointer rule

@@ -46,7 +46,7 @@ export function Screen() {
       <ComposeDetailsBody />
 
       <BottomSheet open ariaLabel="#coastroad">
-        <SheetTitle>#coastroad</SheetTitle>
+        <SheetTitle cut>#coastroad</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "0 24px 4px" }}>
           <button type="button" className="cg-sr-focusable cg-state cg-focus cg-hit" style={{ fontFamily: "var(--font-sans)" }}>
             Set exact values for #coastroad

@@ -276,9 +276,14 @@ export function SheetItem({ label, onSelect, ariaLabel, node }) {
    `trailing` is the slot for what the heading line carries besides its name — the
    screen's one "?", or the switch the sheet exists for. It is the heading's own
    row, so a sheet that needs one stops assembling a heading by hand; a close
-   control is still the one thing it never takes. */
-export function SheetTitle({ children, trailing, node }) {
-  const heading = { fontSize: "var(--text-title-medium)", letterSpacing: "var(--text-title-medium--letter-spacing)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" };
+   control is still the one thing it never takes.
+
+   `cut` keeps a heading that IS a name on one line, ended with "…" where the
+   name outgrows it — the tag pad's `#saltmaps` (jakob 2026-11-23, point 4: a
+   tag is one line everywhere but its own page; the long-names law's case 2).
+   A name that fits draws exactly as before. */
+export function SheetTitle({ children, trailing, cut = false, node }) {
+  const heading = { fontSize: "var(--text-title-medium)", letterSpacing: "var(--text-title-medium--letter-spacing)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)", ...(cut ? { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 } : null) };
   if (!trailing) {
     return (
       <h2 style={{ margin: 0, padding: "0 var(--space-6) var(--space-2)", ...heading }} data-node={node}>

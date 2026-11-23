@@ -103,9 +103,13 @@ guest were this user right now, but unable to act as them. The stance
 anchor is the member anchor at its drawn 48px geometry, wearing the
 viewpoint's stance; wherever the viewpoint holds no stance it wears the
 hollow face, the muted 🫥. Its accessible name reads
-`@genesismod's stance on this post` — the viewpoint's handle, never
-`Your opinion` (jakob 2026-10-06). The tap opens `GuestGate`: nothing is
-staged and nothing signs.
+`@genesismod's opinion on this post` — the viewpoint's handle, never
+`Your opinion` (jakob 2026-10-06; the word `opinion`, 2026-11-23) — on
+the wide anchor and the narrow ones alike, and where the viewpoint holds
+an opinion its reading follows, as a member's anchor reads its own:
+`@genesismod's opinion on this post: <face>, <pair>.`, never the
+press-and-hold hint (`StanceControl`'s `anchorName`). The tap opens
+`GuestGate`: nothing is staged and nothing signs.
 
 **Its printed words speak the viewpoint's name too** (the vantage law,
 jakob 2026-10-13; readme §13). Where an anchor draws its words — the

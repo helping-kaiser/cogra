@@ -72,11 +72,14 @@ export function BottomNav({ active = "feed", slots = DEFAULT_SLOTS, onSelect, in
     letterSpacing: "var(--text-label-medium--letter-spacing)",
     fontWeight: "var(--text-label-medium--font-weight)",
     textDecoration: "none",
-    // Text scale is never capped (readme §4 *Type*, K13.4): above 1.3× a
-    // label may wrap to a second line, and the bar grows past its 64px
-    // minimum to hold it — a label is never shortened to an ellipsis.
-    whiteSpace: "normal",
-    overflowWrap: "break-word",
+    // THE WORDS DROP ABOVE 1.3× (readme §4 *Type*; jakob 2026-11-23, (c)):
+    // text scale is never capped, and where the reader's size passes 1.3×
+    // the word under each icon is not drawn — the icons stand alone, the
+    // bar keeps its 64px, and a word never wraps and is never cut. Each
+    // slot keeps its word as its accessible name (`aria-label`), so what a
+    // screen reader hears is the same at every size. At 1×, as drawn, every
+    // word stands on one line.
+    whiteSpace: "nowrap",
     textAlign: "center",
   };
   const tone = (selected) => (selected ? "var(--on-surface)" : "var(--text-secondary)");
@@ -141,13 +144,15 @@ export function BottomNav({ active = "feed", slots = DEFAULT_SLOTS, onSelect, in
             key={slot}
             type="button"
             aria-current={selected ? "page" : undefined}
+            aria-label={LABELS[slot]}
             onClick={() => onSelect && onSelect(slot)}
             className="cg-state cg-focus"
             style={{ ...item, color: tone(selected) }}
             data-node={slotNode}
           >
             <Icon name={glyph} />
-            {LABELS[slot]}
+            {/* The word, the part a client drops above 1.3×. */}
+            <span aria-hidden="true">{LABELS[slot]}</span>
           </button>
         );
       })}
