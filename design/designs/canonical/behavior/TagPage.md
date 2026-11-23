@@ -24,7 +24,7 @@ ALWAYS a tagged post stands as a post card and a tagged comment as tagPage.comme
 
 ALWAYS a tagged comment's card offers no Reply and no view-replies line
 
-ALWAYS tagPage.commentCard carries tagPage.commentCard.tagsLine, its tags as tagPage.commentCard.tagsLine.tag and its count as tagPage.commentCard.tagsLine.counts, as the feed's comment card does
+ALWAYS tagPage.commentCard carries tagPage.commentCard.tagsLine, its tags as tagPage.commentCard.tagsLine.tag and its count as tagPage.commentCard.tagsLine.counts, as a comment carries it in the feed
 
 WHEN tap tagPage.commentCard.tagsLine.counts -> the comment's tags-and-references sheet rises over the tag page, as a feed card's count opens it
 
