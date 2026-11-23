@@ -546,6 +546,71 @@ describe("TopicView — the rows", () => {
     expect(log.asked).toEqual([["c1"]]);
   });
 
+  // jakob, hand test 2026-11-23: "if i am on the tags page of "wood" clicking
+  // "wood" chips does nothing. clicking any other chip (or anything else)
+  // sends me there tho." — as the profile's own author chip is inert on the
+  // person's own page (`ActorChip`'s `here`, ProfilePosts.md:25): the same
+  // pill, no link, nothing to focus, and the card's door passes it by.
+  describe("the tag's own chip on its own page", () => {
+    const tag = (name: string) => ({
+      __typename: "TopicClaim",
+      hashtag: { __typename: "Hashtag", id: `ht-${name}`, name: moderated(name) },
+      relevance: 0.4,
+      confidence: 0.9,
+      pending: false,
+    });
+    const rows = () => [
+      row({ ...postNode("p1", "About Rust"), topics: [tag("rust"), tag("wasm"), tag("axum")] }),
+      row(taggedComment("c1", { topics: [tag("wasm"), tag("rust")] })),
+    ];
+
+    it("is_inert_on_a_post_card_and_a_comment_card_and_every_other_tag_still_navigates", async () => {
+      serve("rust", rows());
+      renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+      const own = [
+        await screen.findByTestId(byNode("tagPage.card.tagsLine.tag", "p1/rust")),
+        await screen.findByTestId(byNode("tagPage.commentCard.tagsLine.tag", "c1/rust")),
+      ];
+      for (const chip of own) {
+        expect(chip).toHaveTextContent("#rust");
+        expect(within(chip).queryByRole("link")).toBeNull();
+        // The card's bare-ground door passes it by (`Card`'s `data-own-press`).
+        expect(chip).toHaveAttribute("data-own-press");
+        push.mockClear();
+        fireEvent.click(within(chip).getByText("#rust"));
+        expect(push).not.toHaveBeenCalled();
+      }
+      for (const chip of [
+        screen.getByTestId(byNode("tagPage.card.tagsLine.tag", "p1/wasm")),
+        screen.getByTestId(byNode("tagPage.commentCard.tagsLine.tag", "c1/wasm")),
+      ]) {
+        expect(within(chip).getByRole("link", { name: "#wasm" }).getAttribute("href")).toMatch(/^\/topics\/wasm\?from=/);
+        expect(chip).not.toHaveAttribute("data-own-press");
+      }
+    });
+
+    // "Same tag" is the name the page itself resolves: `hashtag(name:)`
+    // canonicalizes what was asked (hashtag.md §1), so `/topics/Rust` is #rust's page.
+    it("is_decided_on_the_canonical_name_the_page_resolves_not_the_name_asked_for", async () => {
+      serve("rust", rows());
+      renderWithProviders(<TopicView name="Rust" />, { writeSigner: fakeWriteSigner() });
+      const chip = await screen.findByTestId(byNode("tagPage.card.tagsLine.tag", "p1/rust"));
+      expect(within(chip).queryByRole("link")).toBeNull();
+    });
+
+    it("is_inert_inside_the_tags_and_references_sheet_raised_over_the_page", async () => {
+      serve("rust", rows());
+      renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+      fireEvent.click(await screen.findByTestId(byNode("tagPage.card.tagsLine.counts", "p1")));
+      const ownRow = await screen.findByTestId("topic-post-p1-refs-sheet-topic-rust");
+      expect(within(ownRow).queryByRole("link")).toBeNull();
+      expect(within(ownRow).getByText("rust")).toBeInTheDocument();
+      expect(
+        within(screen.getByTestId("topic-post-p1-refs-sheet-topic-wasm")).getByRole("link").getAttribute("href"),
+      ).toMatch(/^\/topics\/wasm\?from=/);
+    });
+  });
+
   // A page that tags no comment sends no second read (`fetchHashtagDetail`).
   it("a_page_with_no_tagged_comment_sends_no_comment_read", async () => {
     const log: TaggedCommentsLog = { asked: [] };
