@@ -4114,19 +4114,34 @@ surface; the full paper's `app:deployment` additionally documents five
 terminal invariants (client-reproducible feed ranking, device-local
 computation scope, concealment-entropy custody, auditable terminal
 centrality, attribution-view insulation of CAN enrichment), reproduced by
-their own owners, one realization-side invariant, and three postulates of
-operator duties (both at the end of this section).
+their own owners, one realization-side invariant (courtesy), three
+postulates of operator duties with their courtesy remarks, replay
+verification and verdict certificates, and the replay floor with its
+declared cases (all at the end of this section).
 
 - **Continuous Public Availability of Graph State
-  (`subsec:deployment:public-availability`).** Every edge record —
-  endpoints, author, parameters, domain, the inherited act time, **payload
-  witness**, and the fields needed to recompute determinant magnitude,
-  determinant sign, and damped weight — is available to any participant at
-  any time without access control. Availability applies to the structural
-  record and the retained payload residue — the witness
-  (`rem:graph:act-payload-custody-phases`); full payload bytes are
-  available only while in full projection, and Layer-1 verification never
-  requires them. For standing, edge availability alone is insufficient: the
+  (`subsec:deployment:public-availability`).** The published state is the
+  accepted authored-act history: every accepted act envelope — act
+  identifier, author, family, structural body, public protocol references
+  and causal parents, the payload and dependency commitments, the admission
+  handshake and approval witness, and the finalization epoch and act time —
+  together with its deterministic edge projection and parent-act
+  resolution. Each edge projection carries its parameters, precomputed
+  scalars $\lVert\boldsymbol{\Psi}_e\rVert_F$,
+  $|\det \boldsymbol{\Psi}_e^{[P]}|^{1/2}$ and $\epsilon(e)$, and the
+  inherited pair $(\mathbb{T}^{\text{act}}, \tau_e)$. An edge projection
+  alone is sufficient for raw graph geometry; the recorded author,
+  signature verification, payload- and dependency-commitment verification,
+  causal references, approval, act time, and hyper-edge atomicity require
+  the parent act envelope. All of it is available to any participant at any
+  time without access control. Availability applies unconditionally to the
+  structural act record and the retained payload residue — the witness
+  (`post:graph:separable-act-projections`); no Layer-1 verification requires
+  optional content bytes. Availability also covers every conserved standing
+  package commitment and the data required to resolve it, including the
+  attempted-rung verdicts and their supplied or recoverable support, the
+  declared inputs, recovery and soundness evidence, and formula editions.
+  For standing, edge availability alone is insufficient: the
   verifier must also determine that no accepted complete act was omitted —
   projection completeness
   (`prop:deployment:allocation-input-completeness`) and the public declared
@@ -4192,11 +4207,10 @@ operator duties (both at the end of this section).
   identity key used for canonical boundary placement; the server's scoring
   and boundary computations depend on no unpublished field. The record
   splits into a structural part — sufficient for every Layer-1 computation
-  — and a payload part (state and witness) sufficient to verify carriage;
-  the structural part alone supports full replay. Derived edges add no
-  record fields. For a hyper-edge leg, the record also contains its role
-  and sibling identity, so complete-act identity is independently
-  reconstructible.
+  — and a retained content commitment witness; the structural part supports
+  full replay. Derived edges add no record fields. For a hyper-edge leg, the
+  record also contains its role and reciprocal co-leg identity, so
+  complete-act identity is independently reconstructible.
 - **Independent Verification of Conserved Standing
   (`subsec:deployment:conserved-standing-reproducibility`).** Every binding
   input, intermediate value, validity verdict, and output of the conserved
@@ -4227,8 +4241,9 @@ operator duties (both at the end of this section).
   Projection completeness and dynamic safety are orthogonal checks
   (`rem:deployment:completeness-safety-orthogonal`); a valid package
   requires both, and controller replay is a separate obligation. Any
-  participant verifies the binding standing package and checks its stated
-  enclosures and verdicts: opposing sound PASS and FAIL on the same question
+  participant verifies the binding standing package and checks its verdicts
+  and their supplied or recoverable support: opposing sound PASS and FAIL on
+  the same question
   identify an attributable discrepancy, as does a recomputed exact object
   that differs from the published record; a finer reader deciding a
   published INDECISIVE finds none.
@@ -4257,11 +4272,13 @@ operator duties (both at the end of this section).
   independently evaluated enclosure endpoints. A participant unable to check
   decides nothing, and producer metadata outside that content neither
   creates nor excuses a discrepancy. The encoded certificate evidence names
-  each attempted rung, its enclosure and verdict, so a reader distinguishes
-  proved FAIL from INDECISIVE without trusting the host's backoff summary.
-  The byte serialization is the deployment's, published and versioned under
-  `cond:deployment:canonical-encoding`, with attempted-rung enclosures and
-  verdicts published under `cond:deployment:canonical-replay` (§13.1).
+  each attempted rung, its verdict and supplied or recoverable enclosure
+  support, so a reader distinguishes proved FAIL from INDECISIVE without
+  trusting the host's backoff summary. The byte serialization is the
+  deployment's, published and versioned under
+  `cond:deployment:canonical-encoding`, with attempted-rung verdicts and
+  their supplied or recoverable support published under
+  `cond:deployment:canonical-replay` (§13.1).
   Numerical enclosures may carry declared comparison allowances for values.
   Publishing an encoding badly is a deployment defect; not declaring one is
   a protocol defect.
@@ -4342,39 +4359,70 @@ and retains the material needed to replay that edition.
 | Condition | Duty |
 |---|---|
 | `cond:deployment:standing-parameters` | Publish the tilt profile and backoff grid, the depth mass and its deepest supported depth, the self-retention base, the domain weights, and each act family's normalized domain profile, with their defining formulas and admissibility evidence. |
-| `cond:deployment:wall-calibration` | Publish the numéraire, policy-floor schedule, structural floor declaration and its exact defining object, margin, controller edition, initialization, reduced constants, and arithmetic and comparison rules under `post:deployment:replay-verification`. For an evaluated binding-floor test whose enclosure straddles the floor, the producer may refine before publication; otherwise reject the proposed set under `post:network:host-contract`, keeping that verdict out of the accepted publication and issuing it under `post:deployment:verdict-issuance`; the controller terminates with a verdict or rejection. Evaluate both chartered floors against the declared economic and work criteria; neither is a default. Publish proposal and delivered wall separately, including the floor, deadband and step-cap order, preserve the debit vintage in force, and certify the charged value. A floor switch is a public structural change with regenerated evidence; a third floor needs its own derivation. |
-| `cond:deployment:boundary-policy` | Publish the epoch target size, minimum and maximum durations, policy-floor schedule, threshold announcement lead, candidate-set search policy and trial budget, validation timeout, solver availability target, and fallback, with a constant-change adaptation window during which cadence retargeting is frozen. |
-| `cond:deployment:canonical-encoding` | Publish and version one canonical encoding of the standing package, with round-trip evidence. |
-| `cond:deployment:canonical-replay` | Publish each attempted positive rung with its stated enclosure and verdict under `post:deployment:replay-verification`. Attempt positive rungs from greatest to least through the first PASS, or through the least positive rung if none passes; accept the greatest attempted PASS, with the exact anchor available. A missing, repeated, out-of-order or below-acceptance attempt fails verification. A record holds positive attempts only, and the anchor has no row; a record whose attempts end at the least positive rung without a PASS shows acceptance of the anchor. A rung that cannot be evaluated has no stated sound enclosure and therefore no verdict: it cannot be published as INDECISIVE and cannot be skipped, so no rung below it, the anchor included, is accepted for that proposed set under that record. Any sound enclosure of the rung, however loose, carries a verdict and lets the descent continue; without one, the producer's way on is another proposed set or the declared fallback of `cond:deployment:boundary-policy`. A participant unable to check reports that it could not verify, neither a discrepancy nor a confirmation. A voluntary build declaration names the implementation, source revisions, environment and store discipline; reproduction follows the record's order, and a participant unable to run it reports non-reproduction, neither a discrepancy nor a confirmation. At a binding threshold, refinement is the producer's option before publication; reject an unresolved proposed set under `post:network:host-contract` and issue its verdict under `post:deployment:verdict-issuance`. |
+| `cond:deployment:wall-calibration` | Publish the numéraire, policy-floor schedule, fixed structural-floor declaration and exact defining object, declared margin, controller edition, initialization, reduced constants, and arithmetic and comparison rules under `post:deployment:replay-verification`. For an evaluated binding-floor test whose enclosure straddles the floor, the producer may refine before publication; otherwise reject the proposed set under `post:network:host-contract`, keeping that verdict out of the accepted publication; the controller terminates with a verdict or rejection. Publish proposal and delivered wall separately, including the floor, deadband and step-cap order, and preserve the debit vintage in force. Certify the value charged under `def:epoch:safety-threshold`. A floor switch is a public structural change with regenerated replay evidence. |
+| `cond:deployment:boundary-policy` | Publish the epoch target size, minimum and maximum durations, policy-floor schedule, threshold announcement lead, candidate-set search policy and trial budget, validation timeout, and fallback if no proposed set verifies within the budget. These declarations confer no admission right on an unwritten candidate. |
+| `cond:deployment:canonical-encoding` | Publish and version one encoding satisfying `post:deployment:canonical-standing-publication`, including Actor and support ordering, representations of rational quantities, disclosures for nonexact quantities, and all declared profile, depth-mass, emission, controller and certificate fields. The paper selects no byte encoding. |
+| `cond:deployment:canonical-replay` | Publish each attempted positive rung with its verdict and supplied or recoverable sound enclosure support under `post:deployment:replay-verification`. Attempt positive rungs from greatest to least through the first PASS, or through the least positive rung if none passes; accept the greatest attempted PASS, with the exact anchor available. A missing, repeated, out-of-order or below-acceptance attempt fails verification. A record holds positive attempts only, and the anchor has no row; a record whose attempts end at the least positive rung without a PASS shows acceptance of the anchor. A rung with neither supplied nor recoverable sound support has no verdict: it cannot be published as INDECISIVE and cannot be skipped, so no rung below it, the anchor included, is accepted for that proposed set under that record. Any sound enclosure of the rung, however loose, carries a verdict and lets the descent continue; without one, the producer's way on is another proposed set or the declared fallback of `cond:deployment:boundary-policy`. A participant unable to check reports that it could not verify, neither a discrepancy nor a confirmation. A voluntary build declaration names the implementation, source revisions, environment and store discipline; reproduction follows the record's order, and a participant unable to run it reports non-reproduction, neither a discrepancy nor a confirmation. At a binding threshold, refinement is the producer's option before publication; reject an unresolved proposed set under `post:network:host-contract`. |
+
+Oversight remarks *(courtesy)*: evaluate both chartered floors against the
+declared economic and work criteria, neither being a default, and a third
+floor needs its own derivation (`rem:deployment:wall-calibration-oversight`);
+publish a solver availability target and a constant-change adaptation
+window, freezing cadence retargeting during that window — deployment
+conduct observations rather than epoch replay inputs
+(`rem:deployment:boundary-policy-oversight`); supply round-trip evidence for
+the published encoding (`rem:deployment:canonical-encoding-oversight`).
 
 **Centralized-phase monitoring (`post:deployment:centralized-monitoring`).**
-During the centralized phase the operator publishes reproducible
-observations, their procedures, thresholds, persistence windows, and review
-schedule, and records the disposition of each threshold crossing; a missed
-target never waives the floor, a passing certificate, exact standing, or X9.
+Missing a performance or experience target never waives the floor, a
+passing certificate, exact standing, or X9. During the centralized phase
+the operator publishes reproducible observations, their sampling and
+aggregation procedures, thresholds, persistence windows and review
+schedule, and each threshold crossing records its disposition
+(`rem:deployment:centralized-monitoring-conduct` *(courtesy)*).
 
 | Condition | Duty |
 |---|---|
-| `cond:deployment:certificate-monitoring` | Publish per accepted epoch the evaluated certificate, contributing width, accepted rung, enclosure radius, standing movement, transported mass by hop, and below-wall fraction, with fallback and rung frequencies that distinguish proved FAIL from INDECISIVE enclosures under `post:deployment:replay-verification`. For a fixed deployment and attempted set, the relative frequencies of proved FAIL and INDECISIVE can vary with the tightness of the producer's evaluation and are not deployment invariants. |
-| `cond:deployment:title-certificate-monitoring` | Recompute $\mathrm{owner}^{(k)}$ from the published partition at every boundary, compare it with the published certificate, and publish every disagreement with its evidence; a disagreement triggers the published review, not a rewrite of the certificate. |
-| `cond:deployment:emission-experience` | Publish the wall in force, the emission-fraction distribution, exported mass, and community sag and fading-Actor observations against a declared experience envelope, with the declared response; no response silently changes the source-emission rule. |
-| `cond:deployment:controller-performance` | Publish the controller's response model, hypotheses, tested range, and tracking, steady-error, settling, and chatter observations, and calibrate $a$, $r$, $d$ within the published edition; a failed target prompts review, not margin escalation or a new controller input. |
-| `cond:deployment:standing-work` | Measure and publish, per accepted epoch and per trial set, the standing work against a declared scale and duration budget, including the load at which the duration target is missed. |
-| `cond:deployment:cadence-maturity` | Whenever the boundary triple changes, measure raw maturity drift and the resulting raw feed/bridge observations, and publish the adaptation window with evidence that cadence retargeting stays frozen throughout it. |
+| `cond:deployment:certificate-monitoring` | Publish per accepted epoch the evaluated certificate, contributing width, accepted rung and enclosure radius needed to verify the accepted result under `post:deployment:replay-verification`. The radius may be recovered from supplied or fixed standard enclosure support; it need not be duplicated as a field. The standing, transport and registration inputs required to replay the accepted package remain in the replay floor. |
+| `cond:deployment:title-certificate-monitoring` | Recompute $\mathrm{owner}^{(k)}$ from the published partition at every boundary and compare it with the published certificate; title means the recomputed fold under `cond:graph:boundary-accountability-title-certificate`. |
+| `cond:deployment:emission-experience` *(courtesy)* | Publish the wall in force, the emission-fraction distribution, exported mass, and community sag and fading-Actor observations against a declared experience envelope, with the declared response; no response silently changes the source-emission rule. |
+| `cond:deployment:controller-performance` *(courtesy)* | Publish the controller's response model, hypotheses, tested range, and tracking, steady-error, settling, and chatter observations, and calibrate $a$, $r$, $d$ within the published edition; a failed target prompts review, not margin escalation or a new controller input. |
+| `cond:deployment:standing-work` *(courtesy)* | Measure and publish, per accepted epoch and per trial set, the standing work against a declared scale and duration budget, including the load at which the duration target is missed. |
+| `cond:deployment:cadence-maturity` *(courtesy)* | Whenever the boundary triple changes, measure raw maturity drift and the resulting raw feed/bridge observations, and publish the adaptation window with evidence that cadence retargeting stays frozen throughout it. |
+
+Monitoring remarks *(courtesy)*: publish every disagreement between the
+recomputed title fold and the published certificate with its evidence; a
+disagreement triggers the published review, not a rewrite of the
+certificate (`rem:deployment:title-certificate-monitoring-courtesies`). For
+a realization claiming the courtesy monitoring standard, publish movement
+from the preceding standing, transported mass by hop and the fraction of
+contributing coordinates below the wall, and aggregate fallback and rung
+frequencies distinguishing proved FAIL from INDECISIVE enclosures; for a
+fixed deployment and attempted set, those relative frequencies can vary
+with the tightness of the producer's evaluation and are not deployment
+invariants; this diagnostic compilation is not a replay dependency
+(`rem:deployment:certificate-monitoring-courtesies`).
 
 **Deployment evidence publication (`post:deployment:calibration-evidence`).**
-Each required calibration publishes its inputs or acquisition procedure,
-formula and implementation editions, workload, comparison method,
-acceptance criteria declared before evaluation, results, and limitations; a
-failed criterion is reported with its disposition.
+Each required calibration publishes its exact inputs or declared data
+acquisition procedure, formula and implementation editions, workload,
+comparison method, acceptance criteria declared before evaluation, results
+and limitations; a failed criterion is reported with its disposition
+(`rem:deployment:calibration-publication-conduct` *(courtesy)*).
 
 | Condition | Duty |
 |---|---|
-| `cond:deployment:parameter-comparisons` | For a proposed change to tilt, depth, domain weights, self-retention, bleed, inverse temperature, or the floor/numéraire/controller declaration, publish baseline and candidate inputs, affected derived quantities, and comparison criteria, and regenerate the affected proof and fixture evidence. |
-| `cond:deployment:payload-cache-envelope` | Publish the payload cap, encoding and indexing overhead, device/cache budget, traversal depth, workload, and retention horizon used for capacity sizing, and reject a cap/workload combination that exceeds the declared cache budget. |
-| `cond:deployment:boundary-search-evidence` | Publish boundary-search trial counts and elapsed-time envelopes with their hardware, arithmetic, residual target, and timeout/fallback settings, and show that any adopted exact reuse yields the same certified outputs as complete validation on the declared comparison inputs. |
-| `cond:deployment:terminal-regression` | For a standing-edition change, publish regression inputs and deltas for each terminal consumer that reads standing, with its declared tolerance and response to a failed criterion. |
-| `cond:deployment:complete-act-conformance` | Publish compiler/replay evidence covering parallel acts, complete-act identity, fold cells, recipient resolution, domain profiles, and base allocation, and reproduce the accepted-act census under projection completeness. |
+| `cond:deployment:parameter-comparisons` *(courtesy)* | For a proposed change to tilt, depth, domain weights, self-retention, bleed, inverse temperature, or the floor/numéraire/controller declaration, publish baseline and candidate inputs, affected derived quantities, and comparison criteria, and regenerate the affected proof and fixture evidence. |
+| `cond:deployment:payload-cache-envelope` *(courtesy)* | Publish the payload cap, encoding and indexing overhead, device/cache budget, traversal depth, workload, and retention horizon used for capacity sizing, and reject a cap/workload combination that exceeds the declared cache budget. |
+| `cond:deployment:boundary-search-evidence` | For an adopted exact reuse affecting a published epoch, demonstrate equal certified outputs on declared current comparison inputs and revalidate changed inputs. Publish validity-verdict agreement and the arithmetic, residual target, timeout and fallback settings that fix the epoch's replay inputs and accepted result; reuse does not authorize stale verdicts. Comparative validation evidence needed to justify the adopted exact reuse remains in the replay floor. |
+| `cond:deployment:terminal-regression` *(courtesy)* | For a standing-edition change, publish regression inputs and deltas for each terminal consumer that reads standing, with its declared tolerance and response to a failed criterion. |
+| `cond:deployment:complete-act-conformance` *(courtesy)* | Publish compiler/replay evidence covering parallel acts, complete-act identity, fold cells, recipient resolution, domain profiles, and base allocation, and reproduce the accepted-act census under projection completeness. |
+
+For a realization claiming the courtesy search standard, search trial
+counts and total elapsed-time envelopes, comparative performance
+benchmarks and measured reuse benefits are published; a performance report
+never replaces the evidence needed to verify the actual accepted output
+(`rem:deployment:boundary-search-courtesies` *(courtesy)*).
 
 ### 13.2 Replay verification and verdict certificates
 
