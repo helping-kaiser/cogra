@@ -973,7 +973,9 @@ const OWN_PROFILE_MENU = [
   { label: "Share your profile", onSelect: () => {}, node: "share" },
 ];
 
-/* A device-local recent query — a quiet row, never a record (readme §13).
+/* A device-local recent query — a quiet row, never a record (readme §13), on
+   one line: a query too long for it, a 128-character tag among them, ends in
+   "…" (round 62; jakob 2026-11-23, no wrapping for tags in lists).
    Named by its placer (design ⇄ impl seam 062/063): `Explore` registers each
    row as `recent`, keyed by its query's words, with its `glyph` and `query`. */
 function RecentRow({ text, node, nodeKey }) {
@@ -1001,7 +1003,7 @@ function RecentRow({ text, node, nodeKey }) {
       <span style={{ display: "inline-flex", color: "var(--text-secondary)" }} data-node={node && "glyph"}>
         <Icon name="search" size={18} />
       </span>
-      <span style={{ fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node && "query"}>
+      <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node && "query"}>
         {text}
       </span>
     </button>
