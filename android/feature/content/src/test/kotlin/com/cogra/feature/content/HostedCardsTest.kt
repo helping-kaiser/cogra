@@ -9,6 +9,8 @@ package com.cogra.feature.content
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -108,6 +110,7 @@ class HostedCardsTest {
         signedIn: Boolean = true,
         placement: HostedPlacement = HostedPlacement.Profile,
         viewerId: String = "u2",
+        tagHere: String? = null,
         body: @Composable (HostedCards) -> Unit,
     ) {
         compose.setContent {
@@ -127,6 +130,7 @@ class HostedCardsTest {
                 tag = if (placement == HostedPlacement.Profile) "profile" else "tagPage",
                 notify = {},
                 placement = placement,
+                tagHere = tagHere,
             ) { hosted -> Column { body(hosted) } }
         }
     }
@@ -266,6 +270,59 @@ class HostedCardsTest {
         compose.onNodeWithTag("profile_comment_c1_refs_reference_l1-user-mira").performClick()
         compose.onNodeWithTag("profile_comment_c1_refs_sheet").assertDoesNotExist()
         assertThat(opened).containsExactly("actor:mira")
+    }
+
+    // jakob 2026-11-23 — on a tag's own page its chip opens nothing, as the
+    // person's own name opens nothing on their profile: no second page of the
+    // tag, and the tap never falls through to the card's door. Every other tag
+    // still opens.
+    @Test
+    fun onATagsOwnPageItsChipIsInertAndAnotherStillOpens() {
+        val tagged = post().copy(topics = listOf(testTopicClaim("rust"), testTopicClaim("fieldnotes")))
+        host(placement = HostedPlacement.TagPage, tagHere = "rust") {
+            it.post(tagged, DataNode("tagPage") / "card")
+        }
+        // An inert chip is no control of its own: it merges into the card.
+        compose.onNodeWithTag("tagPage.card.tagsLine.tag:rust", useUnmergedTree = true)
+            .assertHasNoClickAction()
+            .performClick()
+        assertThat(opened).isEmpty()
+        compose.onNodeWithTag("tagPage.card.tagsLine.tag:fieldnotes").assertHasClickAction().performClick()
+        assertThat(opened).containsExactly("topic:fieldnotes")
+    }
+
+    // The same rule inside a sheet raised over the page: the tags-and-references
+    // sheet's row for the page's own tag is a plain row; another row still leaves.
+    @Test
+    fun overATagsOwnPageItsRowInTheTagsSheetOpensNothing() {
+        val listed = comment().let {
+            it.copy(
+                comment = it.comment.copy(
+                    topics = listOf(testTopicClaim("rust")),
+                    references = listOf(testReferenceClaim(testMentionTarget("mira"))),
+                ),
+            )
+        }
+        host(placement = HostedPlacement.TagPage, tagHere = "rust") {
+            it.comment(listed, DataNode("tagPage") / "commentCard", replies, null)
+        }
+        compose.onNodeWithTag("tagPage_comment_c1_topics_counts", useUnmergedTree = true).performClick()
+        compose.onNodeWithTag("tagPage_comment_c1_refs_topic_rust", useUnmergedTree = true)
+            .assertHasNoClickAction()
+            .performClick()
+        compose.onNodeWithTag("tagPage_comment_c1_refs_sheet").assertExists()
+        assertThat(opened).isEmpty()
+        compose.onNodeWithTag("tagPage_comment_c1_refs_reference_l1-user-mira").performClick()
+        assertThat(opened).containsExactly("actor:mira")
+    }
+
+    // Off a tag page the same chip is a door, as it is everywhere.
+    @Test
+    fun offATagPageTheChipStillOpensItsTag() {
+        val tagged = post().copy(topics = listOf(testTopicClaim("rust")))
+        host { it.post(tagged, posts) }
+        compose.onNodeWithTag("profile.posts.card.tagsLine.tag:rust").performClick()
+        assertThat(opened).containsExactly("topic:rust")
     }
 
     // `CommentCard`'s line shape carries no score and no share.
