@@ -57,11 +57,14 @@ by construction: a rule normative within a courtesy standard binds a
 realization that explicitly claims that standard and edition, and failure
 falsifies that claim, not the epoch's closure validity. Adopting a courtesy
 standard is optional and is never an admission requirement. Mathematics is a
-separate explicit class for statements solely about abstract mathematical
-objects; v0.36.0 classifies no label into it. A statement's class and a
-value's tag (§3) are separate metadata. A child label has the closure
-default unless itself excepted; an unlabeled paragraph inherits its nearest
-labeled owner's class. Neither closure nor oracle material depends on
+separate explicit class for a statement solely about abstract mathematical
+objects, with no protocol constants, actors, epochs, admission or conduct,
+and depending only on mathematics-class statements; v0.36.0 classifies no
+label into it. A statement's class and a value's tag (§3) are separate
+metadata; closure and verify values required for replay remain within the
+closure contract. A child label has the closure default unless itself
+excepted; an unlabeled paragraph inherits its nearest labeled owner's
+class. Mixed statements split before classification. Neither closure nor oracle material depends on
 courtesy material, while courtesy material may cite either.
 
 *How this file shows the class.* As the specification badges each labeled
@@ -4700,7 +4703,8 @@ package, published certificates and title results. It includes the
 standard statements, comparison-instance descriptors, supplied or
 recoverable enclosures, authenticated epoch inputs and evidence binding
 each evaluated enclosure to its proposal and inputs, sufficient to check
-soundness as well as recover the same PASS and FAIL decisions. Required
+soundness as well as recover the same PASS and FAIL decisions against the
+same enclosures or defining statements. Required
 formation and ordering-accountability evidence belongs to this floor.
 
 - *Per accepted act* the floor holds its act envelope
@@ -4737,8 +4741,10 @@ formation and ordering-accountability evidence belongs to this floor.
   reads supplied dynamic enclosures, checks exact stated comparisons and
   requires every claimed PASS or FAIL to agree with its support. Missing
   dependencies, an ambiguous instance or an opposite decision fail;
-  inability to evaluate is neither confirmation nor discrepancy. A
-  reference to privately held data does not discharge publication. Ordered
+  inability to evaluate is neither confirmation nor discrepancy. Soundness
+  checking and endpoint comparison are distinct operations, and the inputs
+  and evidence for both belong to replay verification; a reference to
+  privately held data does not discharge publication. Ordered
   attempted-rung evidence includes unsuccessful rungs of the accepted
   proposed set. **Verdicts of an entirely rejected proposed set are never
   floor content.**
@@ -4798,7 +4804,10 @@ content nor permits omission of public replay support.
   declared projection reads. The proof objects and the declaration are
   authenticated epoch inputs; a pointer to the second party's live or
   archived state replaces none of them, and account evidence the record
-  does not carry is missing evidence. A later withdrawal removes nothing
+  does not carry is missing evidence. The pinned account permits
+  evaluation of the declared projection for every accounted destruction
+  against the rules edition the declaration pins, whatever the second
+  party later publishes or withdraws. A later withdrawal removes nothing
   the record pins.
 - *Replay.* Replay evaluates the declared projection for every proof
   object against the pinned rules edition and pinned second-party data.
@@ -4812,8 +4821,11 @@ content nor permits omission of public replay support.
   declared rules, not a stored property of the record. Validity at pin is a
   fixed historical fact; current validity evaluates the same projection
   against the present state, is live, and is never stored as an
-  authoritative value; any materialized validity is a cache with no
-  independent authority.
+  authoritative value. When that party changes its state by
+  reorganization, repudiation or any reason of its own, the projection's
+  source changes and its current value follows without an invalidation
+  event or adjudication by the network. Any materialized validity is a
+  cache with no independent authority.
 
 **Declared Author-Authority Case
 (`def:deployment:declared-author-authority-case`,
@@ -4839,8 +4851,10 @@ content nor permits omission of public replay support.
   binds it; without that binding it imposes no condition on an epoch. When
   the second party changes its state or published rules, or stops
   publishing them, later packages bind a changed declaration or a
-  withdrawal of this one, prospectively and without network adjudication.
-  The case neither reattributes an accepted act nor changes its author,
+  withdrawal of this one, prospectively and without network adjudication;
+  whether the change warranted the withdrawal is a question of the case's
+  current validity, never of the record's replay. Earlier pins keep the
+  validity fixed at publication. The case neither reattributes an accepted act nor changes its author,
   identifier, frame address or structural consequences.
 - *Pinned proof objects.* For every act first accepted in an epoch under
   the case, the record pins a proof object binding the case identity, act
@@ -4869,7 +4883,9 @@ content nor permits omission of public replay support.
   the pinned proof object and rules edition and is a fixed historical fact;
   current validity is live and independently re-evaluable. A change of
   rules edition requires a correspondingly identified projection and never
-  silently changes the historical question. Neither a changed current
+  silently changes the historical question. Revocation, reorganization or
+  repudiation may change a current result without an invalidation event
+  or network adjudication. Neither a changed current
   result nor a changed prospective declaration can reattribute an accepted
   act, rebind its Actor's address, or recompute its finalized title,
   ownership or settlement consequences.
