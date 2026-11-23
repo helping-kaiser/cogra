@@ -154,26 +154,51 @@ pub async fn references_of(
 
     let mut claims = Vec::with_capacity(rows.len());
     for r in rows {
-        let mut exact = ExactSums::default();
-        exact.absorb(&r.relevance, &r.support, r.records)?;
-        let sum = exact.bundle();
-        let net = sum.fold();
-        if net.is_severed() {
-            continue;
+        if let Some(claim) = standing_claim(
+            r.target,
+            author,
+            &r.relevance,
+            &r.support,
+            r.records,
+            r.pending,
+        )? {
+            claims.push(claim);
         }
-        claims.push(ReferenceClaim {
-            target: r.target,
-            author: author.to_string(),
-            relevance: net.p_d,
-            support: net.p_i,
-            raw_relevance: sum.p_d,
-            raw_support: sum.p_i,
-            records: sum.records,
-            withdrawal_cost: sum.severance_cost().try_into().unwrap_or(u32::MAX),
-            pending: r.pending,
-        });
     }
     Ok(claims)
+}
+
+/// One (artifact, target) bundle's grouped sums as the fold reads them:
+/// the claim it stands as, or `None` for a bundle netting to `(0,0)`.
+///
+/// The one place the withdrawal rule is applied to a grouped row, so every
+/// read of the fold agrees about which bundles stand.
+fn standing_claim(
+    target: String,
+    author: &str,
+    relevance: &str,
+    support: &str,
+    records: i64,
+    pending: bool,
+) -> Result<Option<ReferenceClaim>, ReferencesError> {
+    let mut exact = ExactSums::default();
+    exact.absorb(relevance, support, records)?;
+    let sum = exact.bundle();
+    let net = sum.fold();
+    if net.is_severed() {
+        return Ok(None);
+    }
+    Ok(Some(ReferenceClaim {
+        target,
+        author: author.to_string(),
+        relevance: net.p_d,
+        support: net.p_i,
+        raw_relevance: sum.p_d,
+        raw_support: sum.p_i,
+        records: sum.records,
+        withdrawal_cost: sum.severance_cost().try_into().unwrap_or(u32::MAX),
+        pending,
+    }))
 }
 
 /// One author's citation bundle from one artifact toward one target: the
