@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { LEGACY_CLICK_WINDOW_MS, swallowRestOfGesture } from "./outside-press";
+import {
+  LEGACY_CLICK_WINDOW_MS,
+  SHIELD_AFTER_LIFT_MS,
+  SHIELD_TEST_ID,
+  swallowRestOfGesture,
+} from "./outside-press";
 
 // The primitive alone: which of the gesture's later events it keeps, and the
 // moments it stands down so it never eats a press it does not own.
@@ -102,5 +107,106 @@ describe("swallowRestOfGesture", () => {
     window.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
     beneath.dispatchEvent(pointer("click", 1));
     expect(heard).toEqual(["click"]);
+  });
+});
+
+// THE WASH'S PLACE IS HELD UNTIL THE GESTURE ENDS (jakob's hand test,
+// 2026-11-23: the control beneath an outside press lit and stayed lit). A
+// touch tap's `:hover` goes to whatever the browser hit-tests at the tap, so
+// what must not be beneath the finger is the control: a shield stands where
+// the wash stood. jsdom does no hit-testing, so these pin the shield's place
+// and lifetime; the lit state itself is measured in the harness probe.
+describe("the shield over the wash's place", () => {
+  let host: HTMLDivElement;
+  let wash: HTMLDivElement;
+  const shield = () => document.querySelector<HTMLElement>(`[data-testid="${SHIELD_TEST_ID}"]`);
+  const pointer = (type: string, pointerId: number) =>
+    new PointerEvent(type, { bubbles: true, cancelable: true, pointerId });
+
+  beforeEach(() => {
+    host = document.createElement("div");
+    wash = document.createElement("div");
+    wash.style.position = "fixed";
+    wash.style.zIndex = "40";
+    host.appendChild(wash);
+    document.body.appendChild(host);
+  });
+  afterEach(() => {
+    window.dispatchEvent(new KeyboardEvent("keydown"));
+    host.remove();
+    vi.useRealTimers();
+  });
+
+  /** The press lands on the wash, which its surface then removes at once. */
+  const dismiss = (pointerId = 1) => {
+    swallowRestOfGesture({ pointerId, target: wash });
+    wash.remove();
+  };
+
+  it("stands where the wash stood, covering the screen at the wash's level, once the wash is gone", () => {
+    dismiss();
+    const raised = shield();
+    expect(raised).not.toBeNull();
+    // Same parent: the same stacking context, and inside the same modal
+    // dialog when the wash stands in one (the comments sheet's stance pads).
+    expect(raised?.parentElement).toBe(host);
+    expect(raised?.style.position).toBe("fixed");
+    expect(raised?.style.inset).toBe("0px");
+    expect(raised?.style.zIndex).toBe("40");
+    expect(raised?.style.touchAction).toBe("none");
+    expect(raised?.getAttribute("aria-hidden")).toBe("true");
+  });
+
+  it("goes with the gesture's click", () => {
+    dismiss();
+    window.dispatchEvent(pointer("pointerup", 1));
+    expect(shield()).not.toBeNull();
+    document.body.dispatchEvent(pointer("click", 1));
+    expect(shield()).toBeNull();
+  });
+
+  it("outlives a long press's context menu until the lift", () => {
+    vi.useFakeTimers();
+    dismiss();
+    document.body.dispatchEvent(pointer("contextmenu", 1));
+    expect(shield()).not.toBeNull();
+    window.dispatchEvent(pointer("pointerup", 1));
+    vi.advanceTimersByTime(SHIELD_AFTER_LIFT_MS);
+    expect(shield()).toBeNull();
+  });
+
+  it("goes shortly after a lift no click follows — a drag", () => {
+    vi.useFakeTimers();
+    dismiss();
+    window.dispatchEvent(pointer("pointerup", 1));
+    vi.advanceTimersByTime(SHIELD_AFTER_LIFT_MS - 1);
+    expect(shield()).not.toBeNull();
+    vi.advanceTimersByTime(1);
+    expect(shield()).toBeNull();
+  });
+
+  it("goes when the browser takes the pointer for a pan", () => {
+    dismiss();
+    window.dispatchEvent(pointer("pointercancel", 1));
+    expect(shield()).toBeNull();
+  });
+
+  it("goes when the next press begins or a key is pressed", () => {
+    dismiss();
+    window.dispatchEvent(pointer("pointerdown", 2));
+    expect(shield()).toBeNull();
+    host.appendChild(wash);
+    dismiss();
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab" }));
+    expect(shield()).toBeNull();
+  });
+
+  it("ignores another finger's lift and a script's click while the press is down", () => {
+    vi.useFakeTimers();
+    dismiss();
+    window.dispatchEvent(pointer("pointerup", 2));
+    document.body.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    vi.advanceTimersByTime(SHIELD_AFTER_LIFT_MS * 2);
+    expect(shield()).not.toBeNull();
   });
 });

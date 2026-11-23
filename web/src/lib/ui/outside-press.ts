@@ -34,6 +34,25 @@
 // that pointer's lift within a second. Anything else ends the watch and passes
 // untouched, as do the next press, a key, and the browser taking the pointer
 // for a pan (`pointercancel`: no click follows one).
+//
+// SWALLOWING THE EVENTS IS NOT ENOUGH: THE ELEMENT BENEATH STILL LIGHTS
+// (jakob's hand test, 2026-11-23: after an outside press "the button
+// highlights as if activated but does not activate … and the highlighting
+// stays"). A touch tap's hover is not an event a listener can cancel: the
+// browser hit-tests the tap and moves `:hover` to what it finds (UI Events,
+// § "Mouse Event Order": a tap is followed by the compatibility mouseover/
+// mousemove at the tap's point, and the element keeps `:hover` until the next
+// tap lands elsewhere — the "sticky hover" of touch browsers). With the wash
+// gone that element is the control beneath, so its `cg-state` layer stood at
+// `--state-hover` — measured in headless Chromium 153 with touch emulation:
+// `feed.card.actionRow.share` `:hover` true, `::after` opacity 0.08, 1.7 s
+// after the press.
+//
+// So the wash's place is held until the gesture ends: a transparent SHIELD,
+// laid over the same spot in the same stacking context the moment the press
+// lands, is what the rest of the gesture hit-tests to. It goes with the click,
+// a pan, the next press or key, or — when no click follows the lift (a drag) —
+// shortly after it.
 
 /** The events a dismissing press's gesture may still produce. */
 const TAIL = ["pointerup", "pointercancel", "click", "auxclick", "contextmenu"] as const;
@@ -42,14 +61,46 @@ const TAIL = ["pointerup", "pointercancel", "click", "auxclick", "contextmenu"] 
 export const LEGACY_CLICK_WINDOW_MS = 1000;
 
 /**
+ * How long the shield outlives a lift no click followed. A tap's click is
+ * dispatched right behind its `pointerup`; this only bounds the drag case, and
+ * stays short of a deliberate second tap.
+ */
+export const SHIELD_AFTER_LIFT_MS = 300;
+
+/** The shield's test id, for tests and the harness. */
+export const SHIELD_TEST_ID = "outside-press-shield";
+
+/**
+ * Lays a transparent, input-catching layer over `wash` as its next sibling —
+ * same parent, so the same stacking context and the same modal dialog's
+ * subtree when the wash stands inside one — and returns its removal.
+ */
+function raiseShield(wash: EventTarget | null | undefined): () => void {
+  if (!(wash instanceof Element) || wash.parentNode === null) return () => {};
+  const shield = document.createElement("div");
+  shield.setAttribute("aria-hidden", "true");
+  shield.dataset.testid = SHIELD_TEST_ID;
+  const zIndex = getComputedStyle(wash).zIndex;
+  shield.style.cssText = `position:fixed;inset:0;touch-action:none;background:transparent;z-index:${
+    zIndex === "" || zIndex === "auto" ? "auto" : zIndex
+  }`;
+  wash.after(shield);
+  return () => shield.remove();
+}
+
+/**
  * Keeps the rest of the gesture `down` began to itself: call it from the
  * `pointerdown` of the press that closes a surface. `down` is the native
- * event (React's `event.nativeEvent`).
+ * event (React's `event.nativeEvent`); its `target` is the wash, whose place
+ * a shield holds until the gesture ends.
  */
-export function swallowRestOfGesture(down: Pick<PointerEvent, "pointerId">): void {
+export function swallowRestOfGesture(
+  down: Pick<PointerEvent, "pointerId"> & { readonly target?: EventTarget | null },
+): void {
   if (typeof window === "undefined") return;
   const pointerId = down.pointerId;
   let liftedAt: number | null = null;
+  holdWashPlace(down.target, pointerId);
 
   const ours = (event: Event): boolean => {
     const id = (event as Partial<PointerEvent>).pointerId;
@@ -93,4 +144,43 @@ export function swallowRestOfGesture(down: Pick<PointerEvent, "pointerId">): voi
   // the window has already run, so the press that called this never trips it.
   window.addEventListener("pointerdown", release, true);
   window.addEventListener("keydown", release, true);
+}
+
+/**
+ * The shield's own lifetime, kept apart from the swallowing: a long press's
+ * context menu ends the swallowing while the finger is still down, and the
+ * lift that follows must still land on the shield.
+ */
+function holdWashPlace(wash: EventTarget | null | undefined, pointerId: number): void {
+  const lower = raiseShield(wash);
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const END = ["pointerup", "pointercancel", "click"] as const;
+
+  const onEnd = (event: Event) => {
+    const id = (event as Partial<PointerEvent>).pointerId;
+    if (typeof id === "number" && id !== pointerId) return;
+    if (event.type === "pointerup") {
+      if (timer === null) timer = setTimeout(drop, SHIELD_AFTER_LIFT_MS);
+      return;
+    }
+    if (event.type === "click" && typeof id !== "number" && timer === null) return;
+    // The click (bubble phase, after the swallow has taken it) or a pan.
+    drop();
+  };
+  const onNext = () => drop();
+
+  function drop() {
+    if (timer !== null) clearTimeout(timer);
+    timer = null;
+    for (const type of END) window.removeEventListener(type, onEnd);
+    window.removeEventListener("pointerdown", onNext, true);
+    window.removeEventListener("keydown", onNext, true);
+    lower();
+  }
+
+  // Capture on the window, and added before the swallow's own listeners: its
+  // `stopImmediatePropagation` would silence any window listener added later.
+  for (const type of END) window.addEventListener(type, onEnd, true);
+  window.addEventListener("pointerdown", onNext, true);
+  window.addEventListener("keydown", onNext, true);
 }
