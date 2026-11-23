@@ -186,7 +186,11 @@ realization.
   below that depth equals its pinned amount.
 - **R5 bindability** — addresses are opaque, permanent, and carry no
   identity claim; the network's map from actors into $\mathbb{A}$ is the
-  frame binding (`def:comparator:frame-binding`).
+  frame binding $\mathrm{key} : V_u \to \mathbb{A}$
+  (`def:comparator:frame-binding`), permanent for the life of the graph.
+  Here $\mathrm{key}$ is the lookup of an actor's address in the burn map,
+  not a signing key; the keys that sign an act are evidence of its recorded
+  approval (`post:graph:act-authentication-requirements`).
 - **R6 non-negativity** — every value of $B$ lies on the single ordered
   line $\mathbb{R}_{\ge 0}$.
 - **R7 auditability by provenance** — every unit of $B$ is anchored to a
@@ -566,8 +570,8 @@ Shared mathematics (norms, delimiters, number sets) is tag-exempt.
 | parallel bundles, all other folds | — | the guild / user | L2 | **reimplement freely** (`rem:graph:authored-act-bundle-consumers`) |
 | membership fold $\mathrm{member}^{(k)}(a,C)$ | — | guild / chat policy | L2 | reimplement freely; policy defaults L1·by-product |
 | raw $\tilde{w}(e)$ and $\epsilon(e)$ **formulas** | — | feed, raw bridge, raw signed diagnostics | **L2** | reimplement freely at terminal read-sites |
-| payload projection / bytes | — (terminal by postulate) | user / L2 service | L2 | reimplement freely; carriage custody per carriage mode |
-| content witness | — (evidence; authenticates carriage) | any verifier | L1·verify | consume only; retained by Layer 1 across phases (`rem:graph:act-payload-custody-phases`) |
+| payload projection / bytes | — (terminal by postulate) | user / L2 service | L2 | **reimplement freely** |
+| content witness | — (evidence; authenticates carriage) | any verifier | L1·verify | consume only; retained by Layer 1 across phases (`post:graph:separable-act-projections`) |
 | feed $S(u,c)$ | — | the user | L2 | **reimplement freely** |
 | reward $R_C$ | — | the guild | L2 | **reimplement freely** |
 | CAN $V(n)$, aggregation fn | — | the guild | L2 | **reimplement freely** (subject to the three invariants, §4.1) |
@@ -593,12 +597,13 @@ tolerance, precision clip, semantic weak-path cutoff, or permanent
 pruned-node state (`rem:sorting:raw-pruning-is-implementation`).
 
 Note: the payload **projection / bytes** are terminal by postulate — no
-closure quantity reads them (removable-projection invariance), so they are
-**L2**, a carriage-custody concern per carriage mode. The **content witness** is
-not: it is **L1·verify** evidence — no formula consumes it, but it
-authenticates carriage and is retained by Layer 1 across both deployment
-phases (`rem:graph:act-payload-custody-phases`); withholding it breaks
-auditability. Only the structural record is L1·closure.
+closure quantity reads them (opening-availability invariance,
+`prop:graph:removable-projection-invariance`), so they are **L2**. The
+**content witness** is not: it is **L1·verify** evidence — no formula
+consumes it, but it authenticates carriage and is retained by Layer 1
+across both deployment phases (`post:graph:separable-act-projections`);
+withholding it breaks auditability. Only the structural record is
+L1·closure.
 
 ---
 
@@ -1055,7 +1060,8 @@ A record by actor $i$ is writable in epoch $k$ iff all three sub-gates hold
    actors ($\rho_\theta \le \rho_{\text{act}} < \rho_{\text{eff}}$) enter
    when the door has headroom (the membrane, not a wall).
 
-An insolvent actor (W1) restores capacity immediately by committing burns.
+An insolvent actor (W1) restores capacity by a burn, from its acceptance
+under the published marker policy (`post:epoch:act-debit`).
 Re-crossing the wall (W2a) requires the recomputed final standing to pass
 it: an accepted burn raises the actor's own source rate and a complete
 eligible person-directed act may add higher-rate support, but neither
@@ -1122,8 +1128,8 @@ $\mathsf{mint}(\mathrm{actid}(q))$ (`def:graph:act-identifier`), the same
 act identity that settlement references resolve to. Uniqueness holds by
 construction: a colliding act identifier is author-equivocation, rejected
 by record integrity, never adjudicated by title logic. No payload datum
-enters the act identifier, so identity, pointer resolution, and title
-survive every payload state. Two actors listing "the same" real-world
+enters the act identifier, so identity, pointer resolution, and title are
+unchanged by later opening availability for a fixed accepted history. Two actors listing "the same" real-world
 referent create two Items with two ownership threads; out-of-band truth is
 subject to accountability cost. Genesis is an ordinary gated append. Title at Layer 1 is title over a
 **registered claim**, never custody of a referent
@@ -1267,9 +1273,10 @@ functions of the epoch partition $\{E_j\}_{j \le k}$ and the
 reference-forced well-formedness chain alone — a **strictly stronger
 invariance than ordered-replay determinism**: the host's residual sub-epoch
 ordering of unconstrained acts enters nowhere. Handshake well-formedness is
-fixed by the public, non-tombstonable settlement references; conflict
-resolution reads only set membership, $\mathrm{ep}(\cdot)$ indices, and
-that chain — never the tombstonable dependency projection. Closure
+fixed by the public, permanently present structural settlement references;
+conflict resolution reads only set membership, $\mathrm{ep}(\cdot)$
+indices, and that chain — never the residual sub-epoch positions of
+unconstrained acts or optional dependency-opening holdings. Closure
 selection is title-invisible: the closure rule decides membership only, never
 recognition or tie-break (`rem:graph:title-order-irrelevance`).
 
@@ -2921,8 +2928,9 @@ netting.
 Every content node carries metadata beyond the sentiment slice — licensing
 terms and format-level attributes. **None enter any scoring, attribution, or
 transport formula**; they affect actor choices (hence topology) indirectly
-and one-directionally. Erasure therefore drops the controlled payload while
-leaving every Layer 1 quantity untouched
+and one-directionally. Later availability of an optional content opening
+leaves every Layer 1 quantity and the public structural act others rely on
+unchanged for fixed accepted inputs
 (`prop:graph:removable-projection-invariance`).
 
 **The two axes.** **Provenance** $o$ (`def:content:provenance`) is the
@@ -3054,7 +3062,8 @@ home: eligibility for stance aggregation is a property of the family, never of
 an act's destination. Feed ranking, raw signed traversal, CAN, title, payload display, and settlement
 recognition continue to read their declared raw records or bundles — **net
 stance is one input to act folding, never a mutation of the record**, and it
-never merges, hides, or removes payload projections
+never merges, hides, or removes payload objects or their commitments, which
+remain individually identified even when an opening is unavailable
 (`prop:graph:removable-projection-invariance`).
 
 Aggregation properties (`prop:epoch:net-stance-properties`): order-stable (a
@@ -3783,7 +3792,8 @@ value read by W1, the safety wall, emission, and capacity. The debit is
 consummated at the writing epoch's price and **never re-calculated** (the sole
 vintage object). $\theta$ is the **only** debited object — no gate, door, stamp, or
 average moves a balance. **Capacity *is* the balance:** remaining actions
-$= \lfloor b_i/\theta \rfloor$, restored immediately by burning. Standing
+$= \lfloor b_i/\theta \rfloor$, restored by a burn from its acceptance under
+the published marker policy. Standing
 prices nothing and no per-epoch capacity object is derived. Two samplings
 coexist by design (`rem:epoch:two-action-counts`): boundary pairs feed
 stamps and standing; live pairs feed W1. **Translation law
@@ -4091,7 +4101,7 @@ $\rho_{\text{pol}}$ and the effective floor is derived by the safety clamp
 | settlement references | recognition clauses (i)–(ii); handshake chain as causal parents, placed $\mathrm{Bid} \prec \mathrm{Accept} \prec \mathrm{Ratify}$ by a compliant order | act-identity resolution |
 | ownership thread | title certificate; recognition clause (iii), authorization and parties | title as straddler |
 | $\mathrm{owner}^{(k)}$ | recognition clause (iii), authorization and parties; standing recipient resolution reads the epoch title fold (`post:epoch:settlement-standing-title-coupling`) | terminal routing/display read it downstream |
-| payload structural witness | act integrity; removable-projection invariance | (L1·verify) — retained by Layer 1 across phases; bytes never read by Layer 1 |
+| payload structural witness | act integrity; opening-availability invariance | (L1·verify) — retained by Layer 1 across phases; bytes never read by Layer 1 |
 | terminal complement | — | feed, reward, attribution, bridge transport, identity association, payload rendering, licensing, membership policy, raw scoring formulas: named only in `tbl:symbols:boundary` |
 
 ---
@@ -4611,8 +4621,8 @@ objects live only in the boundary ledger** (§3).
 | $\Phi_k(q)$ | Key of record $(k, \mathrm{pos}_k(q))$, compared lexicographically across and within epochs; precedence $\prec$ reads it. | `def:graph:authoritative-act-order` |
 | $\mathrm{DepOK}_k(q)$ | Every declared dependency of $q$ lies in finalized history at a strictly lower key of record. | `cond:graph:authoritative-order-dependency-placement` |
 | $\prec$ (L1·closure), $\prec^*$ **(L1·verify)** | Authoritative-order precedence; identity-key refinement (audit tie-break only). | `def:graph:authoritative-act-order`, `def:epoch:log-position` |
-| $C^{\text{pre}}_q$, $V_q$, $\sigma^{\text{app}}_q$ | Proposal pre-commitment, host-salted verified act, and approval witness of the admission handshake. | `def:graph:proposal-pre-commitment`, `def:graph:verified-act`, `def:graph:approval-witness` |
-| $\mathrm{deps}(q)$, dependency commitment | Actor-authored removable dependency projection and its retained binding commitment; tombstonable, reopenable for fraud proof **(L1·verify** when opened**)**. | `def:graph:act-dependency-projection`, `def:graph:ordering-fraud-proof` |
+| $C^{\text{pre}}_q$, $V_q$, $\sigma^{\text{app}}_q$ | Proposal pre-commitment, verified act with host-added blinding values, and approval witness of the admission handshake; each recorded signature verifies under the public key the record maps to it. | `def:graph:proposal-pre-commitment`, `def:graph:verified-act`, `def:graph:approval-witness` |
+| $\mathrm{deps}(q)$, dependency commitment | Actor-authored dependency set and its retained binding commitment, which anchors any later authenticated opening; an opening is checked for an ordering fraud proof **(L1·verify** when opened**)**. | `def:graph:act-dependency-projection`, `def:graph:ordering-fraud-proof` |
 | $\nu$ | Numéraire: burn units per action-credit, the sole join between the burn units the primitive records in and the action economy (applied per act by the θ-debit); bond-kernel denominator. Structural; moving it is a migration event. | `def:comparator:numeraire` |
 | $\rho_{\text{pol}}$ | Policy floor: the host's dimensionless gate-axis dial; announced at $k$, effective at $k+1$; valid iff $\rho_{\text{pol}}\nu \ge \theta$. Canonical default $1$. | `def:epoch:policy-floor` |
 | $\theta$ | Safety threshold (burn units per action): the safety wall's burn image $\theta = \nu\rho_\theta$, published with one-boundary lead under X1–X9; algorithmic per-epoch output, never a host input. | `def:epoch:safety-threshold` |
