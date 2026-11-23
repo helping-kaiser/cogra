@@ -37,6 +37,7 @@ within a phase, order is flexible.
 | 8. When everyone can tag anything | 1 | **Q59** | Semi-passable Types — whether a path may cross a Type along tag edges whose author the viewer reaches, at viewer-to-tagger strength. The sinks invariant stands until open tagging makes a topic's crowd worth routing through; stored so the option is not lost. |
 | 9. When a second party writes to Layer 1 | 1 | **Q63** | The payload mark of an act CoGra does not carry — a CoGra actor writing through a third-party Layer 2. It reads unmarked until then. |
 | 10. At the next specification read | 1 | **Q67** | How long the GC keeps the row of an act that may still be ordered — for good, until Layer 1 names when the act can no longer be ordered, or a window of CoGra's own. It stays for good until the read. |
+| 11. When the budget, not the reader, sizes a page | 1 | **Q73** | Pricing a mixed row at its dearest kind — CoGra's own complexity calculator in place of the library's, so a mixed list can carry whole cards and the pages of ten return to twenty. Deferred: a mixed list carries its rows light and cards are read by id. |
 | — Parked | 4 | **Q62, Q64, Q65, Q66** | An authenticated carriage receipt beside the seal — none is issued now; whether ingestion checks that the carried pair opens the witness — it checks nothing until a second carrier exists; four races in the seal leg, accepted as known gaps; and how a deferral's verdict reaches its author — asked of the L1 team, nothing built until the specification settles the duty's scope. |
 
 As questions resolve, their blocks disappear from below and their
@@ -1012,3 +1013,30 @@ table:
 ### Related
 
 Q65 (known gaps in the seal leg).
+## Q73 — Pricing a mixed row at its dearest kind
+
+**Where it shows up:**
+[api-spec.md "Query budgets"](implementation/api-spec.md#query-budgets)
+(a list of mixed kinds)
+**Status:** open (deferred — the long-run pricing oracle, recorded
+and not built; jakob, 2026-11-23)
+
+### Context
+
+A list of mixed kinds is priced at the sum of its kinds on every
+row: async-graphql's complexity calculator opens a frame per field
+only, so every inline fragment's fields add into the same parent,
+and the per-field cost function receives the children already
+summed. Pricing a row at its dearest kind therefore cannot be done
+inside that function; it needs CoGra's own calculator in place of
+the library's. It would buy mixed lists that carry whole cards in
+one read, and the pages cut to ten for the budget — Saved,
+History, the feed and the profile lists — back at twenty. It
+costs a calculator CoGra owns on the protective boundary, where
+an under-pricing bug is a hole in the budget.
+
+### The question
+
+When does CoGra replace the library's complexity calculator with
+its own, pricing a mixed row at its dearest kind? Until then a
+mixed list carries its rows light and whole cards are read by id.
