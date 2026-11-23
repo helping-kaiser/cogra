@@ -40,6 +40,7 @@ use async_graphql::dataloader::{DataLoader, Loader};
 use postgres_store::auth::ActorIdentity;
 use postgres_store::content::{Comment, Post};
 use postgres_store::media::{GalleryEntry, MediaAttachment};
+use postgres_store::references::{self as references_store, ReferenceCountKey};
 use postgres_store::removal::{self as removal_store, Removal};
 use postgres_store::{
     PgPool, auth as store, bookmarks as bookmarks_store, content as content_store,
@@ -393,6 +394,34 @@ impl Loader<(Uuid, Uuid)> for BookmarkLoader {
     }
 }
 
+/// How many citations each artifact's `references` serves, keyed on the
+/// artifact, its author and the fold view.
+///
+/// A card prints `· N references` and reads nothing else of the list, so
+/// a page of cards asks once per card; the loader turns that into one
+/// grouped count for the page. The view rides in the key for the reason
+/// the viewer rides in [`BookmarkLoader`]'s: the loaders are registered
+/// once on the schema, and a key without it would let one reader's
+/// pending acts answer another's. A key with no standing citation is
+/// absent from the map, which the resolver reads as zero.
+pub struct ReferenceCountLoader(PgPool);
+
+impl Loader<ReferenceCountKey> for ReferenceCountLoader {
+    type Value = u32;
+    type Error = LoadError;
+
+    async fn load(
+        &self,
+        keys: &[ReferenceCountKey],
+    ) -> Result<HashMap<ReferenceCountKey, u32>, LoadError> {
+        Ok(references_store::reference_counts(&self.0, keys)
+            .await
+            .map_err(LoadError::from_display)?
+            .into_iter()
+            .collect())
+    }
+}
+
 /// The post a comment's thread hangs under, keyed on the comment's id.
 ///
 /// A Saved comment row names "the post it answers" and opens the post it
@@ -456,6 +485,7 @@ pub struct NodeLoaders {
     pub epoch_instants: DataLoader<EpochInstantLoader>,
     pub bookmarks: DataLoader<BookmarkLoader>,
     pub thread_posts: DataLoader<ThreadPostLoader>,
+    pub reference_counts: DataLoader<ReferenceCountLoader>,
 }
 
 impl NodeLoaders {
@@ -475,7 +505,8 @@ impl NodeLoaders {
             record_acts: DataLoader::new(RecordActLoader(pool.clone()), tokio::spawn),
             epoch_instants: DataLoader::new(EpochInstantLoader(pool.clone()), tokio::spawn),
             bookmarks: DataLoader::new(BookmarkLoader(pool.clone()), tokio::spawn),
-            thread_posts: DataLoader::new(ThreadPostLoader(pool), tokio::spawn),
+            thread_posts: DataLoader::new(ThreadPostLoader(pool.clone()), tokio::spawn),
+            reference_counts: DataLoader::new(ReferenceCountLoader(pool), tokio::spawn),
         }
     }
 }

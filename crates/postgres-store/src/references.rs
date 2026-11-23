@@ -171,8 +171,9 @@ pub async fn references_of(
 /// One (artifact, target) bundle's grouped sums as the fold reads them:
 /// the claim it stands as, or `None` for a bundle netting to `(0,0)`.
 ///
-/// The one place the withdrawal rule is applied to a grouped row, so every
-/// read of the fold agrees about which bundles stand.
+/// The one place the withdrawal rule is applied to a grouped row, so the
+/// list and the count ([`reference_counts`]) cannot disagree about which
+/// bundles stand.
 fn standing_claim(
     target: String,
     author: &str,
@@ -199,6 +200,111 @@ fn standing_claim(
         withdrawal_cost: sum.severance_cost().try_into().unwrap_or(u32::MAX),
         pending,
     }))
+}
+
+/// One artifact a [`reference_counts`] batch is asked about: the citing
+/// artifact, the author whose bundles are read, and the fold view —
+/// exactly the three things [`references_of`] takes.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ReferenceCountKey {
+    pub artifact: String,
+    pub author: String,
+    /// True when the author's own in-flight acts count — the viewer is the
+    /// author and asked for them ([`ReferenceView::IncludingPending`] with
+    /// the author as its actor).
+    pub with_pending: bool,
+}
+
+/// How many citations [`references_of`] would serve for each key, in one
+/// statement for the whole batch.
+///
+/// The grouped sums come back per (key, target) and pass through
+/// [`standing_claim`], the list's own rule, so a bundle netted to `(0,0)`
+/// is dropped here exactly as it is there. A key with no standing
+/// citation is absent from the result; it counts zero.
+pub async fn reference_counts(
+    pool: &PgPool,
+    keys: &[ReferenceCountKey],
+) -> Result<Vec<(ReferenceCountKey, u32)>, ReferencesError> {
+    if keys.is_empty() {
+        return Ok(Vec::new());
+    }
+    let artifacts: Vec<String> = keys.iter().map(|k| k.artifact.clone()).collect();
+    let authors: Vec<String> = keys.iter().map(|k| k.author.clone()).collect();
+    let pending: Vec<bool> = keys.iter().map(|k| k.with_pending).collect();
+    let rows = sqlx::query!(
+        r#"WITH keys AS (
+               SELECT DISTINCT k.artifact, k.author, k.with_pending
+               FROM unnest($1::text[], $2::text[], $3::bool[])
+                    AS k(artifact, author, with_pending)
+           ),
+           candidates AS (
+               SELECT k.artifact, k.author, k.with_pending,
+                      l.target AS target,
+                      l.p_i    AS relevance,
+                      l.p_d    AS support,
+                      FALSE    AS pending
+               FROM keys k
+               JOIN mirror_record_legs l
+                 ON l.source = k.artifact
+                AND l.leg = 't' AND l.family = 'reference'
+                AND NOT l.census_unknown
+               JOIN mirror_records r
+                 ON r.record_id = l.record_id
+                AND r.author = k.author
+                AND NOT r.payload_marked
+             UNION ALL
+               SELECT k.artifact, k.author, k.with_pending,
+                      s.target, s.p_d, s.p_i, TRUE
+               FROM keys k
+               JOIN staged_writes s
+                 ON k.with_pending
+                AND s.family = 'reference'
+                AND s.middle = k.artifact
+                AND s.author = k.author
+                AND octet_length(s.payload) = 0
+                AND s.pre_signed_at IS NOT NULL
+                AND s.state NOT IN ('landed', 'expired')
+           )
+           SELECT artifact                            AS "artifact!",
+                  author                              AS "author!",
+                  with_pending                        AS "with_pending!",
+                  target                              AS "target!",
+                  SUM(relevance::text::numeric)::text AS "relevance!",
+                  SUM(support::text::numeric)::text   AS "support!",
+                  COUNT(*)::bigint                    AS "records!",
+                  BOOL_OR(pending)                    AS "pending!"
+           FROM candidates
+           GROUP BY artifact, author, with_pending, target"#,
+        &artifacts,
+        &authors,
+        &pending,
+    )
+    .fetch_all(pool)
+    .await?;
+
+    let mut counts: std::collections::HashMap<ReferenceCountKey, u32> =
+        std::collections::HashMap::new();
+    for r in rows {
+        let key = ReferenceCountKey {
+            artifact: r.artifact,
+            author: r.author,
+            with_pending: r.with_pending,
+        };
+        let standing = standing_claim(
+            r.target,
+            &key.author,
+            &r.relevance,
+            &r.support,
+            r.records,
+            r.pending,
+        )?
+        .is_some();
+        if standing {
+            *counts.entry(key).or_default() += 1;
+        }
+    }
+    Ok(counts.into_iter().collect())
 }
 
 /// One author's citation bundle from one artifact toward one target: the

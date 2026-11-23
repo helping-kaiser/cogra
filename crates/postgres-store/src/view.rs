@@ -3,7 +3,7 @@
 //! Which view of the graph a fold read takes — the one type every fold
 //! that has a pending half shares.
 //!
-//! # The pending half is one predicate, written seven times
+//! # The pending half is one predicate, written eight times
 //!
 //! A staged write counts toward a fold from the pre-commitment onward,
 //! and the test for "in flight" is the same everywhere it is asked:
@@ -14,7 +14,8 @@
 //! ```
 //!
 //! It appears in `topics::topics_of`, `topics::tagged_with`,
-//! `references::references_of`, `references::bundle`, `stance::standing`,
+//! `references::references_of`, `references::reference_counts`,
+//! `references::bundle`, `stance::standing`,
 //! `stance::held_topics` and `stance::count_held_topics`. sqlx's macros
 //! take a string literal and nothing that expands to one, so the fragment
 //! cannot be shared; what can be shared

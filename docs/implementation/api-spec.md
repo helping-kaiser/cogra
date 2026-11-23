@@ -1500,6 +1500,11 @@ type Post implements Node {
    viewer through the citer, at the forward-path weight that gates
    them (slice 3)."
   references(includePending: Boolean! = true): [ReferenceClaim!]!
+  "How many rows `references` serves under the same
+   `includePending`, for the same viewer — the number a card's tags
+   line prints, read without the rows or their targets. One grouped
+   count for a page of cards, priced as one field."
+  referenceCount(includePending: Boolean! = true): Int!
   "When the viewer saved this; null when it is not kept, or with no
    session. What the menus' Save / Unsave row reads."
   viewerBookmarkedAt: DateTime
@@ -1553,6 +1558,9 @@ type Comment implements Node {
    author-owned channel as `Post.references`; a Comment is a citing
    artifact like any other passive node."
   references(includePending: Boolean! = true): [ReferenceClaim!]!
+  "The same count `Post.referenceCount` reads, for this comment's
+   `references`."
+  referenceCount(includePending: Boolean! = true): Int!
   "When the viewer saved this; null when it is not kept, or with no
    session. What the menus' Save / Unsave row reads."
   viewerBookmarkedAt: DateTime
