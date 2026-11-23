@@ -1,5 +1,5 @@
 // A comment as the profile's comments view reads it (`ProfileComments`'s
-// terminal Comment: `CommentFields`, what it answers and the thread's post),
+// edge node: `CommentFields`, what it answers and the thread's post),
 // cast once — the wire shape a handler serves.
 
 const moderated = (value: string | null, status = "NORMAL") => ({ __typename: "ModeratedText", value, status });
@@ -37,7 +37,7 @@ export function answersComment(id: string, handle: string, words = "The third he
   };
 }
 
-/** One of the person's comments, on the wire (`Record.terminal`). */
+/** One of the person's comments, on the wire (a `User.comments` edge's node). */
 export function profileComment(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     __typename: "Comment",
@@ -73,11 +73,22 @@ export function taggedCommentWire(id: string, over: Record<string, unknown> = {}
   return profileComment(id, over);
 }
 
-/** A page of the comments view, as the `ProfileComments` read serves it. */
+/** One of the person's comments still settling — signed, not yet ordered on L1. */
+export function settlingComment(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
+  return profileComment(id, {
+    createdAt: new Date(Date.now() - 60_000).toISOString(),
+    landing: { __typename: "Landing", state: "PENDING" },
+    ...over,
+  });
+}
+
+/**
+ * A page of the comments view, as the `ProfileComments` read serves it
+ * (`User.comments`): each edge's node is the comment itself.
+ */
 export function commentsPage(
   userId: string,
-  /** A null stands for a record whose comment CoGra does not carry. */
-  comments: readonly (Record<string, unknown> | null)[],
+  comments: readonly Record<string, unknown>[],
   next: string | null = null,
 ) {
   return {
@@ -85,11 +96,8 @@ export function commentsPage(
       __typename: "User",
       id: userId,
       comments: {
-        __typename: "RecordConnection",
-        edges: comments.map((comment, index) => ({
-          __typename: "RecordEdge",
-          node: { __typename: "Record", id: `rec-${String(comment?.id ?? index)}`, terminal: comment },
-        })),
+        __typename: "CommentConnection",
+        edges: comments.map((comment) => ({ __typename: "CommentEdge", node: comment })),
         pageInfo: { __typename: "PageInfo", hasNextPage: next !== null, endCursor: next },
       },
     },

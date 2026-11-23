@@ -373,6 +373,17 @@ fragment StanceBundleFields on StanceBundle {
   }
 }
 
+# The borrowed view's own landed bundle toward one node — what a guest's
+# face wears, read-only. No node id, no raw sums, no cost: nothing on it
+# can name or price an act.
+fragment BorrowedStanceFields on BorrowedStance {
+  pDirected
+  pInterest
+  recordCount
+  inert
+  severed
+}
+
 # An email change in flight — which sides landed, read by the settings
 # row, the confirmation's pair and the landings.
 fragment PendingEmailChangeFields on PendingEmailChange {

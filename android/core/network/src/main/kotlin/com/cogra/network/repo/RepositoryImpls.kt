@@ -949,10 +949,11 @@ class ProfileRepositoryImpl @Inject constructor(private val client: ApolloClient
     override suspend fun profileComments(authorId: String, after: String?): Outcome<Page<ProfileComment>> =
         guard.run { readProfileComments(client, authorId, after) }
 
-    // Posts is a `RecordConnection.totalCount` and the two opinion figures its
-    // `bundleCount` — one per person, however often revised (open-questions
-    // Q35, ruled 2026-11-10) — each read with `first: 0`,
-    // the number without a page (`ProfileFigures`).
+    // Posts is the Posts view's own `PostConnection.totalCount` — settling and
+    // removed posts counted, so figure and list agree (ProfilePosts.md:15) —
+    // and the two opinion figures a `bundleCount`, one per person however
+    // often revised (open-questions Q35, ruled 2026-11-10); each read with
+    // `first: 0`, the number without a page (`ProfileFigures`).
     override suspend fun figures(actorId: String): Outcome<ProfileFigures> = guard.run {
         client.query(ProfileFiguresQuery(actorId)).fetch().map { data ->
             // A count the server did not serve stays unknown — the header

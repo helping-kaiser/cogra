@@ -89,3 +89,57 @@ export function stanceHandlers(seeded: Record<string, SeededStance> = {}): Reque
     root("HashtagStance", "hashtag", "Hashtag", seeded, "name"),
   ];
 }
+
+/** A seeded borrowed stance: the view's own landed bundle, as a guest reads it. */
+export type SeededBorrowed = {
+  readonly pDirected: number;
+  readonly pInterest: number;
+  readonly recordCount?: number;
+  readonly severed?: boolean;
+};
+
+function borrowedRoot(
+  operation: string,
+  field: string,
+  typename: string,
+  seeded: Record<string, SeededBorrowed>,
+  key: "id" | "name" = "id",
+) {
+  return gqlLink.query(operation, ({ variables }) => {
+    const id = String(variables[key]);
+    const held = seeded[id];
+    return HttpResponse.json({
+      data: {
+        [field]: {
+          __typename: typename,
+          id,
+          borrowedStance:
+            held === undefined
+              ? null
+              : {
+                  __typename: "BorrowedStance",
+                  pDirected: held.pDirected,
+                  pInterest: held.pInterest,
+                  recordCount: held.recordCount ?? 1,
+                  inert: held.pDirected === 0 || held.pInterest === 0,
+                  severed: held.severed ?? false,
+                },
+        },
+      },
+    });
+  });
+}
+
+/**
+ * A guest's four borrowed-stance reads (`borrowedStance`), keyed as
+ * `stanceHandlers` is. A target with nothing seeded answers null: the
+ * borrowed view holds none, the hollow face.
+ */
+export function borrowedStanceHandlers(seeded: Record<string, SeededBorrowed> = {}): RequestHandler[] {
+  return [
+    borrowedRoot("PostBorrowedStance", "post", "Post", seeded),
+    borrowedRoot("CommentBorrowedStance", "comment", "Comment", seeded),
+    borrowedRoot("ProfileBorrowedStance", "user", "User", seeded),
+    borrowedRoot("HashtagBorrowedStance", "hashtag", "Hashtag", seeded, "name"),
+  ];
+}
