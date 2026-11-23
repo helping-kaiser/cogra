@@ -108,6 +108,7 @@ export const KEY_RULES = {
   profileCard: "the person's id, the lowercase UUID the wire carries (the profile feed card)",
   record: "the record's key, as the row prints it (the score's trace)",
   recent: "the recent query's words, lowercased, each run of other characters one -, none leading or trailing (Explore's recents)",
+  reference: "the reference's position in the References section, counted from 1 (the tags-and-references sheet)",
   redactedAccount: "the deleted account's actor id, the lowercase UUID the wire carries (the hidden-accounts sheet, where a deleted account has no handle left to key by)",
   redactedTopic: "the held topic's id, as the wire carries it (Your topics, where a name moderation took away leaves no name to key by)",
   redactedApplication: "the deleted asker's actor id, the lowercase UUID the wire carries (Invites' applications, where an asker who deleted their account has no handle left to key by)",
