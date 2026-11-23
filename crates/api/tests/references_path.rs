@@ -1208,3 +1208,217 @@ async fn withdrawing_an_absent_citation_is_refused(pool: PgPool) {
     );
     assert_eq!(e.path, vec!["target".to_string()]);
 }
+
+fn count_key(artifact: &str, author: &str, with_pending: bool) -> store_refs::ReferenceCountKey {
+    store_refs::ReferenceCountKey {
+        artifact: artifact.to_string(),
+        author: author.to_string(),
+        with_pending,
+    }
+}
+
+/// What the batched count says for one key — a key with nothing standing
+/// is absent from the batch's answer and counts zero.
+fn count_for(
+    counts: &[(store_refs::ReferenceCountKey, u32)],
+    key: &store_refs::ReferenceCountKey,
+) -> usize {
+    counts
+        .iter()
+        .find(|(k, _)| k == key)
+        .map_or(0, |(_, n)| *n as usize)
+}
+
+/// The count reads the fold the list reads: a netted bundle, a
+/// payload-marked record and another author's citation drop out of both,
+/// a bundle inert on one axis stays in both, and an artifact citing
+/// nothing counts zero — every artifact of the page answered by one call.
+///
+/// The batched reference count answers every artifact of a page in one call and counts exactly the rows the list serves.
+/// ´claim:references:the-batched-count-reads-the-lists-fold´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_batched_count_is_the_length_of_each_artifacts_list(pool: PgPool) {
+    seed_reference(&pool, "a1", "alice", "art-a", "gone", 0.5, 0.5, false).await;
+    seed_reference(&pool, "a2", "alice", "art-a", "gone", -0.5, -0.5, false).await;
+    seed_reference(&pool, "a3", "alice", "art-a", "kept", 0.5, 0.5, false).await;
+    seed_reference(&pool, "a4", "alice", "art-a", "half", 0.5, 0.0, false).await;
+    seed_reference(&pool, "b1", "alice", "art-b", "tgt", 0.5, 0.5, true).await;
+    seed_reference(&pool, "c1", "mallory", "art-c", "tgt", 0.9, 0.9, false).await;
+
+    let keys: Vec<_> = ["art-a", "art-b", "art-c", "art-d"]
+        .iter()
+        .map(|artifact| count_key(artifact, "alice", false))
+        .collect();
+    let counts = store_refs::reference_counts(&pool, &keys)
+        .await
+        .expect("counts");
+
+    let mut seen = Vec::new();
+    for key in &keys {
+        let listed = references_of(&pool, &key.artifact, "alice", ReferenceView::Landed)
+            .await
+            .expect("folds")
+            .len();
+        assert_eq!(count_for(&counts, key), listed, "{}", key.artifact);
+        seen.push(listed);
+    }
+    assert_eq!(
+        seen,
+        vec![2, 0, 0, 0],
+        "kept and half; marked, foreign and empty"
+    );
+}
+
+/// The pending half counts exactly where the list's does: the author's own
+/// pre-committed citation counts in the pending view and not in the landed
+/// one, and once it lands it counts in both.
+///
+/// The count's pending half is the list's: an in-flight citation counts only in its author's pending view until it lands.
+/// ´claim:references:the-count-takes-the-lists-view´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_count_takes_the_pending_view_the_list_takes(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, key) = rig.funded_actor("alice").await;
+    let carrier = rig.post(alice, &key, "carrier").await;
+    let cited = rig.post(alice, &key, "cited").await;
+    let artifact = rig.node_of(carrier).await;
+    let address = rig.address(alice).await;
+
+    let prepared = references::prepare_reference(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        carrier,
+        &ReferenceDraft {
+            target: cited,
+            relevance: 0.6,
+            support: -0.2,
+        },
+    )
+    .await
+    .expect("prepares");
+    rig.sign_and_relay(prepared.id, &key).await;
+
+    let pending = count_key(&artifact, &address, true);
+    let landed = count_key(&artifact, &address, false);
+    let before = store_refs::reference_counts(&rig.pool, &[pending.clone(), landed.clone()])
+        .await
+        .expect("counts");
+    assert_eq!(
+        count_for(&before, &pending),
+        1,
+        "in flight, the author's view"
+    );
+    assert_eq!(count_for(&before, &landed), 0, "not landed yet");
+
+    rig.close_and_ingest().await;
+    let after = store_refs::reference_counts(&rig.pool, &[pending.clone(), landed.clone()])
+        .await
+        .expect("counts");
+    assert_eq!(count_for(&after, &pending), 1);
+    assert_eq!(count_for(&after, &landed), 1, "landed, every view");
+}
+
+/// A delegate over the production count call that records the key
+/// counts it was handed — the shape of [`CountingPostLoader`].
+struct CountingReferenceCountLoader {
+    pool: PgPool,
+    batches: Arc<Mutex<Vec<usize>>>,
+}
+
+impl Loader<store_refs::ReferenceCountKey> for CountingReferenceCountLoader {
+    type Value = u32;
+    type Error = String;
+
+    async fn load(
+        &self,
+        keys: &[store_refs::ReferenceCountKey],
+    ) -> Result<HashMap<store_refs::ReferenceCountKey, u32>, Self::Error> {
+        self.batches.lock().expect("lock").push(keys.len());
+        Ok(store_refs::reference_counts(&self.pool, keys)
+            .await
+            .map_err(|e| e.to_string())?
+            .into_iter()
+            .collect())
+    }
+}
+
+/// A page of cards asking for their counts concurrently reaches the count
+/// once, as one slice of every card's key — one grouped read for the page,
+/// where the list reads once per card.
+///
+/// A page of cards' reference counts reaches the batched count once, as every card's key in one call.
+/// ´claim:references:a-page-of-counts-is-one-read´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_page_of_counts_reaches_the_count_as_one_batch(pool: PgPool) {
+    for i in 0..8 {
+        seed_reference(
+            &pool,
+            &format!("r{i}"),
+            "alice",
+            &format!("art-{i}"),
+            "tgt",
+            0.5,
+            0.5,
+            false,
+        )
+        .await;
+    }
+    let batches = Arc::new(Mutex::new(Vec::new()));
+    let loader = Arc::new(
+        DataLoader::new(
+            CountingReferenceCountLoader {
+                pool: pool.clone(),
+                batches: Arc::clone(&batches),
+            },
+            tokio::spawn,
+        )
+        .delay(Duration::from_millis(200)),
+    );
+
+    let mut handles = Vec::new();
+    for i in 0..8 {
+        let loader = Arc::clone(&loader);
+        let key = count_key(&format!("art-{i}"), "alice", false);
+        handles.push(tokio::spawn(async move { loader.load_one(key).await }));
+    }
+    let mut total = 0;
+    for handle in handles {
+        total += handle.await.expect("join").expect("loads").unwrap_or(0);
+    }
+
+    assert_eq!(total, 8, "one standing citation per card");
+    assert_eq!(
+        batches.lock().expect("lock").clone(),
+        vec![8],
+        "one batch for the page"
+    );
+}
+
+/// The production loader answers over the same call: a card with a
+/// standing citation reads its number, a card citing nothing is absent and
+/// reads as zero.
+///
+/// (´claim:references:a-loader-is-silent-about-what-is-not-there´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_count_loader_is_silent_about_a_card_citing_nothing(pool: PgPool) {
+    seed_reference(&pool, "r1", "alice", "art", "tgt", 0.5, 0.5, false).await;
+    let loaders = NodeLoaders::new(pool.clone());
+    assert_eq!(
+        loaders
+            .reference_counts
+            .load_one(count_key("art", "alice", false))
+            .await
+            .expect("loads"),
+        Some(1),
+    );
+    assert_eq!(
+        loaders
+            .reference_counts
+            .load_one(count_key("bare", "alice", false))
+            .await
+            .expect("loads"),
+        None,
+    );
+}
