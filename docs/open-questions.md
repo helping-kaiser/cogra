@@ -1013,6 +1013,7 @@ table:
 ### Related
 
 Q65 (known gaps in the seal leg).
+
 ## Q73 — Pricing a mixed row at its dearest kind
 
 **Where it shows up:**
