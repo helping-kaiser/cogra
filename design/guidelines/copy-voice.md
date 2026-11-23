@@ -185,8 +185,6 @@ glyph used as punctuation.
 - `Your opinion of this post drops to nothing. It stops reaching
   your feed, you stop earning from it, and nothing passes on through
   you.`
-- `A signing key can only ever back one account, so this account needs
-  its own.`
 - `This is the only way to restore your key.`
 - `Replying also signs an opinion on what it answers.` — the reply
   seal's note, under the ruled block in every state, at a post or a

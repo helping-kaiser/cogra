@@ -33,7 +33,7 @@ export interface ProfileHeaderProps {
   /** A guest's borrowed view, by handle — the wide anchor reads `@<handle>'s opinion` (StanceControl's `vantage`). */
   vantage?: string;
   /** StanceControl's `vantageHoles`, for a board that re-selects the reader. */
-  vantageHoles?: { guest: string; member: string };
+  vantageHoles?: { guest?: string; member?: string; label?: string };
   /** Owned by the shell, like `PostCard.taught`. */
   taught?: boolean;
   bundle?: StanceBundle | null;

@@ -46,6 +46,8 @@ WHEN tap a chronicle card for a published post -> the post's detail opens AND it
 
 WHEN tap a chronicle card for a tag or a citation of a post -> the tagged or cited post's detail opens AND its back arrow reads Back to the profile
 
+WHEN tap a chronicle card for a tag or a citation of a comment -> the comment opens in its thread, landed on, as a comment's reference row opens it
+
 WHEN tap profile.bottomBar.profileSlot -> the reader's own profile opens
 
 WHEN tap the back arrow -> the reader returns to where they came from, in the state they left it AND the arrow's label names that origin
