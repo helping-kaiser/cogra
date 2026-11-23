@@ -6,6 +6,10 @@ ALWAYS profile.comments lists a comment the person signed that is still settling
 
 ALWAYS profile.comments.commentCard leads with profile.comments.commentCard.target, the pointer to what it answers
 
+ALWAYS profile.comments.commentCard carries profile.comments.commentCard.tagsLine, its tags as profile.comments.commentCard.tagsLine.tag and its count as profile.comments.commentCard.tagsLine.counts, as a comment carries it in the feed
+
+WHEN tap profile.comments.commentCard.tagsLine.counts -> the comment's tags-and-references sheet rises over the profile, as a feed card's count opens it
+
 ALWAYS profile.comments.commentCard.target reads On with the post's author's handle and removed post, as On @sol's removed post, and never the post's title GIVEN the post it answers was removed
 
 ALWAYS profile.comments.commentCard.target reads On with the post's title and Deleted account in the handle's place GIVEN the post it answers is a deleted account's and still there

@@ -26,6 +26,8 @@ ALWAYS the first row of every card's ⋮ in Saved reads Unsave, the card's own S
 
 ALWAYS no card in Saved carries a saved mark and no card carries an unsave control of Saved's own
 
+WHEN tap saved.commentCard.tagsLine.counts -> the comment's tags-and-references sheet rises over Saved, as a feed card's count opens it
+
 WHEN saved.commentCard.target is tapped GIVEN it names a post -> the post it answers opens AND its back arrow reads Back to Saved
 
 WHEN saved.commentCard.target is tapped GIVEN it names a comment -> the post's comment section opens scrolled to the comment it names

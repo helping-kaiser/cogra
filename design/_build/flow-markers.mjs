@@ -2038,6 +2038,10 @@ Object.assign(FLOW_MARKERS, {
     ...nav(12),
     // The load chip's failed first page (round 45): its Retry.
     { n: 19, find: ">Retry</button>", tag: "button" },
+    // The second comment's tags line (round 63, seam 419): its tag and its
+    // count, the next free numbers; `all`, its settling copy too.
+    { n: 20, find: '<a href="/t/', tag: "a", all: true },
+    { n: 21, find: ">· 1 reference</button>", tag: "button", all: true },
   ],
   ProfileEdit: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },

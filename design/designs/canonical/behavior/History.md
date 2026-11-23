@@ -48,6 +48,8 @@ ALWAYS sensitive content in History keeps its veil, as on the feed
 
 ALWAYS History offers no way to clear the list and no way to remove one thing from it
 
+WHEN tap history.commentCard.tagsLine.counts -> the comment's tags-and-references sheet rises over History, as a feed card's count opens it
+
 WHEN history.commentCard.target is tapped GIVEN it names a post -> the post it answers opens AND its back arrow reads Back to History
 
 WHEN history.commentCard.target is tapped GIVEN it names a comment -> the post's comment section opens scrolled to the comment it names
