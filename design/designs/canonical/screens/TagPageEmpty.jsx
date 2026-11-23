@@ -43,14 +43,20 @@
    something and tag it", a compose entrance from a read surface that nothing
    has ruled. The page states what is true and leaves it there rather than
    inventing the way out. The stance row is not that action: it is the page's
-   own gesture about the page's own subject, and it fills nothing. */
+   own gesture about the page's own subject, and it fills nothing.
+
+   REGISTERED under the `tagPage` prefix (round 62, seam 406), by `TagPage`'s
+   names: the `header`, the topic's row `actionRow` with its `stance` and
+   `share`, and the line `empty` in the rows' place, the house's name for an
+   empty list. */
+export const NODE = "tagPage";
 export function Screen() {
   return (
     <>
-      <PageHeader title="#slipwaylight" backHref="#" backLabel="Back to Explore" />
-      <TopicStanceRow name="#slipwaylight" />
+      <PageHeader title="#slipwaylight" backHref="#" backLabel="Back to Explore" node="header" />
+      <TopicStanceRow name="#slipwaylight" node="actionRow" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "4px 24px 0" }}>
-        <EmptyState title="Nothing carries this tag right now." />
+        <EmptyState title="Nothing carries this tag right now." node="empty" />
       </div>
     </>
   );
