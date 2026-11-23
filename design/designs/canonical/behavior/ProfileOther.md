@@ -58,6 +58,8 @@ WHEN a guest taps the wide anchor -> the guest gate opens
 
 ALWAYS the wide anchor's words beside the hollow face name the borrowed view, as @genesismod's opinion, its handle ellipsized before 's opinion where the name outgrows the anchor, as @genesismo…'s opinion, GIVEN the reader is a guest and the borrowed view holds no opinion on the person
 
+ALWAYS every stance anchor on the page is spoken as the borrowed view's opinion, as @genesismod's opinion on @ada, its reading after it where the view holds one, GIVEN the reader is a guest
+
 ALWAYS the wide anchor's accessible name keeps the borrowed view's full handle, never ellipsized GIVEN the reader is a guest
 
 ALWAYS the wide anchor wears the locked look, visibly inactive at the disabled opacity and still tappable GIVEN the reader is an applicant
