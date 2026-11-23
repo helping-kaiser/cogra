@@ -1453,7 +1453,7 @@ function ProfileOwnBody({ tail = null, headLine = null, tab = "posts", chronicle
 
    Named as `ProfileOwnBody` names its page, under the same `profile` prefix:
    `ProfileOther` and `ProfileMenu` register it. */
-function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "Ada Okonkwo", nameSize, nameLineHeight, tab = "posts", chronicle = false, aside = false } = {}) {
+function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "Ada Okonkwo", nameSize, nameLineHeight, tab = "posts", chronicle = false, aside = false, vantageHoles } = {}) {
   return (
     <>
       <PageHeader title="@ada" backHref="#" backLabel={backLabel} node="header" />
@@ -1471,6 +1471,8 @@ function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "A
             stancesOn={6}
             stancesTaken={6}
             bundle={bundle}
+            vantage={vantageHoles ? GUEST_VANTAGE : undefined}
+            vantageHoles={vantageHoles}
             onCounts={() => {}}
             onCommit={() => {}}
             onMessage={() => {}}
@@ -5289,12 +5291,24 @@ const AFFINITY_AXES = {
    48, seam 320-16): `actionRow`, the wide anchor `stance` — `StanceControl`'s
    anatomy, its open pad `stance.pad.*` — and `share`, as the profile's head
    names its row (`profile.identity.actionRow.stance`). */
-function TopicStanceRow({ name, bundle, stanceOpen, stanceDefaultPick, node }) {
+/* A GUEST'S BORROWED VIEW ON THE WIDE ANCHOR (round 62, seam 404.3): the
+   `reader` chip a page draws a guest with, `ReplyEntry`'s grammar. Its `guest`
+   names the borrowed view in the topic's or the person's wide anchor —
+   `@genesismod's opinion` (TagPage.md, ProfileOther.md), the handle cut
+   first — through `StanceControl`'s `vantageHoles`, so the anchor's paths
+   stay one; the faces stay as drawn (the hollow face where no stance is). */
+const GUEST_VANTAGE = "genesismod";
+const READER_CHIP = { reader: { editor: "enum", options: ["member", "guest"], default: "member" } };
+const READER_VALS = `readerMember: this.props.reader === "guest" ? "none" : "inline", readerGuest: this.props.reader === "guest" ? "flex" : "none"`;
+const READER_HOLES = { guest: "{{readerGuest}}", member: "{{readerMember}}" };
+function TopicStanceRow({ name, bundle, stanceOpen, stanceDefaultPick, vantageHoles, node }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", padding: "4px 16px 8px" }} data-node={node}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <StanceControl
           wide
+          vantage={vantageHoles ? GUEST_VANTAGE : undefined}
+          vantageHoles={vantageHoles}
           targetLabel={name}
           axes={AFFINITY_AXES}
           bundle={bundle}
@@ -5335,7 +5349,16 @@ function TopicStanceRow({ name, bundle, stanceOpen, stanceDefaultPick, node }) {
    each post `card` and the comment `commentCard`, keyed by their ids as on
    every host. A row the board draws both ways marks each copy as its chip's
    (`post`, `comment`), the card keeping its own key in both (ruling 39). */
-function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, removed, commentRemoved, ownComment, scrolledBy = 0 } = {}) {
+/* A comment's media as the thread draws it (`ReplyMedia`): two pictures, and a
+   clip. Spelled once, so the tag page's tagged comment wears the same. */
+const REPLY_MEDIA_CLIP = [
+  { kind: "video", src: "comment-clip.mp4", poster: "comment-camera.jpg", ratio: "square", fit: "cover", alt: "A film camera panning across the headland at low light." },
+];
+const REPLY_MEDIA_PICTURES = [
+  { src: "gallery-market.jpg", ratio: "4 / 3", fit: "cover", alt: "Crates of strawberries on a market stand." },
+  { src: "gallery-honey.jpg", ratio: "1 / 1", fit: "cover", alt: "A jar of honey in low sun." },
+];
+function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, removed, commentRemoved, ownComment, scrolledBy = 0, vantageHoles } = {}) {
   /* @ada's tagged comment, live and removed (round 58; jakob 2026-11-18, C4
      "as rec"): removed, `CommentCard`'s own mark in the words' place, as
      `ProfileComments`' `removed` draws this same comment — its author, its
@@ -5349,6 +5372,13 @@ function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, rem
   const copy = (chip, value) => (named ? { "data-node-chip": chip, "data-node-key": value } : null);
   const adaLive = <CommentCard attach id={ADA_TAGGED_COMMENT_ID} author={ADA} content="Low tide is kinder to the rubbings than noon ever was." timestamp="4d" license={{ attribution: 0, provenance: 0 }} bundle={mkBundle(0.1, 0.1)} target={solTarget} onOpenTarget={() => {}} menuItems={readerCommentCardMenu("ada")} node={commentCard} />;
   const adaRemoved = <CommentCard attach id={ADA_TAGGED_COMMENT_ID} author={ADA} timestamp="4d" redacted={{ reason: "author", when: "2h" }} bundle={mkBundle(0.1, 0.1)} target={solTarget} onOpenTarget={() => {}} menuItems={readerCommentCardMenu("ada")} node={commentCard} />;
+  /* @ada's tagged comment with pictures and with a clip (round 62, seam
+     403.1): the comment card as the thread draws a comment's media
+     (`ReplyMedia`'s two pictures and its clip), so the tag page registers
+     `commentCard.media` and its parts by the thread's names. */
+  const adaMedia = (media) => <CommentCard attach id={ADA_TAGGED_COMMENT_ID} author={ADA} content="Low tide is kinder to the rubbings than noon ever was." timestamp="4d" media={media} license={{ attribution: 0, provenance: 0 }} bundle={mkBundle(0.1, 0.1)} target={solTarget} onOpenTarget={() => {}} menuItems={readerCommentCardMenu("ada")} node={commentCard} />;
+  const adaPictures = adaMedia(REPLY_MEDIA_PICTURES);
+  const adaClip = adaMedia(REPLY_MEDIA_CLIP);
   const solOwnTarget = `“${MIRA_GALLERY_POST.title}” — @mira`;
   const solOwnComment =
     ownComment === "removed" ? (
@@ -5359,7 +5389,7 @@ function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, rem
   const tobiasLive = <PostCard attach {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} node={card} />;
   const tobiasRemoved = <PostCard attach id={TOBIAS_POST.id} author={TOBIAS} timestamp={TOBIAS_POST.timestamp} redacted={{ reason: "author", when: "now" }} score={TOBIAS_POST.score} comments={TOBIAS_POST.comments} bundle={mkBundle(0.1, 0.1)} menuItems={TOBIAS_POST.menuItems} node={card} />;
   const commentId = ownComment ? SOL_OWN_COMMENT.id : ADA_TAGGED_COMMENT_ID;
-  const stanceRow = <TopicStanceRow name="#saltmaps" bundle={bundle} stanceOpen={stanceOpen} stanceDefaultPick={stanceDefaultPick} node={named ? "actionRow" : undefined} />;
+  const stanceRow = <TopicStanceRow name="#saltmaps" bundle={bundle} stanceOpen={stanceOpen} stanceDefaultPick={stanceDefaultPick} vantageHoles={vantageHoles} node={named ? "actionRow" : undefined} />;
   const list = (
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "4px 0 0" }}>
         <TaggedRow pair={{ pDirected: 0.1, pInterest: 1 }} pending node={claim} nodeKey={TOBIAS_POST.id}>
@@ -5384,6 +5414,8 @@ function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, rem
             <>
               <div style={{ display: "{{commentLive}}" }} {...copy("comment", "live")}>{adaLive}</div>
               <div style={{ display: "{{commentRemoved}}" }} {...copy("comment", "removed")}>{adaRemoved}</div>
+              <div style={{ display: "{{commentPictures}}" }} {...copy("comment", "pictures")}>{adaPictures}</div>
+              <div style={{ display: "{{commentClip}}" }} {...copy("comment", "clip")}>{adaClip}</div>
             </>
           ) : commentRemoved === "ada" ? adaRemoved : adaLive}
         </TaggedRow>

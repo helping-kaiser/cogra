@@ -3461,6 +3461,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back to Explore"', tag: "a", all: true },
     ...tagPageBody({ topicStance: 'aria-label="Give your opinion on #saltmaps"' }).filter((m) => m.n !== 1),
     { n: 16, find: ">Retry</button>", tag: "button" },
+    // The `comment` chip's clip (round 62): its sound, the next free number.
+    { n: 17, find: 'aria-label="Turn sound on"', tag: "button" },
   ],
   /* The page a moment after a hide (item 83): the same body, so the same
      markers; the snackbar's Undo takes the next free number. */

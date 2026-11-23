@@ -49,6 +49,9 @@
    2026-11-23, B3 (a)) draw the two verbs that take the person bare on the
    same act: `Mentioned` `a deleted account`, the reserved disc in the
    picture's place, and `Vouched for` `a deleted account`, the record's face.
+   A GUEST (round 62, seam 404.3) is the `reader` chip's `guest`: the wide
+   anchor reads `@genesismod's opinion` beside the hollow face, the handle
+   cut first where it outgrows the anchor (`READER_CHIP`).
    REGISTERED under the `profile` prefix (design ⇄ impl seam 059/061): another
    person's page is the same surface as your own, named by the same body
    names. */
@@ -59,8 +62,9 @@ export const PROPS = {
   ...TAB_CHIP,
   ...CHRONICLE_CHIP,
   aside: { editor: "enum", options: ["handle", "deleted", "mentioned-deleted", "vouched-deleted"], default: "handle" },
+  ...READER_CHIP,
 };
-export const VALS = `backLabel: this.props.from === "profile" ? "Back to the profile" : "Back to feed", displayName: this.props.name === "two-lines" ? "Maximiliana Wilhelmina Featherstonehaugh" : this.props.name === "fifty" ? "Maximiliana Wilhelmina Featherstonehaugh Okonkwoli" : this.props.name === "one-word" ? "MaximilianaWilhelminaFeatherstonehaughOkonkwoLiang" : this.props.name === "widest" ? "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW" : "Ada Okonkwo", nameSize: this.props.name === "fifty" ? "19px" : this.props.name === "one-word" ? "20px" : this.props.name === "widest" ? "10px" : "var(--text-title-large)", nameLineHeight: this.props.name === "fifty" ? "24px" : this.props.name === "one-word" ? "25px" : this.props.name === "widest" ? "13px" : "var(--text-title-large--line-height)", ${TAB_VALS}, ${CHRONICLE_VALS}, asideHandle: this.props.aside === "handle" ? "contents" : "none", asideDeleted: this.props.aside === "deleted" ? "contents" : "none", asideMentioned: this.props.aside === "mentioned-deleted" ? "contents" : "none", asideVouched: this.props.aside === "vouched-deleted" ? "contents" : "none"`;
+export const VALS = `backLabel: this.props.from === "profile" ? "Back to the profile" : "Back to feed", displayName: this.props.name === "two-lines" ? "Maximiliana Wilhelmina Featherstonehaugh" : this.props.name === "fifty" ? "Maximiliana Wilhelmina Featherstonehaugh Okonkwoli" : this.props.name === "one-word" ? "MaximilianaWilhelminaFeatherstonehaughOkonkwoLiang" : this.props.name === "widest" ? "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW" : "Ada Okonkwo", nameSize: this.props.name === "fifty" ? "19px" : this.props.name === "one-word" ? "20px" : this.props.name === "widest" ? "10px" : "var(--text-title-large)", nameLineHeight: this.props.name === "fifty" ? "24px" : this.props.name === "one-word" ? "25px" : this.props.name === "widest" ? "13px" : "var(--text-title-large--line-height)", ${TAB_VALS}, ${CHRONICLE_VALS}, asideHandle: this.props.aside === "handle" ? "contents" : "none", asideDeleted: this.props.aside === "deleted" ? "contents" : "none", asideMentioned: this.props.aside === "mentioned-deleted" ? "contents" : "none", asideVouched: this.props.aside === "vouched-deleted" ? "contents" : "none", ${READER_VALS}`;
 export function Screen() {
-  return <ProfileOtherBody backLabel="{{backLabel}}" displayName="{{displayName}}" nameSize="{{nameSize}}" nameLineHeight="{{nameLineHeight}}" tab="chip" chronicle={CHRONICLE_REMOVED} aside />;
+  return <ProfileOtherBody backLabel="{{backLabel}}" displayName="{{displayName}}" nameSize="{{nameSize}}" nameLineHeight="{{nameLineHeight}}" tab="chip" chronicle={CHRONICLE_REMOVED} aside vantageHoles={READER_HOLES} />;
 }

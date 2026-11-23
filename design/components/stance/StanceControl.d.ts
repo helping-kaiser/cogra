@@ -42,6 +42,10 @@ export interface StanceControlProps {
   /** The presentational variant a profile header wears: the anchor stretched to
    *  the row's width, with its words drawn beside the face. */
   wide?: boolean;
+  /** A guest's borrowed view, by handle: the wide anchor reads `@<handle>'s opinion` in `Your opinion`'s place, the handle cut first. */
+  vantage?: string;
+  /** Both anchor words behind display holes, `{ guest, member }`, for a board whose `reader` chip re-selects the reader. */
+  vantageHoles?: { guest: string; member: string };
   /** The anchor restyled to sit on photography: a line-face glyph in the rail's
    *  family instead of the card's muted emoji. Restyles the anchor only. */
   overMedia?: boolean;
