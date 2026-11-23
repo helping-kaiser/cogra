@@ -129,7 +129,7 @@ internal fun ListThread(
     )
 }
 
-/** A listed comment as the comment feed card, its doors landing on its thread. */
+/** A listed comment as the comment feed card: its pointer opens what it names ([openPointer]), the rest its thread. */
 @Composable
 internal fun ListCommentCard(
     /** The comment as the list read it; a removal since stands as its mark. */
@@ -143,8 +143,6 @@ internal fun ListCommentCard(
     /** The feed's head row (Saved, History), or the line a profile lists its comments in. */
     shape: CommentCardShape = CommentCardShape.Thread,
     authorHere: Boolean = false,
-    /** The head row's door where it differs from what it names — the line shape's lands on the thread. */
-    onOpenTarget: (() -> Unit)? = null,
     /** The reply's door where it differs from the thread aimed at the comment — an applicant's lock. */
     onReply: (() -> Unit)? = null,
     /** The sheet the card's ⋮ raises on this host and the rows its boards register; null keeps the rows' tags. */
@@ -169,14 +167,7 @@ internal fun ListCommentCard(
         testTagPrefix = testTagPrefix,
         revealed = actions.reveals.isRevealed(comment.id, comment.sensitiveMark()),
         onReveal = { actions.onReveal(comment.id, comment.sensitiveMark()) },
-        onOpenTarget = onOpenTarget ?: {
-            when (target) {
-                is CommentTarget.Post -> doors.onOpenPost(target.id)
-                is CommentTarget.Comment -> threadPostId?.let { doors.onOpenComment(it, target.id, false) }
-                null -> Unit
-            }
-            Unit
-        },
+        onOpenTarget = { openPointer(target, threadPostId, doors) },
         onOpenPlace = { threadPostId?.let { doors.onOpenComment(it, comment.id, false) } },
         onReply = onReply ?: {
             threadPostId?.let { doors.onOpenComment(it, comment.id, true) }
@@ -212,6 +203,24 @@ internal fun ListCommentCard(
             onClose = { removeOpen = false },
             testTag = "${testTagPrefix}_remove_confirm",
         )
+    }
+}
+
+/**
+ * THE POINTER IS THE DOOR TO WHAT IT NAMES, on every host. A post's line opens
+ * the post itself, at its top, never its comment section (jakob 2026-11-23,
+ * seam 405: "the line is the door to the post the rest of the card opens the
+ * thread of comments scrolled to the comment"). A reply's line names the
+ * comment it answers and opens the thread at that comment (`CommentCard.jsx`:
+ * the head row is "its own door, to what it names"). The door lives here, in
+ * the one card every host draws, so no host can wire it otherwise
+ * (`CommentCardHostCensusTest`).
+ */
+internal fun openPointer(target: CommentTarget?, threadPostId: String?, doors: CardDoors) {
+    when (target) {
+        is CommentTarget.Post -> doors.onOpenPost(target.id)
+        is CommentTarget.Comment -> threadPostId?.let { doors.onOpenComment(it, target.id, false) }
+        null -> Unit
     }
 }
 

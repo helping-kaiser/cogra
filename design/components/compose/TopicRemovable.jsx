@@ -54,6 +54,13 @@ const PAIR = {
   opacity: 0.75,
 };
 
+/* A TAG IS ONE LINE (jakob 2026-11-23, point 4: "everywhere the tag is
+   one-line at most"): the pill never grows past its row and never wraps its
+   name; a name too long for the row — a 128-character tag — is the part cut,
+   ending in "…", while the pair and the × keep their room (the long-names
+   law's case 2). A name that fits draws exactly as before. */
+const NAME = { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
+
 export function TopicRemovable({ topic, pair, onRemove, onEdit, node }) {
   return (
     <span
@@ -61,6 +68,8 @@ export function TopicRemovable({ topic, pair, onRemove, onEdit, node }) {
         display: "inline-flex",
         alignItems: "center",
         gap: 6,
+        maxWidth: "100%",
+        minWidth: 0,
         /* A true height, padding inside it (seam 245, ask 2): without
            border-box the 32 measured the content alone and drew 40. */
         boxSizing: "border-box",
@@ -95,15 +104,16 @@ export function TopicRemovable({ topic, pair, onRemove, onEdit, node }) {
             font: "inherit",
             letterSpacing: "inherit",
             cursor: "pointer",
+            minWidth: 0,
           }}
         >
-          #{topic}
-          {pair && <span style={PAIR}>{pair}</span>}
+          <span style={NAME}>#{topic}</span>
+          {pair && <span style={{ ...PAIR, flex: "none" }}>{pair}</span>}
         </button>
       ) : (
         <>
-          #{topic}
-          {pair && <span style={PAIR}>{pair}</span>}
+          <span style={NAME}>#{topic}</span>
+          {pair && <span style={{ ...PAIR, flex: "none" }}>{pair}</span>}
         </>
       )}
       <button

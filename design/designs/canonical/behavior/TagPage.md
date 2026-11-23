@@ -2,6 +2,14 @@
 
 ALWAYS the tag page is titled by the tag, # and all
 
+ALWAYS tagPage.header.title stands on one line and ends in … GIVEN the tag's name is too long for it
+
+ALWAYS tagPage.name prints the tag's whole name, # and all, under the header and above the topic's row, wrapping at its hyphens and breaking inside the name where a run has none, GIVEN the name is too long for the header's one line
+
+ALWAYS no heading stands under the header GIVEN the tag's name fits the header's one line
+
+ALWAYS tagPage.name is the one place a tag's name wraps
+
 ALWAYS the tag page carries no bottom bar
 
 ALWAYS the tag page's header carries no control, and the topic's stance row stands under the title above every post
@@ -16,11 +24,19 @@ ALWAYS a tagged post stands as a post card and a tagged comment as tagPage.comme
 
 ALWAYS a tagged comment's card offers no Reply and no view-replies line
 
+ALWAYS tagPage.commentCard carries tagPage.commentCard.tagsLine, its tags as tagPage.commentCard.tagsLine.tag and its count as tagPage.commentCard.tagsLine.counts, as a comment carries it in the feed
+
+WHEN tap tagPage.commentCard.tagsLine.counts -> the comment's tags-and-references sheet rises over the tag page, as a feed card's count opens it
+
+WHEN tap tagPage.commentCard.tagsLine.tag -> that tag's page opens
+
 ALWAYS a tagged comment's ⋮ holds the comment's whole menu, the reader's comment menu on someone else's, removed or not, and the own comment menu on the reader's own, less Edit and Remove once it was removed
 
 ALWAYS a tagged comment's pointer names a removed post it answers by its author's handle, as On @sol's removed post, and never by its title
 
-WHEN tagPage.commentCard.target is tapped -> the post it answers opens AND its back arrow reads Back to #saltmaps
+WHEN tagPage.commentCard.target is tapped GIVEN it names a post -> the post it answers opens AND its back arrow reads Back to #saltmaps
+
+WHEN tagPage.commentCard.target is tapped GIVEN it names a comment -> the post's comment section opens scrolled to the comment it names
 
 WHEN tagPage.commentCard is tapped outside tagPage.commentCard.target and its own controls -> the post's comment section opens scrolled to that comment
 
@@ -56,9 +72,11 @@ ALWAYS the back arrow reads Back to Explore and leads to Explore GIVEN the page 
 
 WHEN a guest reaches the tag page -> the page shows what is tagged AND every stance face wears the borrowed view's own stance, read-only, and the hollow face wherever the borrowed view holds none AND the scores come from the genesis vantage
 
-ALWAYS the topic's wide anchor's words beside the hollow face name the borrowed view, as @genesismod's opinion, its handle ellipsized before 's opinion where the name outgrows the anchor, as @genesismo…'s opinion, GIVEN the reader is a guest and the borrowed view holds no opinion on the topic
+ALWAYS the topic's wide anchor's words beside the hollow face name the borrowed view, as @genesis_mod's opinion, its handle ellipsized before 's opinion where the name outgrows the anchor, as @genesis…'s opinion, GIVEN the reader is a guest and the borrowed view holds no opinion on the topic
 
 ALWAYS the topic's wide anchor's accessible name keeps the borrowed view's full handle, never ellipsized GIVEN the reader is a guest
+
+ALWAYS every stance anchor on the tag page is spoken as the borrowed view's opinion, as @genesis_mod's opinion on this post, its reading after it where the view holds one, GIVEN the reader is a guest
 
 WHEN a guest taps a stance face on the tag page -> the guest gate opens over the tag page
 
@@ -70,7 +88,7 @@ WHEN the page's first read gets no answer -> the header stands AND the line Can'
 
 WHEN tap Retry -> the page is read again AND it answers as the read does
 
-WHEN a link or a typed address opens a tag page GIVEN its name cannot be a tag name, breaking the naming gate -> the header keeps the name asked for AND the page reads This tag doesn't exist. in the page's place AND NEVER the stance row, a card or a Retry stands
+WHEN a link or a typed address opens a tag page GIVEN its name cannot be a tag name, breaking the naming gate -> the header keeps the name asked for, on one line ending in … where it is too long, AND no full-name heading stands AND the page reads This tag doesn't exist. in the page's place AND NEVER the stance row, a card or a Retry stands
 
 ALWAYS the page for a name that cannot be a tag is the answer no, never the failure voice and never the error colour, and nothing on it retries
 

@@ -85,6 +85,7 @@ export function Screen() {
               timestamp="1h"
               parent={ADA_POST}
               topics={["glovebox", "coastroad"]}
+              references={1}
               score="12.40"
               {...pick}
               node="commentCard"

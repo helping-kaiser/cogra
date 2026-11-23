@@ -28,7 +28,9 @@ WHEN tap profile.tabRow.everythingTab -> the chronicle stands below profile.tabR
 
 ALWAYS the chronicle stands one act to a card, newest first, each card leading with its act's disc, then its verb and snippet, its age on the trailing edge
 
-ALWAYS a chronicle card stands among the landed ones and reads Still settling under its age GIVEN its act still pends
+ALWAYS a post or a comment the reader signed that is still settling stands on the chronicle as its act's card, in its place by newness among the landed ones, and reads Still settling under its age
+
+ALWAYS every other act stands on the chronicle once it has landed, and never while it pends
 
 ALWAYS a chronicle card with no destination is the same card, inert
 
@@ -75,6 +77,8 @@ WHEN tap profile.tabRow.commentsTab -> the reader's comments stand below profile
 WHEN tap a chronicle card for a published post -> the post's detail opens AND its back arrow reads Back to your profile
 
 WHEN tap a chronicle card for a tag or a citation of a post -> the tagged or cited post's detail opens AND its back arrow reads Back to your profile
+
+WHEN tap a chronicle card for a tag or a citation of a comment -> the comment opens in its thread, landed on, as a comment's reference row opens it
 
 WHEN tap a chronicle card whose post or comment was removed -> it opens where the card opens for the act, the removed thing standing there as its mark
 
