@@ -2040,7 +2040,13 @@ Every other line here is **carried over — blessed by use (jakob
 - **The applicant's task cards** (`ApplicantFeed`) — `Verify your email`,
   its title alone over the address and `Resend the link`; `Create your key` over `Your application needs a key on this
   browser before @mira can approve it.` (the app's rendering above), with
-  `Create my key`.
+  `Create my key`. A key on this device that has not reached the
+  application (the `keyCard` chip's `attach`): `Attach your key` over
+  `Your key is on this browser. It hasn't reached your application yet.`
+  (the app: `Your key is in this app. It hasn't reached your application
+  yet.`), and the house line `That didn't go through.` with `Retry` in
+  `Create my key`'s place (*new 2026-11-23, blessed (jakob 2026-11-23:
+  "Attach i guess and body is fine")*).
 - **The waiting card** (`ApplicantWaiting`) — under `All set — waiting on
   @mira`, `Their approval brings you in.`; its ask link labelled `Your ask link`, captioned `It does not
   expire.` (jakob 2026-10-07, item 58). On the applicant's own profile

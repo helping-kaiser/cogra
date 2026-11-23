@@ -6963,6 +6963,11 @@ a title for a key that exists and is not attached (a new string, jakob's); (c) t
 `That didn't go through.` with `Retry`, the key card absent while the key waits. Recommendation (a)
 with jakob ruling the title.
 
+Closed by round 66 as (b) (jakob 2026-11-23, "Attach i guess and body is fine"): `ApplicantFeed`'s
+`keyCard` chip at `attach` titles the card `Attach your key`, its body `Your key is on this browser.
+It hasn't reached your application yet.` (the app: `…is in this app…`), and `Create my key` gives way
+to `That didn't go through.` with `Retry`, `feed.keyCard.attachFault`.
+
 ### 304 · Which handle the bare feed's borrowed view speaks · *design* · **filed 2026-11-23**
 
 Round 63, item 4. The genesis moderator's view is `@genesismod` on `TagPage` and `ProfileOther`

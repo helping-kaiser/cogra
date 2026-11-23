@@ -30,10 +30,24 @@
    the vouch-back card's shape of name: the verify card's address line is
    `address`, `Wrong address?` is `wrongAddress`, the seven-day line `note` and
    `Resend the link` `resend`, as on `VerifyExpired`; the key card's button is
-   `create`. */
+   `create`.
+
+   A KEY THAT EXISTS AND IS NOT ATTACHED (round 66; jakob 2026-11-23, "Attach
+   i guess and body is fine"; backlog 303) is the `keyCard` chip's `attach`:
+   the applicant's own key, on this device, failed to reach the application.
+   The key card stands in its place, titled `Attach your key`, its body naming
+   the platform as the `wording` chip does — `Your key is on this browser. It
+   hasn't reached your application yet.` on the web, `…is in this app…` in
+   the app — and `Create my key` gives way to the house line `That didn't go
+   through.` with `Retry` at its end, the Invites copy fault's shape
+   (`SigningPending row`, `invites.link.copyFault`), named `attachFault`.
+   `create` is the card for a key not yet made. */
 export const NODE = "feed";
-export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
-export const VALS = `keyCardBody: this.props.wording === "app" ? "Your application needs a key in this app before @mira can approve it." : "Your application needs a key on this browser before @mira can approve it."`;
+export const PROPS = {
+  wording: { editor: "enum", options: ["browser", "app"], default: "browser" },
+  keyCard: { editor: "enum", options: ["create", "attach"], default: "create" },
+};
+export const VALS = `keyCardTitle: this.props.keyCard === "attach" ? "Attach your key" : "Create your key", keyCardBody: this.props.keyCard === "attach" ? (this.props.wording === "app" ? "Your key is in this app. It hasn't reached your application yet." : "Your key is on this browser. It hasn't reached your application yet.") : this.props.wording === "app" ? "Your application needs a key in this app before @mira can approve it." : "Your application needs a key on this browser before @mira can approve it.", keyCreateShown: this.props.keyCard === "attach" ? "none" : "contents", keyFaultShown: this.props.keyCard === "attach" ? "block" : "none"`;
 
 export function Screen() {
   return (
@@ -84,10 +98,17 @@ export function Screen() {
             Resend the link
           </Button>
         </TaskCard>
-        <TaskCard tone="notice" title="Create your key" body="{{keyCardBody}}" node="keyCard">
-          <Button variant="inverse" selfStart node="create">
-            Create my key
-          </Button>
+        <TaskCard tone="notice" title="{{keyCardTitle}}" body="{{keyCardBody}}" node="keyCard">
+          <div style={{ display: "{{keyCreateShown}}" }}>
+            <Button variant="inverse" selfStart node="create">
+              Create my key
+            </Button>
+          </div>
+          <div style={{ display: "{{keyFaultShown}}" }} data-node-chip="keyCard" data-node-key="attach">
+            <div data-node="attachFault">
+              <SigningPending row message="That didn't go through." onRetry={() => {}} />
+            </div>
+          </div>
         </TaskCard>
         <PostCard {...ADA_POST} signedIn={false} stanceOpacity="var(--state-disabled)" node="card" />
       </FeedList>
