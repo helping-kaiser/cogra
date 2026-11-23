@@ -91,7 +91,8 @@
       "keys": {
         "feed.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
-        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "feed.keyCard.attachFault": "the keyCard chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "feed.band": [],
@@ -183,6 +184,9 @@
           "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
         ],
         "feed.keyCard": [],
+        "feed.keyCard.attachFault": [
+          "attach"
+        ],
         "feed.keyCard.body": [],
         "feed.keyCard.create": [],
         "feed.keyCard.title": [],
