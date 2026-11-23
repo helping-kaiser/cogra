@@ -377,12 +377,13 @@ class CograNavGraphTest {
         compose.onNodeWithTag("feed.card.tagsLine.tag:rust").performClick()
         waitForTag("tagPage.card:p1")
 
-        compose.onNodeWithTag("tagPage.card.tagsLine.tag:rust").performClick()
+        // Inert, the chip merges into its card: it is reached in the unmerged tree.
+        compose.onNodeWithTag("tagPage.card.tagsLine.tag:rust", useUnmergedTree = true).performClick()
         compose.waitForIdle()
 
         assertThat(navController.currentBackStack.value.count { it.destination.hasRoute<Topic>() }).isEqualTo(1)
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Topic>()).isTrue()
-        compose.onNodeWithTag("tagPage.card.tagsLine.tag:rust").assertHasNoClickAction()
+        compose.onNodeWithTag("tagPage.card.tagsLine.tag:rust", useUnmergedTree = true).assertHasNoClickAction()
 
         compose.runOnIdle { compose.activity.onBackPressedDispatcher.onBackPressed() }
         waitForTag("feed.card:p1")
