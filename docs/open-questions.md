@@ -752,6 +752,10 @@ marker production is a liveness dependency of the epoch sequence
 deployment takes is its published policy, not a Layer 1 rule. The
 stand-in has no burn realization behind it
 ([roadmap.md "The stand-in and the swap"](implementation/roadmap.md#the-stand-in-and-the-swap)).
+The network has no deployment of record yet (the L1 team,
+2026-11-23): which author-authority case it declares and whether its
+host claims the courtesy handshake and issuance standards are
+undecided.
 
 ### The question
 
@@ -974,8 +978,8 @@ Q58 (the write rule's second gate on the surface).
 (the reap),
 [architecture.md "The write path"](implementation/architecture.md#the-write-path)
 (step 5)
-**Status:** open (deferred — waits for the read of the next
-specification release; jakob, 2026-11-20)
+**Status:** open (deferred — jakob, 2026-11-20; the L1 team answered
+the specification side 2026-11-23)
 
 ### Context
 
@@ -996,11 +1000,14 @@ documents that only an approved verified act is eligible for host
 ordering
 ([layer1-interface.md §8.2](primitive/layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake),
 "Approval witness"); it names no moment after which an approved act
-can no longer be ordered.
+can no longer be ordered. The L1 team confirmed that no such moment
+exists (2026-11-23), and the specification treats an act ordered
+after its content pair is gone as valid: a host can seal and order an
+act while declining its carriage (``def:graph:verified-act``).
 
 ### The question
 
-How long does the GC keep such a row? Three options are on the
+How long does the GC keep such a row? Four options are on the
 table:
 
 - **(a)** Keep it for good, as now.
@@ -1009,6 +1016,8 @@ table:
 - **(c)** Remove them after a further window of CoGra's own. An act
   ordered after that window is a published record whose content
   nobody holds, the case the kept row exists to prevent.
+- **(d)** The author ends it, through a kept write shown to its author
+  and a removal or forget.
 
 ### Related
 
