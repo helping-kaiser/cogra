@@ -12,7 +12,10 @@ this document keeps: **closure** binds every epoch, **oracle** binds
 only under a case the epoch package declares, **courtesy** binds only
 a realization that claims that standard. An item marked *open* is
 either an [open-questions.md](../open-questions.md) entry or a
-question asked of the L1 team (2026-11-23); §5 lists them all.
+decision the network's deployment has not made. The L1 team answered
+CoGra's questions on 2026-11-23; where an answer is the L1 author's
+reading rather than the specification's text, this document says so.
+§5 lists every open item.
 
 ---
 
