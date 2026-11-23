@@ -97,6 +97,7 @@ internal fun TopicsLine(
     val countsStyle = MaterialTheme.typography.bodySmall
     val density = LocalDensity.current
     val lineLabel = stringResource(R.string.content_topics_line_label)
+    val tagHere = LocalTagHere.current
 
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
         val budget = with(density) { maxWidth.toPx() }
@@ -126,12 +127,15 @@ internal fun TopicsLine(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             names.take(shown).forEach { name ->
+                // The page's own tag is already open ([LocalTagHere]).
+                val here = onOpen == null && name == tagHere
                 TopicChip(
                     name = name,
                     onClick = { onOpenTopic(name) },
+                    modifier = if (here) Modifier.swallowTaps() else Modifier,
                     // Inert inside the line that is itself the opener: a chip
                     // sitting in a control must not be a second one.
-                    inert = onOpen != null,
+                    inert = onOpen != null || here,
                     testTag = node?.div("tag")?.keyed(name)?.tag ?: "${testTagPrefix}_topic_$name",
                 )
             }
