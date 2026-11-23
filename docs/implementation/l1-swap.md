@@ -447,8 +447,11 @@ An act CoGra does not carry:
 
 ### 3.5 Issuance
 
-**Layer 1 requires.** Presenting a rejected set's verdict to the party
-it measures is the courtesy issuance standard
+**Layer 1 requires.** Issuance is a courtesy standard: where a
+realization claims it, issuance presents existing
+computed-and-included comparison data whole to its rightful holder
+and promises neither a computation nor a delivery hop; an adopter may
+present a rejected set's comparison privately to the party measured
 (``post:deployment:verdict-issuance``,
 [§13.2](../primitive/layer1-interface.md#132-replay-verification-and-verdict-certificates)).
 Under the closure a host owes no one the verdict behind a rejection or
@@ -466,12 +469,8 @@ is visible to CoGra only as an act that does not land, and the
 staged-write GC is what ends the wait.
 
 **Open.** [Q66](../open-questions.md#q66--issuing-a-deferrals-verdict-to-its-author).
-Where a realization claims the standard, issuance presents existing
-computed-and-included comparison data whole to its rightful holder and
-promises neither a computation nor a delivery hop; an adopter may
-present a rejected set's comparison privately to the party measured
-(``post:deployment:verdict-issuance``). A wait on an unsatisfied
-dependency is not a computed comparison. Through which channel an
+A wait on an unsatisfied dependency is not a computed comparison, so
+the standard presents nothing for it. Through which channel an
 application would receive a verdict is unanswered, and whether the
 network's host claims the standard is undecided (2026-11-23). Whether
 a stamp-wall refusal reads apart from
