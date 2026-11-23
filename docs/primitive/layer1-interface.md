@@ -1322,10 +1322,11 @@ projections. An accepted act $q$ owns exactly: its act identifier, author,
 family, semantic body (the authored parameters $(p_d, p_i)$, domain/mask,
 family-specific structural metadata), public protocol references (including
 any settlement reference and license qualifiers), asserted causal parents,
-the removable payload projection and dependency projection, the commitments
-and signatures of its admission handshake, and its approval witness — plus
-host-attached finalization metadata: the epoch and the authoritative
-logical time $\mathbb{T}^{\text{act}}_q$. Its graph projection contains
+the payload object and dependency projection with optional openings, the
+commitments and signatures of its admission handshake, and its approval
+witness — plus host-attached finalization metadata: the epoch and the act
+time $\mathbb{T}^{\text{act}}_q$, assigned when the approved act is placed
+into the authoritative order, not an authored field. Its graph projection contains
 exactly one binary edge or exactly two role-labelled hyper-edge projections;
 the edge set is derived,
 $E_k = \bigcup_{j \le k}\bigcup_{q \in \mathcal{Q}_j} \mathrm{edges}(q)$.
@@ -1359,16 +1360,17 @@ $\theta^{(k)}$ debit — a hyper-edge does not debit per leg — and carries
 exactly one dependency projection belonging to the act as a whole. A
 hyper-edge's A- and T-projections are not two records later joined into one
 act: they are two graph projections of one already-formed act, sharing by
-construction one act identifier, author, payload lifecycle, dependency
+construction one act identifier, author, payload projection, dependency
 projection, causal-parent set, approval witness, debit, count increment,
-stamp, and authoritative logical time.
+stamp, and act time.
 
 **Act identifier and minted-node identity (`def:graph:act-identifier`).**
 The actor chooses a unique author-local sequence value $s_q$ fixed before
 submission; the act identifier is
 $\mathrm{actid}(q) = \mathsf{act}(\mathrm{author}(q), s_q,
 \mathrm{family}(q))$ — no host-assigned time, no minted target, so it
-exists before host salting, verification, ordering, and time assignment.
+exists before the host adds its blinding values, verification, ordering,
+and time assignment.
 Record identifiers project it by role with one constructor
 ($\mathsf{record}(\mathrm{actid}(q), \mathrm{binary})$,
 $\mathsf{record}(\mathrm{actid}(q), A)$,
@@ -1449,7 +1451,7 @@ no identity key is formed. It anchors; it does not create. Under final-set
 admission it is one ordinary act (§7.1). The canonical payload is profile
 data; the Profile husk is structural. Profile updates are parallel
 Registrations: the bundle updates the payload, never the identity or the
-key-binding (`rem:graph:profile-update`).
+frame binding (`rem:graph:profile-update`).
 
 **Universal authored-act parallelism (`ax:graph:parallel-authored-acts`).**
 For every edge family an author may append an authored act parallel to
@@ -1491,10 +1493,12 @@ semantic target. The family's parameter tuple belongs to the act: leg-role
 swaps are renderings, not independent standing coordinates. Both
 projections inherit the one act time
 $\mathbb{T}^{\text{act}}_{e_A} = \mathbb{T}^{\text{act}}_{e_T} =
-\mathbb{T}^{\text{act}}_q$. Payload bytes, payload state, and the
-co-removed private value enter none of the identity, author,
-semantic-target, parameter, or act-time fields, so edge-projection
-identity is invariant under payload reduction.
+\mathbb{T}^{\text{act}}_q$. A consumer requiring an ordered sequence of
+acts uses the key of record $(k, \mathrm{pos}_k(q))$; act times are a
+recomputable Lamport summary and not a total order. Optional content bytes
+and opening material enter none of the act identity, author, semantic
+target, parameter tuple or act-time fields, so edge-projection identity is
+independent of later opening availability.
 
 **Graph partition and passivity (`def:graph:partition`,
 `ax:graph:passivity`).** $V = V_u \sqcup V_c$: $V_u$ **active** nodes
@@ -1521,8 +1525,12 @@ proposition, not an inference across the ontology and passivity axioms:
 $\mathrm{src}(e) = \mathrm{author}(q)$ for a binary act, and for a
 hyper-edge act $\mathrm{src}(e_A) = \mathrm{author}(q)$,
 $\mathrm{tgt}(e_A) = \mathrm{src}(e_T) = \mathrm{middle}(q)$,
-$\mathrm{tgt}(e_T) = \mathrm{semanticTarget}(q)$. There is no accepted
-record sourced at an actor who did not author it.
+$\mathrm{tgt}(e_T) = \mathrm{semanticTarget}(q)$. The author field of the
+act's metadata, the permanent frame address bound by
+`def:comparator:frame-binding`, the author component of
+$\mathrm{actid}(q)$, and the source endpoint of the binary edge or A-leg
+name one actor. There is no accepted record sourced at an actor other than
+its act's recorded author.
 
 **Derived raw edges and the raw traversal snapshot
 (`def:graph:derived-raw-edges`, `def:graph:raw-traversal-snapshot`).** A
@@ -1556,8 +1564,9 @@ not at all (`cor:graph:act-projection-atomicity`), and it is written only
 after the completed tentative state passes the final-set write rule. A
 submission that is not written is not refused — it is nothing (the network
 has no ontology of the unwritten, and only the certificate speaks). Not
-writes (`rem:network:not-a-write`): derived edges (recomputation), payload
-reduction, non-written candidates, provisional standing solves, and the
+writes (`rem:network:not-a-write`): derived edges (recomputation), a change
+in optional payload-opening availability, non-written candidates,
+provisional standing solves, and the
 solver's internal iterates — only the accepted final set and its standing
 package speak.
 
@@ -1596,132 +1605,288 @@ it; conflict protection is boundary accountability, not write-unit
 grouping (`rem:graph:dependency-closure-excludes-conflicts`).
 
 **Public protocol references (`def:graph:public-protocol-reference`).**
-Non-removable structural fields required to identify the meaning or
-validity of an act: hyper-edge A/T role and shared act identifier, the
-settlement references, structural target and incidence fields,
-family-required prior-act references, and license qualifiers. They remain
-in the structural record after every payload or dependency tombstone.
-They identify *what* an act is; Actor-authored dependencies constrain
+Permanent structural fields required to identify the meaning or validity
+of an act: hyper-edge A/T role and shared act identifier, the settlement
+references, structural target and incidence fields, family-required
+prior-act references, license qualifiers, and other public formation
+metadata. They remain permanently in the structural record independently
+of optional-opening holdings and are always available for formation
+replay, title recognition, complete-act reconstruction, and public semantic
+interpretation. They identify *what* an act is; Actor-authored dependencies constrain
 *where* the host may place it.
 
-**Removable projections (`def:graph:act-removable-projections`,
-`def:graph:act-dependency-projection`,
-`def:graph:act-dependency-tombstone`).** Every act may carry two typed
-removable projections — **content** (never read at Layer 1) and
-**dependency** (read by the host at admission to validate order) — each
-governed by the separable, concealing commitment (§8.4): full bytes and
-opening material beside carriage, a binding-yet-concealing commitment
-residue in the structural record, one-way tombstoning. The dependency
-projection is the actor's finite canonical dependency list
-$\mathrm{deps}(q)$ — each element naming one authored act, never an
-individual leg, declaring that $q$'s key of record must exceed each
-member's (`cond:graph:authoritative-order-dependency-placement`). The
-encoding is sorted by act identifier, duplicate-free,
-self-dependency-free, bounded in count and byte length, and versioned; the
-canonical empty list is valid and distinct from a missing one. The
-declaration grants no inclusion right. States: full-empty /
-full / tombstoned (list and opening removed, the binding commitment residue
-remaining — the anchor a later opening reopens). Tombstoning changes no
-identity, order, time, count, debit, standing, feed, CAN, title, or
-recognition quantity.
+**Act commitment projections (`def:graph:act-removable-projections`,
+`def:graph:act-dependency-projection`).** Every authored act has typed
+**content** and **dependency** commitments under the separable act
+commitment (§8.4). Each binding, concealing commitment remains in the
+immutable structural record when an optional opening is unavailable.
+Content bytes are never read at Layer 1, whereas the host reads dependency
+opening data at admission to validate order. The commitment residue is a
+normative structural field independent of later custody. The dependency
+projection is the author's finite dependency set $\mathrm{deps}(q)$ — each
+element naming one authored act, never an individual leg. The declaration
+requires $q$'s key of record to exceed every dependency's
+(`cond:graph:authoritative-order-dependency-placement`); it grants no
+inclusion right if a dependency is unavailable or the proposed order
+unsatisfiable. The set is duplicate-free, self-dependency-free and bounded
+in count and encoding length; the empty set is valid and distinct from a
+missing opening. The retained commitment binds one canonical dependency
+value to the act and anchors any later authenticated opening.
 
-**The admission handshake** — how a proposal becomes an orderable act:
+**Dependency List Order (`def:graph:dependency-list-order`)**
+*(courtesy)*. The reference dependency encoding orders act identifiers
+componentwise: author identifier by bytes, author-local sequence as a
+number, and family name by bytes. Entries are strictly increasing, so
+duplicates are excluded; sequence ten follows sequence two regardless of
+decimal text encoding. This is the representation of the finite dependency
+set, not a new graph-order condition.
+
+**Act Dependency Tombstone (`def:graph:act-dependency-tombstone`)**
+*(courtesy)*. A dependency tombstone is a holder's removal of the
+dependency list, the author's dependency blinding value and other opening
+material, ending any storage or carriage undertaking it held for those
+values (`def:graph:holder`). It changes no accepted act, commitment, order,
+act time, action count, debit, edge set, standing, title or settlement
+result. Destruction is irreversible only to the extent that no holder
+retains the information; later independently supplied authenticated
+opening material can be checked against the unchanged commitment. Its
+cases — full-empty (the verified empty list and its opening present), full
+(the canonical list and its opening present), tombstoned (the list, the
+author's dependency blinding value and opening removed from this holder
+while the binding commitment remains) — describe a holder's holdings, never
+graph states.
+
+**Dependency Blinding Value Concealment
+(`rem:graph:dependency-nonce-concealment`)** *(courtesy)*. After a
+tombstone, concealment against the published pre-commitment rests on the
+quality of the author's dependency blinding value, which no rule of the
+specification governs; reusing a blinding value across concealed
+dependencies can link two otherwise hidden references, and a holder
+removing its dependency list cannot recall copies observed on the
+submission path. The warning imposes no entropy floor, custody mandate or
+host quality check.
+
+**The admission handshake** — how a proposal becomes an orderable act. The
+closure states its properties; the concrete transcript is the courtesy
+handshake below.
 
 1. **Proposal pre-commitment (`def:graph:proposal-pre-commitment`).**
-   Because the host contributes the final projection salts, the actor first
-   binds its proposal: with two independent fresh private nonces, one per
-   projection — a **content nonce** and a **dependency nonce** — it forms
-   domain-separated pre-digests of the content bytes and of the canonical
-   dependency encoding, each over the act identifier, its projection's
-   nonce, and the bytes; the pre-commitment is the hash of the canonical
-   structural body plus both pre-digests, and the actor signs it. The
-   pre-commitment exists before host salting, binds the exact proposal,
-   cannot be transplanted to another act identifier, carries no host order,
-   and grants no inclusion. The dependency nonce is disclosed to the host at
-   proposal with the dependency list. The content nonce stays on the
-   author's content-carriage side, beside the payload, is removed atomically
-   with it, and is never disclosed as dependency-verification input; the
-   host receives it only inside the optional content pair (step 2). With two
-   independent nonces, dependency verification carries no content
-   capability. **Entropy custody** (`subsec:deployment:concealment-entropy`,
-   `rem:graph:erasure-floor`): the host generates the commitment salts in
-   both carriage modes; the content nonce's entropy custody belongs to the
-   actor or the carriage layer under the published generation rule. When the
-   pair is absent the host never holds the content nonce, and the carrier
-   owns its checkable format, length, freshness, and non-reuse checks; these
-   are carriage obligations, not conditions of act acceptance. A low-entropy
-   content nonce exposes that actor's payload, not another actor's record.
-2. **Verified act (`def:graph:verified-act`).** The proposal carries the
-   structural body, the optional **content pair** (payload, content nonce),
-   the dependency list and the dependency nonce, the content pre-digest, the
-   pre-commitment, and the pre-signature. The pair is optional as a unit:
-   bytes without their nonce cannot be verified against the content
-   pre-digest. The host uses one submission procedure whether or not it
-   holds the pair. **Act checks:** it verifies the actor signature,
-   act-identifier uniqueness, canonical formation, hyper-edge A/T
-   consistency, public protocol references, dependency bounds, absence of
-   self-dependency, and the pre-commitment recomputed from the encoded
-   structural body, the received opaque content pre-digest, and the
-   dependency pre-digest recomputed from the dependency nonce and the
-   canonical dependency encoding. The act checks never require the payload
-   or the content nonce; a failure of an act check produces no Layer-1
-   object. The host then chooses independent fresh domain-separated salts
-   meeting the published entropy floor and forms the binding commitments:
-   the content commitment over the act identifier, the pre-commitment, its
-   salt, and the content pre-digest — binding the payload transitively and
-   inheriting the pre-digest's concealment, by one formula with or without
-   the pair — and the dependency commitment over the act identifier, the
-   pre-commitment, its salt, and the canonical dependency encoding.
-   **Carriage checks:** when the pair is present, the host additionally
-   recomputes the content pre-digest from the payload and content nonce,
-   requires equality with the received pre-digest, enforces the
-   $M_{\text{payload}}$ carriage bound, and carries the pair under
-   `rem:graph:act-payload-custody-phases`, removing both members atomically
-   on request; a failure refuses carriage of the pair, not the act. When the
-   pair is absent, those checks and that custody belong to whoever carries
-   it and are not conditions of the act. What the host verifies for the act,
-   commits to, seals, or orders never depends on possession of the payload
-   or content nonce. It seals the resulting **verified act** header — body,
-   pre-commitment, pre-signature, both commitments, and the content and
-   dependency edition tags, no host order fields — with its host signature.
-   The seal attests receipt, pre-commitment verification from the two
-   pre-digests, formation validity, and salt addition, identically in both
-   carriage modes; it promises no inclusion. The seal does not attest
-   carriage of the content pair: a party on the submission path can remove
-   an offered pair without invalidating the act, and a host can seal and
-   order an act while declining its carriage. Where carriage matters to the
-   actor, the layer that accepts it returns an authenticated carriage result
-   separate from the seal; its form is a deployment concern.
-3. **Approval witness (`def:graph:approval-witness`).** The actor verifies
-   the host seal, exact equality of the returned body, references,
-   pre-commitment and pre-signature, correct recomputation of its own
-   content pre-digest from the payload and content nonce, correct formation
-   of the content commitment over that pre-digest and of the dependency
-   commitment over the canonical dependency encoding with the returned
-   salts, correct editions, and (for a hyper-edge) agreement of all act-level
-   fields across both legs — then signs the **approval witness** over the
-   encoded verified act together with its host seal. The witness signs no
-   epoch index, position, logical time,
-   final-set membership, standing, or title outcome. **Only a verified act
-   with a valid approval witness is eligible for host ordering**; a
-   verified but unaccepted act remains off-record submission state.
+   Before the host adds its blinding values, the author signs a
+   pre-commitment $C^{\text{pre}}_q$ with signature $\sigma^{\text{pre}}_q$
+   to the approved opaque bytes of a proposed act's structural body, content
+   value and dependency value. The approved body includes the act
+   identifier, author, family, edge shape, incidence, semantic coordinates,
+   public protocol references, and any opaque signed extension bytes; it
+   excludes host blinding values, residues, seals and order fields. The
+   signature covers the approved bytes, including the stated author and act
+   identifier they name, under the public key the record maps to it; it
+   prevents substitution of any covered byte and grants no inclusion. Its
+   well-formedness establishes nothing about whether that key speaks for
+   the stated Actor (`post:graph:act-authentication-requirements`). The
+   signed pre-commitment is verifiable from the declared formation edition
+   and its authenticated inputs without requiring a host to hold a content
+   opening.
+2. **Verified act (`def:graph:verified-act`).** A verified act $V_q$ is the
+   approved structural body, the signed proposal pre-commitment, the content
+   commitment and dependency commitment formed with host-added blinding
+   values, and a host verification seal over their exact association. The
+   record names each commitment's formation edition so that replay can
+   verify its formation. The host verifies the proposal signature under its
+   recorded signing key, structural formation, public protocol references,
+   dependency bounds, absence of self-dependency and the binding of the
+   approved body and commitments before sealing. A failed act check
+   produces no Layer-1 object. The seal attests those checks and commitment
+   formation, but promises no inclusion. The verification seal does not
+   attest carriage of the content pair: a party on the submission path can
+   remove a supplied pair without invalidating the act, and a host can seal
+   and order an act while declining its carriage. The host's acceptance,
+   commitment, seal and order are independent of possession of a content
+   opening.
+3. **Approval witness (`def:graph:approval-witness`).** Before approving,
+   the author verifies the host seal, exact equality of the returned
+   approved body and proposal, and correct formation of both host-added
+   commitments under their declared editions; for a hyper-edge, all
+   act-level fields agree across both legs. The author signs an approval
+   witness $\sigma^{\text{app}}_q$ over this exact verified act and seal,
+   including its content and dependency commitments, as the accepted
+   realization of the precommitted proposal. A valid witness verifies under
+   the public key the record maps to it over this exact association;
+   authority of that key for the stated Actor is separate from signature
+   validity. The witness signs no epoch index, position, logical time,
+   final-set membership, standing or title outcome. **Only a verified act
+   with a valid approval witness is eligible for host ordering**; a changed
+   header, inconsistent hyper-edge leg, invalid dependency opening or
+   unsatisfiable dependency set is refused. A verified but unaccepted act
+   remains off-record submission state.
 4. **Ordering fraud proof (`def:graph:ordering-fraud-proof`,
    `post:graph:ordering-accountability`).** For an accepted act, a fraud
-   proof is the ordinary full opening of its dependency projection; it
-   succeeds iff some dependency is absent from finalized history or has a
-   key of record not strictly below the act's. A successful proof may
-   trigger fault attribution, operator slashing, or deployment sanctions —
-   but it does **not** reorder the epoch, delete the act, reverse counts or
-   debits, recompute historical standing, or reverse title. The
-   authoritative order stays authoritative even when proven non-compliant
-   (a *compliant* order satisfies both placement conditions); by finalizing
-   an act the host attests it received and validated the full dependency
-   opening.
+   proof is an authenticated full opening of its dependency commitment
+   against the finalized act, seal, approval witness and authoritative
+   order; it succeeds exactly when some dependency is absent from finalized
+   history or has a key of record not strictly below the act's. An opening
+   reveals the complete dependency list; no selective-disclosure or
+   zero-knowledge property is required. Verification dependent on a hidden
+   opening is conditional on authenticated supply of that opening. A
+   successful proof may trigger fault attribution, operator slashing, or
+   deployment sanctions — but it does **not** reorder the epoch, delete the
+   act, reverse counts or debits, recompute historical standing, or reverse
+   title. The authoritative order stays authoritative even when proven
+   non-compliant (a *compliant* order satisfies both placement conditions);
+   by finalizing an act the host attests it received and validated the full
+   dependency opening.
 
-**Submission-path disclosure (`subsec:deployment:concealment-entropy`).**
-Every submission discloses the dependency list and its nonce, and the
-content pair when it is sent, to the host and to whatever carries the
-submission. Confidentiality of the submission path is deployment scope; a
+**Courtesy Handshake (`def:graph:courtesy-handshake`)** *(courtesy)*. The
+reference realization of `post:graph:act-authentication-requirements` uses
+the deployment's declared canonical serialization encode (one encoding per
+value, published and versioned), collision-resistant hash $H$, and
+signature scheme Sign. Actor-indexed signing notation denotes the signing
+key used for that Actor's stated approval; it does not identify the signing
+key with the permanent frame address or establish key-to-Actor authority.
+Domain-separation tags, author and host blinding-value formats, and the
+host blinding-value entropy floor belong to the declared courtesy edition,
+which fixes their properties rather than their bytes. Its field vocabulary
+and transcript are versioned together; a courtesy wire change advances that
+edition without changing closure semantics, while a change to structural
+authentication or ordering properties still changes the closure contract.
+
+- *Body and pre-digests.* The author's canonical body includes approved
+  structural fields and an opaque signed extension carrying the initial
+  requested publication intent. With the content bytes, the canonical
+  dependency encoding, and the author's two independent fresh blinding
+  values, one per projection, the pre-digests are
+  $h^{\text{pre}}_{\text{content}} = H(\texttt{PN-content-pre-v2} \parallel \mathrm{actid}(q) \parallel \text{content blinding value} \parallel \text{bytes})$
+  and
+  $h^{\text{pre}}_{\text{dep}} = H(\texttt{PN-dependency-pre-v2} \parallel \mathrm{actid}(q) \parallel \text{dependency blinding value} \parallel \mathrm{encode}(\mathrm{deps}(q)))$;
+  the author signs
+  $C^{\text{pre}}_q = H(\texttt{PN-act-proposal-v2} \parallel \mathrm{encode}(\text{body}) \parallel h^{\text{pre}}_{\text{content}} \parallel h^{\text{pre}}_{\text{dep}})$.
+  It exists before the host adds its blinding values and binds the exact
+  proposal without granting inclusion.
+- *Blinding-value disclosure.* The author's dependency blinding value is
+  disclosed to the host at proposal with the dependency list; the author's
+  content blinding value stays beside the payload, removed atomically with
+  it, and is never disclosed as dependency-verification input. The host
+  receives it only inside the optional **content pair** (payload, content
+  blinding value), under that pair's custody obligations; the pair is
+  optional as a unit, since bytes without the author's content blinding
+  value cannot be verified. The author's independent blinding values mean
+  dependency verification carries no content capability even for a short
+  or enumerable payload.
+- *Host checks and commitments.* The host uses one submission procedure
+  whether or not it holds the content pair. It checks the proposal
+  signature under its recorded signing key, act-identifier uniqueness,
+  canonical formation, hyper-edge A/T consistency, public protocol
+  references, dependency bounds, absence of self-dependency, and the
+  pre-commitment recomputed from the encoded structural body, the received
+  opaque content pre-digest, and the dependency pre-digest recomputed from
+  the author's dependency blinding value; these act checks never require
+  the payload or the author's content blinding value. It then chooses
+  independent fresh blinding values and forms the content commitment
+  $H(\texttt{PN-content-v2} \parallel \mathrm{actid}(q) \parallel C^{\text{pre}}_q \parallel \text{host content blinding value} \parallel h^{\text{pre}}_{\text{content}})$
+  — binding the payload transitively and inheriting the pre-digest's
+  concealment, by one formula with or without the pair — and the dependency
+  commitment
+  $H(\texttt{PN-dependency-v2} \parallel \mathrm{actid}(q) \parallel C^{\text{pre}}_q \parallel \text{host dependency blinding value} \parallel \mathrm{encode}(\mathrm{deps}(q)))$.
+- *Carriage checks.* When the pair is present, the carrier recomputes the
+  content pre-digest from the payload and the author's content blinding
+  value, requires equality with the received pre-digest, enforces the
+  $M_{\text{payload}}$ carriage bound, and carries both members atomically
+  on request; a failure refuses carriage of the pair, not the act. When the
+  pair is absent, those checks and that custody belong to whoever carries
+  it and are not conditions of the act; the host's acceptance of the act is
+  identical in both cases.
+- *Header and seal.* The reference header is (body, $C^{\text{pre}}_q$,
+  $\sigma^{\text{pre}}_q$, both commitments, the content and dependency
+  edition tags), with no host order fields, sealed by the host's signature
+  over $H(\texttt{PN-verified-act-v1} \parallel \mathrm{encode}(V_q))$. An
+  edition tag names the formation of its commitment, including its inputs,
+  canonical encoding and domain separation; any change to that formation
+  moves the tag. The seal attests receipt, pre-commitment verification from
+  the two pre-digests, formation validity and addition of the host's
+  blinding values, identically in both carriage modes.
+- *Approval.* The host returns the header, its blinding values and the
+  seal; the Actor verifies exact equality of the approved body, act
+  identifier, semantic coordinates, public protocol references and opaque
+  signed extension bytes, recomputes both commitments and checks the
+  correct editions before signing its approval witness. Where carriage
+  matters, the party that accepts it returns an authenticated receipt
+  separate from the seal, scoped to that party and object. No rule of the
+  specification concerns a host's retention of a received content
+  pre-digest; concealment of the payload rests on the author's content
+  blinding value.
+- *Fraud opening.* For an ordering fraud proof the authenticated opening
+  (act identifier, dependency list, host dependency blinding value) is
+  checked against the dependency commitment by the equation above and then
+  against $\mathrm{DepOK}_k(q)$; the complete list is disclosed.
+
+**Holder, custodian, storage, carriage (`def:graph:holder`,
+`def:graph:custodian`, `def:graph:storage`, `def:graph:carriage`)**
+*(courtesy)*. A **holder** is any party that retains opening material for a
+projection, however acquired. Holding is a fact, not an undertaking: it
+imposes no service or retention duty, and a holder may remove the material
+at any moment without wronging anyone; transient sight for checking is not
+holding, an author holding its content pair is a holder, and append custody
+alone never makes a host a holder of an opening it does not hold. A
+**custodian** is a holder that by its own act undertakes storage or
+carriage — beginning when it accepts a store or serve request, or declares
+a carriage endpoint for material it already holds, and ending when it
+removes the material it controls; receipt of the signed initial intent
+alone imposes no undertaking. **Storage** is the courtesy service of
+retaining opening material quietly, with no endpoint or serving duty.
+**Carriage** is storage plus serving opening material on request at a
+declared authenticated endpoint; it narrows to storage when serving stops.
+Acceptance, continuation and refusal are the custodian's own decisions,
+each acknowledged by an authenticated receipt. Carriage is independent of
+append, changes no accepted record or graph state, and an act's validity
+never depends on its openings being carried. Every holding is an
+observation, never a graph state.
+
+**Requested Publication Intent (`def:graph:requested-publication-intent`)**
+*(courtesy)*. A requested publication intent states what a party is asked
+to do with a projection's opening, never a graph state or an assertion that
+an opening currently exists. The signed initial intent addresses each party
+that receives the projection's opening together with the proposal; a party
+receiving no opening has nothing to examine, retain or acknowledge for that
+projection. The vocabulary per projection is **peek** (examine an opening
+and let it go, without becoming a holder), **store** (retain quietly),
+**serve** (retain and answer requests at a declared authenticated
+endpoint), **shelve** (a serving custodian stops serving and keeps quiet
+storage) and **forget** (any holder removes what it holds; accepted
+deletion also ends any service for that material). Absence of a value asks
+nothing. Material received with no value attached creates no duty and
+authorizes neither acceptance of storage or carriage nor publication. A
+party answers each value it accepts with an authenticated receipt binding
+the request, its sequence, the party, the projection and the object;
+declining any value does not change an otherwise valid act, and an accepted
+forget promises deletion by that holder, not recall from other holders.
+Material required for proposal validation may be received without ongoing
+carriage, but a recipient that cannot complete validation while honoring
+immediate deletion declines the proposal or service rather than issuing a
+false deletion receipt. A later request is an authenticated courtesy
+message outside the immutable body naming the original act, projection,
+controller, intended party, intent, courtesy edition and a controller-local
+monotonically increasing sequence for that act, projection and party; the
+controller signs it or uses equivalent attributable authentication, and
+the recipient verifies controller authority. An identical retry, byte-equal
+in the values the receipt binds, returns the one receipt already issued; an
+older request cannot supersede a newer accepted one, and reuse of a
+sequence with different content is rejected. Only a later explicit serve
+request by the same authorized controller can restore serving after its
+forget request for that recipient. The immutable proposal's intent is its
+initial request in the named courtesy edition; it holds the origin of the
+sequence for its act, projection and party, its receipt binds that origin,
+and every later request's sequence exceeds it. A legacy body with no
+paper-defined field vocabulary establishes no intent under this edition
+until its controller sends an explicit authenticated intent message; a
+vendor adapter requires an explicit edition-specific interpretation and
+controller authorization, and neither a legacy field nor a present pair
+implicitly means any of these values.
+
+**Submission-path disclosure (`subsec:deployment:concealment-entropy`)**
+*(courtesy)*. Every submission discloses the dependency list and the
+author's dependency blinding value, and the content pair when it is sent,
+to the host and to whatever carries the submission, because the host orders
+by the dependencies and verifies the pair it carries. Confidentiality of
+the submission path is deployment scope; a
 later tombstone conceals the dependency projection from holders of the
 record, not from parties that observed the submission.
 
@@ -1729,8 +1894,8 @@ record, not from parties that observed the submission.
 `def:graph:stamp-fault`, `def:graph:title-certificate-fault`).** A
 *parent-placement fault* is an asserted parent of a finalized act that is
 absent from finalized history or sits at a key of record not strictly below
-the act's; the public finalized record proves it, with no
-removable-projection opening. It carries the dependency case's consequences
+the act's; the public finalized record proves it, and no optional opening
+is needed. It carries the dependency case's consequences
 — attribution and sanctions, no reordering, deletion, recomputation, or
 reversal (`cond:graph:ordering-accountability-parent-placement`). A *stamp
 fault* is a published logical time that differs from the recomputed
@@ -1744,23 +1909,59 @@ replacement-agreement mechanism is specified.
 
 **Act authentication requirements
 (`post:graph:act-authentication-requirements`,
-`rem:graph:authentication-realization-out-of-scope`).** The deployment must
-provide: (i) authorship — publicly checkable evidence the stated actor
-authorized the proposal; (ii) proposal integrity — no host substitution
-without detection; (iii) realization transparency — every host-added field
-visible to the actor before approval; (iv) exact approval — only the exact
-approved act may enter the sequence; (v) hyper-act unity; (vi)
-removable-projection binding; (vii) ordering accountability. **The
-specification prescribes properties, not a cryptographic realization:
-signature schemes, commitment schemes, hash functions, salts, serialization
-formats, key management, proof encodings, and algorithm migration are
-deployment concerns.** The handshake constructions above are one reference
-realization: encode is the deployment's declared canonical serialization
-(one encoding per value, published and versioned), $H$ its declared
-collision-resistant hash, and Sign its declared signature scheme; the
-domain-separation tags, nonce and salt formats, and salt entropy floor are
-the deployment's. Any implementation satisfying the postulate is
-compliant.
+`itm:graph:act-authentication-requirements-signature-verification`,
+`rem:graph:authentication-realization-out-of-scope`).** Before an authored
+act becomes eligible for the authoritative sequence, the deployment must
+provide all of: (i) **signature verification** — public evidence
+sufficient to check that each recorded proposal and approval signature is
+well-formed: it verifies, under the public key the record maps to it, over
+the exact bytes it covers, which include the stated author and act
+identifier; (ii) proposal integrity — a host cannot substitute another body
+or committed value, including opaque signed extension bytes, for the bytes
+the recorded signatures cover without detection; (iii) realization
+transparency — every host-added field of the finalizable act lies within
+the bytes the recorded approval signs; (iv) exact approval — only the exact
+finalizable act covered by a well-formed recorded approval signature may
+enter the authoritative sequence; (v) hyper-act unity — both projections of
+a hyper-edge resolve to the same approved parent act; (vi)
+opening-independent projection binding — later unavailability of an
+opening does not permit the immutable act to be rebound to another payload
+or dependency value; (vii) ordering accountability — where dependency
+compliance is claimed, public evidence can establish a violation without
+rewriting finalized history.
+
+Signature verification establishes only that each recorded signature is
+well-formed under the public key the record maps to it, over the bytes it
+covers; **the record's map of signatures to keys need not match its map of
+authors to acts, and no closure check relates them.** References to the
+Actor's signature or approval in act formation denote this recorded
+approval operation, not an independent proof of key-to-Actor authority. In
+an epoch whose package binds no author-authority case
+(`post:epoch:final-edge-set`), an act is eligible when its recorded
+signatures are well-formed, whichever keys they are; no key authority is
+checked, and every consequence the closure attaches to the act's author,
+including its debit, standing, title and settlement effects, follows the
+recorded author. The author field and its structural consequences remain
+fixed (`def:graph:act-identifier`, `def:graph:act-envelope`,
+`prop:graph:author-source-identity`, `def:comparator:frame-binding`).
+*Declared case:* under an author-authority case bound in the epoch package,
+the record also carries the evidence read by that case's projection, and
+verification checks the stated Actor's authorization under its pinned rules
+and data (§13.3).
+
+**The specification prescribes the properties of authenticated act
+formation, not a cryptographic realization: signature schemes, commitment
+schemes, hash functions, blinding values, serialization formats, key
+management, proof encodings, and algorithm migration are deployment
+concerns.** The canonical encoding used for a commitment is published and
+versioned so that its formation can be verified. Conformance to the
+act-formation contract requires `post:graph:act-authentication-requirements`;
+this does not certify conformance to the specification's other
+requirements. In the absence of a declared author-authority case, deciding
+which signing keys may speak for an Actor is the deployment's concern and
+imposes no additional closure condition; an author-authority case bound in
+the epoch package additionally requires its pinned evidence and conditional
+replay check.
 
 ### 8.3 Temporal structure
 
@@ -2232,10 +2433,10 @@ Eight structural invariants for all edges and hyper-edges:
 1. Every record is initiated at its author: the source of a binary edge or
    A-leg is the act's author, and a T-leg's passive source is the act's
    middle node, fixed by that same author. Author metadata, the
-   act-identifier author component, the frame-bound key, and the initiating
+   act-identifier author component, the frame address, and the initiating
    source endpoint are one actor by construction
    (`prop:graph:author-source-identity`).
-2. Every edge projection inherits its parent act's logical time
+2. Every edge projection inherits its parent act's act time
    $\mathbb{T}^{\text{act}}_q$ — the Lamport summary of the order of record,
    never an input to precedence (`ax:graph:act-causality`) — and carries its
    own maturity scalar $\tau_e$.
@@ -2252,8 +2453,8 @@ Eight structural invariants for all edges and hyper-edges:
    (`cor:graph:standing-act-atomicity`).
 6. Boundary damping $e^{-\beta H_\tau}$ is applied at observation, not to
    stored tensors.
-7. Every authored act carries a payload commitment; payload bytes and
-   payload state enter the canonical pipeline nowhere
+7. Every authored act carries a payload commitment; optional content bytes
+   enter the canonical pipeline nowhere
    (`prop:graph:removable-projection-invariance`). Nodes carry nothing:
    every node-level quantity is a declared fold over incident records
    (`ax:graph:authored-act-ontology`, `def:graph:canonical-folds`).
