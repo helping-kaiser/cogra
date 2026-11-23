@@ -5523,6 +5523,9 @@
         "feed.commentCard.tagsLine": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
         ],
+        "feed.commentCard.tagsLine.counts": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
         "feed.commentCard.tagsLine.tag": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
@@ -9077,6 +9080,9 @@
         "history.commentCard.tagsLine": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
         ],
+        "history.commentCard.tagsLine.counts": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
         "history.commentCard.tagsLine.tag": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
@@ -9589,6 +9595,9 @@
         "history.commentCard.tagsLine": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
         ],
+        "history.commentCard.tagsLine.counts": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
         "history.commentCard.tagsLine.tag": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
@@ -9753,6 +9762,9 @@
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
         ],
         "history.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "history.commentCard.tagsLine.counts": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
         ],
         "history.commentCard.tagsLine.tag": [
@@ -13487,6 +13499,7 @@
       "prefix": "profile",
       "keys": {
         "profile.comments.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "profile.comments.commentCard.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "profile.comments.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
       "nodes": {
@@ -13539,6 +13552,19 @@
         "profile.comments.commentCard.authorChip.name": [
           "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f",
           "5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e"
+        ],
+        "profile.comments.commentCard.media": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "profile.comments.commentCard.media.dots": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "profile.comments.commentCard.media.frame": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f/1",
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f/2"
+        ],
+        "profile.comments.commentCard.media.frame.soundDisc": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f/1"
         ],
         "profile.comments.commentCard.menu": [
           "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f",
@@ -19127,6 +19153,9 @@
         "saved.commentCard.tagsLine": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
         ],
+        "saved.commentCard.tagsLine.counts": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
         "saved.commentCard.tagsLine.tag": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
@@ -20203,6 +20232,9 @@
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
         ],
         "saved.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "saved.commentCard.tagsLine.counts": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
         ],
         "saved.commentCard.tagsLine.tag": [
