@@ -4,6 +4,8 @@ ALWAYS the stage beneath the sheet stays inert while the sheet is up
 
 ALWAYS the sheet is titled by the tag it edits
 
+ALWAYS the sheet stands no taller than 88% of the screen's height, as the reference pair's sheet does, so Done stands inside a 360 by 640 screen with nothing scrolled
+
 ALWAYS the sheet carries no Un-tag control
 
 ALWAYS the pick's readout stands above the field

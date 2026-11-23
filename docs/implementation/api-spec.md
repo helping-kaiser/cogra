@@ -905,6 +905,10 @@ enum PayloadState { FULL REDUCED }
 type PostConnection {
   edges: [PostEdge!]!
   pageInfo: PageInfo!
+  "How many posts the listing holds, across every page — one per
+   post, never an edit, a removed post included — under the filter
+   that served the edges."
+  totalCount: Int!
 }
 type PostEdge {
   cursor: String!
@@ -917,6 +921,9 @@ type PostEdge {
 type CommentConnection {
   edges: [CommentEdge!]!
   pageInfo: PageInfo!
+  "How many entries the list holds, across every page, under the
+   filter that served the edges."
+  totalCount: Int!
 }
 type CommentEdge {
   cursor: String!
@@ -979,9 +986,9 @@ GENESIS records (`true`) or the rest (`false`), so a count and the
 rows it counts never disagree. The profile's figures count bundles,
 never records ([open-questions.md Q35](../open-questions.md)): one
 person's opinions toward one target are one, however often revised.
-`Posts` is `outgoingRecords(family: PUBLISH, toKind: POST, genesis:
-true)`'s `totalCount` — one genesis per post, so its records are its
-bundles. `Opinions on them` is `incomingRecords(family: OPINION,
+`Posts` is `User.posts`' `totalCount` — every post the person
+published, a still-settling one and a removed one included, never an
+edit: exactly the rows the Posts view lists. `Opinions on them` is `incomingRecords(family: OPINION,
 payloadMarked: false)`'s `bundleCount` — the people holding an
 opinion on the person — and `Opinions by them` is
 `outgoingRecords(family: OPINION, toKind: USER, payloadMarked:
@@ -1249,6 +1256,14 @@ type User implements Node & Actor {
   "When the viewer saved this person; null when not kept, or with no
    session. What the profile menus' Save / Unsave row reads."
   viewerBookmarkedAt: DateTime
+  "The person's posts — the profile's Posts view and its Posts
+   figure: the post listing's own order narrowed to them, pending
+   entries first, a removed post included, never an edit."
+  posts(first: Int, after: String, last: Int, before: String, includePending: Boolean! = true): PostConnection!
+  "The person's comments — the profile's Comments view — whatever
+   they answer, in the thread read's newest-first order: pending
+   entries first, a removed comment included, never an edit."
+  comments(first: Int, after: String, last: Int, before: String, includePending: Boolean! = true): CommentConnection!
 
   # Private viewer state — each field resolves only when the authenticated
   # viewer is this User; null otherwise (see "Private viewer state" below).
@@ -1741,6 +1756,10 @@ type Hashtag {
   "The viewer's own Affinity bundle toward this topic — the follow
    control's read, and with `pick` where a candidate would land it."
   viewerStance(pick: StancePickInput, includePending: Boolean! = true): StanceBundle
+  "The borrowed view's landed Affinity bundle toward this topic, for
+   a request with no session — read-only, what a guest's follow face
+   wears; null with a session and where it holds none."
+  borrowedStance: BorrowedStance
 }
 
 "One node currently tagged with a topic."
@@ -3940,6 +3959,17 @@ type StanceBundle {
   "Where the supplied pick lands the bundle; null without one."
   projected: StanceProjection
 }
+
+"The borrowed view's own landed bundle toward one node, as a
+ sessionless reader's face wears it — StanceBundle's readings,
+ read-only."
+type BorrowedStance {
+  pDirected: Dimension!
+  pInterest: Dimension!
+  recordCount: Int!
+  inert: Boolean!
+  severed: Boolean!
+}
 ```
 
 **Both sides of the fold are served.** The clip is the read rule,
@@ -3981,6 +4011,23 @@ reader chooses the **L1 view** — only what has landed — or the
 from the pre-commitment onward. Severance computes its batch
 against the L2 view, so severing and refetching reads `(0, 0)` at
 once rather than an epoch later.
+
+**The borrowed view's stance.** `borrowedStance: BorrowedStance`
+sits beside `viewerStance` on every stance-able node and serves a
+request with no session what its stance faces wear
+([stance-control.md "A guest's view"](../../design/guidelines/stance-control.md#a-guests-view)):
+the landed bundle of the borrowed view — the account
+`Query.borrowedView` names for that request, the Genesis
+Moderator — toward the node, as `{ pDirected, pInterest,
+recordCount, inert, severed }`, the readings that account's own
+`viewerStance(includePending: false)` gives. It is read-only by
+shape: no `targetGraphId`, `severanceCost` or `projected`, nothing
+a gesture starts from. It is null with a session, and null where
+the borrowed view holds no landed record toward the node — the
+hollow face. Only the landed half is served, because an act in
+flight is its own author's read. A sessionless `viewerStance`
+stays null. The faces at one depth of a document share one batch:
+the vantage and one grouped bundle read, whatever the page's size.
 
 **The author's Publish bundle.** `Post.viewerBacking(includePending:
 Boolean! = true): BackingBundle` serves the sum of the Publish

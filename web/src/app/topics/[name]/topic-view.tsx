@@ -321,6 +321,10 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
                       // THE SCORE OPENS ITS TRACE, whose back arrow reads `Back to #<thattag>`.
                       scoreOrigin={{ kind: "tag", name, from }}
                       doorFrom={doorFrom}
+                      // THE PAGE'S OWN TAG IS INERT ON IT (jakob, hand test
+                      // 2026-11-23): "same tag" is the name the read answers,
+                      // canonical (hashtag.md §1), never the name asked for.
+                      tagHere={tagName}
                       testId={`topic-post-${node.id}`}
                       authorTestId={`topic-author-${node.id}`}
                       stanceTestId={`topic-stance-${node.id}`}
@@ -350,6 +354,7 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
                       // on this page a card is a doorway, not a thread.
                       reply="none"
                       from={doorFrom}
+                      tagHere={tagName}
                       testId={`topic-comment-${node.id}`}
                       node={{ path: `${NODE}.commentCard`, key: node.id }}
                       attach

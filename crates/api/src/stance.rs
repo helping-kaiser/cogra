@@ -141,7 +141,7 @@ async fn resolve_id(pool: &PgPool, target: Uuid) -> Result<nodes::ResolvedNode, 
 
 /// The family the target's node class fixes. Domain, mask and tier follow
 /// from it — never a caller's choice (edges.md §1).
-fn family_for(node: &NodeId) -> Family {
+pub(crate) fn family_for(node: &NodeId) -> Family {
     match node {
         NodeId::Name(_) => Family::Affinity,
         _ => Family::Opinion,

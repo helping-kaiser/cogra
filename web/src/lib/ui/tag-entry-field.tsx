@@ -86,7 +86,10 @@ export function TagEntryField({
       {tags.length > 0 && (
         <ul className="m-0 flex list-none flex-wrap gap-2 p-0" data-testid={`${testIdPrefix}-tag-list`}>
           {tags.map((tag, index) => (
-            <li key={`${tag.name}-${index}`} className="flex flex-col gap-1">
+            // The item may yield to the row (`min-w-0 max-w-full`): a wrapping
+            // flex row sizes an item to its content, so a long tag's pill would
+            // otherwise push past the screen instead of cutting its name.
+            <li key={`${tag.name}-${index}`} className="flex min-w-0 max-w-full flex-col gap-1">
               <TopicRemovable
                 name={tag.name}
                 onRemove={() => removeAt(index)}

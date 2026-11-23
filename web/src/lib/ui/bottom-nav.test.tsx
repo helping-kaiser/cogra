@@ -1,7 +1,10 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
-import { settleReaderState } from "@/lib/session/reader-state";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+import { resetReaderStateForTests, settleReaderState } from "@/lib/session/reader-state";
 import { ALL_SLOTS, BottomNav } from "./bottom-nav";
 import { CarriedSnackbar } from "./carried-snackbar";
 
@@ -31,14 +34,60 @@ describe("BottomNav", () => {
     expect(screen.getByTestId("nav-search")).not.toHaveAttribute("aria-current");
   });
 
-  // A label is never shortened to an ellipsis: above 1.3× it wraps and the bar
-  // grows (`BottomNav.jsx`, K13.4).
-  it("wraps a label rather than ellipsizing it", () => {
+  // A word is never shortened to an ellipsis; up to 1.3× the bar is as it was.
+  it("never ellipsizes a word", () => {
     render(<BottomNav active="feed" signedIn />);
     const slot = screen.getByTestId("nav-feed");
     expect(slot.className).not.toContain("truncate");
     expect(slot.className).toContain("whitespace-normal");
     expect(slot.className).toContain("break-words");
+  });
+
+  // ABOVE 1.3× THE WORDS DROP (jakob 2026-11-23, seam 411 (c)): the drawn word
+  // is the part that drops, so it is print only, and every slot — member,
+  // applicant, guest — carries its word as its own accessible name.
+  describe("the words above 1.3×", () => {
+    const WORDS = { feed: "Feed", search: "Explore", compose: "New post", wallet: "Wallet", profile: "Profile" };
+    afterEach(() => resetReaderStateForTests());
+
+    it.each([
+      ["a member", true, "MEMBER"],
+      ["an applicant", true, "APPLICANT"],
+      ["a guest", false, null],
+    ] as const)("every_slot_keeps_its_word_as_its_own_accessible_name_for_%s", (_who, signedIn, state) => {
+      settleReaderState(state);
+      render(<BottomNav active="feed" signedIn={signedIn} />);
+      for (const [slot, word] of Object.entries(WORDS)) {
+        const element = screen.getByTestId(`nav-${slot}`);
+        expect(element).toHaveAttribute("aria-label", word);
+        expect(element).toHaveAccessibleName(word);
+        expect(element.className).toContain("cg-bar-slot");
+      }
+      expect(screen.getByTestId("nav-feed")).toHaveAttribute("aria-current", "page");
+    });
+
+    it("the_drawn_word_is_the_part_that_drops_and_is_print_only", () => {
+      render(<BottomNav active="feed" signedIn />);
+      for (const [slot, word] of Object.entries(WORDS)) {
+        if (slot === "compose") continue;
+        const drawn = screen.getByTestId(`nav-${slot}`).querySelector(".cg-bar-word");
+        expect(drawn).toHaveTextContent(word);
+        expect(drawn).toHaveAttribute("aria-hidden", "true");
+      }
+      expect(screen.getByTestId("nav-compose").querySelector(".cg-bar-compose")).not.toBeNull();
+    });
+
+    // The comparison itself is CSS; jsdom evaluates neither `sign()` nor a
+    // style query, so the rule is pinned here and measured in a browser.
+    it("the_rule_drops_the_words_past_a_root_of_20_8px_and_keeps_the_1x_geometry", () => {
+      const css = readFileSync(join(process.cwd(), "src", "app", "tokens-2.css"), "utf8");
+      expect(css).toMatch(/@property --cg-text-past-bar \{\s*syntax: "<number>";\s*inherits: true;\s*initial-value: 0;/);
+      expect(css).toContain("--cg-text-past-bar: max(0, sign(1rem - 20.8px));");
+      const rule = css.slice(css.indexOf("@container style(--cg-text-past-bar: 1)"));
+      expect(rule).toMatch(/\.cg-bar-word \{\s*display: none;/);
+      expect(rule).toMatch(/\.cg-bar-slot \{\s*padding-block: 8px 0;\s*gap: 0;/);
+      expect(rule).toMatch(/\.cg-bar-compose \{\s*width: 40px;\s*height: 40px;/);
+    });
   });
 
   // 64px band, hairline top border, safe-area padding — and the height read as
