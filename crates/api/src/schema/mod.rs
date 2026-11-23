@@ -161,6 +161,7 @@ pub fn build_with(ctx: ApiContext, budgets: QueryBudgets) -> ApiSchema {
         .data(loaders.epoch_instants)
         .data(loaders.bookmarks)
         .data(loaders.thread_posts)
+        .data(loaders.reference_counts)
         .data(loaders.guest_stances)
         .data(ctx.pool)
         .data(ctx.boundary)

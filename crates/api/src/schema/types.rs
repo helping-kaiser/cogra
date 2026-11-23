@@ -19,7 +19,7 @@ use common::l1::census::Family;
 use common::l1::identifier::NodeId;
 use common::l1::wire;
 use postgres_store::content::ThreadOrder;
-use postgres_store::references::ReferenceView;
+use postgres_store::references::{ReferenceCountKey, ReferenceView};
 use postgres_store::topics::{TagChannel, TopicView};
 use postgres_store::{
     PgPool, auth as store, mirror, profile as profile_store, references as references_store,
@@ -34,7 +34,7 @@ use crate::l1::StandInBoundary;
 use crate::loaders::{
     ActorByAddressLoader, ActorByIdLoader, CommentByNodeLoader, CommentGalleryLoader,
     CommentRemovalLoader, MediaByIdLoader, PayloadStateLoader, PostByNodeLoader, PostGalleryLoader,
-    PostRemovalLoader, SeveringRecordLoader,
+    PostRemovalLoader, ReferenceCountLoader, SeveringRecordLoader,
 };
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 
@@ -3546,6 +3546,17 @@ impl PostType {
         reference_claims(ctx, &self.0.l1_node_id, self.0.author_id, include_pending).await
     }
 
+    /// How many rows `references` serves under the same `includePending`
+    /// for the same viewer — the number a card prints, without the rows or
+    /// their targets. Priced as one field.
+    async fn reference_count(
+        &self,
+        ctx: &Context<'_>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<i32> {
+        reference_count_of(ctx, &self.0.l1_node_id, self.0.author_id, include_pending).await
+    }
+
     /// The viewer's own stance bundle toward this post, and — with
     /// `pick` — where a candidate stance would land it. Null for a
     /// viewer with no bundle to read. `includePending: false` folds
@@ -3897,6 +3908,17 @@ impl CommentType {
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<Vec<ReferenceClaim>> {
         reference_claims(ctx, &self.0.l1_node_id, self.0.author_id, include_pending).await
+    }
+
+    /// How many rows `references` serves under the same `includePending`
+    /// for the same viewer — the same count `Post.referenceCount` reads.
+    /// Priced as one field.
+    async fn reference_count(
+        &self,
+        ctx: &Context<'_>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<i32> {
+        reference_count_of(ctx, &self.0.l1_node_id, self.0.author_id, include_pending).await
     }
 
     /// The viewer's own stance bundle toward this comment, and — with
@@ -4488,16 +4510,9 @@ async fn reference_claims(
     include_pending: bool,
 ) -> async_graphql::Result<Vec<ReferenceClaim>> {
     let pool = ctx.data::<PgPool>()?;
-    let Some(author) = ctx
-        .data::<DataLoader<ActorByIdLoader>>()?
-        .load_one(author_id)
-        .await?
-        .and_then(|identity| identity.realization_address)
-    else {
+    let Some((author, counts_pending)) = citing_view(ctx, author_id, include_pending).await? else {
         return Ok(Vec::new());
     };
-    let viewer = viewer_address(ctx).await?;
-    let counts_pending = include_pending && viewer.as_deref() == Some(author.as_str());
     let rows = references_store::references_of(
         pool,
         l1_node_id,
@@ -4518,6 +4533,55 @@ async fn reference_claims(
             pending: row.pending,
         })
         .collect())
+}
+
+/// Whose bundles a citing artifact's reference row reads, and whether
+/// their in-flight acts count: the carrier's author, and pending only when
+/// the viewer is that author and asked for it. `None` for an author with
+/// no address — nothing of theirs can stand on the graph.
+///
+/// Shared by [`reference_claims`] and [`reference_count_of`], so the list
+/// and its count are always read under the same view.
+async fn citing_view(
+    ctx: &Context<'_>,
+    author_id: Uuid,
+    include_pending: bool,
+) -> async_graphql::Result<Option<(String, bool)>> {
+    let Some(author) = ctx
+        .data::<DataLoader<ActorByIdLoader>>()?
+        .load_one(author_id)
+        .await?
+        .and_then(|identity| identity.realization_address)
+    else {
+        return Ok(None);
+    };
+    let viewer = viewer_address(ctx).await?;
+    let counts_pending = include_pending && viewer.as_deref() == Some(author.as_str());
+    Ok(Some((author, counts_pending)))
+}
+
+/// How many rows [`reference_claims`] serves for the same artifact,
+/// viewer and `includePending`, through the loader that counts a whole
+/// page of cards in one grouped read.
+async fn reference_count_of(
+    ctx: &Context<'_>,
+    l1_node_id: &str,
+    author_id: Uuid,
+    include_pending: bool,
+) -> async_graphql::Result<i32> {
+    let Some((author, with_pending)) = citing_view(ctx, author_id, include_pending).await? else {
+        return Ok(0);
+    };
+    let count = ctx
+        .data::<DataLoader<ReferenceCountLoader>>()?
+        .load_one(ReferenceCountKey {
+            artifact: l1_node_id.to_string(),
+            author,
+            with_pending,
+        })
+        .await?
+        .unwrap_or(0);
+    Ok(i32::try_from(count).unwrap_or(i32::MAX))
 }
 
 /// Types one citation's far end from its raw L1 identifier.
