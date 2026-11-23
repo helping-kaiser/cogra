@@ -159,6 +159,17 @@
    the topic's row. `short` is `#saltmaps`, which fits, so no heading stands.
    The topic's spoken names keep `#saltmaps`.
 
+   THE HEADING SHRINKS TO FIT (round 66; jakob 2026-11-23, "as rec"): the
+   largest whole pixel from 22 down that holds the whole name on two lines,
+   never below 12px, its leading round(size × 28 / 22) — the profile head's
+   rule (`nameFitSize`) with a floor the head does not have. Each value
+   carries the size the rule gives its sample at the board's 390px:
+   `middle` the long name cut to 85 characters at its word `light`, two
+   lines at 17px on 22px (16px at 360, 18px at 412); `long` and
+   `long-hyphens` at the floor, 12px on 15px, three lines (three at 360, two
+   at 412) — no 128-character name needs a fourth. */
+const MIDDLE_NAME = "salt_maps_of_the_coast_road_and_the_third_headland_light_and_the_third_headland_light";
+
    A GUEST'S FACES ARE THE BORROWED VIEW'S (round 63; jakob 2026-11-23,
    point 7 "build it"): on the `reader` chip's `guest` the view holds one
    opinion on the page — @tobias's post, the face the member's fixture draws —
@@ -172,10 +183,10 @@ export const PROPS = {
   load: { editor: "enum", options: ["loaded", "failed", "notFound"], default: "loaded" },
   post: { editor: "enum", options: ["live", "removed"], default: "live" },
   comment: { editor: "enum", options: ["live", "removed", "pictures", "clip"], default: "live" },
-  name: { editor: "enum", options: ["short", "long", "long-hyphens"], default: "short" },
+  name: { editor: "enum", options: ["short", "middle", "long", "long-hyphens"], default: "short" },
   ...READER_CHIP,
 };
-export const VALS = `loadedShown: this.props.load === "loaded" ? "contents" : "none", failedShown: this.props.load === "failed" ? "contents" : "none", notFoundShown: this.props.load === "notFound" ? "contents" : "none", postLive: this.props.post === "removed" ? "none" : "contents", postRemoved: this.props.post === "removed" ? "contents" : "none", commentLive: this.props.comment === "live" ? "contents" : "none", commentRemoved: this.props.comment === "removed" ? "contents" : "none", commentPictures: this.props.comment === "pictures" ? "contents" : "none", commentClip: this.props.comment === "clip" ? "contents" : "none", tagName: this.props.name === "long" ? ${JSON.stringify(LONG_NAME)} : this.props.name === "long-hyphens" ? ${JSON.stringify(LONG_NAME.replaceAll("_", "-"))} : "saltmaps", tagHeading: this.props.name === "short" ? "none" : "block", ${READER_VALS}, ${readerNames([
+export const VALS = `loadedShown: this.props.load === "loaded" ? "contents" : "none", failedShown: this.props.load === "failed" ? "contents" : "none", notFoundShown: this.props.load === "notFound" ? "contents" : "none", postLive: this.props.post === "removed" ? "none" : "contents", postRemoved: this.props.post === "removed" ? "contents" : "none", commentLive: this.props.comment === "live" ? "contents" : "none", commentRemoved: this.props.comment === "removed" ? "contents" : "none", commentPictures: this.props.comment === "pictures" ? "contents" : "none", commentClip: this.props.comment === "clip" ? "contents" : "none", tagName: this.props.name === "middle" ? ${JSON.stringify(MIDDLE_NAME)} : this.props.name === "long" ? ${JSON.stringify(LONG_NAME)} : this.props.name === "long-hyphens" ? ${JSON.stringify(LONG_NAME.replaceAll("_", "-"))} : "saltmaps", tagHeading: this.props.name === "short" ? "none" : "block", tagHeadingSize: this.props.name === "middle" ? "17px" : this.props.name === "short" ? "var(--text-title-large)" : "12px", tagHeadingLineHeight: this.props.name === "middle" ? "22px" : this.props.name === "short" ? "var(--text-title-large--line-height)" : "15px",${READER_VALS}, ${readerNames([
   ["readerTopicName", "#saltmaps", undefined, undefined],
   ["readerTobiasName", "this post", mkBundle(0.1, 0.1), mkBundle(0.1, 0.1)],
   ["readerSolName", "this post", mkBundle(0.1, 0.1), undefined],
@@ -186,7 +197,7 @@ export function Screen() {
   return (
     <>
       <div style={{ display: "{{loadedShown}}" }}>
-        <TagPageBody removed="hole" commentRemoved="hole" named vantageHoles={READER_HOLES} title="#{{tagName}}" heading="{{tagHeading}}" />
+        <TagPageBody removed="hole" commentRemoved="hole" named vantageHoles={READER_HOLES} title="#{{tagName}}" heading="{{tagHeading}}" headingSize="{{tagHeadingSize}}" headingLineHeight="{{tagHeadingLineHeight}}" />
       </div>
       <div style={{ display: "{{failedShown}}" }}>
         <PageHeader title="#{{tagName}}" backHref="#" backLabel="Back to Explore" />

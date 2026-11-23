@@ -6,6 +6,12 @@ ALWAYS tagPage.header.title stands on one line and ends in … GIVEN the tag's n
 
 ALWAYS tagPage.name prints the tag's whole name, # and all, under the header and above the topic's row, wrapping at its hyphens and breaking inside the name where a run has none, GIVEN the name is too long for the header's one line
 
+ALWAYS tagPage.name stands at the largest whole pixel from the title role's 22px down at which the whole name holds two lines, never below 12px, its line-height round(size × 28 / 22) px, the profile head's two-line rule with a floor
+
+ALWAYS tagPage.name stands at 12px on as many lines as it needs there GIVEN the whole name holds two lines at no size down to 12px
+
+ALWAYS tagPage.name is never cut and is hidden from assistive technology, the header's title speaking the whole name
+
 ALWAYS no heading stands under the header GIVEN the tag's name fits the header's one line
 
 ALWAYS tagPage.name is the one place a tag's name wraps

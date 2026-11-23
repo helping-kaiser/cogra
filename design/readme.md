@@ -8127,7 +8127,13 @@ jakob's rulings closing the day's rounds, executed in one lane.
      the whole name stands under the header as a wrapping heading above
      the topic's row (`TagPage`'s `name`, the title role, breaking at its
      hyphens and inside the name where a run has none); a name that fits
-     is not printed twice.
+     is not printed twice. The heading takes the profile head's two-line
+     rule WITH A FLOOR (jakob 2026-11-23): the largest whole pixel from 22
+     down that holds the whole name on two lines, never below 12px, its
+     line-height round(size × 28 / 22) px; a name that holds two lines at
+     no size down to 12px stands at 12px on the lines it needs there —
+     three for a 128-character name at 360 and 390 px, two at 412, never
+     four.
   3. *Text that wraps* — headings, card titles and bodies, dialog titles
      and bodies, snackbars, notices, the borrowed-view band: the sentence
      wraps at its spaces and is never cut as a whole, and A HANDLE OR A

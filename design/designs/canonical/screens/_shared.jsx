@@ -5427,15 +5427,22 @@ const SOL_TAGGED_LINE = { topics: ["saltmaps"] };
    (`title-large`, the header's own), wrapping at its hyphens and breaking
    inside the name where a run has none (`overflow-wrap: break-word`). It is
    print only: the header's title already speaks the whole name. A name that
-   fits is not printed twice (`heading` absent, or its display hole `none`). */
-function TagFullName({ name, display, node }) {
+   fits is not printed twice (`heading` absent, or its display hole `none`).
+   IT SHRINKS TO FIT (jakob 2026-11-23, "as rec"): the head's two-line rule
+   (`nameFitSize`) with a 12px floor — the largest whole pixel from 22 down at
+   which the whole name holds two lines, its leading round(size × 28 / 22);
+   a name that holds two lines at no size down to 12 stands at 12 on the lines
+   it needs there. A client computes the size by the rule; a static board
+   passes what the rule gives its sample (`size` / `lineHeight`, unset at the
+   role's 22px / 28px). */
+function TagFullName({ name, display, size = "var(--text-title-large)", lineHeight = "var(--text-title-large--line-height)", node }) {
   return (
-    <p aria-hidden="true" style={{ display, margin: 0, padding: "4px 16px 0", fontSize: "var(--text-title-large)", letterSpacing: "var(--text-title-large--letter-spacing)", lineHeight: "var(--text-title-large--line-height)", fontWeight: "var(--text-title-large--font-weight)", overflowWrap: "break-word", wordBreak: "normal" }} data-node={node}>
+    <p aria-hidden="true" style={{ display, margin: 0, padding: "4px 16px 0", fontSize: size, letterSpacing: "var(--text-title-large--letter-spacing)", lineHeight, fontWeight: "var(--text-title-large--font-weight)", overflowWrap: "break-word", wordBreak: "normal" }} data-node={node}>
       {name}
     </p>
   );
 }
-function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, removed, commentRemoved, ownComment, scrolledBy = 0, vantageHoles, title = "#saltmaps", heading } = {}) {
+function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, removed, commentRemoved, ownComment, scrolledBy = 0, vantageHoles, title = "#saltmaps", heading, headingSize, headingLineHeight } = {}) {
   /* A guest's page (`vantageHoles`, the `reader` chip): the topic hollow for
      both readers, @tobias's post held for both (the view holds the member's
      opinion there), @sol's post and @ada's comment held for the member and
@@ -5476,7 +5483,7 @@ function TagPageBody({ bundle, stanceOpen, stanceDefaultPick, named = false, rem
   const commentId = ownComment ? SOL_OWN_COMMENT.id : ADA_TAGGED_COMMENT_ID;
   const stanceRow = (
     <>
-      {heading && <TagFullName name={title} display={heading} node={named ? "name" : undefined} />}
+      {heading && <TagFullName name={title} display={heading} size={headingSize} lineHeight={headingLineHeight} node={named ? "name" : undefined} />}
       <TopicStanceRow name="#saltmaps" bundle={bundle} stanceOpen={stanceOpen} stanceDefaultPick={stanceDefaultPick} vantageHoles={topicHoles} node={named ? "actionRow" : undefined} />
     </>
   );
