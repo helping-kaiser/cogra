@@ -1879,7 +1879,7 @@ const citedOneRow = (fault) => ({
    would serve one of them badly. */
 const tagsRow = (count) => ({
   label: "Tags",
-  value: `${count} tags`,
+  value: count === 1 ? "1 tag" : `${count} tags`,
   count: String(count),
   countNoun: "tag",
   onOpen: () => {},
@@ -1897,6 +1897,23 @@ const SEAL_TAGS_MANY = ["fieldnotes", "coastroad", "saltmaps", "tidal", "estuary
    where the drawing stops being readable. */
 const TAGS_ROW_HOLDS = 2;
 
+/* THE ROW COUNTS WHEN THE CHIPS STOP FITTING (readme, the seal's Tags row;
+   round 62): at most two chips, and only while they fit the value slot whole —
+   a readout chip is never cut, so one tag too long for the slot (a name up to
+   128 characters) folds the row to `1 tag`, as a card's tags line falls to
+   its words. A static drawing cannot measure, so the board judges fit on the
+   strings, measured (round 62, `ComposeSeal`: 181px at 360, so 211px in the
+   390 frame); a readout chip costs 16px of padding and at most 6.5px a character
+   (`#fieldnotes` 78px, `#coastroad` 78px), 6px between two. The clients run
+   the same fold measured. */
+const SEAL_TAGS_SLOT_PX = 211;
+const SEAL_TAG_CHAR_PX = 6.5;
+const SEAL_TAG_PILL_PX = 16;
+const SEAL_TAG_GAP_PX = 6;
+const sealTagsFit = (tags) =>
+  tags.length <= TAGS_ROW_HOLDS &&
+  tags.reduce((width, tag, index) => width + (index ? SEAL_TAG_GAP_PX : 0) + SEAL_TAG_PILL_PX + (tag.length + 1) * SEAL_TAG_CHAR_PX, 0) <= SEAL_TAGS_SLOT_PX;
+
 /* THE TAGS ROW IN EITHER READING, for a staged set: the chips while they fit,
    the count and its door past that. ONE FACTORY FOR BOTH SEALS, `citedRow`'s
    reason — the reply seal reads its staged tags as the post seal does (seam
@@ -1907,7 +1924,7 @@ const TAGS_ROW_HOLDS = 2;
    the unlanded citation's row (`citedOneRow`'s `fault`), at the Tags row. */
 const SEAL_UNLANDED_TAG = "This tag didn't land.";
 const sealTagsRow = (tags, fault) =>
-  tags.length > TAGS_ROW_HOLDS
+  !sealTagsFit(tags)
     ? tagsRow(tags.length)
     : {
         label: "Tags",
