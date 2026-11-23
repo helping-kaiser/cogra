@@ -22,6 +22,7 @@ import { declared } from "@/test/css";
 import { byNode } from "@/test/data-node";
 import { renderWithProviders } from "@/test/providers";
 import { CarriedSnackbar } from "./carried-snackbar";
+import { SHIELD_TEST_ID } from "./outside-press";
 import type { DataNode } from "./data-node";
 import { PAD_PARK_INSET_PX, PadParkingProvider } from "./pad-parking";
 import { NO_STANDING_LABEL, SEVERED_LABEL } from "./stance-readout";
@@ -1206,6 +1207,30 @@ describe("the release that never commits", () => {
         fireEvent.pointerUp(beneath, { pointerId: 3 });
         tail("click", 3);
       });
+      expect(opened).toBe(0);
+    });
+
+    // NOTHING BENEATH LIGHTS FROM THAT PRESS (jakob, 2026-11-23: the share
+    // button beneath lit as if pressed and stayed lit). A touch browser moves
+    // `:hover` to whatever it hit-tests at the tap, so the wash's place is held
+    // by a transparent shield until the gesture's click (`outside-press.ts`).
+    it("holds the wash's place until the gesture's click, so the tap lights nothing beneath", async () => {
+      mount();
+      await settle();
+      await openPad();
+      await release();
+      await act(async () => {
+        fireEvent.pointerDown(screen.getByTestId(`${PREFIX}-scrim`), { pointerId: 3 });
+      });
+      expect(screen.queryByTestId(`${PREFIX}-scrim`)).toBeNull();
+      const shield = screen.getByTestId(SHIELD_TEST_ID);
+      // The wash's own parent (the portal into the body), so its stacking.
+      expect(shield.parentElement).toBe(document.body);
+      await act(async () => {
+        fireEvent.pointerUp(shield, { pointerId: 3 });
+        fireEvent(shield, new PointerEvent("click", { bubbles: true, cancelable: true, pointerId: 3 }));
+      });
+      expect(screen.queryByTestId(SHIELD_TEST_ID)).toBeNull();
       expect(opened).toBe(0);
     });
 

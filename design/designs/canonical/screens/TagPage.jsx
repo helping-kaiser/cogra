@@ -138,22 +138,32 @@
    with its `glyph`, `exact` and `pending`, keyed by the tagged thing's id,
    each post `card` (its removed copy's `card.removalMark`) and the comment
    `commentCard`, keyed by their ids. The `post` and `comment` chips' copies
-   carry their chip's marker. The failed and not-found states stay unnamed. */
+   carry their chip's marker. The failed and not-found states stay unnamed.
+
+   A TAGGED COMMENT WITH MEDIA (round 62, seam 403.1): the `comment` chip's
+   `pictures` and `clip` draw @ada's tagged comment carrying the thread's two
+   pictures and its clip (`ReplyMedia`), so `commentCard.media`, its `frame`,
+   the frame's `soundDisc` and the `dots` register by the thread's names.
+
+   A GUEST'S TAG PAGE (round 62, seam 404.3) is the `reader` chip's `guest`:
+   the topic's wide anchor reads `@genesismod's opinion` beside the hollow
+   face (`READER_CHIP`, `StanceControl`'s `vantage`), the rest as drawn. */
 
 export const NODE = "tagPage";
 export const FRAME = { width: 390, height: 1344 };
 export const PROPS = {
   load: { editor: "enum", options: ["loaded", "failed", "notFound"], default: "loaded" },
   post: { editor: "enum", options: ["live", "removed"], default: "live" },
-  comment: { editor: "enum", options: ["live", "removed"], default: "live" },
+  comment: { editor: "enum", options: ["live", "removed", "pictures", "clip"], default: "live" },
+  ...READER_CHIP,
 };
-export const VALS = `loadedShown: this.props.load === "loaded" ? "contents" : "none", failedShown: this.props.load === "failed" ? "contents" : "none", notFoundShown: this.props.load === "notFound" ? "contents" : "none", postLive: this.props.post === "removed" ? "none" : "contents", postRemoved: this.props.post === "removed" ? "contents" : "none", commentLive: this.props.comment === "removed" ? "none" : "contents", commentRemoved: this.props.comment === "removed" ? "contents" : "none"`;
+export const VALS = `loadedShown: this.props.load === "loaded" ? "contents" : "none", failedShown: this.props.load === "failed" ? "contents" : "none", notFoundShown: this.props.load === "notFound" ? "contents" : "none", postLive: this.props.post === "removed" ? "none" : "contents", postRemoved: this.props.post === "removed" ? "contents" : "none", commentLive: this.props.comment === "live" ? "contents" : "none", commentRemoved: this.props.comment === "removed" ? "contents" : "none", commentPictures: this.props.comment === "pictures" ? "contents" : "none", commentClip: this.props.comment === "clip" ? "contents" : "none", ${READER_VALS}`;
 
 export function Screen() {
   return (
     <>
       <div style={{ display: "{{loadedShown}}" }}>
-        <TagPageBody removed="hole" commentRemoved="hole" named />
+        <TagPageBody removed="hole" commentRemoved="hole" named vantageHoles={READER_HOLES} />
       </div>
       <div style={{ display: "{{failedShown}}" }}>
         <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" />

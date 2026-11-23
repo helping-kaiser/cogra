@@ -4,7 +4,7 @@ ALWAYS the posts view lists the person's posts as post cards, never as chronicle
 
 ALWAYS the posts view is where another's profile lands, from any door, its states — empty, settling, loading, failed — the landing's own
 
-ALWAYS the posts view lists a post the person signed that is still settling among the landed ones, its card wearing Still settling and carrying no score, its score slot bare, as the feed's card does
+ALWAYS the posts view lists a post the person signed that is still settling at the head of the list, above every landed one, the settling posts newest signed first among themselves, its card wearing Still settling and carrying no score, its score slot bare, as the feed's card does, and it takes its place in the list's order when it lands
 
 ALWAYS a removed post keeps its place in the list as the feed's removed card, profile.posts.card.removalMark.line reading Removed by its author where its words and pictures were, with the removal's date, and nothing more under it, whatever the feed's filter holds
 
