@@ -963,9 +963,10 @@ fall between prepare and close.
 
 ### The question
 
-If CoGra claims the courtesy issuance standard, is a deferral at
-close a rejection it covers, and if so, how does its verdict reach
-the author — what the certificate names, and by which channel?
+If the host CoGra writes to claims the courtesy issuance standard,
+is a deferral at close a rejection it covers, and if so, how does
+its verdict reach the author — what the certificate names, and by
+which channel?
 
 ### Related
 
