@@ -84,6 +84,7 @@ import { announceStanceSigned } from "@/lib/stance/signed-events";
 import { clearSettling, useSettling } from "@/lib/stance/settling";
 import { useStanceTaught } from "@/lib/stance/stance-coach";
 import type {
+  BorrowedStance,
   StanceBundle,
   StanceCommit,
   StanceLanding,
@@ -634,15 +635,17 @@ export function StanceControl({
     readBundle();
   }, [readBundle]);
 
-  // A GUEST'S WIDE ANCHOR SPEAKS THE VIEWPOINT'S NAME (stance-control.md, *A
-  // guest's view*: the vantage law; TagPage.md:55-57, ProfileOther.md:51-53):
-  // `@genesismod's opinion`, never `Your opinion`. Asked only where words are
-  // drawn — the wide anchor — and only of a guest: a signed-in reader's
-  // anchor is their own, whoever's view their feed still borrows.
-  const guestWords = wide && phase === "signedOut";
+  // A GUEST'S ANCHOR SPEAKS THE VIEWPOINT'S NAME (stance-control.md, *A
+  // guest's view*: the vantage law; FeedBare.md:9, TagPage.md:75-79,
+  // ProfileOther.md:59-63; the master's `anchorName`): every anchor, wide and
+  // narrow, is `@genesis_mod's opinion on …`, and the wide one draws
+  // `@genesis_mod's opinion` where `Your opinion` would stand. Only a guest's:
+  // a signed-in reader's anchor is their own, whoever's view their feed still
+  // borrows ("only a nobody borrows stances", seam 430.1).
+  const guest = phase === "signedOut";
   const [vantage, setVantage] = useState<{ handle: string | null } | null>(null);
   useEffect(() => {
-    if (!guestWords) return undefined;
+    if (!guest) return undefined;
     let live = true;
     void data.borrowedViewHandle().then((handle) => {
       if (live) setVantage({ handle });
@@ -650,9 +653,35 @@ export function StanceControl({
     return () => {
       live = false;
     };
-  }, [guestWords, data]);
+  }, [guest, data]);
   /** The borrowed view's handle, once the read named one. */
-  const guestHandle = guestWords ? (vantage?.handle ?? null) : null;
+  const guestHandle = guest ? (vantage?.handle ?? null) : null;
+
+  // A GUEST'S FACE WEARS THE BORROWED VIEW'S OWN STANCE (FeedBare.md:7,
+  // TagPage.md:73, GuestGate.md:11): read-only, at the member's anchor
+  // geometry, the hollow face where that view holds none. DISPLAY ONLY — it
+  // lives in this state and nowhere else: never the bundle the pad, the
+  // landing or the walk-back read, never a kept pick, never a node id. Only
+  // an opinion's face borrows: a vouch or an approval is the reader's own act.
+  const lends = guest && family === "opinion" && padOnly === undefined;
+  const [lent, setLent] = useState<{ value: BorrowedStance | null } | null>(null);
+  useEffect(() => {
+    if (!lends) return undefined;
+    let live = true;
+    void data.borrowedStance(seamTarget).then((outcome) => {
+      // A read that did not answer is the hollow face, as today.
+      if (live) setLent({ value: outcome.kind === "success" ? outcome.value : null });
+    });
+    return () => {
+      live = false;
+    };
+  }, [lends, data, seamTarget]);
+  /**
+   * The borrowed stance the face wears — only while the reader is a guest,
+   * and only once the view is named: a held face nobody owns would read as
+   * the reader's own.
+   */
+  const borrowedFace = lends && guestHandle !== null ? (lent?.value ?? null) : null;
 
   // Settling ends when the ordered read has caught up with the pending one.
   const settledRecords = bundle === null || bundle === undefined ? null : bundle.records;
@@ -1161,13 +1190,19 @@ export function StanceControl({
   // The resting anchor stands unless a pad-only host is the opening itself.
   const anchored = padOnly === undefined || padOnly.keepAnchor === true;
   const keptShown = waitingForKey || waitingForReview;
+  // A guest rests on the borrowed view's stance, read through the same
+  // readout as a member's own (the master's `restingOf`).
   const restingPair: StancePair | null = keptShown
     ? kept
     : pending !== null
       ? pending.pair
-      : bundle === null || bundle === undefined || bundle.records === 0
-        ? null
-        : bundle.current;
+      : lends
+        ? borrowedFace === null || (borrowedFace.records === 0 && !borrowedFace.severed)
+          ? null
+          : borrowedFace.current
+        : bundle === null || bundle === undefined || bundle.records === 0
+          ? null
+          : bundle.current;
   // A resting (0, 0) is walked back only when the bundle — or the signing
   // just taken — says so; otherwise (an empty sign's standing, a kept pick)
   // it says nothing (the master's `restingZero`; PadStanding.md:29).
@@ -1175,7 +1210,9 @@ export function StanceControl({
     ? false
     : pending !== null
       ? pending.severed
-      : bundle !== null && bundle !== undefined && bundle.severed;
+      : lends
+        ? borrowedFace !== null && borrowedFace.severed
+        : bundle !== null && bundle !== undefined && bundle.severed;
   const restingFace =
     restingPair === null
       ? null
@@ -1443,8 +1480,12 @@ export function StanceControl({
             aria-label={
               // The guest's name keeps the full handle: the ellipsis below
               // is print only (stance-control.md:108-119, TagPage.md:57).
-              guestHandle !== null && (restingFace === null || restingPair === null)
-                ? `@${guestHandle}'s stance on ${target.label}`
+              // Held, its reading follows as a member's does — read-only, so
+              // never the press-and-hold hint (the master's `anchorName`).
+              guestHandle !== null
+                ? restingFace === null || restingPair === null
+                  ? `@${guestHandle}'s opinion on ${target.label}`
+                  : `@${guestHandle}'s opinion on ${target.label}: ${restingFace.label}, ${formatStancePair(restingPair)}.`
                 : restingFace === null || restingPair === null
                 ? `Give your opinion on ${target.label}`
                 : keptShown
@@ -1517,7 +1558,7 @@ export function StanceControl({
                 Your opinion
               </span>
             )}
-            {restingPair === null && guestHandle !== null && (
+            {wide && restingPair === null && guestHandle !== null && (
               // A guest's words name the borrowed view. A name that outgrows
               // the anchor truncates its HANDLE, never its `'s opinion`, so
               // the words always say whose view it is (`@genesismo…'s

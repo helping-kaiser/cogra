@@ -476,7 +476,7 @@ describe("ProfileScreen", () => {
     );
     renderWithProviders(<ProfileScreen handle="ada" />);
     const anchor = await screen.findByTestId(byNode("profile.identity.actionRow.stance.anchor"));
-    await waitFor(() => expect(anchor).toHaveAccessibleName("@genesismod's stance on @ada"));
+    await waitFor(() => expect(anchor).toHaveAccessibleName("@genesismod's opinion on @ada"));
   });
 
   // ProfileOther.md:49 — the guest's tap still opens the gate under the new words.
