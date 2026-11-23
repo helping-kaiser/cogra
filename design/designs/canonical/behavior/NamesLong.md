@@ -2,7 +2,7 @@
 
 ALWAYS a person row never wraps, the display name ellipsizing first and the handle staying whole until it alone cannot fit
 
-ALWAYS a page title, a row's title and its aside, a menu row, the profile's handle line and a caption never wrap
+ALWAYS a page title, a row's title and its aside, a menu row, the profile's handle line, a caption and a settings row's value never wrap
 
 ALWAYS the handle or name standing in a one-line place is the part cut with an ellipsis, and the words around it keep their room first, as @maximiliana_feathe… commented on your post
 

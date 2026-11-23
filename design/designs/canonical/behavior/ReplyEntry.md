@@ -8,9 +8,9 @@ ALWAYS a clip the reader started by its play disc keeps the stage GIVEN it still
 
 WHEN scroll settles anywhere below the thread's hard top GIVEN the incumbent still qualifies -> NEVER the stage re-elects upward
 
-ALWAYS the thread's top-level comments stand newest first
+ALWAYS the thread's top-level comments stand newest first, the comments still settling at the head, newest signed first among themselves, each taking its place in the order when it lands
 
-ALWAYS the replies in a branch stand oldest first
+ALWAYS the replies in a branch stand oldest first, the replies still settling closing the branch, oldest signed first among themselves, each taking its place in the order when it lands
 
 WHEN the author's confirmed Remove on their own comment lands -> the comment's words and pictures give way to the mark Removed by its author in the comment's own place AND NEVER the comment leaves the thread
 

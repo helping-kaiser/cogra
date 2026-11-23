@@ -1,6 +1,7 @@
 import React from "react";
 import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
 import { Icon } from "../navigation/Icon.jsx";
+import { nameInLine } from "../people/ActorChip.jsx";
 import { Snackbar } from "../core/Snackbar.jsx";
 import { JoinPrompt } from "../core/JoinPrompt.jsx";
 import { StancePad, STANCE_AXES } from "./StancePad.jsx";
@@ -261,6 +262,15 @@ function parkedPadStyle(inset = 16) {
    and a lone face at full width reads as lost. Tap, hold, pad, severance: all
    unchanged — the variant restyles the anchor and nothing else.
 
+   `vantage` (round 62, seam 404.3) is the borrowed view's handle for a guest:
+   the wide anchor's words read `@genesismod's opinion` in `Your opinion`'s
+   place (stance-control.md, the guest's viewpoint; `TagPage.md`,
+   `ProfileOther.md`), the handle the part cut before `'s opinion`, which stays
+   whole (`nameInLine`, the long-names law's case 2).
+   `vantageHoles` — `{ guest, member }`, each a `{{hole}}` the board's VALS
+   fills with a display value — draws both words for a board whose `reader`
+   chip re-selects the reader.
+
    `axes` (the topic round, 2026-09-14) NAMES THE FOUR POLES, for the reason
    `StancePad` already takes them as a prop: this control is not the stance
    family's alone. An Affinity toward a Type — the gesture the topic page wears
@@ -287,6 +297,8 @@ export function StanceControl({
   padInset = 16,
   padNote,
   wide = false,
+  vantage,
+  vantageHoles,
   overMedia = false,
   /* THE VOUCH CARD'S EMPTY FACE IS A LINE FACE IN THE CARD'S INK (jakob
      2026-10-14). The 🫥 emoji draws in its own fixed pale greys and cannot
@@ -678,10 +690,29 @@ export function StanceControl({
             </span>
           ))}
           {wide && restingPair === null && (
-            /* The wide anchor's words — only where there is no pair to show. */
-            <span aria-hidden="true" style={{ whiteSpace: "nowrap" }}>
-              Your opinion
-            </span>
+            /* The wide anchor's words — only where there is no pair to show; a
+               guest's name the borrowed view's opinion (`vantage`). */
+            vantageHoles ? (
+              /* A board whose `reader` chip re-selects the reader draws both,
+                 each behind its display hole (`Chip`'s `selectedHoles` idiom),
+                 so the anchor's registered paths stay one. */
+              <>
+                <span aria-hidden="true" style={{ display: vantageHoles.guest, minWidth: 0, whiteSpace: "nowrap" }}>
+                  {nameInLine(`@${vantage}'s opinion`)}
+                </span>
+                <span aria-hidden="true" style={{ display: vantageHoles.member, whiteSpace: "nowrap" }}>
+                  Your opinion
+                </span>
+              </>
+            ) : vantage ? (
+              <span aria-hidden="true" style={{ display: "flex", minWidth: 0, whiteSpace: "nowrap" }}>
+                {nameInLine(`@${vantage}'s opinion`)}
+              </span>
+            ) : (
+              <span aria-hidden="true" style={{ whiteSpace: "nowrap" }}>
+                Your opinion
+              </span>
+            )
           )}
           {restingPair !== null && (
             /* NEVER WRAPS. This is the post card's affordance row, which is one

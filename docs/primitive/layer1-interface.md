@@ -13,9 +13,10 @@ act-ownership refoundation (authored acts, the admission handshake, the
 authoritative act order) and the **Edition 5** refoundation of standing as
 one conserved allocation operator. This reference draws two scopes from it:
 
-- **The closure surface** — the binding material only: kernel record, the
-  admission rules, closure quantities, the two straddlers, and the shared
-  mathematics. Terminal read-sites are *named* in its boundary ledger
+- **The closure surface** — the closure material (kernel record, admission
+  rules, closure quantities, the two straddlers, shared mathematics), with
+  the courtesy and oracle statements it touches marked as such (see
+  *Material classes* below). Terminal read-sites are *named* in its boundary ledger
   (`tbl:symbols:boundary`) but their mechanisms are not specified there.
   Cited below by anchor label (`def:…`, `post:…`, `lem:…`, `rem:…`, `ax:…`,
   `subsec:…`).
@@ -29,8 +30,8 @@ one conserved allocation operator. This reference draws two scopes from it:
 Proofs and motivation prose are omitted.
 
 **Pinned anchor set.** This file's citation set is pinned under the spec's
-anchor-stability contract: 491 distinct anchor names,
-`anchor_set_hash = 3e55203a5cca9da8f74fbb41427e19e5874e2b9dcfdac5ff885c2072d31c8f2f`
+anchor-stability contract: 492 distinct anchor names,
+`anchor_set_hash = 02b3df6c105c10344d47718b7b13df44279c951c51cc9e943a0c67a390eccf1f`
 (sha256 over the sorted distinct anchor names joined by `\n`, no trailing
 newline). Once
 registered with the Peer Team, renaming any pinned label is a breaking
@@ -56,11 +57,14 @@ by construction: a rule normative within a courtesy standard binds a
 realization that explicitly claims that standard and edition, and failure
 falsifies that claim, not the epoch's closure validity. Adopting a courtesy
 standard is optional and is never an admission requirement. Mathematics is a
-separate explicit class for statements solely about abstract mathematical
-objects; v0.36.0 classifies no label into it. A statement's class and a
-value's tag (§3) are separate metadata. A child label has the closure
-default unless itself excepted; an unlabeled paragraph inherits its nearest
-labeled owner's class. Neither closure nor oracle material depends on
+separate explicit class for a statement solely about abstract mathematical
+objects, with no protocol constants, actors, epochs, admission or conduct,
+and depending only on mathematics-class statements; v0.36.0 classifies no
+label into it. A statement's class and a value's tag (§3) are separate
+metadata; closure and verify values required for replay remain within the
+closure contract. A child label has the closure default unless itself
+excepted; an unlabeled paragraph inherits its nearest labeled owner's
+class. Mixed statements split before classification. Neither closure nor oracle material depends on
 courtesy material, while courtesy material may cite either.
 
 *How this file shows the class.* As the specification badges each labeled
@@ -263,9 +267,10 @@ applicable operator bound and its proof are published; otherwise the
 realization publishes a statement identifying why its rules provide no
 such accrual, without requiring proof of a zero bound. These are public
 audit evidence and not additional computational inputs to the network.
-External provenance publication is a courtesy audit standard; under a
-declared verifiable-provenance case, pinned proof objects instead enter
-the oracle check (`rem:comparator:auditability`, §13.3).
+
+Under `rem:comparator:auditability`, external provenance publication is a
+courtesy audit standard; under a declared verifiable-provenance case,
+pinned proof objects instead enter the oracle check (§13.3).
 
 R1–R11 name the burn-primitive requirements and M1–M5 the marker-bound
 settlement conditions (§1.2). The safety-threshold premises are X1–X9
@@ -556,7 +561,7 @@ Shared mathematics (norms, delimiters, number sets) is tag-exempt.
 
 | Object | Feedback read-site | Terminal read-site | Verdict | Permission |
 |---|---|---|---|---|
-| accepted edge set $E_k$ + accepted authoritative act sequence $\mathcal{Q}_k$ (acts, key of record $(k, \mathrm{pos}_k(q))$, honest $\mathbb{T}^{\text{act}}_q$) | substrate of all of $\mathcal{A}$ | — | L1·closure | consume only; agreement on $\mathcal{Q}_k$, not merely $E_k$; $\mathbb{T}^{\text{act}}_q$ itself is a recomputable summary of the order of record with no ordering authority (L1·verify) |
+| accepted edge set $E_k$ + accepted authoritative act sequence $\mathcal{Q}_k$ (acts ordered by the key of record $(k, \mathrm{pos}_k(q))$; $\mathbb{T}^{\text{act}}_q$ recomputable) | substrate of all of $\mathcal{A}$ | — | L1·closure | consume only; agreement on $\mathcal{Q}_k$, not merely $E_k$; $\mathbb{T}^{\text{act}}_q$ itself is a recomputable summary of the order of record with no ordering authority (L1·verify) |
 | binding constants + formula pins $\beta,\eta,\nu,\rho_{\text{pol}},\theta,m_\theta,N_{\text{epoch}},\delta_{\text{pos}},L_{\text{hop}},M_{\text{payload}}$; standing-census/compiler/coefficient/activation/allocator/certificate formula editions, structural wall floor and reduced controller constants, and controller formula edition | standing activation / gate / formation / package validity / epoch target | — | L1·closure | consume only; no silent formula-edition change |
 | canonical raw defaults: $q$, raw depth $L$, the canonical raw path-composition rule | — | feed / raw bridge / raw signed services | **L2** | reimplement freely at terminal read-sites |
 | host-cached $\tilde{w}_{\text{spam}}, \tilde{w}_{\max}, \tilde{w}_{\max}^{\text{Op}}, \tilde{w}(e), \epsilon(e)$ | — | client convenience, raw diagnostics | L1·by-product | ignore and recompute freely |
@@ -943,9 +948,7 @@ Stated independently of any mechanism that achieves them.
   `post:epoch:final-act-sequence-write-rule`; otherwise no member of that
   proposed set becomes a Layer-1 record. Misbehavior at the boundary is
   *evidence, not prevention* (`post:graph:boundary-accountability`).
-  Presenting a rejected set's verdict to the party it measures is the
-  courtesy issuance standard (`post:deployment:verdict-issuance`
-  *(courtesy)*, §13.2). The boundary timestamp is a host
+  The boundary timestamp is a host
   assertion: the closure cause and the asserted timestamp are checkable for
   mutual consistency with the published duration bounds, with no obligation
   to anchor the timestamp to an external clock.
@@ -1002,7 +1005,7 @@ formation, package validity, or the epoch target;
 | $Q(1)$ | $\approx 0.6975$ (activation normalization of the deployed core) | `def:epoch:responsive-vouch-activation` |
 | $\kappa_{\text{self}}$, $\omega_D$ | unity (self-retention base and every published domain weight; reference values pending the calibration lock) | `tbl:epoch:standing-domain-weights` |
 | certificate screen $\mathcal{K}_k$ | a rung passes iff $m_\theta\,\mathcal{K}_k \le 1$; the accepted rung $t_k$ is the greatest attempted rung whose supplied or recoverable sound enclosure support proves PASS under `post:deployment:replay-verification` — a rung left INDECISIVE is passed over; the anchor $t_k = 0$ always certifies | `def:dynamics:conserved-standing-certificate`, `def:epoch:tilt-backoff-grid` |
-| $M_{\text{payload}}$ | deployment-calibrated; **per act, aggregate over a hyper-edge's projections**, stated in bytes of the deployment's declared payload encoding | `def:graph:act-payload-projection` |
+| $M_{\text{payload}}$ | deployment-calibrated; bounds every carried content pair, **aggregate over the act**, stated in bytes of the deployment's declared payload encoding | `def:graph:act-payload-projection` |
 
 Canonical raw defaults and derived raw constants (terminal formulas,
 host-cached values are by-products — §3): $q = \tfrac12$ (raw diversity
@@ -1027,9 +1030,10 @@ $\mathrm{clip}_{[-1,1]}$ in `def:epoch:net-stance`, not a calibrated value.
 interval) and the positive unit-cost projection $c_{\mathrm{u}}$ (R10) —
 are read as constants and re-derived nowhere. Settlement depth and the
 assumed provenance, cost and operator properties add no computational
-inputs (`def:comparator:burn-interface`); the publication of their audit
-evidence is courtesy (`rem:comparator:burn-realization-audit-evidence`,
-§1.1). A realization's own fees, splits, phase
+inputs (`def:comparator:burn-interface`). The realization publishes the
+settlement depth with its finality assumptions under R4(e); publication of
+the provenance, cost and operator audit evidence is courtesy
+(`rem:comparator:burn-realization-audit-evidence`, §1.1). A realization's own fees, splits, phase
 leads, and any ceiling derived from them are its design; the network
 neither names nor recomputes them (`rem:comparator:surface-readings`).
 $c_{\mathrm{u}}$ turns a burn-amount quantity into an amount-proportional
@@ -1067,14 +1071,15 @@ proposed act sequence $\mathcal{Q}_k$ — no prefix of $\mathcal{Q}_k$
 carries a normative standing value (`post:epoch:final-act-sequence-closure`,
 `def:epoch:proposed-final-act-state`).
 
-A record by actor $i$ is writable in epoch $k$ iff all three sub-gates hold
+A record whose act's recorded author is actor $i$ is writable in epoch $k$
+iff all three sub-gates hold
 (`post:epoch:final-act-sequence-write-rule`,
 `subsec:epoch:participation-gates`):
 
 1. **W1 — solvency (debited):** $b_i \geq \theta^{(k)}$ — evaluated
    continuously on the live pair; on write the balance debits $\theta^{(k)}$
-   (`post:epoch:act-debit`). Capacity **is** the balance; only the actor's
-   own balance pays the actor's $\theta$.
+   (`post:epoch:act-debit`). Capacity **is** the balance; only the recorded
+   author's own balance pays its $\theta$.
 2. **W2a — safety (individual, never averaged):** the act's final stamp
    $\rho_{\text{act}}(q) = \hat{\alpha}_i^{(k)} \geq \rho_\theta$ (the
    wall). The stamp is the reduced **final** standing of the completed set,
@@ -1511,6 +1516,16 @@ display — is Layer-2-free. A parallel *genesis* is rejected by record
 integrity (author equivocation on one act identifier): a node cannot be
 re-minted, only newly written about
 (`post:graph:title-act-bundle-reservation`).
+
+**Projection (`def:graph:projection`).** A projection is a value derived by
+a stated deterministic rule from a stated source. Its source is primitive
+relative to it, and the projection has no independent authority: anyone can
+re-evaluate it from the same source and rule, while disagreement concerns
+that rule or source. A materialized projection is a cache without
+authority, and no record fact depends on its materialization. Edges
+project accepted acts; epoch summaries project the record and replay
+inputs; validity under a declared case projects the declared second
+party's state.
 
 **Edge projection (`def:graph:act-edge-projection`).** The projection is
 deterministic and fixed at formation; it is not an appended record of its
@@ -3829,8 +3844,9 @@ $\theta$-history, post-debit standing $=$ pre-debit standing $-
 \rho_\theta\nu$ (reduced: rigid translation by $\rho_\theta$), exact.
 
 **Final-Set Write Rule (`post:epoch:final-act-sequence-write-rule`,
-`subsec:verification:two-gate`).** See §7.1 — W1 solvency (debited,
-continuous, own-balance-only); W2a individual final stamp $\ge \rho_\theta$
+`subsec:verification:two-gate`).** See §7.1 — over records whose act's
+recorded author is actor $i$: W1 solvency (debited, continuous, only the
+recorded author's own balance pays); W2a individual final stamp $\ge \rho_\theta$
 (never averaged); W2b act-weighted epoch stamp $\ge \rho_{\text{eff}}$ with
 the act budget (never debited; band actors enter on door headroom).
 
@@ -3887,8 +3903,8 @@ Price axis:
     enclosure support proves PASS under
     `post:deployment:replay-verification` at the wall in force and on the epoch's own contributing width,
     $m_\theta\,\mathcal{K}_k \le 1$; the anchor always certifies, and
-    higher-rung failures and indecisive enclosures stay distinct and
-    published;
+    higher-rung failures and INDECISIVE verdicts and their support stay
+    distinct and published;
   - (X3) *step bound* — $|\rho_\theta^{(k+1)} - \rho_\theta^{(k)}| \le
     \min(a,\ r\,\rho_\theta^{(k)})$ for published $a > 0$, $0 < r < 1$;
   - (X4) *hysteresis* — the published relative deadband applies to the
@@ -4309,17 +4325,14 @@ declared cases (all at the end of this section).
   Publishing an encoding badly is a deployment defect; not declaring one is
   a protocol defect.
 - **Formula Completeness (`subsec:deployment:completeness`).** The published
-  material — protocol constants; edge-type specifications and census; tensor
-  pipeline; path-view extraction; mask and tier rules; determinant sign and
-  damped weight; **net stance, cell coefficients, recipient resolution,
-  domain weights, activations, the tilt grid and emission rule, control-act
-  self-resolution and vouch withdrawal by netting**; the **write rule
-  (W1/W2a/W2b), closure rule, formation rule + handshake, and the θ-debit
-  ledger**; settlement recognition and the **epoch title fold**; the
-  conserved derivation sequence and certificate definitions; the
-  safety price, the five-ρ family (§11.8), the structural wall floor, and
-  the wall controller — is jointly
-  sufficient to reproduce the server's output from published records alone. Terminal mechanisms are not
+  material — all protocol constants, all mask promotion criteria, all
+  edge-type specifications, the CAN recursion, the burn amounts read
+  through the burn interface together with the capacity bound and the
+  unit-cost projection a realization publishes with them
+  (`def:comparator:burn-interface`), the settlement recognition predicate
+  and title certificate, and the epoch boundary computation sequence — is
+  jointly sufficient to reproduce the server's output from published edge
+  records alone, without any unpublished component. Terminal mechanisms are not
   part of this invariant; **if a terminal service publishes a mechanism,
   the grant requires that terminal mechanism's own completeness** — a guild
   that reimplements a terminal default publishes its own complete
@@ -4375,8 +4388,9 @@ what the record binds are closure:
 
 ### 13.1 Operator duties
 
-Three postulates bind the deployment's operator; each condition below is
-one published duty.
+Three postulates state the deployment's operator duties; each condition
+below is one published duty. Conditions marked *(courtesy)* bind only a
+realization that claims that standard and edition; the rest are closure.
 
 **Calibration declarations (`post:deployment:calibration-declarations`).**
 Before an edition takes effect, the deployment publishes these declarations
@@ -4696,7 +4710,8 @@ package, published certificates and title results. It includes the
 standard statements, comparison-instance descriptors, supplied or
 recoverable enclosures, authenticated epoch inputs and evidence binding
 each evaluated enclosure to its proposal and inputs, sufficient to check
-soundness as well as recover the same PASS and FAIL decisions. Required
+soundness as well as recover the same PASS and FAIL decisions against the
+same enclosures or defining statements. Required
 formation and ordering-accountability evidence belongs to this floor.
 
 - *Per accepted act* the floor holds its act envelope
@@ -4733,8 +4748,10 @@ formation and ordering-accountability evidence belongs to this floor.
   reads supplied dynamic enclosures, checks exact stated comparisons and
   requires every claimed PASS or FAIL to agree with its support. Missing
   dependencies, an ambiguous instance or an opposite decision fail;
-  inability to evaluate is neither confirmation nor discrepancy. A
-  reference to privately held data does not discharge publication. Ordered
+  inability to evaluate is neither confirmation nor discrepancy. Soundness
+  checking and endpoint comparison are distinct operations, and the inputs
+  and evidence for both belong to replay verification; a reference to
+  privately held data does not discharge publication. Ordered
   attempted-rung evidence includes unsuccessful rungs of the accepted
   proposed set. **Verdicts of an entirely rejected proposed set are never
   floor content.**
@@ -4794,7 +4811,10 @@ content nor permits omission of public replay support.
   declared projection reads. The proof objects and the declaration are
   authenticated epoch inputs; a pointer to the second party's live or
   archived state replaces none of them, and account evidence the record
-  does not carry is missing evidence. A later withdrawal removes nothing
+  does not carry is missing evidence. The pinned account permits
+  evaluation of the declared projection for every accounted destruction
+  against the rules edition the declaration pins, whatever the second
+  party later publishes or withdraws. A later withdrawal removes nothing
   the record pins.
 - *Replay.* Replay evaluates the declared projection for every proof
   object against the pinned rules edition and pinned second-party data.
@@ -4808,8 +4828,11 @@ content nor permits omission of public replay support.
   declared rules, not a stored property of the record. Validity at pin is a
   fixed historical fact; current validity evaluates the same projection
   against the present state, is live, and is never stored as an
-  authoritative value; any materialized validity is a cache with no
-  independent authority.
+  authoritative value. When that party changes its state by
+  reorganization, repudiation or any reason of its own, the projection's
+  source changes and its current value follows without an invalidation
+  event or adjudication by the network. Any materialized validity is a
+  cache with no independent authority.
 
 **Declared Author-Authority Case
 (`def:deployment:declared-author-authority-case`,
@@ -4835,8 +4858,10 @@ content nor permits omission of public replay support.
   binds it; without that binding it imposes no condition on an epoch. When
   the second party changes its state or published rules, or stops
   publishing them, later packages bind a changed declaration or a
-  withdrawal of this one, prospectively and without network adjudication.
-  The case neither reattributes an accepted act nor changes its author,
+  withdrawal of this one, prospectively and without network adjudication;
+  whether the change warranted the withdrawal is a question of the case's
+  current validity, never of the record's replay. Earlier pins keep the
+  validity fixed at publication. The case neither reattributes an accepted act nor changes its author,
   identifier, frame address or structural consequences.
 - *Pinned proof objects.* For every act first accepted in an epoch under
   the case, the record pins a proof object binding the case identity, act
@@ -4865,7 +4890,9 @@ content nor permits omission of public replay support.
   the pinned proof object and rules edition and is a fixed historical fact;
   current validity is live and independently re-evaluable. A change of
   rules edition requires a correspondingly identified projection and never
-  silently changes the historical question. Neither a changed current
+  silently changes the historical question. Revocation, reorganization or
+  repudiation may change a current result without an invalidation event
+  or network adjudication. Neither a changed current
   result nor a changed prospective declaration can reattribute an accepted
   act, rebind its Actor's address, or recompute its finalized title,
   ownership or settlement consequences.
@@ -4914,7 +4941,7 @@ objects live only in the boundary ledger** (§3).
 | burn accumulator | A record of the realization's history carrying or accumulating burn and extending the settlement lineage; appending one is open to any party. | `def:comparator:burn-accumulator` |
 | $m_k$ | Epoch marker: the burn accumulator the deployment's published marker policy recognizes by its form as epoch $k$'s, bound by closed epoch $k$ one-to-one and in order (M5); $m_0$ names the empty initial boundary, and an unclosed recognized marker is pending. | `def:comparator:epoch-marker`, `cond:comparator:marker-epoch-registration` |
 | $\delta_{\text{pos}}$ | Snapshot buffer (settlement-stability depth), chosen to exceed the settlement depth a realization publishes (R4(e)) so the weld reads the recognized final marker, its lineage, and its fixed accepted view under the published finality assumptions; edge membership is the closure rule's. | `post:epoch:final-edge-set` |
-| $M_{\text{payload}}$ | Maximum payload byte length **per act** (aggregate over a hyper-edge's projections); the structural bound is L1·closure, payload bytes terminal. | `def:graph:act-payload-projection` |
+| $M_{\text{payload}}$ | Maximum carried content-pair byte length, aggregate over an act; the structural bound is L1·closure, payload bytes terminal. | `def:graph:act-payload-projection` |
 | $L_{\text{hop}}$, $\gamma$ | Chartered transport depth 4, in hops of the conserved transport; and the chartered activation exponent $1/4$, which is deliberately not routed through it. | `def:epoch:standing-depth-mass`, `def:epoch:responsive-vouch-activation` |
 
 ### 14.2 Rules

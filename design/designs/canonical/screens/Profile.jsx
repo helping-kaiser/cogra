@@ -19,7 +19,9 @@
    blessed 2026-11-19) is the `act` chip, on the third act: `opinion-removed`
    `Gave an opinion` `on a post`, `tag-removed` `Tagged a post` `#saltmaps`,
    `citation-removed` `Cited a post`, each its second line `Removed by its
-   author` where the post's title would stand (`ChronicleTargetActs`). Sol has no
+   author` where the post's title would stand (`ChronicleTargetActs`); the
+   tag's and the citation's card is the door to the post (round 62; jakob
+   2026-11-23, B2 (a)), the opinion's inert. Sol has no
    picture: the monogram is the designed fallback, and the badge on it reads as
    "add one".
 

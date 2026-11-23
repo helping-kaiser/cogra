@@ -23,16 +23,19 @@
    2026-11-19, B2 (a)) — the `comments` chip's `settling`, `ProfileComments`'
    twin: @sol's comment signed and not yet landed, wearing `Still settling`
    as the thread's landed reply does (`ReplySettled`), its age `now`, its ⋮
-   your own comment's menu, the card keyed by its id in every copy.
+   your own comment's menu, the card keyed by its id in every copy. A
+   STILL-SETTLING THING STANDS AT THE HEAD (round 62; jakob 2026-11-23, B1
+   "in signing order"): `settling-two` draws two, the newer signed first
+   (`now`, then `3m`).
 
    REGISTERED under the `profile` prefix, told apart by board as
    `ProfileCommentsMenuOwn`. */
 export const NODE = "profile";
 export const PROPS = {
-  comments: { editor: "enum", options: ["some", "none", "removed", "settling"], default: "some" },
+  comments: { editor: "enum", options: ["some", "none", "removed", "settling", "settling-two"], default: "some" },
   load: { editor: "enum", options: ["loaded", "loading", "failed"], default: "loaded" },
 };
-export const VALS = `someShown: this.props.load === "loaded" && this.props.comments !== "none" ? "contents" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "block" : "none", liveShown: this.props.comments === "removed" || this.props.comments === "settling" ? "none" : "contents", removedShown: this.props.comments === "removed" ? "contents" : "none", settlingShown: this.props.comments === "settling" ? "contents" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none"`;
+export const VALS = `someShown: this.props.load === "loaded" && this.props.comments !== "none" ? "contents" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "block" : "none", liveShown: this.props.comments === "removed" || this.props.comments === "settling" || this.props.comments === "settling-two" ? "none" : "contents", removedShown: this.props.comments === "removed" ? "contents" : "none", settlingShown: this.props.comments === "settling" || this.props.comments === "settling-two" ? "contents" : "none", secondSettlingShown: this.props.comments === "settling-two" ? "contents" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none"`;
 export function Screen() {
   return (
     <ProfileTabTop own tab="comments">
@@ -64,6 +67,24 @@ export function Screen() {
         menuItems={OWN_COMMENT_CARD_MENU}
         node="commentCard"
         id={SOL_OWN_COMMENT.id}
+      />
+      </div>
+      {/* The second comment still settling (`settling-two`): @sol's comment
+          on @ada's post, the thread's (`SOL_THREAD_COMMENT`), signed before
+          the first, its age `3m`. */}
+      <div style={{ display: "{{secondSettlingShown}}" }} data-node-chip="comments" data-node-key="settling-two">
+      <CommentCard
+        author={SOL}
+        content={SOL_THREAD_COMMENT.content}
+        timestamp="3m"
+        pending
+        license={{ attribution: 0, provenance: 0 }}
+        onReply={() => {}}
+        target={`“${ADA_POST.title}” — @ada`}
+        onOpenTarget={() => {}}
+        menuItems={OWN_COMMENT_CARD_MENU}
+        node="commentCard"
+        id={SOL_THREAD_COMMENT.id}
       />
       </div>
       <div style={{ display: "{{removedShown}}" }} data-node-chip="comments" data-node-key="removed">
