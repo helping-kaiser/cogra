@@ -119,6 +119,33 @@ data class StanceStanding(
 )
 
 /**
+ * The borrowed view's own landed bundle toward one target — what a guest's
+ * face wears (FeedBare.md:7, GuestGate.md:11; the schema's `BorrowedStance`).
+ *
+ * DISPLAY ONLY, and a different type from [StanceStanding] on purpose: it
+ * carries no node an act could name, no raw sums a landing could fold
+ * against and no cost, so nothing read from it can reach a projection, a
+ * severance or a kept pick.
+ */
+data class BorrowedStance(
+    /** Where the view's bundle sits, as the graph reads it. */
+    val net: StancePair,
+    /** How many of the view's records the fold covers. */
+    val records: Int,
+    /** Either axis at zero (`BorrowedStance.inert`). */
+    val inert: Boolean,
+    /** Walked back to nothing (`BorrowedStance.severed`) — [StanceStanding.severed]'s rule. */
+    val severed: Boolean,
+) {
+    /**
+     * The pair the anchor rests on, or null for the hollow face — the
+     * master's `restingOf`: nothing stands where no record does, unless the
+     * bundle was walked back.
+     */
+    val resting: StancePair? get() = net.takeIf { records > 0 || severed }
+}
+
+/**
  * Where a candidate pick lands the bundle. This is the second number the
  * control has to show: the value being written and the place it lands
  * are different, and only the first is what the record carries
