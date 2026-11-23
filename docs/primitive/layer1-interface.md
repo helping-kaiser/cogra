@@ -149,13 +149,12 @@ exposes exactly four mathematical objects to the network:
   denomination and at the published terms.
 
 The first two are the frame; the last two are constants the network reads
-and never re-derives. **Public audit evidence:** the settlement depth, the
-R7 provenance, the separately published recording-event costs (R10), and
-the applicable operator bound and proof or statement of absence (R11) are
-evidence for checking the realization, not additional computational
-inputs. Everything else a realization carries — an economy, instruments,
-prices, phases, an operator — is its own: no such quantity enters a network
-published-quantity formula (`rem:comparator:surface-readings`).
+and never re-derives. Settlement depth and the assumed provenance, cost and
+operator properties of `post:comparator:burn-primitive` add no
+computational inputs. Everything else a realization carries — an economy,
+instruments, prices, phases, an operator — is its own: no such quantity
+enters a network published-quantity formula
+(`rem:comparator:surface-readings`).
 
 **Burn Primitive Requirements (`post:comparator:burn-primitive`).** A
 realization must satisfy every requirement below; its use at epoch closure
@@ -193,36 +192,50 @@ realization.
 - **R7 auditability by provenance** — every unit of $B$ is anchored to a
   genuine, irrecoverable destruction and capped, per recording event, by the
   destruction it rides on; a record not backed by destruction contributes
-  zero; the realization publishes the quantities a reader needs to
-  recompute this.
+  zero.
 - **R8 instantaneous costliness, append-only record** — what a burn
   destroys is priced at the instant it occurs; its record is never removed;
   no operation maps a record back to what was destroyed.
-- **R9 bootstrap capacity** — the realization publishes a non-negative
-  bound $B_{\max}$ on the aggregate burn amount attainable before it opens
-  to external acquisition. If external acquisition is available from the
-  realization's start, that interval is empty: the realization publishes
-  $B_{\max} = 0$ and states why. This zero bounds only the empty interval,
-  not burn amount attainable thereafter.
-- **R10 unit-cost projection** — the realization publishes a positive
-  $c_{\mathrm{u}}$, its denomination, and the terms under which it applies;
-  its units are external denomination per burn unit, and a burn amount
-  times $c_{\mathrm{u}}$ is the amount-proportional outlay at those terms.
-  If a burn unit is exactly one unit of what is destroyed, the realization
-  may use that unit as its external denomination; when the destruction is
-  the only amount-proportional outlay, $c_{\mathrm{u}} = 1$ in that
-  denomination. Any additional cost per recording event is published
-  separately, with its denomination and terms, as public audit evidence.
-  R7 provenance establishes the backing destruction, not a numerical lower
-  bound on $c_{\mathrm{u}}$ in an arbitrary denomination.
+- **R9 bootstrap capacity** — the interface has a non-negative bound
+  $B_{\max}$ on the aggregate burn amount attainable before it opens to
+  external acquisition of burn amount. If external acquisition is available
+  from the realization's start, that interval is empty and $B_{\max} = 0$.
+  This zero bounds only the empty interval, not burn amount attainable
+  thereafter.
+- **R10 unit-cost projection** — the interface has a positive unit-cost
+  projection $c_{\mathrm{u}}$. Its units are external denomination per burn
+  unit, and multiplying a burn amount by $c_{\mathrm{u}}$ gives the
+  amount-proportional outlay at the published terms of
+  `def:comparator:burn-interface`. If a burn unit is exactly one unit of
+  what is destroyed, the realization may use that unit as its external
+  denomination; when the destruction is the only amount-proportional
+  outlay, $c_{\mathrm{u}} = 1$ in that denomination. Any additional cost per
+  recording event is separate from $c_{\mathrm{u}}$ and is not an
+  additional computational input to the network. R7 provenance establishes
+  the backing destruction, not a numerical lower bound on $c_{\mathrm{u}}$
+  in an arbitrary denomination.
 - **R11 operator bound** — if a realization has an operator that accrues
   burn amount from operating it, the realization bounds that operator's
-  burn amount by a result it proves and publishes. If no role accrues burn
-  amount from operating the realization, it publishes a statement of that
-  absence, identifying why its rules provide no such accrual; no proof of a
-  zero bound is required. The bound and proof, or the statement of absence,
-  are required public audit evidence, not an additional computational
-  input to the network.
+  burn amount. If no role accrues burn amount from operating the
+  realization, no operator bound applies.
+
+**Burn Realization Audit Evidence
+(`rem:comparator:burn-realization-audit-evidence`)** *(courtesy)*. A
+realization publishes the quantities a reader needs to recompute and verify
+the provenance of each burn unit, never merely scan and total a ledger.
+Beside the bootstrap capacity bound already published as an interface
+constant, it states why an empty pre-opening interval has zero capacity. It
+publishes the positive unit-cost projection, its denomination and
+applicable terms, with any recording-event costs and their denomination
+and terms separately rather than folded into $c_{\mathrm{u}}$. Where an
+operator accrues burn amount from operating the realization, the
+applicable operator bound and its proof are published; otherwise the
+realization publishes a statement identifying why its rules provide no
+such accrual, without requiring proof of a zero bound. These are public
+audit evidence and not additional computational inputs to the network.
+External provenance publication is a courtesy audit standard; under a
+declared verifiable-provenance case, pinned proof objects instead enter
+the oracle check (`rem:comparator:auditability`, §13.3).
 
 R1–R11 name the burn-primitive requirements and M1–M5 the marker-bound
 settlement conditions (§1.2). The safety-threshold premises are X1–X9
@@ -727,10 +740,9 @@ epoch machinery (PN full §6, `subsec:epoch:epoch-boundary`). Publishes the
 binding constants and the host-cached raw defaults (§6 below). From its
 foundation the network reads only the two published interface constants
 $B_{\max}$ (R9) and $c_{\mathrm{u}}$ (R10). The applicable operator bound
-and proof or statement of absence (R11) and the separately published
-recording-event costs (R10) are required public audit evidence, not
-additional computational inputs; nothing else a realization publishes
-enters a network formula. The
+is a realization property (R11), and recording-event cost stays separate
+from $c_{\mathrm{u}}$ (R10); other monetary arrangements of a realization
+enter no network formula (`rem:comparator:surface-readings`). The
 network levies no protocol-level fee of its own; no protocol-level fee is
 extracted from content transactions, advertising spend, or guild reward
 pools.
@@ -975,14 +987,13 @@ reference calibration $(\nu, \rho_{\text{pol}}) = (0.10, 1)$, $\rho_{\text{eff}}
 No netting-clip constant exists: the stance-aggregation clip is the fixed
 $\mathrm{clip}_{[-1,1]}$ in `def:epoch:net-stance`, not a calibrated value.
 
-*Interface constants* — $B_{\max}$ (R9; zero, with its explanation, for an
-empty pre-opening interval) and the positive unit-cost projection
-$c_{\mathrm{u}}$ (R10, with its denomination and terms) — are published by
-the realization, read as constants, and re-derived nowhere. The settlement
-depth with its finality assumptions (R4(e)), R7 provenance, separately
-published recording-event costs, and the R11 operator bound and proof or
-statement of absence are public audit evidence, not computational inputs
-(`def:comparator:burn-interface`). A realization's own fees, splits, phase
+*Interface constants* — $B_{\max}$ (R9; zero for an empty pre-opening
+interval) and the positive unit-cost projection $c_{\mathrm{u}}$ (R10) —
+are read as constants and re-derived nowhere. Settlement depth and the
+assumed provenance, cost and operator properties add no computational
+inputs (`def:comparator:burn-interface`); the publication of their audit
+evidence is courtesy (`rem:comparator:burn-realization-audit-evidence`,
+§1.1). A realization's own fees, splits, phase
 leads, and any ceiling derived from them are its design; the network
 neither names nor recomputes them (`rem:comparator:surface-readings`).
 $c_{\mathrm{u}}$ turns a burn-amount quantity into an amount-proportional
@@ -3872,7 +3883,7 @@ operator duties (both at the end of this section).
   and X8 comparison procedure, and the controller's reduced constants
   $a, r, d$, together with the interface constants the network reads from
   its realization and surfaces unmodified
-  (`subsec:deployment:realization-obligations`), are known to all clients
+  (`def:comparator:burn-interface`), are known to all clients
   and do not change without clients being able to detect the change and
   invalidate affected cached computations before it applies. The marker
   policy is published before genesis and stays fixed for the interpretation
@@ -3977,41 +3988,53 @@ operator duties (both at the end of this section).
   that reimplements a terminal default publishes its own complete
   specification in its place.
 
-**Realization Obligations (`subsec:deployment:realization-obligations`).**
-The deployment runs against a realization that publishes, and keeps
-published, the R7 audit quantities; $B_{\max}$ (R9), a published zero with
-its explanation for an empty pre-opening interval; $c_{\mathrm{u}}$ (R10)
-with its denomination and terms, and any separately published
-recording-event costs; the settlement depth (R4(e)) with the finality
-assumptions under which it holds; and — where the realization has an
-operator accruing burn amount — the R11 operator bound and its proof, or
-else a statement of that absence with its explanation. Settlement depth,
-provenance, recording-event costs, and the operator evidence are public
-audit evidence, not computational inputs. The deployment publishes its
-marker policy with its fixed edition, epoch-marker placement rule, and
-cadence (`post:comparator:marker-bound-settlement`); every reader can
-recover the complete accepted sets and their evidence from the policy's
-package encoding. The network carries all of it to participants unmodified
-and without access control; the deployment adds no channel by which a
-published quantity could be silently dropped, replaced, or amended in
-transit. Two duties: *publication* on the realization, *non-occlusion* on
-the deployment. Design space: a pointer to the realization's own
-publication, a mirror in the network's append-log, or a periodic published
-snapshot beside the network's own constants. A breach of the finality
-assumptions has the halt consequence of
-`rem:comparator:finality-breach-halts` (§1.2) and one of two published
-deployment responses; which one follows is the deployment's published
-policy, and neither is a Layer-1 rule:
+**Realization Obligations (`subsec:deployment:realization-obligations`)**
+*(courtesy)*. The network's mathematical inputs from the burn primitive are
+the four objects of `def:comparator:burn-interface`, while the burn
+primitive and marker contract fix the realization and marker properties the
+network assumes; the audit standard of
+`rem:comparator:burn-realization-audit-evidence` calls for publication of
+the evidence a reader needs to check the realization. The invariant: the
+deployment runs against a realization that publishes, and keeps published,
+the R7 audit quantities; $B_{\max}$ (R9), a published zero with its
+explanation for an empty pre-opening interval; $c_{\mathrm{u}}$ (R10) with
+its denomination and terms, and any separately published recording-event
+costs; the settlement depth (R4(e)) with the finality assumptions under
+which it holds; and — where the realization has an operator accruing burn
+amount — the R11 operator bound and its proof, or else a statement of that
+absence with its explanation. The subsection calls settlement depth,
+provenance, recording-event costs, and the applicable operator evidence
+"required public audit evidence, not additional computational inputs". The
+deployment publishes its marker policy with its fixed edition, epoch-marker
+placement rule, and cadence (`post:comparator:marker-bound-settlement`);
+every reader can recover the complete accepted sets and their evidence from
+the policy's package encoding. The network carries all of it to
+participants unmodified and without access control; the deployment adds no
+channel by which a published quantity could be silently dropped, replaced,
+or amended in transit. Two duties: *publication* on the realization,
+*non-occlusion* on the deployment. Design space: a pointer to the
+realization's own publication, a mirror in the network's append-log, or a
+periodic published snapshot beside the network's own constants. After a
+finality breach, which has the halt consequence of
+`rem:comparator:finality-breach-halts` (§1.2), a deployment may retain the
+closed epochs and re-anchor at a fresh initial marker in the surviving
+history, or follow the replaced history and re-derive the affected epochs;
+it publishes the ledger-continuity decision, the settled amounts carried
+over, and, when following the replaced history, the superseded
+certificates and point of divergence. Neither response is a Layer-1 rule,
+and the choice is stated rather than made silently. The two cases that say
+what the record binds are closure:
 
 - **Re-anchor (`case:deployment:realization-obligations-finality-breach-reanchor`).**
-  Keep every closed epoch as published and resume by a published
-  marker-policy edition change naming a fresh initial epoch marker in the
-  surviving history, with a published ledger-continuity decision.
+  The epoch package binds the marker-policy identity and edition that name
+  a fresh initial epoch marker in the surviving history
+  (`post:epoch:final-edge-set`). The closed epoch packages remain fixed,
+  and replay reads the bound policy edition and marker.
 - **Follow (`case:deployment:realization-obligations-finality-breach-follow`).**
-  Follow the replaced history, re-deriving the epochs whose markers were lost
-  under a published marker-policy edition change; name the superseded
-  certificates and the point of divergence, and publish the
-  ledger-continuity decision.
+  The epoch packages bind the policy identity and edition for the new
+  lineage's epoch-marker sequence (`post:epoch:final-edge-set`). Replay
+  derives the affected epochs from that sequence and the bound policy
+  edition; it does not read an unbound continuity announcement.
 
 ### 13.1 Operator duties
 
