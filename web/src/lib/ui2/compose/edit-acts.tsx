@@ -12,6 +12,7 @@
 // a foot gone silent would read as a fault.
 
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { nameInText } from "@/lib/ui/names";
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { HELP_TOPICS } from "@/lib/ui2/help-dialog";
 import { HelpDot } from "@/lib/ui2/help-dot";
@@ -183,7 +184,13 @@ export function WithdrawnLine({
       className="m-0 flex flex-wrap items-center gap-1 text-body-small text-on-surface-variant"
       {...testAttributes(node)}
     >
-      <span data-testid={node === undefined ? testId : undefined}>Withdrawn: {name}</span>
+      {/* A WRAPPING SENTENCE (`_shared.jsx` `WithdrawnLine`, round 63): the
+          tag or handle in it is one unit (`nameInText`) — whole on the next
+          line, cut past a full one — and the words may yield (`min-w-0`) so a
+          long name never pushes the line past the screen. */}
+      <span data-testid={node === undefined ? testId : undefined} className="min-w-0 max-w-full">
+        {nameInText(`Withdrawn: ${name}`)}
+      </span>
       <TextAction
         testId={`${testId}-undo`}
         node={part(node, "undo")}
