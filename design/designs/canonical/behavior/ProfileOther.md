@@ -32,6 +32,8 @@ ALWAYS profile.chronicle.act.second reads Removed by its author where the target
 
 ALWAYS profile.chronicle.act.aside reads on a deleted account where the target's handle would stand GIVEN the act's target is an account since deleted
 
+ALWAYS profile.chronicle.act.aside reads a deleted account, with no on, after Mentioned or Vouched for GIVEN the person mentioned or vouched for has an account since deleted
+
 ALWAYS a chronicle card whose post or comment was removed keeps its place, its disc, its verb and its age, profile.chronicle.act.second reading Removed by its author where its words were, in the row's quiet second line, whatever the feed's filter holds
 
 WHEN tap the wide anchor -> the pad blooms at the lower centre of the viewport AND nothing is staged

@@ -186,12 +186,16 @@ export function ContentRow({
   node,
   nodeKey,
   redacted = false,
+  discRedacted = false,
 }) {
   const shape = VARIANTS[variant] ?? VARIANTS.ledger;
   /* A DELETED ACCOUNT'S ROW (jakob 2026-10-07, HA-3): the reserved disc and
      `REDACTED_ACTOR_NAME` in the system's voice, the aside dropped — the
      handle a row would print is gone, and anything in its place would invent
-     one. `ActorChip`'s law, at row scale. */
+     one. `ActorChip`'s law, at row scale. `discRedacted` is the disc alone:
+     a row whose disc is a person's picture and whose person's account is
+     gone — the chronicle's `Mentioned` `a deleted account` — keeps its own
+     words and wears the reserved disc. */
   const title = redacted ? REDACTED_ACTOR_NAME : titleGiven;
   const titleAside = redacted ? undefined : asideGiven;
   /* A row is a control unless it is declared not to be. `inert` is the
@@ -246,7 +250,7 @@ export function ContentRow({
       data-node-key={action ? undefined : node && nodeKey}
     >
       <span style={{ position: "relative", flex: "none", width: "40px", height: "40px" }} data-node={node && "disc"}>
-        <Disc redacted={redacted} image={image} imageShape={shape.image} name={name} face={face} letter={letter} glyph={glyph} tone={shape.disc} />
+        <Disc redacted={redacted || discRedacted} image={image} imageShape={shape.image} name={name} face={face} letter={letter} glyph={glyph} tone={shape.disc} />
         {direction && (
           <span
             aria-hidden="true"

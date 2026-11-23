@@ -1494,6 +1494,17 @@ function ProfileOtherBody({ bundle, backLabel = "Back to feed", displayName = "A
                   <div style={{ display: "{{asideDeleted}}" }} data-node-chip="aside" data-node-key="deleted">
                     <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Gave an opinion" titleAside="on a deleted account" trailing="2d" inert node="act" nodeKey="3" />
                   </div>
+                  {/* The two verbs that take the person bare (round 62; jakob
+                      2026-11-23, B3 (a)): the fragment alone, no `on`. The
+                      mention's disc is the person's picture, so the reserved
+                      disc stands in it (`ContentRow`'s `discRedacted`); the
+                      vouch's is the record's face, as the opinion's. */}
+                  <div style={{ display: "{{asideMentioned}}" }} data-node-chip="aside" data-node-key="mentioned-deleted">
+                    <ContentRow variant="chronicle" chevron={false} discRedacted title="Mentioned" titleAside="a deleted account" trailing="2d" inert node="act" nodeKey="3" />
+                  </div>
+                  <div style={{ display: "{{asideVouched}}" }} data-node-chip="aside" data-node-key="vouched-deleted">
+                    <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Vouched for" titleAside="a deleted account" trailing="2d" inert node="act" nodeKey="3" />
+                  </div>
                 </>
               ) : (
                 <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @tobias" trailing="2d" inert node="act" nodeKey="3" />
