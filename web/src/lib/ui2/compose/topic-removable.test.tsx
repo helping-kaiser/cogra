@@ -7,6 +7,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { WithdrawnLine } from "./edit-acts";
 import { TopicRemovable } from "./topic-removable";
 
 /** The atom's longest legal name, one unbroken run (hashtag.md §1: 128 characters). */
@@ -26,6 +27,18 @@ describe("TopicRemovable — a tag is one line", () => {
     if (editable) expect(screen.getByTestId("pill-select")).toHaveClass("min-w-0");
     // The × keeps its room.
     expect(screen.getByTestId("pill-remove")).toHaveClass("flex-none");
+  });
+
+  // The editor's withdrawn line under the tags (`_shared.jsx` `WithdrawnLine`,
+  // round 63): a wrapping sentence whose tag is one unit, the words yielding.
+  it("keeps the editor's withdrawn tag one unit in a line that may yield", () => {
+    render(<WithdrawnLine name={`#${LONG}`} onUndo={vi.fn()} testId="gone" />);
+    const line = screen.getByTestId("gone");
+    expect(line).toHaveClass("min-w-0", "max-w-full");
+    expect(line).toHaveTextContent(`Withdrawn: #${LONG}`);
+    const unit = line.querySelector("[data-name-unit]");
+    expect(unit?.textContent).toBe(`#${LONG}`);
+    expect(screen.getByRole("button", { name: `Undo withdrawing #${LONG}` })).toBeInTheDocument();
   });
 
   // The accessible names carry the whole tag, whatever the cut hides.
