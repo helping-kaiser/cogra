@@ -114,6 +114,8 @@ const FEED_MENU_ROWS: ReadonlySet<PostMenuRow> = new Set([
   "save",
   "cite",
   "hide",
+  "citedBy",
+  "opinions",
   "license",
   "report",
   "edit",

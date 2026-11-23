@@ -75,6 +75,8 @@ fun StanceControlRoute(
     node: DataNode? = null,
     /** The pad opened as something in particular (the vouch-back); see [StancePadVariant]. */
     variant: StancePadVariant? = null,
+    /** A plain pad's registered node (`tagPage.actionRow.stance.pad`); see [StanceControl]. */
+    padNode: DataNode? = null,
     /**
      * The host is the opening gesture (the vouch card's `Vouch back`): the
      * pad opens with the route, no resting target is drawn, and
@@ -103,9 +105,7 @@ fun StanceControlRoute(
     // A guest has no bundle to read, and asking for one costs a refused
     // round trip plus the guard's wasted token refresh on every control
     // the page holds.
-    LaunchedEffect(target, onRequireAccount) {
-        if (onRequireAccount == null) viewModel.observe(target)
-    }
+    LaunchedEffect(target, onRequireAccount) { if (onRequireAccount == null) viewModel.observe(target) }
     // Leaving the screen dismisses the pad and stages nothing
     // (design.md §8.3). The pad is a popup — its own window, drawn over
     // whatever the app navigates to — and the holder outlives the
@@ -168,6 +168,7 @@ fun StanceControlRoute(
         wide = wide,
         node = node,
         variant = variant,
+        padNode = padNode,
         padOnly = padOnly,
         lineFaceInk = lineFaceInk,
         onConfirmEmptySign = { viewModel.onConfirmEmptySign(target) },

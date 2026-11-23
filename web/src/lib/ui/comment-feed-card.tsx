@@ -29,10 +29,18 @@
 // THE LINE SHAPE (`CommentCard`'s `targetShape="line"`, ProfileComments): where
 // a comment is listed away from its thread and nothing ranks it — a profile's
 // comments — the card leads with the one-line `On …` pointer instead of the
-// head row, its words stand whole and are no door, and its row is the
-// thread's own: the opinion, then the text `Reply`, with the collapsed
-// "View n replies" line under the card. Every door — the pointer, Reply and
-// the replies line — opens the thread the comment lives in.
+// head row, its words stand whole, and its row is the thread's own: the
+// opinion, then the text `Reply`, with the collapsed "View n replies" line
+// under the card. Every door — the pointer, Reply and the replies line — opens
+// the thread the comment lives in.
+//
+// IN BOTH SHAPES THE CARD IS THE DOOR TO THE COMMENT'S PLACE: a tap anywhere
+// outside what it answers and its own controls opens the post's comment
+// section scrolled to it (FeedKinds.md:27, History.md:53, Saved.md:31,
+// ProfileComments.md:49, ProfileCommentsOwn.md:17), a removed comment's card
+// as much as a live one's. The words and the pictures carry the door
+// (`cg-door`, `CommentCard.jsx`'s body), and the card's bare ground forwards
+// to the same place (`Card`'s `onOpen`).
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -46,6 +54,8 @@ import { COMMENT_SETTLING, useOpenCommentEdit } from "@/lib/compose/comment-edit
 import { withRemoval, type Removal } from "@/lib/api/removal-api";
 import { fetchHeldOpinions, type HeldOpinionView } from "@/lib/api/opinions-api";
 import { fetchCitingArtifacts, type CitingArtifactView } from "@/lib/api/references-api";
+import { hideRow, hiddenPersonOf } from "@/lib/hidden/hide-row";
+import { useHiddenSet } from "@/lib/hidden/provider";
 import type { License } from "@/lib/license";
 import { useComfortLine } from "@/lib/saved/comfort-line";
 import { REMOVED_BY_AUTHOR, postTitle } from "@/lib/saved/row-content";
@@ -94,6 +104,8 @@ import { ShareButton } from "./share-button";
 import { StanceControl } from "./stance-control";
 import { shortTimestamp } from "./timestamp";
 import { TopicsLine } from "./topics-line";
+import { NO_REACH_LINE } from "./transport-error";
+import { WRITTEN } from "./written";
 
 /* A LONG COMMENT FOLDS AT TWO LINES under `More` (FeedCommentShapes.md:29,
    the caption's precedent); the card is still the door to its thread. The
@@ -151,11 +163,26 @@ export type CommentTargetView =
       readonly removal?: { readonly at: string; readonly by: string } | null;
     };
 
+/**
+ * The comment's own folds — its topics and its citations. A host may leave
+ * them out of its read, as the tag page does: two fold lists of fifty a row
+ * would price its list past the query budget (`list_cost` × `fold_cost`), and
+ * its card draws no topics line (TagPage.jsx: the comment is handed none).
+ */
+type CommentFolds = "topics" | "references";
+
 /** A comment as its feed card reads it: the thread's own fields, what it answers, its thread's post. */
-export type CommentFeedView = CommentFieldsFragment & {
-  readonly target?: CommentTargetView | null;
-  readonly post?: { readonly id: string } | null;
-};
+export type CommentFeedView = Omit<CommentFieldsFragment, CommentFolds> &
+  Partial<Pick<CommentFieldsFragment, CommentFolds>> & {
+    readonly target?: CommentTargetView | null;
+    readonly post?: { readonly id: string } | null;
+  };
+
+/** The comment whole, where its read carried both folds. */
+function wholeComment(comment: CommentFeedView): CommentFieldsFragment | null {
+  const { topics, references } = comment;
+  return topics === undefined || references === undefined ? null : { ...comment, topics, references };
+}
 
 function text(field: Moderated): string {
   return field === null || field === undefined || field.status === "REDACTED" ? "" : (field.value ?? "").trim();
@@ -254,10 +281,12 @@ export function CommentFeedCard({
   shape = "thread",
   authorHere = false,
   reply = "open",
-  replyCount = 0,
   onRemoved,
+  attach = false,
 }: {
   comment: CommentFeedView;
+  /** The card hangs under a row flag (`TaggedRow`) and squares its top-left corner (`Card`'s `attach`). */
+  attach?: boolean;
   /**
    * How the card names what it answers (`CommentCard`'s `targetShape`): the
    * feed's `thread` head row, or the `line` pointer of a comment listed away
@@ -271,8 +300,6 @@ export function CommentFeedCard({
   authorHere?: boolean;
   /** The line shape's text Reply, for this reader. */
   reply?: LineReply;
-  /** The line shape's collapsed branch: the "View n replies" line under the card. */
-  replyCount?: number;
   /**
    * The author's own Remove, taken from the card's ⋮: the host keeps the mark
    * too, so a view held for a return comes back wearing it.
@@ -292,6 +319,7 @@ export function CommentFeedCard({
   const router = useRouter();
   const client = useApolloClient();
   const writes = useSavedWrites();
+  const hidden = useHiddenSet();
   const viewerId = useActiveAccountId();
   const phase = useAuthPhase();
   const applicant = useReaderIsApplicant();
@@ -312,7 +340,7 @@ export function CommentFeedCard({
   // AN EDIT SIGNED FROM THIS CARD'S MENU: the comment as it reads afresh,
   // laid over what the host served, so the card settles in place.
   const [reread, setReread] = useState<CommentFieldsFragment | null>(null);
-  const current = reread === null ? given : { ...given, ...reread };
+  const current: CommentFeedView = reread === null ? given : { ...given, ...reread };
   const comment = taken === null ? current : withRemoval(current, taken);
   const own = viewerId !== null && comment.author?.id === viewerId;
   const comfort = useComfortLine(comment.id);
@@ -356,10 +384,8 @@ export function CommentFeedCard({
   // off outside the feed).
   const clamped = !line && !unfolded;
   const [holdWords, folds] = useClampFold(clamped, words);
-  const wordsClass = `text-body-medium ${clamped ? "line-clamp-2" : ""}`;
-  // In the line shape the words are no door: the card is reached through
-  // its pointer, its Reply and its replies line (ProfileComments.md:23-27).
-  const wordsDoor = line ? null : place;
+  const wordsClass = `text-body-medium ${WRITTEN} ${clamped ? "line-clamp-2" : ""}`;
+  const wordsDoor = place;
   const stamp = shortTimestamp(comment.createdAt);
   const handle = comment.author?.handle ?? null;
 
@@ -383,29 +409,46 @@ export function CommentFeedCard({
   // it lives in is the card's `post`.
   const target = comment.target ?? null;
   const editThread = threadPost ?? (target?.__typename === "Post" ? target.id : null);
+  const openEditWith = (whole: CommentFieldsFragment) => {
+    if (openEditDoor === null || target === null || editThread === null) return;
+    openEditDoor({
+      comment: whole,
+      parentId: target.__typename === "Comment" ? target.id : null,
+      postId: editThread,
+      targetLabel: head?.kind === "post" ? head.title : (head?.label ?? "this post"),
+      onLeave: () => {},
+      onSigned: () =>
+        landSignedEdit({
+          settleInPlace: () => {
+            onNotify(COMMENT_SETTLING);
+            void fetchComment(client, comment.id).then((outcome) => {
+              if (outcome.kind === "success" && outcome.value !== null) setReread(outcome.value);
+            });
+          },
+          openThread: () => {
+            if (place !== null) router.push(place);
+          },
+        }),
+    });
+  };
+  // THE EDITOR STARTS FROM THE COMMENT WHOLE — its topics and citations are
+  // what it edits against. A host that read the card without its folds (the
+  // tag page) has the comment read whole first; a read that gets no answer
+  // opens nothing and says so on the host's snackbar.
   const openEdit =
     !own || openEditDoor === null || target === null || editThread === null
       ? undefined
-      : () =>
-          openEditDoor({
-            comment,
-            parentId: target.__typename === "Comment" ? target.id : null,
-            postId: editThread,
-            targetLabel: head?.kind === "post" ? head.title : (head?.label ?? "this post"),
-            onLeave: () => {},
-            onSigned: () =>
-              landSignedEdit({
-                settleInPlace: () => {
-                  onNotify(COMMENT_SETTLING);
-                  void fetchComment(client, comment.id).then((outcome) => {
-                    if (outcome.kind === "success" && outcome.value !== null) setReread(outcome.value);
-                  });
-                },
-                openThread: () => {
-                  if (place !== null) router.push(place);
-                },
-              }),
+      : () => {
+          const whole = wholeComment(comment);
+          if (whole !== null) {
+            openEditWith(whole);
+            return;
+          }
+          void fetchComment(client, comment.id).then((outcome) => {
+            if (outcome.kind === "success" && outcome.value !== null) openEditWith(outcome.value);
+            else onNotify(NO_REACH_LINE);
           });
+        };
 
   // THE COMMIT SENDS THE MAIL; refused or unanswered, the sheet stays and the
   // snackbar never claims a report that did not go out (ReportConfirm.md:13-17).
@@ -427,33 +470,50 @@ export function CommentFeedCard({
   const host = menuHostOf(node);
   const sheetNodes = host === undefined || !menuOpen ? undefined : menuSheetNodes(host);
 
-  const items = redacted
-    ? []
-    : commentMenuItems({
-        comment,
-        writes,
-        notify: onNotify,
-        // A GUEST IS ASKED TO JOIN before anything is kept, cited or reported
-        // (GuestGate.md:5) — the profile's Comments tab and the feed are read
-        // by guests.
-        onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
-        applicant,
-        navigate: (route) => router.push(route),
-        openCitedBy,
-        openOpinions,
-        openLicense: (license) => {
-          setLicenseShown(license);
-          setLicenseOpen(true);
-        },
-        openEdit,
-        openRemove: own ? () => setRemoving(true) : undefined,
-        openReport: () => {
-          setReportAsked(true);
-          setReportOpen(true);
-        },
-        testIdPrefix: `${testId}-menu`,
-        rowNode: sheetNodes?.row,
-      });
+  // A REMOVED COMMENT KEEPS ITS ⋮ (ProfileComments.md:9,
+  // ProfileCommentsOwn.md:11): the reader's menu whole, the author's less Edit
+  // and Remove (`commentMenuItems`' `removed`).
+  const items = commentMenuItems({
+    comment,
+    removed: redacted,
+    writes,
+    notify: onNotify,
+    // A GUEST IS ASKED TO JOIN before anything is kept, cited or reported
+    // (GuestGate.md:5) — the profile's Comments tab and the feed are read
+    // by guests.
+    onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
+    applicant,
+    navigate: (route) => router.push(route),
+    openCitedBy,
+    openOpinions,
+    openLicense: (license) => {
+      setLicenseShown(license);
+      setLicenseOpen(true);
+    },
+    openEdit,
+    openRemove: own ? () => setRemoving(true) : undefined,
+    openReport: () => {
+      setReportAsked(true);
+      setReportOpen(true);
+    },
+    // HIDING THE COMMENT'S AUTHOR, the post menu's twin (CommentMenu.md:13-21):
+    // no confirm; the host answers as after a hide from a post's menu there —
+    // the feed's rows of theirs leave, History's at its next load, Saved and a
+    // profile keep the card — and its snackbar offers Undo. A failure stands
+    // on this card's row line (`useComfortLine`, keyed by the comment).
+    hide:
+      own || comment.author == null
+        ? undefined
+        : hideRow({
+            set: hidden,
+            person: hiddenPersonOf(comment.author),
+            origin: comment.id,
+            notify: onNotify,
+            onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
+          }),
+    testIdPrefix: `${testId}-menu`,
+    rowNode: sheetNodes?.row,
+  });
 
   const body = (
     <>
@@ -463,19 +523,20 @@ export function CommentFeedCard({
             {words}
           </p>
         ) : (
-          <Link href={wordsDoor} data-testid={`${testId}-link`} className="block">
+          <Link href={wordsDoor} data-testid={`${testId}-link`} className="cg-focus cg-door block">
             <p ref={holdWords} className={wordsClass}>
               {words}
             </p>
           </Link>
         ))}
       {/* A COMMENT IS WORDS FIRST and its pictures join them: inset at the
-          card's medium rung, square and filled, capped at comment scale
-          (FeedCommentShapes.md). The pictures take the words' door. */}
+          card's medium rung, a square at the column's whole width, filled,
+          with no height cap (jakob 2026-11-18). The pictures take the words'
+          door. */}
       {hasMedia(comment) && (
         <div
           onClick={wordsDoor === null ? undefined : () => router.push(wordsDoor)}
-          className={wordsDoor === null ? undefined : "cursor-pointer"}
+          className={wordsDoor === null ? undefined : "cg-door cursor-pointer"}
         >
           <PostMedia
             node={comment}
@@ -483,7 +544,6 @@ export function CommentFeedCard({
             radius="var(--radius-medium)"
             ratio={1}
             fit="cover"
-            maxHeight="220px"
             surface="reading"
             testId={`${testId}-media`}
             dataNode={part(node, "media")}
@@ -519,7 +579,7 @@ export function CommentFeedCard({
               {stamp}
             </time>
           )}
-          {/* A menu with no rows is no menu: a removed comment keeps none. */}
+          {/* A menu with no rows is no menu. */}
           {items.length > 0 && (
             <OverflowTrigger
               ariaLabel="More on this comment"
@@ -629,13 +689,15 @@ export function CommentFeedCard({
           {unfolded ? "Less" : "More"}
         </button>
       )}
-      {!redacted && (
+      {/* A host that read no folds hands the card no topics, and the card
+          draws no line for them (`CommentCard`'s `topics = []`). */}
+      {!redacted && comment.topics !== undefined && (
         <TopicsLine
           topics={comment.topics.map((claim) => ({
             name: claim.hashtag.name.value ?? "",
             pending: claim.pending,
           }))}
-          references={comment.references.length}
+          references={comment.references?.length ?? 0}
           testIdPrefix={testId}
           from={from}
         />
@@ -644,7 +706,13 @@ export function CommentFeedCard({
   );
 
   const card = (
-    <Card testId={testId} node={node}>
+    <Card
+      testId={testId}
+      node={node}
+      attach={attach}
+      door={place !== null}
+      onOpen={place === null ? undefined : () => router.push(place)}
+    >
       {/* THE TARGET POINTER (`CommentCard`'s line shape; ProfileComments.md:5):
           one line, one tap to the thread — the target kind's glyph, then
           `On …` in the quiet ink, ellipsized. */}
@@ -779,23 +847,9 @@ export function CommentFeedCard({
       {comfort !== null && <RowLine state={comfort} testId={`${testId}-row-line`} />}
     </Card>
   );
-  if (!line) return card;
-  return (
-    <>
-      {card}
-      {/* THE COLLAPSED BRANCH, as the thread draws it: a short rule and the
-          count, indented under the card — its door the thread
-          (ProfileComments.md:27). */}
-      {replyCount > 0 && place !== null && (
-        <Link
-          href={place}
-          {...testAttributes(part(node, "viewReplies"), `${testId}-replies`)}
-          className="cg-state cg-focus cg-hit ml-7 flex items-center gap-3 self-start py-1 pl-0 pr-2 text-label-medium text-on-surface-variant"
-        >
-          <span aria-hidden="true" className="h-px w-6 bg-outline-variant" />
-          View {replyCount === 1 ? "1 reply" : `${replyCount} replies`}
-        </Link>
-      )}
-    </>
-  );
+  // NO VIEW-REPLIES LINE on any host of this card (ProfileComments.md:47,
+  // ProfileCommentsOwn.md:15, FeedKinds.md:25, History.md:41, Saved.md:19,
+  // TagPage.md:17): the collapsed branch is the thread's own line, and the
+  // card's door already opens the thread on this comment.
+  return card;
 }

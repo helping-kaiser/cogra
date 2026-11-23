@@ -131,12 +131,25 @@ pub struct StagedWrite {
 /// over P (layer1-interface.md §8.2, "Proposal pre-commitment"). The
 /// content nonce stays on CoGra's side with the payload; the dependency
 /// nonce goes to the host with the dependency list.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct PreSignedParts {
     pub author_pubkey: Vec<u8>,
     pub content_nonce: Vec<u8>,
     pub dependency_nonce: Vec<u8>,
     pub pre_signature: Vec<u8>,
+}
+
+/// `Debug` shows each nonce's length and never its bytes.
+impl std::fmt::Debug for PreSignedParts {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use common::redact::ByteLen;
+        f.debug_struct("PreSignedParts")
+            .field("author_pubkey", &self.author_pubkey)
+            .field("content_nonce", &ByteLen::of(&self.content_nonce))
+            .field("dependency_nonce", &ByteLen::of(&self.dependency_nonce))
+            .field("pre_signature", &self.pre_signature)
+            .finish()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -317,20 +330,84 @@ pub async fn insert(
 
 /// Loads one staged write, reconstructed into seam types. A write a
 /// redaction reaped is refused as [`StagedError::Reaped`]: it has no
-/// proposal left to reconstruct.
+/// proposal left to reconstruct. A write whose pair the GC moved into
+/// carriage is [`StagedError::NotFound`], as it was before custody: the
+/// reap ended the write, and the row it left is the act's structure for a
+/// late landing ([`reap_expired`]), nothing to sign, relay or list.
 pub async fn load(pool: &PgPool, id: Uuid) -> Result<StagedWrite, StagedError> {
     match load_promotable(pool, id).await? {
         Promotable::Full(write) => Ok(*write),
+        Promotable::Custodied(_) => Err(StagedError::NotFound(id)),
         Promotable::Reaped(_) => Err(StagedError::Reaped(id)),
     }
 }
 
-/// A staged write as its landing reads it: whole, or reaped by a
-/// redaction before its record landed.
+/// A staged write as its landing reads it: whole, reaped by the GC with
+/// its pair in carriage, or reaped by a redaction before its record
+/// landed.
 #[derive(Debug, Clone)]
 pub enum Promotable {
     Full(Box<StagedWrite>),
+    Custodied(Box<LandingWrite>),
     Reaped(Box<ReapedWrite>),
+}
+
+/// What a landing builds from: the act's structure, the display rows the
+/// write owned, and its content pair with the salt. A whole staged write
+/// gives one once sealed ([`StagedWrite::into_landing`]); a write the GC
+/// reaped gives one from its structural row and its carriage row.
+#[derive(Debug, Clone)]
+pub struct LandingWrite {
+    pub id: Uuid,
+    pub actor_id: Uuid,
+    pub body: StructuralBody,
+    pub node_id: Option<Uuid>,
+    pub pre_signed_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub payload: Vec<u8>,
+    pub content_nonce: Vec<u8>,
+    pub content_salt: Vec<u8>,
+}
+
+impl LandingWrite {
+    /// The content pair and salt, as carriage holds them.
+    pub fn carried_pair(&self) -> crate::content::CarriedPair<'_> {
+        crate::content::CarriedPair {
+            payload: &self.payload,
+            content_nonce: &self.content_nonce,
+            content_salt: &self.content_salt,
+        }
+    }
+
+    /// The same write as a redaction leaves it, reduced at `reaped_at`.
+    pub fn reaped(&self, reaped_at: chrono::DateTime<chrono::Utc>) -> ReapedWrite {
+        ReapedWrite {
+            id: self.id,
+            actor_id: self.actor_id,
+            body: self.body.clone(),
+            node_id: self.node_id,
+            pre_signed_at: self.pre_signed_at,
+            reaped_at,
+        }
+    }
+}
+
+impl StagedWrite {
+    /// The write as its landing reads it. None before the seal has
+    /// returned the content salt.
+    pub fn into_landing(self) -> Option<LandingWrite> {
+        let content_nonce = self.pre_signed?.content_nonce;
+        let content_salt = self.sealed?.content_salt;
+        Some(LandingWrite {
+            id: self.id,
+            actor_id: self.actor_id,
+            body: self.proposal.body,
+            node_id: self.node_id,
+            pre_signed_at: self.pre_signed_at,
+            payload: self.proposal.payload,
+            content_nonce,
+            content_salt,
+        })
+    }
 }
 
 /// What a reaped write keeps: the structure of the act and the display
@@ -352,16 +429,18 @@ pub struct ReapedWrite {
 
 /// Loads one staged write for its landing, which is the one reader a
 /// reaped write still answers: the record is ordered fact whatever became
-/// of the payload, so it has to land, and it lands reduced.
+/// of the payload, so it has to land. A redaction-reaped write lands
+/// reduced. A GC-reaped write lands from its carriage row: whole while the
+/// row is full, reduced once a redaction reduced it.
 pub async fn load_promotable(pool: &PgPool, id: Uuid) -> Result<Promotable, StagedError> {
     let row = sqlx::query!(
-        "SELECT id, actor_id, author, seq, family, middle,
+        "SELECT id, actor_id, act_id, author, seq, family, middle,
                 target, p_d, p_i, settlement_ref, license, asserted_parents,
                 deps, payload, state, author_pubkey, content_nonce,
                 dependency_nonce, pre_signature,
                 content_salt, deps_salt, content_commitment, deps_commitment,
                 host_seal, prepared_epoch, node_id, pre_signed_at, carried,
-                payload_reaped_at
+                payload_reaped_at, payload_custodied_at
          FROM staged_writes WHERE id = $1",
         id,
     )
@@ -400,9 +479,9 @@ pub async fn load_promotable(pool: &PgPool, id: Uuid) -> Result<Promotable, Stag
         license: row.license,
         asserted_parents: parse_ids(&row.asserted_parents)?,
     };
-    let payload = match (row.payload, row.payload_reaped_at) {
-        (Some(payload), None) => payload,
-        (None, Some(reaped_at)) => {
+    let payload = match (row.payload, row.payload_reaped_at, row.payload_custodied_at) {
+        (Some(payload), None, None) => payload,
+        (None, Some(reaped_at), None) => {
             return Ok(Promotable::Reaped(Box::new(ReapedWrite {
                 id: row.id,
                 actor_id: row.actor_id,
@@ -411,6 +490,39 @@ pub async fn load_promotable(pool: &PgPool, id: Uuid) -> Result<Promotable, Stag
                 pre_signed_at: row.pre_signed_at,
                 reaped_at,
             })));
+        }
+        (None, None, Some(_)) => {
+            let carriage = crate::content::act_payload(pool, &row.act_id)
+                .await?
+                .ok_or_else(|| corrupt("custodied pair missing from carriage"))?;
+            let custodied = LandingWrite {
+                id: row.id,
+                actor_id: row.actor_id,
+                body,
+                node_id: row.node_id,
+                pre_signed_at: row.pre_signed_at,
+                payload: Vec::new(),
+                content_nonce: Vec::new(),
+                content_salt: Vec::new(),
+            };
+            return Ok(match carriage {
+                crate::content::ActPayload {
+                    payload: Some(payload),
+                    content_nonce: Some(content_nonce),
+                    content_salt: Some(content_salt),
+                    ..
+                } => Promotable::Custodied(Box::new(LandingWrite {
+                    payload,
+                    content_nonce,
+                    content_salt,
+                    ..custodied
+                })),
+                crate::content::ActPayload {
+                    reduced_at: Some(reduced_at),
+                    ..
+                } => Promotable::Reaped(Box::new(custodied.reaped(reduced_at))),
+                _ => return Err(corrupt("custodied carriage")),
+            });
         }
         _ => return Err(corrupt("payload")),
     };
@@ -577,7 +689,9 @@ pub async fn supersede_unsigned_targeting(
 ///
 /// A write a redaction reaped is not listed: it has no proposal left to
 /// sign or show, and the content it carried is exactly what the
-/// redaction took out of every reader's reach.
+/// redaction took out of every reader's reach. Nor is one the GC reaped
+/// into carriage: the reap ended the write, and its row is left only for
+/// the act's late landing.
 pub async fn list_for_actor(
     pool: &PgPool,
     actor_id: Uuid,
@@ -585,6 +699,7 @@ pub async fn list_for_actor(
     let ids = sqlx::query_scalar!(
         "SELECT id FROM staged_writes
          WHERE actor_id = $1 AND payload_reaped_at IS NULL
+           AND payload_custodied_at IS NULL
          ORDER BY created_at DESC",
         actor_id,
     )
@@ -821,7 +936,13 @@ pub async fn revert_to_pre_sign(pool: &PgPool, id: Uuid) -> Result<(), StagedErr
 /// so the same transaction tells the applicant (APPLICATION_APPROVED,
 /// `notifications::write_approved`); any other write writes no row, and a
 /// retry writes nothing twice.
+///
+/// The caller runs this once the host has accepted the approval, so the
+/// approval moment ([`mark_approved`]) is written first and on its own:
+/// it is the host's fact, and it stands even when the GC expired the
+/// write between the relay and this transition.
 pub async fn record_relaying(pool: &PgPool, id: Uuid) -> Result<(), StagedError> {
+    mark_approved(pool, id).await?;
     let mut tx = pool.begin().await?;
     transition(
         &mut tx,
@@ -890,13 +1011,30 @@ pub async fn held_approvals_ready(pool: &PgPool) -> Result<Vec<HeldApproval>, St
     .collect())
 }
 
+/// Records that the host accepted the write's approval: the first moment
+/// is kept, whatever state the write is in by now. The GC reads it when
+/// it reaps an expired write ([`reap_expired`]): an approved act can
+/// still be ordered, so its content pair is kept.
+async fn mark_approved(pool: &PgPool, id: Uuid) -> Result<(), StagedError> {
+    sqlx::query!(
+        "UPDATE staged_writes SET approved_at = NOW()
+         WHERE id = $1 AND approved_at IS NULL",
+        id,
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
 /// Clears a relayed hold — only the witness that was relayed, so a retry
-/// that replaced it in the meantime keeps its own.
+/// that replaced it in the meantime keeps its own. The host accepted the
+/// relayed witness, so the write is marked approved ([`mark_approved`]).
 pub async fn release_held_approval(
     pool: &PgPool,
     id: Uuid,
     signature: &[u8],
 ) -> Result<(), StagedError> {
+    mark_approved(pool, id).await?;
     sqlx::query!(
         "UPDATE staged_writes SET held_approval_signature = NULL, updated_at = NOW()
          WHERE id = $1 AND held_approval_signature = $2",
@@ -912,13 +1050,31 @@ pub async fn release_held_approval(
 /// `awaiting_pre_sign` → `carried`. The prepare that made them ran as for
 /// any write; carrying is what holds them back from signing until the
 /// landing completes their dependencies.
-pub async fn carry(pool: &PgPool, ids: &[Uuid]) -> Result<u64, StagedError> {
+///
+/// The carry takes the account lock the landing takes
+/// ([`crate::auth::lock_account`]) in the caller's transaction, and carries
+/// only while the account is an applicant: a carry and the landing that
+/// releases the batch serialize, and a carry that comes after the landing
+/// carries nothing, where it would otherwise stay carried with nothing
+/// left to release it.
+pub async fn carry(
+    conn: &mut PgConnection,
+    account: Uuid,
+    ids: &[Uuid],
+) -> Result<u64, StagedError> {
+    if !crate::auth::lock_account(conn, account).await? {
+        return Ok(0);
+    }
     Ok(sqlx::query!(
-        "UPDATE staged_writes SET state = 'carried', carried = TRUE, updated_at = NOW()
-         WHERE id = ANY($1) AND state = 'awaiting_pre_sign'",
+        "UPDATE staged_writes s
+         SET state = 'carried', carried = TRUE, updated_at = NOW()
+         FROM user_credentials c
+         WHERE c.actor_id = $1 AND c.account_state = 'applicant'
+           AND s.actor_id = $1 AND s.id = ANY($2) AND s.state = 'awaiting_pre_sign'",
+        account,
         ids,
     )
-    .execute(pool)
+    .execute(&mut *conn)
     .await?
     .rows_affected())
 }
@@ -950,8 +1106,10 @@ pub struct PromotedWrite {
 /// identifier — a record landing after its staged write expired still
 /// promotes, display rows and all (the mirror governs; late landing
 /// wins). The payload it needs is still on the expired row: expiry stops
-/// serving the content, the reap is what destroys it. Past the reap
-/// there is no row to match and the record stays unpromoted.
+/// serving the content. Past the reap, an approved write's row is still
+/// there and its pair is in carriage ([`reap_expired`]), so it promotes
+/// whole; any other write has no row to match and its record stays
+/// unpromoted.
 pub async fn promote_landed(pool: &PgPool, epoch: i64) -> Result<Vec<PromotedWrite>, StagedError> {
     let rows = sqlx::query!(
         "UPDATE staged_writes
@@ -1061,7 +1219,7 @@ struct StagedRows {
 /// The staged copy of an act's payload, as a redaction finds it: locked,
 /// so nothing promotes or relays it while the redaction archives and
 /// reaps it.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct StagedCopy {
     pub id: Uuid,
     pub state: String,
@@ -1072,6 +1230,23 @@ pub struct StagedCopy {
     pub content_nonce: Option<Vec<u8>>,
     pub content_salt: Option<Vec<u8>>,
     pub content_commitment: Option<Vec<u8>>,
+}
+
+/// `Debug` shows the lengths of the payload and the content nonce, never
+/// their bytes.
+impl std::fmt::Debug for StagedCopy {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use common::redact::ByteLen;
+        f.debug_struct("StagedCopy")
+            .field("id", &self.id)
+            .field("state", &self.state)
+            .field("carried", &self.carried)
+            .field("payload", &ByteLen::of_opt(&self.payload))
+            .field("content_nonce", &ByteLen::of_opt(&self.content_nonce))
+            .field("content_salt", &self.content_salt)
+            .field("content_commitment", &self.content_commitment)
+            .finish()
+    }
 }
 
 /// One staged act of a revision chain: the act, where its handshake
@@ -1213,22 +1388,89 @@ pub async fn reap_payload(conn: &mut PgConnection, act_id: &str) -> Result<u64, 
     .rows_affected())
 }
 
-/// GC, second phase: deletes expired rows another `gc_after_epochs` epochs
-/// after expiry.
+/// GC, second phase: reaps expired rows another `gc_after_epochs` epochs
+/// after expiry, returning how many it reaped.
+///
+/// The host can still hold an approved act and order it later. Its
+/// author may not be able to pay yet, or a dependency may be missing. So
+/// a sealed, approved write with a non-empty payload keeps custody. Its
+/// content pair (payload, content nonce, content salt) moves into
+/// carriage, and its row stays as the act's structure. What stays is what
+/// the act's late landing and its redaction read. The landing reads the
+/// body, the author's actor, the node and the authoring instant its
+/// display rows carry, and the dependency list its notifications read. The
+/// redaction reads the content commitment, its archive's witness while no
+/// record has landed. The rest leaves with the write, as a deleted row
+/// would: the pre-commitment leg with the dependency nonce, the
+/// dependency salt and commitment, and the host seal. Every other expired
+/// row is deleted. An empty payload gets no carriage row, so it keeps no
+/// custody.
+///
+/// The move and the deletes are one transaction. The move locks each
+/// staged row `FOR UPDATE` before it writes carriage, the order a
+/// redaction takes ([`lock_copy`]), so the two serialize on the staged row.
+/// A redaction that holds the row first reaps it, and then it no longer
+/// qualifies. One that comes second finds the pair in carriage. A record
+/// already in the mirror whose row is still expired is marked in the same
+/// statement, as a late carriage row always marks its record.
 pub async fn reap_expired(
     pool: &PgPool,
     current_epoch: i64,
     gc_after_epochs: i64,
 ) -> Result<u64, StagedError> {
-    Ok(sqlx::query!(
-        "DELETE FROM staged_writes
-         WHERE state = 'expired' AND expired_epoch + $2 <= $1",
+    let mut tx = pool.begin().await?;
+    let reaped = reap_expired_in(&mut tx, current_epoch, gc_after_epochs).await?;
+    tx.commit().await?;
+    Ok(reaped)
+}
+
+/// The reap on the caller's transaction — [`reap_expired`] is this in a
+/// transaction of its own.
+pub async fn reap_expired_in(
+    tx: &mut PgConnection,
+    current_epoch: i64,
+    gc_after_epochs: i64,
+) -> Result<u64, StagedError> {
+    let custodied = sqlx::query!(
+        "WITH due AS (
+             SELECT id, act_id, payload, content_nonce, content_salt
+             FROM staged_writes
+             WHERE state = 'expired' AND expired_epoch + $2 <= $1
+               AND approved_at IS NOT NULL
+               AND length(payload) > 0
+               AND content_nonce IS NOT NULL AND content_salt IS NOT NULL
+             FOR UPDATE
+         ), carried AS (
+             INSERT INTO act_payloads (act_id, payload, content_nonce, content_salt)
+             SELECT act_id, payload, content_nonce, content_salt FROM due
+             ON CONFLICT (act_id) DO NOTHING
+         ), marked AS (
+             UPDATE mirror_records r SET payload_marked = TRUE
+             FROM due WHERE r.record_id = due.act_id AND NOT r.payload_marked
+         )
+         UPDATE staged_writes s
+         SET payload = NULL, content_nonce = NULL, content_salt = NULL,
+             author_pubkey = NULL, dependency_nonce = NULL, pre_signature = NULL,
+             deps_salt = NULL, deps_commitment = NULL, host_seal = NULL,
+             payload_custodied_at = NOW(), updated_at = NOW()
+         FROM due WHERE s.id = due.id",
         current_epoch,
         gc_after_epochs,
     )
-    .execute(pool)
+    .execute(&mut *tx)
     .await?
-    .rows_affected())
+    .rows_affected();
+    let deleted = sqlx::query!(
+        "DELETE FROM staged_writes
+         WHERE state = 'expired' AND expired_epoch + $2 <= $1
+           AND payload_custodied_at IS NULL",
+        current_epoch,
+        gc_after_epochs,
+    )
+    .execute(&mut *tx)
+    .await?
+    .rows_affected();
+    Ok(custodied + deleted)
 }
 
 #[cfg(test)]

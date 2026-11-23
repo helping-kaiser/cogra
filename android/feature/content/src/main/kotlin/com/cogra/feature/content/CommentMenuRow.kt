@@ -9,6 +9,7 @@ import com.cogra.core.designsystem.DataNode
 internal enum class CommentMenuRow(val nodeName: String) {
     Save("save"),
     Cite("cite"),
+    Hide("hide"),
     Edit("edit"),
     Remove("remove"),
     CitedBy("citedBy"),

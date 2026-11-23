@@ -6,12 +6,12 @@
 // its thread (ProfileComments.md:3) — `CommentCard` in the shape a comment
 // wears listed away from its thread (`shape="line"`): the pointer to what it
 // answers leading (:5), the author chip, the age and the ⋮, the words whole,
-// the opinion and the thread's text Reply, and the "View n replies" line under
-// the card. Newest first, the order the read serves.
+// the opinion and the thread's text Reply — and no view-replies line (:47;
+// ProfileCommentsOwn.md:15). Newest first, the order the read serves.
 //
 // What the card's doors open, from here (graph.json `ProfileComments`):
-// - the pointer, Reply and the replies line open the thread the comment lives
-//   in (:23-27), its back arrow naming the profile; Reply aims its composer at
+// - the pointer and Reply open the thread the comment lives
+//   in (:43-45), its back arrow naming the profile; Reply aims its composer at
 //   the comment, and an applicant's Reply answers in the snackbar instead (:29);
 // - the author chip is the page it stands on, so it is inert (:21);
 // - the ⋮ is the comment's menu, the own comment's with Remove among its acts
@@ -67,8 +67,7 @@ export function ProfileCommentsList({
           key={comment.id}
           {...{ [ANCHOR_ATTRIBUTE]: comment.id, [SEEN_ATTRIBUTE]: comment.id }}
           ref={index === tailIndex ? tailRef : undefined}
-          // The card and its replies line, 12px apart (`CommentCard`'s `<li>`).
-          className="flex flex-col gap-3"
+          className="flex flex-col"
         >
           <CommentFeedCard
             comment={comment}
@@ -80,7 +79,6 @@ export function ProfileCommentsList({
             testId={`profile-comment-${comment.id}`}
             authorHere
             reply={reply}
-            replyCount={comment.replyCount}
             onNotify={notify}
             onRemoved={(removal) => onRemoved(comment.id, removal)}
             onLinkCopied={() => notify(LINK_COPIED)}

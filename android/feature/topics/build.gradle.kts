@@ -30,6 +30,8 @@ android {
 dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:domain"))
+    // The cards' menus save and hide through the app's one Saved host (TagPageMenu.md:7).
+    implementation(project(":feature:saved"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

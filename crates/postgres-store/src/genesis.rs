@@ -240,10 +240,21 @@ pub async fn parameters_seeded(pool: &PgPool) -> Result<bool, sqlx::Error> {
 /// The nonces the bootstrap pre-signs one genesis act under, as its
 /// handshake custody keeps them. The content nonce is None once a
 /// non-empty payload's carriage row holds it instead.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct HandshakeNonces {
     pub content_nonce: Option<Vec<u8>>,
     pub dependency_nonce: Vec<u8>,
+}
+
+/// `Debug` shows each nonce's length and never its bytes.
+impl std::fmt::Debug for HandshakeNonces {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use common::redact::ByteLen;
+        f.debug_struct("HandshakeNonces")
+            .field("content_nonce", &ByteLen::of_opt(&self.content_nonce))
+            .field("dependency_nonce", &ByteLen::of(&self.dependency_nonce))
+            .finish()
+    }
 }
 
 /// Keeps a genesis act's two nonces before its seal is requested, and

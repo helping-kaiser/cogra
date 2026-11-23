@@ -686,20 +686,46 @@ class ContentScreensTest {
         compose.onAllNodesWithTag("feed.menuSheet.cite").assertCountEquals(1)
     }
 
-    /** A REMOVED POST HAS NO MENU AT ALL (`Removed.jsx:5-6`). */
+    private fun renderRemovedFeedCard(viewerId: String) = renderFeed(
+        FeedUiState(
+            loading = false,
+            posts = listOf(testPost("p1").copy(content = ModeratedField(null, FieldStatus.REDACTED))),
+        ),
+        viewerId = viewerId,
+    )
+
+    private fun menuTops(rows: List<String>) =
+        rows.map { compose.onNodeWithTag("feed.menuSheet.$it").fetchSemanticsNode().boundsInRoot.top }
+
+    /**
+     * THE OWN REMOVED POST KEEPS ITS ⋮ (FeedRemoved.md:9, FeedRemovedMenuOwn.md:3,
+     * :5): Save, Cite, Cited by, Opinions on this, License terms — the own
+     * menu less Edit, Mark as sensitive and Remove.
+     */
     @Test
-    fun aRemovedCardDropsTheMenuWholesale() {
-        renderFeed(
-            FeedUiState(
-                loading = false,
-                posts = listOf(
-                    testPost("p1").copy(content = ModeratedField(null, FieldStatus.REDACTED)),
-                ),
-            ),
-            viewerId = "author-1",
-        )
-        compose.onNodeWithTag("feed.card:p1").assertExists()
-        compose.onNodeIn(feedCard("p1"), "feed.card.menu").assertDoesNotExist()
+    fun anOwnRemovedCardKeepsItsMenuLessEditSensitiveAndRemove() {
+        renderRemovedFeedCard(viewerId = "author-1")
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        assertThat(menuTops(listOf("save", "cite", "citedBy", "opinions", "license"))).isInStrictOrder()
+        listOf("edit", "markSensitive", "remove", "hide", "report").forEach {
+            compose.onNodeWithTag("feed.menuSheet.$it").assertDoesNotExist()
+        }
+    }
+
+    /**
+     * ANOTHER'S REMOVED POST: THE READER'S MENU WHOLE (FeedRemovedMenu.md:3, :5),
+     * Hide with the author's handle, Report at the sheet tail.
+     */
+    @Test
+    @Config(qualifiers = "w411dp-h891dp")
+    fun anothersRemovedCardKeepsTheReadersMenuWhole() {
+        renderRemovedFeedCard(viewerId = "someone-else")
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        val rows = listOf("save", "cite", "hide", "citedBy", "opinions", "license", "report")
+        assertThat(menuTops(rows)).isInStrictOrder()
+        listOf("edit", "markSensitive", "remove").forEach {
+            compose.onNodeWithTag("feed.menuSheet.$it").assertDoesNotExist()
+        }
     }
 
     // -- The post edit (EditCompose family) --
@@ -1607,11 +1633,10 @@ class ContentScreensTest {
         assertThat(editing).isEqualTo("p1")
     }
 
-    // THE COMMENT'S ROWS (`_shared.jsx:392`), and the missing Hide row is
-    // RULED (jakob 2026-09-12): hiding names an actor, reached from the
-    // commenter's own profile.
+    // THE COMMENT'S ROWS (CommentMenu.md:7, :9): someone else's comment carries
+    // Hide with its author's handle, in the post menu's slot after Cite.
     @Test
-    fun aCommentCarriesSaveCiteCitedByOpinionsAndLicenseButNoHide() {
+    fun anothersCommentCarriesSaveCiteHideCitedByOpinionsAndLicense() {
         renderDetail(
             detailFixture(
                 loading = false,
@@ -1626,7 +1651,10 @@ class ContentScreensTest {
         compose.onNodeWithTag("postDetail.menuSheet.citedBy").assertExists()
         compose.onNodeWithTag("postDetail.menuSheet.opinions").assertExists()
         compose.onNodeWithTag("postDetail.menuSheet.license").assertExists()
-        compose.onNodeWithTag("postDetail.menuSheet.hide").assertDoesNotExist()
+        val cite = compose.onNodeWithTag("postDetail.menuSheet.cite").fetchSemanticsNode().boundsInRoot.top
+        val hide = compose.onNodeWithTag("postDetail.menuSheet.hide").fetchSemanticsNode().boundsInRoot.top
+        val citedBy = compose.onNodeWithTag("postDetail.menuSheet.citedBy").fetchSemanticsNode().boundsInRoot.top
+        assertThat(listOf(cite, hide, citedBy)).isInStrictOrder()
     }
 
     // IT IS DRAWN STACKED ON PURPOSE (`CommentMenu.jsx:18-23`): the thread
@@ -2145,17 +2173,45 @@ class ContentScreensTest {
         compose.onNodeWithTag("postDetail.card.tagsLine", useUnmergedTree = true).assertDoesNotExist()
     }
 
+    private fun detailMenuTops(rows: List<String>) =
+        rows.map { compose.onNodeWithTag("postDetail.menuSheet.$it").fetchSemanticsNode().boundsInRoot.top }
+
     /**
-     * A REMOVED POST HAS NO MENU LEFT — back is the whole header
-     * (`Removed.jsx:5-6`): no ⋮, and so none of its rows.
+     * THE OWN REMOVED POST KEEPS THE HEADER'S ⋮ (Removed.md:11, :13): Save,
+     * Cite in a new post, Cited by, Opinions on this, License terms — the own
+     * menu less Edit, Mark as sensitive and Remove.
      */
     @Test
-    fun aRemovedOwnPostLosesItsWholeMenu() {
+    @Config(qualifiers = "w411dp-h891dp")
+    fun aRemovedOwnPostKeepsItsMenuLessEditSensitiveAndRemove() {
         renderDetail(
             detailFixture(loading = false, post = removedPost()),
             viewerId = "author-1",
         )
-        compose.onNodeWithTag("postDetail.header.menu").assertDoesNotExist()
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
+        assertThat(detailMenuTops(listOf("save", "cite", "citedBy", "opinions", "license"))).isInStrictOrder()
+        listOf("edit", "markSensitive", "remove", "hide", "report").forEach {
+            compose.onNodeWithTag("postDetail.menuSheet.$it").assertDoesNotExist()
+        }
+    }
+
+    /**
+     * ANOTHER'S REMOVED POST: THE READER'S POST MENU WHOLE (RemovedOther.md:5,
+     * :7) — Hide with the author's handle, Report at the sheet tail.
+     */
+    @Test
+    @Config(qualifiers = "w411dp-h891dp")
+    fun anothersRemovedPostKeepsTheReadersMenuWhole() {
+        renderDetail(
+            detailFixture(loading = false, post = removedPost()),
+            viewerId = "someone-else",
+        )
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
+        val rows = listOf("save", "cite", "hide", "citedBy", "opinions", "license", "report")
+        assertThat(detailMenuTops(rows)).isInStrictOrder()
+        listOf("edit", "markSensitive", "remove").forEach {
+            compose.onNodeWithTag("postDetail.menuSheet.$it").assertDoesNotExist()
+        }
     }
 
     /**

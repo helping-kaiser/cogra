@@ -56,6 +56,7 @@ import { ActsFooter, WithdrawnLine } from "@/lib/ui2/compose/edit-acts";
 import { EditWriteRuleNotice } from "@/lib/ui2/compose/edit-notices";
 import { useSlowAnswer } from "@/lib/ui2/waiting-commit";
 import { PICKABLE_VIDEO_TYPES } from "@/lib/ui2/media/video";
+import { PINNED_PAGE_STILL } from "@/lib/ui2/screen-layer";
 import { licenseName } from "@/lib/license";
 import {
   DESCRIPTION_MAX_CHARS,
@@ -271,7 +272,13 @@ export function PostEditView({
   return (
     <main
       data-testid="post-edit"
-      className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col bg-surface text-on-surface"
+      // A STAGE PINS ITS FOOTER (design/readme.md, *Spacing and layout*: "so a
+      // growing field never walks the commitment out of reach"): the screen's
+      // height, not a floor under it, so a long body scrolls in the fields'
+      // own scroller and the stack keeps the foot — as the comment editor does.
+      // SEVERAL FIELDS (the words or the description, the title): the pinned foot
+      // stays under the keyboard and the focused field takes the room (seam 388).
+      className={`mx-auto flex ${PINNED_PAGE_STILL} w-full max-w-2xl flex-col bg-surface text-on-surface`}
     >
       {/* While the signing holds the reader, the way out refuses a press and
           never dims (EditCompose.md: the back arrow and the ✕ refuse while it
@@ -288,7 +295,17 @@ export function PostEditView({
         focusTitle
       />
 
-      <div className="flex flex-1 flex-col gap-3.5 px-6 pb-4 pt-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-3.5 px-6 pb-4 pt-3">
+        {/* The fields scroll above the pinned stack. The gutter rides inside
+            the scroller's own padding, so a row's 48px target and its focus
+            ring stay whole (the comment editor's fields, the same shape). */}
+        <div
+          data-testid="post-edit-fields"
+          // `*:shrink-0`: no field gives up height to fit; where the screen is
+          // short the scroller scrolls (measured at 360 × 640: shrinking rows
+          // painted the words over the title and the title under the tags).
+          className="-mx-6 flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto px-6 *:shrink-0"
+        >
         {clip !== undefined ? (
           <ClipFields
             clip={clip}
@@ -340,8 +357,9 @@ export function PostEditView({
         ) : (
           // THE WORDS ARE THE BODY, AND THE BODY TAKES THE ROOM (EditWords:
           // `WordsBody` at flex 1, as the composer's words stage draws it) — the
-          // post, not a field on a form.
-          <div className="flex min-h-0 flex-1 flex-col gap-1.5" {...testAttributes(BODY)}>
+          // post, not a field on a form. No `min-h-0`: `flex-1` starts it from
+          // nothing, and inside the fields' scroller its floor is its content.
+          <div className="flex flex-1 flex-col gap-1.5" {...testAttributes(BODY)}>
             <WordsField words={state.words} onWords={onWords} />
             <Refusals refusals={refusals} onDismiss={onDismissRefusal} />
             <AddControl
@@ -487,6 +505,7 @@ export function PostEditView({
         {/* A media body stands at its own height and the foot keeps the
             screen's bottom; a words body takes the slack itself. */}
         {media && <div className="flex-1" />}
+        </div>
 
         {refusal && (
           <p role="alert" data-testid="post-edit-refused" className="m-0 text-body-medium text-error">

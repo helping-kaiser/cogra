@@ -126,6 +126,10 @@ internal fun CommentFeedCard(
     onOpenPost: (String) -> Unit,
     onCite: () -> Unit,
     onLicense: () -> Unit,
+    /** The ⋮'s Cited by row: what cites the comment, over the host (CommentMenu.md:25). */
+    onCitedBy: () -> Unit,
+    /** The ⋮'s Opinions on this row: the comment's opinions sheet, over the host (CommentMenu.md:23). */
+    onOpinions: () -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
     /** What the card's ⋮ holds and where it registers: the own rows or another's, and their doors. */
     menu: CommentCardMenu = CommentCardMenu(),
@@ -166,6 +170,8 @@ internal fun CommentFeedCard(
                     onOpenPost = onOpenPost,
                     onCite = onCite,
                     onLicense = onLicense,
+                    onCitedBy = onCitedBy,
+                    onOpinions = onOpinions,
                     menu = menu,
                     // A profile's list draws the words whole (`CommentCard`'s
                     // `clampLines`, off outside the feed).
@@ -531,6 +537,8 @@ private fun OwnPart(
     onOpenPost: (String) -> Unit,
     onCite: () -> Unit,
     onLicense: () -> Unit,
+    onCitedBy: () -> Unit,
+    onOpinions: () -> Unit,
     menu: CommentCardMenu,
     /** The words fold at two lines under `More` — in the feed, never on a listed comment. */
     clamped: Boolean,
@@ -542,22 +550,20 @@ private fun OwnPart(
         onOpenActor = onOpenActor,
         authorHere = authorHere,
         testTagPrefix = testTagPrefix,
-        // A REMOVED COMMENT HAS NO MENU LEFT (CommentRemoved.md:9): its ⋮ goes
-        // with the payload.
-        menu = if (comment.removed) {
-            emptyList()
-        } else {
-            commentMenuRows(
-                comment = comment,
-                own = menu.own,
-                onCite = onCite,
-                onLicense = onLicense,
-                onEdit = menu.onEdit,
-                onRemove = menu.onRemove,
-                onReport = menu.onReport,
-                placement = menu.placement,
-            )
-        },
+        // A REMOVED COMMENT KEEPS ITS ⋮ ON A LISTED CARD (ProfileComments.md:9,
+        // ProfileCommentsOwn.md:11): the rows themselves drop Edit and Remove.
+        menu = commentMenuRows(
+            comment = comment,
+            own = menu.own,
+            onCite = onCite,
+            onLicense = onLicense,
+            onCitedBy = onCitedBy,
+            onOpinions = onOpinions,
+            onEdit = menu.onEdit,
+            onRemove = menu.onRemove,
+            onReport = menu.onReport,
+            placement = menu.placement,
+        ),
         menuContentDescription = stringResource(R.string.content_menu_comment),
         // UNSTACKED OVER ITS HOST (CommentMenu.md:5): the host's registered sheet.
         menuSheetNode = menu.placement?.sheet,

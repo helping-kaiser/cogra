@@ -28,6 +28,7 @@ import { HeaderBar } from "@/lib/ui2/header-bar";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { CropFrame } from "@/lib/ui2/media/crop-frame";
 import type { Crop } from "@/lib/ui2/media/crop";
+import { PINNED_PAGE } from "@/lib/ui2/screen-layer";
 
 /** The screen's title and its X's spoken name (AvatarCrop.jsx `WizardHeader`). */
 export const AVATAR_CROP_TITLE = "Your picture";
@@ -58,7 +59,7 @@ export function AvatarCrop({
   return (
     <main
       data-testid="avatar-crop"
-      className="mx-auto flex h-dvh w-full max-w-2xl flex-col bg-surface text-on-surface"
+      className={`mx-auto flex ${PINNED_PAGE} w-full max-w-2xl flex-col bg-surface text-on-surface`}
     >
       <HeaderBar
         title={AVATAR_CROP_TITLE}
@@ -69,7 +70,7 @@ export function AvatarCrop({
         testId="avatar-crop-header"
         focusTitle
       />
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-6 pb-4 pt-2">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto *:shrink-0 px-6 pb-4 pt-2">
         <CropFrame src={src} shape="avatar" crop={crop} onChange={onCrop} zoomSlider testId="avatar-crop-frame" />
         <div className="flex-1" />
         {problem}

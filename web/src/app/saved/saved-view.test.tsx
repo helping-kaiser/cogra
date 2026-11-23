@@ -16,7 +16,7 @@ import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { byNode } from "@/test/data-node";
 import { settleFetches } from "@/test/fetch";
-import { hiddenPage } from "@/test/hidden";
+import { hiddenHandlers, hiddenLog, hiddenPage } from "@/test/hidden";
 import { intersect } from "@/test/media-env";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
@@ -379,6 +379,24 @@ describe("SavedScreen — the unsave is the card's own ⋮ first row", () => {
     expect(personMenu()[0]).toHaveTextContent("Unsave");
   });
 
+  // ONE REGISTERED NODE NAMES ONE OPEN SHEET: a post's menu, opened and closed,
+  // no longer wears `saved.menuSheet` beside the comment's open one.
+  it("a_closed_post_menu_does_not_share_saved_menuSheet_with_the_comments_open_one", async () => {
+    serve(THREE);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    postMenu();
+    // The reader's own close (what the dialog reports on Escape or the scrim).
+    fireEvent(screen.getByTestId("saved.menuSheet"), new Event("close"));
+    await waitFor(() => expect((screen.getByTestId("saved-menu-sheet") as HTMLDialogElement).open).toBe(false));
+    const rows = commentMenu();
+    const sheets = screen.getAllByTestId("saved.menuSheet");
+    expect(sheets).toHaveLength(1);
+    expect((sheets[0] as HTMLDialogElement).open).toBe(true);
+    expect(sheets[0]).not.toBe(screen.getByTestId("saved-menu-sheet"));
+    expect(within(sheets[0]!).getAllByRole("button")).toEqual(rows);
+  });
+
   // ProfileMenu.md:17, on the profile card's own ⋮ (FeedProfileShapes.md).
   it("a_person_cards_mention_opens_the_composer_with_the_person_staged", async () => {
     push.mockClear();
@@ -529,7 +547,7 @@ describe("SavedScreen — the card menus' rows (SavedPostMenu.md, FeedProfileMen
       ),
     );
 
-  it("a_post_cards_menu_reads_unsave_cite_hide_license_report_as_saved_menuSheet_rows", async () => {
+  it("a_post_cards_menu_reads_unsave_cite_hide_cited_by_opinions_license_report_as_saved_menuSheet_rows", async () => {
     // SavedPostMenu.md:3, :5.
     serve(THREE);
     renderWithProviders(<SavedScreen />, { store: signedIn() });
@@ -538,9 +556,101 @@ describe("SavedScreen — the card menus' rows (SavedPostMenu.md, FeedProfileMen
       ["saved.menuSheet.save", "Unsave"],
       ["saved.menuSheet.cite", "Cite in a new post"],
       ["saved.menuSheet.hide", "Hide @ada"],
+      ["saved.menuSheet.citedBy", "Cited by"],
+      ["saved.menuSheet.opinions", "Opinions on this"],
       ["saved.menuSheet.license", "License terms"],
       ["saved.menuSheet.report", "Report"],
     ]);
+  });
+
+  it("your_own_post_cards_menu_reads_unsave_cite_edit_sensitive_remove_cited_by_opinions_license", async () => {
+    // SavedPostMenuOwn.md:5.
+    const mine = { ...postNode("p1", "Mine", SAVED[0]), author: author("me", "me", "Me") };
+    serve([{ node: mine, bookmarkedAt: SAVED[0] }]);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    expect(words(postMenu()).map(([node]) => node)).toEqual([
+      "saved.menuSheet.save",
+      "saved.menuSheet.cite",
+      "saved.menuSheet.edit",
+      "saved.menuSheet.markSensitive",
+      "saved.menuSheet.remove",
+      "saved.menuSheet.citedBy",
+      "saved.menuSheet.opinions",
+      "saved.menuSheet.license",
+    ]);
+  });
+
+  it("a_removed_post_cards_menu_reads_unsave_cite_hide_cited_by_opinions_license_report", async () => {
+    // SavedRemovedMenu.md:3, :5 — the reader's post menu whole with the post
+    // kept; removed comments' menus: `profile-comments.test.tsx`.
+    const removed = {
+      ...postNode("p1", null, SAVED[0]),
+      title: { __typename: "ModeratedText", value: null, status: "REDACTED" },
+      content: { __typename: "ModeratedText", value: null, status: "REDACTED" },
+      removal: { __typename: "Removal", at: at(1), by: "AUTHOR" },
+    };
+    serve([{ node: removed, bookmarkedAt: SAVED[0] }]);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    expect(screen.getByTestId(byNode("saved.card.removalMark", "p1"))).toHaveTextContent("Removed by its author");
+    expect(words(postMenu())).toEqual([
+      ["saved.menuSheet.save", "Unsave"],
+      ["saved.menuSheet.cite", "Cite in a new post"],
+      ["saved.menuSheet.hide", "Hide @ada"],
+      ["saved.menuSheet.citedBy", "Cited by"],
+      ["saved.menuSheet.opinions", "Opinions on this"],
+      ["saved.menuSheet.license", "License terms"],
+      ["saved.menuSheet.report", "Report"],
+    ]);
+  });
+
+  it("a_comment_cards_menu_reads_unsave_cite_hide_cited_by_opinions_license_report", async () => {
+    // SavedCommentMenu.md:5.
+    serve(THREE);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    expect(words(commentMenu())).toEqual([
+      ["saved.menuSheet.save", "Unsave"],
+      ["saved.menuSheet.cite", "Cite in a new post"],
+      ["saved.menuSheet.hide", "Hide @tobias"],
+      ["saved.menuSheet.citedBy", "Cited by"],
+      ["saved.menuSheet.opinions", "Opinions on this"],
+      ["saved.menuSheet.license", "License terms"],
+      ["saved.menuSheet.report", "Report"],
+    ]);
+  });
+
+  it("your_own_comment_cards_menu_carries_no_hide_and_no_report", async () => {
+    // SavedCommentMenuOwn.md:5.
+    const mine = { ...commentNode("c1", SAVED[1]), author: author("me", "me", "Me") };
+    serve([{ node: mine, bookmarkedAt: SAVED[1] }]);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    expect(words(commentMenu()).map(([node]) => node)).toEqual([
+      "saved.menuSheet.save",
+      "saved.menuSheet.cite",
+      "saved.menuSheet.edit",
+      "saved.menuSheet.remove",
+      "saved.menuSheet.citedBy",
+      "saved.menuSheet.opinions",
+      "saved.menuSheet.license",
+    ]);
+  });
+
+  it("hide_on_a_comment_keeps_every_card_in_saved_and_snackbars_with_undo_and_no_confirm", async () => {
+    // SavedCommentMenu.md:7, then :9 — the row reads Unhide while the author is hidden.
+    const log = hiddenLog();
+    serve(THREE);
+    server.use(...hiddenHandlers(log));
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    fireEvent.click(commentMenu()[2]!);
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(await screen.findByTestId("saved.snackbar.message")).toHaveTextContent("@tobias is hidden.");
+    await waitFor(() => expect(log.hides).toEqual([{ actor: "u2", at: null }]));
+    expect(cards()).toEqual(ALL);
+    await waitFor(() => expect(commentMenu()[2]).toHaveTextContent(/^Unhide @tobias$/));
   });
 
   it("a_person_cards_menu_reads_unsave_mention_hide_report_the_same_rows_as_on_every_host", async () => {

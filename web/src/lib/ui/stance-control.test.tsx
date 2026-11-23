@@ -444,6 +444,91 @@ describe("the stance control at rest", () => {
     expect(screen.getByTestId(`${PREFIX}-resting-exact`)).toHaveTextContent("+0.55 / +0.20");
   });
 
+  // THE VANTAGE LAW (stance-control.md, *A guest's view*, jakob 2026-10-13/14;
+  // readme §13; TagPage.md:55-57, ProfileOther.md:51-53).
+  describe("a guest's wide anchor names the borrowed view", () => {
+    const words = () => screen.getByTestId(`${PREFIX}-words`);
+    const guestWide = async (options: StubStanceOptions = {}) => {
+      renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} wide />, {
+        stanceData: createStubStanceData(options),
+      });
+      await settle();
+    };
+
+    it("stance_control_md_116_a_guest_reads_the_viewpoints_name_never_your_opinion", async () => {
+      await guestWide({ borrowedView: "genesismod" });
+      expect(words()).toHaveTextContent("@genesismod's opinion");
+      expect(control()).not.toHaveTextContent("Your opinion");
+      // Beside the hollow face.
+      expect(screen.getByTestId(`${PREFIX}-resting-face`)).toHaveTextContent("🫥");
+    });
+
+    it("stance_control_md_116_the_name_comes_from_the_borrowed_view_never_a_fixed_one", async () => {
+      await guestWide({ borrowedView: "mira" });
+      expect(words()).toHaveTextContent("@mira's opinion");
+      expect(control()).toHaveAccessibleName("@mira's stance on this post");
+    });
+
+    it("stance_control_md_116_the_handle_truncates_before_its_s_opinion_which_stays_whole", async () => {
+      await guestWide({ borrowedView: "genesismod" });
+      const handle = screen.getByTestId(`${PREFIX}-words-handle`);
+      const suffix = screen.getByTestId(`${PREFIX}-words-suffix`);
+      expect(handle).toHaveTextContent(/^@genesismod$/);
+      expect(suffix).toHaveTextContent(/^'s opinion$/);
+      // The handle is the one part that gives: it shrinks and ellipsizes…
+      expect(handle.className).toContain("truncate");
+      expect(handle.className).toContain("min-w-0");
+      // …and the suffix never does, so the words always name whose view it is.
+      expect(suffix.className).toContain("flex-none");
+      expect(words().className).toContain("min-w-0");
+      // The row stays one line.
+      expect(words().className).toContain("whitespace-nowrap");
+    });
+
+    it("stance_control_md_118_the_ellipsis_is_print_only_the_accessible_name_keeps_the_full_handle", async () => {
+      const long = "genesismoderator_of_the_whole_graph";
+      await guestWide({ borrowedView: long });
+      expect(control()).toHaveAccessibleName(`@${long}'s stance on this post`);
+      // Drawn, never a second name.
+      expect(words()).toHaveAttribute("aria-hidden", "true");
+    });
+
+    it("a_read_that_names_nobody_draws_the_face_alone_never_your_opinion", async () => {
+      await guestWide({ borrowedView: null });
+      expect(screen.queryByTestId(`${PREFIX}-words`)).toBeNull();
+      expect(control()).not.toHaveTextContent("Your opinion");
+    });
+
+    it("a_server_render_draws_no_words_until_the_reader_is_known", async () => {
+      renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} wide />, {
+        stanceData: createStubStanceData({ borrowedView: "genesismod" }),
+        hydrate: true,
+      });
+      // The first commit reads the session's server snapshot (`resolving`).
+      expect(screen.queryByText("Your opinion")).toBeNull();
+      await settle();
+      expect(words()).toHaveTextContent("@genesismod's opinion");
+    });
+
+    it("a_signed_in_readers_wide_anchor_keeps_your_opinion_whoever_their_feed_borrows", async () => {
+      renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} wide />, {
+        store: signedInStore(),
+        stanceData: createStubStanceData({ borrowedView: "genesismod" }),
+      });
+      await settle();
+      expect(words()).toHaveTextContent(/^Your opinion$/);
+      expect(control()).toHaveAccessibleName("Give your opinion on this post");
+    });
+
+    it("a_guests_narrow_anchor_draws_no_words", async () => {
+      renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} />, {
+        stanceData: createStubStanceData({ borrowedView: "genesismod" }),
+      });
+      await settle();
+      expect(screen.queryByTestId(`${PREFIX}-words`)).toBeNull();
+    });
+  });
+
   it("keeps the standing it has when a re-read faults", async () => {
     const data = mount({ seed: { "post-1": { records: [{ pDirected: 0.55, pInterest: 0.2 }] } } });
     await settle();
@@ -1082,6 +1167,99 @@ describe("the release that never commits", () => {
     });
     expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
     expect(data.sent).toEqual([]);
+  });
+
+  // A PRESS OUTSIDE ONLY EVER CLOSES (jakob, 2026-11-19; PadStanding.md:17):
+  // the wash leaves on the press, so the gesture's lift and click land on
+  // whatever it covered — here a picture's door — and must not open it.
+  describe("the press outside keeps the rest of its gesture", () => {
+    let beneath: HTMLButtonElement;
+    let opened: number;
+    beforeEach(() => {
+      opened = 0;
+      beneath = document.createElement("button");
+      beneath.dataset.testid = "beneath";
+      beneath.addEventListener("click", () => {
+        opened += 1;
+      });
+      beneath.addEventListener("contextmenu", () => {
+        opened += 1;
+      });
+      document.body.appendChild(beneath);
+    });
+    afterEach(() => beneath.remove());
+    /** The gesture's tail as a browser dispatches it: a PointerEvent naming its pointer (Pointer Events 3). */
+    const tail = (type: "click" | "contextmenu", pointerId: number) =>
+      fireEvent(beneath, new PointerEvent(type, { bubbles: true, cancelable: true, pointerId }));
+
+    it("never lets the tap that closed the pad open what lay beneath", async () => {
+      mount();
+      await settle();
+      await openPad();
+      await release();
+      await act(async () => {
+        fireEvent.pointerDown(screen.getByTestId(`${PREFIX}-scrim`), { pointerId: 3 });
+      });
+      expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+      // The wash is gone, so the lift and the click are hit-tested afresh.
+      await act(async () => {
+        fireEvent.pointerUp(beneath, { pointerId: 3 });
+        tail("click", 3);
+      });
+      expect(opened).toBe(0);
+    });
+
+    it("never lets a long press that closed the pad raise what lay beneath's menu", async () => {
+      mount();
+      await settle();
+      await openPad();
+      await release();
+      await act(async () => {
+        fireEvent.pointerDown(screen.getByTestId(`${PREFIX}-scrim`), { pointerId: 3 });
+      });
+      await act(async () => {
+        tail("contextmenu", 3);
+        fireEvent.pointerUp(beneath, { pointerId: 3 });
+      });
+      expect(opened).toBe(0);
+    });
+
+    it("hands the next tap back whole, so the surface beneath answers it", async () => {
+      mount();
+      await settle();
+      await openPad();
+      await release();
+      await act(async () => {
+        fireEvent.pointerDown(screen.getByTestId(`${PREFIX}-scrim`), { pointerId: 3 });
+      });
+      await act(async () => {
+        fireEvent.pointerUp(beneath, { pointerId: 3 });
+        tail("click", 3);
+      });
+      await act(async () => {
+        fireEvent.pointerDown(beneath, { pointerId: 4 });
+        fireEvent.pointerUp(beneath, { pointerId: 4 });
+        tail("click", 4);
+      });
+      expect(opened).toBe(1);
+    });
+
+    it("drops the key-absent pick on that press exactly as before (PadKeyAbsent.md:33)", async () => {
+      mount({ keyAbsent: true });
+      await settle();
+      await openPad();
+      await settle();
+      await act(async () => {
+        fireEvent.pointerDown(screen.getByTestId(`${PREFIX}-scrim`), { pointerId: 3 });
+      });
+      await act(async () => {
+        fireEvent.pointerUp(beneath, { pointerId: 3 });
+        tail("click", 3);
+      });
+      expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+      expect(screen.queryByTestId(`${PREFIX}-kept`)).toBeNull();
+      expect(opened).toBe(0);
+    });
   });
 
   it("keeps the pad open on a lost pointer, so nothing is lost or signed", async () => {
@@ -1928,7 +2106,8 @@ describe("where the pad blooms", () => {
     expect(pad.style.left).toBe("0px");
     expect(pad.style.right).toBe("0px");
     expect(pad.style.transform).toBe("");
-    expect(pad.style.bottom).toBe(`${PAD_PARK_INSET_PX}px`);
+    // The 16px count from the safe edge (pad-parking.ts: the inset rides every parking).
+    expect(pad.style.bottom).toBe(`calc(${PAD_PARK_INSET_PX}px + env(safe-area-inset-bottom, 0px))`);
     // Nothing is anchored, so nothing measured a target into a `top`.
     expect(pad.style.top).toBe("");
   };

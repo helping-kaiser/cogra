@@ -92,6 +92,48 @@ async fn a_record_crosses_the_seam_into_the_mirror(pool: PgPool) {
     assert!(balance.balance < balance.burned_total);
 }
 
+/// The write-rule pre-check prices a batch exactly, the way the close
+/// debits it: a balance of exactly θ × acts carries the batch and one
+/// micro-unit less does not. Fifteen acts at the reference θ (0.050186)
+/// is a count where a binary floating-point product lands above the
+/// exact balance, so a float comparison would refuse an affordable
+/// batch. The refusal names both numbers.
+///
+/// The pre-check decides a balance of exactly the batch's price as affordable, one micro-unit less as not.
+/// ´claim:relay:the-write-rule-pre-check-is-exact´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_write_rule_pre_check_is_exact_at_the_boundary(pool: PgPool) {
+    const ACTS: usize = 15;
+    let standin = StandIn::new(pool.clone(), StandInConfig::default());
+    let boundary = StandInBoundary(standin.clone());
+    let theta = standin.current_theta().await.expect("θ");
+    assert_eq!(theta, l1_standin::REFERENCE_THETA_MICRO);
+    let price = theta * ACTS as i64;
+
+    let exact = ActorKey::generate();
+    standin
+        .credit_burn(&exact.address(), price)
+        .await
+        .expect("burn");
+    api::prepare::check_batch_solvency(&boundary, &exact.address(), ACTS)
+        .await
+        .expect("a balance of exactly θ × acts carries the batch");
+
+    let short = ActorKey::generate();
+    standin
+        .credit_burn(&short.address(), price - 1)
+        .await
+        .expect("burn");
+    match api::prepare::check_batch_solvency(&boundary, &short.address(), ACTS).await {
+        Err(e @ api::prepare::PrepareError::BatchWriteRule { acts: ACTS, .. }) => {
+            let message = e.to_string();
+            assert!(message.contains("0.752789"), "names the balance: {message}");
+            assert!(message.contains("0.050186"), "names θ: {message}");
+        }
+        other => panic!("expected a batch write-rule refusal, got {other:?}"),
+    }
+}
+
 /// X-SR3 across the seam: each ingested epoch carries the boundary
 /// timestamp its package asserts, and an epoch the mirror took in before
 /// the package carried one is filled from the published sequence on the

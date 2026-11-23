@@ -133,23 +133,18 @@ class HostedPlacement internal constructor(
         )
 
         /**
-         * A tag's page (TagPage.md:15-17): each card stands under the claim
+         * A tag's page (TagPage.md:15-19): each card stands under the claim
          * that put it there, attached to it (`TaggedRow`); its author is a door;
-         * a post's ⋮ raises `tagPage.menuSheet` with the reader's rows its board
-         * registers (TagPageMenu.md:5), the own rows keeping their tags; no
-         * board draws a comment's menu here; and a tagged comment offers no
-         * Reply and no view-replies line (:17).
+         * a post's ⋮ and a tagged comment's ⋮ both raise `tagPage.menuSheet`,
+         * every row registered under it (TagPageMenu, -Own, -RemovedMenu,
+         * -RemovedMenuOwn; TagPageCommentMenu, -Own, -RemovedMenu,
+         * -RemovedMenuOwn — round 60); and a tagged comment offers no Reply and
+         * no view-replies line (:17).
          */
         val TagPage = HostedPlacement(
-            menuSheet = DataNode("tagPage") / "menuSheet",
-            postMenuRows = setOf(
-                PostMenuRow.Save,
-                PostMenuRow.Cite,
-                PostMenuRow.Hide,
-                PostMenuRow.License,
-                PostMenuRow.Report,
-            ),
-            commentMenu = null,
+            menuSheet = TAG_PAGE_MENU_SHEET,
+            postMenuRows = POST_MENU_ROWS,
+            commentMenu = TAG_PAGE_COMMENT_MENU,
             authorHere = false,
             attach = true,
             threadDoors = false,
@@ -188,7 +183,17 @@ fun CardListHost(
         stanceControl = nodeStanceControl,
     )
     ProvideRemoval {
-        HostedCardsScope(doors, routes, hooks, revealed, tag, notify, placement, rememberCommentReread(), content)
+        HostedCardsScope(
+            doors,
+            routes,
+            hooks,
+            revealed,
+            tag,
+            notify,
+            placement,
+            rememberCommentReread(),
+            content = content,
+        )
     }
 }
 
@@ -204,6 +209,8 @@ internal fun HostedCardsScope(
     placement: HostedPlacement = HostedPlacement.Profile,
     /** One comment read afresh, for the card an edit signed off the thread settles ([EditReturn]). */
     rereadComment: suspend (String) -> CommentView? = { null },
+    /** The report row's door over the host — the confirm, or a guest's join prompt — as History's and Saved's. */
+    reportSheet: ReportSheetSlot = reportDoor(routes.onRequireAccount, "${tag}_report_sheet"),
     content: @Composable (HostedCards) -> Unit,
 ) {
     val layers = remember { CoveringLayers() }
@@ -252,9 +259,7 @@ internal fun HostedCardsScope(
                 onCommentsDepart = routes.onCommentsDepart,
             )
         }
-        reportFor?.let { ask ->
-            reportDoor(routes.onRequireAccount, "${tag}_report_sheet")(ask, { reportFor = null }, notify)
-        }
+        reportFor?.let { ask -> reportSheet(ask, { reportFor = null }, notify) }
     }
 }
 
@@ -297,6 +302,16 @@ private val PROFILE_MENU_SHEET = DataNode("profile") / "menuSheet"
 
 /** The profile's comment card menus: `profile.menuSheet`, every row registered (ProfileCommentsMenu, -Own). */
 private val PROFILE_COMMENT_MENU = CommentMenuPlacement(PROFILE_MENU_SHEET, CommentMenuPlacement.ALL)
+
+/** The sheet a tag page's cards raise, a post's and a comment's alike. */
+private val TAG_PAGE_MENU_SHEET = DataNode("tagPage") / "menuSheet"
+
+/**
+ * A tagged comment's menus: the comment's whole menu on `tagPage.menuSheet`,
+ * every row registered (TagPageCommentMenu, -Own, -RemovedMenu,
+ * -RemovedMenuOwn) — the same rows, by the same rule, as every other host's.
+ */
+private val TAG_PAGE_COMMENT_MENU = CommentMenuPlacement(TAG_PAGE_MENU_SHEET, CommentMenuPlacement.ALL)
 
 /**
  * A hosted post card's place: the host's registered card, keyed by the

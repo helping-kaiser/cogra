@@ -264,7 +264,7 @@ pub enum SubmissionError {
 /// optional pair without breaking a caller (Rust Reference, "The
 /// `non_exhaustive` attribute"; API Guidelines C-STRUCT-PRIVATE): other
 /// crates build one with [`PreSigned::submission`] or [`Submission::new`].
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 #[non_exhaustive]
 pub struct Submission {
     pub body: StructuralBody,
@@ -274,6 +274,24 @@ pub struct Submission {
     pub pre_commitment: [u8; 32],
     pub pre_signature: Vec<u8>,
     pub author_pubkey: Vec<u8>,
+}
+
+/// `Debug` shows the dependency nonce's length and never its bytes.
+impl fmt::Debug for Submission {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Submission")
+            .field("body", &self.body)
+            .field("deps", &self.deps)
+            .field(
+                "dependency_nonce",
+                &crate::redact::ByteLen::of(&self.dependency_nonce),
+            )
+            .field("content_pre_digest", &self.content_pre_digest)
+            .field("pre_commitment", &self.pre_commitment)
+            .field("pre_signature", &self.pre_signature)
+            .field("author_pubkey", &self.author_pubkey)
+            .finish()
+    }
 }
 
 impl Submission {

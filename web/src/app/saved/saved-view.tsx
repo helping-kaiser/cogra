@@ -179,9 +179,8 @@ export function SavedScreen({
     [client, guard, writes],
   );
 
-  // THE FIELD NARROWS ONCE TYPING SETTLES — the finder's debounce shape
-  // (`reference-finder.tsx`): every keystroke would otherwise be a read, and
-  // only the last one's answer could ever stand. Clearing the field asks for
+  // THE FIELD NARROWS ONCE TYPING SETTLES: every keystroke would otherwise be a
+  // read, and only the last one's answer could ever stand. Clearing the field asks for
   // the whole list at once. The first arrival is this same read, blank.
   const asked = query.trim();
   const arrived = useRef(false);

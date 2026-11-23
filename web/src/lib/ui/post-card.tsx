@@ -69,6 +69,7 @@ import { ShareButton } from "./share-button";
 import { StanceControl } from "./stance-control";
 import { shortTimestamp } from "./timestamp";
 import { TopicsLine } from "./topics-line";
+import { WRITTEN } from "./written";
 
 /* THE CLAMPS — the media law's drawn ones (title 1 line, body 18, description
    2; tmp_dev/2026-09-11-mvp-design-queue-rulings.md): the description is the
@@ -161,8 +162,11 @@ export function PostCard({
   menuOpen = false,
   node,
   scoreOrigin,
+  attach = false,
 }: {
   post: PostView;
+  /** The card hangs under a row flag (`TaggedRow`) and squares its top-left corner (`Card`'s `attach`). */
+  attach?: boolean;
   /**
    * Where this card stands, for its score slot: the slot opens the trace and
    * this names the trace's back arrow (`Back to feed`, `Back to the post`,
@@ -305,12 +309,12 @@ export function PostCard({
   // title never clamps and stands at `headline-small`.
   const heading =
     title === null ? null : detail ? (
-      <h1 className="text-headline-small" {...testAttributes(part(node, "title"), `${testId}-title`)}>
+      <h1 className={`text-headline-small ${WRITTEN}`} {...testAttributes(part(node, "title"), `${testId}-title`)}>
         {title}
       </h1>
     ) : (
       <h2
-        className="line-clamp-1 break-words text-title-medium"
+        className={`line-clamp-1 text-title-medium ${WRITTEN}`}
         {...testAttributes(part(node, "title"), `${testId}-title`)}
       >
         {title}
@@ -352,8 +356,8 @@ export function PostCard({
             {...testAttributes(part(node, "body"), `${testId}-body`)}
             className={
               detail
-                ? "whitespace-pre-wrap text-body-large"
-                : `text-body-medium ${open ? "" : "line-clamp-[18]"}`
+                ? `whitespace-pre-wrap text-body-large ${WRITTEN}`
+                : `text-body-medium ${WRITTEN} ${open ? "" : "line-clamp-[18]"}`
             }
           >
             {words}
@@ -367,7 +371,7 @@ export function PostCard({
           <p
             ref={holdDescription}
             {...testAttributes(part(node, "description"), `${testId}-description`)}
-            className={`text-body-medium text-on-surface-variant ${
+            className={`text-body-medium text-on-surface-variant ${WRITTEN} ${
               detail || open ? "" : "line-clamp-2"
             }`}
           >
@@ -390,7 +394,7 @@ export function PostCard({
   const textBlock = hasText ? <div className="flex flex-col gap-1">{bodyText}</div> : null;
 
   return (
-    <Card testId={testId} node={node} door={!detail && !redacted}>
+    <Card testId={testId} node={node} door={!detail && !redacted} attach={attach}>
       {/* AUTHOR, TIMESTAMP, AND THE ⋮ — the card's header line. ON A DETAIL
           SURFACE THE PAGE HEADER OWNS THE ONE OVERFLOW (`_shared.jsx:341-346`
           — the master hides the card's dot in `detail`): two dots would be two
@@ -419,12 +423,13 @@ export function PostCard({
               {stamp}
             </time>
           )}
-          {/* A REMOVED POST HAS NO MENU LEFT (`Removed.jsx:5-6`): there is
-              nothing of it to edit, cite or license, so the ⋮ is dropped
-              wholesale rather than a row at a time. The menu itself, and the
-              sheets its rows open, belong to the host the card stands on
-              (`PostMenuHost`, every host's one sheet). */}
-          {!detail && !redacted && onOpenMenu !== undefined && (
+          {/* A REMOVED POST KEEPS ITS ⋮ (FeedRemoved.md:9, ProfilePosts.md:11,
+              ProfilePostsOwn.md:13): the reader's menu whole, or the author's
+              less Edit, Mark as sensitive and Remove (`postMenuItems`'
+              `removed`). The menu itself, and the sheets its rows open, belong
+              to the host the card stands on (`PostMenuHost`, every host's one
+              sheet). */}
+          {!detail && onOpenMenu !== undefined && (
             <OverflowTrigger
               ariaLabel="More on this post"
               testId={`${testId}-menu`}

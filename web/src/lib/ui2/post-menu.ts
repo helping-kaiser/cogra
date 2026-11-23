@@ -16,6 +16,8 @@ export type PostMenuRow =
   | "save"
   | "cite"
   | "hide"
+  | "citedBy"
+  | "opinions"
   | "license"
   | "report"
   | "edit"
@@ -33,6 +35,12 @@ export type PostMenuContext = {
   postId: string;
   /** The viewer is the author — `OWN_POST_MENU` rather than `READER_POST_MENU`. */
   own: boolean;
+  /**
+   * The post was removed (`payloadIsRedacted`): the author's own menu loses
+   * Edit, Mark as sensitive and Remove, and the reader's stays whole
+   * (FeedRemovedMenuOwn.md:5, FeedRemovedMenu.md:5).
+   */
+  removed?: boolean;
   /** The author's handle, for the reader menu's hide row. */
   handle: string | null;
   /** Dropped from the rows when there is none: a redacted record has no license. */
@@ -41,6 +49,14 @@ export type PostMenuContext = {
   navigate: (href: string) => void;
   openLicense: (license: License) => void;
   openRemove: () => void;
+  /**
+   * What cites the post, over the surface the menu was opened from
+   * (ReaderPostMenu.md:31, CitedBy.md:5). A reading: open to a guest and an
+   * applicant alike (FeedPostMenu.md:25).
+   */
+  openCitedBy: () => void;
+  /** The post's opinions sheet, over the same surface (ReaderPostMenu.md:33, PostOpinions.md:5). */
+  openOpinions: () => void;
   /**
    * The report row's door: the confirm sheet over the surface the menu was
    * opened from (ReportConfirm.md:3), or the join prompt for a guest (:21).
@@ -110,11 +126,14 @@ export type PostMenuContext = {
 export function postMenuItems({
   postId,
   own,
+  removed = false,
   handle,
   license,
   navigate,
   openLicense,
   openRemove,
+  openCitedBy,
+  openOpinions,
   openReport,
   shareRow,
   save,
@@ -148,20 +167,24 @@ export function postMenuItems({
       onGuest ?? onApplicant ?? (() => navigate(`/compose?reference=${postId}`)),
     ),
   );
+  // A REMOVED POST HAS NOTHING LEFT TO EDIT, MARK OR REMOVE: the author's
+  // menu keeps its reads and its Save and Cite (FeedRemovedMenuOwn.md:5).
   if (own) {
-    rows.push(
-      row("edit", "edit", "Edit", () => navigate(`/compose?post=${postId}`)),
-      // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published post
-      // sensitive is always a signed action changing the post — an edit — so
-      // there is no standalone commit path and this row is a door into the
-      // edit flow rather than a sheet of its own. Edit is the general door;
-      // this is the intentioned one. When the edit surface's drawn Sensitive
-      // row lands (CW-46) the link can focus it.
-      row("markSensitive", "sensitive", "Mark as sensitive", () =>
-        navigate(`/compose?post=${postId}`),
-      ),
-      row("remove", "remove", "Remove", openRemove),
-    );
+    if (!removed) {
+      rows.push(
+        row("edit", "edit", "Edit", () => navigate(`/compose?post=${postId}`)),
+        // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published post
+        // sensitive is always a signed action changing the post — an edit — so
+        // there is no standalone commit path and this row is a door into the
+        // edit flow rather than a sheet of its own. Edit is the general door;
+        // this is the intentioned one. When the edit surface's drawn Sensitive
+        // row lands (CW-46) the link can focus it.
+        row("markSensitive", "sensitive", "Mark as sensitive", () =>
+          navigate(`/compose?post=${postId}`),
+        ),
+        row("remove", "remove", "Remove", openRemove),
+      );
+    }
   } else {
     // The handle is the thing a reader recognises, and the word they will
     // look for again under Hidden accounts (`ActorChip.jsx:67`). The row keeps
@@ -169,6 +192,15 @@ export function postMenuItems({
     const fallback = handle === null ? "Hide this account" : `Hide @${handle}`;
     rows.push(row("hide", "hide", hide?.label ?? fallback, hide?.onSelect ?? (() => {})));
   }
+  // THE TWO READINGS CLOSE THE ACTS, before the license, on every menu and
+  // whatever their counts — the post live or removed (ReaderPostMenu.md:35,
+  // RemoveMenu.md:27): the detail's count lines vanish at zero, so these rows
+  // are the one door that always stands. Inbound first, as the comment's menu
+  // has it (`comment-menu.ts`).
+  rows.push(
+    row("citedBy", "cited-by", "Cited by", openCitedBy),
+    row("opinions", "opinions", "Opinions on this", openOpinions),
+  );
   if (license !== null) {
     rows.push(row("license", "license", "License terms", () => openLicense(license)));
   }

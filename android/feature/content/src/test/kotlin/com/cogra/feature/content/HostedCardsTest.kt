@@ -62,16 +62,17 @@ class HostedCardsTest {
         onOpenTopic = { opened += "topic:$it" },
     )
 
-    private fun post(landing: Landing = Landing.landed(1)) = PostView(
+    private fun post(landing: Landing = Landing.landed(1), removal: Removal? = null) = PostView(
         id = "p1",
         title = text("The long way home"),
         description = text(null),
-        content = text("Took the coast road."),
+        content = text(if (removal == null) "Took the coast road." else null),
         author = ada,
         createdAt = now.minusSeconds(86_400),
         updatedAt = now.minusSeconds(86_400),
         landing = landing,
         license = LicenseChoice.PublicDomain,
+        removal = removal,
     )
 
     private fun comment(removal: Removal? = null, replies: Int = 2) = ProfileComment(
@@ -106,13 +107,14 @@ class HostedCardsTest {
     private fun host(
         signedIn: Boolean = true,
         placement: HostedPlacement = HostedPlacement.Profile,
+        viewerId: String = "u2",
         body: @Composable (HostedCards) -> Unit,
     ) {
         compose.setContent {
             HostedCardsScope(
                 doors = doors,
                 routes = HostedCardRoutes(
-                    viewerId = "u2",
+                    viewerId = viewerId,
                     signedIn = signedIn,
                     onEditPost = {},
                     onCitePost = {},
@@ -120,7 +122,7 @@ class HostedCardsTest {
                     onEditComment = { _, _ -> },
                     onSignInOrJoin = {},
                 ),
-                hooks = CardHooks(viewerId = "u2"),
+                hooks = CardHooks(viewerId = viewerId),
                 revealed = emptyMap(),
                 tag = if (placement == HostedPlacement.Profile) "profile" else "tagPage",
                 notify = {},
@@ -264,9 +266,9 @@ class HostedCardsTest {
     }
 
     // ProfileComments.md:7, :9 — a removed comment keeps its place, its mark
-    // where its words were, its author chip, time and pointer, and no menu.
+    // where its words were, its author chip, time and pointer, and its ⋮.
     @Test
-    fun aRemovedCommentKeepsItsPlaceItsPointerAndNoMenu() {
+    fun aRemovedCommentKeepsItsPlaceItsPointerAndItsMenu() {
         host { it.comment(comment(removal = Removal(now, RemovalAgent.AUTHOR)), cards, replies, null) }
         compose.onNodeWithTag("profile.comments.commentCard.removalMark.line", useUnmergedTree = true)
             .assertTextEquals("Removed by its author")
@@ -274,8 +276,107 @@ class HostedCardsTest {
             .assertTextEquals("The comment's place in the thread, and every response, remain.")
         assertThat(shown("profile.comments.commentCard.authorChip")).isTrue()
         assertThat(shown("profile.comments.commentCard.target")).isTrue()
-        assertThat(shown("profile.comments.commentCard.menu")).isFalse()
+        assertThat(shown("profile.comments.commentCard.menu")).isTrue()
         assertThat(shown("profile.comments.commentCard.actionRow.reply")).isTrue()
+    }
+
+    // -- A removed card keeps its ⋮ (round 57; the *RemovedMenu* boards) --
+
+    private val removed = Removal(now, RemovalAgent.AUTHOR)
+
+    /** Opens [trigger] and asserts [rows] stand top to bottom under [sheet] and [absent] do not. */
+    private fun assertMenu(trigger: String, sheet: String, rows: List<String>, absent: List<String>) {
+        compose.onNodeWithTag(trigger, useUnmergedTree = true).performClick()
+        compose.onNodeWithTag(sheet).assertExists()
+        val tops = rows.map { compose.onNodeWithTag("$sheet.$it").fetchSemanticsNode().boundsInRoot.top }
+        assertThat(tops).isInStrictOrder()
+        absent.forEach { assertThat(shown("$sheet.$it")).isFalse() }
+    }
+
+    private val readerPostRows = listOf("save", "cite", "hide", "citedBy", "opinions", "license", "report")
+    private val ownRemovedPostRows = listOf("save", "cite", "citedBy", "opinions", "license")
+    private val ownOnlyPostRows = listOf("edit", "markSensitive", "remove")
+
+    // ProfilePosts.md:11, ProfilePostsRemovedMenu.md:3, :5 — another's removed
+    // post keeps its ⋮, the reader's post menu whole, Report at the tail.
+    @Test
+    fun anothersRemovedPostOnAProfileKeepsTheReadersMenuWhole() {
+        host { it.post(post(removal = removed), posts) }
+        assertThat(shown("profile.posts.card.removalMark")).isTrue()
+        assertMenu("profile.posts.card.menu", "profile.menuSheet", readerPostRows, ownOnlyPostRows)
+    }
+
+    // ProfilePostsOwn.md:13, ProfilePostsRemovedMenuOwn.md:3, :5 — the reader's
+    // own removed post: the own menu less Edit, Mark as sensitive and Remove.
+    @Test
+    fun anOwnRemovedPostOnTheOwnProfileLosesEditSensitiveAndRemove() {
+        host(viewerId = "u1") { it.post(post(removal = removed), posts) }
+        assertMenu(
+            "profile.posts.card.menu",
+            "profile.menuSheet",
+            ownRemovedPostRows,
+            ownOnlyPostRows + listOf("hide", "report"),
+        )
+    }
+
+    // ProfileComments.md:9, ProfileCommentsRemovedMenu.md:3, :5 — another's
+    // removed comment: the reader's comment menu whole, Hide with its author's
+    // handle after Cite.
+    @Test
+    fun anothersRemovedCommentKeepsTheReadersCommentMenu() {
+        host { it.comment(comment(removal = removed), cards, replies, null) }
+        assertMenu(
+            "profile.comments.commentCard.menu",
+            "profile.menuSheet",
+            listOf("save", "cite", "hide", "citedBy", "opinions", "license", "report"),
+            listOf("edit", "remove"),
+        )
+    }
+
+    // ProfileCommentsOwn.md:11, ProfileCommentsRemovedMenuOwn.md:3, :5 — the
+    // reader's own removed comment: the own comment menu less Edit and Remove.
+    @Test
+    fun anOwnRemovedCommentLosesEditAndRemove() {
+        host(viewerId = "u1") { it.comment(comment(removal = removed), cards, replies, null) }
+        assertMenu(
+            "profile.comments.commentCard.menu",
+            "profile.menuSheet",
+            listOf("save", "cite", "citedBy", "opinions", "license"),
+            listOf("edit", "remove", "hide", "report"),
+        )
+    }
+
+    // TagPageRemovedMenu.md:3, :5 — another's removed tagged post: the reader's
+    // post menu whole under `tagPage.menuSheet`, every row registered.
+    @Test
+    fun anothersRemovedTaggedPostKeepsTheReadersMenuWhole() {
+        host(placement = HostedPlacement.TagPage) { it.post(post(removal = removed), tagCard) }
+        assertMenu("tagPage.card.menu", "tagPage.menuSheet", readerPostRows, ownOnlyPostRows)
+    }
+
+    // TagPageRemovedMenuOwn.md:3, :5 — the reader's own removed tagged post.
+    @Test
+    fun anOwnRemovedTaggedPostLosesEditSensitiveAndRemove() {
+        host(placement = HostedPlacement.TagPage, viewerId = "u1") { it.post(post(removal = removed), tagCard) }
+        assertMenu(
+            "tagPage.card.menu",
+            "tagPage.menuSheet",
+            ownRemovedPostRows,
+            ownOnlyPostRows + listOf("hide", "report"),
+        )
+    }
+
+    // TagPageMenuOwn (nodes.json) — a live own tagged post keeps its whole own
+    // menu, Edit, Mark as sensitive and Remove wearing the registered rows.
+    @Test
+    fun anOwnLiveTaggedPostKeepsItsWholeOwnMenu() {
+        host(placement = HostedPlacement.TagPage, viewerId = "u1") { it.post(post(), tagCard) }
+        assertMenu(
+            "tagPage.card.menu",
+            "tagPage.menuSheet",
+            listOf("save", "cite", "edit", "markSensitive", "remove", "citedBy", "opinions", "license"),
+            listOf("hide", "report"),
+        )
     }
 
     // -- A tag's page (TagPage.md, TagPageMenu.md) --

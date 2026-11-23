@@ -92,11 +92,14 @@ import { CommentEditor } from "@/app/posts/[id]/edit/comment-editor";
 import { StanceControl } from "@/lib/ui/stance-control";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
 import { RowLine } from "@/lib/ui/row-line";
+import { hideRow, hiddenPersonOf } from "@/lib/hidden/hide-row";
+import { useHiddenSet } from "@/lib/hidden/provider";
 import { useSavedWrites } from "@/lib/saved/provider";
 import { useHostSnack } from "@/lib/saved/save-row";
 import { REPORT_COMMENT_TITLE, commentMenuItems } from "@/lib/ui2/comment-menu";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
+import { WRITTEN } from "@/lib/ui/written";
 
 /** Any node of the thread tree — a comment or a nested reply. */
 type ThreadComment = CommentView | ReplyView;
@@ -254,6 +257,7 @@ export function CommentsSheet({
   const [commentSigned, setCommentSigned] = useState(false);
   const { snack: menuSnack, notify, dismiss: dismissMenuSnack } = useHostSnack();
   const writes = useSavedWrites();
+  const hidden = useHiddenSet();
   // A guest's Save is asked to join first (GuestGate.md:5).
   const [joinOpen, setJoinOpen] = useState(false);
   // THE LICENSE IS NEVER A STATE OF THE CARD (`ReaderPostMenu.jsx:27-29`): one
@@ -729,11 +733,28 @@ export function CommentsSheet({
       // an Edit button (jakob on #423, seam 304).
       openEdit: own ? () => openEditor(comment, parentId) : undefined,
       openRemove: own ? () => setRemoving(comment) : undefined,
+      // A REMOVED COMMENT KEEPS ITS MENU (CommentRemoved.md:9): the own one
+      // less Edit and Remove, another's the reader's menu whole.
+      removed: payloadIsRedacted(comment),
       // SOMEONE ELSE'S: Report at the tail, its confirm stacked over the thread.
       openReport: () => {
         setReportAsked(true);
         setReporting(comment);
       },
+      // HIDE FROM THE THREAD (CommentMenu.md:11): the thread stands as it was,
+      // the hidden person's comments where they stood — nothing here reads the
+      // hidden set — and this snackbar, with Undo, is the only answer. A
+      // failure stands on the comment's own row line, keyed by the comment.
+      hide:
+        own || comment.author == null
+          ? undefined
+          : hideRow({
+              set: hidden,
+              person: hiddenPersonOf(comment.author),
+              origin: comment.id,
+              notify,
+              onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
+            }),
       testIdPrefix: "comment-menu",
       rowNode,
     });
@@ -811,10 +832,10 @@ export function CommentsSheet({
     const unopened = thread === undefined && branch > 0;
     const isOwn = viewerId !== null && comment.author?.id === viewerId;
     const edited = comment.updatedAt > comment.createdAt;
-    // A REMOVED COMMENT (CommentRemoved.md): it keeps its author, its time and
-    // its place in the order, the mark where its words were; it has no menu
-    // left and no Edit — nothing of it is left to save, cite, license or edit —
-    // while Reply and the face stay, and its replies stay under it.
+    // A REMOVED COMMENT (CommentRemoved.md, CommentRemovedOther.md): it keeps
+    // its author, its time and its place in the order, the mark where its
+    // words were; it keeps its ⋮ (the own menu less Edit and Remove, or the
+    // reader's whole), Reply and the face, and its replies stay under it.
     const removed = payloadIsRedacted(comment);
     const card = node === undefined ? undefined : instance(node, "commentCard", comment.id);
     return (
@@ -863,9 +884,9 @@ export function CommentsSheet({
                   commenter's own profile, one tap away through their chip.
                   IT IS DRAWN STACKED ON PURPOSE (`CommentMenu.jsx:18-23`): the
                   thread already lives in a sheet, so this menu is a sheet on a
-                  sheet (design/readme.md:2364). A REMOVED COMMENT HAS NO MENU
-                  LEFT (`_shared.jsx`, `menuItems={removed ? [] : …}`). */}
-              {!removed && menuRowsOf(comment, isOwn, parentId).length > 0 && (
+                  sheet (design/readme.md:2364). A REMOVED COMMENT KEEPS IT
+                  (CommentRemoved.md:9, CommentRemovedOther.md:7). */}
+              {menuRowsOf(comment, isOwn, parentId).length > 0 && (
                 <OverflowTrigger
                   ariaLabel="More on this comment"
                   testId={`comment-menu-${comment.id}`}
@@ -903,7 +924,7 @@ export function CommentsSheet({
             nodeId={comment.id}
             signature={sensitiveSignature(comment)}
           >
-            <p className="text-body-medium">{comment.content.value}</p>
+            <p className={`text-body-medium ${WRITTEN}`}>{comment.content.value}</p>
             {/* A COMMENT IS WORDS FIRST and its pictures join them: below the
                 words, INSET at the card's medium rung rather than full-bleed
                 (they are an attachment, not the body), and capped at comment
@@ -919,17 +940,24 @@ export function CommentsSheet({
                 // SQUARE IS THE COMMENT SCALE'S SHAPE (design/readme.md §"the
                 // media slice"): every attachment, picture or clip, alike —
                 // not only a video or a multi-picture set — takes the one
-                // frame, so a thread's rhythm never changes per comment.
+                // frame, so a thread's rhythm never changes per comment. The
+                // square runs the column's whole width with no height cap
+                // (jakob 2026-11-18, android's shape: "why is there a cap on
+                // how high it can be?").
                 ratio={1}
                 // ...AND FILLED, NEVER LETTERBOXED: an uncropped picture
                 // display-crops to the frame rather than fitting whole inside
                 // it, same as the video's own centre-crop.
                 fit="cover"
-                maxHeight="220px"
                 // One control, the sound; no transport bar and no duration
                 // pill on a surface meant for reading.
                 surface="reading"
                 testId={`comment-media-${comment.id}`}
+                // THE PICTURES' REGISTERED NAMES where the sheet is registered
+                // (ReplyMedia, round 60): `<card>.media`, each picture its
+                // `frame` keyed `<comment id>/<position>`, a clip's sound its
+                // frame's `soundDisc`, the gallery's `dots`.
+                dataNode={part(card, "media")}
               />
             )}
           </BodyRegion>
@@ -995,12 +1023,13 @@ export function CommentsSheet({
             )}
           </div>
           {/* THE ROW LINE under the face (RowSigning.md): a save or unsave of
-              this comment that did not go through. */}
-          {writes.failure(comment.id) !== null && (
+              this comment, or a hide of its author made from it, that did not
+              go through (CommentMenu.md:15, :21). */}
+          {(writes.failure(comment.id) ?? hidden.failure(comment.id)) !== null && (
             <RowLine
               state={{
                 kind: "didntGoThrough",
-                onRetry: () => writes.failure(comment.id)?.retry(),
+                onRetry: () => (writes.failure(comment.id) ?? hidden.failure(comment.id))?.retry(),
               }}
               testId={`comment-${comment.id}-row-line`}
             />
@@ -1084,16 +1113,19 @@ export function CommentsSheet({
                 it. */}
             <Snackbar
               testId="comment-signed"
+              node={{ path: "postDetail.snackbar" }}
               message={commentSigned ? COMMENT_SETTLING : null}
               onDismiss={dismissCommentSigned}
             />
             {/* THE COMMENT MENUS' AFTERMATH (CommentMenu.md, design digest item
                 54): `Saved.`, and `Removed from Saved.` with `Undo`. It reads
-                inside the thread, where the menu was opened; the page's own
-                `postDetail.snackbar` is beneath the sheet's scrim, so this one
-                carries no registered path until a stacked state is drawn. */}
+                inside the thread, where the menu was opened. The sheet's
+                snackbar is the registered `postDetail.snackbar`, hosted here
+                because the page's own bar is beneath the sheet's scrim; the
+                signed line above wears the same node. */}
             <Snackbar
               testId="comment-menu-snackbar"
+              node={{ path: "postDetail.snackbar" }}
               message={menuSnack?.message ?? null}
               action={menuSnack?.action}
               token={menuSnack?.token}

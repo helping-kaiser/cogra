@@ -27,8 +27,13 @@
 // [TopicCardsHost], with every door, menu, sheet and stage they carry on
 // the feed, the profile and History.
 //
-// THE EMPTY PAGE WIRES NO FACE AT ALL (backlog item 81, ruled
-// 2026-09-15), which is why the row sits inside the populated branch.
+// THE EMPTIED PAGE CARRIES THE ROW TOO (TagPageEmpty.md:9; jakob
+// 2026-09-15 overruled item 81's "no face"): taking a position on a name
+// needs no Tag records, so the row stands whatever the list holds.
+//
+// REGISTERED under `tagPage` (round 60): the header, the row
+// (`actionRow`, its `stance` and `share`), each row's `claim` keyed by the
+// tagged thing's id, and the cards the shell hosts (`card`, `commentCard`).
 
 package com.cogra.feature.topics
 
@@ -50,19 +55,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -86,7 +86,12 @@ import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.NodeSnackbarVisuals
 import com.cogra.core.designsystem.SeenCardsEffect
 import com.cogra.core.designsystem.dataNode
-import com.cogra.core.designsystem.surfaceTopAppBarColors
+import com.cogra.core.designsystem.dataNodeSurface
+import com.cogra.core.designsystem.v2.atom.ButtonKind
+import com.cogra.core.designsystem.v2.atom.ButtonSize
+import com.cogra.core.designsystem.v2.atom.CograButton
+import com.cogra.core.designsystem.v2.atom.EmptyState
+import com.cogra.core.designsystem.v2.atom.PageHeader
 import com.cogra.core.designsystem.v2.atom.hitTarget
 import com.cogra.core.designsystem.v2.media.ScrollStageHost
 import com.cogra.core.designsystem.v2.media.ScrollStageRow
@@ -95,6 +100,12 @@ import com.cogra.domain.PostView
 import com.cogra.domain.ProfileComment
 import com.cogra.domain.TaggedContentView
 import com.cogra.domain.TaggedNode
+import com.cogra.domain.hidden.HiddenSet
+import com.cogra.domain.saved.SavedWrites
+import com.cogra.feature.saved.LocalSavedHost
+import com.cogra.feature.saved.rememberHiddenSet
+import com.cogra.feature.saved.rememberSavedHost
+import com.cogra.feature.saved.rememberSavedWrites
 import kotlinx.coroutines.launch
 
 /** The `from` a History tag card opens a topic with (`Back to History`). */
@@ -103,14 +114,35 @@ const val TOPIC_FROM_HISTORY = "history"
 /** The `from` a search result opens a topic with (`Back to the search`, TagPage.md:35). */
 const val TOPIC_FROM_SEARCH = "search"
 
-/** The `from` a Your-topics row opens a topic with (`Back to Your topics`, TagPage.md:35). */
+/** The `from` a Your-topics row opens a topic with (`Back to Your tags`, TagPage.md:49). */
 const val TOPIC_FROM_YOUR_TOPICS = "yourTopics"
 
-/** The `from` another tag's page opens a topic with: that tag, `#` and all (`Back to #fieldnotes`, TagPage.md:41). */
+/** The `from` a feed card's chip opens a topic with (`Back to feed`, TagPage.md:49). */
+const val TOPIC_FROM_FEED = "feed"
+
+/** The `from` a post's tags-and-references sheet opens a topic with (`Back to the post`, TagPage.md:49). */
+const val TOPIC_FROM_POST = "post"
+
+/** The `from` a card on another's profile opens a topic with (`Back to the profile`, TagPage.md:49). */
+const val TOPIC_FROM_PROFILE = "profile"
+
+/** The `from` a card on the reader's own profile opens a topic with (`Back to your profile`, TagPage.md:49). */
+const val TOPIC_FROM_OWN_PROFILE = "ownProfile"
+
+/** The `from` a Saved card opens a topic with (`Back to Saved`, TagPage.md:49). */
+const val TOPIC_FROM_SAVED = "saved"
+
+/** The `from` another tag's page opens a topic with: that tag, `#` and all (`Back to #fieldnotes`, TagPage.md:49). */
 fun topicFromTopic(name: String): String = "#$name"
 
-/** The tag page's registered root (`tagPage.*`: TagPageMenu, TagPageHidden). */
+/** The tag page's registered root (`tagPage.*`: TagPage, TagPageHeldPad, the menu boards). */
 private val TAG_PAGE = DataNode("tagPage")
+
+/**
+ * The topic's wide anchor, drawn by the shell: [node] is the registered
+ * control (`tagPage.actionRow.stance`), its open pad `node / "pad"`.
+ */
+typealias TopicStanceSlot = @Composable (node: DataNode) -> Unit
 
 /**
  * What the tag page draws its rows' cards with: the feed's own post and
@@ -133,20 +165,34 @@ class TopicCards(
  */
 typealias TopicCardsHost = @Composable (notify: (String) -> Unit, content: @Composable (TopicCards) -> Unit) -> Unit
 
+/**
+ * What the tag page's cards' menus write through (TagPageMenu.md:7,
+ * TagPageCommentMenu.md:7, TagPageCommentRemovedMenu.md:9): the app's Saved
+ * overlay and hidden set, and the guest gate their Save and Hide raise for one
+ * signed out. Nothing given stands the rows inert.
+ */
+class TopicMenuWrites(
+    val saved: SavedWrites? = null,
+    val hidden: HiddenSet? = null,
+    val onGuest: (() -> Unit)? = null,
+)
+
 /** No host: the rows draw their claims alone — for previews and the screen's own tests. */
 val NoTopicCards: TopicCardsHost = { _, content -> content(TopicCards({ _, _ -> }, { _, _ -> })) }
 
 @Composable
 fun TopicRoute(
     name: String,
-    /** Where the page was opened from; it names the way back (TagPage.md:35). */
+    /** Where the page was opened from; it names the way back (TagPage.md:49). */
     from: String? = null,
     onBack: () -> Unit,
-    stanceControl: (@Composable () -> Unit)? = null,
+    stanceControl: TopicStanceSlot? = null,
     /** The deletion band, while the account's confirmed deletion is in its grace (`FeedDeleting.md:3`). */
     deletionBand: @Composable () -> Unit = {},
     /** The feed's cards, hosted over the page by the shell (TagPage.md:15). */
     cardsHost: TopicCardsHost = NoTopicCards,
+    /** The guest gate the cards' Save and Hide raise; null when signed in. */
+    onRequireAccount: (() -> Unit)? = null,
     viewModel: TopicViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -165,6 +211,7 @@ fun TopicRoute(
         backDescription = topicBack(from),
         onShare = { context.shareTopic(viewModel.shareUrl(name)) },
         cardsHost = cardsHost,
+        menus = TopicMenuWrites(rememberSavedWrites(), rememberHiddenSet(), onRequireAccount),
     )
 }
 
@@ -177,17 +224,21 @@ private fun Context.shareTopic(url: String) {
     startActivity(Intent.createChooser(send, null))
 }
 
-/** The back arrow's origin noun (TagPage.md:41); null is the plain `Back`. */
+/** The back arrow's origin noun (TagPage.md:49); null is the plain `Back`. */
 @Composable
 internal fun topicBack(from: String?): String? = when {
     from == TOPIC_FROM_HISTORY -> stringResource(R.string.topics_back_history)
     from == TOPIC_FROM_SEARCH -> stringResource(R.string.topics_back_search)
     from == TOPIC_FROM_YOUR_TOPICS -> stringResource(R.string.topics_back_your_topics)
+    from == TOPIC_FROM_FEED -> stringResource(R.string.topics_back_feed)
+    from == TOPIC_FROM_POST -> stringResource(R.string.topics_back_post)
+    from == TOPIC_FROM_PROFILE -> stringResource(R.string.topics_back_profile)
+    from == TOPIC_FROM_OWN_PROFILE -> stringResource(R.string.topics_back_own_profile)
+    from == TOPIC_FROM_SAVED -> stringResource(R.string.topics_back_saved)
     from != null && from.startsWith("#") -> stringResource(R.string.topics_back_topic, from.removePrefix("#"))
     else -> null
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopicScreen(
     name: String,
@@ -195,11 +246,12 @@ fun TopicScreen(
     onRefresh: () -> Unit,
     onBack: () -> Unit,
     /**
-     * The page's one action, drawn by the shell. Null while the auth
+     * The page's one action, drawn by the shell, wearing the node it is
+     * handed (`tagPage.actionRow.stance`, its pad `.pad`). Null while the auth
      * state is still unknown — the signed-in and signed-out readings
      * differ, and guessing puts the wrong action on the tap for a frame.
      */
-    stanceControl: (@Composable () -> Unit)? = null,
+    stanceControl: TopicStanceSlot? = null,
     /** Content cards that stood fully in the viewport (`SeenCardsEffect`). */
     onCardsSeen: (List<String>) -> Unit = {},
     /** Tall cards with an edge on screen this frame (History.md:13). */
@@ -212,6 +264,8 @@ fun TopicScreen(
     /** The stance row's share: the tag's own address, handed to the platform's sheet. */
     onShare: () -> Unit = {},
     cardsHost: TopicCardsHost = NoTopicCards,
+    /** What the cards' menus save and hide through, their words on this page's snackbar. */
+    menus: TopicMenuWrites = TopicMenuWrites(),
 ) {
     val listState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -219,25 +273,15 @@ fun TopicScreen(
     val notify: (String) -> Unit = { text ->
         scope.launch { snackbarHostState.showSnackbar(NodeSnackbarVisuals(text, TAG_PAGE / "snackbar")) }
     }
+    // THE MENUS' AFTERMATH READS ON THE PAGE'S OWN SNACKBAR (`tagPage.snackbar`,
+    // TagPageMenu.md:7, TagPageCommentMenu.md:7): `Saved.`, a hide's words, each
+    // with `Undo` — the menus under it save and hide through this host.
+    val snackbar = TAG_PAGE / "snackbar"
+    val savedHost = rememberSavedHost(menus.saved, snackbarHostState, snackbar, menus.onGuest, menus.hidden)
     Scaffold(
-        topBar = {
-            Column {
-                TopAppBar(
-                    colors = surfaceTopAppBarColors(),
-                    title = { Text("#$name", modifier = Modifier.testTag("topic_title")) },
-                    navigationIcon = {
-                        IconButton(onClick = onBack, modifier = Modifier.testTag("topic_back")) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = backDescription ?: stringResource(R.string.topics_back),
-                            )
-                        }
-                    },
-                )
-                // Directly under the header (FeedDeleting.md:5).
-                deletionBand()
-            }
-        },
+        // A registered surface: its tags reach UiAutomator as resource ids.
+        modifier = Modifier.dataNodeSurface(),
+        topBar = { TagPageHeader(name, onBack, backDescription, deletionBand) },
         snackbarHost = { CograSnackbarHost(snackbarHostState) },
     ) { padding ->
         Box(
@@ -251,37 +295,18 @@ fun TopicScreen(
                         .align(Alignment.Center)
                         .testTag("topic_loading"),
                 )
-                state.notFound -> ErrorLine(
-                    R.string.topics_not_found,
-                    "topic_not_found",
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(24.dp),
-                )
-                state.transportFailed -> Column(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    ErrorLine(R.string.topics_error_transport, "topic_transport_error")
-                    TextButton(onClick = onRefresh, modifier = Modifier.testTag("topic_retry")) {
-                        Text(stringResource(R.string.topics_retry))
-                    }
-                }
+                state.notFound || state.transportFailed -> UnreadPage(state.notFound, onRefresh)
                 else -> Column(modifier = Modifier.fillMaxSize()) {
                     // Under the title, above anything belonging to a
                     // post — outside the list, so it does not scroll
-                    // away from the page it acts on.
-                    if (state.content.isNotEmpty()) StanceRow(name, stanceControl, onShare)
-                    cardsHost(notify) { cards ->
-                        TaggedList(
-                            state = state,
-                            listState = listState,
-                            cards = cards,
-                            seen = TopicSeen(onCardsSeen, onCardEdgesSeen, onSeenCheckpoint),
-                        )
+                    // away from the page it acts on. The emptied page
+                    // carries it too, holding nothing (TagPageEmpty.md:9).
+                    StanceRow(name, stanceControl, onShare)
+                    CompositionLocalProvider(LocalSavedHost provides savedHost) {
+                        cardsHost(notify) { cards ->
+                            val seen = TopicSeen(onCardsSeen, onCardEdgesSeen, onSeenCheckpoint)
+                            TaggedList(state = state, listState = listState, cards = cards, seen = seen)
+                        }
                     }
                 }
             }
@@ -289,19 +314,80 @@ fun TopicScreen(
     }
 }
 
-/** The topic's stance row (`TagPage`): the wide anchor the shell passes in, and the tag's share. */
+/**
+ * THE HOUSE HEADER (`PageHeader`, TagPage.md:3, :7) as `tagPage.header`: the
+ * arrow naming its origin and the tag, # and all — and no control; the
+ * deletion band directly under it (FeedDeleting.md:5).
+ */
 @Composable
-private fun StanceRow(name: String, stanceControl: (@Composable () -> Unit)?, onShare: () -> Unit) {
+private fun TagPageHeader(
+    name: String,
+    onBack: () -> Unit,
+    backDescription: String?,
+    deletionBand: @Composable () -> Unit,
+) {
+    Column {
+        PageHeader(
+            title = "#$name",
+            onBack = onBack,
+            backContentDescription = backDescription ?: stringResource(R.string.topics_back),
+            node = TAG_PAGE / "header",
+        )
+        deletionBand()
+    }
+}
+
+/**
+ * The page's place where nothing could be listed, the header standing above it:
+ * the answer no for a name that cannot be a tag (TagPage.md:69-71) — the
+ * not-found family's `EmptyState`, never the failure voice or its colour, and
+ * nothing on it retries — or no answer at all (:65), the house line over an
+ * outlined Retry leading the column, `ProfileUnreachable`'s shape.
+ */
+@Composable
+private fun UnreadPage(notFound: Boolean, onRetry: () -> Unit) {
+    if (notFound) {
+        EmptyState(
+            testTag = "topic_not_found",
+            title = stringResource(R.string.topics_not_found),
+            modifier = Modifier.padding(horizontal = Space.x6, vertical = Space.x2),
+        )
+    } else {
+        Column(
+            modifier = Modifier.padding(horizontal = Space.x6, vertical = Space.x4),
+            verticalArrangement = Arrangement.spacedBy(Space.x3),
+        ) {
+            ErrorLine(R.string.topics_error_transport, "topic_transport_error")
+            CograButton(
+                text = stringResource(R.string.topics_retry),
+                onClick = onRetry,
+                kind = ButtonKind.Outlined,
+                size = ButtonSize.Compact,
+                testTag = "topic_retry",
+            )
+        }
+    }
+}
+
+/**
+ * The topic's stance row (`TopicStanceRow`, registered as `tagPage.actionRow`):
+ * the wide anchor the shell passes in, wearing `actionRow.stance`, and the tag's
+ * share, `actionRow.share` — round 48's names.
+ */
+@Composable
+private fun StanceRow(name: String, stanceControl: TopicStanceSlot?, onShare: () -> Unit) {
+    val row = TAG_PAGE / "actionRow"
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .dataNode(row)
             .padding(start = Space.x4, end = Space.x4, top = Space.x1, bottom = Space.x2),
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.weight(1f)) {
             if (stanceControl != null) {
-                Box(Modifier.fillMaxWidth().testTag("topic_stance_row")) { stanceControl() }
+                Box(Modifier.fillMaxWidth()) { stanceControl(row / "stance") }
             }
         }
         // DRAWN COMPACT, TAPPED AT 48 (`TagPage`'s row, `ShareButton.jsx`): the
@@ -310,7 +396,7 @@ private fun StanceRow(name: String, stanceControl: (@Composable () -> Unit)?, on
         val description = stringResource(R.string.topics_share, name)
         Box(
             modifier = Modifier
-                .dataNode(TAG_PAGE / "share")
+                .dataNode(row / "share")
                 .hitTarget(
                     interactive = Modifier
                         .clip(CircleShape)
@@ -375,12 +461,13 @@ private fun TaggedList(state: TopicUiState, listState: LazyListState, cards: Top
             verticalArrangement = Arrangement.spacedBy(Space.x2),
         ) {
             if (!state.contentLoading && state.content.isEmpty()) {
+                // THE EMPTIED PAGE (TagPageEmpty.md:3-7): the calm `EmptyState`,
+                // 24 at the sides and 4 under the row — no action, no error colour.
                 item {
-                    Text(
-                        stringResource(R.string.topics_content_empty),
-                        modifier = Modifier
-                            .padding(start = Space.x4, end = Space.x4, top = Space.x3)
-                            .testTag("topic_content_empty"),
+                    EmptyState(
+                        testTag = "topic_content_empty",
+                        title = stringResource(R.string.topics_content_empty),
+                        modifier = Modifier.padding(start = Space.x6, end = Space.x6),
                     )
                 }
             }

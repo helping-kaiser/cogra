@@ -242,18 +242,19 @@ class RemovalScreensTest {
     }
 
     /**
-     * ALWAYS the header carries the way back alone and no menu; ALWAYS the post
-     * keeps its author chip, its opinion, its comment count and its share; WHEN
-     * tap the comment count -> the thread opens (Removed.md:11-15).
+     * ALWAYS the header carries the way back and the menu, less Edit, Mark as
+     * sensitive and Remove; ALWAYS the post keeps its author chip, its opinion,
+     * its comment count and its share; WHEN tap the comment count -> the thread
+     * opens (Removed.md:11-17).
      */
     @Test
-    fun removedKeepsItsSkeletonAndBackIsTheWholeHeader() {
+    fun removedKeepsItsSkeletonAndItsHeaderMenu() {
         renderDetail(backDescription = "Back to Saved")
         openPostConfirm()
         press("remove")
         compose.waitForIdle()
 
-        compose.onNodeWithTag("postDetail.header.menu").assertDoesNotExist()
+        compose.onNodeWithTag("postDetail.header.menu").assertExists()
         // RM-G8's build word: the label the detail arrived with stands.
         compose.onNodeWithContentDescription("Back to Saved").assertExists()
         compose.onNodeWithTag("postDetail.card.authorChip").assertExists()
@@ -261,6 +262,26 @@ class RemovalScreensTest {
         compose.onNodeWithTag("postDetail.card.actionRow.comments").assertExists().performClick()
         compose.waitForIdle()
         compose.onNodeWithTag("postDetail.threadSheet").assertExists()
+    }
+
+    /**
+     * WHEN tap the header's ⋮ on the post just removed -> the sheet rises with
+     * its rows AND NEVER Edit, Mark as sensitive or Remove stands (Removed.md:13).
+     */
+    @Test
+    fun aPostJustRemovedRaisesItsMenuLessEditSensitiveAndRemove() {
+        renderDetail()
+        openPostConfirm()
+        press("remove")
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
+        listOf("save", "cite", "citedBy", "opinions", "license").forEach {
+            compose.onNodeWithTag("postDetail.menuSheet.$it").assertExists()
+        }
+        listOf("edit", "markSensitive", "remove").forEach {
+            compose.onNodeWithTag("postDetail.menuSheet.$it").assertDoesNotExist()
+        }
     }
 
     /** ALWAYS the mark reads Removed by its author GIVEN its author's account sweep took the post (Removed.md:5). */
@@ -410,8 +431,9 @@ class RemovalScreensTest {
     /**
      * WHEN the removal is taken -> the dialog closes AND the comment's words and
      * pictures give way to the mark in the comment's own place; a removed
-     * comment keeps its author and its time, carries no ⋮ and no Edit, keeps
-     * its opinion and its Reply, and its replies stay under it.
+     * comment keeps its author and its time, keeps its ⋮ less Edit and Remove
+     * (CommentRemoved.md:9), keeps its opinion and its Reply, and its replies
+     * stay under it.
      */
     @Test
     fun aTakenCommentRemovalSwapsTheOneNodeForItsMark() {
@@ -424,7 +446,7 @@ class RemovalScreensTest {
         compose.onNodeWithText(COMMENT_LINE).assertExists()
         compose.onNodeWithText("Comment c1").assertDoesNotExist()
         compose.onNodeIn(threadCard("c1"), threadPart("authorChip")).assertExists()
-        compose.onNodeIn(threadCard("c1"), threadPart("menu")).assertDoesNotExist()
+        compose.onNodeIn(threadCard("c1"), threadPart("menu")).assertExists()
         compose.onNodeIn(threadCard("c1"), threadPart("actionRow.edit")).assertDoesNotExist()
         compose.onNodeIn(threadCard("c1"), threadPart("actionRow.reply")).assertExists()
         compose.onNodeWithTag("stance_c1").assertExists()
@@ -434,6 +456,21 @@ class RemovalScreensTest {
         assertThat(compose.onNodeWithTag(threadCard("c1")).getUnclippedBoundsInRoot().top).isEqualTo(before)
         assertThat(repo.records).containsExactly("rec:c1")
         assertThat(repo.reads.single().second).isEqualTo("c1")
+    }
+
+    /** CommentRemovedMenu.md:3, :5 — the comment just removed raises its own menu less Edit and Remove. */
+    @Test
+    fun aCommentJustRemovedRaisesItsMenuLessEditAndRemove() {
+        openThread()
+        removeOwnComment()
+
+        compose.onNodeIn(threadCard("c1"), threadPart("menu")).performClick()
+        listOf("save", "cite", "citedBy", "opinions", "license").forEach {
+            compose.onNodeWithTag("postDetail.menuSheet.$it").assertExists()
+        }
+        listOf("edit", "remove", "report").forEach {
+            compose.onNodeWithTag("postDetail.menuSheet.$it").assertDoesNotExist()
+        }
     }
 
     /**
@@ -472,7 +509,10 @@ class RemovalScreensTest {
 
     // ---- RM-G9 · the own menu off the detail -------------------------
 
-    /** A post removed from its feed card stands as its mark in place, its ⋮ gone with the payload. */
+    /**
+     * A post removed from its feed card stands as its mark in place, its ⋮
+     * kept less Remove (FeedRemoved.md:3, :9).
+     */
     @Test
     fun aFeedCardRemovedFromItsOwnMenuStandsAsItsMarkInPlace() {
         compose.setContent {
@@ -496,7 +536,10 @@ class RemovalScreensTest {
 
         compose.onNodeWithTag(feedCard("p1")).assertExists()
         compose.onNodeWithText(AUTHOR_MARK).assertExists()
-        compose.onNodeIn(feedCard("p1"), "feed.card.menu").assertDoesNotExist()
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.cite").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.remove").assertDoesNotExist()
+        compose.onNodeWithTag("feed.menuSheet.edit").assertDoesNotExist()
         // The card beside it is untouched.
         compose.onNodeWithText("Body p2").assertExists()
         assertThat(repo.records).containsExactly("rec:p1")

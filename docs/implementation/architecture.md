@@ -347,7 +347,11 @@ steps:
    state advances. A staged write that never completes the
    handshake and lands is garbage-collected — staged payload
    included — after a bounded number of epochs (an operational
-   parameter, [data-model.md](data-model.md)).
+   parameter, [data-model.md](data-model.md)). The host can still
+   order an approved act later, so the collection moves an approved
+   write's content pair into carriage instead of dropping it, and
+   its late record promotes like any other
+   ([data-model.md "Staged writes"](data-model.md#staged-writes)).
 
 Staged content is served, not withheld. From the pre-commitment
 signature onward a staged write's display rows are readable by
@@ -372,6 +376,10 @@ Prepare pre-checks the two-gate write rule over the mirror's
 current state — W1 solvency, W2a the individual stamp wall, W2b
 the averaged door
 ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
+W1 is decided on the exact integers the ledger holds: the balance
+and θ cross the seam in micro-units, and a batch's price is their
+checked product, so a balance of exactly θ × acts writes
+([layer1-interface.md §13.2](../primitive/layer1-interface.md#132-replay-verification-and-verdict-certificates)).
 A failed check is a normal, visible account state, not an auth
 failure: authentication gates the *service*, write standing gates
 the *graph* ([auth.md](auth.md)). The product surfaces the state

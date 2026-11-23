@@ -17,5 +17,17 @@ describe("Card", () => {
   it("takes the medium rung of the shape scale", () => {
     render(<Card testId="the_card">content</Card>);
     expect(screen.getByTestId("the_card").className).toContain("rounded-medium");
+    expect(screen.getByTestId("the_card").className).not.toContain("rounded-tl-none");
+  });
+
+  // TaggedRow.jsx: the card under a row flag squares its top-left corner so
+  // flag and card fuse into one folder-tab silhouette (`attach`).
+  it("squares its top-left corner where it hangs under a row flag", () => {
+    render(
+      <Card testId="the_card" attach>
+        content
+      </Card>,
+    );
+    expect(screen.getByTestId("the_card").className).toContain("rounded-tl-none");
   });
 });

@@ -29,6 +29,7 @@ import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 
 import { CoveringLayerProvider, useCoversSurface } from "./covering-layer";
 import { pressIsOnScrim, useSheetDrag } from "./sheet-drag";
+import type { KeyboardClass } from "./screen-layer";
 
 /**
  * THE SLIVER A SHEET AT ITS CEILING LEAVES BEHIND (`_shared.jsx:1249` —
@@ -61,9 +62,28 @@ export const SHEET_CEILING_SLIVER_PX = 72;
  * generated, so the number would have to be written out a second time in a
  * literal, which is exactly the drift the constant exists to stop. The sheet
  * already carries a style for its drag offset; this rides beside it.
+ *
+ * A sheet that does not ride the keyboard (`keyboard="stays"`) keeps this
+ * ceiling with the keyboard up: its foot stays where it is, under it.
  */
-export const SHEET_CEILING =
-  `calc(100dvh - ${SHEET_CEILING_SLIVER_PX}px - env(safe-area-inset-top, 0px))`;
+export const SHEET_CEILING = `calc(100dvh - ${SHEET_CEILING_SLIVER_PX}px - env(safe-area-inset-top, 0px))`;
+
+/**
+ * THE CEILING OF A SHEET THAT RIDES: the master's `100%` is the visible
+ * screen, so the on-screen keyboard comes off it — the ceiling is measured in
+ * the band left above the keyboard (`keyboard-inset.ts`). With no keyboard the
+ * inset is 0 and this is {@link SHEET_CEILING} exactly.
+ */
+export const SHEET_CEILING_RIDING = `calc(100dvh - ${SHEET_CEILING_SLIVER_PX}px - env(safe-area-inset-top, 0px) - var(--keyboard-inset, 0px))`;
+
+/**
+ * A ONE-FIELD SHEET RIDES ABOVE THE KEYBOARD (seam 388, point 1: the alt-text
+ * sheet, the sensitive sheet's reason): the dialog's bottom margin is the
+ * keyboard's height, so the whole surface — field, Done and all — stands on
+ * the keyboard's top edge. A sheet of several fields, or of none, takes no
+ * lift (point 2).
+ */
+export const SHEET_KEYBOARD_LIFT = "var(--keyboard-inset, 0px)";
 
 /**
  * THE RAISED CLASS (`BottomSheet.jsx`: "the raised 88% class stays what a sheet
@@ -79,11 +99,14 @@ export const SHEET_RAISED = "88dvh";
 export const SHEET_DEFAULT = "62dvh";
 
 /** What a sheet's surface is bounded by. */
-function sheetHeight(tallest: boolean, height?: string, max: string = SHEET_DEFAULT): CSSProperties {
-  if (height !== undefined) return { height: `min(${height}, ${SHEET_CEILING})` };
-  return tallest
-    ? { height: SHEET_CEILING }
-    : { maxHeight: `min(${max}, ${SHEET_CEILING})` };
+function sheetHeight(
+  tallest: boolean,
+  height?: string,
+  max: string = SHEET_DEFAULT,
+  ceiling: string = SHEET_CEILING,
+): CSSProperties {
+  if (height !== undefined) return { height: `min(${height}, ${ceiling})` };
+  return tallest ? { height: ceiling } : { maxHeight: `min(${max}, ${ceiling})` };
 }
 
 /**
@@ -102,9 +125,14 @@ const SHEET_PAD_BOTTOM = `calc(${SHEET_PAD_BOTTOM_SUM})`;
  * surface's class less that padding. A pinned one (`tallest`, `height`) has a
  * definite surface, so its column simply fills the content box.
  */
-function columnHeight(tallest: boolean, height?: string, max: string = SHEET_DEFAULT): CSSProperties {
+function columnHeight(
+  tallest: boolean,
+  height?: string,
+  max: string = SHEET_DEFAULT,
+  ceiling: string = SHEET_CEILING,
+): CSSProperties {
   if (tallest || height !== undefined) return { height: "100%" };
-  return { maxHeight: `calc(min(${max}, ${SHEET_CEILING}) - ${SHEET_PAD_TOP} - (${SHEET_PAD_BOTTOM_SUM}))` };
+  return { maxHeight: `calc(min(${max}, ${ceiling}) - ${SHEET_PAD_TOP} - (${SHEET_PAD_BOTTOM_SUM}))` };
 }
 
 /**
@@ -140,7 +168,15 @@ export function BottomSheet({
   rows = false,
   maxHeight,
   dragFromHandle = false,
+  keyboard = "stays",
 }: {
+  /**
+   * WHETHER THE SHEET RIDES THE ON-SCREEN KEYBOARD (seam 388): `rides` for a
+   * sheet of ONE field with its `Done`, which then stands on the keyboard's
+   * top edge; `stays` — the default, and every sheet of several fields or of
+   * none — keeps its place, the keyboard over its foot.
+   */
+  keyboard?: KeyboardClass;
   /**
    * A SHEET HOSTING A PAD DRAGS ONLY FROM ITS HANDLE AND TITLE ZONE
    * (`BottomSheet.jsx`; StancePad.prompt.md: "the field owns every pointer
@@ -267,6 +303,7 @@ export function BottomSheet({
   stacked?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement | null>(null);
+  const rides = keyboard === "rides";
   const titleRef = useRef<HTMLHeadingElement | null>(null);
   // A SHEET OVER A SURFACE SUSPENDS THAT SURFACE'S STAGE (design/readme.md
   // §13; Feed.md:31). It covers from the moment it is raised to the moment
@@ -370,7 +407,8 @@ export function BottomSheet({
           // eases home (`cg-sheet-settle`) unless the reader asked for
           // stillness.
           translate: drag.offset === 0 ? undefined : `0px ${drag.offset}px`,
-          ...sheetHeight(tallest, height, maxHeight),
+          ...sheetHeight(tallest, height, maxHeight, rides ? SHEET_CEILING_RIDING : SHEET_CEILING),
+          marginBottom: rides ? SHEET_KEYBOARD_LIFT : undefined,
           paddingTop: SHEET_PAD_TOP,
           paddingRight: 0,
           paddingBottom: SHEET_PAD_BOTTOM,
@@ -403,7 +441,7 @@ export function BottomSheet({
         // The surface's bound less its padding: a percentage of an indefinite
         // height resolves to nothing, so the column cannot simply ask for
         // `100%` of a sheet that is only capped.
-        style={columnHeight(tallest, height, maxHeight)}
+        style={columnHeight(tallest, height, maxHeight, rides ? SHEET_CEILING_RIDING : SHEET_CEILING)}
       >
         {/* The handle says the sheet can be pulled down, and it can. The
             gesture is read across the whole surface, so the grip marks where

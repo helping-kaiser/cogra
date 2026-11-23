@@ -378,6 +378,22 @@ describe("History — the seen-list as a feed (History.md)", () => {
     // moment (the evident path while Removed is unregistered).
     expect(screen.getByTestId(byNode("history.card.removalMark", "p9"))).toHaveTextContent("Removed by its author");
     expect(screen.getByTestId(byNode("history.card.removalMark.when", "p9"))).toHaveTextContent("18m");
+    // HistoryRemovedMenu.md:3, :5 — its ⋮ raises the reader's post menu whole.
+    fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p9")));
+    const sheet = screen.getAllByTestId("history.menuSheet").find((d) => (d as HTMLDialogElement).open);
+    expect(
+      within(sheet!)
+        .getAllByRole("button")
+        .map((row) => row.textContent),
+    ).toEqual([
+      "Save",
+      "Cite in a new post",
+      expect.stringMatching(/^Hide @/),
+      "Cited by",
+      "Opinions on this",
+      "License terms",
+      "Report",
+    ]);
   });
 
   it("the_readers_own_removal_from_a_cards_menu_leaves_it_in_place_wearing_its_mark", async () => {
@@ -406,6 +422,15 @@ describe("History — the seen-list as a feed (History.md)", () => {
     fireEvent.click(await screen.findByTestId("history-menu-remove-confirm-remove"));
     expect(await screen.findByTestId(byNode("history.card.removalMark", "p5"))).toHaveTextContent("Removed by its author");
     expect(cards()).toEqual(["history.commentCard:c1", "history.card:p5", "history.card:p1"]);
+    // HistoryRemovedMenuOwn.md:5 — your own post's menu less Edit, Mark as
+    // sensitive and Remove.
+    fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p5")));
+    const sheet = screen.getAllByTestId("history.menuSheet").find((d) => (d as HTMLDialogElement).open);
+    expect(
+      within(sheet!)
+        .getAllByRole("button")
+        .map((row) => row.textContent),
+    ).toEqual(["Save", "Cite in a new post", "Cited by", "Opinions on this", "License terms"]);
   });
 
   it("a_hidden_accounts_posts_and_comments_stay_out_and_its_profile_card_stays", async () => {
@@ -1002,6 +1027,7 @@ describe("History — the comment menu (HistoryCommentMenu.md, round 41)", () =>
     expect(rows()).toEqual([
       ["history.menuSheet.save", "Save"],
       ["history.menuSheet.cite", "Cite in a new post"],
+      ["history.menuSheet.hide", "Hide @tobias"],
       ["history.menuSheet.citedBy", "Cited by"],
       ["history.menuSheet.opinions", "Opinions on this"],
       ["history.menuSheet.license", "License terms"],
@@ -1028,6 +1054,57 @@ describe("History — the comment menu (HistoryCommentMenu.md, round 41)", () =>
     fireEvent.click(screen.getByTestId("history.menuSheet.edit"));
     expect(await screen.findByTestId("comment-edit")).toBeInTheDocument();
     expect(screen.getByTestId("history-list")).toBeInTheDocument();
+    // HistoryCommentMenuOwn.md:5 — no Hide on the reader's own comment.
+    expect(screen.queryByTestId("history.menuSheet.hide")).not.toBeInTheDocument();
+  });
+
+  it("hide_on_a_comment_keeps_every_card_in_its_place_and_snackbars_with_undo_and_no_confirm", async () => {
+    // HistoryCommentMenu.md:7.
+    const log = hiddenLog();
+    serveHistory(() => page([COMMENT, POST]));
+    server.use(...hiddenHandlers(log));
+    render();
+    await screen.findByTestId("history-list");
+    fireEvent.click(screen.getByTestId(byNode("history.commentCard.menu", "c1")));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(screen.getByTestId("history.snackbar.message")).toHaveTextContent("@tobias is hidden.");
+    expect(screen.getByTestId("history.snackbar.action")).toHaveTextContent("Undo");
+    expect(cards()).toEqual(["history.commentCard:c1", "history.card:p1"]);
+    await waitFor(() => expect(log.hides).toEqual([{ actor: "u2", at: null }]));
+  });
+
+  it("a_hidden_authors_comment_reads_unhide_and_the_tap_unhides_with_history_standing", async () => {
+    // HistoryCommentMenu.md:9, :11.
+    // Hidden from this very History, so the comment still stands in it.
+    const log = hiddenLog();
+    serveHistory(() => page([COMMENT, POST]));
+    server.use(...hiddenHandlers(log));
+    render();
+    await screen.findByTestId("history-list");
+    fireEvent.click(screen.getByTestId(byNode("history.commentCard.menu", "c1")));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
+    await waitFor(() => expect(log.hides).toHaveLength(1));
+    fireEvent.click(screen.getByTestId(byNode("history.commentCard.menu", "c1")));
+    await waitFor(() => expect(screen.getByTestId("history.menuSheet.hide")).toHaveTextContent("Unhide @tobias"));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
+    expect(await screen.findByTestId("history.snackbar.message")).toHaveTextContent("@tobias is unhidden.");
+    await waitFor(() => expect(log.unhides).toEqual(["u2"]));
+    expect(cards()).toEqual(["history.commentCard:c1", "history.card:p1"]);
+  });
+
+  it("a_failed_hide_on_a_comment_reverts_and_its_card_says_so_with_retry", async () => {
+    // CommentMenu.md:15 on History's comment card.
+    const log = hiddenLog();
+    serveHistory(() => page([COMMENT, POST]));
+    server.use(...hiddenHandlers(log, { failHide: true }));
+    render();
+    await screen.findByTestId("history-list");
+    fireEvent.click(screen.getByTestId(byNode("history.commentCard.menu", "c1")));
+    fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
+    const line = await screen.findByTestId("history-comment-c1-row-line");
+    expect(line).toHaveTextContent("That didn't go through.");
+    expect(screen.getByTestId("history-comment-c1-row-line-retry")).toHaveTextContent("Retry");
   });
 });
 
@@ -1039,7 +1116,7 @@ describe("History — the post menu (HistoryPostMenu.md, round 36 + 41)", () => 
       .map((row) => [row.getAttribute("data-testid"), row.textContent]);
   }
 
-  it("the_reader_menu_reads_save_cite_hide_license_report_as_history_menuSheet_rows", async () => {
+  it("the_reader_menu_reads_save_cite_hide_cited_by_opinions_license_report_as_history_menuSheet_rows", async () => {
     // HistoryPostMenu.md:3 (the sheet over History), :5 (the rows and their order).
     serveHistory(() => page([COMMENT, POST]));
     render();
@@ -1049,9 +1126,42 @@ describe("History — the post menu (HistoryPostMenu.md, round 36 + 41)", () => 
       ["history.menuSheet.save", "Save"],
       ["history.menuSheet.cite", "Cite in a new post"],
       ["history.menuSheet.hide", "Hide @ada"],
+      ["history.menuSheet.citedBy", "Cited by"],
+      ["history.menuSheet.opinions", "Opinions on this"],
       ["history.menuSheet.license", "License terms"],
       ["history.menuSheet.report", "Report"],
     ]);
+  });
+
+  it("your_own_post_menu_reads_save_cite_edit_sensitive_remove_cited_by_opinions_license", async () => {
+    // HistoryPostMenuOwn.md:5.
+    const mine: Entry = { node: postNode("p5", "Mine", 1, author("me", "me", "Me")), firstSeenAt: hoursAgo(0.5) };
+    serveHistory(() => page([mine, POST]));
+    render();
+    await screen.findByTestId("history-list");
+    fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p5")));
+    expect(rows().map(([node]) => node)).toEqual([
+      "history.menuSheet.save",
+      "history.menuSheet.cite",
+      "history.menuSheet.edit",
+      "history.menuSheet.markSensitive",
+      "history.menuSheet.remove",
+      "history.menuSheet.citedBy",
+      "history.menuSheet.opinions",
+      "history.menuSheet.license",
+    ]);
+  });
+
+  it("opinions_on_this_raises_the_posts_opinions_sheet_over_history", async () => {
+    // HistoryPostMenu.md:5 with PostOpinions.md:5 — over the host, the list beneath.
+    serveHistory(() => page([COMMENT, POST]));
+    render();
+    await screen.findByTestId("history-list");
+    fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
+    fireEvent.click(screen.getByTestId("history.menuSheet.opinions"));
+    const sheet = (await screen.findByTestId("postDetail.opinionsSheet")) as HTMLDialogElement;
+    expect(sheet.open).toBe(true);
+    expect(screen.getByTestId("history-list")).toBeInTheDocument();
   });
 
   it("the_hide_row_reads_unhide_with_the_handle_once_the_author_is_hidden_keeping_its_node", async () => {
@@ -1083,7 +1193,7 @@ describe("History — the post menu (HistoryPostMenu.md, round 36 + 41)", () => 
     fireEvent.click(screen.getByTestId("history.menuSheet.hide"));
     expect(screen.queryByRole("alertdialog")).toBeNull();
     await waitFor(() =>
-      expect((screen.getByTestId("history.menuSheet") as HTMLDialogElement).open).toBe(false),
+      expect((screen.getByTestId("history-menu-sheet") as HTMLDialogElement).open).toBe(false),
     );
     expect(screen.getByTestId("history.snackbar.message")).toHaveTextContent(
       "@ada is unhidden.",

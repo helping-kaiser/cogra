@@ -16,7 +16,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -33,9 +40,15 @@ import com.cogra.domain.hidden.HiddenPerson
 import com.cogra.domain.hidden.HiddenSet
 import com.cogra.domain.history.HistoryCard
 import com.cogra.domain.history.HistoryEntry
+import com.cogra.domain.references.CitingArtifact
+import com.cogra.domain.references.CitingKind
+import com.cogra.domain.references.CitingView
 import com.cogra.domain.saved.SavedCard
 import com.cogra.domain.saved.SavedEntry
 import com.cogra.domain.saved.SavedWrites
+import com.cogra.domain.stance.HeldOpinion
+import com.cogra.domain.stance.OpinionHolder
+import com.cogra.domain.stance.StancePair
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.RecordingHiddenRepository
 import com.cogra.domain.testing.RecordingSavedRepository
@@ -62,6 +75,10 @@ class PostMenuHostsTest {
     @get:Rule
     val compose = createComposeRule()
 
+    private companion object {
+        val LEGACY_OWN_ROW = Regex("_(edit|sensitive|remove)$")
+    }
+
     private val ada = ActorRef("ada-id", "ada")
     private val adaHiddenAt: Instant = Instant.parse("2026-11-01T09:00:00Z")
     private val byAda: PostView = testPost("p1", author = ada)
@@ -84,14 +101,53 @@ class PostMenuHostsTest {
 
     private fun writes() = SavedWrites(RecordingSavedRepository(), tokens, CoroutineScope(Dispatchers.Unconfined))
 
-    private val noDoors = CardDoors(onOpenPost = {}, onOpenComment = { _, _, _ -> }, onOpenActor = {}, onOpenTopic = {})
+    /** The posts a Cited by row opened, and the nodes whose Cited by was read. */
+    private val opened = mutableListOf<String>()
+    private val asked = mutableListOf<String>()
+
+    /** The nodes whose opinions were read, and the people a row opened. */
+    private val opinionsFor = mutableListOf<String>()
+    private val people = mutableListOf<String>()
+    private val miraHolds = HeldOpinion(
+        holderId = "a-mira",
+        holder = OpinionHolder("mira-id", "mira", "Mira Voss", null, redacted = false),
+        pair = StancePair(0.9, 0.25),
+        severed = false,
+    )
+
+    /** What cites a post: one comment, on the post it answers (CitedBy.md:15). */
+    private val reads = InboundReads(
+        citedBy = { id ->
+            asked += id
+            Outcome.Success(
+                listOf(
+                    CitingArtifact(
+                        key = "sol c1",
+                        target = CitingView(CitingKind.COMMENT, "The wax-stick ones", opensPost = "p9"),
+                        pair = StancePair(0.4, 0.2),
+                    ),
+                ),
+            )
+        },
+        opinionsOn = { id ->
+            opinionsFor += id
+            Outcome.Success(listOf(miraHolds))
+        },
+    )
+
+    private val noDoors = CardDoors(
+        onOpenPost = { opened += it },
+        onOpenComment = { _, _, _ -> },
+        onOpenActor = {},
+        onOpenTopic = {},
+    )
 
     private val host = SnackbarHostState()
 
     private fun renderHistory(adaHidden: Boolean, viewerId: String = "reader-id") {
         val store = hiddenSet(adaHidden)
         compose.setContent {
-            CompositionLocalProvider(LocalSnackbarHostState provides host) {
+            CompositionLocalProvider(LocalSnackbarHostState provides host, LocalInboundReads provides reads) {
                 HistoryScreen(
                     state = HistoryUiState(
                         entries = listOf(HistoryEntry(HistoryCard.Post(byAda), Instant.now())),
@@ -108,10 +164,10 @@ class PostMenuHostsTest {
         }
     }
 
-    private fun renderSaved(adaHidden: Boolean) {
+    private fun renderSaved(adaHidden: Boolean, viewerId: String = "reader-id") {
         val store = hiddenSet(adaHidden)
         compose.setContent {
-            CompositionLocalProvider(LocalSnackbarHostState provides host) {
+            CompositionLocalProvider(LocalSnackbarHostState provides host, LocalInboundReads provides reads) {
                 Column {
                     SavedScreen(
                         state = SavedUiState(
@@ -128,7 +184,7 @@ class PostMenuHostsTest {
                         onBack = {},
                         doors = noDoors,
                         hidden = store,
-                        hooks = CardHooks(viewerId = "reader-id"),
+                        hooks = CardHooks(viewerId = viewerId),
                     )
                     CograSnackbarHost(host)
                 }
@@ -142,7 +198,11 @@ class PostMenuHostsTest {
         val writes = writes()
         compose.setContent {
             val saved = rememberSavedHost(writes, host, DataNode("profile") / "snackbar", null, store)
-            CompositionLocalProvider(LocalSnackbarHostState provides host, LocalSavedHost provides saved) {
+            CompositionLocalProvider(
+                LocalSnackbarHostState provides host,
+                LocalSavedHost provides saved,
+                LocalInboundReads provides reads,
+            ) {
                 HostedCardsScope(
                     doors = noDoors,
                     routes = HostedCardRoutes(
@@ -166,22 +226,24 @@ class PostMenuHostsTest {
     private fun renderDetail(adaHidden: Boolean, onRequireAccount: (() -> Unit)? = null) {
         val store = hiddenSet(adaHidden)
         compose.setContent {
-            PostDetailScreen(
-                state = PostDetailUiState(loading = false, post = byAda),
-                viewerId = "reader-id",
-                onRefresh = {},
-                onReveal = { _, _ -> },
-                onEdit = {},
-                onOpenActor = {},
-                onOpenPost = {},
-                onOpenTopic = {},
-                onReference = {},
-                onShare = {},
-                onBack = {},
-                saved = writes(),
-                hidden = store,
-                onRequireAccount = onRequireAccount,
-            )
+            CompositionLocalProvider(LocalInboundReads provides reads) {
+                PostDetailScreen(
+                    state = PostDetailUiState(loading = false, post = byAda),
+                    viewerId = "reader-id",
+                    onRefresh = {},
+                    onReveal = { _, _ -> },
+                    onEdit = {},
+                    onOpenActor = { people += it },
+                    onOpenPost = { opened += it },
+                    onOpenTopic = {},
+                    onReference = {},
+                    onShare = {},
+                    onBack = {},
+                    saved = writes(),
+                    hidden = store,
+                    onRequireAccount = onRequireAccount,
+                )
+            }
         }
     }
 
@@ -205,6 +267,8 @@ class PostMenuHostsTest {
             "history.menuSheet.save",
             "history.menuSheet.cite",
             "history.menuSheet.hide",
+            "history.menuSheet.citedBy",
+            "history.menuSheet.opinions",
             "history.menuSheet.license",
             "history.menuSheet.report",
         )
@@ -222,6 +286,8 @@ class PostMenuHostsTest {
             "history.menuSheet.edit",
             "history.menuSheet.markSensitive",
             "history.menuSheet.remove",
+            "history.menuSheet.citedBy",
+            "history.menuSheet.opinions",
             "history.menuSheet.license",
         )
         compose.onNodeWithTag("history.menuSheet.hide").assertDoesNotExist()
@@ -274,7 +340,10 @@ class PostMenuHostsTest {
 
     // -- Saved --
 
-    /** SavedPostMenu.md:3, :5 — `saved.menuSheet`: Unsave, Cite, Hide, License terms, Report. */
+    /**
+     * SavedPostMenu.md:3, :5 — `saved.menuSheet`: Unsave, Cite, Hide, Cited by,
+     * Opinions on this, License terms, Report.
+     */
     @Test
     fun savedsPostMenuRaisesItsSheetWithUnsaveFirst() {
         renderSaved(adaHidden = false)
@@ -285,9 +354,52 @@ class PostMenuHostsTest {
             "saved.menuSheet.save",
             "saved.menuSheet.cite",
             "saved.menuSheet.hide",
+            "saved.menuSheet.citedBy",
+            "saved.menuSheet.opinions",
             "saved.menuSheet.license",
             "saved.menuSheet.report",
         )
+    }
+
+    /**
+     * SavedPostMenuOwn.md:5, :7-11 — the reader's own post: Unsave, Cite, Edit,
+     * Mark as sensitive, Remove, Cited by, Opinions, License under the registered
+     * `saved.menuSheet` nodes, no Hide, no Report, and no per-post legacy tag on
+     * the own rows. A post by someone else carries none of the three.
+     */
+    @Test
+    fun savedsOwnPostMenuRaisesTheOwnRowsUnderItsRegisteredNodes() {
+        renderSaved(adaHidden = false, viewerId = ada.id)
+        compose.onNodeWithTag("saved.card.menu").performClick()
+        assertRowsInOrder(
+            "saved.menuSheet.save",
+            "saved.menuSheet.cite",
+            "saved.menuSheet.edit",
+            "saved.menuSheet.markSensitive",
+            "saved.menuSheet.remove",
+            "saved.menuSheet.citedBy",
+            "saved.menuSheet.opinions",
+            "saved.menuSheet.license",
+        )
+        compose.onNodeWithTag("saved.menuSheet.hide").assertDoesNotExist()
+        compose.onNodeWithTag("saved.menuSheet.report").assertDoesNotExist()
+        compose.onAllNodes(hasLegacyOwnRowTag()).assertCountEquals(0)
+    }
+
+    @Test
+    fun savedsReaderPostMenuCarriesNoOwnRows() {
+        renderSaved(adaHidden = false)
+        compose.onNodeWithTag("saved.card.menu").performClick()
+        compose.onNodeWithTag("saved.menuSheet.edit").assertDoesNotExist()
+        compose.onNodeWithTag("saved.menuSheet.markSensitive").assertDoesNotExist()
+        compose.onNodeWithTag("saved.menuSheet.remove").assertDoesNotExist()
+        compose.onAllNodes(hasLegacyOwnRowTag()).assertCountEquals(0)
+    }
+
+    /** A per-post legacy tag of an own row: `<prefix>_edit`, `<prefix>_sensitive`, `<prefix>_remove`. */
+    private fun hasLegacyOwnRowTag() = SemanticsMatcher("has a legacy own-row test tag") { node ->
+        node.config.getOrNull(SemanticsProperties.TestTag)
+            ?.let { LEGACY_OWN_ROW.containsMatchIn(it) } == true
     }
 
     /** SavedPostMenu.md:19 — a hidden author's post still standing in Saved reads `Unhide @ada`. */
@@ -331,6 +443,8 @@ class PostMenuHostsTest {
             "profile.menuSheet.save",
             "profile.menuSheet.cite",
             "profile.menuSheet.hide",
+            "profile.menuSheet.citedBy",
+            "profile.menuSheet.opinions",
             "profile.menuSheet.license",
             "profile.menuSheet.report",
         )
@@ -348,6 +462,8 @@ class PostMenuHostsTest {
             "profile.menuSheet.edit",
             "profile.menuSheet.markSensitive",
             "profile.menuSheet.remove",
+            "profile.menuSheet.citedBy",
+            "profile.menuSheet.opinions",
             "profile.menuSheet.license",
         )
         compose.onNodeWithTag("profile.menuSheet.hide").assertDoesNotExist()
@@ -427,5 +543,118 @@ class PostMenuHostsTest {
         compose.waitForIdle()
         assertThat(asked).isEqualTo(1)
         assertThat(hiddenRepository.hides).isEmpty()
+    }
+
+    // -- Cited by, on every host (CitedBy.md:3, :5; ReaderPostMenu.md:31, :35) --
+
+    /** Taps [row] in the open menu and asserts what cites the post came up, read for p1. */
+    private fun assertCitedByOpens(row: String) {
+        compose.onNodeWithTag(row).performClick()
+        compose.waitForIdle()
+        assertThat(asked).containsExactly("p1")
+        compose.onNodeWithText("The wax-stick ones").assertExists()
+    }
+
+    /** HistoryPostMenu.md:5 — Cited by stands before License terms and opens over History. */
+    @Test
+    fun historysCitedByRowOpensWhatCitesThePost() {
+        renderHistory(adaHidden = false)
+        compose.onNodeWithTag("history.card.menu").performClick()
+        assertCitedByOpens("history.menuSheet.citedBy")
+        compose.onNodeWithTag("history.card:p1").assertExists()
+    }
+
+    /** SavedPostMenu.md:5 — Cited by opens over Saved. */
+    @Test
+    fun savedsCitedByRowOpensWhatCitesThePost() {
+        renderSaved(adaHidden = false)
+        compose.onNodeWithTag("saved.card.menu").performClick()
+        assertCitedByOpens("saved.menuSheet.citedBy")
+    }
+
+    /** ProfilePostsMenuOwn.md:5 — the own menu carries it too, after Remove. */
+    @Test
+    fun theOwnProfilesCitedByRowOpensWhatCitesThePost() {
+        renderProfilePosts(adaHidden = false, viewerId = ada.id)
+        compose.onNodeWithTag("profile.posts.card.menu").performClick()
+        assertCitedByOpens("profile.menuSheet.citedBy")
+    }
+
+    /**
+     * CitedBy.md:3, :13, :15 — over the detail, the registered sheet; a citing
+     * comment's row opens the thread's post and the sheet goes as it is followed.
+     */
+    @Test
+    fun theDetailsCitedByRowOpensTheRegisteredSheetAndItsRowOpensThePost() {
+        renderDetail(adaHidden = false)
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
+        assertRowsInOrder(
+            "postDetail.menuSheet.hide",
+            "postDetail.menuSheet.citedBy",
+            "postDetail.menuSheet.opinions",
+            "postDetail.menuSheet.license",
+        )
+        assertCitedByOpens("postDetail.menuSheet.citedBy")
+        compose.onNodeWithTag("postDetail.citedBySheet").assertExists()
+        compose.onNodeWithTag("postDetail.citedBySheet.title", useUnmergedTree = true)
+            .assert(hasAnyDescendant(hasText("Cited by")))
+        compose.onNodeWithTag("postDetail.citedBySheet.citation:1").performClick()
+        compose.waitForIdle()
+        assertThat(opened).containsExactly("p9")
+        compose.onNodeWithTag("postDetail.citedBySheet").assertDoesNotExist()
+    }
+
+    /** FeedPostMenu.md:25 — a reading opens for a guest: Cited by never raises the gate. */
+    @Test
+    fun aGuestsCitedByOpensWithoutTheGate() {
+        var gated = 0
+        renderDetail(adaHidden = false, onRequireAccount = { gated++ })
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
+        assertCitedByOpens("postDetail.menuSheet.citedBy")
+        assertThat(gated).isEqualTo(0)
+    }
+
+    // -- Opinions on this, on every host (PostOpinions.md:3, :5; ReaderPostMenu.md:33, :35) --
+
+    /**
+     * PostOpinions.md:3, :17 — over the detail, the registered sheet titled for the
+     * post; a holder's row opens their profile, the detail's own person door
+     * (`Back to the post`), and the sheet goes as it is followed.
+     */
+    @Test
+    fun theDetailsOpinionsRowOpensTheRegisteredSheetAndItsRowOpensThePerson() {
+        renderDetail(adaHidden = false)
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.opinions").performClick()
+        compose.waitForIdle()
+        assertThat(opinionsFor).containsExactly("p1")
+        compose.onNodeWithTag("postDetail.opinionsSheet.title", useUnmergedTree = true)
+            .assert(hasAnyDescendant(hasText("Opinions on this post")))
+        compose.onNodeWithTag("postDetail.opinionsSheet.opinion:mira-id").performClick()
+        compose.waitForIdle()
+        assertThat(people).containsExactly("mira")
+        compose.onNodeWithTag("postDetail.opinionsSheet").assertDoesNotExist()
+    }
+
+    /** HistoryPostMenuOwn.md:5 — the own menu carries it too, and it opens over History. */
+    @Test
+    fun historysOwnOpinionsRowOpensOverHistory() {
+        renderHistory(adaHidden = false, viewerId = ada.id)
+        compose.onNodeWithTag("history.card.menu").performClick()
+        compose.onNodeWithTag("history.menuSheet.opinions").performClick()
+        compose.waitForIdle()
+        assertThat(opinionsFor).containsExactly("p1")
+        compose.onNodeWithText("Mira Voss").assertExists()
+        compose.onNodeWithTag("history.card:p1").assertExists()
+    }
+
+    /** PostOpinions.md:5 — a profile's posts view: the sheet over the profile. */
+    @Test
+    fun aProfilePostsOpinionsRowOpensOverTheProfile() {
+        renderProfilePosts(adaHidden = false)
+        compose.onNodeWithTag("profile.posts.card.menu").performClick()
+        compose.onNodeWithTag("profile.menuSheet.opinions").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Opinions on this post").assertExists()
     }
 }

@@ -1,11 +1,12 @@
-// THE COMMENT'S ROWS (CommentMenu.md:7, CommentMenuOwn.md:3; round 41): Save ·
-// Cite in a new post · Cited by · Opinions on this · License terms · Report on
-// a reader's comment, and the author's own with Edit and Remove joined after
-// Cite — Save · Cite in a new post · Edit · Remove · Cited by · Opinions on
-// this · License terms, no Report row (the own menus' rule). No Hide — hiding
-// names an actor, and its route is the commenter's profile (jakob 2026-09-12).
-// One builder for every comment's ⋮ — the thread's, and the comment feed
-// card's — the way `post-menu.ts` is the post's.
+// THE COMMENT'S ROWS (CommentMenu.md:7, CommentMenuOwn.md:3; round 51): Save ·
+// Cite in a new post · Hide @ada · Cited by · Opinions on this · License terms
+// · Report on someone else's comment, a removed one too — the post menu's
+// slot for Hide (jakob 2026-11-17, seam 355 349-1) — and the author's own with
+// Edit and Remove joined after Cite — Save · Cite in a new post · Edit ·
+// Remove · Cited by · Opinions on this · License terms, no Hide and no Report
+// row (the own menus' rule; CommentMenu.md:9). One builder for every
+// comment's ⋮ — the thread's, and the comment feed card's — the way
+// `post-menu.ts` is the post's.
 //
 // EDIT IS A MENU ROW, NEVER A BUTTON ON THE CARD (jakob on #423, seam 304): the
 // row is the one door to the comment's edit on every host the own comment
@@ -32,6 +33,7 @@ import type { MenuItem } from "./overflow-menu";
 export type CommentMenuRow =
   | "save"
   | "cite"
+  | "hide"
   | "edit"
   | "remove"
   | "citedBy"
@@ -55,6 +57,8 @@ export function commentMenuItems({
   openEdit,
   openRemove,
   openReport,
+  hide,
+  removed = false,
   testIdPrefix,
   rowNode = () => undefined,
 }: {
@@ -97,6 +101,18 @@ export function commentMenuItems({
    * (jakob 2026-09-14, the introduced-but-inert law; `post-menu.ts`'s).
    */
   openReport?: () => void;
+  /**
+   * Someone else's comment: the hide row as it reads now — `Hide @ada`, or
+   * `Unhide @ada` while the author is hidden (`hideRow`, the post menu's one
+   * hide behaviour; CommentMenu.md:11-21). Absent, the row reads `Hide this
+   * account` and stands inert, as the post menu's does.
+   */
+  hide?: { label: string; onSelect: () => void };
+  /**
+   * The comment was removed: the own menu drops Edit and Remove, and stays the
+   * own menu (no Report row) — `openRemove` still names it the author's.
+   */
+  removed?: boolean;
   /** Rows are `<prefix>-save-<id>`, `<prefix>-cite-<id>`, …. */
   testIdPrefix: string;
   /**
@@ -132,9 +148,16 @@ export function commentMenuItems({
   ];
   // EDIT, THEN REMOVE, ARE THE LAST OF THE ACTS, before the two readings —
   // `OWN_POST_MENU`'s place for the pair, at comment scale (`CommentMenuOwn.jsx`).
-  if (own) {
+  // A REMOVED COMMENT HAS NOTHING LEFT TO EDIT OR REMOVE: the author's menu
+  // keeps the rest (ProfileCommentsRemovedMenuOwn.md:5, CommentRemovedMenu.md).
+  if (own && !removed) {
     rows.push(row("edit", "edit", "Edit", openEdit ?? (() => {})), row("remove", "remove", "Remove", openRemove));
   }
+  // HIDE STANDS IN THE POST MENU'S SLOT, after Cite, on someone else's comment
+  // only — a removed one included, the author still being someone to hide
+  // (CommentMenu.md:7, :9; CommentRemovedOtherMenu.md:5). The row keeps its
+  // one node whether it reads Hide or Unhide.
+  if (!own) rows.push(row("hide", "hide", hide?.label ?? "Hide this account", hide?.onSelect ?? (() => {})));
   rows.push(
     // INBOUND BEFORE OPINIONS (`_shared.jsx:397-413`): it sits between the
     // acts and the license because it is a fact about the ARTIFACT, where the
