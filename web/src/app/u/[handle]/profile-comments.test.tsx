@@ -21,7 +21,7 @@ import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { byNode } from "@/test/data-node";
 import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { gqlLink, startMswServer } from "@/test/msw";
-import { answersComment, commentsPage, profileComment } from "@/test/profile-comment";
+import { answersComment, commentsPage, profileComment, settlingComment } from "@/test/profile-comment";
 import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
 import { ProfileScreen } from "./profile-view";
@@ -152,7 +152,7 @@ function servePostsTab() {
             __typename: "User",
             id: variables.id,
             posts: {
-              __typename: "RecordConnection",
+              __typename: "PostConnection",
               edges: [],
               pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
             },
@@ -590,6 +590,82 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     await waitFor(() => expect(reads).toHaveLength(2));
     expect(screen.getByTestId("profile-comments")).toBeInTheDocument();
     expect(chronicle).toHaveLength(1);
+    scroller.remove();
+  });
+});
+
+// A STILL-SETTLING COMMENT ON A PROFILE (design rounds 61/62;
+// ProfileComments.md:5, ProfileCommentsOwn.md:7; seam 395 item 2): it heads
+// the newest-first list on every profile, own and anyone's, wearing Still
+// settling as the comment card does wherever it is still settling.
+describe("ProfileComments — a still-settling comment heads the list (rounds 61/62)", () => {
+  function expectSettling(id: string) {
+    expect(screen.getByTestId(`profile-comment-${id}-pending`)).toHaveTextContent(/^Still settling$/);
+    // Its score slot bare, as the comment card's always is while it settles.
+    expect(screen.queryByTestId(byNode("profile.comments.commentCard.actionRow.score.value", id))).toBeNull();
+  }
+
+  it("a_settling_comment_heads_anothers_profile_wearing_still_settling", async () => {
+    // ProfileComments.md:5.
+    serveAda();
+    serveChronicle();
+    serveComments({
+      "": { comments: [settlingComment("c3"), profileComment("c2"), profileComment("c1")], next: null },
+    });
+    renderWithProviders(<ProfileScreen handle="ada" />, { store: signedIn() });
+    await openCommentsTab();
+    expect(cardIds()).toEqual(["c3", "c2", "c1"]);
+    expectSettling("c3");
+    expect(screen.queryByTestId("profile-comment-c2-pending")).toBeNull();
+  });
+
+  it("a_settling_comment_heads_your_own_profile_wearing_still_settling", async () => {
+    // ProfileCommentsOwn.md:7 — a settling reply to a comment, too.
+    serveOwn();
+    serveChronicle();
+    serveComments({
+      "": {
+        comments: [
+          settlingComment("c3", { target: answersComment("c0", "sol") }),
+          settlingComment("c2"),
+          profileComment("c1"),
+        ],
+        next: null,
+      },
+    });
+    renderWithProviders(<ProfileScreen handle={null} />, { store: signedIn("u-ada") });
+    await openCommentsTab();
+    expect(cardIds()).toEqual(["c3", "c2", "c1"]);
+    expectSettling("c3");
+    expectSettling("c2");
+    expect(screen.getByTestId(byNode("profile.comments.commentCard.target", "c3"))).toHaveTextContent(
+      /^On @sol's comment$/,
+    );
+    expect(screen.queryByTestId("profile-comment-c1-pending")).toBeNull();
+  });
+
+  it("paging_across_settling_and_landed_comments_has_no_duplicate_and_no_gap", async () => {
+    serveAda();
+    serveChronicle();
+    const reads = serveComments({
+      "": { comments: [settlingComment("c4"), profileComment("c3")], next: "k1" },
+      // c3 again: a page that repeats a card already drawn adds no second one.
+      k1: { comments: [profileComment("c3"), profileComment("c2"), profileComment("c1")], next: null },
+    });
+    const scroller = document.createElement("div");
+    document.body.append(scroller);
+    renderWithProviders(
+      <ScrollHostProvider value={{ current: scroller }}>
+        <ProfileScreen handle="ada" />
+      </ScrollHostProvider>,
+      { store: signedIn() },
+    );
+    await openCommentsTab();
+    const { intersect } = await import("@/test/media-env");
+    act(() => intersect(true));
+    await waitFor(() => expect(reads.at(-1)).toEqual({ id: "u-ada", after: "k1" }));
+    await waitFor(() => expect(cardIds()).toEqual(["c4", "c3", "c2", "c1"]));
+    expectSettling("c4");
     scroller.remove();
   });
 });

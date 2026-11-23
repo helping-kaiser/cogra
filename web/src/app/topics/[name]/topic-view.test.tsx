@@ -290,7 +290,7 @@ describe("TopicView", () => {
     renderWithProviders(<TopicView name="rust" />, { store: guestStore(), writeSigner: fakeWriteSigner() });
     const anchor = await screen.findByTestId("tagPage.actionRow.stance.anchor");
     await within(anchor).findByTestId("topic-affinity-words");
-    expect(anchor).toHaveAccessibleName("@genesismod's stance on #rust");
+    expect(anchor).toHaveAccessibleName("@genesismod's opinion on #rust");
   });
 
   // TagPageEmpty.md:9 — "ALWAYS the empty tag page carries the topic's own
