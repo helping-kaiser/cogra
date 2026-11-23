@@ -478,24 +478,54 @@ function JoinPrivacyNotice() {
    copy, so it keeps its own key (ruling 39) and the copies add only the
    control's `pending` to the registry. `draw` is handed the copy's stance
    props. The anatomy is `PadPending`'s and `PadPendingReview`'s on the feed;
-   nothing else about the host changes. */
+   nothing else about the host changes. `hole` names the copies' display
+   holes, so a host whose card a second chip replaces (`commentPick` under
+   `COMMENT_MEDIA_VALS`) hides that card's copies alone. */
 const PICK_CHIP = { pick: { editor: "enum", options: ["none", "key", "review"], default: "none" } };
 const PICK_VALS = `pickNone: this.props.pick === "none" ? "contents" : "none", pickKey: this.props.pick === "key" ? "contents" : "none", pickReview: this.props.pick === "review" ? "contents" : "none"`;
 const KEPT_PICK = { pDirected: 0.1, pInterest: 0.1 };
-function PickCopies({ draw }) {
+function PickCopies({ draw, hole = "pick" }) {
   return (
     <>
-      <div style={{ display: "{{pickNone}}" }} data-node-chip="pick" data-node-key="none">
+      <div style={{ display: `{{${hole}None}}` }} data-node-chip="pick" data-node-key="none">
         {draw({})}
       </div>
-      <div style={{ display: "{{pickKey}}" }} data-node-chip="pick" data-node-key="key">
+      <div style={{ display: `{{${hole}Key}}` }} data-node-chip="pick" data-node-key="key">
         {draw({ stancePendingPick: KEPT_PICK })}
       </div>
-      <div style={{ display: "{{pickReview}}" }} data-node-chip="pick" data-node-key="review">
+      <div style={{ display: `{{${hole}Review}}` }} data-node-chip="pick" data-node-key="review">
         {draw({ stancePendingPick: KEPT_PICK, stancePendingReview: true })}
       </div>
     </>
   );
+}
+
+/* A COMMENT'S MEDIA ON HISTORY AND SAVED (round 65, seam 424; backlog 305
+   (b)). The `comment` chip draws @ada's tag-page comment — `TagPage`'s and
+   `ProfileComments`' media comment, `REPLY_MEDIA_*` — as the feed's card in
+   @tobias's place, once with its pictures and once with its clip, and the
+   @tobias card's `pick` copies stand only at `none`. The card sits directly
+   in each copy and keeps its own key (ruling 39): its id repeats under this
+   one chip only, so the registry gains `commentCard.media` and its parts.
+   It answers @sol's post, as on the tag page; its figure is the place's. */
+const COMMENT_MEDIA_CHIP = { comment: { editor: "enum", options: ["none", "pictures", "clip"], default: "none" } };
+const COMMENT_MEDIA_VALS = `commentPickNone: this.props.comment === "none" && this.props.pick === "none" ? "contents" : "none", commentPickKey: this.props.comment === "none" && this.props.pick === "key" ? "contents" : "none", commentPickReview: this.props.comment === "none" && this.props.pick === "review" ? "contents" : "none", commentPictures: this.props.comment === "pictures" ? "contents" : "none", commentClip: this.props.comment === "clip" ? "contents" : "none"`;
+function CommentMediaCopies({ score }) {
+  return [["pictures", "commentPictures", REPLY_MEDIA_PICTURES], ["clip", "commentClip", REPLY_MEDIA_CLIP]].map(([value, hole, media]) => (
+    <div key={value} style={{ display: `{{${hole}}}` }} data-node-chip="comment" data-node-key={value}>
+      <CommentFeedCard
+        id={ADA_TAGGED_COMMENT_ID}
+        author={ADA}
+        content="Low tide is kinder to the rubbings than noon ever was."
+        timestamp="4d"
+        parent={SOL_POST}
+        media={media}
+        {...TAGGED_COMMENT_LINE}
+        score={score}
+        node="commentCard"
+      />
+    </div>
+  ));
 }
 
 function FeedList({ children }) {
