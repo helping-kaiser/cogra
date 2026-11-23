@@ -146,7 +146,7 @@
    the frame's `soundDisc` and the `dots` register by the thread's names.
 
    A GUEST'S TAG PAGE (round 62, seam 404.3) is the `reader` chip's `guest`:
-   the topic's wide anchor reads `@genesismod's opinion` beside the hollow
+   the topic's wide anchor reads `@genesis_mod's opinion` beside the hollow
    face (`READER_CHIP`, `StanceControl`'s `vantage`), the rest as drawn. */
 
 /* THE FULL NAME (round 63; jakob 2026-11-23, point 3 (b): "only on the tags
@@ -163,7 +163,7 @@
    point 7 "build it"): on the `reader` chip's `guest` the view holds one
    opinion on the page — @tobias's post, the face the member's fixture draws —
    and none on the topic, @sol's post or @ada's comment, which wear the hollow
-   face; every anchor is spoken `@genesismod's opinion on …` (point 8 (a)). */
+   face; every anchor is spoken `@genesis_mod's opinion on …` (point 8 (a)). */
 const LONG_NAME = "salt_maps_of_the_coast_road_and_the_third_headland_light_and_the_third_headland_light_and_the_third_headland_light_and_the_third";
 
 export const NODE = "tagPage";

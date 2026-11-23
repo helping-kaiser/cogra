@@ -5299,10 +5299,12 @@ const AFFINITY_AXES = {
 /* A GUEST'S BORROWED VIEW ON THE WIDE ANCHOR (round 62, seam 404.3): the
    `reader` chip a page draws a guest with, `ReplyEntry`'s grammar. Its `guest`
    names the borrowed view in the topic's or the person's wide anchor —
-   `@genesismod's opinion` (TagPage.md, ProfileOther.md), the handle cut
+   `@genesis_mod's opinion` (TagPage.md, ProfileOther.md), the handle cut
    first — through `StanceControl`'s `vantageHoles`, so the anchor's paths
-   stay one; the faces stay as drawn (the hollow face where no stance is). */
-const GUEST_VANTAGE = "genesismod";
+   stay one; the faces stay as drawn (the hollow face where no stance is).
+   One handle for the genesis moderator's view on every guest board, the
+   bare feed's band included (jakob 2026-11-23, B2). */
+const GUEST_VANTAGE = "genesis_mod";
 const READER_CHIP = { reader: { editor: "enum", options: ["member", "guest"], default: "member" } };
 /* THE BORROWED VIEW'S OWN OPINIONS (round 63; jakob 2026-11-23, point 7
    "build it"): on a guest's page every face wears what the borrowed view

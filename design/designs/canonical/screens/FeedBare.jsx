@@ -3,12 +3,14 @@
    too, with `Main`'s dead-link snackbar (jakob 2026-10-02). An applicant who
    deletes their account lands here signed out, and one snackbar answers on
    arrival: `Your account is deleted.` (jakob 2026-10-05; `DeleteAccount`'s
-   applicant case). */
+   applicant case). The view is `@genesis_mod`, the one handle every guest
+   board names it by (`GUEST_VANTAGE`; jakob 2026-11-23, B2); its display
+   name is the tree's `Genesis Moderator` (ExploreSearch.md). */
 export function Screen() {
   return (
     <>
       <CograBand bell={false} trailing={<FeedFilter />}>
-        <BorrowedViewBand handle="noa" displayName="Noa Lindgren" actionLabel="Sign in or join" />
+        <BorrowedViewBand handle={GUEST_VANTAGE} displayName="Genesis Moderator" actionLabel="Sign in or join" />
         <ApkLine />
       </CograBand>
       <FeedList>
@@ -17,9 +19,9 @@ export function Screen() {
             and pair the member's feed draws there (`Feed`) — and none on
             @tobias's, which wears the hollow face. Read-only: a tap raises
             the guest gate. Each anchor is spoken as the band's view's
-            opinion, `@noa's opinion on this post` (point 8 (a)). */}
-        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} signedIn={false} stanceVantage="noa" />
-        <PostCard {...TOBIAS_POST} signedIn={false} stanceVantage="noa" />
+            opinion, `@genesis_mod's opinion on this post` (point 8 (a)). */}
+        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} signedIn={false} stanceVantage={GUEST_VANTAGE} />
+        <PostCard {...TOBIAS_POST} signedIn={false} stanceVantage={GUEST_VANTAGE} />
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>
