@@ -189,8 +189,9 @@ author component of every act identifier CoGra stores.
 
 - *Server.* Where the key ↔ address rule lives becomes explicit: kept
   as an admission rule at the relay or the host, which needs no case,
-  declared as a case, or dropped (*open*). If the network's address is not a function of the
-  Ed25519 key — an address on the realization, for instance — then
+  declared as a case, or dropped (*open*). If the network's address
+  is not a function of the Ed25519 key — an address on the
+  realization, for instance — then
   `address_of`, the ceremony's check, the uniqueness pair and every
   identifier carrying an address change together, and the accounts
   and device keys CoGra holds need a migration (*open*).
@@ -283,8 +284,9 @@ API for the content projection, the host for the dependency
 projection (``def:graph:requested-publication-intent``); which value
 an author signs for the dependency projection is unanswered. The text
 prescribes no form or place for a statement that a realization claims
-no handshake edition. Second-device approval and envelope verification may change with the
-edition: [Q33](../open-questions.md#q33--cross-device-handshake-continuation),
+no handshake edition. Second-device approval and envelope
+verification may change with the edition:
+[Q33](../open-questions.md#q33--cross-device-handshake-continuation),
 [Q54](../open-questions.md#q54--semantic-verification-of-the-payload-envelope-on-clients).
 
 ### 3.3 The published record and the epoch package
@@ -691,8 +693,8 @@ Nothing here builds Layer 1 into the stand-in.
       this document and [open-questions.md](../open-questions.md).
 - [ ] Register the interface document's anchor set and hash with the
       L1 team.
-- [ ] The L1 team announced v0.37.0, a release that moves and remints labels on
-      a published map; re-derive
+- [ ] The L1 team announced v0.37.0, a release that moves and remints
+      labels on a published map; re-derive
       [layer1-interface.md](../primitive/layer1-interface.md) against
       it when the tag arrives.
 - [ ] Make the GraphQL schema and the bootstrap generic over
