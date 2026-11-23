@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { fakeClampLayout } from "@/test/fake-clamp-layout";
 import { expectLineYieldsHandle, LONG_HANDLE } from "@/test/names";
-import { answersComment, profileComment } from "@/test/profile-comment";
+import { answersComment, answersPost, profileComment } from "@/test/profile-comment";
 import { renderWithProviders } from "@/test/providers";
 import { expectWrapsLongWords } from "@/test/written";
 import { CommentFeedCard, type CommentFeedView } from "./comment-feed-card";
@@ -118,6 +118,66 @@ describe("CommentFeedCard's media", () => {
     expect(frame.style.aspectRatio).toBe("1 / 1");
     expect(frame.style.maxHeight).toBe("");
     expect(frame.style.maxWidth).toBe("");
+  });
+});
+
+// THE POINTER DOOR (jakob 2026-11-23, seams 405 and 417: "the one line "On
+// <post name>..:" should just open the corresponding post not the comment
+// section of it"; "a reply's pointer opens the thread at the comment it
+// names"). FeedKinds.md:27, History.md:51, Saved.md:29, ProfileComments.md:45,
+// ProfileCommentsOwn.md:15, TagPage.md:23 — in both shapes, under the host's
+// registered `target` name, as a link of its own a keyboard and a screen
+// reader meet by its `On …` name.
+describe("CommentFeedCard's pointer door", () => {
+  beforeEach(() => router.push.mockClear());
+
+  function pointer(shape: "thread" | "line", over: Record<string, unknown> = {}) {
+    const comment = profileComment("c1", over) as unknown as CommentFeedView;
+    renderWithProviders(
+      <CommentFeedCard
+        comment={comment}
+        shape={shape}
+        from="u:sol"
+        testId="card"
+        node={{ path: "profile.comments.commentCard", key: "c1" }}
+        onNotify={() => {}}
+        onLinkCopied={() => {}}
+      />,
+    );
+    return screen.getByTestId("profile.comments.commentCard.target");
+  }
+
+  for (const shape of ["line", "thread"] as const) {
+    it(`opens the post itself, its comment section closed, from a pointer naming a post (${shape} shape)`, () => {
+      const door = pointer(shape);
+      expect(door.tagName).toBe("A");
+      expect(door).toHaveAttribute("href", "/posts/p1?from=u%3Asol");
+      expect(door.parentElement?.closest("a")).toBeNull();
+      expect(screen.getByRole("link", { name: "On “The long way home” — @ada" })).toBe(door);
+    });
+
+    it(`opens the thread at the named comment from a reply's pointer (${shape} shape)`, () => {
+      const door = pointer(shape, { target: answersComment("c0", "sol") });
+      expect(door).toHaveAttribute("href", "/posts/p1?comment=c0&from=u%3Asol");
+      expect(screen.getByRole("link", { name: "On @sol's comment" })).toBe(door);
+    });
+
+    it(`keeps a removed post's pointer a door to the post, its detail showing the mark (${shape} shape)`, () => {
+      const door = pointer(shape, {
+        target: { ...answersPost("p1", "The long way home"), removal: { __typename: "Removal", at: "2026-11-01T00:00:00Z", by: "AUTHOR" } },
+      });
+      expect(door).toHaveAttribute("href", "/posts/p1?from=u%3Asol");
+      expect(door).toHaveAccessibleName("On @ada's removed post");
+    });
+
+    it(`never opens the card's own door from the pointer (${shape} shape)`, () => {
+      fireEvent.click(pointer(shape));
+      expect(router.push).not.toHaveBeenCalled();
+    });
+  }
+
+  it("gives the line shape's pointer its grown hit target (CommentCard.jsx: cg-hit)", () => {
+    expect(pointer("line")).toHaveClass("cg-hit");
   });
 });
 
