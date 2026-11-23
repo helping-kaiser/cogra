@@ -13,9 +13,10 @@ act-ownership refoundation (authored acts, the admission handshake, the
 authoritative act order) and the **Edition 5** refoundation of standing as
 one conserved allocation operator. This reference draws two scopes from it:
 
-- **The closure surface** — the binding material only: kernel record, the
-  admission rules, closure quantities, the two straddlers, and the shared
-  mathematics. Terminal read-sites are *named* in its boundary ledger
+- **The closure surface** — the closure material (kernel record, admission
+  rules, closure quantities, the two straddlers, shared mathematics), with
+  the courtesy and oracle statements it touches marked as such (see
+  *Material classes* below). Terminal read-sites are *named* in its boundary ledger
   (`tbl:symbols:boundary`) but their mechanisms are not specified there.
   Cited below by anchor label (`def:…`, `post:…`, `lem:…`, `rem:…`, `ax:…`,
   `subsec:…`).
@@ -263,9 +264,10 @@ applicable operator bound and its proof are published; otherwise the
 realization publishes a statement identifying why its rules provide no
 such accrual, without requiring proof of a zero bound. These are public
 audit evidence and not additional computational inputs to the network.
-External provenance publication is a courtesy audit standard; under a
-declared verifiable-provenance case, pinned proof objects instead enter
-the oracle check (`rem:comparator:auditability`, §13.3).
+
+Under `rem:comparator:auditability`, external provenance publication is a
+courtesy audit standard; under a declared verifiable-provenance case,
+pinned proof objects instead enter the oracle check (§13.3).
 
 R1–R11 name the burn-primitive requirements and M1–M5 the marker-bound
 settlement conditions (§1.2). The safety-threshold premises are X1–X9
@@ -943,9 +945,7 @@ Stated independently of any mechanism that achieves them.
   `post:epoch:final-act-sequence-write-rule`; otherwise no member of that
   proposed set becomes a Layer-1 record. Misbehavior at the boundary is
   *evidence, not prevention* (`post:graph:boundary-accountability`).
-  Presenting a rejected set's verdict to the party it measures is the
-  courtesy issuance standard (`post:deployment:verdict-issuance`
-  *(courtesy)*, §13.2). The boundary timestamp is a host
+  The boundary timestamp is a host
   assertion: the closure cause and the asserted timestamp are checkable for
   mutual consistency with the published duration bounds, with no obligation
   to anchor the timestamp to an external clock.
@@ -4378,8 +4378,9 @@ what the record binds are closure:
 
 ### 13.1 Operator duties
 
-Three postulates bind the deployment's operator; each condition below is
-one published duty.
+Three postulates state the deployment's operator duties; each condition
+below is one published duty. Conditions marked *(courtesy)* bind only a
+realization that claims that standard and edition; the rest are closure.
 
 **Calibration declarations (`post:deployment:calibration-declarations`).**
 Before an edition takes effect, the deployment publishes these declarations
