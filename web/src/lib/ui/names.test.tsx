@@ -121,4 +121,38 @@ describe("nameInText — text that wraps", () => {
   it("renders as an element", () => {
     expect(units(mount(<NameInText text={`${H} is hidden.`} />))).toHaveLength(1);
   });
+
+  // A TAG IS THE SAME ONE UNIT (ActorChip.jsx `nameInText`, round 63; jakob
+  // 2026-11-23: "everywhere the tag is one-line at most").
+  describe("a #tag", () => {
+    /** The atom's longest legal name, hyphenated (hashtag.md §1: 128 characters). */
+    const LONG = `#${"salt-maps-of-the-coast-road-".repeat(5).slice(0, 127)}s`;
+
+    it("is one no-break unit that end-cuts past a full line, as a handle is", () => {
+      const host = mount(nameInText(`Removed ${LONG} from the post`));
+      const [unit] = units(host);
+      expect(unit).toHaveClass("inline-flex", "max-w-full", "whitespace-nowrap", "align-top");
+      const [name] = [...unit.children] as HTMLElement[];
+      expect(name.textContent).toBe(LONG);
+      expect(name).toHaveClass("min-w-0", "overflow-hidden", "text-ellipsis");
+      expect(host).toHaveTextContent(`Removed ${LONG} from the post`);
+    });
+
+    // A name may hold dots, so a dot that ends it is the sentence's.
+    it("lets a trailing dot ride as punctuation, keeping the dots inside the name", () => {
+      const [unit] = units(mount(nameInText("Tagged #salt.maps.")));
+      const [name, tail] = [...unit.children] as HTMLElement[];
+      expect(name.textContent).toBe("#salt.maps");
+      expect(tail.textContent).toBe(".");
+    });
+
+    it("stands beside a handle as its own unit", () => {
+      const found = units(mount(nameInText(`${H} tagged #saltmaps, twice`)));
+      expect(found.map((unit) => unit.textContent)).toEqual([H, "#saltmaps,"]);
+    });
+
+    it.each([["C# and F#"], ["&#38; is an entity"], ["## heading"]])("does not take %j for a tag", (text) => {
+      expect(nameInText(text)).toBe(text);
+    });
+  });
 });
