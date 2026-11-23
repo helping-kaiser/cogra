@@ -463,10 +463,16 @@ a read for them and the clients a surface; if it does not, a deferral
 is visible to CoGra only as an act that does not land, and the
 staged-write GC is what ends the wait.
 
-**Open.** [Q66](../open-questions.md#q66--issuing-a-deferrals-verdict-to-its-author);
-asked of the L1 team (2026-11-23): whether the network's host claims
-the issuance standard and by which channel an author's application
-would receive a verdict. Whether a stamp-wall refusal reads apart from
+**Open.** [Q66](../open-questions.md#q66--issuing-a-deferrals-verdict-to-its-author).
+Where a realization claims the standard, issuance presents existing
+computed-and-included comparison data whole to its rightful holder and
+promises neither a computation nor a delivery hop; an adopter may
+present a rejected set's comparison privately to the party measured
+(``post:deployment:verdict-issuance``). A wait on an unsatisfied
+dependency is not a computed comparison. Through which channel an
+application would receive a verdict is unanswered, and whether the
+network's host claims the standard is undecided (2026-11-23). Whether
+a stamp-wall refusal reads apart from
 solvency: [Q58](../open-questions.md#q58--the-write-rules-second-gate-on-the-surface).
 
 ### 3.6 Money
@@ -651,6 +657,8 @@ response it publishes:
 [Q61](../open-questions.md#q61--the-deployments-marker-policy-and-finality-breach-response);
 whether it declares an author-authority case:
 [Q68](../open-questions.md#q68--key-authority-and-the-actor-address-at-the-swap).
+The network has no deployment of record yet; the L1 team will write
+when its case has a text (2026-11-23).
 
 ### 3.11 Batches
 
@@ -679,9 +687,14 @@ Nothing here builds Layer 1 into the stand-in.
 
 - [ ] Answer the CoGra-side questions: Q68, Q69, Q70, Q71, Q72 and the
       swap-time Q56, Q58, Q61.
-- [ ] Collect the L1 team's answers (2026-11-23) and fold them into
-      [layer1-interface.md](../primitive/layer1-interface.md) and this
-      document.
+- [x] Collect the L1 team's answers (2026-11-23) and fold them into
+      this document and [open-questions.md](../open-questions.md).
+- [ ] Register the interface document's anchor set and hash with the
+      L1 team.
+- [ ] The L1 team announced v0.37.0, a release that moves and remints labels on
+      a published map; re-derive
+      [layer1-interface.md](../primitive/layer1-interface.md) against
+      it when the tag arrives.
 - [ ] Make the GraphQL schema and the bootstrap generic over
       `L1Boundary`, so the swap replaces one type at the composition
       root (§2.2).
@@ -731,16 +744,17 @@ Nothing here builds Layer 1 into the stand-in.
 
 | Item | Blocks | Tracked |
 |---|---|---|
-| Where the key ↔ address rule lives; the network's address; how accounts and device keys move | §3.1, §3.9, §3.10 | [Q68](../open-questions.md#q68--key-authority-and-the-actor-address-at-the-swap); asked of the L1 team (2026-11-23) |
+| Where the key ↔ address rule lives; the network's address; how accounts and device keys move | §3.1, §3.9, §3.10 | [Q68](../open-questions.md#q68--key-authority-and-the-actor-address-at-the-swap); the network's case and address undecided (2026-11-23) |
 | Signature scheme and key rotation | §3.1 | [Q30](../open-questions.md#q30--l1-key-model-signature-scheme-and-actor-key-rotation) |
-| Whether the record carries the two pre-digests; one key for both signatures | §3.3 | [Q69](../open-questions.md#q69--what-the-published-record-carries-for-the-proposal-signature); asked of the L1 team (2026-11-23) |
+| Whether the record carries the two pre-digests; one key for both signatures | §3.3 | [Q69](../open-questions.md#q69--what-the-published-record-carries-for-the-proposal-signature); answered by the L1 author's reading (2026-11-23) |
 | Whether CoGra claims the courtesy handshake, its request intent, forget-based removal and the rendering default | §3.2, §3.4 | [Q70](../open-questions.md#q70--the-courtesy-handshake-standard-and-its-request-intent) |
-| Whether the network's host claims the courtesy handshake and accepts a body with no extension; absence; addressing; non-adoption | §3.2 | asked of the L1 team (2026-11-23) |
+| Whether the network's host claims the courtesy handshake; which value an author signs for the dependency projection | §3.2 | the network's deployment decision; unanswered (2026-11-23) |
 | What ingestion verifies of a host CoGra does not run | §3.3 | [Q71](../open-questions.md#q71--what-ingestion-verifies-of-a-host-it-does-not-run), [Q64](../open-questions.md#q64--whether-ingestion-checks-that-the-carried-pair-opens-the-witness) |
-| The declaration-end rule's four edges | §3.3 | asked of the L1 team (2026-11-23) |
-| Whether an approval can lapse; how long dependency material may be held; who checks a later request; a removal that is not the author's | §3.4 | asked of the L1 team (2026-11-23) |
+| The declaration-end rule's four edges | §3.3 | the L1 author's reading (2026-11-23) |
+| How long the GC keeps an approved, never-ordered act's row and content | §3.4 | [Q67](../open-questions.md#q67--how-long-the-gc-keeps-the-row-of-an-act-that-may-still-be-ordered) |
+| Whether the recipient's check of an authenticated session is enough for a later request | §3.4 | the L1 author's reading (2026-11-23); [Q70](../open-questions.md#q70--the-courtesy-handshake-standard-and-its-request-intent) |
 | A carriage receipt; an act CoGra does not carry | §3.4 | [Q62](../open-questions.md#q62--an-authenticated-carriage-receipt), [Q63](../open-questions.md#q63--the-payload-mark-of-an-act-cogra-does-not-carry) |
-| A deferral's verdict; whether the network's host claims issuance | §3.5 | [Q66](../open-questions.md#q66--issuing-a-deferrals-verdict-to-its-author); asked of the L1 team (2026-11-23) |
+| A deferral's verdict; whether the network's host claims issuance | §3.5 | [Q66](../open-questions.md#q66--issuing-a-deferrals-verdict-to-its-author); the network's claim undecided, the channel unanswered (2026-11-23) |
 | W2a on the surface | §3.5, §3.7 | [Q58](../open-questions.md#q58--the-write-rules-second-gate-on-the-surface) |
 | What the seam exposes of the realization | §3.6 | [Q56](../open-questions.md#q56--swap-time-seam-exposure-of-the-published-interface-quantities) |
 | Who the deployment is; marker policy; breach response | §3.6, §3.8, §3.10 | [Q61](../open-questions.md#q61--the-deployments-marker-policy-and-finality-breach-response) |
