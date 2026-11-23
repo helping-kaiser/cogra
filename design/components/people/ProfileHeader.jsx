@@ -141,13 +141,16 @@ function Figure({ value, label, node, onOpen, ariaLabel }) {
    wrapped at its spaces, a too-wide word broken inside — takes at most two
    lines of the name's width, the leading round(size × 28 / 22) px. `lines`
    measures the name at a size and leading; the result is passed back as
-   `nameSize` / `nameLineHeight`. No smallest size is ruled. */
-export function nameFitSize(lines) {
-  for (let size = 22; size > 1; size -= 1) {
+   `nameSize` / `nameLineHeight`. No smallest size is ruled for the head.
+   `floor` is the tag page's heading's (jakob 2026-11-23: never below 12px):
+   a name that holds two lines at no size down to the floor takes the floor,
+   on as many lines as it needs there. */
+export function nameFitSize(lines, floor = 1) {
+  for (let size = 22; size > floor; size -= 1) {
     const lineHeight = Math.round((size * 28) / 22);
     if (lines(size, lineHeight) <= 2) return { size, lineHeight };
   }
-  return { size: 1, lineHeight: 1 };
+  return { size: floor, lineHeight: Math.round((floor * 28) / 22) };
 }
 
 export function ProfileHeader({

@@ -81,5 +81,5 @@ export interface ProfileHeaderProps {
 }
 
 export declare function ProfileHeader(props: ProfileHeaderProps): JSX.Element;
-/** The head's two-line rule: given a measure of the name's line count at a size and leading, the largest whole size from 22 down that holds at most two lines, with its leading. */
-export declare function nameFitSize(lines: (size: number, lineHeight: number) => number): { size: number; lineHeight: number };
+/** The head's two-line rule: given a measure of the name's line count at a size and leading, the largest whole size from 22 down that holds at most two lines, with its leading. `floor` (default 1, the head's: no floor) is the smallest size taken; a name that holds two lines at no size down to it takes the floor, on as many lines as it needs (the tag page's heading: 12). */
+export declare function nameFitSize(lines: (size: number, lineHeight: number) => number, floor?: number): { size: number; lineHeight: number };
