@@ -26,7 +26,9 @@ ALWAYS the first row of every card's ⋮ in Saved reads Unsave, the card's own S
 
 ALWAYS no card in Saved carries a saved mark and no card carries an unsave control of Saved's own
 
-WHEN saved.commentCard.target is tapped -> the post it answers opens AND its back arrow reads Back to Saved
+WHEN saved.commentCard.target is tapped GIVEN it names a post -> the post it answers opens AND its back arrow reads Back to Saved
+
+WHEN saved.commentCard.target is tapped GIVEN it names a comment -> the post's comment section opens scrolled to the comment it names
 
 WHEN saved.commentCard is tapped outside saved.commentCard.target and its own controls -> the post's comment section opens scrolled to that comment AND the post's back arrow beneath the thread reads Back to Saved
 

@@ -48,7 +48,9 @@ ALWAYS sensitive content in History keeps its veil, as on the feed
 
 ALWAYS History offers no way to clear the list and no way to remove one thing from it
 
-WHEN history.commentCard.target is tapped -> the post it answers opens AND its back arrow reads Back to History
+WHEN history.commentCard.target is tapped GIVEN it names a post -> the post it answers opens AND its back arrow reads Back to History
+
+WHEN history.commentCard.target is tapped GIVEN it names a comment -> the post's comment section opens scrolled to the comment it names
 
 WHEN history.commentCard is tapped outside history.commentCard.target and its own controls -> the post's comment section opens scrolled to that comment AND the post's back arrow beneath the thread reads Back to History
 
