@@ -117,6 +117,7 @@ export function TopicsLine({
   onOpenReferences,
   node,
   from = null,
+  here = null,
 }: {
   topics: readonly TopicsLineEntry[];
   /** How many citations the node carries — a number on a card, never a row. */
@@ -136,6 +137,11 @@ export function TopicsLine({
    * opened from (TagPage.md:33, :35; `back-origin.ts`).
    */
   from?: string | null;
+  /**
+   * The canonical name of the tag whose page the line stands on: its chip is
+   * drawn inert (`TopicChip`'s `here`), every other chip still navigates.
+   */
+  here?: string | null;
 }) {
   const candidates = topics.slice(0, VISIBLE_CHIPS);
   const lineRef = useRef<HTMLElement | null>(null);
@@ -215,6 +221,7 @@ export function TopicsLine({
       key={topic.name}
       name={topic.name}
       href={onOpen ? undefined : tagPageHref(topic.name, from)}
+      here={here !== null && topic.name === here}
       capped
       testId={`${testIdPrefix}-topic-${topic.name}`}
       node={instance(node, "tag", topic.name)}

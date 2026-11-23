@@ -551,7 +551,11 @@ Defined here, and **not** in the source — see §11. The values are Material's
 own state-layer opacities, applied as a `currentColor` overlay so one
 rule covers all three button variants:
 
-- **Hover** — state layer at **8%**.
+- **Hover** — state layer at **8%**, and only where the primary input can
+  hover (`@media (hover: hover)`; jakob 2026-11-23). On a touch screen a
+  control is lit only while the finger is on it — the press layer — and
+  once the finger lifts or the act is done nothing stays lit. With a
+  cursor, hover stands. Every hover rule in the tree's CSS is gated so.
 - **Press** — state layer at **10%**. Never a scale-down, never a shadow
   change: the direction is calm, and a control that shrinks under the
   thumb performs.
@@ -1144,6 +1148,13 @@ Nothing vanishes silently, and none of these use `error` colouring.
   A redacted node is **not feed material**: it is reached by direct link,
   by structure still pointing at it, or by a reader whose filter admits
   it. — `RedactedContent`, and `PostCard`'s `redacted` prop
+
+  **A still-settling post removed before it lands wears both marks**
+  (jakob 2026-11-23): the removal's mark in the content's place and
+  `Still settling` where every settling card wears it, over the action
+  row, its score slot bare; it stands among the settling posts until it
+  lands, and the removal's rules rule its ⋮ (`ProfilePostsOwn`'s
+  `settling-removed`).
 - **Sensitive** — a gentle blur with tap to reveal, warm wording.
   **The whole body veils as one**: media, text and description under a
   single veil, the title and tags outside it and readable, so a
@@ -12921,6 +12932,82 @@ drawing.
   borrowed handle (304); impl's two settling cases (302). Backlog 298,
   299, 300 and 301 close, and the night-rulings lines on the borrowed
   stance.
+
+### Round 64, one borrowed-view handle, the taller tag pair sheet, both marks, hover off on touch — 2026-11-23
+
+- **Ruled** (jakob 2026-11-23, his review of round 63): B2 (a) with his
+  spelling — the genesis moderator's view is `@genesis_mod` on every guest
+  board; B3 (b) — the composer's tag pair sheets take the raised 88 %
+  class; B4 (a) — a still-settling post removed before it lands wears both
+  marks. To impl (seam 427): on a touch screen a control is lit only while
+  the finger is on it, and nothing stays lit once it lifts; with a cursor
+  hover stands.
+- **Drawn**: `FeedBare`'s band and anchors name `@genesis_mod` (display
+  name the tree's `Genesis Moderator`), as `TagPage` and `ProfileOther` at
+  `reader` = `guest` do (`GUEST_VANTAGE`); `TagPad` and `TagPadCompose`
+  at 88 %; `ProfilePostsOwn` `posts` = `settling-removed` — @sol's salt
+  maps, the removal's mark in the content's place, `Still settling` over
+  the action row where every settling card wears it, the score slot bare,
+  the own removed post's ⋮; `ProfileComments` `comments` = `pictures` /
+  `clip` — the tag page's media comment with `REPLY_MEDIA_*`; the @tobias
+  comment's `· 1 reference` on `HistoryFilter`, `HistoryHidden`,
+  `SavedUndo`, `HistoryCommentMenu`, `SavedCommentMenu` and
+  `FeedCommentMenu`, as `History`, `Saved` and `FeedKinds` print it.
+- **Registered** (impl's seam 424): `profile.comments.commentCard.media`,
+  `.media.dots`, `.media.frame` (`<id>/1`, `<id>/2`), `.media.frame.
+  soundDisc` — @ada's tag-page comment on `ProfileComments`; and the
+  count on the sibling boards, `history.commentCard.tagsLine.counts`
+  (`HistoryFilter`, `HistoryHidden`, `HistoryCommentMenu`),
+  `saved.commentCard.tagsLine.counts` (`SavedUndo`, `SavedCommentMenu`),
+  `feed.commentCard.tagsLine.counts` (`FeedCommentMenu`). Nothing gone.
+- **The law that moved**: stance-control *A guest's view*, `TagPage.md`,
+  `ProfileOther.md`, `FeedBare.md` (the handle and its cut); `TagPad.md`,
+  `TagPadCompose.md` (88 %); readme §9, `ProfilePosts.md`,
+  `ProfilePostsOwn.md` (both marks); readme §4 *Interaction states* and
+  the interaction-states card (hover). Tokens: `states.css`'s two hover
+  rules and `base.css`'s link hover sit inside `@media (hover: hover)`, as
+  does the sensitive card's link hover; the press rules are unchanged.
+- **Measured**: the profile's wide anchor leaves its words 134 px at 390 px
+  and 104 px at 360 px — `@genesis…'s opinion` and `@ge…'s opinion`, the
+  same cut the old handle took; on a tag page `@genesis_mod's opinion`
+  stands whole, 158 px. `FeedBare`'s band line takes three lines at 390
+  px (two with `@noa`) and three at 360. At 360×640 the pair sheets stand
+  475 px (`TagPad`) and 449 px (`TagPadCompose`), `Done` 28 px above the
+  screen's foot, nothing scrolled (at 62 % both scrolled 397 px with
+  `Done` below the edge); at the boards' own 390×844 nothing changes —
+  505 and 479 px are under both caps.
+- **Held**: a comment's media on `History` and `Saved` (backlog 305 — the
+  registry's one-chip rule). Backlog 302 and 304 close.
+
+### Round 65, a comment's media on History and Saved, the harness's two renders — 2026-11-23
+
+- **Ruled**: backlog 305 (b) — a `comment` chip on `History` and `Saved`
+  draws @ada's tag-page media comment in @tobias's place, the `pick`
+  copies hidden; ruling 39 stands as written.
+- **Drawn**: `History` and `Saved` `comment` = `pictures` / `clip` (default
+  `none`) — @ada's comment as the feed's card, answering @sol's post, with
+  `REPLY_MEDIA_*`, `#saltmaps · 1 reference`, and the place's figure
+  `12.40` as its score (the fixture, backlog 306); the @tobias card's
+  `pick` copies stand only at `none` (`PickCopies`' `hole`,
+  `CommentMediaCopies`).
+- **Registered** (seam 424): `history.commentCard.media`, `.media.dots`,
+  `.media.frame` (`<id>/1`, `<id>/2`), `.media.frame.soundDisc` (`<id>/1`),
+  and the same under `saved`. Nothing gone; no string added.
+- **The law that moved**: `History.md` and `Saved.md` — the veiled clip's
+  sentence splits in two, `ALWAYS a veiled clip has no playback` and the
+  disc named, `Feed.md`'s form: `ALWAYS history.commentCard.media.frame.
+  soundDisc is absent GIVEN history.commentCard.media.frame's clip is
+  veiled` (the same for `saved`). Backlog 305 and 306 close.
+- **Found**: round 64's unexplained differences on `CommentCitedByEmpty`
+  (15 px) and `SeveranceConfirm` (7 px) are the harness — antialiased
+  rounded edges (the avatar and the veil under the sheet's scrim, the
+  `Keep it` pill's rim) render a few levels apart in about one render in
+  fifteen under load, on `152cddc34` as on round 64's tip, and never in
+  over 100 serial renders. The 14 px "badge rim" were the flow badge,
+  which `diffbox.mjs` keeps and the proof strips. About one render in
+  fifty loses the Google Fonts fetch and draws the fallback face, and no
+  picture paints in the harness (a board's bare image names miss `img/`).
+  Filed as backlog 307; no board changes.
 ---
 
 ## 14. The canvases

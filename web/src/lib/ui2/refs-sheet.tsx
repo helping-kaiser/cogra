@@ -145,6 +145,7 @@ export function RefsSheet({
   topics,
   references,
   from = null,
+  here = null,
   testId = "refs-sheet",
 }: {
   open: boolean;
@@ -156,6 +157,12 @@ export function RefsSheet({
    * page reads `Back to the post` (TagPage.md:35), the card's list elsewhere.
    */
   from?: string | null;
+  /**
+   * The canonical name of the tag whose page the sheet is raised over: its row
+   * would open the page it is on, so it is the same row, inert — no link, as
+   * the tag's chip on that page (jakob, hand test 2026-11-23).
+   */
+  here?: string | null;
   testId?: string;
 }) {
   // THE SHEET IS THE DOOR, NOT THE DESTINATION. A row that navigated left the
@@ -180,7 +187,7 @@ export function RefsSheet({
             kind="Tag"
             // `RefsSheet` 1: a tag row goes to the tag's page, the one
             // destination a chip's tap already has on every other surface.
-            href={tagPageHref(name, from)}
+            href={here !== null && name === here ? undefined : tagPageHref(name, from)}
             onNavigate={onClose}
             trailing={
               <PairReadout

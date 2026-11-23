@@ -271,6 +271,7 @@ export function CommentFeedCard({
   scoreOrigin,
   shape = "thread",
   authorHere = false,
+  tagHere = null,
   reply = "open",
   onRemoved,
   attach = false,
@@ -289,6 +290,11 @@ export function CommentFeedCard({
    * open the page it is on: the chip is inert (ProfileComments.md:21).
    */
   authorHere?: boolean;
+  /**
+   * The canonical name of the tag whose page the card stands on: that tag's
+   * chip would open the page it is on, so it is inert (`PostCard`'s `tagHere`).
+   */
+  tagHere?: string | null;
   /** The line shape's text Reply, for this reader. */
   reply?: LineReply;
   /**
@@ -681,6 +687,7 @@ export function CommentFeedCard({
           testIdPrefix={testId}
           node={part(node, "tagsLine")}
           from={from}
+          here={tagHere}
         />
       )}
     </>

@@ -92,7 +92,9 @@ WHEN scroll settles at Saved's hard top GIVEN a qualifying clip exists and the d
 
 WHEN an overscroll bounce settles back at Saved's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in Saved's order
 
-ALWAYS a veiled clip has no playback and no sound-disc presence
+ALWAYS a veiled clip has no playback
+
+ALWAYS saved.commentCard.media.frame.soundDisc is absent GIVEN saved.commentCard.media.frame's clip is veiled
 
 ALWAYS saved.searchField reads Search what you saved at rest
 
