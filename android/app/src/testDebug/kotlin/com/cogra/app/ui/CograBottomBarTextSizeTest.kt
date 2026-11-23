@@ -39,8 +39,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
+// NATIVE graphics: the heights compared here rest on real text metrics.
 @RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 @HiltAndroidTest
 class CograBottomBarTextSizeTest {
 
@@ -87,7 +90,9 @@ class CograBottomBarTextSizeTest {
         val referenceHeight = height(REFERENCE)
 
         FACES.forEach { (face, _) ->
-            assertThat(height(face)).isEqualTo(referenceHeight)
+            // Above 1.3× the bar holds the 1.0× height; at 1.3× and below it
+            // is today's bar, which may stand taller as its word grows.
+            if (!wordsShown) assertThat(height(face)).isEqualTo(referenceHeight)
             DESTINATIONS.forEach { (slotNode, slot) ->
                 val tag = "$face.bottomBar.$slotNode"
                 // The word is the slot's only text: present at ≤ 1.3×, gone above.
