@@ -2561,6 +2561,207 @@
         ]
       }
     },
+    "CommentRefsSheet": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.refsSheet.reference": "the reference's position in the References section, counted from 1 (the tags-and-references sheet)",
+        "postDetail.refsSheet.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.threadSheet.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "postDetail.threadSheet.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.threadSheet.viewReplies": "the comment's id, the lowercase UUID the wire carries — the key of the card the line hangs under (CommentCard)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "postDetail.card.opinions": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.refsSheet": [],
+        "postDetail.refsSheet.dragHandle": [],
+        "postDetail.refsSheet.reference": [
+          "1"
+        ],
+        "postDetail.refsSheet.reference.mark": [
+          "1"
+        ],
+        "postDetail.refsSheet.reference.name": [
+          "1"
+        ],
+        "postDetail.refsSheet.reference.value": [
+          "1"
+        ],
+        "postDetail.refsSheet.tag": [
+          "glovebox",
+          "coastroad"
+        ],
+        "postDetail.refsSheet.tag.mark": [
+          "glovebox",
+          "coastroad"
+        ],
+        "postDetail.refsSheet.tag.name": [
+          "glovebox",
+          "coastroad"
+        ],
+        "postDetail.refsSheet.tag.value": [
+          "glovebox",
+          "coastroad"
+        ],
+        "postDetail.refsSheet.title": [],
+        "postDetail.threadSheet": [],
+        "postDetail.threadSheet.commentCard": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.reply": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.exact": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.face": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.avatar": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.handle": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.name": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.menu": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
+          "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
+          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine.counts": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
+        "postDetail.threadSheet.commentCard.tagsLine.tag": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
+        ],
+        "postDetail.threadSheet.dragHandle": [],
+        "postDetail.threadSheet.foot": [],
+        "postDetail.threadSheet.foot.addComment": [],
+        "postDetail.threadSheet.title": [],
+        "postDetail.threadSheet.viewReplies": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ]
+      }
+    },
     "CommentRemoveConfirm": {
       "prefix": "postDetail",
       "keys": {
@@ -11270,6 +11471,19 @@
         "keyCeremony.title": []
       }
     },
+    "KeyCeremonyUnsupported": {
+      "prefix": "keyCeremonyUnsupported",
+      "keys": {},
+      "nodes": {
+        "keyCeremonyUnsupported.header": [],
+        "keyCeremonyUnsupported.header.back": [],
+        "keyCeremonyUnsupported.notice": [],
+        "keyCeremonyUnsupported.notice.body": [],
+        "keyCeremonyUnsupported.notice.download": [],
+        "keyCeremonyUnsupported.notice.title": [],
+        "keyCeremonyUnsupported.title": []
+      }
+    },
     "KeyElsewhere": {
       "prefix": "feed",
       "keys": {
@@ -14822,6 +15036,127 @@
         ]
       }
     },
+    "ProfileOtherHeld": {
+      "prefix": "profile",
+      "keys": {
+        "profile.posts.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "profile.posts.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "profile.posts.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "profile.bottomBar": [],
+        "profile.bottomBar.composeSlot": [],
+        "profile.bottomBar.feedSlot": [],
+        "profile.bottomBar.profileSlot": [],
+        "profile.bottomBar.searchSlot": [],
+        "profile.bottomBar.walletSlot": [],
+        "profile.header": [],
+        "profile.header.back": [],
+        "profile.header.title": [],
+        "profile.identity": [],
+        "profile.identity.actionRow": [],
+        "profile.identity.actionRow.menu": [],
+        "profile.identity.actionRow.message": [],
+        "profile.identity.actionRow.stance": [],
+        "profile.identity.actionRow.stance.anchor": [],
+        "profile.identity.actionRow.stance.anchor.exact": [],
+        "profile.identity.actionRow.stance.anchor.face": [],
+        "profile.identity.avatar": [],
+        "profile.identity.bio": [],
+        "profile.identity.figures": [],
+        "profile.identity.figures.posts": [],
+        "profile.identity.figures.posts.label": [],
+        "profile.identity.figures.posts.value": [],
+        "profile.identity.figures.stancesOn": [],
+        "profile.identity.figures.stancesOn.label": [],
+        "profile.identity.figures.stancesOn.value": [],
+        "profile.identity.figures.stancesTaken": [],
+        "profile.identity.figures.stancesTaken.label": [],
+        "profile.identity.figures.stancesTaken.value": [],
+        "profile.identity.name": [],
+        "profile.posts": [],
+        "profile.posts.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "profile.posts.card.menu": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.opener": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "profile.posts.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.posts.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "profile.tabRow": [],
+        "profile.tabRow.commentsTab": [],
+        "profile.tabRow.everythingTab": [],
+        "profile.tabRow.postsTab": []
+      }
+    },
     "ProfileOtherHidden": {
       "prefix": "profile",
       "keys": {
@@ -16900,6 +17235,140 @@
           "2",
           "3"
         ]
+      }
+    },
+    "RefsSheet": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.refsSheet.reference": "the reference's position in the References section, counted from 1 (the tags-and-references sheet)",
+        "postDetail.refsSheet.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "postDetail.card.opinions": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.refsSheet": [],
+        "postDetail.refsSheet.dragHandle": [],
+        "postDetail.refsSheet.reference": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "postDetail.refsSheet.reference.mark": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "postDetail.refsSheet.reference.name": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "postDetail.refsSheet.reference.value": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "postDetail.refsSheet.tag": [
+          "photography",
+          "coastroad"
+        ],
+        "postDetail.refsSheet.tag.mark": [
+          "photography",
+          "coastroad"
+        ],
+        "postDetail.refsSheet.tag.name": [
+          "photography",
+          "coastroad"
+        ],
+        "postDetail.refsSheet.tag.value": [
+          "photography",
+          "coastroad"
+        ],
+        "postDetail.refsSheet.title": []
       }
     },
     "RejectAllConfirm": {
@@ -21673,7 +22142,8 @@
         "tagPage.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "tagPage.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "tagPage.claim": "the tagged thing's id, the lowercase UUID the wire carries — the post's or the comment's the claim stands above (TaggedRow, the tag page)",
-        "tagPage.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
+        "tagPage.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "tagPage.commentCard.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)"
       },
       "nodes": {
         "tagPage.actionRow": [],
@@ -21835,6 +22305,19 @@
         "tagPage.commentCard.authorChip.name": [
           "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
         ],
+        "tagPage.commentCard.media": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.media.dots": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.media.frame": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f/1",
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f/2"
+        ],
+        "tagPage.commentCard.media.frame.soundDisc": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f/1"
+        ],
         "tagPage.commentCard.menu": [
           "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
         ],
@@ -21911,6 +22394,22 @@
         "tagPage.menuSheet.license": [],
         "tagPage.menuSheet.opinions": [],
         "tagPage.menuSheet.save": []
+      }
+    },
+    "TagPageEmpty": {
+      "prefix": "tagPage",
+      "keys": {},
+      "nodes": {
+        "tagPage.actionRow": [],
+        "tagPage.actionRow.share": [],
+        "tagPage.actionRow.stance": [],
+        "tagPage.actionRow.stance.anchor": [],
+        "tagPage.actionRow.stance.anchor.face": [],
+        "tagPage.empty": [],
+        "tagPage.empty.title": [],
+        "tagPage.header": [],
+        "tagPage.header.back": [],
+        "tagPage.header.title": []
       }
     },
     "TagPageHeldPad": {
