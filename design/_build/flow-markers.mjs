@@ -3204,6 +3204,14 @@ Object.assign(FLOW_MARKERS, {
   CommentCitedByEmpty: [
     { n: 1, find: `class="cg-scrim-in"`, tag: "div", all: true },
   ],
+  // The comment's tags-and-references sheet over the thread (round 62, B5):
+  // `RefsSheet`'s doors, the thread's wash the way back.
+  CommentRefsSheet: [
+    { n: 1, find: ">glovebox<", tag: "button" },
+    { n: 1, find: ">coastroad<", tag: "button" },
+    { n: 2, find: ">Salt maps of the coast road<", tag: "button" },
+    { n: 3, find: `class="cg-scrim-in"`, tag: "div", all: true },
+  ],
   NotificationsEmpty: [{ n: 1, find: 'aria-label="Back to feed"', tag: "a" }, ...nav(2)],
   /* The chats coming-soon screen (item 68) numbers like the bell's empty list:
      the same back-plus-nav anatomy, because it is the same list surface with

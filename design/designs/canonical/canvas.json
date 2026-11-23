@@ -3143,6 +3143,15 @@
       "page": "comments"
     },
     {
+      "file": "CommentRefsSheet.dc.html",
+      "title": "Comment · its tags and references",
+      "x": 4800,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
       "file": "CommentMenuOwn.dc.html",
       "title": "Comment · your own, the menu over the thread",
       "x": 0,
