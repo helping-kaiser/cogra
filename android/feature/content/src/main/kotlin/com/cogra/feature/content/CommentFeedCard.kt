@@ -7,10 +7,12 @@
 // answered thing's mark, its title, its author — and the comment hung under it
 // on a connector rule, the way a reply hangs under what it answers.
 //
-// THE DOUBLE DOOR. The head row opens what it names. The rest of the card opens
-// the comment's own place — the post's comment section, scrolled to this
-// comment. Things with their own meaning keep it: the author chip, the chips,
-// the row.
+// THE DOUBLE DOOR (jakob 2026-11-23, seam 405). The pointer — the head row, or
+// the line shape's `On …` line — opens what it names: a post at its top, a
+// reply's comment in its thread. The rest
+// of the card opens the comment's own place — the post's comment section,
+// scrolled to this comment. Things with their own meaning keep it: the author
+// chip, the chips, the row.
 //
 // THE ROW READS OPINION · SCORE · THE COMMENT GLYPH · SHARE (FeedKinds.md). The
 // glyph is the reply: the same comment section at this comment, the composer
@@ -55,6 +57,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -73,6 +76,7 @@ import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.ButtonSize
 import com.cogra.core.designsystem.v2.atom.CograButton
+import com.cogra.core.designsystem.v2.atom.hitTarget
 import com.cogra.core.designsystem.v2.media.CoverKind
 import com.cogra.core.designsystem.v2.media.CoversSurface
 import com.cogra.core.designsystem.v2.media.SensitiveSource
@@ -113,7 +117,7 @@ internal fun CommentFeedCard(
     testTagPrefix: String,
     revealed: Boolean,
     onReveal: () -> Unit,
-    /** The head row's door: what it names. */
+    /** The pointer's door, in either shape: what it names ([openPointer]). */
     onOpenTarget: () -> Unit,
     /** The card's own door: the thread, landed on this comment. */
     onOpenPlace: () -> Unit,
@@ -311,22 +315,29 @@ private fun ViewRepliesLine(comment: CommentView, node: DataNode, testTagPrefix:
 }
 
 /**
- * THE TARGET POINTER (`CommentCard`'s line shape; ProfileComments.md:5): one
+ * THE TARGET POINTER (`CommentCard`'s line shape; ProfileComments.md:7): one
  * line, one tap — the target kind's glyph, then `On …` in the quiet ink at
- * label-small, ellipsized.
+ * label-small, ellipsized. Its ink keeps its line in the card and its target
+ * answers at 48dp around it (`cg-hit` on the master's button; [hitTarget]).
  */
 @Composable
 private fun LinePointer(target: CommentTarget, node: DataNode, onOpen: () -> Unit) {
     val row = headRowOf(target)
     val words = stringResource(R.string.content_card_on, row.label)
+    val style = MaterialTheme.typography.labelSmall
+    val line = with(LocalDensity.current) { style.lineHeight.toDp() }
     Row(
         modifier = Modifier
             // The pointer stands across the card, a block in its column
             // (`CommentCard.jsx`: the button stretches in the card's flex column).
             .fillMaxWidth()
-            .clip(RoundedCornerShape(Space.x2))
             .dataNode(node)
-            .clickable(role = Role.Button, onClick = onOpen),
+            .hitTarget(
+                interactive = Modifier
+                    .clip(RoundedCornerShape(Space.x2))
+                    .clickable(role = Role.Button, onClick = onOpen),
+                drawnHeight = maxOf(line, POINTER_GLYPH),
+            ),
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -338,7 +349,7 @@ private fun LinePointer(target: CommentTarget, node: DataNode, onOpen: () -> Uni
         )
         Text(
             text = words,
-            style = MaterialTheme.typography.labelSmall,
+            style = style,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
