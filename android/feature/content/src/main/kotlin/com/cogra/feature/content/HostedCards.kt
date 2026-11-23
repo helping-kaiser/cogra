@@ -332,12 +332,12 @@ private fun cardPlacement(node: DataNode, tag: String, placement: HostedPlacemen
 )
 
 /**
- * A listed comment as the comment card's line shape, its every door landing
- * on its thread (ProfileComments.md:23-27): the pointer and the replies line
- * on the comment's own place, Reply with the composer aimed at it — an
+ * A listed comment as the comment card's line shape: its pointer the door to
+ * the post it names ([pointedPost]); the card and the replies line on the
+ * comment's own place in its thread, Reply with the composer aimed at it — an
  * applicant's answered in the snackbar — and a guest's drawing none. Where the
  * host keeps no thread doors (a tag's page, TagPage.md:17) the card offers no
- * Reply and no replies line, and its pointer still opens the thread.
+ * Reply and no replies line.
  */
 @Composable
 private fun HostedCommentCard(
@@ -371,9 +371,6 @@ private fun HostedCommentCard(
             shape = CommentCardShape.Line(reply),
             authorHere = placement.authorHere,
             menu = placement.commentMenu,
-            // THE POINTER OPENS THE THREAD THE COMMENT LIVES IN, landed on the
-            // comment that answers it (ProfileComments.md:23).
-            onOpenTarget = { openPlace() },
             onReply = {
                 if (lockedReply != null) {
                     lockedReply()
