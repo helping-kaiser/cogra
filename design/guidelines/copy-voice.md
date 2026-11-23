@@ -3446,6 +3446,14 @@ sentences, all present tense of the act that happened:
   readout for a bundle walked back to zero, the opinion row's sibling —
   🫥 keeps meaning only *no opinion yet*.
 
+**A deleted account's row opens `A deleted account`** (jakob 2026-11-23,
+B4 (a); *new 2026-11-23*): the fragment capitalised at the sentence's head
+in the actor's place, the rest of each sentence as it stands, the empty
+disc in the picture's place and a face kept — `A deleted account cited
+your post`, and the same for every kind (`Notifications`' `actor` chip). A
+mention's piece that went with the account reads `in a deleted account's
+removed post` (*Naming a removed or deleted thing*).
+
 **The second line is what arrived, or where it is.** The comment's and
 the reply's own words for the two that carry words; `in <title>` for the
 mention and the citation, the saved comment row's `on <title>`
