@@ -34,10 +34,16 @@ export function TopicRemovable({
   removeNode?: DataNode;
 }) {
   const label = `#${name}`;
+  // A TAG IS ONE LINE (TopicRemovable.jsx `NAME`, round 63; jakob 2026-11-23:
+  // "everywhere the tag is one-line at most"): the pill never grows past its
+  // row and never wraps its name — a name too long for the row is the part
+  // cut with "…", while the × keeps its room. A name that fits draws whole.
+  // Both controls' accessible names carry the whole tag.
+  const shown = <span className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{label}</span>;
   return (
     <span
       {...testAttributes(node, testId)}
-      className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-secondary-container px-3 py-1 text-label-large text-on-secondary-container"
+      className="inline-flex min-h-8 min-w-0 max-w-full items-center gap-1.5 rounded-full bg-secondary-container px-3 py-1 text-label-large text-on-secondary-container"
     >
       {onEdit ? (
         <button
@@ -46,12 +52,12 @@ export function TopicRemovable({
           aria-expanded={expanded}
           data-testid={testId !== undefined ? `${testId}-select` : undefined}
           onClick={onEdit}
-          className="cg-state cg-focus cg-hit inline-flex cursor-pointer items-center gap-1.5 rounded-full border-0 bg-transparent p-0 text-inherit [font:inherit] [letter-spacing:inherit]"
+          className="cg-state cg-focus cg-hit inline-flex min-w-0 cursor-pointer items-center gap-1.5 rounded-full border-0 bg-transparent p-0 text-inherit [font:inherit] [letter-spacing:inherit]"
         >
-          {label}
+          {shown}
         </button>
       ) : (
-        <span>{label}</span>
+        shown
       )}
       <button
         type="button"
