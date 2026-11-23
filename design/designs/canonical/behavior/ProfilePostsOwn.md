@@ -16,6 +16,8 @@ WHEN tap the ⋮ on profile.posts.card -> profile.menuSheet rises over the reade
 
 ALWAYS a removed post of the reader's own keeps its place in the list as the feed's removed card, profile.posts.card.removalMark reading Removed by its author with the removal's date, whatever the feed's filter holds, its ⋮ your own post's menu less Edit, Mark as sensitive and Remove
 
+ALWAYS a post of the reader's own removed before it lands wears both marks, profile.posts.card.removalMark in the content's place and Still settling over its action row, its score slot bare, at the head of the list among the settling posts, its ⋮ your own removed post's menu, GIVEN the post is still settling
+
 WHEN tap profile.tabRow.commentsTab -> the reader's own comments stand below profile.tabRow AND the head above stays as it was
 
 WHEN tap profile.tabRow.everythingTab -> the reader's own chronicle stands below profile.tabRow AND the head above stays as it was

@@ -1148,6 +1148,13 @@ Nothing vanishes silently, and none of these use `error` colouring.
   A redacted node is **not feed material**: it is reached by direct link,
   by structure still pointing at it, or by a reader whose filter admits
   it. — `RedactedContent`, and `PostCard`'s `redacted` prop
+
+  **A still-settling post removed before it lands wears both marks**
+  (jakob 2026-11-23): the removal's mark in the content's place and
+  `Still settling` where every settling card wears it, over the action
+  row, its score slot bare; it stands among the settling posts until it
+  lands, and the removal's rules rule its ⋮ (`ProfilePostsOwn`'s
+  `settling-removed`).
 - **Sensitive** — a gentle blur with tap to reveal, warm wording.
   **The whole body veils as one**: media, text and description under a
   single veil, the title and tags outside it and readable, so a

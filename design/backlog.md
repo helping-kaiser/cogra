@@ -6943,6 +6943,13 @@ and if so what the card reads. Options: (a) both marks, the removal's in the con
 `Still settling` under the age, as impl lists it; (b) the removal waits for the post to land, so the
 case never stands.
 
+Closed by round 64 (jakob 2026-11-23, B4 = (a)): both marks — the removal's mark in the content's
+place and `Still settling` where every settling card wears it, over the action row (`PostCard`'s own
+place for it; "under the age" above was the lane's gloss, not the master's), its score slot bare
+(readme §9; `ProfilePosts.md`, `ProfilePostsOwn.md`). Drawn: `ProfilePostsOwn` chip `posts` =
+`settling-removed`. (1), the hidden account's own profile, needs nothing: the list rules carry no
+exception.
+
 ### 303 · Where a failed attach of the applicant's own key stands · *design* · **filed 2026-11-23**
 
 Round 63, item 7 (jakob 2026-11-23, point 5 (a)): the law is written (`ApplicantFeed.md` — the house
