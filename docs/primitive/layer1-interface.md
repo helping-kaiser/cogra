@@ -30,8 +30,8 @@ one conserved allocation operator. This reference draws two scopes from it:
 Proofs and motivation prose are omitted.
 
 **Pinned anchor set.** This file's citation set is pinned under the spec's
-anchor-stability contract: 491 distinct anchor names,
-`anchor_set_hash = 3e55203a5cca9da8f74fbb41427e19e5874e2b9dcfdac5ff885c2072d31c8f2f`
+anchor-stability contract: 492 distinct anchor names,
+`anchor_set_hash = 02b3df6c105c10344d47718b7b13df44279c951c51cc9e943a0c67a390eccf1f`
 (sha256 over the sorted distinct anchor names joined by `\n`, no trailing
 newline). Once
 registered with the Peer Team, renaming any pinned label is a breaking
@@ -1516,6 +1516,16 @@ display — is Layer-2-free. A parallel *genesis* is rejected by record
 integrity (author equivocation on one act identifier): a node cannot be
 re-minted, only newly written about
 (`post:graph:title-act-bundle-reservation`).
+
+**Projection (`def:graph:projection`).** A projection is a value derived by
+a stated deterministic rule from a stated source. Its source is primitive
+relative to it, and the projection has no independent authority: anyone can
+re-evaluate it from the same source and rule, while disagreement concerns
+that rule or source. A materialized projection is a cache without
+authority, and no record fact depends on its materialization. Edges
+project accepted acts; epoch summaries project the record and replay
+inputs; validity under a declared case projects the declared second
+party's state.
 
 **Edge projection (`def:graph:act-edge-projection`).** The projection is
 deterministic and fixed at formation; it is not an appended record of its
@@ -4315,17 +4325,14 @@ declared cases (all at the end of this section).
   Publishing an encoding badly is a deployment defect; not declaring one is
   a protocol defect.
 - **Formula Completeness (`subsec:deployment:completeness`).** The published
-  material — protocol constants; edge-type specifications and census; tensor
-  pipeline; path-view extraction; mask and tier rules; determinant sign and
-  damped weight; **net stance, cell coefficients, recipient resolution,
-  domain weights, activations, the tilt grid and emission rule, control-act
-  self-resolution and vouch withdrawal by netting**; the **write rule
-  (W1/W2a/W2b), closure rule, formation rule + handshake, and the θ-debit
-  ledger**; settlement recognition and the **epoch title fold**; the
-  conserved derivation sequence and certificate definitions; the
-  safety price, the five-ρ family (§11.8), the structural wall floor, and
-  the wall controller — is jointly
-  sufficient to reproduce the server's output from published records alone. Terminal mechanisms are not
+  material — all protocol constants, all mask promotion criteria, all
+  edge-type specifications, the CAN recursion, the burn amounts read
+  through the burn interface together with the capacity bound and the
+  unit-cost projection a realization publishes with them
+  (`def:comparator:burn-interface`), the settlement recognition predicate
+  and title certificate, and the epoch boundary computation sequence — is
+  jointly sufficient to reproduce the server's output from published edge
+  records alone, without any unpublished component. Terminal mechanisms are not
   part of this invariant; **if a terminal service publishes a mechanism,
   the grant requires that terminal mechanism's own completeness** — a guild
   that reimplements a terminal default publishes its own complete
