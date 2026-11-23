@@ -76,7 +76,13 @@ export interface CommentCardProps {
   target?: string;
   /** The target's kind, naming the glyph (`NODE_GLYPHS`). Defaults to `"post"`. */
   targetKind?: string;
-  /** Opens the target. Shown only when both `target` and this are set. */
+  /**
+   * The pointer's door, in either shape — the door to what it names, apart
+   * from the card's own door (`onOpen`, the thread at this comment). A
+   * pointer naming a post opens the post itself, at its top, its thread
+   * closed; a removed post or a deleted account's post still opens, its
+   * detail showing the mark. Shown only when both `target` and this are set.
+   */
   onOpenTarget?: () => void;
   /**
    * How the card names what it answers: `"line"` (default — the one-line
