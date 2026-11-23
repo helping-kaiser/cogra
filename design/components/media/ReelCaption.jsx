@@ -72,9 +72,16 @@ export function ReelCaption({ handle, title, description, bottom = 86, onMore, s
         <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0, fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", letterSpacing: "var(--text-label-large--letter-spacing)", fontWeight: "var(--text-label-large--font-weight)" }} data-node={node && "handle"}>{nameInLine("@" + handle)}</span>
       )}
       {title && (
+        /* The title is one line, cut at its end with "…" (round 62; jakob
+           2026-11-23, E9 (a)): a caption's one-line place, as the handle is,
+           and as a feed card's title clamps to one line. */
         <span
           data-node={node && "title"}
           style={{
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            minWidth: 0,
             fontSize: "var(--text-title-small)",
             letterSpacing: "var(--text-title-small--letter-spacing)",
             lineHeight: "var(--text-title-small--line-height)",

@@ -6,7 +6,7 @@ ALWAYS the reader's own profile's Posts view keeps the own profile's head as the
 
 ALWAYS profile.posts lists the reader's own posts, each card the feed's own, fully live
 
-ALWAYS profile.posts lists a post the reader signed that is still settling among the landed ones, its card wearing Still settling and carrying no score, its score slot bare, as the feed's card does
+ALWAYS profile.posts lists a post the reader signed that is still settling at the head of the list, above every landed one, the settling posts newest signed first among themselves, its card wearing Still settling and carrying no score, its score slot bare, as the feed's card does, and it takes its place in the list's order when it lands
 
 ALWAYS profile.identity.figures.posts counts every post the reader published, a removed one and a still-settling one included, and never an edit, so the figure and the list agree
 

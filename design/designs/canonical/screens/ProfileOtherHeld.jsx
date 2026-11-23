@@ -10,7 +10,13 @@
    its `cg-exact` span and the button's accessible name in both modes.
 
    The board is `ProfileOther` with a bundle — same body helper, one prop —
-   because a held opinion is a STATE of that page, not a second page. */
+   because a held opinion is a STATE of that page, not a second page.
+
+   REGISTERED under the `profile` prefix (round 62, seam 404.4), by
+   `ProfileOther`'s names: the held pair is the wide anchor's `exact`,
+   `profile.identity.actionRow.stance.anchor.exact`, as the feed cards' anchors
+   name theirs. */
+export const NODE = "profile";
 export function Screen() {
   return <ProfileOtherBody bundle={mkBundle(0.7, 0.4)} />;
 }
