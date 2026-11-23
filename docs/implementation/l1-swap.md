@@ -147,9 +147,14 @@ identifier (``itm:graph:act-authentication-requirements-signature-verification``
 [§8.2](../primitive/layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake)).
 No closure check relates a key to the Actor: with no author-authority
 case bound, an act is eligible whichever keys signed it, and its debit,
-standing, title and settlement follow the recorded author. Deciding
-which keys may speak for an Actor is the deployment's concern
-(``post:graph:act-authentication-requirements``, closure). A
+standing, title and settlement follow the recorded author
+(``post:graph:act-authentication-requirements``, closure). Deciding
+which keys may speak for an Actor is the deployment's concern and
+imposes no closure condition
+(``rem:graph:authentication-realization-out-of-scope``): a host may
+refuse to seal a proposal under the deployment's own key rule without
+declaring a case, but without a case no recorded act is rejected on
+key-authority grounds. A
 deployment may instead declare an author-authority case naming a
 second party, its rules edition and a projection, with proof objects
 per act (``def:deployment:declared-author-authority-case``, oracle,
@@ -183,8 +188,8 @@ author component of every act identifier CoGra stores.
 **At the swap.**
 
 - *Server.* Where the key ↔ address rule lives becomes explicit: kept
-  as CoGra's admission rule at the relay, declared as a case, or
-  dropped (*open*). If the network's address is not a function of the
+  as an admission rule at the relay or the host, which needs no case,
+  declared as a case, or dropped (*open*). If the network's address is not a function of the
   Ed25519 key — an address on the realization, for instance — then
   `address_of`, the ceremony's check, the uniqueness pair and every
   identifier carrying an address change together, and the accounts
@@ -197,11 +202,16 @@ author component of every act identifier CoGra stores.
 
 **Open.** Where the key ↔ address rule lives, what the network's
 address is, and how existing accounts move: [Q68](../open-questions.md#q68--key-authority-and-the-actor-address-at-the-swap).
-Asked of the L1 team (2026-11-23): whether the closure alone accepts
-an act signed by any well-formed key; whether a host may keep refusing
-at sealing under the deployment's own rule without declaring a case;
-whether a deployment can be its own second party; and which case and
-address format the network will declare. Signature scheme and key
+The L1 team confirmed (2026-11-23) that the closure alone accepts an
+act signed by any well-formed key and that a host may refuse at
+sealing without a case ("Layer 1 requires" above). The L1
+author reads that a deployment may be its own second party, its
+key-derivation rule needing no outside data; any declared case still
+pins a proof object for every act
+(``post:deployment:pinned-author-authority-proof-objects``). The
+network has no deployment of record yet: which case it declares is
+undecided, and what an Actor's address is on it is unanswered.
+Signature scheme and key
 rotation: [Q30](../open-questions.md#q30--l1-key-model-signature-scheme-and-actor-key-rotation).
 
 ### 3.2 The handshake the clients speak
