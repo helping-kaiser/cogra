@@ -65,12 +65,12 @@ export function profileComment(id: string, over: Record<string, unknown> = {}): 
 }
 
 /**
- * A tagged comment as the tag page reads it (`topics.graphql`): the card's
- * own fields without the two folds.
+ * A tagged comment as the tag page's `TaggedComments` read serves it
+ * (`topics.graphql`): the comment whole, what it answers and its thread's
+ * post — the profile's own shape.
  */
 export function taggedCommentWire(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
-  const DROPPED = new Set(["topics", "references"]);
-  return Object.fromEntries(Object.entries(profileComment(id, over)).filter(([key]) => !DROPPED.has(key)));
+  return profileComment(id, over);
 }
 
 /** A page of the comments view, as the `ProfileComments` read serves it. */
