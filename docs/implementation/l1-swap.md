@@ -393,7 +393,9 @@ host never receives the pair
 Ingestion promotes the pair and salt into `act_payloads`. The staged
 write GC keeps custody of a sealed, approved write's pair, because
 the host can still order it later
-([data-model.md "Staged writes"](data-model.md#staged-writes)).
+([data-model.md "Staged writes"](data-model.md#staged-writes)); no
+moment bounds that ordering
+([Q67](../open-questions.md#q67--how-long-the-gc-keeps-the-row-of-an-act-that-may-still-be-ordered)).
 Removal is a request in the author's authenticated session or an
 engine's decision (account deletion, moderation), carried out as a
 reduction of CoGra's carriage, with an archive unit and a visible mark
@@ -408,18 +410,35 @@ rule.
   the redaction's last step with it. Whatever the network host keeps
   of its own blinding values and of the dependency opening is the
   host's holding, not CoGra's.
-- *Web and Android.* No change, unless removal becomes a signed forget
-  request (Q70), which both clients would sign.
+- *Web and Android.* No change while a forget request is made in the
+  author's session: the courtesy standard accepts a signature or
+  equivalent attributable authentication (Q70), and that CoGra's
+  session check is enough is the L1 author's reading ("Open" below).
+  The receipt the standard asks for is the server's.
 
 **Open.** Whether removal is expressed in the courtesy vocabulary, and
 whether CoGra adopts the courtesy rendering default (absent, authored
 emptiness, unavailable, unknown) or documents its own: both under
 [Q70](../open-questions.md#q70--the-courtesy-handshake-standard-and-its-request-intent).
-Asked of the L1 team (2026-11-23): whether an approval can lapse, so
-that content kept for an approved, never-ordered act can end; how long
-dependency material may be held; whether a later request must be
-checkable by a third party; and whether a removal on a legal order is
-a holder ceasing to hold with its own stated reason. A receipt for
+The L1 team confirmed (2026-11-23) that an approval does not lapse and
+no moment bounds the ordering of an approved act; an act ordered after
+its content pair is gone is valid (``def:graph:verified-act``). How
+long CoGra keeps that content:
+[Q67](../open-questions.md#q67--how-long-the-gc-keeps-the-row-of-an-act-that-may-still-be-ordered).
+No text lets an author withdraw an approval; a forget ends carriage,
+not the approval. Holding is a fact, not an undertaking
+(``def:graph:holder``), but a recipient that cannot complete
+validation while honoring immediate deletion declines rather than
+issue a false deletion receipt
+(``def:graph:requested-publication-intent``): a host that keeps the
+dependency opening for the act's life declines a forget for it. A
+later request is signed or uses equivalent attributable
+authentication, and the recipient verifies controller authority
+(``def:graph:requested-publication-intent``); that the recipient's
+own check of an authenticated session is enough is the L1 author's
+reading. A removal on a legal order is a holder ceasing to hold, which
+wrongs no one (``def:graph:holder``); no text governs a custodian's
+stated reason. A receipt for
 carriage: [Q62](../open-questions.md#q62--an-authenticated-carriage-receipt).
 An act CoGra does not carry:
 [Q63](../open-questions.md#q63--the-payload-mark-of-an-act-cogra-does-not-carry).
