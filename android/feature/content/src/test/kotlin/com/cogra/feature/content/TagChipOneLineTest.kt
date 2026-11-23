@@ -83,8 +83,12 @@ class TagChipOneLineTest {
         assertThat(chip.left.value).isAtLeast(0f)
         assertThat(chip.right.value).isAtMost(SCREEN.value)
         assertThat(chip.height.value).isAtMost(ONE_LINE_PILL.value)
-        assertThat(cross.width.value).isGreaterThan(0f)
-        assertThat(cross.right.value).isAtMost(chip.right.value)
+        // The ×'s node answers at 48 beyond its 16dp glyph (`hitTarget`), so its
+        // bounds reach past the pill by design: the drawn glyph — the node's
+        // centre ± 8 — is what must stand inside the pill, after the name.
+        val crossCentre = (cross.left.value + cross.right.value) / 2
+        assertThat(crossCentre + GLYPH_HALF).isAtMost(chip.right.value)
+        assertThat(bounds("${PREFIX}_tag_${name}_open").right.value).isAtMost(crossCentre - GLYPH_HALF)
         val text = layout("${PREFIX}_tag_${name}_open")
         assertThat(text.lineCount).isEqualTo(1)
         assertThat(text.isLineEllipsized(0)).isEqualTo(cut)
@@ -120,6 +124,9 @@ class TagChipOneLineTest {
 
         /** `TopicRemovable`: at least 32 tall, `4 12`, one label-large line — never a second. */
         val ONE_LINE_PILL: Dp = 34.dp
+
+        /** Half the × glyph (`TopicRemovable.jsx`: `close` at 16). */
+        const val GLYPH_HALF = 8f
 
         /** Thirty characters, hyphenated, short enough to fit a phone's row whole. */
         const val THIRTY = "salt-maps-of-the-coast-road-26"
