@@ -105,18 +105,8 @@ fun StanceControlRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val guest by viewModel.guest.collectAsStateWithLifecycle()
     KeptEffects(target, variant, state.reviewFrom, viewModel)
-    // A GUEST'S OPINION FACE IS LENT (FeedBare.md:7): the borrowed view's own,
-    // never a vouch-back's or an approval's pad — those are the reader's own
-    // acts, never the view's.
-    val lends = onRequireAccount != null && variant == null && !padOnly
-    // A guest has no bundle to read — asking costs a refused round trip and
-    // the guard's wasted refresh per control — so they read the view's.
-    LaunchedEffect(target, onRequireAccount) {
-        when {
-            onRequireAccount == null -> viewModel.observe(target)
-            lends -> viewModel.observeAsGuest(target)
-        }
-    }
+    val lends = isLent(onRequireAccount, variant, padOnly)
+    ObserveEffect(target, onRequireAccount, lends, viewModel)
     // Leaving the screen dismisses the pad and stages nothing
     // (design.md §8.3). The pad is a popup — its own window, drawn over
     // whatever the app navigates to — and the holder outlives the
@@ -144,18 +134,7 @@ fun StanceControlRoute(
     if (onTaken != null) TakenEffect(entry.taken, target, viewModel, onTaken)
     // AN APPLICANT'S FACE IS LOCKED, NOT GONE ([rememberGate]); a [variant]'s pad stays open.
     val gate = rememberGate(onRequireAccount, locked = state.applicant && variant == null)
-    val controlState = if (lends) {
-        guest.toControlState(target)
-    } else {
-        entry.toControlState(
-            coaching = state.coachingTarget == target,
-            inputMode = state.inputMode,
-            borrowed = state.borrowed,
-            keyAbsent = state.keyAbsent,
-            kept = state.kept.keptFor(target, entry.family),
-            settling = target in state.settling,
-        )
-    }
+    val controlState = if (lends) guest.toControlState(target) else state.controlStateOf(target, entry)
     StanceControl(
         state = if (onTaken != null) controlState.copy(confirmation = null) else controlState,
         // Every gesture that ENTERS the ceremony, so a guest meets the
@@ -193,6 +172,45 @@ fun StanceControlRoute(
         onKeepPending = { viewModel.onKeepPending(target) },
     )
 }
+
+/**
+ * A GUEST'S OPINION FACE IS LENT (FeedBare.md:7): the borrowed view's own —
+ * never a vouch-back's or an approval's pad (a [variant]) nor a pad-only host:
+ * those are the reader's own acts, never the view's.
+ */
+private fun isLent(onRequireAccount: (() -> Unit)?, variant: StancePadVariant?, padOnly: Boolean): Boolean =
+    onRequireAccount != null && variant == null && !padOnly
+
+/**
+ * What the control reads, once per target and reader: a reader with a session
+ * their own standing; a guest — who has no bundle, and asking for one costs a
+ * refused round trip and the guard's wasted refresh per control — the
+ * borrowed view's ([isLent]); a gated face that is not lent, nothing.
+ */
+@Composable
+private fun ObserveEffect(
+    target: StanceTarget,
+    onRequireAccount: (() -> Unit)?,
+    lends: Boolean,
+    viewModel: StanceViewModel,
+) {
+    LaunchedEffect(target, onRequireAccount) {
+        when {
+            onRequireAccount == null -> viewModel.observe(target)
+            lends -> viewModel.observeAsGuest(target)
+        }
+    }
+}
+
+/** A reader's own control for [target], from the holder's state. */
+private fun StanceUiState.controlStateOf(target: StanceTarget, entry: TargetStance) = entry.toControlState(
+    coaching = coachingTarget == target,
+    inputMode = inputMode,
+    borrowed = borrowed,
+    keyAbsent = keyAbsent,
+    kept = kept.keptFor(target, entry.family),
+    settling = target in settling,
+)
 
 /**
  * THE KEPT PICK'S WIRING for one control: what a pick kept here signs as —

@@ -1661,16 +1661,7 @@ private fun StanceRestingFace(
             if (holding || ringClosed) HoldRing(closed = ringClosed, tag = "${testTagPrefix}_stance_ring")
         }
         if (standing == null) {
-            if (wide && vantage != null) {
-                VantageWords(vantage)
-            } else if (wide) {
-                Text(
-                    text = stringResource(R.string.stance_wide_words),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    maxLines = 1,
-                )
-            }
+            if (wide) WideWords(vantage)
         } else if (LocalShowExactValues.current) {
             Text(
                 text = standing.pair(),
@@ -1685,16 +1676,21 @@ private fun StanceRestingFace(
 }
 
 /**
- * A GUEST'S WIDE WORDS name the borrowed view, `@genesis_mod's opinion`
- * (TagPage.md:75, ProfileOther.md:59): a name that outgrows the anchor cuts
- * its HANDLE, never its `'s opinion`, so the words always say whose view it is
+ * The wide anchor's words, only where there is no pair to show: `Your opinion`
+ * — or, for a guest, the borrowed view's (TagPage.md:75, ProfileOther.md:59),
+ * `@genesis_mod's opinion`. A name that outgrows the anchor cuts its HANDLE,
+ * never its `'s opinion`, so the words always say whose view it is
  * (`@genesis…'s opinion`; the master's `nameInLine`). The accessible name
- * keeps the handle whole, so the print is hidden from it.
+ * keeps the handle whole, so the guest's print is hidden from it.
  */
 @Composable
-private fun RowScope.VantageWords(handle: String) {
+private fun RowScope.WideWords(vantage: String?) {
     val style = MaterialTheme.typography.labelLarge
     val ink = MaterialTheme.colorScheme.primary
+    if (vantage == null) {
+        Text(text = stringResource(R.string.stance_wide_words), style = style, color = ink, maxLines = 1)
+        return
+    }
     Row(
         modifier = Modifier
             .weight(1f, fill = false)
@@ -1702,7 +1698,7 @@ private fun RowScope.VantageWords(handle: String) {
             .testTag(VANTAGE_WORDS_TAG),
     ) {
         Text(
-            text = "@$handle",
+            text = "@$vantage",
             style = style,
             color = ink,
             maxLines = 1,
