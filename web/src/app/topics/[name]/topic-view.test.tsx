@@ -919,7 +919,37 @@ describe("TopicView — the tag page's registered nodes (TagPage, TagPageHeldPad
       },
     ],
   });
-  const liveRows = () => [row(textPost(), 0.1, 1, true), row(galleryPost(), 0.55, 1), row(taggedComment("c1"), 0.4, 0.9)];
+  // @ada's comment carries #saltmaps and one reference, as the board's does
+  // (round 63 `TAGGED_COMMENT_LINE`), so its tags line is drawn.
+  const adaLine = () => ({
+    topics: [
+      {
+        __typename: "TopicClaim",
+        hashtag: { __typename: "Hashtag", id: "h3", name: moderated("saltmaps") },
+        relevance: 0.4,
+        confidence: 0.9,
+        pending: false,
+      },
+    ],
+    references: [
+      {
+        __typename: "ReferenceClaim",
+        targetId: "r1",
+        relevance: 0.5,
+        support: 0.5,
+        withdrawalCost: 1,
+        rawRelevance: 0.5,
+        rawSupport: 0.5,
+        pending: false,
+        target: null,
+      },
+    ],
+  });
+  const liveRows = () => [
+    row(textPost(), 0.1, 1, true),
+    row(galleryPost(), 0.55, 1),
+    row(taggedComment("c1", adaLine()), 0.4, 0.9),
+  ];
   const removedRows = () => [
     row({ ...textPost(), content: moderated(null, "REDACTED"), removal: REMOVED }, 0.1, 1, true),
     row(taggedComment("c1", { content: moderated(null, "REDACTED"), removal: REMOVED }), 0.4, 0.9),
