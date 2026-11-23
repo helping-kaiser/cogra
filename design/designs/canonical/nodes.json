@@ -8828,6 +8828,9 @@
         "history.commentCard.tagsLine": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
         ],
+        "history.commentCard.tagsLine.counts": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
         "history.commentCard.tagsLine.tag": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
@@ -13483,7 +13486,8 @@
     "ProfileComments": {
       "prefix": "profile",
       "keys": {
-        "profile.comments.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
+        "profile.comments.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "profile.comments.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
       "nodes": {
         "profile.bottomBar": [],
@@ -13548,6 +13552,15 @@
         ],
         "profile.comments.commentCard.removalMark.when": [
           "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "profile.comments.commentCard.tagsLine": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "profile.comments.commentCard.tagsLine.counts": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "profile.comments.commentCard.tagsLine.tag": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f/saltmaps"
         ],
         "profile.comments.commentCard.target": [
           "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f",
@@ -18920,6 +18933,9 @@
         "saved.commentCard.tagsLine": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
         ],
+        "saved.commentCard.tagsLine.counts": [
+          "8c7296e7-8e4b-45b1-9889-279e7a713f9c"
+        ],
         "saved.commentCard.tagsLine.tag": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c/glovebox",
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c/coastroad"
@@ -22143,7 +22159,8 @@
         "tagPage.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "tagPage.claim": "the tagged thing's id, the lowercase UUID the wire carries — the post's or the comment's the claim stands above (TaggedRow, the tag page)",
         "tagPage.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
-        "tagPage.commentCard.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)"
+        "tagPage.commentCard.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "tagPage.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
       "nodes": {
         "tagPage.actionRow": [],
@@ -22330,12 +22347,22 @@
         "tagPage.commentCard.removalMark.when": [
           "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
         ],
+        "tagPage.commentCard.tagsLine": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.tagsLine.counts": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.tagsLine.tag": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f/saltmaps"
+        ],
         "tagPage.commentCard.target": [
           "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
         ],
         "tagPage.header": [],
         "tagPage.header.back": [],
-        "tagPage.header.title": []
+        "tagPage.header.title": [],
+        "tagPage.name": []
       }
     },
     "TagPageCommentMenu": {
@@ -22419,7 +22446,8 @@
         "tagPage.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "tagPage.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "tagPage.claim": "the tagged thing's id, the lowercase UUID the wire carries — the post's or the comment's the claim stands above (TaggedRow, the tag page)",
-        "tagPage.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
+        "tagPage.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "tagPage.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
       "nodes": {
         "tagPage.actionRow": [],
@@ -22602,6 +22630,15 @@
         ],
         "tagPage.commentCard.menu": [
           "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.tagsLine": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.tagsLine.counts": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
+        "tagPage.commentCard.tagsLine.tag": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f/saltmaps"
         ],
         "tagPage.commentCard.target": [
           "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
