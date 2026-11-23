@@ -138,7 +138,8 @@ export function savedOrigin({
 /**
  * The profile's posts (Reel.md:3, "the profile's posts"): the posts view's
  * next pages from where the view had reached, in the view's own order —
- * newest first by landing, the read the view itself pages with. Every row is
+ * the still-settling posts first, then the landed ones newest first — the read
+ * the view itself pages with. Every row is
  * the person's post, so nothing is cut but what the stream narrows.
  */
 export function profileOrigin({
