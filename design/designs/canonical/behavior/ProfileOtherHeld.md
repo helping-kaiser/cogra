@@ -12,7 +12,7 @@ ALWAYS Message keeps its own width and the ⋮ its place in both reading modes, 
 
 ALWAYS the header bar is titled with the person's handle and carries the way back alone
 
-ALWAYS the bottom bar keeps lit the slot of the root the profile was opened from, Feed from the feed
+ALWAYS profile.bottomBar keeps lit the slot of the root the profile was opened from, profile.bottomBar.feedSlot from the feed
 
 WHEN tap the wide anchor -> the pad blooms at the lower centre of the viewport AND nothing is staged
 
@@ -36,15 +36,17 @@ WHEN tap the Opinions by figure -> the opinions page opens on this profile on it
 
 WHEN tap the Posts figure -> NEVER anything happens
 
-ALWAYS the page lands on its Posts tab, as every profile does
+ALWAYS the page lands on profile.tabRow.postsTab, as every profile does
 
-WHEN tap the Posts tab GIVEN another tab is lit -> the person's posts stand below the tab row as post cards AND the header above stays as it was
+WHEN tap profile.tabRow.postsTab GIVEN another tab is lit -> the person's posts stand below profile.tabRow as post cards AND the header above stays as it was
 
-WHEN tap the Comments tab -> the person's comments stand below the tab row as comment cards AND the header above stays as it was
+WHEN tap profile.tabRow.commentsTab -> the person's comments stand below profile.tabRow as comment cards AND the header above stays as it was
 
 WHEN tap a chronicle card for a published post -> the post's detail opens AND its back arrow reads Back to the profile
 
-WHEN tap the Profile slot -> the reader's own profile opens
+WHEN tap a chronicle card for a tag or a citation of a post -> the tagged or cited post's detail opens AND its back arrow reads Back to the profile
+
+WHEN tap profile.bottomBar.profileSlot -> the reader's own profile opens
 
 WHEN tap the back arrow -> the reader returns to where they came from, in the state they left it AND the arrow's label names that origin
 
