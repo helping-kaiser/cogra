@@ -313,9 +313,11 @@ recomputes the pre-commitment from them and forms the content
 commitment over that pre-digest and a salt it draws, so nothing it
 verifies, commits to or seals depends on the payload.
 
-The pair's checks belong to whoever carries it
+The host's acceptance is independent of the pair ("Verified act"),
+and the courtesy handshake places the pair's checks with whoever
+carries it
 ([layer1-interface.md §8.2](../primitive/layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake),
-"Entropy custody"), so they are the API's **carriage checks**, run
+"Courtesy Handshake"), so they are the API's **carriage checks**, run
 before anything reaches the host
 (`relay::check_carriage`, then `staged::record_pre_signed`): the
 content nonce and the dependency nonce are each 32 bytes

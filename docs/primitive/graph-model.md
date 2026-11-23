@@ -20,7 +20,7 @@ CoGra's own stores. The node and edge catalogs live in
   *from* you.
 - **Append-only chronicles.** The record set only grows. No record
   is ever deleted, merged, superseded, or rewritten; the only
-  one-way transition is payload reduction
+  one-way transition is CoGra's payload reduction
   ([substrate.md §7](substrate.md#7-payload-carriage)). The store
   holds chronicles, never state — every notion of "current" is a
   declared read rule over the records (§3).

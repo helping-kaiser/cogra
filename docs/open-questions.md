@@ -125,16 +125,17 @@ model that our docs nowhere pin down:
 Neither blocks documenting the resolved design; both gate its
 implementation.
 
-**Edition-4 status (PN v0.23.2-dev):** L1 now specifies a
-mandatory act-authentication handshake — author pre-commitment,
-host-sealed verified act, author approval witness — but expressly
-declares signature schemes, key management, and algorithm
-migration deployment concerns, and says nothing about rotation
+**What Layer 1 states.** The closure states properties of act
+authentication — each recorded proposal and approval signature
+verifies under the public key the record maps to it — and relates no
+key to the Actor. Signature schemes, key management and algorithm
+migration are deployment concerns, and so, unless an author-authority
+case is declared, is which keys may speak for an Actor
 (``post:graph:act-authentication-requirements``,
 ``rem:graph:authentication-realization-out-of-scope``;
 [layer1-interface.md §8.2](primitive/layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake)).
-Both questions stay open, now aimed at that postulate's
-realization rather than at silence.
+Both questions stay open, aimed at the deployment's realization of
+that postulate.
 
 **Interim realization (stand-in only).** The L1 stand-in's
 handshake runs on Ed25519 signatures, SHA-256 salted hash
@@ -793,16 +794,19 @@ deferred swap question).
 
 The host's seal attests receipt, pre-commitment verification,
 formation validity and salt addition; it does not attest carriage of
-the content pair. Where carriage matters to the actor, the interface
-has the layer that accepts it return an authenticated carriage result
-separate from the seal, in a form the deployment chooses. CoGra's API
-carries the content pair of every act it relays: it runs the carriage
-checks before anything reaches the host and refuses a failing pair as
-`BAD_INPUT`. It issues no separate authenticated carriage result.
+the content pair. The courtesy handshake has the party that accepts
+carriage return an authenticated receipt, separate from the seal and
+scoped to that party and object; it binds only a realization that
+claims that standard
+([layer1-interface.md §8.2](primitive/layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake),
+"Courtesy Handshake"). CoGra's API carries the content pair of every
+act it relays: it runs the carriage checks before anything reaches
+the host and refuses a failing pair as `BAD_INPUT`. It issues no
+carriage receipt.
 
 ### The question
 
-Does CoGra return an authenticated carriage result to the author
+Does CoGra return an authenticated carriage receipt to the author
 beside the seal — and if so, in what form?
 
 ### Related
@@ -940,12 +944,14 @@ jakob, 2026-11-17)
 
 ### Context
 
-Specification v0.34.0, unchanged in v0.34.1, gives the host a duty:
-it issues each verdict on which the rejection of a proposed set
-rests, FAIL and INDECISIVE included, as a whole certificate to the
-party the comparison measures, with the rejection and unasked; a bare
-rejection without the enclosure the host compared is forbidden. An
-own-balance comparison measures the author whose act it compares.
+No closure rule has a host issue the verdict behind a rejection or a
+deferral. Issuance is a courtesy standard: a realization claiming it
+presents an existing comparison as a whole certificate to the party
+the comparison measures, and promises neither a computation nor a
+delivery hop
+([layer1-interface.md §13.2](primitive/layer1-interface.md#132-replay-verification-and-verdict-certificates),
+"Verdict Issuance"). An own-balance comparison measures the author
+whose act it compares.
 
 At close the stand-in orders an approved act only when its author's
 balance pays θ. An act whose author cannot pay is left unwritten,
@@ -957,10 +963,10 @@ fall between prepare and close.
 
 ### The question
 
-Is a deferral at close a rejection the duty covers, and if so, how
-does its verdict reach the author — what the certificate names, and
-by which channel? The L1 team has been asked; the duty's scope is
-under revision on their side.
+If the host CoGra writes to claims the courtesy issuance standard,
+is a deferral at close a rejection it covers, and if so, how does
+its verdict reach the author — what the certificate names, and by
+which channel?
 
 ### Related
 

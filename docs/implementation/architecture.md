@@ -207,8 +207,10 @@ epoch publication — with the two documented simplifications (money
 as numbers, standing stubbed). The stand-in mirrors the substrate
 contract as the L1 side defines it — where a bilaterally agreed
 edition supersedes the mirrored copy, the code follows the
-agreement — and enforces nothing CoGra-specific: CoGra's own
-restrictions live in L2 prepare and folds, keeping the delta at
+agreement — and enforces nothing CoGra-specific beyond its address
+convention: it seals only under the key the author's address
+derives from, a stand-in convention, not a Layer 1 check. CoGra's
+own restrictions live in L2 prepare and folds, keeping the delta at
 the swap as small as possible. It owns its own `l1_*` tables in
 the shared Postgres instance: they play L1's role, nothing outside
 the crate touches them, and the whole crate is replaced at the
@@ -277,17 +279,18 @@ reasoning, contract mechanics, and the test story live there.
 ## The write path
 
 [substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)
-owns the flow's semantics — L1's admission handshake takes two
-device signatures per act; this is the system view of the five
-steps:
+owns the flow's semantics — the admission handshake carries two
+signatures per act, both by the device's key under CoGra's rule;
+this is the system view of the five steps:
 
 1. **Prepare** (backend). Validate the gesture against L2 policy
    and envelope conformance, pre-check the write rule (below),
    assemble the canonical proposal — act body, payload envelope,
    dependency list in canonical order (strictly ascending by act
-   identifier in Layer 1's componentwise order — author by bytes,
-   then sequence as a number, then family by bytes — so
-   duplicate-free) — and store it as a **staged write** (Postgres
+   identifier in the reference encoding's componentwise order —
+   author by bytes, then sequence as a number, then family by bytes
+   — so duplicate-free, ``def:graph:dependency-list-order``) — and
+   store it as a **staged write** (Postgres
    row; payload bytes ride the row until confirm promotes them
    into carriage). Return the
    proposal to the client.
@@ -340,7 +343,9 @@ steps:
    **approval witness** over the verified act and its seal — only then is
    the act orderable. The backend relays the approval and drives
    retries across epoch boundaries. Both signatures cover the
-   act, so the relay can neither alter it nor author one unasked.
+   act, so the relay cannot alter it, and the stand-in seals only
+   under the key the author's address derives from, so the relay
+   cannot author one unasked.
 5. **Confirm** (ingestion). When the accepted act arrives in the
    mirror, the staged write is promoted: the content pair and its
    salt become permanent carriage, display rows drop their pending mark, flow

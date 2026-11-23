@@ -151,7 +151,8 @@ defined in
    `(0,0)` + payload toward the `illegal` moderation Type, same
    shape as above.
 
-`'illegal'` is **not** reversible — payload state moves one way.
+`'illegal'` is **not** reversible — CoGra's carriage moves payload
+state one way.
 Where both classifications have been applied, `illegal` takes
 precedence; the precedence is CoGra read-side policy, since the
 Tags themselves are independent marks.

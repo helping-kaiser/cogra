@@ -173,8 +173,8 @@ concept table in [substrate-map.md](substrate-map.md)):
    [edges.md](edges.md).
 2. **Payload on an L1 record** — content and flow state riding the
    gesture, bounded by `M_payload`, witness-covered (§7). Every
-   edge carries a payload projection, so every gesture can carry
-   state.
+   authored act carries a content commitment to an optional
+   payload, so every gesture can carry state.
 3. **L2 overlay** — CoGra's own structure, for state that must be
    queryable but has no L1 home (§3).
 4. **Postgres / off-graph** — display content, operational
@@ -198,16 +198,19 @@ design question for this doc, not a per-instance improvisation.
 
 **Client-signed, backend-relayed.** A record's signature is the
 actor's own: the signing key lives on the member's device and never
-enters CoGra custody — it is the key the actor's address, and
-every value burned to it, hangs on. The backend is the actor's
-preparation and transport agent, never their signer (it holds the
-person ↔ actor association — identity association is terminal by
-contract — and the carriage stores, nothing more). L1's admission
-handshake requires two author signatures per act — the proposal
+enters CoGra custody. In CoGra the actor's address derives from
+that key — CoGra's own convention, not a Layer 1 rule — so the
+address, and every value burned to it, hangs on it. The backend is
+the actor's preparation and transport agent, never their signer (it
+holds the person ↔ actor association — identity association is
+terminal by contract — and the carriage stores, nothing more). L1's
+admission handshake carries two signatures per act — the proposal
 pre-commitment before host salting, and the approval witness over
-the exact host-sealed verified act
-([layer1-interface.md §8.2](layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake))
-— so one write runs in five steps:
+the exact host-sealed verified act — and checks each under the
+public key the record maps to it, relating no key to the actor
+([layer1-interface.md §8.2](layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake)).
+That both are the author's own device key is CoGra's rule. One
+write runs in five steps:
 
 1. **Prepare.** The backend validates the gesture (envelope
    conformance, L2 policy), pre-checks the write rule below, and
@@ -236,12 +239,14 @@ the exact host-sealed verified act
    act orderable. The
    backend relays the approval and drives retries across epoch
    boundaries; relaying confers nothing: both signatures cover
-   the act, so the backend can neither alter it nor author one
-   unasked.
+   the act, so the backend cannot alter it, and the stand-in seals
+   only under the key the author's address derives from, so the
+   backend cannot author one unasked.
 5. **Confirm.** The mirror converges on the accepted act and
    the staged content pair is promoted to permanent carriage (§7). A
-   prepared act that never lands is discarded, staged payload
-   included, after a bounded number of epochs.
+   prepared act that never lands is collected after a bounded number
+   of epochs; what the collection keeps for a late landing is
+   [data-model.md "Staged writes"](../implementation/data-model.md#staged-writes).
 
 **Content exists at authoring, not at landing.** A prepared act
 is its author's content from the moment they sign it, readable by
@@ -254,8 +259,8 @@ applicant's carried acts are released at that account landing
 ([data-model.md "Staged writes"](../implementation/data-model.md#staged-writes)).
 The epoch never defines the
 content; it dates it. The existence is conditional on that arrival:
-when a prepared act expires unlanded and is discarded, the content
-leaves every reader's view with it — on the graph nothing ever
+when a prepared act expires unlanded, the content leaves every
+reader's view with it — on the graph nothing ever
 existed, so there is nothing to mark — and its author is told that
 it did not land.
 
@@ -344,12 +349,13 @@ CoGra is the carriage service for its users' content. The model is
   non-conforming payload still holds a valid, irrevocable, scored L1
   act (``prop:graph:removable-projection-invariance``); it is only
   invisible where conformance is enforced.
-- **Removal is the deletion story.** Payload state moves one way,
-  full → reduced: removing the payload, its content nonce and salt
-  erases content — never rewrites it — while the structural record
-  stays. The visible mark
-  for "never erase silently" is exactly this pair: the immutable
-  structural record plus the monotone reduced-only payload state.
+- **Removal is the deletion story.** CoGra's carriage moves payload
+  state one way, full → reduced: removing the payload, its content
+  nonce and salt erases content — never rewrites it — while the
+  structural record and its content commitment stay. The visible
+  mark for "never erase silently" is exactly this pair: the
+  immutable structural record plus the monotone reduced-only
+  payload state CoGra's carriage records.
   Policy and flows: [layers.md](layers.md),
   [moderation.md](../instances/moderation.md).
 - **E2EE chat commits over ciphertext.** The witness binds the

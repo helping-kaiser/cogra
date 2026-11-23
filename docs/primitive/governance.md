@@ -518,8 +518,8 @@ Proposal must explicitly carry the reverse.
 that passes runs the same finalization-and-materialization
 machinery with the reversed value. The resulting state will
 typically mirror the pre-original state, but exact mirror is not
-guaranteed — and one class of outcomes is structurally one-way:
-an illegal classification's payload removal is monotone
+guaranteed — and one class of outcomes is one-way: an illegal
+classification's payload removal is monotone in CoGra's carriage
 ([layers.md §5](layers.md#5-deletion-policy)), so no
 counter-Proposal restores removed content. Where exact mirror
 matters, the application designs its materialization so forward
