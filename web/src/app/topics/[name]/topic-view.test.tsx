@@ -884,6 +884,14 @@ describe("TopicView — the tag page's registered nodes (TagPage, TagPageHeldPad
     });
     await screen.findByTestId("tagPage.header");
     await screen.findAllByTestId("tagPage.claim");
+    // Each card's anchor draws its exact pair once its own stance read answers,
+    // which races the page's reads: count the page only once every card's has.
+    const cardAnchors = "[data-testid='tagPage.card.actionRow.stance.anchor'],[data-testid='tagPage.commentCard.actionRow.stance.anchor']";
+    const cardExacts =
+      "[data-testid='tagPage.card.actionRow.stance.anchor.exact'],[data-testid='tagPage.commentCard.actionRow.stance.anchor.exact']";
+    await waitFor(() =>
+      expect(document.querySelectorAll(cardExacts).length).toBe(document.querySelectorAll(cardAnchors).length),
+    );
     const seen = rendered();
     view.unmount();
     return seen;
