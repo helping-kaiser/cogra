@@ -27,6 +27,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.height
 import com.cogra.app.HiltTestActivity
 import com.cogra.app.ui.theme.CograTheme
 import com.cogra.core.designsystem.DataNode
@@ -119,8 +120,9 @@ class CograBottomBarTextSizeTest {
         )
     }
 
-    private fun height(face: String) =
-        compose.onNodeWithTag("$face.bottomBar").getUnclippedBoundsInRoot().height
+    /** The bar's height in dp (Truth takes the plain float, not the inline `Dp`). */
+    private fun height(face: String): Float =
+        compose.onNodeWithTag("$face.bottomBar").getUnclippedBoundsInRoot().height.value
 
     /** What TalkBack reads for the slot: its merged text and descriptions. */
     private fun spokenName(tag: String): List<String> {
