@@ -551,7 +551,11 @@ Defined here, and **not** in the source — see §11. The values are Material's
 own state-layer opacities, applied as a `currentColor` overlay so one
 rule covers all three button variants:
 
-- **Hover** — state layer at **8%**.
+- **Hover** — state layer at **8%**, and only where the primary input can
+  hover (`@media (hover: hover)`; jakob 2026-11-23). On a touch screen a
+  control is lit only while the finger is on it — the press layer — and
+  once the finger lifts or the act is done nothing stays lit. With a
+  cursor, hover stands. Every hover rule in the tree's CSS is gated so.
 - **Press** — state layer at **10%**. Never a scale-down, never a shadow
   change: the direction is calm, and a control that shrinks under the
   thumb performs.
