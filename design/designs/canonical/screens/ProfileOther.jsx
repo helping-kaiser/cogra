@@ -51,12 +51,12 @@
    same act: `Mentioned` `a deleted account`, the reserved disc in the
    picture's place, and `Vouched for` `a deleted account`, the record's face.
    A GUEST (round 62, seam 404.3) is the `reader` chip's `guest`: the wide
-   anchor reads `@genesismod's opinion` beside the hollow face, the handle
+   anchor reads `@genesis_mod's opinion` beside the hollow face, the handle
    cut first where it outgrows the anchor (`READER_CHIP`). The faces are the
    borrowed view's (round 63; jakob 2026-11-23, point 7): it holds an opinion
    on @ada's post on the Posts tab, the face the member's fixture draws, and
    none on @ada, whose anchor wears the hollow face; each anchor is spoken
-   `@genesismod's opinion on …` (point 8 (a)).
+   `@genesis_mod's opinion on …` (point 8 (a)).
    REGISTERED under the `profile` prefix (design ⇄ impl seam 059/061): another
    person's page is the same surface as your own, named by the same body
    names. */

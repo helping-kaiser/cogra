@@ -139,6 +139,9 @@ an `instances/` doc is a sign the mechanism belongs in
   the L1 stand-in and its swap, vertical slices from the seam
   through the CGT rail and flows (each hand-testable), staged
   workstreams with their gates.
+- [l1-swap](implementation/l1-swap.md) — the move from the L1
+  stand-in to PeerNetworks Layer 1: the seam today, what changes
+  area by area, the order of work, what is still open.
 - [architecture](implementation/architecture.md) — system design
   around the L1 seam: external surfaces, stores, write and read
   paths.

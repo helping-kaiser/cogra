@@ -15,6 +15,8 @@ body {
 }
 
 a { color: var(--primary); text-decoration-color: color-mix(in srgb, var(--primary) 40%, transparent) }
-a:hover { color: color-mix(in srgb, var(--primary) 84%, var(--on-surface)); text-decoration-color: currentColor }
+@media (hover: hover) {
+  a:hover { color: color-mix(in srgb, var(--primary) 84%, var(--on-surface)); text-decoration-color: currentColor }
+}
 
 code, kbd, samp, pre { font-family: var(--font-mono) }
