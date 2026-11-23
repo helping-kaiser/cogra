@@ -119,6 +119,7 @@ export function Screen() {
               replyOpacity="{{lockOpacity}}"
               target="{{targetLine}}"
               onOpenTarget={() => {}}
+              {...TAGGED_COMMENT_LINE}
               menuItems={readerCommentCardMenu("ada")}
               node="commentCard"
               id={ADA_SECOND_COMMENT_ID}
@@ -173,6 +174,7 @@ export function Screen() {
 
               target="{{targetLine}}"
               onOpenTarget={() => {}}
+              {...TAGGED_COMMENT_LINE}
               menuItems={readerCommentCardMenu("ada")}
               node="commentCard"
               id={ADA_SECOND_COMMENT_ID}

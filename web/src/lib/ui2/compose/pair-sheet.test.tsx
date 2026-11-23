@@ -210,6 +210,15 @@ describe("TagPadCompose — a staged tag's pair", () => {
     }
   });
 
+  // ONE MARKUP, TWO PAINTINGS (readme §13; TagPadCompose.jsx, RefPair.jsx draw
+  // the pair in `cg-exact`): the number is drawn for geek mode alone, and the
+  // spoken twin carries it whatever the mode.
+  it("draws the exact pair as geek mode's number, its spoken twin carrying it always", () => {
+    renderTag();
+    expect(screen.getByTestId("sheet-exact").className.split(/\s+/)).toContain("cg-exact");
+    expect(screen.getByTestId("sheet-spoken")).toHaveTextContent("+0.10");
+  });
+
   it("thinks at zero certainty, naming it, never one of the thirteen (faces follow the value)", () => {
     // The expectation is the rule's (tagReadout's), not the bare table's:
     // a checker computed from the table would wrongly pass a 🎣 here.
@@ -309,8 +318,14 @@ describe("TagPadCompose — a staged tag's pair", () => {
     const route = screen.getByTestId("sheet-exact-route");
     expect(document.activeElement).toBe(route);
     expect(route).toHaveTextContent("Set exact values for #coastroad");
-    expect(route.className).toContain("sr-only");
-    expect(route.className).toContain("focus:not-sr-only");
+    // HIDDEN UNTIL FOCUS IS SHOWN (the boards' `cg-sr-focusable`, drawn on
+    // `:focus-visible`): focus lands here on every open, so a `:focus` reveal
+    // drew the route on a tap's open and pushed Done off a short phone
+    // (jakob's hand test, 2026-11-23). jsdom has no focus-visible heuristic;
+    // the drawn rect is the harness probe's to measure.
+    expect(route.className.split(/\s+/)).toContain("sr-only");
+    expect(route.className.split(/\s+/)).toContain("focus-visible:not-sr-only");
+    expect(route.className.split(/\s+/)).not.toContain("focus:not-sr-only");
 
     fireEvent.click(route);
     expect(screen.queryByTestId("sheet-field")).toBeNull();

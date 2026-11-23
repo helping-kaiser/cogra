@@ -12,8 +12,14 @@ export function Screen() {
         <ApkLine />
       </CograBand>
       <FeedList>
-        <PostCard {...ADA_POST} signedIn={false} />
-        <PostCard {...TOBIAS_POST} signedIn={false} />
+        {/* THE BORROWED VIEW'S OWN OPINIONS (round 63; jakob 2026-11-23,
+            point 7 "build it"): the view holds one on @ada's post — the face
+            and pair the member's feed draws there (`Feed`) — and none on
+            @tobias's, which wears the hollow face. Read-only: a tap raises
+            the guest gate. Each anchor is spoken as the band's view's
+            opinion, `@noa's opinion on this post` (point 8 (a)). */}
+        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} signedIn={false} stanceVantage="noa" />
+        <PostCard {...TOBIAS_POST} signedIn={false} stanceVantage="noa" />
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>

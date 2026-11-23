@@ -280,6 +280,17 @@ priced for, and the budget is a bound on the server's work rather
 than a hope about it. A gallery's bound is enforced the same way,
 by the cap prepare refuses past.
 
+**A list of mixed kinds is priced at the sum of its kinds.** A
+selection on a union list prices every row at the cost of every
+kind it names, because the calculator adds an inline fragment's
+fields into the parent field's cost — a safe bound, and a loose
+one, since a row is one kind. A mixed list therefore carries its
+rows light, and a client reads whole cards by id in a second
+request, each card then priced once for the rows of its kind; the
+tag page's tagged content is the instance. Pricing a mixed row at
+its dearest kind needs a cost calculator of CoGra's own
+([Q73](../open-questions.md#q73--pricing-a-mixed-row-at-its-dearest-kind)).
+
 **The ceilings are measured, not chosen, and re-derived downward
 as the corpus shrinks** — a ceiling admits what the clients
 actually send, never a legacy high-water mark. Both are derived

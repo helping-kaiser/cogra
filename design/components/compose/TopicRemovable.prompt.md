@@ -14,4 +14,6 @@ A topic the author has staged, shown back to them.
 
 The row it sits in is the composer's own — a wrapping flex row ending in the `+ Add a tag` inline action, under a field label.
 
+**One line, never wider than its row.** A name too long for the row — a 128-character tag — is cut with "…" and the pair and the × keep their room; the pill never wraps its name (jakob 2026-11-23: a tag is one line everywhere but its own page).
+
 **The × is the button, not the pill.** Making the pill pressable would say removal is the only thing a topic is for. The button adds no box — no border, no background, no padding, colour inherited — so it draws the glyph it always was, and brings the state layer, the focus ring and the 48px target with it. It names what it removes: `Remove #coastroad`, because a row of these is otherwise a row of identically-named controls.

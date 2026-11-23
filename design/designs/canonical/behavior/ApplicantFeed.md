@@ -28,6 +28,8 @@ WHEN the email is verified -> feed.verifyCard leaves AND the cards still owed st
 
 WHEN the key is attached -> feed.keyCard leaves AND the cards still owed stay
 
+WHEN the applicant's own key, on this device and not yet attached, fails to attach -> the house line That didn't go through. stands with Retry AND NEVER a fresh key is offered in its place AND NEVER the key is said to belong to another account
+
 WHEN the last owed step is done -> the waiting card takes the task cards' place
 
 WHEN tap Resend the link -> the verification mail goes out again AND feed.verifyCard stays AND the snackbar reads Sent — the link is on its way to noor@fieldmail.org. with the address the card prints
