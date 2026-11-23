@@ -635,7 +635,7 @@
       "x": -9700,
       "y": 0,
       "w": 9280,
-      "h": 6224,
+      "h": 6280,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -796,6 +796,15 @@
       "file": "ReplyKeyAbsent.dc.html",
       "title": "Comments · key absent, at the reply's door",
       "x": 4320,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
+      "file": "CommentRefsSheet.dc.html",
+      "title": "Comment · its tags and references",
+      "x": 4800,
       "y": 0,
       "w": 390,
       "h": 844,

@@ -6,6 +6,8 @@ ALWAYS tagPage.menuSheet reads Save or Unsave, then Cite in a new post, then Edi
 
 WHEN tap tagPage.menuSheet.edit -> the menu closes AND the comment's edit opens over the tag's page
 
+WHEN tap tagPage.menuSheet.edit GIVEN the read of the comment for its edit gets no answer -> the menu closes AND tagPage.snackbar reads Can't reach the server. Check your connection and try again. AND NEVER the comment's edit opens
+
 WHEN tap tagPage.menuSheet.remove -> the menu closes AND the think-twice dialog comes up over the tag's page
 
 WHEN tap tagPage.menuSheet.opinions -> the menu closes AND the comment's opinions sheet comes up over the tag's page

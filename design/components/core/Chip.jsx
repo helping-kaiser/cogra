@@ -100,11 +100,16 @@ const READOUT = {
   flex: "none",
 };
 
-/* `selectedHoles` lets a board draw ONE chip whose selection its own setting
+/* `cut` keeps a filter chip inside its row (round 62; jakob 2026-11-23, no
+   wrapping for tags in lists): a label too long for the row — a
+   128-character tag in the filter sheet's `One tag` — ends in "…" and the
+   pill never runs past the row's edge.
+
+   `selectedHoles` lets a board draw ONE chip whose selection its own setting
    chooses — `{ checked, border, background, color }`, each a `{{hole}}` the
    board's VALS fills with what `selected` would give — so a row a chip
    setting re-selects is drawn once, not once per value (round 49, seam 338). */
-export function Chip({ label, selected = false, selectedHoles, onToggle, ariaLabel, disabled = false, size = "md", tone = "filter", node, nodeKey }) {
+export function Chip({ label, selected = false, selectedHoles, onToggle, ariaLabel, disabled = false, size = "md", tone = "filter", cut = false, node, nodeKey }) {
   if (tone === "readout") return <span style={READOUT} data-node={node} data-node-key={node && nodeKey}>{label}</span>;
   const h = selectedHoles;
   return (
@@ -124,9 +129,10 @@ export function Chip({ label, selected = false, selectedHoles, onToggle, ariaLab
         background: h ? h.background : selected ? "var(--secondary-container)" : "transparent",
         color: h ? h.color : selected ? "var(--on-secondary-container)" : "var(--text-body)",
         opacity: disabled ? "var(--state-disabled)" : 1,
+        ...(cut ? { maxWidth: "100%" } : null),
       }}
     >
-      {label}
+      {cut ? <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span> : label}
     </button>
   );
 }

@@ -6798,6 +6798,10 @@ deleted the table gives no cell, so neither is drawn or written. Options: (a) th
 `this account`, the label's own lowercase word. Recommendation (a): the one fragment the table
 already blesses, and it keeps saying whom the act was toward.
 
+Closed by round 62 (jakob 2026-11-23, B3 = (a)): `Mentioned` `a deleted account` · `Vouched for` `a
+deleted account` (copy-voice *Naming a removed or deleted thing* and *The chronicle's verbs*;
+`ProfileOther.md`), drawn on `ProfileOther`'s `aside` chip, the mention wearing the reserved disc.
+
 ### 294 · A deleted account's notifications · *design* · **filed 2026-11-19**
 
 Round 61 (backlog 286's last: "an actor, not a pointer"). Every notification is a sentence with
@@ -6808,6 +6812,11 @@ fragment capitalised at the sentence's head, the reserved disc in the picture's 
 what happened); (c) the account's rows leave the list once it is deleted (a notification is not
 graph structure, but it is still the record of an act). Recommendation (a). The same row's `in …`
 line for a deleted account's swept piece would read `in a deleted account's removed post`.
+
+Closed by round 62 (jakob 2026-11-23, B4 = (a)): every kind's sentence opens `A deleted account` in
+the actor's place, the rest as it stands, the empty disc in the picture's place and a face kept; a
+swept piece reads `in a deleted account's removed post` (`Notifications.md`, copy-voice; drawn as
+`Notifications`' `actor` chip).
 
 ### 295 · A comment's references sheet has no board · *system* · **filed 2026-11-19**
 
@@ -6820,6 +6829,11 @@ comment's sheet over the thread as `CommentCitedByEmpty` stacks its sheet, both 
 told apart by board; (b) register the post's alone and leave the comment's to the clients, who
 build it from the same master.
 
+Closed by round 62 (jakob 2026-11-23, B5 = (a)): `RefsSheet` registers under `postDetail`
+(`refsSheet`, `title`, each `tag` keyed by its name, each `reference` by its place) and
+`CommentRefsSheet` draws the comment's sheet over the thread under the same paths; the thread's
+reference counts lead to it.
+
 ### 296 · Where a tag's or a citation's chronicle act opens · *design* · **filed 2026-11-19**
 
 Round 61. copy-voice *The chronicle's verbs* gives a tag's and a citation's acts their words and
@@ -6827,6 +6841,11 @@ discs, and no sidecar says where their card opens; `Profile`'s `act` chip draws 
 target and all, inert like the opinion's act, so nothing is claimed. Options: (a) the tagged or
 cited thing's detail (its mark there once removed), as a published post's act opens its post; (b)
 inert, as an opinion's act.
+
+Closed by round 62 (jakob 2026-11-23, B2 = (a)): a tag's or a citation's chronicle card of a post
+opens the tagged or cited post's detail, its mark there once removed (`Profile.md`,
+`ProfileOther.md`, `ProfileDeleted.md`, `ProfileOtherHeld.md`); `Profile`'s `act` chip draws both
+cards as doors. A comment's (`Tagged a comment`, `Cited a comment`) is backlog 300.
 
 ### 297 · A pending act's place when it is not the newest · *design* · **filed 2026-11-19**
 
@@ -6837,3 +6856,51 @@ Comments tab's, its twin, the second comment `now` below a `1d` one (`ProfileCom
 reads out of order. Options: (a) a pending thing stands at the head of its list, wherever its
 landed twin would stand; (b) it keeps its place in the order by its signing time, its age `now`
 until it lands. Drawing-level: jakob's.
+
+Closed by round 62 (jakob 2026-11-23, B1 "in signing order"): a still-settling thing stands at the
+head of a newest-first list, newest signed first among the settling ones, and closes an oldest-first
+reply branch, taking its place in the order when it lands (`ProfilePosts.md`, `ProfilePostsOwn.md`,
+`ProfileComments.md`, `ProfileCommentsOwn.md`, `ReplyEntry.md`; the clock is the docs',
+`api-spec.md:226-232`). The four tabs' `settling` draws it at the head, `settling-two` two of them
+(`now`, then `3m`). The Everything tab's settling rows stand as they were (backlog 298).
+
+### 298 · The Everything tab's settling rows against the landed-only chronicle · *design* · **filed 2026-11-23**
+
+Round 62. Two passages disagree. The design, round 61 (jakob 2026-11-19, B2 (a)): a still-settling
+act shows on every tab of every profile — `Profile.md:31`, `ProfileOther.md:27` ("a chronicle card
+stands among the landed ones and reads Still settling under its age GIVEN its act still pends"),
+drawn as `Profile` / `ProfileOther` `chronicle` = `settling` (`profile.chronicle.act.pending`). The
+docs, `docs/implementation/api-spec.md:242-243`: "The chronicle takes no such argument: the record
+set has no pending namespace, so a record is listed exactly when it is ordered fact" (open-questions
+Q41, `open-questions.md:263-264`). Impl holds the Everything tab's settling rows (seam 408). Not
+resolved here: jakob's.
+
+### 299 · A long tag outside lists — the places held for jakob · *design* · **filed 2026-11-23**
+
+Round 62 built the list places (the chronicle aside, Explore's recent row, the seal's Tags row, the
+filter sheet's `One tag` chip). The census (`tmp_dev/2026-11-23-design-round62/census-long-tags.md`)
+found these, none touched: (O-title) the tag page's own title — `PageHeader` with a `#tag` title
+overflows one line (its wrapper gets `minWidth: 0` only for an `@handle`, `PageHeader.jsx:35, :38`;
+law `PageHeader.jsx:68-73` says "…"; jakob's words say the full name wraps on its own page; impl
+seam 406, (a) the header wraps / (b) a wrapping heading under it); its `notFound` copy holds an
+illegal name (O6). (O1) the composer's tag pills (`TopicRemovable`): wrap at hyphens inside the pill,
+an unbroken name overflows. (O2) a tag inside wrapping text — snackbars and dialogs break anywhere
+(`overflowWrap: anywhere`), `WithdrawnLine` and the pad's sentences wrap at hyphens or overflow;
+case 3 does not say whether a tag is a name unit. (O3) the tag pad's sheet title (`SheetTitle`):
+wraps at hyphens, overflows unbroken. (O4) the score trace's topic block (`QuotedRow` title): breaks
+anywhere. (O5) the search field holding a long typed tag: static ellipsis, the live input scrolls.
+
+### 300 · Where a comment's tag or citation chronicle act opens · *design* · **filed 2026-11-23**
+
+Round 62. jakob's B2 (a) opens the tagged or cited POST from its chronicle act; copy-voice also
+names `Tagged a comment` and `Cited a comment` (*The chronicle's verbs*), and backlog 296's option
+(a) said "the tagged or cited thing's detail". No board draws a comment's act. Options: (a) the
+comment in its thread, landed on, as a comment reference row opens (`RefsSheet.md`); (b) inert.
+
+### 301 · A long settings value on a board · *design* · **filed 2026-11-23**
+
+Round 62. `SettingsRow`'s value now ends in "…" with its label whole (jakob 2026-11-23, E10),
+measured with an injected 68-character address at 360 px (value 195 px wide, cut; label 35 px,
+whole). No board draws a long value: the tree's longest address is `noor@fieldmail.org`, and a long
+one is a new string. Options: (a) a `value` chip on `Settings` with an address jakob names; (b) the
+measurement stands as the proof.

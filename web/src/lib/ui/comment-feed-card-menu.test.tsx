@@ -409,21 +409,20 @@ describe("Edit on your own comment off the thread", () => {
     expect(routerPush).not.toHaveBeenCalled();
   });
 
-  // A HOST THAT READ THE CARD WITHOUT ITS FOLDS (the tag page's budget): the
-  // editor still starts from the comment whole, its topics and citations
-  // read first — never from a card that only lacks them.
-  it("an_edit_from_a_card_read_without_its_folds_reads_the_comment_whole_first", async () => {
-    const reads: string[] = [];
+  // EVERY HOST HANDS THE CARD THE COMMENT WHOLE (the tag page through its own
+  // `TaggedComments` read): the editor starts from the card's comment, its
+  // topics and citations, with no read first.
+  it("an_edit_starts_from_the_cards_comment_whole_with_no_read_first", async () => {
+    let reads = 0;
     server.use(
-      gqlLink.query("CommentCard", ({ variables }) => {
-        reads.push(variables.id as string);
-        return HttpResponse.json({ data: { comment: profileComment("c1", { content: moderated("old words") }) } });
+      gqlLink.query("CommentCard", () => {
+        reads += 1;
+        return HttpResponse.json({ data: { comment: profileComment("c1") } });
       }),
     );
     const asked: CommentEditRequest[] = [];
     mount({
       reader: "u-ada",
-      over: { topics: undefined, references: undefined },
       editor: (request) => {
         asked.push(request);
         return <div data-testid="stub-editor" />;
@@ -431,34 +430,18 @@ describe("Edit on your own comment off the thread", () => {
     });
     fireEvent.click(within(await openMenu()).getByTestId("history.menuSheet.edit"));
     await screen.findByTestId("stub-editor");
-    expect(reads).toEqual(["c1"]);
+    expect(reads).toBe(0);
     expect(asked[0]!.comment.topics).toEqual([]);
     expect(asked[0]!.comment.references).toEqual([]);
   });
-
-  it("an_edit_whose_whole_read_gets_no_answer_opens_nothing_and_says_so", async () => {
-    server.use(gqlLink.query("CommentCard", () => HttpResponse.error()));
-    const notify = vi.fn();
-    mount({
-      reader: "u-ada",
-      notify,
-      over: { topics: undefined, references: undefined },
-      editor: () => <div data-testid="stub-editor" />,
-    });
-    fireEvent.click(within(await openMenu()).getByTestId("history.menuSheet.edit"));
-    await waitFor(() =>
-      expect(notify).toHaveBeenCalledWith("Can't reach the server. Check your connection and try again."),
-    );
-    expect(screen.queryByTestId("stub-editor")).toBeNull();
-  });
 });
 
-// CommentCard.jsx: `topics = []` — a card handed no topics draws no topics line.
-describe("a comment card read without its folds", () => {
-  it("draws_no_topics_line", async () => {
-    mount({ host: "profile", over: { topics: undefined, references: undefined } });
+// TopicsLine.jsx: a card with no topics and no citations draws no line.
+describe("a comment card with no topics and no citations", () => {
+  it("draws_no_tags_line", async () => {
+    mount({ host: "profile" });
     await screen.findByTestId(byNode("profile.comments.commentCard", "c1"));
-    expect(screen.queryByTestId("card-topics")).toBeNull();
+    expect(screen.queryByTestId(byNode("profile.comments.commentCard.tagsLine", "c1"))).toBeNull();
   });
 });
 
