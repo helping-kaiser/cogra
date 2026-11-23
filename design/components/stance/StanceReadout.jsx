@@ -1,4 +1,5 @@
 import React from "react";
+import { nameInText } from "../people/ActorChip.jsx";
 
 /* The stance readout — the numbers and the faces (guidelines/stance-control.md:
    *Two numbers, never one*, *The gesture*, *The emoji readout*).
@@ -776,7 +777,8 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, words, head, onExp
   if (sentence !== undefined) {
     return (
       <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", color: "var(--text-secondary)", ...style }} data-node={node}>
-        <span aria-hidden="true">{sentence}</span>
+        {/* A tag or a handle in the sentence is one unit (`nameInText`). */}
+        <span aria-hidden="true">{nameInText(sentence)}</span>
         <span style={SR_ONLY}>{said}</span>
       </p>
     );
@@ -968,7 +970,10 @@ export function StanceLandingLine({ landing, names = STANCE_AXIS_NAMES, onExplai
 
    A line with nothing to hide is a plain string and stays one. */
 export function HelpLine({ line }) {
-  if (typeof line === "string") return line;
+  /* A tag or a handle in the line is one unit (`nameInText`; jakob
+     2026-11-23, point 4: `#saltmaps stays on Your tags` never breaks inside
+     the name). */
+  if (typeof line === "string") return nameInText(line);
   return (
     <>
       <span aria-hidden="true">

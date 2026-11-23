@@ -6,6 +6,8 @@ ALWAYS the band names the borrowed view's account and carries Sign in or join
 
 ALWAYS every stance face wears the borrowed view's own stance, read-only, at the member's anchor geometry, and the hollow face wherever the borrowed view holds none GIVEN the reader is signed out
 
+ALWAYS every stance anchor is spoken as the borrowed view's opinion, as @noa's opinion on this post, its reading after it where the view holds one, GIVEN the reader is signed out
+
 ALWAYS the band carries no bell GIVEN the reader is signed out
 
 ALWAYS the bar carries all five slots GIVEN the reader is signed out

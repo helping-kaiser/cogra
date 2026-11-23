@@ -61,6 +61,8 @@ export declare function SheetItem(props: SheetItemProps): JSX.Element;
 export declare function SheetTitle(props: {
   children?: React.ReactNode;
   trailing?: React.ReactNode;
+  /** A heading that is a name — the tag pad's `#saltmaps` — kept on one line, ended with "…" where the name outgrows it. */
+  cut?: boolean;
   /** The data-node name its placer gives this heading (design ⇄ impl seam 002; renders as attributes only). */
   node?: string;
 }): JSX.Element;
