@@ -19,14 +19,20 @@
    own removed comment's rows; the card keyed by its id in both copies, as on
    `ProfileComments`.
 
+   YOUR COMMENT STILL SETTLING STANDS IN THE LIST (round 61; jakob
+   2026-11-19, B2 (a)) — the `comments` chip's `settling`, `ProfileComments`'
+   twin: @sol's comment signed and not yet landed, wearing `Still settling`
+   as the thread's landed reply does (`ReplySettled`), its age `now`, its ⋮
+   your own comment's menu, the card keyed by its id in every copy.
+
    REGISTERED under the `profile` prefix, told apart by board as
    `ProfileCommentsMenuOwn`. */
 export const NODE = "profile";
 export const PROPS = {
-  comments: { editor: "enum", options: ["some", "none", "removed"], default: "some" },
+  comments: { editor: "enum", options: ["some", "none", "removed", "settling"], default: "some" },
   load: { editor: "enum", options: ["loaded", "loading", "failed"], default: "loaded" },
 };
-export const VALS = `someShown: this.props.load === "loaded" && this.props.comments !== "none" ? "contents" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "block" : "none", liveShown: this.props.comments === "removed" ? "none" : "contents", removedShown: this.props.comments === "removed" ? "contents" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none"`;
+export const VALS = `someShown: this.props.load === "loaded" && this.props.comments !== "none" ? "contents" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "block" : "none", liveShown: this.props.comments === "removed" || this.props.comments === "settling" ? "none" : "contents", removedShown: this.props.comments === "removed" ? "contents" : "none", settlingShown: this.props.comments === "settling" ? "contents" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none"`;
 export function Screen() {
   return (
     <ProfileTabTop own tab="comments">
@@ -36,6 +42,21 @@ export function Screen() {
         author={SOL}
         content={SOL_OWN_COMMENT.content}
         timestamp={SOL_OWN_COMMENT.timestamp}
+        license={{ attribution: 0, provenance: 0 }}
+        onReply={() => {}}
+        target={`“${MIRA_GALLERY_POST.title}” — @mira`}
+        onOpenTarget={() => {}}
+        menuItems={OWN_COMMENT_CARD_MENU}
+        node="commentCard"
+        id={SOL_OWN_COMMENT.id}
+      />
+      </div>
+      <div style={{ display: "{{settlingShown}}" }} data-node-chip="comments" data-node-key="settling">
+      <CommentCard
+        author={SOL}
+        content={SOL_OWN_COMMENT.content}
+        timestamp="now"
+        pending
         license={{ attribution: 0, provenance: 0 }}
         onReply={() => {}}
         target={`“${MIRA_GALLERY_POST.title}” — @mira`}

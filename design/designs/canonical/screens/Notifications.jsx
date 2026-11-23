@@ -43,10 +43,15 @@
    now.`, over an outlined `Retry` (`ProfileUnreachable`'s grammar). `more`
    is the next page that did not come while rows stand: the list scrolled to
    its foot, and `Couldn't load more — Retry` ending it at the list's own
-   rung, never `--error` (`ProfileMoreFailed`'s row). */
+   rung, never `--error` (`ProfileMoreFailed`'s row).
+   THE `piece` CHIP DRAWS A REMOVED PIECE (round 61; the pointer rule blessed
+   2026-11-19): the mention's post removed by its author, its second line
+   `in @mira's removed post` — the piece named by kind and author, never by
+   its title, as every pointer names it. The row still opens the post, its
+   mark there. */
 export const NODE = "notifications";
-export const PROPS = { load: { editor: "enum", options: ["loaded", "loading", "failed", "more"], default: "loaded" } };
-export const VALS = `headShown: this.props.load === "loaded" ? "flex" : "none", footShown: this.props.load === "loaded" || this.props.load === "more" ? "flex" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", moreShown: this.props.load === "more" ? "block" : "none"`;
+export const PROPS = { piece: { editor: "enum", options: ["live", "removed"], default: "live" }, load: { editor: "enum", options: ["loaded", "loading", "failed", "more"], default: "loaded" } };
+export const VALS = `headShown: this.props.load === "loaded" ? "flex" : "none", footShown: this.props.load === "loaded" || this.props.load === "more" ? "flex" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", moreShown: this.props.load === "more" ? "block" : "none", pieceLive: this.props.piece === "removed" ? "none" : "contents", pieceRemoved: this.props.piece === "removed" ? "contents" : "none"`;
 const NOTIFICATIONS_ROWS = { display: "flex", flexDirection: "column", gap: 8 };
 const NOTIFICATIONS_TAIL = {
   margin: 0,
@@ -98,17 +103,35 @@ export function Screen() {
           node="notification"
           nodeKey="3"
         />
-        <ContentRow
-          variant="chronicle"
-          chevron={false}
-          image="inviter.jpg"
-          title="@mira mentioned you"
-          second="in Salt maps of the coast road"
-          trailing="1d"
-          onOpen={() => {}}
-          node="notification"
-          nodeKey="4"
-        />
+        <div style={{ display: "{{pieceLive}}" }} data-node-chip="piece" data-node-key="live">
+          <ContentRow
+            variant="chronicle"
+            chevron={false}
+            image="inviter.jpg"
+            title="@mira mentioned you"
+            second="in Salt maps of the coast road"
+            trailing="1d"
+            onOpen={() => {}}
+            node="notification"
+            nodeKey="4"
+          />
+        </div>
+        {/* The piece that carries the mention, removed by its author (round
+            61; the pointer rule blessed 2026-11-19): named by kind and
+            author, never by its title. */}
+        <div style={{ display: "{{pieceRemoved}}" }} data-node-chip="piece" data-node-key="removed">
+          <ContentRow
+            variant="chronicle"
+            chevron={false}
+            image="inviter.jpg"
+            title="@mira mentioned you"
+            second="in @mira's removed post"
+            trailing="1d"
+            onOpen={() => {}}
+            node="notification"
+            nodeKey="4"
+          />
+        </div>
         {/* THE EIGHTH KIND (the invites round, 2026-09-15): an application of
             yours became approvable. It belongs to the set by the set's own
             test — somebody else acted (the applicant attached their key, the

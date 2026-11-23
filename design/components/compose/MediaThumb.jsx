@@ -93,7 +93,10 @@ export function MediaThumb({
      tile's own clip — the picture and every badge on it, cut to its corners —
      is an inner layer the size of the tile, and the X stands outside that
      layer, so its 48px target may overhang the tile's corner while its glyph
-     stays where it is drawn. */
+     stays where it is drawn. In a row of tiles 8px apart the overhang reaches
+     5px into the next tile, which paints later: the X stands one layer up
+     (`zIndex: 1`, below every bar, sheet and wash) so the whole target is
+     its own there too (backlog 292). */
   return (
     <div
       style={{
@@ -255,6 +258,7 @@ export function MediaThumb({
             position: "absolute",
             right: "3px",
             top: "3px",
+            zIndex: 1,
             width: "16px",
             height: "16px",
             border: 0,

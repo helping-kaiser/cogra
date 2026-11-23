@@ -717,6 +717,10 @@ Retry (`UploadErrorLine` with both ways out):
   the line is drawn short because Retry stands beside it and the pair
   would say "try again" twice.
 
+  An upload answered `RATE_LIMITED` is this fault, never the refusal
+  below: a limit passes, so a later try can land, and the row keeps its
+  line with `Retry` (jakob 2026-11-19, told, "all fine").
+
 **A picture the server refuses at upload** — a refusal, not a fault
 (jakob 2026-11-17, impl 348-3): the server answered no, so retrying
 cannot change the answer, and the line keeps the refused files' one way
@@ -870,9 +874,10 @@ recorded so the registry is whole.
   every host the edit opens from (jakob 2026-11-13, N5); an untitled
   post takes its stand-in (*An untitled post*), and a removed one reads
   `Your comment on @ada's removed post.`, the comment card's own naming
-  (jakob 2026-11-17, **blessed**), and a deleted account's `Your comment
-  on a deleted account's removed post.` by the same naming (*Naming a
-  removed or deleted thing*); and its sections `Words` and `Pictures` (`CommentEdit`; `Cover`
+  (jakob 2026-11-17, **blessed**); a deleted account's post still there
+  keeps its title, `Your comment on "Three mornings on the wall…".`, and a
+  swept one reads `Your comment on a deleted account's removed post.` by
+  the same naming (*Naming a removed or deleted thing*); and its sections `Words` and `Pictures` (`CommentEdit`; `Cover`
   on `CommentEditVideo`).
 
 ## Accessible names
@@ -1661,7 +1666,9 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   registration, the reset and its link's check, the token confirms, and the email change's
   request and resend once the account's mail budget is spent (jakob
   2026-10-06) — says `Too many tries. Wait a little, then try again.`
-  (jakob 2026-10-05). The submit stays.
+  (jakob 2026-10-05). The submit stays. An upload's is on the row, the
+  upload's own fault: `One picture didn't upload.` or a clip's `That
+  video didn't upload.`, with `Retry` (*A clip that didn't upload*).
 - `NOT_FOUND` — the surface. For a profile: `This profile doesn't
   exist.` **Drawn** on `ProfileNotFound`. Posts and comments take the
   same construction: `This post doesn't exist.` and `This comment
@@ -2720,11 +2727,13 @@ words. A record is one row, whatever gesture signed it.
   opinion`, the aside the target as above, the disc 🤷 — never the
   counter-record's own face, which would read as an opinion against.
 - **A tag** — `Tagged a post` · `Tagged a comment`, the aside the tag
-  (`#saltmaps`), the title or words under it; one taken off `Un-tagged
+  (`#saltmaps`), the title or words under it — `Removed by its author` in
+  their place once the target was removed, as for an opinion; one taken off `Un-tagged
   a post` · `Un-tagged a comment` (`Un-tag`'s past). The disc the `#`
   monogram, as Explore's `Your tags` door wears it.
 - **A citation** — `Cited a post` · `Cited a comment`, the cited
-  thing's title or words under it, the disc that thing's own glyph; a
+  thing's title or words under it — `Removed by its author` in their
+  place once it was removed — the disc that thing's own glyph; a
   person cited `Mentioned`, the aside `@ada`, the disc their avatar; one
   taken back `Withdrew a citation`, the cited thing under it.
 - **The profile** — the first record, the account's own registration,
@@ -3410,7 +3419,10 @@ sentences, all present tense of the act that happened:
 - `@mira mentioned you` — a citation whose target is you.
 - `@ada cited your post` — a citation whose target is something you
   wrote. *Cited*, the product's verb for a Reference, and the second
-  line says where: `in Sunday at the tide market`.
+  line says where: `in Sunday at the tide market`. A mention's and a
+  citation's piece, once removed, is named by kind and author, `in
+  @mira's removed post` (*Naming a removed or deleted thing*;
+  `Notifications`' `piece` chip).
 - `@rafa is ready for your approval` — an applicant staged through your
   invite who has finished both proofs. The person is the subject, not the
   application: *An application is ready* names the schema, and what the
@@ -3769,8 +3781,8 @@ tag, `TagPageEmpty`'s own first sentence.
 the title's place, the removal mark's own line in the system's voice, over
 the author's handle.
 
-**Naming a removed or deleted thing** (round 59; *new 2026-11-18, to be
-blessed*): a pointer
+**Naming a removed or deleted thing** (round 59; *new 2026-11-18,
+blessed (jakob 2026-11-19)*): a pointer
 never names a removed thing by its title or its words. It names it by its
 kind and its author — the author's handle while the author is there, `a
 deleted account` once the account is gone (`this account`'s lowercase
@@ -3784,9 +3796,17 @@ mark's line where the title or words were and `Deleted account` where the
 handle was (`Removed by its author` over `Deleted account`; `@tobias` or
 `Deleted account` over `Removed by its author` for a comment). A
 chronicle aside on an account since deleted reads `on a deleted account`
-(`ProfileOther`'s `aside`). Drawn on `FeedCommentShapes` (`answering`),
-`ProfileComments` (`target`), `TagPageRemovedMenuOwn`'s page and
-`ProfileOther` (`aside`).
+(`ProfileOther`'s `aside`). The same naming reaches every line that
+names a target in words: the comment edit's line (*The comment edit*),
+the chronicle's opinion, tag and citation rows (`Removed by its author`
+where the title would stand), a reference or citing row (the mark in the
+name's place, the tile empty; a deleted account's row `Deleted account`
+with the reserved disc) and the notifications' `in …` line (`in @mira's
+removed post`). Drawn on `FeedCommentShapes` (`answering`),
+`ProfileComments` (`target`), `TagPageRemovedMenuOwn`'s page,
+`ProfileOther` (`aside`), `CommentEdit` (`post`), `Profile` (`act`),
+`RefsSheet` (`target`), `CitedBy` (`citing`) and `Notifications`
+(`piece`).
 
 **An untitled post** (jakob 2026-10-06): a words post is represented by
 its first line, the content itself, so a comment's head row shows its

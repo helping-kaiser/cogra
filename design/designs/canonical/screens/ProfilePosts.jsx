@@ -8,7 +8,8 @@
 
    A PROFILE WITH NO POSTS (the `posts` chip at `none`): the list reads
    `Nothing here yet.`, the line alone — `ProfileComments`' empty tab, the
-   member's empty-chronicle line (seam 245, ask 11).
+   member's empty-chronicle line (seam 245, ask 11). The Posts figure reads
+   `0` over it: the figure counts what the list holds (readme §7).
 
    REGISTERED under the `profile` prefix (round 27, seam 252; the web's minted
    ids, kept). The posts view is a tab of the profile page, not a page of its
@@ -44,7 +45,7 @@ export const PROPS = {
   posts: { editor: "enum", options: ["some", "none", "settling", "removed"], default: "some" },
   load: { editor: "enum", options: ["loaded", "loading", "failed"], default: "loaded" },
 };
-export const VALS = `someShown: this.props.load === "loaded" && this.props.posts !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.posts === "none" ? "block" : "none", secondLanded: this.props.posts === "settling" || this.props.posts === "removed" ? "none" : "contents", secondSettling: this.props.posts === "settling" ? "contents" : "none", secondRemoved: this.props.posts === "removed" ? "contents" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none"`;
+export const VALS = `someShown: this.props.load === "loaded" && this.props.posts !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.posts === "none" ? "block" : "none", secondLanded: this.props.posts === "settling" || this.props.posts === "removed" ? "none" : "contents", secondSettling: this.props.posts === "settling" ? "contents" : "none", secondRemoved: this.props.posts === "removed" ? "contents" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", postsFigure: this.props.posts === "none" ? "0" : "12"`;
 const ADA_SECOND_POST = {
   id: "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a",
   author: ADA,
@@ -68,7 +69,7 @@ export function Screen() {
             displayName="Ada Okonkwo"
             avatarSrc="comment-camera.jpg"
             bio="A dozen tries at the third headland light and counting."
-            posts={12}
+            posts="{{postsFigure}}"
             stancesOn={6}
             stancesTaken={6}
             onCounts={() => {}}

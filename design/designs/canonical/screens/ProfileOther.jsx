@@ -36,7 +36,11 @@
    the `chronicle` chip's `removed`: the 5d post's act, removed as
    `ProfilePosts`' `removed` draws its 5d post, its second line `Removed by
    its author` where the words were, the card still the door to the post's
-   detail (`ChronicleAct`).
+   detail (`ChronicleAct`). A PENDING ACT ON EVERYTHING (round 61; jakob
+   2026-11-19, B2 (a)) is the same chip's `settling`: the newest act, the
+   long way home's, signed and not yet landed, its age `now` and `Still
+   settling` under it, as the own tab draws it — at the head, the list
+   newest first.
 
    AN OPINION ON AN ACCOUNT SINCE DELETED (round 59, the proposal to jakob
    2026-11-18) is the `aside` chip's `deleted`: the opinion's act names its

@@ -2,6 +2,8 @@
 
 ALWAYS profile.comments lists the person's comments, each a profile.comments.commentCard in reach of its thread
 
+ALWAYS profile.comments lists a comment the person signed that is still settling among the landed ones, its card wearing Still settling, as the thread's landed reply does
+
 ALWAYS profile.comments.commentCard leads with profile.comments.commentCard.target, the pointer to what it answers
 
 ALWAYS profile.comments.commentCard.target reads On with the post's author's handle and removed post, as On @sol's removed post, and never the post's title GIVEN the post it answers was removed

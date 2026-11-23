@@ -8,7 +8,7 @@ ALWAYS profile.posts lists the reader's own posts, each card the feed's own, ful
 
 ALWAYS profile.posts lists a post the reader signed that is still settling among the landed ones, its card wearing Still settling and carrying no score, its score slot bare, as the feed's card does
 
-ALWAYS profile.identity.figures.posts counts every post the reader published, a removed one included, so the figure and the list agree
+ALWAYS profile.identity.figures.posts counts every post the reader published, a removed one and a still-settling one included, and never an edit, so the figure and the list agree
 
 ALWAYS the ⋮ on a card holds the own post menu, Edit among its rows, and carries no Hide and no Report row
 

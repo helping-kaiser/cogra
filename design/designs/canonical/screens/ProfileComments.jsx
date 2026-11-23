@@ -41,6 +41,13 @@
    `removalMark.when`, as the feed's card, the post and the thread's comment
    draw it — `2h`, the removal's own moment, never the comment's `4d`.
 
+   A COMMENT STILL SETTLING IN THE LIST (round 61; jakob 2026-11-19, B2 (a):
+   "the profile should not lag behind just because sth is still settling")
+   is the `comments` chip's `settling`: the second comment, signed and not
+   yet landed, among the landed ones, wearing `Still settling` as the
+   thread's landed reply does (`ReplySettled`), its age `now` — the card
+   keyed by its id in every copy, as `ProfilePosts`' `settling` is.
+
    WHAT THE POINTER CALLS A REMOVED OR DELETED POST (round 59; the proposal
    to jakob 2026-11-18, C3: "for sure not the actual title") — the `target`
    chip, on the second comment's pointer to @sol's post: `live` `On “Salt
@@ -62,12 +69,12 @@ export const NODE = "profile";
 const ADA_COMMENT_ID = "5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e";
 const ADA_SECOND_COMMENT_ID = "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f";
 export const PROPS = {
-  comments: { editor: "enum", options: ["some", "none", "removed"], default: "some" },
+  comments: { editor: "enum", options: ["some", "none", "removed", "settling"], default: "some" },
   load: { editor: "enum", options: ["loaded", "loading", "failed"], default: "loaded" },
   reader: { editor: "enum", options: ["member", "applicant"], default: "member" },
   target: { editor: "enum", options: ["live", "removed", "deleted", "swept"], default: "live" },
 };
-export const VALS = `someShown: this.props.load === "loaded" && this.props.comments !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "flex" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", secondLive: this.props.comments === "removed" ? "none" : "contents", secondRemoved: this.props.comments === "removed" ? "contents" : "none", lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none", targetLine: this.props.target === "removed" ? "@sol's removed post" : this.props.target === "deleted" ? "“Salt maps of the coast road” — Deleted account" : this.props.target === "swept" ? "a deleted account's removed post" : "“Salt maps of the coast road” — @sol"`;
+export const VALS = `someShown: this.props.load === "loaded" && this.props.comments !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "flex" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", secondLive: this.props.comments === "removed" || this.props.comments === "settling" ? "none" : "contents", secondRemoved: this.props.comments === "removed" ? "contents" : "none", secondSettling: this.props.comments === "settling" ? "contents" : "none", lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none", targetLine: this.props.target === "removed" ? "@sol's removed post" : this.props.target === "deleted" ? "“Salt maps of the coast road” — Deleted account" : this.props.target === "swept" ? "a deleted account's removed post" : "“Salt maps of the coast road” — @sol"`;
 
 export function Screen() {
   return (
@@ -114,6 +121,27 @@ export function Screen() {
               author={ADA}
               content="Low tide is kinder to the rubbings than noon ever was."
               timestamp="4d"
+              license={{ attribution: 0, provenance: 0 }}
+              onReply={() => {}}
+              onOpen={() => {}}
+              replyOpacity="{{lockOpacity}}"
+
+              target="{{targetLine}}"
+              onOpenTarget={() => {}}
+              menuItems={readerCommentCardMenu("ada")}
+              node="commentCard"
+              id={ADA_SECOND_COMMENT_ID}
+            />
+          </div>
+          {/* The same comment still settling: the thread's landed reply
+              (`ReplySettled`, `CommentsThreadSheet`'s `landed`), `Still
+              settling` worn under the words, its age `now`. */}
+          <div style={{ display: "{{secondSettling}}" }} data-node-chip="comments" data-node-key="settling">
+            <CommentCard
+              author={ADA}
+              content="Low tide is kinder to the rubbings than noon ever was."
+              timestamp="now"
+              pending
               license={{ attribution: 0, provenance: 0 }}
               onReply={() => {}}
               onOpen={() => {}}

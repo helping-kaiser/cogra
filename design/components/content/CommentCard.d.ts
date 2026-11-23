@@ -145,7 +145,7 @@ export interface CommentCardProps {
   onOpenScore?: () => void;
   /** The comment's id, the lowercase UUID the wire carries — keys the card, and its `viewReplies` line, when it is named (round 33). Draws nothing. */
   id?: string;
-  /** The data-node name its placer gives this card — keyed by the comment's id (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its media: `media` (`frame` per item, keyed by its position from 1, a clip's `soundDisc` or `playDisc`; `dots`) and its affordance row: `actionRow`, holding `stance`, `score`, `reply` (the glyph form, or the thread's text button) and `share`; its author's `authorChip` and its ⋮ `menu`; and a removed comment's mark `removalMark`, `RedactedContent`'s `line`, `detail` and `when` inside it. */
+  /** The data-node name its placer gives this card — keyed by the comment's id (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its media: `media` (`frame` per item, keyed by its position from 1, a clip's `soundDisc` or `playDisc`; `dots`) and its affordance row: `actionRow`, holding `stance`, `score`, `reply` (the glyph form, or the thread's text button) and `share`; its author's `authorChip` and its ⋮ `menu`; its tags line `tagsLine`, `TopicsLine`'s `tag` (keyed by the tag's name) and `counts` inside it, as `PostCard`'s; and a removed comment's mark `removalMark`, `RedactedContent`'s `line`, `detail` and `when` inside it. */
   node?: string;
   /** The card's key, given by its placer in place of `id`. Given none, `id` keys the card. */
   nodeKey?: string;

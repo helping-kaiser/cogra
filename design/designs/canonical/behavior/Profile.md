@@ -12,7 +12,7 @@ ALWAYS the figures read Posts, Opinions on you and Opinions by you, each labelle
 
 ALWAYS the two opinion figures are two doors and the Posts figure is no door, each door spoken as its figure's number and visible words and nothing more, as 5 Opinions on you and 5 Opinions by you
 
-ALWAYS profile.identity.figures.posts counts every post the reader published, a removed one included, and never an edit, so the figure and profile.posts agree
+ALWAYS profile.identity.figures.posts counts every post the reader published, a removed one and a still-settling one included, and never an edit, so the figure and profile.posts agree
 
 ALWAYS Invites wears the bell's dot, never a count, and is spoken as Invites — someone is waiting GIVEN an application of the reader's is ready for their approval
 
@@ -28,9 +28,11 @@ WHEN tap profile.tabRow.everythingTab -> the chronicle stands below profile.tabR
 
 ALWAYS the chronicle stands one act to a card, newest first, each card leading with its act's disc, then its verb and snippet, its age on the trailing edge
 
-ALWAYS a chronicle card reads Still settling GIVEN its act still pends
+ALWAYS a chronicle card stands among the landed ones and reads Still settling under its age GIVEN its act still pends
 
 ALWAYS a chronicle card with no destination is the same card, inert
+
+ALWAYS profile.chronicle.act.second reads Removed by its author where the target's title or words would stand, and never the title, GIVEN the act is an opinion, a tag or a citation on a post or comment since removed, a deleted account's swept one included
 
 ALWAYS a chronicle card whose post or comment was removed keeps its place, its disc, its verb and its age, profile.chronicle.act.second reading Removed by its author where its words were, in the row's quiet second line, whatever the feed's filter holds
 
