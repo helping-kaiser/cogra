@@ -1,8 +1,8 @@
 // The feed's cards hosted on a profile's tabs (ProfilePosts.md, ProfileComments.md):
 // the post card unchanged but for its inert author chip, and the comment card in
-// its line shape — the `On …` pointer leading, the words whole and a door, the
-// thread's text Reply, the "View n replies" line under the card — every door
-// landing on the thread the comment lives in. web's twins are
+// its line shape — the `On …` pointer leading, the door to the post it names;
+// the words whole and a door, the thread's text Reply, the "View n replies"
+// line under the card — those landing on the thread at the comment. web's twins are
 // `profile-posts.test.tsx` and `profile-comments.test.tsx`.
 
 package com.cogra.feature.content
@@ -163,15 +163,26 @@ class HostedCardsTest {
         assertThat(shown("profile_post_pending_p1")).isTrue()
     }
 
-    // ProfileComments.md:5, :23 — the card leads with its pointer to what it
-    // answers, and the pointer opens the thread the comment lives in,
-    // scrolled to that comment.
+    // ProfileComments.md:7 — the card leads with its pointer to what it
+    // answers; the pointer is the door to the post it names, never its comment
+    // section (jakob 2026-11-23, seam 405).
     @Test
-    fun theCommentsPointerLeadsAndOpensItsThread() {
+    fun theCommentsPointerLeadsAndOpensThePost() {
         host { it.comment(comment(), cards, replies, null) }
         compose.onNodeWithText("On “Salt maps of the coast road” — @sol").assertIsDisplayed()
         compose.onNodeIn("profile.comments.commentCard:c1", "profile.comments.commentCard.target").performClick()
-        assertThat(opened).containsExactly("comment:p9/c1")
+        assertThat(opened).containsExactly("post:p9")
+    }
+
+    // A reply's pointer names the comment it answers, and opens the thread at
+    // it — never at the reply itself (CommentCard.jsx:397, "to what it names").
+    @Test
+    fun aRepliesPointerOpensTheThreadAtTheCommentItAnswers() {
+        val reply = comment().copy(target = CommentTarget.Comment("c0", text("Where was this?"), "sol"))
+        host { it.comment(reply, cards, replies, null) }
+        compose.onNodeWithText("On @sol's comment").assertIsDisplayed()
+        compose.onNodeIn("profile.comments.commentCard:c1", "profile.comments.commentCard.target").performClick()
+        assertThat(opened).containsExactly("comment:p9/c0")
     }
 
     // ProfileComments.md:35, :39 — Reply opens the thread aimed at the
@@ -423,7 +434,7 @@ class HostedCardsTest {
         assertThat(shown("tagPage.commentCard:c1")).isTrue()
         compose.onNodeWithText("View 2 replies").assertDoesNotExist()
         compose.onNodeIn("tagPage.commentCard:c1", "tagPage.commentCard.target").performClick()
-        assertThat(opened).containsExactly("comment:p9/c1")
+        assertThat(opened).containsExactly("post:p9")
     }
 
     // A tagged comment's author is a door too: the page is the tag's, not theirs.
