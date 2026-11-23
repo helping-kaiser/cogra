@@ -22,9 +22,33 @@ import { useCallback, useState } from "react";
 
 import { useMeasureEffect } from "./measure-effect";
 
-/** Whether a one-line box cuts any of its text. Both widths are whole pixels (MDN). */
+/**
+ * Whether a one-line box cuts any of its text.
+ *
+ * The two widths are whole pixels (MDN, `Element.scrollWidth`: "this property
+ * will round the value to an integer"), so a text a fraction of a pixel too
+ * wide reads as fitting while the browser already draws its "…" — measured on
+ * this lane at 412 px: an 18-character tag 332.125 px wide in a 332 px title,
+ * both widths 332. So an equal pair is settled on the fractional widths MDN
+ * points to (`Element.getBoundingClientRect`), the text's own laid-out width
+ * taken from a range over the box's contents (MDN, `Range.getBoundingClientRect`;
+ * the cut is paint only, so the range spans the whole text).
+ */
 export function cutsLine(element: HTMLElement): boolean {
-  return element.scrollWidth > element.clientWidth;
+  if (element.scrollWidth > element.clientWidth) return true;
+  const range = element.ownerDocument.createRange();
+  if (typeof range.getBoundingClientRect !== "function") return false;
+  range.selectNodeContents(element);
+  const text = range.getBoundingClientRect().width;
+  const style = getComputedStyle(element);
+  const inset =
+    parseFloat(style.paddingLeft) +
+    parseFloat(style.paddingRight) +
+    parseFloat(style.borderLeftWidth) +
+    parseFloat(style.borderRightWidth);
+  const room = element.getBoundingClientRect().width - (Number.isNaN(inset) ? 0 : inset);
+  // a hundredth of a pixel is float noise; anything past it is drawn cut
+  return text - room > 0.01;
 }
 
 /**
