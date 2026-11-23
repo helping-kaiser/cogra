@@ -6991,3 +6991,17 @@ comment on the board; (c) widen ruling 39 so a keyed instance may repeat under e
 copies never show together — a build-law change, his. Until ruled impl knows the card emits
 `history.commentCard.media`, `.media.frame` (`<id>/<n>`), `.media.frame.soundDisc`, `.media.dots`
 (the same on `saved`) and registers none.
+
+Ruled (b) for round 65; stopped there on the score (306).
+
+### 306 · The feed score @ada's media comment wears on History and Saved · *design* · **filed 2026-11-23**
+
+Round 65, item 1 (backlog 305 (b), seam 424). On `History` and `Saved` the comment is the feed's own
+card (`CommentFeedCard`), and its row reads the opinion, then the score (`History.md`: "the figure the
+latest fetch of its thing found — … a dash only where that fetch found none"; `Saved.md`: "the figure
+the same card wears on the feed"). The tree gives @ada's tagged comment (`ADA_TAGGED_COMMENT_ID`) no
+score: `TagPage` and `ProfileComments` draw it as a list card, which carries none. Its head row has
+words (`Salt maps of the coast road` over `@sol`, the feed's card answering @sol's post). Options:
+(a) the place's figure, `12.40`, the @tobias card's; (b) a figure jakob names (a new string); (c) the
+dash, History's "found none" (Saved has no dash case). Recommendation (a): no new string, and the
+board's other states keep every pixel.
