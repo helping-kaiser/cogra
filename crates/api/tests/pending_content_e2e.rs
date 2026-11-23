@@ -8,13 +8,17 @@
 
 use std::sync::Arc;
 
+use api::l1::{BoundaryError, L1Boundary};
 use axum::body::Body;
 use axum::http::Request;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use common::l1::client::ActorKey;
-use common::l1::handshake::Proposal;
+use common::l1::handshake::{
+    AccountBalance, ApprovalWitness, BurnSettlement, BurnTicket, EpochPackage, Micro, Proposal,
+};
 use common::l1::identifier::ActId;
+use common::l1::proposal::{SealedAct, Submission};
 use common::l1::wire;
 use http_body_util::BodyExt;
 use l1_standin::StandIn;
@@ -1426,7 +1430,270 @@ async fn a_redaction_waiting_on_the_custody_move_archives_and_reduces_it(pool: P
     );
 }
 
+/// A host whose answer to an approval is lost in transit: it answers every
+/// approval with a transport failure, after taking it (`takes`) or without
+/// ever seeing it. Everything else is the stand-in's.
+struct LostAnswer {
+    inner: api::l1::StandInBoundary,
+    takes: bool,
+}
+
+impl L1Boundary for LostAnswer {
+    async fn seal(&self, submission: Submission) -> Result<SealedAct, BoundaryError> {
+        self.inner.seal(submission).await
+    }
+
+    async fn approve(&self, witness: ApprovalWitness) -> Result<(), BoundaryError> {
+        if self.takes {
+            self.inner.approve(witness).await?;
+        }
+        Err(BoundaryError::Substrate("timed out".into()))
+    }
+
+    async fn epochs_since(&self, after: i64) -> Result<Vec<EpochPackage>, BoundaryError> {
+        self.inner.epochs_since(after).await
+    }
+
+    async fn balance(&self, address: &str) -> Result<AccountBalance, BoundaryError> {
+        self.inner.balance(address).await
+    }
+
+    async fn host_public_key(&self) -> Result<Vec<u8>, BoundaryError> {
+        self.inner.host_public_key().await
+    }
+
+    async fn current_theta(&self) -> Result<Micro, BoundaryError> {
+        self.inner.current_theta().await
+    }
+
+    async fn max_payload_bytes(&self) -> Result<usize, BoundaryError> {
+        self.inner.max_payload_bytes().await
+    }
+
+    async fn request_admission_burn(
+        &self,
+        address: &str,
+        amount_micro: i64,
+        key: Uuid,
+    ) -> Result<BurnTicket, BoundaryError> {
+        self.inner
+            .request_admission_burn(address, amount_micro, key)
+            .await
+    }
+
+    async fn burn_settlement(&self, ticket: &BurnTicket) -> Result<BurnSettlement, BoundaryError> {
+        self.inner.burn_settlement(ticket).await
+    }
+
+    async fn drop_carriage(&self, act_ids: &[String]) -> Result<u64, BoundaryError> {
+        self.inner.drop_carriage(act_ids).await
+    }
+}
+
+/// The crash window of the approval relay, end to end: the host takes the
+/// approval and its answer is lost, so the server never records it. The
+/// send it marked before the call stands, so the GC keeps custody, and
+/// the act ordered after the reap lands whole.
+///
+/// An approval the host took but whose answer was lost keeps custody at the reap, and its act lands whole.
+/// ´claim:pending:a-lost-approval-answer-keeps-custody´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_approval_whose_answer_was_lost_keeps_custody_and_lands_whole(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let (post_id, act_id) = rig.approved_over(&token, &key, true, true).await;
+    assert_eq!(
+        rig.approval_marks(&act_id).await,
+        (false, 1),
+        "no approval recorded, the send's mark stands"
+    );
+
+    rig.expire_everything().await;
+    rig.reap().await;
+    assert_eq!(rig.carriage_state(&act_id).await.as_deref(), Some("full"));
+    rig.close_and_ingest().await;
+
+    assert!(rig.payload_marked(&act_id).await, "the record reads marked");
+    let edges = rig.listed(None, "first: 10").await;
+    assert_eq!(edges.len(), 1, "the act lands whole: {edges:?}");
+    assert_eq!(edges[0]["node"]["id"], post_id);
+    assert_eq!(edges[0]["node"]["content"]["value"], "slow to order");
+    assert_eq!(edges[0]["node"]["landing"]["state"], "LANDED");
+}
+
+/// An approval whose outcome is unknown keeps its mark even when the host
+/// never received it: the relay cannot tell the two apart, so the GC keeps
+/// the write. A wrong keep is one hidden row; a wrong delete would lose a
+/// published act's content.
+///
+/// An approval send whose outcome is unknown keeps its mark, and the reap keeps the write.
+/// ´claim:pending:an-unknown-approval-outcome-keeps-the-mark´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_approval_with_an_unknown_outcome_keeps_its_mark(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let (_, act_id) = rig.approved_over(&token, &key, false, true).await;
+    assert_eq!(rig.approval_marks(&act_id).await, (false, 1));
+
+    rig.expire_everything().await;
+    rig.reap().await;
+    assert_eq!(rig.carriage_state(&act_id).await.as_deref(), Some("full"));
+    assert!(rig.staged_row_kept(&act_id).await, "the row is kept");
+}
+
+/// A definite refusal takes the send's mark back: the host refused a
+/// witness that does not verify, so nothing is left it could order, and
+/// the reap deletes the write with no carriage row.
+///
+/// A definitely refused approval leaves no mark, and the reap deletes the write.
+/// ´claim:pending:a-refused-approval-is-deleted-at-the-reap´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_refused_approval_takes_its_mark_back_and_the_reap_deletes_the_write(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let (_, act_id) = rig.approved_over(&token, &key, true, false).await;
+    assert_eq!(rig.approval_marks(&act_id).await, (false, 0));
+
+    rig.expire_everything().await;
+    rig.reap().await;
+    assert_eq!(rig.carriage_state(&act_id).await, None);
+    let rows: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM staged_writes WHERE act_id = $1")
+        .bind(&act_id)
+        .fetch_one(&rig.pool)
+        .await
+        .expect("counts");
+    assert_eq!(rows, 0, "the write is deleted");
+}
+
+/// An approved write its author redacted before the GC keeps its row at
+/// the reap, as a custodied write does, so the act ordered afterwards lands
+/// the way a redacted act lands: its staged row promotes, its carriage
+/// stays reduced, the record reads marked, and nothing the redaction
+/// removed comes back.
+///
+/// An approved write redacted before the GC keeps its row, and its late landing lands reduced.
+/// ´claim:pending:an-approved-redacted-write-lands-reduced-past-the-reap´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_approved_write_redacted_before_the_reap_lands_reduced_from_its_kept_row(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor_id, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let (_, act_id) = rig.approved_then_expired(&token, &key).await;
+    let done = api::redaction::redact_act(
+        &rig.pool,
+        &api::redaction::Redaction {
+            actor_id,
+            act_id: &act_id,
+            reason: "removed before the reap",
+            redacted_by: &actor_id.to_string(),
+        },
+    )
+    .await
+    .expect("redacts");
+    assert!(done.staged_reaped && done.reduced, "{done:?}");
+
+    rig.reap().await;
+    assert!(rig.staged_row_kept(&act_id).await, "the row is kept");
+    rig.close_and_ingest().await;
+
+    let state: String = sqlx::query_scalar("SELECT state FROM staged_writes WHERE act_id = $1")
+        .bind(&act_id)
+        .fetch_one(&rig.pool)
+        .await
+        .expect("the row promoted");
+    assert_eq!(state, "landed", "the late landing promoted the kept row");
+    assert!(rig.payload_marked(&act_id).await, "the record reads marked");
+    assert_eq!(
+        rig.carriage_state(&act_id).await.as_deref(),
+        Some("reduced")
+    );
+    assert!(
+        rig.listed(None, "first: 10").await.is_empty(),
+        "nothing the redaction removed comes back"
+    );
+}
+
 impl Rig {
+    /// A post pre-signed and its approval relayed over a host that loses
+    /// the answer ([`LostAnswer`]): `takes` says whether the host took the
+    /// approval first. With `valid` false the witness does not verify, and
+    /// the stand-in itself refuses it. Returns the post's id and its act.
+    async fn approved_over(
+        &self,
+        token: &str,
+        key: &ActorKey,
+        takes: bool,
+        valid: bool,
+    ) -> (String, String) {
+        let prepared = self
+            .prepare_post(token, "Late lander", "slow to order")
+            .await;
+        let post_id = prepared["preparePost"]["node"]
+            .as_str()
+            .expect("node")
+            .to_string();
+        let signed = self
+            .pre_sign(token, key, &prepared["preparePost"]["writes"])
+            .await;
+        let write = &signed[0];
+        let act_id = write.pre.proposal.body.act_id().to_string();
+        let host_key = self.standin.host_public_key().await.expect("host key");
+        let mut signature = write
+            .pre
+            .approve(key, &write.act, &host_key)
+            .expect("approves")
+            .approval_signature;
+        let standin = api::l1::StandInBoundary(self.standin.clone());
+        let id = Uuid::parse_str(&write.id).expect("staged id");
+        let relayed = if valid {
+            let lossy = LostAnswer {
+                inner: standin,
+                takes,
+            };
+            api::relay::submit_approval(&lossy, &self.pool, id, signature).await
+        } else {
+            signature[0] ^= 0xFF;
+            api::relay::submit_approval(&standin, &self.pool, id, signature).await
+        };
+        match (valid, relayed) {
+            (true, Err(api::relay::RelayError::Boundary(BoundaryError::Substrate(_)))) => {}
+            (false, Err(api::relay::RelayError::SignatureInvalid(_))) => {}
+            (_, other) => panic!("unexpected relay outcome: {other:?}"),
+        }
+        (post_id, act_id)
+    }
+
+    /// Whether the host's acceptance is recorded, and how many sends are
+    /// open, on the act's staged row.
+    async fn approval_marks(&self, act_id: &str) -> (bool, i32) {
+        sqlx::query_as(
+            "SELECT approved_at IS NOT NULL, approval_sends_open
+             FROM staged_writes WHERE act_id = $1",
+        )
+        .bind(act_id)
+        .fetch_one(&self.pool)
+        .await
+        .expect("reads")
+    }
+
+    async fn staged_row_kept(&self, act_id: &str) -> bool {
+        sqlx::query_scalar("SELECT kept_at IS NOT NULL FROM staged_writes WHERE act_id = $1")
+            .bind(act_id)
+            .fetch_optional(&self.pool)
+            .await
+            .expect("reads")
+            .unwrap_or(false)
+    }
+
+    async fn reap(&self) {
+        postgres_store::staged::reap_expired(&self.pool, FAR_FUTURE_EPOCH + GC, GC)
+            .await
+            .expect("reaps");
+    }
+
     /// A post approved at the host and not yet ordered, whose write the
     /// GC then expires and reaps. Returns the post's id and its act.
     async fn approved_then_reaped(&self, token: &str, key: &ActorKey) -> (String, String) {

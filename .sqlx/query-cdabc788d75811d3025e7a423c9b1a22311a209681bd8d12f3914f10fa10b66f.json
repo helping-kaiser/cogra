@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE staged_writes\n         SET approval_sends_open = approval_sends_open + 1, updated_at = NOW()\n         WHERE id = $1 AND kept_at IS NULL AND content_commitment IS NOT NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cdabc788d75811d3025e7a423c9b1a22311a209681bd8d12f3914f10fa10b66f"
+}

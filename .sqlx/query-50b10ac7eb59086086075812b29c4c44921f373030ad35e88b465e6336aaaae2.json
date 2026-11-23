@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, actor_id, act_id, author, seq, family, middle,\n                target, p_d, p_i, settlement_ref, license, asserted_parents,\n                deps, payload, state, author_pubkey, content_nonce,\n                dependency_nonce, pre_signature,\n                content_salt, deps_salt, content_commitment, deps_commitment,\n                host_seal, prepared_epoch, node_id, pre_signed_at, carried,\n                payload_reaped_at, payload_custodied_at\n         FROM staged_writes WHERE id = $1",
+  "query": "SELECT id, actor_id, act_id, author, seq, family, middle,\n                target, p_d, p_i, settlement_ref, license, asserted_parents,\n                deps, payload, state, author_pubkey, content_nonce,\n                dependency_nonce, pre_signature,\n                content_salt, deps_salt, content_commitment, deps_commitment,\n                host_seal, prepared_epoch, node_id, pre_signed_at, carried,\n                payload_reaped_at, payload_custodied_at,\n                kept_at IS NOT NULL AS \"kept!\"\n         FROM staged_writes WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -157,6 +157,11 @@
         "ordinal": 30,
         "name": "payload_custodied_at",
         "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 31,
+        "name": "kept!",
+        "type_info": "Bool"
       }
     ],
     "parameters": {
@@ -195,8 +200,9 @@
       true,
       false,
       true,
-      true
+      true,
+      null
     ]
   },
-  "hash": "064afac5598d8f1af19db43415751a85b7e79bc2070031ae4a6db7ea58d3be55"
+  "hash": "50b10ac7eb59086086075812b29c4c44921f373030ad35e88b465e6336aaaae2"
 }
