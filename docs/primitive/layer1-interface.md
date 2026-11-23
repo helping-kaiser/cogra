@@ -556,7 +556,7 @@ Shared mathematics (norms, delimiters, number sets) is tag-exempt.
 
 | Object | Feedback read-site | Terminal read-site | Verdict | Permission |
 |---|---|---|---|---|
-| accepted edge set $E_k$ + accepted authoritative act sequence $\mathcal{Q}_k$ (acts, key of record $(k, \mathrm{pos}_k(q))$, honest $\mathbb{T}^{\text{act}}_q$) | substrate of all of $\mathcal{A}$ | — | L1·closure | consume only; agreement on $\mathcal{Q}_k$, not merely $E_k$; $\mathbb{T}^{\text{act}}_q$ itself is a recomputable summary of the order of record with no ordering authority (L1·verify) |
+| accepted edge set $E_k$ + accepted authoritative act sequence $\mathcal{Q}_k$ (acts ordered by the key of record $(k, \mathrm{pos}_k(q))$; $\mathbb{T}^{\text{act}}_q$ recomputable) | substrate of all of $\mathcal{A}$ | — | L1·closure | consume only; agreement on $\mathcal{Q}_k$, not merely $E_k$; $\mathbb{T}^{\text{act}}_q$ itself is a recomputable summary of the order of record with no ordering authority (L1·verify) |
 | binding constants + formula pins $\beta,\eta,\nu,\rho_{\text{pol}},\theta,m_\theta,N_{\text{epoch}},\delta_{\text{pos}},L_{\text{hop}},M_{\text{payload}}$; standing-census/compiler/coefficient/activation/allocator/certificate formula editions, structural wall floor and reduced controller constants, and controller formula edition | standing activation / gate / formation / package validity / epoch target | — | L1·closure | consume only; no silent formula-edition change |
 | canonical raw defaults: $q$, raw depth $L$, the canonical raw path-composition rule | — | feed / raw bridge / raw signed services | **L2** | reimplement freely at terminal read-sites |
 | host-cached $\tilde{w}_{\text{spam}}, \tilde{w}_{\max}, \tilde{w}_{\max}^{\text{Op}}, \tilde{w}(e), \epsilon(e)$ | — | client convenience, raw diagnostics | L1·by-product | ignore and recompute freely |
@@ -1002,7 +1002,7 @@ formation, package validity, or the epoch target;
 | $Q(1)$ | $\approx 0.6975$ (activation normalization of the deployed core) | `def:epoch:responsive-vouch-activation` |
 | $\kappa_{\text{self}}$, $\omega_D$ | unity (self-retention base and every published domain weight; reference values pending the calibration lock) | `tbl:epoch:standing-domain-weights` |
 | certificate screen $\mathcal{K}_k$ | a rung passes iff $m_\theta\,\mathcal{K}_k \le 1$; the accepted rung $t_k$ is the greatest attempted rung whose supplied or recoverable sound enclosure support proves PASS under `post:deployment:replay-verification` — a rung left INDECISIVE is passed over; the anchor $t_k = 0$ always certifies | `def:dynamics:conserved-standing-certificate`, `def:epoch:tilt-backoff-grid` |
-| $M_{\text{payload}}$ | deployment-calibrated; **per act, aggregate over a hyper-edge's projections**, stated in bytes of the deployment's declared payload encoding | `def:graph:act-payload-projection` |
+| $M_{\text{payload}}$ | deployment-calibrated; bounds every carried content pair, **aggregate over the act**, stated in bytes of the deployment's declared payload encoding | `def:graph:act-payload-projection` |
 
 Canonical raw defaults and derived raw constants (terminal formulas,
 host-cached values are by-products — §3): $q = \tfrac12$ (raw diversity
@@ -3831,8 +3831,9 @@ $\theta$-history, post-debit standing $=$ pre-debit standing $-
 \rho_\theta\nu$ (reduced: rigid translation by $\rho_\theta$), exact.
 
 **Final-Set Write Rule (`post:epoch:final-act-sequence-write-rule`,
-`subsec:verification:two-gate`).** See §7.1 — W1 solvency (debited,
-continuous, own-balance-only); W2a individual final stamp $\ge \rho_\theta$
+`subsec:verification:two-gate`).** See §7.1 — over records whose act's
+recorded author is actor $i$: W1 solvency (debited, continuous, only the
+recorded author's own balance pays); W2a individual final stamp $\ge \rho_\theta$
 (never averaged); W2b act-weighted epoch stamp $\ge \rho_{\text{eff}}$ with
 the act budget (never debited; band actors enter on door headroom).
 
@@ -3889,8 +3890,8 @@ Price axis:
     enclosure support proves PASS under
     `post:deployment:replay-verification` at the wall in force and on the epoch's own contributing width,
     $m_\theta\,\mathcal{K}_k \le 1$; the anchor always certifies, and
-    higher-rung failures and indecisive enclosures stay distinct and
-    published;
+    higher-rung failures and INDECISIVE verdicts and their support stay
+    distinct and published;
   - (X3) *step bound* — $|\rho_\theta^{(k+1)} - \rho_\theta^{(k)}| \le
     \min(a,\ r\,\rho_\theta^{(k)})$ for published $a > 0$, $0 < r < 1$;
   - (X4) *hysteresis* — the published relative deadband applies to the
@@ -4916,7 +4917,7 @@ objects live only in the boundary ledger** (§3).
 | burn accumulator | A record of the realization's history carrying or accumulating burn and extending the settlement lineage; appending one is open to any party. | `def:comparator:burn-accumulator` |
 | $m_k$ | Epoch marker: the burn accumulator the deployment's published marker policy recognizes by its form as epoch $k$'s, bound by closed epoch $k$ one-to-one and in order (M5); $m_0$ names the empty initial boundary, and an unclosed recognized marker is pending. | `def:comparator:epoch-marker`, `cond:comparator:marker-epoch-registration` |
 | $\delta_{\text{pos}}$ | Snapshot buffer (settlement-stability depth), chosen to exceed the settlement depth a realization publishes (R4(e)) so the weld reads the recognized final marker, its lineage, and its fixed accepted view under the published finality assumptions; edge membership is the closure rule's. | `post:epoch:final-edge-set` |
-| $M_{\text{payload}}$ | Maximum payload byte length **per act** (aggregate over a hyper-edge's projections); the structural bound is L1·closure, payload bytes terminal. | `def:graph:act-payload-projection` |
+| $M_{\text{payload}}$ | Maximum carried content-pair byte length, aggregate over an act; the structural bound is L1·closure, payload bytes terminal. | `def:graph:act-payload-projection` |
 | $L_{\text{hop}}$, $\gamma$ | Chartered transport depth 4, in hops of the conserved transport; and the chartered activation exponent $1/4$, which is deliberately not routed through it. | `def:epoch:standing-depth-mass`, `def:epoch:responsive-vouch-activation` |
 
 ### 14.2 Rules
