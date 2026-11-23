@@ -29,8 +29,8 @@ one conserved allocation operator. This reference draws two scopes from it:
 Proofs and motivation prose are omitted.
 
 **Pinned anchor set.** This file's citation set is pinned under the spec's
-anchor-stability contract: 458 distinct anchor names,
-`anchor_set_hash = 1dce7dbbe886b1a25c9feafc152a9e664de1801bd8ada950a1c18980bb343a99`
+anchor-stability contract: 491 distinct anchor names,
+`anchor_set_hash = 3e55203a5cca9da8f74fbb41427e19e5874e2b9dcfdac5ff885c2072d31c8f2f`
 (sha256 over the sorted distinct anchor names joined by `\n`, no trailing
 newline). Once
 registered with the Peer Team, renaming any pinned label is a breaking
@@ -66,21 +66,47 @@ courtesy material, while courtesy material may cite either.
 *How this file shows the class.* As the specification badges each labeled
 statement, this file marks each courtesy or oracle statement it reproduces
 with *(courtesy)* or *(oracle)* beside its anchor; every unmarked statement
-is closure. The courtesy anchors cited here are
-`def:graph:act-dependency-tombstone`, `def:graph:act-payload-controller`,
-`def:graph:act-payload-state`, `rem:graph:act-payload-custody-phases`,
-`rem:graph:payload-size-not-act-cost`,
-`subsec:deployment:concealment-entropy`,
-`subsec:deployment:realization-obligations`,
-`post:deployment:verdict-issuance`,
-`cond:deployment:cadence-maturity`,
-`cond:deployment:complete-act-conformance`,
-`cond:deployment:controller-performance`,
-`cond:deployment:emission-experience`,
-`cond:deployment:parameter-comparisons`,
-`cond:deployment:payload-cache-envelope`,
-`cond:deployment:standing-work` and
-`cond:deployment:terminal-regression`.
+is closure. Of the anchors this file cites, these 37 are courtesy:
+
+- graph: `def:graph:act-dependency-tombstone`,
+  `def:graph:act-payload-controller`, `def:graph:act-payload-state`,
+  `def:graph:canonical-erasure-default`, `def:graph:carriage`,
+  `def:graph:courtesy-handshake`, `def:graph:custodian`,
+  `def:graph:dependency-list-order`, `def:graph:holder`,
+  `def:graph:requested-publication-intent`, `def:graph:storage`,
+  `gloss:graph:blinding-value`, `gloss:graph:commitment`,
+  `gloss:graph:opening`, `rem:graph:act-payload-custody-phases`,
+  `rem:graph:dependency-nonce-concealment`,
+  `rem:graph:payload-size-not-act-cost`;
+- burn realization: `rem:comparator:burn-realization-audit-evidence`,
+  `subsec:deployment:realization-obligations`;
+- deployment: `subsec:deployment:concealment-entropy`,
+  `post:deployment:verdict-issuance`,
+  `rem:deployment:wall-calibration-oversight`,
+  `rem:deployment:boundary-policy-oversight`,
+  `rem:deployment:canonical-encoding-oversight`,
+  `rem:deployment:centralized-monitoring-conduct`,
+  `rem:deployment:title-certificate-monitoring-courtesies`,
+  `rem:deployment:certificate-monitoring-courtesies`,
+  `rem:deployment:calibration-publication-conduct`,
+  `rem:deployment:boundary-search-courtesies`,
+  `cond:deployment:cadence-maturity`,
+  `cond:deployment:complete-act-conformance`,
+  `cond:deployment:controller-performance`,
+  `cond:deployment:emission-experience`,
+  `cond:deployment:parameter-comparisons`,
+  `cond:deployment:payload-cache-envelope`,
+  `cond:deployment:standing-work`, `cond:deployment:terminal-regression`.
+
+These 8 are oracle, the two declared cases of §13.3:
+`def:deployment:declared-verifiable-provenance-case`,
+`post:deployment:pinned-provenance-proof-objects`,
+`post:deployment:declared-provenance-replay`,
+`def:deployment:provenance-validity-projection`,
+`def:deployment:declared-author-authority-case`,
+`post:deployment:pinned-author-authority-proof-objects`,
+`post:deployment:declared-author-authority-replay`,
+`def:deployment:author-authority-validity-projection`.
 
 Purpose: the normative reference for rebasing CoGra as a Layer 2 on this
 substrate. Its closure statements bind every epoch exactly as stated; its
@@ -4015,9 +4041,8 @@ refine the wall and ridge enclosures or reject the proposed wall and any
 package requiring it. The ridge is the chartered reason for both floors —
 beyond it clean elasticity decreases — and economic positivity and this
 leverage landmark are structural choices, not consequences of X2. The
-deployment assesses economic suitability under
-`cond:deployment:wall-calibration` and `cond:deployment:parameter-comparisons`
-(§13.1).
+deployment publishes its codec and comparison procedure and certifies
+X1–X9 for its charged value (`def:epoch:safety-threshold`).
 
 **Floor economics (`cor:epoch:floor-economics`).** At every published wall,
 $\theta = \nu\rho_\theta \ge \nu\rho_{\theta,\min} > 0$ (minimum price per act)
