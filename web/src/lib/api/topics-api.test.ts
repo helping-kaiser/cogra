@@ -5,6 +5,8 @@ import { describe, expect, it } from "vitest";
 import { fetchHashtagDetail, fetchTagNames, prepareTag } from "./topics-api";
 import { DEFAULT_CONFIDENCE, DEFAULT_RELEVANCE } from "@/lib/topics/draft";
 import { gqlLink, startMswServer } from "@/test/msw";
+import { taggedCommentWire } from "@/test/profile-comment";
+import { tagPageHandlers } from "@/test/tag-page";
 
 const server = startMswServer();
 
@@ -55,6 +57,47 @@ describe("fetchHashtagDetail", () => {
 
   it("fails on a transport fault", async () => {
     server.use(gqlLink.query("HashtagDetail", () => HttpResponse.error()));
+    expect((await fetchHashtagDetail(client(), "rust")).kind).toBe("failed");
+  });
+
+  // The app's shape (`TopicRepositoryImpl.withCommentCards`): the list names
+  // each comment, one `TaggedComments` read carries them whole over exactly
+  // those ids, the list keeps its own order, and a comment the second read
+  // cannot resolve leaves its row out.
+  it("carries each tagged comment whole from the second read, in the list's order", async () => {
+    const claim = (node: unknown) => ({ relevance: 0.4, confidence: 0.9, pending: false, node });
+    const asked: unknown[] = [];
+    // The first handler a `use` lists answers first: c2 resolves to nothing.
+    server.use(
+      gqlLink.query("TaggedComments", ({ variables }) => {
+        asked.push(variables.ids);
+        return HttpResponse.json({
+          data: { nodes: [taggedCommentWire("c1"), null, taggedCommentWire("c3")] },
+        });
+      }),
+      ...tagPageHandlers(
+        hashtag("rust", [
+          claim(taggedCommentWire("c1")),
+          claim(taggedCommentWire("c2")),
+          claim(taggedCommentWire("c3")),
+        ]),
+      ),
+    );
+    const outcome = await fetchHashtagDetail(client(), "rust");
+    expect(asked).toEqual([["c1", "c2", "c3"]]);
+    expect(outcome.kind).toBe("success");
+    if (outcome.kind !== "success") return;
+    const rows = outcome.value?.taggedContent ?? [];
+    expect(rows.map(({ node }) => node.id)).toEqual(["c1", "c3"]);
+    const first = rows[0]!.node;
+    expect(first.__typename === "Comment" && first.references).toEqual([]);
+  });
+
+  it("fails when the comment cards' read gets no answer", async () => {
+    server.use(
+      gqlLink.query("TaggedComments", () => HttpResponse.error()),
+      ...tagPageHandlers(hashtag("rust", [{ relevance: 0.4, confidence: 0.9, pending: false, node: taggedCommentWire("c1") }])),
+    );
     expect((await fetchHashtagDetail(client(), "rust")).kind).toBe("failed");
   });
 });

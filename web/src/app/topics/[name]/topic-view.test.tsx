@@ -19,6 +19,7 @@ import { answersComment, answersPost, taggedCommentWire } from "@/test/profile-c
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
 import { stanceHandlers } from "@/test/stance";
+import { tagPageHandlers, type TaggedCommentsLog } from "@/test/tag-page";
 import { TAG_EMPTY, TAG_NOT_FOUND, TAG_UNREACHABLE, TopicView } from "./topic-view";
 
 function signedInStore() {
@@ -84,8 +85,8 @@ function postNode(id: string, title: string) {
 }
 
 /**
- * A tagged comment as the tag page reads it (`topics.graphql`): the card's
- * own fields without the two folds, what it answers and its thread's post.
+ * A tagged comment as the tag page reads it (`topics.graphql` `TaggedComments`):
+ * the comment whole, what it answers and its thread's post.
  */
 function taggedComment(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
   return taggedCommentWire(id, {
@@ -124,8 +125,9 @@ const row = (node: unknown, relevance = 0.1, confidence = 1, pending = false) =>
   node,
 });
 
-function serve(name: string, rows: unknown[]) {
-  server.use(gqlLink.query("HashtagDetail", () => HttpResponse.json({ data: hashtagDetail(name, rows) })));
+/** The page's two reads, the comments named by the first and carried whole by the second. */
+function serve(name: string, rows: unknown[], log?: TaggedCommentsLog) {
+  server.use(...tagPageHandlers(hashtagDetail(name, rows).hashtag, log));
 }
 
 /** The keys of the post cards on the page, in order. */
@@ -435,6 +437,74 @@ describe("TopicView — the rows", () => {
     expect(card).toHaveTextContent("nice crate");
     expect(within(card).getByTestId(byNode("tagPage.commentCard.authorChip", "c1"))).toHaveTextContent("@bob");
     expect(within(card).getByTestId(byNode("tagPage.commentCard.actionRow.stance.anchor", "c1"))).toBeInTheDocument();
+  });
+
+  // Seam 411 (jakob, 2026-11-23): the tagged comment's card carries its tags
+  // line, and the line does there what it does on the feed's comment card —
+  // two chips, then the counts, its references included. One card, one
+  // behaviour.
+  it("a_tagged_comments_card_carries_its_tags_line_two_chips_then_the_counts_its_references_included", async () => {
+    const tag = (name: string) => ({
+      __typename: "TopicClaim",
+      hashtag: { __typename: "Hashtag", id: `ht-${name}`, name: moderated(name) },
+      relevance: 0.4,
+      confidence: 0.9,
+      pending: false,
+    });
+    const citation = (id: string) => ({
+      __typename: "ReferenceClaim",
+      targetId: id,
+      relevance: 0.5,
+      support: 0.5,
+      withdrawalCost: 1,
+      rawRelevance: 0.5,
+      rawSupport: 0.5,
+      pending: false,
+      target: null,
+    });
+    const log: TaggedCommentsLog = { asked: [] };
+    serve(
+      "rust",
+      [
+        row(postNode("p1", "About Rust")),
+        row(
+          taggedComment("c1", {
+            topics: [tag("rust"), tag("wasm"), tag("axum")],
+            references: [citation("r1"), citation("r2")],
+          }),
+        ),
+      ],
+      log,
+    );
+    renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+    const line = await screen.findByTestId(byNode("tagPage.commentCard.tagsLine", "c1"));
+    expect(within(line).getByTestId(byNode("tagPage.commentCard.tagsLine.tag", "c1/rust"))).toBeInTheDocument();
+    expect(within(line).getByTestId(byNode("tagPage.commentCard.tagsLine.tag", "c1/wasm"))).toBeInTheDocument();
+    expect(within(line).queryByTestId(byNode("tagPage.commentCard.tagsLine.tag", "c1/axum"))).toBeNull();
+    expect(within(line).getByTestId(byNode("tagPage.commentCard.tagsLine.counts", "c1"))).toHaveTextContent(
+      "· 1 tag · 2 references",
+    );
+    // The comment cards are read apart, over exactly the comment ids the list named.
+    expect(log.asked).toEqual([["c1"]]);
+  });
+
+  // A page that tags no comment sends no second read (`fetchHashtagDetail`).
+  it("a_page_with_no_tagged_comment_sends_no_comment_read", async () => {
+    const log: TaggedCommentsLog = { asked: [] };
+    serve("rust", [row(postNode("p1", "About Rust"))], log);
+    renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+    await screen.findByTestId(byNode("tagPage.card", "p1"));
+    expect(log.asked).toEqual([]);
+  });
+
+  // TagPage.md:65 — the page's read is both reads: the comment cards' read
+  // getting no answer is the page's read getting none.
+  it("the_comment_cards_read_getting_no_answer_stands_the_failure_line_and_retry", async () => {
+    serve("rust", [row(taggedComment("c1"))]);
+    server.use(gqlLink.query("TaggedComments", () => HttpResponse.error()));
+    renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+    expect(await screen.findByTestId("topic-transport-error")).toHaveTextContent(TAG_UNREACHABLE);
+    expect(screen.queryByTestId(byNode("tagPage.commentCard", "c1"))).toBeNull();
   });
 
   // TagPage.md:17 — no Reply and no view-replies line.
@@ -807,13 +877,25 @@ describe("TopicView — the tag page's registered nodes (TagPage, TagPageHeldPad
     row({ ...textPost(), content: moderated(null, "REDACTED"), removal: REMOVED }, 0.1, 1, true),
     row(taggedComment("c1", { content: moderated(null, "REDACTED"), removal: REMOVED }), 0.4, 0.9),
   ];
+  // The `comment` chip's `pictures` and `clip` (round 62, seam 403.1): @ada's
+  // tagged comment carrying the thread's two pictures, and its clip.
+  const clip = () => ({
+    ...picture(9),
+    url: "https://media.test/9.mp4",
+    mimeType: "video/mp4",
+    options: { __typename: "MediaOptions", aspectRatio: "9:16", durationMs: 12_000 },
+  });
+  const mediaRows = () => [
+    row(taggedComment("c-pictures", { attachments: [picture(1), picture(2)] }), 0.4, 0.9),
+    row(taggedComment("c-clip", { attachments: [clip()] }), 0.4, 0.9),
+  ];
   const rendered = () =>
     new Set([...document.querySelectorAll("[data-testid^='tagPage.']")].map((element) => element.getAttribute("data-testid")));
 
   // The board's cards wear an opinion (`mkBundle(0.1, 0.1)`), so each anchor
   // draws its exact pair beside the face.
   const NICE = { pDirected: 0.1, pInterest: 0.1 };
-  const cardStances = { "p-text": NICE, "p-gallery": NICE, c1: NICE };
+  const cardStances = { "p-text": NICE, "p-gallery": NICE, c1: NICE, "c-pictures": NICE, "c-clip": NICE };
 
   async function census(rows: unknown[], removedOn = false): Promise<Set<string | null>> {
     if (removedOn) writeCommittedFeedFilter("u1", { ...FEED_FILTER_DEFAULT, also: ["settling", "removed"] });
@@ -825,6 +907,14 @@ describe("TopicView — the tag page's registered nodes (TagPage, TagPageHeldPad
     });
     await screen.findByTestId("tagPage.header");
     await screen.findAllByTestId("tagPage.claim");
+    // Each card's anchor draws its exact pair once its own stance read answers,
+    // which races the page's reads: count the page only once every card's has.
+    const cardAnchors = "[data-testid='tagPage.card.actionRow.stance.anchor'],[data-testid='tagPage.commentCard.actionRow.stance.anchor']";
+    const cardExacts =
+      "[data-testid='tagPage.card.actionRow.stance.anchor.exact'],[data-testid='tagPage.commentCard.actionRow.stance.anchor.exact']";
+    await waitFor(() =>
+      expect(document.querySelectorAll(cardExacts).length).toBe(document.querySelectorAll(cardAnchors).length),
+    );
     const seen = rendered();
     view.unmount();
     return seen;
@@ -832,9 +922,26 @@ describe("TopicView — the tag page's registered nodes (TagPage, TagPageHeldPad
 
   it("every_path_the_registry_gives_TagPage_stands_on_the_page", async () => {
     const live = await census(liveRows());
+    const media = await census(mediaRows());
     const removed = await census(removedRows(), true);
-    const missing = registered("TagPage").filter((path) => !live.has(path) && !removed.has(path));
+    const missing = registered("TagPage").filter((path) => !live.has(path) && !media.has(path) && !removed.has(path));
     expect(missing).toEqual([]);
+  });
+
+  // TagPage.jsx round 62: a tagged comment's media registers by the thread's
+  // names — the card's `media`, each picture its `frame` keyed
+  // `<comment id>/<position>`, a clip's sound its frame's `soundDisc`, a
+  // gallery's `dots` — each inside its own card.
+  it("a_tagged_comments_media_wears_the_threads_registered_names", async () => {
+    serve("rust", mediaRows());
+    renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+    const pictures = await screen.findByTestId(byNode("tagPage.commentCard", "c-pictures"));
+    const keys = (path: string) => screen.queryAllByTestId(path).map((element) => element.getAttribute("data-testid-key"));
+    expect(keys("tagPage.commentCard.media")).toEqual(["c-pictures", "c-clip"]);
+    expect(keys("tagPage.commentCard.media.frame")).toEqual(["c-pictures/1", "c-pictures/2", "c-clip/1"]);
+    expect(keys("tagPage.commentCard.media.frame.soundDisc")).toEqual(["c-clip/1"]);
+    expect(keys("tagPage.commentCard.media.dots")).toEqual(["c-pictures"]);
+    expect(within(pictures).getByTestId(byNode("tagPage.commentCard.media.dots", "c-pictures"))).toBeInTheDocument();
   });
 
   it("every_path_the_registry_gives_TagPageHeldPad_stands_with_the_held_topics_pad_open", async () => {
