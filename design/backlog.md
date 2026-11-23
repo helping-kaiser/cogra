@@ -7005,3 +7005,19 @@ words (`Salt maps of the coast road` over `@sol`, the feed's card answering @sol
 (a) the place's figure, `12.40`, the @tobias card's; (b) a figure jakob names (a new string); (c) the
 dash, History's "found none" (Saved has no dash case). Recommendation (a): no new string, and the
 board's other states keep every pixel.
+
+### 307 · The pixel harness renders a board two ways under load · *system* · **filed 2026-11-23**
+
+Round 65, item 2. Round 64's unexplained differences are the harness, not the boards: one render in
+fifteen to twenty, with four renders running at once, comes out a few pixels off on BOTH trees
+(`152cddc34` and `ca0e6e7e5`, whose board text differs only by the hover gate). `CommentCitedByEmpty`
+(`120a3741…` against `6d95e128…`): 15 px, ±1–4 levels, on the antialiased edges under the sheet's
+scrim — the author avatar's circle (x 39–42, rows 406, 407, 429) and the veil's top corners (x 39–42
+and 346–347, rows 442, 443). `SeveranceConfirm` (`d6dc2c08…` against `a3412bb4…`): 7 px on the `Keep
+it` pill's rim (x 325–328, rows 552–557, and x 237 row 573). Round 64's reading of 14 px on "the
+review overlay's badge rim" came from `diffbox.mjs`, which keeps the flow badges; with them stripped,
+as the proof renders, the wobble is the pill's own rim. Over 100 serial renders never wobbled;
+`--num-raster-threads=1` does not stop it. Separately, about one render in fifty loses Figtree (the
+Google Fonts fetch errors) and the whole board draws in the fallback face. Options: (a) the proof
+re-renders a differing board once before it reports a difference; (b) serve Figtree to the harness
+locally; (c) both. Recommendation (c).
