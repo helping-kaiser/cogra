@@ -81,7 +81,7 @@ function postNode(id: string, title: string) {
     genesisRecordId: "rec-genesis",
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
-    references: [],
+    referenceCount: 0,
   };
 }
 
@@ -509,17 +509,6 @@ describe("TopicView — the rows", () => {
       confidence: 0.9,
       pending: false,
     });
-    const citation = (id: string) => ({
-      __typename: "ReferenceClaim",
-      targetId: id,
-      relevance: 0.5,
-      support: 0.5,
-      withdrawalCost: 1,
-      rawRelevance: 0.5,
-      rawSupport: 0.5,
-      pending: false,
-      target: null,
-    });
     const log: TaggedCommentsLog = { asked: [] };
     serve(
       "rust",
@@ -528,7 +517,7 @@ describe("TopicView — the rows", () => {
         row(
           taggedComment("c1", {
             topics: [tag("rust"), tag("wasm"), tag("axum")],
-            references: [citation("r1"), citation("r2")],
+            referenceCount: 2,
           }),
         ),
       ],
@@ -1007,19 +996,7 @@ describe("TopicView — the tag page's registered nodes (TagPage, TagPageHeldPad
         pending: false,
       },
     ],
-    references: [
-      {
-        __typename: "ReferenceClaim",
-        targetId: "r1",
-        relevance: 0.5,
-        support: 0.5,
-        withdrawalCost: 1,
-        rawRelevance: 0.5,
-        rawSupport: 0.5,
-        pending: false,
-        target: null,
-      },
-    ],
+    referenceCount: 1,
   });
   const liveRows = () => [
     row(textPost(), 0.1, 1, true),

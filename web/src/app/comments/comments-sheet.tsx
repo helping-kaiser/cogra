@@ -988,7 +988,7 @@ export function CommentsSheet({
                 name: claim.hashtag.name.value ?? "",
                 pending: claim.pending,
               }))}
-              references={comment.references.length}
+              references={comment.referenceCount}
               testIdPrefix={`comment-${comment.id}`}
             />
           )}

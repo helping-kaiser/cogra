@@ -46,6 +46,8 @@ import type { TraceOrigin } from "@/lib/score/trace-session";
 import { RemovedPlaceholder } from "@/lib/ui2/media/removed-placeholder";
 import { OverflowTrigger } from "@/lib/ui2/overflow-menu";
 import { RefsSheet } from "@/lib/ui2/refs-sheet";
+import type { ReferenceClaimNode } from "@/lib/references/claims";
+import { useReferencesOnOpen } from "@/lib/references/use-references-on-open";
 import { ActorChip } from "./actor-chip";
 import { Card } from "./card";
 import { useClampFold } from "./clamp-fold";
@@ -165,7 +167,12 @@ export function PostCard({
   scoreOrigin,
   attach = false,
 }: {
-  post: PostView;
+  /**
+   * The post as its read drew it. A card read carries `referenceCount` only;
+   * the detail's own read carries the list too (`PostDetail`), and then the
+   * count is the list's length and the sheet reads nothing.
+   */
+  post: PostView & { readonly references?: readonly ReferenceClaimNode[] };
   /** The card hangs under a row flag (`TaggedRow`) and squares its top-left corner (`Card`'s `attach`). */
   attach?: boolean;
   /**
@@ -284,6 +291,15 @@ export function PostCard({
   const [open, setOpen] = useState(false);
   // The tags-and-references sheet, raised by the line that counts them.
   const [refsOpen, setRefsOpen] = useState(false);
+  // The count the line prints, and the rows the sheet lists — read by id as it
+  // rises unless the post's own read carried them (`useReferencesOnOpen`).
+  const referenceCount = post.references?.length ?? post.referenceCount;
+  const cited = useReferencesOnOpen({
+    open: refsOpen,
+    node: { kind: "Post", id: post.id },
+    count: referenceCount,
+    held: post.references,
+  });
   // THE NARROW-SHARE FOLD (design/readme.md, jakob 2026-09-17, sharpened
   // 2026-09-22 — PR #794): strictly below 360px the row sheds Share and the
   // host's menu leads with it instead (`PostMenuHost`); at 360 the wide
@@ -562,7 +578,7 @@ export function PostCard({
               name: claim.hashtag.name.value ?? "",
               pending: claim.pending,
             }))}
-            references={post.references.length}
+            references={referenceCount}
             testIdPrefix={testId}
             node={part(node, "tagsLine")}
             onOpen={detail ? () => setRefsOpen(true) : undefined}
@@ -577,7 +593,9 @@ export function PostCard({
             open={refsOpen}
             onClose={() => setRefsOpen(false)}
             topics={post.topics}
-            references={post.references}
+            references={cited.references}
+            failed={cited.failed}
+            onRetry={cited.retry}
             from={doorFrom}
             here={tagHere}
             testId={`${testId}-refs-sheet`}

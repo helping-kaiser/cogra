@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { RefsSheet, type TopicClaimNode } from "./refs-sheet";
 import type { ReferenceClaimNode } from "@/lib/references/claims";
@@ -196,5 +196,46 @@ describe("RefsSheet", () => {
     open({ references: [] });
     expect(screen.getByText("Tags")).toBeInTheDocument();
     expect(screen.queryByText("References")).toBeNull();
+  });
+});
+
+// THE ROWS ARE READ AS THE SHEET RISES (a card carries the count only), and the
+// wait is the house ladder (readme §4, *Loading*; seam 431): nothing under 200ms,
+// then Loading… where the rows go; a read with no answer says the house line
+// over Retry. The tags are the card's already and never wait.
+describe("RefsSheet while its rows are read", () => {
+  afterEach(() => vi.useRealTimers());
+
+  it("shows nothing for the first 200ms, then Loading… under the tags", () => {
+    vi.useFakeTimers();
+    open({ references: null });
+    expect(screen.getByText("Tags")).toBeInTheDocument();
+    expect(screen.queryByTestId("refs-sheet-loading")).toBeNull();
+    act(() => void vi.advanceTimersByTime(199));
+    expect(screen.queryByTestId("refs-sheet-loading")).toBeNull();
+    act(() => void vi.advanceTimersByTime(1));
+    expect(screen.getByTestId("refs-sheet-loading")).toHaveTextContent("Loading…");
+    expect(screen.getByTestId("refs-sheet-loading")).toHaveAttribute("role", "status");
+    expect(screen.queryByText("References")).toBeNull();
+  });
+
+  it("drops the line the moment the rows arrive", () => {
+    vi.useFakeTimers();
+    const { rerender } = open({ references: null });
+    act(() => void vi.advanceTimersByTime(300));
+    rerender(<RefsSheet open onClose={vi.fn()} topics={TAGS} references={REFERENCES} />);
+    expect(screen.queryByTestId("refs-sheet-loading")).toBeNull();
+    expect(screen.getByText("References")).toBeInTheDocument();
+  });
+
+  it("says the house line over Retry when the read got no answer", () => {
+    const onRetry = vi.fn();
+    open({ references: null, failed: true, onRetry });
+    expect(screen.getByTestId("refs-sheet-error")).toHaveTextContent(
+      "Can't reach the server. Check your connection and try again.",
+    );
+    expect(screen.queryByTestId("refs-sheet-loading")).toBeNull();
+    fireEvent.click(screen.getByTestId("refs-sheet-retry"));
+    expect(onRetry).toHaveBeenCalledTimes(1);
   });
 });

@@ -683,7 +683,7 @@ export function CommentFeedCard({
             name: claim.hashtag.name.value ?? "",
             pending: claim.pending,
           }))}
-          references={comment.references.length}
+          references={comment.referenceCount}
           testIdPrefix={testId}
           node={part(node, "tagsLine")}
           from={from}

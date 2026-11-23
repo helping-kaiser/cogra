@@ -56,7 +56,7 @@ export function profileComment(id: string, over: Record<string, unknown> = {}): 
     genesisRecordId: `rec-${id}`,
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
-    references: [],
+    referenceCount: 0,
     viewerBookmarkedAt: null,
     target: answersPost("p1", "The long way home"),
     post: { __typename: "Post", id: "p1" },

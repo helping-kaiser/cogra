@@ -102,7 +102,7 @@ function postNode(id: string, title: string | null, writtenDaysAgo = 1, by = aut
     genesisRecordId: `rec-${id}`,
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
-    references: [],
+    referenceCount: 0,
     viewerBookmarkedAt: null,
     comments: { __typename: "CommentConnection", totalCount: 0 },
   };
@@ -126,7 +126,7 @@ function commentNode(id: string, by = author("u2", "tobias", "Tobias")) {
     genesisRecordId: `rec-${id}`,
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
-    references: [],
+    referenceCount: 0,
     viewerBookmarkedAt: null,
     target: {
       __typename: "Post",
