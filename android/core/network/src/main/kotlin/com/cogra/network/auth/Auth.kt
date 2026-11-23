@@ -178,7 +178,7 @@ class BearerInterceptor(private val gate: SessionGate) : HttpInterceptor {
                     .build(),
             )
         }
-        val explicit =request.headers.firstOrNull { it.name == EXPLICIT_BEARER_HEADER }?.value
+        val explicit = request.headers.firstOrNull { it.name == EXPLICIT_BEARER_HEADER }?.value
         if (explicit != null) {
             return chain.proceed(
                 request.newBuilder()

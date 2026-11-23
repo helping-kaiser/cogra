@@ -8,9 +8,7 @@
 
 package com.cogra.network.repo
 
-import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.ApolloClient
-import com.apollographql.apollo.api.Operation
 import com.apollographql.apollo.api.Optional
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
@@ -20,26 +18,19 @@ import com.cogra.domain.flatMap
 import com.cogra.domain.map
 import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.repo.WriteRepository
-import com.cogra.domain.stance.BorrowedStance
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StanceKind
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.stance.StanceTarget
-import com.cogra.network.auth.ANONYMOUS_HEADER
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
-import com.cogra.network.graphql.CommentBorrowedStanceQuery
 import com.cogra.network.graphql.CommentStanceQuery
-import com.cogra.network.graphql.HashtagBorrowedStanceQuery
 import com.cogra.network.graphql.HashtagStanceQuery
-import com.cogra.network.graphql.PostBorrowedStanceQuery
 import com.cogra.network.graphql.PostStanceQuery
 import com.cogra.network.graphql.PrepareSeveranceMutation
-import com.cogra.network.graphql.ProfileBorrowedStanceQuery
 import com.cogra.network.graphql.ProfileStanceQuery
-import com.cogra.network.graphql.fragment.BorrowedStanceFields
 import com.cogra.network.graphql.fragment.StanceBundleFields
 import com.cogra.network.graphql.type.PrepareSeveranceInput
 import com.cogra.network.graphql.type.StancePickInput
@@ -70,22 +61,6 @@ private enum class TargetKind { POST, COMMENT, USER }
  * the probe on, the second is a refusal the guard can act on.
  */
 private class RootAnswer(val bundle: StanceBundleFields?)
-
-/**
- * What one root said about a guest's face: it holds the id ([RootAnswer]'s
- * reason for not being a bare null), and the view's stance toward it — null
- * where the view holds none, which is an answer, never a refusal.
- */
-private class BorrowedAnswer(fields: BorrowedStanceFields?) {
-    val face: BorrowedStance? = fields?.let {
-        BorrowedStance(
-            net = StancePair(it.pDirected, it.pInterest),
-            records = it.recordCount,
-            inert = it.inert,
-            severed = it.severed,
-        )
-    }
-}
 
 /**
  * A root that answered with a null bundle has an unauthenticated reader
@@ -291,77 +266,6 @@ class StanceRepositoryImpl @Inject constructor(
         kinds.remove(id)
         return notFound()
     }
-
-    /**
-     * A GUEST'S FACE: the borrowed view's own stance, read on its own four
-     * documents and NOWHERE NEAR [bundle].
-     *
-     * - Without a token ([ANONYMOUS_HEADER]) and outside [AuthGuard]: the
-     *   read is a guest's by definition, its null is an answer (the view
-     *   holds none) and never a refusal to refresh on.
-     * - Never cached: "the normalized cache is optional", installed only by
-     *   the builder's `.cache(…)` with its own artifact
-     *   (https://www.apollographql.com/docs/kotlin/caching/normalized-cache),
-     *   and this client installs none (NetworkModule), so every call is a
-     *   round trip whose answer lives only in the caller. A cache added
-     *   later defaults to `CacheFirst` client-wide: these four documents
-     *   would then need `FetchPolicy.NetworkOnly` and no store write.
-     * - It writes nothing a signing reads: [graphIds] never learns from it.
-     *   Only [kinds] does — which root holds an id is a fact about the
-     *   node, the same for every reader, and it spares the next read the
-     *   probe.
-     */
-    override suspend fun borrowedStance(target: StanceTarget): Outcome<BorrowedStance?> = when (target) {
-        is StanceTarget.Topic -> topicBorrowed(target.name)
-        is StanceTarget.Node -> nodeBorrowed(target.id)
-    }
-
-    /** A name says which root to ask, as the topic's bundle read does: no probe. */
-    private suspend fun topicBorrowed(name: String): Outcome<BorrowedStance?> {
-        val read = lent(client.query(HashtagBorrowedStanceQuery(name))) { data ->
-            data.hashtag?.let { BorrowedAnswer(it.borrowedStance?.borrowedStanceFields) }
-        }
-        return when (read) {
-            is Outcome.Failed -> read
-            is Outcome.Refused -> read
-            is Outcome.Success -> read.value?.let { Outcome.Success(it.face) } ?: notFound()
-        }
-    }
-
-    /** The node's borrowed read, probed in [TargetKind]'s order as [nodeBundle] probes. */
-    private suspend fun nodeBorrowed(id: String): Outcome<BorrowedStance?> {
-        for (kind in kinds[id]?.let { listOf(it) } ?: TargetKind.entries) {
-            when (val read = askBorrowed(kind, id)) {
-                is Outcome.Failed -> return read
-                is Outcome.Refused -> return read
-                is Outcome.Success -> {
-                    val answer = read.value ?: continue
-                    kinds[id] = kind
-                    return Outcome.Success(answer.face)
-                }
-            }
-        }
-        kinds.remove(id)
-        return notFound()
-    }
-
-    private suspend fun askBorrowed(kind: TargetKind, id: String): Outcome<BorrowedAnswer?> = when (kind) {
-        TargetKind.POST -> lent(client.query(PostBorrowedStanceQuery(id))) { data ->
-            data.post?.let { BorrowedAnswer(it.borrowedStance?.borrowedStanceFields) }
-        }
-        TargetKind.COMMENT -> lent(client.query(CommentBorrowedStanceQuery(id))) { data ->
-            data.comment?.let { BorrowedAnswer(it.borrowedStance?.borrowedStanceFields) }
-        }
-        TargetKind.USER -> lent(client.query(ProfileBorrowedStanceQuery(id))) { data ->
-            data.user?.let { BorrowedAnswer(it.borrowedStance?.borrowedStanceFields) }
-        }
-    }
-
-    /** One borrowed read, sent without a token; null where the root does not hold the id. */
-    private suspend fun <D : Operation.Data> lent(
-        call: ApolloCall<D>,
-        pick: (D) -> BorrowedAnswer?,
-    ): Outcome<BorrowedAnswer?> = call.addHttpHeader(ANONYMOUS_HEADER, "1").fetch().map(pick)
 
     /** One root's answer, or null where that root does not hold the id. */
     private suspend fun ask(
