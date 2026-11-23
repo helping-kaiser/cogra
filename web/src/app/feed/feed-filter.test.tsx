@@ -84,7 +84,7 @@ function post(id: string, change: Record<string, unknown> = {}): Node {
     genesisRecordId: `rec-${id}`,
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
-    references: [],
+    referenceCount: 0,
     ...change,
   };
 }
@@ -110,7 +110,7 @@ function comment(id: string): Node {
     genesisRecordId: `rec-${id}`,
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
-    references: [],
+    referenceCount: 0,
     viewerBookmarkedAt: null,
     target: {
       __typename: "Post",
