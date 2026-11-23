@@ -439,6 +439,55 @@ describe("TopicView — the rows", () => {
     expect(within(card).getByTestId(byNode("tagPage.commentCard.actionRow.stance.anchor", "c1"))).toBeInTheDocument();
   });
 
+  // Seam 411 (jakob, 2026-11-23): the tagged comment's card carries its tags
+  // line, and the line does there what it does on the feed's comment card —
+  // two chips, then the counts, its references included. One card, one
+  // behaviour.
+  it("a_tagged_comments_card_carries_its_tags_line_two_chips_then_the_counts_its_references_included", async () => {
+    const tag = (name: string) => ({
+      __typename: "TopicClaim",
+      hashtag: { __typename: "Hashtag", id: `ht-${name}`, name: moderated(name) },
+      relevance: 0.4,
+      confidence: 0.9,
+      pending: false,
+    });
+    const citation = (id: string) => ({
+      __typename: "ReferenceClaim",
+      targetId: id,
+      relevance: 0.5,
+      support: 0.5,
+      withdrawalCost: 1,
+      rawRelevance: 0.5,
+      rawSupport: 0.5,
+      pending: false,
+      target: null,
+    });
+    const log: TaggedCommentsLog = { asked: [] };
+    serve(
+      "rust",
+      [
+        row(postNode("p1", "About Rust")),
+        row(
+          taggedComment("c1", {
+            topics: [tag("rust"), tag("wasm"), tag("axum")],
+            references: [citation("r1"), citation("r2")],
+          }),
+        ),
+      ],
+      log,
+    );
+    renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+    const line = await screen.findByTestId(byNode("tagPage.commentCard.tagsLine", "c1"));
+    expect(within(line).getByTestId(byNode("tagPage.commentCard.tagsLine.tag", "c1/rust"))).toBeInTheDocument();
+    expect(within(line).getByTestId(byNode("tagPage.commentCard.tagsLine.tag", "c1/wasm"))).toBeInTheDocument();
+    expect(within(line).queryByTestId(byNode("tagPage.commentCard.tagsLine.tag", "c1/axum"))).toBeNull();
+    expect(within(line).getByTestId(byNode("tagPage.commentCard.tagsLine.counts", "c1"))).toHaveTextContent(
+      "· 1 tag · 2 references",
+    );
+    // The comment cards are read apart, over exactly the comment ids the list named.
+    expect(log.asked).toEqual([["c1"]]);
+  });
+
   // A page that tags no comment sends no second read (`fetchHashtagDetail`).
   it("a_page_with_no_tagged_comment_sends_no_comment_read", async () => {
     const log: TaggedCommentsLog = { asked: [] };
