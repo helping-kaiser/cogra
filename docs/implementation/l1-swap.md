@@ -319,6 +319,7 @@ The host publishes the seven parts of ``post:network:host-contract``
   fields beyond the legs, no pre-commitment, no signature, no key, no
   seal, no dependency commitment and no edition. The stand-in stores
   all of them in `l1_acts` (`seal.rs:172-201`) and publishes none.
+  The replay floor asks for them ("Layer 1 requires" above).
 - `EpochClosure` carries the closure cause, the boundary triple, the
   dependent-set partition, the final ledger, θ charged, the wall step
   and the marker policy (`handshake.rs:486-501`). It binds no
@@ -350,13 +351,22 @@ The host publishes the seven parts of ``post:network:host-contract``
 [Q64](../open-questions.md#q64--whether-ingestion-checks-that-the-carried-pair-opens-the-witness)).
 Whether the record must carry the two pre-digests so the
 pre-signature's covered bytes recompute from it:
-[Q69](../open-questions.md#q69--what-the-published-record-carries-for-the-proposal-signature),
-also asked of the L1 team (2026-11-23) together with whether one key
-for both signatures is a valid map. Asked of the L1 team
-(2026-11-23): four edges of the declaration-end rule — whether a
-withdrawal recurs, whether a successor keeps the case identity,
-whether a withdrawal is authenticated and fixed before the epoch, and
-whether it is itself a declaration in force.
+[Q69](../open-questions.md#q69--what-the-published-record-carries-for-the-proposal-signature).
+The envelope's field list does not name them
+(``def:graph:act-envelope``). The L1 author reads (2026-11-23) that
+the pre-commitment alone is the public input the proposal signature's
+check needs, and that the seal and the approval witness carry the
+binding the floor asks for. The floor asks that each signature verify
+"over bytes that name the stated author and act identifier"
+(``def:deployment:published-epoch-replay-floor``); for the proposal
+signature a reader cannot check that without the two pre-digests. One
+key for both signatures is a valid map: no text requires the two keys
+to differ. The four edges of the declaration-end rule, as the L1
+author reads them (2026-11-23): a withdrawal appears once; a successor
+keeps the case identity and advances the edition, the edge the L1
+author holds least firmly; a withdrawal is bound package content under
+the package's authentication; and a withdrawal is not itself a
+declaration in force (``post:epoch:final-edge-set``).
 
 ### 3.4 Content custody and removal
 
