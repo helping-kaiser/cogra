@@ -61,6 +61,15 @@ internal const val SESSION_BYPASS_HEADER = "X-Cogra-Session-Bypass"
  */
 internal const val EXPLICIT_BEARER_HEADER = "X-Cogra-Explicit-Bearer"
 
+/**
+ * The header a call sets to go out WITHOUT a token, whatever the store holds
+ * — a guest's borrowed-stance read, whose answer is null for any session and
+ * which must never refresh one. Stripped before the wire; the gate is not
+ * consulted, so the read can neither rotate a session nor fail on an
+ * unreadable store.
+ */
+internal const val ANONYMOUS_HEADER = "X-Cogra-Anonymous"
+
 /** Refresh this far before `exp` rather than sending a token about to die. */
 private const val CLOCK_SKEW_SECONDS = 30L
 
@@ -158,7 +167,18 @@ private fun expiry(access: String): Long? {
 /** Adds `Authorization: Bearer <access>` for every request the gate resolves. */
 class BearerInterceptor(private val gate: SessionGate) : HttpInterceptor {
     override suspend fun intercept(request: HttpRequest, chain: HttpInterceptorChain): HttpResponse {
-        val explicit = request.headers.firstOrNull { it.name == EXPLICIT_BEARER_HEADER }?.value
+        if (request.headers.any { it.name == ANONYMOUS_HEADER }) {
+            return chain.proceed(
+                request.newBuilder()
+                    .headers(
+                        request.headers.filterNot {
+                            it.name == ANONYMOUS_HEADER || it.name.equals("Authorization", ignoreCase = true)
+                        },
+                    )
+                    .build(),
+            )
+        }
+        val explicit =request.headers.firstOrNull { it.name == EXPLICIT_BEARER_HEADER }?.value
         if (explicit != null) {
             return chain.proceed(
                 request.newBuilder()

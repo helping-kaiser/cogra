@@ -34,6 +34,7 @@ import com.cogra.domain.TaggedContentView
 import com.cogra.domain.UserProfile
 import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.references.ReferenceClaim
+import com.cogra.domain.stance.BorrowedStance
 import com.cogra.domain.stance.HeldOpinion
 import com.cogra.domain.stance.OpinionDirection
 import com.cogra.domain.stance.SeveranceQuote
@@ -466,6 +467,15 @@ interface StanceRepository {
      * names its kind by this (KeptPicksReview.md:13).
      */
     suspend fun kindOf(target: StanceTarget): StanceKind? = (target as? StanceTarget.Topic)?.let { StanceKind.TOPIC }
+
+    /**
+     * The borrowed view's own stance toward [target], for a reader with no
+     * session — null where that view holds none (the hollow face), and for
+     * any session. Asked only while signed out, sent without a token, never
+     * through the refresh guard, and never remembered: nothing it answers
+     * feeds [targetGraphId], a standing, a projection or a kept pick.
+     */
+    suspend fun borrowedStance(target: StanceTarget): Outcome<BorrowedStance?>
 }
 
 /**

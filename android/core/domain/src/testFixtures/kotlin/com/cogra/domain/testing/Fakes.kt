@@ -102,6 +102,7 @@ import com.cogra.domain.signing.ExpectedNetting
 import com.cogra.domain.signing.NodeExpectation
 import com.cogra.domain.signing.Parents
 import com.cogra.domain.signing.stanceRecord
+import com.cogra.domain.stance.BorrowedStance
 import com.cogra.domain.stance.HeldOpinion
 import com.cogra.domain.stance.OpinionDirection
 import com.cogra.domain.stance.SeveranceQuote
@@ -797,6 +798,13 @@ open class ThrowingStanceRepository : StanceRepository {
             is StanceTarget.Topic -> "name:${target.name}"
         },
     )
+
+    /**
+     * Answers rather than throws, for [targetGraphId]'s reason: every guest
+     * face asks it, and a test about something else need not script it. The
+     * borrowed view holds nothing — the hollow face.
+     */
+    override suspend fun borrowedStance(target: StanceTarget): Outcome<BorrowedStance?> = Outcome.Success(null)
 }
 
 /**

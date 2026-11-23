@@ -28,6 +28,7 @@ import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.UserError
 import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.repo.WriteRepository
+import com.cogra.domain.stance.BorrowedStance
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
@@ -130,6 +131,9 @@ class StanceStandInRepository @Inject constructor(private val writes: WriteRepos
         Outcome.Refused(
             listOf(UserError(ErrorCode.INTERNAL, "no backend to stage a severance batch")),
         )
+
+    /** No backend, so no borrowed view holds anything: the hollow face. */
+    override suspend fun borrowedStance(target: StanceTarget): Outcome<BorrowedStance?> = Outcome.Success(null)
 
     private fun fold(pairs: List<StancePair>): StancePair = StancePair(
         pDirected = pairs.sumOf { it.pDirected }.coerceIn(-1.0, 1.0),
