@@ -4454,10 +4454,17 @@ never replaces the evidence needed to verify the actual accepted output
   as its lower endpoint, and a greater-than test decides FAIL when it has
   that value as its upper endpoint. Equality decides PASS exactly when both
   endpoints equal the value.
-- *Verdicts.* Each evaluated comparison in the record is published as a
-  stated sound enclosure — a closed interval with exact endpoints that
-  contains the exact value of the evaluated quantity — together with its
-  threshold and the verdict that the endpoints alone define. For a test that
+- *Verdicts.* Each evaluated comparison in the record publishes its verdict
+  and supplied or uniquely recoverable sound enclosure support, together
+  with its threshold and the evidence needed to check the enclosure's
+  soundness for the actual epoch inputs. A sound enclosure is a closed
+  interval with exact endpoints that contains the exact value of the
+  evaluated quantity. An exact object stated by its definition instead
+  resolves its defining identity for the pinned comparison; a claimed
+  decision requires an identity that decides it. **An INDECISIVE claim
+  requires an exact stated value or sound enclosure support on every
+  side**; a definition-only side without a deciding identity supplies no
+  finite support for that claim. For a test that
   a quantity is at most a threshold: PASS iff the upper endpoint is at most
   the threshold; FAIL iff the lower endpoint is above the threshold;
   INDECISIVE iff the lower endpoint is at most the threshold and the upper
@@ -4469,9 +4476,9 @@ never replaces the evidence needed to verify the actual accepted output
   case. A reduction the standard declares, such as an enclosure of a
   difference against zero, is part of the standard and resolves from the
   certificate reference (`def:deployment:verdict-certificate`). Every
-  verdict carries its enclosure and threshold; an outcome without a stated
-  sound enclosure is not a verdict. A verdict asserts no precision, width
-  or effort beyond these endpoints.
+  verdict resolves its stated comparison support and threshold; an outcome
+  without stated replay support is not a verdict. A verdict asserts no
+  precision, width or effort beyond its support.
 - *The rung test* (`def:epoch:tilt-backoff-grid`) is one instance, with
   $m_\theta\,\mathcal{K}_k$ at the attempted rung as the quantity and one as
   the threshold (`def:dynamics:conserved-standing-certificate`): PASS iff the
@@ -4483,16 +4490,16 @@ never replaces the evidence needed to verify the actual accepted output
   descent continues. At a binding threshold, an INDECISIVE enclosure is a
   verdict that decides nothing and authorizes nothing: a proposed set left
   unresolved is rejected (`post:network:host-contract`), and no verdict of a
-  rejected set is any part of the accepted publication. Each verdict on
-  which a rejection rests, FAIL or INDECISIVE, is issued whole to the party
-  it measures; showing it further is the right of that party and the duty of
-  no one, within the scopes of `post:deployment:rejected-verdicts`.
+  rejected set is any part of the accepted publication. Every computed
+  comparison included in the published epoch resolves its stated support
+  and verdict, while no verdict of a rejected proposed set enters the
+  accepted record (`def:deployment:published-epoch-replay-floor`, §13.3).
 - *Representation.* How endpoints are represented belongs to the
   deployment's published encoding (`cond:deployment:canonical-encoding`).
 - *Verification.* Verification recomputes every exact object and compares
-  it with the published object; the reader checks every stated enclosure for
-  soundness by its own sound evaluation at any refinement, then checks that
-  the verdict follows from its endpoints and threshold. No particular build,
+  it with the published object; the reader checks every supplied or
+  recovered enclosure for soundness against its bound inputs, then checks
+  that the verdict follows from the support and threshold. No particular build,
   declared procedure or witness is required. A finer reader may decide a
   comparison the record leaves INDECISIVE without finding a discrepancy;
   opposing sound PASS and FAIL for the same question are attributable
@@ -4503,7 +4510,10 @@ never replaces the evidence needed to verify the actual accepted output
   voluntary test of the producer and never a precondition of package
   acceptance.
 
-**Verdict certificates (`subsec:deployment:verdict-certificates`).**
+**Verdict certificates (`subsec:deployment:verdict-certificates`).** The
+accepted record carries each required verdict with its evidence, including
+failed or INDECISIVE rung attempts whose order establishes the accepted
+value. A rejected proposed set creates no accepted publication duty.
 
 - **Verdict Certificate (`def:deployment:verdict-certificate`).** A triple
   $C = (S, E, o)$ for one comparison. The *standard reference* $S$ resolves
@@ -4514,28 +4524,48 @@ never replaces the evidence needed to verify the actual accepted output
   were in force at judgment and the procedure editions then in force, so the
   standard is accepted content before any proposal is judged under it; it
   fixes what is compared and how its sides are stated, never how a reader
-  evaluates them. The *enclosure* $E$ gives each side of the reduced
-  comparison as a closed interval with exact endpoints, lower at most upper:
-  a side stated exactly is the point interval of its value, and an evaluated
-  side is a sound enclosure stated by the route the procedure declares. The
-  *outcome* $o$ is PASS, FAIL or INDECISIVE. The certificate is valid when
-  $o = V(E, S)$, where $V$ is total: PASS when every pair of quantity and
-  threshold values that $E$ admits satisfies the predicate, FAIL when no such
-  pair does, INDECISIVE otherwise. Replay resolves $S$ in the public record,
-  recomputes $V$ and compares it with $o$; it needs the certificate and the
-  public record and nothing else. The outcome is derivable and is carried so
-  that replay is a check rather than an interpretation. The certificate
+  evaluates them. The *evidence component* $E$ resolves the stated support
+  for each side of the reduced comparison: an exact stated value, a
+  recoverable standard enclosure, a supplied dynamic sound enclosure, or an
+  exact defining statement with an identity that decides this comparison.
+  An enclosure is fixed by the standard exactly when $S$ resolves its
+  published exact endpoints or a declared deterministic enclosure procedure
+  and edition whose exact inputs belong to the replay floor and whose
+  specified output uniquely determines those endpoints; a producer-selected
+  precision or branch not recoverable from that declaration makes the
+  enclosure dynamic and requires its endpoints to be supplied with the
+  result. Recovering standard endpoints does not establish soundness: the
+  enclosure guarantee and its binding to the actual epoch inputs must also
+  be verifiable. For a definition-stated side without a finite value
+  representation, $S$ resolves the exact object and the applicable defining
+  identity rather than fabricating point endpoints; an identity establishing
+  equality with a threshold decides an at-most predicate PASS and a strict
+  less-than predicate FAIL without a finite surrogate, and unresolved
+  computation supplies no decision claim. The *outcome* $o$ is PASS, FAIL or
+  INDECISIVE. The certificate is valid when $o = V(E, S)$: for enclosure
+  support, $V$ is PASS when every admitted pair satisfies the predicate,
+  FAIL when no admitted pair does, and INDECISIVE otherwise; a deciding
+  exact identity yields its declared decision. Replay resolves $S$ in the
+  public record, including the comparison instance, measured object, trial
+  or rung, applicable boundary, predicate, threshold, reduction and
+  procedure edition; it recomputes $V$ from the resolved support and
+  compares it with $o$. The reference names the record state it resolves
+  against; this instance binding alone does not prove an enclosure sound for
+  that instance, which the accepted evidence layer supplies. The outcome is
+  derivable and is carried so that replay is a check rather than an
+  interpretation. The certificate
   certifies the comparison only: binding $E$ to a proposal and its inputs is
   the evidence layer above it, published with every accepted package and
   absent from a bare certificate, so a certificate alone asserts no
   acceptance.
 - **Stated Verdicts Replay Alike (`lem:deployment:stated-verdict-replay`).**
-  For a stated certificate $(S, E, o)$, every replayer that resolves $S$ in
-  the same public record computes the same outcome $V(E, S)$, so validity is
-  decided from the certificate and the public record alone. Replay checks
-  that the outcome follows from the enclosure and the standard; it does not
-  check that the enclosure is sound, which needs the inputs of the evaluated
-  quantity.
+  For a stated certificate $(S, E, o)$, every replayer resolving the same
+  support under $S$ in the same public record agrees on its stated decision
+  and checks that $o$ agrees with it. An independently finer evaluator may
+  decide a sound straddle that $E$ leaves INDECISIVE without contradicting
+  the certificate. The certificate's own support determines its
+  self-consistency; soundness of an enclosure for the evaluated quantity
+  also needs the bound inputs.
 - **Sound Verdicts Never Conflict (`lem:deployment:sound-verdict-agreement`).**
   Two sound enclosures $E$, $F$ for the same comparison under the same
   standard never decide opposite ways (one PASS, the other FAIL). Their
@@ -4554,70 +4584,58 @@ never replaces the evidence needed to verify the actual accepted output
   refinement that keeps the value in its interior; a sound refinement
   bringing the deciding endpoint to the value decides the order test, while
   a point refinement decides equality.
-- **Verdict Issuance (`post:deployment:verdict-issuance`).** The host
-  chooses each enclosure within the constraints that the paper and the
-  declared comparison procedure fix: soundness is required and tightness is
-  chosen. The host issues each verdict on which the rejection of a proposed
-  set rests, FAIL and INDECISIVE included, as a whole certificate under
-  `def:deployment:verdict-certificate` to the party the comparison measures,
-  with the rejection and unasked. A bare rejection, without the enclosure the
-  host compared, is forbidden. An own-balance or individual-safety
-  comparison measures the author whose act it compares. A comparison that
-  measures no single party, such as the epoch door, and the wall, floor and
-  controller comparisons of the deployment itself are issued to the
-  deployment itself; this self-issuance asks nothing beyond the evidence the
-  deployment already keeps (`cond:deployment:wall-calibration`,
-  `cond:deployment:boundary-search-evidence`). From the issued certificate
-  and the public record alone, the party measured can recompute the outcome
-  from the stated enclosure and the standard and obtains the outcome the
-  host stated; this fixes no representation. The reference names the record
-  state it resolves against, and an issued certificate binds the host as its
-  statement of that verdict, as `post:network:host-contract` binds it to the
-  published package. The certificate lets its holder check that the outcome
-  follows from the enclosure, not that the enclosure is sound. The party
-  measured is owed the certificate, not the evidence layer, whose inputs
-  include acts of other authors that the rejected set leaves unwritten. That
-  the issued enclosure is the one the host compared is conduct of the host,
-  priced by reputation, as is its choice of tightness: a finer sound
-  enclosure computed by anyone holding the inputs decides an INDECISIVE left
-  by parsimony, never contradicts the outcome, and leaves undecided only a
-  comparison whose value meets its threshold. Whether and which proposed
-  sets the host evaluates remains its discretion under
-  `post:epoch:final-act-sequence-closure`; the duty makes visible the
-  enclosure chosen at every comparison on which a rejection rests. Showing
-  an issued certificate further is the right of the party measured and the
-  duty of no one: the host can neither demand secrecy nor force publicity.
-- **Rejected Verdicts (`post:deployment:rejected-verdicts`).** Every verdict
-  of a judged proposed set falls in one of three cases. *Accepted*: the
-  whole certificate set and its evidence layer are published with the
-  accepted package (`post:network:host-contract`,
-  `cond:deployment:canonical-replay`), failed and INDECISIVE rung attempts
-  included where they are the evidence of the accepted value. *Rejected and
-  noted*: the verdict of a rejected set is shown by choice; a note carries a
-  valid certificate whole or does not exist, asserts no acceptance, decides
-  nothing for the rejected set, and by its presence or absence changes no
-  accepted record, verdict or rejection. *Rejected and private*: nothing is
-  shown and no certificate is owed to the public; the party measured holds
-  any certificate issued to it, and the standard is public regardless. The
-  verdicts of a rejected set live outside the accepted record: an issued
-  certificate with the party measured, and a note where its maker places it,
-  separately identified from every accepted package. The deployment may note
-  its own comparisons whole in its own publication beside its calibration
-  evidence (`post:deployment:calibration-evidence`); where the inputs are
-  public, as for those comparisons, any reader can refine a noted
-  INDECISIVE, and a finer decision can only sharpen it. A third party shown
-  a note can check that the outcome follows from the enclosure and that the
-  reference resolves; it cannot check soundness without the inputs, and it
-  learns nothing of acceptance or of other trials. Two bounds apply, each in
-  its own scope; both bind the accepted record, the host and the deployment,
-  and neither limits what a party measured shows of its own certificate:
-  no accepted record represents an unwritten act, and the host shows the
+- **Verdict Issuance (`post:deployment:verdict-issuance`)** *(courtesy)*.
+  For a realization claiming this courtesy standard and edition, issuance
+  presents existing computed-and-included comparison data as a whole
+  certificate under `def:deployment:verdict-certificate` to its rightful
+  holder; it promises neither a computation nor a delivery hop. The host
+  chooses each dynamic enclosure within the constraints of the paper and
+  declared comparison procedure: soundness is required and tightness is
+  chosen. What is shown must be checkable by whoever sees it, with its
+  stated support and decision. An own-balance or individual-safety
+  comparison measures the author whose act it compares; a comparison
+  measuring no single party, such as the epoch door, and the deployment's
+  wall, floor and controller comparisons are presented to the deployment
+  itself, asking nothing beyond the data it already keeps. The holder
+  resolves the support and standard from the certificate and its reference
+  and checks the host's stated outcome; this fixes no representation. An
+  issued certificate binds the host as its statement of that verdict; this
+  issuer binding is normative for a realization claiming the courtesy
+  standard, but it is not an epoch admission test, and attribution needs a
+  trusted association between issuer and statement. The host shows the
   certificate of an author only as that author chooses
-  (`rem:epoch:consent-exposure`); no verdict of a rejected trial is gathered
-  into a demand ledger or a register of persons
-  (`rem:epoch:admission-statistics-quarantine`) — counts without persons,
-  such as those of `cond:deployment:certificate-monitoring` and
-  `cond:deployment:boundary-search-evidence`, are no such ledger.
+  (`rem:epoch:consent-exposure`). The holder can check decision
+  self-consistency from the resolved support; enclosure soundness also
+  needs the bound inputs, which may include acts of other authors absent
+  from a rejected set. That the presented support is the support the host
+  used is conduct priced by reputation, as is a choice of dynamic
+  tightness; a finer sound enclosure may decide a correctly stated
+  INDECISIVE without contradicting it. The host retains discretion over
+  which proposed sets it evaluates
+  (`post:epoch:final-act-sequence-closure`). An adopter may present an
+  existing comparison of a rejected set privately to the party measured or
+  note a valid whole certificate separately from every accepted package; a
+  note asserts no acceptance, changes no accepted record or rejection, and
+  may be absent. The deployment may similarly note its own comparisons
+  beside its calibration evidence (`post:deployment:calibration-evidence`).
+  Showing an issued certificate further is the right of the party measured
+  and the duty of no one: the host can neither demand secrecy nor force
+  publicity. Differencing across individual-safety certificates shown to a
+  holder is an accepted residue of issuance; the replay floor promises
+  nothing about accumulated observations of holders or carriers.
+- **Rejected Verdicts (`post:deployment:rejected-verdicts`).** The accepted
+  package publishes its required certificate set and evidence layer
+  (`post:network:host-contract`, `cond:deployment:canonical-replay`),
+  including unsuccessful attempted rungs needed to establish the accepted
+  value. **The published epoch record contains no verdict of a rejected
+  proposed set and no cross-person computation beyond its replay
+  dependencies.** No accepted record represents an unwritten act. The
+  replay gate checks both completeness and membership: each included
+  result belongs to the required certificates or their replay dependencies,
+  and an extraneous person-indexed compilation is not admitted as epoch
+  content. The standing and transport computations needed to verify the
+  accepted package remain replay dependencies
+  (`rem:epoch:admission-statistics-quarantine`).
 - **Stated Exactness and Chosen Imprecision
   (`rem:deployment:stated-exactness`).** The requirement to decide exactly
   attaches to the comparison of what is stated, never to the computation of
@@ -4635,10 +4653,196 @@ never replaces the evidence needed to verify the actual accepted output
   through a sound enclosure. Realizations that state the same data reach the
   same verdicts, and realizations that differ only in the enclosures they
   produce can differ only between a decision and INDECISIVE. Where the paper
-  does not constrain an enclosure, its selection is discretion of the host;
-  the chosen width is visible in every certificate — at a rung in the
-  published attempts, at a binding threshold in the issued certificate
-  (`post:deployment:verdict-issuance`).
+  does not constrain an enclosure, its selection is discretion of the host:
+  a sound but wide enclosure forces INDECISIVE, effort buys decisions, the
+  chosen width is visible in every certificate, and reputation prices what
+  is visible. At a rung the published attempts expose the chosen support; a
+  finer independent evaluator may decide a stated straddle without showing
+  that its published verdict was false.
+
+### 13.3 The replay floor and the declared cases
+
+**Published Epoch Replay Floor
+(`def:deployment:published-epoch-replay-floor`).** The replay floor of a
+published epoch is the data required for a third party to replay and
+verify its accepted sequence and authenticated act envelopes, standing
+package, published certificates and title results. It includes the
+standard statements, comparison-instance descriptors, supplied or
+recoverable enclosures, authenticated epoch inputs and evidence binding
+each evaluated enclosure to its proposal and inputs, sufficient to check
+soundness as well as recover the same PASS and FAIL decisions. Required
+formation and ordering-accountability evidence belongs to this floor.
+
+- *Per accepted act* the floor holds its act envelope
+  (`def:graph:act-envelope`), including the signed proposal pre-commitment
+  and its recorded signing key, the verification seal, the commitments and
+  the formation edition each commitment names, and the approval witness
+  with its recorded signing key, so that each signature's well-formedness
+  under the public key the record maps to it, over bytes that name the
+  stated author and act identifier, and the act's formation verify without
+  any hidden opening. **These record checks do not relate any key to the
+  stated Actor** (`post:graph:act-authentication-requirements`).
+- The floor holds the commitments, seals, witnesses and order, never the
+  hidden openings; a value that depends on a hidden opening is verified
+  only when someone supplies that authenticated opening. Subject to this
+  rule, required dependencies must be included or resolve in the published
+  record.
+- *Declared cases.* Under a declared verifiable-provenance case bound in
+  the epoch package, the floor includes the case declaration and its pinned
+  account, and its conditional replay gate checks that account against the
+  rules edition the declaration pins and the second-party data pinned with
+  it. Under a declared author-authority case bound in the epoch package,
+  the floor includes the declaration and the pinned authority proof
+  objects for each act first accepted in that epoch, and its conditional
+  replay gate checks authorization under the pinned rules edition and
+  second-party data.
+- *Certificates.* The floor is dependency-complete relative to the
+  required epoch outputs, not a smallest byte encoding or a host-selected
+  empty certificate set; the accepted-set, ordered-rung and package
+  obligations determine which certificates belong to it, and a producer
+  cannot omit a required decision to shrink the floor. A replay gate
+  resolves each descriptor to the same epoch, accepted set, act or measured
+  object, comparison, trial or rung where applicable, predicate, threshold,
+  reduction and procedure edition; it recovers fixed standard enclosures,
+  reads supplied dynamic enclosures, checks exact stated comparisons and
+  requires every claimed PASS or FAIL to agree with its support. Missing
+  dependencies, an ambiguous instance or an opposite decision fail;
+  inability to evaluate is neither confirmation nor discrepancy. A
+  reference to privately held data does not discharge publication. Ordered
+  attempted-rung evidence includes unsuccessful rungs of the accepted
+  proposed set. **Verdicts of an entirely rejected proposed set are never
+  floor content.**
+- *INDECISIVE claims.* An INDECISIVE claim owes no reproduction of
+  indecision by an independently refining evaluator, but its claimed
+  outcome must agree with its own stated support: it is invalid when its
+  own support decides PASS or FAIL, and also when any side lacks the
+  finite support required for that claim; a definition-only side without a
+  deciding identity cannot be used to evade this check. An entirely
+  straddling positive-rung record may support the exact anchor where the
+  existing descent permits it, but cannot authorize an unresolved binding
+  threshold.
+
+**Replay Floor Scope (`post:deployment:replay-floor-scope`).** Everything
+outside the published epoch's replay floor is outside the specification's
+scope. Many readings are presented for convenience and are not part of the
+peer-network closure; these courtesies may be formally defined in optional
+vendor specifications. Required replay evidence remains inside the floor
+even where its value carries a verify tag rather than selecting admission.
+Issuance surfaces, delivery channels, carriers' account state, status pages
+and computation above the floor do not enlarge the epoch record. The scope
+does not remove the soundness inputs or evidence for an evaluated
+enclosure, the accepted sequence, record-verifiable act formation and
+signature evidence, or title-accountability evidence; the floor also
+retains evidence required by each verification case bound in the epoch
+package, under that case's explicit conditional scope. It prescribes no
+transport, serialization, storage layout or physical co-location, and the
+opening-dependent qualification neither makes a hidden opening floor
+content nor permits omission of public replay support.
+
+**Declared Verifiable-Provenance Case
+(`def:deployment:declared-verifiable-provenance-case`,
+`post:deployment:pinned-provenance-proof-objects`,
+`post:deployment:declared-provenance-replay`,
+`def:deployment:provenance-validity-projection`)** *(oracle)*.
+
+- *Declaration.* A deployment may declare a verifiable-provenance case by
+  naming a second party, the edition of that party's published rules, the
+  published data against which a burn increment's destruction record is
+  checked, and the deterministic projection that checks the pair. The
+  declaration pins the projection identity and the rules edition in force
+  when it is made as evidence of what was in force; what counts as a
+  destruction, and in what unit, remains the second party's to define. The
+  second party's system and authority over its own state are external; a
+  declaration neither defines that system nor turns its live state into
+  epoch data. It is authenticated and fixed before an epoch is published
+  under it, and applies to exactly the epochs whose package binds it;
+  without that binding it imposes no condition on an epoch. When the second
+  party changes its state or published rules, or stops publishing them,
+  later packages bind the changed declaration or a withdrawal of it,
+  prospectively and without adjudication by the network.
+- *Pinned proof objects.* For every epoch published under the case, the
+  accepted record pins the account of each destruction the epoch's
+  increment counts, in the second party's own unit of destruction, which
+  the pinned rules edition defines and the declaration names: a proof
+  object carrying the destruction record and the second-party data the
+  declared projection reads. The proof objects and the declaration are
+  authenticated epoch inputs; a pointer to the second party's live or
+  archived state replaces none of them, and account evidence the record
+  does not carry is missing evidence. A later withdrawal removes nothing
+  the record pins.
+- *Replay.* Replay evaluates the declared projection for every proof
+  object against the pinned rules edition and pinned second-party data.
+  Missing, unauthenticated, ambiguous or failing account evidence fails
+  verification under that case; a verifier's own inability to evaluate,
+  including inability to obtain the pinned rules edition, is neither
+  confirmation nor discrepancy. The conditional result binds the epoch at
+  pin and asserts no verdict on the second party's present state.
+- *Validity projection.* Validity is the deterministic projection of the
+  immutable record and the second party's published state under its
+  declared rules, not a stored property of the record. Validity at pin is a
+  fixed historical fact; current validity evaluates the same projection
+  against the present state, is live, and is never stored as an
+  authoritative value; any materialized validity is a cache with no
+  independent authority.
+
+**Declared Author-Authority Case
+(`def:deployment:declared-author-authority-case`,
+`post:deployment:pinned-author-authority-proof-objects`,
+`post:deployment:declared-author-authority-replay`,
+`def:deployment:author-authority-validity-projection`)** *(oracle)*.
+
+- *Declaration.* A deployment may declare an author-authority case by
+  naming a second party, the edition of that party's published rules, the
+  published data against which an act's stated Actor and signing keys are
+  checked, and the deterministic projection that checks whether those keys
+  were authorized for that Actor's proposal and approval. The declaration
+  pins the projection identity and rules edition in force when it is made.
+  The interpretation of authorization is the declaration's own: it states
+  the authority inputs and the convention the projection applies,
+  including any validity interval or delegation chain it reads, while the
+  named rules edition is the second party's own rules beneath that
+  convention. The second party's system, rules and authority are external
+  premises; including its evidence in the record does not establish its
+  authority independently of the declared case. The declaration is
+  authenticated and fixed before an epoch is published under it, and
+  applies to every act first accepted in exactly those epochs whose package
+  binds it; without that binding it imposes no condition on an epoch. When
+  the second party changes its state or published rules, or stops
+  publishing them, later packages bind a changed declaration or a
+  withdrawal of this one, prospectively and without network adjudication.
+  The case neither reattributes an accepted act nor changes its author,
+  identifier, frame address or structural consequences.
+- *Pinned proof objects.* For every act first accepted in an epoch under
+  the case, the record pins a proof object binding the case identity, act
+  identifier, stated Actor, proposal and approval to the signing keys used
+  and all second-party data the declared projection reads, including any
+  delegation chain, authorization interval or revocation evidence required
+  by the pinned rules. The proof objects of several acts in one epoch may
+  refer to one account pinned once in that record. The proof objects and
+  declaration are authenticated epoch inputs; a pointer to the second
+  party's live or archived state replaces none of them, evidence the record
+  does not carry is missing evidence, and a later withdrawal removes nothing
+  the record pins. They read the public act record, not a hidden content or
+  dependency opening.
+- *Replay.* Replay evaluates the declared projection for every proof
+  object against the pinned rules edition and second-party data; the
+  projection checks that the signing keys used were authorized for the
+  stated Actor's proposal and approval, separately from verifying the
+  signatures under those keys
+  (`itm:graph:act-authentication-requirements-signature-verification`).
+  Missing, unauthenticated, ambiguous or failing authority evidence fails
+  verification under that case; a verifier's own inability to evaluate is
+  neither confirmation nor discrepancy. The conditional result binds the
+  epoch at pin; it does not assert a verdict on the second party's present
+  state or rewrite a finalized act or its consequences.
+- *Validity projection.* Validity at pin evaluates the projection against
+  the pinned proof object and rules edition and is a fixed historical fact;
+  current validity is live and independently re-evaluable. A change of
+  rules edition requires a correspondingly identified projection and never
+  silently changes the historical question. Neither a changed current
+  result nor a changed prospective declaration can reattribute an accepted
+  act, rebind its Actor's address, or recompute its finalized title,
+  ownership or settlement consequences.
 
 ---
 
