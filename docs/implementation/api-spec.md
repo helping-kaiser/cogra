@@ -3620,12 +3620,14 @@ type PreparedWrite {
   family: RecordFamily!
   "The canonical proposal, serialized for pre-signing (base64).
    Covers everything the author asserts — endpoints, parameters,
-   payload bytes, dependency list — so the relay can neither
-   alter it nor author one unasked. Deterministic CBOR
+   payload bytes, dependency list — so the relay cannot alter it;
+   the stand-in's address convention keeps it from authoring one
+   unasked (substrate.md §6). Deterministic CBOR
    `[1, body, payload, deps]`: the structural body's canonical
    bytes, the payload bytes, and the dependency list as act
-   identifiers, strictly ascending in Layer 1's componentwise
-   order: author by bytes, then sequence as a number, then family
+   identifiers, strictly ascending in the reference encoding's
+   componentwise order (layer1-interface.md, Dependency List
+   Order): author by bytes, then sequence as a number, then family
    by bytes. Its envelope version is its own and is 1."
   canonicalProposal: String!
   "Epoch budget: a staged write that never completes the handshake
