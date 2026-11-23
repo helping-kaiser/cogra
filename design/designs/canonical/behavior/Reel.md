@@ -14,6 +14,8 @@ ALWAYS reel.seekLine rides directly above reel.bottomBar, never on the screen's 
 
 ALWAYS reel.seekLine's ink stays a 3px line and its touch target is 48dp, rising from the track, with reel.caption standing clear above that target
 
+ALWAYS reel.caption.title stands on one line, cut at its end with …, reel.caption.handle above it and reel.caption.description below it in their places, GIVEN it is longer than the caption's line
+
 ALWAYS reel.bottomBar stays on the stream
 
 ALWAYS reel.bottomBar lights the root of the stack the stream was opened from, the root its list stands in

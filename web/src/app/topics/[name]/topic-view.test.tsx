@@ -866,13 +866,25 @@ describe("TopicView — the tag page's registered nodes (TagPage, TagPageHeldPad
     row({ ...textPost(), content: moderated(null, "REDACTED"), removal: REMOVED }, 0.1, 1, true),
     row(taggedComment("c1", { content: moderated(null, "REDACTED"), removal: REMOVED }), 0.4, 0.9),
   ];
+  // The `comment` chip's `pictures` and `clip` (round 62, seam 403.1): @ada's
+  // tagged comment carrying the thread's two pictures, and its clip.
+  const clip = () => ({
+    ...picture(9),
+    url: "https://media.test/9.mp4",
+    mimeType: "video/mp4",
+    options: { __typename: "MediaOptions", aspectRatio: "9:16", durationMs: 12_000 },
+  });
+  const mediaRows = () => [
+    row(taggedComment("c-pictures", { attachments: [picture(1), picture(2)] }), 0.4, 0.9),
+    row(taggedComment("c-clip", { attachments: [clip()] }), 0.4, 0.9),
+  ];
   const rendered = () =>
     new Set([...document.querySelectorAll("[data-testid^='tagPage.']")].map((element) => element.getAttribute("data-testid")));
 
   // The board's cards wear an opinion (`mkBundle(0.1, 0.1)`), so each anchor
   // draws its exact pair beside the face.
   const NICE = { pDirected: 0.1, pInterest: 0.1 };
-  const cardStances = { "p-text": NICE, "p-gallery": NICE, c1: NICE };
+  const cardStances = { "p-text": NICE, "p-gallery": NICE, c1: NICE, "c-pictures": NICE, "c-clip": NICE };
 
   async function census(rows: unknown[], removedOn = false): Promise<Set<string | null>> {
     if (removedOn) writeCommittedFeedFilter("u1", { ...FEED_FILTER_DEFAULT, also: ["settling", "removed"] });
@@ -899,9 +911,26 @@ describe("TopicView — the tag page's registered nodes (TagPage, TagPageHeldPad
 
   it("every_path_the_registry_gives_TagPage_stands_on_the_page", async () => {
     const live = await census(liveRows());
+    const media = await census(mediaRows());
     const removed = await census(removedRows(), true);
-    const missing = registered("TagPage").filter((path) => !live.has(path) && !removed.has(path));
+    const missing = registered("TagPage").filter((path) => !live.has(path) && !media.has(path) && !removed.has(path));
     expect(missing).toEqual([]);
+  });
+
+  // TagPage.jsx round 62: a tagged comment's media registers by the thread's
+  // names — the card's `media`, each picture its `frame` keyed
+  // `<comment id>/<position>`, a clip's sound its frame's `soundDisc`, a
+  // gallery's `dots` — each inside its own card.
+  it("a_tagged_comments_media_wears_the_threads_registered_names", async () => {
+    serve("rust", mediaRows());
+    renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+    const pictures = await screen.findByTestId(byNode("tagPage.commentCard", "c-pictures"));
+    const keys = (path: string) => screen.queryAllByTestId(path).map((element) => element.getAttribute("data-testid-key"));
+    expect(keys("tagPage.commentCard.media")).toEqual(["c-pictures", "c-clip"]);
+    expect(keys("tagPage.commentCard.media.frame")).toEqual(["c-pictures/1", "c-pictures/2", "c-clip/1"]);
+    expect(keys("tagPage.commentCard.media.frame.soundDisc")).toEqual(["c-clip/1"]);
+    expect(keys("tagPage.commentCard.media.dots")).toEqual(["c-pictures"]);
+    expect(within(pictures).getByTestId(byNode("tagPage.commentCard.media.dots", "c-pictures"))).toBeInTheDocument();
   });
 
   it("every_path_the_registry_gives_TagPageHeldPad_stands_with_the_held_topics_pad_open", async () => {

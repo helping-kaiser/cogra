@@ -20,6 +20,8 @@ export interface ChipProps {
    * no size, no selection and no handler, because it is not pressed.
    */
   tone?: "filter" | "readout";
+  /** A filter chip whose label may outrun its row — a 128-character tag — ends in "…" and stays inside the row. */
+  cut?: boolean;
   /** The data-node name its placer gives this chip (design ⇄ impl seam 002; renders as attributes only). A filter sheet names each kind chip as `<value>Chip` — `postsChip`, `topicsChip` — the way `SegmentedFilter` names its segments. */
   node?: string;
   /** The key of a repeated chip whose set is content's, not fixed — the feed filter's topic chips, keyed by the topic's name. */

@@ -161,6 +161,10 @@ export function ProfileHeader({
   stancesTaken,
   own = false,
   signedIn = true,
+  /* A guest's borrowed view (round 62): the wide anchor's `vantage` and,
+     for a board that re-selects the reader, its `vantageHoles`. */
+  vantage,
+  vantageHoles,
   taught = true,
   bundle,
   onCommit,
@@ -390,6 +394,8 @@ export function ProfileHeader({
               <StanceControl
                 wide
                 targetLabel={redacted ? "this account" : "@" + handle}
+                vantage={vantage}
+                vantageHoles={vantageHoles}
                 bundle={bundle ?? undefined}
                 signedIn={signedIn}
                 taught={taught}
