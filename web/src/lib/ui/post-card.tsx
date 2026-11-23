@@ -157,6 +157,7 @@ export function PostCard({
   onOpenMedia,
   stream,
   authorHere = false,
+  tagHere = null,
   doorFrom = null,
   onOpenMenu,
   menuOpen = false,
@@ -266,6 +267,12 @@ export function PostCard({
    * (ProfilePosts.md:25, `ActorChip`'s `here`).
    */
   authorHere?: boolean;
+  /**
+   * The canonical name of the tag whose page the card stands on: that tag's
+   * chip, and its row in the card's sheet, would open the page they are on,
+   * so they are drawn inert (jakob, hand test 2026-11-23; `authorHere`'s twin).
+   */
+  tagHere?: string | null;
   /**
    * The origin every door out of the card carries — its author chip, its tag
    * chips and its sheet's rows — so what they open names where the card stood
@@ -561,6 +568,7 @@ export function PostCard({
             onOpen={detail ? () => setRefsOpen(true) : undefined}
             onOpenReferences={detail ? undefined : () => setRefsOpen(true)}
             from={doorFrom}
+            here={tagHere}
           />
           {/* THE SHEET RIDES THE CARD, not the page: the same card is the feed's
               summary, the profile's and the detail's, and every one of them
@@ -571,6 +579,7 @@ export function PostCard({
             topics={post.topics}
             references={post.references}
             from={doorFrom}
+            here={tagHere}
             testId={`${testId}-refs-sheet`}
           />
         </>
