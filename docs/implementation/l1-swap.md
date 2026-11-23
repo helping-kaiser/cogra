@@ -244,7 +244,12 @@ standard's structure and CoGra's own bytes:
   arrive with the real substrate" (`crypto.rs:22-23`).
 
 CoGra claims no courtesy handshake edition and encodes no publication
-intent.
+intent. Under a courtesy edition, a body without its vocabulary
+establishes no intent until its controller sends an explicit
+authenticated intent message, or a vendor adapter interprets it under
+an explicit edition-specific interpretation and controller
+authorization, without rewriting the historical signature
+(``def:graph:requested-publication-intent``).
 
 **At the swap.** A new body edition — an extension slot, other tags,
 another encoding or scheme — touches, in one change:
@@ -266,12 +271,19 @@ the new one; writes in flight at the swap are re-prepared (§3.9).
 
 **Open.** Whether CoGra claims the courtesy handshake standard and its
 intent vocabulary: [Q70](../open-questions.md#q70--the-courtesy-handshake-standard-and-its-request-intent).
-Asked of the L1 team (2026-11-23): whether the network's host claims
-the courtesy standard and accepts a body with no extension; whether
-absence is a missing extension or an empty one; whether, with CoGra's
-API carrying the content pair, the intent is addressed to the API
-alone; and what a declaration of not adopting the handshake is.
-Second-device approval and envelope verification may change with the
+Whether the network's host claims the courtesy standard is undecided
+(2026-11-23). A body with no extension is a valid act: the body
+includes any opaque signed extension bytes, and absence of a value
+asks nothing (``def:graph:proposal-pre-commitment``,
+``def:graph:requested-publication-intent``). The text gives no byte
+form for absence; the L1 team places it in the courtesy edition's
+serialization. Under the standard the initial intent addresses each
+party that receives a projection's opening with the proposal: CoGra's
+API for the content projection, the host for the dependency
+projection (``def:graph:requested-publication-intent``); which value
+an author signs for the dependency projection is unanswered. The text
+prescribes no form or place for a statement that a realization claims
+no handshake edition. Second-device approval and envelope verification may change with the
 edition: [Q33](../open-questions.md#q33--cross-device-handshake-continuation),
 [Q54](../open-questions.md#q54--semantic-verification-of-the-payload-envelope-on-clients).
 
