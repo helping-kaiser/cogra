@@ -1032,7 +1032,7 @@ key and address 1:1),
 [auth.md "Application"](implementation/auth.md#application-the-applicant-state)
 (the key ceremony)
 **Status:** open (deferred — to the preparation of the real Layer 1
-swap; asked of the L1 team 2026-11-23)
+swap; answered in part by the L1 team 2026-11-23)
 
 ### Context
 
@@ -1056,6 +1056,10 @@ Actor's address is the frame binding into the burn map, permanent for
 the life of the graph and not a signing key
 (``def:comparator:frame-binding``).
 
+The network has no deployment of record yet (the L1 team,
+2026-11-23): which case it declares is undecided, and what an Actor's
+address is on it is unanswered.
+
 ### The question
 
 Where does CoGra's key ↔ address rule live, what is an actor's
@@ -1064,10 +1068,15 @@ address on the network, and what happens to existing accounts?
 - **The rule.**
   - **Deployment convention, no case.** The host or CoGra's relay
     keeps refusing a key that does not give the author; replay does
-    not check it; the package binds the empty case set.
+    not check it; the package binds the empty case set. The text
+    permits a refusal at sealing without a case
+    (``rem:graph:authentication-realization-out-of-scope``).
   - **A declared author-authority case.** The rule becomes replayable
     by third parties, at the cost of a case declaration, proof objects
-    per act and a withdrawal path when the rule changes.
+    per act (``post:deployment:pinned-author-authority-proof-objects``)
+    and a withdrawal path when the rule changes. The L1 author reads
+    that the deployment may be its own second party, its
+    key-derivation rule needing no outside data.
   - **No rule.** The closure alone decides; any well-formed key could
     act for any author, and that author pays.
 - **The address.** A function of the signing key as today, or the
@@ -1094,7 +1103,7 @@ world moves to the network).
 [layer1-interface.md §13.3](primitive/layer1-interface.md#133-the-replay-floor-and-the-declared-cases)
 (the replay floor)
 **Status:** open (deferred — to the preparation of the real Layer 1
-swap; asked of the L1 team 2026-11-23)
+swap; answered by the L1 author's reading 2026-11-23)
 
 ### Context
 
@@ -1116,6 +1125,17 @@ together, bind the two. A reader cannot recompute the pre-commitment
 from the body: the pre-digests are not on the record, and the content
 pre-digest sits one layer under the host's blinding value. The
 stand-in keeps no content pre-digest after sealing.
+
+The envelope's field list does not name the pre-digests
+(``def:graph:act-envelope``). The L1 author reads (2026-11-23) that
+the pre-commitment alone is the public input the proposal signature's
+check needs, and that the seal and the approval witness carry the
+binding the replay floor asks for. The floor's own words ask that each
+signature verify "over bytes that name the stated author and act
+identifier" (``def:deployment:published-epoch-replay-floor``); for the
+proposal signature a reader cannot check that without the two
+pre-digests. One key for both signatures is a valid map: no text
+requires the two keys to differ.
 
 ### The question
 
