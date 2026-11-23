@@ -6992,7 +6992,10 @@ copies never show together — a build-law change, his. Until ruled impl knows t
 `history.commentCard.media`, `.media.frame` (`<id>/<n>`), `.media.frame.soundDisc`, `.media.dots`
 (the same on `saved`) and registers none.
 
-Ruled (b) for round 65; stopped there on the score (306).
+Closed by round 65, as (b) inside ruling 39: the `comment` chip on `History` and `Saved` (`none`,
+`pictures`, `clip`) draws @ada's tag-page comment as the feed's card in @tobias's place, the `pick`
+copies standing only at `none`, and registers `commentCard.media`, `.media.dots`, `.media.frame`
+(`<id>/1`, `<id>/2`) and `.media.frame.soundDisc` (`<id>/1`) under `history` and `saved`.
 
 ### 306 · The feed score @ada's media comment wears on History and Saved · *design* · **filed 2026-11-23**
 
@@ -7005,6 +7008,9 @@ words (`Salt maps of the coast road` over `@sol`, the feed's card answering @sol
 (a) the place's figure, `12.40`, the @tobias card's; (b) a figure jakob names (a new string); (c) the
 dash, History's "found none" (Saved has no dash case). Recommendation (a): no new string, and the
 board's other states keep every pixel.
+
+Closed by round 65 as (a), a sample fixture: the comment wears the place's figure, `12.40`, on both
+boards (`CommentMediaCopies`).
 
 ### 307 · The pixel harness renders a board two ways under load · *system* · **filed 2026-11-23**
 
