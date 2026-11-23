@@ -42,7 +42,7 @@ WHEN tap profile.tabRow.commentsTab -> NEVER anything changes
 
 WHEN tap profile.comments.commentCard.authorChip on one of the person's own comments -> NEVER anything changes
 
-WHEN tap profile.comments.commentCard.target -> the thread it lives in opens scrolled to that comment
+WHEN profile.comments.commentCard.target is tapped -> the post it answers opens AND its back arrow reads Back to the profile
 
 WHEN tap Reply on a comment -> the thread the comment lives in opens scrolled to that comment
 

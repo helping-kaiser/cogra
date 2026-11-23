@@ -24,6 +24,8 @@ ALWAYS a reply is a comment targeting a comment: as standalone content a reply c
 
 ALWAYS feed.commentCard carries no view-replies line
 
+WHEN feed.commentCard.target is tapped -> the post it answers opens AND its back arrow reads Back to feed
+
 WHEN feed.commentCard is tapped outside feed.commentCard.target and its own controls -> the post's comment section opens scrolled to that comment
 
 WHEN feed.commentCard.actionRow.reply is tapped -> the post's comment section opens scrolled to that comment AND the reply composer opens aimed at that comment
