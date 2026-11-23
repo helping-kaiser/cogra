@@ -139,6 +139,13 @@ query PostDetail(
     # and the edit contract is complete state, so a save that re-states the
     # mark without its reason silently clears the line the veil shows.
     ...PostFields
+    # THE DETAIL KEEPS ITS OWN POST'S LIST — the one post on the page, so the
+    # fold prices once: its sheet, the hold's citation-set check
+    # (`detail-freeze.ts`) and the post editor read it. Its comments carry
+    # the count (`CommentFields`).
+    references(includePending: $includePending) {
+      ...ReferenceClaimFields
+    }
     comments(
       first: $commentsFirst
       after: $commentsAfter

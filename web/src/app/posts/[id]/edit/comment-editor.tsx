@@ -80,14 +80,20 @@ import { runUpload, runVideoUpload } from "@/lib/compose/uploads";
 import { kindOf, sensitiveReasonProblem, type CoverAsset, type PickedAsset } from "@/lib/compose/wizard";
 import { captureFrameZero } from "@/lib/ui2/media/video";
 import type { SealFault } from "@/lib/compose/seal-fault";
-import { useWaitedPast, SLOW_NETWORK_MS } from "@/lib/ui2/waiting-commit";
+import { useWaitedPast, SLOW_ANSWER_MS, SLOW_NETWORK_MS } from "@/lib/ui2/waiting-commit";
+import type { ReferenceClaimNode } from "@/lib/references/claims";
+import { useReferencesOnOpen } from "@/lib/references/use-references-on-open";
+import { Button } from "@/lib/ui/button";
+import { TransportError } from "@/lib/ui/transport-error";
+import { HeaderBar } from "@/lib/ui2/header-bar";
+import { SCREEN_LAYER_STILL } from "@/lib/ui2/screen-layer";
 import { CENTERED } from "@/lib/ui2/media/crop";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
 import { DiscardConfirm } from "@/lib/ui2/compose/discard-confirm";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { ReferencePicker } from "@/lib/ui2/compose/reference-picker";
 import { TagPicker } from "@/lib/ui2/compose/tag-picker";
-import { CommentEditView } from "./comment-edit-view";
+import { COMMENT_EDIT_LEAVE_LABEL, CommentEditView } from "./comment-edit-view";
 
 /** The comment pager's square — the window a comment clip's face is cut to (CoverCrop.md). */
 const COMMENT_COVER_RATIO = 1;
@@ -132,8 +138,11 @@ function tagDrafts(
   }));
 }
 
+/** A comment as the edit holds it: the card's read, and the citations read for the edit. */
+type EditedComment = CommentFieldsFragment & { readonly references: readonly ReferenceClaimNode[] };
+
 /** The comment as it arrived, ready to edit — an untouched editor stages nothing (F10). */
-function editingOf(comment: CommentFieldsFragment): Editing {
+function editingOf(comment: EditedComment): Editing {
   const tags = tagDrafts(comment.topics);
   // A claim CoGra cannot type has no L2 id to name it back by, so it is left
   // out of the section — never staged, never read as a removal.
@@ -160,7 +169,76 @@ function writeRuleIn(errors: readonly UserError[]): boolean {
   return errors.some((error) => error.code === "WRITE_RULE_FAILED");
 }
 
-export function CommentEditor({
+type CommentEditorProps = {
+  /** The comment as any read serves it — the thread's, or a card's off the thread (`comment-edit-door.tsx`). */
+  comment: CommentFieldsFragment;
+  /** The comment this one hangs under, or null at the top level — the node it answers. */
+  parentId: string | null;
+  postId: string;
+  /** What the comment is on, for the editor's lede. */
+  targetLabel: string;
+  /** Back to where the edit was opened — the thread, or a card's host — nothing kept. */
+  onLeave: () => void;
+  /** The signing was taken: the host it was opened from shows the edit settling. */
+  onSigned: () => void;
+};
+
+/**
+ * THE EDIT OPENS ON THE WHOLE CITATION SET, OR NOT AT ALL. A comment's card
+ * carries its citations as a count (`referenceCount`), so the edit reads the
+ * rows by id as it opens (`useReferencesOnOpen`) and holds its fields back
+ * until they are in: an edit that opened on fewer citations than stand would
+ * offer a set the author never chose, and its batch is reckoned against what
+ * it loaded (`referenceChanges`). Until then the edit's own header stands with
+ * the house `Loading…` past 200ms (readme §4, *Loading*), and a read with no
+ * answer says the house line over `Retry`, as the thread's read does.
+ */
+export function CommentEditor(props: CommentEditorProps) {
+  const { comment, onLeave } = props;
+  const cited = useReferencesOnOpen({
+    open: true,
+    node: { kind: "Comment", id: comment.id },
+    count: comment.referenceCount,
+  });
+  const late = useWaitedPast(cited.references === null && !cited.failed, SLOW_ANSWER_MS);
+  if (cited.references !== null) {
+    return <LoadedCommentEditor {...props} comment={{ ...comment, references: cited.references }} />;
+  }
+  return (
+    <div
+      data-testid="comment-edit"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Edit comment"
+      className={`${SCREEN_LAYER_STILL} z-40 flex flex-col bg-surface text-on-surface`}
+    >
+      <HeaderBar
+        title="Edit comment"
+        backLabel="Back to the thread"
+        onBack={onLeave}
+        onLeave={onLeave}
+        leaveLabel={COMMENT_EDIT_LEAVE_LABEL}
+      />
+      <div className="flex flex-col gap-3 px-6 pb-4 pt-3">
+        {late && (
+          <p role="status" aria-live="polite" data-testid="comment-edit-loading">
+            Loading…
+          </p>
+        )}
+        {cited.failed && (
+          <div className="flex items-center gap-3">
+            <TransportError testId="comment-edit-load-failed" />
+            <Button testId="comment-edit-load-retry" variant="outline" size="sm" onClick={cited.retry}>
+              Retry
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function LoadedCommentEditor({
   comment,
   parentId,
   postId,
@@ -168,8 +246,7 @@ export function CommentEditor({
   onLeave,
   onSigned,
 }: {
-  /** The comment as any read serves it — the thread's, or a card's off the thread (`comment-edit-door.tsx`). */
-  comment: CommentFieldsFragment;
+  comment: EditedComment;
   /** The comment this one hangs under, or null at the top level — the node it answers. */
   parentId: string | null;
   postId: string;
