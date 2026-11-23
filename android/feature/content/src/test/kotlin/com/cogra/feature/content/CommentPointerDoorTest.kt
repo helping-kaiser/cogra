@@ -12,6 +12,7 @@
 package com.cogra.feature.content
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
@@ -154,37 +155,41 @@ class CommentPointerDoorTest(private val host: CommentCardHost) {
                     onBack = {},
                     doors = doors,
                 )
-                CommentCardHost.PROFILE, CommentCardHost.TAG_PAGE -> {
-                    val profile = host == CommentCardHost.PROFILE
-                    HostedCardsScope(
-                        doors = doors,
-                        routes = HostedCardRoutes(
-                            viewerId = "u-reader",
-                            signedIn = true,
-                            onEditPost = {},
-                            onCitePost = {},
-                            onReply = {},
-                            onEditComment = { _, _ -> },
-                            onSignInOrJoin = {},
-                        ),
-                        hooks = CardHooks(viewerId = "u-reader"),
-                        revealed = emptyMap(),
-                        tag = if (profile) "profile" else "tagPage",
-                        notify = {},
-                        placement = if (profile) HostedPlacement.Profile else HostedPlacement.TagPage,
-                    ) { hosted ->
-                        val card = if (profile) {
-                            DataNode("profile") / "comments" / "commentCard"
-                        } else {
-                            DataNode("tagPage") / "commentCard"
-                        }
-                        val replies = if (profile) DataNode("profile") / "comments" / "viewReplies" else card
-                        Column { hosted.comment(ProfileComment(comment, target, "p1"), card, replies, null) }
-                    }
-                }
+                CommentCardHost.PROFILE, CommentCardHost.TAG_PAGE -> Hosted(target)
             }
         }
         compose.waitForIdle()
+    }
+
+    /** A profile's Comments tab or a tag's page: the card on [HostedCardsScope], as the shell hosts it. */
+    @Composable
+    private fun Hosted(target: CommentTarget) {
+        val profile = host == CommentCardHost.PROFILE
+        HostedCardsScope(
+            doors = doors,
+            routes = HostedCardRoutes(
+                viewerId = "u-reader",
+                signedIn = true,
+                onEditPost = {},
+                onCitePost = {},
+                onReply = {},
+                onEditComment = { _, _ -> },
+                onSignInOrJoin = {},
+            ),
+            hooks = CardHooks(viewerId = "u-reader"),
+            revealed = emptyMap(),
+            tag = if (profile) "profile" else "tagPage",
+            notify = {},
+            placement = if (profile) HostedPlacement.Profile else HostedPlacement.TagPage,
+        ) { hosted ->
+            val card = if (profile) {
+                DataNode("profile") / "comments" / "commentCard"
+            } else {
+                DataNode("tagPage") / "commentCard"
+            }
+            val replies = if (profile) DataNode("profile") / "comments" / "viewReplies" else card
+            Column { hosted.comment(ProfileComment(comment, target, "p1"), card, replies, null) }
+        }
     }
 
     /** The pointer: the line shape's registered `.target`, the feed shape's head row. */
