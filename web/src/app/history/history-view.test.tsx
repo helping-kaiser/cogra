@@ -21,6 +21,9 @@
 //   (`crates/api/tests/view_history.rs`); the screen's duty is to ask with the
 //   reader's query and draw the answer as served, which is pinned here.
 
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -1415,5 +1418,122 @@ describe("the stream opened from History (RL-3)", () => {
     expect(reads.map((read) => read.after)).toEqual([null, "c3"]);
     expect(stream!.snapshot.hasMore).toBe(false);
     forgetStream();
+  });
+});
+
+// A COMMENT'S MEDIA ON HISTORY (round 65, seam 424/444; History.jsx:74-77,
+// :114; `_shared.jsx` `CommentMediaCopies`, :503-529): the `comment` chip's
+// `pictures` and `clip` stand a media comment as the feed's own comment card,
+// registering `history.commentCard.media`, `.media.dots`, `.media.frame` keyed
+// `<comment id>/<position>` and `.media.frame.soundDisc` — the tag page's
+// names (`topic-view.test.tsx`), drawn by the one card.
+describe("History — a comment's media, as the feed's comment card draws it (History.md:57, :103, :105)", () => {
+  const REGISTRY = JSON.parse(
+    readFileSync(join(process.cwd(), "..", "design", "designs", "canonical", "nodes.json"), "utf8"),
+  ) as { screens: Record<string, { nodes: Record<string, string[]> }> };
+  const mediaPaths = Object.keys(REGISTRY.screens.History!.nodes).filter((path) =>
+    path.startsWith("history.commentCard.media"),
+  );
+
+  const picture = (n: number) => ({
+    __typename: "MediaAttachment",
+    id: `m${n}`,
+    url: `https://media.test/${n}.jpg`,
+    altText: null,
+    status: "NORMAL",
+    mimeType: "image/jpeg",
+    options: { __typename: "MediaOptions", aspectRatio: "1:1", durationMs: null },
+    coverMedia: null,
+    coverTaken: false,
+  });
+  const clip = () => ({
+    ...picture(9),
+    url: "https://media.test/9.mp4",
+    mimeType: "video/mp4",
+    options: { __typename: "MediaOptions", aspectRatio: "9:16", durationMs: 12_000 },
+  });
+  const withMedia = (id: string, attachments: unknown[], extra: Record<string, unknown> = {}): Entry => ({
+    node: { ...commentNode(id, author("u1", "ada", "Ada")), attachments, ...extra },
+    firstSeenAt: seenOn(0, 11),
+  });
+  const keys = (path: string) => screen.queryAllByTestId(path).map((element) => element.getAttribute("data-testid-key"));
+
+  it("registers_the_four_media_paths_the_round_65_board_names", () => {
+    expect(mediaPaths.sort()).toEqual([
+      "history.commentCard.media",
+      "history.commentCard.media.dots",
+      "history.commentCard.media.frame",
+      "history.commentCard.media.frame.soundDisc",
+    ]);
+  });
+
+  it("a_comment_with_pictures_and_one_with_a_clip_wear_every_media_path_with_its_key", async () => {
+    serveHistory(() =>
+      page([withMedia("c-pictures", [picture(1), picture(2)]), withMedia("c-clip", [clip()]), POST]),
+    );
+    render();
+    const pictures = await screen.findByTestId(byNode("history.commentCard", "c-pictures"));
+    expect(keys("history.commentCard.media")).toEqual(["c-pictures", "c-clip"]);
+    expect(keys("history.commentCard.media.frame")).toEqual(["c-pictures/1", "c-pictures/2", "c-clip/1"]);
+    expect(keys("history.commentCard.media.dots")).toEqual(["c-pictures"]);
+    expect(keys("history.commentCard.media.frame.soundDisc")).toEqual(["c-clip/1"]);
+    expect(within(pictures).getByTestId(byNode("history.commentCard.media.dots", "c-pictures"))).toBeInTheDocument();
+    // Every path the registry gives the board's media stands.
+    const worn = new Set([...document.querySelectorAll("[data-testid^='history.commentCard.media']")].map((e) => e.getAttribute("data-testid")));
+    expect(mediaPaths.filter((path) => !worn.has(path))).toEqual([]);
+  });
+
+  it("a_comment_with_four_pictures_frames_each_by_its_position", async () => {
+    serveHistory(() => page([withMedia("c-four", [picture(1), picture(2), picture(3), picture(4)])]));
+    render();
+    await screen.findByTestId(byNode("history.commentCard", "c-four"));
+    expect(keys("history.commentCard.media.frame")).toEqual(["c-four/1", "c-four/2", "c-four/3", "c-four/4"]);
+    expect(keys("history.commentCard.media.dots")).toEqual(["c-four"]);
+  });
+
+  it("a_veiled_clip_has_no_sound_disc_until_the_reader_shows_it", async () => {
+    // History.md:47, :103, :105: the card keeps its veil, and the veiled clip
+    // wears no `soundDisc`; the reveal is an eligibility change.
+    serveHistory(() =>
+      page([withMedia("c-veiled", [clip()], { attachmentsStatus: "SENSITIVE", sensitiveSelfMark: true })]),
+    );
+    render();
+    await screen.findByTestId(byNode("history.commentCard", "c-veiled"));
+    expect(screen.getByTestId("history-comment-c-veiled-veil")).toBeInTheDocument();
+    expect(keys("history.commentCard.media.frame.soundDisc")).toEqual([]);
+    fireEvent.click(screen.getByTestId("history-comment-c-veiled-veil-reveal"));
+    await waitFor(() => expect(keys("history.commentCard.media.frame.soundDisc")).toEqual(["c-veiled/1"]));
+  });
+
+  it("a_comment_without_media_wears_no_media_path", async () => {
+    serveHistory(() => page([COMMENT]));
+    render();
+    await screen.findByTestId(byNode("history.commentCard", "c1"));
+    expect(document.querySelectorAll("[data-testid^='history.commentCard.media']")).toHaveLength(0);
+  });
+
+  it("a_removed_media_comment_wears_its_mark_and_none_of_its_media", async () => {
+    // History.md:43: the removal mark in its place; the redacted payload draws nothing.
+    serveHistory(() =>
+      page([
+        withMedia("c-gone", [{ ...picture(1), status: "REDACTED" }], {
+          content: moderated(null, "REDACTED"),
+          removal: { __typename: "Removal", at: hoursAgo(0.3), by: "AUTHOR" },
+        }),
+      ]),
+    );
+    render();
+    await screen.findByTestId(byNode("history.commentCard", "c-gone"));
+    expect(screen.getByTestId("history-comment-c-gone-removed")).toHaveTextContent("Removed by its author");
+    expect(document.querySelectorAll("[data-testid^='history.commentCard.media']")).toHaveLength(0);
+  });
+
+  it("tapping_a_comments_pictures_opens_its_thread_landed_on_it_with_back_to_history", async () => {
+    // History.md:57: a tap outside the target and the card's controls.
+    serveHistory(() => page([withMedia("c-pictures", [picture(1), picture(2)])]));
+    render();
+    const frame = await screen.findByTestId(byNode("history.commentCard.media.frame", "c-pictures/1"));
+    fireEvent.click(frame);
+    expect(push).toHaveBeenCalledWith("/posts/p1?comment=c-pictures&from=history");
   });
 });
