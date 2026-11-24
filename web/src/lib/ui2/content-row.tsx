@@ -73,13 +73,16 @@ const SEVERED_LABEL = STANCE_SEVERANCE_WORDS.zero;
 
 const ELLIPSIS ="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap";
 
-/** What the title's aside holds: a bare `@handle`, words naming one, or neither. */
-type AsideHandle = "none" | "bare" | "words";
+/**
+ * What the title's aside holds: a bare `@handle`, words naming one, other
+ * words (`#saltmaps`, `on #saltmaps`), or none at all.
+ */
+type AsideHandle = "none" | "bare" | "words" | "text";
 
 function asideKind(aside: string | undefined): AsideHandle {
   if (aside === undefined) return "none";
   if (/^@[A-Za-z0-9_]+$/.test(aside)) return "bare";
-  return /(?<![\w@])@[A-Za-z0-9_]/.test(aside) ? "words" : "none";
+  return /(?<![\w@])@[A-Za-z0-9_]/.test(aside) ? "words" : "text";
 }
 
 /** The title beside each kind of aside (ContentRow.jsx `heading`). */
@@ -87,13 +90,20 @@ const HEADING_FLEX: Record<AsideHandle, string> = {
   none: "",
   bare: "shrink-[999]",
   words: "flex-none max-w-full",
+  text: "flex-none max-w-full",
 };
 
-/** The aside's share of the squeeze (ContentRow.jsx `ASIDE_FLEX`). */
+/**
+ * The aside's share of the squeeze (ContentRow.jsx `ASIDE_FLEX`). Words with
+ * no handle — a tag up to 128 characters — end in "…" while the title, the
+ * verb, keeps its room (round 62; jakob 2026-11-23: "everywhere the tag is
+ * one-line at most").
+ */
 const ASIDE_FLEX: Record<AsideHandle, string> = {
   none: "flex-none",
   bare: `${ELLIPSIS} shrink`,
   words: `${ELLIPSIS} shrink`,
+  text: `${ELLIPSIS} shrink`,
 };
 
 function Disc({ disc }: { disc: ContentRowDisc }) {
@@ -219,7 +229,7 @@ export function ContentRow({
   // law: the title (the name) gives way first, the handle stays whole until
   // it alone cannot fit. An aside whose words name a handle — `on @mira` —
   // gives up its handle first, the title and the words kept (`nameInLine`).
-  // An aside with no handle keeps its width.
+  // An aside with no handle — a tag — ends in "…", the title keeping its room.
   const asideHandle = asideKind(aside);
   const heading = (
     <span

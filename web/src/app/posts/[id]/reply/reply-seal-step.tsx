@@ -44,7 +44,6 @@ import { PillButton } from "@/lib/ui2/pill-button";
 import { FactRow } from "@/lib/ui2/fact-row";
 import { NoticeLine, NoticePanel } from "@/lib/ui2/notice-panel";
 import { QuietNote } from "@/lib/ui2/quiet-note";
-import { ReadoutChip } from "@/lib/ui2/chip";
 import {
   ActsCard,
   actsTotal,
@@ -55,6 +54,7 @@ import {
 import { CitedSheet } from "@/lib/ui2/compose/cited-sheet";
 import { CITATION_FAMILY, PairSheet } from "@/lib/ui2/compose/pair-sheet";
 import { TagsSheet } from "@/lib/ui2/compose/tags-sheet";
+import { manageTagsLabel, useSealTagsFold } from "@/lib/ui2/compose/seal-tags";
 import { ParkedPad } from "@/lib/ui2/compose/parked-pad";
 import { SensitiveSheet } from "@/lib/ui2/compose/sensitive-sheet";
 import { StancePad } from "@/lib/ui2/compose/stance-pad";
@@ -80,9 +80,6 @@ import {
 } from "@/lib/compose/reply-wizard";
 
 export type ReplySheet = "none" | "license" | "stance" | "tags" | "cited" | "pair" | "sensitive";
-
-/** How many chips the Tags row holds before it counts — the post seal's rule (`TAGS_ROW_HOLDS`). */
-const TAGS_ROW_HOLDS = 2;
 
 /** The note under the fact rows (ReplySeal.md:7; `_shared.jsx` `ReplySealBody`). */
 export const REPLYING_SIGNS_AN_OPINION = "Replying also signs an opinion on what it answers.";
@@ -198,6 +195,7 @@ export function ReplySealStep({
   onRestoreKey: () => void;
 }) {
   const acts = signedActions(state);
+  const tagsFold = useSealTagsFold(state.tags.map((tag) => tag.name));
   // Inert for the label swap's duration, never dimmed (SealSigning.md): a press
   // on a way out, a fact's action or a row's door does nothing then.
   const guard = (act: () => void) => () => {
@@ -218,8 +216,10 @@ export function ReplySealStep({
     },
   ];
   // THE STAGED TAGS READ BACK AS THE POST SEAL'S DO (`ComposeSealTagged`): the
-  // chips while the row holds them, past that their count, the row the door
-  // to the sheet that lists them. A refused tag is said on its row.
+  // chips while the row holds them whole, past that their count, the row the
+  // door to the sheet that lists them (`sealTagsRow`'s measured fold, round
+  // 62: one tag too long for the slot reads `1 tag`). A refused tag is said on
+  // its row.
   const refusedTag = firstRefused(state.tags, tagErrors);
   const tagFault =
     refusedTag === null
@@ -229,26 +229,20 @@ export function ReplySealStep({
           onRemove: () => removeTag(refusedTag.item.name),
           removeLabel: `Remove #${refusedTag.item.name}`,
         };
-  if (state.tags.length > TAGS_ROW_HOLDS) {
+  if (state.tags.length > 0 && tagsFold.folded) {
     rows.push({
       label: "Tags",
-      value: `${state.tags.length} tags`,
+      value: tagsFold.value,
       count: state.tags.length,
       countNoun: "tag",
-      open: { label: `Manage the ${state.tags.length} tags`, onOpen: guard(() => onSheet("tags")) },
+      open: { label: manageTagsLabel(state.tags.length), onOpen: guard(() => onSheet("tags")) },
       fault: tagFault,
       testId: "reply-open-tags-sheet",
     });
   } else if (state.tags.length > 0) {
     rows.push({
       label: "Tags",
-      value: (
-        <span className="flex items-center gap-1.5 overflow-hidden">
-          {state.tags.map((tag) => (
-            <ReadoutChip key={tag.name}>#{tag.name}</ReadoutChip>
-          ))}
-        </span>
-      ),
+      value: tagsFold.value,
       count: state.tags.length,
       countNoun: "tag",
       fault: tagFault,

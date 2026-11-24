@@ -402,6 +402,9 @@ describe("the feed filter", () => {
       const tide = within(sheet()).getByTestId(byNode("feed.filterSheet.topic.tag", "tidepools"));
       expect(within(sheet()).queryByTestId(byNode("feed.filterSheet.topic.tag", "harbour"))).toBeNull();
       expect(salt).toHaveTextContent("#saltmaps");
+      // `Chip`'s `cut` (Chip.jsx:103-106, round 62): a tag too long for the
+      // sheet ends in "…" and the pill never runs past the row's edge.
+      expect(salt).toHaveAttribute("data-cut", "");
       fireEvent.click(salt);
       fireEvent.click(tide);
       expect(salt).toHaveAttribute("aria-checked", "false");

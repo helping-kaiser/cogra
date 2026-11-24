@@ -237,6 +237,22 @@ describe("ReplySealStep — the board's rows and lines", () => {
     expect(screen.getByTestId("reply-open-tags")).toBeInTheDocument();
   });
 
+  // The post seal's measured fold (_shared.jsx:1935-1943, `sealTagsRow` is one
+  // factory for both seals): a tag too long for the slot reads `1 tag`.
+  it("folds one tag too long for the slot to `1 tag`, the row the door to the sheet", () => {
+    const spy = vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+      const width = this.hasAttribute("data-seal-tags-slot") ? 181 : this.hasAttribute("data-seal-tags-probe") ? 963 : 0;
+      return { width, height: 0, top: 0, left: 0, right: width, bottom: 0, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
+    });
+    const name = `${"sweepfixture-".repeat(9)}end`;
+    const { onSheet } = renderSeal({ tags: [{ name, relevance: 0.5, confidence: 0.5 }] as never });
+    const door = screen.getByRole("button", { name: "Manage the 1 tag" });
+    expect(door).toHaveTextContent("1 tag");
+    fireEvent.click(door);
+    expect(onSheet).toHaveBeenCalledWith("tags");
+    spy.mockRestore();
+  });
+
   it("says a refused tag on its own row, with Remove it as the way out", () => {
     const tags = [{ name: "reserved", relevance: 0.5, confidence: 0.5 }] as never;
     const { onTags } = renderSeal({ tags }, "none", { tagErrors: { 0: "That tag can't be used." } });

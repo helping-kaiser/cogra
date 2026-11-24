@@ -313,6 +313,22 @@ describe("TagPadCompose — a staged tag's pair", () => {
     expect(screen.getByTestId("sheet-exact")).toHaveTextContent("+0.10 / 1.00");
   });
 
+  // The route is one line (`cg-sr-focusable` keeps `white-space: nowrap` when
+  // it shows; TagPadCompose.jsx:52-54) and a tag is one line at most (jakob
+  // 2026-11-23): the tag ends the line, so it is the part cut with "…" and the
+  // route never runs past the sheet. Its accessible name keeps the whole tag.
+  it("cuts a long tag at the end of its one-line non-drag route", () => {
+    const LONG = `#${"sweepfixture-".repeat(9)}end`;
+    render(<Host family={TAG_FAMILY} initial={TAG_DEFAULT} title={LONG} />);
+    const route = screen.getByTestId("sheet-exact-route");
+    expect(route.className.split(/\s+/)).toEqual(expect.arrayContaining(["max-w-full"]));
+    const words = route.querySelector("span") as HTMLElement;
+    expect(words.className.split(/\s+/)).toEqual(
+      expect.arrayContaining(["min-w-0", "overflow-hidden", "text-ellipsis", "whitespace-nowrap"]),
+    );
+    expect(route).toHaveAccessibleName(`Set exact values for ${LONG}`);
+  });
+
   it("lands focus on its non-drag route, which swaps the field for bounded tracks in place", () => {
     renderTag();
     const route = screen.getByTestId("sheet-exact-route");
