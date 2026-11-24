@@ -53,6 +53,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChatBubble
@@ -208,12 +209,9 @@ internal fun RefsSheet(
     /** Over another sheet — a comment's tags and references, raised over the thread. */
     stacked: Boolean = false,
 ) {
-    val cited = citationsOnOpen(node, referenceCount, held)
     RefsSheetContent(
         topics = topics,
-        references = cited.references,
-        failed = cited.failed,
-        onRetry = cited.retry,
+        cited = citationsOnOpen(node, referenceCount, held),
         onDismiss = onDismiss,
         onOpenTopic = onOpenTopic,
         onOpenActor = onOpenActor,
@@ -223,14 +221,12 @@ internal fun RefsSheet(
     )
 }
 
-/** The sheet over its rows as read: [references] null while the read is out. */
+/** The sheet over its rows as read: [CitationsOnOpen.references] null while the read is out. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun RefsSheetContent(
     topics: List<TopicClaimView>,
-    references: List<ReferenceClaimView>?,
-    failed: Boolean,
-    onRetry: () -> Unit,
+    cited: CitationsOnOpen,
     onDismiss: () -> Unit,
     onOpenTopic: (String) -> Unit,
     onOpenActor: (String) -> Unit,
@@ -238,7 +234,7 @@ internal fun RefsSheetContent(
     testTagPrefix: String,
     stacked: Boolean = false,
 ) {
-    val late = rememberSlowAnswer(references == null && !failed)
+    val late = rememberSlowAnswer(cited.references == null && !cited.failed)
     // THE SHEET IS THE DOOR, NOT THE DESTINATION — `CograOverflowMenu`'s own
     // rule, which this sheet did not keep. Its opener remembers `refsOpen`
     // across the trip (`rememberSaveable`), so a row that navigated while the
@@ -286,26 +282,36 @@ internal fun RefsSheetContent(
                 items(topics, key = { it.hashtag.id }) { claim ->
                     TagRow(claim, openTopic, testTagPrefix)
                 }
-                when {
-                    references != null -> {
-                        if (references.isNotEmpty()) {
-                            item {
-                                SectionLabel(stringResource(R.string.content_refs_section_references))
-                            }
-                        }
-                        items(references, key = { it.targetId }) { claim ->
-                            ReferenceRow(claim, openActor, openPost, testTagPrefix)
-                        }
-                    }
-                    failed -> item { RowsFault(onRetry, testTagPrefix) }
-                    late -> item {
-                        LoadingState(
-                            testTag = "${testTagPrefix}_refs_loading",
-                            modifier = Modifier.padding(horizontal = Space.x6, vertical = Space.x3),
-                        )
-                    }
-                }
+                citationRows(cited, late, openActor, openPost, testTagPrefix)
             }
+        }
+    }
+}
+
+/** The citations' section: the rows once read, else the wait or the fault in their place. */
+private fun LazyListScope.citationRows(
+    cited: CitationsOnOpen,
+    late: Boolean,
+    openActor: (String) -> Unit,
+    openPost: (String) -> Unit,
+    testTagPrefix: String,
+) {
+    val references = cited.references
+    when {
+        references != null -> {
+            if (references.isNotEmpty()) {
+                item { SectionLabel(stringResource(R.string.content_refs_section_references)) }
+            }
+            items(references, key = { it.targetId }) { claim ->
+                ReferenceRow(claim, openActor, openPost, testTagPrefix)
+            }
+        }
+        cited.failed -> item { RowsFault(cited.retry, testTagPrefix) }
+        late -> item {
+            LoadingState(
+                testTag = "${testTagPrefix}_refs_loading",
+                modifier = Modifier.padding(horizontal = Space.x6, vertical = Space.x3),
+            )
         }
     }
 }
