@@ -230,10 +230,12 @@ epoch above every real one and orders among pending entries by
 because nothing serializes two authors' signatures apart. Under
 `OLDEST_FIRST` they close the page set instead, since they are the
 newest; the cursor namespaces are unchanged. A
-pending entry's cursor changes when it lands, because its position
-in the order changes; a content cursor therefore carries the
-entry's own id alongside the key, so a walk resuming from it can
-find where the entry went instead of serving it twice. Cursors
+content cursor carries the entry's own id alongside the key, and
+the walk's horizon: the newest landing its first page read. Every
+later page of the walk reads the listing as of that horizon — an
+entry landed since keeps its place among the pending entries — so
+an entry that lands between two pages is served exactly once, in
+either direction; a first page reads the listing afresh. Cursors
 stay opaque: what rides inside is the server's business, and a
 client reads no structure into them. Every content listing takes
 `includePending` (default true): false serves only what has landed
