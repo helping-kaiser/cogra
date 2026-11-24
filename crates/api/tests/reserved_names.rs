@@ -206,7 +206,11 @@ async fn a_reserved_handle_stays_with_its_holder_alone(pool: PgPool) {
     let token = rig.log_in("holder@example.com").await;
 
     let resaved = change_handle(&rig, &token, " Moderator").await;
-    assert_eq!(resaved["changeHandle"]["userErrors"], json!([]), "{resaved}");
+    assert_eq!(
+        resaved["changeHandle"]["userErrors"],
+        json!([]),
+        "{resaved}"
+    );
     assert_eq!(resaved["changeHandle"]["user"]["handle"], "moderator");
 
     let moved = change_handle(&rig, &token, "former_moderator").await;

@@ -502,7 +502,11 @@ async fn a_reserved_display_name_is_refused_before_anything_is_staged(pool: PgPo
                 )
                 .await;
             let payload = &refused["prepareProfileUpdate"];
-            assert_eq!(payload["writes"], Value::Null, "`{spelling}` stages nothing");
+            assert_eq!(
+                payload["writes"],
+                Value::Null,
+                "`{spelling}` stages nothing"
+            );
             assert_eq!(
                 payload["userErrors"],
                 json!([{

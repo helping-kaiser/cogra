@@ -146,10 +146,12 @@ async fn refuse_reserved_display_name(
     if !crate::reserved::is_reserved_display_name(name) {
         return Ok(());
     }
-    let held = profile::landed_profile(pool, viewer).await?.is_some_and(|p| {
-        crate::reserved::fold_display_name(&p.display_name)
-            == crate::reserved::fold_display_name(name)
-    });
+    let held = profile::landed_profile(pool, viewer)
+        .await?
+        .is_some_and(|p| {
+            crate::reserved::fold_display_name(&p.display_name)
+                == crate::reserved::fold_display_name(name)
+        });
     if held {
         Ok(())
     } else {
