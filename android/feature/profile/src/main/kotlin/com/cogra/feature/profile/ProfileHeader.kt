@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.FittedName
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.hitTarget
 import com.cogra.core.designsystem.v2.media.CograAvatar
@@ -286,12 +287,16 @@ private fun AvatarAndName(
         // The name column takes what the avatar leaves (`minmax(0, 1fr)`).
         Column(Modifier.weight(1f)) {
             Column(verticalArrangement = Arrangement.spacedBy(NAME_GAP)) {
-                Text(
+                // SHOWN WHOLE ON AT MOST TWO LINES (Profile.md:103-105): the
+                // largest whole size from 22 that holds two, no smallest size;
+                // only the name's size moves, the handle line keeps its own.
+                FittedName(
                     text = name,
                     style = MaterialTheme.typography.titleLarge,
                     // `Deleted account` is the system's voice, not a chosen name.
                     color = MaterialTheme.colorScheme.let { if (deleted) it.onSurfaceVariant else it.onSurface },
-                    modifier = Modifier
+                    modifier = Modifier.fillMaxWidth(),
+                    textModifier = Modifier
                         .fillMaxWidth()
                         .semantics { heading() }
                         .dataNode(node / "name"),

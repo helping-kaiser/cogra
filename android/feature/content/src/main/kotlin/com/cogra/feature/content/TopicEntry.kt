@@ -18,6 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.NameInText
 import com.cogra.core.designsystem.TagParameterSliders
 import com.cogra.core.designsystem.TopicChip
 import com.cogra.core.designsystem.dataNode
@@ -223,7 +224,8 @@ private fun TagParametersDialog(
     AlertDialog(
         onDismissRequest = onDone,
         modifier = Modifier.testTag("${testTagPrefix}_tag_params"),
-        title = { Text("#${row.name}") },
+        // A dialog's title wraps; the tag it is is one unit (NamesLong.md; round 63).
+        title = { NameInText("#${row.name}") },
         text = {
             TagParameterSliders(
                 relevance = row.relevance,

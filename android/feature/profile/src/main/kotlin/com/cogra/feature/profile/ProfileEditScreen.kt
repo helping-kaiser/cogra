@@ -191,6 +191,7 @@ fun ProfileEditScreen(
                                 R.string.profile_edit_display_name_too_long,
                                 MAX_DISPLAY_NAME_CHARS,
                             )
+                            state.nameReserved -> stringResource(R.string.profile_edit_name_reserved)
                             else -> null
                         },
                         testTag = "profile_edit_display_name",

@@ -210,7 +210,7 @@ class ProfileTabsScreenTest {
     // Profile.md:23 — the chronicle stands on Everything, the right-most tab, alone.
     @Test
     fun theChronicleStandsOnEverythingAlone() {
-        render(loaded().copy(posts = posts("p1"), rows = listOf(act())))
+        render(loaded().copy(tab = ProfileTab.EVERYTHING, posts = posts("p1"), rows = listOf(act())))
         compose.onNodeWithTag("profile.chronicle").assertExists()
         compose.onNodeWithTag("profile.chronicle.act:1").performScrollTo().assertExists()
         compose.onAllNodesWithTag("profile.posts.card:p1").assertCountEquals(0)

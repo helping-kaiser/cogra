@@ -2,6 +2,7 @@ package com.cogra.feature.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cogra.domain.ErrorCode
 import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.Outcome
 import com.cogra.domain.content.isBioTooLong
@@ -89,6 +90,8 @@ data class ProfileEditUiState(
     val submitting: Boolean = false,
     val emptyName: Boolean = false,
     val refused: Boolean = false,
+    /** CoGra reserves this name: the Display name field's own line, until the next Save. */
+    val nameReserved: Boolean = false,
     val signingFailed: Boolean = false,
     /** One-shot: the update signed; the caller pops back and refreshes. */
     val saved: Boolean = false,
@@ -216,6 +219,9 @@ class ProfileEditViewModel @Inject constructor(
     fun onSubmit() {
         val s = _state.value
         if (s.submitting || s.imagesPending) return
+        // Every real press of Save takes the reserved line away (ProfileEdit.md:85),
+        // even one that stops at a guard below.
+        _state.update { it.copy(nameReserved = false) }
         if (s.displayName.isBlank()) {
             _state.update { it.copy(emptyName = true) }
             return
@@ -239,7 +245,12 @@ class ProfileEditViewModel @Inject constructor(
             ) {
                 is Outcome.Success -> outcome.value
                 is Outcome.Refused -> {
-                    _state.update { it.copy(submitting = false, refused = true) }
+                    val reserved = outcome.errors.any {
+                        it.code == ErrorCode.DISPLAY_NAME_RESERVED && it.field?.firstOrNull() == "displayName"
+                    }
+                    _state.update {
+                        it.copy(submitting = false, nameReserved = reserved, refused = !reserved)
+                    }
                     return@launch
                 }
                 is Outcome.Failed -> {

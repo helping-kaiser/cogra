@@ -78,7 +78,11 @@ import com.cogra.domain.content.isSensitiveReasonTooLong
 import com.cogra.feature.content.BackingPad
 import com.cogra.feature.content.R
 import com.cogra.feature.content.ReferenceRow
+import com.cogra.feature.content.SEAL_TAG_GAP
+import com.cogra.feature.content.SealTagsFold
+import com.cogra.feature.content.manageTagsLabel
 import com.cogra.feature.content.stagedName
+import com.cogra.feature.content.tagsCountWords
 
 /**
  * `ComposeSeal` — every act with its cost, before a single signature
@@ -318,9 +322,6 @@ private fun WideText(text: String, onClick: () -> Unit, testTag: String) {
     )
 }
 
-/** How many tag chips the seal's Tags row holds before it counts (`_shared.jsx` `TAGS_ROW_HOLDS`). */
-private const val TAGS_ROW_HOLDS = 2
-
 /**
  * `ActsCard` — the container-highest card listing what one signature commits:
  * one row per act kind (quiet label · value · count, a hairline under each,
@@ -386,28 +387,32 @@ private fun ActsCard(
 }
 
 /**
- * THE TAGS ROW IN ITS TWO READINGS (jakob 2026-09-15): the chips while they
- * fit, past that `N tags` and the row a door to the tags sheet.
+ * THE TAGS ROW IN ITS TWO READINGS (jakob 2026-09-15; `sealTagsRow`, round
+ * 62): the chips while they fit the value slot whole, past that `N tags` — `1
+ * tag` for one too long for the slot — and the row a door to the tags sheet.
  */
 @Composable
-private fun TagsActRow(tags: List<String>, onOpenSheet: (SealSheet) -> Unit) {
-    if (tags.size in 1..TAGS_ROW_HOLDS) {
-        ActRow(label = "Tags", count = tags.size, noun = "tag") {
-            Row(
-                modifier = Modifier.clipToBounds(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                tags.forEach { CograReadoutChip(label = "#$it") }
+internal fun TagsActRow(tags: List<String>, onOpenSheet: (SealSheet) -> Unit) {
+    if (tags.isEmpty()) return
+    SealTagsFold(tags, labelWidth = ACT_LABEL, countStyle = MaterialTheme.typography.labelSmall) { folded ->
+        if (!folded) {
+            ActRow(label = "Tags", count = tags.size, noun = "tag") {
+                Row(
+                    modifier = Modifier.clipToBounds().testTag("wizard_seal_tag_chips"),
+                    horizontalArrangement = Arrangement.spacedBy(SEAL_TAG_GAP),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    tags.forEach { CograReadoutChip(label = "#$it", testTag = "wizard_seal_tag_$it") }
+                }
             }
+        } else {
+            ActRow(
+                label = "Tags",
+                count = tags.size,
+                noun = "tag",
+                door = Door(manageTagsLabel(tags.size), "wizard_seal_tags") { onOpenSheet(SealSheet.Tags) },
+            ) { ActValue(tagsCountWords(tags.size)) }
         }
-    } else if (tags.size > TAGS_ROW_HOLDS) {
-        ActRow(
-            label = "Tags",
-            count = tags.size,
-            noun = "tag",
-            door = Door("Manage the ${tags.size} tags", "wizard_seal_tags") { onOpenSheet(SealSheet.Tags) },
-        ) { ActValue("${tags.size} tags") }
     }
 }
 
