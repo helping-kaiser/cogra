@@ -93,10 +93,74 @@ impl LandingOrder {
 ///
 /// `id` is optional so a cursor issued before it was carried still
 /// paginates, on the key alone.
+///
+/// `horizon` is the walk's snapshot (api-spec.md "A page is a snapshot"):
+/// the newest landing key the listing held when the walk's first page was
+/// read. The listing every later page of the walk reads is the one as of
+/// that page — an entry that has landed above the horizon since is still
+/// read where it stood, among the settling entries, so it can neither be
+/// served again out of the landed namespace nor be skipped by a boundary
+/// that moved past it. A cursor without one predates it: the walk then
+/// re-resolves the cursor's own entry, as it did before the horizon was
+/// carried.
 #[derive(Debug, Clone, Copy)]
 pub struct ContentCursor {
     pub order: LandingOrder,
     pub id: Option<Uuid>,
+    pub horizon: Option<LandingOrder>,
+}
+
+impl ContentCursor {
+    /// The cursor of one listed entry, in the walk that served it under
+    /// `horizon`.
+    pub fn of<T: Listed>(entry: &T, horizon: Option<LandingOrder>) -> Self {
+        Self {
+            order: entry.view_key(horizon),
+            id: entry.entry_id(),
+            horizon,
+        }
+    }
+}
+
+/// The horizon of a listing that held no landed entry yet: below every
+/// key of record, which is numbered from one.
+const EMPTY_HORIZON: LandingOrder = LandingOrder {
+    landed_epoch: 0,
+    position: 0,
+};
+
+/// One page of a listing walk, with the horizon its cursors carry. `None`
+/// only for a walk that carries none: a settled read, or one resumed from a
+/// cursor that predates the horizon.
+#[derive(Debug, Clone)]
+pub struct Listing<T> {
+    pub items: Vec<T>,
+    pub horizon: Option<LandingOrder>,
+}
+
+/// An entry of a listing that pages across the settling and landed
+/// namespaces.
+pub trait Listed {
+    /// The landing key, once landed.
+    fn landed_key(&self) -> Option<LandingOrder>;
+    /// Where the entry sorts in the walk fixed at `horizon`: its landing
+    /// key if it had landed by then, its pending key otherwise.
+    fn view_key(&self, horizon: Option<LandingOrder>) -> LandingOrder;
+    /// The id a cursor carries, if the entry has one.
+    fn entry_id(&self) -> Option<Uuid>;
+}
+
+/// The view key of a content row: landed at or below the horizon reads in
+/// the landed namespace, anything else in the pending one.
+fn content_view_key(
+    order: Option<LandingOrder>,
+    created_at: Timestamp,
+    horizon: Option<LandingOrder>,
+) -> LandingOrder {
+    match order {
+        Some(o) if horizon.is_none_or(|h| o <= h) => o,
+        _ => LandingOrder::pending_at(created_at),
+    }
 }
 
 /// One post with its current display version (entity row + newest
@@ -147,6 +211,20 @@ impl Post {
     }
 }
 
+impl Listed for Post {
+    fn landed_key(&self) -> Option<LandingOrder> {
+        self.order
+    }
+
+    fn view_key(&self, horizon: Option<LandingOrder>) -> LandingOrder {
+        content_view_key(self.order, self.created_at, horizon)
+    }
+
+    fn entry_id(&self) -> Option<Uuid> {
+        Some(self.id)
+    }
+}
+
 /// One comment with its current display version.
 #[derive(Debug, Clone)]
 pub struct Comment {
@@ -176,6 +254,20 @@ impl Comment {
     pub fn sort_key(&self) -> LandingOrder {
         self.order
             .unwrap_or_else(|| LandingOrder::pending_at(self.created_at))
+    }
+}
+
+impl Listed for Comment {
+    fn landed_key(&self) -> Option<LandingOrder> {
+        self.order
+    }
+
+    fn view_key(&self, horizon: Option<LandingOrder>) -> LandingOrder {
+        content_view_key(self.order, self.created_at, horizon)
+    }
+
+    fn entry_id(&self) -> Option<Uuid> {
+        Some(self.id)
     }
 }
 
@@ -1070,16 +1162,16 @@ pub async fn posts_by_nodes(
 /// namespace; `backward` flips the walk for `last`/`before` paging
 /// (results always come back newest-first). `include_pending` false
 /// serves only what has landed on L1. `limit` is capped by the resolver.
-/// The cursor is re-resolved against its entry's current state before the
-/// walk, so an entry that lands between two pages is not served a second
-/// time out of the other namespace.
+/// The walk reads the listing as of its first page (see
+/// [`ContentCursor::horizon`]), so an entry that lands between two pages
+/// is served exactly once.
 pub async fn list_posts(
     pool: &PgPool,
     cursor: Option<ContentCursor>,
     backward: bool,
     limit: i64,
     include_pending: bool,
-) -> Result<Vec<Post>, ContentError> {
+) -> Result<Listing<Post>, ContentError> {
     posts_walk(pool, None, cursor, backward, limit, include_pending).await
 }
 
@@ -1093,7 +1185,7 @@ pub async fn list_posts_by_author(
     backward: bool,
     limit: i64,
     include_pending: bool,
-) -> Result<Vec<Post>, ContentError> {
+) -> Result<Listing<Post>, ContentError> {
     posts_walk(pool, Some(author), cursor, backward, limit, include_pending).await
 }
 
@@ -1105,7 +1197,7 @@ async fn posts_walk(
     backward: bool,
     limit: i64,
     include_pending: bool,
-) -> Result<Vec<Post>, ContentError> {
+) -> Result<Listing<Post>, ContentError> {
     let cursor = resolve_post_cursor(pool, cursor).await?;
     merge_walk(
         cursor,
@@ -1163,6 +1255,21 @@ pub async fn count_posts(
 /// The error type is the branches' own, so a walk whose landed branch is
 /// the record mirror (the chronicle) shares the merge with the content
 /// listings.
+///
+/// **The horizon.** A walk that serves settling entries fixes its
+/// horizon on its first page — the newest landing key the listing holds
+/// then — and every later page reads the listing as of it: the landed
+/// branch serves landings at or below it, the pending branch everything
+/// still settling *or* landed above it, in the pending namespace's order.
+/// Each entry so keeps the one place it had when the walk began, and a
+/// keyset walk over an order that does not move serves every entry
+/// exactly once, in either direction. The first page learns the horizon
+/// from the newest landed row it read; a page that read none asks the
+/// landed branch for its newest row.
+///
+/// `opens` names that first page: no cursor, and a walk with settling
+/// entries in it. A settled read (`include_pending` false) has no
+/// settling entries to place and keeps no horizon.
 async fn merge_walk<T, E, Landed, Pending, LFut, PFut>(
     cursor: Option<ContentCursor>,
     backward: bool,
@@ -1170,52 +1277,121 @@ async fn merge_walk<T, E, Landed, Pending, LFut, PFut>(
     include_pending: bool,
     landed: Landed,
     pending: Pending,
-) -> Result<Vec<T>, E>
+) -> Result<Listing<T>, E>
 where
+    T: Listed,
     Landed: Fn(Option<LandingOrder>, bool, i64) -> LFut,
-    Pending: Fn((Option<Timestamp>, Option<Uuid>), bool, i64) -> PFut,
+    Pending: Fn(PendingFrom, bool, i64) -> PFut,
     LFut: std::future::Future<Output = Result<Vec<T>, E>>,
     PFut: std::future::Future<Output = Result<Vec<T>, E>>,
 {
     let in_pending = cursor.is_some_and(|c| c.order.is_pending());
+    let landed_cursor = cursor.map(|c| c.order).filter(|o| !o.is_pending());
+    let opens = include_pending && cursor.is_none();
+    let mut horizon = cursor.and_then(|c| c.horizon);
     let mut out = Vec::new();
     if backward {
         if !in_pending {
-            out = landed(cursor.map(|c| c.order), true, limit).await?;
+            let rows = landed(landed_cursor, true, limit).await?;
+            if opens && (rows.len() as i64) < limit {
+                horizon = Some(newest_landing(&rows));
+            }
+            out = match horizon {
+                Some(h) => rows
+                    .into_iter()
+                    .filter(|r| r.landed_key().is_some_and(|k| k <= h))
+                    .collect(),
+                None => rows,
+            };
         }
         let remaining = limit - out.len() as i64;
         if include_pending && remaining > 0 {
-            let mut head = pending(pending_from(cursor), true, remaining).await?;
+            let mut head = pending(pending_from(cursor, horizon), true, remaining).await?;
             head.append(&mut out);
             out = head;
         }
     } else {
         if include_pending && (cursor.is_none() || in_pending) {
-            out = pending(pending_from(cursor), false, limit).await?;
+            out = pending(pending_from(cursor, horizon), false, limit).await?;
         }
         let remaining = limit - out.len() as i64;
         if remaining > 0 {
-            let landed_cursor = cursor.map(|c| c.order).filter(|o| !o.is_pending());
-            out.append(&mut landed(landed_cursor, false, remaining).await?);
+            let from = landed_cursor.or(horizon.map(just_above));
+            let rows = landed(from, false, remaining).await?;
+            if opens {
+                horizon = Some(newest_landing(&rows));
+            }
+            out.extend(rows);
         }
     }
-    Ok(out)
+    if opens && horizon.is_none() {
+        horizon = Some(newest_landing(&landed(None, false, 1).await?));
+    }
+    Ok(Listing {
+        items: out,
+        horizon,
+    })
+}
+
+/// The newest landing among landed-branch rows read newest-first from the
+/// top, or the empty horizon when there were none.
+fn newest_landing<T: Listed>(newest_first: &[T]) -> LandingOrder {
+    newest_first
+        .first()
+        .and_then(Listed::landed_key)
+        .unwrap_or(EMPTY_HORIZON)
+}
+
+/// The exclusive landed cursor that admits the horizon itself: the walk's
+/// landed branch serves keys below its cursor, and a key of record is a
+/// pair of integers, so the key one position on is the tightest bound.
+fn just_above(horizon: LandingOrder) -> LandingOrder {
+    LandingOrder {
+        position: horizon.position.saturating_add(1),
+        ..horizon
+    }
+}
+
+/// Where the pending branch resumes, and the horizon it reads under.
+#[derive(Debug, Clone, Copy)]
+struct PendingFrom {
+    /// The authoring instant of the cursor's entry; None walks the branch
+    /// from its own end.
+    at: Option<Timestamp>,
+    /// The entry id that breaks ties on the instant.
+    id: Option<Uuid>,
+    /// Rows landed above it still read here; None reads only what is
+    /// still settling.
+    horizon: Option<LandingOrder>,
+}
+
+impl PendingFrom {
+    fn horizon_parts(&self) -> (Option<i64>, Option<i64>) {
+        match self.horizon {
+            Some(h) => (Some(h.landed_epoch), Some(h.position)),
+            None => (None, None),
+        }
+    }
 }
 
 /// The pending branch's keyset: the authoring instant and the entry id
 /// that breaks ties on it. Empty for a cursor in the landed namespace —
 /// the pending branch is then walked from its own end.
-fn pending_from(cursor: Option<ContentCursor>) -> (Option<Timestamp>, Option<Uuid>) {
-    match cursor.filter(|c| c.order.is_pending()) {
+fn pending_from(cursor: Option<ContentCursor>, horizon: Option<LandingOrder>) -> PendingFrom {
+    let (at, id) = match cursor.filter(|c| c.order.is_pending()) {
         Some(c) => (c.order.pending_instant(), c.id),
         None => (None, None),
-    }
+    };
+    PendingFrom { at, id, horizon }
 }
 
 /// The id a pending cursor must be re-checked against, if any: only a
-/// pending cursor can move, and only one carrying an id can be found.
+/// pending cursor without a horizon can move — under a horizon its entry
+/// keeps its place — and only one carrying an id can be found.
 fn movable(cursor: Option<ContentCursor>) -> Option<Uuid> {
-    cursor.filter(|c| c.order.is_pending()).and_then(|c| c.id)
+    cursor
+        .filter(|c| c.order.is_pending() && c.horizon.is_none())
+        .and_then(|c| c.id)
 }
 
 /// Re-points a cursor at the landing coordinates its entry has now.
@@ -1371,15 +1547,27 @@ async fn list_posts_landed(
 /// alone is not unique — two authors' pre-commitment signatures can share
 /// a microsecond, and a keyset on a non-unique column drops the siblings
 /// at every page boundary. A cursor from before the id was carried
-/// (`None`) keysets on the instant alone.
+/// (`None`) keysets on the instant alone. Under a horizon the branch also
+/// reads the rows landed above it (see [`merge_walk`]).
+///
+/// The page's ids come from two arms, each `limit` long and each on its
+/// own index: the unlanded rows on the partial `posts_pending_idx`, which
+/// a single `IS NULL OR …` predicate would forfeit, and the rows landed
+/// above the horizon on `posts_landing_order_idx` — a short range, since
+/// it holds only what landed while the walk ran. Without a horizon the
+/// second arm's guard is false before it reads a row. The comment
+/// branches below are built the same way.
 async fn list_posts_pending(
     pool: &PgPool,
     author: Option<Uuid>,
-    cursor: (Option<Timestamp>, Option<Uuid>),
+    cursor: PendingFrom,
     backward: bool,
     limit: i64,
 ) -> Result<Vec<Post>, ContentError> {
-    let (at, after_id) = cursor;
+    let PendingFrom {
+        at, id: after_id, ..
+    } = cursor;
+    let (he, hp) = cursor.horizon_parts();
     let rows = if backward {
         sqlx::query_as!(
             PostRow,
@@ -1404,11 +1592,25 @@ async fn list_posts_pending(
                                 created_at DESC, version_id DESC
                        LIMIT 1
                    ) v ON TRUE
-                   WHERE p.landed_epoch IS NULL
-                     AND ($4::uuid IS NULL OR p.author_id = $4)
-                     AND ($1::timestamptz IS NULL
-                          OR ($2::uuid IS NULL AND p.created_at > $1)
-                          OR ($2 IS NOT NULL AND (p.created_at, p.id) > ($1, $2)))
+                   WHERE p.id IN (
+                       (SELECT q.id FROM posts q
+                        WHERE q.landed_epoch IS NULL
+                          AND ($4::uuid IS NULL OR q.author_id = $4)
+                          AND ($1::timestamptz IS NULL
+                               OR ($2::uuid IS NULL AND q.created_at > $1)
+                               OR ($2 IS NOT NULL AND (q.created_at, q.id) > ($1, $2)))
+                        ORDER BY q.created_at ASC, q.id ASC
+                        LIMIT $3)
+                       UNION ALL
+                       (SELECT q.id FROM posts q
+                        WHERE $5::bigint IS NOT NULL
+                          AND (q.landed_epoch, q.position) > ($5, $6::bigint)
+                          AND ($4::uuid IS NULL OR q.author_id = $4)
+                          AND ($1::timestamptz IS NULL
+                               OR ($2::uuid IS NULL AND q.created_at > $1)
+                               OR ($2 IS NOT NULL AND (q.created_at, q.id) > ($1, $2)))
+                        ORDER BY q.created_at ASC, q.id ASC
+                        LIMIT $3))
                    ORDER BY p.created_at ASC, p.id ASC
                    LIMIT $3
                ) page
@@ -1417,6 +1619,8 @@ async fn list_posts_pending(
             after_id,
             limit,
             author,
+            he,
+            hp,
         )
         .fetch_all(pool)
         .await?
@@ -1443,17 +1647,33 @@ async fn list_posts_pending(
                             created_at DESC, version_id DESC
                    LIMIT 1
                ) v ON TRUE
-               WHERE p.landed_epoch IS NULL
-                 AND ($4::uuid IS NULL OR p.author_id = $4)
-                 AND ($1::timestamptz IS NULL
-                      OR ($2::uuid IS NULL AND p.created_at < $1)
-                      OR ($2 IS NOT NULL AND (p.created_at, p.id) < ($1, $2)))
+               WHERE p.id IN (
+                   (SELECT q.id FROM posts q
+                    WHERE q.landed_epoch IS NULL
+                      AND ($4::uuid IS NULL OR q.author_id = $4)
+                      AND ($1::timestamptz IS NULL
+                           OR ($2::uuid IS NULL AND q.created_at < $1)
+                           OR ($2 IS NOT NULL AND (q.created_at, q.id) < ($1, $2)))
+                    ORDER BY q.created_at DESC, q.id DESC
+                    LIMIT $3)
+                   UNION ALL
+                   (SELECT q.id FROM posts q
+                    WHERE $5::bigint IS NOT NULL
+                      AND (q.landed_epoch, q.position) > ($5, $6::bigint)
+                      AND ($4::uuid IS NULL OR q.author_id = $4)
+                      AND ($1::timestamptz IS NULL
+                           OR ($2::uuid IS NULL AND q.created_at < $1)
+                           OR ($2 IS NOT NULL AND (q.created_at, q.id) < ($1, $2)))
+                    ORDER BY q.created_at DESC, q.id DESC
+                    LIMIT $3))
                ORDER BY p.created_at DESC, p.id DESC
                LIMIT $3"#,
             at,
             after_id,
             limit,
             author,
+            he,
+            hp,
         )
         .fetch_all(pool)
         .await?
@@ -1637,7 +1857,7 @@ pub async fn comments_for_target(
     limit: i64,
     include_pending: bool,
     order: ThreadOrder,
-) -> Result<Vec<Comment>, ContentError> {
+) -> Result<Listing<Comment>, ContentError> {
     let cursor = resolve_comment_cursor(pool, cursor).await?;
     let oldest_first = order == ThreadOrder::OldestFirst;
     let mut rows = merge_walk(
@@ -1650,7 +1870,7 @@ pub async fn comments_for_target(
     )
     .await?;
     if oldest_first {
-        rows.reverse();
+        rows.items.reverse();
     }
     Ok(rows)
 }
@@ -1755,11 +1975,14 @@ async fn comments_landed(
 async fn comments_pending(
     pool: &PgPool,
     target_id: Uuid,
-    cursor: (Option<Timestamp>, Option<Uuid>),
+    cursor: PendingFrom,
     backward: bool,
     limit: i64,
 ) -> Result<Vec<Comment>, ContentError> {
-    let (at, after_id) = cursor;
+    let PendingFrom {
+        at, id: after_id, ..
+    } = cursor;
+    let (he, hp) = cursor.horizon_parts();
     let rows = if backward {
         sqlx::query_as!(
             CommentRow,
@@ -1783,11 +2006,25 @@ async fn comments_pending(
                                 created_at DESC, version_id DESC
                        LIMIT 1
                    ) v ON TRUE
-                   WHERE c.target_id = $4
-                     AND c.landed_epoch IS NULL
-                     AND ($1::timestamptz IS NULL
-                          OR ($2::uuid IS NULL AND c.created_at > $1)
-                          OR ($2 IS NOT NULL AND (c.created_at, c.id) > ($1, $2)))
+                   WHERE c.id IN (
+                       (SELECT q.id FROM comments q
+                        WHERE q.target_id = $4
+                          AND q.landed_epoch IS NULL
+                          AND ($1::timestamptz IS NULL
+                               OR ($2::uuid IS NULL AND q.created_at > $1)
+                               OR ($2 IS NOT NULL AND (q.created_at, q.id) > ($1, $2)))
+                        ORDER BY q.created_at ASC, q.id ASC
+                        LIMIT $3)
+                       UNION ALL
+                       (SELECT q.id FROM comments q
+                        WHERE q.target_id = $4
+                          AND $5::bigint IS NOT NULL
+                          AND (q.landed_epoch, q.position) > ($5, $6::bigint)
+                          AND ($1::timestamptz IS NULL
+                               OR ($2::uuid IS NULL AND q.created_at > $1)
+                               OR ($2 IS NOT NULL AND (q.created_at, q.id) > ($1, $2)))
+                        ORDER BY q.created_at ASC, q.id ASC
+                        LIMIT $3))
                    ORDER BY c.created_at ASC, c.id ASC
                    LIMIT $3
                ) page
@@ -1796,6 +2033,8 @@ async fn comments_pending(
             after_id,
             limit,
             target_id,
+            he,
+            hp,
         )
         .fetch_all(pool)
         .await?
@@ -1821,17 +2060,33 @@ async fn comments_pending(
                             created_at DESC, version_id DESC
                    LIMIT 1
                ) v ON TRUE
-               WHERE c.target_id = $4
-                 AND c.landed_epoch IS NULL
-                 AND ($1::timestamptz IS NULL
-                      OR ($2::uuid IS NULL AND c.created_at < $1)
-                      OR ($2 IS NOT NULL AND (c.created_at, c.id) < ($1, $2)))
+               WHERE c.id IN (
+                   (SELECT q.id FROM comments q
+                    WHERE q.target_id = $4
+                      AND q.landed_epoch IS NULL
+                      AND ($1::timestamptz IS NULL
+                           OR ($2::uuid IS NULL AND q.created_at < $1)
+                           OR ($2 IS NOT NULL AND (q.created_at, q.id) < ($1, $2)))
+                    ORDER BY q.created_at DESC, q.id DESC
+                    LIMIT $3)
+                   UNION ALL
+                   (SELECT q.id FROM comments q
+                    WHERE q.target_id = $4
+                      AND $5::bigint IS NOT NULL
+                      AND (q.landed_epoch, q.position) > ($5, $6::bigint)
+                      AND ($1::timestamptz IS NULL
+                           OR ($2::uuid IS NULL AND q.created_at < $1)
+                           OR ($2 IS NOT NULL AND (q.created_at, q.id) < ($1, $2)))
+                    ORDER BY q.created_at DESC, q.id DESC
+                    LIMIT $3))
                ORDER BY c.created_at DESC, c.id DESC
                LIMIT $3"#,
             at,
             after_id,
             limit,
             target_id,
+            he,
+            hp,
         )
         .fetch_all(pool)
         .await?
@@ -1887,7 +2142,7 @@ pub async fn comments_by_author(
     backward: bool,
     limit: i64,
     include_pending: bool,
-) -> Result<Vec<Comment>, ContentError> {
+) -> Result<Listing<Comment>, ContentError> {
     let cursor = resolve_comment_cursor(pool, cursor).await?;
     merge_walk(
         cursor,
@@ -2000,11 +2255,14 @@ async fn comments_by_author_landed(
 async fn comments_by_author_pending(
     pool: &PgPool,
     author: Uuid,
-    cursor: (Option<Timestamp>, Option<Uuid>),
+    cursor: PendingFrom,
     backward: bool,
     limit: i64,
 ) -> Result<Vec<Comment>, ContentError> {
-    let (at, after_id) = cursor;
+    let PendingFrom {
+        at, id: after_id, ..
+    } = cursor;
+    let (he, hp) = cursor.horizon_parts();
     let rows = if backward {
         sqlx::query_as!(
             CommentRow,
@@ -2028,11 +2286,25 @@ async fn comments_by_author_pending(
                                 created_at DESC, version_id DESC
                        LIMIT 1
                    ) v ON TRUE
-                   WHERE c.author_id = $4
-                     AND c.landed_epoch IS NULL
-                     AND ($1::timestamptz IS NULL
-                          OR ($2::uuid IS NULL AND c.created_at > $1)
-                          OR ($2 IS NOT NULL AND (c.created_at, c.id) > ($1, $2)))
+                   WHERE c.id IN (
+                       (SELECT q.id FROM comments q
+                        WHERE q.author_id = $4
+                          AND q.landed_epoch IS NULL
+                          AND ($1::timestamptz IS NULL
+                               OR ($2::uuid IS NULL AND q.created_at > $1)
+                               OR ($2 IS NOT NULL AND (q.created_at, q.id) > ($1, $2)))
+                        ORDER BY q.created_at ASC, q.id ASC
+                        LIMIT $3)
+                       UNION ALL
+                       (SELECT q.id FROM comments q
+                        WHERE q.author_id = $4
+                          AND $5::bigint IS NOT NULL
+                          AND (q.landed_epoch, q.position) > ($5, $6::bigint)
+                          AND ($1::timestamptz IS NULL
+                               OR ($2::uuid IS NULL AND q.created_at > $1)
+                               OR ($2 IS NOT NULL AND (q.created_at, q.id) > ($1, $2)))
+                        ORDER BY q.created_at ASC, q.id ASC
+                        LIMIT $3))
                    ORDER BY c.created_at ASC, c.id ASC
                    LIMIT $3
                ) page
@@ -2041,6 +2313,8 @@ async fn comments_by_author_pending(
             after_id,
             limit,
             author,
+            he,
+            hp,
         )
         .fetch_all(pool)
         .await?
@@ -2066,17 +2340,33 @@ async fn comments_by_author_pending(
                             created_at DESC, version_id DESC
                    LIMIT 1
                ) v ON TRUE
-               WHERE c.author_id = $4
-                 AND c.landed_epoch IS NULL
-                 AND ($1::timestamptz IS NULL
-                      OR ($2::uuid IS NULL AND c.created_at < $1)
-                      OR ($2 IS NOT NULL AND (c.created_at, c.id) < ($1, $2)))
+               WHERE c.id IN (
+                   (SELECT q.id FROM comments q
+                    WHERE q.author_id = $4
+                      AND q.landed_epoch IS NULL
+                      AND ($1::timestamptz IS NULL
+                           OR ($2::uuid IS NULL AND q.created_at < $1)
+                           OR ($2 IS NOT NULL AND (q.created_at, q.id) < ($1, $2)))
+                    ORDER BY q.created_at DESC, q.id DESC
+                    LIMIT $3)
+                   UNION ALL
+                   (SELECT q.id FROM comments q
+                    WHERE q.author_id = $4
+                      AND $5::bigint IS NOT NULL
+                      AND (q.landed_epoch, q.position) > ($5, $6::bigint)
+                      AND ($1::timestamptz IS NULL
+                           OR ($2::uuid IS NULL AND q.created_at < $1)
+                           OR ($2 IS NOT NULL AND (q.created_at, q.id) < ($1, $2)))
+                    ORDER BY q.created_at DESC, q.id DESC
+                    LIMIT $3))
                ORDER BY c.created_at DESC, c.id DESC
                LIMIT $3"#,
             at,
             after_id,
             limit,
             author,
+            he,
+            hp,
         )
         .fetch_all(pool)
         .await?
@@ -2145,11 +2435,38 @@ impl ChronicleEntry {
     }
 }
 
+impl Listed for ChronicleEntry {
+    fn landed_key(&self) -> Option<LandingOrder> {
+        match self {
+            Self::Record(_) => Some(self.sort_key()),
+            Self::Post(p) => p.order,
+            Self::Comment(c) => c.order,
+        }
+    }
+
+    /// A record is served only at or below the horizon, so its key is its
+    /// place; a post or comment is served from the settling branch, and
+    /// sorts where any content row does.
+    fn view_key(&self, horizon: Option<LandingOrder>) -> LandingOrder {
+        match self {
+            Self::Record(_) => self.sort_key(),
+            Self::Post(p) => p.view_key(horizon),
+            Self::Comment(c) => c.view_key(horizon),
+        }
+    }
+
+    fn entry_id(&self) -> Option<Uuid> {
+        self.id()
+    }
+}
+
 /// A settling post or comment, keyed for the pending branch's merge.
 struct Settling {
     created_at: Timestamp,
     id: Uuid,
     l1_node_id: String,
+    /// The display row's landing key, once promoted.
+    landed: Option<LandingOrder>,
     entry: ChronicleEntry,
 }
 
@@ -2163,6 +2480,19 @@ impl Settling {
     fn genesis_record(&self) -> Option<&str> {
         self.l1_node_id.strip_prefix("mint:")
     }
+
+    /// Whether the settling branch serves this row, given where its minting
+    /// record stands in the mirror. A record at or below the horizon — or
+    /// any mirrored record, for a walk without one — is ordered fact the
+    /// landed branch serves, so the row stays out; a record landed above
+    /// the horizon leaves the row where the walk first met it. With no
+    /// record mirrored, only a row still pending is settling.
+    fn served(&self, mirrored: Option<LandingOrder>, horizon: Option<LandingOrder>) -> bool {
+        match mirrored {
+            Some(key) => horizon.is_some_and(|h| key > h),
+            None => self.landed.is_none(),
+        }
+    }
 }
 
 /// A person's chronicle — the profile's Everything view: their records
@@ -2173,10 +2503,10 @@ impl Settling {
 /// author; `author` their account, the content rows' author.
 /// `include_pending` false serves the records alone.
 ///
-/// The cursor is re-resolved against its entry's current state before
-/// the walk, as the content listings' are, so an entry that lands under
-/// the page boundary is not served a second time out of the landed
-/// branch.
+/// The walk reads the chronicle as of its first page, as the content
+/// listings do ([`ContentCursor::horizon`]); its horizon is the newest of
+/// the person's records then, so an entry that lands between two pages is
+/// served exactly once.
 pub async fn chronicle(
     pool: &PgPool,
     author: Uuid,
@@ -2185,7 +2515,7 @@ pub async fn chronicle(
     backward: bool,
     limit: i64,
     include_pending: bool,
-) -> Result<Vec<ChronicleEntry>, crate::mirror::MirrorError> {
+) -> Result<Listing<ChronicleEntry>, crate::mirror::MirrorError> {
     let cursor = resolve_chronicle_cursor(pool, cursor).await?;
     let filter = crate::mirror::RecordFilter {
         author: Some(address.to_string()),
@@ -2226,18 +2556,18 @@ async fn resolve_chronicle_cursor(
 /// comments, merged on the one `(authoring instant, id)` keyset both
 /// tables page on, newest first.
 ///
-/// A settling row whose minting record is already in the mirror is left
-/// out: its record is ordered fact and stands in the landed branch, and
-/// the display row only lags behind it until the landing pass promotes
-/// it (`staged::promote_landed` runs after the epoch is mirrored). Left
-/// in, one page would carry the same post twice. Leaving rows out can
-/// cut a batch short, so the branch reads on from where the batch ended
-/// until it has its `limit` or the settling rows run out — a short
-/// branch is what tells the walk to continue into the landed one.
+/// A settling row whose minting record the landed branch serves is left
+/// out ([`Settling::served`]): its record is ordered fact, and the display
+/// row only lags behind it until the landing pass promotes it
+/// (`staged::promote_landed` runs after the epoch is mirrored). Left in,
+/// one page would carry the same post twice. Leaving rows out can cut a
+/// batch short, so the branch reads on from where the batch ended until
+/// it has its `limit` or the settling rows run out — a short branch is
+/// what tells the walk to continue into the landed one.
 async fn chronicle_settling(
     pool: &PgPool,
     author: Uuid,
-    cursor: (Option<Timestamp>, Option<Uuid>),
+    cursor: PendingFrom,
     backward: bool,
     limit: i64,
 ) -> Result<Vec<ChronicleEntry>, crate::mirror::MirrorError> {
@@ -2258,10 +2588,16 @@ async fn chronicle_settling(
             .iter()
             .filter_map(|s| s.genesis_record().map(str::to_string))
             .collect();
-        let landed = crate::mirror::genesis_records(pool, &minting).await?;
-        let fresh = batch
-            .into_iter()
-            .filter(|s| s.genesis_record().is_none_or(|r| !landed.contains(r)));
+        let mirrored = crate::mirror::record_keys(pool, &minting).await?;
+        let fresh = batch.into_iter().filter(|s| {
+            let key = s.genesis_record().and_then(|r| mirrored.get(r)).map(
+                |&(landed_epoch, position)| LandingOrder {
+                    landed_epoch,
+                    position,
+                },
+            );
+            s.served(key, cursor.horizon)
+        });
         if backward {
             let mut head: Vec<Settling> = fresh.collect();
             head.append(&mut kept);
@@ -2272,7 +2608,11 @@ async fn chronicle_settling(
         if exhausted {
             break;
         }
-        from = (Some(edge.0), Some(edge.1));
+        from = PendingFrom {
+            at: Some(edge.0),
+            id: Some(edge.1),
+            ..cursor
+        };
     }
     Ok(kept.into_iter().map(|s| s.entry).collect())
 }
@@ -2283,7 +2623,7 @@ async fn chronicle_settling(
 async fn settling_batch(
     pool: &PgPool,
     author: Uuid,
-    cursor: (Option<Timestamp>, Option<Uuid>),
+    cursor: PendingFrom,
     backward: bool,
     limit: i64,
 ) -> Result<(Vec<Settling>, bool), ContentError> {
@@ -2295,12 +2635,14 @@ async fn settling_batch(
             created_at: p.created_at,
             id: p.id,
             l1_node_id: p.l1_node_id.clone(),
+            landed: p.order,
             entry: ChronicleEntry::Post(p),
         })
         .chain(comments.into_iter().map(|c| Settling {
             created_at: c.created_at,
             id: c.id,
             l1_node_id: c.l1_node_id.clone(),
+            landed: c.order,
             entry: ChronicleEntry::Comment(c),
         }))
         .collect();
@@ -2421,6 +2763,21 @@ mod tests {
         chrono::DateTime::from_timestamp_micros(micros).expect("in range")
     }
 
+    /// A walk's stand-in row: the number is its landing epoch.
+    impl Listed for i32 {
+        fn landed_key(&self) -> Option<LandingOrder> {
+            Some(landed(i64::from(*self)))
+        }
+
+        fn view_key(&self, _: Option<LandingOrder>) -> LandingOrder {
+            landed(i64::from(*self))
+        }
+
+        fn entry_id(&self) -> Option<Uuid> {
+            None
+        }
+    }
+
     /// The pending namespace is the sentinel epoch, and a pending key
     /// carries the authoring instant it was built from. The round trip
     /// matters because the walk resumes from it: a key that cannot say
@@ -2508,6 +2865,7 @@ mod tests {
         let pending = ContentCursor {
             order: LandingOrder::pending_at(at(9)),
             id: Some(id),
+            horizon: None,
         };
         assert_eq!(movable(Some(pending)), Some(id));
         assert_eq!(
@@ -2520,11 +2878,48 @@ mod tests {
         assert_eq!(
             movable(Some(ContentCursor {
                 order: landed(1),
-                id: Some(id)
+                ..pending
             })),
             None
         );
         assert_eq!(movable(None), None);
+    }
+
+    /// Under a horizon the walk reads the listing as of its first page, so
+    /// a pending cursor's entry keeps its place and is never re-read.
+    ///
+    /// A pending cursor carrying a horizon is never re-read.
+    /// ´claim:content:a-cursor-under-a-horizon-is-never-re-read´
+    #[test]
+    fn a_cursor_under_a_horizon_is_never_re_read() {
+        let cursor = ContentCursor {
+            order: LandingOrder::pending_at(at(9)),
+            id: Some(Uuid::from_u128(1)),
+            horizon: Some(landed(3)),
+        };
+        assert_eq!(movable(Some(cursor)), None);
+    }
+
+    /// A content row reads in the landed namespace only if it had landed by
+    /// the horizon; one landed above it keeps its pending key. Without a
+    /// horizon the key is the row's sort key.
+    ///
+    /// A row landed above the walk's horizon keeps its pending key; one at or below it reads its landing key.
+    /// ´claim:content:a-row-landed-above-the-horizon-keeps-its-pending-key´
+    #[test]
+    fn a_row_landed_above_the_horizon_keeps_its_pending_key() {
+        let pending = LandingOrder::pending_at(at(5));
+        assert_eq!(content_view_key(None, at(5), Some(landed(3))), pending);
+        assert_eq!(
+            content_view_key(Some(landed(4)), at(5), Some(landed(3))),
+            pending
+        );
+        assert_eq!(
+            content_view_key(Some(landed(3)), at(5), Some(landed(3))),
+            landed(3)
+        );
+        assert_eq!(content_view_key(Some(landed(4)), at(5), None), landed(4));
+        assert_eq!(content_view_key(None, at(5), None), pending);
     }
 
     /// A cursor re-points at the coordinates its entry has now, keeping
@@ -2538,6 +2933,7 @@ mod tests {
         let cursor = ContentCursor {
             order: LandingOrder::pending_at(at(9)),
             id: Some(id),
+            horizon: None,
         };
         let moved = repoint(Some(cursor), Some(landed(5))).expect("some");
         assert_eq!(moved.order, landed(5));
@@ -2560,20 +2956,28 @@ mod tests {
         let pending = ContentCursor {
             order: LandingOrder::pending_at(at(9)),
             id: Some(id),
+            horizon: None,
         };
-        assert_eq!(pending_from(Some(pending)), (Some(at(9)), Some(id)));
+        let keyset = |from: PendingFrom| (from.at, from.id);
         assert_eq!(
-            pending_from(Some(ContentCursor {
-                order: landed(1),
-                id: Some(id)
-            })),
+            keyset(pending_from(Some(pending), None)),
+            (Some(at(9)), Some(id))
+        );
+        assert_eq!(
+            keyset(pending_from(
+                Some(ContentCursor {
+                    order: landed(1),
+                    ..pending
+                }),
+                None
+            )),
             (None, None)
         );
-        assert_eq!(pending_from(None), (None, None));
+        assert_eq!(keyset(pending_from(None, None)), (None, None));
     }
 
     type LandedAsk = (Option<LandingOrder>, bool, i64);
-    type PendingAsk = ((Option<Timestamp>, Option<Uuid>), bool, i64);
+    type PendingAsk = (PendingFrom, bool, i64);
 
     /// What each branch of a walk was asked for — enough to assert the
     /// merge's shape without a database behind it.
@@ -2591,6 +2995,26 @@ mod tests {
         pending_rows: Vec<i32>,
         landed_rows: Vec<i32>,
     ) -> (Vec<i32>, Calls) {
+        let (listing, calls) = walk_listing(
+            cursor,
+            backward,
+            limit,
+            include_pending,
+            pending_rows,
+            landed_rows,
+        )
+        .await;
+        (listing.items, calls)
+    }
+
+    async fn walk_listing(
+        cursor: Option<ContentCursor>,
+        backward: bool,
+        limit: i64,
+        include_pending: bool,
+        pending_rows: Vec<i32>,
+        landed_rows: Vec<i32>,
+    ) -> (Listing<i32>, Calls) {
         let calls = std::cell::RefCell::new(Calls::default());
         let out =
             merge_walk(
@@ -2658,6 +3082,7 @@ mod tests {
             Some(ContentCursor {
                 order: landed(4),
                 id: None,
+                horizon: None,
             }),
             true,
             5,
@@ -2682,6 +3107,7 @@ mod tests {
             Some(ContentCursor {
                 order: LandingOrder::pending_at(at(9)),
                 id: None,
+                horizon: None,
             }),
             true,
             3,
@@ -2692,5 +3118,80 @@ mod tests {
         .await;
         assert_eq!(out, vec![1, 2]);
         assert!(calls.landed.is_empty());
+    }
+
+    /// A walk's first page learns its horizon from the newest landed row
+    /// it read, at no extra ask; a first page the pending branch filled
+    /// asks the landed branch for its one newest row; a listing with no
+    /// landed row has the empty horizon.
+    ///
+    /// A walk's first page fixes its horizon from the newest landed row, asking for it only when the page read none.
+    /// ´claim:content:the-first-page-fixes-the-walks-horizon´
+    #[tokio::test]
+    async fn the_first_page_fixes_the_walks_horizon() {
+        let (read, calls) = walk_listing(None, false, 3, true, vec![9], vec![6, 5]).await;
+        assert_eq!(read.horizon, Some(landed(6)));
+        assert_eq!(calls.landed.len(), 1, "learnt from the page's own rows");
+
+        let (full, calls) = walk_listing(None, false, 1, true, vec![9, 8], vec![6, 5]).await;
+        assert_eq!(full.items, vec![9]);
+        assert_eq!(full.horizon, Some(landed(6)));
+        assert_eq!(
+            calls.landed,
+            vec![(None, false, 1)],
+            "one ask for the newest"
+        );
+
+        let (empty, _) = walk_listing(None, false, 3, true, vec![9], vec![]).await;
+        assert_eq!(empty.horizon, Some(EMPTY_HORIZON));
+
+        let (back, calls) = walk_listing(None, true, 2, true, vec![9], vec![6, 5]).await;
+        assert_eq!(back.horizon, Some(landed(6)));
+        assert_eq!(calls.landed.len(), 2, "a full backward page asks once more");
+
+        let (settled, _) = walk_listing(None, false, 3, false, vec![], vec![6, 5]).await;
+        assert_eq!(settled.horizon, None, "a settled read keeps none");
+    }
+
+    /// Under a horizon the landed branch is read as of it: forward from a
+    /// pending cursor it starts just above the horizon, and backward it
+    /// keeps only the rows at or below it. The pending branch is told the
+    /// horizon so it reads the rows landed above it.
+    ///
+    /// Under a horizon the landed branch serves only what had landed by it, and the pending branch reads the rest.
+    /// ´claim:content:a-horizon-splits-the-two-branches´
+    #[tokio::test]
+    async fn a_horizon_splits_the_two_branches() {
+        let horizon = Some(LandingOrder {
+            landed_epoch: 5,
+            position: 0,
+        });
+        let pending = ContentCursor {
+            order: LandingOrder::pending_at(at(9)),
+            id: None,
+            horizon,
+        };
+        let (_, calls) = walk(Some(pending), false, 3, true, vec![], vec![5, 4]).await;
+        assert_eq!(calls.pending[0].0.horizon, horizon);
+        assert_eq!(
+            calls.landed[0].0,
+            Some(LandingOrder {
+                landed_epoch: 5,
+                position: 1,
+            }),
+            "the horizon itself is admitted"
+        );
+
+        let below = ContentCursor {
+            order: landed(2),
+            ..pending
+        };
+        let (out, calls) = walk(Some(below), true, 4, true, vec![1], vec![7, 5, 3]).await;
+        assert_eq!(
+            out,
+            vec![1, 5, 3],
+            "the row landed above the horizon is not served here"
+        );
+        assert_eq!(calls.pending[0].2, 2);
     }
 }

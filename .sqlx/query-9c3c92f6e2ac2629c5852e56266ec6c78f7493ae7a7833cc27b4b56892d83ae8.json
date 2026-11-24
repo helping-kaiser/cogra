@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT record_id, epoch, position FROM mirror_records WHERE record_id = ANY($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "record_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "epoch",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "position",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "9c3c92f6e2ac2629c5852e56266ec6c78f7493ae7a7833cc27b4b56892d83ae8"
+}

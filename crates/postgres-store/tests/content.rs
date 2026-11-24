@@ -5,7 +5,9 @@
 //! serialization rules make that state hard to reach end to end — the
 //! store's contract has to hold on its own.
 
-use postgres_store::content::{self, Comment, ContentCursor, LandingOrder, Post, ThreadOrder};
+use postgres_store::content::{
+    self, Comment, ContentCursor, LandingOrder, Listed, Listing, Post, ThreadOrder,
+};
 use postgres_store::genesis;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -127,16 +129,13 @@ async fn pending_versions(pool: &PgPool, post_id: Uuid) -> Vec<(Timestamp, bool)
     .expect("versions")
 }
 
-/// The cursor a resolver would hand back for a listing entry: its sort
-/// key and its own id.
-fn cursor_of(p: &Post) -> ContentCursor {
-    ContentCursor {
-        order: p.sort_key(),
-        id: Some(p.id),
-    }
+/// The cursor a resolver would hand back for entry `i` of a page: its
+/// place in the walk, its own id, and the walk's horizon.
+fn cursor_at<T: Listed>(page: &Listing<T>, i: usize) -> ContentCursor {
+    ContentCursor::of(&page.items[i], page.horizon)
 }
 
-async fn page(pool: &PgPool, cursor: Option<ContentCursor>, limit: i64) -> Vec<Post> {
+async fn page(pool: &PgPool, cursor: Option<ContentCursor>, limit: i64) -> Listing<Post> {
     content::list_posts(pool, cursor, false, limit, true)
         .await
         .expect("lists")
@@ -157,24 +156,29 @@ async fn same_instant_pending_entries_paginate_without_loss(pool: PgPool) {
     let two = post(&pool, author, None, at(0), "two").await;
 
     let all = page(&pool, None, 10).await;
-    assert_eq!(all.len(), 2, "both pending entries are listed");
+    assert_eq!(all.items.len(), 2, "both pending entries are listed");
 
     let first = page(&pool, None, 1).await;
-    assert_eq!(first.len(), 1);
-    let second = page(&pool, Some(cursor_of(&first[0])), 1).await;
+    assert_eq!(first.items.len(), 1);
+    let second = page(&pool, Some(cursor_at(&first, 0)), 1).await;
     assert_eq!(
-        second.len(),
+        second.items.len(),
         1,
         "the same-instant sibling must survive the page boundary"
     );
 
-    let mut walked = vec![first[0].id, second[0].id];
+    let mut walked = vec![first.items[0].id, second.items[0].id];
     walked.sort();
     let mut expected = vec![one, two];
     expected.sort();
     assert_eq!(walked, expected);
 
-    assert!(page(&pool, Some(cursor_of(&second[0])), 1).await.is_empty());
+    assert!(
+        page(&pool, Some(cursor_at(&second, 0)), 1)
+            .await
+            .items
+            .is_empty()
+    );
 }
 
 /// A page boundary can fall inside the pending set and then have its own
@@ -195,10 +199,10 @@ async fn a_page_boundary_survives_the_entry_landing_under_it(pool: PgPool) {
 
     let page1 = page(&pool, None, 2).await;
     assert_eq!(
-        page1.iter().map(|p| p.id).collect::<Vec<_>>(),
+        page1.items.iter().map(|p| p.id).collect::<Vec<_>>(),
         vec![pending_second, pending_first]
     );
-    let boundary = cursor_of(&page1[1]);
+    let boundary = cursor_at(&page1, 1);
 
     let mut tx = pool.begin().await.expect("tx");
     content::land_post(&mut tx, pending_first, order(2, 1))
@@ -211,7 +215,7 @@ async fn a_page_boundary_survives_the_entry_landing_under_it(pool: PgPool) {
 
     let page2 = page(&pool, Some(boundary), 10).await;
     assert_eq!(
-        page2.iter().map(|p| p.id).collect::<Vec<_>>(),
+        page2.items.iter().map(|p| p.id).collect::<Vec<_>>(),
         vec![new, old],
         "an entry that landed between pages must not be served again"
     );
@@ -442,8 +446,8 @@ async fn the_edit_whose_record_landed_last_renders_the_post(pool: PgPool) {
     );
 
     let listed = page(&pool, None, 10).await;
-    assert_eq!(listed.len(), 1);
-    assert_eq!(listed[0].content, "landed later");
+    assert_eq!(listed.items.len(), 1);
+    assert_eq!(listed.items[0].content, "landed later");
 }
 
 /// The same for a comment, whose edits take their own read path.
@@ -496,9 +500,9 @@ async fn the_comment_edit_whose_record_landed_last_renders_the_comment(pool: PgP
     )
     .await
     .expect("thread");
-    assert_eq!(thread.len(), 1);
+    assert_eq!(thread.items.len(), 1);
     assert_eq!(
-        thread[0].content, "landed later",
+        thread.items[0].content, "landed later",
         "the thread read resolves the same version as the single read"
     );
 }
@@ -553,9 +557,9 @@ async fn a_pending_edit_outranks_a_version_that_landed_after_it_was_signed(pool:
     let landed_only = content::list_posts(&pool, None, false, 10, false)
         .await
         .expect("lists");
-    assert_eq!(landed_only.len(), 1);
-    assert_eq!(landed_only[0].content, "landed");
-    assert!(!landed_only[0].version_pending);
+    assert_eq!(landed_only.items.len(), 1);
+    assert_eq!(landed_only.items[0].content, "landed");
+    assert!(!landed_only.items[0].version_pending);
 }
 
 /// A version row written before the coordinates existed carries none, and
@@ -646,7 +650,11 @@ async fn the_thread_count_admits_what_the_thread_read_serves(pool: PgPool) {
         .await
         .expect("count");
     assert_eq!(total, 3);
-    assert_eq!(total, served.len() as i64, "the count answers for the page");
+    assert_eq!(
+        total,
+        served.items.len() as i64,
+        "the count answers for the page"
+    );
 
     let landed = content::comments_for_target(
         &pool,
@@ -666,7 +674,7 @@ async fn the_thread_count_admits_what_the_thread_read_serves(pool: PgPool) {
         landed_total, 2,
         "the unlanded entry is out of the landed-only count"
     );
-    assert_eq!(landed_total, landed.len() as i64);
+    assert_eq!(landed_total, landed.items.len() as i64);
 }
 
 /// A target nobody has answered counts zero under either filter — the
@@ -735,21 +743,14 @@ async fn thread(
     backward: bool,
     limit: i64,
     order: ThreadOrder,
-) -> Vec<Comment> {
+) -> Listing<Comment> {
     content::comments_for_target(pool, host, cursor, backward, limit, true, order)
         .await
         .expect("thread")
 }
 
-fn ids(page: &[Comment]) -> Vec<Uuid> {
-    page.iter().map(|c| c.id).collect()
-}
-
-fn comment_cursor(c: &Comment) -> ContentCursor {
-    ContentCursor {
-        order: c.sort_key(),
-        id: Some(c.id),
-    }
+fn ids(page: &Listing<Comment>) -> Vec<Uuid> {
+    page.items.iter().map(|c| c.id).collect()
 }
 
 /// Oldest-first is the newest-first sequence read the other way: the
@@ -789,37 +790,332 @@ async fn an_oldest_first_walk_pages_across_both_namespaces(pool: PgPool) {
 
     let page1 = thread(&pool, b.host, None, false, 2, oldest).await;
     assert_eq!(ids(&page1), vec![l1, l2]);
-    let page2 = thread(
-        &pool,
-        b.host,
-        Some(comment_cursor(&page1[1])),
-        false,
-        2,
-        oldest,
-    )
-    .await;
+    let page2 = thread(&pool, b.host, Some(cursor_at(&page1, 1)), false, 2, oldest).await;
     assert_eq!(ids(&page2), vec![l3, p1], "the walk continues into pending");
-    let page3 = thread(
-        &pool,
-        b.host,
-        Some(comment_cursor(&page2[1])),
-        false,
-        2,
-        oldest,
-    )
-    .await;
+    let page3 = thread(&pool, b.host, Some(cursor_at(&page2, 1)), false, 2, oldest).await;
     assert_eq!(ids(&page3), vec![p2]);
 
     let tail = thread(&pool, b.host, None, true, 2, oldest).await;
     assert_eq!(ids(&tail), vec![p1, p2], "`last` reads the newest end");
-    let before = thread(
+    let before = thread(&pool, b.host, Some(cursor_at(&tail, 0)), true, 2, oldest).await;
+    assert_eq!(ids(&before), vec![l2, l3], "and back across the boundary");
+}
+
+/// Two landed posts and three settling ones, the settling ones authored
+/// last — newest-first the listing reads `P3 P2 P1 L2 L1`. The landing
+/// tests below all land into epoch 2, above everything landed here.
+struct Settling {
+    landed: [Uuid; 2],
+    pending: [Uuid; 3],
+}
+
+async fn settling(pool: &PgPool) -> Settling {
+    let author = actor(pool, "author").await;
+    let l1 = post(pool, author, Some(order(1, 1)), at(0), "l1").await;
+    let l2 = post(pool, author, Some(order(1, 2)), at(10), "l2").await;
+    let p1 = post(pool, author, None, at(20), "p1").await;
+    let p2 = post(pool, author, None, at(30), "p2").await;
+    let p3 = post(pool, author, None, at(40), "p3").await;
+    Settling {
+        landed: [l1, l2],
+        pending: [p1, p2, p3],
+    }
+}
+
+/// Lands each post at its key, in the order given, one transaction each —
+/// the landing pass's own shape.
+async fn land_posts(pool: &PgPool, landings: &[(Uuid, LandingOrder)]) {
+    for (id, landing) in landings {
+        let mut tx = pool.begin().await.expect("tx");
+        assert!(
+            content::land_post(&mut tx, *id, *landing)
+                .await
+                .expect("lands")
+        );
+        tx.commit().await.expect("commit");
+    }
+}
+
+async fn land_one_comment(pool: &PgPool, id: Uuid, landing: LandingOrder) {
+    let mut tx = pool.begin().await.expect("tx");
+    assert!(
+        content::land_comment(&mut tx, id, landing)
+            .await
+            .expect("lands")
+    );
+    tx.commit().await.expect("commit");
+}
+
+async fn walk(
+    pool: &PgPool,
+    cursor: Option<ContentCursor>,
+    backward: bool,
+    limit: i64,
+) -> Listing<Post> {
+    content::list_posts(pool, cursor, backward, limit, true)
+        .await
+        .expect("lists")
+}
+
+fn post_ids(page: &Listing<Post>) -> Vec<Uuid> {
+    page.items.iter().map(|p| p.id).collect()
+}
+
+/// Page one ends on a settling post that then lands, while the older
+/// settling posts below it still pend. They were below the boundary when
+/// page one was read, so page two owes them, ahead of the landed posts.
+///
+/// The boundary entry landing between two pages leaves the settling entries below it due on the next page.
+/// ´claim:content:the-boundary-landing-keeps-the-settling-entries-below-it´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_boundary_landing_keeps_the_settling_entries_below_it(pool: PgPool) {
+    let s = settling(&pool).await;
+    let [l1, l2] = s.landed;
+    let [p1, p2, p3] = s.pending;
+
+    let page1 = page(&pool, None, 2).await;
+    assert_eq!(post_ids(&page1), vec![p3, p2]);
+    let boundary = cursor_at(&page1, 1);
+
+    land_posts(&pool, &[(p2, order(2, 1))]).await;
+
+    assert_eq!(
+        post_ids(&page(&pool, Some(boundary), 10).await),
+        vec![p1, l2, l1],
+        "the settling post below the boundary must not be dropped"
+    );
+}
+
+/// Page one serves a settling post above its boundary; that post lands
+/// while the boundary entry still pends. It was served once already, so
+/// it must not come back out of the landed namespace on page two.
+///
+/// An entry above the page boundary landing between two pages is not served again.
+/// ´claim:content:an-entry-above-the-boundary-landing-is-not-served-again´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_entry_above_the_boundary_landing_is_not_served_again(pool: PgPool) {
+    let s = settling(&pool).await;
+    let [l1, l2] = s.landed;
+    let [p1, p2, p3] = s.pending;
+
+    let page1 = page(&pool, None, 2).await;
+    assert_eq!(post_ids(&page1), vec![p3, p2]);
+    let boundary = cursor_at(&page1, 1);
+
+    land_posts(&pool, &[(p3, order(2, 1))]).await;
+
+    assert_eq!(
+        post_ids(&page(&pool, Some(boundary), 10).await),
+        vec![p1, l2, l1],
+        "the post served on page one must not be served again"
+    );
+}
+
+/// The entry above the boundary lands first and the boundary entry after
+/// it, so the boundary's new key sits above the other's: neither ordering
+/// of two landings may serve the page-one post again or drop the one below.
+///
+/// (´claim:content:an-entry-above-the-boundary-landing-is-not-served-again´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn landings_around_the_boundary_in_either_order_serve_each_entry_once(pool: PgPool) {
+    let s = settling(&pool).await;
+    let [l1, l2] = s.landed;
+    let [p1, p2, p3] = s.pending;
+
+    let page1 = page(&pool, None, 2).await;
+    assert_eq!(post_ids(&page1), vec![p3, p2]);
+    let boundary = cursor_at(&page1, 1);
+
+    land_posts(&pool, &[(p3, order(2, 1)), (p2, order(2, 2))]).await;
+
+    assert_eq!(
+        post_ids(&page(&pool, Some(boundary), 10).await),
+        vec![p1, l2, l1]
+    );
+}
+
+/// The settling post below the boundary lands while the boundary still
+/// pends: it is still owed, and served exactly once.
+///
+/// (´claim:content:the-boundary-landing-keeps-the-settling-entries-below-it´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_entry_below_the_boundary_landing_is_served_once(pool: PgPool) {
+    let s = settling(&pool).await;
+    let [l1, l2] = s.landed;
+    let [p1, p2, p3] = s.pending;
+
+    let page1 = page(&pool, None, 2).await;
+    assert_eq!(post_ids(&page1), vec![p3, p2]);
+    let boundary = cursor_at(&page1, 1);
+
+    land_posts(&pool, &[(p1, order(2, 1))]).await;
+
+    assert_eq!(
+        post_ids(&page(&pool, Some(boundary), 10).await),
+        vec![p1, l2, l1]
+    );
+}
+
+/// Every settling post lands between the pages, in an order that matches
+/// neither their authoring nor the page: page two still serves exactly
+/// what page one left owed.
+///
+/// (´claim:content:the-boundary-landing-keeps-the-settling-entries-below-it´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn every_settling_entry_landing_between_pages_is_served_once(pool: PgPool) {
+    let s = settling(&pool).await;
+    let [l1, l2] = s.landed;
+    let [p1, p2, p3] = s.pending;
+
+    let page1 = page(&pool, None, 2).await;
+    assert_eq!(post_ids(&page1), vec![p3, p2]);
+    let boundary = cursor_at(&page1, 1);
+
+    land_posts(
         &pool,
-        b.host,
-        Some(comment_cursor(&tail[0])),
-        true,
-        2,
-        oldest,
+        &[(p1, order(2, 1)), (p3, order(2, 2)), (p2, order(2, 3))],
     )
     .await;
-    assert_eq!(ids(&before), vec![l2, l3], "and back across the boundary");
+
+    assert_eq!(
+        post_ids(&page(&pool, Some(boundary), 10).await),
+        vec![p1, l2, l1]
+    );
+}
+
+/// One entry a page, with a settling post landing after every page and
+/// out of authoring order: the walk serves page one's listing, each entry
+/// once, and ends.
+///
+/// A one-entry-a-page walk with an entry landing after every page serves each entry of the first page's listing exactly once.
+/// ´claim:content:a-walk-with-landings-between-every-page-serves-each-entry-once´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_walk_with_landings_between_every_page_serves_each_entry_once(pool: PgPool) {
+    let s = settling(&pool).await;
+    let [l1, l2] = s.landed;
+    let [p1, p2, p3] = s.pending;
+    let mut schedule = [(p2, order(2, 1)), (p3, order(2, 2)), (p1, order(2, 3))].into_iter();
+
+    let mut walked = Vec::new();
+    let mut cursor = None;
+    loop {
+        let one = page(&pool, cursor, 1).await;
+        let Some(entry) = one.items.first() else {
+            break;
+        };
+        walked.push(entry.id);
+        cursor = Some(cursor_at(&one, 0));
+        if let Some(landing) = schedule.next() {
+            land_posts(&pool, &[landing]).await;
+        }
+        assert!(walked.len() <= 10, "the walk must end: {walked:?}");
+    }
+    assert_eq!(walked, vec![p3, p2, p1, l2, l1]);
+}
+
+/// Walking back from the oldest end: page two of the backward walk ends
+/// on `P2`, and `P3` — the one entry still owed — lands before page three.
+/// It must be served, not lost with the pending namespace it left.
+///
+/// A backward walk serves an entry that landed above its page boundary, and never again one it served below it.
+/// ´claim:content:a-backward-walk-serves-each-entry-once-across-landings´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_backward_walk_serves_an_entry_landing_above_its_boundary(pool: PgPool) {
+    let s = settling(&pool).await;
+    let [l1, l2] = s.landed;
+    let [p1, p2, p3] = s.pending;
+
+    let back1 = walk(&pool, None, true, 2).await;
+    assert_eq!(post_ids(&back1), vec![l2, l1]);
+    let back2 = walk(&pool, Some(cursor_at(&back1, 0)), true, 2).await;
+    assert_eq!(post_ids(&back2), vec![p2, p1]);
+    let boundary = cursor_at(&back2, 0);
+
+    land_posts(&pool, &[(p3, order(2, 1))]).await;
+
+    assert_eq!(
+        post_ids(&walk(&pool, Some(boundary), true, 2).await),
+        vec![p3],
+        "the entry still owed must not be dropped"
+    );
+}
+
+/// The backward walk's boundary entry lands before page three, while the
+/// entry below it, served on page two, still pends: page three serves
+/// only what is left above.
+///
+/// (´claim:content:a-backward-walk-serves-each-entry-once-across-landings´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_backward_walk_survives_its_boundary_landing(pool: PgPool) {
+    let s = settling(&pool).await;
+    let [l1, l2] = s.landed;
+    let [p1, p2, p3] = s.pending;
+
+    let back1 = walk(&pool, None, true, 2).await;
+    assert_eq!(post_ids(&back1), vec![l2, l1]);
+    let back2 = walk(&pool, Some(cursor_at(&back1, 0)), true, 2).await;
+    assert_eq!(post_ids(&back2), vec![p2, p1]);
+    let boundary = cursor_at(&back2, 0);
+
+    land_posts(&pool, &[(p2, order(2, 1))]).await;
+
+    assert_eq!(
+        post_ids(&walk(&pool, Some(boundary), true, 2).await),
+        vec![p3],
+        "the settling entry served on page two must not be served again"
+    );
+}
+
+/// A person's comments page on the same two-namespace walk: page one ends
+/// on a settling comment that lands, and the older settling comment below
+/// it is still owed on page two.
+///
+/// (´claim:content:the-boundary-landing-keeps-the-settling-entries-below-it´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_persons_comments_keep_the_settling_entry_below_a_landed_boundary(pool: PgPool) {
+    let author = actor(&pool, "author").await;
+    let host = post(&pool, author, Some(order(1, 1)), at(0), "host").await;
+    let landed = comment(&pool, author, host, Some(order(1, 2)), at(10), "landed").await;
+    let older = comment(&pool, author, host, None, at(20), "older").await;
+    let boundary_entry = comment(&pool, author, host, None, at(30), "boundary").await;
+    let newest = comment(&pool, author, host, None, at(40), "newest").await;
+
+    let page1 = content::comments_by_author(&pool, author, None, false, 2, true)
+        .await
+        .expect("comments");
+    assert_eq!(ids(&page1), vec![newest, boundary_entry]);
+    let boundary = cursor_at(&page1, 1);
+
+    land_one_comment(&pool, boundary_entry, order(2, 1)).await;
+
+    let page2 = content::comments_by_author(&pool, author, Some(boundary), false, 10, true)
+        .await
+        .expect("comments");
+    assert_eq!(ids(&page2), vec![older, landed]);
+}
+
+/// An oldest-first branch is where landings meet the walk head-on: the
+/// pending replies close it, and the next one lands while the reader
+/// holds the cursor of the one before. It must still be served.
+///
+/// (´claim:content:a-backward-walk-serves-each-entry-once-across-landings´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_oldest_first_branch_serves_a_reply_landing_past_its_boundary(pool: PgPool) {
+    let b = branch(&pool).await;
+    let [_, _, l3] = b.landed;
+    let [p1, p2] = b.pending;
+    let oldest = ThreadOrder::OldestFirst;
+
+    let page1 = thread(&pool, b.host, None, false, 2, oldest).await;
+    let page2 = thread(&pool, b.host, Some(cursor_at(&page1, 1)), false, 2, oldest).await;
+    assert_eq!(ids(&page2), vec![l3, p1]);
+
+    land_one_comment(&pool, p2, order(9, 1)).await;
+
+    let page3 = thread(&pool, b.host, Some(cursor_at(&page2, 1)), false, 2, oldest).await;
+    assert_eq!(
+        ids(&page3),
+        vec![p2],
+        "the reply that landed past the boundary must not be dropped"
+    );
 }

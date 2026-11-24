@@ -1255,6 +1255,26 @@ pub async fn genesis_records(
     .collect())
 }
 
+/// The key of record `(epoch, position)` of every given record the mirror
+/// holds; a record not mirrored is simply absent.
+pub async fn record_keys(
+    pool: &PgPool,
+    record_ids: &[String],
+) -> Result<std::collections::HashMap<String, (i64, i64)>, MirrorError> {
+    if record_ids.is_empty() {
+        return Ok(std::collections::HashMap::new());
+    }
+    Ok(sqlx::query!(
+        "SELECT record_id, epoch, position FROM mirror_records WHERE record_id = ANY($1)",
+        record_ids,
+    )
+    .fetch_all(pool)
+    .await?
+    .into_iter()
+    .map(|r| (r.record_id, (r.epoch, r.position)))
+    .collect())
+}
+
 pub(crate) struct LegOwned {
     pub(crate) record_id: String,
     pub(crate) leg: RecordLeg,

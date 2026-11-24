@@ -1642,7 +1642,13 @@ impl User {
     ) -> async_graphql::Result<ChronicleEntryConnection> {
         let page = keyset_page(first, after, last, before)?;
         let Some(address) = self.identity.realization_address.as_deref() else {
-            return Ok(chronicle_connection(Vec::new(), &page));
+            return Ok(chronicle_connection(
+                postgres_store::content::Listing {
+                    items: Vec::new(),
+                    horizon: None,
+                },
+                &page,
+            ));
         };
         let pool = ctx.data::<PgPool>()?;
         let rows = postgres_store::content::chronicle(
@@ -4810,6 +4816,7 @@ pub(crate) fn record_cursor(r: &mirror::RecordFull) -> CursorKey {
         epoch: r.epoch,
         position: r.position,
         id: None,
+        horizon: None,
     }
 }
 
@@ -5769,6 +5776,7 @@ async fn hydrate_vouched_in(
                 epoch: row.epoch,
                 position: row.position,
                 id: None,
+                horizon: None,
             }),
             Actor::User(User {
                 identity,
@@ -6049,19 +6057,17 @@ impl From<postgres_store::content::ChronicleEntry> for ChronicleEntry {
 pub type ChronicleEntryConnection = KeysetConnection<ChronicleEntry>;
 
 /// A page of the chronicle, each entry under the content listings'
-/// cursor: its sort key and, for a settling entry, its id.
+/// cursor: its place in the walk, for a settling entry its id, and the
+/// walk's horizon.
 fn chronicle_connection(
-    rows: Vec<postgres_store::content::ChronicleEntry>,
+    listing: postgres_store::content::Listing<postgres_store::content::ChronicleEntry>,
     page: &KeysetPage,
 ) -> ChronicleEntryConnection {
+    let horizon = listing.horizon;
     keyset_connection(
-        rows,
+        listing.items,
         page,
-        |e| CursorKey {
-            epoch: e.sort_key().landed_epoch,
-            position: e.sort_key().position,
-            id: e.id(),
-        },
+        |e| listing_cursor_key(e, horizon),
         ChronicleEntry::from,
     )
 }
@@ -6183,7 +6189,7 @@ pub(crate) async fn posts_connection(
 ) -> async_graphql::Result<PostConnection> {
     let pool = ctx.data::<PgPool>()?;
     let cursor = content_cursor(page.cursor);
-    let rows = match author {
+    let listing = match author {
         None => {
             postgres_store::content::list_posts(
                 pool,
@@ -6206,10 +6212,11 @@ pub(crate) async fn posts_connection(
             .await?
         }
     };
+    let horizon = listing.horizon;
     Ok(keyset_connection_with(
-        rows,
+        listing.items,
         &page,
-        |p| content_cursor_key(p.sort_key(), p.id),
+        |p| listing_cursor_key(p, horizon),
         PostType,
         PostConnectionFields {
             author,
@@ -6226,7 +6233,7 @@ async fn authored_comments_connection(
     include_pending: bool,
 ) -> async_graphql::Result<CommentConnection> {
     let pool = ctx.data::<PgPool>()?;
-    let rows = postgres_store::content::comments_by_author(
+    let listing = postgres_store::content::comments_by_author(
         pool,
         author,
         content_cursor(page.cursor),
@@ -6235,10 +6242,11 @@ async fn authored_comments_connection(
         include_pending,
     )
     .await?;
+    let horizon = listing.horizon;
     Ok(keyset_connection_with(
-        rows,
+        listing.items,
         &page,
-        |c| content_cursor_key(c.sort_key(), c.id),
+        |c| listing_cursor_key(c, horizon),
         CommentType,
         CommentConnectionFields {
             scope: CommentScope::Author(author),
@@ -6251,12 +6259,16 @@ async fn authored_comments_connection(
 /// connections — the entry's own id. Cursors are opaque per the Relay
 /// spec, so what rides inside is the server's to choose; the id is what
 /// lets a pending entry that has since landed be found again instead of
-/// served twice (api-spec.md "Pagination").
+/// served twice (api-spec.md "Pagination"). A listing that pages across
+/// the settling and landed namespaces also carries its walk's horizon
+/// (`ContentCursor::horizon`), the key of record its first page was read
+/// as of.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CursorKey {
     pub epoch: i64,
     pub position: i64,
     pub id: Option<Uuid>,
+    pub horizon: Option<(i64, i64)>,
 }
 
 impl CursorKey {
@@ -6271,24 +6283,30 @@ impl CursorKey {
 pub(crate) fn content_cursor(
     key: Option<CursorKey>,
 ) -> Option<postgres_store::content::ContentCursor> {
-    key.map(|k| postgres_store::content::ContentCursor {
-        order: postgres_store::content::LandingOrder {
-            landed_epoch: k.epoch,
-            position: k.position,
-        },
+    use postgres_store::content::{ContentCursor, LandingOrder};
+    let order = |(landed_epoch, position)| LandingOrder {
+        landed_epoch,
+        position,
+    };
+    key.map(|k| ContentCursor {
+        order: order((k.epoch, k.position)),
         id: k.id,
+        horizon: k.horizon.map(order),
     })
 }
 
-/// The wire cursor of one listing entry: its sort key and its id.
-pub(crate) fn content_cursor_key(
-    order: postgres_store::content::LandingOrder,
-    id: Uuid,
+/// The wire cursor of one listing entry, served by a walk under
+/// `horizon`: its place in that walk, its id, and the horizon.
+pub(crate) fn listing_cursor_key<T: postgres_store::content::Listed>(
+    entry: &T,
+    horizon: Option<postgres_store::content::LandingOrder>,
 ) -> CursorKey {
+    let cursor = postgres_store::content::ContentCursor::of(entry, horizon);
     CursorKey {
-        epoch: order.landed_epoch,
-        position: order.position,
-        id: Some(id),
+        epoch: cursor.order.landed_epoch,
+        position: cursor.order.position,
+        id: cursor.id,
+        horizon: cursor.horizon.map(|h| (h.landed_epoch, h.position)),
     }
 }
 
@@ -6355,18 +6373,29 @@ pub fn encode_landing_cursor(key: CursorKey) -> String {
         epoch,
         position,
         id,
+        horizon,
     } = key;
-    match id {
-        Some(id) => B64.encode(format!("{epoch}:{position}:{id}")),
-        None => B64.encode(format!("{epoch}:{position}")),
+    match (id, horizon) {
+        (Some(id), None) => B64.encode(format!("{epoch}:{position}:{id}")),
+        (None, None) => B64.encode(format!("{epoch}:{position}")),
+        (id, Some((he, hp))) => {
+            let id = id.map_or_else(|| HORIZON_NO_ID.to_string(), |id| id.to_string());
+            B64.encode(format!("{epoch}:{position}:{id}:{he}:{hp}"))
+        }
     }
 }
 
+/// The id slot of a cursor that carries a horizon but names no entry id
+/// (a record's place in the chronicle).
+const HORIZON_NO_ID: &str = "-";
+
 /// The wire form is `epoch:position[:id]`, the key of record and the
-/// optional entry id. A cursor without the trailing id is accepted and
-/// paginates on the key alone. Anything else is refused as an invalid
-/// cursor — a cursor is opaque, so a client holding one the server no
-/// longer reads restarts the walk.
+/// optional entry id, or `epoch:position:id:he:hp` with the walk's horizon
+/// (`-` in the id slot when there is none). A cursor without the trailing
+/// id is accepted and paginates on the key alone; one without a horizon
+/// pages as it did before the horizon was carried. Anything else is
+/// refused as an invalid cursor — a cursor is opaque, so a client holding
+/// one the server no longer reads restarts the walk.
 fn decode_landing_cursor(cursor: &str) -> async_graphql::Result<CursorKey> {
     let invalid = || super::query::bad_input("invalid cursor");
     let raw = B64.decode(cursor).map_err(|_| invalid())?;
@@ -6375,15 +6404,28 @@ fn decode_landing_cursor(cursor: &str) -> async_graphql::Result<CursorKey> {
     let [epoch, position, rest @ ..] = parts.as_slice() else {
         return Err(invalid());
     };
-    let id = match rest {
-        [] => None,
-        [id] => Some(Uuid::parse_str(id).map_err(|_| invalid())?),
+    let parse_id = |id: &str| Uuid::parse_str(id).map_err(|_| invalid());
+    let (id, horizon) = match rest {
+        [] => (None, None),
+        [id] => (Some(parse_id(id)?), None),
+        [id, he, hp] => {
+            let id = match *id {
+                HORIZON_NO_ID => None,
+                id => Some(parse_id(id)?),
+            };
+            let horizon = (
+                he.parse().map_err(|_| invalid())?,
+                hp.parse().map_err(|_| invalid())?,
+            );
+            (id, Some(horizon))
+        }
         _ => return Err(invalid()),
     };
     Ok(CursorKey {
         epoch: epoch.parse().map_err(|_| invalid())?,
         position: position.parse().map_err(|_| invalid())?,
         id,
+        horizon,
     })
 }
 
@@ -6495,7 +6537,7 @@ async fn comments_connection(
 ) -> async_graphql::Result<CommentConnection> {
     let pool = ctx.data::<PgPool>()?;
     let page = keyset_page(first, after, last, before)?;
-    let rows = postgres_store::content::comments_for_target(
+    let listing = postgres_store::content::comments_for_target(
         pool,
         thread.target,
         content_cursor(page.cursor),
@@ -6505,10 +6547,11 @@ async fn comments_connection(
         thread.order,
     )
     .await?;
+    let horizon = listing.horizon;
     Ok(keyset_connection_with(
-        rows,
+        listing.items,
         &page,
-        |c| content_cursor_key(c.sort_key(), c.id),
+        |c| listing_cursor_key(c, horizon),
         CommentType,
         CommentConnectionFields {
             scope: CommentScope::Thread(thread.target),
@@ -6798,45 +6841,80 @@ mod page_tests {
     #[test]
     fn the_cursor_carries_the_key_of_record() {
         let id = Uuid::from_u128(0x0123_4567_89ab_cdef_0123_4567_89ab_cdef);
+        let plain = CursorKey {
+            epoch: 7,
+            position: 3,
+            id: None,
+            horizon: None,
+        };
         for key in [
             CursorKey {
-                epoch: 7,
-                position: 3,
                 id: Some(id),
+                ..plain
             },
-            CursorKey {
-                epoch: 7,
-                position: 3,
-                id: None,
-            },
+            plain,
         ] {
             let wire = encode_landing_cursor(key);
             assert_eq!(decode_landing_cursor(&wire).expect("round-trips"), key);
         }
         assert_eq!(
-            B64.decode(encode_landing_cursor(CursorKey {
-                epoch: 7,
-                position: 3,
-                id: None,
-            }))
-            .expect("base64"),
+            B64.decode(encode_landing_cursor(plain)).expect("base64"),
             b"7:3"
         );
-        let earlier = CursorKey {
-            epoch: 7,
-            position: 3,
-            id: None,
-        };
+        let earlier = plain;
         let later = CursorKey {
-            epoch: 7,
             position: 4,
-            id: None,
+            ..plain
         };
         assert!(later.order() > earlier.order());
         for old in [format!("7:900:3:{id}"), "7:900:3".to_string()] {
             let refused = decode_landing_cursor(&B64.encode(old.as_bytes()))
                 .expect_err("an act-time cursor is refused");
             assert_eq!(refused.message, "invalid cursor", "{old}");
+        }
+    }
+
+    /// A listing cursor carries its walk's horizon and round-trips it, with
+    /// or without an entry id; a cursor issued before the horizon was
+    /// carried still decodes, horizon-less, and a malformed horizon is
+    /// refused like any other malformed cursor.
+    ///
+    /// A listing cursor round-trips its walk's horizon, and a cursor without one still decodes.
+    /// ´claim:pagination:a-listing-cursor-carries-its-walks-horizon´
+    #[test]
+    fn a_listing_cursor_carries_its_walks_horizon() {
+        let id = Uuid::from_u128(0x0123_4567_89ab_cdef_0123_4567_89ab_cdef);
+        let settling = CursorKey {
+            epoch: i64::MAX,
+            position: 1_800_000_000_000_000,
+            id: Some(id),
+            horizon: Some((4, 2)),
+        };
+        let record = CursorKey {
+            epoch: 4,
+            position: 1,
+            id: None,
+            horizon: Some((4, 2)),
+        };
+        for key in [settling, record] {
+            let wire = encode_landing_cursor(key);
+            assert_eq!(decode_landing_cursor(&wire).expect("round-trips"), key);
+        }
+        assert_eq!(
+            B64.decode(encode_landing_cursor(record)).expect("base64"),
+            b"4:1:-:4:2"
+        );
+        let before_the_horizon = B64.encode(format!("{}:7:{id}", i64::MAX).as_bytes());
+        assert_eq!(
+            decode_landing_cursor(&before_the_horizon)
+                .expect("an older cursor still decodes")
+                .horizon,
+            None
+        );
+        for bad in ["4:1:-:4", "4:1:-:x:2", "4:1:nope:4:2"] {
+            let refused = decode_landing_cursor(&B64.encode(bad.as_bytes()))
+                .expect_err("a malformed horizon is refused");
+            assert_eq!(refused.message, "invalid cursor", "{bad}");
         }
     }
 
