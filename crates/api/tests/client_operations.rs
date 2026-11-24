@@ -73,13 +73,109 @@ fn default_page_size() -> usize {
 /// visitor prices every branch of a document whatever its flags say, so
 /// leaving them unset measures the worst case, which is what a ceiling
 /// has to admit.
-fn client_variables() -> async_graphql::Variables {
+fn page_variables() -> serde_json::Value {
     let page = default_page_size();
-    async_graphql::Variables::from_json(serde_json::json!({
+    serde_json::json!({
         "first": page,
         "commentsFirst": page,
         "limit": null,
-    }))
+    })
+}
+
+/// How many ids a client sends at most to a `nodes(ids:)` read — the one
+/// other variable a complexity expression reads (`Query.nodes` costs
+/// `ids.len()` times its row).
+#[derive(Clone, Copy)]
+enum IdBatch {
+    /// The comment rows of one tagged page: the Android
+    /// `TopicRepositoryImpl.withCommentCards`
+    /// (`android/core/network/src/main/kotlin/com/cogra/network/repo/Topics.kt:69-72`)
+    /// and the web `fetchHashtagDetail`
+    /// (`web/src/lib/api/topics-api.ts:64-72`) send the comment ids of one
+    /// `taggedContent` answer, which neither client gives a limit, so it
+    /// is the server's default page — pinned to `paging.defaultPageSize`
+    /// (`tests/client_constants.rs`), the number `first` is bound to.
+    TaggedPage,
+    /// The server's cap on one lookup (`Query.nodes`). The trace reads
+    /// chunk at it (Android `MAX_NAMES`, web `TRACE_NODES_CHUNK`, both
+    /// 100), and `ContentGraphIds` sends every id a form names, unchunked
+    /// on both clients, so the cap is its worst case.
+    ServerCap,
+}
+
+impl IdBatch {
+    fn len(self) -> usize {
+        match self {
+            Self::TaggedPage => default_page_size(),
+            Self::ServerCap => api::schema::types::MAX_PAGE_SIZE as usize,
+        }
+    }
+}
+
+/// Every client operation that passes a variable to `nodes(ids:)`, by
+/// operation name, with the batch it sends. An operation missing here
+/// fails [`client_variables`] by name rather than measuring its rows at
+/// nothing; a stale row fails `every_nodes_read_has_its_batch`.
+const ID_BATCHES: [(&str, IdBatch); 4] = [
+    ("TaggedComments", IdBatch::TaggedPage),
+    ("TraceNames", IdBatch::ServerCap),
+    ("TraceNodes", IdBatch::ServerCap),
+    ("ContentGraphIds", IdBatch::ServerCap),
+];
+
+/// The variables a document's root `nodes(ids:)` selections read their
+/// ids from, read off the parsed document. A literal list names no
+/// variable: it is priced as written.
+fn nodes_id_variables(document: &str) -> BTreeSet<String> {
+    use async_graphql::parser::types::{DocumentOperations, Selection};
+    let parsed = async_graphql::parser::parse_query(document)
+        .unwrap_or_else(|e| panic!("a client document does not parse: {e}"));
+    let operations: Vec<_> = match parsed.operations {
+        DocumentOperations::Single(operation) => vec![operation],
+        DocumentOperations::Multiple(operations) => operations.into_values().collect(),
+    };
+    let mut out = BTreeSet::new();
+    for operation in &operations {
+        for selection in &operation.node.selection_set.node.items {
+            let Selection::Field(field) = &selection.node else {
+                continue;
+            };
+            if field.node.name.node != "nodes" {
+                continue;
+            }
+            let Some(ids) = field.node.get_argument("ids") else {
+                continue;
+            };
+            let read = ids
+                .node
+                .clone()
+                .into_const_with(|name| Err::<async_graphql::Value, String>(name.to_string()));
+            if let Err(variable) = read {
+                out.insert(variable);
+            }
+        }
+    }
+    out
+}
+
+/// The variables a client binds for one operation: the page sizes, and
+/// for a `nodes(ids:)` read its batch of ids from [`ID_BATCHES`].
+fn client_variables(operation: &str, document: &str) -> async_graphql::Variables {
+    let mut variables = page_variables();
+    for variable in nodes_id_variables(document) {
+        let batch = ID_BATCHES
+            .iter()
+            .find(|(name, _)| *name == operation)
+            .map(|(_, batch)| *batch)
+            .unwrap_or_else(|| {
+                panic!("{operation} reads nodes(ids: ${variable}) and has no row in ID_BATCHES")
+            });
+        variables[variable.as_str()] = serde_json::Value::Array(vec![
+            serde_json::json!("00000000-0000-0000-0000-000000000000");
+            batch.len()
+        ]);
+    }
+    async_graphql::Variables::from_json(variables)
 }
 
 /// One top-level definition, kept as source text: what has to go back on
@@ -316,20 +412,29 @@ async fn validation_errors_of(schema: &ApiSchema, request: async_graphql::Reques
 }
 
 /// Sends one operation the way the HTTP handler would, with the client's
-/// own page sizes bound and its ids and inputs unbound, and keeps every
-/// error the validator raised.
+/// own page and batch sizes bound and its ids and inputs otherwise
+/// unbound, and keeps every error the validator raised.
 async fn validation_errors(schema: &ApiSchema, name: &str, document: &str) -> Vec<String> {
     let request = async_graphql::Request::new(document)
         .operation_name(name)
-        .variables(client_variables());
+        .variables(client_variables(name, document));
     validation_errors_of(schema, request).await
 }
 
-/// The budget refusals alone, for the bisection: a tripped budget is
-/// raised before the validation rules' errors and replaces them, so a
-/// probe ceiling decides this answer and nothing else does.
-async fn budget_errors(schema: &ApiSchema, name: &str, document: &str) -> Vec<String> {
-    validation_errors(schema, name, document)
+/// The budget refusals alone under `variables`, for the bisection: a
+/// tripped budget is raised before the validation rules' errors and
+/// replaces them, so a probe ceiling decides this answer and nothing
+/// else does.
+async fn budget_errors(
+    schema: &ApiSchema,
+    name: &str,
+    document: &str,
+    variables: &async_graphql::Variables,
+) -> Vec<String> {
+    let request = async_graphql::Request::new(document)
+        .operation_name(name)
+        .variables(variables.clone());
+    validation_errors_of(schema, request)
         .await
         .into_iter()
         .filter(|message| message == TOO_COMPLEX || message == TOO_DEEP)
@@ -419,6 +524,7 @@ async fn measured(
     pool: &PgPool,
     name: &str,
     document: &str,
+    variables: &async_graphql::Variables,
     probe: fn(usize) -> QueryBudgets,
 ) -> usize {
     let mut refused = 0;
@@ -426,7 +532,7 @@ async fn measured(
     while admitted - refused > 1 {
         let middle = refused + (admitted - refused) / 2;
         let schema = schema(pool.clone(), probe(middle));
-        if budget_errors(&schema, name, document).await.is_empty() {
+        if budget_errors(&schema, name, document, variables).await.is_empty() {
             admitted = middle;
         } else {
             refused = middle;
@@ -472,8 +578,9 @@ async fn the_budget_ceilings_keep_their_stated_headroom(pool: PgPool) {
     let mut deepest = (String::new(), 0usize);
     for (client, relative) in CORPORA {
         for ClientOperation { name, document, .. } in client_operations(relative) {
-            let complexity = measured(&pool, &name, &document, complexity_probe).await;
-            let depth = measured(&pool, &name, &document, depth_probe).await;
+            let variables = client_variables(&name, &document);
+            let complexity = measured(&pool, &name, &document, &variables, complexity_probe).await;
+            let depth = measured(&pool, &name, &document, &variables, depth_probe).await;
             println!("{client:8} {name:24} complexity {complexity:7}  depth {depth:3}");
             if complexity > heaviest.1 {
                 heaviest = (format!("{client} {name}"), complexity);
@@ -564,6 +671,29 @@ async fn the_guard_reports_an_invalid_client_document(pool: PgPool) {
         passed.is_empty(),
         "the guard passes documents the schema refuses: {passed:?}"
     );
+}
+
+/// Every operation of every corpus that passes a variable to
+/// `nodes(ids:)`, by name.
+fn nodes_reads() -> BTreeSet<String> {
+    CORPORA
+        .iter()
+        .flat_map(|(_, relative)| client_operations(relative))
+        .filter(|operation| !nodes_id_variables(&operation.document).is_empty())
+        .map(|operation| operation.name)
+        .collect()
+}
+
+/// [`ID_BATCHES`] names exactly the `nodes(ids:)` reads the corpora
+/// carry: a new one without a row would be priced at nothing, a row
+/// whose operation is gone keeps a batch no client sends.
+///
+/// (´claim:budgets:a-nodes-read-is-priced-at-its-batch´)
+#[test]
+fn every_nodes_read_has_its_batch() {
+    let reads = nodes_reads();
+    let rows: BTreeSet<String> = ID_BATCHES.iter().map(|(name, _)| (*name).to_string()).collect();
+    assert_eq!(reads, rows, "the nodes(ids:) reads and ID_BATCHES disagree");
 }
 
 /// The extraction is load-bearing — an operation silently dropped would
