@@ -78,6 +78,38 @@ class NamesTest {
         assertThat(nameUnits("Mail ada@example.com")).isEmpty()
     }
 
+    // Round 63 (jakob 2026-11-23, a tag is one line at most): a `#tag` in
+    // wrapping text is one unit as a handle is; a dot after it is punctuation.
+    @Test
+    fun aTagInWrappingTextIsOneUnitAndADotAfterItRidesWithIt() {
+        val tag = "#" + "coast-".repeat(21) + "road.v2"
+        val text = "Withdrawn: $tag."
+        val unit = nameUnits(text).single()
+        assertThat(text.substring(unit.start, unit.nameEnd)).isEqualTo(tag)
+        assertThat(text.substring(unit.nameEnd, unit.end)).isEqualTo(".")
+        assertThat(nameUnits("Ask @ada about #saltmaps").map { text(it, "Ask @ada about #saltmaps") })
+            .containsExactly("@ada", "#saltmaps").inOrder()
+    }
+
+    @Test
+    fun aHashInsideAWordOrAnEntityIsNoTag() {
+        assertThat(nameUnits("Written in C# and F#")).isEmpty()
+        assertThat(nameUnits("It&#39;s fine")).isEmpty()
+        assertThat(nameUnits("A lone # here")).isEmpty()
+    }
+
+    // NamesLong.md:15 at a tag's scale: a 129-character tag past a full line is cut, its dot kept.
+    @Test
+    fun aTagPastAFullLineIsEndCutAndKeepsItsPunctuation() {
+        val tag = "#" + "w".repeat(128)
+        val text = "Signed $tag."
+        val shown = shapeNamesInText(text, nameUnits(text), lineWidth = 300, widthOf = tenEach)
+        val plain = shown.filterNot { it == WORD_JOINER }
+        assertThat(plain).isEqualTo("Signed #" + "w".repeat(27) + "$ELLIPSIS.")
+    }
+
+    private fun text(unit: NameUnit, of: String) = of.substring(unit.start, unit.nameEnd)
+
     // NamesLong.md:13 — a unit never stands on two lines: no break opportunity inside it.
     @Test
     fun aJoinedUnitHasAWordJoinerBetweenEveryGrapheme() {
