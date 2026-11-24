@@ -4,7 +4,7 @@ ALWAYS the feed reads from the genesis moderator's view GIVEN the reader is sign
 
 ALWAYS the band names the borrowed view's account, as Browsing from @genesis_mod's view — join to build your own., and carries Sign in or join
 
-ALWAYS the band's disc wears the borrowed view's own picture, on the genesis moderator's account the CoGra mark as the brand's orange tile clipped round, the same in light and dark
+ALWAYS the band's disc wears the borrowed view's own picture where the account has one, and its monogram where it does not
 
 ALWAYS every stance face wears the borrowed view's own stance, read-only, at the member's anchor geometry, and the hollow face wherever the borrowed view holds none GIVEN the reader is signed out
 
