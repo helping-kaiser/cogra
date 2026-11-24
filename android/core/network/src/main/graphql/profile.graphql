@@ -159,14 +159,14 @@ query AuthorRecords($author: UUID!, $first: Int!, $after: String) {
 # :7), then the landed ones newest first, a removed one in its place
 # (:9), never an edit. The edge's node is the post as the feed card reads
 # it (`FeedWindow`'s selection: `PostFields` and its comment count). A
-# page of TEN, web's twin's size (web/src/lib/graphql/profile.graphql):
-# every edge carries a whole card. The page size is a literal so the
+# page of TWENTY, web's twin's size (web/src/lib/graphql/profile.graphql).
+# The page size is a literal so the
 # client-operation guard (`crates/api/tests/client_operations.rs`) prices
 # the call the device makes.
 query ProfilePosts($id: UUID!, $after: String) {
   user(id: $id) {
     id
-    posts(first: 10, after: $after) {
+    posts(first: 20, after: $after) {
       edges {
         node {
           ...PostFields
@@ -195,12 +195,11 @@ query ProfilePosts($id: UUID!, $after: String) {
 # (`HistoryPage`'s selection): the thread's own fields, what it answers
 # (the card's `On …` pointer) and its thread's post (where its doors
 # land) — and its replies' count, the "View n replies" line, priced at
-# `first: 0` as web's twin prices it. Ten a page, for the posts view's
-# reason.
+# `first: 0` as web's twin prices it. Twenty a page, as the posts view.
 query ProfileComments($id: UUID!, $after: String) {
   user(id: $id) {
     id
-    comments(first: 10, after: $after) {
+    comments(first: 20, after: $after) {
       edges {
         node {
           ...CommentFields

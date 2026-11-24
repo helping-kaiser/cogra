@@ -86,8 +86,13 @@ class ProfileScreensTest {
         }
     }
 
+    /**
+     * A profile standing on Everything: this class draws the chronicle. The
+     * landing (Posts lit) is the ViewModel's, pinned in `ProfileLandingTest`.
+     */
     private fun loaded(own: Boolean = false, applicant: Boolean = false) = ProfileUiState(
         loading = false,
+        tab = ProfileTab.EVERYTHING,
         profile = testProfile(
             id = "u1",
             handle = "ada",
@@ -101,6 +106,7 @@ class ProfileScreensTest {
 
     private fun deleted() = ProfileUiState(
         loading = false,
+        tab = ProfileTab.EVERYTHING,
         profile = testProfile(id = "u9", handle = "x7q").copy(
             displayName = ModeratedField(null, FieldStatus.REDACTED),
             bio = ModeratedField(null, FieldStatus.REDACTED),
@@ -465,9 +471,10 @@ class ProfileScreensTest {
         compose.onNodeWithTag("profile.chronicle.act.aside", useUnmergedTree = true).assertTextEquals("on @mira")
     }
 
-    // Profile.md:21 and every board: the row lands on Everything.
+    // Profile.md:73 — standing on Everything, the Posts tab switches; the
+    // chronicle's explainer stands on Everything. The landing is ProfileLandingTest's.
     @Test
-    fun theTabRowLandsOnEverythingAndSwitches() {
+    fun theTabRowOnEverythingSwitchesToPosts() {
         var picked: ProfileTab? = null
         render(loaded(), onTabChange = { picked = it })
         compose.onNodeWithTag("profile.tabRow.everythingTab").assertIsSelected()

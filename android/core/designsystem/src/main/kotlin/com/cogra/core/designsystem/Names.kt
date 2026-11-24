@@ -16,8 +16,8 @@
 // developer.android.com/develop/ui/compose/layouts/basics).
 //
 // TEXT THAT WRAPS ([NameInText]): the sentence wraps at its spaces and is never
-// cut as a whole, but a handle — or a person's name passed in `names` — never
-// stands on two lines. Compose has no keep-together span: `LineBreak` and
+// cut as a whole, but a handle, a `#tag` (round 63) — or a person's name passed
+// in `names` — never stands on two lines. Compose has no keep-together span: `LineBreak` and
 // `Hyphens` choose a paragraph's strategy, not a span's
 // (developer.android.com/develop/ui/compose/text/style-paragraph). So the unit
 // is made unbreakable the Unicode way, a WORD JOINER (U+2060) between each of
@@ -45,6 +45,7 @@ import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,6 +53,17 @@ import java.text.BreakIterator
 
 /** A handle in running text: `@` and its characters, not inside a word or an email. */
 private val HANDLE = Regex("""(?<![\w@])@[A-Za-z0-9_]+""")
+
+/**
+ * A TAG IS THE SAME ONE UNIT in wrapping text (`ActorChip.jsx` `HANDLE_IN_TEXT`,
+ * round 63; jakob 2026-11-23: "everywhere the tag is one-line at most"): `#`
+ * and its name, not inside a word or an entity. A name may hold dots, so it
+ * ends on a non-dot and a dot after it rides as punctuation.
+ */
+private val TAG = Regex("""(?<![\w#&])#[A-Za-z0-9_-](?:[A-Za-z0-9._-]*[A-Za-z0-9_-])?""")
+
+/** What [NameInText] holds whole: every handle and every tag. */
+private val IN_TEXT = Regex("${HANDLE.pattern}|${TAG.pattern}")
 
 /** The punctuation that rides with a unit (`ActorChip.jsx` `UNIT_TAIL`). */
 private val UNIT_TAIL = Regex("""^(?:['’]s\b|[?.,!:;)’]+)""")
@@ -94,10 +106,10 @@ fun nameLine(text: String): NameLine? {
 /** One unit in wrapping text: the name at [start] until [nameEnd], its punctuation until [end]. */
 data class NameUnit(val start: Int, val nameEnd: Int, val end: Int)
 
-/** Every handle in [text], and every one of [names], as units with their trailing punctuation. */
+/** Every handle and tag in [text], and every one of [names], as units with their trailing punctuation. */
 fun nameUnits(text: String, names: List<String> = emptyList()): List<NameUnit> {
     val given = names.filter { it.isNotBlank() }.map { Regex.escape(it) }
-    val pattern = if (given.isEmpty()) HANDLE else Regex((listOf(HANDLE.pattern) + given).joinToString("|"))
+    val pattern = if (given.isEmpty()) IN_TEXT else Regex((listOf(IN_TEXT.pattern) + given).joinToString("|"))
     val units = mutableListOf<NameUnit>()
     var from = 0
     while (from <= text.length) {
@@ -161,9 +173,13 @@ fun shapeNamesInText(text: String, units: List<NameUnit>, lineWidth: Int?, width
             append(text, last, unit.start)
             val name = text.substring(unit.start, unit.nameEnd)
             val tail = text.substring(unit.nameEnd, unit.end)
+            // Measured as drawn, joiners included: each is its own grapheme
+            // and takes the style's letter spacing, so a long unit measured
+            // bare is drawn wider than its line and breaks inside itself.
+            val drawnWidth: (String) -> Int = { widthOf(joined(it)) }
             val shown = lineWidth
-                ?.takeIf { widthOf(name + tail) > it }
-                ?.let { cutName(name, tail, it, widthOf) }
+                ?.takeIf { drawnWidth(name + tail) > it }
+                ?.let { cutName(name, tail, it, drawnWidth) }
                 ?: name
             append(joined(shown + tail))
             last = unit.end
@@ -174,7 +190,9 @@ fun shapeNamesInText(text: String, units: List<NameUnit>, lineWidth: Int?, width
 /**
  * A one-line place's text (`nameInLine`): never wraps, clips at its end, and
  * where words follow its first `@handle` the handle is the part cut with "…"
- * while the words keep their room. The node speaks [text] whole.
+ * while the words keep their room. The node speaks [text] whole. [onCut]
+ * hears, on every layout, whether the line cut its text (the tag page prints
+ * the whole name under a cut title, TagPage.md:7).
  */
 @Composable
 fun NameInLine(
@@ -182,10 +200,20 @@ fun NameInLine(
     modifier: Modifier = Modifier,
     style: TextStyle = LocalTextStyle.current,
     color: Color = Color.Unspecified,
+    onCut: ((Boolean) -> Unit)? = null,
 ) {
     val line = remember(text) { nameLine(text) }
+    val heard: (TextLayoutResult) -> Unit = { onCut?.invoke(it.hasVisualOverflow) }
     if (line == null) {
-        Text(text, modifier, color = color, style = style, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(
+            text,
+            modifier,
+            color = color,
+            style = style,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            onTextLayout = heard,
+        )
         return
     }
     // The space before the handle rides at the handle's start, where a trailing
@@ -208,6 +236,8 @@ fun NameInLine(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f, fill = false),
+            // The handle is the part that yields, so its cut is the line's.
+            onTextLayout = heard,
         )
         Text(line.after, color = color, style = style, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }

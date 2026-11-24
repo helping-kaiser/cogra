@@ -7,6 +7,9 @@
 package com.cogra.app.navigation
 
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasTestTag
@@ -143,12 +146,13 @@ class ProfileTabsNavigationTest {
     // ProfilePosts.md:3 — "the posts view lists the person's posts as post
     // cards, never as chronicle entries": red on main, whose Posts tab read
     // the chronicle filtered to Publish and drew its acts.
+    // Profile.md:25 too: the own profile lands there, the Posts tab lit.
     @Test
     fun thePostsTabDrawsTheFeedsPostCardsNeverChronicleActs() {
         memberOnTheFeed()
         openOwnProfile()
-        openTab("postsTab")
         scrollTo("profile.posts", "profile.posts.card:p1")
+        compose.onNodeWithTag("profile.tabRow.postsTab").assertIsSelected()
 
         assertThat(compose.onAllNodesWithTag(CHRONICLE_ROW, useUnmergedTree = true).fetchSemanticsNodes()).isEmpty()
         assertThat(compose.onAllNodesWithTag("profile.chronicle.act:1").fetchSemanticsNodes()).isEmpty()
@@ -161,7 +165,6 @@ class ProfileTabsNavigationTest {
     fun aPostCardOpensThePostAndBackReturnsToThePostsTab() {
         memberOnTheFeed()
         openOwnProfile()
-        openTab("postsTab")
         scrollTo("profile.posts", "profile.posts.card:p1")
         compose.onNodeWithTag("profile.posts.card:p1").performClick()
         waitUntilOn { onTop<PostDetail>() }
@@ -183,7 +186,8 @@ class ProfileTabsNavigationTest {
         compose.onNodeWithTag("feed.card.authorChip").performClick()
         waitUntilOn { onTop<Profile>() }
         waitForTag("profile.identity.name")
-        openTab("postsTab")
+        // ProfileOther.md:21 — another's profile lands on Posts.
+        compose.onNodeWithTag("profile.tabRow.postsTab").assertIsSelected()
         scrollTo("profile.posts", "profile.posts.card:p1")
         compose.onNodeWithTag("profile.posts.card:p1").performClick()
         waitUntilOn { onTop<PostDetail>() }
@@ -223,12 +227,105 @@ class ProfileTabsNavigationTest {
     fun aChronicleActNamesYourProfileOnTheWayBack() {
         memberOnTheFeed()
         openOwnProfile()
+        openChroniclesPost()
+        compose.onNodeWithTag("postDetail.header.back").assertContentDescriptionEquals("Back to your profile")
+    }
+
+    /** Everything chosen, its one act's post opened (Profile.md:77). */
+    private fun openChroniclesPost() {
+        openTab("everythingTab")
         compose.waitUntil(timeoutMillis = 30_000) {
             compose.onAllNodesWithTag(CHRONICLE_ROW, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
         }
         compose.onNodeWithTag(CHRONICLE_ROW, useUnmergedTree = true).performScrollTo().performClick()
         waitUntilOn { onTop<PostDetail>() }
-        compose.onNodeWithTag("postDetail.header.back").assertContentDescriptionEquals("Back to your profile")
+    }
+
+    private fun pressBack() {
+        compose.runOnIdle { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.waitForIdle()
+    }
+
+    /** The bar's Profile slot, under whichever screen the bar stands. */
+    private fun tapProfileSlot() {
+        compose.onNode(
+            SemanticsMatcher("is the bar's profile slot") { node ->
+                node.config.getOrNull(SemanticsProperties.TestTag)?.endsWith(".bottomBar.profileSlot") == true
+            },
+        ).performClick()
+        compose.waitForIdle()
+    }
+
+    private fun assertStandsOnEverything() {
+        compose.waitUntil(timeoutMillis = 30_000) {
+            compose.onAllNodesWithTag(CHRONICLE_ROW, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("profile.tabRow.everythingTab").assertIsSelected()
+    }
+
+    // ProfilePosts.md:77 — the system back from a post opened on Everything
+    // returns to the profile in the state it was left: Everything lit, its
+    // chronicle below.
+    @Test
+    fun systemBackFromAPostOpenedOnEverythingReturnsToEverything() {
+        memberOnTheFeed()
+        openOwnProfile()
+        openChroniclesPost()
+        pressBack()
+        waitUntilOn { onTop<Profile>() }
+        assertStandsOnEverything()
+    }
+
+    // ProfileOther.md:21 "from any door", :101 — a profile left on Comments is
+    // popped with its entry (the back arrow's navigateUp and the system back
+    // pop alike); the same door opens it again on Posts.
+    @Test
+    fun aProfileLeftOnCommentsLandsOnPostsWhenOpenedAgain() {
+        memberOnTheFeed()
+        compose.onNodeWithTag("feed.card.authorChip").performClick()
+        waitUntilOn { onTop<Profile>() }
+        waitForTag("profile.identity.name")
+        openTab("commentsTab")
+        compose.onNodeWithTag("profile.tabRow.commentsTab").assertIsSelected()
+
+        pressBack()
+        waitUntilOn { onTop<Feed>() }
+        compose.onNodeWithTag("feed.card.authorChip").performClick()
+        waitUntilOn { onTop<Profile>() }
+        waitForTag("profile.identity.name")
+        compose.onNodeWithTag("profile.tabRow.postsTab").assertIsSelected()
+    }
+
+    // Profile.md:89 — the bar's Profile slot over a screen deeper in the
+    // Profile tab's stack brings the profile back with "its list as it was
+    // left": Everything stays lit (today's behaviour, pinned).
+    @Test
+    fun theProfileSlotFromDeeperInItsStackKeepsTheTabLeft() {
+        memberOnTheFeed()
+        openOwnProfile()
+        openChroniclesPost()
+        tapProfileSlot()
+        waitUntilOn { onTop<Profile>() && navController.currentBackStackEntry?.toRoute<Profile>()?.handle == null }
+        assertStandsOnEverything()
+    }
+
+    // Profile.md:97 — a return to the profile from another tab's root keeps the
+    // list it was left with (the tab switch restores the Profile tab's stack).
+    @Test
+    fun theProfileSlotFromAnotherRootKeepsTheTabLeft() {
+        memberOnTheFeed()
+        openOwnProfile()
+        openTab("everythingTab")
+        assertStandsOnEverything()
+        compose.onNode(
+            SemanticsMatcher("is the bar's feed slot") { node ->
+                node.config.getOrNull(SemanticsProperties.TestTag)?.endsWith(".bottomBar.feedSlot") == true
+            },
+        ).performClick()
+        waitUntilOn { onTop<Feed>() }
+        tapProfileSlot()
+        waitUntilOn { onTop<Profile>() }
+        assertStandsOnEverything()
     }
 
     private companion object {

@@ -1,5 +1,6 @@
 package com.cogra.feature.profile
 
+import androidx.lifecycle.SavedStateHandle
 import com.cogra.domain.AccountState
 import com.cogra.domain.ActorRef
 import com.cogra.domain.AuthTokens
@@ -111,7 +112,7 @@ class ProfileViewModelTest {
         SeenTracker(history, session, scope, testSeenRecord(session, scope))
     }
 
-    private fun viewModel() = ProfileViewModel(profiles, account, seenTracker)
+    private fun viewModel() = ProfileViewModel(SavedStateHandle(), profiles, account, seenTracker)
 
     @Before
     fun setDispatcher() = Dispatchers.setMain(dispatcher)
@@ -137,7 +138,7 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun theOwnProfileLoadsAndLandsOnEverything() = runTest(dispatcher) {
+    fun theOwnProfileLoadsAndLandsOnPosts() = runTest(dispatcher) {
         val vm = viewModel()
         vm.start(null)
         dispatcher.scheduler.advanceUntilIdle()
@@ -145,10 +146,10 @@ class ProfileViewModelTest {
         assertThat(s.loading).isFalse()
         assertThat(s.profile?.handle).isEqualTo("jakob")
         assertThat(s.own).isTrue()
-        assertThat(s.tab).isEqualTo(ProfileTab.EVERYTHING)
-        // Every visitor lands on Everything: every profile board draws the
-        // tab row at `value="everything"` (Profile.md:21) — the chronicle.
-        assertThat(profiles.rowRequests).containsExactly("records")
+        // Profile.md:25 — the own profile lands with the Posts tab lit, "AND
+        // NEVER it lands on Everything or Comments": the posts page alone is read.
+        assertThat(s.tab).isEqualTo(ProfileTab.POSTS)
+        assertThat(profiles.rowRequests).containsExactly("posts")
     }
 
     /**
@@ -259,8 +260,6 @@ class ProfileViewModelTest {
         vm.start(null)
         dispatcher.scheduler.advanceUntilIdle()
 
-        vm.onTabChange(ProfileTab.POSTS)
-        dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.posts.map { it.id }).containsExactly("p1", "p2").inOrder()
         assertThat(vm.state.value.rows).isEmpty()
         assertThat(vm.state.value.hasMore).isTrue()
@@ -269,18 +268,21 @@ class ProfileViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.comments.map { it.comment.id }).containsExactly("c1")
         assertThat(vm.state.value.posts).isEmpty()
-        assertThat(profiles.rowRequests).containsExactly("records", "posts", "comments").inOrder()
+
+        vm.onTabChange(ProfileTab.EVERYTHING)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(profiles.rowRequests).containsExactly("posts", "comments", "records").inOrder()
     }
 
-    // ProfilePosts.md:21 — a tap on the standing tab changes nothing.
+    // ProfilePosts.md:45 — a tap on the standing tab changes nothing.
     @Test
     fun theStandingTabReadsNothingAgain() = runTest(dispatcher) {
         val vm = viewModel()
         vm.start(null)
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onTabChange(ProfileTab.EVERYTHING)
+        vm.onTabChange(ProfileTab.POSTS)
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(profiles.rowRequests).containsExactly("records")
+        assertThat(profiles.rowRequests).containsExactly("posts")
     }
 
     // ProfilePosts.md:13 — only the list below the tab row changes, and only
@@ -288,12 +290,11 @@ class ProfileViewModelTest {
     // lands on the new one.
     @Test
     fun aLateOldTabsPageNeverLandsOnTheNewTab() = runTest(dispatcher) {
-        val vm = viewModel()
-        vm.start(null)
-        dispatcher.scheduler.advanceUntilIdle()
+        // The landing's own Posts page is still on its way when Comments is tapped.
         profiles.posts = Outcome.Success(Page(listOf(testPost("p1")), endCursor = null, hasNextPage = false))
         profiles.gate = CompletableDeferred()
-        vm.onTabChange(ProfileTab.POSTS)
+        val vm = viewModel()
+        vm.start(null)
         dispatcher.scheduler.advanceUntilIdle()
         vm.onTabChange(ProfileTab.COMMENTS)
         profiles.gate?.complete(Unit)
@@ -313,8 +314,6 @@ class ProfileViewModelTest {
         profiles.posts = postsPage("p1", "p2", next = "c1")
         val vm = viewModel()
         vm.start(null)
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.onTabChange(ProfileTab.POSTS)
         dispatcher.scheduler.advanceUntilIdle()
 
         profiles.posts = postsPage("p2", "p3")
@@ -349,12 +348,12 @@ class ProfileViewModelTest {
     // arrive: the first page when nothing has landed yet, else the next.
     @Test
     fun retryAsksAgainForThePageThatDidNotArrive() = runTest(dispatcher) {
+        // The landing's first Posts page does not arrive.
+        profiles.posts = Outcome.Failed(IOException("offline"))
         val vm = viewModel()
         vm.start(null)
         dispatcher.scheduler.advanceUntilIdle()
-        profiles.posts = Outcome.Failed(IOException("offline"))
-        vm.onTabChange(ProfileTab.POSTS)
-        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.pageFailed).isTrue()
 
         profiles.posts = Outcome.Success(Page(listOf(testPost("p1")), endCursor = "c1", hasNextPage = true))
         vm.onRetryPage()
@@ -406,8 +405,6 @@ class ProfileViewModelTest {
             )
             val vm = viewModel()
             vm.start(handle)
-            dispatcher.scheduler.advanceUntilIdle()
-            vm.onTabChange(ProfileTab.POSTS)
             dispatcher.scheduler.advanceUntilIdle()
             profiles.posts = postsPage("p2", "p1")
             vm.onLoadMore()
