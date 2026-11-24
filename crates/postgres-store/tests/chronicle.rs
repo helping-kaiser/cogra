@@ -241,7 +241,14 @@ async fn fixture(pool: &PgPool) -> Fixture {
     let newer = opinion(2, 1, 2);
     let (older_opinion, newer_opinion) = (older.act_id.to_string(), newer.act_id.to_string());
     ingest(pool, 1, vec![older, newer]).await;
-    let landed = post(pool, author, &act(3, Family::Publish), Some(order(1, 3)), at(0)).await;
+    let landed = post(
+        pool,
+        author,
+        &act(3, Family::Publish),
+        Some(order(1, 3)),
+        at(0),
+    )
+    .await;
     let settling_post = post(pool, author, &act(4, Family::Publish), None, at(10)).await;
     let settling_comment =
         pending_comment(pool, author, landed, &act(5, Family::Review), at(20)).await;
@@ -275,10 +282,7 @@ async fn settling_posts_and_comments_lead_the_chronicle(pool: PgPool) {
     );
     assert_eq!(
         ids(&page(&pool, f.author, None, false, 10, false).await),
-        vec![
-            Seen::Record(f.newer_opinion),
-            Seen::Record(f.older_opinion),
-        ]
+        vec![Seen::Record(f.newer_opinion), Seen::Record(f.older_opinion)]
     );
 }
 
@@ -344,10 +348,7 @@ async fn an_entry_landing_under_the_boundary_is_served_once(pool: PgPool) {
 
     assert_eq!(
         ids(&page(&pool, f.author, Some(boundary), false, 10, true).await),
-        vec![
-            Seen::Record(f.newer_opinion),
-            Seen::Record(f.older_opinion),
-        ],
+        vec![Seen::Record(f.newer_opinion), Seen::Record(f.older_opinion)],
         "the landed post is above the boundary now and must not come again"
     );
 }

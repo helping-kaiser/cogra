@@ -2246,7 +2246,11 @@ async fn chronicle_settling(
     while (kept.len() as i64) < limit {
         let ask = limit - kept.len() as i64;
         let (batch, exhausted) = settling_batch(pool, author, from, backward, ask).await?;
-        let edge = if backward { batch.first() } else { batch.last() };
+        let edge = if backward {
+            batch.first()
+        } else {
+            batch.last()
+        };
         let Some(edge) = edge.map(Settling::key) else {
             break;
         };
@@ -2588,28 +2592,29 @@ mod tests {
         landed_rows: Vec<i32>,
     ) -> (Vec<i32>, Calls) {
         let calls = std::cell::RefCell::new(Calls::default());
-        let out = merge_walk(
-            cursor,
-            backward,
-            limit,
-            include_pending,
-            |c, back, n| {
-                calls.borrow_mut().landed.push((c, back, n));
-                let rows = landed_rows.clone();
-                async move {
-                    Ok::<_, ContentError>(rows.into_iter().take(n.max(0) as usize).collect())
-                }
-            },
-            |c, back, n| {
-                calls.borrow_mut().pending.push((c, back, n));
-                let rows = pending_rows.clone();
-                async move {
-                    Ok::<_, ContentError>(rows.into_iter().take(n.max(0) as usize).collect())
-                }
-            },
-        )
-        .await
-        .expect("walk");
+        let out =
+            merge_walk(
+                cursor,
+                backward,
+                limit,
+                include_pending,
+                |c, back, n| {
+                    calls.borrow_mut().landed.push((c, back, n));
+                    let rows = landed_rows.clone();
+                    async move {
+                        Ok::<_, ContentError>(rows.into_iter().take(n.max(0) as usize).collect())
+                    }
+                },
+                |c, back, n| {
+                    calls.borrow_mut().pending.push((c, back, n));
+                    let rows = pending_rows.clone();
+                    async move {
+                        Ok::<_, ContentError>(rows.into_iter().take(n.max(0) as usize).collect())
+                    }
+                },
+            )
+            .await
+            .expect("walk");
         (out, calls.into_inner())
     }
 
