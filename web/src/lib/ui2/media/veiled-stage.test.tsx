@@ -1,6 +1,6 @@
 // THE VEIL AND THE STAGE — android's `VeiledStageTest` twin (the stage-law
 // packet §6 `veiled-stage.test.tsx` row; §3.2 rule 8). "ALWAYS a veiled clip
-// has no playback and no sound-disc presence" (Feed.md:43–45, History.md:73),
+// has no playback and no sound-disc presence" (Feed.md:43–45; History.md:103, :105),
 // and "the unveil is an eligibility change, not a suspension lift"
 // (design/readme.md §13, L05): an unveiled clip joins the rotation as a clip
 // scrolling into view does — it takes nothing from an incumbent that still
@@ -89,7 +89,7 @@ function frame(ratios: Record<string, number>) {
   );
 }
 
-describe("a veiled clip is out of the rotation (Feed.md:43/45, H02 History.md:73)", () => {
+describe("a veiled clip is out of the rotation (Feed.md:43/45, H02 History.md:103/105)", () => {
   it("is never elected and wears no disc — the clip below it takes the stage instead", () => {
     render(<List ids={["a", "b"]} veiled={["a"]} />);
     frame({ a: 1, b: 1 });
