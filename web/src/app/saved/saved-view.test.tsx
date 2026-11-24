@@ -693,6 +693,20 @@ describe("SavedScreen — search what you saved", () => {
     expect(screen.getByTestId("saved.searchField")).toBeInTheDocument();
   });
 
+  it("the_header_and_the_field_stand_as_one_gapless_block_in_the_collapsing_top", async () => {
+    // Saved.jsx stacks PageHeader and SearchBar with no gap of their own: the
+    // field's pill at 48 + 4 = 52, never pushed down by the region's column gap.
+    serve(THREE);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    const top = screen.getByTestId("collapsing-top");
+    expect(top.children).toHaveLength(1);
+    const block = top.children[0]!;
+    expect(block).toContainElement(screen.getByTestId("saved.header"));
+    expect(block).toContainElement(screen.getByTestId("saved.searchField"));
+    expect(block.className).not.toMatch(/\bgap-/);
+  });
+
   it("the_whole_list_is_read_with_no_query", async () => {
     const reads = serveSaved(() => page(THREE));
     renderWithProviders(<SavedScreen />, { store: signedIn() });
