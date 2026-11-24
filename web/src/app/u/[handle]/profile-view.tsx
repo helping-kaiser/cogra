@@ -70,7 +70,8 @@ import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { StatusBanners } from "@/app/status-banners";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { CograBand } from "@/lib/ui/cogra-band";
-import { instance, type DataNode } from "@/lib/ui/data-node";
+import { instance, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { InlineAction } from "@/lib/ui2/inline-action";
 import { EmptyState } from "@/lib/ui/empty-state";
 import { Icon } from "@/lib/ui/icons";
 import { tailIndexOf, useApproachingTail } from "@/lib/ui/infinite-list";
@@ -112,7 +113,15 @@ export const INVITE_LOCKED = "You can invite once you're in.";
 export const APPLICANT_CHRONICLE_EMPTY = "Nothing here yet.";
 /** The chronicle page that did not arrive (Profile.md:35; copy-voice.md). */
 export const COULDNT_LOAD_MORE = "Couldn't load more";
-/** How long a next page may take before `Loading…` stands for it (Profile.md:33). */
+/**
+ * A card tab's FIRST page that did not arrive (ProfilePosts.md:23,
+ * ProfileComments.md:27; `_shared.jsx` `ProfileTabFirstPage`): the house
+ * line's noun form (copy-voice *A read with nothing loaded*).
+ */
+export function tabFirstPageFault(tab: "posts" | "comments"): string {
+  return `Can't reach the server — ${tab} can't load right now.`;
+}
+/** How long a page may take before `Loading…` stands for it (Profile.md:47, ProfilePosts.md:21). */
 export const LOADING_AFTER_MS = 200;
 
 const CHRONICLE: DataNode = { path: "profile.chronicle" };
@@ -407,11 +416,16 @@ export function ProfileScreen({
   const listed =
     filter === "posts" ? posts.length : filter === "comments" ? comments.length : rows.length;
   const tailIndex = tailIndexOf(listed);
-  // `Loading…` stands only once a next page is 200ms late (Profile.md:33):
-  // the timer marks the read it was started for, so an answered read — or the
-  // next one — is never shown late.
+  const cardTab = filter === "posts" || filter === "comments" ? filter : null;
+  const cardView = cardTab !== null;
+  // `Loading…` stands only once a next page is 200ms late (Profile.md:47), and
+  // so does a card tab's first page (ProfilePosts.md:21, :25;
+  // ProfileComments.md:25, :29): the timer marks the read it was started for,
+  // so an answered read — or the next one, a tab switched mid-read or a Retry
+  // — is never shown late. Everything's first page keeps its line at once:
+  // no board draws its wait.
   const [lateRead, setLateRead] = useState<number | null>(null);
-  const paging = rowsLoading && listed > 0;
+  const paging = rowsLoading && (listed > 0 || cardView);
   useEffect(() => {
     if (!paging) return;
     const timer = window.setTimeout(() => setLateRead(pageAsk), LOADING_AFTER_MS);
@@ -443,7 +457,6 @@ export function ProfileScreen({
   // History's own); the chronicle keeps its 16px gutter (`profile.chronicle`:
   // `8px 16px 0`). The lines that stand where cards would keep the gutter
   // either way.
-  const cardView = filter === "posts" || filter === "comments";
   const lineGutter = cardView ? "px-4" : "";
   // WHAT A COMMENT CARD'S REPLY DOES FOR THIS READER (ProfileComments.md:25,
   // :29): a member's opens the thread, an applicant's is locked, and a guest
@@ -838,20 +851,54 @@ export function ProfileScreen({
                   ))}
                 </ul>
               )}
-              {rowsLoading && listed === 0 && (
+              {rowsLoading && listed === 0 && !cardView && (
                 <p role="status" aria-live="polite" data-testid="profile-rows-loading" className={`py-2 ${lineGutter}`}>
                   Loading…
                 </p>
               )}
-              {loadingShown && (
+              {/* A CARD TAB'S FIRST PAGE, 200ms LATE: `LoadingState` in the
+                  list's place (`ProfileTabFirstPage`), never the empty line. */}
+              {loadingShown && listed === 0 && (
+                <p
+                  role="status"
+                  aria-live="polite"
+                  {...testAttributes({ path: `profile.${filter}.loading` })}
+                  className={`m-0 text-body-medium text-on-surface-variant ${lineGutter}`}
+                >
+                  Loading…
+                </p>
+              )}
+              {loadingShown && listed > 0 && (
                 <p role="status" aria-live="polite" data-testid="profile-rows-loading" className={`py-2 ${lineGutter}`}>
                   Loading…
                 </p>
               )}
-              {/* THE PAGE THAT DID NOT ARRIVE (Profile.md:35): the quiet line and
+              {/* A CARD TAB'S FIRST PAGE THAT DID NOT ARRIVE (ProfilePosts.md:23,
+                  ProfileComments.md:27): `ProfileMoreFailed`'s quiet row in the
+                  first-page family's words, Retry ending the line, where the
+                  list would stand — never the error colour, never a full-tab
+                  fault. Retry asks the first page again. */}
+              {pageFailed && listed === 0 && cardTab !== null && (
+                <div className={lineGutter} role="alert">
+                  <p
+                    className="m-0 pb-4 text-body-medium text-on-surface-variant"
+                    {...testAttributes({ path: `profile.${cardTab}.moreFault` })}
+                  >
+                    {tabFirstPageFault(cardTab)}{" "}
+                    <InlineAction
+                      size="sm"
+                      node={{ path: `profile.${cardTab}.moreFault.retry` }}
+                      onClick={() => profile && void loadRows(profile.id, cardTab, null, own)}
+                    >
+                      Retry
+                    </InlineAction>
+                  </p>
+                </div>
+              )}
+              {/* THE PAGE THAT DID NOT ARRIVE (Profile.md:49): the quiet line and
                   Retry where the next page would have stood — never the error
                   colour. */}
-              {pageFailed && (
+              {pageFailed && (listed > 0 || !cardView) && (
                 <div className={`flex items-center gap-3 ${lineGutter}`} role="alert">
                   <span className="text-body-medium text-on-surface-variant" data-testid="profile-rows-failed">
                     {COULDNT_LOAD_MORE}
