@@ -112,7 +112,15 @@ export const INVITE_LOCKED = "You can invite once you're in.";
 export const APPLICANT_CHRONICLE_EMPTY = "Nothing here yet.";
 /** The chronicle page that did not arrive (Profile.md:35; copy-voice.md). */
 export const COULDNT_LOAD_MORE = "Couldn't load more";
-/** How long a next page may take before `Loading…` stands for it (Profile.md:33). */
+/**
+ * A card tab's FIRST page that did not arrive (ProfilePosts.md:23,
+ * ProfileComments.md:27; `_shared.jsx` `ProfileTabFirstPage`): the house
+ * line's noun form (copy-voice *A read with nothing loaded*).
+ */
+export function tabFirstPageFault(tab: "posts" | "comments"): string {
+  return `Can't reach the server — ${tab} can't load right now.`;
+}
+/** How long a page may take before `Loading…` stands for it (Profile.md:47, ProfilePosts.md:21). */
 export const LOADING_AFTER_MS = 200;
 
 const CHRONICLE: DataNode = { path: "profile.chronicle" };
