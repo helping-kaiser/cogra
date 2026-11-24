@@ -472,7 +472,12 @@ internal fun com.cogra.network.graphql.type.LandingState.toDomain(): LandingStat
 internal fun PostFields.Landing.toDomain() = Landing(state.toDomain(), epoch)
 internal fun CommentFields.Landing.toDomain() = Landing(state.toDomain(), epoch)
 
-internal fun PostFields.toDomain(): PostView = PostView(
+/**
+ * A post as its read drew it. [references] is the list where the read
+ * selected it beside the fragment (`PostDetail`); every card read leaves it
+ * null and carries only the count.
+ */
+internal fun PostFields.toDomain(references: List<ReferenceClaimView>? = null): PostView = PostView(
     id = id,
     title = title.toDomain(),
     description = description.toDomain(),
@@ -485,7 +490,8 @@ internal fun PostFields.toDomain(): PostView = PostView(
     landing = landing.toDomain(),
     license = LicenseChoice(license.attribution, license.provenance),
     topics = topics.map { it.toDomain() },
-    references = references.map { it.referenceClaimFields.toDomain() },
+    references = references,
+    referenceCount = referenceCount,
     attachments = attachments.map { it.mediaFields.toDomain() },
     attachmentsStatus = attachmentsStatus.toDomain(),
     moderation = moderationStatus.toDomain(),
@@ -494,7 +500,8 @@ internal fun PostFields.toDomain(): PostView = PostView(
     viewerBookmarkedAt = viewerBookmarkedAt,
 )
 
-internal fun CommentFields.toDomain(): CommentView = CommentView(
+/** A comment as its read drew it; [references] as [PostFields.toDomain]'s (`CommentForEdit`). */
+internal fun CommentFields.toDomain(references: List<ReferenceClaimView>? = null): CommentView = CommentView(
     id = id,
     content = content.toDomain(),
     author = author?.let {
@@ -505,7 +512,8 @@ internal fun CommentFields.toDomain(): CommentView = CommentView(
     landing = landing.toDomain(),
     license = LicenseChoice(license.attribution, license.provenance),
     topics = topics.map { it.toDomain() },
-    references = references.map { it.referenceClaimFields.toDomain() },
+    references = references,
+    referenceCount = referenceCount,
     attachments = attachments.map { it.mediaFields.toDomain() },
     attachmentsStatus = attachmentsStatus.toDomain(),
     moderation = moderationStatus.toDomain(),

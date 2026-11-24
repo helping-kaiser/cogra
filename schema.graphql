@@ -562,6 +562,40 @@ type ChangePasswordPayload {
 	userErrors: [UserError!]!
 }
 
+"""
+One entry of a person's chronicle (`User.chronicle`): a record that is
+ordered fact, or a post or a comment they signed that is still
+settling, read off its own `landing`. Once it lands, the post or
+comment stands on the chronicle as its minting record. A union, as
+the list's members share no interface (GraphQL spec §3.8, *Unions*).
+"""
+union ChronicleEntry = Record | Post | Comment
+
+type ChronicleEntryConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [ChronicleEntryEdge!]!
+}
+
+"""
+An edge in a connection.
+"""
+type ChronicleEntryEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: ChronicleEntry!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
 type Comment implements Node {
 	id: UUID!
 	"""
@@ -5017,6 +5051,15 @@ type User implements Node & Actor {
 	`includePending: false` serves only what has landed on L1.
 	"""
 	comments(after: String, before: String, first: Int, last: Int, includePending: Boolean! = true): CommentConnection!
+	"""
+	The person's chronicle — the profile's Everything view: every
+	record they authored, newest-first in landing order, the posts
+	and comments they signed that are still settling ahead of them in
+	the content listings' own order, each wearing its `landing`. Any
+	other act joins once it has landed, as its record.
+	`includePending: false` serves the records alone.
+	"""
+	chronicle(after: String, before: String, first: Int, last: Int, includePending: Boolean! = true): ChronicleEntryConnection!
 	"""
 	The account's name in the one actor namespace: 3–30 characters of
 	[a-z0-9_], case-folded.

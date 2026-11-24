@@ -1621,16 +1621,19 @@ private fun CardTopicsLine(
     CoversSurface(open = refsOpen, kind = CoverKind.Suspend)
     TopicsLine(
         topics = post.topics,
-        references = post.references,
+        referenceCount = post.citationCount,
         onOpenTopic = onOpenTopic,
         testTagPrefix = testTagPrefix,
         onOpenReferences = { refsOpen = true },
         node = node,
     )
     if (refsOpen) {
+        // The card carries the count; the sheet reads the rows as it rises.
         RefsSheet(
             topics = post.topics,
-            references = post.references,
+            node = post.citingNode,
+            referenceCount = post.citationCount,
+            held = post.references,
             onDismiss = { refsOpen = false },
             onOpenTopic = onOpenTopic,
             onOpenActor = onOpenActor,

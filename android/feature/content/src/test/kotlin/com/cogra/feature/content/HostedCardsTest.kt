@@ -9,6 +9,7 @@ package com.cogra.feature.content
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
@@ -26,8 +27,10 @@ import com.cogra.domain.Landing
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.ModeratedField
 import com.cogra.domain.ModerationState
+import com.cogra.domain.Outcome
 import com.cogra.domain.PostView
 import com.cogra.domain.ProfileComment
+import com.cogra.domain.ReferenceContentKind
 import com.cogra.domain.Removal
 import com.cogra.domain.RemovalAgent
 import com.cogra.domain.saved.CommentTarget
@@ -118,26 +121,30 @@ class HostedCardsTest {
         body: @Composable (HostedCards) -> Unit,
     ) {
         compose.setContent {
-            HostedCardsScope(
-                doors = doors,
-                routes = HostedCardRoutes(
-                    viewerId = viewerId,
-                    signedIn = signedIn,
-                    onEditPost = {},
-                    onCitePost = {},
-                    onReply = {},
-                    onEditComment = { _, _ -> },
-                    onSignInOrJoin = {},
-                ),
-                hooks = CardHooks(viewerId = viewerId),
-                revealed = emptyMap(),
-                tag = if (placement == HostedPlacement.Profile) "profile" else "tagPage",
-                notify = {},
-                placement = placement,
-                tagHere = tagHere,
-            ) { hosted -> Column { body(hosted) } }
+            CompositionLocalProvider(LocalReferenceReads provides reads.reads) {
+                HostedCardsScope(
+                    doors = doors,
+                    routes = HostedCardRoutes(
+                        viewerId = viewerId,
+                        signedIn = signedIn,
+                        onEditPost = {},
+                        onCitePost = {},
+                        onReply = {},
+                        onEditComment = { _, _ -> },
+                        onSignInOrJoin = {},
+                    ),
+                    hooks = CardHooks(viewerId = viewerId),
+                    revealed = emptyMap(),
+                    tag = if (placement == HostedPlacement.Profile) "profile" else "tagPage",
+                    notify = {},
+                    placement = placement,
+                    tagHere = tagHere,
+                ) { hosted -> Column { body(hosted) } }
+            }
         }
     }
+
+    private val reads = ScriptedReferenceReads()
 
     private fun shown(tag: String) =
         compose.onAllNodesWithTag(tag, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
@@ -301,6 +308,38 @@ class HostedCardsTest {
         compose.onNodeWithTag("profile_comment_c1_refs_reference_l1-user-mira").performClick()
         compose.onNodeWithTag("profile_comment_c1_refs_sheet").assertDoesNotExist()
         assertThat(opened).containsExactly("actor:mira")
+    }
+
+    // api-spec.md "Query budgets" (jakob 2026-11-23): a hosted comment card
+    // carries the count its read served, and its sheet reads the rows by id.
+    @Test
+    fun aHostedCommentCardCountsAndItsSheetReadsTheRowsById() {
+        reads.answer = Outcome.Success(
+            listOf(testReferenceClaim(testMentionTarget("mira")), testReferenceClaim(testMentionTarget("ada"))),
+        )
+        val listed = comment().let {
+            it.copy(comment = it.comment.copy(topics = listOf(testTopicClaim("saltmaps")), referenceCount = 2))
+        }
+        host { it.comment(listed, cards, replies, null) }
+        compose.onNodeWithTag("profile_comment_c1_topics_counts", useUnmergedTree = true)
+            .assertTextEquals("· 2 references")
+        assertThat(reads.asked).isEmpty()
+        compose.onNodeWithTag("profile_comment_c1_topics_counts", useUnmergedTree = true).performClick()
+        compose.onNodeWithTag("profile_comment_c1_refs_reference_l1-user-mira").assertExists()
+        compose.onNodeWithTag("profile_comment_c1_refs_reference_l1-user-ada").assertExists()
+        assertThat(reads.asked).containsExactly(ReferenceContentKind.COMMENT to "c1")
+    }
+
+    // The post card hosted on a profile reads its own post's rows.
+    @Test
+    fun aHostedPostCardsSheetReadsThePostsRowsById() {
+        reads.answer = Outcome.Success(listOf(testReferenceClaim(testMentionTarget("mira"))))
+        host { it.post(post().copy(topics = listOf(testTopicClaim("saltmaps")), referenceCount = 1), posts) }
+        compose.onNodeIn("profile.posts.card:p1", "profile.posts.card.tagsLine.counts", useUnmergedTree = true)
+            .assertTextEquals("· 1 reference")
+            .performClick()
+        compose.onNodeWithTag("profile_post_p1_refs_reference_l1-user-mira").assertExists()
+        assertThat(reads.asked).containsExactly(ReferenceContentKind.POST to "p1")
     }
 
     // jakob 2026-11-23 — on a tag's own page its chip opens nothing, as the

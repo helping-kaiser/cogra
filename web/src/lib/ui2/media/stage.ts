@@ -391,7 +391,7 @@ export class Stage {
 
   /**
    * The surface's scroll came to rest at its hard top (Feed.md:19/21,
-   * ReplyEntry.md:3/5, TagPage.md:25/27, ProfilePosts.md:7/9, History.md:69/71).
+   * ReplyEntry.md:3/5, TagPage.md:25/27, ProfilePosts.md:7/9, History.md:99/101).
    * The election lapses an autoplayed incumbent's claim there, never a
    * hand-started one's, and under suppression does nothing (FeedCover.md:31).
    */

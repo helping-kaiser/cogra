@@ -181,7 +181,21 @@ class FeedRepositoryTest {
         assertThat(server.requestCount).isEqualTo(0)
     }
 
-    private fun postJson(id: String, commentCount: Int = 0) = """
+    /** A feed card's read carries the count its line prints, and never the list (api-spec.md "Query budgets"). */
+    @Test
+    fun aWindowsCardCarriesTheCountAndNoList() = runTest {
+        enqueue(
+            """{"data":{"feed":{"__typename":"FeedConnection","edges":[
+               {"__typename":"FeedEdge","node":${postJson("p1", referenceCount = 4)}}]}}}""",
+        )
+        val post = (repo().window(listOf("p1")) as Outcome.Success).value.single()
+        assertThat(post.references).isNull()
+        assertThat(post.referenceCount).isEqualTo(4)
+        assertThat(post.citationCount).isEqualTo(4)
+        assertThat(server.takeRequest().body.readUtf8()).doesNotContain("references")
+    }
+
+    private fun postJson(id: String, commentCount: Int = 0, referenceCount: Int = 0) = """
         {"__typename":"Post","id":"$id",
          "title":{"__typename":"ModeratedText","value":"Title $id","status":"NORMAL"},
          "description":{"__typename":"ModeratedText","value":null,"status":"NORMAL"},
@@ -196,7 +210,7 @@ class FeedRepositoryTest {
          "removal":null,"genesisRecordId":"rec:$id",
          "license":{"__typename":"License","attribution":0.5,"provenance":1.0},
          "topics":[],
-         "references":[],
+         "referenceCount":$referenceCount,
          "commentCount":{"__typename":"CommentConnection","totalCount":$commentCount}}
     """.trimIndent()
 }
