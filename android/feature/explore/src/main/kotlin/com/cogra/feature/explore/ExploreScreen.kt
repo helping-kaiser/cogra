@@ -64,6 +64,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -437,10 +438,14 @@ private fun RecentRow(query: String, onTap: () -> Unit) {
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(18.dp).dataNode(EXPLORE / "recent" / "glyph"),
         )
+        // ONE LINE (`_shared.jsx` `RecentRow`, round 62): a query too long for
+        // it — a 128-character tag among them — ends in "…"; the node keeps it whole.
         Text(
             text = query,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.dataNode(EXPLORE / "recent" / "query"),
         )
     }
