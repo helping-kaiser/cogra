@@ -21,6 +21,7 @@ import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { byNode } from "@/test/data-node";
 import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { gqlLink, startMswServer } from "@/test/msw";
+import { chroniclePage } from "@/test/chronicle";
 import { answersComment, commentsPage, profileComment, settlingComment } from "@/test/profile-comment";
 import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
@@ -109,35 +110,26 @@ function serveComments(
 function serveChronicle(): number[] {
   const reads: number[] = [];
   server.use(
-    gqlLink.query("AuthorRecords", () => {
+    gqlLink.query("ProfileChronicle", () => {
       reads.push(reads.length);
-      return HttpResponse.json({
-        data: {
-          records: {
-            __typename: "RecordConnection",
-            edges: [
-              {
-                __typename: "RecordEdge",
-                node: {
-                  __typename: "Record",
-                  id: "act:1",
-                  family: "REVIEW",
-                  act: "GENESIS",
-                  targetId: "p1",
-                  terminalId: "mint:act:1",
-                  landedAt: new Date(Date.now() - 86_400_000).toISOString(),
-                  pDirected: 0,
-                  pInterest: 0,
-                  severed: null,
-                  target: null,
-                  terminal: null,
-                },
-              },
-            ],
-            pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+      return HttpResponse.json(
+        chroniclePage([
+          {
+            __typename: "Record",
+            id: "act:1",
+            family: "REVIEW",
+            act: "GENESIS",
+            targetId: "p1",
+            terminalId: "mint:act:1",
+            landedAt: new Date(Date.now() - 86_400_000).toISOString(),
+            pDirected: 0,
+            pInterest: 0,
+            severed: null,
+            target: null,
+            terminal: null,
           },
-        },
-      });
+        ]),
+      );
     }),
   );
   return reads;
