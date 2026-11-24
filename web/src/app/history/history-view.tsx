@@ -9,23 +9,23 @@
 // time it was fully in the viewport (the seen tracker, `seen-tracker.ts`), and
 // the seeing stays in the app: it never becomes a graph record. The page
 // surfaces exactly that list — append-only, never compacted, with no way to
-// clear it and no way to take one thing out (History.md:45), because taking a
+// clear it and no way to take one thing out (History.md:49), because taking a
 // thing out would put it back into the reader's feed.
 //
-// EVERY KIND AS ITS OWN FEED CARD (History.md:19-21): a post as the feed's
+// EVERY KIND AS ITS OWN FEED CARD (History.md:23-25): a post as the feed's
 // `PostCard`, a comment as the `CommentFeedCard`, a person as the
 // `ProfileFeedCard`, a topic as the `TagFeedCard` — unchanged and fully live.
 // No card anatomy is this page's own, and no card wears the age of the seeing
-// (History.md:31). A removed thing keeps its place wearing its card's own
-// removal mark (History.md:39); sensitive content keeps its card's veil.
+// (History.md:35). A removed thing keeps its place wearing its card's own
+// removal mark (History.md:43); sensitive content keeps its card's veil.
 //
-// NEWEST FIRST, BY FIRST SEEING, FROZEN PER OPEN (History.md:23, :109). The
+// NEWEST FIRST, BY FIRST SEEING, FROZEN PER OPEN (History.md:27, :131). The
 // server pages on `(firstSeenAt, node id)`, so a thing first seen while the
 // reader scrolls sorts above the open page and joins only at the next open or
 // the next pull. A quiet day divider stands above the first thing seen on
 // each day; it belongs to the list, never to a card.
 //
-// SEARCH AND FILTER ON TOP (History.md:85-107; HistoryFilter.md;
+// SEARCH AND FILTER ON TOP (History.md:107-129; HistoryFilter.md;
 // HistorySearch.md): the one search law over the seen set, RUN ON THE SERVER
 // (`viewHistory(query:)`), so a match is found wherever it stands, never only
 // among the loaded cards; and the kinds trigger, whose sheet stages and whose
@@ -34,7 +34,7 @@
 // can stand beside it.
 //
 // A HIDDEN ACCOUNT'S POSTS AND COMMENTS STAY OUT WHILE IT IS HIDDEN, its own
-// profile card stays (History.md:41) — the server's exclusion, and at every
+// profile card stays (History.md:45) — the server's exclusion, and at every
 // fresh read the device's own hidden set over what arrives, so a hide still on
 // its way is honoured. The open History never rearranges under a hide
 // (HistoryHidden.md:3-5): it takes hold at the next open or pull.
@@ -99,7 +99,7 @@ export const HISTORY_NONE_KINDS = "Nothing you've seen is of that kind.";
 /** HistoryNone.md:9 — the empty state's one action. */
 export const SHOW_EVERYTHING = "Show everything";
 
-/** History.md:85: the field's placeholder and name, naming the list it searches. */
+/** History.md:107: the field's placeholder and name, naming the list it searches. */
 export const SEARCH_YOUR_HISTORY = "Search your history";
 
 /** HistoryFilter.md:3: the sheet's title, and the trigger's purpose. */
@@ -121,7 +121,7 @@ export const HISTORY_SEARCH_DEBOUNCE_MS = 250;
 
 /** Where a card's doors say the reader came from: `Back to History`. */
 const FROM = "history";
-/** A card's score opens its trace, whose back arrow reads `Back to History` (History.md:61). */
+/** A card's score opens its trace, whose back arrow reads `Back to History` (History.md:77). */
 const HISTORY_ORIGIN: TraceOrigin = { kind: "history" };
 
 type Entry = HistoryEntry & { readonly id: string };
@@ -146,7 +146,7 @@ function isCardKind(entry: HistoryEntry): boolean {
 /**
  * Whom a seen thing is by — a post's or a comment's author — for the hidden
  * set. A person and a topic are by no one: a hidden account's own profile card
- * stays (History.md:41).
+ * stays (History.md:45).
  */
 function authorOf(entry: HistoryEntry): string | null {
   const node = entry.node;
@@ -280,7 +280,7 @@ export function HistoryScreen({
     };
   }, [ask, asked, read, searchDebounceMs]);
 
-  // PULL DOWN AT THE TOP RE-READS (History.md:111): the platform's own
+  // PULL DOWN AT THE TOP RE-READS (History.md:133): the platform's own
   // refresh, through the same read the first arrival takes.
   const onPull = useCallback(() => {
     setLoading(true);
@@ -424,9 +424,9 @@ export function HistoryScreen({
         {said}
       </span>
       {/* THE HEADER, THE FIELD AND THE TRIGGER COLLAPSE ON THE WAY DOWN AND
-          RETURN ON THE WAY UP (History.md:119), and a reader three screens
+          RETURN ON THE WAY UP (History.md:141), and a reader three screens
           down summons Back to top with them; its tap goes up, animated, and
-          never re-reads (History.md:113-117). ONE BLOCK, FLUSH: the board
+          never re-reads (History.md:135-139). ONE BLOCK, FLUSH: the board
           stacks the header, the field and the trigger with no gap of their
           own and ends on the trigger row's 8px, so the region adds neither. */}
       <CollapsingTop flush onBackToTop={() => scrollHostToTopAnimated(host)}>
@@ -502,7 +502,7 @@ export function HistoryScreen({
         </div>
       )}
       {entries.length > 0 && (
-        // THE FEED'S ONE STAGE (History.md:77-83): at most one clip plays, and
+        // THE FEED'S ONE STAGE (History.md:97-101): at most one clip plays, and
         // the stage re-elects at the list's hard top, by the feed's law.
         <StageHost>
           {/* ONE COLUMN AT THE FEED LIST'S 8px RHYTHM (`FeedList`): captions,
@@ -565,7 +565,7 @@ export function HistoryScreen({
                   return (
                     <Fragment key={entry.id}>
                       {day !== null && day !== undefined && (
-                        // A QUIET DAY DIVIDER (History.md:25-27): label-small,
+                        // A QUIET DAY DIVIDER (History.md:29-31): label-small,
                         // secondary, centred, no rule and no fill — part of
                         // the list, never of a card.
                         <li
@@ -660,7 +660,7 @@ export function HistoryScreen({
         testId="history-menu"
         notify={notify}
         // A REMOVED THING KEEPS ITS PLACE IN HISTORY, WEARING ITS MARK
-        // (History.md:39): the reader's own removal from a card's ⋮ stands the
+        // (History.md:43): the reader's own removal from a card's ⋮ stands the
         // card as its mark where it stood (RM-G9's build word).
         onRemoved={(removed) =>
           setEntries((current) =>

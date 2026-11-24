@@ -459,8 +459,11 @@ pub enum ErrorCode {
     /// Ask link unknown, or its applicant is landed or already waiting in
     /// your own queue.
     AskLinkUnusable,
-    /// The handle is already held in the one actor namespace.
+    /// The handle is already held in the one actor namespace, or is one
+    /// CoGra reserves.
     HandleTaken,
+    /// The display name is one CoGra reserves.
+    DisplayNameReserved,
     /// Under the length floor or in the breach corpus.
     WeakPassword,
     /// The email already belongs to an account.
@@ -1619,6 +1622,40 @@ impl User {
     ) -> async_graphql::Result<CommentConnection> {
         let page = keyset_page(first, after, last, before)?;
         authored_comments_connection(ctx, self.identity.id, page, include_pending).await
+    }
+
+    /// The person's chronicle — the profile's Everything view: every
+    /// record they authored, newest-first in landing order, the posts
+    /// and comments they signed that are still settling ahead of them in
+    /// the content listings' own order, each wearing its `landing`. Any
+    /// other act joins once it has landed, as its record.
+    /// `includePending: false` serves the records alone.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    async fn chronicle(
+        &self,
+        ctx: &Context<'_>,
+        after: Option<String>,
+        before: Option<String>,
+        first: Option<i32>,
+        last: Option<i32>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<ChronicleEntryConnection> {
+        let page = keyset_page(first, after, last, before)?;
+        let Some(address) = self.identity.realization_address.as_deref() else {
+            return Ok(chronicle_connection(Vec::new(), &page));
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let rows = postgres_store::content::chronicle(
+            pool,
+            self.identity.id,
+            address,
+            content_cursor(page.cursor),
+            page.backward,
+            page.limit + 1,
+            include_pending,
+        )
+        .await?;
+        Ok(chronicle_connection(rows, &page))
     }
 
     /// The account's name in the one actor namespace: 3–30 characters of
@@ -5982,6 +6019,50 @@ pub(crate) fn record_connection(
             filter,
             slice: None,
         },
+    )
+}
+
+/// One entry of a person's chronicle (`User.chronicle`): a record that is
+/// ordered fact, or a post or a comment they signed that is still
+/// settling, read off its own `landing`. Once it lands, the post or
+/// comment stands on the chronicle as its minting record. A union, as
+/// the list's members share no interface (GraphQL spec §3.8, *Unions*).
+#[derive(async_graphql::Union)]
+pub enum ChronicleEntry {
+    Record(Record),
+    Post(PostType),
+    Comment(CommentType),
+}
+
+impl From<postgres_store::content::ChronicleEntry> for ChronicleEntry {
+    fn from(entry: postgres_store::content::ChronicleEntry) -> Self {
+        use postgres_store::content::ChronicleEntry as Stored;
+        match entry {
+            Stored::Record(r) => Self::Record(Record(r)),
+            Stored::Post(p) => Self::Post(PostType(p)),
+            Stored::Comment(c) => Self::Comment(CommentType(c)),
+        }
+    }
+}
+
+/// A chronicle page.
+pub type ChronicleEntryConnection = KeysetConnection<ChronicleEntry>;
+
+/// A page of the chronicle, each entry under the content listings'
+/// cursor: its sort key and, for a settling entry, its id.
+fn chronicle_connection(
+    rows: Vec<postgres_store::content::ChronicleEntry>,
+    page: &KeysetPage,
+) -> ChronicleEntryConnection {
+    keyset_connection(
+        rows,
+        page,
+        |e| CursorKey {
+            epoch: e.sort_key().landed_epoch,
+            position: e.sort_key().position,
+            id: e.id(),
+        },
+        ChronicleEntry::from,
     )
 }
 

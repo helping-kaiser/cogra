@@ -311,7 +311,7 @@ const SURFACES: Surface[] = [
   // drawn on the web yet and inherit it — the packet's §1 rows G and H).
   { name: "the tag page (T02 TagPage.md:25, T03 TagPage.md:27)", mount: onList, scroller: listScroller },
   { name: "the profile's posts (P02 ProfilePosts.md:7, P03 ProfilePosts.md:9)", mount: onList, scroller: listScroller },
-  { name: "History (H03 History.md:69, H04 History.md:71)", mount: onList, scroller: listScroller },
+  { name: "History (H03 History.md:99, H04 History.md:101)", mount: onList, scroller: listScroller },
 ];
 
 describe.each(SURFACES)("the hard top of $name", ({ mount, scroller }) => {
