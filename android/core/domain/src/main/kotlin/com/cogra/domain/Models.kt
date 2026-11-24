@@ -979,8 +979,10 @@ sealed interface RecordLink {
  * One row of an actor's chronicle — the `User.chronicle` read rendered
  * as an honest labelled history (roadmap "Slice 2.1"). The label derives
  * from family + [act]; the snippet is the touched content's current
- * text, when CoGra carries a display row for it. A post or comment still settling is the row its genesis record will
- * draw, [pending] and aged by [signedAt].
+ * text, when CoGra carries a display row for it — or, once that content is
+ * removed, its removal mark, never another node's words. A post or comment
+ * still settling is the row its genesis record will draw, [pending] and aged
+ * by [signedAt].
  */
 data class RecordRow(
     /**

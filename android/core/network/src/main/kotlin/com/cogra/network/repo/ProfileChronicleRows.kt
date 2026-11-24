@@ -16,7 +16,9 @@ import com.cogra.domain.RecordAct
 import com.cogra.domain.RecordLink
 import com.cogra.domain.RecordOpinion
 import com.cogra.domain.RecordRow
+import com.cogra.domain.RemovalAgent
 import com.cogra.domain.map
+import com.cogra.domain.stance.removalMark
 import com.cogra.network.fetch
 import com.cogra.network.graphql.ProfileChronicleQuery
 import com.cogra.network.graphql.fragment.ChronicleRecordFields
@@ -61,7 +63,8 @@ private fun ChronicleSettlingPostFields.toRow(): RecordRow = RecordRow(
     id = genesisRecordId,
     family = Family.PUBLISH,
     genesis = true,
-    snippet = title.value ?: content.value,
+    // A removed one reads its mark where its words were (Profile.md:39).
+    snippet = removalMark(removal?.by?.toDomain()) ?: title.value ?: content.value,
     link = RecordLink.ToPost(postId),
     act = RecordAct.GENESIS,
     pending = landing.state == LandingState.PENDING,
@@ -76,7 +79,7 @@ private fun ChronicleSettlingCommentFields.toRow(): RecordRow = RecordRow(
     id = genesisRecordId,
     family = Family.REVIEW,
     genesis = true,
-    snippet = content.value,
+    snippet = removalMark(removal?.by?.toDomain()) ?: content.value,
     link = post?.id?.let { RecordLink.ToPost(it) },
     act = RecordAct.GENESIS,
     pending = landing.state == LandingState.PENDING,
@@ -95,6 +98,13 @@ private fun ChronicleRecordFields.toRow(): RecordRow {
     // other family is about its target (a Review's terminal being the
     // comment it minted, whose words are the row's).
     val reading = if (kind == Family.REFERENCE) citedReading() else touchedReading()
+    // The row's own thing — the node its second line quotes: a comment's or a
+    // citation's terminal, anything else's target. Once that thing is removed
+    // its mark stands where its words were, and no other node's words ever
+    // fall through in their place (Profile.md:37, :39; ProfileDeleted.md:25).
+    val removed = removalMark(
+        if (kind == Family.REVIEW || kind == Family.REFERENCE) terminalRemoval() else targetRemoval(),
+    )
     // The server's reading of what the record did (`Record.act`); a value
     // this client does not know reads ordinary.
     val did = runCatching { RecordAct.valueOf(act.rawValue) }.getOrDefault(RecordAct.ORDINARY)
@@ -102,7 +112,7 @@ private fun ChronicleRecordFields.toRow(): RecordRow {
         id = id,
         family = kind,
         genesis = did == RecordAct.GENESIS || targetId == mint || terminalId == mint,
-        snippet = reading.snippet,
+        snippet = removed ?: reading.snippet,
         link = reading.link,
         landedAt = landedAt,
         // Both stance families wear their own face (the chronicle's opinion card).
@@ -115,6 +125,14 @@ private fun ChronicleRecordFields.toRow(): RecordRow {
         untag = kind == Family.TAG && pDirected == 0.0 && pInterest == 0.0,
     )
 }
+
+/** Who removed the record's target, when it is a removed post or comment. */
+private fun ChronicleRecordFields.targetRemoval(): RemovalAgent? =
+    (target?.onPost?.removal?.by ?: target?.onComment?.removal?.by)?.toDomain()
+
+/** Who removed the record's terminal — a Review's comment, a citation's cited thing. */
+private fun ChronicleRecordFields.terminalRemoval(): RemovalAgent? =
+    (terminal?.onPost?.removal?.by ?: terminal?.onComment?.removal?.by)?.toDomain()
 
 /** What a chronicle row reads of the node its act is about. */
 private class RowReading(
