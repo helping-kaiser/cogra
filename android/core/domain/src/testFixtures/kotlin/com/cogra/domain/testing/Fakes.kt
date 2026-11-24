@@ -1036,6 +1036,10 @@ open class ThrowingReferenceRepository : ReferenceRepository {
         limit: Int?,
         kinds: Set<FeedKind>,
     ): Outcome<List<ReferenceCandidateView>> = throw UnsupportedOperationException()
+    override suspend fun referencesOf(
+        kind: ReferenceContentKind,
+        id: String,
+    ): Outcome<List<ReferenceClaimView>?> = throw UnsupportedOperationException()
     override suspend fun prepareReference(
         artifact: String,
         target: String,
@@ -1074,6 +1078,12 @@ fun testPost(
     author: ActorRef? = ActorRef("author-1", "author"),
     license: LicenseChoice = LicenseChoice.PublicDomain,
     landing: Landing = Landing.landed(1),
+    /**
+     * The citations as a read that carries the list (`PostDetail`) draws
+     * them — none by default. A card's read carries only the count: pass
+     * null and set [PostView.referenceCount] to stand for one.
+     */
+    references: List<ReferenceClaimView>? = emptyList(),
 ): PostView = PostView(
     id = id,
     title = testModeratedField(title),
@@ -1084,6 +1094,7 @@ fun testPost(
     updatedAt = Instant.EPOCH,
     landing = landing,
     license = license,
+    references = references,
 )
 
 fun testComment(
@@ -1092,6 +1103,8 @@ fun testComment(
     author: ActorRef? = ActorRef("author-2", "commenter"),
     license: LicenseChoice = LicenseChoice.PublicDomain,
     landing: Landing = Landing.landed(1),
+    /** As [testPost]'s: the list a `CommentForEdit` read carries; null stands for a card's read. */
+    references: List<ReferenceClaimView>? = emptyList(),
 ): CommentView = CommentView(
     id = id,
     content = testModeratedField(body),
@@ -1100,6 +1113,7 @@ fun testComment(
     updatedAt = Instant.EPOCH,
     landing = landing,
     license = license,
+    references = references,
 )
 
 fun testHashtag(name: String, id: String = "hashtag-$name"): HashtagView = HashtagView(

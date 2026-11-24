@@ -72,6 +72,8 @@ class ContentRepositoryTest {
         attachments: String = "[]",
         moderationStatus: String = "NORMAL",
         commentCount: Int = 0,
+        references: String = "[]",
+        referenceCount: Int = 0,
     ) = """
         {"__typename":"Post","id":"$id",
          "title":{"__typename":"ModeratedText","value":${title?.let { "\"$it\"" } ?: "null"},"status":"NORMAL"},
@@ -89,7 +91,7 @@ class ContentRepositoryTest {
          "removal":null,"genesisRecordId":"rec:$id",
          "license":{"__typename":"License","attribution":0.5,"provenance":1.0},
          "topics":[],
-         "references":[],
+         "references":$references,"referenceCount":$referenceCount,
          "commentCount":{"__typename":"CommentConnection","totalCount":$commentCount}}
     """.trimIndent()
 
@@ -202,7 +204,7 @@ class ContentRepositoryTest {
                "removal":null,"genesisRecordId":"rec:p1",
                "license":{"__typename":"License","attribution":0.0,"provenance":0.0},
                "topics":[],
-               "references":[],
+               "references":[],"referenceCount":0,
                "comments":{"__typename":"CommentConnection","totalCount":1,
                  "edges":[{"__typename":"CommentEdge","node":{"__typename":"Comment","id":"c1",
                    "content":{"__typename":"ModeratedText","value":"hi","status":"NORMAL"},
@@ -217,7 +219,7 @@ class ContentRepositoryTest {
                    "sensitiveSelfMark":false,"sensitiveReason":null,
                    "license":{"__typename":"License","attribution":1.0,"provenance":0.0},
                    "topics":[],
-                   "references":[],
+                   "references":[],"referenceCount":0,
                    "replies":{"__typename":"CommentConnection","totalCount":2}}}],
                  "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":"cc"}}}}}""",
         )
@@ -248,6 +250,75 @@ class ContentRepositoryTest {
 
         enqueue("""{"data":{"post":null}}""")
         assertThat((repo().post("gone", 20, null) as Outcome.Success).value).isNull()
+    }
+
+    // -- A card carries the count; the detail and the edit carry the list (api-spec.md "Query budgets") --
+
+    private fun claimJson(handle: String) =
+        """{"__typename":"ReferenceClaim",
+            "target":{"__typename":"User","id":"user-$handle","handle":"$handle",
+            "displayName":{"__typename":"ModeratedText","value":null}},
+            "targetId":"l1-$handle","relevance":0.1,"support":0.2,"withdrawalCost":1,
+            "rawRelevance":0.1,"rawSupport":0.2,"pending":false}"""
+
+    /** One comment as `CommentFields` serves it, [extra] keys appended. */
+    private fun commentJson(id: String, referenceCount: Int, extra: String = "") = """
+        {"__typename":"Comment","id":"$id",
+         "content":{"__typename":"ModeratedText","value":"hi","status":"NORMAL"},
+         "attachments":[],"attachmentsStatus":"NORMAL",
+         "author":{"__typename":"User","id":"u2","handle":"bob",
+                   "displayName":{"__typename":"ModeratedText","value":"Bob"},"avatar":null},
+         "createdAt":"2026-08-12T10:05:00+00:00","updatedAt":"2026-08-12T10:05:00+00:00",
+         "landing":${landingJson("LANDED", 4)},"moderationStatus":"NORMAL",
+         "removal":null,"genesisRecordId":"rec:$id",
+         "sensitiveSelfMark":false,"sensitiveReason":null,
+         "license":{"__typename":"License","attribution":1.0,"provenance":0.0},
+         "topics":[],"referenceCount":$referenceCount$extra}
+    """.trimIndent()
+
+    @Test
+    fun theDetailKeepsItsOwnPostsListAndItsCommentsCarryTheCount() = runTest {
+        val post = postJson(
+            "p1",
+            "Hello",
+            references = "[${claimJson("ada")},${claimJson("mira")}]",
+            referenceCount = 2,
+        )
+        enqueue(
+            """{"data":{"post":${post.trimEnd().dropLast(1)},
+               "comments":{"__typename":"CommentConnection","totalCount":1,
+                 "edges":[{"__typename":"CommentEdge","node":${
+                commentJson("c1", referenceCount = 3, extra = """,
+                   "replies":{"__typename":"CommentConnection","totalCount":0}""")
+            }}],
+                 "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}}""",
+        )
+        val detail = checkNotNull((repo().post("p1", 20, null) as Outcome.Success).value)
+        assertThat(detail.post.references?.map { it.targetId }).containsExactly("l1-ada", "l1-mira").inOrder()
+        assertThat(detail.post.citationCount).isEqualTo(2)
+        val comment = detail.comments.items.single()
+        // A comment card's read: the count, never the list.
+        assertThat(comment.references).isNull()
+        assertThat(comment.referenceCount).isEqualTo(3)
+        assertThat(comment.citationCount).isEqualTo(3)
+    }
+
+    @Test
+    fun theCommentEditsReadCarriesEveryCitation() = runTest {
+        enqueue(
+            """{"data":{"comment":${
+                commentJson(
+                    "c1",
+                    referenceCount = 3,
+                    extra = """,
+                   "references":[${claimJson("ada")},${claimJson("mira")},${claimJson("sol")}]""",
+                )
+            }}}""",
+        )
+        val loaded = checkNotNull((repo().commentForEdit("c1") as Outcome.Success).value)
+        assertThat(loaded.comment.references?.map { it.targetId })
+            .containsExactly("l1-ada", "l1-mira", "l1-sol").inOrder()
+        assertThat(loaded.comment.referenceCount).isEqualTo(3)
     }
 
     @Test

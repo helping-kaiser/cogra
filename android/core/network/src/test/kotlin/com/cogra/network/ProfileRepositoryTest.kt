@@ -275,7 +275,7 @@ class ProfileRepositoryTest {
          "removal":${if (removed) removedJson else "null"},"genesisRecordId":"rec:$id",
          "license":{"__typename":"License","attribution":0.5,"provenance":1.0},
          "topics":[],
-         "references":[],
+         "references":[],"referenceCount":0,
          "commentCount":{"__typename":"CommentConnection","totalCount":3}}
     """.trimIndent()
 
@@ -295,7 +295,7 @@ class ProfileRepositoryTest {
          "sensitiveSelfMark":false,"sensitiveReason":null,
          "license":{"__typename":"License","attribution":1.0,"provenance":0.0},
          "topics":[],
-         "references":[],
+         "references":[],"referenceCount":0,
          "target":{"__typename":"Post","id":"p9",
            "title":{"__typename":"ModeratedText","value":"Salt maps","status":"NORMAL"},
            "content":{"__typename":"ModeratedText","value":"words","status":"NORMAL"},
