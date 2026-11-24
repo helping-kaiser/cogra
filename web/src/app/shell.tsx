@@ -134,7 +134,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // but a bar still stands beneath, and the pad parks above it.
   const streaming = pathname.startsWith("/reel/");
   // SAVED AND HISTORY KEEP PROFILE LIT (Saved.md, design digest item 51;
-  // History.md:121: the originating root stays lit on a drill-in) — their one
+  // History.md:143: the originating root stays lit on a drill-in) — their one
   // door is the reader's own profile.
   // NOTIFICATIONS KEEPS LIT THE ROOT THE BELL WAS TAPPED ON (Notifications.md:27).
   const active =
