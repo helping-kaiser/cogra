@@ -374,8 +374,8 @@ class FeedFilterViewModelTest {
     }
 
     @Test
-    fun aCardsReadNeverCarriesMoreThanItsTen() = runTest(dispatcher) {
-        val ids = (1..12).map { "h$it" }
+    fun aCardsReadNeverCarriesMoreThanItsTwenty() = runTest(dispatcher) {
+        val ids = (1..22).map { "h$it" }
         ids.forEach { feed.cardsById[it] = FeedCard.Tag(TagCardTopic(it, testModeratedField(it), emptyList())) }
         feed.answer = Outcome.Success(
             FeedRanking(3, ids.mapIndexed { i, id -> entry(id, i, kind = FeedKind.TAG) }, emptyList()),
@@ -384,7 +384,7 @@ class FeedFilterViewModelTest {
         val vm = viewModel()
         settle()
 
-        assertThat(feed.cardReads.map { it.size }).containsExactly(10, 2).inOrder()
+        assertThat(feed.cardReads.map { it.size }).containsExactly(20, 2).inOrder()
         assertThat(vm.ids()).isEqualTo(ids)
     }
 
