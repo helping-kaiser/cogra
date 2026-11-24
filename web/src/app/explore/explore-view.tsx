@@ -726,7 +726,12 @@ function AtRest({
                 <span aria-hidden="true" className="inline-flex text-on-surface-variant" {...testAttributes(part(row, "glyph"))}>
                   <Icon name="search" size={18} />
                 </span>
-                <span className="text-body-medium" {...testAttributes(part(row, "query"))}>
+                <span
+                  // ONE LINE (`RecentRow`, round 62): a query too long for it —
+                  // a 128-character tag among them — ends in "…".
+                  className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-body-medium"
+                  {...testAttributes(part(row, "query"))}
+                >
                   {recent}
                 </span>
               </button>

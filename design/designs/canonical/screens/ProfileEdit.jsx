@@ -43,10 +43,19 @@
    - `refused` is a write-rule refusal already known at Save: the line
      `You can't sign right now.` stands on Save in the row's quiet register
      (`RowWriteRule`), its "?" opening `Why signing waits`, and Save dims —
-     nobody is sent to the seal. */
+     nobody is sent to the seal.
+   - `name-reserved` is the change refused because the display name typed is
+     one of CoGra's reserved names (round 66; jakob 2026-11-23, the list and
+     the line blessed; copy-voice, *Reserved names*): Sol typed `CoGra`, and
+     the Display name field reads `That name isn't available.` in M3's error
+     state, the house field refusal as Join draws `That handle is taken.`
+     (`JoinErrors`) — this board drew no field refusal before. The name stays
+     typed and Save still answers, as at `changed`. The errored field is a
+     drawn copy beside the named one and carries no name, as `upload-refused`'s
+     line is, so no path moves. */
 export const NODE = "profileEdit";
-export const PROPS = { state: { editor: "enum", options: ["rest", "picture", "changed", "removed", "upload-failed", "upload-refused", "refused"], default: "rest" } };
-export const VALS = `monoShown: this.props.state === "picture" || this.props.state === "upload-failed" || this.props.state === "upload-refused" ? "none" : "flex", photoShown: this.props.state === "picture" || this.props.state === "upload-failed" || this.props.state === "upload-refused" ? "flex" : "none", uploadRefusedShown: this.props.state === "upload-refused" ? "block" : "none", removeShown: this.props.state === "picture" ? "inline-flex" : "none", undoShown: this.props.state === "removed" ? "inline-flex" : "none", changeLabel: this.props.state === "picture" || this.props.state === "removed" ? "Change" : "Change picture", uploadFailedShown: this.props.state === "upload-failed" ? "block" : "none", nothingShown: this.props.state === "rest" || this.props.state === "picture" ? "flex" : "none", refusedShown: this.props.state === "refused" ? "flex" : "none", saveOpacity: this.props.state === "rest" || this.props.state === "picture" || this.props.state === "refused" ? "var(--state-disabled)" : "1", saveCursor: this.props.state === "rest" || this.props.state === "picture" || this.props.state === "refused" ? "default" : "pointer"`;
+export const PROPS = { state: { editor: "enum", options: ["rest", "picture", "changed", "removed", "upload-failed", "upload-refused", "refused", "name-reserved"], default: "rest" } };
+export const VALS = `nameShown: this.props.state === "name-reserved" ? "none" : "contents", nameReservedShown: this.props.state === "name-reserved" ? "contents" : "none", monoShown: this.props.state === "picture" || this.props.state === "upload-failed" || this.props.state === "upload-refused" ? "none" : "flex", photoShown: this.props.state === "picture" || this.props.state === "upload-failed" || this.props.state === "upload-refused" ? "flex" : "none", uploadRefusedShown: this.props.state === "upload-refused" ? "block" : "none", removeShown: this.props.state === "picture" ? "inline-flex" : "none", undoShown: this.props.state === "removed" ? "inline-flex" : "none", changeLabel: this.props.state === "picture" || this.props.state === "removed" ? "Change" : "Change picture", uploadFailedShown: this.props.state === "upload-failed" ? "block" : "none", nothingShown: this.props.state === "rest" || this.props.state === "picture" ? "flex" : "none", refusedShown: this.props.state === "refused" ? "flex" : "none", saveOpacity: this.props.state === "rest" || this.props.state === "picture" || this.props.state === "refused" ? "var(--state-disabled)" : "1", saveCursor: this.props.state === "rest" || this.props.state === "picture" || this.props.state === "refused" ? "default" : "pointer"`;
 
 const QUIET_LINE = {
   margin: 0,
@@ -83,7 +92,12 @@ export function Screen() {
             <UploadErrorLine onRemove={() => {}} />
           </div>
         </div>
-        <TextField node="name" label="Display name" corner="Optional" kind="name" cap={50} value="Sol Ferreira" />
+        <div style={{ display: "{{nameShown}}" }}>
+          <TextField node="name" label="Display name" corner="Optional" kind="name" cap={50} value="Sol Ferreira" />
+        </div>
+        <div style={{ display: "{{nameReservedShown}}" }}>
+          <TextField id="name-reserved" label="Display name" corner="Optional" kind="name" cap={50} value="CoGra" error={"That name isn't available."} />
+        </div>
         <TextField node="bio" label="Bio" corner="Optional" rows={3} cap={500} value="Field notes from the flats — salt, paper, and whatever the wind allows." />
         <TextField node="website" label="Website" corner="Optional" kind="url" autoComplete="url" enterKeyHint="go" cap={2048} value="solferreira.art" />
         <div style={{ flex: 1 }} />

@@ -324,7 +324,14 @@ class PostEditViewModel @Inject constructor(
                     // unaddressable — no write could name it — so it stays
                     // out of the editable section and its absence is never
                     // read as a withdrawal.
-                    val refs = post.references.mapNotNull { it.editableRow() }
+                    //
+                    // THE EDIT OPENS ON THE WHOLE CITATION SET, OR NOT AT ALL:
+                    // `PostDetail` carries the list, and a read without it
+                    // (a card's, the count alone) must never open an edit
+                    // that would stage a set the author never chose.
+                    val cited = post.references
+                        ?: return@launch _state.update { it.copy(loading = false, transportFailed = true) }
+                    val refs = cited.mapNotNull { it.editableRow() }
                     // The mark is read before the edit opens, never
                     // defaulted: an edit prepared without it unmarks the
                     // post, so a mark this read could not confirm is a mark

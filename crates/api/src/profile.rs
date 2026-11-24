@@ -46,6 +46,10 @@ pub enum ProfileError {
         message: String,
     },
     /// A profile picture was refused; the path names the offending field.
+    /// The display name is one CoGra reserves ([`crate::reserved`]) and
+    /// not the one the author already holds.
+    #[error("the display name is reserved")]
+    DisplayNameReserved,
     #[error(transparent)]
     Media(#[from] crate::media::GalleryError),
     #[error(transparent)]
@@ -128,6 +132,33 @@ fn checked_profile_len(
     }
 }
 
+/// Refuses a display name CoGra reserves, before anything is staged or
+/// signed (copy-voice.md "Reserved names").
+///
+/// An account that already holds the reserved name — a system account the
+/// bootstrap seeded, or a name that stood before the reserve — keeps it:
+/// the same name, once folded, re-saved over its landed profile passes.
+async fn refuse_reserved_display_name(
+    pool: &PgPool,
+    viewer: Uuid,
+    name: &str,
+) -> Result<(), ProfileError> {
+    if !crate::reserved::is_reserved_display_name(name) {
+        return Ok(());
+    }
+    let held = profile::landed_profile(pool, viewer)
+        .await?
+        .is_some_and(|p| {
+            crate::reserved::fold_display_name(&p.display_name)
+                == crate::reserved::fold_display_name(name)
+        });
+    if held {
+        Ok(())
+    } else {
+        Err(ProfileError::DisplayNameReserved)
+    }
+}
+
 /// Prepares a profile update: a parallel Registration toward the
 /// author's own Profile at the census-fixed `(1, 1)` (edges.md §2),
 /// chained behind the current head — the backend populates the causal
@@ -170,6 +201,9 @@ pub async fn prepare_profile_update<B: L1Boundary>(
         draft.display_name,
         MAX_DISPLAY_NAME_CHARS,
     )?;
+    if let Some(name) = &display_name {
+        refuse_reserved_display_name(pool, viewer, name).await?;
+    }
     let bio = checked_profile_len("bio", "bio", draft.bio, MAX_BIO_CHARS)?;
     let website_url = checked_profile_len(
         "websiteUrl",

@@ -26,6 +26,18 @@
 // identifier. A count that quietly dropped a kind would tell a reader the sheet
 // holds less than it does, and this sheet is the only place the number can be
 // checked.
+//
+// A CARD CARRIES THE COUNT, AND THE SHEET READS THE ROWS AS IT OPENS
+// (api-spec.md "Query budgets"; jakob 2026-11-23). The list is a fold priced at
+// fifty rows a card, so a card's read selects `referenceCount` and the rows it
+// counts are read by id the moment this sheet rises — afresh on every rise, the
+// sheet being composed only while it stands. The detail's own post hands the
+// list its read carried, and a count of zero is an empty list already. The
+// rows' wait is the house ladder (readme §4, *Loading*; seam 434): nothing
+// under 200ms, then `Loading…` where the rows will stand; a read with no answer
+// says the house transport line over `Retry` in their place (seam 452). The
+// tags are on the card already and never wait. The web's twin is
+// `web/src/lib/references/use-references-on-open.ts`.
 
 package com.cogra.feature.content
 
@@ -41,6 +53,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChatBubble
@@ -51,6 +64,13 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,6 +80,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.MonogramAvatar
 import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.StancePoint
@@ -69,24 +92,115 @@ import com.cogra.core.designsystem.pair
 import com.cogra.core.designsystem.tagReadout
 import com.cogra.core.designsystem.twoPlaces
 import com.cogra.core.designsystem.twoPlacesUnsigned
+import com.cogra.core.designsystem.v2.atom.ButtonKind
+import com.cogra.core.designsystem.v2.atom.ButtonSize
+import com.cogra.core.designsystem.v2.atom.CograButton
+import com.cogra.core.designsystem.v2.atom.LoadingState
 import com.cogra.core.designsystem.v2.atom.SectionLabel
 import com.cogra.core.designsystem.v2.atom.SheetTitle
 import com.cogra.core.designsystem.v2.atom.sheetContainerColor
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.domain.CommentView
+import com.cogra.domain.Outcome
+import com.cogra.domain.PostView
 import com.cogra.domain.ReferenceClaimView
 import com.cogra.domain.ReferenceContentKind
 import com.cogra.domain.ReferenceTargetView
 import com.cogra.domain.TopicClaimView
+import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.feature.content.R
+import com.cogra.feature.content.edit.rememberSlowAnswer
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 /** The leading mark's tile, at the small rung (`ReferenceRow.jsx`). */
 private val MARK_SIZE = 32.dp
 
-@OptIn(ExperimentalMaterial3Api::class)
+/** The node whose citations a sheet lists: a post or a comment, by its L2 id. */
+internal data class CitingNode(val kind: ReferenceContentKind, val id: String)
+
+/** The node a post's sheet lists. */
+internal val PostView.citingNode: CitingNode get() = CitingNode(ReferenceContentKind.POST, id)
+
+/** The node a comment's sheet lists. */
+internal val CommentView.citingNode: CitingNode get() = CitingNode(ReferenceContentKind.COMMENT, id)
+
+/**
+ * The read behind the sheet's rows. Provided by [ReferenceReadsViewModel] in
+ * the app; a test provides its own, and a read it does not script fails
+ * rather than answering for it.
+ */
+@Stable
+class ReferenceReads(
+    val referencesOf: suspend (kind: ReferenceContentKind, id: String) -> Outcome<List<ReferenceClaimView>?> =
+        { _, _ -> Outcome.Failed(UnsupportedOperationException("read not provided")) },
+)
+
+/** The surface's reads; null falls back to the destination's [ReferenceReadsViewModel]. */
+val LocalReferenceReads = compositionLocalOf<ReferenceReads?> { null }
+
+/** The process's reference reads, for a sheet a card's counts raise. */
+@HiltViewModel
+class ReferenceReadsViewModel @Inject constructor(references: ReferenceRepository) : ViewModel() {
+    val reads = ReferenceReads(referencesOf = references::referencesOf)
+}
+
+@Composable
+private fun referenceReads(): ReferenceReads =
+    LocalReferenceReads.current ?: hiltViewModel<ReferenceReadsViewModel>().reads
+
+/** What the sheet has of its rows: null while their read is out, [failed] when it got no answer. */
+internal data class CitationsOnOpen(
+    val references: List<ReferenceClaimView>?,
+    val failed: Boolean,
+    val retry: () -> Unit,
+)
+
+/** One answer of the rows' read: still out, the rows, or no answer. */
+private sealed interface RowsRead {
+    data object Out : RowsRead
+
+    data class Rows(val rows: List<ReferenceClaimView>) : RowsRead
+
+    data object Failed : RowsRead
+}
+
+/**
+ * The sheet's rows, read by id as it opens unless [held] carries them. Every
+ * composition of the sheet — every rise — reads afresh; a retry reads again.
+ */
+@Composable
+internal fun citationsOnOpen(node: CitingNode, count: Int, held: List<ReferenceClaimView>?): CitationsOnOpen {
+    if (held != null) return CitationsOnOpen(held, failed = false, retry = {})
+    if (count == 0) return CitationsOnOpen(emptyList(), failed = false, retry = {})
+    val reads = referenceReads()
+    var attempt by remember { mutableIntStateOf(0) }
+    val read by produceState<RowsRead>(RowsRead.Out, node, attempt) {
+        value = RowsRead.Out
+        // A node gone since the card was drawn has nothing left to list.
+        value = when (val outcome = reads.referencesOf(node.kind, node.id)) {
+            is Outcome.Success -> RowsRead.Rows(outcome.value.orEmpty())
+            is Outcome.Refused, is Outcome.Failed -> RowsRead.Failed
+        }
+    }
+    val retry = { attempt += 1 }
+    return when (val answer = read) {
+        RowsRead.Out -> CitationsOnOpen(null, failed = false, retry = retry)
+        is RowsRead.Rows -> CitationsOnOpen(answer.rows, failed = false, retry = retry)
+        RowsRead.Failed -> CitationsOnOpen(null, failed = true, retry = retry)
+    }
+}
+
+/**
+ * The sheet for [node]: its [topics] from the card, its citations [held] where
+ * the opener's read carried them, else read by id as it rises ([citationsOnOpen]).
+ */
 @Composable
 internal fun RefsSheet(
     topics: List<TopicClaimView>,
-    references: List<ReferenceClaimView>,
+    node: CitingNode,
+    referenceCount: Int,
+    held: List<ReferenceClaimView>?,
     onDismiss: () -> Unit,
     onOpenTopic: (String) -> Unit,
     onOpenActor: (String) -> Unit,
@@ -95,6 +209,32 @@ internal fun RefsSheet(
     /** Over another sheet — a comment's tags and references, raised over the thread. */
     stacked: Boolean = false,
 ) {
+    RefsSheetContent(
+        topics = topics,
+        cited = citationsOnOpen(node, referenceCount, held),
+        onDismiss = onDismiss,
+        onOpenTopic = onOpenTopic,
+        onOpenActor = onOpenActor,
+        onOpenPost = onOpenPost,
+        testTagPrefix = testTagPrefix,
+        stacked = stacked,
+    )
+}
+
+/** The sheet over its rows as read: [CitationsOnOpen.references] null while the read is out. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun RefsSheetContent(
+    topics: List<TopicClaimView>,
+    cited: CitationsOnOpen,
+    onDismiss: () -> Unit,
+    onOpenTopic: (String) -> Unit,
+    onOpenActor: (String) -> Unit,
+    onOpenPost: (String) -> Unit,
+    testTagPrefix: String,
+    stacked: Boolean = false,
+) {
+    val late = rememberSlowAnswer(cited.references == null && !cited.failed)
     // THE SHEET IS THE DOOR, NOT THE DESTINATION — `CograOverflowMenu`'s own
     // rule, which this sheet did not keep. Its opener remembers `refsOpen`
     // across the trip (`rememberSaveable`), so a row that navigated while the
@@ -142,16 +282,55 @@ internal fun RefsSheet(
                 items(topics, key = { it.hashtag.id }) { claim ->
                     TagRow(claim, openTopic, testTagPrefix)
                 }
-                if (references.isNotEmpty()) {
-                    item {
-                        SectionLabel(stringResource(R.string.content_refs_section_references))
-                    }
-                }
-                items(references, key = { it.targetId }) { claim ->
-                    ReferenceRow(claim, openActor, openPost, testTagPrefix)
-                }
+                citationRows(cited, late, openActor, openPost, testTagPrefix)
             }
         }
+    }
+}
+
+/** The citations' section: the rows once read, else the wait or the fault in their place. */
+private fun LazyListScope.citationRows(
+    cited: CitationsOnOpen,
+    late: Boolean,
+    openActor: (String) -> Unit,
+    openPost: (String) -> Unit,
+    testTagPrefix: String,
+) {
+    val references = cited.references
+    when {
+        references != null -> {
+            if (references.isNotEmpty()) {
+                item { SectionLabel(stringResource(R.string.content_refs_section_references)) }
+            }
+            items(references, key = { it.targetId }) { claim ->
+                ReferenceRow(claim, openActor, openPost, testTagPrefix)
+            }
+        }
+        cited.failed -> item { RowsFault(cited.retry, testTagPrefix) }
+        late -> item {
+            LoadingState(
+                testTag = "${testTagPrefix}_refs_loading",
+                modifier = Modifier.padding(horizontal = Space.x6, vertical = Space.x3),
+            )
+        }
+    }
+}
+
+/** The rows' read got no answer: the house transport line over `Retry`, in the rows' place. */
+@Composable
+private fun RowsFault(onRetry: () -> Unit, testTagPrefix: String) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = Space.x6, vertical = Space.x3),
+        verticalArrangement = Arrangement.spacedBy(Space.x2),
+    ) {
+        ErrorLine(R.string.content_error_transport, "${testTagPrefix}_refs_error")
+        CograButton(
+            text = stringResource(R.string.content_retry),
+            onClick = onRetry,
+            kind = ButtonKind.Outlined,
+            size = ButtonSize.Compact,
+            testTag = "${testTagPrefix}_refs_retry",
+        )
     }
 }
 

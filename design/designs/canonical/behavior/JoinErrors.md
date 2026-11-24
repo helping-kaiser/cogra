@@ -4,7 +4,7 @@ ALWAYS the board is a composite demonstration, never one reachable moment: it dr
 
 WHEN press Create account GIVEN the password is shorter than 12 characters and Repeat password differs from it -> the Password field's line reads A password is at least 12 characters. AND the Repeat password field's line reads The two passwords don't match. AND NEVER the registration is sent AND NEVER the Email field changes
 
-WHEN press Create account GIVEN every local check passes and the handle is taken -> the Handle field's line reads That handle is taken. AND NEVER the Email field changes
+WHEN press Create account GIVEN every local check passes and the handle is taken or reserved -> the Handle field's line reads That handle is taken. AND NEVER the Email field changes
 
 ALWAYS That handle is taken. never stands together with a local refusal: a local refusal stops the press before anything is sent
 

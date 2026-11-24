@@ -40,12 +40,12 @@ import { DialogSurface } from "@/lib/ui2/dialog-surface";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { FactRow } from "@/lib/ui2/fact-row";
 import { HelpDot } from "@/lib/ui2/help-dot";
-import { ReadoutChip } from "@/lib/ui2/chip";
 import { QuietNote } from "@/lib/ui2/quiet-note";
 import { NoticeLine, NoticePanel } from "@/lib/ui2/notice-panel";
 import { ActsCard, actsTotal, SLOW_SIGNING_LINE, type ActsRow } from "@/lib/ui2/compose/acts-card";
 import { CitedSheet } from "@/lib/ui2/compose/cited-sheet";
 import { TagsSheet } from "@/lib/ui2/compose/tags-sheet";
+import { manageTagsLabel, useSealTagsFold } from "@/lib/ui2/compose/seal-tags";
 import { ParkedPad } from "@/lib/ui2/compose/parked-pad";
 import { SensitiveSheet } from "@/lib/ui2/compose/sensitive-sheet";
 import { UploadStatusLine } from "@/lib/ui2/compose/upload-notice";
@@ -67,9 +67,6 @@ import type { SealFault } from "@/lib/compose/seal-fault";
 export type SealSheet = "none" | "license" | "stance" | "sensitive" | "cited" | "tags";
 
 export type { SealFault } from "@/lib/compose/seal-fault";
-
-/** How many chips the Tags row holds before it counts (`TAGS_ROW_HOLDS`). */
-export const TAGS_ROW_HOLDS = 2;
 
 // The failure pack's words, blessed (copy-voice, *Faults by code*).
 const SEAL_BUG_TITLE = "This shouldn't have happened";
@@ -187,6 +184,7 @@ export function SealStep({
   onKeepDiscarding: () => void;
 }) {
   const acts = signedActions(state);
+  const tagsFold = useSealTagsFold(state.tags.map((tag) => tag.name));
   const video = isVideoPost(state);
   // How many are still moving — the count the gate reads out. A failure is
   // not counted: it is not something the reader is waiting for.
@@ -220,27 +218,22 @@ export function SealStep({
   const rows: ActsRow[] = [
     { label: "Post", value: heading, count: 1, countNoun: "post", testId: "wizard-seal-post" },
   ];
-  if (state.tags.length > TAGS_ROW_HOLDS) {
-    // THE ROW COUNTS INSTEAD OF NAMING past what it holds (ComposeSealTagged):
+  if (state.tags.length > 0 && tagsFold.folded) {
+    // THE ROW COUNTS INSTEAD OF NAMING past what it holds, and when its chips
+    // do not fit the slot whole (ComposeSealTagged; `sealTagsRow`, round 62):
     // a pill it would clip is a lie about what is being signed.
     rows.push({
       label: "Tags",
-      value: `${state.tags.length} tags`,
+      value: tagsFold.value,
       count: state.tags.length,
       countNoun: "tag",
-      open: { label: `Manage the ${state.tags.length} tags`, onOpen: guard(() => onSheet("tags")) },
+      open: { label: manageTagsLabel(state.tags.length), onOpen: guard(() => onSheet("tags")) },
       testId: "wizard-open-tags",
     });
   } else if (state.tags.length > 0) {
     rows.push({
       label: "Tags",
-      value: (
-        <span className="flex items-center gap-1.5 overflow-hidden">
-          {state.tags.map((tag) => (
-            <ReadoutChip key={tag.name}>#{tag.name}</ReadoutChip>
-          ))}
-        </span>
-      ),
+      value: tagsFold.value,
       count: state.tags.length,
       countNoun: "tag",
       testId: "wizard-seal-tags",

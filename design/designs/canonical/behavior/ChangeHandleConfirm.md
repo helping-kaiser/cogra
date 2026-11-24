@@ -26,7 +26,7 @@ WHEN the change is taken GIVEN the dialog was closed while it was in flight -> t
 
 WHEN the change does not go through GIVEN the dialog was closed while it was in flight -> settings.credentials.handle still reads the old handle AND its second line reads That didn't go through. in the failure voice AND Retry stands in its trailing slot AND NEVER the snackbar carries the failure
 
-WHEN the new handle is taken GIVEN the dialog was closed while it was in flight -> settings.credentials.handle still reads the old handle AND its second line reads That handle is taken. in the failure voice AND NEVER the handle changes
+WHEN the new handle is taken or reserved GIVEN the dialog was closed while it was in flight -> settings.credentials.handle still reads the old handle AND its second line reads That handle is taken. in the failure voice AND NEVER the handle changes
 
 WHEN tap settings.credentials.handle GIVEN its second line reads That handle is taken. -> the form opens with the new handle still typed AND the New handle field reads That handle is taken.
 
@@ -34,7 +34,7 @@ WHEN tap Retry on settings.credentials.handle -> the same change is asked again 
 
 WHEN tap Change it GIVEN the new handle is free -> settings returns AND the snackbar reads Your handle is now, then the new handle, as Your handle is now @solferreira. AND the Handle row reads the new handle AND the old handle is free for anyone at once AND links to the old handle stop resolving to the reader
 
-WHEN tap Change it GIVEN the new handle is taken -> the dialog closes onto the form AND the New handle field reads That handle is taken. AND NEVER the handle changes
+WHEN tap Change it GIVEN the new handle is taken or reserved -> the dialog closes onto the form AND the New handle field reads That handle is taken. AND NEVER the handle changes
 
 WHEN tap Change it GIVEN no answer reaches the device -> the dialog stays up AND the line That didn't send. Try again. stands in it AND Change it reads Retry AND NEVER the handle changes
 

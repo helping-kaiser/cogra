@@ -1019,16 +1019,21 @@ private fun DetailCardFoot(
         CoversSurface(open = refsOpen, kind = CoverKind.Suspend)
         TopicsLine(
             topics = post.topics,
-            references = post.references,
+            referenceCount = post.citationCount,
             onOpenTopic = onOpenTopic,
             testTagPrefix = "detail_post",
             onOpen = { refsOpen = true },
             node = node / "tagsLine",
         )
         if (refsOpen) {
+            // The detail's own read carries the list; a post painted off a
+            // card ([com.cogra.domain.content.SeenPosts]) has the count only,
+            // and its sheet reads the rows if it rises before the read lands.
             RefsSheet(
                 topics = post.topics,
-                references = post.references,
+                node = post.citingNode,
+                referenceCount = post.citationCount,
+                held = post.references,
                 onDismiss = { refsOpen = false },
                 onOpenTopic = onOpenTopic,
                 onOpenActor = onOpenActor,

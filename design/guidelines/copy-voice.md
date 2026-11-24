@@ -1275,7 +1275,13 @@ doesn't know which field is wrong.
 
 **Drawn** — a board renders these verbatim:
 
-- `That handle is taken.` — Join's Handle field, the server's answer.
+- `That handle is taken.` — Join's Handle field, the server's answer;
+  the same line answers a reserved handle, on Join and on the handle
+  change (*Reserved names*).
+- `That name isn't available.` — the profile edit's Display name field,
+  the server's answer to a reserved display name (*Reserved names*).
+  **Drawn** on `ProfileEdit`'s `name-reserved`. (*New 2026-11-23,
+  blessed (jakob 2026-11-23).*)
 - `A password is at least 12 characters.` — Join's Password field, a
   local format failure.
 - `That email and password don't match.` — SignIn's form-level fault
@@ -1309,6 +1315,25 @@ field:
 - `That doesn't look like an invite link.` — the invite field's, in the
   email line's shape; it names the link because the field asks for a
   link. **Drawn** on `InviteEntryError`.
+
+**Reserved names** (jakob 2026-11-23: "we need a fixed list of cogra
+name that can not be picked by anyone"; the list blessed with `cogra_dev`
+/ `CoGra Dev` added). A fixed list of CoGra's own names nobody can pick.
+The WHOLE name is compared, after folding its case and its spacing; a
+word inside a longer name is never refused, and common words stay free
+on purpose — `support`, `official`, `admin`, `team`, `help`.
+
+- Handles: `cogra`, `cogra_dev`, `genesis`, `genesis_mod`, `moderator`,
+  `publisher`, `treasury`, `deleted_account`, `deleted`, `this_account`.
+- Display names: `CoGra`, `CoGra Dev`, `Genesis Moderator`,
+  `The Publisher`, `The Moderator`, `The Treasury`, `Deleted account`,
+  `A deleted account`, `This account`.
+
+A reserved handle reads `That handle is taken.`, the one refusal for a
+handle an account holds and a handle CoGra keeps, on Join's Handle field
+and on the handle change (`JoinErrors`, `ChangeHandleConfirm`). A
+reserved display name reads `That name isn't available.` on the profile
+edit's Display name field (`ProfileEdit`'s `name-reserved`).
 
 ## Commits that wait
 
@@ -1682,7 +1707,10 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
 - `INVALID_CREDENTIALS` — in place: `That email and password don't
   match.` **Drawn** on `SignInError`.
 - `HANDLE_TAKEN` — on the field: `That handle is taken.` **Drawn** on
-  `JoinErrors`.
+  `JoinErrors`. A reserved handle answers the same (*Reserved names*).
+- A reserved display name — on the field: `That name isn't available.`
+  **Drawn** on `ProfileEdit`'s `name-reserved` (*Reserved names*; its
+  code is not named yet).
 - `EMAIL_IN_USE` — on the field: `That email already has an account.`
   *Copy-only.*
 - `WEAK_PASSWORD` — on the field. The length half is `A password is at
@@ -2012,7 +2040,13 @@ Every other line here is **carried over — blessed by use (jakob
 - **The applicant's task cards** (`ApplicantFeed`) — `Verify your email`,
   its title alone over the address and `Resend the link`; `Create your key` over `Your application needs a key on this
   browser before @mira can approve it.` (the app's rendering above), with
-  `Create my key`.
+  `Create my key`. A key on this device that has not reached the
+  application (the `keyCard` chip's `attach`): `Attach your key` over
+  `Your key is on this browser. It hasn't reached your application yet.`
+  (the app: `Your key is in this app. It hasn't reached your application
+  yet.`), and the house line `That didn't go through.` with `Retry` in
+  `Create my key`'s place (*new 2026-11-23, blessed (jakob 2026-11-23:
+  "Attach i guess and body is fine")*).
 - **The waiting card** (`ApplicantWaiting`) — under `All set — waiting on
   @mira`, `Their approval brings you in.`; its ask link labelled `Your ask link`, captioned `It does not
   expire.` (jakob 2026-10-07, item 58). On the applicant's own profile

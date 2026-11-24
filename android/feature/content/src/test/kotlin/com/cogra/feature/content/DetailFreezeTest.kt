@@ -60,6 +60,23 @@ class DetailFreezeTest {
         assertThat(landingOf(opened, again, asked = false)).isEqualTo(DetailLanding.SAME)
     }
 
+    /**
+     * A post painted off a card carries the count only, which is all its card
+     * drew — so against the detail's list the hold compares counts (the web's
+     * `detail-freeze.ts`, case for case).
+     */
+    @Test
+    fun aCardPaintComparesTheCountItDrewAgainstTheDetailsList() {
+        val painted = opened.copy(references = null, referenceCount = 1)
+        assertThat(landingOf(painted, opened, asked = false)).isEqualTo(DetailLanding.SAME)
+        val twoNow = opened.copy(
+            references = opened.references.orEmpty() + testReferenceClaim(target = null, targetId = "l1-b"),
+        )
+        assertThat(landingOf(painted, twoNow, asked = false)).isEqualTo(DetailLanding.HOLD)
+        val noneNow = opened.copy(references = emptyList())
+        assertThat(landingOf(painted, noneNow, asked = false)).isEqualTo(DetailLanding.HOLD)
+    }
+
     @Test
     fun theClaimSetsAreComparedByWhichClaimsStandNotByOrder() {
         val two = opened.copy(topics = listOf(testTopicClaim("cats"), testTopicClaim("dogs")))

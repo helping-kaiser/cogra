@@ -14,12 +14,16 @@ import com.apollographql.apollo.api.Optional
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ReferenceCandidateView
+import com.cogra.domain.ReferenceClaimView
+import com.cogra.domain.ReferenceContentKind
 import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.map
 import com.cogra.domain.references.CITABLE_KINDS
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
+import com.cogra.network.graphql.CommentReferencesQuery
+import com.cogra.network.graphql.PostReferencesQuery
 import com.cogra.network.graphql.PrepareReferenceMutation
 import com.cogra.network.graphql.PrepareReferenceWithdrawalMutation
 import com.cogra.network.graphql.ReferenceCandidatesQuery
@@ -52,6 +56,20 @@ class ReferenceRepositoryImpl @Inject constructor(
                 limit = Optional.presentIfNotNull(limit),
             ),
         ).fetch().map { data -> data.referenceCandidates.mapNotNull { it.toDomain() } }
+    }
+
+    override suspend fun referencesOf(
+        kind: ReferenceContentKind,
+        id: String,
+    ): Outcome<List<ReferenceClaimView>?> = guard.run {
+        when (kind) {
+            ReferenceContentKind.POST -> client.query(PostReferencesQuery(id)).fetch().map { data ->
+                data.post?.references?.map { it.referenceClaimFields.toDomain() }
+            }
+            ReferenceContentKind.COMMENT -> client.query(CommentReferencesQuery(id)).fetch().map { data ->
+                data.comment?.references?.map { it.referenceClaimFields.toDomain() }
+            }
+        }
     }
 
     override suspend fun prepareReference(

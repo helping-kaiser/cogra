@@ -2049,7 +2049,8 @@ Object.assign(FLOW_MARKERS, {
   ProfileEdit: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'aria-label="Change picture"', tag: "button" },
-    { n: 3, find: 'data-field="Display name"', tag: "div" },
+    // Round 66: the `name-reserved` copy of the field carries the same 3.
+    { n: 3, find: 'data-field="Display name"', tag: "div", all: true },
     { n: 4, find: 'data-field="Bio"', tag: "div" },
     { n: 5, find: 'data-field="Website"', tag: "div" },
     { n: 6, find: ">Save</button>", tag: "button" },
@@ -2754,6 +2755,9 @@ Object.assign(FLOW_MARKERS, {
    board take its next free number (the identity rule: a badge is not a
    position). */
 FLOW_MARKERS.ApplicantFeed.push({ n: 21, find: ">Wrong address?</button>", tag: "button" });
+// Round 66: the `keyCard` chip's failed attach — `Retry` in `Create my key`'s
+// place, the next free number.
+FLOW_MARKERS.ApplicantFeed.push({ n: 22, find: ">Retry</button>", tag: "button" });
 Object.assign(FLOW_MARKERS, {
   ApplicantEmail: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },

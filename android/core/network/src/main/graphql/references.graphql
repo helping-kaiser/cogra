@@ -136,6 +136,30 @@ query ReferenceCandidates($query: String!, $kinds: [NodeKind!], $limit: Int) {
   }
 }
 
+# A CARD'S REFERENCES, READ BY ID WHEN A SURFACE THAT SHOWS THEM OPENS
+# (api-spec.md "Query budgets"). A card carries `referenceCount`; the list
+# is a fold priced at fifty rows, so it is read only when the tags-and-
+# references sheet opens on a card — the same rows the count counts, under
+# the same default view the card's read used. web's twin is
+# `web/src/lib/graphql/references.graphql`.
+query PostReferences($id: UUID!) {
+  post(id: $id) {
+    id
+    references {
+      ...ReferenceClaimFields
+    }
+  }
+}
+
+query CommentReferences($id: UUID!) {
+  comment(id: $id) {
+    id
+    references {
+      ...ReferenceClaimFields
+    }
+  }
+}
+
 mutation PrepareReference($input: PrepareReferenceInput!) {
   prepareReference(input: $input) {
     writes {

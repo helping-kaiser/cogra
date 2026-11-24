@@ -58,7 +58,9 @@ WHEN the account is created -> the applicant days begin on ApplicantFeed
 
 WHEN the account is created GIVEN the form opened over the signed-in state -> the new account's applicant days begin on ApplicantFeed AND this device switches to the new account AND the other account's sessions stay valid wherever they are
 
-WHEN the registration is refused because the handle is taken -> the Handle field's line reads That handle is taken. in place of its hint AND the field takes the error state
+WHEN the registration is refused because the handle is taken or is one of CoGra's reserved handles -> the Handle field's line reads That handle is taken. in place of its hint AND the field takes the error state
+
+ALWAYS a reserved handle and a handle an account holds read the one refusal, That handle is taken., and nothing tells them apart
 
 WHEN the registration is refused because the email already has an account -> the Email field's line reads That email already has an account. AND the field takes the error state
 

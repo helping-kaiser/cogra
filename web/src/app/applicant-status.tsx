@@ -11,7 +11,9 @@
 //   change), says the seven-day consequence once, and resends to that
 //   address with the sent-shape snackbar naming it.
 // - `feed.keyCard` while no key is attached: `Create my key` in `inverse` on
-//   the account-notice olive, its body naming the approver.
+//   the account-notice olive, its body naming the approver; once the key is
+//   on this browser and its attach did not go through, `Attach your key`
+//   with the fault line and `Retry` in that place.
 // - `feed.application` once approved and landing — the landing card, no
 //   control while the key is here.
 // - the waiting and closed cards are `ApplicationCard`'s.
@@ -29,7 +31,9 @@ import { resendVerificationEmail } from "@/lib/api/onboarding-api";
 import { fetchSettingsAccount } from "@/lib/api/settings-api";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { ApplicationCard, type ApplicationSurface } from "./application-card";
-import type { RegistrationProgress } from "@/lib/signing/registration-signer";
+import { useAttachActorKey, useRegistrationFlow } from "@/lib/signing/provider";
+import { attachFaultOf, type AttachFault, type RegistrationProgress } from "@/lib/signing/registration-signer";
+import { RowLine } from "@/lib/ui/row-line";
 import { buttonClassName } from "@/lib/ui/button";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { TransportError } from "@/lib/ui/transport-error";
@@ -43,6 +47,8 @@ import { useOptionalStanceData } from "@/lib/stance/provider";
 
 const VERIFY: DataNode = { path: "feed.verifyCard" };
 const KEY: DataNode = { path: "feed.keyCard" };
+/** The fault line of the key that did not attach, drawn only at the chip's `attach`. */
+const ATTACH_FAULT: DataNode = { path: "feed.keyCard.attachFault", key: "attach" };
 const LANDING: DataNode = { path: "feed.application" };
 
 /** The approver's `@handle`, read once from the application the cards share. */
@@ -122,7 +128,7 @@ export function ApplicantStatus({
         <div className="flex flex-col gap-2">
           {!emailVerified && <VerifyCard />}
           {!keyAttached && !keyOnDevice && approver !== null && <CeremonyCard approver={approver} />}
-          {!keyAttached && keyOnDevice && <KeyElsewhereCard />}
+          {!keyAttached && keyOnDevice && <UnattachedKeyCard fault={progress.attachFault} />}
           {/* keyAttached && !keyOnDevice: the restore ask rides the
               screen's collapsing top, not this stack. */}
           {/* THE APPLICATION CARD (ApplicantWaiting, ApplicantRejected): waiting
@@ -221,6 +227,55 @@ function CeremonyCard({ approver }: { approver: string }) {
       >
         Create my key
       </Link>
+    </TaskCard>
+  );
+}
+
+/**
+ * THE KEY ON THIS BROWSER THAT DID NOT ATTACH (ApplicantFeed.jsx `keyCard` =
+ * `attach`, round 66; ApplicantFeed.md:19-21, 37-39). The poll's repair
+ * attach says why (`attachFault`): the applicant's own key that did not reach
+ * the application reads `Attach your key`, and `That didn't go through.` with
+ * `Retry` (`SigningPending row`, the web's `RowLine`) stands in `Create my
+ * key`'s place — never a fresh key, never "another account". Retry attaches
+ * the SAME key again, as the ceremony does (`/key`), then polls at once
+ * (`ensureAdvancing`), and the card leaves with the pass that reads the key
+ * attached. A key the server refuses as another account's (`keyInUse`, now or
+ * at a Retry) keeps today's card, which no board draws.
+ */
+function UnattachedKeyCard({ fault }: { fault: AttachFault | undefined }) {
+  const attachActorKey = useAttachActorKey();
+  const flow = useRegistrationFlow();
+  // A Retry's answer is fresher than the pass that drew the card.
+  const [retried, setRetried] = useState<AttachFault | "attached" | null>(null);
+  const [retrying, setRetrying] = useState(false);
+  const shown = retried ?? fault;
+
+  if (shown !== "failed" && shown !== "attached") return <KeyElsewhereCard />;
+
+  const onRetry = async () => {
+    if (retrying) return;
+    setRetrying(true);
+    const answer = attachFaultOf(await attachActorKey());
+    setRetrying(false);
+    setRetried(answer ?? "attached");
+    if (answer === null) flow.ensureAdvancing();
+  };
+
+  return (
+    <TaskCard
+      tone="notice"
+      title="Attach your key"
+      body="Your key is on this browser. It hasn't reached your application yet."
+      node={KEY}
+    >
+      {shown === "failed" && (
+        <RowLine
+          state={{ kind: "didntGoThrough", onRetry: () => void onRetry() }}
+          node={ATTACH_FAULT}
+          testId="home_attach_fault"
+        />
+      )}
     </TaskCard>
   );
 }

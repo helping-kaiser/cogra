@@ -359,6 +359,9 @@ export function FeedFilterSheet({
               node={node === undefined ? undefined : { path: `${node.path}.topic.tag`, key: topic.name }}
               selected={staged.topic?.id === topic.id}
               onClick={() => set({ topic: staged.topic?.id === topic.id ? null : topic })}
+              // A tag is one line at most: a name too long for the sheet ends
+              // in "…" and the chip stays inside it (Chip.jsx `cut`, round 62).
+              cut
             >
               {`#${topic.name}`}
             </Chip>

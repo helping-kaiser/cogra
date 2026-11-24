@@ -248,6 +248,47 @@ impl Rig {
         (status, body_json(response).await)
     }
 
+    /// A part whose body is `chunk` repeated forever, under `token`'s
+    /// session when one is given and with a declared `Content-Length` when
+    /// one is given, and how many body bytes the router pulled before it
+    /// answered. A body that never ends can only be answered by a refusal,
+    /// and the count shows how much of it was read first.
+    async fn put_endless_part(
+        &self,
+        token: Option<&str>,
+        session: &str,
+        part_number: u32,
+        declared: Option<usize>,
+        chunk: &'static [u8],
+    ) -> (axum::response::Response, usize) {
+        use async_graphql::futures_util::{StreamExt, stream};
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        let pulled = Arc::new(AtomicUsize::new(0));
+        let counter = pulled.clone();
+        let body =
+            stream::repeat_with(move || axum::body::Bytes::from_static(chunk)).map(move |chunk| {
+                counter.fetch_add(chunk.len(), Ordering::Relaxed);
+                Ok::<_, std::io::Error>(chunk)
+            });
+        let mut request = Request::builder()
+            .method("PUT")
+            .uri(format!("/media/uploads/{session}/parts/{part_number}"))
+            .header("x-real-ip", "203.0.113.7");
+        if let Some(token) = token {
+            request = request.header("authorization", format!("Bearer {token}"));
+        }
+        if let Some(declared) = declared {
+            request = request.header("content-length", declared);
+        }
+        let response = self
+            .app
+            .clone()
+            .oneshot(request.body(Body::from_stream(body)).expect("request"))
+            .await
+            .expect("response");
+        (response, pulled.load(Ordering::Relaxed))
+    }
+
     /// Every part of `file`, cut the way the session said to.
     async fn put_all_parts(&self, token: &str, session: &str, part_size: usize, file: &[u8]) {
         for (index, chunk) in file.chunks(part_size).enumerate() {
@@ -783,5 +824,173 @@ async fn a_part_is_refused_unless_it_fits_the_cut(pool: PgPool) {
     assert_eq!(
         incomplete["userErrors"][0]["code"], "BAD_INPUT",
         "nothing landed, so there is nothing to assemble: {incomplete}"
+    );
+}
+
+/// The `Connection` header an answer carries, if any.
+fn connection(response: &axum::response::Response) -> Option<&str> {
+    response
+        .headers()
+        .get("connection")
+        .and_then(|v| v.to_str().ok())
+}
+
+/// The part route decides who may send a part from the headers before it
+/// reads the body (api-spec.md "Uploads need a session at the door"). An
+/// anonymous part is answered with the route's own 401: one that declares
+/// more than a part is answered before a byte of its body is pulled, one
+/// that declares nothing is absorbed — pulled and dropped, never buffered
+/// — no further than one part, and a part-sized body is absorbed whole so
+/// the answer reaches a client that sends before it reads. Before the
+/// door, each of these bodies was buffered up to twice a part and the
+/// endless ones were answered 413.
+///
+/// An anonymous part is refused with 401 before its body is buffered.
+/// ´claim:media:an-anonymous-part-is-refused-before-its-body´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_anonymous_part_is_refused_before_its_body_is_read(pool: PgPool) {
+    let rig = Rig::new(pool);
+    let owner = rig.member("owner").await;
+    let begun = rig
+        .begin(&owner, photo_with_location().len(), "STILL")
+        .await;
+    no_errors(&begun, "begin refused");
+    let session = begun["upload"]["id"].as_str().expect("session id");
+    let refusal = json!({
+        "code": "UNAUTHENTICATED",
+        "message": "this endpoint needs an access token",
+        "field": [],
+    });
+
+    let (declared, pulled) = rig
+        .put_endless_part(None, session, 1, Some(1024 * 1024), &[b'x'; 8])
+        .await;
+    assert_eq!(declared.status(), StatusCode::UNAUTHORIZED);
+    assert_eq!(connection(&declared), Some("close"));
+    assert_eq!(pulled, 0, "a declared oversized body is never pulled");
+    assert_eq!(body_json(declared).await, refusal);
+
+    let (endless, pulled) = rig
+        .put_endless_part(None, session, 1, None, &[b'x'; 8])
+        .await;
+    assert_eq!(endless.status(), StatusCode::UNAUTHORIZED);
+    assert_eq!(connection(&endless), Some("close"));
+    assert!(
+        pulled <= 16 + 8,
+        "absorbed no further than one part and the chunk in flight: {pulled}"
+    );
+    assert_eq!(body_json(endless).await, refusal);
+
+    let whole = rig
+        .app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("PUT")
+                .uri(format!("/media/uploads/{session}/parts/1"))
+                .header("x-real-ip", "203.0.113.7")
+                .body(Body::from(vec![b'x'; 16]))
+                .expect("request"),
+        )
+        .await
+        .expect("response");
+    assert_eq!(whole.status(), StatusCode::UNAUTHORIZED);
+    assert_eq!(connection(&whole), None, "a part-sized body is absorbed");
+    assert_eq!(body_json(whole).await, refusal);
+}
+
+/// A signed-in caller the session cannot take a part from is refused from
+/// the headers too, before the body: an account that is not a member, one
+/// whose deletion executed (no login, the predicate `/graphql`'s viewer
+/// resolution reads), a member whose session it is not, and the owner naming a part outside
+/// the cut — each with the answer it always got. Before the door each was
+/// answered 413 once twice a part had been buffered.
+///
+/// A part the caller may not send is refused before its body is buffered.
+/// ´claim:media:a-refused-part-is-refused-before-its-body´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_part_the_caller_may_not_send_is_refused_before_its_body(pool: PgPool) {
+    let rig = Rig::new(pool);
+    let owner = rig.member("owner").await;
+    let stranger = rig.member("stranger").await;
+    let applicant_id = rig.seed_member("applicant", "applicant@example.com").await;
+    let applicant = rig.log_in("applicant@example.com").await;
+    sqlx::query("UPDATE user_credentials SET account_state = 'applicant' WHERE actor_id = $1")
+        .bind(applicant_id)
+        .execute(&rig.pool)
+        .await
+        .expect("an applicant");
+    let gone_id = rig.seed_member("gone", "gone@example.com").await;
+    let gone = rig.log_in("gone@example.com").await;
+    sqlx::query(
+        "UPDATE user_credentials SET email = NULL, password_hash = NULL WHERE actor_id = $1",
+    )
+    .bind(gone_id)
+    .execute(&rig.pool)
+    .await
+    .expect("the login goes");
+    let begun = rig
+        .begin(&owner, photo_with_location().len(), "STILL")
+        .await;
+    no_errors(&begun, "begin refused");
+    let session = begun["upload"]["id"].as_str().expect("session id");
+    let part_count = begun["upload"]["partCount"].as_u64().expect("part count");
+
+    let cases = [
+        (
+            "an applicant",
+            applicant.as_str(),
+            1,
+            StatusCode::FORBIDDEN,
+            json!({ "code": "FORBIDDEN", "message": "only a member may upload", "field": [] }),
+        ),
+        (
+            "an account whose deletion executed",
+            gone.as_str(),
+            1,
+            StatusCode::FORBIDDEN,
+            json!({ "code": "FORBIDDEN", "message": "only a member may upload", "field": [] }),
+        ),
+        (
+            "another member",
+            stranger.as_str(),
+            1,
+            StatusCode::NOT_FOUND,
+            json!({ "code": "NOT_FOUND", "message": "no such upload session", "field": ["uploadId"] }),
+        ),
+        (
+            "the owner, outside the cut",
+            owner.as_str(),
+            part_count as u32 + 1,
+            StatusCode::BAD_REQUEST,
+            json!({
+                "code": "BAD_INPUT",
+                "message": format!("parts are numbered 1 to {part_count}"),
+                "field": ["partNumber"],
+            }),
+        ),
+    ];
+    for (case, token, part_number, status, refusal) in cases {
+        let (answer, pulled) = rig
+            .put_endless_part(
+                Some(token),
+                session,
+                part_number,
+                Some(1024 * 1024),
+                &[b'x'; 8],
+            )
+            .await;
+        assert_eq!(answer.status(), status, "{case}");
+        assert_eq!(pulled, 0, "{case}: the body is never pulled");
+        assert_eq!(body_json(answer).await, refusal, "{case}");
+    }
+
+    let (oversized, _) = rig
+        .put_endless_part(Some(&owner), session, 1, None, &[b'x'; 8])
+        .await;
+    assert_eq!(
+        oversized.status(),
+        StatusCode::PAYLOAD_TOO_LARGE,
+        "the body limit is still the owner's to meet"
     );
 }

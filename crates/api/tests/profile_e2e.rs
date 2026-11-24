@@ -465,3 +465,118 @@ async fn empty_update_refuses_with_a_user_error(pool: PgPool) {
     assert_eq!(payload["writes"], Value::Null);
     assert_eq!(payload["userErrors"][0]["code"], "BAD_INPUT");
 }
+
+const PREPARE_PROFILE: &str = r#"mutation($input: PrepareProfileUpdateInput!) {
+    prepareProfileUpdate(input: $input) {
+      writes { id }
+      userErrors { code field message }
+    }
+  }"#;
+
+/// The spellings of a reserved display name a person might type, each
+/// folding to it once case and spacing are folded.
+fn display_spellings(name: &str) -> [String; 4] {
+    [
+        name.to_string(),
+        name.to_uppercase(),
+        format!("  {} ", name.to_lowercase()),
+        name.replace(' ', " \u{a0}\t"),
+    ]
+}
+
+/// Every reserved display name, in every spelling that folds to it, is refused on the display name before anything is staged.
+/// ´claim:profile:a-reserved-display-name-is-refused´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_reserved_display_name_is_refused_before_anything_is_staged(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_id, _key) = rig.seed_member("ada", "ada@example.com").await;
+    let token = rig.log_in("ada@example.com").await;
+
+    for reserved in api::reserved::RESERVED_DISPLAY_NAMES {
+        for spelling in display_spellings(reserved) {
+            let refused = rig
+                .gql(
+                    Some(&token),
+                    PREPARE_PROFILE,
+                    json!({ "input": { "displayName": spelling, "bio": "a bio" }}),
+                )
+                .await;
+            let payload = &refused["prepareProfileUpdate"];
+            assert_eq!(
+                payload["writes"],
+                Value::Null,
+                "`{spelling}` stages nothing"
+            );
+            assert_eq!(
+                payload["userErrors"],
+                json!([{
+                    "code": "DISPLAY_NAME_RESERVED",
+                    "field": ["displayName"],
+                    "message": "the display name is reserved",
+                }]),
+                "`{spelling}`"
+            );
+        }
+    }
+}
+
+/// A reserved name inside a longer display name, or run together without its spaces, is not reserved and prepares.
+/// ´claim:profile:a-reserved-word-inside-a-display-name-stays-free´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_reserved_word_inside_a_longer_display_name_stays_free(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_id, _key) = rig.seed_member("ada", "ada@example.com").await;
+    let token = rig.log_in("ada@example.com").await;
+
+    for name in ["CoGra fan", "Not The Moderator", "TheTreasury"] {
+        let prepared = rig
+            .gql(
+                Some(&token),
+                PREPARE_PROFILE,
+                json!({ "input": { "displayName": name }}),
+            )
+            .await;
+        let payload = &prepared["prepareProfileUpdate"];
+        assert_eq!(payload["userErrors"], json!([]), "`{name}`");
+        assert!(payload["writes"].is_array(), "`{name}` prepares");
+    }
+}
+
+/// An account that already holds a reserved display name may re-save it in any folding of it and edit its other fields, but cannot move to another reserved name.
+/// ´claim:profile:a-reserved-display-name-stays-with-its-holder´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_reserved_display_name_stays_with_its_holder(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (id, _key) = rig.seed_member("holder", "holder@example.com").await;
+    let mut conn = rig.pool.acquire().await.expect("conn");
+    postgres_store::genesis::insert_profile_version(&mut conn, id, "The Moderator", None)
+        .await
+        .expect("held name");
+    drop(conn);
+    let token = rig.log_in("holder@example.com").await;
+
+    for input in [
+        json!({ "bio": "still the moderator" }),
+        json!({ "displayName": "The Moderator", "bio": "re-saved" }),
+        json!({ "displayName": " the  MODERATOR" }),
+    ] {
+        let prepared = rig
+            .gql(Some(&token), PREPARE_PROFILE, json!({ "input": input }))
+            .await;
+        let payload = &prepared["prepareProfileUpdate"];
+        assert_eq!(payload["userErrors"], json!([]), "{input}");
+        assert!(payload["writes"].is_array(), "{input} prepares");
+    }
+
+    let moved = rig
+        .gql(
+            Some(&token),
+            PREPARE_PROFILE,
+            json!({ "input": { "displayName": "The Treasury" }}),
+        )
+        .await;
+    assert_eq!(
+        moved["prepareProfileUpdate"]["userErrors"][0]["code"],
+        "DISPLAY_NAME_RESERVED"
+    );
+}

@@ -763,6 +763,23 @@ pinned to the offending field (`handle` / `email`).
   session it rides. A freed handle is immediately claimable
   (plain UNIQUE semantics), and links to the old handle resolve
   to nothing — or to whoever claims it — honestly.
+- **Reserved names.** A fixed list of CoGra's own handles and
+  display names nobody can pick; the lists and their refusal lines
+  live in
+  [copy-voice.md "Reserved names"](../../design/guidelines/copy-voice.md),
+  and `api::reserved` mirrors them under a drift test. A handle is
+  compared in its folded form: `register` and `changeHandle` refuse
+  a reserved one exactly as a held one — `HANDLE_TAKEN`, same
+  message, same field, at the same point in the flow — so nothing
+  tells the two apart. A display name is compared whole, trimmed,
+  whitespace runs folded to one space and lowercased:
+  `prepareProfileUpdate` refuses a reserved one as
+  `DISPLAY_NAME_RESERVED` on `displayName` before anything is
+  staged; a reserved word inside a longer name stays free. An
+  account already holding a reserved name keeps it and may save it
+  again; once it moves away, the name is kept from it too. The
+  genesis bootstrap seeds the system accounts under their reserved
+  names through its own store writes, which no request reaches.
 - **Email.** Trimmed and **lowercased** to a canonical form used
   for both the stored `user_credentials.email` and the login
   lookup, so the

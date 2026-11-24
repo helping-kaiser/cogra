@@ -16,7 +16,9 @@ ALWAYS a person's reference row reads Deleted account in the name's place, the r
 
 WHEN tap a person's reference row GIVEN the account is deleted -> the deleted account's page opens
 
-WHEN tap a tag row -> the tag's page opens
+WHEN tap a tag row GIVEN the sheet was not opened from that tag's own page -> the tag's page opens
+
+WHEN tap a tag row GIVEN the sheet was opened from that tag's own page -> NEVER anything changes
 
 WHEN tap a person's reference row -> their profile opens
 

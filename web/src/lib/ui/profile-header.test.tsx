@@ -7,7 +7,8 @@ import { act, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { expectWrapsLongWords } from "@/test/written";
-import { ProfileHeader, nameFitSize } from "./profile-header";
+import { nameFitSize } from "./name-fit";
+import { ProfileHeader } from "./profile-header";
 
 const IDENTITY = { path: "profile.identity" };
 const HANDLE = "maximiliana_featherstone_haugh";
@@ -82,6 +83,20 @@ describe("nameFitSize", () => {
   // Profile.md:87 — no smallest size: two lines are the hard cap.
   it("has no floor above the last whole pixel", () => {
     expect(nameFitSize((size) => (size > 3 ? 3 : 2))).toEqual({ size: 3, lineHeight: 4 });
+  });
+
+  // TagPage.md:9-11 — the tag heading's floor: never below 12px, and a name
+  // that holds two lines at no size down to 12 stands at 12 on 15.
+  it("stops at the floor it is given, on the floor's leading, without asking below it", () => {
+    const asked: number[] = [];
+    expect(
+      nameFitSize((size) => {
+        asked.push(size);
+        return 3;
+      }, 12),
+    ).toEqual({ size: 12, lineHeight: 15 });
+    expect(Math.min(...asked)).toBeGreaterThan(11);
+    expect(nameFitSize((size) => (size > 14 ? 3 : 2), 12)).toEqual({ size: 14, lineHeight: 18 });
   });
 });
 

@@ -523,8 +523,17 @@ data class PostView(
      * and the ranker arrives in slice 3.
      */
     val topics: List<TopicClaimView> = emptyList(),
-    /** This post's current references — the same author-owned channel as [topics] (D12). */
-    val references: List<ReferenceClaimView> = emptyList(),
+    /**
+     * This post's current references — the same author-owned channel as
+     * [topics] (D12) — where the read carried them: the detail's own post
+     * (`PostDetail`). NULL ON A CARD: a card read carries only
+     * [referenceCount] (api-spec.md "Query budgets"), and a surface that
+     * shows the rows reads them by id as it opens. Null is "not read",
+     * never "none" — [citationCount] is the number either way.
+     */
+    val references: List<ReferenceClaimView>? = null,
+    /** How many citations stand — the card read's `referenceCount`, the rows [references] would list. */
+    val referenceCount: Int = 0,
     /**
      * The gallery, in the author's order, the first entry the cover.
      * Empty on a words post — a post's body is words XOR media (D16),
@@ -562,6 +571,9 @@ data class PostView(
 ) {
     /** The body is media rather than words (D16). */
     val isMediaPost: Boolean get() = attachments.isNotEmpty()
+
+    /** The number the line prints: the list's length where it was read, else the count. */
+    val citationCount: Int get() = references?.size ?: referenceCount
 }
 
 /** One comment with its current display version. */
@@ -587,8 +599,14 @@ data class CommentView(
     val replyCount: Int = 0,
     /** This comment's current topics — the same author-owned channel as [PostView.topics]. */
     val topics: List<TopicClaimView> = emptyList(),
-    /** This comment's current references — the same author-owned channel (D12). */
-    val references: List<ReferenceClaimView> = emptyList(),
+    /**
+     * This comment's current references — the same author-owned channel
+     * (D12) — where the read carried them: the edit's own read
+     * (`CommentForEdit`). Null on every card, as [PostView.references].
+     */
+    val references: List<ReferenceClaimView>? = null,
+    /** How many citations stand — `referenceCount`, the rows [references] would list. */
+    val referenceCount: Int = 0,
     /**
      * The gallery, at most four and with no cover: a comment is text
      * **plus** optional media, never instead of it (D16).
@@ -622,7 +640,10 @@ data class CommentView(
     val sensitiveReason: String? = null,
     /** When the reader saved this comment; null when not kept — the comment menu's first row. */
     val viewerBookmarkedAt: Instant? = null,
-)
+) {
+    /** The number the line prints: the list's length where it was read, else the count. */
+    val citationCount: Int get() = references?.size ?: referenceCount
+}
 
 /**
  * One standing citation on a piece of content — a chip in the
