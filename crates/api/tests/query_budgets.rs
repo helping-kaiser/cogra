@@ -473,6 +473,43 @@ async fn a_full_slice_page_with_legs_fits_the_release_budget(pool: PgPool) {
     assert!(response.errors.is_empty(), "{:?}", response.errors);
 }
 
+/// A full page of the person's chronicle at the cap fits the release
+/// budget with the Everything view's whole row on every kind: a record's
+/// row as the clients' `AuthorRecords` reads it, and the settling post's
+/// and comment's light rows beside it. A union row prices at the sum of
+/// its kinds, so this is the dearest page a client can ask of it.
+///
+/// A full chronicle page at the cap, every kind's row selected, fits the release budget.
+/// ´claim:budgets:a-full-chronicle-page-fits-the-release-budget´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_full_chronicle_page_fits_the_release_budget(pool: PgPool) {
+    let query = "{ user(id: \"00000000-0000-0000-0000-000000000000\") {
+        chronicle(first: 100) { pageInfo { hasNextPage endCursor }
+            edges { cursor node {
+                __typename
+                ... on Record {
+                    id family act targetId terminalId topic { name { value } }
+                    landedAt pDirected pInterest severed
+                    target { __typename
+                        ... on User { id handle }
+                        ... on Post { id title { value } content { value } removal { at by } }
+                        ... on Comment { id content { value } removal { at by }
+                            target { __typename ... on Post { id } } } }
+                    terminal { __typename
+                        ... on Comment { id content { value } target { __typename ... on Post { id } } }
+                        ... on Post { id title { value } content { value } }
+                        ... on User { id handle avatar { url } } }
+                }
+                ... on Post { id landing { state } title { value } content { value }
+                    removal { at by } }
+                ... on Comment { id landing { state } content { value } removal { at by }
+                    target { __typename ... on Post { id } ... on Comment { id } } }
+            } } }
+    } }";
+    let response = execute(&schema(pool, QueryBudgets::release()), query).await;
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+}
+
 /// The client's whole `feedRanking` selection (ranked-feed-api §12) fits
 /// the release budget. Its lists are a ranking snapshot, not connections:
 /// each field prices once however many rows come back, so the snapshot's

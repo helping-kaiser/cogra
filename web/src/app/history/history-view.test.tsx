@@ -3,23 +3,26 @@
 // HistorySearch.md). Each test names the line(s) it holds; the lines another
 // suite holds are named here once so the mapping is whole:
 //
-// - History.md:5-17, HistoryEmpty.md:9 (what joins History, the first seeing
+// - History.md:5-21, HistoryEmpty.md:9 (what joins History, the first seeing
 //   only, never a record): the seen tracker — `seen-tracker.test.tsx`,
 //   `seen-record.test.ts` — and the server (`crates/api/tests/view_history.rs`).
-// - History.md:29, :61 (the card's score and its trace): the slot's own
+// - History.md:33, :77 (the card's score and its trace): the slot's own
 //   suite (`score-slot.test.tsx`: the lookup, the dash on a miss, the door
 //   whose trace reads `Back to History`) and the trace's (`trace-view.test.tsx`).
-// - History.md:33, :43, :65-75 (the row's order, the veil, the stance hold):
+// - History.md:37, :47, :85-95 (the row's order, the veil, the stance hold):
 //   the card masters' own suites (`post-card.test.tsx`,
 //   `stance-control.test.tsx`, `comment-feed-card.test.ts`).
-// - History.md:77-83 (one clip, the hard-top re-election): `StageHost`'s.
-// - History.md:113-117 (Back to top): `collapsing-top.test.tsx`; here, only
-//   that the header, field and trigger ride the collapsing top (:119).
-// - History.md:121, HistoryNone.md:23, HistorySearch.md:45 (the lit slot):
+// - History.md:97-101 (one clip, the hard-top re-election): `StageHost`'s.
+// - History.md:135-139 (Back to top): `collapsing-top.test.tsx`; here, only
+//   that the header, field and trigger ride the collapsing top (:141).
+// - History.md:143, HistoryNone.md:23, HistorySearch.md:45 (the lit slot):
 //   `shell.test.tsx`.
-// - History.md:89-101 (the matcher's law itself): the server's
+// - History.md:111-123 (the matcher's law itself): the server's
 //   (`crates/api/tests/view_history.rs`); the screen's duty is to ask with the
 //   reader's query and draw the answer as served, which is pinned here.
+
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
@@ -312,7 +315,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
   });
 
   it("history_is_a_feed_of_every_kind_each_as_its_own_feed_card_newest_seen_first", async () => {
-    // History.md:3, :19, :21, :23.
+    // History.md:3, :23, :25, :27.
     serveHistory(() => page(ALL));
     render();
     await screen.findByTestId("history-list");
@@ -326,7 +329,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
   });
 
   it("a_quiet_day_divider_stands_above_the_first_thing_seen_each_day_and_belongs_to_the_list", async () => {
-    // History.md:25, :27.
+    // History.md:29, :31.
     serveHistory(() => page(ALL));
     render();
     await screen.findByTestId("history-list");
@@ -352,7 +355,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
   });
 
   it("a_card_carries_no_age_of_the_seeing_only_its_own", async () => {
-    // History.md:31.
+    // History.md:35.
     serveHistory(() => page([POST]));
     render();
     await screen.findByTestId("history-list");
@@ -360,7 +363,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
   });
 
   it("a_comment_card_carries_no_view_replies_line", async () => {
-    // History.md:35, :37.
+    // History.md:39, :41.
     serveHistory(() => page([COMMENT]));
     render();
     await screen.findByTestId("history-list");
@@ -368,7 +371,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
   });
 
   it("a_thing_removed_after_it_was_seen_keeps_its_place_wearing_its_mark", async () => {
-    // History.md:39: the card's own removal mark, in its place.
+    // History.md:43: the card's own removal mark, in its place.
     const removed: Entry = { node: postNode("p9", "Gone", 2, undefined, true), firstSeenAt: hoursAgo(0.55) };
     serveHistory(() => page([COMMENT, removed, POST]));
     render();
@@ -397,7 +400,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
   });
 
   it("the_readers_own_removal_from_a_cards_menu_leaves_it_in_place_wearing_its_mark", async () => {
-    // History.md:39 with RM-G9's build word: removed from History's own ⋮,
+    // History.md:43 with RM-G9's build word: removed from History's own ⋮,
     // the card stands as its mark where it stood. The removal answers here.
     const mine: Entry = { node: postNode("p5", "Mine", 1, author("me", "me", "Me")), firstSeenAt: hoursAgo(0.5) };
     serveHistory(() => page([COMMENT, mine, POST]));
@@ -434,7 +437,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
   });
 
   it("a_hidden_accounts_posts_and_comments_stay_out_and_its_profile_card_stays", async () => {
-    // History.md:41: the server keeps them out; a hide the server has not
+    // History.md:45: the server keeps them out; a hide the server has not
     // taken yet is honoured by the device's own set at the read.
     serveHistory(() => page([COMMENT, POST, { node: personNode("u1", "ada", "Ada"), firstSeenAt: daysAgo(1) }]));
     server.use(
@@ -447,7 +450,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
   });
 
   it("history_offers_no_way_to_clear_and_no_way_to_remove_one_thing", async () => {
-    // History.md:45.
+    // History.md:49.
     serveHistory(() => page(ALL));
     render();
     await screen.findByTestId("history-list");
@@ -458,11 +461,11 @@ describe("History — the seen-list as a feed (History.md)", () => {
   });
 
   it("every_cards_doors_land_as_the_feeds_do_their_back_arrow_reading_back_to_history", async () => {
-    // History.md:47, :49, :51, :53, :55, :57.
+    // History.md:53, :57, :59, :71, :73.
     serveHistory(() => page(ALL));
     render();
     await screen.findByTestId("history-list");
-    // THE POINTER DOOR (History.md:51): the line naming the post opens the post
+    // THE POINTER DOOR (History.md:53): the line naming the post opens the post
     // itself, under its registered name.
     expect(screen.getByTestId(byNode("history.commentCard.target", "c1"))).toHaveAttribute("href", "/posts/p1?from=history");
     expect(screen.getByTestId("history-comment-c1-link")).toHaveAttribute(
@@ -496,7 +499,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
   });
 
   it("a_tag_card_reaching_the_reader_through_no_one_stands_no_through_line", async () => {
-    // History.md:59.
+    // History.md:75.
     serveHistory(() => page([TAG]));
     render();
     await screen.findByTestId("history-list");
@@ -510,7 +513,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
   });
 
   it("tag_a_new_post_with_it_opens_the_composer_with_the_tag_staged", async () => {
-    // History.md:63, and the row's order: opinion, the act, share (History.md:33).
+    // History.md:79, and the row's order: opinion, the act, share (History.md:37).
     serveHistory(() => page([TAG]));
     render();
     await screen.findByTestId("history-list");
@@ -546,7 +549,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
   });
 
   it("the_field_reads_search_your_history_and_the_trigger_everything_at_rest", async () => {
-    // History.md:85, :105.
+    // History.md:107, :127.
     serveHistory(() => page(ALL));
     render();
     await screen.findByTestId("history-list");
@@ -558,7 +561,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
   });
 
   it("tapping_the_trigger_opens_the_historys_filter_sheet_over_history", async () => {
-    // History.md:107; HistoryNone.md:17; HistorySearch.md:39.
+    // History.md:129; HistoryNone.md:17; HistorySearch.md:39.
     serveHistory(() => page(ALL));
     render();
     await screen.findByTestId("history-list");
@@ -569,7 +572,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
   });
 
   it("the_order_stands_frozen_while_scrolling_and_the_next_page_continues_it", async () => {
-    // History.md:109: the next page continues the open list; nothing moves.
+    // History.md:131: the next page continues the open list; nothing moves.
     const later: Entry = { node: postNode("p8", "Later", 40), firstSeenAt: daysAgo(27) };
     const reads = serveHistory(({ after }) =>
       after === null ? page(ALL, { hasNextPage: true, endCursor: "c4" }) : page([later]),
@@ -590,7 +593,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
   });
 
   it("pull_down_at_the_top_re_reads_history", async () => {
-    // History.md:111; HistoryHidden.md:7's way in.
+    // History.md:133; HistoryHidden.md:7's way in.
     let reads = 0;
     server.use(
       gqlLink.query("HistoryPage", () => {
@@ -614,7 +617,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
   });
 
   it("the_header_the_field_and_the_trigger_ride_the_collapsing_top", async () => {
-    // History.md:119.
+    // History.md:141.
     serveHistory(() => page(ALL));
     render();
     await screen.findByTestId("history-list");
@@ -625,7 +628,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
   });
 
   it("the_back_arrow_reads_back_to_your_profile_and_returns_to_it", async () => {
-    // History.md:123, :125; HistoryEmpty.md:11, :13; HistoryNone.md:19, :21;
+    // History.md:145, :147; HistoryEmpty.md:11, :13; HistoryNone.md:19, :21;
     // HistorySearch.md:41, :43.
     serveHistory(() => page(ALL));
     render();
@@ -649,9 +652,9 @@ function pull(scroller: HTMLElement) {
   fireEvent(scroller, touch("touchend", 100 + PULL_THRESHOLD));
 }
 
-describe("History — search your history (History.md:85-103; HistorySearch.md)", () => {
+describe("History — search your history (History.md:107-125; HistorySearch.md)", () => {
   it("typing_narrows_on_the_server_trimmed_once_typing_settles", async () => {
-    // History.md:87, :93: a query reaches everything seen — the server's
+    // History.md:109, :115: a query reaches everything seen — the server's
     // matcher — never only the loaded cards, and no page is walked for it.
     const reads = serveHistory(({ query }) =>
       query === "long way" ? page([POST]) : page(ALL, { hasNextPage: true, endCursor: "c4" }),
@@ -668,7 +671,7 @@ describe("History — search your history (History.md:85-103; HistorySearch.md)"
   });
 
   it("the_matches_stand_in_sections_people_then_tags_then_content_with_captions", async () => {
-    // History.md:87; HistorySearch.md:3, :11, :23, :25.
+    // History.md:109; HistorySearch.md:3, :11, :23, :25.
     const MATEO: Entry = { node: personNode("u4", "mateo", "Mateo Ruiz"), firstSeenAt: hoursAgo(3) };
     serveHistory(({ query }) => (query === "m" ? page([MATEO, PERSON, TAG, POST]) : page(ALL)));
     render();
@@ -757,7 +760,7 @@ describe("History — search your history (History.md:85-103; HistorySearch.md)"
   });
 
   it("a_query_nothing_seen_carries_stands_history_narrowed_to_nothing_with_show_everything", async () => {
-    // History.md:103; HistoryNone.md:3, :7, :9, :11, :13.
+    // History.md:125; HistoryNone.md:3, :7, :9, :11, :13.
     const reads = serveHistory(({ query, kinds }) => (query === null && kinds === null ? page(ALL) : page([])));
     render();
     await screen.findByTestId("history-list");
@@ -1415,5 +1418,122 @@ describe("the stream opened from History (RL-3)", () => {
     expect(reads.map((read) => read.after)).toEqual([null, "c3"]);
     expect(stream!.snapshot.hasMore).toBe(false);
     forgetStream();
+  });
+});
+
+// A COMMENT'S MEDIA ON HISTORY (round 65, seam 424/444; History.jsx:74-77,
+// :114; `_shared.jsx` `CommentMediaCopies`, :503-529): the `comment` chip's
+// `pictures` and `clip` stand a media comment as the feed's own comment card,
+// registering `history.commentCard.media`, `.media.dots`, `.media.frame` keyed
+// `<comment id>/<position>` and `.media.frame.soundDisc` — the tag page's
+// names (`topic-view.test.tsx`), drawn by the one card.
+describe("History — a comment's media, as the feed's comment card draws it (History.md:57, :103, :105)", () => {
+  const REGISTRY = JSON.parse(
+    readFileSync(join(process.cwd(), "..", "design", "designs", "canonical", "nodes.json"), "utf8"),
+  ) as { screens: Record<string, { nodes: Record<string, string[]> }> };
+  const mediaPaths = Object.keys(REGISTRY.screens.History!.nodes).filter((path) =>
+    path.startsWith("history.commentCard.media"),
+  );
+
+  const picture = (n: number) => ({
+    __typename: "MediaAttachment",
+    id: `m${n}`,
+    url: `https://media.test/${n}.jpg`,
+    altText: null,
+    status: "NORMAL",
+    mimeType: "image/jpeg",
+    options: { __typename: "MediaOptions", aspectRatio: "1:1", durationMs: null },
+    coverMedia: null,
+    coverTaken: false,
+  });
+  const clip = () => ({
+    ...picture(9),
+    url: "https://media.test/9.mp4",
+    mimeType: "video/mp4",
+    options: { __typename: "MediaOptions", aspectRatio: "9:16", durationMs: 12_000 },
+  });
+  const withMedia = (id: string, attachments: unknown[], extra: Record<string, unknown> = {}): Entry => ({
+    node: { ...commentNode(id, author("u1", "ada", "Ada")), attachments, ...extra },
+    firstSeenAt: seenOn(0, 11),
+  });
+  const keys = (path: string) => screen.queryAllByTestId(path).map((element) => element.getAttribute("data-testid-key"));
+
+  it("registers_the_four_media_paths_the_round_65_board_names", () => {
+    expect(mediaPaths.sort()).toEqual([
+      "history.commentCard.media",
+      "history.commentCard.media.dots",
+      "history.commentCard.media.frame",
+      "history.commentCard.media.frame.soundDisc",
+    ]);
+  });
+
+  it("a_comment_with_pictures_and_one_with_a_clip_wear_every_media_path_with_its_key", async () => {
+    serveHistory(() =>
+      page([withMedia("c-pictures", [picture(1), picture(2)]), withMedia("c-clip", [clip()]), POST]),
+    );
+    render();
+    const pictures = await screen.findByTestId(byNode("history.commentCard", "c-pictures"));
+    expect(keys("history.commentCard.media")).toEqual(["c-pictures", "c-clip"]);
+    expect(keys("history.commentCard.media.frame")).toEqual(["c-pictures/1", "c-pictures/2", "c-clip/1"]);
+    expect(keys("history.commentCard.media.dots")).toEqual(["c-pictures"]);
+    expect(keys("history.commentCard.media.frame.soundDisc")).toEqual(["c-clip/1"]);
+    expect(within(pictures).getByTestId(byNode("history.commentCard.media.dots", "c-pictures"))).toBeInTheDocument();
+    // Every path the registry gives the board's media stands.
+    const worn = new Set([...document.querySelectorAll("[data-testid^='history.commentCard.media']")].map((e) => e.getAttribute("data-testid")));
+    expect(mediaPaths.filter((path) => !worn.has(path))).toEqual([]);
+  });
+
+  it("a_comment_with_four_pictures_frames_each_by_its_position", async () => {
+    serveHistory(() => page([withMedia("c-four", [picture(1), picture(2), picture(3), picture(4)])]));
+    render();
+    await screen.findByTestId(byNode("history.commentCard", "c-four"));
+    expect(keys("history.commentCard.media.frame")).toEqual(["c-four/1", "c-four/2", "c-four/3", "c-four/4"]);
+    expect(keys("history.commentCard.media.dots")).toEqual(["c-four"]);
+  });
+
+  it("a_veiled_clip_has_no_sound_disc_until_the_reader_shows_it", async () => {
+    // History.md:47, :103, :105: the card keeps its veil, and the veiled clip
+    // wears no `soundDisc`; the reveal is an eligibility change.
+    serveHistory(() =>
+      page([withMedia("c-veiled", [clip()], { attachmentsStatus: "SENSITIVE", sensitiveSelfMark: true })]),
+    );
+    render();
+    await screen.findByTestId(byNode("history.commentCard", "c-veiled"));
+    expect(screen.getByTestId("history-comment-c-veiled-veil")).toBeInTheDocument();
+    expect(keys("history.commentCard.media.frame.soundDisc")).toEqual([]);
+    fireEvent.click(screen.getByTestId("history-comment-c-veiled-veil-reveal"));
+    await waitFor(() => expect(keys("history.commentCard.media.frame.soundDisc")).toEqual(["c-veiled/1"]));
+  });
+
+  it("a_comment_without_media_wears_no_media_path", async () => {
+    serveHistory(() => page([COMMENT]));
+    render();
+    await screen.findByTestId(byNode("history.commentCard", "c1"));
+    expect(document.querySelectorAll("[data-testid^='history.commentCard.media']")).toHaveLength(0);
+  });
+
+  it("a_removed_media_comment_wears_its_mark_and_none_of_its_media", async () => {
+    // History.md:43: the removal mark in its place; the redacted payload draws nothing.
+    serveHistory(() =>
+      page([
+        withMedia("c-gone", [{ ...picture(1), status: "REDACTED" }], {
+          content: moderated(null, "REDACTED"),
+          removal: { __typename: "Removal", at: hoursAgo(0.3), by: "AUTHOR" },
+        }),
+      ]),
+    );
+    render();
+    await screen.findByTestId(byNode("history.commentCard", "c-gone"));
+    expect(screen.getByTestId("history-comment-c-gone-removed")).toHaveTextContent("Removed by its author");
+    expect(document.querySelectorAll("[data-testid^='history.commentCard.media']")).toHaveLength(0);
+  });
+
+  it("tapping_a_comments_pictures_opens_its_thread_landed_on_it_with_back_to_history", async () => {
+    // History.md:57: a tap outside the target and the card's controls.
+    serveHistory(() => page([withMedia("c-pictures", [picture(1), picture(2)])]));
+    render();
+    const frame = await screen.findByTestId(byNode("history.commentCard.media.frame", "c-pictures/1"));
+    fireEvent.click(frame);
+    expect(push).toHaveBeenCalledWith("/posts/p1?comment=c-pictures&from=history");
   });
 });

@@ -229,8 +229,10 @@ export function MediaGallery({
             the keys are the route. THE ROW IS WINDOWED at seven (item 67, ruled
             2026-09-14: "ten dots under a gallery card is too much"), and it is
             the same row the viewer draws, in the card's tone — one marker for one
-            position, in both pagers. */}
-        <div className="flex justify-center pt-2">
+            position, in both pagers. The wrapper is a plain block, the
+            master's (`MediaAttachment.jsx:583-585`): the row itself centres
+            the dots, so the registered `dots` spans the gallery's width. */}
+        <div className="pt-2">
           <PagerDots
             count={items.length}
             current={page}

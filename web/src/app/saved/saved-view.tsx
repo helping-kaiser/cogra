@@ -90,7 +90,7 @@ export const SAVED_SEARCH_DEBOUNCE_MS = 250;
 
 /** Where a card's doors say the reader came from: `Back to Saved`. */
 const FROM = "saved";
-/** A card's score opens its trace, whose back arrow reads `Back to Saved` (Saved.md:37). */
+/** A card's score opens its trace, whose back arrow reads `Back to Saved` (Saved.md:47). */
 const SAVED_ORIGIN: TraceOrigin = { kind: "saved" };
 
 type Entry = SavedEntry & { readonly id: string };
@@ -449,7 +449,7 @@ export function SavedScreen({
         testId="saved-menu"
         notify={notify}
         // A kept post the reader removes keeps its place on the shelf, wearing
-        // its mark (RM-G9's build word; History.md:39's "keeps its place").
+        // its mark (RM-G9's build word; History.md:43's "keeps its place").
         onRemoved={(removed) =>
           setEntries((current) =>
             current.map((entry) =>

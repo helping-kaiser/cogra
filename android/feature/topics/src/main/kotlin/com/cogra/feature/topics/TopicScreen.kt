@@ -31,7 +31,8 @@
 // 2026-09-15 overruled item 81's "no face"): taking a position on a name
 // needs no Tag records, so the row stands whatever the list holds.
 //
-// REGISTERED under `tagPage` (round 60): the header, the row
+// REGISTERED under `tagPage` (round 60): the header, the full name under it
+// where the header cuts it (`name`, round 63), the row
 // (`actionRow`, its `stance` and `share`), each row's `claim` keyed by the
 // tagged thing's id, and the cards the shell hosts (`card`, `commentCard`).
 
@@ -65,8 +66,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -75,6 +78,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -83,6 +87,7 @@ import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.EdgeSighting
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.FittedName
 import com.cogra.core.designsystem.NodeSnackbarVisuals
 import com.cogra.core.designsystem.SeenCardsEffect
 import com.cogra.core.designsystem.dataNode
@@ -278,10 +283,15 @@ fun TopicScreen(
     // with `Undo` — the menus under it save and hide through this host.
     val snackbar = TAG_PAGE / "snackbar"
     val savedHost = rememberSavedHost(menus.saved, snackbarHostState, snackbar, menus.onGuest, menus.hidden)
+    // "TOO LONG" IS THE TITLE'S OWN MEASURED CUT (TagPage.md:5, :7, :15),
+    // never a count of characters: the header says on every layout whether
+    // its one line cut the name, so a turned phone that fits it drops the
+    // heading and a narrower one prints it again.
+    var titleCut by remember(name) { mutableStateOf(false) }
     Scaffold(
         // A registered surface: its tags reach UiAutomator as resource ids.
         modifier = Modifier.dataNodeSurface(),
-        topBar = { TagPageHeader(name, onBack, backDescription, deletionBand) },
+        topBar = { TagPageHeader(name, onBack, backDescription, deletionBand) { titleCut = it } },
         snackbarHost = { CograSnackbarHost(snackbarHostState) },
     ) { padding ->
         Box(
@@ -301,6 +311,10 @@ fun TopicScreen(
                     // post — outside the list, so it does not scroll
                     // away from the page it acts on. The emptied page
                     // carries it too, holding nothing (TagPageEmpty.md:9).
+                    // The whole name, where the title cut it, stands
+                    // above the row (`TagPageBody`'s order); only the
+                    // read page prints it.
+                    if (titleCut) TagFullName(name)
                     StanceRow(name, stanceControl, onShare)
                     CompositionLocalProvider(LocalSavedHost provides savedHost) {
                         cardsHost(notify) { cards ->
@@ -325,6 +339,7 @@ private fun TagPageHeader(
     onBack: () -> Unit,
     backDescription: String?,
     deletionBand: @Composable () -> Unit,
+    onTitleCut: (Boolean) -> Unit,
 ) {
     Column {
         PageHeader(
@@ -332,10 +347,38 @@ private fun TagPageHeader(
             onBack = onBack,
             backContentDescription = backDescription ?: stringResource(R.string.topics_back),
             node = TAG_PAGE / "header",
+            onTitleCut = onTitleCut,
         )
         deletionBand()
     }
 }
+
+/**
+ * THE TAG'S FULL NAME (`TagFullName`, TagPage.md:7-17) as `tagPage.name`: the
+ * whole name, # and all, in the title role, wrapping at its hyphens and
+ * breaking inside a run that has none — the one place a tag's name wraps,
+ * never cut. IT SHRINKS TO FIT (round 66): the profile head's two-line rule
+ * with a 12 floor ([FittedName]). Print only: the header's title already
+ * speaks the whole name, so the heading is hidden from assistive technology.
+ */
+@Composable
+private fun TagFullName(name: String) {
+    FittedName(
+        text = "#$name",
+        style = MaterialTheme.typography.titleLarge,
+        color = MaterialTheme.colorScheme.onSurface,
+        floor = TAG_NAME_FLOOR,
+        modifier = Modifier
+            .fillMaxWidth()
+            .dataNode(TAG_PAGE / "name")
+            // `padding: 4px 16px 0` (`TagFullName`).
+            .padding(start = Space.x4, end = Space.x4, top = Space.x1),
+        textModifier = Modifier.semantics { hideFromAccessibility() },
+    )
+}
+
+/** The heading's smallest size (jakob 2026-11-23: never below 12). */
+private const val TAG_NAME_FLOOR = 12
 
 /**
  * The page's place where nothing could be listed, the header standing above it:

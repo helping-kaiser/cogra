@@ -54,15 +54,15 @@ query FeedWindow($ids: [UUID!]!, $first: Int!) {
 # card renders the same thing on both surfaces. web's twin is
 # `web/src/lib/graphql/feed.graphql` `FeedCards`.
 #
-# A READ OF ITS OWN, AT TEN. Every edge carries whole card selections — a
+# A READ OF ITS OWN, AT TWENTY. Every edge carries whole card selections — a
 # comment's with its head row's target, a topic's with a glimpse of three —
-# so it is priced at a page of ten rather than the post window's twenty, and
-# the page size is a literal so the client-operation guard
+# so it is priced on its own, at the same page of twenty as the post window,
+# and the page size is a literal so the client-operation guard
 # (`crates/api/tests/client_operations.rs`) prices the call the device
 # actually makes. The post rows keep riding `FeedWindow`; the device splits a
 # window's ids by the kind the ranking already named.
 query FeedCards($ids: [UUID!]!) {
-  feed(orderedIds: $ids, first: 10) {
+  feed(orderedIds: $ids, first: 20) {
     edges {
       node {
         __typename

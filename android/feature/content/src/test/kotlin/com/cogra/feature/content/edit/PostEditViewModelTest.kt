@@ -276,6 +276,31 @@ class PostEditViewModelTest {
         assertThat(vm.state.value.license).isEqualTo(LicenseChoice(attribution = 1.0, provenance = 0.0))
     }
 
+    /** The detail's read carries the list, and the edit opens holding every citation in it. */
+    @Test
+    fun theEditOpensHoldingEveryCitationTheDetailsReadCarried() = runTest(dispatcher) {
+        content.loadedReferences = listOf("ada", "mira", "sol").map { testReferenceClaim(testMentionTarget(it)) }
+        val vm = opened()
+        assertThat(vm.state.value.referenceSection.loaded.map { it.targetId })
+            .containsExactly("user-ada", "user-mira", "user-sol")
+        assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+    }
+
+    /** A read that carried only the count never opens an edit that would lose citations. */
+    @Test
+    fun aReadWithoutTheListOpensNoEdit() = runTest(dispatcher) {
+        content.postOutcome = Outcome.Success(
+            PostDetail(
+                post = testPost(TEST_POST_ID, references = null).copy(referenceCount = 3),
+                comments = Page(emptyList(), null, hasNextPage = false),
+            ),
+        )
+        val vm = opened()
+        assertThat(vm.state.value.loading).isFalse()
+        assertThat(vm.state.value.transportFailed).isTrue()
+        assertThat(vm.state.value.referenceSection.loaded).isEmpty()
+    }
+
     // -- One batch (EditCompose, EditActs) --
 
     @Test
