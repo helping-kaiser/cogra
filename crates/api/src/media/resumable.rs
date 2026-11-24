@@ -253,21 +253,18 @@ pub async fn begin(
     })
 }
 
-/// Takes one part.
-///
-/// Everything about this is idempotent by construction: the store
-/// overwrites a part written under a number it already holds, and the
-/// part row's primary key overwrites the identifier that names it. A
-/// client that retries a part it never got an answer for lands exactly
-/// where a client that sent it once does.
-pub async fn receive_part(
+/// Whether `author`'s session takes a part numbered `part_number`: the
+/// session is theirs and open, the upload is not complete, and the number
+/// is inside the cut. Everything here is decided without the part's
+/// bytes, so the part route asks it before it reads a body, and
+/// [`receive_part`] asks it again once the bytes are in — the session may
+/// have completed or expired while they travelled.
+pub async fn admit_part(
     pool: &PgPool,
-    blobs: &dyn BlobStore,
     author: Uuid,
     session_id: Uuid,
     part_number: u32,
-    bytes: Vec<u8>,
-) -> Result<PartReceipt, SessionError> {
+) -> Result<store::UploadSession, SessionError> {
     let session = store::upload_session(pool, session_id, author)
         .await
         .map_err(SessionError::internal)?
@@ -286,6 +283,26 @@ pub async fn receive_part(
             format!("parts are numbered 1 to {part_count}"),
         ));
     }
+    Ok(session)
+}
+
+/// Takes one part.
+///
+/// Everything about this is idempotent by construction: the store
+/// overwrites a part written under a number it already holds, and the
+/// part row's primary key overwrites the identifier that names it. A
+/// client that retries a part it never got an answer for lands exactly
+/// where a client that sent it once does.
+pub async fn receive_part(
+    pool: &PgPool,
+    blobs: &dyn BlobStore,
+    author: Uuid,
+    session_id: Uuid,
+    part_number: u32,
+    bytes: Vec<u8>,
+) -> Result<PartReceipt, SessionError> {
+    let session = admit_part(pool, author, session_id, part_number).await?;
+    let part_count = session.part_count as u32;
 
     let expected = expected_part_bytes(&session, part_number);
     if bytes.len() as u64 != expected {

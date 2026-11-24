@@ -352,7 +352,11 @@ answer reaches a client that sends its whole body before reading,
 instead of being lost to the connection reset an early close
 causes (RFC 9112 §9.6). A body that declares or carries more is
 answered at once with `Connection: close`. The ceilings above,
-413 included, are a signed-in request's to meet.
+413 included, are a signed-in request's to meet. The upload part
+route keeps the same door: the bearer, the member state and the
+session's owner and part number are checked from the path and the
+headers, a refused part's body is absorbed up to one part the same
+way, and only the session's owner meets the route's body limit.
 
 **Introspection is disabled in release builds** — not secrecy
 (the repo is public; the contract travels as the checked-in
