@@ -1621,6 +1621,45 @@ describe("the chronicle's still-settling posts and comments", () => {
     expect(screen.getByTestId(byNode("profile.chronicle.act.pending", "1")).className).not.toContain("text-error");
   });
 
+  // A removed comment keeps its card, its verb, its age and its door, the
+  // second line `Removed by its author` where its words were — never the
+  // parent post's title (Profile.md:39, ProfileOther.md:39; `_shared.jsx`
+  // `ChronicleAct`: the plain second line, no other ink).
+  it("draws a removed comment's act as Removed by its author, never its post's title", async () => {
+    server.use(gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u2", "ada") } })));
+    const parent = landedPublish("act:a:1:publish", "p1").target;
+    serveChronicle({
+      "": {
+        nodes: [
+          {
+            ...landedPublish("act:a:2:review", "p1"),
+            family: "REVIEW",
+            terminal: {
+              __typename: "Comment",
+              id: "c1",
+              content: { __typename: "ModeratedText", value: null },
+              removal: { __typename: "Removal", at: "2026-11-20T10:00:00Z", by: "AUTHOR" },
+              target: { __typename: "Post", id: "p1" },
+            },
+            target: parent,
+          },
+          landedPublish("act:a:1:publish", "p1"),
+        ],
+        next: null,
+      },
+    });
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    await openEverything();
+    await screen.findByTestId(byNode("profile.chronicle.act", "2"));
+    expect(screen.getByTestId(byNode("profile.chronicle.act.title", "1"))).toHaveTextContent("Commented");
+    const second = screen.getByTestId(byNode("profile.chronicle.act.second", "1"));
+    expect(second).toHaveTextContent("Removed by its author");
+    expect(second).not.toHaveTextContent("Hello world");
+    expect(row(1).querySelector("a")).toHaveAttribute("href", "/posts/p1?from=u%3Aada");
+    // The live act beside it reads its own words, as ever.
+    expect(screen.getByTestId(byNode("profile.chronicle.act.second", "2"))).toHaveTextContent("Hello world");
+  });
+
   it("draws them on another's profile for a signed-in reader too", async () => {
     server.use(meHandler(), gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u2", "ada") } })));
     serveChronicle({ "": { nodes: THREE, next: null } });

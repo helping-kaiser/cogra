@@ -17,6 +17,7 @@ import {
   type ProfileChronicleQuery,
   type UserProfileQuery,
 } from "@/__generated__/graphql";
+import { removalMark } from "@/lib/stance/kept-preview";
 import type { CommentFeedView } from "@/lib/ui/comment-feed-card";
 import { fetchOutcome, payloadOutcome, success, type Outcome } from "./outcome";
 import { stagedFromPrepared, type StagedWriteView } from "./writes-api";
@@ -350,7 +351,13 @@ function toRow(node: RecordNode, own: boolean): RecordRow {
           : null;
   // The second line is the target's own words: a review its comment, a
   // citation the cited thing's, anything else the post or comment it names.
+  // Once that thing is removed its mark stands where its words were, and no
+  // other node's words ever fall through in their place (Profile.md:37, :39).
+  const quoted = family === "comment" || family === "citation" ? node.terminal : node.target;
+  const removed =
+    quoted?.__typename === "Post" || quoted?.__typename === "Comment" ? removalMark(quoted.removal) : null;
   const snippet =
+    removed ??
     terminalComment?.content.value ??
     (family === "citation" ? cited.snippet : null) ??
     targetPost?.title?.value ??
@@ -407,12 +414,14 @@ function toSettlingRow(
     pending: node.landing.state === "PENDING",
     signedAt: node.createdAt,
   } as const;
+  // A removed one reads its mark where its words were (Profile.md:39).
+  const removed = removalMark(node.removal);
   if (node.__typename === "Post") {
     return {
       ...common,
       kind: "post",
       label: "Published a post",
-      snippet: node.title.value ?? node.content.value ?? null,
+      snippet: removed ?? node.title.value ?? node.content.value ?? null,
       postId: node.postId,
       commentId: null,
     };
@@ -421,7 +430,7 @@ function toSettlingRow(
     ...common,
     kind: "comment",
     label: "Commented",
-    snippet: node.content.value ?? null,
+    snippet: removed ?? node.content.value ?? null,
     postId: node.post?.id ?? null,
     commentId: node.commentId,
   };
