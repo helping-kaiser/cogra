@@ -9,6 +9,7 @@
 package com.cogra.domain.signing
 
 import com.cogra.domain.AccountState
+import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserError
 import com.cogra.domain.WriteState
@@ -24,11 +25,14 @@ sealed interface RegistrationProgress {
      * them; [keyOnDevice] distinguishes "run the ceremony here" from
      * "the key lives on another device" — a slot key that does not
      * match the account's attached key counts as not-on-device.
+     * [attachFault] says why this pass's repair attach did not go
+     * through; null when none was tried or it went through.
      */
     data class AwaitingApproval(
         val emailVerified: Boolean,
         val keyAttached: Boolean,
         val keyOnDevice: Boolean,
+        val attachFault: AttachFault? = null,
     ) : RegistrationProgress
 
     /** Approved and signed (or mid-seal); landing is the server's move. */
@@ -48,6 +52,25 @@ sealed interface RegistrationProgress {
 
     /** Transport failed; call `advance()` again. */
     data class Failed(val cause: Exception) : RegistrationProgress
+}
+
+/**
+ * Why an attach of the key on this device did not go through
+ * (ApplicantFeed.md:37): [KEY_IN_USE] when the server refused it as another
+ * account's (`ACTOR_KEY_IN_USE`), [FAILED] for every other refusal and for no
+ * answer.
+ */
+enum class AttachFault {
+    FAILED,
+    KEY_IN_USE,
+}
+
+/** The fault an attach's outcome reads as; null when it went through. */
+fun attachFaultOf(outcome: Outcome<Unit>): AttachFault? = when (outcome) {
+    is Outcome.Success -> null
+    is Outcome.Refused ->
+        if (outcome.errors.any { it.code == ErrorCode.ACTOR_KEY_IN_USE }) AttachFault.KEY_IN_USE else AttachFault.FAILED
+    is Outcome.Failed -> AttachFault.FAILED
 }
 
 class RegistrationSigner @Inject constructor(
@@ -113,10 +136,14 @@ class RegistrationSigner @Inject constructor(
         // without one is a server fault rather than a step the person takes.
         val application = status.application ?: return RegistrationProgress.Refused(emptyList())
         if (application.approvedAt != null) return RegistrationProgress.AwaitingLanding
+        // The same attach, under the same condition, as ever: only its
+        // reason is kept now (ApplicantFeed.md:37).
+        val attach = if (application.keyAttached) null else repairAttach()
         return RegistrationProgress.AwaitingApproval(
             emailVerified = application.emailVerified,
-            keyAttached = application.keyAttached || repairAttach(),
+            keyAttached = application.keyAttached || attach is Outcome.Success,
             keyOnDevice = keyOnDevice(status.actorPubkey),
+            attachFault = attach?.let(::attachFaultOf),
         )
     }
 
@@ -137,11 +164,11 @@ class RegistrationSigner @Inject constructor(
      * that exists only on this device is re-attached silently. It fires
      * only when the server reports no key attached (the call site's
      * gate) and this account's own slot holds one — per-account keying
-     * is what keeps another account's key out of reach. False when
-     * there is nothing to repair or the attach did not land.
+     * is what keeps another account's key out of reach. The attach's
+     * own outcome, its reason kept; null when there is nothing to repair.
      */
-    private suspend fun repairAttach(): Boolean {
-        if (identity.actorSeed() == null) return false
-        return ceremony.attachActorKey() is Outcome.Success
+    private suspend fun repairAttach(): Outcome<Unit>? {
+        if (identity.actorSeed() == null) return null
+        return ceremony.attachActorKey()
     }
 }
