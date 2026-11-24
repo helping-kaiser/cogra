@@ -108,5 +108,5 @@ interface FeedRepository {
 /** The most ids one `feed` hydration carries (the page budget, CD-2). */
 const val MAX_FEED_WINDOW = 100
 
-/** The most ids one `FeedCards` read carries (its literal `first: 10`). */
-const val MAX_CARDS_WINDOW = 10
+/** The most ids one `FeedCards` read carries (its literal `first: 20`). */
+const val MAX_CARDS_WINDOW = 20

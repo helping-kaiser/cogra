@@ -29,6 +29,7 @@ import com.cogra.domain.feed.FeedRankArgs
 import com.cogra.domain.feed.FeedRanking
 import com.cogra.domain.feed.FeedTopic
 import com.cogra.domain.feed.FeedViewer
+import com.cogra.domain.feed.MAX_CARDS_WINDOW
 import com.cogra.domain.feed.ReaderDefaults
 import com.cogra.domain.hidden.HiddenSet
 import com.cogra.domain.history.SeenRecord
@@ -374,8 +375,8 @@ class FeedFilterViewModelTest {
     }
 
     @Test
-    fun aCardsReadNeverCarriesMoreThanItsTen() = runTest(dispatcher) {
-        val ids = (1..12).map { "h$it" }
+    fun aCardsReadNeverCarriesMoreThanItsTwenty() = runTest(dispatcher) {
+        val ids = (1..22).map { "h$it" }
         ids.forEach { feed.cardsById[it] = FeedCard.Tag(TagCardTopic(it, testModeratedField(it), emptyList())) }
         feed.answer = Outcome.Success(
             FeedRanking(3, ids.mapIndexed { i, id -> entry(id, i, kind = FeedKind.TAG) }, emptyList()),
@@ -384,8 +385,10 @@ class FeedFilterViewModelTest {
         val vm = viewModel()
         settle()
 
-        assertThat(feed.cardReads.map { it.size }).containsExactly(10, 2).inOrder()
-        assertThat(vm.ids()).isEqualTo(ids)
+        // A window is as wide as a cards read, so one window is one read.
+        assertThat(feed.cardReads.first()).hasSize(FEED_PAGE_SIZE)
+        assertThat(feed.cardReads.map { it.size }.max()).isAtMost(MAX_CARDS_WINDOW)
+        assertThat(vm.ids()).isEqualTo(ids.take(FEED_PAGE_SIZE))
     }
 
     @Test

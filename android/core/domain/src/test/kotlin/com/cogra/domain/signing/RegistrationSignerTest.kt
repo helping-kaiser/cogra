@@ -227,8 +227,61 @@ class RegistrationSignerTest {
         onboarding.attachOutcome = Outcome.Failed(IOException("lost"))
         onboarding.status = status(application = application(keyAttached = false))
         assertThat(signer.advance()).isEqualTo(
-            RegistrationProgress.AwaitingApproval(emailVerified = true, keyAttached = false, keyOnDevice = true),
+            RegistrationProgress.AwaitingApproval(
+                emailVerified = true,
+                keyAttached = false,
+                keyOnDevice = true,
+                attachFault = AttachFault.FAILED,
+            ),
         )
+    }
+
+    @Test
+    fun aRepairAttachTheServerRefusesAsAnotherAccountsKeyReadsKeyInUse() = runTest {
+        onboarding.attachOutcome = Outcome.Refused(listOf(UserError(ErrorCode.ACTOR_KEY_IN_USE, "in use")))
+        onboarding.status = status(application = application(keyAttached = false))
+        val progress = signer.advance() as RegistrationProgress.AwaitingApproval
+        assertThat(progress.keyAttached).isFalse()
+        assertThat(progress.attachFault).isEqualTo(AttachFault.KEY_IN_USE)
+    }
+
+    @Test
+    fun anyOtherRefusalOfTheRepairAttachReadsFailed() = runTest {
+        onboarding.attachOutcome = Outcome.Refused(listOf(UserError(ErrorCode.RATE_LIMITED, "slow down")))
+        onboarding.status = status(application = application(keyAttached = false))
+        val progress = signer.advance() as RegistrationProgress.AwaitingApproval
+        assertThat(progress.keyAttached).isFalse()
+        assertThat(progress.attachFault).isEqualTo(AttachFault.FAILED)
+    }
+
+    @Test
+    fun keepingTheReasonChangesNothingAboutTheAttachItself() = runTest {
+        // One attach per pass, of this slot's own key, whatever its answer —
+        // and none at all once the server reads the key attached.
+        onboarding.attachOutcome = Outcome.Failed(IOException("lost"))
+        onboarding.status = status(application = application(keyAttached = false))
+        signer.advance()
+        signer.advance()
+        assertThat(onboarding.attachedKeys).containsExactly(pubkeyOf(actor), pubkeyOf(actor))
+
+        onboarding.attachOutcome = Outcome.Success(Unit)
+        val healed = signer.advance() as RegistrationProgress.AwaitingApproval
+        assertThat(healed.keyAttached).isTrue()
+        assertThat(healed.attachFault).isNull()
+
+        onboarding.status = status(application = application(keyAttached = true))
+        val attached = signer.advance() as RegistrationProgress.AwaitingApproval
+        assertThat(attached.attachFault).isNull()
+        assertThat(onboarding.attachedKeys).hasSize(3)
+    }
+
+    @Test
+    fun anEmptySlotHasNoAttachFault() = runTest {
+        identity.seed = null
+        onboarding.status = status(application = application(keyAttached = false))
+        val progress = signer.advance() as RegistrationProgress.AwaitingApproval
+        assertThat(progress.attachFault).isNull()
+        assertThat(onboarding.attachedKeys).isEmpty()
     }
 
     @Test

@@ -178,6 +178,16 @@ class HomeViewModel @Inject constructor(
         refresh()
     }
 
+    /**
+     * `Retry` on the key that did not attach (ApplicantFeed.md:39): the poll
+     * passes at once, and its repair attach sends the same key again under
+     * its one gate — no mint, no restore. The card leaves with the pass that
+     * reads the key attached.
+     */
+    fun onRetryAttach() {
+        if (_state.value.applicant) registration.ensureAdvancing()
+    }
+
     /** Pull-to-refresh: the one manual re-pull, applicant or member. */
     fun onPullRefresh() {
         _state.update { it.copy(refreshing = true) }
