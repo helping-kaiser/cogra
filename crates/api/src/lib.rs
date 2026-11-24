@@ -32,6 +32,7 @@ pub mod registry;
 pub mod relay;
 pub mod removal;
 pub mod report;
+pub mod reserved;
 pub mod schema;
 pub mod search;
 pub mod shutdown;

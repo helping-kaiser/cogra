@@ -480,9 +480,12 @@ private fun ThreadRefs(
     onOpenPost: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    // The thread's card carries the count; the sheet reads the rows as it rises.
     RefsSheet(
         topics = comment.topics,
-        references = comment.references,
+        node = comment.citingNode,
+        referenceCount = comment.citationCount,
+        held = comment.references,
         onDismiss = onDismiss,
         onOpenTopic = { name -> depart { onOpenTopic(name) } },
         onOpenActor = { handle -> depart { onOpenActor(handle) } },
@@ -1154,7 +1157,7 @@ private fun CommentCardBody(
     // The same one line a post wears (`CommentCard.jsx`).
     TopicsLine(
         topics = comment.topics,
-        references = comment.references,
+        referenceCount = comment.citationCount,
         onOpenTopic = onOpenTopic,
         // THE COUNT IS A DOOR on every comment too (TopicsLine.jsx:202-212):
         // the tags-and-references sheet, stacked over the thread.

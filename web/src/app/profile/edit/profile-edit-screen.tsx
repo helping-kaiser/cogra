@@ -77,6 +77,10 @@ import {
   type ProfileMediaChoice,
 } from "./profile-media-field";
 
+// The Display name field's own line for a reserved name (ProfileEdit.md:81);
+// it stands until the next press of Save (ProfileEdit.md:85), never on typing.
+const NAME_RESERVED_LINE = "That name isn't available.";
+
 /** The prepared change the seal holds and signs. */
 type Sealing = {
   readonly writes: readonly StagedWriteView[];
@@ -102,6 +106,7 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [refusedMessage, setRefusedMessage] = useState<string | null>(null);
+  const [nameReserved, setNameReserved] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatar, setAvatar] = useState<ProfileMediaChoice>(UNCHANGED);
   // The account's own id: the node a profile payload binds to.
@@ -176,6 +181,7 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
     if (submitting) return;
     setSubmitting(true);
     setRefusedMessage(null);
+    setNameReserved(null);
     setTransportFailed(false);
 
     // The pictures go up BEFORE the record is prepared: an update naming an
@@ -198,6 +204,10 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
     const prepared = await guard.run(() => prepareProfileUpdate(client, sent));
     if (prepared.kind === "refused") {
       setSubmitting(false);
+      if (prepared.errors.some((e) => e.code === "DISPLAY_NAME_RESERVED" && e.field?.[0] === "displayName")) {
+        setNameReserved(NAME_RESERVED_LINE);
+        return;
+      }
       setRefusedMessage(firstRefusalMessage(prepared.errors, "The server refused this update."));
       return;
     }
@@ -319,7 +329,7 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
               onChange={setDisplayName}
               testId="profile-edit-display-name"
               cap={DISPLAY_NAME_MAX_CHARS}
-              error={displayNameTooLong ?? undefined}
+              error={displayNameTooLong ?? nameReserved ?? undefined}
             />
             <TextField
               label="Bio"

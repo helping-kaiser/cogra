@@ -41,7 +41,6 @@ import com.cogra.core.designsystem.TopicChipHeight
 import com.cogra.core.designsystem.TopicChipHorizontalOverhead
 import com.cogra.core.designsystem.v2.atom.hitTarget
 import com.cogra.core.designsystem.v2.token.Space
-import com.cogra.domain.ReferenceClaimView
 import com.cogra.domain.TopicClaimView
 import com.cogra.feature.content.R
 
@@ -72,7 +71,8 @@ private const val VISIBLE_CHIPS = 2
 @Composable
 internal fun TopicsLine(
     topics: List<TopicClaimView>,
-    references: List<ReferenceClaimView>,
+    /** The citations the counts state — a card's `referenceCount`, the detail's list length. */
+    referenceCount: Int,
     onOpenTopic: (String) -> Unit,
     testTagPrefix: String,
     modifier: Modifier = Modifier,
@@ -87,11 +87,11 @@ internal fun TopicsLine(
      */
     node: DataNode? = null,
 ) {
-    if (topics.isEmpty() && references.isEmpty()) return
+    if (topics.isEmpty() && referenceCount == 0) return
     val names = topics.map { it.hashtag.name.value.orEmpty() }
     val cap = minOf(VISIBLE_CHIPS, names.size)
     // Every candidate's counts, read once (the plurals are composable).
-    val countsFor = (0..cap).associateWith { shown -> countsText(names.size - shown, references.size) }
+    val countsFor = (0..cap).associateWith { shown -> countsText(names.size - shown, referenceCount) }
     val measurer = rememberTextMeasurer()
     val chipStyle = MaterialTheme.typography.labelLarge
     val countsStyle = MaterialTheme.typography.bodySmall

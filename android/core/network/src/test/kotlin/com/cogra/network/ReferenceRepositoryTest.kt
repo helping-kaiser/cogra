@@ -268,4 +268,41 @@ class ReferenceRepositoryTest {
         val outcome = repo().prepareReferenceWithdrawal(artifact = "p1", target = "u1")
         assertThat((outcome as Outcome.Success).value).hasSize(3)
     }
+
+    // -- A card's citations, read by id when its sheet opens (api-spec.md "Query budgets") --
+
+    private fun claimJson(handle: String) =
+        """{"__typename":"ReferenceClaim",
+            "target":{"__typename":"User","id":"user-$handle","handle":"$handle",
+            "displayName":{"__typename":"ModeratedText","value":null}},
+            "targetId":"l1-$handle","relevance":0.1,"support":0.2,"withdrawalCost":1,
+            "rawRelevance":0.1,"rawSupport":0.2,"pending":false}"""
+
+    @Test
+    fun aPostsCitationsAreReadByItsId() = runTest {
+        enqueue(
+            """{"data":{"post":{"__typename":"Post","id":"p1",
+            "references":[${claimJson("ada")},${claimJson("mira")},${claimJson("sol")}]}}}""",
+        )
+        val rows = (repo().referencesOf(ReferenceContentKind.POST, "p1") as Outcome.Success).value
+        assertThat(rows?.map { it.targetId }).containsExactly("l1-ada", "l1-mira", "l1-sol").inOrder()
+        assertThat(rows?.first()?.target).isEqualTo(ReferenceTargetView.Profile("user-ada", "ada", null))
+        val body = server.takeRequest().body.readUtf8()
+        assertThat(body).contains("\"operationName\":\"PostReferences\"")
+        assertThat(body).contains("\"id\":\"p1\"")
+    }
+
+    @Test
+    fun aCommentsCitationsAreReadByItsId() = runTest {
+        enqueue("""{"data":{"comment":{"__typename":"Comment","id":"c1","references":[${claimJson("ada")}]}}}""")
+        val rows = (repo().referencesOf(ReferenceContentKind.COMMENT, "c1") as Outcome.Success).value
+        assertThat(rows?.single()?.targetId).isEqualTo("l1-ada")
+        assertThat(server.takeRequest().body.readUtf8()).contains("\"operationName\":\"CommentReferences\"")
+    }
+
+    @Test
+    fun aNodeGoneSinceTheCardWasDrawnIsNull() = runTest {
+        enqueue("""{"data":{"post":null}}""")
+        assertThat((repo().referencesOf(ReferenceContentKind.POST, "gone") as Outcome.Success).value).isNull()
+    }
 }

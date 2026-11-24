@@ -110,6 +110,7 @@ fun PostView.withRemoval(removal: Removal): PostView = copy(
     attachmentsStatus = FieldStatus.REDACTED,
     topics = emptyList(),
     references = emptyList(),
+    referenceCount = 0,
 )
 
 /** The comment wearing [removal], as [PostView.withRemoval]; its replies are untouched. */
@@ -120,6 +121,7 @@ fun CommentView.withRemoval(removal: Removal): CommentView = copy(
     attachmentsStatus = FieldStatus.REDACTED,
     topics = emptyList(),
     references = emptyList(),
+    referenceCount = 0,
     sensitiveSelfMark = false,
     sensitiveReason = null,
 )

@@ -275,7 +275,7 @@ class ProfileRepositoryTest {
          "removal":${if (removed) removedJson else "null"},"genesisRecordId":"rec:$id",
          "license":{"__typename":"License","attribution":0.5,"provenance":1.0},
          "topics":[],
-         "references":[],
+         "references":[],"referenceCount":0,
          "commentCount":{"__typename":"CommentConnection","totalCount":3}}
     """.trimIndent()
 
@@ -295,7 +295,7 @@ class ProfileRepositoryTest {
          "sensitiveSelfMark":false,"sensitiveReason":null,
          "license":{"__typename":"License","attribution":1.0,"provenance":0.0},
          "topics":[],
-         "references":[],
+         "references":[],"referenceCount":0,
          "target":{"__typename":"Post","id":"p9",
            "title":{"__typename":"ModeratedText","value":"Salt maps","status":"NORMAL"},
            "content":{"__typename":"ModeratedText","value":"words","status":"NORMAL"},
@@ -345,7 +345,7 @@ class ProfileRepositoryTest {
         assertThat(page.endCursor).isEqualTo("c2")
         val sent = server.takeRequest().body.readUtf8()
         assertThat(sent).containsMatch("\"after\"\\s*:\\s*\"c1\"")
-        assertThat(sent).containsMatch("posts\\(first:\\s*10,\\s*after:\\s*\\\$after\\)")
+        assertThat(sent).containsMatch("posts\\(first:\\s*20,\\s*after:\\s*\\\$after\\)")
         assertThat(sent).doesNotContain("outgoingRecords")
     }
 
@@ -376,7 +376,7 @@ class ProfileRepositoryTest {
         assertThat(page.items[1].comment.removal).isNotNull()
         assertThat(page.hasNextPage).isFalse()
         val sent = server.takeRequest().body.readUtf8()
-        assertThat(sent).containsMatch("comments\\(first:\\s*10,\\s*after:\\s*\\\$after\\)")
+        assertThat(sent).containsMatch("comments\\(first:\\s*20,\\s*after:\\s*\\\$after\\)")
         assertThat(sent).doesNotContain("outgoingRecords")
         assertThat(unknown.items).isEmpty()
         assertThat(unknown.hasNextPage).isFalse()
