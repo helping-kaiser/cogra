@@ -7036,6 +7036,15 @@ a proof cannot see a picture change. Options: (a) the proof re-renders a differi
 it reports a difference; (b) serve Figtree to the harness locally; (c) both, and the harness's base
 at `img/`. Recommendation (c).
 
+Closed by round 67 as (c), in a repaired copy of the harness: dev-state
+`tmp_dev/design-orchestrator-tools/pixel/` (`pixel.mjs`, `run-node.sh`, `README.md`; round 49's
+files unchanged). A differing combination renders both sides once more and differs only if no
+render of one side matches one of the other, the report naming each that needed it; Figtree comes
+from `design/assets/fonts/figtree.ttf` by request interception, and nothing reaches the network;
+the page's base is the tree's `img/`; an unknown chip or a bad value stops the run before it
+renders (the default state is `geek=off` or `""`). Under eight proofs at once, 3 of 60
+`SeveranceConfirm` comparisons wobbled once and all matched on the second render.
+
 ### 308 · How the CoGra mark sits in a 24–40 px avatar disc · *design* · **filed 2026-11-23**
 
 Round 66, item 3 (jakob 2026-11-23, "logo split ofcourse"). The rule is written (readme §4,
