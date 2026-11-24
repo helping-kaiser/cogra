@@ -65,6 +65,8 @@ fun PageHeader(
      * in place of the [testTag] scheme.
      */
     node: DataNode? = null,
+    /** Hears, on every layout, whether the one-line title cut its text. */
+    onTitleCut: ((Boolean) -> Unit)? = null,
 ) {
     val backTag = node?.div("back")?.tag ?: testTag?.let { "${it}_back" } ?: "page_header_back"
     val titleTag = node?.div("title")?.tag ?: testTag?.let { "${it}_title" } ?: "page_header_title"
@@ -115,6 +117,7 @@ fun PageHeader(
                 modifier = Modifier
                     .weight(1f)
                     .testTag(titleTag),
+                onCut = onTitleCut,
             )
         }
 
