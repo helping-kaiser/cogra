@@ -8,7 +8,7 @@
 // 12px), and a name that holds two lines at no size down to it stands at the
 // floor on the lines it needs there. One rule, one fitter, two hosts.
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { useMeasureEffect } from "./measure-effect";
 
@@ -55,11 +55,17 @@ export function useNameFit<T extends HTMLElement>(
   name: string,
   floor = 1,
 ): [holdName: (element: T | null) => void, fit: NameFit | null] {
-  const [element, setElement] = useState<T | null>(null);
+  const elementRef = useRef<T | null>(null);
+  // Each mount and unmount of the heading re-runs the measurement below.
+  const [mounts, setMounts] = useState(0);
   const [fit, setFit] = useState<NameFit | null>(null);
-  const holdName = useCallback((next: T | null) => setElement(next), []);
+  const holdName = useCallback((next: T | null) => {
+    elementRef.current = next;
+    setMounts((count) => count + 1);
+  }, []);
 
   useMeasureEffect(() => {
+    const element = elementRef.current;
     if (element === null) return;
     const measure = () => {
       const { fontSize, lineHeight } = element.style;
@@ -100,7 +106,7 @@ export function useNameFit<T extends HTMLElement>(
       live = false;
       observer?.disconnect();
     };
-  }, [name, element, floor]);
+  }, [name, mounts, floor]);
 
   return [holdName, fit];
 }
