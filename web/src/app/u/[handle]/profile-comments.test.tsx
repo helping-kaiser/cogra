@@ -21,6 +21,7 @@ import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { byNode } from "@/test/data-node";
 import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { gqlLink, startMswServer } from "@/test/msw";
+import { chroniclePage } from "@/test/chronicle";
 import { answersComment, commentsPage, profileComment, settlingComment } from "@/test/profile-comment";
 import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
@@ -109,35 +110,26 @@ function serveComments(
 function serveChronicle(): number[] {
   const reads: number[] = [];
   server.use(
-    gqlLink.query("AuthorRecords", () => {
+    gqlLink.query("ProfileChronicle", () => {
       reads.push(reads.length);
-      return HttpResponse.json({
-        data: {
-          records: {
-            __typename: "RecordConnection",
-            edges: [
-              {
-                __typename: "RecordEdge",
-                node: {
-                  __typename: "Record",
-                  id: "act:1",
-                  family: "REVIEW",
-                  act: "GENESIS",
-                  targetId: "p1",
-                  terminalId: "mint:act:1",
-                  landedAt: new Date(Date.now() - 86_400_000).toISOString(),
-                  pDirected: 0,
-                  pInterest: 0,
-                  severed: null,
-                  target: null,
-                  terminal: null,
-                },
-              },
-            ],
-            pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+      return HttpResponse.json(
+        chroniclePage([
+          {
+            __typename: "Record",
+            id: "act:1",
+            family: "REVIEW",
+            act: "GENESIS",
+            targetId: "p1",
+            terminalId: "mint:act:1",
+            landedAt: new Date(Date.now() - 86_400_000).toISOString(),
+            pDirected: 0,
+            pInterest: 0,
+            severed: null,
+            target: null,
+            terminal: null,
           },
-        },
-      });
+        ]),
+      );
     }),
   );
   return reads;
@@ -186,6 +178,8 @@ beforeEach(() => {
   window.localStorage.clear();
   push.mockReset();
   forgetAllProfileViews();
+  // Every profile lands on its posts view (ProfilePosts.md:5) and reads it.
+  servePostsTab();
 });
 
 describe("ProfileComments — the comments view (ProfileComments.md)", () => {
@@ -270,7 +264,7 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     // :17 — Everything: the chronicle.
     fireEvent.click(screen.getByTestId(byNode("profile.tabRow.everythingTab")));
     expect(await screen.findByTestId(byNode("profile.chronicle.act", "1"))).toBeInTheDocument();
-    expect(chronicle).toHaveLength(2);
+    expect(chronicle).toHaveLength(1);
     expect(screen.getByTestId(byNode("profile.identity.name"))).toBe(name);
   });
 
@@ -488,7 +482,7 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     const { PULL_THRESHOLD } = await import("@/lib/ui/pull-to-refresh");
     pullsAtTop(scroller, PULL_THRESHOLD);
     await waitFor(() => expect(reads).toHaveLength(2));
-    expect(chronicle).toHaveLength(1);
+    expect(chronicle).toHaveLength(0);
     expect(screen.getByTestId(byNode("profile.comments.commentCard.removalMark", "c1"))).toBeInTheDocument();
     fireEvent.click(screen.getByTestId(byNode("profile.comments.commentCard.menu", "c1")));
     const rows = within(openProfileMenuSheet())
@@ -533,6 +527,8 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
   });
 
   it("a_tab_switch_lets_the_held_view_go", async () => {
+    // The view held is the one standing as the reader leaves: switched off
+    // Comments onto Everything, the way back lands on Everything, read once.
     serveAda();
     const chronicle = serveChronicle();
     serveComments({ "": { comments: [profileComment("c1")], next: null } });
@@ -544,7 +540,8 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     renderWithProviders(<ProfileScreen handle="ada" />);
     await screen.findByTestId(byNode("profile.chronicle.act", "1"));
     expect(screen.queryByTestId("profile-comments")).toBeNull();
-    expect(chronicle).toHaveLength(3);
+    expect(screen.getByTestId(byNode("profile.tabRow.everythingTab"))).toHaveAttribute("aria-pressed", "true");
+    expect(chronicle).toHaveLength(1);
   });
 
   it("the_next_page_arrives_in_place_and_a_failed_one_says_so_with_retry", async () => {
@@ -589,7 +586,7 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     pullsAtTop(scroller, PULL_THRESHOLD);
     await waitFor(() => expect(reads).toHaveLength(2));
     expect(screen.getByTestId("profile-comments")).toBeInTheDocument();
-    expect(chronicle).toHaveLength(1);
+    expect(chronicle).toHaveLength(0);
     scroller.remove();
   });
 });

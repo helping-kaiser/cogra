@@ -169,8 +169,12 @@ class TabNavigationTest {
         waitForTag("profile.identity.name")
     }
 
-    /** The own chronicle's one act, the post p1 (ProfileOther.md: a chronicle card opens the post). */
+    /**
+     * The own chronicle's one act, the post p1 (ProfileOther.md: a chronicle
+     * card opens the post), on Everything — the profile lands on Posts (Profile.md:25).
+     */
     private fun openTheChroniclesPost() {
+        compose.onNodeWithTag("profile.tabRow.everythingTab").performScrollTo().performClick()
         compose.waitUntil(timeoutMillis = 30_000) {
             compose.onAllNodesWithTag(CHRONICLE_ROW, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
         }

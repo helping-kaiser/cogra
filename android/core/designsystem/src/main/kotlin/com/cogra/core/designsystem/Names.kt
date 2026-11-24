@@ -45,6 +45,7 @@ import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
@@ -189,7 +190,9 @@ fun shapeNamesInText(text: String, units: List<NameUnit>, lineWidth: Int?, width
 /**
  * A one-line place's text (`nameInLine`): never wraps, clips at its end, and
  * where words follow its first `@handle` the handle is the part cut with "…"
- * while the words keep their room. The node speaks [text] whole.
+ * while the words keep their room. The node speaks [text] whole. [onCut]
+ * hears, on every layout, whether the line cut its text (the tag page prints
+ * the whole name under a cut title, TagPage.md:7).
  */
 @Composable
 fun NameInLine(
@@ -197,10 +200,20 @@ fun NameInLine(
     modifier: Modifier = Modifier,
     style: TextStyle = LocalTextStyle.current,
     color: Color = Color.Unspecified,
+    onCut: ((Boolean) -> Unit)? = null,
 ) {
     val line = remember(text) { nameLine(text) }
+    val heard: (TextLayoutResult) -> Unit = { onCut?.invoke(it.hasVisualOverflow) }
     if (line == null) {
-        Text(text, modifier, color = color, style = style, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(
+            text,
+            modifier,
+            color = color,
+            style = style,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            onTextLayout = heard,
+        )
         return
     }
     // The space before the handle rides at the handle's start, where a trailing
@@ -223,6 +236,8 @@ fun NameInLine(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f, fill = false),
+            // The handle is the part that yields, so its cut is the line's.
+            onTextLayout = heard,
         )
         Text(line.after, color = color, style = style, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }

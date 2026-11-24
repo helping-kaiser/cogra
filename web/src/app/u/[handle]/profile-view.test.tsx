@@ -1,4 +1,7 @@
 import { InMemoryCache } from "@apollo/client";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { useState } from "react";
@@ -20,6 +23,7 @@ import { borrowedViewHandler } from "@/test/borrowed-view";
 import { byNode } from "@/test/data-node";
 import { bookmarkHandlers, bookmarkLog } from "@/test/saved";
 import { stanceBundle, stanceHandlers } from "@/test/stance";
+import { chroniclePage, settlingCommentEntry, settlingPostEntry } from "@/test/chronicle";
 import { CarriedSnackbar } from "@/lib/ui/carried-snackbar";
 import { ProfileScreen } from "./profile-view";
 
@@ -40,6 +44,23 @@ const server = startMswServer(
   // The header's figures are read beside every profile; a test that does not
   // ask about them gets an answer rather than an unhandled request.
   gqlLink.query("ProfileFigures", () => HttpResponse.json({ data: { user: null } })),
+  // Every profile lands on its posts view (ProfilePosts.md:5), so every
+  // profile render reads it; a test that does not ask finds no post.
+  gqlLink.query("ProfilePosts", ({ variables }) =>
+    HttpResponse.json({
+      data: {
+        user: {
+          __typename: "User",
+          id: variables.id,
+          posts: {
+            __typename: "PostConnection",
+            edges: [],
+            pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+          },
+        },
+      },
+    }),
+  ),
   gqlLink.mutation("MarkSeen", ({ variables }) => {
     marked.push(variables.nodes as string[]);
     return HttpResponse.json({
@@ -102,50 +123,48 @@ function recordsHandler(
     cites?: string;
   }[],
 ) {
-  return gqlLink.query("AuthorRecords", () =>
-    HttpResponse.json({
-      data: {
-        records: {
-          __typename: "RecordConnection",
-          edges: rows.map((row) => ({
-            __typename: "RecordEdge",
-            node: {
-              __typename: "Record",
-              id: row.id,
-              family: row.family,
-              act: row.act ?? (row.targetId === undefined ? "GENESIS" : "ORDINARY"),
-              targetId: row.targetId ?? `mint:${row.id}`,
-              terminalId: null,
-              topic: row.topic ? { __typename: "Hashtag", name: { __typename: "ModeratedText", value: row.topic } } : null,
-              landedAt: new Date(Date.now() - 3 * 86_400_000).toISOString(),
-              pDirected: row.pair?.[0] ?? 0,
-              pInterest: row.pair?.[1] ?? 0,
-              severed: row.pair ? false : null,
-              target: row.postId
-                ? {
-                    __typename: "Post",
-                    id: row.postId,
-                    title: { __typename: "ModeratedText", value: "Hello world" },
-                    content: { __typename: "ModeratedText", value: "Body" },
-                  }
-                : row.on
-                  ? { __typename: "User", id: `u-${row.on}`, handle: row.on }
-                  : null,
-              terminal: row.cites
-                ? {
-                    __typename: "Post",
-                    id: row.cites,
-                    title: { __typename: "ModeratedText", value: "The long way home" },
-                    content: { __typename: "ModeratedText", value: "Body" },
-                  }
-                : null,
-            },
-          })),
-          pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
-        },
-      },
-    }),
+  return gqlLink.query("ProfileChronicle", () =>
+    HttpResponse.json(
+      chroniclePage(
+        rows.map((row) => ({
+          __typename: "Record",
+          id: row.id,
+          family: row.family,
+          act: row.act ?? (row.targetId === undefined ? "GENESIS" : "ORDINARY"),
+          targetId: row.targetId ?? `mint:${row.id}`,
+          terminalId: null,
+          topic: row.topic ? { __typename: "Hashtag", name: { __typename: "ModeratedText", value: row.topic } } : null,
+          landedAt: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+          pDirected: row.pair?.[0] ?? 0,
+          pInterest: row.pair?.[1] ?? 0,
+          severed: row.pair ? false : null,
+          target: row.postId
+            ? {
+                __typename: "Post",
+                id: row.postId,
+                title: { __typename: "ModeratedText", value: "Hello world" },
+                content: { __typename: "ModeratedText", value: "Body" },
+              }
+            : row.on
+              ? { __typename: "User", id: `u-${row.on}`, handle: row.on }
+              : null,
+          terminal: row.cites
+            ? {
+                __typename: "Post",
+                id: row.cites,
+                title: { __typename: "ModeratedText", value: "The long way home" },
+                content: { __typename: "ModeratedText", value: "Body" },
+              }
+            : null,
+        })),
+      ),
+    ),
   );
+}
+
+/** The chronicle stands on Everything, one tap from where the profile lands. */
+async function openEverything() {
+  fireEvent.click(await screen.findByTestId(byNode("profile.tabRow.everythingTab")));
 }
 
 beforeEach(() => {
@@ -175,6 +194,7 @@ describe("ProfileScreen", () => {
     expect(screen.queryByTestId(byNode("profile.identity.actionRow.edit"))).not.toBeInTheDocument();
     expect(screen.queryByTestId(byNode("profile.band.gear"))).not.toBeInTheDocument();
     // The chronicle row labels and links to the touched post.
+    await openEverything();
     const row = await screen.findByTestId(byNode("profile.chronicle.act", "1"));
     expect(row).toHaveTextContent("Published a post");
     expect(row).toHaveTextContent("Hello world");
@@ -198,6 +218,7 @@ describe("ProfileScreen", () => {
       ]),
     );
     renderWithProviders(<ProfileScreen handle="ada" />);
+    await openEverything();
     const opinion = await screen.findByTestId(byNode("profile.chronicle.act", "1"));
     expect(opinion).toHaveTextContent("Gave an opinion");
     expect(screen.getByTestId(byNode("profile.chronicle.act.aside", "1"))).toHaveTextContent("on @mira");
@@ -223,6 +244,7 @@ describe("ProfileScreen", () => {
       ]),
     );
     renderWithProviders(<ProfileScreen handle="ada" />);
+    await openEverything();
     const walkBack = await screen.findByTestId(byNode("profile.chronicle.act", "1"));
     expect(walkBack).toHaveTextContent("Walked back an opinion");
     expect(screen.getByTestId(byNode("profile.chronicle.act.aside", "1"))).toHaveTextContent("on @mira");
@@ -249,6 +271,7 @@ describe("ProfileScreen", () => {
       ]),
     );
     renderWithProviders(<ProfileScreen handle="ada" />);
+    await openEverything();
     const tag = await screen.findByTestId(byNode("profile.chronicle.act", "1"));
     expect(tag).toHaveTextContent("Tagged a post");
     expect(screen.getByTestId(byNode("profile.chronicle.act.aside", "1"))).toHaveTextContent("#saltmaps");
@@ -383,9 +406,10 @@ describe("ProfileScreen", () => {
     expect(back).toHaveAttribute("href", "/u/ada/opinions?tab=by");
   });
 
-  // THE CHRONICLE'S TAB ROW (TabBar.jsx; Profile.md:21): three glyph toggles
-  // named in the accessibility tree, the reader landing on Everything.
-  it("lands on Everything under the chronicle's glyph tabs", async () => {
+  // THE CHRONICLE'S TAB ROW (TabBar.jsx; Profile.md:23): three glyph toggles
+  // named in the accessibility tree, the reader landing on Posts
+  // (ProfileOther.md:21: "NEVER it lands on Everything or Comments").
+  it("lands on Posts under the chronicle's glyph tabs", async () => {
     server.use(
       gqlLink.query("UserProfile", () =>
         HttpResponse.json({ data: { user: profile("u2", "ada") } }),
@@ -395,7 +419,9 @@ describe("ProfileScreen", () => {
     renderWithProviders(<ProfileScreen handle="ada" />);
     const tabs = await screen.findByRole("group", { name: "What the chronicle shows" });
     expect(tabs).toHaveAttribute("data-testid", "profile.tabRow");
-    expect(screen.getByTestId(byNode("profile.tabRow.everythingTab"))).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId(byNode("profile.tabRow.postsTab"))).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId(byNode("profile.tabRow.everythingTab"))).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByTestId(byNode("profile.tabRow.commentsTab"))).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByTestId(byNode("profile.tabRow.postsTab"))).toHaveAccessibleName("Posts");
     expect(screen.getByTestId(byNode("profile.tabRow.commentsTab"))).toHaveAccessibleName("Comments");
   });
@@ -537,6 +563,10 @@ describe("ProfileScreen", () => {
     expect(
       await screen.findByTestId(byNode("profile.identity.actionRow.stance.anchor")),
     ).toHaveAccessibleName("Give your opinion on this account");
+    // ProfileDeleted.md:5 — it lands on Posts, as every profile does.
+    expect(await screen.findByTestId(byNode("profile.posts.empty.title"))).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("profile.tabRow.postsTab"))).toHaveAttribute("aria-pressed", "true");
+    await openEverything();
     expect(await screen.findByTestId(byNode("profile.chronicle.act", "1"))).toBeInTheDocument();
     expect(screen.getByRole("main")).not.toHaveTextContent("@marlow");
   });
@@ -672,6 +702,7 @@ describe("ProfileScreen", () => {
       recordsHandler([{ id: "act:a:1:publish", family: "PUBLISH", postId: "p1" }]),
     );
     renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+    await openEverything();
     await screen.findByTestId(byNode("profile.chronicle.act"));
     // The profile, never the chronicle's posts: those join only as a list
     // sees them.
@@ -1029,7 +1060,8 @@ describe("ProfileScreen", () => {
     expect(await screen.findByTestId(byNode("profile.identity.actionRow.edit"))).toHaveAttribute("href", "/profile/edit");
     expect(screen.getByTestId(byNode("profile.band.gear"))).toHaveAttribute("href", "/settings");
     expect(screen.getByTestId(byNode("profile.identity.actionRow.invites"))).toHaveAttribute("href", "/invites");
-    expect(await screen.findByTestId("profile-chronicle-empty")).toBeInTheDocument();
+    // Profile.md:25 — the own profile lands on Posts.
+    expect(await screen.findByTestId(byNode("profile.posts.empty.title"))).toBeInTheDocument();
     // The root wears the band (`ProfileBand`): gear, then chats, then the bell.
     expect(screen.getByTestId(byNode("profile.band.gear"))).toHaveAccessibleName("Settings");
     expect(screen.getByTestId(byNode("profile.band.wordmark"))).toHaveTextContent("cogra");
@@ -1125,8 +1157,13 @@ describe("ProfileScreen", () => {
     expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent(
       "You can invite once you're in.",
     );
-    // The applicant's empty chronicle says what fills it, and when.
-    expect(screen.getByTestId(byNode("profile.chronicle.empty.title"))).toHaveTextContent(
+    // ProfileApplicant.md:22 — the page lands with the Posts tab lit, as every
+    // profile does, its empty line reading Nothing here yet.
+    expect(screen.getByTestId(byNode("profile.tabRow.postsTab"))).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId(byNode("profile.posts.empty.title"))).toHaveTextContent(/^Nothing here yet\.$/);
+    // The applicant's empty chronicle reads the same line.
+    await openEverything();
+    expect(await screen.findByTestId(byNode("profile.chronicle.empty.title"))).toHaveTextContent(
       /^Nothing here yet\.$/,
     );
   });
@@ -1144,9 +1181,9 @@ describe("ProfileScreen", () => {
     renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore(), reader: "APPLICANT" });
     // The page's own read says member; the shared state says applicant, and the
     // lock follows the shared state. The Invites lock is what still tells the
-    // applicant apart here: the empty chronicle reads the same for both
+    // applicant apart here: the empty line reads the same for both
     // (round 42 cut its applicant tail).
-    await waitFor(() => expect(screen.getByTestId(byNode("profile.chronicle.empty.title"))).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId(byNode("profile.posts.empty.title"))).toBeInTheDocument());
     const invites = screen.getByTestId(byNode("profile.identity.actionRow.invites"));
     expect(invites).not.toHaveAttribute("href");
     expect(invites.className).toContain("opacity-[var(--state-disabled)]");
@@ -1214,33 +1251,29 @@ describe("ProfileScreen", () => {
       gqlLink.query("UserProfile", () =>
         HttpResponse.json({ data: { user: profile("u2", "ada") } }),
       ),
+      gqlLink.query("ProfilePosts", () => {
+        reads.push("posts");
+        return HttpResponse.json({ data: { user: null } });
+      }),
       gqlLink.query("ProfileComments", () => {
         reads.push("comments");
         return HttpResponse.json({ data: { user: null } });
       }),
-      gqlLink.query("AuthorRecords", ({ variables }) => {
+      gqlLink.query("ProfileChronicle", ({ variables }) => {
         // The chronicle reads every family: no tab narrows it.
         expect(variables).not.toHaveProperty("family");
         reads.push("everything");
-        return HttpResponse.json({
-          data: {
-            records: {
-              __typename: "RecordConnection",
-              edges: [],
-              pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
-            },
-          },
-        });
+        return HttpResponse.json(chroniclePage([]));
       }),
     );
     renderWithProviders(<ProfileScreen handle="ada" />);
     await screen.findByTestId(byNode("profile.identity.name"));
-    // Every visitor lands on Everything, as every profile board draws it.
-    await waitFor(() => expect(reads).toEqual(["everything"]));
+    // Every visitor lands on Posts and reads it alone (ProfilePosts.md:5).
+    await waitFor(() => expect(reads).toEqual(["posts"]));
     fireEvent.click(screen.getByTestId(byNode("profile.tabRow.commentsTab")));
-    await waitFor(() => expect(reads).toEqual(["everything", "comments"]));
+    await waitFor(() => expect(reads).toEqual(["posts", "comments"]));
     fireEvent.click(screen.getByTestId(byNode("profile.tabRow.everythingTab")));
-    await waitFor(() => expect(reads).toEqual(["everything", "comments", "everything"]));
+    await waitFor(() => expect(reads).toEqual(["posts", "comments", "everything"]));
   });
 
   // THE PAGE THAT DID NOT ARRIVE (Profile.md:35): the quiet line and Retry
@@ -1250,9 +1283,10 @@ describe("ProfileScreen", () => {
       gqlLink.query("UserProfile", () =>
         HttpResponse.json({ data: { user: profile("u2", "ada") } }),
       ),
-      gqlLink.query("AuthorRecords", () => HttpResponse.error()),
+      gqlLink.query("ProfileChronicle", () => HttpResponse.error()),
     );
     renderWithProviders(<ProfileScreen handle="ada" />);
+    await openEverything();
     const line = await screen.findByTestId("profile-rows-failed");
     expect(line).toHaveTextContent("Couldn't load more");
     expect(line.className).not.toContain("text-error");
@@ -1488,5 +1522,223 @@ describe("ProfileScreen — the voucher's profile", () => {
       "aria-label",
       "Opinion pad for @mira",
     );
+  });
+});
+
+// A POST OR A COMMENT STILL SETTLING ON THE EVERYTHING TAB (Profile.md:31,
+// ProfileOther.md:27; `_shared.jsx` `ChronicleAct`'s `settling`): on every
+// profile, the act's card — its disc, verb and snippet — its age read off its
+// signing and `Still settling` under it (`ContentRow` `pending`), in the
+// order `User.chronicle` pages it: the settling entries lead, then the landed
+// acts. Every other act stands only once landed, as its record.
+describe("the chronicle's still-settling posts and comments", () => {
+  const REGISTRY = JSON.parse(
+    readFileSync(join(process.cwd(), "..", "design", "designs", "canonical", "nodes.json"), "utf8"),
+  ) as { screens: Record<string, { nodes: Record<string, string[]> }> };
+
+  /** A landed post's genesis record, as the chronicle serves it. */
+  function landedPublish(id: string, postId: string) {
+    return {
+      __typename: "Record",
+      id,
+      family: "PUBLISH",
+      act: "GENESIS",
+      targetId: `mint:${id}`,
+      terminalId: null,
+      topic: null,
+      landedAt: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+      pDirected: 0,
+      pInterest: 0,
+      severed: null,
+      target: {
+        __typename: "Post",
+        id: postId,
+        title: { __typename: "ModeratedText", value: "Hello world" },
+        content: { __typename: "ModeratedText", value: "Body" },
+        removal: null,
+      },
+      terminal: null,
+    };
+  }
+
+  type Read = { id: string; after: string | null };
+  /** The chronicle's pages by the cursor each answers (`""` the first), and the reads asked. */
+  function serveChronicle(pages: Record<string, { nodes: unknown[]; next: string | null }>): Read[] {
+    const reads: Read[] = [];
+    server.use(
+      gqlLink.query("ProfileChronicle", ({ variables }) => {
+        const read = { id: variables.id as string, after: (variables.after as string | null | undefined) ?? null };
+        reads.push(read);
+        const page = pages[read.after ?? ""];
+        return HttpResponse.json(
+          chroniclePage(page.nodes, { userId: read.id, hasNextPage: page.next !== null, endCursor: page.next }),
+        );
+      }),
+    );
+    return reads;
+  }
+
+  const THREE = [
+    settlingPostEntry({ id: "p9", title: "The long way home" }),
+    settlingCommentEntry({ id: "c9", postId: "p1", content: "The third headland light is real" }),
+    landedPublish("act:a:1:publish", "p1"),
+  ];
+
+  const row = (n: number) => screen.getByTestId(byNode("profile.chronicle.act", String(n)));
+  const rowIds = () =>
+    screen
+      .getAllByTestId(/^chronicle-row-.*-open$/)
+      .map((element) => element.getAttribute("data-testid")?.replace(/-open$/, ""));
+
+  it("draws another's settling post and comment as their acts, Still settling under the age, ahead of the landed acts, for a guest", async () => {
+    server.use(gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u2", "ada") } })));
+    const reads = serveChronicle({ "": { nodes: THREE, next: null } });
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    await openEverything();
+    await screen.findByTestId(byNode("profile.chronicle.act", "3"));
+    expect(reads).toEqual([{ id: "u2", after: null }]);
+    // The settling post: the publish's verb, its title, its age `now`, the marker.
+    expect(screen.getByTestId(byNode("profile.chronicle.act.title", "1"))).toHaveTextContent("Published a post");
+    expect(screen.getByTestId(byNode("profile.chronicle.act.second", "1"))).toHaveTextContent("The long way home");
+    expect(screen.getByTestId(byNode("profile.chronicle.act.trailing", "1"))).toHaveTextContent("now");
+    expect(screen.getByTestId(byNode("profile.chronicle.act.pending", "1"))).toHaveTextContent("Still settling");
+    // Its door is its card's on the Posts tab: the post itself.
+    expect(row(1).querySelector("a")).toHaveAttribute("href", "/posts/p9?from=u%3Aada");
+    // The settling comment: the comment's verb, its words, the marker, and the
+    // thread landed on it, the Comments tab card's door.
+    expect(screen.getByTestId(byNode("profile.chronicle.act.title", "2"))).toHaveTextContent("Commented");
+    expect(screen.getByTestId(byNode("profile.chronicle.act.second", "2"))).toHaveTextContent(
+      "The third headland light is real",
+    );
+    expect(screen.getByTestId(byNode("profile.chronicle.act.pending", "2"))).toHaveTextContent("Still settling");
+    expect(row(2).querySelector("a")).toHaveAttribute("href", "/posts/p1?comment=c9&from=u%3Aada");
+    // The landed act after them, drawn as ever: no marker, its landing's age.
+    expect(screen.getByTestId(byNode("profile.chronicle.act.title", "3"))).toHaveTextContent("Published a post");
+    expect(screen.getByTestId(byNode("profile.chronicle.act.trailing", "3"))).toHaveTextContent("3d");
+    expect(screen.queryByTestId(byNode("profile.chronicle.act.pending", "3"))).not.toBeInTheDocument();
+    expect(row(3).querySelector("a")).toHaveAttribute("href", "/posts/p1?from=u%3Aada");
+    // The marker is the honesty register, never the error colour.
+    expect(screen.getByTestId(byNode("profile.chronicle.act.pending", "1")).className).not.toContain("text-error");
+  });
+
+  it("draws them on another's profile for a signed-in reader too", async () => {
+    server.use(meHandler(), gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u2", "ada") } })));
+    serveChronicle({ "": { nodes: THREE, next: null } });
+    renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+    await openEverything();
+    expect(await screen.findByTestId(byNode("profile.chronicle.act.pending", "1"))).toHaveTextContent("Still settling");
+    expect(screen.getByTestId(byNode("profile.chronicle.act.pending", "2"))).toHaveTextContent("Still settling");
+  });
+
+  it("draws the reader's own settling post and comment on their own chronicle, the doors naming their profile", async () => {
+    server.use(meHandler(), gqlLink.query("MyProfile", () => HttpResponse.json({ data: { me: profile("u1", "ada") } })));
+    const reads = serveChronicle({ "": { nodes: THREE, next: null } });
+    renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
+    await openEverything();
+    expect(await screen.findByTestId(byNode("profile.chronicle.act.pending", "1"))).toHaveTextContent("Still settling");
+    expect(reads).toEqual([{ id: "u1", after: null }]);
+    expect(row(1).querySelector("a")).toHaveAttribute("href", "/posts/p9?from=profile");
+    expect(row(2).querySelector("a")).toHaveAttribute("href", "/posts/p1?comment=c9&from=profile");
+  });
+
+  it("wears every part the Profile and ProfileOther boards register for a settling act, keyed by its position", async () => {
+    server.use(gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u2", "ada") } })));
+    serveChronicle({ "": { nodes: [THREE[0]], next: null } });
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    await openEverything();
+    await screen.findByTestId(byNode("profile.chronicle.act", "1"));
+    for (const board of ["Profile", "ProfileOther"]) {
+      const nodes = REGISTRY.screens[board].nodes;
+      expect(nodes["profile.chronicle.act.pending"]).toEqual(["1"]);
+      for (const path of [
+        "profile.chronicle.act",
+        "profile.chronicle.act.disc",
+        "profile.chronicle.act.title",
+        "profile.chronicle.act.second",
+        "profile.chronicle.act.trailing",
+        "profile.chronicle.act.pending",
+      ]) {
+        expect(nodes[path], `${board} registers ${path}`).toContain("1");
+        expect(screen.getByTestId(byNode(path, "1"))).toBeInTheDocument();
+      }
+    }
+  });
+
+  it("pages across the settling / landed boundary with the server's cursors, in the order served", async () => {
+    server.use(gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u2", "ada") } })));
+    const reads = serveChronicle({
+      "": { nodes: [settlingPostEntry({ id: "p9" }), settlingCommentEntry({ id: "c9", postId: "p1" })], next: "c1" },
+      c1: { nodes: [landedPublish("act:a:1:publish", "p1")], next: null },
+    });
+    const scroller = document.createElement("div");
+    document.body.append(scroller);
+    renderWithProviders(
+      <ScrollHostProvider value={{ current: scroller }}>
+        <ProfileScreen handle="ada" />
+      </ScrollHostProvider>,
+    );
+    await openEverything();
+    await screen.findByTestId(byNode("profile.chronicle.act", "2"));
+    const { intersect } = await import("@/test/media-env");
+    act(() => intersect(true));
+    await screen.findByTestId(byNode("profile.chronicle.act", "3"));
+    expect(reads).toEqual([
+      { id: "u2", after: null },
+      { id: "u2", after: "c1" },
+    ]);
+    expect(rowIds()).toEqual(["chronicle-row-act:p9", "chronicle-row-act:c9", "chronicle-row-act:a:1:publish"]);
+    expect(screen.queryByTestId(byNode("profile.chronicle.act.pending", "3"))).not.toBeInTheDocument();
+    scroller.remove();
+  });
+
+  it("shows an entry that lands between two reads once: the next page's record is the held row, and a re-read draws it landed", async () => {
+    server.use(gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u2", "ada") } })));
+    // Page one serves the post still settling; it lands before page two, whose
+    // walk serves its minting record (`act:p9`, the post's `genesisRecordId`).
+    serveChronicle({
+      "": { nodes: [settlingPostEntry({ id: "p9" })], next: "c1" },
+      c1: { nodes: [landedPublish("act:p9", "p9"), landedPublish("act:a:1:publish", "p1")], next: null },
+    });
+    const scroller = document.createElement("div");
+    document.body.append(scroller);
+    renderWithProviders(
+      <ScrollHostProvider value={{ current: scroller }}>
+        <ProfileScreen handle="ada" />
+      </ScrollHostProvider>,
+    );
+    await openEverything();
+    await screen.findByTestId(byNode("profile.chronicle.act.pending", "1"));
+    const { intersect, pullsAtTop } = await import("@/test/media-env");
+    act(() => intersect(true));
+    await screen.findByTestId(byNode("profile.chronicle.act", "2"));
+    // One row for the post: the held page stands, the repeat is dropped.
+    expect(rowIds()).toEqual(["chronicle-row-act:p9", "chronicle-row-act:a:1:publish"]);
+    // A re-read replaces the list: the post stands once, as its record, unmarked.
+    serveChronicle({
+      "": { nodes: [landedPublish("act:p9", "p9"), landedPublish("act:a:1:publish", "p1")], next: null },
+    });
+    pullsAtTop(scroller, PULL_THRESHOLD);
+    await waitFor(() =>
+      expect(screen.queryByTestId(byNode("profile.chronicle.act.pending", "1"))).not.toBeInTheDocument(),
+    );
+    expect(rowIds()).toEqual(["chronicle-row-act:p9", "chronicle-row-act:a:1:publish"]);
+    expect(screen.getByTestId(byNode("profile.chronicle.act.trailing", "1"))).toHaveTextContent("3d");
+    scroller.remove();
+  });
+
+  it("restores the held Everything view with its settling rows on the way back", async () => {
+    server.use(gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u2", "ada") } })));
+    const reads = serveChronicle({ "": { nodes: THREE, next: null } });
+    const left = renderWithProviders(<ProfileScreen handle="ada" from="feed" />);
+    await openEverything();
+    const first = await screen.findByTestId(byNode("profile.chronicle.act", "1"));
+    fireEvent.click(first.querySelector("a")!);
+    left.unmount();
+    renderWithProviders(<ProfileScreen handle="ada" from="feed" />);
+    expect(screen.getByTestId(byNode("profile.chronicle.act.pending", "1"))).toHaveTextContent("Still settling");
+    expect(screen.getByTestId(byNode("profile.chronicle.act.pending", "2"))).toHaveTextContent("Still settling");
+    expect(screen.queryByTestId(byNode("profile.chronicle.act.pending", "3"))).not.toBeInTheDocument();
+    await screen.findByTestId(byNode("profile.identity.name"));
+    expect(reads).toHaveLength(1);
   });
 });
