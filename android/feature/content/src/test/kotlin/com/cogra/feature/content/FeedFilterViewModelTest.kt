@@ -388,7 +388,7 @@ class FeedFilterViewModelTest {
         // A window is as wide as a cards read, so one window is one read.
         assertThat(feed.cardReads.first()).hasSize(FEED_PAGE_SIZE)
         assertThat(feed.cardReads.map { it.size }.max()).isAtMost(MAX_CARDS_WINDOW)
-        assertThat(vm.ids()).isEqualTo(ids)
+        assertThat(vm.ids()).isEqualTo(ids.take(FEED_PAGE_SIZE))
     }
 
     @Test
