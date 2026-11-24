@@ -187,6 +187,33 @@ async function openPostsTab() {
 const cardIds = () =>
   screen.getAllByTestId(byNode("profile.posts.card")).map((card) => card.getAttribute("data-testid-key"));
 
+/** Whether a tab of the row stands lit. */
+const lit = (tab: "postsTab" | "commentsTab" | "everythingTab") =>
+  screen.getByTestId(byNode(`profile.tabRow.${tab}`)).getAttribute("aria-pressed");
+
+/**
+ * Open Ada's profile from the feed, switch to Comments, leave by `leave`, then
+ * open it from the feed again: the second opening must land on Posts.
+ */
+async function leaveOnComments(leave: () => void) {
+  serveAda();
+  serveChronicle();
+  servePosts({ "": { posts: [adas("p1")], next: null } });
+  server.use(
+    gqlLink.query("ProfileComments", () => HttpResponse.json({ data: commentsPage("u-ada", [profileComment("c1")]) })),
+  );
+  const left = renderWithProviders(<ProfileScreen handle="ada" from="feed" />);
+  await screen.findByTestId(byNode("profile.identity.name"));
+  fireEvent.click(screen.getByTestId(byNode("profile.tabRow.commentsTab")));
+  await screen.findByTestId(byNode("profile.comments.commentCard", "c1"));
+  leave();
+  left.unmount();
+  const again = renderWithProviders(<ProfileScreen handle="ada" from="feed" />);
+  await waitFor(() => expect(lit("postsTab")).toBe("true"));
+  expect(await screen.findByTestId("profile-posts")).toBeInTheDocument();
+  again.unmount();
+}
+
 beforeEach(() => {
   window.localStorage.clear();
   push.mockReset();
@@ -406,25 +433,113 @@ describe("ProfilePosts — the posts view (ProfilePosts.md)", () => {
     expect(screen.getByTestId(byNode("profile.header.back"))).toHaveAttribute("aria-label", "Back to Saved");
   });
 
-  it("a_profile_opened_afresh_or_left_off_the_posts_view_lands_on_everything", async () => {
-    // Every profile board draws the reader landing on Everything: the held
-    // view is a return's, never a new opening's.
+  it("a_profile_opened_afresh_lands_on_posts_never_on_the_view_held", async () => {
+    // ProfileOther.md:21 — another's profile lands on Posts from any door: the
+    // held view is a return's, never a new opening's.
     serveAda();
     const families = serveChronicle();
+    server.use(
+      gqlLink.query("ProfileComments", () =>
+        HttpResponse.json({ data: commentsPage("u-ada", [profileComment("c1")]) }),
+      ),
+    );
     servePosts({ "": { posts: [adas("p1")], next: null } });
     const first = renderWithProviders(<ProfileScreen handle="ada" from="saved" />);
-    await openPostsTab();
+    await screen.findByTestId("profile-posts");
+    fireEvent.click(screen.getByTestId(byNode("profile.tabRow.commentsTab")));
+    await screen.findByTestId(byNode("profile.comments.commentCard", "c1"));
     first.unmount();
     // Opened from another list, it is a new opening.
     const fresh = renderWithProviders(<ProfileScreen handle="ada" from="history" />);
-    await screen.findByTestId(byNode("profile.chronicle.act", "1"));
-    expect(screen.queryByTestId("profile-posts")).toBeNull();
+    expect(await screen.findByTestId("profile-posts")).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("profile.tabRow.postsTab"))).toHaveAttribute("aria-pressed", "true");
     fresh.unmount();
     // And the fresh opening let the held view go.
+    renderWithProviders(<ProfileScreen handle="ada" from="saved" />);
+    expect(await screen.findByTestId("profile-posts")).toBeInTheDocument();
+    expect(families).toEqual([]);
+  });
+
+  // THE LANDING (ProfilePosts.md:5, ProfileOther.md:21; the own profile's
+  // Profile.md:25, ProfilePostsOwn.md:3): every profile lands with the Posts
+  // tab lit and the posts view below it, from any door, for a guest and for a
+  // signed-in reader alike — and reads that view alone, never the chronicle.
+  it("anothers_profile_lands_on_posts_for_a_guest_reading_the_posts_view_alone", async () => {
+    serveAda();
+    const families = serveChronicle();
+    const reads = servePosts({ "": { posts: [adas("p1")], next: null } });
     renderWithProviders(<ProfileScreen handle="ada" />);
-    await screen.findByTestId(byNode("profile.chronicle.act", "1"));
-    expect(screen.queryByTestId("profile-posts")).toBeNull();
-    expect(families.every((family) => family === null)).toBe(true);
+    expect(await screen.findByTestId("profile-posts")).toBeInTheDocument();
+    expect(lit("postsTab")).toBe("true");
+    expect(lit("everythingTab")).toBe("false");
+    expect(reads).toEqual([{ id: "u-ada", after: null }]);
+    expect(families).toEqual([]);
+  });
+
+  it("anothers_profile_lands_on_posts_for_a_signed_in_reader", async () => {
+    server.use(meAs("u1", "pixel"));
+    serveAda();
+    const families = serveChronicle();
+    const reads = servePosts({ "": { posts: [adas("p1")], next: null } });
+    renderWithProviders(<ProfileScreen handle="ada" />, { store: signedIn() });
+    expect(await screen.findByTestId("profile-posts")).toBeInTheDocument();
+    expect(lit("postsTab")).toBe("true");
+    expect(reads).toHaveLength(1);
+    expect(families).toEqual([]);
+  });
+
+  it("the_readers_own_profile_lands_on_posts_from_its_root_and_by_its_handle", async () => {
+    // Profile.md:25 — "NEVER it lands on Everything or Comments".
+    serveOwn();
+    const families = serveChronicle();
+    servePosts({ "": { posts: [adas("p1")], next: null } });
+    const root = renderWithProviders(<ProfileScreen handle={null} />, { store: signedIn("u-ada") });
+    expect(await screen.findByTestId("profile-posts")).toBeInTheDocument();
+    expect(lit("postsTab")).toBe("true");
+    root.unmount();
+    serveAda();
+    renderWithProviders(<ProfileScreen handle="ada" from="feed" />, { store: signedIn("u-ada") });
+    expect(await screen.findByTestId("profile-posts")).toBeInTheDocument();
+    expect(lit("postsTab")).toBe("true");
+    expect(families).toEqual([]);
+  });
+
+  it("the_way_back_from_an_everything_act_returns_to_everything_as_it_was_left", async () => {
+    // ProfileOther.md:101 — "the reader returns to where they came from, in the
+    // state they left it": a post opened from the chronicle comes back on it.
+    serveAda();
+    const families = serveChronicle();
+    const reads = servePosts({ "": { posts: [adas("p1")], next: null } });
+    const left = renderWithProviders(<ProfileScreen handle="ada" from="feed" />);
+    await screen.findByTestId("profile-posts");
+    fireEvent.click(screen.getByTestId(byNode("profile.tabRow.everythingTab")));
+    const act = await screen.findByTestId(byNode("profile.chronicle.act", "1"));
+    fireEvent.click(act.querySelector("a")!);
+    left.unmount();
+    renderWithProviders(<ProfileScreen handle="ada" from="feed" />);
+    expect(screen.getByTestId(byNode("profile.chronicle.act", "1"))).toBeInTheDocument();
+    expect(lit("everythingTab")).toBe("true");
+    await screen.findByTestId(byNode("profile.identity.name"));
+    // Neither view is read again.
+    expect(families).toHaveLength(1);
+    expect(reads).toHaveLength(1);
+  });
+
+  it("a_profile_left_by_its_own_back_arrow_lands_on_posts_when_opened_again", async () => {
+    // ProfileOther.md:21 — the feed's chip opens the profile with the same
+    // origin its way back carries; leaving by the bar's arrow is no card's door.
+    await leaveOnComments(() => fireEvent.click(screen.getByTestId(byNode("profile.header.back"))));
+  });
+
+  it("a_profile_left_by_a_door_outside_the_page_or_the_browsers_back_lands_on_posts", async () => {
+    // The bottom bar's slots and the browser's own back stand outside the page:
+    // the next opening is a new one (ProfileOther.md:21).
+    const outside = document.createElement("a");
+    outside.href = "/feed";
+    document.body.appendChild(outside);
+    await leaveOnComments(() => fireEvent.click(outside));
+    await leaveOnComments(() => window.dispatchEvent(new PopStateEvent("popstate")));
+    outside.remove();
   });
 
   it("the_next_page_arrives_in_place_and_a_failed_one_says_so_with_retry", async () => {
