@@ -51,11 +51,26 @@ internal fun landingOf(painted: PostView?, fresh: PostView, asked: Boolean): Det
  * or citation set. Tags and citations are acts of their own on L1 rather
  * than edits of the post, "but the inspection must say so" (jakob, FC-G1(b))
  * — so they count the same way, by which claims stand, not by how they weigh.
+ *
+ * THE CITATIONS ARE A SET WHERE THE PAINT HELD ONE, AND A COUNT WHERE IT DID
+ * NOT. The detail's own read carries the list; a post painted off a card
+ * ([com.cogra.domain.content.SeenPosts]) carries only the count, which is all
+ * its card drew — the list was never on screen, so the count is what the hold
+ * compares (the web's `detail-freeze.ts`, case for case).
  */
 internal fun isNewerVersion(painted: PostView, fresh: PostView): Boolean =
     painted.updatedAt != fresh.updatedAt ||
         painted.topics.map { it.hashtag.id }.toSet() != fresh.topics.map { it.hashtag.id }.toSet() ||
-        painted.references.map { it.targetId }.toSet() != fresh.references.map { it.targetId }.toSet()
+        !sameCitations(painted, fresh)
+
+private fun sameCitations(painted: PostView, fresh: PostView): Boolean {
+    val paintedSet = painted.references
+    val freshSet = fresh.references
+    if (paintedSet != null && freshSet != null) {
+        return paintedSet.map { it.targetId }.toSet() == freshSet.map { it.targetId }.toSet()
+    }
+    return painted.citationCount == fresh.citationCount
+}
 
 /**
  * Whether the fresh read shows a part of the post removed that the painted
