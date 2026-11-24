@@ -108,9 +108,10 @@ pub(crate) struct Candidate {
 }
 
 /// The stored parts of an accepted act's authentication beside its body
-/// and content commitment: what its published record carries so that
-/// authorship and formation verify from the record alone
-/// (layer1-interface.md §8.4, "Act envelope").
+/// and content commitment: what its published record carries so that each
+/// signature verifies under the key the record maps it to, and the act's
+/// formation verifies, from the record alone (layer1-interface.md §8.4,
+/// "Act envelope"; §13.3, "Published Epoch Replay Floor").
 #[derive(Debug, Clone, Default)]
 pub(crate) struct SealedParts {
     pub author_pubkey: Vec<u8>,

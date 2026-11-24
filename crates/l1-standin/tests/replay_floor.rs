@@ -1,15 +1,19 @@
 //! The replay floor of a published epoch: every accepted act's record
 //! carries its signed pre-commitment, the host seal, both commitments with
-//! the formation edition each names, and the author's approval witness, so
-//! authorship and formation verify from the published record alone, with
-//! no hidden opening (layer1-interface.md §8.4, "Act envelope"; §8.2,
-//! "Verified act" and "Approval witness"). Every package binds the
-//! verification-case declarations in force, the empty set included
-//! (§11.6, the published epoch package).
+//! the formation edition each names, the approval witness, and the public
+//! key the record maps both signatures to, so each signature and the act's
+//! formation verify from the published record alone, with no hidden
+//! opening (layer1-interface.md §13.3, "Published Epoch Replay Floor";
+//! §8.4, "Act envelope"; §8.2, "Verified act" and "Approval witness").
+//! Every package binds the verification-case declarations in force, the
+//! empty set included (§11.6, the published epoch package).
 //!
 //! The checks here recompute every signature from the record's own bytes
 //! and the host key the deployment publishes; they read nothing the host
-//! keeps beside the record.
+//! keeps beside the record. Like the floor's own checks, they relate no key
+//! to the stated Actor; that the stand-in seals only under the key its
+//! author's address derives from is its own submission check, asserted
+//! apart.
 //!
 //! **Budget: this suite runs in ≤ 10 s.** Like `host.rs`, every test spins
 //! its own database and replays the workspace migration set.
@@ -103,7 +107,7 @@ async fn land(
 /// Why a published record fails to verify on its own.
 #[derive(Debug, PartialEq, Eq)]
 enum Unverified {
-    AuthorKey,
+    SigningKey,
     Body,
     Legs,
     PreSignature,
@@ -112,17 +116,16 @@ enum Unverified {
 }
 
 /// Verifies one published record from its own fields and the published
-/// host key: the author key binds to the record's author, the body is the
-/// record's act and the legs its projection, the author signed the
-/// pre-commitment, the host sealed the verified act the record publishes,
-/// and the author approved that verified act and its seal.
+/// host key: the body is the record's act and the legs its projection,
+/// the pre-signature verifies over the pre-commitment under the key the
+/// record maps it to, the host seal over the verified act the record
+/// publishes under the host key, and the approval witness over that act
+/// and its seal under the same recorded key. It relates that key to no
+/// Actor.
 fn verify_from_record(record: &PublishedRecord, host_key: &[u8]) -> Result<(), Unverified> {
     let auth = &record.authentication;
-    let author_key =
-        crypto::verifying_key_from_bytes(&auth.author_pubkey).ok_or(Unverified::AuthorKey)?;
-    if crypto::address_of(&author_key) != record.author {
-        return Err(Unverified::AuthorKey);
-    }
+    let signing_key =
+        crypto::verifying_key_from_bytes(&auth.author_pubkey).ok_or(Unverified::SigningKey)?;
     if auth.body.act_id() != record.act_id
         || auth.body.author != record.author
         || auth.body.family != record.family
@@ -153,7 +156,7 @@ fn verify_from_record(record: &PublishedRecord, host_key: &[u8]) -> Result<(), U
         .as_slice()
         .try_into()
         .map_err(|_| Unverified::PreSignature)?;
-    if !crypto::verify_digest(&author_key, &pre_commitment, &auth.pre_signature) {
+    if !crypto::verify_digest(&signing_key, &pre_commitment, &auth.pre_signature) {
         return Err(Unverified::PreSignature);
     }
     let verified_act = seal_message(&record.seal_frame());
@@ -162,7 +165,7 @@ fn verify_from_record(record: &PublishedRecord, host_key: &[u8]) -> Result<(), U
         return Err(Unverified::Seal);
     }
     if !crypto::verify_digest(
-        &author_key,
+        &signing_key,
         &approval_digest(&verified_act, &auth.host_seal),
         &auth.approval_signature,
     ) {
@@ -196,15 +199,17 @@ fn record_bytes(record: &PublishedRecord) -> Vec<u8> {
 /// A client-signed Registration with a payload, an Opinion with an empty
 /// payload that declares a dependency, and a hyper-edge Tag with two legs
 /// close into one epoch. Each published record verifies from its own
-/// fields: the author key binds to the address, the pre-signature verifies
-/// over the published pre-commitment, the host seal over the verified act
-/// the record publishes, and the approval witness over that act and its
-/// seal. The authentication is exactly what the device held — the
-/// verified act it approved, the seal and its own witness — with the
-/// editions the host sealed under, and the read-back package publishes
-/// the same.
+/// fields: the pre-signature verifies over the published pre-commitment
+/// and the approval witness over the verified act and its seal, both under
+/// the key the record maps them to, and the host seal over the verified
+/// act under the host key. The authentication is exactly what the device
+/// held — the verified act it approved, the seal, its own witness and its
+/// own key — with the editions the host sealed under, and the read-back
+/// package publishes the same. Apart from the record checks, the recorded
+/// key is the one the author's address derives from: the stand-in seals
+/// under no other.
 ///
-/// Every accepted act verifies from its published record alone: the author's pre-signature, the host seal and the approval witness.
+/// Every accepted act verifies from its published record alone: the pre-signature, the host seal and the approval witness.
 /// ´claim:standin:every-accepted-act-verifies-from-its-published-record´
 #[sqlx::test(migrations = "../../migrations")]
 async fn every_accepted_act_verifies_from_its_published_record(pool: PgPool) {
@@ -264,11 +269,19 @@ async fn every_accepted_act_verifies_from_its_published_record(pool: PgPool) {
             "{}",
             record.act_id
         );
-        let (_, sealed, witness) = held
+        let (pre, sealed, witness) = held
             .iter()
             .find(|(pre, _, _)| pre.act_id() == record.act_id)
             .expect("an act the device landed");
         let auth = &record.authentication;
+        assert_eq!(auth.author_pubkey, pre.author_pubkey);
+        let signing_key =
+            crypto::verifying_key_from_bytes(&auth.author_pubkey).expect("a well-formed key");
+        assert_eq!(
+            crypto::address_of(&signing_key),
+            record.author,
+            "the stand-in seals only under the key the author's address derives from"
+        );
         assert_eq!(auth.body, sealed.act.body);
         assert_eq!(auth.pre_commitment, sealed.act.pre_commitment);
         assert_eq!(auth.pre_signature, sealed.act.pre_signature);
@@ -362,10 +375,11 @@ async fn a_published_record_holds_no_opening(pool: PgPool) {
     }
 }
 
-/// Each published member is load-bearing: a record whose pre-signature,
-/// seal, approval witness, dependency commitment, edition or body is
-/// changed by one value no longer verifies, so the verification above
-/// reads every member rather than passing over it.
+/// Each published member is load-bearing: a record whose signing key,
+/// pre-signature, seal, approval witness, dependency commitment, edition
+/// or body is changed by one value no longer verifies, so the verification
+/// above reads every member rather than passing over it. A different
+/// well-formed key fails at the first signature it is checked under.
 ///
 /// Changing any member of a published record's authentication makes it fail to verify.
 /// ´claim:standin:every-published-authentication-member-is-checked´
@@ -394,11 +408,16 @@ async fn every_published_authentication_member_is_checked(pool: PgPool) {
         bytes[0] ^= 1;
     }
     type Tamper = fn(&mut PublishedRecord);
-    let cases: [(&str, Tamper, Unverified); 9] = [
+    let cases: [(&str, Tamper, Unverified); 10] = [
         (
-            "author key",
-            |r| flip(&mut r.authentication.author_pubkey),
-            Unverified::AuthorKey,
+            "malformed signing key",
+            |r| r.authentication.author_pubkey.truncate(31),
+            Unverified::SigningKey,
+        ),
+        (
+            "signing key",
+            |r| r.authentication.author_pubkey = ActorKey::from_seed([7; 32]).public_key_bytes(),
+            Unverified::PreSignature,
         ),
         (
             "body",

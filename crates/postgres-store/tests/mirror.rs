@@ -359,7 +359,7 @@ fn expected_floor(record: &PublishedRecord) -> FloorRow {
 }
 
 /// Ingestion stores what the published record holds at the replay floor:
-/// the approved body in its canonical encoding, the author key, the signed
+/// the approved body in its canonical encoding, the signing key, the signed
 /// pre-commitment, the dependency commitment, both formation editions, the
 /// host seal and the approval witness, each in its own column.
 ///

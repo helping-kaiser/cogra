@@ -233,21 +233,27 @@ pub struct PublishedRecord {
     pub authentication: ActAuthentication,
 }
 
-/// What an accepted act's record carries so that its authorship and its
-/// formation verify from the record alone, with no hidden opening (§8.2,
-/// "Proposal pre-commitment", "Verified act" and "Approval witness"; §8.4,
-/// "Act envelope"): the approved body, the signed pre-commitment, the
+/// What an accepted act's record carries so that its signatures and its
+/// formation verify from the record alone, with no hidden opening (§13.3,
+/// "Published Epoch Replay Floor"; §8.2, "Proposal pre-commitment",
+/// "Verified act" and "Approval witness"; §8.4, "Act envelope"): the
+/// approved body, the public key the record maps the proposal signature
+/// and the approval signature to, the signed pre-commitment, the
 /// dependency commitment beside the record's content commitment, the
 /// formation edition each commitment names, the host seal, and the
-/// author's approval witness. The openings — the content pair, both
-/// salts, the dependency list and its nonce — are never part of it.
+/// approval witness. A reader verifies each signature under that key, the
+/// seal under the host key, and the commitments' formation; no record
+/// check relates the key to the stated Actor. The openings — the content
+/// pair, both salts, the dependency list and its nonce — are never part
+/// of it.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActAuthentication {
     /// The approved structural body the pre-commitment, the seal and the
     /// approval all cover.
     pub body: StructuralBody,
-    /// The key the author's address derives from, which every author
-    /// signature verifies under.
+    /// The public key the record maps both the proposal signature and the
+    /// approval signature to, which each verifies under. No record check
+    /// relates it to the stated Actor.
     pub author_pubkey: Vec<u8>,
     /// P, the proposal pre-commitment.
     pub pre_commitment: Vec<u8>,
@@ -927,7 +933,8 @@ mod tests {
     /// - per accepted act, the act envelope at the floor: act identifier,
     ///   author and family, the approved body, both commitments with the
     ///   formation edition each names, the signed pre-commitment, the host
-    ///   seal, the approval witness, and the author key they verify under;
+    ///   seal, the approval witness, and the signing key the record maps
+    ///   both signatures to;
     ///   with the host-derived edge projections and maturities;
     /// - the closure's Host Contract inputs: cause and boundary triple, the
     ///   dependent-set partition, the final ledger and debit vintage, the
@@ -981,7 +988,7 @@ mod tests {
             }
             let ActAuthentication {
                 body: _approved_body,
-                author_pubkey: _author_key,
+                author_pubkey: _recorded_signing_key,
                 pre_commitment: _pre_commitment,
                 pre_signature: _author_signature_over_it,
                 dependency_commitment: _dependency_commitment,

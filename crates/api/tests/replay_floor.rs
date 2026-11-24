@@ -35,17 +35,15 @@ fn standin(pool: &PgPool) -> StandIn {
 }
 
 /// Verifies one published record from its own fields and the published
-/// host key — the author key binds to the author, the body is the record's
-/// act and its legs the body's projection, and the pre-signature, the host
-/// seal and the approval witness each verify — and names the first member
-/// that does not.
+/// host key — the body is the record's act and its legs the body's
+/// projection, the pre-signature and the approval witness each verify
+/// under the key the record maps them to, and the host seal under the host
+/// key — and names the first member that does not. Like the floor's own
+/// checks, it relates no key to the stated Actor.
 fn verify_from_record(record: &PublishedRecord, host_key: &[u8]) -> Result<(), &'static str> {
     let auth = &record.authentication;
-    let author_key =
-        crypto::verifying_key_from_bytes(&auth.author_pubkey).ok_or("author key malformed")?;
-    if crypto::address_of(&author_key) != record.author {
-        return Err("author key is not the author's");
-    }
+    let signing_key =
+        crypto::verifying_key_from_bytes(&auth.author_pubkey).ok_or("signing key malformed")?;
     if auth.body.act_id() != record.act_id {
         return Err("body is another act");
     }
@@ -73,7 +71,7 @@ fn verify_from_record(record: &PublishedRecord, host_key: &[u8]) -> Result<(), &
         .as_slice()
         .try_into()
         .map_err(|_| "pre-commitment is not a digest")?;
-    if !crypto::verify_digest(&author_key, &pre_commitment, &auth.pre_signature) {
+    if !crypto::verify_digest(&signing_key, &pre_commitment, &auth.pre_signature) {
         return Err("pre-signature");
     }
     let verified_act = seal_message(&record.seal_frame());
@@ -82,7 +80,7 @@ fn verify_from_record(record: &PublishedRecord, host_key: &[u8]) -> Result<(), &
         return Err("host seal");
     }
     if !crypto::verify_digest(
-        &author_key,
+        &signing_key,
         &approval_digest(&verified_act, &auth.host_seal),
         &auth.approval_signature,
     ) {
@@ -95,7 +93,9 @@ fn verify_from_record(record: &PublishedRecord, host_key: &[u8]) -> Result<(), &
 /// Charter with its payload and the role Tag with its two legs — is
 /// published at the floor and verifies from its record alone, under the
 /// formation editions the host seals with; the package binds the empty
-/// set of verification-case declarations.
+/// set of verification-case declarations. Apart from the record checks,
+/// each recorded key is the one its author's address derives from, as the
+/// stand-in seals under no other.
 ///
 /// Every genesis act verifies from its published record alone, as a client-signed act does.
 /// ´claim:bootstrap:every-genesis-act-verifies-from-its-published-record´
@@ -115,6 +115,13 @@ async fn every_genesis_act_verifies_from_its_published_record(pool: PgPool) {
             Ok(()),
             "{}",
             record.act_id
+        );
+        let signing_key = crypto::verifying_key_from_bytes(&record.authentication.author_pubkey)
+            .expect("a well-formed key");
+        assert_eq!(
+            crypto::address_of(&signing_key),
+            record.author,
+            "the stand-in seals only under the key the author's address derives from"
         );
         assert_eq!(
             (

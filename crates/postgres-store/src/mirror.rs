@@ -108,8 +108,9 @@ struct PackageRows {
 }
 
 /// The replay-floor columns of a set of records (data-model.md "The record
-/// mirror"), as parallel arrays: everything the published record holds to
-/// verify its authorship and formation, beside the content commitment.
+/// mirror"), as parallel arrays: everything the published record holds so
+/// that its signatures and its formation verify, beside the content
+/// commitment.
 #[derive(Default)]
 struct FloorRows {
     record_id: Vec<String>,
