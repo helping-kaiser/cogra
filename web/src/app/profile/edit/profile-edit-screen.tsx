@@ -40,7 +40,6 @@ import {
   prepareProfileUpdate,
   type MediaSelection,
 } from "@/lib/api/profile-api";
-import { hasCode } from "@/lib/api/outcome";
 import { answeredFaultLine, firstRefusalMessage } from "@/lib/ui/error-messages";
 import { profileExpectation, type MediaLedger } from "@/lib/compose/payload-expectation";
 import { uploadProfilePicture } from "@/lib/profile/avatar-upload";
@@ -205,10 +204,7 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
     const prepared = await guard.run(() => prepareProfileUpdate(client, sent));
     if (prepared.kind === "refused") {
       setSubmitting(false);
-      if (
-        hasCode(prepared, "DISPLAY_NAME_RESERVED") &&
-        prepared.errors.some((e) => e.code === "DISPLAY_NAME_RESERVED" && e.field?.[0] === "displayName")
-      ) {
+      if (prepared.errors.some((e) => e.code === "DISPLAY_NAME_RESERVED" && e.field?.[0] === "displayName")) {
         setNameReserved(NAME_RESERVED_LINE);
         return;
       }
