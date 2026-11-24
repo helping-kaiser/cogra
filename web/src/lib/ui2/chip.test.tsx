@@ -18,6 +18,25 @@ describe("Chip", () => {
     expect(chip).toHaveAttribute("aria-checked", "true");
   });
 
+  // Chip.jsx:103-106, :132-135 (round 62): `cut` keeps a chip inside its row —
+  // the pill takes at most the row's width and its label ends in "…".
+  it("keeps a cut chip inside its row, its label ending in an ellipsis", () => {
+    const LONG = `#${"sweepfixture".repeat(10)}abcdefgh`;
+    render(
+      <Chip testId="tag" cut onClick={() => {}}>
+        {LONG}
+      </Chip>,
+    );
+    const chip = screen.getByTestId("tag");
+    expect(chip.className.split(/\s+/)).toEqual(expect.arrayContaining(["max-w-full", "min-w-0"]));
+    expect(chip.parentElement?.className.split(/\s+/)).toEqual(expect.arrayContaining(["max-w-full", "min-w-0"]));
+    const label = chip.firstElementChild as HTMLElement;
+    expect(label.className.split(/\s+/)).toEqual(
+      expect.arrayContaining(["min-w-0", "overflow-hidden", "text-ellipsis", "whitespace-nowrap"]),
+    );
+    expect(chip).toHaveAccessibleName(LONG);
+  });
+
   it("draws an unselected chip as a hairline outline", () => {
     render(
       <Chip testId="square" onClick={() => {}}>

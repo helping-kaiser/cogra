@@ -550,6 +550,48 @@ describe("SealStep", () => {
     expect(screen.queryByRole("button", { name: /Manage the/ })).toBeNull();
   });
 
+  // _shared.jsx:1935-1943 (round 62): a readout chip is never cut, so a tag
+  // too long for the value slot folds the row to its count — `1 tag` — and
+  // the row becomes the door, as past two tags. The fold is MEASURED.
+  describe("the measured fold", () => {
+    const LONG = `${"sweepfixture-".repeat(9)}end`;
+    const widths = (slot: number, chips: number) =>
+      vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+        const width = this.hasAttribute("data-seal-tags-slot")
+          ? slot
+          : this.hasAttribute("data-seal-tags-probe")
+            ? chips
+            : 0;
+        return { width, height: 0, top: 0, left: 0, right: width, bottom: 0, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
+      });
+
+    it("folds one tag too long for the slot to `1 tag`, the row a door", () => {
+      const spy = widths(181, 963);
+      const { onSheet } = renderStep({ tags: [tag(LONG)] });
+      const door = screen.getByRole("button", { name: "Manage the 1 tag" });
+      expect(door).toHaveTextContent("1 tag");
+      expect(within(screen.getByTestId("wizard-seal-acts")).queryByText(`#${LONG}`, { ignore: "[aria-hidden] *" })).toBeNull();
+      fireEvent.click(door);
+      expect(onSheet).toHaveBeenCalledWith("tags");
+      spy.mockRestore();
+    });
+
+    it("folds two tags whose chips together pass the slot to `2 tags`", () => {
+      const spy = widths(181, 190);
+      renderStep({ tags: [tag("fieldnotes"), tag("coastroadsandmore")] });
+      expect(screen.getByRole("button", { name: "Manage the 2 tags" })).toHaveTextContent("2 tags");
+      spy.mockRestore();
+    });
+
+    it("keeps the chips while they fit the slot whole", () => {
+      const spy = widths(181, 162);
+      renderStep({ tags: [tag("fieldnotes"), tag("coastroad")] });
+      expect(screen.queryByRole("button", { name: /Manage the/ })).toBeNull();
+      expect(within(screen.getByTestId("wizard-seal-tags")).getByText("#fieldnotes")).toBeInTheDocument();
+      spy.mockRestore();
+    });
+  });
+
   // SealSigning: past 200ms the commit reads its participle, inert and never
   // dimmed; the ways out and the facts' actions refuse a press.
   describe("while it signs", () => {
