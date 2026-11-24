@@ -28,6 +28,7 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { byNode } from "@/test/data-node";
 import { gqlLink, startMswServer } from "@/test/msw";
+import { chroniclePage } from "@/test/chronicle";
 import { commentsPage, profileComment } from "@/test/profile-comment";
 import { renderWithProviders } from "@/test/providers";
 import { reelPost } from "@/test/reel";
@@ -128,41 +129,32 @@ function servePosts(pages: Record<string, { posts: PostView[]; next: string | nu
 function serveChronicle(): (string | null)[] {
   const families: (string | null)[] = [];
   server.use(
-    gqlLink.query("AuthorRecords", ({ variables }) => {
+    gqlLink.query("ProfileChronicle", ({ variables }) => {
       families.push((variables as { family?: string | null }).family ?? null);
-      return HttpResponse.json({
-        data: {
-          records: {
-            __typename: "RecordConnection",
-            edges: [
-              {
-                __typename: "RecordEdge",
-                node: {
-                  __typename: "Record",
-                  id: "act:1",
-                  family: "PUBLISH",
-                  act: "GENESIS",
-                  targetId: "mint:act:1",
-                  terminalId: null,
-                  landedAt: new Date(Date.now() - 86_400_000).toISOString(),
-                  pDirected: 0,
-                  pInterest: 0,
-                  severed: null,
-                  target: {
-                    __typename: "Post",
-                    id: "p1",
-                    title: { __typename: "ModeratedText", value: "The long way home" },
-                    content: { __typename: "ModeratedText", value: "Body" },
-                    removal: null,
-                  },
-                  terminal: null,
-                },
-              },
-            ],
-            pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+      return HttpResponse.json(
+        chroniclePage([
+          {
+            __typename: "Record",
+            id: "act:1",
+            family: "PUBLISH",
+            act: "GENESIS",
+            targetId: "mint:act:1",
+            terminalId: null,
+            landedAt: new Date(Date.now() - 86_400_000).toISOString(),
+            pDirected: 0,
+            pInterest: 0,
+            severed: null,
+            target: {
+              __typename: "Post",
+              id: "p1",
+              title: { __typename: "ModeratedText", value: "The long way home" },
+              content: { __typename: "ModeratedText", value: "Body" },
+              removal: null,
+            },
+            terminal: null,
           },
-        },
-      });
+        ]),
+      );
     }),
   );
   return families;

@@ -37,14 +37,14 @@
 
 import type { MeUser } from "@/lib/api/auth-api";
 import type { PostView } from "@/lib/api/content-api";
-import type { ProfileCommentView, ProfileFigures, ProfileView, RecordRow } from "@/lib/api/profile-api";
+import type { ChronicleRow, ProfileCommentView, ProfileFigures, ProfileView } from "@/lib/api/profile-api";
 import type { ScrollPlace } from "@/lib/ui/scroll-pin";
 
 /** The tab view left, and its cards in its order. */
 export type HeldProfileList =
   | { readonly tab: "posts"; readonly posts: readonly PostView[] }
   | { readonly tab: "comments"; readonly comments: readonly ProfileCommentView[] }
-  | { readonly tab: "everything"; readonly rows: readonly RecordRow[] };
+  | { readonly tab: "everything"; readonly rows: readonly ChronicleRow[] };
 
 export type ProfileViewMemory = {
   readonly reader: string | null;

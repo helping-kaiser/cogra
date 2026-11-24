@@ -7,14 +7,14 @@
 import type { ApolloClient } from "@apollo/client";
 
 import {
-  AuthorRecordsDocument,
   MyProfileDocument,
   PrepareProfileUpdateDocument,
+  ProfileChronicleDocument,
   ProfileCommentsDocument,
   ProfileFiguresDocument,
   ProfilePostsDocument,
   UserProfileDocument,
-  type AuthorRecordsQuery,
+  type ProfileChronicleQuery,
   type UserProfileQuery,
 } from "@/__generated__/graphql";
 import type { CommentFeedView } from "@/lib/ui/comment-feed-card";
@@ -67,6 +67,35 @@ export type RecordRow = {
   /** The person a mention names, and their picture, for the avatar its disc wears. */
   mentioned: { readonly handle: string; readonly avatar: string | null } | null;
 };
+
+/**
+ * A POST OR A COMMENT THE PERSON SIGNED THAT IS STILL SETTLING, on the
+ * chronicle as its act's card (Profile.md:31, ProfileOther.md:27): the row its
+ * landed record will draw — the disc, the verb, the snippet, the door — with
+ * its age read off its signing and `Still settling` under it. Its `id` is the
+ * record it lands as (`genesisRecordId`), so the settling entry and its record
+ * are one row by key.
+ */
+export type SettlingRow = Omit<RecordRow, "landedAt"> & {
+  /**
+   * Its own `landing` read PENDING. The server serves a post or comment here
+   * only while it settles; one read LANDED in the instant its record is
+   * mirrored keeps its row, unmarked, until the next read serves the record.
+   */
+  readonly pending: boolean;
+  /** When its minting record was authored (`createdAt`): the age it reads. */
+  readonly signedAt: string;
+  /** A comment's own id: its door lands the thread on it, as its card's does. */
+  readonly commentId: string | null;
+};
+
+/** One row of the Everything tab: a landed act, or a post or comment still settling. */
+export type ChronicleRow = RecordRow | SettlingRow;
+
+/** Whether a chronicle row is a post or comment entry rather than a landed record. */
+export function isSettlingEntry(row: ChronicleRow): row is SettlingRow {
+  return "signedAt" in row;
+}
 
 /**
  * One page of the chronicle per fetch — the server's own default, pinned
@@ -204,7 +233,11 @@ export async function fetchProfileComments(
   });
 }
 
-export type RecordNode = AuthorRecordsQuery["records"]["edges"][number]["node"];
+type ChronicleNode = NonNullable<
+  ProfileChronicleQuery["user"]
+>["chronicle"]["edges"][number]["node"];
+
+export type RecordNode = Extract<ChronicleNode, { __typename: "Record" }>;
 
 /** What a row's target is, in the chronicle's own words (`on a post`). */
 type TargetWords = { aside: string | null; snippet: string | null };
@@ -356,34 +389,77 @@ function toRow(node: RecordNode, own: boolean): RecordRow {
 }
 
 /**
- * THE EVERYTHING TAB'S PAGE: the chronicle, every family the person signed,
- * one act to a row. The Posts and Comments tabs are card views on reads of
- * their own.
+ * A still-settling post or comment as its act's row: the verb its landed
+ * genesis record reads (`Published a post`, `Commented` — copy-voice, *The
+ * chronicle's verbs*), its own words as the snippet (a post's title, else
+ * its words), and the door its card opens on the Posts or Comments tab — the
+ * post itself, or the thread landed on the comment.
  */
-export async function fetchAuthorRecords(
+function toSettlingRow(
+  node: Extract<ChronicleNode, { __typename: "Post" | "Comment" }>,
+): SettlingRow {
+  const common = {
+    id: node.genesisRecordId,
+    aside: null,
+    face: null,
+    cited: null,
+    mentioned: null,
+    pending: node.landing.state === "PENDING",
+    signedAt: node.createdAt,
+  } as const;
+  if (node.__typename === "Post") {
+    return {
+      ...common,
+      kind: "post",
+      label: "Published a post",
+      snippet: node.title.value ?? node.content.value ?? null,
+      postId: node.postId,
+      commentId: null,
+    };
+  }
+  return {
+    ...common,
+    kind: "comment",
+    label: "Commented",
+    snippet: node.content.value ?? null,
+    postId: node.post?.id ?? null,
+    commentId: node.commentId,
+  };
+}
+
+/**
+ * THE EVERYTHING TAB'S PAGE (`User.chronicle`): the chronicle, every family
+ * the person signed, one act to a row — the posts and comments still settling
+ * first, newest signed first, then the landed acts newest first, in the order
+ * the server pages them (Profile.md:31, ProfileOther.md:27). The Posts and
+ * Comments tabs are card views on reads of their own.
+ */
+export async function fetchProfileChronicle(
   client: ApolloClient,
-  authorId: string,
+  id: string,
   after: string | null = null,
   /** The reader's own chronicle, whose profile updates say `your`. */
   own = false,
-): Promise<Outcome<Page<RecordRow>>> {
+): Promise<Outcome<Page<ChronicleRow>>> {
   const fetched = await fetchOutcome(() =>
     client.query({
-      query: AuthorRecordsDocument,
-      variables: {
-        author: authorId,
-        first: PROFILE_PAGE_SIZE,
-        after,
-      },
+      query: ProfileChronicleDocument,
+      variables: { id, first: PROFILE_PAGE_SIZE, after },
       fetchPolicy: "network-only",
     }),
   );
   if (fetched.kind !== "success") return fetched;
-  const records = fetched.value.records;
+  const chronicle = fetched.value.user?.chronicle;
+  if (chronicle === undefined) return success({ items: [], endCursor: null, hasNextPage: false });
+  // Every entry in the order served: no client-side merge or sort.
+  const items: ChronicleRow[] = [];
+  for (const { node } of chronicle.edges) {
+    items.push(node.__typename === "Record" ? toRow(node, own) : toSettlingRow(node));
+  }
   return success({
-    items: records.edges.map((edge) => toRow(edge.node, own)),
-    endCursor: records.pageInfo.endCursor ?? null,
-    hasNextPage: records.pageInfo.hasNextPage,
+    items,
+    endCursor: chronicle.pageInfo.endCursor ?? null,
+    hasNextPage: chronicle.pageInfo.hasNextPage,
   });
 }
 
