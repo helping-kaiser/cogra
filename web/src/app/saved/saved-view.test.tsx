@@ -693,6 +693,30 @@ describe("SavedScreen — search what you saved", () => {
     expect(screen.getByTestId("saved.searchField")).toBeInTheDocument();
   });
 
+  it("the_header_and_the_field_stand_as_one_gapless_block_in_the_collapsing_top", async () => {
+    // Saved.jsx stacks PageHeader and SearchBar with no gap of their own: the
+    // field's pill at 48 + 4 = 52, never pushed down by the region's column gap.
+    serve(THREE);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    const top = screen.getByTestId("collapsing-top");
+    expect(top.children).toHaveLength(1);
+    const block = top.children[0]!;
+    expect(block).toContainElement(screen.getByTestId("saved.header"));
+    expect(block).toContainElement(screen.getByTestId("saved.searchField"));
+    expect(block.className).not.toMatch(/\bgap-/);
+  });
+
+  it("the_list_stands_8px_under_the_field_by_its_own_top_and_the_region_adds_none", async () => {
+    // FeedList's `padding: 8px 0 0` (_shared.jsx) is the list's own; a region
+    // `pb-2` on top of it doubled the step to 16.
+    serve(THREE);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    const list = await screen.findByTestId("saved-list");
+    expect(list).toHaveClass("pt-2");
+    expect(screen.getByTestId("collapsing-top")).not.toHaveClass("pb-2");
+  });
+
   it("the_whole_list_is_read_with_no_query", async () => {
     const reads = serveSaved(() => page(THREE));
     renderWithProviders(<SavedScreen />, { store: signedIn() });

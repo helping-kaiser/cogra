@@ -50,9 +50,10 @@ export function CollapsingTop({
   flush = false,
 }: {
   /**
-   * No 8px under the region. The feed and Saved draw their
-   * list's 8px top padding here; the profile's header stands directly under
-   * its bar (`ProfileOwnBody`, `ProfileOtherBody`).
+   * No 8px under the region. The feed draws its list's 8px top padding
+   * here; the profile's header stands directly under its bar
+   * (`ProfileOwnBody`, `ProfileOtherBody`), and History and Saved stand
+   * blocks that carry their own 8px.
    */
   flush?: boolean;
   children: React.ReactNode;

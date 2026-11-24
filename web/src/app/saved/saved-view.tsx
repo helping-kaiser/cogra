@@ -295,25 +295,31 @@ export function SavedScreen({
     <main className="mx-auto flex w-full max-w-2xl flex-col">
       {/* THE HEADER AND THE FIELD COLLAPSE ON THE WAY DOWN AND RETURN ON THE
           WAY UP, and a reader three screens down summons Back to top with
-          them; its tap goes up, animated, and never re-reads. */}
-      <CollapsingTop onBackToTop={() => scrollHostToTopAnimated(host)}>
-        <PageHeader
-          title="Saved"
-          backHref="/profile"
-          backLabel="Back to your profile"
-          backScroll={false}
-          backTestId="saved-back"
-          node={{ path: "saved.header" }}
-        />
-        {fielded && (
-          <SearchBar
-            query={query}
-            onChange={setQuery}
-            placeholder={SEARCH_WHAT_YOU_SAVED}
-            ariaLabel={SEARCH_WHAT_YOU_SAVED}
-            node={{ path: "saved.searchField" }}
+          them; its tap goes up, animated, and never re-reads. ONE BLOCK: the
+          board stacks the header and the field with no gap of their own
+          (Saved.jsx), so the region's column gap never opens between them.
+          FLUSH: what stands under it — the list, SavedNone, SavedEmpty — keeps
+          its own 8px top, as the boards draw it. */}
+      <CollapsingTop flush onBackToTop={() => scrollHostToTopAnimated(host)}>
+        <div className="flex flex-col">
+          <PageHeader
+            title="Saved"
+            backHref="/profile"
+            backLabel="Back to your profile"
+            backScroll={false}
+            backTestId="saved-back"
+            node={{ path: "saved.header" }}
           />
-        )}
+          {fielded && (
+            <SearchBar
+              query={query}
+              onChange={setQuery}
+              placeholder={SEARCH_WHAT_YOU_SAVED}
+              ariaLabel={SEARCH_WHAT_YOU_SAVED}
+              node={{ path: "saved.searchField" }}
+            />
+          )}
+        </div>
       </CollapsingTop>
       {loading && entries.length === 0 && (
         <p role="status" aria-live="polite" data-testid="saved-loading" className="px-4 pt-2">
