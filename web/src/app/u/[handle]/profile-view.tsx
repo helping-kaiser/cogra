@@ -482,25 +482,26 @@ export function ProfileScreen({
   // browser's own back, the reader has left the profile, and its next opening
   // lands on Posts (ProfileOther.md:21, Profile.md:25).
   //
-  // Every click first marks the page left for good, at the document; one inside
-  // the page's own React tree — its sheets included, which a portal puts
-  // outside its DOM but not outside its tree — then takes the mark back, in
-  // the page's own capture handler (`onPageClick`), which React runs after the
-  // document's.
+  // Every click first marks the page left for good, at the WINDOW — the one
+  // target whose capture runs before React's own listener, which the App
+  // Router roots at the document itself — and one inside the page's own React
+  // tree (its sheets included, which a portal puts outside its DOM but not
+  // outside its tree) then takes the mark back in the page's capture handler
+  // (`onPageClick`).
   const leftForGood = useRef(false);
   const onPageClick = (event: ReactMouseEvent) => {
     const target = event.target instanceof Element ? event.target : null;
     leftForGood.current = target?.closest(`[data-testid="${BACK_ARROW}"]`) != null;
   };
   useEffect(() => {
-    const onDocumentClick = () => {
+    const leaveForGood = () => {
       leftForGood.current = true;
     };
-    document.addEventListener("click", onDocumentClick, true);
-    window.addEventListener("popstate", onDocumentClick);
+    window.addEventListener("click", leaveForGood, true);
+    window.addEventListener("popstate", leaveForGood);
     return () => {
-      document.removeEventListener("click", onDocumentClick, true);
-      window.removeEventListener("popstate", onDocumentClick);
+      window.removeEventListener("click", leaveForGood, true);
+      window.removeEventListener("popstate", leaveForGood);
       if (leftForGood.current) forgetProfileView(memoryReader, handle);
     };
   }, [memoryReader, handle]);
