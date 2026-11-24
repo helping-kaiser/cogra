@@ -138,7 +138,9 @@ fragment ChronicleRecordFields on Record {
     }
   }
   # A citation's cited thing is its terminal leg: a post or a comment
-  # (`Cited a post`, the title under it) or a person (`Mentioned`).
+  # (`Cited a post`, the title under it) or a person (`Mentioned`); a
+  # Review's terminal is the comment it minted. Its `removal` reads the
+  # mark in its words' place (Profile.md:37, :39).
   terminal {
     __typename
     ... on User {
@@ -152,11 +154,19 @@ fragment ChronicleRecordFields on Record {
       content {
         value
       }
+      removal {
+        at
+        by
+      }
     }
     ... on Comment {
       id
       content {
         value
+      }
+      removal {
+        at
+        by
       }
       target {
         __typename
@@ -189,6 +199,11 @@ fragment ChronicleSettlingPostFields on Post {
   content {
     value
   }
+  # A removed one reads its mark where its words were (Profile.md:39).
+  removal {
+    at
+    by
+  }
 }
 
 # A STILL-SETTLING COMMENT, as light: its thread's post is its door, the
@@ -202,6 +217,10 @@ fragment ChronicleSettlingCommentFields on Comment {
   }
   content {
     value
+  }
+  removal {
+    at
+    by
   }
   post {
     id
