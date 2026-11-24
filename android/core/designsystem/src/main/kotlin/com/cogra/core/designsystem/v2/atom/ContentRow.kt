@@ -48,6 +48,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.NameInLine
+import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.R
 import com.cogra.core.designsystem.StancePoint
 import com.cogra.core.designsystem.ZERO_BUNDLE_READOUT
@@ -187,6 +188,12 @@ fun ContentRow(
     sentence: Boolean = false,
     /** The door's chevron (`ContentRow.jsx` `chevron`): this opens another surface. Never beside an [action]. */
     chevron: Boolean = false,
+    /**
+     * Signed and not yet landed (`ContentRow.jsx` `pending`): the shared
+     * `Still settling` marker stands under the trailing edge, its node the
+     * row's `pending` part.
+     */
+    pending: Boolean = false,
 ) {
     // A DELETED ACCOUNT'S ROW (HA-3, design digest item 56): the reserved disc
     // and `Deleted account` in the system's voice, the aside dropped — unless
@@ -224,7 +231,7 @@ fun ContentRow(
                     Box(Modifier.fillMaxWidth().dataNode(part("second"))) { line() }
                 }
             }
-            TrailingEdge(trailing, unread, part, testTag)
+            TrailingEdge(trailing, unread, pending, part, testTag)
             if (chevron && action == null) {
                 Icon(
                     Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -238,10 +245,16 @@ fun ContentRow(
     }
 }
 
-/** The trailing edge: the quiet time, and under it the unread dot. */
+/** The trailing edge: the quiet time, under it the settling marker, and the unread dot. */
 @Composable
-private fun TrailingEdge(trailing: String?, unread: Boolean, part: (String) -> DataNode?, testTag: String) {
-    if (trailing == null && !unread) return
+private fun TrailingEdge(
+    trailing: String?,
+    unread: Boolean,
+    pending: Boolean,
+    part: (String) -> DataNode?,
+    testTag: String,
+) {
+    if (trailing == null && !unread && !pending) return
     Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
         trailing?.let {
             Text(
@@ -251,6 +264,7 @@ private fun TrailingEdge(trailing: String?, unread: Boolean, part: (String) -> D
                 modifier = Modifier.dataNode(part("trailing")),
             )
         }
+        if (pending) PendingMarker(testTag = part("pending")?.tag ?: "${testTag}_pending")
         if (unread) UnreadDot(part("dot"), testTag)
     }
 }

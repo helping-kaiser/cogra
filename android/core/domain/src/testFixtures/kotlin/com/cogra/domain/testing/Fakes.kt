@@ -923,7 +923,7 @@ open class ThrowingProfileRepository : ProfileRepository {
         throw UnsupportedOperationException()
     override suspend fun myProfile(): Outcome<ProfileView?> =
         throw UnsupportedOperationException()
-    override suspend fun authorRecords(
+    override suspend fun chronicle(
         authorId: String,
         first: Int,
         after: String?,

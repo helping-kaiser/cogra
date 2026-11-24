@@ -74,7 +74,7 @@ class ProfileViewModelTest {
         override suspend fun profileByHandle(handle: String): Outcome<ProfileView?> =
             byHandle[handle] ?: Outcome.Success(null)
 
-        override suspend fun authorRecords(authorId: String, first: Int, after: String?): Outcome<Page<RecordRow>> {
+        override suspend fun chronicle(authorId: String, first: Int, after: String?): Outcome<Page<RecordRow>> {
             rowRequests += "records"
             cursors += after
             gate?.await()
