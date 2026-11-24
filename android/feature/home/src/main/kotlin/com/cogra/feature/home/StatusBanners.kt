@@ -357,13 +357,33 @@ private fun KeyElsewhereCard(onStartKeyCeremony: () -> Unit) {
 
 /**
  * The actor key lives elsewhere — restore brings it to this device
- * (KeyElsewhere). `TaskCard` on the account-notice register (`tone="notice"`,
- * the olive split): the task ring around the `tertiaryContainer` ground, every
- * ink the panel's own, the title beside the mark, and `Restore the key` filled
- * in `inverse` at the small rung.
+ * (KeyElsewhere): the notice [NoticeTaskCard], `Restore the key` filled in
+ * `inverse` at the small rung.
  */
 @Composable
 private fun RestoreCard(onRestoreActor: () -> Unit, node: DataNode?) {
+    NoticeTaskCard(
+        title = stringResource(R.string.home_husk_title),
+        body = stringResource(R.string.home_husk_body),
+        node = node,
+    ) {
+        CograButton(
+            text = stringResource(R.string.home_husk_restore),
+            onClick = onRestoreActor,
+            kind = ButtonKind.Inverse,
+            size = ButtonSize.Compact,
+            testTag = node?.div("restore")?.tag ?: "home_restore",
+        )
+    }
+}
+
+/**
+ * `TaskCard` on the account-notice register (`tone="notice"`, the olive
+ * split): the task ring around the `tertiaryContainer` ground, every ink the
+ * panel's own, the title beside the mark, the body under it, then [content].
+ */
+@Composable
+private fun NoticeTaskCard(title: String, body: String, node: DataNode?, content: @Composable () -> Unit) {
     val colors = MaterialTheme.colorScheme
     val ink = colors.onTertiaryContainer
     Column(
@@ -379,7 +399,7 @@ private fun RestoreCard(onRestoreActor: () -> Unit, node: DataNode?) {
     ) {
         Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.x3)) {
             Text(
-                text = stringResource(R.string.home_husk_title),
+                text = title,
                 style = MaterialTheme.typography.titleMedium,
                 color = ink,
                 modifier = Modifier.weight(1f).dataNode(node?.div("title")),
@@ -387,18 +407,12 @@ private fun RestoreCard(onRestoreActor: () -> Unit, node: DataNode?) {
             CograMark(size = 20.dp, tint = ink)
         }
         Text(
-            text = stringResource(R.string.home_husk_body),
+            text = body,
             style = MaterialTheme.typography.bodyMedium,
             color = ink,
             modifier = Modifier.dataNode(node?.div("body")),
         )
-        CograButton(
-            text = stringResource(R.string.home_husk_restore),
-            onClick = onRestoreActor,
-            kind = ButtonKind.Inverse,
-            size = ButtonSize.Compact,
-            testTag = node?.div("restore")?.tag ?: "home_restore",
-        )
+        content()
     }
 }
 
