@@ -8,12 +8,18 @@
    name is the tree's `Genesis Moderator` (ExploreSearch.md). Its picture is
    the CoGra mark, the brand's orange tile clipped round (jakob 2026-11-24,
    "(a) orange tile"; readme §4 *Imagery*) — the account's own picture, set
-   by the person who holds it, drawn so on the sample. */
+   by the person who holds it, drawn so on the sample.
+
+   REGISTERED (impl seam 451): the feed as a guest reads it, under `Feed`'s
+   prefix and body names — `band`, `filterTrigger`, `card`, `bottomBar` — and
+   the borrowed-view band by `ApplicantFeed`'s name, `borrowedViewBand`. The
+   APK line carries no name: no board registers it. */
+export const NODE = "feed";
 export function Screen() {
   return (
     <>
-      <CograBand bell={false} trailing={<FeedFilter />}>
-        <BorrowedViewBand handle={GUEST_VANTAGE} displayName="Genesis Moderator" avatarMark actionLabel="Sign in or join" />
+      <CograBand bell={false} trailing={<FeedFilter node="filterTrigger" />} node="band">
+        <BorrowedViewBand handle={GUEST_VANTAGE} displayName="Genesis Moderator" avatarMark actionLabel="Sign in or join" node="borrowedViewBand" />
         <ApkLine />
       </CograBand>
       <FeedList>
@@ -23,10 +29,10 @@ export function Screen() {
             @tobias's, which wears the hollow face. Read-only: a tap raises
             the guest gate. Each anchor is spoken as the band's view's
             opinion, `@genesis_mod's opinion on this post` (point 8 (a)). */}
-        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} signedIn={false} stanceVantage={GUEST_VANTAGE} />
-        <PostCard {...TOBIAS_POST} signedIn={false} stanceVantage={GUEST_VANTAGE} />
+        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} signedIn={false} stanceVantage={GUEST_VANTAGE} node="card" />
+        <PostCard {...TOBIAS_POST} signedIn={false} stanceVantage={GUEST_VANTAGE} node="card" />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }
