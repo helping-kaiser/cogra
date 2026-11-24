@@ -120,8 +120,8 @@ query ProfileChronicle($id: UUID!, $first: Int!, $after: String) {
                 handle
               }
               # A removed post or comment keeps its row in the chronicle; `removal`
-              # is what its mark reads (the profile's removal-mark item, a sibling
-              # lane, draws it — this read only carries it).
+              # is the mark its second line reads in its words' place
+              # (Profile.md:37, :39).
               ... on Post {
                 id
                 title {
@@ -154,13 +154,18 @@ query ProfileChronicle($id: UUID!, $first: Int!, $after: String) {
             }
             # The terminal leg: a Review's Comment, or what a Reference cites —
             # a post (`Cited a post`, its title under), a comment, or a person
-            # (`Mentioned`, `@ada` beside) — copy-voice's chronicle verbs.
+            # (`Mentioned`, `@ada` beside) — copy-voice's chronicle verbs. Its
+            # `removal` reads the mark in its words' place (Profile.md:37, :39).
             terminal {
               __typename
               ... on Comment {
                 id
                 content {
                   value
+                }
+                removal {
+                  at
+                  by
                 }
                 target {
                   __typename
@@ -176,6 +181,10 @@ query ProfileChronicle($id: UUID!, $first: Int!, $after: String) {
                 }
                 content {
                   value
+                }
+                removal {
+                  at
+                  by
                 }
               }
               ... on User {
@@ -200,6 +209,10 @@ query ProfileChronicle($id: UUID!, $first: Int!, $after: String) {
             content {
               value
             }
+            removal {
+              at
+              by
+            }
           }
           ... on Comment {
             commentId: id
@@ -210,6 +223,10 @@ query ProfileChronicle($id: UUID!, $first: Int!, $after: String) {
             }
             content {
               value
+            }
+            removal {
+              at
+              by
             }
             post {
               id
