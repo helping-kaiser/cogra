@@ -501,10 +501,13 @@ interface ProfileRepository {
     suspend fun myProfile(): Outcome<ProfileView?>
 
     /**
-     * The actor's chronicle, newest first — every record they authored
-     * (the tab row's right-most tab, Everything: Profile.md:23).
+     * The actor's chronicle (`User.chronicle`; the tab row's right-most tab,
+     * Everything: Profile.md:23) in the server's order — their posts and
+     * comments still settling first, newest signed first, then every landed
+     * record newest first (Profile.md:31, :33). A settling entry's row is
+     * keyed by the record it lands as, so it and that record are one row.
      */
-    suspend fun authorRecords(
+    suspend fun chronicle(
         authorId: String,
         first: Int,
         after: String?,

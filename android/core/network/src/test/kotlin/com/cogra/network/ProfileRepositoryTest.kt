@@ -74,6 +74,12 @@ class ProfileRepositoryTest {
            "topic":$topic}}"""
     }
 
+    /** One page of `User.chronicle` around the given edges. */
+    private fun chronicle(edges: String) =
+        """{"data":{"user":{"__typename":"User","id":"u1","chronicle":{"__typename":"ChronicleEntryConnection",
+           "edges":[$edges],
+           "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}}"""
+
     @Test
     fun aRowCarriesItsActAndWhatItIsAbout() = runTest {
         tokenStore.save(AuthTokens("a", "r", "u1"))
@@ -86,12 +92,9 @@ class ProfileRepositoryTest {
             record("r4", "TAG", "ORDINARY", target = post, pair = "0,0"),
             record("r5", "REGISTRATION", "GENESIS"),
         ).joinToString(",")
-        enqueue(
-            """{"data":{"records":{"__typename":"RecordConnection","edges":[$rows],
-               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
-        )
+        enqueue(chronicle(rows))
 
-        val page = (repo().authorRecords("u1", 20, null) as Outcome.Success).value.items
+        val page = (repo().chronicle("u1", 20, null) as Outcome.Success).value.items
 
         val published = page[0]
         val walkedBack = page[1]
@@ -129,12 +132,9 @@ class ProfileRepositoryTest {
             record("r2", "REFERENCE", "WITHDRAWAL", target = post, terminal = post, pair = "-0.5,-0.5"),
             record("r3", "OPINION", "SOMETHING_NEWER", target = post),
         ).joinToString(",")
-        enqueue(
-            """{"data":{"records":{"__typename":"RecordConnection","edges":[$rows],
-               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
-        )
+        enqueue(chronicle(rows))
 
-        val page = (repo().authorRecords("u1", 20, null) as Outcome.Success).value.items
+        val page = (repo().chronicle("u1", 20, null) as Outcome.Success).value.items
 
         assertThat(page[0].topic).isEqualTo("saltmaps")
         assertThat(page[1].act).isEqualTo(RecordAct.WITHDRAWAL)
