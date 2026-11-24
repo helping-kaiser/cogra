@@ -50,6 +50,7 @@ import { Button } from "@/lib/ui/button";
 import { CommentFeedCard } from "@/lib/ui/comment-feed-card";
 import { EmptyState } from "@/lib/ui/empty-state";
 import { useLineCut } from "@/lib/ui/line-cut";
+import { useNameFit } from "@/lib/ui/name-fit";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PostCard } from "@/lib/ui/post-card";
 import { useScrollHost } from "@/lib/ui/scroll-host";
@@ -66,6 +67,8 @@ import { PostMenuHost } from "@/lib/ui2/post-menu-host";
 
 /** The page's registered prefix (nodes.json `TagPage`, round 60). */
 const NODE = "tagPage";
+/** The full-name heading's smallest size (TagPage.md:9; jakob 2026-11-23). */
+const TAG_NAME_FLOOR = 12;
 
 /** The first read got no answer (TagPage.jsx, round 48; copy-voice *No answer at all*). */
 export const TAG_UNREACHABLE = "Can't reach the server — this tag can't load right now.";
@@ -165,6 +168,9 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
   // characters; only the loaded page measures, so the failed and not-found
   // headers cut and print nothing more (TagPage.md:91).
   const [holdTitle, titleCut] = useLineCut(hashtag?.name.value ?? null);
+  // IT SHRINKS TO FIT (TagPage.md:9-11, round 66): the profile head's
+  // two-line rule (`useNameFit`) with the heading's 12px floor.
+  const [holdName, nameFit] = useNameFit<HTMLParagraphElement>(`#${hashtag?.name.value ?? ""}`, TAG_NAME_FLOOR);
   const header = (title: string, named: boolean) => (
     <PageHeader
       title={title}
@@ -248,8 +254,10 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
           breaking inside a run that has none (`overflow-wrap: break-word`). */}
       {tagName !== null && titleCut && (
         <p
+          ref={holdName}
           aria-hidden="true"
           data-testid={`${NODE}.name`}
+          style={nameFit === null ? undefined : { fontSize: nameFit.size, lineHeight: `${nameFit.lineHeight}px` }}
           className="m-0 px-4 pt-1 text-title-large break-words"
         >
           #{tagName}
