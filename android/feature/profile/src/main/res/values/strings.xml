@@ -53,6 +53,9 @@
     <!-- The page that did not arrive (Profile.md:35; copy-voice.md). -->
     <string name="profile_more_failed">Couldn\'t load more</string>
     <string name="profile_more_retry">Retry</string>
+    <!-- A card tab's first page that did not arrive (ProfilePosts.md:23; ProfileComments.md:27). -->
+    <string name="profile_posts_first_failed">Can\'t reach the server — posts can\'t load right now.</string>
+    <string name="profile_comments_first_failed">Can\'t reach the server — comments can\'t load right now.</string>
 
     <!-- The header's figures (`ProfileHeader.jsx`; copy-voice, the profile):
          each labelled, never merged, the reader's own reading `you`. -->
