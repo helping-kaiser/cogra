@@ -466,6 +466,136 @@ describe("fetchProfileChronicle", () => {
   });
 });
 
+// A REMOVED THING KEEPS ITS ROW (Profile.md:37 and :39, ProfileOther.md:33 and
+// :39, ProfileDeleted.md:25): the second line reads `Removed by its author`
+// where its words were — never the words of the post it answered, nor of the
+// thing that cited it — and its door stays (`_shared.jsx` `ChronicleAct`).
+describe("fetchProfileChronicle's removed rows", () => {
+  const removed = { __typename: "Removal", at: "2026-11-20T10:00:00Z", by: "AUTHOR" };
+  const words = (value: string | null) => ({ __typename: "ModeratedText", value });
+  const post = (id: string, title: string | null, removal: unknown = null) => ({
+    __typename: "Post",
+    id,
+    title: words(title),
+    content: words(title === null ? null : `${title}, the body`),
+    removal,
+  });
+  const comment = (id: string, content: string | null, removal: unknown = null, parent: unknown = null) => ({
+    __typename: "Comment",
+    id,
+    content: words(content),
+    removal,
+    target: parent,
+  });
+  function record(id: string, family: string, over: Record<string, unknown>) {
+    return {
+      __typename: "Record",
+      id,
+      family,
+      act: "GENESIS",
+      targetId: `t:${id}`,
+      terminalId: null,
+      topic: null,
+      landedAt: "2026-11-20T09:00:00Z",
+      pDirected: 0.4,
+      pInterest: 0.5,
+      severed: false,
+      target: null,
+      terminal: null,
+      ...over,
+    };
+  }
+  async function rows(nodes: unknown[]) {
+    server.use(gqlLink.query("ProfileChronicle", () => HttpResponse.json(chroniclePage(nodes))));
+    const outcome = await fetchProfileChronicle(client(), "u-chronicle");
+    if (outcome.kind !== "success") throw new Error(outcome.kind);
+    return outcome.value.items;
+  }
+
+  it("reads a removed comment's row as removed, never its post's words", async () => {
+    const [row] = await rows([
+      record("r-c", "REVIEW", {
+        target: post("p-1", "The parent post"),
+        terminal: comment("c-1", null, removed, { __typename: "Post", id: "p-1" }),
+      }),
+    ]);
+    expect(row).toMatchObject({ label: "Commented", snippet: "Removed by its author", postId: "p-1" });
+  });
+
+  it("reads a removed reply's row as removed, never the comment it answered", async () => {
+    const [row] = await rows([
+      record("r-r", "REVIEW", {
+        target: comment("c-0", "The answered comment", null, { __typename: "Post", id: "p-1" }),
+        terminal: comment("c-1", null, removed, { __typename: "Comment" }),
+      }),
+    ]);
+    expect(row).toMatchObject({ label: "Commented", snippet: "Removed by its author" });
+  });
+
+  it("reads a removed post's publish, edit and tag rows as removed, their doors kept", async () => {
+    const [publish, edit, tag] = await rows([
+      record("r-p", "PUBLISH", { target: post("p-2", null, removed) }),
+      record("r-e", "PUBLISH", { act: "ORDINARY", target: post("p-2", null, removed) }),
+      record("r-t", "TAG", { target: post("p-2", null, removed), topic: { name: words("saltmaps") } }),
+    ]);
+    expect(publish).toMatchObject({ label: "Published a post", snippet: "Removed by its author", postId: "p-2" });
+    expect(edit).toMatchObject({ label: "Edited a post", snippet: "Removed by its author", postId: "p-2" });
+    expect(tag).toMatchObject({ label: "Tagged a post", aside: "#saltmaps", snippet: "Removed by its author", postId: "p-2" });
+  });
+
+  it("reads an opinion on a removed post or comment as removed", async () => {
+    const [onPost, onComment] = await rows([
+      record("r-o", "OPINION", { act: "ORDINARY", target: post("p-2", null, removed) }),
+      record("r-q", "OPINION", { act: "ORDINARY", target: comment("c-2", null, removed) }),
+    ]);
+    expect(onPost).toMatchObject({ aside: "on a post", snippet: "Removed by its author" });
+    expect(onComment).toMatchObject({ aside: "on a comment", snippet: "Removed by its author" });
+  });
+
+  it("reads a citation of a removed thing as removed, never the citing thing's words", async () => {
+    const [ofPost, ofComment] = await rows([
+      record("r-x", "REFERENCE", { target: post("p-3", "The citing post"), terminal: post("p-4", null, removed) }),
+      record("r-y", "REFERENCE", {
+        target: post("p-3", "The citing post"),
+        terminal: comment("c-4", null, removed, { __typename: "Post", id: "p-5" }),
+      }),
+    ]);
+    expect(ofPost).toMatchObject({ label: "Cited a post", snippet: "Removed by its author", postId: "p-4" });
+    expect(ofComment).toMatchObject({ label: "Cited a comment", snippet: "Removed by its author" });
+  });
+
+  it("reads a moderation verdict's removal in its own mark", async () => {
+    const [row] = await rows([
+      record("r-m", "PUBLISH", { target: post("p-6", null, { ...removed, by: "MODERATION" }) }),
+    ]);
+    expect(row).toMatchObject({ snippet: "Removed under the platform's rules" });
+  });
+
+  it("leaves a row whose thing stands unchanged, beside a removed one", async () => {
+    const [live, gone] = await rows([
+      record("r-l", "REVIEW", {
+        target: post("p-1", "The parent post"),
+        terminal: comment("c-5", "Still here", null, { __typename: "Post", id: "p-1" }),
+      }),
+      record("r-g", "REVIEW", {
+        target: post("p-1", "The parent post"),
+        terminal: comment("c-6", null, removed, { __typename: "Post", id: "p-1" }),
+      }),
+    ]);
+    expect(live).toMatchObject({ snippet: "Still here", postId: "p-1" });
+    expect(gone).toMatchObject({ snippet: "Removed by its author", postId: "p-1" });
+  });
+
+  it("reads a removed post or comment still settling as removed", async () => {
+    const [p, c] = await rows([
+      { ...settlingPostEntry({ id: "p9", title: null, content: null }), removal: removed },
+      { ...settlingCommentEntry({ id: "c9", postId: "p1", content: null }), removal: removed },
+    ]);
+    expect(p).toMatchObject({ snippet: "Removed by its author", postId: "p9", pending: true });
+    expect(c).toMatchObject({ snippet: "Removed by its author", postId: "p1", commentId: "c9" });
+  });
+});
+
 describe("prepareProfileUpdate", () => {
   it("sends the three-valued avatar field and maps the staged writes", async () => {
     let input: { avatarMediaId?: string | null } | undefined;
