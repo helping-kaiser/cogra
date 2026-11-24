@@ -8,8 +8,9 @@
 //! pod's reads under `crates/ranker-server/graphql` — the pod is the
 //! third generated consumer of the same contract. This suite
 //! anchors them the way `schema_drift` anchors the SDL — a client
-//! document that outgrows a posture fails here, by name, instead of
-//! reaching a device as "can't reach server".
+//! document that outgrows a posture, or that the schema's validator
+//! refuses at all, fails here, by name, instead of reaching a device as
+//! "can't reach server".
 //!
 //! Each operation is sent the way a client sends it: one operation plus
 //! the fragments it transitively spreads, never the whole file. The
@@ -17,9 +18,9 @@
 //! concatenated corpus would price as their sum and measure nothing.
 //!
 //! Requires a live Postgres (`make up`) for the context the schema is
-//! built over; the operations never reach a resolver — the ids and
-//! inputs are deliberately left unbound, so argument coercion refuses
-//! after validation has already done the measuring.
+//! built over. The ids and inputs are deliberately left unbound, so a
+//! resolver that reads one refuses before it does any work, after
+//! validation has already done the measuring.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -32,8 +33,8 @@ use api::schema::{ApiSchema, QueryBudgets, build_with};
 mod rig;
 
 /// The two budget rejections async-graphql raises; both are message-only
-/// validation errors, which is what lets this suite name the operation
-/// that tripped one.
+/// validation errors, which is what lets the bisection below tell a
+/// tripped budget from any other refusal.
 const TOO_COMPLEX: &str = "Query is too complex.";
 const TOO_DEEP: &str = "Query is nested too deep.";
 
@@ -203,8 +204,8 @@ fn graphql_files(dir: &Path) -> Vec<PathBuf> {
 }
 
 /// Every `.graphql` file in one client's operation tree, split into
-/// definitions.
-fn corpus(dir: &Path) -> Vec<Definition> {
+/// definitions, each with the file it is written in, relative to `dir`.
+fn corpus(dir: &Path) -> Vec<(PathBuf, Definition)> {
     let mut files = graphql_files(dir);
     files.sort();
     assert!(!files.is_empty(), "no documents under {}", dir.display());
@@ -213,7 +214,10 @@ fn corpus(dir: &Path) -> Vec<Definition> {
         .flat_map(|path| {
             let source = std::fs::read_to_string(path)
                 .unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+            let file = path.strip_prefix(dir).unwrap_or(path).to_path_buf();
             definitions(&source)
+                .into_iter()
+                .map(move |definition| (file.clone(), definition))
         })
         .collect()
 }
@@ -242,21 +246,34 @@ fn wire_document(operation: &Definition, fragments: &BTreeMap<String, &Definitio
     document
 }
 
+/// One operation a client sends, assembled for the wire, with the file
+/// it is written in so a refusal names where to fix it.
+struct ClientOperation {
+    file: PathBuf,
+    name: String,
+    document: String,
+}
+
 /// The operations one client sends, each already assembled for the wire.
-fn client_operations(relative: &str) -> Vec<(String, String)> {
+fn client_operations(relative: &str) -> Vec<ClientOperation> {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../..")
         .join(relative);
     let definitions = corpus(&dir);
     let fragments: BTreeMap<String, &Definition> = definitions
         .iter()
+        .map(|(_, d)| d)
         .filter(|d| d.text.starts_with("fragment"))
         .map(|d| (d.name.clone(), d))
         .collect();
-    let operations: Vec<(String, String)> = definitions
+    let operations: Vec<ClientOperation> = definitions
         .iter()
-        .filter(|d| !d.text.starts_with("fragment"))
-        .map(|d| (d.name.clone(), wire_document(d, &fragments)))
+        .filter(|(_, d)| !d.text.starts_with("fragment"))
+        .map(|(file, d)| ClientOperation {
+            file: Path::new(relative).join(file),
+            name: d.name.clone(),
+            document: wire_document(d, &fragments),
+        })
         .collect();
     assert!(!operations.is_empty(), "no operations under {relative}");
     operations
@@ -271,21 +288,50 @@ fn schema(pool: PgPool, budgets: QueryBudgets) -> ApiSchema {
     build_with(ctx, budgets)
 }
 
-/// Sends one operation the way the HTTP handler would, with the client's
-/// own page sizes bound. Ids and inputs stay unbound on purpose: the
-/// budgets are decided in validation, and coercion refuses afterwards
-/// without any resolver running.
-async fn budget_errors(schema: &ApiSchema, name: &str, document: &str) -> Vec<String> {
-    let request = async_graphql::Request::new(document)
-        .operation_name(name)
-        .variables(client_variables())
-        .data(Option::<api::auth::Viewer>::None);
+/// The messages of every error the server raised before executing
+/// `request`: a parse error, a validation rule's refusal, a tripped
+/// budget, an unknown operation name.
+///
+/// Told apart by phase, not by message text. async-graphql answers a
+/// request that fails to parse or validate with those errors alone and
+/// runs no execute hook (`Schema::execute` → `prepare_request`), and
+/// the schema's `InternalFaults` extension gives every error the
+/// execute hook sees an `extensions.code` — `BAD_INPUT` for a variable
+/// left unbound (`schema::faults`). An error without a code is the
+/// validator's, so it is a defect in the document, never in its
+/// unbound ids and inputs.
+async fn validation_errors_of(schema: &ApiSchema, request: async_graphql::Request) -> Vec<String> {
     schema
-        .execute(request)
+        .execute(request.data(Option::<api::auth::Viewer>::None))
         .await
         .errors
         .iter()
+        .filter(|e| {
+            !e.extensions
+                .as_ref()
+                .is_some_and(|extensions| extensions.get("code").is_some())
+        })
         .map(|e| e.message.clone())
+        .collect()
+}
+
+/// Sends one operation the way the HTTP handler would, with the client's
+/// own page sizes bound and its ids and inputs unbound, and keeps every
+/// error the validator raised.
+async fn validation_errors(schema: &ApiSchema, name: &str, document: &str) -> Vec<String> {
+    let request = async_graphql::Request::new(document)
+        .operation_name(name)
+        .variables(client_variables());
+    validation_errors_of(schema, request).await
+}
+
+/// The budget refusals alone, for the bisection: a tripped budget is
+/// raised before the validation rules' errors and replaces them, so a
+/// probe ceiling decides this answer and nothing else does.
+async fn budget_errors(schema: &ApiSchema, name: &str, document: &str) -> Vec<String> {
+    validation_errors(schema, name, document)
+        .await
+        .into_iter()
         .filter(|message| message == TOO_COMPLEX || message == TOO_DEEP)
         .collect()
 }
@@ -307,35 +353,33 @@ const CORPORA: [(&str, &str); 3] = [
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_release_budgets_admit_the_ranker_pods_full_pages(pool: PgPool) {
     let schema = schema(pool, QueryBudgets::release());
-    for (name, document) in client_operations("crates/ranker-server/graphql") {
-        let request = async_graphql::Request::new(document)
-            .operation_name(&name)
+    for operation in client_operations("crates/ranker-server/graphql") {
+        let request = async_graphql::Request::new(&operation.document)
+            .operation_name(&operation.name)
             .variables(async_graphql::Variables::from_json(serde_json::json!({
                 "first": api::schema::types::MAX_PAGE_SIZE,
-            })))
-            .data(Option::<api::auth::Viewer>::None);
-        let rejected: Vec<String> = schema
-            .execute(request)
-            .await
-            .errors
-            .iter()
-            .map(|e| e.message.clone())
-            .filter(|message| message == TOO_COMPLEX || message == TOO_DEEP)
-            .collect();
+            })));
+        let rejected = validation_errors_of(&schema, request).await;
         assert!(
             rejected.is_empty(),
-            "the release budgets reject the pod's {name} at the page cap: {rejected:?}"
+            "the release budgets reject the pod's {} ({}) at the page cap: {rejected:?}",
+            operation.name,
+            operation.file.display(),
         );
     }
 }
 
+/// Fails on any validation error, not only a tripped budget: a document
+/// the schema refuses is refused under every posture.
 async fn assert_corpus_fits(schema: &ApiSchema, posture: &str) {
     for (client, relative) in CORPORA {
-        for (name, document) in client_operations(relative) {
-            let rejected = budget_errors(schema, &name, &document).await;
+        for operation in client_operations(relative) {
+            let rejected = validation_errors(schema, &operation.name, &operation.document).await;
             assert!(
                 rejected.is_empty(),
-                "{posture} budgets reject the {client} client's {name}: {rejected:?}"
+                "the {posture} schema refuses the {client} client's {} ({}): {rejected:?}",
+                operation.name,
+                operation.file.display(),
             );
         }
     }
@@ -427,7 +471,7 @@ async fn the_budget_ceilings_keep_their_stated_headroom(pool: PgPool) {
     let mut heaviest = (String::new(), 0usize);
     let mut deepest = (String::new(), 0usize);
     for (client, relative) in CORPORA {
-        for (name, document) in client_operations(relative) {
+        for ClientOperation { name, document, .. } in client_operations(relative) {
             let complexity = measured(&pool, &name, &document, complexity_probe).await;
             let depth = measured(&pool, &name, &document, depth_probe).await;
             println!("{client:8} {name:24} complexity {complexity:7}  depth {depth:3}");
@@ -497,7 +541,7 @@ async fn the_guard_reports_an_invalid_client_document(pool: PgPool) {
             .data(Option::<api::auth::Viewer>::None);
         let refused = schema.execute(request).await.errors;
         assert!(!refused.is_empty(), "the schema accepts {name}");
-        let reported = budget_errors(&schema, name, document).await;
+        let reported = validation_errors(&schema, name, document).await;
         assert!(
             !reported.is_empty(),
             "the guard passes {name}, which the schema refuses with {refused:?}"
@@ -511,7 +555,7 @@ async fn the_guard_reports_an_invalid_client_document(pool: PgPool) {
         !schema.execute(request).await.errors.is_empty(),
         "{name} executes without its variable"
     );
-    let reported = budget_errors(&schema, name, document).await;
+    let reported = validation_errors(&schema, name, document).await;
     assert!(
         reported.is_empty(),
         "the guard reports {name}'s unbound variable: {reported:?}"
@@ -532,7 +576,7 @@ fn the_corpora_carry_the_operations_they_are_read_for() {
     ] {
         let names: BTreeSet<String> = client_operations(relative)
             .into_iter()
-            .map(|(name, _)| name)
+            .map(|operation| operation.name)
             .collect();
         for expected in ["PostDetail", "FeedRanking", "CommentReplies", "PreparePost"] {
             assert!(
@@ -578,7 +622,7 @@ fn no_client_reads_the_retired_posts_listing() {
         "android/core/network/src/main/graphql",
         "web/src/lib/graphql",
     ] {
-        for (name, document) in client_operations(relative) {
+        for ClientOperation { name, document, .. } in client_operations(relative) {
             assert!(
                 !root_fields(&document).contains("posts"),
                 "{relative} operation {name} reads the retired `posts` listing"
