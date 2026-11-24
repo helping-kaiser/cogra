@@ -78,6 +78,12 @@ ALWAYS Website's refusal reads A website address is at most 2,048 characters. GI
 
 ALWAYS Save stands visible and disabled, the field's refusal on screen as the reason GIVEN a field is past its cap
 
+WHEN the change is refused because the display name is one of CoGra's reserved names -> the edit stands with the name still typed AND the Display name field's line reads That name isn't available. AND the field takes the error state AND NEVER anything is signed
+
+ALWAYS a display name is refused only when the whole name, its case and spacing folded, is on CoGra's reserved list, and never for a word inside a longer name
+
+WHEN typing in the Display name field GIVEN it carries That name isn't available. -> the line stands AND NEVER it goes before the next press of Save
+
 ALWAYS a cap counts characters as Unicode scalar values
 
 WHEN tap the back arrow -> the profile comes back

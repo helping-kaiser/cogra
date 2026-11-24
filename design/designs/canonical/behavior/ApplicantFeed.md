@@ -12,7 +12,13 @@ ALWAYS feed.verifyCard stands GIVEN the email is not verified yet
 
 ALWAYS feed.keyCard stands GIVEN no key is attached to the application yet
 
-ALWAYS feed.keyCard.body reads Your application needs a key on this browser before @mira can approve it. on the web and Your application needs a key in this app before @mira can approve it. in the app
+ALWAYS feed.keyCard.title reads Create your key GIVEN the applicant has no key yet
+
+ALWAYS feed.keyCard.body reads Your application needs a key on this browser before @mira can approve it. on the web and Your application needs a key in this app before @mira can approve it. in the app GIVEN the applicant has no key yet
+
+ALWAYS feed.keyCard.title reads Attach your key GIVEN the applicant's own key is on this device and not attached
+
+ALWAYS feed.keyCard.body reads Your key is on this browser. It hasn't reached your application yet. on the web and Your key is in this app. It hasn't reached your application yet. in the app GIVEN the applicant's own key is on this device and not attached
 
 ALWAYS either owed step can be done first, and the other's card stands until it is
 
@@ -28,7 +34,9 @@ WHEN the email is verified -> feed.verifyCard leaves AND the cards still owed st
 
 WHEN the key is attached -> feed.keyCard leaves AND the cards still owed stay
 
-WHEN the applicant's own key, on this device and not yet attached, fails to attach -> the house line That didn't go through. stands with Retry AND NEVER a fresh key is offered in its place AND NEVER the key is said to belong to another account
+WHEN the applicant's own key, on this device and not yet attached, fails to attach -> feed.keyCard reads Attach your key AND feed.keyCard.attachFault reads That didn't go through. with Retry at its end in the place of Create my key AND NEVER a fresh key is offered in its place AND NEVER the key is said to belong to another account
+
+WHEN tap the Retry of feed.keyCard.attachFault -> the same key is attached again AND feed.keyCard leaves once it is attached
 
 WHEN the last owed step is done -> the waiting card takes the task cards' place
 

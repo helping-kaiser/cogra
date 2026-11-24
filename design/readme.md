@@ -772,7 +772,11 @@ column at its 42rem.
 **An avatar is the actor's picture where they have one**, and a
 **monogram circle** in `secondaryContainer`/`onSecondaryContainer`
 where they do not — the *designed* placeholder, not a gap waiting to
-be filled, and where a picture fails to load it is what shows.
+be filled, and where a picture fails to load it is what shows. **A
+system account wears the CoGra mark** (jakob 2026-11-23, "logo split
+ofcourse"): The Publisher `@publisher`, The Moderator `@moderator` and
+The Treasury `@treasury` wear the mark in the disc, by rule; an account
+a person holds wears its own picture, whoever holds it.
 
 **Photography exists as mock material** (`assets/photos/`, ten real
 photographs at true ratios — food, people, animals, scenery). It is
@@ -8127,7 +8131,13 @@ jakob's rulings closing the day's rounds, executed in one lane.
      the whole name stands under the header as a wrapping heading above
      the topic's row (`TagPage`'s `name`, the title role, breaking at its
      hyphens and inside the name where a run has none); a name that fits
-     is not printed twice.
+     is not printed twice. The heading takes the profile head's two-line
+     rule WITH A FLOOR (jakob 2026-11-23): the largest whole pixel from 22
+     down that holds the whole name on two lines, never below 12px, its
+     line-height round(size × 28 / 22) px; a name that holds two lines at
+     no size down to 12px stands at 12px on the lines it needs there —
+     three for a 128-character name at 360 and 390 px, two at 412, never
+     four.
   3. *Text that wraps* — headings, card titles and bodies, dialog titles
      and bodies, snackbars, notices, the borrowed-view band: the sentence
      wraps at its spaces and is never cut as a whole, and A HANDLE OR A
@@ -13008,6 +13018,53 @@ drawing.
   fifty loses the Google Fonts fetch and draws the fallback face, and no
   picture paints in the harness (a board's bare image names miss `img/`).
   Filed as backlog 307; no board changes.
+
+### Round 66, the heading that shrinks to fit, Attach your key, reserved names, a tag's own chip, the mark for system accounts — 2026-11-23
+
+- **Ruled** (jakob 2026-11-23): the tag page's heading shrinks to fit as
+  the profile's name does, never below 12 px ("as rec"); the unattached
+  key card is titled `Attach your key`, its body as proposed ("Attach i
+  guess and body is fine"); reserved names are a fixed list of CoGra's own
+  names, the whole name compared, never a word inside one ("list is fine",
+  with `cogra_dev` / `CoGra Dev`; both refusal lines blessed); the three
+  `system` accounts wear the CoGra mark by rule, a person's account its
+  own picture ("logo split ofcourse"); and, in his hand test (seam 441),
+  a tag's own chip on its own page does nothing, as the profile's own
+  author chip does.
+- **Drawn**: `TagPage` `name` = `middle` (the long name cut at 85
+  characters, at its word `light`), 17 px on 22 px at the board's 390 px;
+  `long` and `long-hyphens` 12 px on 15 px, three lines (`TagFullName`'s
+  `size` / `lineHeight`; `nameFitSize` takes an optional `floor`).
+  `ApplicantFeed` `keyCard` = `attach`: `Attach your key` over `Your key
+  is on this browser. It hasn't reached your application yet.` (`wording`
+  = `app`: `…is in this app…`), `That didn't go through.` with `Retry` in
+  `Create my key`'s place, `SigningPending row` as on Invites' copy fault.
+  `ProfileEdit` `state` = `name-reserved`: `CoGra` typed, the Display name
+  field in M3's error state reading `That name isn't available.`, Join's
+  field refusal shape (the board drew none), an unnamed copy as
+  `upload-refused`'s line is; Save answers.
+- **Measured** (the heading, size and lines): the 85-character name 16 px
+  / 17 px / 18 px at 360 / 390 / 412 px, two lines each; the two
+  128-character names 12 px at all three, three lines at 360 and 390 and
+  two at 412 — none needs a fourth.
+- **Registered**: `feed.keyCard.attachFault` (key `attach`) on
+  `ApplicantFeed`. Nothing gone.
+- **The law that moved**: `TagPage.md` (the fit, the floor, aria-hidden;
+  every door to the page's own tag inert, another tag's open) and the
+  long-names law's tag sentence; `RefsSheet.md` (its tag row inert on its
+  own tag's page); `ApplicantFeed.md` (title and body by case; the failed
+  attach placed on the card, its Retry); `Join.md`, `JoinErrors.md`,
+  `ChangeHandleConfirm.md` (a reserved handle reads `That handle is
+  taken.`, one refusal for two causes); `ProfileEdit.md` and copy-voice
+  *Field errors* — *Reserved names*, the list's one home — and *Faults
+  by code*; readme §4 *Imagery* (a system account wears the mark).
+  Backlog 303 closes.
+- **Held**: how the mark sits in a 24–40 px disc — the brand guideline
+  draws it alone and as the rounded tile, never in a disc (backlog 308,
+  with shots of three ways). `FeedBare`'s band, the one place the tree
+  draws the sample `@genesis_mod`, keeps the monogram until he picks;
+  no guest board draws the view's disc elsewhere and `ExploreSearch`
+  draws no genesis result.
 ---
 
 ## 14. The canvases
