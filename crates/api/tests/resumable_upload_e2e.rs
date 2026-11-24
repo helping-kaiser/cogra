@@ -899,8 +899,9 @@ async fn an_anonymous_part_is_refused_before_its_body_is_read(pool: PgPool) {
 }
 
 /// A signed-in caller the session cannot take a part from is refused from
-/// the headers too, before the body: an account that is not a member, a
-/// member whose session it is not, and the owner naming a part outside
+/// the headers too, before the body: an account that is not a member, one
+/// whose deletion executed (no login, the predicate `/graphql`'s viewer
+/// resolution reads), a member whose session it is not, and the owner naming a part outside
 /// the cut — each with the answer it always got. Before the door each was
 /// answered 413 once twice a part had been buffered.
 ///
@@ -920,6 +921,15 @@ async fn a_part_the_caller_may_not_send_is_refused_before_its_body(pool: PgPool)
         .execute(&rig.pool)
         .await
         .expect("an applicant");
+    let gone_id = rig.seed_member("gone", "gone@example.com").await;
+    let gone = rig.log_in("gone@example.com").await;
+    sqlx::query(
+        "UPDATE user_credentials SET email = NULL, password_hash = NULL WHERE actor_id = $1",
+    )
+    .bind(gone_id)
+    .execute(&rig.pool)
+    .await
+    .expect("the login goes");
     let begun = rig.begin(&owner, photo_with_location().len(), "STILL").await;
     no_errors(&begun, "begin refused");
     let session = begun["upload"]["id"].as_str().expect("session id");
@@ -929,6 +939,13 @@ async fn a_part_the_caller_may_not_send_is_refused_before_its_body(pool: PgPool)
         (
             "an applicant",
             applicant.as_str(),
+            1,
+            StatusCode::FORBIDDEN,
+            json!({ "code": "FORBIDDEN", "message": "only a member may upload", "field": [] }),
+        ),
+        (
+            "an account whose deletion executed",
+            gone.as_str(),
             1,
             StatusCode::FORBIDDEN,
             json!({ "code": "FORBIDDEN", "message": "only a member may upload", "field": [] }),
