@@ -1548,8 +1548,15 @@ async fn list_posts_landed(
 /// a microsecond, and a keyset on a non-unique column drops the siblings
 /// at every page boundary. A cursor from before the id was carried
 /// (`None`) keysets on the instant alone. Under a horizon the branch also
-/// reads the rows landed above it (see [`merge_walk`]); with none, the
-/// row comparison is NULL and only unlanded rows qualify.
+/// reads the rows landed above it (see [`merge_walk`]).
+///
+/// The page's ids come from two arms, each `limit` long and each on its
+/// own index: the unlanded rows on the partial `posts_pending_idx`, which
+/// a single `IS NULL OR …` predicate would forfeit, and the rows landed
+/// above the horizon on `posts_landing_order_idx` — a short range, since
+/// it holds only what landed while the walk ran. Without a horizon the
+/// second arm's guard is false before it reads a row. The comment
+/// branches below are built the same way.
 async fn list_posts_pending(
     pool: &PgPool,
     author: Option<Uuid>,
@@ -1585,12 +1592,25 @@ async fn list_posts_pending(
                                 created_at DESC, version_id DESC
                        LIMIT 1
                    ) v ON TRUE
-                   WHERE (p.landed_epoch IS NULL
-                          OR (p.landed_epoch, p.position) > ($5::bigint, $6::bigint))
-                     AND ($4::uuid IS NULL OR p.author_id = $4)
-                     AND ($1::timestamptz IS NULL
-                          OR ($2::uuid IS NULL AND p.created_at > $1)
-                          OR ($2 IS NOT NULL AND (p.created_at, p.id) > ($1, $2)))
+                   WHERE p.id IN (
+                       (SELECT q.id FROM posts q
+                        WHERE q.landed_epoch IS NULL
+                          AND ($4::uuid IS NULL OR q.author_id = $4)
+                          AND ($1::timestamptz IS NULL
+                               OR ($2::uuid IS NULL AND q.created_at > $1)
+                               OR ($2 IS NOT NULL AND (q.created_at, q.id) > ($1, $2)))
+                        ORDER BY q.created_at ASC, q.id ASC
+                        LIMIT $3)
+                       UNION ALL
+                       (SELECT q.id FROM posts q
+                        WHERE $5::bigint IS NOT NULL
+                          AND (q.landed_epoch, q.position) > ($5, $6::bigint)
+                          AND ($4::uuid IS NULL OR q.author_id = $4)
+                          AND ($1::timestamptz IS NULL
+                               OR ($2::uuid IS NULL AND q.created_at > $1)
+                               OR ($2 IS NOT NULL AND (q.created_at, q.id) > ($1, $2)))
+                        ORDER BY q.created_at ASC, q.id ASC
+                        LIMIT $3))
                    ORDER BY p.created_at ASC, p.id ASC
                    LIMIT $3
                ) page
@@ -1627,12 +1647,25 @@ async fn list_posts_pending(
                             created_at DESC, version_id DESC
                    LIMIT 1
                ) v ON TRUE
-               WHERE (p.landed_epoch IS NULL
-                      OR (p.landed_epoch, p.position) > ($5::bigint, $6::bigint))
-                 AND ($4::uuid IS NULL OR p.author_id = $4)
-                 AND ($1::timestamptz IS NULL
-                      OR ($2::uuid IS NULL AND p.created_at < $1)
-                      OR ($2 IS NOT NULL AND (p.created_at, p.id) < ($1, $2)))
+               WHERE p.id IN (
+                   (SELECT q.id FROM posts q
+                    WHERE q.landed_epoch IS NULL
+                      AND ($4::uuid IS NULL OR q.author_id = $4)
+                      AND ($1::timestamptz IS NULL
+                           OR ($2::uuid IS NULL AND q.created_at < $1)
+                           OR ($2 IS NOT NULL AND (q.created_at, q.id) < ($1, $2)))
+                    ORDER BY q.created_at DESC, q.id DESC
+                    LIMIT $3)
+                   UNION ALL
+                   (SELECT q.id FROM posts q
+                    WHERE $5::bigint IS NOT NULL
+                      AND (q.landed_epoch, q.position) > ($5, $6::bigint)
+                      AND ($4::uuid IS NULL OR q.author_id = $4)
+                      AND ($1::timestamptz IS NULL
+                           OR ($2::uuid IS NULL AND q.created_at < $1)
+                           OR ($2 IS NOT NULL AND (q.created_at, q.id) < ($1, $2)))
+                    ORDER BY q.created_at DESC, q.id DESC
+                    LIMIT $3))
                ORDER BY p.created_at DESC, p.id DESC
                LIMIT $3"#,
             at,
@@ -1973,12 +2006,25 @@ async fn comments_pending(
                                 created_at DESC, version_id DESC
                        LIMIT 1
                    ) v ON TRUE
-                   WHERE c.target_id = $4
-                     AND (c.landed_epoch IS NULL
-                          OR (c.landed_epoch, c.position) > ($5::bigint, $6::bigint))
-                     AND ($1::timestamptz IS NULL
-                          OR ($2::uuid IS NULL AND c.created_at > $1)
-                          OR ($2 IS NOT NULL AND (c.created_at, c.id) > ($1, $2)))
+                   WHERE c.id IN (
+                       (SELECT q.id FROM comments q
+                        WHERE q.target_id = $4
+                          AND q.landed_epoch IS NULL
+                          AND ($1::timestamptz IS NULL
+                               OR ($2::uuid IS NULL AND q.created_at > $1)
+                               OR ($2 IS NOT NULL AND (q.created_at, q.id) > ($1, $2)))
+                        ORDER BY q.created_at ASC, q.id ASC
+                        LIMIT $3)
+                       UNION ALL
+                       (SELECT q.id FROM comments q
+                        WHERE q.target_id = $4
+                          AND $5::bigint IS NOT NULL
+                          AND (q.landed_epoch, q.position) > ($5, $6::bigint)
+                          AND ($1::timestamptz IS NULL
+                               OR ($2::uuid IS NULL AND q.created_at > $1)
+                               OR ($2 IS NOT NULL AND (q.created_at, q.id) > ($1, $2)))
+                        ORDER BY q.created_at ASC, q.id ASC
+                        LIMIT $3))
                    ORDER BY c.created_at ASC, c.id ASC
                    LIMIT $3
                ) page
@@ -2014,12 +2060,25 @@ async fn comments_pending(
                             created_at DESC, version_id DESC
                    LIMIT 1
                ) v ON TRUE
-               WHERE c.target_id = $4
-                 AND (c.landed_epoch IS NULL
-                      OR (c.landed_epoch, c.position) > ($5::bigint, $6::bigint))
-                 AND ($1::timestamptz IS NULL
-                      OR ($2::uuid IS NULL AND c.created_at < $1)
-                      OR ($2 IS NOT NULL AND (c.created_at, c.id) < ($1, $2)))
+               WHERE c.id IN (
+                   (SELECT q.id FROM comments q
+                    WHERE q.target_id = $4
+                      AND q.landed_epoch IS NULL
+                      AND ($1::timestamptz IS NULL
+                           OR ($2::uuid IS NULL AND q.created_at < $1)
+                           OR ($2 IS NOT NULL AND (q.created_at, q.id) < ($1, $2)))
+                    ORDER BY q.created_at DESC, q.id DESC
+                    LIMIT $3)
+                   UNION ALL
+                   (SELECT q.id FROM comments q
+                    WHERE q.target_id = $4
+                      AND $5::bigint IS NOT NULL
+                      AND (q.landed_epoch, q.position) > ($5, $6::bigint)
+                      AND ($1::timestamptz IS NULL
+                           OR ($2::uuid IS NULL AND q.created_at < $1)
+                           OR ($2 IS NOT NULL AND (q.created_at, q.id) < ($1, $2)))
+                    ORDER BY q.created_at DESC, q.id DESC
+                    LIMIT $3))
                ORDER BY c.created_at DESC, c.id DESC
                LIMIT $3"#,
             at,
@@ -2227,12 +2286,25 @@ async fn comments_by_author_pending(
                                 created_at DESC, version_id DESC
                        LIMIT 1
                    ) v ON TRUE
-                   WHERE c.author_id = $4
-                     AND (c.landed_epoch IS NULL
-                          OR (c.landed_epoch, c.position) > ($5::bigint, $6::bigint))
-                     AND ($1::timestamptz IS NULL
-                          OR ($2::uuid IS NULL AND c.created_at > $1)
-                          OR ($2 IS NOT NULL AND (c.created_at, c.id) > ($1, $2)))
+                   WHERE c.id IN (
+                       (SELECT q.id FROM comments q
+                        WHERE q.author_id = $4
+                          AND q.landed_epoch IS NULL
+                          AND ($1::timestamptz IS NULL
+                               OR ($2::uuid IS NULL AND q.created_at > $1)
+                               OR ($2 IS NOT NULL AND (q.created_at, q.id) > ($1, $2)))
+                        ORDER BY q.created_at ASC, q.id ASC
+                        LIMIT $3)
+                       UNION ALL
+                       (SELECT q.id FROM comments q
+                        WHERE q.author_id = $4
+                          AND $5::bigint IS NOT NULL
+                          AND (q.landed_epoch, q.position) > ($5, $6::bigint)
+                          AND ($1::timestamptz IS NULL
+                               OR ($2::uuid IS NULL AND q.created_at > $1)
+                               OR ($2 IS NOT NULL AND (q.created_at, q.id) > ($1, $2)))
+                        ORDER BY q.created_at ASC, q.id ASC
+                        LIMIT $3))
                    ORDER BY c.created_at ASC, c.id ASC
                    LIMIT $3
                ) page
@@ -2268,12 +2340,25 @@ async fn comments_by_author_pending(
                             created_at DESC, version_id DESC
                    LIMIT 1
                ) v ON TRUE
-               WHERE c.author_id = $4
-                 AND (c.landed_epoch IS NULL
-                      OR (c.landed_epoch, c.position) > ($5::bigint, $6::bigint))
-                 AND ($1::timestamptz IS NULL
-                      OR ($2::uuid IS NULL AND c.created_at < $1)
-                      OR ($2 IS NOT NULL AND (c.created_at, c.id) < ($1, $2)))
+               WHERE c.id IN (
+                   (SELECT q.id FROM comments q
+                    WHERE q.author_id = $4
+                      AND q.landed_epoch IS NULL
+                      AND ($1::timestamptz IS NULL
+                           OR ($2::uuid IS NULL AND q.created_at < $1)
+                           OR ($2 IS NOT NULL AND (q.created_at, q.id) < ($1, $2)))
+                    ORDER BY q.created_at DESC, q.id DESC
+                    LIMIT $3)
+                   UNION ALL
+                   (SELECT q.id FROM comments q
+                    WHERE q.author_id = $4
+                      AND $5::bigint IS NOT NULL
+                      AND (q.landed_epoch, q.position) > ($5, $6::bigint)
+                      AND ($1::timestamptz IS NULL
+                           OR ($2::uuid IS NULL AND q.created_at < $1)
+                           OR ($2 IS NOT NULL AND (q.created_at, q.id) < ($1, $2)))
+                    ORDER BY q.created_at DESC, q.id DESC
+                    LIMIT $3))
                ORDER BY c.created_at DESC, c.id DESC
                LIMIT $3"#,
             at,
