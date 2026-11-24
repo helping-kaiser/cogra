@@ -280,9 +280,10 @@ jobs:
   # The client query-cost guards, on the change class they were written for.
   #
   # `client_operations` replays every committed operation from both client
-  # corpora against both budget postures and fails when the heaviest
-  # document grows into the stated headroom; `query_budgets` pins the
-  # postures themselves. Both live in crates/api/tests, so they ran only
+  # corpora against both budget postures, fails on any validation error
+  # (a tripped budget or a document the schema refuses), and fails when
+  # the heaviest document grows into the stated headroom; `query_budgets`
+  # pins the postures themselves. Both live in crates/api/tests, so they ran only
   # under the `test` job — which the `code` filter subtracts `android/**`
   # and `web/**` from. Adding a field to a client .graphql file, the single
   # most common way to grow the heaviest document, therefore ran neither.
