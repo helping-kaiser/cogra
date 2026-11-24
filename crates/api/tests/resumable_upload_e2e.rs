@@ -265,12 +265,11 @@ impl Rig {
         use std::sync::atomic::{AtomicUsize, Ordering};
         let pulled = Arc::new(AtomicUsize::new(0));
         let counter = pulled.clone();
-        let body = stream::repeat_with(move || axum::body::Bytes::from_static(chunk)).map(
-            move |chunk| {
+        let body =
+            stream::repeat_with(move || axum::body::Bytes::from_static(chunk)).map(move |chunk| {
                 counter.fetch_add(chunk.len(), Ordering::Relaxed);
                 Ok::<_, std::io::Error>(chunk)
-            },
-        );
+            });
         let mut request = Request::builder()
             .method("PUT")
             .uri(format!("/media/uploads/{session}/parts/{part_number}"))
@@ -852,7 +851,9 @@ fn connection(response: &axum::response::Response) -> Option<&str> {
 async fn an_anonymous_part_is_refused_before_its_body_is_read(pool: PgPool) {
     let rig = Rig::new(pool);
     let owner = rig.member("owner").await;
-    let begun = rig.begin(&owner, photo_with_location().len(), "STILL").await;
+    let begun = rig
+        .begin(&owner, photo_with_location().len(), "STILL")
+        .await;
     no_errors(&begun, "begin refused");
     let session = begun["upload"]["id"].as_str().expect("session id");
     let refusal = json!({
@@ -912,9 +913,7 @@ async fn a_part_the_caller_may_not_send_is_refused_before_its_body(pool: PgPool)
     let rig = Rig::new(pool);
     let owner = rig.member("owner").await;
     let stranger = rig.member("stranger").await;
-    let applicant_id = rig
-        .seed_member("applicant", "applicant@example.com")
-        .await;
+    let applicant_id = rig.seed_member("applicant", "applicant@example.com").await;
     let applicant = rig.log_in("applicant@example.com").await;
     sqlx::query("UPDATE user_credentials SET account_state = 'applicant' WHERE actor_id = $1")
         .bind(applicant_id)
@@ -930,7 +929,9 @@ async fn a_part_the_caller_may_not_send_is_refused_before_its_body(pool: PgPool)
     .execute(&rig.pool)
     .await
     .expect("the login goes");
-    let begun = rig.begin(&owner, photo_with_location().len(), "STILL").await;
+    let begun = rig
+        .begin(&owner, photo_with_location().len(), "STILL")
+        .await;
     no_errors(&begun, "begin refused");
     let session = begun["upload"]["id"].as_str().expect("session id");
     let part_count = begun["upload"]["partCount"].as_u64().expect("part count");
