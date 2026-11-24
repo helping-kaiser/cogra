@@ -40,6 +40,23 @@ const server = startMswServer(
   // The header's figures are read beside every profile; a test that does not
   // ask about them gets an answer rather than an unhandled request.
   gqlLink.query("ProfileFigures", () => HttpResponse.json({ data: { user: null } })),
+  // Every profile lands on its posts view (ProfilePosts.md:5), so every
+  // profile render reads it; a test that does not ask finds no post.
+  gqlLink.query("ProfilePosts", ({ variables }) =>
+    HttpResponse.json({
+      data: {
+        user: {
+          __typename: "User",
+          id: variables.id,
+          posts: {
+            __typename: "PostConnection",
+            edges: [],
+            pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+          },
+        },
+      },
+    }),
+  ),
   gqlLink.mutation("MarkSeen", ({ variables }) => {
     marked.push(variables.nodes as string[]);
     return HttpResponse.json({
@@ -148,6 +165,11 @@ function recordsHandler(
   );
 }
 
+/** The chronicle stands on Everything, one tap from where the profile lands. */
+async function openEverything() {
+  fireEvent.click(await screen.findByTestId(byNode("profile.tabRow.everythingTab")));
+}
+
 beforeEach(() => {
   window.localStorage.clear();
   resetSeenQueueForTests();
@@ -175,6 +197,7 @@ describe("ProfileScreen", () => {
     expect(screen.queryByTestId(byNode("profile.identity.actionRow.edit"))).not.toBeInTheDocument();
     expect(screen.queryByTestId(byNode("profile.band.gear"))).not.toBeInTheDocument();
     // The chronicle row labels and links to the touched post.
+    await openEverything();
     const row = await screen.findByTestId(byNode("profile.chronicle.act", "1"));
     expect(row).toHaveTextContent("Published a post");
     expect(row).toHaveTextContent("Hello world");
@@ -198,6 +221,7 @@ describe("ProfileScreen", () => {
       ]),
     );
     renderWithProviders(<ProfileScreen handle="ada" />);
+    await openEverything();
     const opinion = await screen.findByTestId(byNode("profile.chronicle.act", "1"));
     expect(opinion).toHaveTextContent("Gave an opinion");
     expect(screen.getByTestId(byNode("profile.chronicle.act.aside", "1"))).toHaveTextContent("on @mira");
@@ -223,6 +247,7 @@ describe("ProfileScreen", () => {
       ]),
     );
     renderWithProviders(<ProfileScreen handle="ada" />);
+    await openEverything();
     const walkBack = await screen.findByTestId(byNode("profile.chronicle.act", "1"));
     expect(walkBack).toHaveTextContent("Walked back an opinion");
     expect(screen.getByTestId(byNode("profile.chronicle.act.aside", "1"))).toHaveTextContent("on @mira");
@@ -249,6 +274,7 @@ describe("ProfileScreen", () => {
       ]),
     );
     renderWithProviders(<ProfileScreen handle="ada" />);
+    await openEverything();
     const tag = await screen.findByTestId(byNode("profile.chronicle.act", "1"));
     expect(tag).toHaveTextContent("Tagged a post");
     expect(screen.getByTestId(byNode("profile.chronicle.act.aside", "1"))).toHaveTextContent("#saltmaps");
@@ -383,9 +409,10 @@ describe("ProfileScreen", () => {
     expect(back).toHaveAttribute("href", "/u/ada/opinions?tab=by");
   });
 
-  // THE CHRONICLE'S TAB ROW (TabBar.jsx; Profile.md:21): three glyph toggles
-  // named in the accessibility tree, the reader landing on Everything.
-  it("lands on Everything under the chronicle's glyph tabs", async () => {
+  // THE CHRONICLE'S TAB ROW (TabBar.jsx; Profile.md:23): three glyph toggles
+  // named in the accessibility tree, the reader landing on Posts
+  // (ProfileOther.md:21: "NEVER it lands on Everything or Comments").
+  it("lands on Posts under the chronicle's glyph tabs", async () => {
     server.use(
       gqlLink.query("UserProfile", () =>
         HttpResponse.json({ data: { user: profile("u2", "ada") } }),
@@ -395,7 +422,9 @@ describe("ProfileScreen", () => {
     renderWithProviders(<ProfileScreen handle="ada" />);
     const tabs = await screen.findByRole("group", { name: "What the chronicle shows" });
     expect(tabs).toHaveAttribute("data-testid", "profile.tabRow");
-    expect(screen.getByTestId(byNode("profile.tabRow.everythingTab"))).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId(byNode("profile.tabRow.postsTab"))).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId(byNode("profile.tabRow.everythingTab"))).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByTestId(byNode("profile.tabRow.commentsTab"))).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByTestId(byNode("profile.tabRow.postsTab"))).toHaveAccessibleName("Posts");
     expect(screen.getByTestId(byNode("profile.tabRow.commentsTab"))).toHaveAccessibleName("Comments");
   });
@@ -537,6 +566,10 @@ describe("ProfileScreen", () => {
     expect(
       await screen.findByTestId(byNode("profile.identity.actionRow.stance.anchor")),
     ).toHaveAccessibleName("Give your opinion on this account");
+    // ProfileDeleted.md:5 — it lands on Posts, as every profile does.
+    expect(await screen.findByTestId(byNode("profile.posts.empty.title"))).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("profile.tabRow.postsTab"))).toHaveAttribute("aria-pressed", "true");
+    await openEverything();
     expect(await screen.findByTestId(byNode("profile.chronicle.act", "1"))).toBeInTheDocument();
     expect(screen.getByRole("main")).not.toHaveTextContent("@marlow");
   });
@@ -672,6 +705,7 @@ describe("ProfileScreen", () => {
       recordsHandler([{ id: "act:a:1:publish", family: "PUBLISH", postId: "p1" }]),
     );
     renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+    await openEverything();
     await screen.findByTestId(byNode("profile.chronicle.act"));
     // The profile, never the chronicle's posts: those join only as a list
     // sees them.
@@ -1029,7 +1063,8 @@ describe("ProfileScreen", () => {
     expect(await screen.findByTestId(byNode("profile.identity.actionRow.edit"))).toHaveAttribute("href", "/profile/edit");
     expect(screen.getByTestId(byNode("profile.band.gear"))).toHaveAttribute("href", "/settings");
     expect(screen.getByTestId(byNode("profile.identity.actionRow.invites"))).toHaveAttribute("href", "/invites");
-    expect(await screen.findByTestId("profile-chronicle-empty")).toBeInTheDocument();
+    // Profile.md:25 — the own profile lands on Posts.
+    expect(await screen.findByTestId(byNode("profile.posts.empty.title"))).toBeInTheDocument();
     // The root wears the band (`ProfileBand`): gear, then chats, then the bell.
     expect(screen.getByTestId(byNode("profile.band.gear"))).toHaveAccessibleName("Settings");
     expect(screen.getByTestId(byNode("profile.band.wordmark"))).toHaveTextContent("cogra");
@@ -1125,8 +1160,13 @@ describe("ProfileScreen", () => {
     expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent(
       "You can invite once you're in.",
     );
-    // The applicant's empty chronicle says what fills it, and when.
-    expect(screen.getByTestId(byNode("profile.chronicle.empty.title"))).toHaveTextContent(
+    // ProfileApplicant.md:22 — the page lands with the Posts tab lit, as every
+    // profile does, its empty line reading Nothing here yet.
+    expect(screen.getByTestId(byNode("profile.tabRow.postsTab"))).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId(byNode("profile.posts.empty.title"))).toHaveTextContent(/^Nothing here yet\.$/);
+    // The applicant's empty chronicle reads the same line.
+    await openEverything();
+    expect(await screen.findByTestId(byNode("profile.chronicle.empty.title"))).toHaveTextContent(
       /^Nothing here yet\.$/,
     );
   });
@@ -1144,9 +1184,9 @@ describe("ProfileScreen", () => {
     renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore(), reader: "APPLICANT" });
     // The page's own read says member; the shared state says applicant, and the
     // lock follows the shared state. The Invites lock is what still tells the
-    // applicant apart here: the empty chronicle reads the same for both
+    // applicant apart here: the empty line reads the same for both
     // (round 42 cut its applicant tail).
-    await waitFor(() => expect(screen.getByTestId(byNode("profile.chronicle.empty.title"))).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId(byNode("profile.posts.empty.title"))).toBeInTheDocument());
     const invites = screen.getByTestId(byNode("profile.identity.actionRow.invites"));
     expect(invites).not.toHaveAttribute("href");
     expect(invites.className).toContain("opacity-[var(--state-disabled)]");
@@ -1214,6 +1254,10 @@ describe("ProfileScreen", () => {
       gqlLink.query("UserProfile", () =>
         HttpResponse.json({ data: { user: profile("u2", "ada") } }),
       ),
+      gqlLink.query("ProfilePosts", () => {
+        reads.push("posts");
+        return HttpResponse.json({ data: { user: null } });
+      }),
       gqlLink.query("ProfileComments", () => {
         reads.push("comments");
         return HttpResponse.json({ data: { user: null } });
@@ -1235,12 +1279,12 @@ describe("ProfileScreen", () => {
     );
     renderWithProviders(<ProfileScreen handle="ada" />);
     await screen.findByTestId(byNode("profile.identity.name"));
-    // Every visitor lands on Everything, as every profile board draws it.
-    await waitFor(() => expect(reads).toEqual(["everything"]));
+    // Every visitor lands on Posts and reads it alone (ProfilePosts.md:5).
+    await waitFor(() => expect(reads).toEqual(["posts"]));
     fireEvent.click(screen.getByTestId(byNode("profile.tabRow.commentsTab")));
-    await waitFor(() => expect(reads).toEqual(["everything", "comments"]));
+    await waitFor(() => expect(reads).toEqual(["posts", "comments"]));
     fireEvent.click(screen.getByTestId(byNode("profile.tabRow.everythingTab")));
-    await waitFor(() => expect(reads).toEqual(["everything", "comments", "everything"]));
+    await waitFor(() => expect(reads).toEqual(["posts", "comments", "everything"]));
   });
 
   // THE PAGE THAT DID NOT ARRIVE (Profile.md:35): the quiet line and Retry
@@ -1253,6 +1297,7 @@ describe("ProfileScreen", () => {
       gqlLink.query("AuthorRecords", () => HttpResponse.error()),
     );
     renderWithProviders(<ProfileScreen handle="ada" />);
+    await openEverything();
     const line = await screen.findByTestId("profile-rows-failed");
     expect(line).toHaveTextContent("Couldn't load more");
     expect(line.className).not.toContain("text-error");

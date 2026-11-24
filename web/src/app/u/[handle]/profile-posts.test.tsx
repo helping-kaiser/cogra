@@ -279,7 +279,7 @@ describe("ProfilePosts — the posts view (ProfilePosts.md)", () => {
     expect(screen.getByTestId(byNode("profile.identity.name"))).toBe(name);
     // :21 — Everything: the chronicle.
     fireEvent.click(screen.getByTestId(byNode("profile.tabRow.everythingTab")));
-    await waitFor(() => expect(families).toEqual([null, null]));
+    await waitFor(() => expect(families).toEqual([null]));
     expect(await screen.findByTestId(byNode("profile.chronicle.act", "1"))).toBeInTheDocument();
   });
 
@@ -567,7 +567,7 @@ describe("ProfilePosts — the posts view (ProfilePosts.md)", () => {
   });
 
   it("a_pull_at_the_top_refreshes_the_profile_and_keeps_the_posts_view", async () => {
-    // ProfilePosts.md:57.
+    // ProfilePosts.md:83.
     serveAda();
     const families = serveChronicle();
     const reads = servePosts({ "": { posts: [adas("p1")], next: null } });
@@ -584,7 +584,7 @@ describe("ProfilePosts — the posts view (ProfilePosts.md)", () => {
     pullsAtTop(scroller, PULL_THRESHOLD);
     await waitFor(() => expect(reads).toHaveLength(2));
     expect(screen.getByTestId("profile-posts")).toBeInTheDocument();
-    expect(families).toEqual([null]);
+    expect(families).toEqual([]);
     scroller.remove();
   });
 });

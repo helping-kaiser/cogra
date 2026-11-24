@@ -24,7 +24,7 @@
 // nothing under the header; each slot carries its own spacing instead.
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
@@ -115,15 +115,18 @@ export const COULDNT_LOAD_MORE = "Couldn't load more";
 export const LOADING_AFTER_MS = 200;
 
 const CHRONICLE: DataNode = { path: "profile.chronicle" };
+/** The bar's back arrow (`PageHeader`'s `back` part under `profile.header`). */
+const BACK_ARROW = "profile.header.back";
 const IDENTITY: DataNode = { path: "profile.identity" };
 const ROW = (name: string): DataNode => ({ path: `profile.identity.actionRow.${name}` });
 
 /**
  * WHAT AN ARRIVAL DOES WITH THE LIST BELOW THE TAB ROW. A first arrival lands
- * on Everything and reads it; a return keeps the card view — Posts or
- * Comments — it came back to as it was left; a pull re-reads the tab on screen
- * and keeps it (Profile.md:69, ProfilePosts.md:57, ProfileComments.md:51 — the
- * profile refreshes; nothing says the tab moves).
+ * on Posts and reads it alone (ProfilePosts.md:5, ProfileOther.md:21,
+ * Profile.md:25 — every profile, from any door); a return keeps the view —
+ * Posts, Comments or Everything — it came back to as it was left; a pull
+ * re-reads the tab on screen and keeps it (ProfilePosts.md:83 — the profile
+ * refreshes; nothing says the tab moves).
  */
 type ListArrival = "land" | "keep" | ChronicleFilter;
 
@@ -157,9 +160,10 @@ export function ProfileScreen({
   useFreshRootBell(reader, freshRoot);
   const bellIsLit = useBellLit(reader);
 
-  // THE WAY BACK LANDS WHERE THE READER LEFT (Reel.md:83; ProfilePosts.md:51;
-  // ProfileComments.md:45): a profile left from a card view — through the
-  // stream, a card's post or its trace, a comment's thread — comes back on that
+  // THE WAY BACK LANDS WHERE THE READER LEFT (Reel.md:83; ProfilePosts.md:77;
+  // ProfileComments.md:81): a profile left from a tab view — through the
+  // stream, a card's post or its trace, a comment's thread, a chronicle act's
+  // post — comes back on that
   // view, its cards, its paging and its place, and its own back arrow keeps the
   // origin it was opened with (`profile-memory.ts`). Read once, at mount.
   const memoryReader = phase === "signedIn" ? account : null;
@@ -176,9 +180,10 @@ export function ProfileScreen({
   const [loading, setLoading] = useState(returned === null);
   const [notFound, setNotFound] = useState(false);
   const [transportFailed, setTransportFailed] = useState(false);
-  // Every profile board draws the reader landing on Everything.
-  const [filter, setFilter] = useState<ChronicleFilter>(held?.tab ?? "everything");
-  const [rows, setRows] = useState<readonly RecordRow[]>([]);
+  // EVERY PROFILE LANDS ON POSTS, from any door (ProfilePosts.md:5,
+  // ProfileOther.md:21, Profile.md:25); a return stands on the tab it left.
+  const [filter, setFilter] = useState<ChronicleFilter>(held?.tab ?? "posts");
+  const [rows, setRows] = useState<readonly RecordRow[]>(held?.tab === "everything" ? held.rows : []);
   // THE POSTS VIEW'S CARDS (ProfilePosts.md:3), in the order the read serves.
   const [posts, setPosts] = useState<readonly PostView[]>(held?.tab === "posts" ? held.posts : []);
   // THE COMMENTS VIEW'S CARDS (ProfileComments.md:3), in the order the read serves.
@@ -296,8 +301,8 @@ export function ProfileScreen({
         setViewer(me);
         setOwn(mine);
         if (list === "land") {
-          setFilter("everything");
-          void loadRows(loaded.id, "everything", null, mine);
+          setFilter("posts");
+          void loadRows(loaded.id, "posts", null, mine);
         } else if (list !== "keep") {
           void loadRows(loaded.id, list, null, mine);
         }
@@ -373,7 +378,7 @@ export function ProfileScreen({
   const onFilter = (next: ChronicleFilter) => {
     if (next === filter || profile === null) return;
     // Off the view that was held, the profile's landing is the tab's own
-    // again; a card view now standing is held afresh, at its top.
+    // again; the view now standing is held afresh, at its top.
     forgetProfileView(memoryReader, handle);
     setFilter(next);
     setRows([]);
@@ -442,11 +447,11 @@ export function ProfileScreen({
   // has none, as in the thread.
   const reply = phase !== "signedIn" ? "none" : applicant ? "locked" : "open";
 
-  // THE CARD VIEW IS KEPT AS IT STANDS (`profile-memory.ts`) — written from
-  // an effect rather than from each read, so no path can change it and forget
-  // to record it. Only a view with something to come back to is kept.
+  // THE TAB VIEW IS KEPT AS IT STANDS (`profile-memory.ts`) — written from an
+  // effect rather than from each read, so no path can change it and forget to
+  // record it. Only a view with something to come back to is kept.
   useEffect(() => {
-    if (profile === null || !cardView || (rowsLoading && listed === 0)) return;
+    if (profile === null || (rowsLoading && listed === 0)) return;
     rememberProfileView({
       reader: memoryReader,
       route: handle,
@@ -455,11 +460,50 @@ export function ProfileScreen({
       figures,
       viewer,
       own,
-      list: filter === "posts" ? { tab: "posts", posts } : { tab: "comments", comments },
+      list:
+        filter === "posts"
+          ? { tab: "posts", posts }
+          : filter === "comments"
+            ? { tab: "comments", comments }
+            : { tab: "everything", rows },
       endCursor,
       hasNextPage: hasMore,
     });
-  }, [memoryReader, handle, openedFrom, profile, figures, viewer, own, filter, cardView, rowsLoading, listed, posts, comments, endCursor, hasMore]);
+  }, [memoryReader, handle, openedFrom, profile, figures, viewer, own, filter, rowsLoading, listed, posts, comments, rows, endCursor, hasMore]);
+
+  // A PROFILE LEFT BY NO DOOR OF ITS OWN IS NOT COME BACK TO. Every way back to
+  // a profile is a link to its route carrying the origin it was opened with —
+  // the same URL the door that opened it carries (the feed's chip, Saved's
+  // row) — so the held view alone cannot tell a return from a new opening.
+  // What tells them apart is how the reader left: through one of the page's
+  // own doors (a card, a figure, Message, the menu — every click inside the
+  // page but its bar's back arrow) the view waits for the way back; by the
+  // bar's back arrow, a door outside the page (the bottom bar) or the
+  // browser's own back, the reader has left the profile, and its next opening
+  // lands on Posts (ProfileOther.md:21, Profile.md:25).
+  //
+  // Every click first marks the page left for good, at the document; one inside
+  // the page's own React tree — its sheets included, which a portal puts
+  // outside its DOM but not outside its tree — then takes the mark back, in
+  // the page's own capture handler (`onPageClick`), which React runs after the
+  // document's.
+  const leftForGood = useRef(false);
+  const onPageClick = (event: ReactMouseEvent) => {
+    const target = event.target instanceof Element ? event.target : null;
+    leftForGood.current = target?.closest(`[data-testid="${BACK_ARROW}"]`) != null;
+  };
+  useEffect(() => {
+    const onDocumentClick = () => {
+      leftForGood.current = true;
+    };
+    document.addEventListener("click", onDocumentClick, true);
+    window.addEventListener("popstate", onDocumentClick);
+    return () => {
+      document.removeEventListener("click", onDocumentClick, true);
+      window.removeEventListener("popstate", onDocumentClick);
+      if (leftForGood.current) forgetProfileView(memoryReader, handle);
+    };
+  }, [memoryReader, handle]);
 
   // A PORTRAIT CLIP'S TAP OPENS THE STREAM OVER THE POSTS VIEW (Reel.md:3,
   // ProfilePosts.md:43-45), in its order, and past the page on screen through
@@ -484,7 +528,7 @@ export function ProfileScreen({
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col pb-2">
+    <main className="mx-auto flex w-full max-w-2xl flex-col pb-2" onClickCapture={onPageClick}>
       <CollapsingTop
         flush
         // A return lands scrolled where it was left: the header is collapsed

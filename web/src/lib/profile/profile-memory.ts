@@ -1,26 +1,28 @@
-// WHERE THE READER WAS ON A PROFILE'S CARD VIEWS — the posts view and the
-// comments view — so every way back through a card's door lands there exactly.
+// WHERE THE READER WAS ON A PROFILE'S TAB VIEWS — Posts, Comments and
+// Everything — so every way back through one of the page's doors lands there
+// exactly.
 //
 // "WHEN press reel.backDisc GIVEN the stream was opened from anywhere else ->
 // the stream closes onto where it was opened, the state the reader left
 // exactly" (Reel.md:83), and "WHEN tap the back arrow -> the reader returns to
-// where they came from, in the state they left it" (ProfilePosts.md:51,
-// ProfileComments.md:45): the profile's posts view is one of the lists the
-// stream opens from (Reel.md:3), and both views' cards open their post or
-// their thread on a route of its own. The App Router unmounts the profile
-// when that route renders, so a remount that started from nothing would land
-// on Everything — the tab every profile board opens on — at the top, its cards
-// read again. This is the external store the feed's memory is
+// where they came from, in the state they left it" (ProfilePosts.md:77,
+// ProfileComments.md:81, ProfileOther.md:101): the profile's posts view is one
+// of the lists the stream opens from (Reel.md:3), and every view's cards open
+// their post or their thread on a route of its own. The App Router unmounts
+// the profile when that route renders, so a remount that started from nothing
+// would land on Posts — where every profile lands, from any door
+// (ProfilePosts.md:5, ProfileOther.md:21, Profile.md:25) — at the top, its
+// cards read again. This is the external store the feed's memory is
 // (`app/feed/feed-memory.ts` says why it is module scope rather than Cache
 // Components): the view left, its cards, its paging, and its place.
 //
-// WHAT IS HELD, AND WHEN. Only a profile left while one of its CARD VIEWS
-// stands — Posts or Comments, the two whose cards have doors that leave the
-// page (ProfilePosts.md:39-49, ProfileComments.md:23-27). Everything's
-// chronicle keeps its own landing. The header is held beside the cards so the
-// page is as tall at its first commit as it was when the reader left; the
-// arrival still asks the server for the header beneath it, as every arrival
-// does ("a return to the own profile reads the server").
+// WHAT IS HELD, AND WHEN. The view standing as the reader leaves, whichever
+// tab it is. The header is held beside the cards so the page is as tall at its
+// first commit as it was when the reader left; the arrival still asks the
+// server for the header beneath it, as every arrival does ("a return to the
+// own profile reads the server"). A profile left by no door of its own — its
+// bar's back arrow, the bottom bar, the browser's back — lets its view go
+// (`forgetProfileView`), so the next opening lands on Posts again.
 //
 // WHICH ARRIVAL IS A RETURN. Every way back to a profile is a link to its
 // route — the stream's back disc, the detail's and the trace's back arrows —
@@ -35,13 +37,14 @@
 
 import type { MeUser } from "@/lib/api/auth-api";
 import type { PostView } from "@/lib/api/content-api";
-import type { ProfileCommentView, ProfileFigures, ProfileView } from "@/lib/api/profile-api";
+import type { ProfileCommentView, ProfileFigures, ProfileView, RecordRow } from "@/lib/api/profile-api";
 import type { ScrollPlace } from "@/lib/ui/scroll-pin";
 
-/** The card view left, and its cards in its order. */
+/** The tab view left, and its cards in its order. */
 export type HeldProfileList =
   | { readonly tab: "posts"; readonly posts: readonly PostView[] }
-  | { readonly tab: "comments"; readonly comments: readonly ProfileCommentView[] };
+  | { readonly tab: "comments"; readonly comments: readonly ProfileCommentView[] }
+  | { readonly tab: "everything"; readonly rows: readonly RecordRow[] };
 
 export type ProfileViewMemory = {
   readonly reader: string | null;
@@ -78,7 +81,7 @@ function sameProfile(
 }
 
 /**
- * Keep the card view as it stands. Called whenever what it shows changes; the
+ * Keep the tab view as it stands. Called whenever what it shows changes; the
  * place the reader scrolled to stays with the same profile's same view.
  */
 export function rememberProfileView(left: Omit<ProfileViewMemory, "place">): void {
@@ -91,8 +94,8 @@ export function rememberProfileView(left: Omit<ProfileViewMemory, "place">): voi
 
 /**
  * Keep the place on this profile's held view. Called as the reader scrolls,
- * so it costs no render; a scroll on any other profile, or on the chronicle,
- * leaves the held place alone.
+ * so it costs no render; a scroll on any other profile leaves the held place
+ * alone.
  */
 export function rememberProfilePlace(
   reader: string | null,
@@ -103,7 +106,7 @@ export function rememberProfilePlace(
 }
 
 /**
- * The card view `reader` left on this profile, or null. A READ, NOT A TAKE:
+ * The tab view `reader` left on this profile, or null. A READ, NOT A TAKE:
  * a lazy state initializer may run twice (React StrictMode), and a return
  * left again through the same door finds it again.
  */
