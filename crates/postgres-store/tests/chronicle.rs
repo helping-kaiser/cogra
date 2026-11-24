@@ -384,3 +384,112 @@ async fn a_mirrored_genesis_is_served_once_as_its_record(pool: PgPool) {
         "the row is never served beside its record"
     );
 }
+
+/// Two landed opinions and three settling entries — two posts and, newest,
+/// a comment — so a two-entry page one ends inside the settling set with
+/// a settling post still below it: `C3 P2 P1 newer older`.
+struct Boundary {
+    author: Uuid,
+    older_opinion: String,
+    newer_opinion: String,
+    p1: Uuid,
+    p2: Uuid,
+    c3: Uuid,
+}
+
+async fn boundary_fixture(pool: &PgPool) -> Boundary {
+    let author = actor(pool, ALICE).await;
+    let host = post(pool, author, &act(9, Family::Publish), None, at(0)).await;
+    let older = opinion(1, 1, 1);
+    let newer = opinion(2, 1, 2);
+    let (older_opinion, newer_opinion) = (older.act_id.to_string(), newer.act_id.to_string());
+    ingest(pool, 1, vec![older, newer, publish(act(9, Family::Publish), 1, 3)]).await;
+    let mut tx = pool.begin().await.expect("tx");
+    assert!(
+        content::land_post(&mut tx, host, order(1, 3))
+            .await
+            .expect("lands")
+    );
+    tx.commit().await.expect("commit");
+    let p1 = post(pool, author, &act(3, Family::Publish), None, at(10)).await;
+    let p2 = post(pool, author, &act(4, Family::Publish), None, at(20)).await;
+    let c3 = pending_comment(pool, author, host, &act(5, Family::Review), at(30)).await;
+    Boundary {
+        author,
+        older_opinion,
+        newer_opinion,
+        p1,
+        p2,
+        c3,
+    }
+}
+
+/// Page one ends on a settling post that then lands — record mirrored,
+/// row promoted — while an older settling post still pends below it. Page
+/// two owes that post ahead of the records.
+///
+/// The chronicle's boundary entry landing between two pages leaves the settling entries below it due.
+/// ´claim:chronicle:the-boundary-landing-keeps-the-settling-entries-below-it´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_chronicle_boundary_landing_keeps_the_settling_entries_below_it(pool: PgPool) {
+    let f = boundary_fixture(&pool).await;
+    let host_record = act(9, Family::Publish).to_string();
+    let first = page(&pool, f.author, None, false, 2, true).await;
+    assert_eq!(ids(&first), vec![Seen::Comment(f.c3), Seen::Post(f.p2)]);
+    let boundary = cursor_of(&first[1]);
+
+    ingest(&pool, 2, vec![publish(act(4, Family::Publish), 2, 1)]).await;
+    let mut tx = pool.begin().await.expect("tx");
+    assert!(
+        content::land_post(&mut tx, f.p2, order(2, 1))
+            .await
+            .expect("lands")
+    );
+    tx.commit().await.expect("commit");
+
+    assert_eq!(
+        ids(&page(&pool, f.author, Some(boundary), false, 10, true).await),
+        vec![
+            Seen::Post(f.p1),
+            Seen::Record(host_record),
+            Seen::Record(f.newer_opinion),
+            Seen::Record(f.older_opinion),
+        ],
+        "the settling post below the boundary must not be dropped"
+    );
+}
+
+/// Page one serves the settling comment above its boundary; the comment
+/// lands while the boundary post still pends. It was served once, so its
+/// record must not come back on page two.
+///
+/// An entry above the chronicle's page boundary landing between two pages is not served again as its record.
+/// ´claim:chronicle:an-entry-above-the-boundary-landing-is-not-served-again´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_chronicle_entry_above_the_boundary_landing_is_not_served_again(pool: PgPool) {
+    let f = boundary_fixture(&pool).await;
+    let host_record = act(9, Family::Publish).to_string();
+    let first = page(&pool, f.author, None, false, 2, true).await;
+    assert_eq!(ids(&first), vec![Seen::Comment(f.c3), Seen::Post(f.p2)]);
+    let boundary = cursor_of(&first[1]);
+
+    ingest(&pool, 2, vec![publish(act(5, Family::Review), 2, 1)]).await;
+    let mut tx = pool.begin().await.expect("tx");
+    assert!(
+        content::land_comment(&mut tx, f.c3, order(2, 1))
+            .await
+            .expect("lands")
+    );
+    tx.commit().await.expect("commit");
+
+    assert_eq!(
+        ids(&page(&pool, f.author, Some(boundary), false, 10, true).await),
+        vec![
+            Seen::Post(f.p1),
+            Seen::Record(host_record),
+            Seen::Record(f.newer_opinion),
+            Seen::Record(f.older_opinion),
+        ],
+        "the comment served on page one must not come again as its record"
+    );
+}
