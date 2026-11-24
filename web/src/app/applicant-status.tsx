@@ -31,7 +31,7 @@ import { resendVerificationEmail } from "@/lib/api/onboarding-api";
 import { fetchSettingsAccount } from "@/lib/api/settings-api";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { ApplicationCard, type ApplicationSurface } from "./application-card";
-import { useKeyCeremony, useRegistrationFlow } from "@/lib/signing/provider";
+import { useAttachActorKey, useRegistrationFlow } from "@/lib/signing/provider";
 import { attachFaultOf, type AttachFault, type RegistrationProgress } from "@/lib/signing/registration-signer";
 import { RowLine } from "@/lib/ui/row-line";
 import { buttonClassName } from "@/lib/ui/button";
@@ -244,7 +244,7 @@ function CeremonyCard({ approver }: { approver: string }) {
  * at a Retry) keeps today's card, which no board draws.
  */
 function UnattachedKeyCard({ fault }: { fault: AttachFault | undefined }) {
-  const ceremony = useKeyCeremony();
+  const attachActorKey = useAttachActorKey();
   const flow = useRegistrationFlow();
   // A Retry's answer is fresher than the pass that drew the card.
   const [retried, setRetried] = useState<AttachFault | "attached" | null>(null);
@@ -256,7 +256,7 @@ function UnattachedKeyCard({ fault }: { fault: AttachFault | undefined }) {
   const onRetry = async () => {
     if (retrying) return;
     setRetrying(true);
-    const answer = attachFaultOf(await ceremony.attachActorKey());
+    const answer = attachFaultOf(await attachActorKey());
     setRetrying(false);
     setRetried(answer ?? "attached");
     if (answer === null) flow.ensureAdvancing();
