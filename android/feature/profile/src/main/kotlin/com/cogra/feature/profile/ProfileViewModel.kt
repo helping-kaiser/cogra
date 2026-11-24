@@ -57,7 +57,7 @@ data class ProfileUiState(
     val vouchesBack: Boolean = false,
     /** The lit tab: Posts on landing, "AND NEVER it lands on Everything or Comments" (ProfileOther.md:21). */
     val tab: ProfileTab = ProfileTab.POSTS,
-    /** Everything's chronicle acts, newest first. */
+    /** Everything's chronicle acts in the server's order, the settling posts and comments first. */
     val rows: List<RecordRow> = emptyList(),
     /** The posts view's cards, in the order the read serves. */
     val posts: List<PostView> = emptyList(),
@@ -280,7 +280,10 @@ class ProfileViewModel @Inject constructor(
                 ProfileTab.COMMENTS -> land(profiles.profileComments(author, after)) { page ->
                     copy(comments = joined(comments, page.items, reset) { it.comment.id })
                 }
-                ProfileTab.EVERYTHING -> land(profiles.authorRecords(author, PAGE, after)) { page ->
+                // A settling entry and the record it lands as share a key, so
+                // a page that serves the record after the held settling copy
+                // keeps the one row; a pull replaces the list.
+                ProfileTab.EVERYTHING -> land(profiles.chronicle(author, PAGE, after)) { page ->
                     copy(rows = joined(rows, page.items, reset) { it.id })
                 }
             }
