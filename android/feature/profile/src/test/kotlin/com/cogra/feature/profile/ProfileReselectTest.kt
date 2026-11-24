@@ -34,7 +34,8 @@ class ProfileReselectTest {
             loading = false,
             profile = testProfile(id = "u1", handle = "ada"),
             own = true,
-            rows = List(ACTS) { RecordRow("r$it", Family.PUBLISH, true, "Act $it", null) },
+            tab = ProfileTab.EVERYTHING,
+            rows =List(ACTS) { RecordRow("r$it", Family.PUBLISH, true, "Act $it", null) },
         )
         compose.setContent {
             ProfileScreen(
