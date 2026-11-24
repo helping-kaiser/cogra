@@ -8,6 +8,7 @@ package com.cogra.feature.home
 
 import android.content.ClipData
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -40,6 +41,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.RowLine
+import com.cogra.core.designsystem.RowLineState
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.ButtonSize
@@ -49,6 +52,7 @@ import com.cogra.core.designsystem.v2.atom.taskRing
 import com.cogra.core.designsystem.v2.atom.taskRingColors
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.ErrorCode
+import com.cogra.domain.signing.AttachFault
 import com.cogra.domain.signing.RegistrationProgress
 import kotlinx.coroutines.launch
 
@@ -86,6 +90,7 @@ fun StatusBannersRoute(
         onResend = viewModel::onResend,
         onResumePending = viewModel::onResumePending,
         onStartKeyCeremony = onStartKeyCeremony,
+        onRetryAttach = viewModel::onRetryAttach,
         application = ApplicationCardActions(
             surface = surface,
             askUrl = viewModel::askUrl,
@@ -205,6 +210,8 @@ fun StatusBanners(
     onResumePending: () -> Unit,
     onStartKeyCeremony: () -> Unit,
     application: ApplicationCardActions = ApplicationCardActions(),
+    /** `Retry` on the key that did not attach (ApplicantFeed.md:39). */
+    onRetryAttach: () -> Unit = {},
 ) {
     if (state.loading) return
     // The host pads horizontally — the feed's list padding, the
@@ -219,6 +226,7 @@ fun StatusBanners(
                 onResendEmailChange = onResendEmailChange,
                 onResend = onResend,
                 onStartKeyCeremony = onStartKeyCeremony,
+                onRetryAttach = onRetryAttach,
                 application = application,
             )
         } else {
@@ -260,6 +268,7 @@ private fun ApplicantStatus(
     onResend: () -> Unit,
     onStartKeyCeremony: () -> Unit,
     application: ApplicationCardActions,
+    onRetryAttach: () -> Unit,
 ) {
     when (val progress = state.progress) {
         null -> CircularProgressIndicator(modifier = Modifier.testTag("home_status_loading"))
@@ -270,8 +279,14 @@ private fun ApplicantStatus(
             when {
                 // The two proofs are independent — both cards can show.
                 !progress.keyAttached && !progress.keyOnDevice -> CeremonyCard(onStartKeyCeremony)
+                // The applicant's own key, here, did not reach the
+                // application (ApplicantFeed.md:37): attach it again,
+                // never a fresh key, never "another account".
+                !progress.keyAttached && progress.attachFault == AttachFault.FAILED ->
+                    AttachKeyCard(onRetryAttach, application.surface)
                 // A key sits on the device but the attach was refused —
-                // it belongs to another account (ACTOR_KEY_IN_USE).
+                // it belongs to another account (ACTOR_KEY_IN_USE). No
+                // board draws this card yet.
                 !progress.keyAttached && progress.keyOnDevice -> KeyElsewhereCard(onStartKeyCeremony)
                 // keyAttached && !keyOnDevice: the restore ask rides the
                 // screen's collapsing top (KeyRestoreBanner), not this
@@ -324,6 +339,31 @@ private fun CeremonyCard(onStartKeyCeremony: () -> Unit) {
             ) {
                 Text(stringResource(R.string.home_create_key_button))
             }
+        }
+    }
+}
+
+/**
+ * THE KEY IN THIS APP THAT DID NOT ATTACH (`ApplicantFeed.jsx` `keyCard` =
+ * `attach`, round 66; ApplicantFeed.md:19-21, 37-39): the notice task card
+ * titled `Attach your key`, its body the app's wording, and the house line
+ * `That didn't go through.` with `Retry` (`SigningPending row`) in `Create my
+ * key`'s place. Retry pokes the applicant poll into a pass at once, whose
+ * repair attach sends the SAME key again — the one attach the app has, under
+ * its one gate — and the card leaves with the pass that reads it attached.
+ */
+@Composable
+private fun AttachKeyCard(onRetry: () -> Unit, surface: ApplicationSurface) {
+    // The board registers the card on the feed; elsewhere it stands unnamed.
+    val node = if (surface == ApplicationSurface.FEED) DataNode("feed") / "keyCard" else null
+    NoticeTaskCard(
+        title = stringResource(R.string.home_attach_key_title),
+        body = stringResource(R.string.home_attach_key_body),
+        node = node,
+    ) {
+        // A block at the card's width, as the board's line stands in it.
+        Box(Modifier.fillMaxWidth().dataNode(node?.div("attachFault")?.keyed("attach"))) {
+            RowLine(state = RowLineState.DidntGoThrough(onRetry = onRetry), testTag = "home_attach_fault")
         }
     }
 }
