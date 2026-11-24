@@ -297,8 +297,10 @@ export function SavedScreen({
           WAY UP, and a reader three screens down summons Back to top with
           them; its tap goes up, animated, and never re-reads. ONE BLOCK: the
           board stacks the header and the field with no gap of their own
-          (Saved.jsx), so the region's column gap never opens between them. */}
-      <CollapsingTop onBackToTop={() => scrollHostToTopAnimated(host)}>
+          (Saved.jsx), so the region's column gap never opens between them.
+          FLUSH: what stands under it — the list, SavedNone, SavedEmpty — keeps
+          its own 8px top, as the boards draw it. */}
+      <CollapsingTop flush onBackToTop={() => scrollHostToTopAnimated(host)}>
         <div className="flex flex-col">
           <PageHeader
             title="Saved"

@@ -707,6 +707,16 @@ describe("SavedScreen — search what you saved", () => {
     expect(block.className).not.toMatch(/\bgap-/);
   });
 
+  it("the_list_stands_8px_under_the_field_by_its_own_top_and_the_region_adds_none", async () => {
+    // FeedList's `padding: 8px 0 0` (_shared.jsx) is the list's own; a region
+    // `pb-2` on top of it doubled the step to 16.
+    serve(THREE);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    const list = await screen.findByTestId("saved-list");
+    expect(list).toHaveClass("pt-2");
+    expect(screen.getByTestId("collapsing-top")).not.toHaveClass("pb-2");
+  });
+
   it("the_whole_list_is_read_with_no_query", async () => {
     const reads = serveSaved(() => page(THREE));
     renderWithProviders(<SavedScreen />, { store: signedIn() });
