@@ -580,7 +580,8 @@ enum ErrorCode {
   INVALID_CREDENTIALS          # email / password pair did not match
   INVITE_UNUSABLE              # invite link invalid, expired, revoked, or consumed
   ASK_LINK_UNUSABLE            # ask link unknown, or its applicant is landed or already waiting in your own queue
-  HANDLE_TAKEN                 # the requested handle is already in use
+  HANDLE_TAKEN                 # the requested handle is already in use, or reserved (auth.md "Reserved names")
+  DISPLAY_NAME_RESERVED        # the display name is one CoGra reserves (auth.md "Reserved names")
   WEAK_PASSWORD                # under the length floor or in the breach corpus
   EMAIL_IN_USE                 # the email already belongs to an account
   ACTOR_KEY_IN_USE             # the actor key is bound to a different account
