@@ -497,7 +497,10 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
         ).fetch().map { data ->
             data.post?.let { post ->
                 PostDetail(
-                    post = post.postFields.toDomain()
+                    // The detail's own post carries its list (`PostDetail`);
+                    // its comments carry the count.
+                    post = post.postFields
+                        .toDomain(references = post.references.map { it.referenceClaimFields.toDomain() })
                         .copy(commentCount = post.comments.totalCount),
                     comments = Page(
                         items = post.comments.edges.map { edge ->
@@ -737,7 +740,10 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
         client.query(CommentForEditQuery(id)).fetch().map { data ->
             data.comment?.let {
                 CommentForEdit(
-                    comment = it.commentFields.toDomain(),
+                    // The edit opens on the whole citation set (`CommentForEdit`).
+                    comment = it.commentFields.toDomain(
+                        references = it.references.map { claim -> claim.referenceClaimFields.toDomain() },
+                    ),
                     selfMark = SelfMarkView(
                         it.commentFields.sensitiveSelfMark,
                         it.commentFields.sensitiveReason,
