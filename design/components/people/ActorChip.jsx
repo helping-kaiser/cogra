@@ -96,8 +96,34 @@ export const UNHIDE_ACTOR_LABEL = (handle, redacted = false) =>
    numeric size from 56px up headline-small; any other numeric size
    label-large. THE WEIGHT IS THE DISC'S OWN: every letter stands at 500
    whatever its role says, the large discs' headline-small included (jakob,
-   round 32: "all fine"), so a monogram reads at one weight at every size. */
-export function MonogramAvatar({ name, size = "sm", src, redacted = false, node }) {
+   round 32: "all fine"), so a monogram reads at one weight at every size.
+
+   THE COGRA MARK AS AN ACCOUNT'S PICTURE IS THE BRAND'S ORANGE TILE CLIPPED
+   ROUND (jakob 2026-11-24, "(a) orange tile"; readme §4 *Imagery*). `mark`
+   draws `assets/icon.svg` — the tile, its geometry and its three fills copied
+   VERBATIM, never redrawn, as `Icon`'s mark copies `cogra-mark.svg` — filling
+   the disc and clipped to its circle, at every size and the same in light and
+   dark: the tile's own colours, not the theme's. The circle falls wholly
+   inside the tile's rounded square, so no corner of the ground shows. */
+function MarkTile() {
+  return (
+    <svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true" style={{ display: "block" }}>
+      <rect width="100" height="100" rx="22" fill="#EF6C1A" />
+      <circle cx="50.00" cy="40.21" r="18.94" fill="none" stroke="#4F1D00" strokeWidth="13.17" />
+      <path
+        d="M68.937 22.447 L68.937 60.574 C68.879 61.179 68.786 63.012 68.576 64.198 C68.357 65.392 68.063 66.586 67.642 67.713 C67.213 68.840 66.675 69.958 66.028 70.967 C65.372 71.985 64.598 72.952 63.732 73.784 C62.866 74.625 61.865 75.365 60.831 75.988 C59.805 76.602 58.670 77.098 57.526 77.501 C56.391 77.905 55.197 78.182 54.003 78.384 C52.809 78.586 51.589 78.670 50.378 78.721 C49.167 78.771 47.948 78.746 46.737 78.679 C45.526 78.620 43.710 78.401 43.113 78.342"
+        fill="none"
+        stroke="#4F1D00"
+        strokeWidth="13.17"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="52.97" cy="37.24" r="7.16" fill="#FFF8F6" />
+    </svg>
+  );
+}
+
+export function MonogramAvatar({ name, size = "sm", src, mark = false, redacted = false, node }) {
   const [failed, setFailed] = React.useState(false);
   const initial = redacted ? null : (name ?? "").trim().charAt(0).toUpperCase() || "?";
   const role = typeof size === "number" ? (size >= 56 ? "headline-small" : size === 32 ? "label-medium" : "label-large") : null;
@@ -127,7 +153,9 @@ export function MonogramAvatar({ name, size = "sm", src, redacted = false, node 
       }}
       data-node={node}
     >
-      {src && !failed && !redacted ? (
+      {mark && !redacted ? (
+        <MarkTile />
+      ) : src && !failed && !redacted ? (
         <img src={src} alt="" onError={() => setFailed(true)} style={{ height: "100%", width: "100%", objectFit: "cover", display: "block" }} />
       ) : (
         initial

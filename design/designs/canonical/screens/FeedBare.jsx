@@ -5,12 +5,15 @@
    arrival: `Your account is deleted.` (jakob 2026-10-05; `DeleteAccount`'s
    applicant case). The view is `@genesis_mod`, the one handle every guest
    board names it by (`GUEST_VANTAGE`; jakob 2026-11-23, B2); its display
-   name is the tree's `Genesis Moderator` (ExploreSearch.md). */
+   name is the tree's `Genesis Moderator` (ExploreSearch.md). Its picture is
+   the CoGra mark, the brand's orange tile clipped round (jakob 2026-11-24,
+   "(a) orange tile"; readme §4 *Imagery*) — the account's own picture, set
+   by the person who holds it, drawn so on the sample. */
 export function Screen() {
   return (
     <>
       <CograBand bell={false} trailing={<FeedFilter />}>
-        <BorrowedViewBand handle={GUEST_VANTAGE} displayName="Genesis Moderator" actionLabel="Sign in or join" />
+        <BorrowedViewBand handle={GUEST_VANTAGE} displayName="Genesis Moderator" avatarMark actionLabel="Sign in or join" />
         <ApkLine />
       </CograBand>
       <FeedList>

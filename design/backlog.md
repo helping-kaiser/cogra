@@ -7060,3 +7060,8 @@ round — the mark inside the circle the Android adaptive icon keeps clear of an
 the mark alone on the monogram's own `secondaryContainer` disc, at the tile's scale (0.84) — low
 contrast in dark; (c) the mark alone on `surface` with the field hairline, at the tile's scale.
 Recommendation (a): the brand's own small-size form, legible at 24 px in both themes.
+
+Closed by round 67 as (a) (jakob 2026-11-24, "(a) orange tile"): the mark as an account's picture
+is `icon.svg` filling the disc, clipped round, at every size and in both themes (readme §4
+*Imagery*; `MonogramAvatar`'s `mark`, the tile copied verbatim). `FeedBare`'s band draws
+`@genesis_mod` so at 24 px in place of the monogram `G`.

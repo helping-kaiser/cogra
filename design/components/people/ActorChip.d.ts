@@ -52,6 +52,10 @@ export interface MonogramAvatarProps {
    *  Also takes an exact pixel size (e.g. the profile header's 80). */
   size?: "sm" | "md" | "lg" | number;
   src?: string;
+  /** The CoGra mark as the account's picture: `assets/icon.svg`, the brand's
+   *  orange tile, filling the disc and clipped round, the same in both themes
+   *  (readme §4 *Imagery*). Wins over `src`. */
+  mark?: boolean;
   /** A redacted actor: the disc reserved and empty — there is no name to take
    *  a monogram from, and a glyph would be imagery with no source — ringed
    *  1px in `--border-field` inside its box (`REDACTED_RING`). */

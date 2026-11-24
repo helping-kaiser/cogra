@@ -776,7 +776,13 @@ be filled, and where a picture fails to load it is what shows. **A
 system account wears the CoGra mark** (jakob 2026-11-23, "logo split
 ofcourse"): The Publisher `@publisher`, The Moderator `@moderator` and
 The Treasury `@treasury` wear the mark in the disc, by rule; an account
-a person holds wears its own picture, whoever holds it.
+a person holds wears its own picture, whoever holds it. **The mark as an
+account's picture is the brand's orange tile clipped round** (jakob
+2026-11-24, "(a) orange tile"): `assets/icon.svg` — the tile, not
+`cogra-mark.svg` alone — fills the disc and is clipped to its circle, at
+every avatar size, the same in light and dark (`MonogramAvatar`'s `mark`).
+The boards draw the sample genesis moderator `@genesis_mod` so, on
+`FeedBare`'s band.
 
 **Photography exists as mock material** (`assets/photos/`, ten real
 photographs at true ratios — food, people, animals, scenery). It is
