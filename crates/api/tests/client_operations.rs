@@ -171,7 +171,9 @@ fn client_variables(operation: &str, document: &str) -> async_graphql::Variables
                 panic!("{operation} reads nodes(ids: ${variable}) and has no row in ID_BATCHES")
             });
         variables[variable.as_str()] = serde_json::Value::Array(vec![
-            serde_json::json!("00000000-0000-0000-0000-000000000000");
+            serde_json::json!(
+                "00000000-0000-0000-0000-000000000000"
+            );
             batch.len()
         ]);
     }
@@ -532,7 +534,10 @@ async fn measured(
     while admitted - refused > 1 {
         let middle = refused + (admitted - refused) / 2;
         let schema = schema(pool.clone(), probe(middle));
-        if budget_errors(&schema, name, document, variables).await.is_empty() {
+        if budget_errors(&schema, name, document, variables)
+            .await
+            .is_empty()
+        {
             admitted = middle;
         } else {
             refused = middle;
@@ -692,7 +697,10 @@ fn nodes_reads() -> BTreeSet<String> {
 #[test]
 fn every_nodes_read_has_its_batch() {
     let reads = nodes_reads();
-    let rows: BTreeSet<String> = ID_BATCHES.iter().map(|(name, _)| (*name).to_string()).collect();
+    let rows: BTreeSet<String> = ID_BATCHES
+        .iter()
+        .map(|(name, _)| (*name).to_string())
+        .collect();
     assert_eq!(reads, rows, "the nodes(ids:) reads and ID_BATCHES disagree");
 }
 
