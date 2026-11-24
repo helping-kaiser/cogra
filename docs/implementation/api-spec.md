@@ -310,9 +310,10 @@ replies (Q49): the reader unfolds a branch with its own
 `CommentReplies` read, so a post-detail read prices its comments
 once, not its comments times a reply page. A standing test
 replays the whole corpus under both postures and fails by
-operation name, and re-measures it by bisection so a document
-growing *into* the headroom fails before it grows past the
-ceiling. Both postures carry the *same* ceilings: a looser dev
+operation name on any validation error, a tripped budget or a
+document the schema refuses, and re-measures it by bisection
+so a document growing *into* the headroom fails before it grows
+past the ceiling. Both postures carry the *same* ceilings: a looser dev
 budget stops being a preview of release, and a document refused
 only in production is the failure this rule exists to prevent.
 
