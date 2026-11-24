@@ -262,21 +262,22 @@ usage is real.
 
 ### Context
 
-The chronicle guarantees *membership*: a record is listed exactly
-when it is ordered fact, with no pending namespace to opt out of.
-But a chronicle row points at a node, and a node read is always
-current — a landed post carrying an unlanded edit serves the
-pending version, marked PENDING. Content listings offer
-`includePending: false` ("the version that landed"), so the
-settled graph is reachable through `posts` — but not by
-traversing from `records`.
+The chronicle's switch is over *membership*: `records` lists a
+record exactly when it is ordered fact, and `User.chronicle`'s
+`includePending: false` drops the settling posts and comments
+leading it. But a chronicle row points at a node, and a node read
+is always current — a landed post carrying an unlanded edit serves
+the pending version, marked PENDING. Content listings'
+`includePending: false` also serves the version that landed, so the
+settled graph is reachable through `posts` — but not by traversing
+from `records` or `User.chronicle`.
 
 ### The question
 
 Should the chronicle's *targets* grow a settled-content serving
-mode — an `includePending`-style switch on `records` that makes
-traversed nodes serve the landed version — or is the membership
-guarantee the chronicle's whole contract, with settled reading
+mode — `User.chronicle`'s `includePending: false`, or a switch on
+`records`, making traversed nodes serve the landed version — or is
+membership the chronicle's whole contract, with settled reading
 left to the content listings? Decide when a real reader wants the
 settled graph through a profile.
 

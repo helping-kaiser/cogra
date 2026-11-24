@@ -36,7 +36,13 @@ function leave(
 }
 
 const heldIds = (list: HeldProfileList | undefined) =>
-  list === undefined ? [] : list.tab === "posts" ? list.posts.map((post) => post.id) : list.comments.map((comment) => comment.id);
+  list === undefined
+    ? []
+    : list.tab === "posts"
+      ? list.posts.map((post) => post.id)
+      : list.tab === "comments"
+        ? list.comments.map((comment) => comment.id)
+        : list.rows.map((row) => row.id);
 
 beforeEach(() => forgetAllProfileViews());
 

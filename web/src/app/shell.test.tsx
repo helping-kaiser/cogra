@@ -56,7 +56,7 @@ describe("AppShell", () => {
     ["/posts/post-1", "postDetail.bottomBar"],
     ["/profile", "profile.bottomBar"],
     ["/u/alice", "profile.bottomBar"],
-    // History.md:121: the bar keeps lit the root History was opened from.
+    // History.md:143: the bar keeps lit the root History was opened from.
     ["/history", "history.bottomBar"],
     // The opinions page under either root (nodes.json `profileStances`, round 26).
     ["/profile/opinions", "profileStances.bottomBar"],
@@ -93,7 +93,7 @@ describe("AppShell", () => {
     },
   );
 
-  it("keeps the profile slot lit on /history (History.md:121)", async () => {
+  it("keeps the profile slot lit on /history (History.md:143)", async () => {
     pathname = "/history";
     renderWithProviders(
       <AppShell>

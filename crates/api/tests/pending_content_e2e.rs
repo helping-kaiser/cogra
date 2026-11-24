@@ -1128,6 +1128,143 @@ async fn an_unlanded_edit_adds_no_chronicle_row(pool: PgPool) {
     assert_eq!(edges[0]["node"]["target"]["landing"]["state"], "LANDED");
 }
 
+/// A person's chronicle as the Everything view reads it, by an anonymous
+/// reader.
+const PROFILE_CHRONICLE: &str = r#"query($id: UUID!, $p: Boolean!) {
+  user(id: $id) {
+    chronicle(first: 10, includePending: $p) {
+      edges { cursor node {
+        __typename
+        ... on Record { family act target { id } }
+        ... on Post { id landing { state } title { value } }
+        ... on Comment { id landing { state } content { value } }
+      } }
+    }
+  }
+}"#;
+
+impl Rig {
+    async fn profile_chronicle(&self, author: &Uuid, include_pending: bool) -> Vec<Value> {
+        let read = self
+            .gql(
+                None,
+                PROFILE_CHRONICLE,
+                json!({ "id": author.to_string(), "p": include_pending }),
+            )
+            .await;
+        read["user"]["chronicle"]["edges"]
+            .as_array()
+            .expect("edges")
+            .clone()
+    }
+}
+
+/// One entry as the test names it: its typename and the id it carries —
+/// a record by its target, a settling post or comment by its own.
+fn entry(edge: &Value) -> (String, String) {
+    let node = &edge["node"];
+    let kind = node["__typename"].as_str().expect("typename").to_string();
+    let id = match kind.as_str() {
+        "Record" => node["target"]["id"].as_str(),
+        _ => node["id"].as_str(),
+    };
+    (kind, id.expect("id").to_string())
+}
+
+/// A person's chronicle leads with the post and the comment they signed
+/// that are still settling, newest signed first, each wearing PENDING,
+/// to every reader — the signed-but-unordered citation beside them is
+/// not there, because only posts and comments list while they settle.
+/// The settled read and the record set (`records`, today's Everything
+/// read) serve the landed record alone. Landed, the post stands once,
+/// as its minting record.
+///
+/// A person's chronicle leads with their settling posts and comments, wearing PENDING, to every reader; every other act lists once it has landed.
+/// ´claim:pending:the-chronicle-lists-settling-posts-and-comments´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_chronicle_lists_settling_posts_and_comments(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (author, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let (_, other_key) = rig.seed_member("other", "other@example.com").await;
+    let other = rig.log_in("other@example.com").await;
+    let host = rig.landed_post(&token, &key, "Host", "b").await;
+    let cited = rig.landed_post(&other, &other_key, "Cited", "b").await;
+
+    let (post, _, held) = rig.pending_post_held(&token, &key, "Settling").await;
+    let comment = rig
+        .gql(
+            Some(&token),
+            PREPARE_COMMENT,
+            json!({ "input": {
+                "target": host,
+                "content": "Settling too.",
+                "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
+                "pInterest": 0.1,
+            }}),
+        )
+        .await;
+    let comment_id = comment["prepareComment"]["node"]
+        .as_str()
+        .expect("node")
+        .to_string();
+    rig.pre_sign(&token, &key, &comment["prepareComment"]["writes"])
+        .await;
+    let citation = rig
+        .gql(
+            Some(&token),
+            PREPARE_REFERENCE,
+            json!({ "input": {
+                "artifact": host, "target": cited, "relevance": 0.1, "support": 0.1,
+            }}),
+        )
+        .await;
+    rig.pre_sign(&token, &key, &citation["prepareReference"]["writes"])
+        .await;
+
+    let edges = rig.profile_chronicle(&author, true).await;
+    assert_eq!(
+        edges.iter().map(entry).collect::<Vec<_>>(),
+        vec![
+            ("Comment".to_string(), comment_id.clone()),
+            ("Post".to_string(), post.clone()),
+            ("Record".to_string(), host.clone()),
+        ],
+        "{edges:#?}"
+    );
+    assert_eq!(edges[0]["node"]["landing"]["state"], "PENDING");
+    assert_eq!(edges[0]["node"]["content"]["value"], "Settling too.");
+    assert_eq!(edges[1]["node"]["landing"]["state"], "PENDING");
+    assert_eq!(edges[1]["node"]["title"]["value"], "Settling");
+    assert_eq!(edges[2]["node"]["act"], "GENESIS");
+
+    let settled = rig.profile_chronicle(&author, false).await;
+    assert_eq!(
+        settled.iter().map(entry).collect::<Vec<_>>(),
+        vec![("Record".to_string(), host.clone())]
+    );
+    assert_eq!(
+        rig.chronicle(&author).await.len(),
+        1,
+        "the record set still lists only ordered fact"
+    );
+
+    rig.approve_and_close(&token, &key, &held).await;
+    let edges = rig.profile_chronicle(&author, true).await;
+    assert_eq!(
+        edges.iter().map(entry).collect::<Vec<_>>(),
+        vec![
+            ("Comment".to_string(), comment_id),
+            ("Record".to_string(), post),
+            ("Record".to_string(), host),
+        ],
+        "the landed post stands once, as its record: {edges:#?}"
+    );
+    assert_eq!(edges[1]["node"]["family"], "PUBLISH");
+    assert_eq!(edges[1]["node"]["act"], "GENESIS");
+}
+
 /// (´claim:pending:pending-content-reads-to-everyone´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_pending_comment_reads_in_its_thread(pool: PgPool) {
