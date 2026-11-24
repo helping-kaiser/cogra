@@ -10,7 +10,7 @@ import { HttpResponse } from "msw/http";
 import { delay } from "msw/utils/delay";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { readRecents, rememberSearch, RECENTS_KEPT, withRecent } from "@/lib/search/recents";
+import { readRecents, recentNodeKey, rememberSearch, RECENTS_KEPT, withRecent } from "@/lib/search/recents";
 import { detailRoot } from "@/app/shell";
 import { createTokenStore } from "@/lib/session/token-store";
 import { CLEAR_SEARCH } from "@/lib/ui2/search-bar";
@@ -324,6 +324,20 @@ describe("Explore at rest", () => {
     fireEvent.click(recent);
     expect(field()).toHaveValue("#saltmaps");
     await waitFor(() => expect(asks.map((ask) => ask.query)).toEqual(["#saltmaps"]));
+  });
+
+  // `RecentRow` (_shared.jsx:1007-1041, round 62; jakob 2026-11-23, no
+  // wrapping for tags in lists): one line, a 128-character tag ends in "…".
+  it("a_recent_stands_on_one_line_and_a_long_tag_is_cut_whole_in_its_words", () => {
+    const LONG = `#${"sweepfixture".repeat(10)}abcdefgh`;
+    serveSearch(() => answer([]));
+    rememberSearch("me", LONG);
+    renderExplore();
+    const query = screen.getByTestId(byNode("explore.recent.query", recentNodeKey(LONG)));
+    expect(query.className.split(/\s+/)).toEqual(
+      expect.arrayContaining(["min-w-0", "overflow-hidden", "text-ellipsis", "whitespace-nowrap"]),
+    );
+    expect(query).toHaveTextContent(LONG);
   });
 
   it("explore_md_31_recents_are_kept_per_account_and_a_guests_on_the_device_alone", () => {
